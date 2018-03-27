@@ -47,7 +47,7 @@ public:
   virtual ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
                  const Surface*      msurface   = nullptr,
-                 PropDirection       dir        = alongMomentum,
+                 NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
   /// Public neutral material effects interface
@@ -61,7 +61,7 @@ public:
   virtual ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
                  const Surface*      msurface   = nullptr,
-                 PropDirection       dir        = alongMomentum,
+                 NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
 protected:

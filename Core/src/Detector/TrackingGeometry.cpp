@@ -85,7 +85,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
                                          const Vector3D&        mom,
                                          const TrackingVolume*  vol,
                                          const TrackingVolume*& nextVol,
-                                         PropDirection          dir,
+                                         NavigationDirection    dir,
                                          double) const
 {
   bool isAtBoundary = false;

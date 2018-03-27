@@ -188,7 +188,7 @@ public:
   virtual const SurfaceIntersection
   surfaceOnApproach(const Vector3D&                gpos,
                     const Vector3D&                dir,
-                    PropDirection                  pdir,
+                    NavigationDirection            pdir,
                     const BoundaryCheck&           bcheck,
                     bool                           collectSensitive,
                     bool                           collectMaterial,
@@ -219,7 +219,7 @@ public:
   ///                  ordered according to intersection
   virtual std::vector<SurfaceIntersection>
   compatibleSurfaces(const TrackParameters&         pars,
-                     PropDirection                  pdir,
+                     NavigationDirection            pdir,
                      const BoundaryCheck&           bcheck,
                      bool                           collectSensitive,
                      bool                           collectMaterial,
@@ -252,7 +252,7 @@ public:
   ///                  ordered according to intersection
   virtual std::vector<SurfaceIntersection>
   compatibleSurfaces(const NeutralParameters&       pars,
-                     PropDirection                  pdir,
+                     NavigationDirection            pdir,
                      const BoundaryCheck&           bcheck,
                      bool                           collectSensitive,
                      bool                           collectMaterial,
@@ -280,7 +280,7 @@ public:
   template <class T>
   std::vector<SurfaceIntersection>
   getCompatibleSurfaces(const T&                       pars,
-                        PropDirection                  pdir,
+                        NavigationDirection            pdir,
                         const BoundaryCheck&           bcheck,
                         bool                           collectSensitive,
                         bool                           collectMaterial,
@@ -370,7 +370,7 @@ protected:
                         const Surface&                    surface,
                         const Vector3D&                   gpos,
                         const Vector3D&                   dir,
-                        PropDirection                     pdir,
+                        NavigationDirection               pdir,
                         const BoundaryCheck&              bcheck,
                         double                            maxPathLength,
                         const ICompatibilityEstimator*    ice = nullptr) const;

@@ -76,7 +76,7 @@ public:
   ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
                  const Surface*      msurface   = nullptr,
-                 PropDirection       dir        = alongMomentum,
+                 NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Public neutral material effects interface
@@ -91,7 +91,7 @@ public:
   ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
                  const Surface*      msurface   = nullptr,
-                 PropDirection       dir        = alongMomentum,
+                 NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Set configuration method
@@ -137,7 +137,7 @@ private:
   void
   updateTrackParameters(ExCellCharged&      eCell,
                         const Surface&      mSurface,
-                        PropDirection       dir,
+                        NavigationDirection dir,
                         MaterialUpdateStage matupstage,
                         const std::string&  surfaceType,
                         size_t              surfaceID) const;

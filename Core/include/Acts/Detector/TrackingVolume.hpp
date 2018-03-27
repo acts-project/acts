@@ -162,7 +162,7 @@ public:
   layerCandidatesOrdered(const Layer*         sLayer,
                          const Layer*         eLayer,
                          const T&             parameters,
-                         PropDirection        pDir             = alongMomentum,
+                         NavigationDirection  pDir             = forward,
                          const BoundaryCheck& bcheck           = true,
                          bool                 collectSensitive = true,
                          bool                 collectMaterial  = true,
@@ -229,8 +229,8 @@ public:
   /// @return is the templated boundary intersection
   template <class T>
   std::vector<BoundaryIntersection<T>>
-  boundarySurfacesOrdered(const T&      parameters,
-                          PropDirection pDir = alongMomentum) const;
+  boundarySurfacesOrdered(const T&            parameters,
+                          NavigationDirection pDir = forward) const;
 
   /// check if you are on a boundary surface
   ///
@@ -537,7 +537,7 @@ std::vector<LayerIntersection<T>>
 TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
                                        const Layer*         eLayer,
                                        const T&             pars,
-                                       PropDirection        pDir,
+                                       NavigationDirection  pDir,
                                        const BoundaryCheck& bcheck,
                                        bool                 collectSensitive,
                                        bool                 collectMaterial,
@@ -551,7 +551,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
   std::vector<LayerIntersection<T>> lIntersections;
   // assign the direction
   const Vector3D& dir
-      = (pDir == alongMomentum ? gm.unit() : Vector3D(-1 * gm.unit()));
+      = (pDir == forward ? gm.unit() : Vector3D(-1 * gm.unit()));
   // the confinedLayers
   if (m_confinedLayers) {
     // cache the longest path length to avoid punch-through to the other side
@@ -636,12 +636,13 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
 // straight line intersection @todo change hard-coded default
 template <class T>
 std::vector<BoundaryIntersection<T>>
-TrackingVolume::boundarySurfacesOrdered(const T& pars, PropDirection pDir) const
+TrackingVolume::boundarySurfacesOrdered(const T&            pars,
+                                        NavigationDirection pDir) const
 {
   // assign the direction
   const Vector3D dir
-      = (pDir == alongMomentum ? pars.momentum().unit()
-                               : Vector3D(-1 * pars.momentum().unit()));
+      = (pDir == forward ? pars.momentum().unit()
+                         : Vector3D(-1 * pars.momentum().unit()));
   // loop over boundarySurfaces and calculate the intersection
   std::vector<BoundaryIntersection<T>> bIntersections;
   auto&                                bSurfaces = boundarySurfaces();

@@ -24,7 +24,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                                  const Acts::Surface*        sf,
-                                 Acts::PropDirection         pDir,
+                                 Acts::NavigationDirection   pDir,
                                  const Acts::BoundaryCheck&  bcheck) const
 {
   Acts::ExtrapolationCode eCode = Acts::ExtrapolationCode::InProgress;
@@ -180,7 +180,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::initNavigationT(Acts::ExtrapolationCell<T>& eCell,
                                     const Acts::Surface*        sf,
-                                    Acts::PropDirection         pDir,
+                                    Acts::NavigationDirection   pDir,
                                     const Acts::BoundaryCheck&  bcheck) const
 {
   // initialize the Navigation stream
@@ -250,7 +250,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
                                  const Surface*        sf,
-                                 PropDirection         pDir,
+                                 NavigationDirection   pDir,
                                  const BoundaryCheck&  bcheck) const
 {
 
@@ -502,7 +502,7 @@ Acts::ExtrapolationCode
 Acts::StaticEngine::handleReturnT(ExtrapolationCode     eCode,
                                   ExtrapolationCell<T>& eCell,
                                   const Surface*        sf,
-                                  PropDirection         pDir,
+                                  NavigationDirection   pDir,
                                   const BoundaryCheck&  bcheck) const
 {
   EX_MSG_DEBUG(++eCell.navigationStep,

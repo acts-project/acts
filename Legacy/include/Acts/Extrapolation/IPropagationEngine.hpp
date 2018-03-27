@@ -55,7 +55,7 @@ public:
   virtual ExtrapolationCode
   propagate(ExCellCharged&                        ecCell,
             const Surface&                        sf,
-            PropDirection                         dir = alongMomentum,
+            NavigationDirection                   dir = forward,
             std::vector<ExtrapolationMode::eMode> purpose
             = {ExtrapolationMode::Destination},
             const BoundaryCheck& bcheck            = true,
@@ -79,7 +79,7 @@ public:
   virtual ExtrapolationCode
   propagate(ExCellNeutral&                        enCell,
             const Surface&                        sf,
-            PropDirection                         dir = alongMomentum,
+            NavigationDirection                   dir = forward,
             std::vector<ExtrapolationMode::eMode> purpose
             = {ExtrapolationMode::Destination},
             const BoundaryCheck& bcheck            = true,

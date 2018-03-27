@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <cmath>
 #include <limits>
 #include <memory>
@@ -18,6 +19,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -76,7 +78,7 @@ namespace propagation {
     struct Options
     {
       /// Propagation direction
-      Direction direction = forward;
+      NavigationDirection direction = forward;
 
       /// Maximum number of steps for one propagate() call
       unsigned int max_steps = 1000;
@@ -247,12 +249,13 @@ namespace propagation {
       // Initialize the propagation result object
       WrapperResult<Parameters> r(Status::IN_PROGRESS);
       // Call the wrapped propagator with the ExtrapolationCell
-      auto status = m_impl->propagate(cache,
-                                      surface,
-                                      PropDirection(int(options.direction)),
-                                      {ExtrapolationMode::Destination},
-                                      true,
-                                      cache.destinationCurvilinear);
+      auto status
+          = m_impl->propagate(cache,
+                              surface,
+                              NavigationDirection(int(options.direction)),
+                              {ExtrapolationMode::Destination},
+                              true,
+                              cache.destinationCurvilinear);
       // Check and convert
       if (!status.isFailure() && cache.endParameters) {
         const Parameters* cParameters

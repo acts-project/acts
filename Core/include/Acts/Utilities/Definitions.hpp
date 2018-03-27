@@ -38,40 +38,31 @@ typedef double TDD_real_t;
 #define TDD_max_bound_value 10e10
 
 namespace Acts {
-/** Tolerance for being on Surface */
+
+///  Tolerance for being on Surface
 static const double s_onSurfaceTolerance = 10e-5;
 
-/** Tolerance for not being within curvilinear projection
-    this allows using the same curvilinear frame to eta = 6,
-    validity tested with IntegrationTests/PropagationTest */
+/// Tolerance for not being within curvilinear projection
+/// this allows using the same curvilinear frame to eta = 6,
+/// validity tested with IntegrationTests/PropagationTest
 static const double s_curvilinearProjTolerance = 0.999995;
 
-/** @enum PropDirection
-  PropDirection, enum for direction of the propagation.
+/// @enum NavigationDirection
+/// The navigation direciton is always with
+/// respect to a given momentum or direction
+enum NavigationDirection : int { backward = -1, anyDirection = 0, forward = 1 };
 
-  */
-enum PropDirection {
-  alongMomentum    = 1,
-  oppositeMomentum = -1,
-  anyDirection     = 0,
-  mappingMode      = 2
+///  This is a steering enum to tell which material update stage:
+/// - preUpdate  : update on approach of a surface
+/// - fullUpdate : update when passing a surface
+/// - postUpdate : update when leaving a surface
+enum MaterialUpdateStage : int {
+  preUpdate  = -1,
+  fullUpdate = 0,
+  postUpdate = 1
 };
 
-/// @brief simple enum for searching surfaces
-enum SearchDirection {
-  outside            = 1,
-  inside             = -1,
-  bothway            = 0,
-  undefinedDirection = 0
-};
-
-/** This is a steering enum to tell which material update stage:
-   - preUpdate  : when reaching a layer before layer is resolved
-   - fullUpdate : just pass through the layer
-   - postUpdate : when leaving the layer
- */
-enum MaterialUpdateStage { preUpdate = -1, fullUpdate = 0, postUpdate = 1 };
-
+/// Eigen definitions
 template <typename T, unsigned int rows, unsigned int cols>
 using ActsMatrix = Eigen::Matrix<T, rows, cols>;
 
@@ -126,12 +117,20 @@ using ActsRowVectorX = Eigen::Matrix<T, 1, Eigen::Dynamic>;
 using ActsRowVectorXd = ActsRowVectorX<double>;
 using ActsRowVectorXf = ActsRowVectorX<float>;
 
-/** elment for code readability
-    - please use these for access to the member variables if needed, e.g.
-        double z  = position[Acts::eZ];
-        double px = momentum[Acts::ePX];
-*/
-enum AxisDefs {
+typedef Eigen::Quaternion<double> Rotation3D;
+typedef Eigen::Translation<double, 3> Translation3D;
+typedef Eigen::AngleAxisd AngleAxis3D;
+typedef Eigen::Affine3d   Transform3D;
+typedef Eigen::Matrix<double, 3, 1> Vector3D;
+typedef Eigen::Matrix<double, 2, 1> Vector2D;
+typedef Eigen::Matrix<double, 3, 3> RotationMatrix3D;
+
+/// axis defintion elment for code readability
+/// - please use these for access to the member variables if needed, e.g.
+///     double z  = position[Acts::eZ];
+///     double px = momentum[Acts::ePX];
+///
+enum AxisDefs : int {
   // position access
   eX = 0,
   eY = 1,
@@ -141,13 +140,5 @@ enum AxisDefs {
   ePY = 1,
   ePZ = 2
 };
-
-typedef Eigen::Quaternion<double> Rotation3D;
-typedef Eigen::Translation<double, 3> Translation3D;
-typedef Eigen::AngleAxisd AngleAxis3D;
-typedef Eigen::Affine3d   Transform3D;
-typedef Eigen::Matrix<double, 3, 1> Vector3D;
-typedef Eigen::Matrix<double, 2, 1> Vector2D;
-typedef Eigen::Matrix<double, 3, 3> RotationMatrix3D;
 
 }  // end of namespace Acts

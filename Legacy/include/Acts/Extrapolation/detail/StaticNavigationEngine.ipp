@@ -21,7 +21,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::resolveBoundaryT(
     Acts::ExtrapolationCell<T>& eCell,
-    Acts::PropDirection         pDir) const
+    Acts::NavigationDirection   pDir) const
 {
   EX_MSG_DEBUG(
       ++eCell.navigationStep,
@@ -220,7 +220,7 @@ Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::handleBoundaryT(
     Acts::ExtrapolationCell<T>&                         eCell,
     const Acts::BoundarySurfaceT<Acts::TrackingVolume>& bSurfaceTV,
-    Acts::PropDirection                                 pDir,
+    Acts::NavigationDirection                           pDir,
     bool                                                stepout) const
 {
   // get the bondary surface and compare with last one to prevent loops
@@ -374,7 +374,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::resolvePositionT(
     Acts::ExtrapolationCell<T>& eCell,
-    Acts::PropDirection         pDir,
+    Acts::NavigationDirection   pDir,
     bool /*noLoop*/) const
 {
   EX_MSG_DEBUG(

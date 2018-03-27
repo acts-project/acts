@@ -157,7 +157,7 @@ private:
   ExtrapolationCode
   extrapolateT(ExtrapolationCell<T>& eCell,
                const Surface*        sf     = nullptr,
-               PropDirection         dir    = alongMomentum,
+               NavigationDirection   dir    = forward,
                const BoundaryCheck&  bcheck = true) const;
 
   /// Main extrapolation method, templated to chared/neutral
@@ -171,7 +171,7 @@ private:
   ExtrapolationCode
   initNavigation(ExtrapolationCell<T>& eCell,
                  const Surface*        sf  = nullptr,
-                 PropDirection         dir = alongMomentum) const;
+                 NavigationDirection   dir = forward) const;
 };
 
 /// Return the geometry type, it's the master

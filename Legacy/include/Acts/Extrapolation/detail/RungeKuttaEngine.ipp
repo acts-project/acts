@@ -190,7 +190,7 @@ Acts::ExtrapolationCode
 Acts::RungeKuttaEngine<MagneticField>::propagate(
     ExCellNeutral&                        eCell,
     const Surface&                        sf,
-    PropDirection                         pDir,
+    NavigationDirection                   pDir,
     std::vector<ExtrapolationMode::eMode> purpose,
     const BoundaryCheck&                  bcheck,
     bool                                  returnCurvilinear) const
@@ -341,7 +341,7 @@ Acts::ExtrapolationCode
 Acts::RungeKuttaEngine<MagneticField>::propagate(
     ExCellCharged&                        eCell,
     const Surface&                        sf,
-    PropDirection                         pDir,
+    NavigationDirection                   pDir,
     std::vector<ExtrapolationMode::eMode> purpose,
     const BoundaryCheck&                  bcheck,
     bool                                  returnCurvilinear) const

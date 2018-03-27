@@ -337,7 +337,7 @@ public:
   /// these are the one-but-last lead parameters (fallback)
   const T* lastLeadParameters;
   /// this is the propagation direction w.r.t the parameters
-  PropDirection propDirection;
+  NavigationDirection navigationDirection;
   /// for checking if navigation is radially towards the
   /// IP, this has consequences for entering cylinders
   int radialDirection;
@@ -396,9 +396,9 @@ public:
   /// @param sParameters are the templated parameters
   /// @param pDir is the propagatio direction
   /// @param econfig is the extrapolation config as value
-  ExtrapolationCell(const T&      sParameters,
-                    PropDirection pDir    = alongMomentum,
-                    unsigned int  econfig = 1)
+  ExtrapolationCell(const T&            sParameters,
+                    NavigationDirection pDir    = forward,
+                    unsigned int        econfig = 1)
     : startParameters(std::unique_ptr<const T>(sParameters.clone()))
     , startVolume(nullptr)
     , startLayer(nullptr)
@@ -413,7 +413,7 @@ public:
     , lastBoundaryParameters(nullptr)
     , lastBoundarySurface(nullptr)
     , lastLeadParameters(&sParameters)
-    , propDirection(pDir)
+    , navigationDirection(pDir)
     , radialDirection(1)
     , nextGeometrySignature(Acts::Unsigned)
     , navigationStep(0)
@@ -577,7 +577,7 @@ public:
       // else the leadParamenters are used
       if (leadParameters->position().perp()
           > (leadParameters->position()
-             + propDirection * leadParameters->momentum().unit())
+             + navigationDirection * leadParameters->momentum().unit())
                 .perp())
         radialDirection = -1;
     }
@@ -593,7 +593,7 @@ public:
     // this was radially inwards moving and stays like this
     if (leadParameters->position().perp()
         > (leadParameters->position()
-           + propDirection * leadParameters->momentum().unit())
+           + navigationDirection * leadParameters->momentum().unit())
               .perp())
       return true;
     // radial direction changed

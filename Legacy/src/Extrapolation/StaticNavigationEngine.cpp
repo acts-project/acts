@@ -50,7 +50,7 @@ Acts::StaticNavigationEngine::setLogger(std::unique_ptr<const Logger> newLogger)
 // charged situation
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::resolveBoundary(Acts::ExCellCharged& ecCharged,
-                                              PropDirection        dir) const
+                                              NavigationDirection  dir) const
 {
   return resolveBoundaryT<Acts::TrackParameters>(ecCharged, dir);
 }
@@ -58,7 +58,7 @@ Acts::StaticNavigationEngine::resolveBoundary(Acts::ExCellCharged& ecCharged,
 // neutral situation
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::resolveBoundary(Acts::ExCellNeutral& ecNeutral,
-                                              PropDirection        dir) const
+                                              NavigationDirection  dir) const
 {
   return resolveBoundaryT<Acts::NeutralParameters>(ecNeutral, dir);
 }
@@ -66,7 +66,7 @@ Acts::StaticNavigationEngine::resolveBoundary(Acts::ExCellNeutral& ecNeutral,
 // charged situation
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::resolvePosition(Acts::ExCellCharged& ecCharged,
-                                              PropDirection        dir,
+                                              NavigationDirection  dir,
                                               bool                 noLoop) const
 {
   return resolvePositionT<Acts::TrackParameters>(ecCharged, dir, noLoop);
@@ -75,7 +75,7 @@ Acts::StaticNavigationEngine::resolvePosition(Acts::ExCellCharged& ecCharged,
 // neutral situation
 Acts::ExtrapolationCode
 Acts::StaticNavigationEngine::resolvePosition(Acts::ExCellNeutral& ecNeutral,
-                                              PropDirection        dir,
+                                              NavigationDirection  dir,
                                               bool                 noLoop) const
 {
   return resolvePositionT<Acts::NeutralParameters>(ecNeutral, dir, noLoop);

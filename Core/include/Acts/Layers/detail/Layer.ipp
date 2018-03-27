@@ -21,7 +21,7 @@ Layer::onLayer(const T& pars, const BoundaryCheck& bcheck) const
 template <class T>
 std::vector<SurfaceIntersection>
 Layer::getCompatibleSurfaces(const T&                       pars,
-                             PropDirection                  pDir,
+                             NavigationDirection            pDir,
                              const BoundaryCheck&           bcheck,
                              bool                           collectSensitive,
                              bool                           collectMaterial,
@@ -47,7 +47,7 @@ Layer::getCompatibleSurfaces(const T&                       pars,
 
   // position and momentum/dir
   const Vector3D& pos = pars.position();
-  const Vector3D  dir = (pDir == oppositeMomentum)
+  const Vector3D  dir = (pDir == backward)
       ? Vector3D(-1. * pars.momentum().unit())
       : pars.momentum().unit();
 
@@ -164,7 +164,7 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
                              const Surface&                    surface,
                              const Vector3D&                   pos,
                              const Vector3D&                   dir,
-                             PropDirection                     pDir,
+                             NavigationDirection               pDir,
                              const BoundaryCheck&              bcheck,
                              double                            maxPathLength,
                              const ICompatibilityEstimator*) const
@@ -176,9 +176,9 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
       = surface.intersectionEstimate(pos, dir, fDirection, bcheck);
   // check if intersection is valid and maxPathLength has not been exceeded
   if (sfIntersection.valid && sfIntersection.pathLength < maxPathLength) {
-    // resulting propDirection
-    PropDirection rDir
-        = (sfIntersection.pathLength > 0 ? alongMomentum : oppositeMomentum);
+    // resulting NavigationDirection
+    NavigationDirection rDir
+        = (sfIntersection.pathLength > 0 ? forward : backward);
     // and the surfaces & direction to push back - take all
     cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, rDir));
   }
@@ -187,7 +187,7 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
 inline const SurfaceIntersection
 Layer::surfaceOnApproach(const Vector3D&      position,
                          const Vector3D&      momentum,
-                         PropDirection        pDir,
+                         NavigationDirection  pDir,
                          const BoundaryCheck& bcheck,
                          bool                 collectSensitive,
                          bool                 collectMaterial,
@@ -226,7 +226,7 @@ Layer::isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck) const
 
 inline std::vector<SurfaceIntersection>
 Layer::compatibleSurfaces(const TrackParameters&         pars,
-                          PropDirection                  pdir,
+                          NavigationDirection            pdir,
                           const BoundaryCheck&           bcheck,
                           bool                           collectSensitive,
                           bool                           collectMaterial,
@@ -250,7 +250,7 @@ Layer::compatibleSurfaces(const TrackParameters&         pars,
 
 inline std::vector<SurfaceIntersection>
 Layer::compatibleSurfaces(const NeutralParameters&       pars,
-                          PropDirection                  pdir,
+                          NavigationDirection            pdir,
                           const BoundaryCheck&           bcheck,
                           bool                           collectSensitive,
                           bool                           collectMaterial,

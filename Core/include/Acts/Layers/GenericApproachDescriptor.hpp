@@ -132,7 +132,7 @@ GenericApproachDescriptor<T>::approachSurface(
                          });
   // return what you have
   return SurfaceIntersection(
-      returnIntersection->second, returnIntersection->first, alongMomentum);
+      returnIntersection->second, returnIntersection->first, forward);
 }
 
 template <class T>

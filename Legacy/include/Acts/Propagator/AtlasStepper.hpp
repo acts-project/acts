@@ -12,6 +12,7 @@
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
@@ -26,13 +27,13 @@ public:
     // optimisation that init is not called twice
     bool cache_ready = false;
     // configuration
-    double dir;
-    bool   useJacobian;
-    double step;
-    double maxPathLength;
-    bool   mcondition;
-    bool   needgradient;
-    bool   newfield;
+    NavigationDirection nav_dir;
+    bool                useJacobian;
+    double              step;
+    double              maxPathLength;
+    bool                mcondition;
+    bool                needgradient;
+    bool                newfield;
     // internal parameters to be used
     Vector3D field;
     double   pVector[64];
@@ -79,10 +80,11 @@ public:
 
     /// Constructor
     template <typename Parameters>
-    Cache(const Parameters& pars,
-          double            ssize = std::numeric_limits<double>::max())
+    Cache(const Parameters&   pars,
+          NavigationDirection ndir  = forward,
+          double              ssize = std::numeric_limits<double>::max())
       : cache_ready(false)
-      , dir(alongMomentum)
+      , nav_dir(ndir)
       , useJacobian(false)
       , step(0.)
       , maxPathLength(0.)

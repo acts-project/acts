@@ -54,7 +54,7 @@ struct PropagationCache
   unsigned int       niter = 0;
 
   PropagationCache()
-    : direction(alongMomentum)
+    : direction(forward)
     , boundaryCheck(true)
     , returnCurvilinear(false)
     , useJacobian(false)
@@ -220,7 +220,7 @@ public:
   ExtrapolationCode
   propagate(ExCellCharged&                        ecCell,
             const Surface&                        sf,
-            PropDirection                         dir = alongMomentum,
+            NavigationDirection                   dir = forward,
             std::vector<ExtrapolationMode::eMode> purpose
             = {ExtrapolationMode::Destination},
             const BoundaryCheck& bcheck            = true,
@@ -244,7 +244,7 @@ public:
   ExtrapolationCode
   propagate(ExCellNeutral&                        enCell,
             const Surface&                        sf,
-            PropDirection                         dir = alongMomentum,
+            NavigationDirection                   dir = forward,
             std::vector<ExtrapolationMode::eMode> purpose
             = {ExtrapolationMode::Destination},
             const BoundaryCheck& bcheck            = true,

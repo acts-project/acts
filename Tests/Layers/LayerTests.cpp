@@ -94,7 +94,7 @@ namespace Test {
       auto           surfaceOnApproach
           = layerStub.surfaceOnApproach(gpos,
                                         direction,
-                                        PropDirection::alongMomentum,
+                                        NavigationDirection::forward,
                                         true,
                                         false,
                                         false,
@@ -109,7 +109,7 @@ namespace Test {
       // signature in the doxygen documentation!
       auto compatibleSurfaces
           = layerStub.compatibleSurfaces(par,
-                                         PropDirection::alongMomentum,
+                                         NavigationDirection::forward,
                                          true,
                                          false,
                                          false,

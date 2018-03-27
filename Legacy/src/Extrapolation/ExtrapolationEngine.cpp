@@ -50,7 +50,7 @@ Acts::ExtrapolationEngine::extrapolate(ExCellCharged&       ecCharged,
                                        const BoundaryCheck& bcheck) const
 {
   return extrapolateT<TrackParameters>(
-      ecCharged, sf, ecCharged.propDirection, bcheck);
+      ecCharged, sf, ecCharged.navigationDirection, bcheck);
 }
 
 /** neutral extrapolation */
@@ -60,5 +60,5 @@ Acts::ExtrapolationEngine::extrapolate(ExCellNeutral&       ecNeutral,
                                        const BoundaryCheck& bcheck) const
 {
   return extrapolateT<NeutralParameters>(
-      ecNeutral, sf, ecNeutral.propDirection, bcheck);
+      ecNeutral, sf, ecNeutral.navigationDirection, bcheck);
 }

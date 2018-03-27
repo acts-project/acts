@@ -166,7 +166,7 @@ private:
   ExtrapolationCode
   extrapolateT(ExtrapolationCell<T>& eCell,
                const Surface*        sf     = 0,
-               PropDirection         dir    = alongMomentum,
+               NavigationDirection   dir    = forward,
                const BoundaryCheck&  bcheck = true) const;
 
   /// Init Navigation for static setup
@@ -182,7 +182,7 @@ private:
   ExtrapolationCode
   initNavigationT(ExtrapolationCell<T>& eCell,
                   const Surface*        sf     = 0,
-                  PropDirection         dir    = alongMomentum,
+                  NavigationDirection   dir    = forward,
                   const BoundaryCheck&  bcheck = true) const;
 
   /// Main static layer handling
@@ -200,7 +200,7 @@ private:
   ExtrapolationCode
   handleLayerT(ExtrapolationCell<T>& eCell,
                const Surface*        sf     = 0,
-               PropDirection         dir    = alongMomentum,
+               NavigationDirection   dir    = forward,
                const BoundaryCheck&  bcheck = true) const;
 
   /// Handle the failure - as configured
@@ -218,7 +218,7 @@ private:
   handleReturnT(ExtrapolationCode     eCode,
                 ExtrapolationCell<T>& eCell,
                 const Surface*        sf     = 0,
-                PropDirection         dir    = alongMomentum,
+                NavigationDirection   dir    = forward,
                 const BoundaryCheck&  bcheck = true) const;
 };
 

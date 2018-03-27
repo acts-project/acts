@@ -117,9 +117,9 @@ public:
   ///
   /// @return is the attached volume at that position
   virtual const T*
-  attachedVolume(const Vector3D& gpos,
-                 const Vector3D& mom,
-                 PropDirection   dir) const;
+  attachedVolume(const Vector3D&     gpos,
+                 const Vector3D&     mom,
+                 NavigationDirection dir) const;
 
   /// templated onBoundary method
   ///
@@ -201,9 +201,9 @@ BoundarySurfaceT<T>::attachVolumeArray(
 
 template <class T>
 const T*
-BoundarySurfaceT<T>::attachedVolume(const Vector3D& pos,
-                                    const Vector3D& mom,
-                                    PropDirection   pdir) const
+BoundarySurfaceT<T>::attachedVolume(const Vector3D&     pos,
+                                    const Vector3D&     mom,
+                                    NavigationDirection pdir) const
 {
   const T* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside

@@ -130,7 +130,7 @@ public:
                    const Vector3D&        mom,
                    const TrackingVolume*  vol,
                    const TrackingVolume*& nextVol,
-                   PropDirection          dir,
+                   NavigationDirection    dir,
                    double                 tol) const;
 
   /// Register the beam tube

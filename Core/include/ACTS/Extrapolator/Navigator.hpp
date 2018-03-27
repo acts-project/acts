@@ -37,7 +37,7 @@ namespace Acts {
 /// @todo harmonize to eventual future update of
 /// TrackingVolume::layerCandidatesOrdered()
 /// TrackingVolume::boundarySurfacesOrdered()
-struct NavParameters
+struct NavigationParameters
 {
 
   /// Position
@@ -60,12 +60,13 @@ struct NavParameters
   }
 
   /// Constructor
-  NavParameters(const Vector3D& p, const Vector3D& d) : pos(p), dir(d) {}
+  NavigationParameters(const Vector3D& p, const Vector3D& d) : pos(p), dir(d) {}
 };
 
-typedef std::vector<SurfaceIntersection>                 NavSurfaces;
-typedef std::vector<LayerIntersection<NavParameters>>    NavLayers;
-typedef std::vector<BoundaryIntersection<NavParameters>> NavBoundaries;
+typedef std::vector<SurfaceIntersection>                     NavigationSurfaces;
+typedef std::vector<LayerIntersection<NavigationParameters>> NavigationLayers;
+typedef std::vector<BoundaryIntersection<NavigationParameters>>
+    NavigationBoundaries;
 
 /// Navigator struct
 ///
@@ -117,14 +118,14 @@ struct Navigator
   {
     /// Navigation on surface level
     /// the vector of navigation surfaces to
-    NavSurfaces nav_surfaces = {};
+    NavigationSurfaces nav_surfaces = {};
     /// the surface iterator
-    NavSurfaces::const_iterator nav_surface_iter = nav_surfaces.end();
+    NavigationSurfaces::const_iterator nav_surface_iter = nav_surfaces.end();
 
     /// Navigation on layer level
     /// the vector of navigation layer to
-    NavLayers                 nav_layers     = {};
-    NavLayers::const_iterator nav_layer_iter = nav_layers.end();
+    NavigationLayers                 nav_layers     = {};
+    NavigationLayers::const_iterator nav_layer_iter = nav_layers.end();
 
     /// Navigation on volume level
     /// Navigation cache: the current volume and current layer
@@ -134,8 +135,9 @@ struct Navigator
     const Layer*          target_layer  = nullptr;
     const TrackingVolume* target_volume = nullptr;
 
-    NavBoundaries                 nav_boundaries    = {};
-    NavBoundaries::const_iterator nav_boundary_iter = nav_boundaries.end();
+    NavigationBoundaries                 nav_boundaries = {};
+    NavigationBoundaries::const_iterator nav_boundary_iter
+        = nav_boundaries.end();
 
     /// Debug string buffer
     std::string debug_string;
@@ -159,8 +161,6 @@ struct Navigator
     /// do nothing if the navigation stream was broken
     if (result.navigation_break) return;
 
-    int direction = 1;
-
     // fail if you have no tracking geometry
     assert(trackingGeometry != nullptr);
 
@@ -168,8 +168,7 @@ struct Navigator
     cache.current_surface = nullptr;
 
     // navigation parameters
-    NavParameters nav_par(cache.position(), cache.direction());
-    auto nav_dir = PropDirection(1);  // @todo !needs to come from the cache
+    NavigationParameters nav_par(cache.position(), cache.direction());
 
     // Navigation initialisation
     //
@@ -218,7 +217,7 @@ struct Navigator
               result.current_layer,
               tLayer,
               nav_par,
-              nav_dir,
+              cache.nav_dir,
               true,
               collectSensitive,
               collectMaterial,
@@ -247,7 +246,7 @@ struct Navigator
                 collectSensitive, collectMaterial, collectPassive)) {
           result.nav_surfaces = result.current_layer->getCompatibleSurfaces(
               nav_par,
-              nav_dir,
+              cache.nav_dir,
               true,
               collectSensitive,
               collectMaterial,
@@ -294,7 +293,7 @@ struct Navigator
         /// @todo: in straight line case, we can re-use
         surface                = result.nav_surface_iter->object;
         auto surface_intersect = surface->intersectionEstimate(
-            cache.pos, direction * cache.dir, true, false);
+            cache.pos, cache.nav_dir * cache.dir, true, false);
         double surface_distance = surface_intersect.pathLength;
         if (!surface_intersect) {
           VLOG(result, "Surface intersection is not valid, skipping it.");
@@ -319,7 +318,7 @@ struct Navigator
           // adjust the next steo size and return
           auto layer_surface   = result.nav_layer_iter->representation;
           auto layer_intersect = layer_surface->intersectionEstimate(
-              cache.pos, direction * cache.dir, true, false);
+              cache.pos, cache.nav_dir * cache.dir, true, false);
           double layer_distance = layer_intersect.pathLength;
           cache.step_size       = layer_distance;
           VLOG(result,
@@ -360,7 +359,7 @@ struct Navigator
                 collectSensitive, collectMaterial, collectPassive)) {
           result.nav_surfaces
               = nav_layer->getCompatibleSurfaces(nav_par,
-                                                 nav_dir,
+                                                 cache.nav_dir,
                                                  true,
                                                  collectSensitive,
                                                  collectMaterial,
@@ -393,7 +392,7 @@ struct Navigator
       if (result.nav_layer_iter != result.nav_layers.end()) {
         layer_surface        = result.nav_layer_iter->representation;
         auto layer_intersect = layer_surface->intersectionEstimate(
-            cache.pos, direction * cache.dir, true, false);
+            cache.pos, cache.nav_dir * cache.dir, true, false);
         double layer_distance = layer_intersect.pathLength;
         // check if the intersect is invalid
         if (!layer_intersect) {
@@ -419,8 +418,8 @@ struct Navigator
         result.nav_surfaces.clear();
         result.nav_surface_iter = result.nav_surfaces.end();
         VLOG(result, "Last layer reached in this volume, switching.");
-        result.nav_boundaries
-            = result.current_volume->boundarySurfacesOrdered(nav_par, nav_dir);
+        result.nav_boundaries = result.current_volume->boundarySurfacesOrdered(
+            nav_par, cache.nav_dir);
         result.nav_boundary_iter = result.nav_boundaries.begin();
         VLOG(result, result.nav_boundaries.size() << " boundaries provided.");
         // we can update the cache size here and return
@@ -459,7 +458,7 @@ struct Navigator
         // get the actual boundary for the navigation & the next volume
         auto boundary = result.nav_boundary_iter->object;
         result.current_volume
-            = boundary->attachedVolume(cache.pos, cache.dir, nav_dir);
+            = boundary->attachedVolume(cache.pos, cache.dir, cache.nav_dir);
         // store the boundary if configured to do so
         // If we don't set it here, it wont be processed by the other
         // actors.
@@ -473,7 +472,7 @@ struct Navigator
               = result.current_volume->layerCandidatesOrdered(nullptr,
                                                               nullptr,
                                                               nav_par,
-                                                              nav_dir,
+                                                              cache.nav_dir,
                                                               true,
                                                               collectSensitive,
                                                               collectMaterial,
@@ -501,7 +500,7 @@ struct Navigator
       }
       // intersect the boundary
       auto boundary_intersect = boundary_surface->intersectionEstimate(
-          cache.pos, direction * cache.dir, true, false);
+          cache.pos, cache.nav_dir * cache.dir, true, false);
       double boundary_distance = boundary_intersect.pathLength;
       // test the next boundary if this one does not work
       if (!boundary_intersect) {

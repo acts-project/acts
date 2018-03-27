@@ -13,14 +13,12 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/standard_abort_conditions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 
 namespace propagation {
-
-  /// Propagation direction, relative to momentum
-  enum Direction : int { backward = -1, forward = 1 };
 
   /// Result status of track parameter propagation
   enum struct Status { SUCCESS, FAILURE, UNSET, IN_PROGRESS, WRONG_DIRECTION };
@@ -110,7 +108,7 @@ namespace propagation {
     {
 
       /// Propagation direction
-      Direction direction = forward;
+      NavigationDirection direction = forward;
 
       /// Maximum number of steps for one propagate() call
       unsigned int max_steps = 1000;
@@ -324,7 +322,7 @@ namespace propagation {
           return_parameter_type;
 
       // Initialize the internal propagation cache
-      cache_type cache(start, options.direction * options.max_step_size);
+      cache_type cache(start, options.direction, options.max_step_size);
       cache.target_surface = &target;
 
       // Type of the full propagation result, including output from actions

@@ -21,7 +21,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::ExtrapolationEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                                         const Acts::Surface*        sf,
-                                        Acts::PropDirection         dir,
+                                        Acts::NavigationDirection   dir,
                                         const Acts::BoundaryCheck& bcheck) const
 {
   EX_MSG_DEBUG(eCell.navigationStep,
@@ -77,7 +77,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
                                           const Acts::Surface*        sf,
-                                          Acts::PropDirection         dir) const
+                                          Acts::NavigationDirection   dir) const
 {
   // initialize the Navigation stream
   // ----------------------------------------------------------------------------------------

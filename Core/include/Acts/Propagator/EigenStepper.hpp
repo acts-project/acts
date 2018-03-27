@@ -67,15 +67,17 @@ public:
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
-    explicit Cache(const T& par,
-                   double   ssize = std::numeric_limits<double>::max())
+    explicit Cache(const T&            par,
+                   NavigationDirection ndir = forward,
+                   double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
+      , nav_dir(ndir)
       , cov_transport(false)
       , accumulated_path(0.)
-      , step_size(ssize)
-      , max_step_size(ssize)
+      , step_size(ndir * ssize)
+      , max_step_size(ndir * ssize)
     {
       // Init the jacobian matrix if needed
       if (par.covariance()) {
@@ -243,6 +245,9 @@ public:
 
     /// Charge-momentum ratio, in natural units
     double qop = 1;
+
+    /// Navigation direction, this is needed for searching
+    NavigationDirection nav_dir;
 
     /// Jacobian from local to the global frame
     ActsMatrixD<7, 5> jac_to_global = ActsMatrixD<7, 5>::Zero();
