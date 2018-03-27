@@ -18,10 +18,10 @@ Acts::SurfaceArray::toVariantData() const
   using namespace std::string_literals;
   variant_map payload;
 
-  throw_assert(m_gridLookup->dimensions() != 0,
+  throw_assert(p_gridLookup->dimensions() != 0,
                "0-dim SurfaceGridLookups cannot currently be serialized");
 
-  payload["surfacegridlookup"] = surfaceGridLookupToVariantData(*m_gridLookup);
+  payload["surfacegridlookup"] = surfaceGridLookupToVariantData(*p_gridLookup);
 
   variant_vector surfaces;
 
@@ -89,7 +89,7 @@ Acts::SurfaceArray::SurfaceArray(const variant_data&                      data_,
                                  std::function<Vector2D(const Vector3D&)> g2l,
                                  std::function<Vector3D(const Vector2D&)> l2g,
                                  std::shared_ptr<const Transform3D> transform)
-  : m_gridLookup(nullptr), m_transform(transform)
+  : p_gridLookup(nullptr), m_transform(transform)
 {
   const variant_map& data = boost::get<variant_map>(data_);
   throw_assert(data.get<std::string>("type") == "SurfaceArray",
@@ -158,60 +158,60 @@ Acts::SurfaceArray::SurfaceArray(const variant_data&                      data_,
   ProtoAxis pAxisB = makePAxis(axistype_b, var_axis_b);
 
   if (axisbdt_a == "closed" && axisbdt_b == "closed") {
-    m_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArray::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
                                 detail::AxisBoundaryType::Closed>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "closed" && axisbdt_b == "bound") {
-    m_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArray::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
                                 detail::AxisBoundaryType::Bound>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "closed" && axisbdt_b == "open") {
-    m_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArray::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
                                 detail::AxisBoundaryType::Open>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "open" && axisbdt_b == "closed") {
-    m_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArray::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Open,
                                 detail::AxisBoundaryType::Closed>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "open" && axisbdt_b == "bound") {
-    m_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArray::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Open,
                                 detail::AxisBoundaryType::Bound>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "open" && axisbdt_b == "open") {
-    m_gridLookup
+    p_gridLookup
         = SurfaceArray::makeSurfaceGridLookup2D<detail::AxisBoundaryType::Open,
                                                 detail::AxisBoundaryType::Open>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "bound" && axisbdt_b == "closed") {
-    m_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArray::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                 detail::AxisBoundaryType::Closed>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "bound" && axisbdt_b == "bound") {
-    m_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArray::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                 detail::AxisBoundaryType::Bound>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "bound" && axisbdt_b == "open") {
-    m_gridLookup
+    p_gridLookup
         = SurfaceArray::makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                                 detail::AxisBoundaryType::Open>(
             g2l, l2g, pAxisA, pAxisB);
   }
 
-  m_gridLookup->fill(surfaces);
+  p_gridLookup->fill(surfaces);
 }
 
 Acts::SurfaceArray::SurfaceArray(
     const variant_data& data_,
     std::function<std::array<double, 1>(const Vector3D&)> g2l,
     std::function<Vector3D(const std::array<double, 1>&)> l2g)
-  : m_gridLookup(nullptr)
+  : p_gridLookup(nullptr)
 {
   const variant_map& data = boost::get<variant_map>(data_);
   throw_assert(data.get<std::string>("type") == "SurfaceArray",
@@ -254,7 +254,7 @@ Acts::SurfaceArray::SurfaceArray(
          var_axis.get<double>("max"),
          var_axis.get<int>("nbins"));
 
-    m_gridLookup
+    p_gridLookup
         = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
   } else if (axistype == "equidistant" && axisbdt == "closed") {
     detail::Axis<detail::AxisType::Equidistant,
@@ -263,7 +263,7 @@ Acts::SurfaceArray::SurfaceArray(
          var_axis.get<double>("max"),
          var_axis.get<int>("nbins"));
 
-    m_gridLookup
+    p_gridLookup
         = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
   } else if (axistype == "equidistant" && axisbdt == "open") {
     detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Open>
@@ -271,7 +271,7 @@ Acts::SurfaceArray::SurfaceArray(
          var_axis.get<double>("max"),
          var_axis.get<int>("nbins"));
 
-    m_gridLookup
+    p_gridLookup
         = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
   } else if (axistype == "variable") {
 
@@ -285,20 +285,20 @@ Acts::SurfaceArray::SurfaceArray(
     if (axisbdt == "bound") {
       detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
           axis(bin_edges);
-      m_gridLookup
+      p_gridLookup
           = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
     } else if (axisbdt == "closed") {
       detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Closed>
           axis(bin_edges);
-      m_gridLookup
+      p_gridLookup
           = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
     } else if (axisbdt == "open") {
       detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Open>
           axis(bin_edges);
-      m_gridLookup
+      p_gridLookup
           = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
     }
   }
 
-  m_gridLookup->fill(surfaces);
+  p_gridLookup->fill(surfaces);
 }
