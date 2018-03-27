@@ -105,6 +105,13 @@ public:
       return dir;
     }
 
+    /// Actual momentum accessor
+    Vector3D
+    momentum() const
+    {
+      return (1./qop)*dir;
+    }
+
     /// Method for on-demand transport of the covariance
     /// to a new curvilinear frame at current  position,
     /// or direction of the cache

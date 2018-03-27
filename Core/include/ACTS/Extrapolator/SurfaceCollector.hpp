@@ -32,8 +32,8 @@ struct SurfaceCollector
   Selector this_selector;
 
   /// Simple result struct to be returned
-  /// It mainly acts as an interal state cache which is
-  /// created for every propagation/extrapolation step
+  /// It has all the SurfaceHit objects that 
+  /// are collected (and thus have been selected)
   struct this_result
   {
     std::vector<const SurfaceHit> collected = {};
