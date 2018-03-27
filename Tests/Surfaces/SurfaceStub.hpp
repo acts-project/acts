@@ -121,6 +121,7 @@ public:
     return true;
   }
 
+  /// Conform to base class signature
   virtual variant_data
   toVariantData() const override
   {

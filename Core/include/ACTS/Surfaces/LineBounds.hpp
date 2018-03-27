@@ -37,6 +37,9 @@ public:
   /// @param halez is the half length in z, defualt = 0.
   LineBounds(double radius = 0., double halez = 0.);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   LineBounds(const variant_data& data);
 
   virtual ~LineBounds();
@@ -84,6 +87,8 @@ public:
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   virtual variant_data
   toVariantData() const override;
 

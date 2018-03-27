@@ -50,7 +50,7 @@ Acts::SurfaceArray::surfaceGridLookupToVariantData(
   for (const auto& axis : sgl.getAxes()) {
     variant_map ax_pl;
 
-  ax_pl["axistype"] = axis->isEquidistant() ? "equidistant"s : "variable"s;
+    ax_pl["axistype"] = axis->isEquidistant() ? "equidistant"s : "variable"s;
 
     if (axis->isEquidistant()) {
       ax_pl["min"]   = axis->getMin();
@@ -210,8 +210,9 @@ Acts::SurfaceArray::SurfaceArray(const variant_data&                      data_,
 Acts::SurfaceArray::SurfaceArray(
     const variant_data& data_,
     std::function<std::array<double, 1>(const Vector3D&)> g2l,
-    std::function<Vector3D(const std::array<double, 1>&)> l2g)
-  : p_gridLookup(nullptr)
+    std::function<Vector3D(const std::array<double, 1>&)> l2g,
+    std::shared_ptr<const Transform3D> transform)
+  : p_gridLookup(nullptr), m_transform(transform)
 {
   const variant_map& data = boost::get<variant_map>(data_);
   throw_assert(data.get<std::string>("type") == "SurfaceArray",
@@ -254,8 +255,8 @@ Acts::SurfaceArray::SurfaceArray(
          var_axis.get<double>("max"),
          var_axis.get<int>("nbins"));
 
-    p_gridLookup
-        = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
+    p_gridLookup = std::make_unique<SurfaceGridLookup<decltype(axis)>>(
+        g2l, l2g, std::make_tuple(axis));
   } else if (axistype == "equidistant" && axisbdt == "closed") {
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>
@@ -263,16 +264,16 @@ Acts::SurfaceArray::SurfaceArray(
          var_axis.get<double>("max"),
          var_axis.get<int>("nbins"));
 
-    p_gridLookup
-        = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
+    p_gridLookup = std::make_unique<SurfaceGridLookup<decltype(axis)>>(
+        g2l, l2g, std::make_tuple(axis));
   } else if (axistype == "equidistant" && axisbdt == "open") {
     detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Open>
     axis(var_axis.get<double>("min"),
          var_axis.get<double>("max"),
          var_axis.get<int>("nbins"));
 
-    p_gridLookup
-        = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
+    p_gridLookup = std::make_unique<SurfaceGridLookup<decltype(axis)>>(
+        g2l, l2g, std::make_tuple(axis));
   } else if (axistype == "variable") {
 
     std::vector<double>   bin_edges;
@@ -285,18 +286,18 @@ Acts::SurfaceArray::SurfaceArray(
     if (axisbdt == "bound") {
       detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
           axis(bin_edges);
-      p_gridLookup
-          = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
+      p_gridLookup = std::make_unique<SurfaceGridLookup<decltype(axis)>>(
+          g2l, l2g, std::make_tuple(axis));
     } else if (axisbdt == "closed") {
       detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Closed>
           axis(bin_edges);
-      p_gridLookup
-          = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
+      p_gridLookup = std::make_unique<SurfaceGridLookup<decltype(axis)>>(
+          g2l, l2g, std::make_tuple(axis));
     } else if (axisbdt == "open") {
       detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Open>
           axis(bin_edges);
-      p_gridLookup
-          = std::make_unique<SurfaceGridLookup<decltype(axis)>>(g2l, l2g, std::make_tuple(axis));
+      p_gridLookup = std::make_unique<SurfaceGridLookup<decltype(axis)>>(
+          g2l, l2g, std::make_tuple(axis));
     }
   }
 

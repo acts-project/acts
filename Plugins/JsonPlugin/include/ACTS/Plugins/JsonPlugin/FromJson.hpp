@@ -14,6 +14,8 @@
 
 namespace Acts {
 
+/// Method to turn an instance of @c nlohmann::json into @c variant_data
+/// which can then be processed further.
 variant_data
 from_json(const nlohmann::json& node);
 

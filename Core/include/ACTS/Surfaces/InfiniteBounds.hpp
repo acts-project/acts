@@ -76,6 +76,8 @@ public:
     return os;
   }
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   variant_data
   toVariantData() const override;
 };

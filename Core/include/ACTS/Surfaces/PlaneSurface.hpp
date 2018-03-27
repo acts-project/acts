@@ -74,6 +74,9 @@ public:
   PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   PlaneSurface(const variant_data& data);
 
   virtual ~PlaneSurface();
@@ -207,6 +210,8 @@ public:
   virtual std::string
   name() const override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   virtual variant_data
   toVariantData() const override;
 

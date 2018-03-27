@@ -91,6 +91,9 @@ public:
   /// cylinder
   CylinderSurface(const CylinderSurface& other, const Transform3D& htrans);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   CylinderSurface(const variant_data& data);
 
   /// Destructor
@@ -240,6 +243,8 @@ public:
   virtual std::string
   name() const override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   virtual variant_data
   toVariantData() const override;
 

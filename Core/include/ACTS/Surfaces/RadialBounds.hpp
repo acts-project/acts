@@ -62,6 +62,9 @@ public:
   /// coverage)
   RadialBounds(double minrad, double maxrad, double avephi, double hphisec);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   RadialBounds(const variant_data& data);
 
   virtual ~RadialBounds();
@@ -116,6 +119,8 @@ public:
   double
   halfPhiSector() const;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   variant_data
   toVariantData() const override;
 

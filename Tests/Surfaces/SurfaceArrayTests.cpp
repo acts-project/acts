@@ -291,10 +291,12 @@ namespace Test {
                       R * std::sin(loc[0] - angleShift),
                       loc[1]);
     };
-    auto sl = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)>>(
-        transform,
-        itransform,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    auto sl
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
+                                                           decltype(zAxis)>>(
+            transform,
+            itransform,
+            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     sl->fill(brl);
     SurfaceArray sa(std::move(sl), brl);
     sa.dump(std::cout);
@@ -353,8 +355,9 @@ namespace Test {
     auto itransform = [](const std::array<double, 1>& loc) {
       return Vector3D(0, 0, loc[0]);
     };
-    auto sl = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(zAxis)>>(
-        transform, itransform, std::make_tuple(zAxis));
+    auto sl
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(zAxis)>>(
+            transform, itransform, std::make_tuple(zAxis));
 
     // same thing in 1D
     SrfVec line = straightLineSurfaces();

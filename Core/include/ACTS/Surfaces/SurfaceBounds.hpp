@@ -98,6 +98,8 @@ public:
   virtual std::ostream&
   dump(std::ostream& os) const = 0;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   virtual variant_data
   toVariantData() const = 0;
 };

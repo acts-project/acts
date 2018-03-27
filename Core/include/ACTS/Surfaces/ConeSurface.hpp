@@ -77,6 +77,9 @@ public:
   /// @param htrans is the additional transfrom applied after copying
   ConeSurface(const ConeSurface& other, const Transform3D& htrans);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   ConeSurface(const variant_data& data);
 
   virtual ~ConeSurface();
@@ -224,6 +227,8 @@ public:
   virtual std::string
   name() const override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   virtual variant_data
   toVariantData() const override;
 

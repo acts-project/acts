@@ -17,9 +17,9 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/IAxis.hpp"
 #include "ACTS/Utilities/InstanceFactory.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
-#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -491,6 +491,7 @@ public:
   /// its own
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
+  /// @param transform Optional additional transform for this SurfaceArray
   SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
                SurfaceVector                       surfaces,
                std::shared_ptr<const Transform3D>  transform = nullptr)
@@ -504,6 +505,7 @@ public:
   /// @param gridLookup The grid storage. Is static casted to ISurfaceGridLookup
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
+  /// @param transform Optional additional transform for this SurfaceArray
   template <class SGL>
   SurfaceArray(std::unique_ptr<SGL>               gridLookup,
                SurfaceVector                      surfaces,
@@ -518,19 +520,28 @@ public:
   /// SingleElementLookup
   /// @param srf The one and only surface
   SurfaceArray(const Surface* srf)
-    : p_gridLookup(static_cast<ISurfaceGridLookup*>(new SingleElementLookup(srf)))
+    : p_gridLookup(
+          static_cast<ISurfaceGridLookup*>(new SingleElementLookup(srf)))
     , m_surfaces({srf})
   {
   }
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  /// @param g2l Callable that converts from global to local
+  /// @param l2g Callable that converts from local to global
   SurfaceArray(const variant_data&                      data_,
                std::function<Vector2D(const Vector3D&)> g2l,
                std::function<Vector3D(const Vector2D&)> l2g,
                std::shared_ptr<const Transform3D>       transform = nullptr);
 
-  SurfaceArray(const variant_data&                                   data_,
+  // This is here so that overload resolution can figure out
+  // we need std::array<double, 1> as local parameters here.
+  SurfaceArray(const variant_data& data_,
                std::function<std::array<double, 1>(const Vector3D&)> g2l,
-               std::function<Vector3D(const std::array<double, 1>&)> l2g);
+               std::function<Vector3D(const std::array<double, 1>&)> l2g,
+               std::shared_ptr<const Transform3D> transform = nullptr);
 
   /// @brief Get all surfaces in bin given by position.
   /// @param pos the lookup position

@@ -54,6 +54,9 @@ public:
   /// @param transf is the transformed applied after copying
   PerigeeSurface(const PerigeeSurface& other, const Transform3D& transf);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   PerigeeSurface(const variant_data& data);
 
   virtual ~PerigeeSurface();
@@ -84,6 +87,8 @@ public:
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   virtual variant_data
   toVariantData() const override;
 };

@@ -40,6 +40,8 @@ public:
   virtual const RectangleBounds&
   boundingBox() const = 0;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   virtual variant_data
   toVariantData() const = 0;
 };

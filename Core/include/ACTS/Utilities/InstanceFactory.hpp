@@ -27,15 +27,21 @@
 
 namespace Acts {
 
-using SurfaceBoundsPtr = std::shared_ptr<const SurfaceBounds>;
-using PlanarBoundsPtr  = std::shared_ptr<const PlanarBounds>;
-using SurfaceBoundsFactory
-    = std::function<SurfaceBoundsPtr(const variant_data&)>;
-using SurfaceFactory = std::function<const Surface*(const variant_data&)>;
-
+/// Class that creates instances for certain types of objects
+/// from @c variant_data input. This is used to avoid duplicating
+/// this type of code anywhere we construct from @c variant_data.
 class InstanceFactory
 {
+  // internal typedefs
+  using SurfaceBoundsPtr = std::shared_ptr<const SurfaceBounds>;
+  using PlanarBoundsPtr  = std::shared_ptr<const PlanarBounds>;
+  using SurfaceBoundsFactory
+      = std::function<SurfaceBoundsPtr(const variant_data&)>;
+  using SurfaceFactory = std::function<const Surface*(const variant_data&)>;
+
 public:
+  /// Default constructor. Sets up a map to lambdas which return
+  /// pointers to the newly constructor instances.
   InstanceFactory()
   {
     // set up map to store factories
@@ -68,6 +74,9 @@ public:
         = [](auto const& data) { return new PlaneSurface(data); };
   }
 
+  /// Method to produce planar bounds type objects
+  /// @param cname The class name
+  /// @param data The @c variant_data to construct from
   PlanarBoundsPtr
   planarBounds(const std::string& cname, const variant_data& data) const
   {
@@ -79,6 +88,9 @@ public:
     return plnBnd_ptr;
   }
 
+  /// Method to produce disc bounds type objects
+  /// @param cname The class name
+  /// @param data The @c variant_data to construct from
   std::shared_ptr<const DiscBounds>
   discBounds(const std::string& cname, const variant_data& data) const
   {
@@ -90,6 +102,9 @@ public:
     return discBnd_ptr;
   }
 
+  /// Method to produce surface bounds type objects
+  /// @param cname The class name
+  /// @param data The @c variant_data to construct from
   SurfaceBoundsPtr
   surfaceBounds(const std::string& cname, const variant_data& data) const
   {
@@ -98,6 +113,9 @@ public:
     return m_surfaceBounds.at(cname)(data);
   }
 
+  /// Method to produce surface objects
+  /// @param cname The class name
+  /// @param data The @c variant_data to construct from
   const Surface*
   surface(const std::string& cname, const variant_data& data) const
   {

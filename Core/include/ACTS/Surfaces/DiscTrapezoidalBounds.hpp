@@ -62,6 +62,9 @@ public:
                         double avephi = M_PI_2,
                         double stereo = 0.);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   DiscTrapezoidalBounds(const variant_data& data);
 
   virtual ~DiscTrapezoidalBounds();
@@ -130,6 +133,8 @@ public:
   double
   halflengthY() const;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   variant_data
   toVariantData() const override;
 

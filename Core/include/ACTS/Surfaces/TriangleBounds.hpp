@@ -51,6 +51,9 @@ public:
   /// @param vertices is the vector of vertices
   TriangleBounds(const std::array<Vector2D, 3>& vertices);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   TriangleBounds(const variant_data& data);
 
   virtual ~TriangleBounds();
@@ -95,6 +98,8 @@ public:
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   variant_data
   toVariantData() const override;
 

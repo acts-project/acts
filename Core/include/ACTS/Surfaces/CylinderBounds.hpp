@@ -78,6 +78,9 @@ public:
                  double halfPhi,
                  double halfZ);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
   CylinderBounds(const variant_data& data);
 
   virtual ~CylinderBounds();
@@ -138,6 +141,8 @@ public:
   double
   halflengthZ() const;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
   variant_data
   toVariantData() const override;
 

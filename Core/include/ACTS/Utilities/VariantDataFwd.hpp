@@ -22,6 +22,8 @@ namespace Acts {
 class variant_map;
 class variant_vector;
 
+/// Forward declaration for the variant data structure
+/// using boost's own forward variant.
 using variant_data = boost::variant<int,
                                     double,
                                     std::string,
