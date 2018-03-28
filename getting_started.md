@@ -39,7 +39,7 @@ in the repository that can be used to setup this release, and a few others, on
 lxplus machines at CERN (see [below](#installation)).
 
 
-## <a name="installation">Installation</a>
+## <a name="installation">Installation and quick start</a>
 
 The ACTS repository is hosted on the GitLab instance at CERN. In order to aquire the latest
 version from the git repository you can simply clone:
@@ -48,8 +48,14 @@ version from the git repository you can simply clone:
 git clone https://gitlab.cern.ch/acts/acts-core.git <ACTS_DIR>
 ```
 
-Subsequently, you can continue with [building ACTS](#building-acts).
+You can then `cd <ACTS_DIR>` continue building ACTS:
 
+```bash
+source CI/setup_lcg92.sh
+mkdir build && cd build
+cmake ..
+cmake --build . -- install
+```
 
 
 ## <a name="cmake">CMake build system</a>
@@ -93,25 +99,29 @@ dependencies:
 source <ACTS_DIR>/CI/setup_lcgXYZ.sh
 ```
 
-where `XYZ` can currently be one of **88**, **91** or **92**. These are the
-releases the CI tests against, so they are sure to be compatible. **You can
-build ACTS with any of these releases**. Additionally, there is a script called
-`setup_llvm40.sh` which will make the `clang` compiler available on top of one
-of the LCG releases.
+where `XYZ` is the version number of the LCG release. There are multiple setup
+scripts for different LCG releases, which corresponds to the releases the CI
+tests against. The releases which can be set up using these scripts are therefore
+sure to be compatible. **You can build ACTS with any of these releases**. 
+Additionally, there is a script called `setup_llvm40.sh` which will make the `clang` compiler available on top of one
+of the LCG releases. This configuration is also tested by the CI.
 
 Using one of the scripts, you can use the following commands to build ACTS with
 all plugins using the same dependency versions as in the continous integration
 system.
 
 ```bash
-source CI/setup_lcg91.sh # example, you can use any of the provided scripts.
+source CI/setup_lcg92.sh # example, you can use any of the provided scripts.
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
       -DACTS_BUILD_DD4HEP_PLUGIN=ON \
-      -DACTS_BUILD_MATERIAL_PLUGIN=on \
+      -DACTS_BUILD_MATERIAL_PLUGIN=ON \
       -DACTS_BUILD_TGEO_PLUGIN=ON ..
 make install
 ```
+
+In this example the DD4hep, Material and TGeo plugins. The install prefix is
+set to `<path you want>`.
 
 ### <a name="build-local">Building ACTS on your local machine</a>
 
