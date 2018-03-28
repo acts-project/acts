@@ -31,32 +31,34 @@ components:
 *   [graphviz](http://www.graphviz.org) (>= 2.28.00) for the documentation
 *   [ROOT](https://root.cern.ch) (>= 6.10.00) for the TGeo plugin
 
-Compatible versions of all dependencies are provided by the [LCG91
-Release](http://lcginfo.cern.ch/release/91). This release is also
-used in the continous integration system to test the software. A setup script
-is provided that can be used to setup the environment on lxplus machines at
-CERN
+Compatible versions of all dependencies are provided by **LCG releases**.
+The current recommended release for building ACTS is the
+[LCG91 Release](http://lcginfo.cern.ch/release/91). This release is also used in the
+continous integration (CI) system to test the software. Setup scripts are provided
+in the repository that can be used to setup this release, and a few others, on
+lxplus machines at CERN (see [below](#installation)).
 
-```bash
-source CI/setup_lcg91.sh
-```
 
 ## <a name="installation">Installation</a>
 
-The ACTS repository is hosted on the GitLab instance at CERN. For the time being
-you need to have a full CERN account in order to access the repository. We are
-working on a solution for non-CERN users. In order to aquire the latest version
-from the git repository you can follow the instructions below.
+The ACTS repository is hosted on the GitLab instance at CERN. In order to aquire the latest
+version from the git repository you can simply clone:
 
 ```bash
 git clone https://gitlab.cern.ch/acts/acts-core.git <ACTS_DIR>
 ```
 
+Subsequently, you can continue with [building ACTS](#building-acts).
+
+
+
 ## <a name="cmake">CMake build system</a>
 
-CMake is used as build system for compiling and installing ACTS.
-For a complete list of cmake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html) and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
-Important options relevant for the ACTS project are given below. They are set by adding '-D\<OPTION\>=\<VALUE\>' to the cmake command.
+CMake is used as build system for compiling and installing ACTS.  For a
+complete list of CMake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html) 
+and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
+Important options relevant for the ACTS project are given below. They are set
+by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 
 | option                       | default | description                                             |
 |------------------------------|---------|---------------------------------------------------------|
@@ -74,14 +76,35 @@ Important options relevant for the ACTS project are given below. They are set by
 | CMAKE_BUILD_TYPE             |         | build type (e.g. Debug, Release) affects compiler flags |
 | DD4hep_DIR                   |         | path to the DD4hep installation                         |
 
-## <a name="build-lxplus">Build ACTS on lxplus</a>
+## <a name="building-acts">Building ACTS</a>
 
-On lxplus the dependencies are provided by a LCG release. You can use the
-following commands to build ACTS with all plugins using the same dependency
-versions as in the continous integration system.
+### <a name="build-lxplus">Building ACTS on lxplus</a>
+
+The first step to build ACTS is to acquire supported versions of the
+dependencies.  Which dependencies are required depends on the plugins you
+enable, as mentioned above.
+
+If you are in an *lxplus-like* environment (i.e. `SLC6` or `CC7`, with
+`cvmfs`), you can use the setup scripts located in `<ACTS_DIR>/CI` to get the
+dependencies:
+
 
 ```bash
-source CI/setup_lcg89.sh
+source <ACTS_DIR>/CI/setup_lcgXYZ.sh
+```
+
+where `XYZ` can currently be one of **88**, **91** or **92**. These are the
+releases the CI tests against, so they are sure to be compatible. **You can
+build ACTS with any of these releases**. Additionally, there is a script called
+`setup_llvm40.sh` which will make the `clang` compiler available on top of one
+of the LCG releases.
+
+Using one of the scripts, you can use the following commands to build ACTS with
+all plugins using the same dependency versions as in the continous integration
+system.
+
+```bash
+source CI/setup_lcg91.sh # example, you can use any of the provided scripts.
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
       -DACTS_BUILD_DD4HEP_PLUGIN=ON \
@@ -90,7 +113,7 @@ cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
 make install
 ```
 
-## <a name="build-local">Build ACTS on your local machine</a>
+### <a name="build-local">Building ACTS on your local machine</a>
 
 Building and running ACTS on your local machine is not offically supported.
 However, if you have the necessary prerequisites installed it should be
@@ -99,13 +122,15 @@ recent Linux distributions and macOS to build and develop ACTS.
 
 # <a name="using-acts">Using ACTS in your own cmake project</a>
 
-When using ACTS in your own cmake-based project, you need to include the following lines in your `CMakeLists.txt` file:
+When using ACTS in your own cmake-based project, you need to include the
+following lines in your `CMakeLists.txt` file:
 
 ```bash
 find_package (ACTS COMPONENTS comp1 comp2 ...)
 ```
 
-where `compX` are the required components from the ACTS project. See the `cmake` output for more information about which components are available.
+where `compX` are the required components from the ACTS project. See the
+`cmake` output for more information about which components are available.
 
 # <a name="documentation">Documentation</a>
 
