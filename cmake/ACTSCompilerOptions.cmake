@@ -27,10 +27,3 @@ set(CMAKE_CXX_STANDARD_REQUIRED TRUE)
 # silence warning about missing RPATH on Mac OSX
 set (CMAKE_MACOSX_RPATH 1)
 
-# Use CCache if available
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-  message(STATUS "Use ccache")
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache)
-endif(CCACHE_FOUND)
