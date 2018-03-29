@@ -499,6 +499,7 @@ public:
   /// @param srf The one and only surface
   SurfaceArray(const Surface* srf)
     : p_gridLookup(std::make_unique<SingleElementLookup>(srf))
+    , m_surfaces({srf})
   {
   }
 

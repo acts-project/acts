@@ -223,6 +223,23 @@ namespace Test {
     }
   }
 
+  BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement)
+  {
+    double w = 3, h = 4;
+    auto   bounds = std::make_shared<const RectangleBounds>(w, h);
+    auto   transptr
+        = std::make_shared<const Transform3D>(Transform3D::Identity());
+    auto srf = std::make_unique<const PlaneSurface>(transptr, bounds);
+
+    SurfaceArray sa(srf.get());
+
+    auto binContent = sa.at(Vector3D(42, 42, 42));
+    BOOST_TEST(binContent.size() == 1);
+    BOOST_TEST(binContent.at(0) == srf.get());
+    BOOST_TEST(sa.surfaces().size() == 1);
+    BOOST_TEST(sa.surfaces().at(0) == srf.get());
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 }  // end of namespace Test
 
