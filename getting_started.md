@@ -51,7 +51,7 @@ git clone https://gitlab.cern.ch/acts/acts-core.git <ACTS_DIR>
 You can then `cd <ACTS_DIR>` continue building ACTS:
 
 ```bash
-source CI/setup_lcg92.sh
+source CI/setup_lcg91.sh
 mkdir build && cd build
 cmake ..
 cmake --build . -- install
@@ -111,13 +111,13 @@ all plugins using the same dependency versions as in the continous integration
 system.
 
 ```bash
-source CI/setup_lcg92.sh # example, you can use any of the provided scripts.
+source CI/setup_lcg91.sh # example, you can use any of the provided scripts.
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
       -DACTS_BUILD_DD4HEP_PLUGIN=ON \
       -DACTS_BUILD_MATERIAL_PLUGIN=ON \
       -DACTS_BUILD_TGEO_PLUGIN=ON ..
-make install
+cmake --build . -- install
 ```
 
 In this example the DD4hep, Material and TGeo plugins. The install prefix is
