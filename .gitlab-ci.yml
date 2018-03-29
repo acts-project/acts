@@ -236,7 +236,7 @@ doc:
     paths:
       - build/doc/html
 
-website:
+doc_deploy:
   stage: deploy
   dependencies:
     - doc
@@ -246,6 +246,14 @@ website:
     - CI/deploy_tag . build/doc/html "acts-developers@cern.ch acts-users@cern.ch"
   only:
     - tags
+
+website_deploy:
+  stage: deploy
+  dependencies: []
+  script:
+    - curl --request POST --form "token=$CI_JOB_TOKEN" --form ref=master https://gitlab.cern.ch/api/v4/projects/36428/trigger/pipeline
+  only:
+    - master
 
 coverage_deploy:
   stage: deploy
@@ -259,4 +267,5 @@ coverage_deploy:
     - kdestroy
   only:
     - master
+
 
