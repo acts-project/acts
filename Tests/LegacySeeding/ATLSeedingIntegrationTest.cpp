@@ -90,4 +90,3 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
     delete sp;
   }
 }
-
