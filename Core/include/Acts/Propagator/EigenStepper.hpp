@@ -7,12 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <cmath>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Propagator/detail/constrained_step.hpp"
 
 namespace Acts {
 
@@ -58,6 +60,8 @@ private:
   };
 
 public:
+  typedef detail::constrained_step cstep;
+
   /// Cache for track parameter propagation
   ///
   struct Cache
@@ -77,7 +81,6 @@ public:
       , cov_transport(false)
       , accumulated_path(0.)
       , step_size(ndir * ssize)
-      , max_step_size(ndir * ssize)
     {
       // Init the jacobian matrix if needed
       if (par.covariance()) {
@@ -280,10 +283,7 @@ public:
     double accumulated_path = 0.;
 
     /// adaptive step size of the runge-kutta integration
-    double step_size = std::numeric_limits<double>::max();
-
-    /// maximal step size of the runge-kutta integration
-    double max_step_size = std::numeric_limits<double>::max();
+    cstep step_size = std::numeric_limits<double>::max();
 
     /// Navigation cache: the start surface
     const Surface* start_surface = nullptr;
@@ -293,6 +293,15 @@ public:
 
     /// Navigation cache: the target surface
     const Surface* target_surface = nullptr;
+
+    /// Debug output
+    /// the string where things are stored (optionally)
+    std::string debug_string = "";
+    /// buffer & formatting for consistent output
+    size_t debug_pfx_width = 30;
+    size_t debug_msg_width = 50;
+    /// flush indication set by actors
+    bool debug_flush = false;
   };
 
   /// Always use the same propagation cache type, independently of the initial
@@ -429,8 +438,8 @@ public:
     // @todo remove magic numbers and implement better step estimation
     double error_estimate = tryRungeKuttaStep(cache.step_size);
     while (error_estimate > 0.0002) {
-      cache.step_size *= 0.5;
-      error_estimate = tryRungeKuttaStep(cache.step_size);
+      cache.step_size = 0.5 * cache.step_size;
+      error_estimate  = tryRungeKuttaStep(cache.step_size);
     }
 
     // use the adjusted step size

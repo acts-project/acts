@@ -8,11 +8,13 @@
 
 #pragma once
 #include <cmath>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Propagator/detail/constrained_step.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
@@ -22,6 +24,8 @@ class AtlasStepper
 {
 
 public:
+  typedef detail::constrained_step cstep;
+
   struct Cache
   {
     // optimisation that init is not called twice
@@ -52,10 +56,7 @@ public:
     double accumulated_path = 0.;
 
     // adaptive step size of the runge-kutta integration
-    double step_size = std::numeric_limits<double>::max();
-
-    // maximal step size of the runge-kutta integration
-    double max_step_size = std::numeric_limits<double>::max();
+    cstep step_size = std::numeric_limits<double>::max();
 
     /// Navigation cache: the start surface
     const Surface* start_surface = nullptr;
@@ -65,6 +66,15 @@ public:
 
     /// Navigation cache: the target surface
     const Surface* target_surface = nullptr;
+
+    /// Debug output
+    /// the string where things are stored (optionally)
+    std::string debug_string = "";
+    /// buffer & formatting for consistent output
+    size_t debug_pfx_width = 30;
+    size_t debug_msg_width = 50;
+    /// flush indication set by actors
+    bool debug_flush = false;
 
     Vector3D
     position() const
@@ -94,7 +104,6 @@ public:
       , field(0., 0., 0.)
       , covariance(nullptr)
       , step_size(ssize)
-      , max_step_size(ssize)
     {
       update(pars);
     }
@@ -693,8 +702,8 @@ public:
   {
 
     // we use h for keeping the nominclature with the original atlas code
-    double& h   = cache.step_size;
-    bool    Jac = cache.useJacobian;
+    double h   = cache.step_size;
+    bool   Jac = cache.useJacobian;
 
     double* R  = &(cache.pVector[0]);  // Coordinates
     double* A  = &(cache.pVector[3]);  // Directions
@@ -778,6 +787,7 @@ public:
       }
 
       //      if (EST < dltm) h *= 2.;
+      cache.step_size = h;
 
       // Parameters calculation
       //

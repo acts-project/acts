@@ -122,6 +122,9 @@ namespace propagation {
       /// Absolute maximum path length
       double max_path_length = std::numeric_limits<double>::max();
 
+      /// Debugging option
+      bool debug = false;
+
       /// List of actions
       Actions action_list;
 
@@ -217,6 +220,9 @@ namespace propagation {
           break;
         }
       }
+      // Post-stepping call to the action list
+      options.action_list(cache, result);
+
       return Status::IN_PROGRESS;
     }
 
@@ -260,8 +266,7 @@ namespace propagation {
       result_type result(Status::IN_PROGRESS);
 
       // Initialize the internal propagation cache
-      cache_type cache(start);
-      cache.step_size = options.direction * options.max_step_size;
+      cache_type cache(start, options.direction, options.max_step_size);
 
       // Internal Abort list
       AbortList<path_limit_reached> internal_aborters;
@@ -271,6 +276,7 @@ namespace propagation {
       path_limit_abort.signed_path_limit
           = std::abs(options.max_path_length) * options.direction;
       path_limit_abort.tolerance = options.target_tolerance;
+      path_limit_abort.debug     = options.debug;
 
       // Perform the actual propagation & check it's outcome
       if (propagate_(result, cache, options, internal_aborters)
@@ -340,16 +346,18 @@ namespace propagation {
       // Internal Abort list
       AbortList<target_reached, path_limit_reached> internal_aborters;
       // configure the aborters
-      auto& at_target_abort = internal_aborters.template get<target_reached>();
-      at_target_abort.surface   = &target;
-      at_target_abort.direction = options.direction;
-      at_target_abort.tolerance = options.target_tolerance;
+      auto& target_abort     = internal_aborters.template get<target_reached>();
+      target_abort.surface   = &target;
+      target_abort.direction = options.direction;
+      target_abort.tolerance = options.target_tolerance;
+      target_abort.debug     = options.debug;
 
       auto& path_limit_abort
           = internal_aborters.template get<path_limit_reached>();
       path_limit_abort.signed_path_limit
           = std::abs(options.max_path_length) * options.direction;
       path_limit_abort.tolerance = options.target_tolerance;
+      path_limit_abort.debug     = options.debug;
 
       // Perform the actual propagation
       if (propagate_(result, cache, options, internal_aborters)

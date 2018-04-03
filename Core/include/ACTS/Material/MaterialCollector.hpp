@@ -1,7 +1,6 @@
-
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 ACTS project team
+// Copyright (C) 2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,6 +14,19 @@
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
+
+#ifndef MATCOLLECTOR_DEBUG_OUTPUTS
+#define MATCOLLECTOR_DEBUG_OUTPUTS
+#define MATCLOG(cache, result, message)                                        \
+  if (debug) {                                                                 \
+    std::stringstream dstream;                                                 \
+    dstream << "   " << std::setw(cache.debug_pfx_width);                      \
+    dstream << "material collection"                                           \
+            << " | ";                                                          \
+    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
+    cache.debug_string += dstream.str();                                       \
+  }
+#endif
 
 namespace Acts {
 
@@ -36,6 +48,9 @@ struct MaterialCollector
   /// per surface is collected, otherwise only the total
   /// pathlength in X0 or L0 are recorded
   bool detailedCollection = false;
+
+  /// Screen output steering
+  bool debug = false;
 
   /// Simple result struct to be returned
   /// It collects the indivdual
@@ -63,17 +78,27 @@ struct MaterialCollector
   {
     // a current surface has been already assigned by the navigator
     if (cache.current_surface && cache.current_surface->associatedMaterial()) {
+
+      MATCLOG(cache,
+              result,
+              "On surface " << cache.current_surface->geoID().toString());
+
       // get the material propertices and only continue
       const MaterialProperties* mProperties
           = cache.current_surface->associatedMaterial()->material(
               cache.position());
       if (mProperties) {
+        MATCLOG(cache, result, "Material properties found for this surface.");
         // the path correction from the surface intersection
         double pCorrection = cache.current_surface->pathCorrection(
             cache.position(), cache.direction());
         // the full material
-        materialInX0 += pCorrection * thicknessInX0();
-        materialInL0 += pCorrection * thicknessInL0();
+        result.materialInX0 += pCorrection * mProperties->thicknessInX0();
+        result.materialInL0 += pCorrection * mProperties->thicknessInL0();
+
+        MATCLOG(cache, result, "t/X0 increased to " << result.materialInX0);
+        MATCLOG(cache, result, "t/L0 increased to " << result.materialInL0);
+
         // if configured, record the individual material hits
         if (detailedCollection) {
           // create for recording

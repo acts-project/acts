@@ -8,6 +8,21 @@
 
 #pragma once
 #include <limits>
+#include "ACTS/Propagator/detail/constrained_step.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+
+#ifndef ABORTER_DEBUG_OUTPUTS
+#define ABORTER_DEBUG_OUTPUTS
+#define TARGETLOG(cache, status, message)                                      \
+  if (debug) {                                                                 \
+    std::stringstream dstream;                                                 \
+    dstream << " " << status << " " << std::setw(cache.debug_pfx_width);       \
+    dstream << " target aborter "                                              \
+            << " | ";                                                          \
+    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
+    cache.debug_string += dstream.str();                                       \
+  }
+#endif
 
 namespace Acts {
 
@@ -22,6 +37,9 @@ namespace detail {
 
     /// the tolerance used to defined "reached"
     double tolerance = 0.;
+
+    /// write out debug information
+    double debug = false;
 
     /// constructor
     ///
@@ -50,12 +68,19 @@ namespace detail {
     operator()(cache_t& cache) const
     {
       // Check if the maximum allowed step size has to be updated
-      if (std::abs(cache.step_size)
-          > std::abs(signed_path_limit - cache.accumulated_path))
-        cache.step_size = signed_path_limit - cache.accumulated_path;
-
+      double diff_to_limit = signed_path_limit - cache.accumulated_path;
+      cache.step_size.update(diff_to_limit, constrained_step::aborter);
+      bool limit_reached = (std::abs(diff_to_limit) < tolerance);
+      if (limit_reached) {
+        TARGETLOG(cache, "x", "Path limit reached.");
+        // reaching the target oath length triggers the output flush
+        cache.debug_flush = true;
+      } else
+        TARGETLOG(cache,
+                  "o",
+                  "Target step_size (path limit) updated to " << diff_to_limit);
       // path limit check
-      return (std::abs(signed_path_limit - cache.accumulated_path) < tolerance);
+      return limit_reached;
     }
   };
 
@@ -64,14 +89,15 @@ namespace detail {
   template <typename Surface>
   struct surface_reached
   {
-
     /// the plain pointer to the surface
     /// - safe as the condition lives shorter than the surface
     const Surface* surface = nullptr;
     /// the direction
-    int direction = 1;
+    NavigationDirection direction = forward;
     /// the tolerance to be defined on surface
     double tolerance = 0.;
+    /// output debug
+    bool debug = false;
 
     /// constructor
     ///
@@ -111,10 +137,21 @@ namespace detail {
                                        false)
                 .pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      if (std::abs(cache.step_size) > std::abs(distance))
-        cache.step_size = distance;
+      cache.step_size.update(cache.nav_dir * distance,
+                             constrained_step::aborter);
       // return true if you fall below tolerance
-      return (std::abs(distance) <= tolerance);
+      bool targed_reached = (std::abs(distance) <= tolerance);
+      if (targed_reached) {
+        TARGETLOG(cache, "x", "Target surface reached.");
+        // reaching the target triggers the debug output flush (if configured)
+        cache.debug_flush = true;
+      } else
+        TARGETLOG(cache,
+                  "o",
+                  "Target step_size (surface) updated to "
+                      << cache.nav_dir * distance);
+      // path limit check
+      return targed_reached;
     }
   };
 

@@ -176,6 +176,7 @@ private:
   Type     m_type;
 
   // To acces the m_type
+  friend class CylinderBounds;
   friend class RectangleBounds;
   // To be able to use `transformed`
   friend class CylinderBounds;

@@ -13,6 +13,7 @@
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
+#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Surfaces/PlaneSurface.hpp"
@@ -134,6 +135,11 @@ namespace Test {
     // Layer material properties - thickness, X0, L0, A, Z, Rho
     MaterialProperties lProperties(
         95.7, 465.2, 28.03, 14., 2.32e-3, 1.5 * units::_mm);
+
+    std::shared_ptr<const SurfaceMaterial> layerMaterialPtr
+        = std::shared_ptr<const SurfaceMaterial>(
+            new Acts::HomogeneousSurfaceMaterial(lProperties));
+
     // Module material - X0, L0, A, Z, Rho
     Material pcMaterial(95.7, 465.2, 28.03, 14., 2.32e-3);
 
@@ -150,6 +156,14 @@ namespace Test {
     for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
 
       std::vector<const Surface*> layerModules;
+
+      // Module material from input
+      MaterialProperties moduleMaterialProperties(pcMaterial,
+                                                  pModuleThickness[ilp]);
+      // create a new surface material
+      std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr
+          = std::shared_ptr<const SurfaceMaterial>(
+              new Acts::HomogeneousSurfaceMaterial(moduleMaterialProperties));
 
       // The rectangle bounds for all modules
       auto mBounds = std::make_shared<RectangleBounds>(pModuleHalfX[ilp],
@@ -184,20 +198,29 @@ namespace Test {
             getTransformFromRotTransl(moduleRotation, mCenter)));
 
         PlaneSurface* mSurface = new PlaneSurface(mModuleTransform, mBounds);
+        // let's assign the material
+        mSurface->setAssociatedMaterial(moduleMaterialPtr);
+
         layerModules.push_back(mSurface);
         surface_cache.push_back(std::unique_ptr<const Surface>(mSurface));
       }
       // create the layer and store it
-      pLayers.push_back(layerCreator->cylinderLayer(
-          layerModules, pLayerBinning[ilp].first, pLayerBinning[ilp].second));
+      auto pLayer = layerCreator->cylinderLayer(
+          layerModules, pLayerBinning[ilp].first, pLayerBinning[ilp].second);
+      auto approachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
+      auto mutableOuterSurface
+          = const_cast<Acts::Surface*>(approachSurfaces.at(1));
+      mutableOuterSurface->setAssociatedMaterial(layerMaterialPtr);
+      /// now push back the layer
+      pLayers.push_back(pLayer);
 
     }  // loop over layers
 
     // layer array
     auto pLayerArray
-        = layerArrayCreator->layerArray(pLayers, 25., 200., arbitrary, binR);
+        = layerArrayCreator->layerArray(pLayers, 25., 300., arbitrary, binR);
     auto pVolumeBounds
-        = std::make_shared<const CylinderVolumeBounds>(25., 200., 1100.);
+        = std::make_shared<const CylinderVolumeBounds>(25., 300., 1100.);
     // create the Tracking volume
     auto pVolume = TrackingVolume::create(nullptr,
                                           pVolumeBounds,

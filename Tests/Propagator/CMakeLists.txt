@@ -10,6 +10,10 @@ add_executable (ActionListTests ActionListTests.cpp)
 target_link_libraries (ActionListTests PRIVATE Acts::Core)
 add_test(NAME ActionListUnitTests COMMAND ActionListTests)
 
+add_executable (ConstrainedStepTests ConstrainedStepTests.cpp)
+target_link_libraries (ConstrainedStepTests PRIVATE ACTSCore)
+add_test(NAME ConstrainedStepUnitTest COMMAND ConstrainedStepTests)
+
 # these tests rely on the Legacy code
 if (ACTS_BUILD_LEGACY)
   add_executable (JacobianTests JacobianTests.cpp)

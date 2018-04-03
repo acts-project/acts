@@ -145,7 +145,10 @@ public:
   toVariantData() const override;
 
 private:
+  /// the bound radius, average, half phi and half Z
   double m_radius, m_avgPhi, m_halfPhi, m_halfZ;
+  /// an indicator if the bounds are closed
+  bool m_closed;
 
   Vector2D
   shifted(const Vector2D& lpos) const;

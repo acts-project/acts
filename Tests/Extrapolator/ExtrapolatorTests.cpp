@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2018 ACTS project team
+// Copyright (C) 2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,6 +23,8 @@
 #include "ACTS/Extrapolator/Navigator.hpp"
 #include "ACTS/Extrapolator/SurfaceCollector.hpp"
 #include "ACTS/MagneticField/ConstantBField.hpp"
+#include "ACTS/Material/Material.hpp"
+#include "ACTS/Material/MaterialCollector.hpp"
 #include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
@@ -56,8 +58,8 @@ namespace Test {
   std::vector<std::unique_ptr<const Surface>> sCache;
   auto                                        tGeometry = testGeometry(sCache);
 
-  const int ntests     = 1000;
-  bool      debug_mode = false;
+  const int ntests     = 1;
+  bool      debug_mode = true;
 
   // A plane selector for the SurfaceCollector
   struct PlaneSelector
@@ -124,8 +126,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.max_step_size = 10. * units::_cm;
-
+    navigator_options.max_step_size   = 10. * units::_cm;
     navigator_options.max_path_length = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry
@@ -137,11 +138,6 @@ namespace Test {
     navigator.collectPassive   = false;
 
     const auto& result = epropagator.propagate(start, navigator_options);
-
-    auto navigator_result = result.get<Navigator::result_type>();
-    if (debug_mode) {
-      std::cout << navigator_result.debug_string << std::endl;
-    }
   }
 
   // This test case checks that no segmentation fault appears
@@ -155,9 +151,13 @@ namespace Test {
           ^ bdata::random((bdata::seed = 11,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((bdata::seed = 12,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+          ^ bdata::random((
+                bdata::seed = 12,
+                bdata::distribution
+                //                           =
+                //                           std::uniform_real_distribution<>(1.0,
+                //                           M_PI - 1.0)))
+                = std::uniform_real_distribution<>(0.5 * M_PI, 0.5 * M_PI)))
           ^ bdata::random((bdata::seed = 13,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
@@ -233,10 +233,6 @@ namespace Test {
       bool worked = (cresult != nullptr);
       BOOST_TEST(worked);
     }
-
-    if (debug_mode) {
-      std::cout << navigator_result.debug_string << std::endl;
-    }
   }
 
   // This test case checks that no segmentation fault appears
@@ -285,9 +281,6 @@ namespace Test {
         1. / (10 * units::_GeV);
     auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
-
-    // A PlaneSelector for the SurfaceCollector
-    typedef SurfaceCollector<PlaneSelector> PlaneCollector;
 
     // Action list and abort list
     typedef ActionList<Navigator, MaterialInteractor> ActionList_type;

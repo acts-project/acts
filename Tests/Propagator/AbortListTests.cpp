@@ -21,6 +21,7 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/detail/Extendable.hpp"
 #include "Acts/Propagator/detail/standard_abort_conditions.hpp"
+#include "Acts/Propagator/detail/constrained_step.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -33,6 +34,7 @@ namespace Test {
 
   // The path limit abort
   typedef detail::path_limit_reached path_limit;
+  typedef detail::constrained_step   cstep;
 
   // This is a simple cache struct to mimic the
   // Stepper cache in the propagation
@@ -43,7 +45,16 @@ namespace Test {
     double accumulated_path = 0.;
 
     // adaptive sep size of the runge-kutta integration
-    double step_size = std::numeric_limits<double>::max();
+    cstep step_size = std::numeric_limits<double>::max();
+
+    /// Debug output
+    /// the string where things are stored (optionally)
+    std::string debug_string = "";
+    /// buffer & formatting for consistent output
+    size_t debug_pfx_width = 30;
+    size_t debug_msg_width = 50;
+    /// flush indication set by actors
+    bool debug_flush = false;
   };
 
   /// This is a simple result struct to mimic the
