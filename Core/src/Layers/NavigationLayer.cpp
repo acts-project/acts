@@ -19,8 +19,8 @@ Acts::NavigationLayer::NavigationLayer(
   : Acts::Layer(nullptr)
   , m_surfaceRepresentation(std::move(surfaceRepresentation))
 {
-  Layer::m_layerThickness = thickness;
-  Layer::m_layerType      = navigation;
+  m_layerThickness = thickness;
+  m_layerType      = navigation;
 }
 
 Acts::NavigationLayer::~NavigationLayer()
