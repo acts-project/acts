@@ -17,7 +17,7 @@
 ///////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-Acts::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
 {
 
   m_checketa = false;
@@ -65,7 +65,6 @@ Acts::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
   // only actually keep 5 of these max 5000 (m_maxOneSize of m_maxsizeSP)
   m_maxsizeSP         = 5000;
   m_maxOneSize        = 5;
-  m_maxNumberVertices = 99;
 
   // cache: counting if ran already
   m_state = 0;
@@ -95,7 +94,7 @@ Acts::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
 // Destructor
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-Acts::ATL_Seedmaker<SpacePoint>::~ATL_Seedmaker()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::~ATL_Seedmaker()
 {
   if (r_index) delete[] r_index;
   if (r_map) delete[] r_map;
@@ -130,7 +129,7 @@ Acts::ATL_Seedmaker<SpacePoint>::~ATL_Seedmaker()
 template <typename SpacePoint>
 template <class RandIter>
 void
-Acts::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
                                           RandIter spBegin,
                                           RandIter spEnd)
 {
@@ -176,7 +175,7 @@ Acts::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
   RandIter sp = spBegin;
   for (; sp != spEnd; ++sp) {
 
-    Acts::SPForSeed<SpacePoint>* sps = newSpacePoint((*sp));
+    Acts::Seeding::SPForSeed<SpacePoint>* sps = newSpacePoint((*sp));
     if (!sps) continue;
     int ir             = int(sps->radius() * irstep);
     if (ir > irmax) ir = irmax;
@@ -192,13 +191,13 @@ Acts::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
 }
 
 ///////////////////////////////////////////////////////////////////
-// Methods to initilize different strategies of seeds production
+// Methods to initialize different strategies of seeds production
 // with three space points with or without vertex constraint
 ///////////////////////////////////////////////////////////////////
 
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::find3Sp()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::find3Sp()
 {
   m_zminU = m_zmin;
   m_zmaxU = m_zmax;
@@ -208,7 +207,6 @@ Acts::ATL_Seedmaker<SpacePoint>::find3Sp()
     m_state   = 1;
     m_nlist   = 0;
     m_endlist = true;
-    m_fvNmin  = 0;
     m_fNmin   = 0;
     m_zMin    = 0;
     production3Sp();
@@ -222,7 +220,7 @@ Acts::ATL_Seedmaker<SpacePoint>::find3Sp()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::findNext()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::findNext()
 {
   if (m_endlist) return;
 
@@ -240,7 +238,7 @@ Acts::ATL_Seedmaker<SpacePoint>::findNext()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::buildFrameWork()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
 {
   m_ptmin = fabs(m_ptmin);
 
@@ -261,12 +259,12 @@ Acts::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   m_K    = 0.;
 
   // set all counters zero
-  m_nsaz = m_nsazv = m_nr = m_nrfz = m_nrfzv = 0;
+  m_nsaz = m_nsazv = m_nr = m_nrfz = 0;
 
   // Build radius sorted containers
   //
   r_size   = int((r_rmax + .1) / r_rstep);
-  r_Sorted = new std::list<Acts::SPForSeed<SpacePoint>*>[r_size];
+  r_Sorted = new std::list<Acts::Seeding::SPForSeed<SpacePoint>*>[r_size];
   r_index  = new int[r_size];
   r_map    = new int[r_size];
   for (int i = 0; i != r_size; ++i) {
@@ -298,20 +296,6 @@ Acts::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   for (int i = 0; i != 583; ++i) {
     rfz_index[i] = 0;
     rfz_map[i]   = 0;
-  }
-
-  // Build radius-azimuthal-Z sorted containers for Z-vertices
-  //
-  const int   NFtmax               = 100;
-  const float sFvmax               = float(NFtmax) / pi2;
-  m_sFv                            = m_ptmin / 120.;
-  if (m_sFv > sFvmax) m_sFv        = sFvmax;
-  m_fvNmax                         = int(pi2 * m_sFv);
-  if (m_fvNmax >= NFtmax) m_fvNmax = NFtmax - 1;
-  m_nrfzv                          = 0;
-  for (int i = 0; i != 300; ++i) {
-    rfzv_index[i] = 0;
-    rfzv_map[i]   = 0;
   }
 
   // Build maps for radius-azimuthal-Z sorted collections
@@ -391,41 +375,7 @@ Acts::ATL_Seedmaker<SpacePoint>::buildFrameWork()
     }
   }
 
-  // Build maps for radius-azimuthal-Z sorted collections for Z
-  //
-  for (int f = 0; f <= m_fvNmax; ++f) {
-
-    int fb                = f - 1;
-    if (fb < 0) fb        = m_fvNmax;
-    int ft                = f + 1;
-    if (ft > m_fvNmax) ft = 0;
-
-    // For each azimuthal region loop through central Z regions
-    //
-    for (int z = 0; z != 3; ++z) {
-
-      int a        = f * 3 + z;
-      int b        = fb * 3 + z;
-      int c        = ft * 3 + z;
-      rfzv_n[a]    = 3;
-      rfzv_i[a][0] = a;
-      rfzv_i[a][1] = b;
-      rfzv_i[a][2] = c;
-      if (z > 1) {
-        rfzv_n[a]    = 6;
-        rfzv_i[a][3] = a - 1;
-        rfzv_i[a][4] = b - 1;
-        rfzv_i[a][5] = c - 1;
-      } else if (z < 1) {
-        rfzv_n[a]    = 6;
-        rfzv_i[a][3] = a + 1;
-        rfzv_i[a][4] = b + 1;
-        rfzv_i[a][5] = c + 1;
-      }
-    }
-  }
-
-  if (!m_SP) m_SP = new Acts::SPForSeed<SpacePoint>*[m_maxsizeSP];
+  if (!m_SP) m_SP = new Acts::Seeding::SPForSeed<SpacePoint>*[m_maxsizeSP];
   if (!m_R) m_R   = new float[m_maxsizeSP];
   if (!m_Tz) m_Tz = new float[m_maxsizeSP];
   if (!m_Er) m_Er = new float[m_maxsizeSP];
@@ -433,9 +383,9 @@ Acts::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   if (!m_V) m_V   = new float[m_maxsizeSP];
   if (!m_Zo) m_Zo = new float[m_maxsizeSP];
   if (!m_OneSeeds)
-    m_OneSeeds = new Acts::InternalSeed<SpacePoint>[m_maxOneSize];
+    m_OneSeeds = new Acts::Seeding::InternalSeed<SpacePoint>[m_maxOneSize];
 
-  if (!m_seedOutput) m_seedOutput = new Acts::Seed<SpacePoint>();
+  if (!m_seedOutput) m_seedOutput = new Acts::Seeding::Seed<SpacePoint>();
 
   i_seed  = l_seeds.begin();
   i_seede = l_seeds.end();
@@ -446,7 +396,7 @@ Acts::ATL_Seedmaker<SpacePoint>::buildFrameWork()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::buildBeamFrameWork()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildBeamFrameWork()
 {
 
   double bx = m_config.beamPosX;
@@ -463,7 +413,7 @@ Acts::ATL_Seedmaker<SpacePoint>::buildBeamFrameWork()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::convertToBeamFrameWork(SpacePoint* const& sp,
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::convertToBeamFrameWork(SpacePoint* const& sp,
                                                         float*             r)
 {
 
@@ -477,10 +427,10 @@ Acts::ATL_Seedmaker<SpacePoint>::convertToBeamFrameWork(SpacePoint* const& sp,
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::fillLists()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
 {
   const float                                                pi2 = 2. * M_PI;
-  typename std::list<Acts::SPForSeed<SpacePoint>*>::iterator r, re;
+  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator r, re;
 
   int  ir0 = 0;
   bool ibl = false;
@@ -546,21 +496,6 @@ Acts::ATL_Seedmaker<SpacePoint>::fillLists()
       // if 1st entry record non-empty bin in "rfz_index"
       rfz_Sorted[n].push_back(*r);
       if (!rfz_map[n]++) rfz_index[m_nrfz++] = n;
-      // pixel hits between 3<=z<=7 are reassigned different z indices for
-      // vertex search
-      if (!m_iteration && (*r)->spacepoint->clusterList().second == 0 && z >= 3
-          && z <= 7) {
-        z <= 4 ? z = 0 : z >= 6 ? z = 2 : z = 1;
-
-        // Azimuthal angle and Z-coordinate sort for fast vertex search
-        //
-        f                                                     = int(F * m_sFv);
-        f<0 ? f += m_fvNmax : f> m_fvNmax ? f -= m_fvNmax : f = f;
-        n                                                     = f * 3 + z;
-        ++m_nsazv;
-        rfzv_Sorted[n].push_back(*r);
-        if (!rfzv_map[n]++) rfzv_index[m_nrfzv++] = n;
-      }
     }
   }
   m_state = 0;
@@ -571,7 +506,7 @@ Acts::ATL_Seedmaker<SpacePoint>::fillLists()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::erase()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::erase()
 {
   for (int i = 0; i != m_nrfz; ++i) {
     int n      = rfz_index[i];
@@ -579,16 +514,10 @@ Acts::ATL_Seedmaker<SpacePoint>::erase()
     rfz_Sorted[n].clear();
   }
 
-  for (int i = 0; i != m_nrfzv; ++i) {
-    int n       = rfzv_index[i];
-    rfzv_map[n] = 0;
-    rfzv_Sorted[n].clear();
-  }
   m_state = 0;
   m_nsaz  = 0;
   m_nsazv = 0;
   m_nrfz  = 0;
-  m_nrfzv = 0;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -596,7 +525,7 @@ Acts::ATL_Seedmaker<SpacePoint>::erase()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::production3Sp()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp()
 {
   // if less than 3 sp in total
   if (m_nsaz < 3) return;
@@ -605,7 +534,7 @@ Acts::ATL_Seedmaker<SpacePoint>::production3Sp()
   // indices for the z-regions array in weird order.
   // ensures creating seeds first for barrel, then left EC, then right EC
   const int ZI[11] = {5, 6, 7, 8, 9, 10, 4, 3, 2, 1, 0};
-  typename std::list<Acts::SPForSeed<SpacePoint>*>::iterator rt[9], rte[9],
+  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator rt[9], rte[9],
       rb[9], rbe[9];
   int nseed = 0;
 
@@ -656,16 +585,16 @@ Acts::ATL_Seedmaker<SpacePoint>::production3Sp()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::production3Sp(
-    typename std::list<Acts::SPForSeed<SpacePoint>*>::iterator* rb,
-    typename std::list<Acts::SPForSeed<SpacePoint>*>::iterator* rbe,
-    typename std::list<Acts::SPForSeed<SpacePoint>*>::iterator* rt,
-    typename std::list<Acts::SPForSeed<SpacePoint>*>::iterator* rte,
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
+    typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rb,
+    typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rbe,
+    typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rt,
+    typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rte,
     int                                                         NB,
     int                                                         NT,
     int&                                                        nseed)
 {
-  typename std::list<Acts::SPForSeed<SpacePoint>*>::iterator r0 = rb[0], r;
+  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator r0 = rb[0], r;
   if (!m_endlist) {
     r0        = m_rMin;
     m_endlist = true;
@@ -726,7 +655,7 @@ Acts::ATL_Seedmaker<SpacePoint>::production3Sp(
         // Comparison with vertices Z coordinates
         // continue if duplet origin not within collision region on z axis
         float Zo = Z - R * Tz;
-        if (!isZCompatible(Zo, Rb, Tz)) continue;
+        if (!isZCompatible(Zo)) continue;
         m_SP[Nb] = (*r);
         if (++Nb == m_maxsizeSP) goto breakb;
       }
@@ -760,7 +689,7 @@ Acts::ATL_Seedmaker<SpacePoint>::production3Sp(
         // Comparison with vertices Z coordinates
         //
         float Zo = Z - R * Tz;
-        if (!isZCompatible(Zo, R, Tz)) continue;
+        if (!isZCompatible(Zo)) continue;
         m_SP[Nt] = (*r);
         if (++Nt == m_maxsizeSP) goto breakt;
       }
@@ -775,7 +704,7 @@ Acts::ATL_Seedmaker<SpacePoint>::production3Sp(
 
     for (int i = 0; i != Nt; ++i) {
 
-      Acts::SPForSeed<SpacePoint>* sp = m_SP[i];
+      Acts::Seeding::SPForSeed<SpacePoint>* sp = m_SP[i];
 
       float dx = sp->x() - X;
       float dy = sp->y() - Y;
@@ -874,9 +803,9 @@ Acts::ATL_Seedmaker<SpacePoint>::production3Sp(
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::newOneSeed(Acts::SPForSeed<SpacePoint>*& p1,
-                                            Acts::SPForSeed<SpacePoint>*& p2,
-                                            Acts::SPForSeed<SpacePoint>*& p3,
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(Acts::Seeding::SPForSeed<SpacePoint>*& p1,
+                                            Acts::Seeding::SPForSeed<SpacePoint>*& p2,
+                                            Acts::Seeding::SPForSeed<SpacePoint>*& p3,
                                             float                         z,
                                             float                         q)
 {
@@ -897,15 +826,15 @@ Acts::ATL_Seedmaker<SpacePoint>::newOneSeed(Acts::SPForSeed<SpacePoint>*& p1,
   // seed.
   else {
     typename std::multimap<float,
-                           Acts::InternalSeed<SpacePoint>*>::reverse_iterator l
+                           Acts::Seeding::InternalSeed<SpacePoint>*>::reverse_iterator l
         = m_mapOneSeeds.rbegin();
 
     if ((*l).first <= q) return;
 
-    Acts::InternalSeed<SpacePoint>* s = (*l).second;
+    Acts::Seeding::InternalSeed<SpacePoint>* s = (*l).second;
     s->set(p1, p2, p3, z);
 
-    typename std::multimap<float, Acts::InternalSeed<SpacePoint>*>::iterator i
+    typename std::multimap<float, Acts::Seeding::InternalSeed<SpacePoint>*>::iterator i
         = m_mapOneSeeds.insert(std::make_pair(q, s));
 
     for (++i; i != m_mapOneSeeds.end(); ++i) {
@@ -922,9 +851,9 @@ Acts::ATL_Seedmaker<SpacePoint>::newOneSeed(Acts::SPForSeed<SpacePoint>*& p1,
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
-    Acts::SPForSeed<SpacePoint>*& SPb,
-    Acts::SPForSeed<SpacePoint>*& SP0,
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
+    Acts::Seeding::SPForSeed<SpacePoint>*& SPb,
+    Acts::Seeding::SPForSeed<SpacePoint>*& SP0,
     float                         Zob)
 {
   // allowed (1/helixradius)-delta between 2 seeds
@@ -935,7 +864,7 @@ Acts::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
   float u0   = SP0->quality();
 
   std::sort(m_CmSp.begin(), m_CmSp.end(), comCurvature());
-  typename std::vector<std::pair<float, Acts::SPForSeed<SpacePoint>*>>::iterator
+  typename std::vector<std::pair<float, Acts::Seeding::SPForSeed<SpacePoint>*>>::iterator
       j,
       jn, i = m_CmSp.begin(), ie = m_CmSp.end();
   jn = i;
@@ -1017,17 +946,17 @@ Acts::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::ATL_Seedmaker<SpacePoint>::fillSeeds()
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillSeeds()
 {
   m_fillOneSeeds = 0;
 
-  typename std::multimap<float, Acts::InternalSeed<SpacePoint>*>::iterator lf
+  typename std::multimap<float, Acts::Seeding::InternalSeed<SpacePoint>*>::iterator lf
       = m_mapOneSeeds.begin(),
       l = m_mapOneSeeds.begin(), le = m_mapOneSeeds.end();
 
   if (l == le) return;
 
-  Acts::InternalSeed<SpacePoint>* s;
+  Acts::Seeding::InternalSeed<SpacePoint>* s;
 
   for (; l != le; ++l) {
 
@@ -1040,7 +969,7 @@ Acts::ATL_Seedmaker<SpacePoint>::fillSeeds()
       s  = (*i_seede++);
       *s = *(*l).second;
     } else {
-      s = new Acts::InternalSeed<SpacePoint>(*(*l).second);
+      s = new Acts::Seeding::InternalSeed<SpacePoint>(*(*l).second);
       l_seeds.push_back(s);
       i_seede = l_seeds.end();
     }
