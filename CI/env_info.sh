@@ -10,3 +10,12 @@ else
 fi
 
 echo "$ACTS_OS $ACTS_COMPILER"
+
+if [ "$(echo $CI_RUNNER_TAGS | grep 'acts')" ]; then
+  echo "Running on ACTS CI runner: use 8 cores"
+  export ACTS_NCPUS=8
+else
+  echo "NOT running on ACTS CI runner: use 2 cores"
+  export ACTS_NCPUS=2
+fi
+
