@@ -42,7 +42,6 @@ build_slc6_lcg88:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   tags:
     - cvmfs
-    - acts
   before_script:
     - set +e && source CI/setup_lcg88.sh; set -e
   script:
@@ -62,7 +61,6 @@ build_slc6_lcg88:
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   tags:
     - cvmfs
-    - acts
   variables:
     BUILD_TYPE: Release
   script:
