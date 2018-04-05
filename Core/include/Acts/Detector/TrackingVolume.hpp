@@ -34,20 +34,23 @@ class Material;
 typedef std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>
     TrackingVolumeBoundaryPtr;
 
-// master typedefs
+/// master typedefs
 typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
 typedef std::shared_ptr<TrackingVolume>               MutableTrackingVolumePtr;
 typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
 
-// possible contained
+/// possible contained
 typedef BinnedArray<TrackingVolumePtr>         TrackingVolumeArray;
 typedef std::vector<TrackingVolumePtr>         TrackingVolumeVector;
 typedef BinnedArray<LayerPtr>                  LayerArray;
 typedef std::vector<LayerPtr>                  LayerVector;
 typedef std::vector<DetachedTrackingVolumePtr> DetachedVolumeVector;
 
+/// full intersection with Layer
 template <class T>
 using LayerIntersection = FullIntersection<Layer, Surface, T>;
+
+/// full intersection with surface
 template <class T>
 using BoundaryIntersection
     = FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface, T>;
@@ -142,6 +145,32 @@ public:
   const Layer*
   associatedLayer(const Vector3D& gpos) const;
 
+  /// Resolves the volume into Layers
+  ///
+  /// @param sLayer is the start layer for the search
+  /// @param eLayer is the end layer for the search
+  /// @param parameters are the templated parameters for searching
+  /// @param bcheck is a boundary check directive
+  /// @param is a maximum path limit for decomposition
+  /// @param collectSensitive resolve for sensitive surfaces in any case
+  /// @param collectMaterial resolve for material in any case
+  /// @param collectPassive resolve for all surfaces in any case
+  ///
+  /// @return intersection wiht the layer
+  template <class T>
+  std::vector<LayerIntersection<T>>
+  decompose(const Layer*         sLayer,
+            const Layer*         eLayer,
+            const T&             parameters,
+            const BoundaryCheck& bcheck = true,
+            double               pLimit = std::numeric_limits<double>::max(),
+            bool                 collectSensitive = true,
+            bool                 collectMaterial  = true,
+            bool                 collectPassive   = false) const;
+
+  /// LEGACY method for old ExtrapolationEngine
+  /// --------- to be deprecated with release 0.07.00
+  ///
   /// Return the material layers ordered based on straight line intersections:
   ///
   /// - startLayer and endLayer are included in the list
@@ -231,15 +260,6 @@ public:
   std::vector<BoundaryIntersection<T>>
   boundarySurfacesOrdered(const T&            parameters,
                           NavigationDirection pDir = forward) const;
-
-  /// check if you are on a boundary surface
-  ///
-  /// @param parameters is the type of track parameters
-  ///
-  /// @return boolean indicator if the parameters are on boundary
-  template <class T>
-  bool
-  onVolumeBoundary(const T& parameters) const;
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -508,28 +528,64 @@ TrackingVolume::confinedDenseVolumes() const
 }
 
 template <class T>
-bool
-TrackingVolume::onVolumeBoundary(const T& pars) const
+std::vector<LayerIntersection<T>>
+TrackingVolume::decompose(const Layer*         sLayer,
+                          const Layer*         eLayer,
+                          const T&             pars,
+                          const BoundaryCheck& bcheck,
+                          double               pLimit,
+                          bool                 collectSensitive,
+                          bool                 collectMaterial,
+                          bool                 collectPassive) const
 {
-  // get the associated Surface
-  const Surface* pSurface  = &pars.referenceSurface();
-  auto&          bSurfaces = boundarySurfaces();
-  // fast loop pointer comparison of the surfaces
-  for (auto& bsIter : bSurfaces) {
-    const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
-    // pointer of the parameter surface is identical with one of the boundary
-    // surface pointers
-    if (pSurface == &bSurface->surfaceRepresentation()) return true;
+  // get position and momentum from the parameters
+  const Vector3D& pos = pars.position();
+  const Vector3D& dir = pars.momentum().unit();
+
+  // the layer intersections which are valid
+  std::vector<LayerIntersection<T>> lIntersections;
+
+  // the confinedLayers
+  if (m_confinedLayers) {
+    // - get compatible layers back from the LayerArray simply because of the
+    // binning
+    // start layer given or not - test layer
+    const Layer* tLayer = sLayer ? sLayer : associatedLayer(pos);
+    if (tLayer) {
+      do {
+        // @note if anyDirection is given, you allow to stay on the layer
+        // i.e. you pick the actually closest one, which could be 0.
+        NavigationDirection ndir = (tLayer == sLayer) ? anyDirection : forward;
+        // - collectSensitive -> always take layer if it has a surface array
+        // - collectMaterial -> always take layer if it has material
+        // - collectPassive -> always take, unless it's a navigation layer
+        if (tLayer->resolve(
+                collectSensitive, collectMaterial, collectPassive)) {
+          // layer on approach intersection
+          auto atIntersection = tLayer->surfaceOnApproach(pos,
+                                                          dir,
+                                                          ndir,
+                                                          bcheck,
+                                                          collectSensitive,
+                                                          collectMaterial,
+                                                          collectPassive);
+          // Intersection is ok - take it
+          if (atIntersection
+              && atIntersection.intersection.pathLength <= std::abs(pLimit)) {
+            // create a layer intersection
+            lIntersections.push_back(LayerIntersection<T>(
+                atIntersection.intersection, tLayer, atIntersection.object));
+          }
+        }
+        // move to next one or break because you reached the end layer
+        tLayer = (tLayer == eLayer) ? nullptr : tLayer->nextLayer(pos, dir);
+      } while (tLayer);
+    }
   }
-  // slow loop - checking the onSurface (does pointer comparison as well)
-  for (auto& bsIter : bSurfaces) {
-    const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
-    // pointer of the parameter surface is identical with one of the boundary
-    // surface pointers
-    if (bSurface->onBoundary(pars)) return true;
-  }
-  // could not find an onSurface
-  return false;
+  // sort them accordingly to the path length
+  std::sort(lIntersections.begin(), lIntersections.end());
+  // and return
+  return lIntersections;
 }
 
 template <class T>

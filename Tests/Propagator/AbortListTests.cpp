@@ -30,6 +30,8 @@ namespace tt    = boost::test_tools;
 
 namespace Acts {
 
+class Surface;
+
 namespace Test {
 
   // The path limit abort
@@ -47,14 +49,23 @@ namespace Test {
     // adaptive sep size of the runge-kutta integration
     cstep step_size = std::numeric_limits<double>::max();
 
+    /// Navigation cache: the start surface
+    const Surface* start_surface = nullptr;
+
+    /// Navigation cache: the current surface
+    const Surface* current_surface = nullptr;
+
+    /// Navigation cache: the target surface
+    const Surface* target_surface = nullptr;
+    bool           target_reached = false;
+
     /// Debug output
     /// the string where things are stored (optionally)
+    bool        debug        = false;
     std::string debug_string = "";
     /// buffer & formatting for consistent output
     size_t debug_pfx_width = 30;
     size_t debug_msg_width = 50;
-    /// flush indication set by actors
-    bool debug_flush = false;
   };
 
   /// This is a simple result struct to mimic the

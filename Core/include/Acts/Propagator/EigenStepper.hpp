@@ -16,6 +16,19 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Propagator/detail/constrained_step.hpp"
 
+#ifndef ESTEPPER_DEBUG_OUTPUTS
+#define ESTEPPER_DEBUG_OUTPUTS
+#define ESLOG(cache, message)                                                  \
+  if (cache.debug) {                                                           \
+    std::stringstream dstream;                                                 \
+    dstream << "|->" << std::setw(cache.debug_pfx_width);                      \
+    dstream << "EigenStepper"                                                  \
+            << " | ";                                                          \
+    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
+    cache.debug_string += dstream.str();                                       \
+  }
+#endif
+
 namespace Acts {
 
 ActsMatrixD<3, 3>
@@ -293,15 +306,15 @@ public:
 
     /// Navigation cache: the target surface
     const Surface* target_surface = nullptr;
+    bool           target_reached = false;
 
     /// Debug output
     /// the string where things are stored (optionally)
+    bool        debug        = false;
     std::string debug_string = "";
     /// buffer & formatting for consistent output
     size_t debug_pfx_width = 30;
     size_t debug_msg_width = 50;
-    /// flush indication set by actors
-    bool debug_flush = false;
   };
 
   /// Always use the same propagation cache type, independently of the initial
@@ -444,6 +457,9 @@ public:
 
     // use the adjusted step size
     const double h = cache.step_size;
+
+    // debug output
+    ESLOG(cache, "Performing RungeKutta step with size " << h);
 
     // When doing error propagation, update the associated Jacobian matrix
     if (cache.cov_transport) {

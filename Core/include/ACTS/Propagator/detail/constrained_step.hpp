@@ -10,6 +10,7 @@
 #define ACTS_CONSTRAINED_STEP_HPP
 
 #include <limits>
+#include <sstream>
 #include "ACTS/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -37,12 +38,15 @@ namespace detail {
     NavigationDirection direction = forward;
 
     /// update the step size of a certain type
+    /// - for accuracy and navigation that can go either way
+    /// - for aborters it can only get (direction)*smaller
     /// @param value is the new value to be updated
     /// @param type is the constraint type
     void
     update(const double& value, Type type)
     {
-      values[type] = value;
+      if (type != aborter || (direction * values[type] > direction * value))
+        values[type] = value;
     }
 
     /// release a certain constraint value
@@ -75,7 +79,7 @@ namespace detail {
     constrained_step&
     operator=(const double& value)
     {
-      /// set all to the same value
+      /// set the accuracy value
       values[accuracy] = value;
       // set/update the direction
       direction = value > 0. ? forward : backward;
@@ -90,7 +94,29 @@ namespace detail {
         return (*std::min_element(values.begin(), values.end()));
       return (*std::max_element(values.begin(), values.end()));
     }
+
+    /// access to a specific value
+    double
+    value(Type type) const
+    {
+      return values[type];
+    }
+
+    /// return the split value as string for debugging
+    std::string
+    toString() const;
   };
+
+  inline std::string
+  constrained_step::toString() const
+  {
+    std::stringstream dstream;
+    dstream << "(" << std::setw(5) << values[accuracy];
+    dstream << ", " << std::setw(5) << values[actor];
+    dstream << ", " << std::setw(5) << values[aborter];
+    dstream << ", " << std::setw(5) << values[user] << " )";
+    return dstream.str();
+  }
 
 }  // namespace detail
 }  // namespace Acts

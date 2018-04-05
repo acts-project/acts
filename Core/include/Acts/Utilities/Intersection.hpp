@@ -104,7 +104,7 @@ public:
   Intersection intersection;
   const T*     object;
   const R*     representation;
-  const S*     result;
+  const S*     result;  //@todo: remove bare pointer
   int          pDirection;
 
   /// Full intersection constructor
@@ -119,8 +119,8 @@ public:
   FullIntersection(const Intersection& sInter,
                    const T*            sObject,
                    const R*            sRepresentation,
-                   const S*            sResult,
-                   int                 dir = 1)
+                   const S*            sResult = nullptr,
+                   int                 dir     = 1)
     : intersection(sInter)
     , object(sObject)
     , representation(sRepresentation)

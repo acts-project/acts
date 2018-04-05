@@ -66,15 +66,15 @@ public:
 
     /// Navigation cache: the target surface
     const Surface* target_surface = nullptr;
+    bool           target_reached = false;
 
     /// Debug output
     /// the string where things are stored (optionally)
+    bool        debug        = false;
     std::string debug_string = "";
     /// buffer & formatting for consistent output
     size_t debug_pfx_width = 30;
     size_t debug_msg_width = 50;
-    /// flush indication set by actors
-    bool debug_flush = false;
 
     Vector3D
     position() const

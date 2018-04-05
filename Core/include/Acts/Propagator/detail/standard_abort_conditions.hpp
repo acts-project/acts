@@ -74,11 +74,12 @@ namespace detail {
       if (limit_reached) {
         TARGETLOG(cache, "x", "Path limit reached.");
         // reaching the target oath length triggers the output flush
-        cache.debug_flush = true;
+        cache.target_reached = true;
       } else
         TARGETLOG(cache,
                   "o",
-                  "Target step_size (path limit) updated to " << diff_to_limit);
+                  "Target step_size (path limit) updated to "
+                      << cache.step_size.toString());
       // path limit check
       return limit_reached;
     }
@@ -127,6 +128,14 @@ namespace detail {
     operator()(cache_t& cache) const
     {
       if (!surface) return false;
+
+      // check if the cache filled the current_surface
+      if (cache.current_surface == surface) {
+        TARGETLOG(cache, "x", "Target surface reached.");
+        cache.target_reached = true;
+        return true;
+      }
+
       // calculate the distance to the surface
       // @todo that might cause problems with a cylinder
       const double distance
@@ -144,12 +153,12 @@ namespace detail {
       if (targed_reached) {
         TARGETLOG(cache, "x", "Target surface reached.");
         // reaching the target triggers the debug output flush (if configured)
-        cache.debug_flush = true;
+        cache.target_reached = true;
       } else
         TARGETLOG(cache,
                   "o",
                   "Target step_size (surface) updated to "
-                      << cache.nav_dir * distance);
+                      << cache.step_size.toString());
       // path limit check
       return targed_reached;
     }

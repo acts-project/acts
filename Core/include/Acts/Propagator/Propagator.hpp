@@ -267,6 +267,7 @@ namespace propagation {
 
       // Initialize the internal propagation cache
       cache_type cache(start, options.direction, options.max_step_size);
+      cache.debug = options.debug;
 
       // Internal Abort list
       AbortList<path_limit_reached> internal_aborters;
@@ -330,6 +331,7 @@ namespace propagation {
       // Initialize the internal propagation cache
       cache_type cache(start, options.direction, options.max_step_size);
       cache.target_surface = &target;
+      cache.debug          = options.debug;
 
       // Type of the full propagation result, including output from actions
       typedef action_list_result_t<return_parameter_type, Actions> result_type;

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 // Core module
 #include <map>
 #include "Acts/EventData/NeutralParameters.hpp"
@@ -36,7 +37,11 @@ class DetachedTrackingVolume;
 class ApproachDescriptor;
 class ICompatibilityEstimator;
 
+// Simple surface intersection
 typedef ObjectIntersection<Surface> SurfaceIntersection;
+// Full surface intersection
+template <class T>
+using FullSurfaceIntersection = FullIntersection<Surface, Surface, T>;
 
 // master typedef
 class Layer;
@@ -171,6 +176,27 @@ public:
           bool collectMaterial,
           bool collectPassive) const;
 
+  /// Decompose Layer into (compatible) surfaces
+  ///
+  /// @param sSurface is the start surface
+  /// @param eLayer is the end layer for the search
+  /// @param parameters are the templated parameters for searching
+  /// @param bcheck is a boundary check directive
+  /// @param collectSensitive resolve for sensitive surfaces in any case
+  /// @param collectMaterial resolve for material in any case
+  /// @param collectPassive resolve for all surfaces in any case
+  ///
+  /// @return list of intersection of surfaces on the layer
+  template <class T>
+  std::vector<FullSurfaceIntersection<T>>
+  decompose(const Surface*       sSurface,
+            const Surface*       eSurface,
+            const T&             parameters,
+            const BoundaryCheck& bcheck           = true,
+            bool                 collectSensitive = true,
+            bool                 collectMaterial  = true,
+            bool                 collectPassive   = false) const;
+
   /// Surface seen on approach
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
@@ -181,8 +207,6 @@ public:
   /// @param collectSensitive is the prescription to find the sensitive surfaces
   /// @param collectMaterial is the precription to find material surfaces
   /// @param collectPassive is the prescription to find all passive surfaces
-  /// @note reasons for resolving are: collect & find material, collect & find
-  /// sensitivex
   /// @param ice is a (future) compatibility estimator t
   /// the straight line approach
   virtual const SurfaceIntersection
@@ -195,6 +219,9 @@ public:
                     bool                           collectPassive,
                     const ICompatibilityEstimator* ice = nullptr) const;
 
+  /// LEGACY method for old ExtrapolationEngine
+  /// --------- to be deprecated with release 0.07.00
+  ///
   ///  get compatible surfaces starting from neutral parameters
   ///  returns the compatible surfaces with a straight line estimation
   ///  a future estimater is forseen

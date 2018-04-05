@@ -76,6 +76,9 @@ struct MaterialCollector
   void
   operator()(cache_t& cache, result_type& result) const
   {
+    // if we are on target, everything should have been done
+    if (cache.target_reached) return;
+
     // a current surface has been already assigned by the navigator
     if (cache.current_surface && cache.current_surface->associatedMaterial()) {
 
@@ -88,10 +91,25 @@ struct MaterialCollector
           = cache.current_surface->associatedMaterial()->material(
               cache.position());
       if (mProperties) {
+        // check if you have a factor for pre/post/full update to do
+        double prepofu = 1.;
+        if (cache.start_surface == cache.current_surface) {
+          prepofu = cache.current_surface->associatedMaterial()->factor(
+              cache.nav_dir, postUpdate);
+        } else if (cache.target_surface == cache.current_surface) {
+          prepofu = cache.current_surface->associatedMaterial()->factor(
+              cache.nav_dir, preUpdate);
+        }
+        if (prepofu == 0.) {
+          MATCLOG(cache, result, "Pre/Post factor set material to zero.");
+          return;
+        }
+
         MATCLOG(cache, result, "Material properties found for this surface.");
         // the path correction from the surface intersection
-        double pCorrection = cache.current_surface->pathCorrection(
-            cache.position(), cache.direction());
+        double pCorrection = prepofu
+            * cache.current_surface->pathCorrection(cache.position(),
+                                                    cache.direction());
         // the full material
         result.materialInX0 += pCorrection * mProperties->thicknessInX0();
         result.materialInL0 += pCorrection * mProperties->thicknessInL0();
