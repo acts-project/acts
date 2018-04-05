@@ -17,6 +17,7 @@
 #include "ACTS/Seeding/Seed.hpp"
 
 namespace Acts {
+namespace Seeding {
 template <typename SpacePoint>
 class InternalSeed
 {
@@ -72,10 +73,10 @@ public:
   setQuality(float);
 
   bool
-  set3(Acts::Seed<SpacePoint>&);
+  set3(Acts::Seeding::Seed<SpacePoint>&);
 
   void
-  set2(Acts::Seed<SpacePoint>&);
+  set2(Acts::Seeding::Seed<SpacePoint>&);
 
 protected:
   SPForSeed<SpacePoint>* m_s0;
@@ -167,7 +168,7 @@ InternalSeed<SpacePoint>::set(SPForSeed<SpacePoint>*& s0,
 
 template <typename SpacePoint>
 inline void
-InternalSeed<SpacePoint>::set2(Acts::Seed<SpacePoint>& s)
+InternalSeed<SpacePoint>::set2(Acts::Seeding::Seed<SpacePoint>& s)
 {
   s.erase();
   s.add(m_s0->spacepoint);
@@ -181,7 +182,7 @@ InternalSeed<SpacePoint>::set2(Acts::Seed<SpacePoint>& s)
 
 template <typename SpacePoint>
 inline bool
-InternalSeed<SpacePoint>::set3(Acts::Seed<SpacePoint>& s)
+InternalSeed<SpacePoint>::set3(Acts::Seeding::Seed<SpacePoint>& s)
 {
 
   bool pixb = !m_s0->spacepoint->clusterList().second;
@@ -226,6 +227,7 @@ InternalSeed<SpacePoint>::setQuality(float q)
   return false;
 }
 
-}  // end of name space
+} // end of Seeding namespace
+} // end of Acts namespace
 
 #endif  // InternalSeed_h

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Seeding/ATL_Seedmaker.hpp"
+#include <iostream>
 
 #define BOOST_TEST_MODULE SeedmakerIntegrationTest
 #include <boost/test/included/unit_test.hpp>
@@ -37,13 +38,19 @@ int
 runSeeding(std::vector<SpacePoint*> spVec)
 {
 
-  Acts::ATL_Seedmaker<SpacePoint> seedMaker;
+  Acts::Seeding::ATL_Seedmaker<SpacePoint> seedMaker;
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
-  const Acts::Seed<SpacePoint>* seed     = seedMaker.next();
+  const Acts::Seeding::Seed<SpacePoint>* seed     = seedMaker.next();
   int                           numSeeds = 0;
   while (seed != 0) {
     numSeeds++;
+    auto spIter = seed->spacePoints().begin();
+    std::cout << "seed zvalues: " << (*spIter)->z << ", ";
+    spIter++;
+    std::cout << (*spIter)->z << ", ";
+    spIter++;
+    std::cout << (*spIter)->z << std::endl;
     seed = seedMaker.next();
   }
   return numSeeds;
