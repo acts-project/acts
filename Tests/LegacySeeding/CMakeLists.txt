@@ -1,5 +1,0 @@
-add_executable (ATLSeedingTest ATLSeedingIntegrationTest.cpp)
-target_include_directories (ATLSeedingTest PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (ATLSeedingTest PRIVATE ACTSLegacy ACTSCore)
-add_test (NAME ATLSeedingIntegrationTest COMMAND ATLSeedingTest)
-acts_add_test_to_cdash_project (PROJECT ACore TEST ATLSeedingIntegrationTest TARGETS ATLSeedingTest)

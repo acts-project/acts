@@ -75,9 +75,6 @@ public:
   bool
   set3(Acts::Seeding::Seed<SpacePoint>&);
 
-  void
-  set2(Acts::Seeding::Seed<SpacePoint>&);
-
 protected:
   SPForSeed<SpacePoint>* m_s0;
   SPForSeed<SpacePoint>* m_s1;
@@ -160,20 +157,6 @@ InternalSeed<SpacePoint>::set(SPForSeed<SpacePoint>*& s0,
   m_s0 = s0;
   m_s1 = s1;
   m_s2 = s2;
-}
-
-/////////////////////////////////////////////////////////////////////////////////
-// Set two space points seed
-/////////////////////////////////////////////////////////////////////////////////
-
-template <typename SpacePoint>
-inline void
-InternalSeed<SpacePoint>::set2(Acts::Seeding::Seed<SpacePoint>& s)
-{
-  s.erase();
-  s.add(m_s0->spacepoint);
-  s.add(m_s1->spacepoint);
-  s.setZVertex(double(m_z));
 }
 
 /////////////////////////////////////////////////////////////////////////////////

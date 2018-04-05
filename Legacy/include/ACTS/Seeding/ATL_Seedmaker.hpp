@@ -105,7 +105,6 @@ namespace Seeding {
     int  m_state;
     // event number since tool init
     int          m_iteration;
-    unsigned int m_maxNumberVertices;
     float        m_etamin, m_etamax;
     float        m_drmin, m_drminv;
     float        m_drmax;
@@ -193,7 +192,6 @@ namespace Seeding {
     int                       m_maxOneSize;
     int                       m_nOneSeeds;
     int                       m_fillOneSeeds;
-    std::set<float>           l_vertex;
     std::vector<std::pair<float, SPForSeed<SpacePoint>*>> m_CmSp;
   
     ///////////////////////////////////////////////////////////////////
@@ -216,8 +214,6 @@ namespace Seeding {
     SPForSeed<SpacePoint>*
     newSpacePoint(SpacePoint* const&);
   
-    void
-    newSeed(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&, float);
   
     void
     newOneSeed(SPForSeed<SpacePoint>*&,
@@ -315,28 +311,6 @@ namespace Seeding {
   
     return sps;
   }
-  
-  ///////////////////////////////////////////////////////////////////
-  // New 2 space points seeds
-  ///////////////////////////////////////////////////////////////////
-  
-  template <typename SpacePoint>
-  inline void
-  ATL_Seedmaker<SpacePoint>::newSeed(SPForSeed<SpacePoint>*& p1,
-                                     SPForSeed<SpacePoint>*& p2,
-                                     float                   z)
-  {
-    SPForSeed<SpacePoint>* p3 = 0;
-  
-    if (i_seede != l_seeds.end()) {
-      InternalSeed<SpacePoint>* s = (*i_seede++);
-      s->set(p1, p2, p3, z);
-    } else {
-      l_seeds.push_back(new InternalSeed<SpacePoint>(p1, p2, p3, z));
-      i_seede = l_seeds.end();
-    }
-  }
-  
   
   ///////////////////////////////////////////////////////////////////
   // Object-function for curvature seeds comparison

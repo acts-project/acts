@@ -65,7 +65,6 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
   // only actually keep 5 of these max 5000 (m_maxOneSize of m_maxsizeSP)
   m_maxsizeSP         = 5000;
   m_maxOneSize        = 5;
-  m_maxNumberVertices = 99;
 
   // cache: counting if ran already
   m_state = 0;
@@ -192,7 +191,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
 }
 
 ///////////////////////////////////////////////////////////////////
-// Methods to initilize different strategies of seeds production
+// Methods to initialize different strategies of seeds production
 // with three space points with or without vertex constraint
 ///////////////////////////////////////////////////////////////////
 
