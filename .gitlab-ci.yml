@@ -125,27 +125,27 @@ integration_tests_slc6_lcg91:
 
 # SLC, LCG91, LLVM40
 
-build_slc6_lcg91_llvm40:
+build_slc6_lcg91_clang:
   <<: *template_build
   before_script:
     - set +e && source CI/setup_lcg91.sh; set -e
-    - source CI/setup_llvm40.sh
+    - source CI/setup_clang.sh
 
-unit_tests_slc6_lcg91_llvm40:
+unit_tests_slc6_lcg91_clang:
   <<: *template_unit_tests
   dependencies:
-    - build_slc6_lcg91_llvm40
+    - build_slc6_lcg91_clang
   before_script:
     - set +e && source CI/setup_lcg91.sh; set -e
-    - source CI/setup_llvm40.sh
+    - source CI/setup_clang.sh
 
-integration_tests_slc6_lcg91_llvm40:
+integration_tests_slc6_lcg91_clang:
   <<: *template_integration_tests
   dependencies:
-    - build_slc6_lcg91_llvm40
+    - build_slc6_lcg91_clang
   before_script:
     - set +e && source CI/setup_lcg91.sh; set -e
-    - source CI/setup_llvm40.sh
+    - source CI/setup_clang.sh
 
 # SLC6, LCG92
 
