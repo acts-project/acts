@@ -261,7 +261,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   m_K    = 0.;
 
   // set all counters zero
-  m_nsaz = m_nsazv = m_nr = m_nrfz = m_nrfzv = 0;
+  m_nsaz = m_nsazv = m_nr = m_nrfz = 0;
 
   // Build radius sorted containers
   //
@@ -300,19 +300,6 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
     rfz_map[i]   = 0;
   }
 
-  // Build radius-azimuthal-Z sorted containers for Z-vertices
-  //
-  const int   NFtmax               = 100;
-  const float sFvmax               = float(NFtmax) / pi2;
-  m_sFv                            = m_ptmin / 120.;
-  if (m_sFv > sFvmax) m_sFv        = sFvmax;
-  m_fvNmax                         = int(pi2 * m_sFv);
-  if (m_fvNmax >= NFtmax) m_fvNmax = NFtmax - 1;
-  m_nrfzv                          = 0;
-  for (int i = 0; i != 300; ++i) {
-    rfzv_index[i] = 0;
-    rfzv_map[i]   = 0;
-  }
 
   // Build maps for radius-azimuthal-Z sorted collections
   //
@@ -387,40 +374,6 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
         rfz_ib[a][6] = a - 2;
         rfz_ib[a][7] = b - 2;
         rfz_ib[a][8] = c - 2;
-      }
-    }
-  }
-
-  // Build maps for radius-azimuthal-Z sorted collections for Z
-  //
-  for (int f = 0; f <= m_fvNmax; ++f) {
-
-    int fb                = f - 1;
-    if (fb < 0) fb        = m_fvNmax;
-    int ft                = f + 1;
-    if (ft > m_fvNmax) ft = 0;
-
-    // For each azimuthal region loop through central Z regions
-    //
-    for (int z = 0; z != 3; ++z) {
-
-      int a        = f * 3 + z;
-      int b        = fb * 3 + z;
-      int c        = ft * 3 + z;
-      rfzv_n[a]    = 3;
-      rfzv_i[a][0] = a;
-      rfzv_i[a][1] = b;
-      rfzv_i[a][2] = c;
-      if (z > 1) {
-        rfzv_n[a]    = 6;
-        rfzv_i[a][3] = a - 1;
-        rfzv_i[a][4] = b - 1;
-        rfzv_i[a][5] = c - 1;
-      } else if (z < 1) {
-        rfzv_n[a]    = 6;
-        rfzv_i[a][3] = a + 1;
-        rfzv_i[a][4] = b + 1;
-        rfzv_i[a][5] = c + 1;
       }
     }
   }
@@ -546,21 +499,6 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
       // if 1st entry record non-empty bin in "rfz_index"
       rfz_Sorted[n].push_back(*r);
       if (!rfz_map[n]++) rfz_index[m_nrfz++] = n;
-      // pixel hits between 3<=z<=7 are reassigned different z indices for
-      // vertex search
-      if (!m_iteration && (*r)->spacepoint->clusterList().second == 0 && z >= 3
-          && z <= 7) {
-        z <= 4 ? z = 0 : z >= 6 ? z = 2 : z = 1;
-
-        // Azimuthal angle and Z-coordinate sort for fast vertex search
-        //
-        f                                                     = int(F * m_sFv);
-        f<0 ? f += m_fvNmax : f> m_fvNmax ? f -= m_fvNmax : f = f;
-        n                                                     = f * 3 + z;
-        ++m_nsazv;
-        rfzv_Sorted[n].push_back(*r);
-        if (!rfzv_map[n]++) rfzv_index[m_nrfzv++] = n;
-      }
     }
   }
   m_state = 0;
@@ -579,16 +517,10 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::erase()
     rfz_Sorted[n].clear();
   }
 
-  for (int i = 0; i != m_nrfzv; ++i) {
-    int n       = rfzv_index[i];
-    rfzv_map[n] = 0;
-    rfzv_Sorted[n].clear();
-  }
   m_state = 0;
   m_nsaz  = 0;
   m_nsazv = 0;
   m_nrfz  = 0;
-  m_nrfzv = 0;
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -726,7 +658,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
         // Comparison with vertices Z coordinates
         // continue if duplet origin not within collision region on z axis
         float Zo = Z - R * Tz;
-        if (!isZCompatible(Zo, Rb, Tz)) continue;
+        if (!isZCompatible(Zo)) continue;
         m_SP[Nb] = (*r);
         if (++Nb == m_maxsizeSP) goto breakb;
       }
@@ -760,7 +692,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
         // Comparison with vertices Z coordinates
         //
         float Zo = Z - R * Tz;
-        if (!isZCompatible(Zo, R, Tz)) continue;
+        if (!isZCompatible(Zo)) continue;
         m_SP[Nt] = (*r);
         if (++Nt == m_maxsizeSP) goto breakt;
       }

@@ -149,7 +149,6 @@ namespace Seeding {
     int                                                  rfz_size;
     std::list<SPForSeed<SpacePoint>*>*                   r_Sorted;
     std::list<SPForSeed<SpacePoint>*>                    rfz_Sorted[583];
-    std::list<SPForSeed<SpacePoint>*>                    rfzv_Sorted[300];
     std::list<SPForSeed<SpacePoint>*>                    l_spforseed;
     typename std::list<SPForSeed<SpacePoint>*>::iterator i_spforseed;
     typename std::list<SPForSeed<SpacePoint>*>::iterator m_rMin;
@@ -164,11 +163,8 @@ namespace Seeding {
     int*  r_index;
     int*  r_map;
     int   m_nrfz, rfz_index[583], rfz_map[583];
-    int   m_nrfzv, rfzv_index[300], rfzv_map[300];
     int   rfz_b[583], rfz_t[593], rfz_ib[583][9], rfz_it[583][9];
-    int   rfzv_n[300], rfzv_i[300][6];
     float m_sF;
-    float m_sFv;
   
     ///////////////////////////////////////////////////////////////////
     // Tables for 3 space points seeds search
@@ -255,7 +251,7 @@ namespace Seeding {
     void
     findNext();
     bool
-    isZCompatible(float&, float&, float&);
+    isZCompatible(float&);
     void
     convertToBeamFrameWork(SpacePoint* const&, float*);
   };
@@ -282,20 +278,10 @@ namespace Seeding {
   
   template <typename SpacePoint>
   inline bool
-  ATL_Seedmaker<SpacePoint>::isZCompatible(float& Zv, float& R, float& T)
+  ATL_Seedmaker<SpacePoint>::isZCompatible(float& Zv)
   {
     if (Zv < m_zminU || Zv > m_zmaxU) return false;
-    if (!m_isvertex) return true;
-  
-    std::set<float>::iterator v = l_vertex.begin(), ve = l_vertex.end();
-  
-    float dZmin = fabs((*v) - Zv);
-    for (++v; v != ve; ++v) {
-      float dZ = fabs((*v) - Zv);
-      if (dZ >= dZmin) break;
-      dZmin = dZ;
-    }
-    return dZmin < (m_dzver + m_dzdrver * R) * sqrt(1. + T * T);
+    else return true;
   }
   
   ///////////////////////////////////////////////////////////////////
