@@ -37,13 +37,13 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
     // @todo make a trapezoidal volume when you have DiscTrapezoidalBounds
     CylinderVolumeBounds* cvBounds = new CylinderVolumeBounds(
         rBounds->rMin(), rBounds->rMax(), 0.5 * thickness);
-    Layer::m_representingVolume
+    m_representingVolume
         = new AbstractVolume(transform, VolumeBoundsPtr(cvBounds));
   }
   // associate the layer to the layer surface itself
   DiscSurface::associateLayer(*this);
   // build an approach descriptor if none provided
-  if (!m_approachDescriptor && Layer::m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor
   if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }

@@ -35,12 +35,12 @@ Acts::CylinderLayer::CylinderLayer(
       = new CylinderVolumeBounds(cBounds->r() - 0.5 * thickness,
                                  cBounds->r() + 0.5 * thickness,
                                  cBounds->halflengthZ());
-  Layer::m_representingVolume
+  m_representingVolume
       = new AbstractVolume(transform, VolumeBoundsPtr(cvBounds));
   // associate the layer to the surface
   CylinderSurface::associateLayer(*this);
   // an approach descriptor is automatically created if there's a surface array
-  if (!m_approachDescriptor && Layer::m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor surfaces
   if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
 }
