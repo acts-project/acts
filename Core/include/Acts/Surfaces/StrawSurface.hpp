@@ -20,6 +20,7 @@
 namespace Acts {
 
 class DetectorElementBase;
+class PolyhedronRepresentation;
 
 ///  @class StrawSurface
 ///
@@ -104,6 +105,10 @@ public:
   /// @return The representation
   virtual variant_data
   toVariantData() const override;
+  
+  virtual 
+  PolyhedronRepresentation
+  polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
 };
 
 inline Surface::SurfaceType
