@@ -79,16 +79,19 @@ namespace Test {
     BOOST_TEST(pClonedPlaneSurface->type() == Surface::Plane);
     delete pClonedPlaneSurface;
     // Test clone method with translation
-    auto pClonedShiftedPlaneSurface = PlaneSurfaceObject.clone(pTransform.get());
-    //Does it exist at all in a decent state?
+    auto pClonedShiftedPlaneSurface
+        = PlaneSurfaceObject.clone(pTransform.get());
+    // Does it exist at all in a decent state?
     BOOST_TEST(pClonedShiftedPlaneSurface->type() == Surface::Plane);
-    //Is it in the right place?
+    // Is it in the right place?
     Translation3D translation2{0., 2., 4.};
-    auto          pTransform2 = std::make_shared<const Transform3D>(translation2);
+    auto pTransform2 = std::make_shared<const Transform3D>(translation2);
     PlaneSurface PlaneSurfaceObject2(pTransform2, rBounds);
-    //these two surfaces should be equivalent now (prematurely testing equality also)
+    // these two surfaces should be equivalent now (prematurely testing equality
+    // also)
     BOOST_TEST(*pClonedShiftedPlaneSurface == PlaneSurfaceObject2);
-    //and, trivially, the shifted cloned surface should be different from the original
+    // and, trivially, the shifted cloned surface should be different from the
+    // original
     BOOST_TEST(*pClonedShiftedPlaneSurface != PlaneSurfaceObject);
     //
     /// Test type (redundant)
