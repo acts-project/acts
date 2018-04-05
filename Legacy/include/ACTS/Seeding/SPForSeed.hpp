@@ -31,7 +31,6 @@
 //    else               {m_covr = 8.*f22; m_covz = .1;}
 
 namespace Acts {
-namespace Seeding {
 
 template <typename SpacePoint>
 class SPForSeed
@@ -294,7 +293,6 @@ SPForSeed<SpacePoint>::setQuality(float q)
   if (q <= m_q) m_q = q;
 }
 
-}  // end of Seeding namespace
-}  // end of Acts namespace
+}  // end of name space
 
 #endif  // SPForSeed_hpp

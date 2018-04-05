@@ -15,7 +15,6 @@
 #include <list>
 
 namespace Acts {
-namespace Seeding {
 
 template <typename SpacePoint>
 class Seed
@@ -130,6 +129,6 @@ template <typename SpacePoint>
 Seed<SpacePoint>::~Seed()
 {
 }
-} // end of Seeding namespace
-} // end of Acts namespace
+}  // end of name space
+
 #endif  // Seed_h
