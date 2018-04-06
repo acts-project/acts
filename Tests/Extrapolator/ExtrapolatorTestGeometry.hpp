@@ -33,6 +33,26 @@ namespace Acts {
 
 namespace Test {
 
+  // a non-free module surface to test (fully) connected geometry
+  // i.e. it avoids surface copying
+  class ModuleSurface : public PlaneSurface
+  {
+  public:
+    // constructor to forward to PlaneSurface
+    ModuleSurface(std::shared_ptr<const Transform3D>  htrans,
+                  std::shared_ptr<const PlanarBounds> pbounds)
+      : PlaneSurface(htrans, pbounds)
+    {
+    }
+
+    // causes pointer assignment
+    bool
+    isFree() const
+    {
+      return false;
+    }
+  };
+
   /// helper method for cylinder layer
   /// create the positions for module surfaces on a cylinder
   static std::vector<Vector3D>
@@ -72,7 +92,8 @@ namespace Test {
   //
   // @param surface_cache is the surface cache to be filled
   //        for memory management
-  static std::shared_ptr<const TrackingGeometry>
+  template <typename Plane_type>
+  std::shared_ptr<const TrackingGeometry>
   testGeometry(std::vector<std::unique_ptr<const Surface>>& surface_cache)
   {
 
@@ -197,7 +218,7 @@ namespace Test {
         std::shared_ptr<Transform3D> mModuleTransform(new Transform3D(
             getTransformFromRotTransl(moduleRotation, mCenter)));
 
-        PlaneSurface* mSurface = new PlaneSurface(mModuleTransform, mBounds);
+        Plane_type* mSurface = new Plane_type(mModuleTransform, mBounds);
         // let's assign the material
         mSurface->setAssociatedMaterial(moduleMaterialPtr);
 

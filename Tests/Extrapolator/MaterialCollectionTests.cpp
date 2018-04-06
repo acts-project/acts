@@ -59,9 +59,10 @@ namespace Test {
   EigenPropagator_type epropagator(std::move(estepper));
 
   std::vector<std::unique_ptr<const Surface>> sCache;
-  auto                                        tGeometry = testGeometry(sCache);
+  auto tGeometry = testGeometry<ModuleSurface>(sCache);
 
   const int ntests              = 1000;
+  const int skip                = 0;
   bool      debug_mode_fwd      = false;
   bool      debug_mode_bwd      = false;
   bool      debug_mode_fwd_step = false;
@@ -93,7 +94,8 @@ namespace Test {
   {
 
     double dcharge = -1 + 2 * charge;
-    (void)index;
+
+    if (index < skip) return;
 
     // define start parameters
     double   x  = 0;
@@ -149,18 +151,16 @@ namespace Test {
     double fwd_step_materialInX0 = 0.;
     double fwd_step_materialInL0 = 0.;
     // check that the collected material is not zero
-    // BOOST_TEST(fwd_material.materialInX0 != 0.);
-    // BOOST_TEST(fwd_material.materialInL0 != 0.);
+    BOOST_TEST(fwd_material.materialInX0 != 0.);
+    BOOST_TEST(fwd_material.materialInL0 != 0.);
     // check that the sum of all steps is the total material
     for (auto& materialHit : fwd_material.collected) {
       auto material = materialHit.material;
       fwd_step_materialInX0 += materialHit.pathLength / material.X0();
       fwd_step_materialInL0 += materialHit.pathLength / material.L0();
     }
-    // BOOST_CHECK_CLOSE(fwd_material.materialInX0, fwd_step_materialInX0,
-    // 1e-5);
-    // BOOST_CHECK_CLOSE(fwd_material.materialInL0, fwd_step_materialInL0,
-    // 1e-5);
+    BOOST_CHECK_CLOSE(fwd_material.materialInX0, fwd_step_materialInX0, 1e-5);
+    BOOST_CHECK_CLOSE(fwd_material.materialInL0, fwd_step_materialInL0, 1e-5);
 
     // get the forward output to the screen
     if (debug_mode_fwd) {
@@ -257,14 +257,16 @@ namespace Test {
     const TrackParameters*              sParameters = &start;
     std::vector<const TrackParameters*> stepParameters;
     for (auto& fwd_steps : fwd_material.collected) {
+      if (debug_mode_fwd_step){
+        std::cout << ">>> Forward Step Propgation & Navigation output "
+                  << std::endl;
+      }
       // make a forward step
       const auto& fwd_step = epropagator.propagate(
           *sParameters, (*fwd_steps.surface), fwdstep_navigator_options);
       // get the backward output to the screen
       if (debug_mode_fwd_step) {
         const auto& fwdstep_output = fwd_step.get<DebugOutput::result_type>();
-        std::cout << ">>> Forward Step Propgation & Navigation output "
-                  << std::endl;
         std::cout << fwdstep_output.debug_string << std::endl;
       }
 

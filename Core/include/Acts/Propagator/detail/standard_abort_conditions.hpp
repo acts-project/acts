@@ -73,7 +73,7 @@ namespace detail {
       bool limit_reached = (std::abs(diff_to_limit) < tolerance);
       if (limit_reached) {
         TARGETLOG(cache, "x", "Path limit reached.");
-        // reaching the target oath length triggers the output flush
+        // reaching the target path length triggers the output flush
         cache.target_reached = true;
       } else
         TARGETLOG(cache,
@@ -153,7 +153,8 @@ namespace detail {
       if (targed_reached) {
         TARGETLOG(cache, "x", "Target surface reached.");
         // reaching the target triggers the debug output flush (if configured)
-        cache.target_reached = true;
+        cache.current_surface = surface;
+        cache.target_reached  = true;
       } else
         TARGETLOG(cache,
                   "o",

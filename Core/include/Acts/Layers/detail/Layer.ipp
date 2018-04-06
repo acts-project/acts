@@ -17,6 +17,21 @@ Layer::onLayer(const T& pars, const BoundaryCheck& bcheck) const
   return isOnLayer(pars.position(), bcheck);
 }
 
+template <class T>
+std::vector<FullSurfaceIntersection<T>>
+Layer::decompose(const Surface* /*sSurface*/,
+                 const Surface* /*eSurface*/,
+                 const T& /*parameters*/,
+                 const BoundaryCheck& /*bcheck*/,
+                 bool /*collectSensitive*/,
+                 bool /*collectMaterial*/,
+                 bool /*collectPassive*/) const
+{
+  // the list of valid intersection
+  std::vector<FullSurfaceIntersection<T>> sIntersections;
+  return sIntersections;
+}
+
 // @TODO: Rewrite this with new SurfaceArray (multiple bins per surface)
 template <class T>
 std::vector<SurfaceIntersection>
@@ -187,7 +202,7 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
 inline const SurfaceIntersection
 Layer::surfaceOnApproach(const Vector3D&      position,
                          const Vector3D&      momentum,
-                         NavigationDirection  pDir,
+                         NavigationDirection  nDir,
                          const BoundaryCheck& bcheck,
                          bool                 collectSensitive,
                          bool                 collectMaterial,
@@ -198,6 +213,10 @@ Layer::surfaceOnApproach(const Vector3D&      position,
   // - collectPassive is on -> always
   // - collectSensitive is on -> always
   // - collectMaterial is on
+
+  // Internal direction
+  // - is nDir, but forward if anyDirection was chosen
+  NavigationDirection iDir = (nDir == anyDirection) ? forward : nDir;
   //   && either sensitive or approach surfaces have material
   bool collectPS = collectSensitive || collectPassive;
   bool collectMS = collectMaterial
@@ -205,22 +224,41 @@ Layer::surfaceOnApproach(const Vector3D&      position,
           || surfaceRepresentation().associatedMaterial());
   // now of course this only counts when you have an approach descriptor
   if (m_approachDescriptor && (collectPS || collectMS)) {
+    // test of you are on an approach surface already, if so - provide
+    if (nDir == anyDirection) {
+      for (auto& asf : m_approachDescriptor->containedSurfaces()) {
+        if (asf->isOnSurface(position, bcheck)) {
+          Intersection nIntersection(position, 0., true);
+          return SurfaceIntersection(
+              nIntersection, &surfaceRepresentation(), nDir);
+        }
+      }
+    }
     // that's the collect trigger for always collecting
     // let's find the approach surface
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
-        position, pDir * momentum.unit(), bcheck);
+        position, iDir * momentum.unit(), bcheck);
     if (aSurface.intersection.valid) return (aSurface);
   }
+  // allow to stay if you are on the surface
+  if (nDir == anyDirection
+      && surfaceRepresentation().isOnSurface(position, bcheck)) {
+    // create a valid 0-distance intescetion and return it
+    Intersection nIntersection(position, 0., true);
+    return SurfaceIntersection(nIntersection, &surfaceRepresentation(), nDir);
+  }
+
   // create the intersection with the surface reprensentation
   auto rIntersection = surfaceRepresentation().intersectionEstimate(
-      position, pDir * momentum.unit(), true, bcheck);
+      position, iDir * momentum.unit(), true, bcheck);
   // return the result
-  return SurfaceIntersection(rIntersection, &surfaceRepresentation(), pDir);
+  return SurfaceIntersection(rIntersection, &surfaceRepresentation(), iDir);
 }
 
 inline bool
 Layer::isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck) const
 {
+  if (m_representingVolume) return m_representingVolume->inside(gp);
   return (surfaceRepresentation()).isOnSurface(gp, bcheck);
 }
 

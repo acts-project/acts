@@ -65,7 +65,7 @@ namespace Test {
     double accumulated_path = 0.;
 
     // adaptive sep size of the runge-kutta integration
-    cstep step_size = std::numeric_limits<double>::max();
+    cstep step_size = 100 * units::_cm;
 
     /// Navigation cache: the start surface
     const Surface* start_surface = nullptr;
@@ -86,9 +86,19 @@ namespace Test {
     size_t debug_msg_width = 50;
   };
 
+  template <typename cache_t>
+  NavigationParameters
+  step(cache_t& cache)
+  {
+    // update the cache position
+    cache.pos = cache.pos + cache.step_size * cache.dir;
+    // create navigation parameters
+    return NavigationParameters(cache.pos, cache.dir);
+  }
+
   // the surface cache & the creation of the geometry
   std::vector<std::unique_ptr<const Surface>> sCache;
-  auto                                        tGeometry = testGeometry(sCache);
+  auto tGeometry = testGeometry<PlaneSurface>(sCache);
 
   BOOST_AUTO_TEST_CASE(Navigator_methods)
   {
@@ -114,55 +124,202 @@ namespace Test {
     cache.pos = position;
     cache.dir = momentum.unit();
 
-    // Initialization navigation from start point
+    // (1) Initialization navigation from start point
+    // - this will call resolve_layers() as well
+    // - it will not return to the stepper
     BOOST_TEST(navigator.initialize(nav_par, cache, result));
     // check that the current_volume is set
-    BOOST_TEST(result.current_volume != nullptr);
-    BOOST_TEST(cache.current_surface == nullptr);
-    BOOST_TEST(result.nav_layers.size() == 1);
-
-    if (navigator.debug) {
-      std::cout << "<<< Test 0 >>> initialize at (0,0,0) " << std::endl;
-      std::cout << cache.debug_string << std::endl;
-      cache.debug_string = "";
-    }
-
-    // this will be called by initialze() as well, doesn't
-    // harm to call twice : initialze/resolve the layers
-    BOOST_TEST(navigator.resolve_layers(nav_par, cache, result));
-
-    if (navigator.debug) {
-      std::cout << "<<< Test 1 >>> resolve_layers " << std::endl;
-      std::cout << cache.debug_string << std::endl;
-      cache.debug_string = "";
-    }
-
-    // Standard navigation:
-    // we should have one layer now,
-    // as there is only one material surface (it is the beam pipe)
-    BOOST_TEST(result.nav_layers.size() == 1);
-    // the nav_layer_iterator should point to the first element
-    bool layer_set = (result.nav_layer_iter == result.nav_layers.begin());
-    BOOST_TEST(layer_set);
+    BOOST_TEST((result.current_volume != nullptr));
+    // check that the current_volume is the start_volume
+    BOOST_TEST((result.current_volume == result.start_volume));
+    // check that the current_surface is rest to
+    BOOST_TEST((cache.current_surface == nullptr));
+    // one layer has been found
+    BOOST_TEST((result.nav_layers.size() == 1));
+    // the iterator should point to it
+    BOOST_TEST((result.nav_layer_iter == result.nav_layers.begin()));
+    // cahce the beam pipe radius
     double beamPipeRadius = result.nav_layer_iter->intersection.position.perp();
-    BOOST_TEST(cache.step_size == beamPipeRadius);
-
-    // Also, if we try collect also the passive, we should only have one
-    // layer -> navigation layers are always dark
-    navigator.collectPassive = true;
-    BOOST_TEST(navigator.resolve_layers(nav_par, cache, result));
-    BOOST_TEST(result.nav_layers.size() == 1);
-    // and the layer should still be set
-    layer_set = (result.nav_layer_iter == result.nav_layers.begin());
-    BOOST_TEST(layer_set);
-    navigator.collectPassive = false;
-
+    // step size has been updated
+    BOOST_TEST((cache.step_size == beamPipeRadius));
     if (navigator.debug) {
-      std::cout << "<<< Test 2 >>> resolve_layers with passive " << std::endl;
+      std::cout << "<<< Test 1a >>> initialize at (0,0,0) " << std::endl;
       std::cout << cache.debug_string << std::endl;
       cache.debug_string = "";
     }
 
+    // positive return: do the step
+    nav_par             = step(cache);
+    Vector3D onBeamPipe = nav_par.position();
+
+    // (2) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST(!(navigator.handle_surfaces(nav_par, cache, result)));
+    // handle_layer should sore the layer surface, but return false
+    BOOST_TEST(!(navigator.handle_layers(nav_par, cache, result)));
+    BOOST_TEST((cache.current_surface != nullptr));
+    // handle_boundaries should return true
+    BOOST_TEST(navigator.handle_boundaries(nav_par, cache, result));
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1b >>> handle_layers, and set step to boundary  "
+                << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    // positive return: do the step
+    nav_par             = step(cache);
+    Vector3D onBoundary = nav_par.position();
+
+    // (3) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST(!(navigator.handle_surfaces(nav_par, cache, result)));
+    // handle_layer should sore the layer surface, but return false
+    BOOST_TEST(!(navigator.handle_layers(nav_par, cache, result)));
+    BOOST_TEST((cache.current_surface != nullptr));
+    // handle_boundaries should return true
+    BOOST_TEST(navigator.handle_boundaries(nav_par, cache, result));
+
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1c >>> advance to boundary, initialize layers."
+                << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    // positive return: do the step
+    nav_par                = step(cache);
+    Vector3D on1stApproach = nav_par.position();
+
+    // (4) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST(!(navigator.handle_surfaces(nav_par, cache, result)));
+    // handle_layer should sore the layer surface, but return false
+    BOOST_TEST((navigator.handle_layers(nav_par, cache, result)));
+
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1d >>> advance to layer, initialize surfaces."
+                << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    // positive return: do the step
+    nav_par           = step(cache);
+    Vector3D on1stSf1 = nav_par.position();
+
+    // (5) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST((navigator.handle_surfaces(nav_par, cache, result)));
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1e >>> advance to surface, update." << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    // positive return: do the step
+    nav_par           = step(cache);
+    Vector3D on1stSf2 = nav_par.position();
+
+    // (6) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST((navigator.handle_surfaces(nav_par, cache, result)));
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1f >>> advance to next surface, update."
+                << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    // positive return: do the step
+    nav_par           = step(cache);
+    Vector3D on1stSf3 = nav_par.position();
+
+    // (7) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST((navigator.handle_surfaces(nav_par, cache, result)));
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1g >>> advance to next surface, update."
+                << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    // positive return: do the step
+    nav_par           = step(cache);
+    Vector3D on1stSf4 = nav_par.position();
+
+    // (8) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST((navigator.handle_surfaces(nav_par, cache, result)));
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1h >>> advance to next surface, update."
+                << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    // positive return: do the step
+    nav_par           = step(cache);
+    Vector3D on1stSf5 = nav_par.position();
+
+    // (9) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST(!(navigator.handle_surfaces(nav_par, cache, result)));
+    // handle_layer should sore the layer surface, but return false
+    BOOST_TEST((navigator.handle_layers(nav_par, cache, result)));
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1i >>> advance to last surface, switch layer."
+                << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    // positive return: do the step
+    nav_par                = step(cache);
+    Vector3D on2ndApproach = nav_par.position();
+
+    // (10) re-entering navigator:
+    // initialize should return false
+    BOOST_TEST(!(navigator.initialize(nav_par, cache, result)));
+    // handle_surfaces should return false
+    BOOST_TEST(!(navigator.handle_surfaces(nav_par, cache, result)));
+    // handle_layer should sore the layer surface, but return false
+    BOOST_TEST((navigator.handle_layers(nav_par, cache, result)));
+
+    // the iterator should point to it
+    if (navigator.debug) {
+      std::cout << "<<< Test 1j >>> advance to layer, initialize surfaces."
+                << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+    }
+
+    /*
     // Initialize navigation from beam pipe
     // lets progess to the intersection with the beam-pipe
     Vector3D atBeampipe = result.nav_layer_iter->intersection.position;
@@ -180,8 +337,6 @@ namespace Test {
     // this will call resolve_layer - no returning to the stepper here
     BOOST_TEST(!navigator.initialize(nav_par, cache, result));
     BOOST_TEST(result.nav_layers.size() == 1);
-    layer_set = (result.nav_layer_iter == result.nav_layers.begin());
-    BOOST_TEST(layer_set);
     BOOST_TEST(cache.step_size == 0.);
     // the current surface should now be set
     BOOST_TEST((cache.current_surface != nullptr));
@@ -267,27 +422,65 @@ namespace Test {
     }
 
     // The starting point
-    Vector3D atSf = at1st;
-
-    if (navigator.debug) {
-      std::cout << "<<< Test 9 >>> advance to and handle surface in pixels "
-                << std::endl;
-    }
-
-    // bool progress = true;
-    // while (progress && result.nav_surface_iter != result.nav_surfaces.end()){
-
-    // progress to the surface
-    atSf += cache.step_size * nav_par.momentum().unit();
+    Vector3D atSf = at1st + cache.step_size * nav_par.momentum().unit();
     cache.pos = atSf;
     nav_par   = NavigationParameters(atSf, momentum);
     // and handle the surfaces
     bool progress = navigator.handle_surfaces(nav_par, cache, result);
     BOOST_TEST(progress);
     if (navigator.debug) {
+      std::cout << "<<< Test 9 >>> advance to surface " << std::endl;
       std::cout << cache.debug_string << std::endl;
       cache.debug_string = "";
     }
+
+    // clear result
+    result = Navigator::result_type();
+    // recreate cache and nav pars
+    cache     = Cache();
+    cache.pos = at1st;
+    cache.dir = momentum.unit();
+    nav_par   = NavigationParameters(at1st, momentum);
+
+    // recreate new navigation parameters
+    BOOST_TEST(nav_par.position() == at1st);
+    BOOST_TEST(navigator.initialize(nav_par, cache, result));
+    // we should have a current layer
+    BOOST_TEST((result.start_layer!=nullptr));
+    BOOST_TEST((result.nav_layer_iter->object!=result.start_layer));
+    // the current layer should point to the begin
+    if (navigator.debug) {
+      std::cout << "<<< Test 10 >>> Initialize at 1st layer, approach surface "
+    << std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+
+    }
+
+    // clear result
+    result = Navigator::result_type();
+    // recreate cache and nav pars
+    cache     = Cache();
+    cache.pos = atSf;
+    cache.dir = momentum.unit();
+    nav_par   = NavigationParameters(atSf, momentum);
+
+    // recreate new navigation parameters
+    BOOST_TEST(nav_par.position() == atSf);
+    BOOST_TEST(navigator.initialize(nav_par, cache, result));
+    // we should have a current layer
+    BOOST_TEST((result.start_layer!=nullptr));
+    BOOST_TEST((result.nav_layer_iter->object!=result.start_layer));
+    // the current layer should point to the begin
+    if (navigator.debug) {
+      std::cout << "<<< Test 11 >>> Initialize at 1st layer, sensor surface " <<
+    std::endl;
+      std::cout << cache.debug_string << std::endl;
+      cache.debug_string = "";
+
+    }
+
+    */
   }
 }
 

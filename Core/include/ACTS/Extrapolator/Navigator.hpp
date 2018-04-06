@@ -132,26 +132,29 @@ struct Navigator
   struct this_state
   {
     /// Navigation on surface level
-    /// the vector of navigation surfaces to
+    /// the vector of navigation surfaces to work throgh
     NavigationSurfaces nav_surfaces = {};
     /// the surface iterator
     NavigationSurfaceIter nav_surface_iter = nav_surfaces.end();
 
     /// Navigation on layer level
-    /// the vector of navigation layer to
+    /// the vector of navigation layers to work throgh
     NavigationLayers    nav_layers     = {};
     NavigationLayerIter nav_layer_iter = nav_layers.end();
 
     /// Navigation on volume level
-    /// Navigation cache: the current volume and current layer
-    const Layer*          current_layer  = nullptr;
+    // the vector of boundary surfaces to work throgh
+    NavigationBoundaries   nav_boundaries    = {};
+    NavigationBoundaryIter nav_boundary_iter = nav_boundaries.end();
+
+    /// Navigation cache: the start volume and layer
+    const TrackingVolume* start_volume = nullptr;
+    const Layer*          start_layer  = nullptr;
+    /// Navigation cache: the current volume
     const TrackingVolume* current_volume = nullptr;
     /// Navigation cache: the target volume and target layer
     const Layer*          target_layer  = nullptr;
     const TrackingVolume* target_volume = nullptr;
-
-    NavigationBoundaries   nav_boundaries    = {};
-    NavigationBoundaryIter nav_boundary_iter = nav_boundaries.end();
 
     /// check if we stay on the layer
     bool stay_on_layer = false;
@@ -199,7 +202,7 @@ struct Navigator
     // - a current volume
     // - potentially also a current layer
     // -> return is always to the stepper
-    if (!result.current_volume && initialize(nav_par, cache, result)) return;
+    if (initialize(nav_par, cache, result)) return;
 
     // -------------------------------------------------
     // Surfaces (if present)
@@ -256,6 +259,9 @@ struct Navigator
              result_type&                result) const
   {
 
+    // no initialisation necessary
+    if (result.current_volume) return false;
+
     NAVLOG(cache, result, "Initializing start volume.");
     // we set the current surface to the start surface
     // for eventual post-update actio, e.g. material integration
@@ -267,19 +273,20 @@ struct Navigator
     // short-cut through object association, saves navigation in the
     // geometry and volume tree search for the lowest volume
     if (cache.start_surface && cache.start_surface->associatedLayer()) {
+      NAVLOG(cache, result, "Fast start initialization through association.")
       // assign the current layer and volume by association
-      result.current_layer  = cache.start_surface->associatedLayer();
-      result.current_volume = result.current_layer->trackingVolume();
+      result.start_layer  = cache.start_surface->associatedLayer();
+      result.start_volume = result.start_layer->trackingVolume();
     } else {
+      NAVLOG(cache, result, "Slow start initialization through search.")
       // Slow navigation initialization for start condition:
       // current volume and layer search through global search
-      result.current_volume
+      result.start_volume
           = trackingGeometry->lowestTrackingVolume(nav_par.position());
-      result.current_layer = result.current_volume
+      result.start_layer = result.current_volume
           ? result.current_volume->associatedLayer(nav_par.position())
           : nullptr;
     }
-
     // Fast Navigation initialization for target:
     if (cache.target_surface && cache.target_surface->associatedLayer()) {
       // assign the target volume and the target surface
@@ -297,8 +304,10 @@ struct Navigator
           ? result.target_volume->associatedLayer(target_intersection.position)
           : nullptr;
     }
-    // The navigation is broken, nothing can be done from here on
-    if (result.current_volume) {
+    // A current volume exists
+    if (result.start_volume) {
+      // assign to the current_volume
+      result.current_volume = result.start_volume;
       // initialize layer - if it works go ahead
       if (resolve_layers(nav_par, cache, result)) {
         if (cache.step_size == 0.) {
@@ -309,8 +318,7 @@ struct Navigator
         }
         return true;
       }
-      // layer initialization didn't work - initialize boundaries
-      if (handle_boundaries(nav_par, cache, result)) return true;
+      return false;
     }
     // navigation broken - switch navigator off
     result.navigation_break = true;
@@ -380,7 +388,7 @@ struct Navigator
         result.nav_boundaries.clear();
         result.nav_boundary_iter = result.nav_boundaries.end();
         // resolve the new layer situation
-        if (resolve_layers(nav_par, cache, result, true)) return true;
+        if (resolve_layers(nav_par, cache, result)) return true;
         // return
         NAVLOG(cache, result, "No layers can be reached in the new volume.");
         // self call for new boundaries
@@ -396,7 +404,7 @@ struct Navigator
   ///
   /// Resolve layers.
   ///
-  /// This initializes the layer candidates when starting,
+  /// This initializes the layer candidates when starting
   /// or when entering a new volume
   ///
   /// @tparam cache_t is the cache type
@@ -407,13 +415,14 @@ struct Navigator
   bool
   resolve_layers(const NavigationParameters& nav_par,
                  cache_t&                    cache,
-                 result_t&                   result,
-                 bool                        vSwitch = false) const
+                 result_t&                   result) const
   {
     NAVLOG(cache, result, "We do not have any layers yet, searching.");
+    // check if we are in the start volume
+    bool start = (result.current_volume == result.start_volume);
     // we do not have layers yet, get the candidates
     result.nav_layers = result.current_volume->decompose(
-        (vSwitch ? nullptr : result.current_layer),
+        (start ? result.start_layer : nullptr),
         result.target_layer,
         nav_par,
         true,
@@ -428,9 +437,17 @@ struct Navigator
              result.nav_layers.size() << " layer candidates found.");
       // set the iterator
       result.nav_layer_iter = result.nav_layers.begin();
-      // update the navigation step size before you return
-      update_step(cache, result, result.nav_layer_iter);
-      return true;
+      if (result.nav_layer_iter->object != result.start_layer) {
+        NAVLOG(cache, result, "Stepping towards first layer.");
+        // update the navigation step size before you return
+        update_step(cache, result, result.nav_layer_iter);
+        return true;
+      } else {
+        NAVLOG(cache,
+               result,
+               "Start layer, avoid step to layer approach surface.");
+        return false;
+      }
     }
     NAVLOG(cache, result, "No layer candidates found, switching volume.");
     return false;
@@ -459,12 +476,17 @@ struct Navigator
       while (result.nav_layer_iter != result.nav_layers.end()) {
         // we take the layer representation surface
         auto layer_surface = result.nav_layer_iter->representation;
+        auto layer_volume = result.nav_layer_iter->object->representingVolume();
         // check if we are on the layer
-        if (result.nav_layer_iter->intersection.pathLength == 0.
-            || layer_surface->isOnSurface(nav_par.position(), true)) {
-          NAVLOG(cache,
-                 result,
-                 "Layer (surface) successfully hit, storing & resolve.");
+        bool on_layer = result.nav_layer_iter->intersection.pathLength == 0;
+        on_layer
+            = on_layer || layer_surface->isOnSurface(nav_par.position(), true);
+        if (!on_layer && result.start_layer == result.nav_layer_iter->object) {
+          on_layer = (layer_volume && layer_volume->inside(nav_par.position()));
+        }
+        // check if we are on the layer
+        if (on_layer) {
+          NAVLOG(cache, result, "On layer, storing & resolve.");
           // store the current surface in the cache
           cache.current_surface = layer_surface;
           // if you found surfaces return to the stepper
@@ -516,11 +538,55 @@ struct Navigator
 
   // Navigation through surfaces
   // -----------------------------------------------
+  ///
   // If we are currently iterating over surfaces, we get the current one
   // pointed at by the iterator here.  This is the main routine that
   // advances through the surfaces in order.
   ///
-  /// Resolve the surfaces of this layer
+  /// -----------------------------------------------
+  /* result.nav_surfaces
+     = result.start_layer->getCompatibleSurfaces(nav_par,
+                                                   forward,
+                                                   true,
+                                                   collectSensitive,
+                                                   collectMaterial,
+                                                   collectPassive,
+                                                   navigationLevel,
+                                                   cache.start_surface,
+                                                   cache.target_surface);
+ if (result.nav_surfaces.size()) {
+   NAVLOG(cache,
+          result,
+          result.nav_surfaces.size() << " surface candidates found.");
+   // set the iterator
+   result.nav_surface_iter = result.nav_surfaces.begin();
+   // potentially switch the first one
+   if (onStartSurfaceCheck
+       && std::abs(result.nav_surface_iter->intersection.pathLength)
+         < s_onSurfaceTolerance  ) {
+       //
+       NAVLOG(cache,
+              result,
+              "This is on the start surface, skipping it.");
+       // increase the iterator, but bail out if it's the last one
+       ++result.nav_surface_iter;
+       if (result.nav_surface_iter == result.nav_surfaces.end()){
+           result.nav_surfaces.clear();
+           result.nav_surface_iter = result.nav_surfaces.end();
+           return false;
+       }
+   }
+   // update the navigation step size before you return
+   update_step(cache, result, result.nav_surface_iter);
+   // we still return
+   return true;
+  }
+  // no returing to the stepper
+  return false;
+ }
+  */
+
+  /// Resolve the surfaces of this layer, if not the start layer
   ///
   /// @tparam cache_t is the cache type
   /// @tparam result_t is the cache type
@@ -535,6 +601,9 @@ struct Navigator
     // get the layer and layer surface
     auto layer_surface = result.nav_layer_iter->representation;
     auto nav_layer     = result.nav_layer_iter->object;
+    // are we on the start layer
+    bool on_start      = (nav_layer == result.start_layer);
+    auto start_surface = on_start ? cache.start_surface : layer_surface;
     // get the surfaces
     // @todo: could symmetrise with decompose() method
     result.nav_surfaces
@@ -545,7 +614,7 @@ struct Navigator
                                            collectMaterial,
                                            collectPassive,
                                            navigationLevel,
-                                           layer_surface,
+                                           start_surface,
                                            cache.target_surface);
     // the number of layer candidates
     if (result.nav_surfaces.size()) {
@@ -642,55 +711,6 @@ struct Navigator
     }
     // do not return to the stepper
     return false;
-  }
-
-  // Navigation through surfaces - given there are som
-  // -----------------------------------------------
-  // If we are currently iterating over surfaces, we get the current one
-  // pointed at by the iterator here.  This is the main routine that
-  // advances through the surfaces in order.
-  //
-  // Loop over surface candidates here:
-  //  - if an intersect is  valid but not yet reached
-  //    then return with updated step size
-  //  - if an intersect is not valid, switch to next
-  template <typename cache_t, typename result_t>
-  bool
-  resolve_surfaces(const NavigationParameters& nav_par,
-                   cache_t&                    cache,
-                   result_type&                result) const
-  {
-    // the nav_layer
-    auto layer_surface = result.nav_layer_iter->representation;
-    auto nav_layer     = result.nav_layer_iter->object;
-    // get the surfaces
-    result.nav_surfaces
-        = nav_layer->getCompatibleSurfaces(nav_par,
-                                           cache.nav_dir,
-                                           true,
-                                           collectSensitive,
-                                           collectMaterial,
-                                           collectPassive,
-                                           navigationLevel,
-                                           layer_surface,
-                                           cache.target_surface);
-    result.nav_surface_iter = result.nav_surfaces.begin();
-    // no compatible surface means switch to next layer
-    if (!result.nav_surfaces.size()) {
-      NAVLOG(cache,
-             result,
-             "No further surfaces on this layer to try, switching layer.");
-      ++result.nav_layer_iter;
-      return false;
-    }
-    NAVLOG(cache,
-           result,
-           result.nav_surfaces.size() << " surface candidates found.");
-    // update the step size towards the first one
-    result.nav_surface_iter = result.nav_surfaces.begin();
-    // update the navigation step size before you return
-    update_step(cache, result, result.nav_surface_iter);
-    return true;
   }
 
   /// This method updates the constrained step size

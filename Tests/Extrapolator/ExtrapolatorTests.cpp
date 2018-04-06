@@ -56,7 +56,7 @@ namespace Test {
   EigenPropagator_type epropagator(std::move(estepper));
 
   std::vector<std::unique_ptr<const Surface>> sCache;
-  auto                                        tGeometry = testGeometry(sCache);
+  auto tGeometry = testGeometry<PlaneSurface>(sCache);
 
   const int ntests     = 1;
   bool      debug_mode = true;
