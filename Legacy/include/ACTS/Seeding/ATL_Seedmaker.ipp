@@ -63,8 +63,8 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
   // limit for sp compatible with 1 middle space point
   // ridiculously large to be EXTRA safe
   // only actually keep 5 of these max 5000 (m_maxOneSize of m_maxsizeSP)
-  m_maxsizeSP         = 5000;
-  m_maxOneSize        = 5;
+  m_maxsizeSP  = 5000;
+  m_maxOneSize = 5;
 
   // cache: counting if ran already
   m_state = 0;
@@ -130,8 +130,8 @@ template <typename SpacePoint>
 template <class RandIter>
 void
 Acts::Seeding::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
-                                          RandIter spBegin,
-                                          RandIter spEnd)
+                                                   RandIter spBegin,
+                                                   RandIter spEnd)
 {
   iteration <= 0 ? m_iteration = 0 : m_iteration = iteration;
   erase();
@@ -299,7 +299,6 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
     rfz_map[i]   = 0;
   }
 
-
   // Build maps for radius-azimuthal-Z sorted collections
   //
   for (int f = 0; f <= m_fNmax; ++f) {
@@ -415,8 +414,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildBeamFrameWork()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::convertToBeamFrameWork(SpacePoint* const& sp,
-                                                        float*             r)
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::convertToBeamFrameWork(
+    SpacePoint* const& sp,
+    float*             r)
 {
 
   r[0] = float(sp->x) - m_xbeam;
@@ -431,7 +431,7 @@ template <class SpacePoint>
 void
 Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
 {
-  const float                                                pi2 = 2. * M_PI;
+  const float pi2 = 2. * M_PI;
   typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator r, re;
 
   int  ir0 = 0;
@@ -536,8 +536,8 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp()
   // indices for the z-regions array in weird order.
   // ensures creating seeds first for barrel, then left EC, then right EC
   const int ZI[11] = {5, 6, 7, 8, 9, 10, 4, 3, 2, 1, 0};
-  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator rt[9], rte[9],
-      rb[9], rbe[9];
+  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator rt[9],
+      rte[9], rb[9], rbe[9];
   int nseed = 0;
 
   // Loop through all azimuthal regions
@@ -592,11 +592,13 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
     typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rbe,
     typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rt,
     typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rte,
-    int                                                         NB,
-    int                                                         NT,
-    int&                                                        nseed)
+    int                                                                  NB,
+    int                                                                  NT,
+    int&                                                                 nseed)
 {
-  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator r0 = rb[0], r;
+  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator r0
+      = rb[0],
+      r;
   if (!m_endlist) {
     r0        = m_rMin;
     m_endlist = true;
@@ -805,11 +807,12 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(Acts::Seeding::SPForSeed<SpacePoint>*& p1,
-                                            Acts::Seeding::SPForSeed<SpacePoint>*& p2,
-                                            Acts::Seeding::SPForSeed<SpacePoint>*& p3,
-                                            float                         z,
-                                            float                         q)
+Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(
+    Acts::Seeding::SPForSeed<SpacePoint>*& p1,
+    Acts::Seeding::SPForSeed<SpacePoint>*& p2,
+    Acts::Seeding::SPForSeed<SpacePoint>*& p3,
+    float                                  z,
+    float                                  q)
 {
   // if the number of seeds already in m_OneSeeds does not exceed m_maxOneSize
   // then insert the current SP into m_mapOneSeeds and m_OneSeeds.
@@ -827,8 +830,8 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(Acts::Seeding::SPForSeed<Sp
   // Then remove all entries after the newly inserted entry equal to the new
   // seed.
   else {
-    typename std::multimap<float,
-                           Acts::Seeding::InternalSeed<SpacePoint>*>::reverse_iterator l
+    typename std::multimap<float, Acts::Seeding::InternalSeed<SpacePoint>*>::
+        reverse_iterator l
         = m_mapOneSeeds.rbegin();
 
     if ((*l).first <= q) return;
@@ -836,7 +839,8 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(Acts::Seeding::SPForSeed<Sp
     Acts::Seeding::InternalSeed<SpacePoint>* s = (*l).second;
     s->set(p1, p2, p3, z);
 
-    typename std::multimap<float, Acts::Seeding::InternalSeed<SpacePoint>*>::iterator i
+    typename std::multimap<float,
+                           Acts::Seeding::InternalSeed<SpacePoint>*>::iterator i
         = m_mapOneSeeds.insert(std::make_pair(q, s));
 
     for (++i; i != m_mapOneSeeds.end(); ++i) {
@@ -856,7 +860,7 @@ void
 Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
     Acts::Seeding::SPForSeed<SpacePoint>*& SPb,
     Acts::Seeding::SPForSeed<SpacePoint>*& SP0,
-    float                         Zob)
+    float                                  Zob)
 {
   // allowed (1/helixradius)-delta between 2 seeds
   const float dC = .00003;
@@ -866,8 +870,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
   float u0   = SP0->quality();
 
   std::sort(m_CmSp.begin(), m_CmSp.end(), Acts::Seeding::comCurvature());
-  typename std::vector<std::pair<float, Acts::Seeding::SPForSeed<SpacePoint>*>>::iterator
-      j,
+  typename std::
+      vector<std::pair<float, Acts::Seeding::SPForSeed<SpacePoint>*>>::iterator
+          j,
       jn, i = m_CmSp.begin(), ie = m_CmSp.end();
   jn = i;
 
@@ -952,7 +957,8 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillSeeds()
 {
   m_fillOneSeeds = 0;
 
-  typename std::multimap<float, Acts::Seeding::InternalSeed<SpacePoint>*>::iterator lf
+  typename std::multimap<float,
+                         Acts::Seeding::InternalSeed<SpacePoint>*>::iterator lf
       = m_mapOneSeeds.begin(),
       l = m_mapOneSeeds.begin(), le = m_mapOneSeeds.end();
 

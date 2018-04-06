@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Seeding/ATL_Seedmaker.hpp"
 #include <iostream>
+#include "ACTS/Seeding/ATL_Seedmaker.hpp"
 
 #define BOOST_TEST_MODULE SeedmakerIntegrationTest
 #include <boost/test/included/unit_test.hpp>
@@ -42,7 +42,7 @@ runSeeding(std::vector<SpacePoint*> spVec)
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
   const Acts::Seeding::Seed<SpacePoint>* seed     = seedMaker.next();
-  int                           numSeeds = 0;
+  int                                    numSeeds = 0;
   while (seed != 0) {
     numSeeds++;
     auto spIter = seed->spacePoints().begin();
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
 {
   std::vector<SpacePoint*> spVec;
   std::vector<int>         layerVec{1, 2, 2, 3, 4, 11, 13, 14};
-//clang-format off
+  // clang-format off
   std::vector<float> xVec{-33.3403,
                           -48.2369,
                           -49.4129,
@@ -70,14 +70,8 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
                           -412.277,
                           -462.5564};
 
-  std::vector<float> yVec{ 2.7288,
-                           4.5193,
-                           4.6755,
-                           11.1935,
-                           18.7696,
-                           83.1666,
-                           179.1006,
-                           232.9765};
+  std::vector<float> yVec{
+      2.7288, 4.5193, 4.6755, 11.1935, 18.7696, 83.1666, 179.1006, 232.9765};
 
   std::vector<float> zVec{-74.5553,
                           -91.9763,
@@ -87,7 +81,7 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
                           -381.403,
                           -568.641,
                           -654.2494};
-//clang format on
+  // clang format on
   for (unsigned int i = 0; i < layerVec.size(); i++) {
     SpacePoint* sp = new SpacePoint();
     sp->surface    = layerVec.at(i);
