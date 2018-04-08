@@ -73,7 +73,7 @@ namespace detail {
       bool limit_reached = (std::abs(diff_to_limit) < tolerance);
       if (limit_reached) {
         TARGETLOG(cache, "x", "Path limit reached.");
-        // reaching the target path length triggers the output flush
+        // reaching the target means navigaiton break
         cache.target_reached = true;
       } else
         TARGETLOG(cache,
@@ -93,6 +93,7 @@ namespace detail {
     /// the plain pointer to the surface
     /// - safe as the condition lives shorter than the surface
     const Surface* surface = nullptr;
+
     /// the direction
     NavigationDirection direction = forward;
     /// the tolerance to be defined on surface
@@ -132,6 +133,7 @@ namespace detail {
       // check if the cache filled the current_surface
       if (cache.current_surface == surface) {
         TARGETLOG(cache, "x", "Target surface reached.");
+        // reaching the target calls a navigation break
         cache.target_reached = true;
         return true;
       }
@@ -152,9 +154,14 @@ namespace detail {
       bool targed_reached = (std::abs(distance) <= tolerance);
       if (targed_reached) {
         TARGETLOG(cache, "x", "Target surface reached.");
-        // reaching the target triggers the debug output flush (if configured)
+        // assigning the current_surface
         cache.current_surface = surface;
-        cache.target_reached  = true;
+        TARGETLOG(cache,
+                  "x",
+                  "Current surface set to target surface "
+                      << cache.current_surface->geoID().toString());
+        // reaching the target calls a navigation break
+        cache.target_reached = true;
       } else
         TARGETLOG(cache,
                   "o",

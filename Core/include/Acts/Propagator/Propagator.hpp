@@ -16,6 +16,19 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+#ifndef PROPAGATOR_DEBUG_OUTPUTS
+#define PROPAGATOR_DEBUG_OUTPUTS
+#define PROPLOG(cache, message)                                                \
+  if (cache.debug) {                                                           \
+    std::stringstream dstream;                                                 \
+    dstream << "|->" << std::setw(cache.debug_pfx_width);                      \
+    dstream << "Propagator"                                                    \
+            << " | ";                                                          \
+    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
+    cache.debug_string += dstream.str();                                       \
+  }
+#endif
+
 namespace Acts {
 
 namespace propagation {
@@ -200,10 +213,13 @@ namespace propagation {
                const Options<Actions, Aborters>& options,
                const InteralAborters& internal_stop_conditions) const
     {
+
       // check with surface_abort if it exists
+      PROPLOG(cache, "Calling initial stop conditions.");
       if (internal_stop_conditions(result, cache)) return Status::FAILURE;
 
       // Pre-stepping call to the action list
+      PROPLOG(cache, "Calling pre-stepping action list.");
       options.action_list(cache, result);
 
       // Propagation loop : stepping
@@ -211,9 +227,11 @@ namespace propagation {
         // Perform a propagation step
         result.pathLength += m_impl.step(cache);
         // Call the actions, can (& will likely) modify cache
+        PROPLOG(cache, "Calling action list on individual step.");
         options.action_list(cache, result);
         // Call the stop_conditions and the internal stop conditions
         // break condition triggered, but still count the step
+        PROPLOG(cache, "Calling action stop conditions on individual step.");
         if (options.stop_conditions(result, cache)
             || internal_stop_conditions(result, cache)) {
           ++result.steps;
@@ -221,6 +239,7 @@ namespace propagation {
         }
       }
       // Post-stepping call to the action list
+      PROPLOG(cache, "Calling post-stepping action list.");
       options.action_list(cache, result);
 
       return Status::IN_PROGRESS;

@@ -66,7 +66,7 @@ namespace Test {
   bool      debug_mode_fwd      = false;
   bool      debug_mode_bwd      = false;
   bool      debug_mode_fwd_step = false;
-  bool      debug_mode_bwd_step = false;
+  bool      debug_mode_bwd_step = true;
 
   // This test case checks that no segmentation fault appears
   // - this tests the collection of surfaces
@@ -167,6 +167,12 @@ namespace Test {
       const auto& fwd_output = fwd_result.get<DebugOutput::result_type>();
       std::cout << ">>> Forward Propgation & Navigation output " << std::endl;
       std::cout << fwd_output.debug_string << std::endl;
+      // check if the surfaces are free
+      std::cout << ">>> Material steps found on ..." << std::endl;
+      for (auto& fwd_steps_o : fwd_material.collected) {
+        std::cout << "--> Surface with "
+                  << fwd_steps_o.surface->geoID().toString() << std::endl;
+      }
     }
 
     // backward material test
@@ -217,6 +223,12 @@ namespace Test {
       const auto& bwd_output = bwd_result.get<DebugOutput::result_type>();
       std::cout << ">>> Backward Propgation & Navigation output " << std::endl;
       std::cout << bwd_output.debug_string << std::endl;
+      // check if the surfaces are free
+      std::cout << ">>> Material steps found on ..." << std::endl;
+      for (auto& bwd_steps_o : bwd_material.collected) {
+        std::cout << "--> Surface with "
+                  << bwd_steps_o.surface->geoID().toString() << std::endl;
+      }
     }
 
     // forward-backward compatibility test
@@ -227,7 +239,6 @@ namespace Test {
     BOOST_CHECK_CLOSE(
         bwd_material.materialInL0, bwd_material.materialInL0, 1e-5);
 
-    /*
     // now go from surface to surface and check
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
@@ -253,14 +264,19 @@ namespace Test {
     double fwdstep_step_materialInX0 = 0.;
     double fwdstep_step_materialInL0 = 0.;
 
+    if (debug_mode_fwd_step) {
+      // check if the surfaces are free
+      std::cout << ">>> Steps to be processed sequentially ..." << std::endl;
+      for (auto& fwd_steps_o : fwd_material.collected) {
+        std::cout << "--> Surface with "
+                  << fwd_steps_o.surface->geoID().toString() << std::endl;
+      }
+    }
+
     // move forward step by step through the surfaces
     const TrackParameters*              sParameters = &start;
     std::vector<const TrackParameters*> stepParameters;
     for (auto& fwd_steps : fwd_material.collected) {
-      if (debug_mode_fwd_step){
-        std::cout << ">>> Forward Step Propgation & Navigation output "
-                  << std::endl;
-      }
       // make a forward step
       const auto& fwd_step = epropagator.propagate(
           *sParameters, (*fwd_steps.surface), fwdstep_navigator_options);
@@ -275,7 +291,6 @@ namespace Test {
       fwdstep_step_materialInL0 += fwdstep_material.materialInL0;
 
       if (fwd_step.endParameters != nullptr) {
-        // set the new start parameters for the step to step loop
         sParameters = fwd_step.endParameters->clone();
         // make sure the parameters do not run out of scope
         stepParameters.push_back(sParameters);
@@ -304,7 +319,6 @@ namespace Test {
                 << std::endl;
       std::cout << fwdstep_output.debug_string << std::endl;
     }
-    */
   }
 
 }  // namespace Test

@@ -377,7 +377,7 @@ public:
   /// Returns 'true' if this surface is 'free'
   /// i.e. it does not belong to a detector element, a layer or a tracking
   /// volume
-  bool
+  virtual bool
   isFree() const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
@@ -525,7 +525,8 @@ Surface::associatedIdentifier() const
 inline bool
 Surface::isFree() const
 {
-  return (!m_associatedDetElement && !m_associatedTrackingVolume);
+  return (!m_associatedDetElement && !m_associatedTrackingVolume
+          && !m_associatedLayer);
 }
 
 inline const Layer*

@@ -39,7 +39,7 @@ Acts::Surface::Surface(const DetectorElementBase& detelement,
 }
 
 Acts::Surface::Surface(const Surface& other)
-  : GeometryObject()
+  : GeometryObject(other)
   , m_transform(other.m_transform)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()

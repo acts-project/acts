@@ -68,7 +68,9 @@ public:
   GeometryID&
   operator=(const GeometryID& tddID)
   {
-    if (&tddID != this) m_value = tddID.m_value;
+    if (&tddID != this) {
+      m_value = tddID.m_value;
+    }
     return (*this);
   }
 
@@ -119,7 +121,7 @@ public:
   toString() const;
 
 private:
-  geo_id_value m_value;
+  geo_id_value m_value = 0;  ///!< this is the value of the geoID
 };
 
 inline geo_id_value

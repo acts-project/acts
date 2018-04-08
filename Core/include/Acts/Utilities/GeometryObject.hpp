@@ -36,6 +36,11 @@ public:
   /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
 
+  /// copy-constructor
+  ///
+  /// @param geoID the geometry identifier of the object
+  GeometryObject(const GeometryObject& geoObj) : m_geoID(geoObj.m_geoID) {}
+
   /// assignment operator
   ///
   /// @param geoID the source geoID

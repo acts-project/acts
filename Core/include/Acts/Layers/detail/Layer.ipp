@@ -57,9 +57,6 @@ Layer::getCompatibleSurfaces(const T&                       pars,
   // the test boudnary check is defined by the search type
   BoundaryCheck tCheck = searchType % 2 ? BoundaryCheck(false) : bcheck;
 
-  // check if the parameter surface is already on the Layer
-  // const Surface* tSurface = &(pars.referenceSurface());
-
   // position and momentum/dir
   const Vector3D& pos = pars.position();
   const Vector3D  dir = (pDir == backward)
@@ -97,7 +94,6 @@ Layer::getCompatibleSurfaces(const T&                       pars,
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the collect
     for (auto& aSurface : approachSurfaces) {
-      // skip if start or end surface
       if (aSurface == startSurface || aSurface == endSurface) continue;
       // we fill passive always, rest is only for material
       if (collectPassive || aSurface->associatedMaterial())

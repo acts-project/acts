@@ -79,12 +79,14 @@ struct MaterialCollector
     // if we are on target, everything should have been done
     if (cache.target_reached) return;
 
-    // a current surface has been already assigned by the navigator
-    if (cache.current_surface && cache.current_surface->associatedMaterial()) {
-
+    if (cache.current_surface)
       MATCLOG(cache,
               result,
-              "On surface " << cache.current_surface->geoID().toString());
+              "Material check on surface "
+                  << cache.current_surface->geoID().toString());
+
+    // a current surface has been already assigned by the navigator
+    if (cache.current_surface && cache.current_surface->associatedMaterial()) {
 
       // get the material propertices and only continue
       const MaterialProperties* mProperties

@@ -46,8 +46,8 @@ namespace Test {
     }
 
     // causes pointer assignment
-    bool
-    isFree() const
+    virtual bool
+    isFree() const override final
     {
       return false;
     }
