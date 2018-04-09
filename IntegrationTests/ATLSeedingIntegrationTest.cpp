@@ -121,14 +121,14 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
     spVec.push_back(sp);
   }
 
-  Acts::Seeding::Seed<SpacePoint> s1(spVec.at(0), spVec.at(1), spVec.at(3),0);
-  Acts::Seeding::Seed<SpacePoint> s2(spVec.at(0), spVec.at(1), spVec.at(4),0);
-  Acts::Seeding::Seed<SpacePoint> s3(spVec.at(0), spVec.at(2), spVec.at(3),0);
-  Acts::Seeding::Seed<SpacePoint> s4(spVec.at(0), spVec.at(2), spVec.at(4),0);
-  Acts::Seeding::Seed<SpacePoint> s5(spVec.at(0), spVec.at(3), spVec.at(4),0);
-  Acts::Seeding::Seed<SpacePoint> s6(spVec.at(1), spVec.at(3), spVec.at(4),0);
-  Acts::Seeding::Seed<SpacePoint> s7(spVec.at(2), spVec.at(3), spVec.at(4),0);
-  Acts::Seeding::Seed<SpacePoint> s8(spVec.at(5), spVec.at(6), spVec.at(7),0);
+  Acts::Seeding::Seed<SpacePoint> s1(spVec.at(0), spVec.at(1), spVec.at(3), 0);
+  Acts::Seeding::Seed<SpacePoint> s2(spVec.at(0), spVec.at(1), spVec.at(4), 0);
+  Acts::Seeding::Seed<SpacePoint> s3(spVec.at(0), spVec.at(2), spVec.at(3), 0);
+  Acts::Seeding::Seed<SpacePoint> s4(spVec.at(0), spVec.at(2), spVec.at(4), 0);
+  Acts::Seeding::Seed<SpacePoint> s5(spVec.at(0), spVec.at(3), spVec.at(4), 0);
+  Acts::Seeding::Seed<SpacePoint> s6(spVec.at(1), spVec.at(3), spVec.at(4), 0);
+  Acts::Seeding::Seed<SpacePoint> s7(spVec.at(2), spVec.at(3), spVec.at(4), 0);
+  Acts::Seeding::Seed<SpacePoint> s8(spVec.at(5), spVec.at(6), spVec.at(7), 0);
   std::vector<Acts::Seeding::Seed<SpacePoint>> refVec;
   refVec.push_back(s1);
   refVec.push_back(s2);
@@ -141,12 +141,18 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
 
   auto seedVec = runSeeding(spVec);
 
-  std::sort(refVec.begin(), refVec.end(),seedComparator());
+  std::sort(refVec.begin(), refVec.end(), seedComparator());
   std::sort(seedVec.begin(), seedVec.end(), seedComparator());
 
-  // difference between reference and result shows if results exactly the same (i.e. difference is 0)
+  // difference between reference and result shows if results exactly the same
+  // (i.e. difference is 0)
   std::vector<Acts::Seeding::Seed<SpacePoint>> diff;
-  std::set_difference(refVec.begin(), refVec.end(),seedVec.begin(),seedVec.end(),std::inserter(diff, diff.begin()),seedComparator());
+  std::set_difference(refVec.begin(),
+                      refVec.end(),
+                      seedVec.begin(),
+                      seedVec.end(),
+                      std::inserter(diff, diff.begin()),
+                      seedComparator());
   BOOST_CHECK(diff.size() == 0);
   for (auto sp : spVec) {
     delete sp;
