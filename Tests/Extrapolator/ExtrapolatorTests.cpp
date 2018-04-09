@@ -50,7 +50,7 @@ namespace Test {
   typedef EigenStepper<BField_type>     EigenStepper_type;
   typedef Propagator<EigenStepper_type> EigenPropagator_type;
 
-  const double         Bz = 0.; // 2. * units::_T;
+  const double         Bz = 0.;  // 2. * units::_T;
   BField_type          bField(0, 0, Bz);
   EigenStepper_type    estepper(bField);
   EigenPropagator_type epropagator(std::move(estepper));
@@ -137,7 +137,8 @@ namespace Test {
     navigator.collectMaterial  = true;
     navigator.collectPassive   = false;
 
-    BOOST_TEST((epropagator.propagate(start, navigator_options).endParameters != nullptr));
+    BOOST_TEST((epropagator.propagate(start, navigator_options).endParameters
+                != nullptr));
   }
 
   // This test case checks that no segmentation fault appears
@@ -151,12 +152,9 @@ namespace Test {
           ^ bdata::random((bdata::seed = 11,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((
-                bdata::seed = 12,
-                bdata::distribution
-                 =
-                 std::uniform_real_distribution<>(1.0,
-                 M_PI - 1.0)))
+          ^ bdata::random((bdata::seed = 12,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
           ^ bdata::random((bdata::seed = 13,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
@@ -288,7 +286,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.max_step_size = 25. * units::_cm;
+    navigator_options.max_step_size   = 25. * units::_cm;
     navigator_options.max_path_length = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry
