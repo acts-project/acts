@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
 #include "ACTS/Seeding/ATL_Seedmaker.hpp"
 
 #define BOOST_TEST_MODULE SeedmakerIntegrationTest
@@ -42,8 +42,8 @@ runSeeding(std::vector<SpacePoint*> spVec)
   Acts::Seeding::ATL_Seedmaker<SpacePoint> seedMaker;
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
-  const Acts::Seeding::Seed<SpacePoint>* seed     = seedMaker.next();
-  int                                    numSeeds = 0;
+  const Acts::Seeding::Seed<SpacePoint>*       seed     = seedMaker.next();
+  int                                          numSeeds = 0;
   std::vector<Acts::Seeding::Seed<SpacePoint>> seedVec;
   while (seed != 0) {
     numSeeds++;
@@ -53,7 +53,6 @@ runSeeding(std::vector<SpacePoint*> spVec)
     std::cout << (*spIter)->z << std::endl;
     seedVec.push_back(*seed);
     seed = seedMaker.next();
-
   }
   return seedVec;
 }
@@ -61,13 +60,15 @@ runSeeding(std::vector<SpacePoint*> spVec)
 // used to sort seeds, ignores z
 class seedComparator
 {
-  public:
-  bool operator()(const Acts::Seeding::Seed<SpacePoint> s1, const Acts::Seeding::Seed<SpacePoint> s2)
+public:
+  bool
+  operator()(const Acts::Seeding::Seed<SpacePoint> s1,
+             const Acts::Seeding::Seed<SpacePoint> s2)
   {
     auto sp1It = s1.spacePoints().begin();
     auto sp2It = s2.spacePoints().begin();
-    for (int i = 0; i<3;i++){
-      if((*sp1It) != (*sp2It)){
+    for (int i = 0; i < 3; i++) {
+      if ((*sp1It) != (*sp2It)) {
         return (*sp1It) < (*sp2It);
       }
       sp1It++;

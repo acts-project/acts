@@ -27,10 +27,7 @@ namespace Seeding {
 
   public:
     Seed();
-    Seed(const SpacePoint*,
-         const SpacePoint*,
-         const SpacePoint*,
-         const double);
+    Seed(const SpacePoint*, const SpacePoint*, const SpacePoint*, const double);
     Seed(const Seed&);
     Seed&
     operator=(const Seed&);
@@ -97,19 +94,20 @@ namespace Seeding {
   ///////////////////////////////////////////////////////////////////////////////
   // Constructors
   ///////////////////////////////////////////////////////////////////////////////
-    
+
   template <typename SpacePoint>
-  Seed<SpacePoint>::Seed(const Seed<SpacePoint>& s){
+  Seed<SpacePoint>::Seed(const Seed<SpacePoint>& s)
+  {
     m_spacepoints = s.spacePoints();
-    m_zvertex = s.zVertex();
-    
+    m_zvertex     = s.zVertex();
   }
 
   template <typename SpacePoint>
   Seed<SpacePoint>&
-  Seed<SpacePoint>::operator=(const Seed<SpacePoint>& s){
+  Seed<SpacePoint>::operator=(const Seed<SpacePoint>& s)
+  {
     m_spacepoints = s.spacePoints();
-    m_zvertex = s.zVertex();
+    m_zvertex     = s.zVertex();
     return *this;
   }
 
