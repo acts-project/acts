@@ -9,13 +9,28 @@
 #ifndef ACTS_MATERIALINTERACTOR_H
 #define ACTS_MATERIALINTERACTOR_H
 
+#include <cmath>
 #include <sstream>
+#include <utility>
 #include "ACTS/EventData/ParticleDefinitions.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/MaterialInteraction.hpp"
+
+#ifndef MATINTERACTOR_DEBUG_OUTPUTS
+#define MATINTERACTOR_DEBUG_OUTPUTS
+#define MATILOG(cache, result, message)                                        \
+  if (debug) {                                                                 \
+    std::stringstream dstream;                                                 \
+    dstream << "   " << std::setw(cache.debug_pfx_width);                      \
+    dstream << "material interaction"                                          \
+            << " | ";                                                          \
+    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
+    cache.debug_string += dstream.str();                                       \
+  }
+#endif
 
 namespace Acts {
 
@@ -45,6 +60,8 @@ struct MaterialInteractor
   bool energy_loss_mean = true;
   /// record material in detail
   bool record_detailed = false;
+  /// debug output flag
+  bool debug = false;
   /// The particle masses for lookup
   ParticleMasses particleMasses;
 
@@ -74,15 +91,37 @@ struct MaterialInteractor
   void
   operator()(cache_t& cache, result_type& result) const
   {
+
+    // if we are on target, everything should have been done
+    if (cache.target_reached) return;
+
     // a current surface has been assigned by the navigator
     if (cache.current_surface && cache.current_surface->associatedMaterial()) {
       // @todo adapt sign & particle type
-      int          sign  = 1;
       ParticleType pType = muon;
       // get the surface material and the corresponding material properties
       auto sMaterial   = cache.current_surface->associatedMaterial();
       auto mProperties = sMaterial->material(cache.position());
       if (mProperties) {
+        // pre - full - post update test
+
+        // check if you have a factor for pre/post/full update to do
+        double prepofu = 1.;
+        if (cache.start_surface == cache.current_surface) {
+          MATILOG(cache, result, "Update on start surface: post-update mode.");
+          prepofu = cache.current_surface->associatedMaterial()->factor(
+              cache.nav_dir, postUpdate);
+        } else if (cache.target_surface == cache.current_surface) {
+          MATILOG(cache, result, "Update on target surface: pre-update mode.");
+          prepofu = cache.current_surface->associatedMaterial()->factor(
+              cache.nav_dir, preUpdate);
+        } else
+          MATILOG(cache, result, "Update while pass through: full mode.");
+        if (prepofu == 0.) {
+          MATILOG(cache, result, "Pre/Post factor set material to zero.");
+          return;
+        }
+
         // if we process noise, we need to transport
         // the covariance to the current place
         cache.apply_cov_transport(true);
@@ -96,7 +135,7 @@ struct MaterialInteractor
         // the momentum at current position
         double p    = std::abs(1. / cache.qop);
         double m    = particleMasses.mass.at(pType);
-        double E    = sqrt(p * p + m * m);
+        double E    = std::sqrt(p * p + m * m);
         double beta = p / E;
         // apply the multiple scattering
         if (multiple_scattering) {
@@ -104,13 +143,13 @@ struct MaterialInteractor
           double tInX0 = mProperties->thicknessInX0();
           // retrieve the scattering contribution
           double sigmaScat = sigmaMS(tInX0 * pCorrection, p, beta);
-          double sinTheta  = sin(cache.direction().theta());
+          double sinTheta  = std::sin(cache.direction().theta());
           double sigmaDeltaPhiSq
               = sigmaScat * sigmaScat / (sinTheta * sinTheta);
           double sigmaDeltaThetaSq = sigmaScat * sigmaScat;
           // add or remove @todo implement check for covariance matrix -> 0
-          cache.cov(ePHI, ePHI) += sign * sigmaDeltaPhiSq;
-          cache.cov(eTHETA, eTHETA) += sign * sigmaDeltaThetaSq;
+          cache.cov(ePHI, ePHI) += cache.nav_dir * sigmaDeltaPhiSq;
+          cache.cov(eTHETA, eTHETA) += cache.nav_dir * sigmaDeltaThetaSq;
         }
         // apply the energy loss
         if (energy_loss) {
@@ -121,7 +160,7 @@ struct MaterialInteractor
               ? ionizationEnergyLoss_mean(p, mat, pType, particleMasses)
               : ionizationEnergyLoss_mop(p, mat, pType, particleMasses);
           // apply the energy loss
-          const double dEdl   = sign * eLoss.first;
+          const double dEdl   = cache.nav_dir * eLoss.first;
           const double dE     = thickness * pCorrection * dEdl;
           double       sigmaP = eLoss.second;
           sigmaP *= thickness * pCorrection;
@@ -134,7 +173,7 @@ struct MaterialInteractor
           const double sigmaDeltaE = thickness * pCorrection * sigmaP;
           const double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);
           // update the covariance if needed
-          cache.cov(eQOP, eQOP) += sign * sigmaQoverP * sigmaQoverP;
+          cache.cov(eQOP, eQOP) += cache.nav_dir * sigmaQoverP * sigmaQoverP;
         }
         // record if configured to do so
         if (record_detailed) {

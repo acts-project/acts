@@ -109,7 +109,7 @@ private:
 inline bool
 RectangleBounds::inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const
 {
-  // fast check for Rectangle bounds & absolulte check
+  // fast check for Rectangle bounds & absolute check
   if (bcheck.m_type == BoundaryCheck::Type::eAbsolute) {
     double tx  = bcheck.m_tolerance.x();
     double ty  = bcheck.m_tolerance.y();

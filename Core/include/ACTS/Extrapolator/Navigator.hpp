@@ -256,9 +256,8 @@ struct Navigator
   /// This does not apply to the navigator
   template <typename cache_t>
   void
-  operator()(cache_t& cache) const
+  operator()(cache_t& /*cache*/) const
   {
-    (void)cache;
   }
 
   /// --------------------------------------------------------------------

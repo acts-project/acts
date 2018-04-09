@@ -244,7 +244,7 @@ Layer::surfaceOnApproach(const Vector3D&      position,
     return SurfaceIntersection(nIntersection, &surfaceRepresentation(), nDir);
   }
 
-  // create the intersection with the surface reprensentation
+  // create the intersection with the surface representation
   auto rIntersection = surfaceRepresentation().intersectionEstimate(
       position, iDir * momentum.unit(), true, bcheck);
   // return the result
