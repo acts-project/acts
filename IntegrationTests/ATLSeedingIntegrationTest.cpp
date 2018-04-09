@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <iostream>
+#include <algorithm>
 #include "ACTS/Seeding/ATL_Seedmaker.hpp"
 
 #define BOOST_TEST_MODULE SeedmakerIntegrationTest
@@ -34,7 +35,7 @@ struct SpacePoint
   int surface;
 };
 
-int
+std::vector<Acts::Seeding::Seed<SpacePoint>>
 runSeeding(std::vector<SpacePoint*> spVec)
 {
 
@@ -43,18 +44,38 @@ runSeeding(std::vector<SpacePoint*> spVec)
   seedMaker.find3Sp();
   const Acts::Seeding::Seed<SpacePoint>* seed     = seedMaker.next();
   int                                    numSeeds = 0;
+  std::vector<Acts::Seeding::Seed<SpacePoint>> seedVec;
   while (seed != 0) {
     numSeeds++;
     auto spIter = seed->spacePoints().begin();
-    std::cout << "seed zvalues: " << (*spIter)->z << ", ";
     spIter++;
-    std::cout << (*spIter)->z << ", ";
     spIter++;
     std::cout << (*spIter)->z << std::endl;
+    seedVec.push_back(*seed);
     seed = seedMaker.next();
+
   }
-  return numSeeds;
+  return seedVec;
 }
+
+// used to sort seeds, ignores z
+class seedComparator
+{
+  public:
+  bool operator()(const Acts::Seeding::Seed<SpacePoint> s1, const Acts::Seeding::Seed<SpacePoint> s2)
+  {
+    auto sp1It = s1.spacePoints().begin();
+    auto sp2It = s2.spacePoints().begin();
+    for (int i = 0; i<3;i++){
+      if((*sp1It) != (*sp2It)){
+        return (*sp1It) < (*sp2It);
+      }
+      sp1It++;
+      sp2It++;
+    }
+    return false;
+  }
+};
 
 BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
 {
@@ -95,8 +116,33 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
     spVec.push_back(sp);
   }
 
-  // compare with result obtained from original ATLAS code
-  BOOST_CHECK(runSeeding(spVec) == 8);
+  Acts::Seeding::Seed<SpacePoint> s1(spVec.at(0), spVec.at(1), spVec.at(3),0);
+  Acts::Seeding::Seed<SpacePoint> s2(spVec.at(0), spVec.at(1), spVec.at(4),0);
+  Acts::Seeding::Seed<SpacePoint> s3(spVec.at(0), spVec.at(2), spVec.at(3),0);
+  Acts::Seeding::Seed<SpacePoint> s4(spVec.at(0), spVec.at(2), spVec.at(4),0);
+  Acts::Seeding::Seed<SpacePoint> s5(spVec.at(0), spVec.at(3), spVec.at(4),0);
+  Acts::Seeding::Seed<SpacePoint> s6(spVec.at(1), spVec.at(3), spVec.at(4),0);
+  Acts::Seeding::Seed<SpacePoint> s7(spVec.at(2), spVec.at(3), spVec.at(4),0);
+  Acts::Seeding::Seed<SpacePoint> s8(spVec.at(5), spVec.at(6), spVec.at(7),0);
+  std::vector<Acts::Seeding::Seed<SpacePoint>> refVec;
+  refVec.push_back(s1);
+  refVec.push_back(s2);
+  refVec.push_back(s3);
+  refVec.push_back(s4);
+  refVec.push_back(s5);
+  refVec.push_back(s6);
+  refVec.push_back(s7);
+  refVec.push_back(s8);
+
+  auto seedVec = runSeeding(spVec);
+
+  std::sort(refVec.begin(), refVec.end(),seedComparator());
+  std::sort(seedVec.begin(), seedVec.end(), seedComparator());
+
+  // difference between reference and result shows if results exactly the same (i.e. difference is 0)
+  std::vector<Acts::Seeding::Seed<SpacePoint>> diff;
+  std::set_difference(refVec.begin(), refVec.end(),seedVec.begin(),seedVec.end(),std::inserter(diff, diff.begin()),seedComparator());
+  BOOST_CHECK(diff.size() == 0);
   for (auto sp : spVec) {
     delete sp;
   }
