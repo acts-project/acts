@@ -231,7 +231,7 @@ namespace propagation {
         options.action_list(cache, result);
         // Call the stop_conditions and the internal stop conditions
         // break condition triggered, but still count the step
-        PROPLOG(cache, "Calling action stop conditions on individual step.");
+        PROPLOG(cache, "Calling stop conditions on individual step.");
         if (options.stop_conditions(result, cache)
             || internal_stop_conditions(result, cache)) {
           ++result.steps;

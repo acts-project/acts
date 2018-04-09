@@ -13,6 +13,7 @@
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/CylinderLayer.hpp"
+#include "ACTS/Layers/ProtoLayer.hpp"
 #include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
 #include "ACTS/Material/Material.hpp"
 #include "ACTS/Material/MaterialProperties.hpp"
@@ -226,8 +227,12 @@ namespace Test {
         surface_cache.push_back(std::unique_ptr<const Surface>(mSurface));
       }
       // create the layer and store it
-      auto pLayer = layerCreator->cylinderLayer(
-          layerModules, pLayerBinning[ilp].first, pLayerBinning[ilp].second);
+      ProtoLayer protoLayer(layerModules);
+      protoLayer.envR = {0.5, 0.5};
+      auto pLayer     = layerCreator->cylinderLayer(layerModules,
+                                                pLayerBinning[ilp].first,
+                                                pLayerBinning[ilp].second,
+                                                protoLayer);
       auto approachSurfaces = pLayer->approachDescriptor()->containedSurfaces();
       auto mutableOuterSurface
           = const_cast<Acts::Surface*>(approachSurfaces.at(1));

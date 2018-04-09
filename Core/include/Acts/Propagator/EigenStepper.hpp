@@ -95,15 +95,16 @@ public:
       , accumulated_path(0.)
       , step_size(ndir * ssize)
     {
+      // Get the reference surface for navigation
+      const auto& surface = par.referenceSurface();
+      // cache the surface for navigation
+      start_surface = &surface;
+
       // Init the jacobian matrix if needed
       if (par.covariance()) {
         cov_transport = true;
         cov           = ActsSymMatrixD<5>(*par.covariance());
-        // Get the reference surface for the jacobian
-        const auto& surface = par.referenceSurface();
         surface.initJacobianToGlobal(jac_to_global, pos, dir, par.parameters());
-        // cache the surface for navigation
-        start_surface = &surface;
       }
     }
 

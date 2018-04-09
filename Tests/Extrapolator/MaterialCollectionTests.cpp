@@ -66,7 +66,7 @@ namespace Test {
   bool      debug_mode_fwd      = false;
   bool      debug_mode_bwd      = false;
   bool      debug_mode_fwd_step = false;
-  bool      debug_mode_bwd_step = true;
+  bool      debug_mode_bwd_step = false;
 
   // This test case checks that no segmentation fault appears
   // - this tests the collection of surfaces
@@ -98,23 +98,16 @@ namespace Test {
     if (index < skip) return;
 
     // define start parameters
-    double   x  = 0;
-    double   y  = 0;
-    double   z  = 0;
-    double   px = pT * cos(phi);
-    double   py = pT * sin(phi);
-    double   pz = pT / tan(theta);
-    double   q  = dcharge;
-    Vector3D pos(x, y, z);
-    Vector3D mom(px, py, pz);
-    /// a covariance matrix to transport
-    ActsSymMatrixD<5> cov;
-    // take some major correlations (off-diagonals)
-    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
-        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    double                x  = 0;
+    double                y  = 0;
+    double                z  = 0;
+    double                px = pT * cos(phi);
+    double                py = pT * sin(phi);
+    double                pz = pT / tan(theta);
+    double                q  = dcharge;
+    Vector3D              pos(x, y, z);
+    Vector3D              mom(px, py, pz);
+    CurvilinearParameters start(nullptr, pos, mom, q);
 
     typedef detail::debug_output_actor DebugOutput;
 
@@ -239,6 +232,7 @@ namespace Test {
     BOOST_CHECK_CLOSE(
         bwd_material.materialInL0, bwd_material.materialInL0, 1e-5);
 
+    // stepping from one surface to the next
     // now go from surface to surface and check
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
@@ -318,6 +312,88 @@ namespace Test {
       std::cout << ">>> Forward Final Step Propgation & Navigation output "
                 << std::endl;
       std::cout << fwdstep_output.debug_string << std::endl;
+    }
+
+    // stepping from one surface to the next : backwards
+    // now go from surface to surface and check
+    typename EigenPropagator_type::template Options<ActionList_type,
+                                                    AbortConditions_type>
+        bwdstep_navigator_options;
+
+    bwdstep_navigator_options.max_step_size   = 25. * units::_cm;
+    bwdstep_navigator_options.max_path_length = 25 * units::_cm;
+    bwdstep_navigator_options.direction       = backward;
+    bwdstep_navigator_options.debug           = debug_mode_bwd_step;
+
+    // get the navigator and provide the TrackingGeometry
+    auto& bwdstep_navigator
+        = bwdstep_navigator_options.action_list.get<Navigator>();
+    bwdstep_navigator.trackingGeometry  = tGeometry;
+    bwdstep_navigator.initialStepFactor = stepFactor;
+    bwdstep_navigator.debug             = debug_mode_bwd_step;
+
+    // get the material collector and configure it
+    auto& bwdstep_materialCollector
+        = bwdstep_navigator_options.action_list.get<MaterialCollector>();
+    bwdstep_materialCollector.detailedCollection = true;
+    bwdstep_materialCollector.debug              = debug_mode_bwd_step;
+
+    double bwdstep_step_materialInX0 = 0.;
+    double bwdstep_step_materialInL0 = 0.;
+
+    if (debug_mode_bwd_step) {
+      // check if the surfaces are free
+      std::cout << ">>> Steps to be processed sequentially ..." << std::endl;
+      for (auto& bwd_steps_o : bwd_material.collected) {
+        std::cout << "--> Surface with "
+                  << bwd_steps_o.surface->geoID().toString() << std::endl;
+      }
+    }
+
+    // move forward step by step through the surfaces
+    sParameters = fwd_result.endParameters.get();
+    for (auto& bwd_steps : bwd_material.collected) {
+      // make a forward step
+      const auto& bwd_step = epropagator.propagate(
+          *sParameters, (*bwd_steps.surface), bwdstep_navigator_options);
+      // get the backward output to the screen
+      if (debug_mode_bwd_step) {
+        const auto& bwdstep_output = bwd_step.get<DebugOutput::result_type>();
+        std::cout << bwdstep_output.debug_string << std::endl;
+      }
+
+      auto& bwdstep_material = bwd_step.get<MaterialCollector::result_type>();
+      bwdstep_step_materialInX0 += bwdstep_material.materialInX0;
+      bwdstep_step_materialInL0 += bwdstep_material.materialInL0;
+
+      if (bwd_step.endParameters != nullptr) {
+        sParameters = bwd_step.endParameters->clone();
+        // make sure the parameters do not run out of scope
+        stepParameters.push_back(sParameters);
+      }
+    }
+    // final destination surface
+    const Surface& dbSurface = start.referenceSurface();
+
+    const auto& bwdstep_final = epropagator.propagate(
+        *sParameters, dbSurface, bwdstep_navigator_options);
+
+    auto& bwdstep_material
+        = bwdstep_final.get<MaterialCollector::result_type>();
+    bwdstep_step_materialInX0 += bwdstep_material.materialInX0;
+    bwdstep_step_materialInL0 += bwdstep_material.materialInL0;
+
+    // forward-forward step compatibility test
+    BOOST_CHECK_CLOSE(bwdstep_step_materialInX0, bwd_step_materialInX0, 1e-5);
+    BOOST_CHECK_CLOSE(bwdstep_step_materialInL0, bwd_step_materialInL0, 1e-5);
+
+    // get the backward output to the screen
+    if (debug_mode_bwd_step) {
+      const auto& bwdstep_output
+          = bwdstep_final.get<DebugOutput::result_type>();
+      std::cout << ">>> Forward Final Step Propgation & Navigation output "
+                << std::endl;
+      std::cout << bwdstep_output.debug_string << std::endl;
     }
   }
 

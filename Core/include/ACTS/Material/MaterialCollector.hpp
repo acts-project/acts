@@ -96,12 +96,16 @@ struct MaterialCollector
         // check if you have a factor for pre/post/full update to do
         double prepofu = 1.;
         if (cache.start_surface == cache.current_surface) {
+          MATCLOG(cache, result, "Update on start surface: post-update mode.");
           prepofu = cache.current_surface->associatedMaterial()->factor(
               cache.nav_dir, postUpdate);
         } else if (cache.target_surface == cache.current_surface) {
+          MATCLOG(cache, result, "Update on target surface: pre-update mode.");
           prepofu = cache.current_surface->associatedMaterial()->factor(
               cache.nav_dir, preUpdate);
-        }
+        } else
+          MATCLOG(cache, result, "Update while pass through: full mode.");
+
         if (prepofu == 0.) {
           MATCLOG(cache, result, "Pre/Post factor set material to zero.");
           return;

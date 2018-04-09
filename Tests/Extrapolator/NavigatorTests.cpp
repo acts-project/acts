@@ -230,8 +230,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    nav_par           = step(cache);
-    Vector3D on1stSf2 = nav_par.position();
+    nav_par = step(cache);
 
     // (6) re-entering navigator:
     // initialize should return false
@@ -247,8 +246,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    nav_par           = step(cache);
-    Vector3D on1stSf3 = nav_par.position();
+    nav_par = step(cache);
 
     // (7) re-entering navigator:
     // initialize should return false
@@ -264,8 +262,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    nav_par           = step(cache);
-    Vector3D on1stSf4 = nav_par.position();
+    nav_par = step(cache);
 
     // (8) re-entering navigator:
     // initialize should return false
@@ -300,8 +297,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    nav_par                = step(cache);
-    Vector3D on2ndApproach = nav_par.position();
+    nav_par = step(cache);
 
     // (10) re-entering navigator:
     // initialize should return false
@@ -336,8 +332,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    nav_par           = step(cache);
-    Vector3D on2stSf2 = nav_par.position();
+    nav_par = step(cache);
 
     // (6) re-entering navigator:
     // initialize should return false
