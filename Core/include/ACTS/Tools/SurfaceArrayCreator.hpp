@@ -411,7 +411,6 @@ private:
   /// This method delegates to SurfaceGridLookup itself.
   /// @param sl The @c SurfaceGridLookup
   /// @param surfaces the surfaces
-  // template <class T>
   void
   completeBinning(SurfaceArray::ISurfaceGridLookup&  sl,
                   const std::vector<const Surface*>& surfaces) const
