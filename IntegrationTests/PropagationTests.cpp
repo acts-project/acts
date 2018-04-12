@@ -37,8 +37,6 @@ namespace tt    = boost::test_tools;
 
 namespace Acts {
 
-using namespace propagation;
-
 namespace IntegrationTest {
 
   typedef ConstantBField                BField_type;

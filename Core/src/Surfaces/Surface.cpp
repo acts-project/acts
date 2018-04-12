@@ -97,6 +97,13 @@ Acts::Surface::operator==(const Surface& other) const
 }
 
 bool
+Acts::Surface::isFree() const
+{
+  return (!m_associatedDetElement && !m_associatedTrackingVolume
+          && !m_associatedLayer);
+}
+
+bool
 Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
                            const BoundaryCheck&  bcheck) const
 {

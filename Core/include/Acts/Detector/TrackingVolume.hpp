@@ -259,7 +259,8 @@ public:
   template <class T>
   std::vector<BoundaryIntersection<T>>
   boundarySurfacesOrdered(const T&            parameters,
-                          NavigationDirection pDir = forward) const;
+                          NavigationDirection pDir        = forward,
+                          bool                skipCurrent = false) const;
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -693,7 +694,8 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
 template <class T>
 std::vector<BoundaryIntersection<T>>
 TrackingVolume::boundarySurfacesOrdered(const T&            pars,
-                                        NavigationDirection pDir) const
+                                        NavigationDirection pDir,
+                                        bool                skipCurrent) const
 {
   // assign the direction
   const Vector3D dir
@@ -707,7 +709,11 @@ TrackingVolume::boundarySurfacesOrdered(const T&            pars,
     Intersection                            bsIntersection
         = bSurface->surfaceRepresentation().intersectionEstimate(
             pars.position(), dir, true, false);
-    if (bsIntersection.valid)
+    // check if the intersection is valid, but exlude the on-surface case
+    // when requested
+    if (bsIntersection.valid
+        && (!skipCurrent
+            || std::abs(bsIntersection.pathLength) < s_onSurfaceTolerance))
       bIntersections.push_back(
           BoundaryIntersection<T>(bsIntersection,
                                   bSurface,

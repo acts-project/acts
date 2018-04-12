@@ -522,13 +522,6 @@ Surface::associatedIdentifier() const
   return m_associatedDetElement->identify();
 }
 
-inline bool
-Surface::isFree() const
-{
-  return (!m_associatedDetElement && !m_associatedTrackingVolume
-          && !m_associatedLayer);
-}
-
 inline const Layer*
 Surface::associatedLayer() const
 {

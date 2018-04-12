@@ -38,8 +38,6 @@ namespace tt    = boost::test_tools;
 
 namespace Acts {
 
-using namespace propagation;
-
 namespace Test {
 
   // Global definitions

@@ -257,6 +257,8 @@ public:
         pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), qop;
         surface.initJacobianToGlobal(jac_to_global, pos, dir, pars);
       }
+      // store in the global jacobian
+      jacobian = jac_full * jacobian;
       // return the full transport jacobian
       return jac_full;
     }
@@ -272,6 +274,9 @@ public:
 
     /// Navigation direction, this is needed for searching
     NavigationDirection nav_dir;
+
+    /// The full jacobian of the transport
+    ActsMatrixD<5, 5> jacobian = ActsMatrixD<5, 5>::Identity();
 
     /// Jacobian from local to the global frame
     ActsMatrixD<7, 5> jac_to_global = ActsMatrixD<7, 5>::Zero();
@@ -405,7 +410,8 @@ public:
   ///                      parameters that are being propagated.
   ///
   ///                      the cache contains the desired step size.
-  ///                      It can be negative during ackwards track propagation,
+  ///                      It can be negative during backwards track
+  ///                      propagation,
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
   double

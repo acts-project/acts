@@ -33,8 +33,6 @@ namespace tt    = boost::test_tools;
 
 namespace Acts {
 
-using namespace propagation;
-
 namespace Test {
 
   // This is a simple cache struct to mimic the

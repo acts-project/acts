@@ -13,7 +13,6 @@ namespace tt = boost::test_tools;
 
 namespace Acts {
 
-using namespace propagation;
 using units::Nat2SI;
 
 namespace IntegrationTest {

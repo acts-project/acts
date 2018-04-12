@@ -461,27 +461,36 @@ struct Navigator
   bool
   handle_boundaries(const NavigationParameters& nav_par,
                     cache_t&                    cache,
-                    result_t&                   result) const
+                    result_t&                   result,
+                    bool                        skip_current = false) const
   {
     // only handle boundaries if you are not in the target volume
-    if (result.current_volume == result.target_volume) return false;
+    if (result.current_volume == result.target_volume || !result.current_volume)
+      return false;
 
     // if you came until here, and you have no boundaries
     // then retrieve them
     if (!result.nav_boundaries.size()) {
       // get the navigation boundaries
-      result.nav_boundaries
-          = result.current_volume->boundarySurfacesOrdered(nav_par, forward);
+      result.nav_boundaries = result.current_volume->boundarySurfacesOrdered(
+          nav_par, forward, skip_current);
       // the number of boundary candidates
       NAVLOG(cache,
              result,
              result.nav_boundaries.size()
                  << " boundary surface candidates found.");
-      // set the iterator
-      result.nav_boundary_iter = result.nav_boundaries.begin();
-      // update the navigation step size before you return
-      update_step(cache, result, result.nav_boundary_iter);
-      return true;
+      // set the iterator - if we have boundary surfaces
+      if (result.nav_boundaries.size()) {
+        result.nav_boundary_iter = result.nav_boundaries.begin();
+        // update the navigation step size before you return
+        update_step(cache, result, result.nav_boundary_iter);
+        return true;
+      } else {
+        NAVLOG(cache,
+               result,
+               "No valid boundary surface found, stopping navigation.");
+        return false;
+      }
     }
     // loop over rest of the boundaries
     while (result.nav_boundary_iter != result.nav_boundaries.end()) {
@@ -496,6 +505,13 @@ struct Navigator
         auto boundary         = result.nav_boundary_iter->object;
         result.current_volume = boundary->attachedVolume(
             nav_par.position(), nav_par.momentum(), forward);
+        // no volume anymore : end of known world
+        if (!result.current_volume) {
+          NAVLOG(cache,
+                 result,
+                 "No more volume to progress to, stopping navigation. ");
+          return false;
+        }
         // store the boundary for eventual actors to work on it
         cache.current_surface = boundary_surface;
         if (cache.current_surface)
@@ -511,7 +527,7 @@ struct Navigator
         // return
         NAVLOG(cache, result, "No layers can be reached in the new volume.");
         // self call for new boundaries
-        return handle_boundaries(nav_par, cache, result);
+        return handle_boundaries(nav_par, cache, result, true);
       }
       ++result.nav_boundary_iter;
     }

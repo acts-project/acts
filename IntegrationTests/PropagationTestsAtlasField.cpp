@@ -38,8 +38,6 @@ namespace tt    = boost::test_tools;
 
 namespace Acts {
 
-using namespace propagation;
-
 /// Get the ATLAS field from :
 /// http://acts.web.cern.ch/ACTS/data/AtlasField/AtlasField.tar.gz
 /// to run this

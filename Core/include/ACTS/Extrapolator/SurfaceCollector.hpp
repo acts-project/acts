@@ -17,6 +17,7 @@ namespace Acts {
 /// The information to written out per hit surface
 struct SurfaceHit
 {
+
   const Surface* surface = nullptr;
   Vector3D       position;
   Vector3D       direction;
