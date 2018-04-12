@@ -103,7 +103,7 @@ where `XYZ` is the version number of the LCG release. There are multiple setup
 scripts for different LCG releases, which corresponds to the releases the CI
 tests against. The releases which can be set up using these scripts are therefore
 sure to be compatible. **You can build ACTS with any of these releases**. 
-Additionally, there is a script called `setup_llvm40.sh` which will make the `clang` compiler available on top of one
+Additionally, there is a script called `setup_clang.sh` which will make the `clang` compiler available on top of one
 of the LCG releases. This configuration is also tested by the CI.
 
 Using one of the scripts, you can use the following commands to build ACTS with
