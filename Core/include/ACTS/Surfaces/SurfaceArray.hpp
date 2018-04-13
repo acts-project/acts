@@ -341,6 +341,16 @@ public:
       }
     }
 
+    /// Internal method.
+    /// This is here, because apparently Eigen doesn't like Vector1D.
+    /// So SurfaceGridLookup internally uses std::array<double, 1> instead
+    /// of Vector1D (see the point_t typedef). This needs to be switched here,
+    /// so as not to
+    /// attempt an initialization of Vector1D that Eigen will complain about.
+    /// The SFINAE is hidden in this private method so the public
+    /// interface stays the same, since we don't care what happens
+    /// here on the callers end
+    /// This is the version for DIM>1
     template <size_t D = DIM, std::enable_if_t<D != 1, int> = 0>
     Vector3D
     getBinCenterImpl(size_t bin) const
@@ -349,6 +359,8 @@ public:
           m_grid.getBinCenter(m_grid.getLocalBinIndices(bin)).data()));
     }
 
+    /// Internal method, see above.
+    /// This is the version for DIM==1
     template <size_t D = DIM, std::enable_if_t<D == 1, int> = 0>
     Vector3D
     getBinCenterImpl(size_t bin) const
