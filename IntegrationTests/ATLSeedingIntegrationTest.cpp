@@ -36,7 +36,7 @@ struct SpacePoint
   int surface;
 };
 
-// call sequence to create seeds. Seeds are copied as the 
+// call sequence to create seeds. Seeds are copied as the
 // call to next() overwrites the previous seed object
 std::vector<Acts::Seeding::Seed<SpacePoint>>
 runSeeding(std::vector<SpacePoint*> spVec)
