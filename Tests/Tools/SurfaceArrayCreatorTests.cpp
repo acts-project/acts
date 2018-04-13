@@ -81,7 +81,7 @@ namespace Test {
     template <detail::AxisBoundaryType bdtA,
               detail::AxisBoundaryType bdtB,
               typename... Args>
-    SurfaceArray::AnySurfaceGridLookup_t
+    std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
     makeSurfaceGridLookup2D(Args&&... args)
     {
       return m_SAC.makeSurfaceGridLookup2D<bdtA, bdtB>(
@@ -568,8 +568,8 @@ namespace Test {
         = m_SAC.surfaceArrayOnDisc(surfaces, equidistant, equidistant);
     std::cout << (*sArray) << std::endl;
     auto axes = sArray->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 3);
-    BOOST_TEST(axes.at(1).getNBins() == 10);
+    BOOST_TEST(axes.at(0)->getNBins() == 3);
+    BOOST_TEST(axes.at(1)->getNBins() == 10);
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
@@ -593,12 +593,14 @@ namespace Test {
       return Vector3D(R * std::cos(phi), R * std::sin(phi), loc[1]);
     };
 
-    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl(
-        globalToLocal,
-        localToGlobal,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl.fill(brl);
-    SurfaceArray sa(sl, brl);
+    auto sl
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
+                                                           decltype(zAxis)>>(
+            globalToLocal,
+            localToGlobal,
+            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    sl->fill(brl);
+    SurfaceArray sa(std::move(sl), brl);
 
     // actually filled SA
     for (const auto& srf : brl) {
@@ -641,11 +643,11 @@ namespace Test {
                                       detail::AxisBoundaryType::Bound>(
         globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-    sl.fill(brl);
-    SurfaceArray sa(sl, brl);
+    sl->fill(brl);
+    SurfaceArray sa(std::move(sl), brl);
     auto         axes = sa.getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 30);
-    BOOST_TEST(axes.at(1).getNBins() == 7);
+    BOOST_TEST(axes.at(0)->getNBins() == 30);
+    BOOST_TEST(axes.at(1)->getNBins() == 7);
     std::cout << sa << std::endl;
 
     for (const auto& pr : barrel.second) {
@@ -689,11 +691,11 @@ namespace Test {
                                          detail::AxisBoundaryType::Bound>(
           globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
 
-      sl2.fill(brl);
-      SurfaceArray sa2(sl2, brl);
+      sl2->fill(brl);
+      SurfaceArray sa2(std::move(sl2), brl);
       axes = sa2.getAxes();
-      BOOST_TEST(axes.at(0).getNBins() == 30);
-      BOOST_TEST(axes.at(1).getNBins() == 7);
+      BOOST_TEST(axes.at(0)->getNBins() == 30);
+      BOOST_TEST(axes.at(1)->getNBins() == 7);
 
       // check bin edges
       std::vector<double> phiEdgesExp
@@ -705,13 +707,13 @@ namespace Test {
              3.14159};
       std::vector<double> zEdgesExp = {-14, -10, -6, -2, 2, 6, 10, 14};
       size_t              i         = 0;
-      for (const auto& edge : axes.at(0).getBinEdges()) {
+      for (const auto& edge : axes.at(0)->getBinEdges()) {
         BOOST_TEST_INFO("phi edge index " << i);
         BOOST_TEST(edge == phiEdgesExp.at(i), tt::tolerance(1e-3));
         i++;
       }
       i = 0;
-      for (const auto& edge : axes.at(1).getBinEdges()) {
+      for (const auto& edge : axes.at(1)->getBinEdges()) {
         BOOST_TEST_INFO("z edge index " << i);
         BOOST_TEST(edge == zEdgesExp.at(i), tt::tolerance(1e-3));
         i++;

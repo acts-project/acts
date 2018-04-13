@@ -179,12 +179,15 @@ namespace Test {
                       R * std::sin(loc[0] - angleShift),
                       loc[1]);
     };
-    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl(
-        transform,
-        itransform,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl.fill(brl);
-    SurfaceArray sa(sl, brl);
+
+    auto sl
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
+                                                           decltype(zAxis)>>(
+            transform,
+            itransform,
+            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    sl->fill(brl);
+    SurfaceArray sa(std::move(sl), brl);
 
     // let's see if we can access all surfaces
     sa.dump(std::cout);
@@ -201,13 +204,15 @@ namespace Test {
         = sa.neighbors(itransform(Vector2D(0, 0)));
     BOOST_TEST(neighbors.size() == 9);
 
-    SurfaceArray::SurfaceGridLookup<decltype(phiAxis), decltype(zAxis)> sl2(
-        transform,
-        itransform,
-        std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    auto sl2
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
+                                                           decltype(zAxis)>>(
+            transform,
+            itransform,
+            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     // do NOT fill, only completebinning
-    sl2.completeBinning(brl);
-    SurfaceArray sa2(sl2, brl);
+    sl2->completeBinning(brl);
+    SurfaceArray sa2(std::move(sl2), brl);
     sa.dump(std::cout);
     for (const auto& srf : brl) {
       Vector3D ctr        = srf->binningPosition(binR);
@@ -216,6 +221,23 @@ namespace Test {
       BOOST_TEST(binContent.size() == 1);
       BOOST_TEST(srf == binContent.at(0));
     }
+  }
+
+  BOOST_AUTO_TEST_CASE(SurfaceArray_singleElement)
+  {
+    double w = 3, h = 4;
+    auto   bounds = std::make_shared<const RectangleBounds>(w, h);
+    auto   transptr
+        = std::make_shared<const Transform3D>(Transform3D::Identity());
+    auto srf = std::make_unique<const PlaneSurface>(transptr, bounds);
+
+    SurfaceArray sa(srf.get());
+
+    auto binContent = sa.at(Vector3D(42, 42, 42));
+    BOOST_TEST(binContent.size() == 1);
+    BOOST_TEST(binContent.at(0) == srf.get());
+    BOOST_TEST(sa.surfaces().size() == 1);
+    BOOST_TEST(sa.surfaces().at(0) == srf.get());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

@@ -280,12 +280,12 @@ namespace Test {
     BOOST_TEST(bounds->halflengthZ() == 14 + envZ, tt::tolerance(1e-3));
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     auto axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 30);
-    BOOST_TEST(axes.at(1).getNBins() == 7);
-    BOOST_TEST(axes.at(0).getMin() == -M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(0).getMax() == M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMin() == -14, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMax() == 14, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getNBins() == 30);
+    BOOST_TEST(axes.at(1)->getNBins() == 7);
+    BOOST_TEST(axes.at(0)->getMin() == -M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getMax() == M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMin() == -14, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMax() == 14, tt::tolerance(1e-3));
 
     // CASE II
 
@@ -301,12 +301,12 @@ namespace Test {
     BOOST_TEST(bounds->halflengthZ() == 14 + envZ, tt::tolerance(1e-3));
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 30);
-    BOOST_TEST(axes.at(1).getNBins() == 7);
-    BOOST_TEST(axes.at(0).getMin() == -M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(0).getMax() == M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMin() == -14, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMax() == 14, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getNBins() == 30);
+    BOOST_TEST(axes.at(1)->getNBins() == 7);
+    BOOST_TEST(axes.at(0)->getMin() == -M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getMax() == M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMin() == -14, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMax() == 14, tt::tolerance(1e-3));
 
     layer = std::dynamic_pointer_cast<CylinderLayer>(
         p_LC->cylinderLayer(srf, 13, 3, pl2));
@@ -319,12 +319,12 @@ namespace Test {
     // since we now have multientry bins
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 13);
-    BOOST_TEST(axes.at(1).getNBins() == 3);
-    BOOST_TEST(axes.at(0).getMin() == -M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(0).getMax() == M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMin() == -14, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMax() == 14, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getNBins() == 13);
+    BOOST_TEST(axes.at(1)->getNBins() == 3);
+    BOOST_TEST(axes.at(0)->getMin() == -M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getMax() == M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMin() == -14, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMax() == 14, tt::tolerance(1e-3));
 
     // CASE III
     ProtoLayer pl3;
@@ -345,12 +345,12 @@ namespace Test {
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
 
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 30);
-    BOOST_TEST(axes.at(1).getNBins() == 7);
-    BOOST_TEST(axes.at(0).getMin() == -M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(0).getMax() == M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMin() == -25, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMax() == 25, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getNBins() == 30);
+    BOOST_TEST(axes.at(1)->getNBins() == 7);
+    BOOST_TEST(axes.at(0)->getMin() == -M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getMax() == M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMin() == -25, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMax() == 25, tt::tolerance(1e-3));
   }
 
   BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture)
@@ -378,12 +378,12 @@ namespace Test {
     BOOST_TEST(bounds->rMax() == 25, tt::tolerance(1e-3));
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     auto axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 3);
-    BOOST_TEST(axes.at(1).getNBins() == 30);
-    BOOST_TEST(axes.at(0).getMin() == 5, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(0).getMax() == 25, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMin() == -M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMax() == M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getNBins() == 3);
+    BOOST_TEST(axes.at(1)->getNBins() == 30);
+    BOOST_TEST(axes.at(0)->getMin() == 5, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getMax() == 25, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMin() == -M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMax() == M_PI, tt::tolerance(1e-3));
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
@@ -407,12 +407,12 @@ namespace Test {
     BOOST_TEST(bounds->rMax() == rMax + envMaxR, tt::tolerance(1e-3));
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == nBinsR);
-    BOOST_TEST(axes.at(1).getNBins() == nBinsPhi);
-    BOOST_TEST(axes.at(0).getMin() == rMin, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(0).getMax() == rMax, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMin() == -M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMax() == M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getNBins() == nBinsR);
+    BOOST_TEST(axes.at(1)->getNBins() == nBinsPhi);
+    BOOST_TEST(axes.at(0)->getMin() == rMin, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getMax() == rMax, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMin() == -M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMax() == M_PI, tt::tolerance(1e-3));
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
@@ -429,12 +429,12 @@ namespace Test {
     BOOST_TEST(bounds->rMax() == rMax + envMaxR, tt::tolerance(1e-3));
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == nBinsR);
-    BOOST_TEST(axes.at(1).getNBins() == nBinsPhi);
-    BOOST_TEST(axes.at(0).getMin() == rMin, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(0).getMax() == rMax, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMin() == -M_PI, tt::tolerance(1e-3));
-    BOOST_TEST(axes.at(1).getMax() == M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getNBins() == nBinsR);
+    BOOST_TEST(axes.at(1)->getNBins() == nBinsPhi);
+    BOOST_TEST(axes.at(0)->getMin() == rMin, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(0)->getMax() == rMax, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMin() == -M_PI, tt::tolerance(1e-3));
+    BOOST_TEST(axes.at(1)->getMax() == M_PI, tt::tolerance(1e-3));
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
@@ -461,8 +461,8 @@ namespace Test {
 
     std::cout << (*layer->surfaceArray()) << std::endl;
     auto axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0).getNBins() == 30);
-    BOOST_TEST(axes.at(1).getNBins() == 7);
+    BOOST_TEST(axes.at(0)->getNBins() == 30);
+    BOOST_TEST(axes.at(1)->getNBins() == 7);
 
     // check if binning is good!
     for (const auto& pr : barrel.second) {

@@ -11,7 +11,7 @@
 #include <array>
 #include <tuple>
 #include <utility>
-#include "ACTS/Utilities/concept/AnyAxis.hpp"
+#include "ACTS/Utilities/IAxis.hpp"
 
 namespace Acts {
 
@@ -112,9 +112,9 @@ namespace detail {
     template <class... Axes>
     static void
     getAxes(const std::tuple<Axes...>& axes,
-            std::array<concept::AnyAxis<>, sizeof...(Axes)>& axesArr)
+            std::array<const IAxis*, sizeof...(Axes)>& axesArr)
     {
-      axesArr[N] = std::get<N>(axes);
+      axesArr[N] = static_cast<const IAxis*>(&std::get<N>(axes));
       grid_helper_impl<N - 1>::getAxes(axes, axesArr);
     }
 
@@ -278,9 +278,9 @@ namespace detail {
     template <class... Axes>
     static void
     getAxes(const std::tuple<Axes...>& axes,
-            std::array<concept::AnyAxis<>, sizeof...(Axes)>& axesArr)
+            std::array<const IAxis*, sizeof...(Axes)>& axesArr)
     {
-      axesArr[0u] = std::get<0u>(axes);
+      axesArr[0u] = static_cast<const IAxis*>(&std::get<0u>(axes));
     }
 
     template <class... Axes>
@@ -553,10 +553,10 @@ namespace detail {
     /// @param [in] axes actual axis objects spanning the grid
     /// @return array with copies of the axis
     template <class... Axes>
-    static std::array<concept::AnyAxis<>, sizeof...(Axes)>
+    static std::array<const IAxis*, sizeof...(Axes)>
     getAxes(const std::tuple<Axes...>& axes)
     {
-      std::array<concept::AnyAxis<>, sizeof...(Axes)> arr;
+      std::array<const IAxis*, sizeof...(Axes)> arr;
       grid_helper_impl<sizeof...(Axes) - 1>::getAxes(axes, arr);
       return arr;
     }

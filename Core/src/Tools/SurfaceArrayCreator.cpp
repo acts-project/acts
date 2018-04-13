@@ -16,7 +16,6 @@
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Surfaces/SurfaceArray.hpp"
-#include "ACTS/Surfaces/concept/AnySurfaceGridLookup.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/BinnedArrayXD.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -61,15 +60,15 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
         * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
-  SurfaceArray::AnySurfaceGridLookup_t sl
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl
       = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
                                 detail::AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-  sl.fill(surfaces);
-  completeBinning(sl, surfaces);
+  sl->fill(surfaces);
+  completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(sl, surfaces);
+  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -111,18 +110,18 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
         * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
   };
 
-  SurfaceArray::AnySurfaceGridLookup_t sl
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl
       = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
                                 detail::AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-  sl.fill(surfaces);
-  completeBinning(sl, surfaces);
+  sl->fill(surfaces);
+  completeBinning(*sl, surfaces);
 
   // get the number of bins
-  auto   axes  = sl.getAxes();
-  size_t bins0 = axes.at(0).getNBins();
-  size_t bins1 = axes.at(1).getNBins();
+  auto   axes  = sl->getAxes();
+  size_t bins0 = axes.at(0)->getNBins();
+  size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -130,7 +129,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << bins0 * bins1
                                       << " bins.");
 
-  return std::make_unique<SurfaceArray>(sl, surfaces);
+  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -168,24 +167,24 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
         * Vector3D(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
   };
 
-  SurfaceArray::AnySurfaceGridLookup_t sl
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl
       = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                 detail::AxisBoundaryType::Closed>(
           globalToLocal, localToGlobal, pAxisR, pAxisPhi);
 
   // get the number of bins
-  auto   axes  = sl.getAxes();
-  size_t bins0 = axes.at(0).getNBins();
-  size_t bins1 = axes.at(1).getNBins();
+  auto   axes  = sl->getAxes();
+  size_t bins0 = axes.at(0)->getNBins();
+  size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1
                                       << " bins.");
-  sl.fill(surfaces);
-  completeBinning(sl, surfaces);
+  sl->fill(surfaces);
+  completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(sl, surfaces);
+  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -252,25 +251,25 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
         * Vector3D(loc[0] * std::cos(loc[1]), loc[0] * std::sin(loc[1]), Z);
   };
 
-  SurfaceArray::AnySurfaceGridLookup_t sl
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl
       = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                 detail::AxisBoundaryType::Closed>(
           globalToLocal, localToGlobal, pAxisR, pAxisPhi);
 
   // get the number of bins
-  auto   axes  = sl.getAxes();
-  size_t bins0 = axes.at(0).getNBins();
-  size_t bins1 = axes.at(1).getNBins();
+  auto   axes  = sl->getAxes();
+  size_t bins0 = axes.at(0)->getNBins();
+  size_t bins1 = axes.at(1)->getNBins();
 
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1
                                       << " bins.");
 
-  sl.fill(surfaces);
-  completeBinning(sl, surfaces);
+  sl->fill(surfaces);
+  completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(sl, surfaces);
+  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane

@@ -14,6 +14,7 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
+#include "ACTS/Utilities/IAxis.hpp"
 #include "ACTS/Utilities/Interpolation.hpp"
 #include "ACTS/Utilities/detail/grid_helper.hpp"
 
@@ -426,7 +427,7 @@ namespace detail {
           [](const size_t& a, const size_t& b) { return a * (b + 2); });
     }
 
-    std::array<concept::AnyAxis<>, DIM>
+    std::array<const IAxis*, DIM>
     getAxes() const
     {
       return grid_helper::getAxes(m_axes);
