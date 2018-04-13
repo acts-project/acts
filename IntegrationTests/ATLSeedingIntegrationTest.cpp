@@ -12,6 +12,8 @@
 #define BOOST_TEST_MODULE SeedmakerIntegrationTest
 #include <boost/test/included/unit_test.hpp>
 
+// space point structure with the bare minimum and reasonable default
+// covariances. clusterList default is SCT (strip detector)
 struct SpacePoint
 {
   float x;
@@ -34,6 +36,8 @@ struct SpacePoint
   int surface;
 };
 
+// call sequence to create seeds. Seeds are copied as the 
+// call to next() overwrites the previous seed object
 std::vector<Acts::Seeding::Seed<SpacePoint>>
 runSeeding(std::vector<SpacePoint*> spVec)
 {
@@ -78,6 +82,7 @@ public:
 
 BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
 {
+// single particle event with 405MeV (just above default pT-cut)
   std::vector<SpacePoint*> spVec;
   std::vector<int>         layerVec{1, 2, 2, 3, 4, 11, 13, 14};
   // clang-format off
@@ -108,6 +113,9 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
                           -568.641,
                           -654.2494};
   // clang-format on
+
+// creating space points and setting clusterList to pixel for
+// the detector region of the pixel detector
   for (unsigned int i = 0; i < layerVec.size(); i++) {
     SpacePoint* sp = new SpacePoint();
     sp->surface    = layerVec.at(i);
@@ -120,7 +128,8 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
     }
     spVec.push_back(sp);
   }
-
+// create seeds (without z component) that are found by the ATLAS seed finder
+// as reference
   Acts::Seeding::Seed<SpacePoint> s1(spVec.at(0), spVec.at(1), spVec.at(3), 0);
   Acts::Seeding::Seed<SpacePoint> s2(spVec.at(0), spVec.at(1), spVec.at(4), 0);
   Acts::Seeding::Seed<SpacePoint> s3(spVec.at(0), spVec.at(2), spVec.at(3), 0);
@@ -141,11 +150,13 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
 
   auto seedVec = runSeeding(spVec);
 
+// sorting required for set_difference call. sorting assumes space points
+// inside seed are already sorted.
   std::sort(refVec.begin(), refVec.end(), seedComparator());
   std::sort(seedVec.begin(), seedVec.end(), seedComparator());
 
-  // difference between reference and result shows if results exactly the same
-  // (i.e. difference is 0)
+// difference between reference and result shows if results exactly the same
+// (i.e. difference is 0)
   std::vector<Acts::Seeding::Seed<SpacePoint>> diff;
   std::set_difference(refVec.begin(),
                       refVec.end(),
