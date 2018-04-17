@@ -44,7 +44,7 @@ convertDD4hepDetector(
   // strip detector
   std::vector<dd4hep::DetElement> subDetectors;
   // go through the detector hierarchies
-  collectSubDetectors(worldDetElement, subDetectors);
+  collectSubDetectors_dd4hep(worldDetElement, subDetectors);
   // sort to build detector from bottom to top
   sortSubDetectors(subDetectors);
   // the volume builders of the subdetectors
@@ -55,15 +55,15 @@ convertDD4hepDetector(
   // loop over the sub detectors
   for (auto& subDetector : subDetectors) {
     // create volume builder
-    auto volBuilder = volumeBuilder(subDetector,
-                                    loggingLevel,
-                                    bTypePhi,
-                                    bTypeR,
-                                    bTypeZ,
-                                    layerEnvelopeR,
-                                    layerEnvelopeZ,
-                                    buildDigitizationModules,
-                                    defaultLayerThickness);
+    auto volBuilder = volumeBuilder_dd4hep(subDetector,
+                                           loggingLevel,
+                                           bTypePhi,
+                                           bTypeR,
+                                           bTypeZ,
+                                           layerEnvelopeR,
+                                           layerEnvelopeZ,
+                                           buildDigitizationModules,
+                                           defaultLayerThickness);
     if (volBuilder) {
       // distinguish beam pipe
       if (volBuilder->getConfiguration().buildToRadiusZero) {
@@ -86,7 +86,7 @@ convertDD4hepDetector(
   // Finally add the beam pipe
   if (beamPipeVolumeBuilder) volumeBuilders.push_back(beamPipeVolumeBuilder);
   // create cylinder volume helper
-  auto volumeHelper = cylinderVolumeHelper();
+  auto volumeHelper = cylinderVolumeHelper_dd4hep();
   // hand over the collected volume builders
   Acts::TrackingGeometryBuilder::Config tgbConfig;
   tgbConfig.trackingVolumeHelper   = volumeHelper;
@@ -97,18 +97,18 @@ convertDD4hepDetector(
 }
 
 std::shared_ptr<const CylinderVolumeBuilder>
-volumeBuilder(dd4hep::DetElement subDetector,
-              Logging::Level     loggingLevel,
-              BinningType        bTypePhi,
-              BinningType        bTypeR,
-              BinningType        bTypeZ,
-              double             layerEnvelopeR,
-              double             layerEnvelopeZ,
-              bool               buildDigitizationModules,
-              double             defaultLayerThickness)
+volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
+                     Logging::Level     loggingLevel,
+                     BinningType        bTypePhi,
+                     BinningType        bTypeR,
+                     BinningType        bTypeZ,
+                     double             layerEnvelopeR,
+                     double             layerEnvelopeZ,
+                     bool               buildDigitizationModules,
+                     double             defaultLayerThickness)
 {
   // create cylinder volume helper
-  auto volumeHelper = cylinderVolumeHelper();
+  auto volumeHelper = cylinderVolumeHelper_dd4hep();
   // create local logger for conversion
   auto DD4hepConverterlogger
       = Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
@@ -138,7 +138,7 @@ volumeBuilder(dd4hep::DetElement subDetector,
 
     // go through sub volumes
     std::vector<dd4hep::DetElement> compounds;
-    collectCompounds(subDetector, compounds);
+    collectCompounds_dd4hep(subDetector, compounds);
 
     // get z position to distinguish positive & negative endcap
     double zPos = 0.;
@@ -191,7 +191,7 @@ volumeBuilder(dd4hep::DetElement subDetector,
                 "hierarchy.");
           nEndCap = true;
           ACTS_VERBOSE("[V]       ->is negative endcap");
-          collectLayers(volumeDetElement, negativeLayers);
+          collectLayers_dd4hep(volumeDetElement, negativeLayers);
         } else {
           if (pEndCap)
             throw std::logic_error(
@@ -201,7 +201,7 @@ volumeBuilder(dd4hep::DetElement subDetector,
                 "hierarchy.");
           pEndCap = true;
           ACTS_VERBOSE("[V]       ->is positive endcap");
-          collectLayers(volumeDetElement, positiveLayers);
+          collectLayers_dd4hep(volumeDetElement, positiveLayers);
         }
       } else if (volumeExtension->isBarrel()) {
         if (barrel)
@@ -213,7 +213,7 @@ volumeBuilder(dd4hep::DetElement subDetector,
         ACTS_VERBOSE("[V] Subvolume : "
                      << volumeDetElement.name()
                      << " is a cylinder volume -> handling as a barrel");
-        collectLayers(volumeDetElement, centralLayers);
+        collectLayers_dd4hep(volumeDetElement, centralLayers);
       } else {
         throw std::logic_error(
             std::string("[V] Current DetElement: ") + volumeDetElement.name()
@@ -348,7 +348,7 @@ volumeBuilder(dd4hep::DetElement subDetector,
                  << " is a Barrel volume - building barrel.");
     /// the dd4hep::DetElements of the layers of the central volume
     std::vector<dd4hep::DetElement> centralLayers;
-    collectLayers(subDetector, centralLayers);
+    collectLayers_dd4hep(subDetector, centralLayers);
 
     // configure SurfaceArrayCreator
     auto surfaceArrayCreator
@@ -419,7 +419,7 @@ volumeBuilder(dd4hep::DetElement subDetector,
 }
 
 std::shared_ptr<const Acts::CylinderVolumeHelper>
-cylinderVolumeHelper(Logging::Level loggingLevel)
+cylinderVolumeHelper_dd4hep(Logging::Level loggingLevel)
 {
   // create cylindervolumehelper which can be used by all instances
   // hand over LayerArrayCreator
@@ -441,8 +441,8 @@ cylinderVolumeHelper(Logging::Level loggingLevel)
 }
 
 void
-collectCompounds(dd4hep::DetElement&              detElement,
-                 std::vector<dd4hep::DetElement>& compounds)
+collectCompounds_dd4hep(dd4hep::DetElement&              detElement,
+                        std::vector<dd4hep::DetElement>& compounds)
 {
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
@@ -457,13 +457,13 @@ collectCompounds(dd4hep::DetElement&              detElement,
       compounds.push_back(childDetElement);
       continue;
     }
-    collectCompounds(childDetElement, compounds);
+    collectCompounds_dd4hep(childDetElement, compounds);
   }
 }
 
 void
-collectSubDetectors(dd4hep::DetElement&              detElement,
-                    std::vector<dd4hep::DetElement>& subdetectors)
+collectSubDetectors_dd4hep(dd4hep::DetElement&              detElement,
+                           std::vector<dd4hep::DetElement>& subdetectors)
 {
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
@@ -482,13 +482,13 @@ collectSubDetectors(dd4hep::DetElement&              detElement,
       subdetectors.push_back(childDetElement);
       continue;
     }
-    collectSubDetectors(childDetElement, subdetectors);
+    collectSubDetectors_dd4hep(childDetElement, subdetectors);
   }
 }
 
 void
-collectLayers(dd4hep::DetElement&              detElement,
-              std::vector<dd4hep::DetElement>& layers)
+collectLayers_dd4hep(dd4hep::DetElement&              detElement,
+                     std::vector<dd4hep::DetElement>& layers)
 {
   const dd4hep::DetElement::Children& children = detElement.children();
   for (auto& child : children) {
@@ -502,7 +502,7 @@ collectLayers(dd4hep::DetElement&              detElement,
       layers.push_back(childDetElement);
       continue;
     }
-    collectLayers(childDetElement, layers);
+    collectLayers_dd4hep(childDetElement, layers);
   }
 }
 }  // End of namespace Acts

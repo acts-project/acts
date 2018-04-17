@@ -158,20 +158,20 @@ convertDD4hepDetector(
 /// @return std::shared_ptr the Acts::CylinderVolumeBuilder which can be used to
 /// build the full tracking geometry
 std::shared_ptr<const CylinderVolumeBuilder>
-volumeBuilder(dd4hep::DetElement subDetector,
-              Logging::Level     loggingLevel   = Logging::Level::INFO,
-              BinningType        bTypePhi       = equidistant,
-              BinningType        bTypeR         = equidistant,
-              BinningType        bTypeZ         = equidistant,
-              double             layerEnvelopeR = 1. * units::_mm,
-              double             layerEnvelopeZ = 1. * units::_mm,
-              bool               buildDigitizationModules = false,
-              double             defaultLayerThickness = 10e-10 * units::_mm);
+volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
+                     Logging::Level     loggingLevel   = Logging::Level::INFO,
+                     BinningType        bTypePhi       = equidistant,
+                     BinningType        bTypeR         = equidistant,
+                     BinningType        bTypeZ         = equidistant,
+                     double             layerEnvelopeR = 1. * units::_mm,
+                     double             layerEnvelopeZ = 1. * units::_mm,
+                     bool               buildDigitizationModules = false,
+                     double defaultLayerThickness = 10e-10 * units::_mm);
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder
 std::shared_ptr<const CylinderVolumeHelper>
-cylinderVolumeHelper(Logging::Level loggingLevel = Logging::Level::INFO);
+cylinderVolumeHelper_dd4hep(Logging::Level loggingLevel = Logging::Level::INFO);
 
 /// Method internally used by convertDD4hepDetector to collect all sub detectors
 /// Sub detector means each 'compound' DetElement or DetElements which are
@@ -181,8 +181,8 @@ cylinderVolumeHelper(Logging::Level loggingLevel = Logging::Level::INFO);
 /// @param [out] subdetectors the DD4hep::DetElements of the sub detectors
 /// contained by detElement
 void
-collectSubDetectors(dd4hep::DetElement&              detElement,
-                    std::vector<dd4hep::DetElement>& subdetectors);
+collectSubDetectors_dd4hep(dd4hep::DetElement&              detElement,
+                           std::vector<dd4hep::DetElement>& subdetectors);
 
 /// Method internally used by convertDD4hepDetector to collect all volumes of a
 /// compound detector
@@ -191,8 +191,8 @@ collectSubDetectors(dd4hep::DetElement&              detElement,
 /// @param [out] compounds the DD4hep::DetElements of the compounds contained by
 /// detElement
 void
-collectCompounds(dd4hep::DetElement&              detElement,
-                 std::vector<dd4hep::DetElement>& compounds);
+collectCompounds_dd4hep(dd4hep::DetElement&              detElement,
+                        std::vector<dd4hep::DetElement>& compounds);
 
 /// Method internally used by convertDD4hepDetector
 /// @param [in] detElement the dd4hep::DetElement of the volume of which the
@@ -200,8 +200,8 @@ collectCompounds(dd4hep::DetElement&              detElement,
 /// @param [out] layers the DD4hep::DetElements of the layers contained by
 /// detElement
 void
-collectLayers(dd4hep::DetElement&              detElement,
-              std::vector<dd4hep::DetElement>& layers);
+collectLayers_dd4hep(dd4hep::DetElement&              detElement,
+                     std::vector<dd4hep::DetElement>& layers);
 }
 
 #endif  // ACTS_DD4HEPPLUGIN_CONVERTDD4HEPDETECTOR_H
