@@ -43,41 +43,22 @@ sortDetElementsByID(std::vector<dd4hep::DetElement>& det)
 /// @param [in] loggingLevel is the debug logging level of the conversion and
 /// geometry building
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
-/// binned in
-/// a layer in phi direction. Possible binningtypes:
+/// binned in a layer in phi direction.
+/// @note Possible binningtypes:
 /// 	- arbitrary   - of the sizes if the surfaces and the distance inbetween
-/// 		vary. This mode finds out the bin boundaries by walking through the
+/// 		vary. This mode finds out the bin boundaries by scanning through the
 /// 		surfaces.
-/// 	- equidistant - if the sensitive surfaces are placed euqidistant
+/// 	- equidistant - if the sensitive surfaces are placed equidistantly
 /// @note equidistant binningtype is recommended because it is faster not only
-/// while building of the geometry but also for look up during the
-/// extrapolation
+/// while building the geometry but also for look up during the extrapolation
 /// @param [in] bTypeR is how the sensitive surfaces (modules) should be binned
-/// in a
-/// layer in r direction
-/// 	- arbitrary   - if the sizes if the surfaces and the distance inbetween
-/// 		them vary. This mode finds out the bin boundaries by walking through the
-/// 		surfaces.
-/// 	- equidistant - if the sensitive surfaces are placed euqidistant
-/// @note equidistant binningtype is recommended because it is faster not only
-/// while building of the geometry  but also for look up during the
-/// extrapolation
+/// in a layer in r direction
 /// @param [in] bTypeZ is how the sensitive surfaces (modules) should be binned
-/// in a
-/// layer in z direction
-/// 	- arbitrary   - if the sizes if the surfaces and the distance inbetween
-/// 		them vary. This mode finds out the bin boundaries by walking through the
-/// 		surfaces.
-/// 	- equidistant - if the sensitive surfaces are placed euqidistant
-/// @note equidistant binningtype is recommended because it is faster not only
-/// while building of the geometry  but also for look up during extrapolation
-/// inner/outer
+/// in a layer in z direction
 /// @param [in] layerEnvelopeR the tolerance added to the geometrical extension
-/// in r
-/// of the layers contained to build the volume envelope around
+/// in r of the layers contained to build the volume envelope around
 /// @param [in] layerEnvelopeZ the tolerance added to the geometrical extension
-/// in z
-/// of the layers contained to build the volume envelope around
+/// in z of the layers contained to build the volume envelope around
 /// @param buildDigitizationModules Flag indicating if the
 /// DigitizationModule (needed for Acts geometric digitization) will be
 /// build for every single sensitive DD4hep DetElement translating directly the
@@ -89,8 +70,7 @@ sortDetElementsByID(std::vector<dd4hep::DetElement>& det)
 /// More information on the usage can be found
 /// in the description of the ActsExtension class.
 /// @param [in] defaultLayerThickness In case no surfaces (to be contained by
-/// the
-/// layer) are handed over, the layer thickness will be set to this value
+/// the layer) are handed over, the layer thickness will be set to this value
 /// @note Layers containing surfaces per default are not allowed to be
 ///       attached to each other (navigation will fail at this point).
 ///       However, to allow material layers (not containing surfaces) to be
@@ -139,41 +119,22 @@ convertDD4hepDetector(
 /// @param [in] loggingLevel is the debug logging level of the conversion and
 /// geometry building
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
-/// binned in
-/// a layer in phi direction. Possible binningtypes:
+/// binned in a layer in phi direction.
+/// @note Possible binningtypes:
 /// 	- arbitrary   - of the sizes if the surfaces and the distance inbetween
-/// 		vary. This mode finds out the bin boundaries by walking through the
+/// 		vary. This mode finds out the bin boundaries by scanning through the
 /// 		surfaces.
-/// 	- equidistant - if the sensitive surfaces are placed euqidistant
+/// 	- equidistant - if the sensitive surfaces are placed equidistantly
 /// @note equidistant binningtype is recommended because it is faster not only
-/// while building of the geometry but also for look up during the
-/// extrapolation
+/// while building the geometry but also for look up during the extrapolation
 /// @param [in] bTypeR is how the sensitive surfaces (modules) should be binned
-/// in a
-/// layer in r direction
-/// 	- arbitrary   - if the sizes if the surfaces and the distance inbetween
-/// 		them vary. This mode finds out the bin boundaries by walking through the
-/// 		surfaces.
-/// 	- equidistant - if the sensitive surfaces are placed euqidistant
-/// @note equidistant binningtype is recommended because it is faster not only
-/// while building of the geometry  but also for look up during the
-/// extrapolation
+/// in a layer in r direction
 /// @param [in] bTypeZ is how the sensitive surfaces (modules) should be binned
-/// in a
-/// layer in z direction
-/// 	- arbitrary   - if the sizes if the surfaces and the distance inbetween
-/// 		them vary. This mode finds out the bin boundaries by walking through the
-/// 		surfaces.
-/// 	- equidistant - if the sensitive surfaces are placed euqidistant
-/// @note equidistant binningtype is recommended because it is faster not only
-/// while building of the geometry  but also for look up during extrapolation
-/// inner/outer
+/// in a layer in z direction
 /// @param [in] layerEnvelopeR the tolerance added to the geometrical extension
-/// in r
-/// of the layers contained to build the volume envelope around
+/// in r of the layers contained to build the volume envelope around
 /// @param [in] layerEnvelopeZ the tolerance added to the geometrical extension
-/// in z
-/// of the layers contained to build the volume envelope around
+/// in z of the layers contained to build the volume envelope around
 /// @param buildDigitizationModules Flag indicating if the
 /// DigitizationModule (needed for Acts geometric digitization) will be
 /// build for every single sensitive DD4hep DetElement translating directly the
@@ -185,8 +146,7 @@ convertDD4hepDetector(
 /// More information on the usage can be found
 /// in the description of the ActsExtension class.
 /// @param [in] defaultLayerThickness In case no surfaces (to be contained by
-/// the
-/// layer) are handed over, the layer thickness will be set to this value
+/// the layer) are handed over, the layer thickness will be set to this value
 /// @note Layers containing surfaces per default are not allowed to be
 ///       attached to each other (navigation will fail at this point).
 ///       However, to allow material layers (not containing surfaces) to be
