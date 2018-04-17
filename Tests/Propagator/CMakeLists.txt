@@ -1,7 +1,3 @@
-add_executable (ExtendableTests ExtendableTests.cpp)
-target_link_libraries (ExtendableTests PRIVATE Acts::Core)
-add_test(NAME ExtendableUnitTests COMMAND ExtendableTests)
-
 add_executable (AbortListTests AbortListTests.cpp)
 target_link_libraries (AbortListTests PRIVATE Acts::Core)
 add_test(NAME AbortListUnitTest COMMAND AbortListTests)

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <type_traits>
 #include "Acts/Propagator/detail/condition_uses_result_type.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"

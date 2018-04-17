@@ -157,8 +157,8 @@ struct MaterialInteractor
           const Material mat = mProperties->material();
           // energy loss and straggling
           std::pair<double, double> eLoss = energy_loss_mean
-              ? ionizationEnergyLoss_mean(p, mat, pType, particleMasses)
-              : ionizationEnergyLoss_mop(p, mat, pType, particleMasses);
+              ? ionizationEnergyLoss_mean(p, mat, pType)
+              : ionizationEnergyLoss_mop(p, mat, pType);
           // apply the energy loss
           const double dEdl   = cache.nav_dir * eLoss.first;
           const double dE     = thickness * pCorrection * dEdl;

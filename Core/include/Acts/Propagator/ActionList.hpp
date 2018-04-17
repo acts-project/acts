@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Propagator/detail/Extendable.hpp"
 #include "Acts/Propagator/detail/action_list_implementation.hpp"
 #include "Acts/Propagator/detail/action_signature_check.hpp"

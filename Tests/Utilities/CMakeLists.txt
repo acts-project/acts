@@ -1,3 +1,7 @@
+add_executable (ExtendableTests ExtendableTests.cpp)
+target_link_libraries (ExtendableTests PRIVATE ACTSCore)
+add_test(NAME ExtendableUnitTests COMMAND ExtendableTests)
+
 add_executable (UnitConversionTests UnitConversionTests.cpp)
 target_link_libraries (UnitConversionTests PRIVATE Acts::Core)
 add_test (NAME UnitConversionUnitTest COMMAND UnitConversionTests)

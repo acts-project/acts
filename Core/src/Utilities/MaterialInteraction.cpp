@@ -13,9 +13,8 @@ namespace Acts {
 static std::pair<double, double>
 ionizationEnergyLoss(bool                  mean,
                      double                p,
+                     double                m,
                      const Material&       mat,
-                     ParticleType          particle,
-                     const ParticleMasses& particleMasses,
                      double                path)
 {
   // the return value
@@ -23,7 +22,6 @@ ionizationEnergyLoss(bool                  mean,
   // kinetic variables
   // and the electron mass in MeV
 
-  double m     = particleMasses.mass[particle];
   double me    = particleMasses.mass[electron];
   double mfrac = me / m;
   double E     = sqrt(p * p + m * m);
@@ -91,10 +89,9 @@ std::pair<double, double>
 ionizationEnergyLoss_mean(double                p,
                           const Material&       mat,
                           ParticleType          particle,
-                          const ParticleMasses& particleMasses,
                           double                path)
 {
-  return ionizationEnergyLoss(true, p, mat, particle, particleMasses, path);
+  return ionizationEnergyLoss(true, p, particleMasses.mass[particle], mat, path);
 }
 
 std::pair<double, double>
@@ -104,14 +101,23 @@ ionizationEnergyLoss_mop(double                p,
                          const ParticleMasses& particleMasses,
                          double                path)
 {
-  return ionizationEnergyLoss(false, p, mat, particle, particleMasses, path);
+  return ionizationEnergyLoss(false, p, particleMasses.mass[particle], mat, path);
 }
+
+std::pair<double, double>
+ionizationEnergyLoss_mop(double          p,
+                         double          m,
+                         const Material& mat,
+                         double          path)
+{
+  return ionizationEnergyLoss(false, p, m, mat, path);
+}
+
 
 std::pair<double, double>
 radiationEnergyLoss(double                p,
                     const Material&       mat,
-                    ParticleType          particle,
-                    const ParticleMasses& particleMasses)
+                    ParticleType          particle)
 {
   double sigma = 0.;
   if (!(mat)) return std::pair<double, double>(0., 0.);

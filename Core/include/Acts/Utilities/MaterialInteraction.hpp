@@ -19,6 +19,8 @@ namespace Acts {
 /// The total energy loss consists of the energy loss due to ionization and the
 /// energy loss due to radiation.
 
+static ParticleMasses particleMasses;
+
 /// The mean ionization energy loss along a given path length. The mean energy
 /// loss should be used for reconstruction.
 /// The energy loss is calculated using the following paper
@@ -39,7 +41,6 @@ std::pair<double, double>
 ionizationEnergyLoss_mean(double                p,
                           const Material&       mat,
                           ParticleType          particle,
-                          const ParticleMasses& particleMasses,
                           double                path = 1.);
 
 /// The most probable ionization energy loss along a given path length. The
@@ -62,7 +63,13 @@ std::pair<double, double>
 ionizationEnergyLoss_mop(double                p,
                          const Material&       mat,
                          ParticleType          particle,
-                         const ParticleMasses& particleMasses,
+                         double                path = 1.);
+
+
+std::pair<double, double>
+ionizationEnergyLoss_mop(double                p,
+                         double                m, 
+                         const Material&       mat,
                          double                path = 1.);
 
 /// @todo To be validated
@@ -75,8 +82,7 @@ ionizationEnergyLoss_mop(double                p,
 std::pair<double, double>
 radiationEnergyLoss(double                p,
                     const Material&       mat,
-                    ParticleType          particle,
-                    const ParticleMasses& particleMasses);
+                    ParticleType          particle);
 
 /// multiple scattering as function of dInX0
 ///

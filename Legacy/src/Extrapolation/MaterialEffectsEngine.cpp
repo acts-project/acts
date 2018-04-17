@@ -202,8 +202,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     // (A) - energy loss correction
     if (m_cfg.eLossCorrection) {
       // dE/dl ionization energy loss per path unit
-      auto eLoss = Acts::ionizationEnergyLoss_mean(
-          p, material, eCell.particleType, m_particleMasses);
+      auto eLoss = Acts::ionizationEnergyLoss_mean(p, material, eCell.particleType);
       double dEdl   = sign * dir * eLoss.first;
       double sigmaP = eLoss.second;
       double dE     = thickness * pathCorrection * dEdl;
