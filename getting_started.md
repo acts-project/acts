@@ -74,7 +74,7 @@ by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 | ACTS_BUILD_TESTS             | ON      | build unit tests                                        |
 | ACTS_BUILD_INTEGRATION_TESTS | OFF     | build integration tests                                 |
 | ACTS_BUILD_DD4HEP_PLUGIN     | OFF     | build DD4HEP plugins                                    |
-| ACTS_BUILD_MATERIAL_PLUGIN   | ON      | build Material plugins                                  |
+| ACTS_BUILD_MATERIAL_PLUGIN   | OFF     | build Material plugins                                  |
 | ACTS_BUILD_TGEO_PLUGIN       | OFF     | build TGeo plugins                                      |
 | CMAKE_INSTALL_PREFIX         |         | target installation directory                           |
 | CMAKE_PREFIX_PATH            |         | search path for external packages                       |
