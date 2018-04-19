@@ -70,7 +70,7 @@ by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 |------------------------------|---------|---------------------------------------------------------|
 | ACTS_BUILD_LEGACY            | ON      | build Legacy package                                    |
 | ACTS_BUILD_DOC               | OFF     | build documentation                                     |
-| ACTS_BUILD_EXAMPLES          | ON      | build examples                                          |
+| ACTS_BUILD_EXAMPLES          | OFF     | build examples                                          |
 | ACTS_BUILD_TESTS             | ON      | build unit tests                                        |
 | ACTS_BUILD_INTEGRATION_TESTS | OFF     | build integration tests                                 |
 | ACTS_BUILD_DD4HEP_PLUGIN     | OFF     | build DD4HEP plugins                                    |
