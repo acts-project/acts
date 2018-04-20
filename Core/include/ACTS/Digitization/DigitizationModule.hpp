@@ -57,7 +57,9 @@ public:
   DigitizationModule(std::shared_ptr<const Segmentation> moduleSegmentation,
                      double                              halfThickness,
                      int                                 readoutDirection,
-                     double                              lorentzAngle);
+                     double                              lorentzAngle,
+                     double                              energyThreshold = 0.,
+                     bool                                analogue = false);
 
   /// Virtual Destructor
   virtual ~DigitizationModule() {}
@@ -88,6 +90,14 @@ public:
   /// Return the lorentz Angle
   double
   lorentzAngle() const;
+
+  /// Return the energy threshold per cell of the module
+  double
+  energyThreshold() const;
+
+  /// Indicates if the readout of the module is analogue, default is digital
+  bool
+  analogue() const;
 
   /// return the segmenation
   const Segmentation&
@@ -128,6 +138,10 @@ private:
   double m_lorentzAngle;
   /// and the tangent of it
   double m_tanLorentzAngle;
+  /// energy threshold per cell
+  double m_energyThreshold;
+  /// flag indicating if module is read out analogue
+  bool m_analogue;
   /// segmentation descriptor
   std::shared_ptr<const Segmentation> m_segmentation;
   /// boundary surfaces z, x, y
@@ -154,6 +168,18 @@ inline double
 DigitizationModule::lorentzAngle() const
 {
   return m_lorentzAngle;
+}
+
+inline double
+DigitizationModule::energyThreshold() const
+{
+  return m_energyThreshold;
+}
+
+inline bool
+DigitizationModule::analogue() const
+{
+  return m_analogue;
 }
 
 inline const Segmentation&
