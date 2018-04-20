@@ -120,18 +120,22 @@ public:
   segmentationSurfacesY() const;
 
 private:
-  double m_halfThickness;     ///< half thickness of the module
-  int    m_readoutDirection;  ///< readout is along (+1) / (-1) wrt local z axis
-  double m_lorentzAngle;      ///< the lorentz angle
-  double m_tanLorentzAngle;   ///< and the tangent of it
-
-  std::shared_ptr<const Segmentation>
-                   m_segmentation;           /// segmentation descriptor
-  SurfacePtrVector m_boundarySurfaces;       ///< boundary surfaces z, x, y
-  SurfacePtrVector m_segmentationSurfacesX;  ///< segmentation surfaces in X -
-                                             /// without boundaries
-  SurfacePtrVector m_segmentationSurfacesY;  ///< segmentation surfaces in Y -
-                                             /// without boundaries
+  /// half thickness of the module
+  double m_halfThickness;
+  /// readout is along (+1) / (-1) wrt local z axis
+  int m_readoutDirection;
+  /// the lorentz angle
+  double m_lorentzAngle;
+  /// and the tangent of it
+  double m_tanLorentzAngle;
+  /// segmentation descriptor
+  std::shared_ptr<const Segmentation> m_segmentation;
+  /// boundary surfaces z, x, y
+  SurfacePtrVector m_boundarySurfaces;
+  /// segmentation surfaces in X - without boundaries
+  SurfacePtrVector m_segmentationSurfacesX;
+  /// segmentation surfaces in Y - without boundaries
+  SurfacePtrVector m_segmentationSurfacesY;
 };
 
 inline double
