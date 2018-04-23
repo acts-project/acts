@@ -11,6 +11,7 @@
 //
 #include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 //
 //
 #include <limits>
@@ -40,6 +41,12 @@ public:
     : GeometryObject(), LineSurface(lbounds, detelement, identifier)
   { /* nop */
   }
+
+  LineSurfaceStub(const variant_data& data)
+    : GeometryObject(), LineSurface(data)
+  { /* nop */
+  }
+
   //
   LineSurfaceStub(const LineSurfaceStub& ls) : GeometryObject(), LineSurface(ls)
   { /* nop */

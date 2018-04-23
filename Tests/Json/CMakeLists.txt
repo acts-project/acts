@@ -1,0 +1,5 @@
+add_executable (FromJsonTests FromJsonTests.cpp)
+target_include_directories (FromJsonTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(FromJsonTests PRIVATE ACTSCore ACTSJsonPlugin)
+add_test (NAME FromJsonUnitTest COMMAND FromJsonTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST FromJsonUnitTest TARGETS FromJsonTests)

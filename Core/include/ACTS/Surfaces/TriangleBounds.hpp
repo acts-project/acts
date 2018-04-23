@@ -13,12 +13,14 @@
 #ifndef ACTS_SURFACESTRIANGLEBOUNDS_H
 #define ACTS_SURFACESTRIANGLEBOUNDS_H
 
+#include <array>
 #include <utility>
 
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -47,7 +49,12 @@ public:
   /// Constructor with coordinates of vertices
   ///
   /// @param vertices is the vector of vertices
-  TriangleBounds(const std::vector<Vector2D>& vertices);
+  TriangleBounds(const std::array<Vector2D, 3>& vertices);
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  TriangleBounds(const variant_data& data);
 
   virtual ~TriangleBounds();
 
@@ -91,8 +98,13 @@ public:
   virtual std::ostream&
   dump(std::ostream& sl) const final override;
 
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  variant_data
+  toVariantData() const override;
+
 private:
-  Vector2D        m_vertices[3];
+  std::array<Vector2D, 3> m_vertices;
   RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 

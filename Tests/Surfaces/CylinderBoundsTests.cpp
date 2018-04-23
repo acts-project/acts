@@ -20,6 +20,7 @@
 //
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 //
 #include <limits>
 
@@ -132,6 +133,31 @@ namespace Test {
     BOOST_TEST(assignedCylinderBounds.r() == cylinderBoundsObject.r());
     BOOST_TEST(assignedCylinderBounds == cylinderBoundsObject);
   }
+
+  BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData)
+  {
+    double         radius = 10, avgPhi = 0, halfPhi = M_PI, halfZ = 15;
+    CylinderBounds cylBounds(radius, avgPhi, halfPhi, halfZ);
+
+    variant_data var_data = cylBounds.toVariantData();
+    std::cout << var_data << std::endl;
+
+    variant_map var_map = boost::get<variant_map>(var_data);
+    BOOST_TEST(var_map.get<std::string>("type") == "CylinderBounds");
+    variant_map pl = var_map.get<variant_map>("payload");
+
+    BOOST_TEST(pl.get<double>("radius") == radius);
+    BOOST_TEST(pl.get<double>("avgPhi") == avgPhi);
+    BOOST_TEST(pl.get<double>("halfPhi") == halfPhi);
+    BOOST_TEST(pl.get<double>("halfZ") == halfZ);
+
+    CylinderBounds cylBounds2(var_data);
+    BOOST_TEST(cylBounds.r() == cylBounds2.r());
+    BOOST_TEST(cylBounds.averagePhi() == cylBounds2.averagePhi());
+    BOOST_TEST(cylBounds.halfPhiSector() == cylBounds2.halfPhiSector());
+    BOOST_TEST(cylBounds.halflengthZ() == cylBounds2.halflengthZ());
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

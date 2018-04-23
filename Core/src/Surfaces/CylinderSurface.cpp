@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include "ACTS/Utilities/ThrowAssert.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
@@ -68,6 +69,28 @@ Acts::CylinderSurface::CylinderSurface(
   : Surface(htrans), m_bounds(cbounds)
 {
   throw_assert(cbounds, "CylinderBounds must not be nullptr");
+}
+
+Acts::CylinderSurface::CylinderSurface(const variant_data& data_)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(data.count("type"), "Variant data must have type.");
+  std::string type = data.get<std::string>("type");
+  throw_assert(type == "CylinderSurface",
+               "Variant data type must be CylinderSurface");
+
+  variant_map payload    = data.get<variant_map>("payload");
+  variant_map var_bounds = payload.get<variant_map>("bounds");
+
+  m_bounds = std::make_shared<const CylinderBounds>(var_bounds);
+
+  if (payload.count("transform")) {
+    // we have a transform
+    auto trf = std::make_shared<const Transform3D>(
+        from_variant<Transform3D>(payload.get<variant_map>("transform")));
+    m_transform = trf;
+  }
 }
 
 Acts::CylinderSurface::~CylinderSurface()
@@ -315,4 +338,22 @@ const Acts::CylinderBounds&
 Acts::CylinderSurface::bounds() const
 {
   return (*m_bounds.get());
+}
+
+Acts::variant_data
+Acts::CylinderSurface::toVariantData() const
+{
+  using namespace std::string_literals;
+
+  variant_map payload;
+  payload["bounds"] = m_bounds->toVariantData();
+
+  if (m_transform) {
+    payload["transform"] = to_variant(*m_transform);
+  }
+
+  variant_map data;
+  data["type"]    = "CylinderSurface"s;
+  data["payload"] = payload;
+  return data;
 }

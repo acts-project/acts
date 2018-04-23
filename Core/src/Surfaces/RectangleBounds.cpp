@@ -11,6 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "ACTS/Utilities/ThrowAssert.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -19,6 +21,19 @@
 Acts::RectangleBounds::RectangleBounds(double halex, double haley)
   : m_halfX(std::abs(halex)), m_halfY(std::abs(haley))
 {
+}
+
+Acts::RectangleBounds::RectangleBounds(const variant_data& data_)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(data_);
+  std::string        type = data.get<std::string>("type");
+  throw_assert(type == "RectangleBounds", "Type must be RectangleBounds");
+
+  const variant_map& payload = data.get<variant_map>("payload");
+
+  m_halfX = payload.get<double>("halflengthX");
+  m_halfY = payload.get<double>("halflengthY");
 }
 
 Acts::RectangleBounds::~RectangleBounds()
@@ -81,4 +96,18 @@ Acts::RectangleBounds::dump(std::ostream& sl) const
      << "(" << halflengthX() << ", " << halflengthY() << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::RectangleBounds::toVariantData() const
+{
+  using namespace std::string_literals;
+
+  variant_map payload;
+  payload["halflengthX"] = m_halfX;
+  payload["halflengthY"] = m_halfY;
+
+  variant_map data({{"type", "RectangleBounds"s}, {"payload", payload}});
+
+  return data;
 }

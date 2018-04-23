@@ -19,6 +19,7 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -50,6 +51,11 @@ public:
   /// @param maxhalex maximal half length X, definition at maximum halflength Y
   /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  TrapezoidBounds(const variant_data& data);
 
   virtual ~TrapezoidBounds();
 
@@ -145,6 +151,11 @@ public:
   /// (second coordinate of local surface frame)
   double
   halflengthY() const;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  variant_data
+  toVariantData() const override;
 
 private:
   double          m_minHalfX;

@@ -17,6 +17,7 @@
 #include "ACTS/Surfaces/LineSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -74,6 +75,11 @@ public:
   /// @param htrans is the additional transform applied after copying
   StrawSurface(const StrawSurface& other, const Transform3D& htrans);
 
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  StrawSurface(const variant_data& data);
+
   virtual ~StrawSurface();
 
   /// Assignment operator
@@ -95,6 +101,11 @@ public:
   /// Return properly formatted class name for screen output */
   virtual std::string
   name() const final override;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  virtual variant_data
+  toVariantData() const override;
 };
 
 inline Surface::SurfaceType

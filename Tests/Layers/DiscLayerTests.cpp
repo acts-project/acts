@@ -24,7 +24,9 @@
 #include "ACTS/EventData/SingleTrackParameters.hpp"
 #include "ACTS/Layers/GenericApproachDescriptor.hpp"
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Volumes/CuboidVolumeBounds.hpp"
+#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;
@@ -96,6 +98,41 @@ namespace Test {
       // auto planeSurface = pDiscLayer->surfaceRepresentation();
       BOOST_TEST(pDiscLayer->surfaceRepresentation().name()
                  == std::string("Acts::DiscSurface"));
+    }
+
+    BOOST_AUTO_TEST_CASE(DiscLayer_toVariantData)
+    {
+      Translation3D translation{0., 1., 2.};
+      auto pTransform = std::make_shared<const Transform3D>(translation);
+      const double minRad(10.), maxRad(5.);  // 20 x 10 disc
+      auto         pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);
+      auto         pDiscLayer = std::dynamic_pointer_cast<DiscLayer>(
+          DiscLayer::create(pTransform, pDisc, nullptr, 6));
+
+      variant_data var_data = pDiscLayer->toVariantData();
+      std::cout << var_data << std::endl;
+
+      variant_map var_map = boost::get<variant_map>(var_data);
+      variant_map pl      = var_map.get<variant_map>("payload");
+      BOOST_TEST(pl.get<double>("thickness") == 6);
+      Transform3D act = from_variant<Transform3D>(pl.at("transform"));
+      BOOST_TEST(pTransform->isApprox(act));
+
+      auto pDiscLayer2
+          = std::dynamic_pointer_cast<DiscLayer>(DiscLayer::create(var_data));
+
+      BOOST_TEST(pDiscLayer->thickness() == pDiscLayer2->thickness());
+      BOOST_TEST(pDiscLayer->transform().isApprox(pDiscLayer2->transform()));
+
+      auto cvBoundsExp = dynamic_cast<const CylinderVolumeBounds*>(
+          &(pDiscLayer->representingVolume()->volumeBounds()));
+      auto cvBoundsAct = dynamic_cast<const CylinderVolumeBounds*>(
+          &(pDiscLayer2->representingVolume()->volumeBounds()));
+
+      BOOST_TEST(cvBoundsExp->innerRadius() == cvBoundsAct->innerRadius());
+      BOOST_TEST(cvBoundsExp->outerRadius() == cvBoundsAct->outerRadius());
+      BOOST_TEST(cvBoundsExp->halfPhiSector() == cvBoundsAct->halfPhiSector());
+      BOOST_TEST(cvBoundsExp->halflengthZ() == cvBoundsAct->halflengthZ());
     }
 
     BOOST_AUTO_TEST_SUITE_END()

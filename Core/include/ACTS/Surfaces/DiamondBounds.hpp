@@ -19,6 +19,7 @@
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -52,6 +53,11 @@ public:
                 double maxhalex,
                 double haley1,
                 double haley2);
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  DiamondBounds(const variant_data& data);
 
   virtual ~DiamondBounds();
 
@@ -118,6 +124,11 @@ public:
   /// This method returns the halflength in Y of trapezoid at positive Y
   double
   halflengthY2() const;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  variant_data
+  toVariantData() const override;
 
 private:
   double          m_minHalfX, m_medHalfX, m_maxHalfX;

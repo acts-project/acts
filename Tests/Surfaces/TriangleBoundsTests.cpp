@@ -21,9 +21,10 @@
 
 #include "ACTS/Surfaces/TriangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
-namespace utf    = boost::unit_test;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
+namespace utf = boost::unit_test;
+// const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -32,8 +33,9 @@ namespace Test {
   /// Unit test for creating compliant/non-compliant TriangleBounds object
   BOOST_AUTO_TEST_CASE(TriangleBoundsConstruction)
   {
-    std::vector<Vector2D> vertices{
-        {1., 1.}, {4., 1.}, {4., 5.}};  // 3-4-5 triangle
+    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
+                                       Vector2D(4., 1.),
+                                       Vector2D(4., 5.)}});  // 3-4-5 triangle
     // test default construction
     // TriangleBounds defaultConstructedTriangleBounds;  //deleted
     //
@@ -47,10 +49,11 @@ namespace Test {
   }
 
   /// Unit tests for TriangleBounds properties
-  BOOST_AUTO_TEST_CASE(TriangleBoundsProperties, *utf::expected_failures(2))
+  BOOST_AUTO_TEST_CASE(TriangleBoundsProperties)
   {
-    std::vector<Vector2D> vertices{
-        {1., 1.}, {4., 1.}, {4., 5.}};  // 3-4-5 triangle
+    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
+                                       Vector2D(4., 1.),
+                                       Vector2D(4., 5.)}});  // 3-4-5 triangle
     /// Test clone
     TriangleBounds triangleBoundsObject(vertices);
     auto           pClonedTriangleBounds = triangleBoundsObject.clone();
@@ -69,15 +72,16 @@ namespace Test {
     BOOST_TEST(triangleBoundsObject.distanceToBoundary(outside) == 26.);  // ok
     //
     /// Test vertices : fail; there are in fact 6 vertices (10.03.2017)
-    std::vector<Vector2D> expectedVertices(vertices);
+    std::array<Vector2D, 3> expectedVertices = vertices;
     BOOST_TEST_MESSAGE(
         "Following two tests fail because the triangle has six vertices");
     BOOST_TEST(triangleBoundsObject.vertices().size() == (size_t)3);
-    BOOST_TEST(triangleBoundsObject.vertices() == expectedVertices);
-    // for (auto i: triangleBoundsObject.vertices()){
-    //  std::cout<<i[0]<<", "<<i[1]<<std::endl;
-    //}
-    //
+    for (size_t i = 0; i < 3; i++) {
+      Vector2D act = triangleBoundsObject.vertices().at(i);
+      Vector2D exp = expectedVertices.at(i);
+      BOOST_CHECK_CLOSE(act[0], exp[0], 1e-6);
+      BOOST_CHECK_CLOSE(act[1], exp[1], 1e-6);
+    }
     /// Test boundingBox NOTE: Bounding box too big
     BOOST_TEST(triangleBoundsObject.boundingBox() == RectangleBounds(4., 5.));
     //
@@ -100,18 +104,53 @@ namespace Test {
   /// Unit test for testing TriangleBounds assignment
   BOOST_AUTO_TEST_CASE(TriangleBoundsAssignment)
   {
-    std::vector<Vector2D> vertices{
-        {1., 1.}, {4., 1.}, {4., 5.}};  // 3-4-5 triangle
-    std::vector<Vector2D> invalid{{NaN, NaN}, {NaN, NaN}, {NaN, NaN}};
-    TriangleBounds        triangleBoundsObject(vertices);
+    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
+                                       Vector2D(4., 1.),
+                                       Vector2D(4., 5)}});  // 3-4-5 triangle
+    std::array<Vector2D, 3> invalid(
+        {{Vector2D(-1, -1), Vector2D(-1, -1), Vector2D(-1, -1)}});
+    TriangleBounds triangleBoundsObject(vertices);
     // operator == not implemented in this class
     //
     /// Test assignment
     TriangleBounds assignedTriangleBoundsObject(
         invalid);  // invalid object, in some sense
     assignedTriangleBoundsObject = triangleBoundsObject;
-    BOOST_TEST(assignedTriangleBoundsObject == triangleBoundsObject);
+    BOOST_TEST(assignedTriangleBoundsObject.vertices()
+               == triangleBoundsObject.vertices());
   }
+
+  BOOST_AUTO_TEST_CASE(TriangleBounds_toVariantData)
+  {
+    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
+                                       Vector2D(4., 1.),
+                                       Vector2D(4., 5.)}});  // 3-4-5 triangle
+    TriangleBounds triangle(vertices);
+    variant_data   var_data = triangle.toVariantData();
+
+    std::cout << var_data << std::endl;
+
+    variant_map var_map = boost::get<variant_map>(var_data);
+    BOOST_TEST(var_map.get<std::string>("type") == "TriangleBounds");
+    variant_map pl = var_map.get<variant_map>("payload");
+
+    variant_vector var_vertices = pl.get<variant_vector>("vertices");
+    BOOST_TEST(var_vertices.size() == 3);
+
+    for (size_t i = 0; i < 3; i++) {
+      Vector2D    exp = vertices.at(i);
+      variant_map var = var_vertices.get<variant_map>(i);
+      BOOST_TEST(var.get<std::string>("type") == "Vector2D");
+      variant_vector coords = var.get<variant_vector>("payload");
+
+      BOOST_TEST(exp.x() == coords.get<double>(0));
+      BOOST_TEST(exp.y() == coords.get<double>(1));
+    }
+
+    TriangleBounds triangle2(var_data);
+    BOOST_TEST(triangle2.vertices().size() == 3);
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

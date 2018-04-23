@@ -23,6 +23,7 @@
 #include "ACTS/Utilities/GeometryStatics.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -390,6 +391,11 @@ public:
   /// Return properly formatted class name
   virtual std::string
   name() const = 0;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  virtual variant_data
+  toVariantData() const = 0;
 
 protected:
   /// Transform3D definition that positions (translation, rotation) the surface

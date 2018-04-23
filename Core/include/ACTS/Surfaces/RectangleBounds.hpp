@@ -15,6 +15,7 @@
 
 #include "ACTS/Surfaces/PlanarBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -41,6 +42,11 @@ public:
   /// @param halfX halflength in X
   /// @param halfY halflength in Y
   RectangleBounds(double halfX, double halfY);
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  RectangleBounds(const variant_data& data);
 
   virtual ~RectangleBounds();
 
@@ -92,6 +98,11 @@ public:
   /// Return method for the half length in Y
   double
   halflengthY() const;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  variant_data
+  toVariantData() const override;
 
 private:
   double m_halfX, m_halfY;

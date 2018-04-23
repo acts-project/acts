@@ -319,7 +319,7 @@ namespace IntegrationTest {
                                                          0.05 * rand1,
                                                          0.05 * rand2);
 
-    Surface_type endSurface(seTransform);
+    Surface_type endSurface(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
     options.max_path_length *= 2;
     const auto  result = propagator.propagate(start, endSurface, options);
@@ -448,14 +448,14 @@ namespace IntegrationTest {
         : createCylindricTransform(
               tp_c->position(), 0.05 * rand1, 0.05 * rand2);
 
-    StartSurface_type startSurface(ssTransform);
+    StartSurface_type startSurface(ssTransform, nullptr);
     BoundParameters   start(std::move(cov_ptr), pos, mom, q, startSurface);
     BoundParameters   start_wo_c(nullptr, pos, mom, q, startSurface);
 
     // increase the path limit - to be safe hitting the surface
     options.max_path_length *= 2;
 
-    DestSurface_type endSurface(seTransform);
+    DestSurface_type endSurface(seTransform, nullptr);
     const auto       result = propagator.propagate(start, endSurface, options);
     const auto&      tp     = result.endParameters;
 

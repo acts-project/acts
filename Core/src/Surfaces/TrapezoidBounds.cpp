@@ -15,6 +15,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include "ACTS/Utilities/VariantData.hpp"
 
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,
@@ -24,6 +25,23 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
   , m_halfY(std::abs(haley))
   , m_boundingBox(std::max(minhalex, maxhalex), haley)
 {
+}
+
+Acts::TrapezoidBounds::TrapezoidBounds(const variant_data& data_)
+  : m_boundingBox(0, 0)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(data_);
+  std::string        type = data.get<std::string>("type");
+  throw_assert(type == "TrapezoidBounds", "Type must be TrapezoidBounds");
+
+  const variant_map& payload = data.get<variant_map>("payload");
+
+  m_minHalfX = payload.get<double>("minHalfX");
+  m_maxHalfX = payload.get<double>("maxHalfX");
+  m_halfY    = payload.get<double>("halfY");
+
+  m_boundingBox = RectangleBounds(m_maxHalfX, m_halfY);
 }
 
 Acts::TrapezoidBounds::~TrapezoidBounds()
@@ -91,4 +109,21 @@ Acts::TrapezoidBounds::dump(std::ostream& sl) const
      << halflengthY() << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::TrapezoidBounds::toVariantData() const
+{
+  using namespace std::string_literals;
+
+  variant_map payload;
+  payload["minHalfX"] = m_minHalfX;
+  payload["maxHalfX"] = m_maxHalfX;
+  payload["halfY"]    = m_halfY;
+
+  variant_map data;
+  data["type"]    = "TrapezoidBounds"s;
+  data["payload"] = payload;
+
+  return data;
 }

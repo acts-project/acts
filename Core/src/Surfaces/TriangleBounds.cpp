@@ -11,12 +11,13 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/TriangleBounds.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 #include <iomanip>
 #include <iostream>
 
-Acts::TriangleBounds::TriangleBounds(const std::vector<Vector2D>& vertices)
-  : m_vertices{vertices[0], vertices[1], vertices[2]}, m_boundingBox(0, 0)
+Acts::TriangleBounds::TriangleBounds(const std::array<Vector2D, 3>& vertices)
+  : m_vertices(vertices), m_boundingBox(0, 0)
 {
   double mx = 0;
   double my = 0;
@@ -24,6 +25,30 @@ Acts::TriangleBounds::TriangleBounds(const std::vector<Vector2D>& vertices)
     mx = std::max(mx, std::abs(v.x()));
     my = std::max(my, std::abs(v.y()));
   }
+  m_boundingBox = RectangleBounds(mx, my);
+}
+
+Acts::TriangleBounds::TriangleBounds(const variant_data& data_)
+  : m_vertices(), m_boundingBox(0, 0)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(data_);
+  std::string        type = data.get<std::string>("type");
+  throw_assert(type == "TriangleBounds", "Type must be TriangleBounds");
+
+  const variant_map&    payload  = data.get<variant_map>("payload");
+  const variant_vector& vertices = payload.get<variant_vector>("vertices");
+  throw_assert(vertices.size() == 3,
+               "Vertices for triangle must be exactly 3.");
+
+  double mx = 0, my = 0;
+  for (size_t i = 0; i < 3; i++) {
+    Vector2D vtx     = from_variant<Vector2D>(vertices.at(i));
+    mx               = std::max(mx, std::abs(vtx.x()));
+    my               = std::max(my, std::abs(vtx.y()));
+    m_vertices.at(i) = vtx;
+  }
+
   m_boundingBox = RectangleBounds(mx, my);
 }
 
@@ -93,4 +118,23 @@ Acts::TriangleBounds::dump(std::ostream& sl) const
   sl << "(" << m_vertices[2].x() << " , " << m_vertices[2].y() << ") ";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::TriangleBounds::toVariantData() const
+{
+  using namespace std::string_literals;
+
+  variant_map payload;
+
+  variant_vector vertices;
+  for (const auto& vtx : m_vertices) {
+    vertices.push_back(to_variant(vtx));
+  }
+
+  variant_map data;
+  data["type"]    = "TriangleBounds"s;
+  data["payload"] = variant_map({{"vertices", vertices}});
+
+  return data;
 }

@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "ACTS/Surfaces/LineBounds.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -18,6 +19,22 @@
 Acts::LineBounds::LineBounds(double radius, double halez)
   : m_radius(std::abs(radius)), m_halfZ(std::abs(halez))
 {
+}
+
+Acts::LineBounds::LineBounds(const variant_data& data_)
+{
+
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(data.count("type"), "Variant data must have type.");
+  // std::string type = boost::get<std::string>(data["type"]);
+  std::string type = data.get<std::string>("type");
+  throw_assert(type == "LineBounds", "Variant data type must be LineBounds");
+
+  variant_map payload = data.get<variant_map>("payload");
+
+  m_radius = payload.get<double>("radius");
+  m_halfZ  = payload.get<double>("halfZ");
 }
 
 Acts::LineBounds::~LineBounds()
@@ -69,4 +86,19 @@ Acts::LineBounds::dump(std::ostream& sl) const
   sl << "(" << r() << ", " << halflengthZ() << ")";
   sl << std::setprecision(-1);
   return sl;
+}
+
+Acts::variant_data
+Acts::LineBounds::toVariantData() const
+{
+  using namespace std::string_literals;
+  variant_map payload;
+
+  payload["radius"] = m_radius;
+  payload["halfZ"]  = m_halfZ;
+
+  variant_map data;
+  data["type"]    = "LineBounds"s;
+  data["payload"] = payload;
+  return data;
 }

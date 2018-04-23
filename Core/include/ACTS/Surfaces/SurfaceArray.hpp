@@ -16,6 +16,8 @@
 #include "ACTS/Utilities/BinningType.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/IAxis.hpp"
+#include "ACTS/Utilities/InstanceFactory.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 #include "ACTS/Utilities/detail/Axis.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 
@@ -122,6 +124,9 @@ public:
     ///       or overflow bin or out of range in any axis.
     virtual bool
     isValidBin(size_t bin) const = 0;
+
+    /// Pure virtual destructor
+    virtual ~ISurfaceGridLookup() = 0;
   };
 
   /// @brief Lookup helper which encapsulates a @c Grid
@@ -489,9 +494,13 @@ public:
   /// its own
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
+  /// @param transform Optional additional transform for this SurfaceArray
   SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-               SurfaceVector                       surfaces)
-    : p_gridLookup(std::move(gridLookup)), m_surfaces(surfaces)
+               SurfaceVector                       surfaces,
+               std::shared_ptr<const Transform3D>  transform = nullptr)
+    : p_gridLookup(std::move(gridLookup))
+    , m_surfaces(surfaces)
+    , m_transform(transform)
   {
   }
 
@@ -499,10 +508,16 @@ public:
   /// @param gridLookup The grid storage. Is static casted to ISurfaceGridLookup
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
+  /// @param transform Optional additional transform for this SurfaceArray
+  /// @note the transform parameter is ONLY used for the serialization.
+  ///       Apart from that, the SGL handles the transforms.
   template <class SGL>
-  SurfaceArray(std::unique_ptr<SGL> gridLookup, SurfaceVector surfaces)
+  SurfaceArray(std::unique_ptr<SGL>               gridLookup,
+               SurfaceVector                      surfaces,
+               std::shared_ptr<const Transform3D> transform = nullptr)
     : p_gridLookup(static_cast<ISurfaceGridLookup*>(gridLookup.release()))
     , m_surfaces(surfaces)
+    , m_transform(transform)
   {
   }
 
@@ -510,10 +525,31 @@ public:
   /// SingleElementLookup
   /// @param srf The one and only surface
   SurfaceArray(const Surface* srf)
-    : p_gridLookup(std::make_unique<SingleElementLookup>(srf))
+    : p_gridLookup(
+          static_cast<ISurfaceGridLookup*>(new SingleElementLookup(srf)))
     , m_surfaces({srf})
   {
   }
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  /// @param g2l Callable that converts from global to local
+  /// @param l2g Callable that converts from local to global
+  /// @param transform Optional additional transform for this SurfaceArray
+  /// @note the transform parameter is ONLY used for the serialization.
+  ///       Apart from that, the SGL handles the transforms.
+  SurfaceArray(const variant_data&                      data_,
+               std::function<Vector2D(const Vector3D&)> g2l,
+               std::function<Vector3D(const Vector2D&)> l2g,
+               std::shared_ptr<const Transform3D>       transform = nullptr);
+
+  // This is here so that overload resolution can figure out
+  // we need std::array<double, 1> as local parameters here.
+  SurfaceArray(const variant_data& data_,
+               std::function<std::array<double, 1>(const Vector3D&)> g2l,
+               std::function<Vector3D(const std::array<double, 1>&)> l2g,
+               std::shared_ptr<const Transform3D> transform = nullptr);
 
   /// @brief Get all surfaces in bin given by position.
   /// @param pos the lookup position
@@ -615,6 +651,12 @@ public:
     return p_gridLookup->isValidBin(bin);
   }
 
+  const Transform3D&
+  transform() const
+  {
+    return *m_transform;
+  }
+
   /// @brief String representation of this @c SurfaceArray
   /// @param sl Output stream to write to
   /// @return the output stream given as @p sl
@@ -650,9 +692,18 @@ public:
     return sl;
   }
 
+  variant_data
+  toVariantData() const;
+
 private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;
   SurfaceVector                       m_surfaces;
+  // this is only used to keep info on transform applied
+  // by l2g and g2l
+  std::shared_ptr<const Transform3D> m_transform;
+
+  variant_data
+  surfaceGridLookupToVariantData(const ISurfaceGridLookup& sgl) const;
 };
 
 }  // namespace Acts

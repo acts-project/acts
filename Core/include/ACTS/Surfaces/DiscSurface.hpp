@@ -18,6 +18,7 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Identifier.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -113,6 +114,11 @@ public:
   /// @param other is the source sourface for the copy
   /// @param transf is the additional transform applied to the surface
   DiscSurface(const DiscSurface& other, const Transform3D& transf);
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  DiscSurface(const variant_data& data);
 
   virtual ~DiscSurface();
 
@@ -310,6 +316,11 @@ public:
   /// Return properly formatted class name for screen output
   virtual std::string
   name() const override;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  virtual variant_data
+  toVariantData() const override;
 
 protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)

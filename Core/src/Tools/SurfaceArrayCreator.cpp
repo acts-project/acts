@@ -68,7 +68,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   sl->fill(surfaces);
   completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -129,7 +130,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << bins0 * bins1
                                       << " bins.");
 
-  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -184,7 +186,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   sl->fill(surfaces);
   completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
@@ -269,7 +272,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   sl->fill(surfaces);
   completeBinning(*sl, surfaces);
 
-  return std::make_unique<SurfaceArray>(std::move(sl), surfaces);
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane

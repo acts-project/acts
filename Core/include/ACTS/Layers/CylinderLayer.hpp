@@ -16,8 +16,11 @@
 #include <algorithm>
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Utilities/BinnedArray.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/InstanceFactory.hpp"
+#include "ACTS/Utilities/ThrowAssert.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
+#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
 
 namespace Acts {
 
@@ -64,6 +67,12 @@ public:
                                              laytyp));
   }
 
+  /// Factory for shared Layer pointer, that accepts @c variant_data
+  /// @param data The data to build from
+  /// @return The return object is a shared poiter to the layer.
+  static MutableLayerPtr
+  create(const variant_data& data);
+
   /// Copy constructor - deleted
   CylinderLayer(const CylinderLayer& cla) = delete;
 
@@ -86,6 +95,11 @@ public:
   // Non-const version
   CylinderSurface&
   surfaceRepresentation() override;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  variant_data
+  toVariantData() const override;
 
 private:
   /// build approach surfaces */
@@ -120,6 +134,6 @@ protected:
   CylinderLayer(const CylinderLayer& cla, const Transform3D& shift);
 };
 
-}  // end of namespace
+}  // namespace Acts
 
 #endif  // ACTS_LAYERS_CYLINDERLAYER_H

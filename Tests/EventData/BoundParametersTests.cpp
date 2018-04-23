@@ -24,6 +24,7 @@
 #include "ACTS/Surfaces/StrawSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ParametersTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -354,7 +355,7 @@ namespace Test {
     transform->pretranslate(center);
 
     // the straw surface
-    PerigeeSurface pSurface(transform);
+    PerigeeSurface pSurface(std::make_shared<const Transform3D>(*transform));
 
     // now create parameters on this surface
     // d0, z0, phi, theta, q/p (1/p)

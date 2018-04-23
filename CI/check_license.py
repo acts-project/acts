@@ -6,6 +6,11 @@ from subprocess import check_output
 import re
 import difflib
 from datetime import datetime
+from fnmatch import fnmatch
+
+EXCLUDE = [
+    "./Plugins/JsonPlugin/include/ACTS/Plugins/JsonPlugin/lib/*"
+]
 
 class CommitInfo:
     date = None
@@ -111,6 +116,10 @@ def main():
     nsrcs = len(srcs)
     step = int(nsrcs/20)
     for i, src in enumerate(srcs):
+
+        if any([fnmatch(src, e) for e in EXCLUDE]):
+            continue
+
 
         if nsrcs > 1 and i%step == 0:
             print("{}/{} -> {:.2f}%".format(i, nsrcs, i/float(nsrcs)*100.))
@@ -226,7 +235,7 @@ def main():
                             if int(year1) < git_mod_year:
                                 ostr.write("File: {}\n".format(src))
                                 ostr.write("Year {} does not match git modification year {}\n".format(year1, git_mod_year))
-                                ostr.write("License should say {}-{}\n".format(git_add_year, git_mod_year))
+                                ostr.write("License should say {}\n".format(git_mod_year))
                                 ostr.write("File was modified on {} by {}:\n{}\n".format(
                                         git_mod_commit.date, 
                                         git_mod_commit.author, 

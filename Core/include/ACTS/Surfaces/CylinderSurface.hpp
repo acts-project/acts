@@ -18,6 +18,7 @@
 #include "ACTS/Surfaces/CylinderBounds.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -89,6 +90,11 @@ public:
   /// @param htrans is the additional transform applied after copying the
   /// cylinder
   CylinderSurface(const CylinderSurface& other, const Transform3D& htrans);
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  CylinderSurface(const variant_data& data);
 
   /// Destructor
   virtual ~CylinderSurface();
@@ -236,6 +242,11 @@ public:
   /// Return method for properly formatted output string
   virtual std::string
   name() const override;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  virtual variant_data
+  toVariantData() const override;
 
 protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)

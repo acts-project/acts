@@ -21,6 +21,7 @@
 #include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Utilities/BinningType.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Utilities/detail/Grid.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -94,6 +95,35 @@ namespace Test {
         trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
+
+        auto transptr = std::make_shared<const Transform3D>(trans);
+        auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
+
+        res.push_back(srf.get());  // use raw pointer
+        m_surfaces.push_back(
+            std::move(srf));  // keep unique, will get destroyed at the end
+      }
+
+      return res;
+    }
+
+    SrfVec
+    straightLineSurfaces(size_t      n        = 10.,
+                         double      step     = 3,
+                         Vector3D    origin   = {0, 0, 1.5},
+                         Transform3D pretrans = Transform3D::Identity(),
+                         Vector3D    dir      = {0, 0, 1})
+    {
+      SrfVec res;
+      for (size_t i = 0; i < n; ++i) {
+        Transform3D trans;
+        trans.setIdentity();
+        trans.translate(origin + dir * step * i);
+        // trans.rotate(AngleAxis3D(M_PI/9., Vector3D(0, 0, 1)));
+        trans.rotate(AngleAxis3D(M_PI / 2., Vector3D(1, 0, 0)));
+        trans = trans * pretrans;
+
+        auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
         auto transptr = std::make_shared<const Transform3D>(trans);
         auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
@@ -240,7 +270,136 @@ namespace Test {
     BOOST_TEST(sa.surfaces().at(0) == srf.get());
   }
 
+  BOOST_FIXTURE_TEST_CASE(SurfaceArray_toVariantData, SurfaceArrayFixture)
+  {
+    SrfVec brl = makeBarrel(30, 7, 2, 1);
+
+    detail::Axis<detail::AxisType::Equidistant,
+                 detail::AxisBoundaryType::Closed>
+                        phiAxis(-M_PI, M_PI, 30u);
+    std::vector<double> zAxis_bin_edges_exp = {-14, -10, 3, 5, 8, 14};
+    detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
+        zAxis(zAxis_bin_edges_exp);
+
+    double angleShift = 2 * M_PI / 30. / 2.;
+    auto transform    = [angleShift](const Vector3D& pos) {
+      return Vector2D(pos.phi() + angleShift, pos.z());
+    };
+    double R        = 10;
+    auto itransform = [angleShift, R](const Vector2D& loc) {
+      return Vector3D(R * std::cos(loc[0] - angleShift),
+                      R * std::sin(loc[0] - angleShift),
+                      loc[1]);
+    };
+    auto sl
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
+                                                           decltype(zAxis)>>(
+            transform,
+            itransform,
+            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
+    sl->fill(brl);
+    SurfaceArray sa(std::move(sl), brl);
+    sa.dump(std::cout);
+
+    variant_data data = sa.toVariantData();
+    // std::cout << data << std::endl;
+
+    const variant_map& var_map = boost::get<variant_map>(data);
+    BOOST_TEST(var_map.get<std::string>("type") == "SurfaceArray");
+    const variant_map& sa_var_pl = var_map.get<variant_map>("payload");
+    BOOST_TEST(sa_var_pl.count("surfacegridlookup") == 1);
+    const variant_map& sgl_var_pl
+        = sa_var_pl.get<variant_map>("surfacegridlookup")
+              .get<variant_map>("payload");
+    BOOST_TEST(sgl_var_pl.get<int>("dimensions") == 2);
+    const variant_vector& axes = sgl_var_pl.get<variant_vector>("axes");
+    BOOST_TEST(axes.size() == 2);
+
+    const variant_map& phiAxis_pl
+        = axes.get<variant_map>(0).get<variant_map>("payload");
+    BOOST_TEST(phiAxis_pl.get<std::string>("axisboundarytype") == "closed");
+    BOOST_TEST(phiAxis_pl.get<std::string>("axistype") == "equidistant");
+    BOOST_TEST(phiAxis_pl.get<double>("min") == -M_PI);
+    BOOST_TEST(phiAxis_pl.get<double>("max") == M_PI);
+    BOOST_TEST(phiAxis_pl.get<int>("nbins") == 30);
+
+    const variant_map& zAxis_pl
+        = axes.get<variant_map>(1).get<variant_map>("payload");
+    BOOST_TEST(zAxis_pl.get<std::string>("axisboundarytype") == "bound");
+    BOOST_TEST(zAxis_pl.get<std::string>("axistype") == "variable");
+    const variant_vector& zAxis_bin_edges
+        = zAxis_pl.get<variant_vector>("bin_edges");
+    BOOST_TEST(zAxis_bin_edges.size() == 6);
+    for (size_t i = 0; i < zAxis_bin_edges.size(); i++) {
+      BOOST_TEST(zAxis_bin_edges.get<double>(i) == zAxis_bin_edges_exp.at(i));
+    }
+
+    SurfaceArray sa2(data, transform, itransform);
+    sa2.dump(std::cout);
+
+    std::ostringstream dumpExp_os;
+    sa.dump(dumpExp_os);
+    std::string                           dumpExp = dumpExp_os.str();
+    boost::test_tools::output_test_stream dumpAct;
+    sa2.dump(dumpAct);
+    BOOST_TEST(dumpAct.is_equal(dumpExp));
+  }
+
+  BOOST_FIXTURE_TEST_CASE(SurfaceArray_toVariantData_1D, SurfaceArrayFixture)
+  {
+    detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
+         zAxis(0, 30, 10);
+    auto transform = [](const Vector3D& pos) {
+      return std::array<double, 1>({{pos.z()}});
+    };
+    auto itransform = [](const std::array<double, 1>& loc) {
+      return Vector3D(0, 0, loc[0]);
+    };
+    auto sl
+        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(zAxis)>>(
+            transform, itransform, std::make_tuple(zAxis));
+
+    // same thing in 1D
+    SrfVec line = straightLineSurfaces();
+    sl->fill(line);
+    SurfaceArray sa(std::move(sl), line);
+
+    sa.dump(std::cout);
+
+    variant_data data = sa.toVariantData();
+    // std::cout << data << std::endl;
+
+    const variant_map& var_map = boost::get<variant_map>(data);
+    BOOST_TEST(var_map.get<std::string>("type") == "SurfaceArray");
+    const variant_map& sa_var_pl = var_map.get<variant_map>("payload");
+    BOOST_TEST(sa_var_pl.count("surfacegridlookup") == 1);
+    const variant_map& sgl_var_pl
+        = sa_var_pl.get<variant_map>("surfacegridlookup")
+              .get<variant_map>("payload");
+    BOOST_TEST(sgl_var_pl.get<int>("dimensions") == 1);
+    const variant_vector& axes = sgl_var_pl.get<variant_vector>("axes");
+    BOOST_TEST(axes.size() == 1);
+
+    const variant_map& zAxis_pl
+        = axes.get<variant_map>(0).get<variant_map>("payload");
+    BOOST_TEST(zAxis_pl.get<std::string>("axisboundarytype") == "bound");
+    BOOST_TEST(zAxis_pl.get<std::string>("axistype") == "equidistant");
+    BOOST_TEST(zAxis_pl.get<double>("min") == 0);
+    BOOST_TEST(zAxis_pl.get<double>("max") == 30);
+    BOOST_TEST(zAxis_pl.get<int>("nbins") == 10);
+
+    SurfaceArray sa2(data, transform, itransform);
+    sa2.dump(std::cout);
+
+    std::ostringstream dumpExp_os;
+    sa.dump(dumpExp_os);
+    std::string                           dumpExp = dumpExp_os.str();
+    boost::test_tools::output_test_stream dumpAct;
+    sa2.dump(dumpAct);
+    BOOST_TEST(dumpAct.is_equal(dumpExp));
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
-}  // end of namespace Test
+}  // namespace Test
 
 }  // end of namespace Acts

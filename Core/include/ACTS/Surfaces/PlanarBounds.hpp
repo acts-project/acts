@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "ACTS/Surfaces/SurfaceBounds.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -38,6 +39,11 @@ public:
   // Bounding box parameters
   virtual const RectangleBounds&
   boundingBox() const = 0;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  virtual variant_data
+  toVariantData() const = 0;
 };
 
 }  // end of namespace

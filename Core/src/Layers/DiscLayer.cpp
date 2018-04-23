@@ -12,11 +12,13 @@
 
 #include "ACTS/Layers/DiscLayer.hpp"
 #include "ACTS/Layers/GenericApproachDescriptor.hpp"
+#include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/DiscBounds.hpp"
 #include "ACTS/Surfaces/RadialBounds.hpp"
 #include "ACTS/Utilities/BinUtility.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "ACTS/Volumes/AbstractVolume.hpp"
 #include "ACTS/Volumes/BoundarySurfaceFace.hpp"
 #include "ACTS/Volumes/CylinderVolumeBounds.hpp"
@@ -46,6 +48,72 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
   if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
   // register the layer to the approach descriptor
   if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
+}
+
+std::shared_ptr<Acts::Layer>
+Acts::DiscLayer::create(const variant_data& data_)
+{
+  throw_assert(data_.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(data_);
+  std::string        type = data.get<std::string>("type");
+  throw_assert(type == "DiscLayer", "Type must be DiscLayer");
+
+  variant_map payload = data.get<variant_map>("payload");
+
+  auto trf = std::make_shared<const Transform3D>(
+      from_variant<Transform3D>(payload.get<variant_map>("transform")));
+
+  LayerType   laytyp;
+  std::string laytyp_str = payload.get<std::string>("layer_type");
+  if (laytyp_str == "active")
+    laytyp = active;
+  else if (laytyp_str == "passive")
+    laytyp = passive;
+  else /*laytyp_str == "navigation"*/
+    laytyp = navigation;
+
+  double thickness = payload.get<double>("thickness");
+  double minR      = payload.get<double>("minR");
+  double maxR      = payload.get<double>("maxR");
+  double R         = (minR + maxR) / 2.;
+
+  auto rbounds = std::make_shared<const RadialBounds>(minR, maxR);
+
+  std::unique_ptr<SurfaceArray> sArray = nullptr;
+
+  // only attempt to reover surface array if present
+  if (payload.count("surfacearray")) {
+
+    // get surface array transform
+    const Transform3D& sa_trf = from_variant<Transform3D>(
+        payload.get<variant_map>("surfacearray_transform"));
+    const Transform3D& sa_itrf = sa_trf.inverse();
+
+    // we need to reproduce the coordinate conversions
+    auto g2l = [sa_trf](const Vector3D& pos) -> Vector2D {
+      // @TODO: Check if - is right here, might be the other way round
+      Vector3D loc = sa_trf * pos;
+      return Vector2D(loc.perp(), loc.phi());
+    };
+    auto l2g = [sa_itrf, R](const Vector2D& loc) -> Vector3D {
+      return sa_itrf
+          * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
+    };
+
+    sArray = std::make_unique<SurfaceArray>(
+        payload.at("surfacearray"),
+        g2l,
+        l2g,
+        std::make_shared<const Transform3D>(sa_trf));
+  }
+
+  // @TODO: Implement ApproachDescriptor serialization
+  return MutableLayerPtr(new DiscLayer(trf,
+                                       rbounds,
+                                       std::move(sArray),
+                                       thickness,
+                                       nullptr,  // std::move(ad),
+                                       laytyp));
 }
 
 const Acts::DiscSurface&
@@ -92,8 +160,8 @@ Acts::DiscLayer::buildApproachDescriptor()
     std::vector<const Surface*> aSurfaces;
     aSurfaces.push_back(new DiscSurface(asnTransform, m_bounds));
     aSurfaces.push_back(new DiscSurface(aspTransform, m_bounds));
-    // create an ApproachDescriptor with standard surfaces surfaces - these will
-    // be deleted by the approach descriptor
+    // create an ApproachDescriptor with standard surfaces surfaces - these
+    // will be deleted by the approach descriptor
     m_approachDescriptor
         = std::make_unique<const GenericApproachDescriptor<Surface>>(aSurfaces);
   }
@@ -104,4 +172,43 @@ Acts::DiscLayer::buildApproachDescriptor()
       mutableSf.associateLayer(*this);
     }
   }
+}
+
+Acts::variant_data
+Acts::DiscLayer::toVariantData() const
+{
+  using namespace std::string_literals;
+  variant_map payload;
+
+  if (m_transform) {
+    payload["transform"] = to_variant(*m_transform);
+  }
+
+  // we need to recover the bounds
+  const AbstractVolume* absVol = representingVolume();
+  throw_assert(absVol,
+               "Cannot serialize DiscLayer without representing volume");
+  auto cvBounds
+      = dynamic_cast<const CylinderVolumeBounds*>(&absVol->volumeBounds());
+
+  payload["minR"]      = cvBounds->innerRadius();
+  payload["maxR"]      = cvBounds->outerRadius();
+  payload["thickness"] = thickness();
+
+  if (layerType() == active)
+    payload["layer_type"] = "active"s;
+  else if (layerType() == passive)
+    payload["layer_type"] = "passive"s;
+  else /*layerType() == navigation*/
+    payload["layer_type"] = "navigation"s;
+
+  if (m_surfaceArray) {
+    payload["surfacearray"]           = m_surfaceArray->toVariantData();
+    payload["surfacearray_transform"] = to_variant(m_surfaceArray->transform());
+  }
+
+  variant_map data;
+  data["type"]    = "DiscLayer"s;
+  data["payload"] = payload;
+  return data;
 }

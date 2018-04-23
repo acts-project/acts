@@ -18,6 +18,7 @@
 #include "ACTS/Surfaces/DiscBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -60,6 +61,11 @@ public:
                         double rMax,
                         double avephi = M_PI_2,
                         double stereo = 0.);
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  DiscTrapezoidalBounds(const variant_data& data);
 
   virtual ~DiscTrapezoidalBounds();
 
@@ -126,6 +132,11 @@ public:
   /// This method returns the halflength in Y (this is Rmax -Rmin)
   double
   halflengthY() const;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  variant_data
+  toVariantData() const override;
 
 private:
   double m_rMin, m_rMax, m_minHalfX, m_maxHalfX, m_avgPhi;

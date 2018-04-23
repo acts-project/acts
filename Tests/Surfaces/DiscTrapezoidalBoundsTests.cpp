@@ -20,6 +20,7 @@
 //
 #include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 
 #include <limits>
 
@@ -135,6 +136,35 @@ namespace Test {
     BOOST_TEST(assignedDiscTrapezoidalBoundsObject
                == discTrapezoidalBoundsObject);
   }
+
+  BOOST_AUTO_TEST_CASE(DiscTrapezoidalBounds_toVariantData)
+  {
+    double rMin = 1, rMax = 5, avgPhi = M_PI / 3., minHalfX = 2, maxHalfX = 4,
+           stereo = M_PI / 8.;
+    DiscTrapezoidalBounds dt(minHalfX, maxHalfX, rMin, rMax, avgPhi, stereo);
+
+    variant_data var_dt = dt.toVariantData();
+    std::cout << var_dt << std::endl;
+
+    variant_map var_dt_map = boost::get<variant_map>(var_dt);
+    BOOST_TEST(var_dt_map.get<std::string>("type") == "DiscTrapezoidalBounds");
+    variant_map pl = var_dt_map.get<variant_map>("payload");
+    BOOST_TEST(pl.get<double>("rMin") == rMin);
+    BOOST_TEST(pl.get<double>("rMax") == rMax);
+    BOOST_TEST(pl.get<double>("avgPhi") == avgPhi);
+    BOOST_TEST(pl.get<double>("minHalfX") == minHalfX);
+    BOOST_TEST(pl.get<double>("maxHalfX") == maxHalfX);
+    BOOST_TEST(pl.get<double>("stereo") == stereo);
+
+    DiscTrapezoidalBounds dt2(var_dt);
+
+    BOOST_TEST(dt.rMin() == dt2.rMin());
+    BOOST_TEST(dt.rMax() == dt2.rMax());
+    BOOST_TEST(dt.minHalflengthX() == dt2.minHalflengthX());
+    BOOST_TEST(dt.maxHalflengthX() == dt2.maxHalflengthX());
+    BOOST_TEST(dt.stereo() == dt2.stereo());
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

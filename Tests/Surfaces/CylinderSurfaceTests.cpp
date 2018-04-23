@@ -22,6 +22,7 @@
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Surfaces/RectangleBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantData.hpp"
 #include "DetectorElementStub.hpp"
 
 namespace tt = boost::test_tools;
@@ -210,6 +211,34 @@ namespace Test {
     /// Test equality of assigned to original
     BOOST_TEST(assignedCylinderSurface == cylinderSurfaceObject);
   }
+
+  BOOST_AUTO_TEST_CASE(CylinderSurface_toVariantData)
+  {
+    double        radius(1.0), halfZ(10.);
+    Translation3D translation{0., 1., 2.};
+    auto          pTransform = std::make_shared<const Transform3D>(translation);
+    CylinderSurface cylinder(pTransform, radius, halfZ);
+
+    variant_data var_cyl = cylinder.toVariantData();
+    std::cout << var_cyl << std::endl;
+
+    const variant_map& pl
+        = boost::get<variant_map>(var_cyl).get<variant_map>("payload");
+    const variant_map& bounds_pl
+        = pl.get<variant_map>("bounds").get<variant_map>("payload");
+    BOOST_TEST(bounds_pl.get<double>("radius") == radius);
+    BOOST_TEST(bounds_pl.get<double>("avgPhi") == 0);
+    BOOST_TEST(bounds_pl.get<double>("halfPhi") == M_PI);
+    BOOST_TEST(bounds_pl.get<double>("halfZ") == halfZ);
+
+    CylinderSurface cylinder2(var_cyl);
+    auto cylbounds = dynamic_cast<const CylinderBounds*>(&cylinder2.bounds());
+    BOOST_TEST(cylbounds->r() == radius);
+    BOOST_TEST(cylbounds->halflengthZ() == halfZ);
+    BOOST_TEST(cylbounds->halfPhiSector() == M_PI);
+    BOOST_TEST(cylbounds->averagePhi() == 0);
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // end of namespace Test

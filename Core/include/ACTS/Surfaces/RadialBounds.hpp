@@ -18,6 +18,7 @@
 #include "ACTS/Surfaces/DiscBounds.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 #include "ACTS/Utilities/detail/periodic.hpp"
 
 namespace Acts {
@@ -60,6 +61,11 @@ public:
   /// @param hphisec is the half opening angle of the disc (Pi for full angular
   /// coverage)
   RadialBounds(double minrad, double maxrad, double avephi, double hphisec);
+
+  /// Constructor which accepts @c variant_data
+  ///
+  /// @param data the @c variant_data to build from
+  RadialBounds(const variant_data& data);
 
   virtual ~RadialBounds();
 
@@ -112,6 +118,11 @@ public:
   /// Return method for the half phi span
   double
   halfPhiSector() const;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  variant_data
+  toVariantData() const override;
 
 private:
   double m_rMin, m_rMax, m_avgPhi, m_halfPhi;

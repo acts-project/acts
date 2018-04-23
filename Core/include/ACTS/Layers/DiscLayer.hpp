@@ -19,6 +19,7 @@ class MsgStream;
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Surfaces/DiscSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -63,6 +64,11 @@ public:
                                          laytyp));
   }
 
+  /// Factory for shared Layer pointer, that accepts @c variant_data
+  /// @param data The data to build from
+  static MutableLayerPtr
+  create(const variant_data& data);
+
   /// Default Constructor
   DiscLayer() = delete;
 
@@ -85,6 +91,11 @@ public:
   // Non-const version
   DiscSurface&
   surfaceRepresentation() override;
+
+  /// Produce a @c variant_data representation of this object
+  /// @return The representation
+  variant_data
+  toVariantData() const override;
 
 private:
   /// build approach surfaces
