@@ -13,6 +13,11 @@
 #include "ACTS/Utilities/ThrowAssert.hpp"
 #include "ACTS/Utilities/VariantData.hpp"
 
+// implementation for pure virtual destructor of ISurfaceGridLookup
+Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup()
+{
+}
+
 Acts::variant_data
 Acts::SurfaceArray::toVariantData() const
 {

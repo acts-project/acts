@@ -124,6 +124,9 @@ public:
     ///       or overflow bin or out of range in any axis.
     virtual bool
     isValidBin(size_t bin) const = 0;
+
+    /// Pure virtual destructor
+    virtual ~ISurfaceGridLookup() = 0;
   };
 
   /// @brief Lookup helper which encapsulates a @c Grid
