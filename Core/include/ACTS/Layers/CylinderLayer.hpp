@@ -69,6 +69,7 @@ public:
 
   /// Factory for shared Layer pointer, that accepts @c variant_data
   /// @param data The data to build from
+  /// @return The return object is a shared poiter to the layer.
   static MutableLayerPtr
   create(const variant_data& data);
 

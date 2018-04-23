@@ -74,9 +74,22 @@ public:
         = [](auto const& data) { return new PlaneSurface(data); };
   }
 
+  /// Method to produce surface bounds type objects
+  /// @param cname The class name
+  /// @param data The @c variant_data to construct from
+  /// @return Shared pointer to the created surfacebounds
+  SurfaceBoundsPtr
+  surfaceBounds(const std::string& cname, const variant_data& data) const
+  {
+    throw_assert(m_surfaceBounds.count(cname),
+                 "No factory found for class " + cname);
+    return m_surfaceBounds.at(cname)(data);
+  }
+
   /// Method to produce planar bounds type objects
   /// @param cname The class name
   /// @param data The @c variant_data to construct from
+  /// @return Shared pointer to the created planar bounds
   PlanarBoundsPtr
   planarBounds(const std::string& cname, const variant_data& data) const
   {
@@ -91,6 +104,7 @@ public:
   /// Method to produce disc bounds type objects
   /// @param cname The class name
   /// @param data The @c variant_data to construct from
+  /// @return Shared pointer to the created disc bounds
   std::shared_ptr<const DiscBounds>
   discBounds(const std::string& cname, const variant_data& data) const
   {
@@ -102,20 +116,10 @@ public:
     return discBnd_ptr;
   }
 
-  /// Method to produce surface bounds type objects
-  /// @param cname The class name
-  /// @param data The @c variant_data to construct from
-  SurfaceBoundsPtr
-  surfaceBounds(const std::string& cname, const variant_data& data) const
-  {
-    throw_assert(m_surfaceBounds.count(cname),
-                 "No factory found for class " + cname);
-    return m_surfaceBounds.at(cname)(data);
-  }
-
   /// Method to produce surface objects
   /// @param cname The class name
   /// @param data The @c variant_data to construct from
+  /// @return Pointer to the created surface
   const Surface*
   surface(const std::string& cname, const variant_data& data) const
   {

@@ -47,6 +47,7 @@ class SurfaceArrayCreator
 {
 public:
   friend Acts::Test::SurfaceArrayCreatorFixture;
+  friend Acts::SurfaceArray;
 
   struct ProtoAxis
   {
@@ -339,11 +340,11 @@ private:
             detail::AxisBoundaryType bdtB,
             typename F1,
             typename F2>
-  std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
+  static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
   makeSurfaceGridLookup2D(F1        globalToLocal,
                           F2        localToGlobal,
                           ProtoAxis pAxisA,
-                          ProtoAxis pAxisB) const
+                          ProtoAxis pAxisB)
   {
 
     using ISGL = SurfaceArray::ISurfaceGridLookup;

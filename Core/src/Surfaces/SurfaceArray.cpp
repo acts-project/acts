@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ACTS/Surfaces/SurfaceArray.hpp"
+#include "ACTS/Tools/SurfaceArrayCreator.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/InstanceFactory.hpp"
 #include "ACTS/Utilities/ThrowAssert.hpp"
@@ -131,9 +132,10 @@ Acts::SurfaceArray::SurfaceArray(const variant_data&                      data_,
   std::string axistype_b = var_axis_b.get<std::string>("axistype");
   std::string axisbdt_b  = var_axis_b.get<std::string>("axisboundarytype");
 
-  auto makePAxis = [](const std::string& axistype,
-                      const variant_map& var_axis) -> ProtoAxis {
-    ProtoAxis pAxis;
+  auto makePAxis
+      = [](const std::string& axistype,
+           const variant_map& var_axis) -> SurfaceArrayCreator::ProtoAxis {
+    SurfaceArrayCreator::ProtoAxis pAxis;
     if (axistype == "equidistant") {
       pAxis.bType = equidistant;
       pAxis.min   = var_axis.get<double>("min");
@@ -154,53 +156,53 @@ Acts::SurfaceArray::SurfaceArray(const variant_data&                      data_,
     return pAxis;
   };
 
-  ProtoAxis pAxisA = makePAxis(axistype_a, var_axis_a);
-  ProtoAxis pAxisB = makePAxis(axistype_b, var_axis_b);
+  SurfaceArrayCreator::ProtoAxis pAxisA = makePAxis(axistype_a, var_axis_a);
+  SurfaceArrayCreator::ProtoAxis pAxisB = makePAxis(axistype_b, var_axis_b);
 
   if (axisbdt_a == "closed" && axisbdt_b == "closed") {
-    p_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArrayCreator::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
                                 detail::AxisBoundaryType::Closed>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "closed" && axisbdt_b == "bound") {
-    p_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArrayCreator::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
                                 detail::AxisBoundaryType::Bound>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "closed" && axisbdt_b == "open") {
-    p_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArrayCreator::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Closed,
                                 detail::AxisBoundaryType::Open>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "open" && axisbdt_b == "closed") {
-    p_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArrayCreator::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Open,
                                 detail::AxisBoundaryType::Closed>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "open" && axisbdt_b == "bound") {
-    p_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArrayCreator::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Open,
                                 detail::AxisBoundaryType::Bound>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "open" && axisbdt_b == "open") {
-    p_gridLookup
-        = SurfaceArray::makeSurfaceGridLookup2D<detail::AxisBoundaryType::Open,
-                                                detail::AxisBoundaryType::Open>(
+    p_gridLookup = SurfaceArrayCreator::
+        makeSurfaceGridLookup2D<detail::AxisBoundaryType::Open,
+                                detail::AxisBoundaryType::Open>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "bound" && axisbdt_b == "closed") {
-    p_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArrayCreator::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                 detail::AxisBoundaryType::Closed>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "bound" && axisbdt_b == "bound") {
-    p_gridLookup = SurfaceArray::
+    p_gridLookup = SurfaceArrayCreator::
         makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                 detail::AxisBoundaryType::Bound>(
             g2l, l2g, pAxisA, pAxisB);
   } else if (axisbdt_a == "bound" && axisbdt_b == "open") {
-    p_gridLookup
-        = SurfaceArray::makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
-                                                detail::AxisBoundaryType::Open>(
+    p_gridLookup = SurfaceArrayCreator::
+        makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                detail::AxisBoundaryType::Open>(
             g2l, l2g, pAxisA, pAxisB);
   }
 

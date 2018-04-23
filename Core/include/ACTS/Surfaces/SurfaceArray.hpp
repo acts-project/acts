@@ -506,6 +506,8 @@ public:
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
   /// @param transform Optional additional transform for this SurfaceArray
+  /// @note the transform parameter is ONLY used for the serialization.
+  ///       Apart from that, the SGL handles the transforms.
   template <class SGL>
   SurfaceArray(std::unique_ptr<SGL>               gridLookup,
                SurfaceVector                      surfaces,
@@ -531,6 +533,9 @@ public:
   /// @param data the @c variant_data to build from
   /// @param g2l Callable that converts from global to local
   /// @param l2g Callable that converts from local to global
+  /// @param transform Optional additional transform for this SurfaceArray
+  /// @note the transform parameter is ONLY used for the serialization.
+  ///       Apart from that, the SGL handles the transforms.
   SurfaceArray(const variant_data&                      data_,
                std::function<Vector2D(const Vector3D&)> g2l,
                std::function<Vector3D(const Vector2D&)> l2g,
@@ -696,73 +701,6 @@ private:
 
   variant_data
   surfaceGridLookupToVariantData(const ISurfaceGridLookup& sgl) const;
-
-  struct ProtoAxis
-  {
-    BinningType         bType;
-    BinningValue        bValue;
-    size_t              nBins;
-    double              min;
-    double              max;
-    std::vector<double> binEdges;
-  };
-
-  template <detail::AxisBoundaryType bdtA,
-            detail::AxisBoundaryType bdtB,
-            typename F1,
-            typename F2>
-  static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(F1                      globalToLocal,
-                          F2                      localToGlobal,
-                          SurfaceArray::ProtoAxis pAxisA,
-                          SurfaceArray::ProtoAxis pAxisB)
-  {
-
-    using ISGL = SurfaceArray::ISurfaceGridLookup;
-    std::unique_ptr<ISGL> ptr;
-
-    // this becomes completely unreadable otherwise
-    // clang-format off
-    if (pAxisA.bType == equidistant && pAxisB.bType == equidistant) {
-
-      detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
-      detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
-
-    } else if (pAxisA.bType == equidistant && pAxisB.bType == arbitrary) {
-
-      detail::Axis<detail::AxisType::Equidistant, bdtA> axisA(pAxisA.min, pAxisA.max, pAxisA.nBins);
-      detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
-      
-    } else if (pAxisA.bType == arbitrary && pAxisB.bType == equidistant) {
-
-      detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      detail::Axis<detail::AxisType::Equidistant, bdtB> axisB(pAxisB.min, pAxisB.max, pAxisB.nBins);
-
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
-
-    } else /*if (pAxisA.bType == arbitrary && pAxisB.bType == arbitrary)*/ {
-
-      detail::Axis<detail::AxisType::Variable, bdtA> axisA(pAxisA.binEdges);
-      detail::Axis<detail::AxisType::Variable, bdtB> axisB(pAxisB.binEdges);
-
-      using SGL = SurfaceArray::SurfaceGridLookup<decltype(axisA), decltype(axisB)>;
-      ptr = std::unique_ptr<ISGL>(static_cast<ISGL*>(
-            new SGL(globalToLocal, localToGlobal, std::make_tuple(axisA, axisB))));
-    }
-    // clang-format on
-
-    return ptr;
-  }
 };
 
 }  // namespace Acts

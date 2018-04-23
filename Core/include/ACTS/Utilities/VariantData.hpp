@@ -27,7 +27,7 @@ class variant_map;
 class variant_vector;
 
 /// This data type allows construction of a tree-like
-/// data structure that contains variant data, in particular
+/// data structure that contains varying data, in particular
 /// int, double, strings, bools, maps and vectors. The latter
 /// two can also contain variant_data (this allows trees)
 /// The definition here uses boost's recursive_wrapper, because
@@ -52,7 +52,7 @@ public:
   using iterator       = map_t::iterator;
   using const_iterator = map_t::const_iterator;
 
-  /// Constructore which takes a @c map_t and wraps it.
+  /// Constructor which takes a @c map_t and wraps it.
   /// @param src The source map, empty by default
   variant_map(map_t src = {}) : m_map(src) {}
 
@@ -153,6 +153,38 @@ public:
   end() const
   {
     return m_map.end();
+  }
+
+  /// Returns a const iterator for the contained map, pointing to begin
+  /// @return Const iterator pointing at begin
+  const_iterator
+  cbegin()
+  {
+    return m_map.cbegin();
+  }
+
+  /// Returns a const iterator for the contained map, pointing to end
+  /// @return Const iterator pointing at end
+  const_iterator
+  cend()
+  {
+    return m_map.cend();
+  }
+
+  /// Returns an const iterator for the contained map, pointing to begin
+  /// @return Const iterator pointing at begin
+  const_iterator
+  cbegin() const
+  {
+    return m_map.cbegin();
+  }
+
+  /// Returns an const iterator for the contained map, pointing to end
+  /// @return Const iterator pointing at end
+  const_iterator
+  cend() const
+  {
+    return m_map.cend();
   }
 
 private:
@@ -268,6 +300,38 @@ public:
     return m_vector.end();
   }
 
+  /// Returns an const iterator for the contained vector, pointing to begin
+  /// @return Const iterator pointing at begin
+  const_iterator
+  cbegin()
+  {
+    return m_vector.cbegin();
+  }
+
+  /// Returns an const iterator for the contained vector, pointing to end
+  /// @return Const iterator pointing at end
+  const_iterator
+  cend()
+  {
+    return m_vector.cend();
+  }
+
+  /// Returns an const iterator for the contained vector, pointing to begin
+  /// @return Const iterator pointing at begin
+  const_iterator
+  cbegin() const
+  {
+    return m_vector.cbegin();
+  }
+
+  /// Returns an const iterator for the contained vector, pointing to end
+  /// @return Const iterator pointing at end
+  const_iterator
+  cend() const
+  {
+    return m_vector.cend();
+  }
+
 private:
   vector_t m_vector;
 };
@@ -278,94 +342,100 @@ class variant_json_visitor : public boost::static_visitor<>
 {
 public:
   /// Constructor for the visitor.
-  /// @param pretty_ Whether the output is indented.
-  variant_json_visitor(bool pretty_ = false)
-    : json_str(std::stringstream()), pretty(pretty_)
+  /// @param pretty Whether the output is indented.
+  variant_json_visitor(bool pretty = false)
+    : m_json_str(std::stringstream()), m_pretty(pretty)
   {
-    json_str << std::fixed << std::setprecision(30);
+    m_json_str << std::fixed << std::setprecision(30);
   }
 
   /// Visitor operator overload
+  /// @param b The bool
   void
   operator()(const bool& b)
   {
     if (b) {
-      json_str << "true";
+      m_json_str << "true";
     } else {
-      json_str << "false";
+      m_json_str << "false";
     }
   }
 
   /// Visitor operator overload
+  /// @param i The int
   void
   operator()(const int& i)
   {
-    json_str << i;
+    m_json_str << i;
   }
 
   /// Visitor operator overload
+  /// @param d The double
   void
   operator()(const double& d)
   {
-    json_str << d;
+    m_json_str << d;
   }
 
   /// Visitor operator overload
+  /// @param str The string
   void
   operator()(const std::string& str)
   {
-    json_str << "\"" << str << "\"";
+    m_json_str << "\"" << str << "\"";
   }
 
   /// Visitor operator overload
+  /// @param map The map
   void
   operator()(const variant_map& map)
   {
-    json_str << "{";
-    if (pretty) json_str << std::endl;
+    m_json_str << "{";
+    if (m_pretty) m_json_str << std::endl;
 
     size_t i = 0;
-    depth += 1;
+    m_depth += 1;
     for (const auto& entry : map) {
       indent();
-      json_str << "\"" << entry.first << "\": ";
+      m_json_str << "\"" << entry.first << "\": ";
       boost::apply_visitor(*this, entry.second);
 
       if (i < map.size() - 1) {
-        json_str << ", ";
-        if (pretty) json_str << std::endl;
+        m_json_str << ", ";
+        if (m_pretty) m_json_str << std::endl;
       }
       ++i;
     }
-    depth -= 1;
+    m_depth -= 1;
 
-    if (pretty) json_str << std::endl;
+    if (m_pretty) m_json_str << std::endl;
     indent();
-    json_str << "}";
+    m_json_str << "}";
   }
 
   /// Visitor operator overload
+  /// @param vec The vector
   void
   operator()(const variant_vector& vec)
   {
-    json_str << "[";
-    if (pretty) json_str << std::endl;
+    m_json_str << "[";
+    if (m_pretty) m_json_str << std::endl;
     size_t i = 0;
-    depth += 1;
+    m_depth += 1;
     for (const auto& entry : vec) {
       indent();
       boost::apply_visitor(*this, entry);
       if (i < vec.size() - 1) {
-        json_str << ", ";
-        if (pretty) json_str << std::endl;
+        m_json_str << ", ";
+        if (m_pretty) m_json_str << std::endl;
       }
       ++i;
     }
 
-    depth -= 1;
-    if (pretty) json_str << std::endl;
+    m_depth -= 1;
+    if (m_pretty) m_json_str << std::endl;
     indent();
-    json_str << "]";
+    m_json_str << "]";
   }
 
   /// Method to get the resulting json string
@@ -373,20 +443,20 @@ public:
   std::string
   str() const
   {
-    return json_str.str();
+    return m_json_str.str();
   }
 
 private:
-  std::stringstream json_str;
-  bool              pretty;
-  size_t            depth = 0;
+  std::stringstream m_json_str;
+  bool              m_pretty;
+  size_t            m_depth = 0;
 
   void
   indent()
   {
-    if (pretty) {
-      for (size_t d = 0; d < depth; d++) {
-        json_str << "  ";
+    if (m_pretty) {
+      for (size_t d = 0; d < m_depth; d++) {
+        m_json_str << "  ";
       }
     }
   }
@@ -396,6 +466,7 @@ private:
 /// instance. This turns the input into a json string and returns it.
 /// @param data The input data to serialize
 /// @param pretty Whether to indent the output
+/// @return JSON string representation of the variant_data
 inline std::string
 to_json(const variant_data& data, bool pretty = false)
 {
@@ -406,6 +477,9 @@ to_json(const variant_data& data, bool pretty = false)
 
 /// Operator overload for the stream operator. This allows
 /// printing of @c variant_data instances.
+/// @param os The outstream
+/// @param data The variant_data
+/// @return The stream given as @p os
 inline std::ostream&
 operator<<(std::ostream& os, const variant_data& data)
 {
@@ -427,7 +501,7 @@ to_variant(const Vector2D& vec)
 }
 
 /// Function to turn a @c Transform3D into @c variant_data
-/// @param vec The vector to transform
+/// @param trf The transform to convert
 /// @return The @c variant_data instance
 inline variant_data
 to_variant(const Transform3D& trf)
@@ -477,15 +551,18 @@ to_variant(const ActsMatrixD<4, 4>& matrix)
 }
 
 /// Function to produce an instance of type @c T from @c variant_data.
-/// Thie is the unimplemented base templated that is specialized
+/// This is the unimplemented base template that is specialized
 /// for various types.
 /// @tparam T The type you want
+/// @param data The data
+/// @return The converted data as type @c T
 template <typename T>
 inline T
-from_variant(const variant_data& data_);
+from_variant(const variant_data& data);
 
 /// Function to produce a @c Transform3D from @c variant_data.
 /// @param data_ The input @c variant_data
+/// @return The converted @c Transform3D
 template <>
 inline Transform3D
 from_variant<Transform3D>(const variant_data& data_)
@@ -511,8 +588,9 @@ from_variant<Transform3D>(const variant_data& data_)
   return trf;
 }
 
-/// Function to produce a @c Transform3D from @c variant_data.
+/// Function to produce a @c Vector2D from @c variant_data.
 /// @param data_ The input @c variant_data
+/// @return The converted @c Vector2D
 template <>
 inline Vector2D
 from_variant<Vector2D>(const variant_data& data_)
@@ -524,10 +602,7 @@ from_variant<Vector2D>(const variant_data& data_)
 
   const variant_vector& vector_data = data.get<variant_vector>("payload");
 
-  Vector2D vec;
-  for (size_t i = 0; i < 2; i++) {
-    vec[i] = vector_data.get<double>(i);
-  }
+  Vector2D vec{vector_data.get<double>(0), vector_data.get<double>(1)};
 
   return vec;
 }
