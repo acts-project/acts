@@ -82,7 +82,7 @@ namespace Seeding {
     // Configuration
     ///////////////////////////////////////////////////////////////////
 
-    Config m_config;
+    const Config m_config;
 
   protected:
     /**    @name Disallow default instantiation, copy, assignment */
