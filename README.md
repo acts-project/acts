@@ -43,3 +43,5 @@ to the ATLAS tracking repository can be found <a href="http://acts.web.cern.ch/A
 
 The ACTS project contains a copy of [gcovr](http://gcovr.com) licensed under
 the 3-Clause BSD license.
+
+This software contains a copy of the `JSON for Modern C++`-library by Niels Lohmann licensed under the MIT License.
