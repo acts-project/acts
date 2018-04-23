@@ -62,7 +62,6 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
 
   double envZShift = 0.5 * (-protoLayer.envZ.first + protoLayer.envZ.second);
   double layerZ    = binPosZ + envZShift;
-
   double layerHalfZ
       = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
   double layerThickness = (protoLayer.maxR - protoLayer.minR)
@@ -103,8 +102,6 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                         << " x "
                                         << binsZ
                                         << ")");
-
-  // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
   if (surfaces.size() > 0) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(

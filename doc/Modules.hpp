@@ -290,7 +290,7 @@
 ///   needs to be decomposed of
 ///   1) {barrel}
 ///   2) {barrel + 2 endcaps}
-///   3) {2 endcaps} - in case there us no barrel at this stage (e.g. forward end caps)
+///   3) {2 endcaps} - in case there is no barrel at this stage (e.g. forward end caps)
 ///
 /// * If a hierachy is not only a single barrel but is decomposed of a barrel
 ///   and its corresponding endcaps they need to be grouped together in an assembly
@@ -334,8 +334,7 @@
 ///	    - sensitive detector modules
 ///		  @note the sensitive detector modules need to be placed in a layer however it can be nested in substructures (can be a component of a modules) i.e. it does not need to be a direct child of the layer
 ///
-/// * The numbering of the id's of the sub detectors needs to be ascending.
-///	  This is needed because the Tracking geometry is built from bottom to top to ensure Navigation.
+///	* The Tracking geometry needs to be built from bottom to top to ensure navigation. Therefore the different hierachies need to be sorted ascending. Per default the sub detectors are sorted by the id of their dd4hep::DetElement. In case another sorting needs to be applied, the users can provide their own function
 ///
 /// * The Acts::ActsExtension's need to be used during the detector construction
 ///    indicating if a \a DetElement
