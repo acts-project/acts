@@ -16,13 +16,17 @@ Acts::DigitizationModule::DigitizationModule(
     std::shared_ptr<const Segmentation> moduleSegmentation,
     double                              halfThickness,
     int                                 readoutDirection,
-    double                              lorentzAngle)
+    double                              lorentzAngle,
+    double                              energyThreshold,
+    bool                                analogue)
   :
 
   m_halfThickness(halfThickness)
   , m_readoutDirection(readoutDirection)
   , m_lorentzAngle(lorentzAngle)
   , m_tanLorentzAngle(tan(lorentzAngle))
+  , m_energyThreshold(energyThreshold)
+  , m_analogue(analogue)
   , m_segmentation(moduleSegmentation)
   , m_boundarySurfaces()
   , m_segmentationSurfacesX()

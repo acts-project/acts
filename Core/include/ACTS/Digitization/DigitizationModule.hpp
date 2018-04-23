@@ -57,7 +57,9 @@ public:
   DigitizationModule(std::shared_ptr<const Segmentation> moduleSegmentation,
                      double                              halfThickness,
                      int                                 readoutDirection,
-                     double                              lorentzAngle);
+                     double                              lorentzAngle,
+                     double                              energyThreshold = 0.,
+                     bool                                analogue = false);
 
   /// Virtual Destructor
   virtual ~DigitizationModule() {}
@@ -88,6 +90,14 @@ public:
   /// Return the lorentz Angle
   double
   lorentzAngle() const;
+
+  /// Return the energy threshold per cell of the module
+  double
+  energyThreshold() const;
+
+  /// Indicates if the readout of the module is analogue, default is digital
+  bool
+  analogue() const;
 
   /// return the segmenation
   const Segmentation&
@@ -120,18 +130,26 @@ public:
   segmentationSurfacesY() const;
 
 private:
-  double m_halfThickness;     ///< half thickness of the module
-  int    m_readoutDirection;  ///< readout is along (+1) / (-1) wrt local z axis
-  double m_lorentzAngle;      ///< the lorentz angle
-  double m_tanLorentzAngle;   ///< and the tangent of it
-
-  std::shared_ptr<const Segmentation>
-                   m_segmentation;           /// segmentation descriptor
-  SurfacePtrVector m_boundarySurfaces;       ///< boundary surfaces z, x, y
-  SurfacePtrVector m_segmentationSurfacesX;  ///< segmentation surfaces in X -
-                                             /// without boundaries
-  SurfacePtrVector m_segmentationSurfacesY;  ///< segmentation surfaces in Y -
-                                             /// without boundaries
+  /// half thickness of the module
+  double m_halfThickness;
+  /// readout is along (+1) / (-1) wrt local z axis
+  int m_readoutDirection;
+  /// the lorentz angle
+  double m_lorentzAngle;
+  /// and the tangent of it
+  double m_tanLorentzAngle;
+  /// energy threshold per cell
+  double m_energyThreshold;
+  /// flag indicating if module is read out analogue
+  bool m_analogue;
+  /// segmentation descriptor
+  std::shared_ptr<const Segmentation> m_segmentation;
+  /// boundary surfaces z, x, y
+  SurfacePtrVector m_boundarySurfaces;
+  /// segmentation surfaces in X - without boundaries
+  SurfacePtrVector m_segmentationSurfacesX;
+  /// segmentation surfaces in Y - without boundaries
+  SurfacePtrVector m_segmentationSurfacesY;
 };
 
 inline double
@@ -150,6 +168,18 @@ inline double
 DigitizationModule::lorentzAngle() const
 {
   return m_lorentzAngle;
+}
+
+inline double
+DigitizationModule::energyThreshold() const
+{
+  return m_energyThreshold;
+}
+
+inline bool
+DigitizationModule::analogue() const
+{
+  return m_analogue;
 }
 
 inline const Segmentation&
