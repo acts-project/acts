@@ -29,5 +29,18 @@ if ! [ -z $CI ]; then
     cp --parents $f changed
   done
 fi
+    
+echo "clang-format done"
+    
+set +e
+git diff --exit-code --stat
+result=$?
 
-exec git diff --exit-code --stat
+if [ "$result" -eq "128" ]; then
+    echo "Format was successfully applied"
+    echo "Could not create summary of affected files"
+    echo "Are you in a submodule?"
+
+fi
+
+exit $result
