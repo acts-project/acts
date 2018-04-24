@@ -9,6 +9,7 @@
 #include "ACTS/Plugins/DD4hepPlugins/ConvertDD4hepDetector.hpp"
 #include <list>
 #include <stdexcept>
+#include "ACTS/Material/MaterialProperties.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerBuilder.hpp"
 #include "ACTS/Plugins/DD4hepPlugins/IActsExtension.hpp"
 #include "ACTS/Tools/LayerArrayCreator.hpp"
@@ -306,12 +307,14 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
                  << " )");
 
     // get the possible material of the surounding volume
-    dd4hep::Material ddmaterial = subDetector.volume().material();
-    Acts::Material   bpMaterial(ddmaterial.radLength(),
-                              ddmaterial.intLength(),
-                              ddmaterial.A(),
-                              ddmaterial.Z(),
-                              ddmaterial.density());
+    dd4hep::Material         ddmaterial = subDetector.volume().material();
+    Acts::MaterialProperties bpMaterial(
+        ddmaterial.radLength() * units::_cm,
+        ddmaterial.intLength() * units::_cm,
+        ddmaterial.A(),
+        ddmaterial.Z(),
+        ddmaterial.density() / pow(Acts::units::_cm, 3),
+        fabs(tube->GetRmax() - tube->GetRmin()) * units::_cm);
 
     // configure the beam pipe layer builder
     Acts::PassiveLayerBuilder::Config bplConfig;
@@ -383,6 +386,7 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
                              + std::string(" has no a shape!"));
 
     // get the possible material
+    /// @todo volume material currently not used
     dd4hep::Material ddmaterial = subDetector.volume().material();
     auto             volumeMaterial
         = std::make_shared<const Material>(ddmaterial.radLength(),

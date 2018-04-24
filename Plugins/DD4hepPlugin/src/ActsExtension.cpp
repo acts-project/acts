@@ -99,15 +99,21 @@ Acts::ActsExtension::ActsExtension(
     std::shared_ptr<const DigitizationModule> digiModule)
   : Acts::IActsExtension(), m_material(nullptr), m_digiModule(digiModule)
 {
+  std::cout << "-----------hand over material: "
+            << "----------------" << std::endl;
+
   Acts::MaterialProperties matprop;
   for (auto& mat : materials) {
-    matprop.add(MaterialProperties(mat.first.radLength(),
-                                   mat.first.intLength(),
-                                   mat.first.A(),
-                                   mat.first.Z(),
-                                   mat.first.density(),
-                                   mat.second));
+    std::cout << "add material with name: " << mat.first.name() << std::endl;
+    matprop.add(
+        MaterialProperties(mat.first.radLength() * units::_cm,
+                           mat.first.intLength() * units::_cm,
+                           mat.first.A(),
+                           mat.first.Z(),
+                           mat.first.density() / pow(Acts::units::_cm, 3),
+                           mat.second * units::_mm));
   }
+
   //  Create homogenous surface material with averaged material properties
   m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
 }
