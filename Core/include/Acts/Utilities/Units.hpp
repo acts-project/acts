@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_UNITS_HPP
-#define ACTS_UNITS_HPP 1
-
+#pragma once
 namespace Acts {
 
 /// @brief Unit and conversion constants
@@ -45,7 +43,7 @@ namespace units {
 #ifdef DOXYGEN
   const double _m = unspecified;
 #else
-  const double _m   = 1e3;
+  const double _m = 1e3;
 #endif  // DOXYGEN
   const double _km = 1e3 * _m;
   const double _cm = 1e-2 * _m;
@@ -286,4 +284,3 @@ namespace units {
 }  // namespace units
 
 }  // namespace Acts
-#endif  // ACTS_UNITS_HPP

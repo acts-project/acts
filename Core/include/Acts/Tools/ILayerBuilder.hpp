@@ -10,9 +10,7 @@
 // ILayerBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_ILAYERBUILDER_H
-#define ACTS_TOOLS_ILAYERBUILDER_H 1
-
+#pragma once
 #include <memory>
 #include <string>
 #include <vector>
@@ -56,5 +54,3 @@ public:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_TOOLS_ILAYERBUILDER_H

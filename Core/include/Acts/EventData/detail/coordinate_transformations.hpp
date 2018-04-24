@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_COORDINATE_TRANSFORMATIONS_H
-#define ACTS_COORDINATE_TRANSFORMATIONS_H 1
-
+#pragma once
 // ACTS includes
 #include <cmath>
 #include "Acts/Surfaces/Surface.hpp"
@@ -89,5 +87,3 @@ namespace detail {
 /// @endcond
 }  // end of namespace Acts
 #endif  // ACTS_COORDINATE_TRANSFORM_PLUGIN
-
-#endif  // ACTS_COORDINATE_TRANSFORMATIONS_H

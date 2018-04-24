@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_LAYERS_PROTOLAYER_H
-#define ACTS_LAYERS_PROTOLAYER_H 1
-
+#pragma once
 #include <iostream>
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -70,5 +68,3 @@ public:
   radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
 };
 }  // namespace Acts
-
-#endif  // ACTS_LAYERS_PROTOLAYER_H

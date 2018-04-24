@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
-#define ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H 1
-
+#pragma once
 #include "Acts/EventData/ParticleDefinitions.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -87,5 +85,3 @@ double
 sigmaMS(double dInX0, double p, double beta);
 
 }  // end of namespace
-
-#endif

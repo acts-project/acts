@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_ANY_OF_HPP
-#define ACTS_ANY_OF_HPP 1
-
+#pragma once
 #include <type_traits>
 
 namespace Acts {
@@ -33,4 +31,3 @@ namespace detail {
 }  // namespace detail
 
 }  // namespace Acts
-#endif  // ACTS_ANY_OF_HPP

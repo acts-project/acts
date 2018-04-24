@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_ACTION_LIST_HPP
-#define ACTS_ACTION_LIST_HPP
-
+#pragma once
 #include "Acts/Propagator/detail/Extendable.hpp"
 #include "Acts/Propagator/detail/action_list_implementation.hpp"
 #include "Acts/Propagator/detail/action_signature_check.hpp"
@@ -65,5 +63,3 @@ public:
 };
 
 }  // namespace Acts
-
-#endif  // ACTS_ACTION_LIST_HPP

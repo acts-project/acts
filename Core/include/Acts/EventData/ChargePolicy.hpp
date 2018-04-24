@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_CHARGEDEFINITION_H
-#define ACTS_CHARGEDEFINITION_H
-
+#pragma once
 namespace Acts {
 
 /// @class ChargedPolicy
@@ -121,5 +119,3 @@ public:
   }
 };
 }  // end of namespace Acts
-
-#endif  // ACTS_CHARGEPOLICY_H

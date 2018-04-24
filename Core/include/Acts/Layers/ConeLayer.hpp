@@ -10,9 +10,7 @@
 // ConeLayer.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_LAYERS_CONELAYER_H
-#define ACTS_LAYERS_CONELAYER_H
-
+#pragma once
 #include <algorithm>
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -107,5 +105,3 @@ protected:
 };
 
 }  // end of namespace
-
-#endif  // TRKGEOMETY_CONELAYER_H

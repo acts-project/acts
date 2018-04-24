@@ -10,9 +10,7 @@
 // HomogeneousSurfaceMaterial.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIAL_HOMOGENOUSLAYERMATERIAL_H
-#define ACTS_MATERIAL_HOMOGENOUSLAYERMATERIAL_H
-
+#pragma once
 #include <vector>
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Material/SurfaceMaterial.hpp"
@@ -113,5 +111,3 @@ inline const MaterialProperties*
 }
 
 }  // end of namespace
-
-#endif

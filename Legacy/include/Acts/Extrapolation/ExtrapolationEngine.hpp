@@ -10,9 +10,7 @@
 // ExtrapolationEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATION_EXTRAPOLATIONENGINE_H
-#define ACTS_EXTRAPOLATION_EXTRAPOLATIONENGINE_H 1
-
+#pragma once
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolation/ExtrapolationCell.hpp"
@@ -193,5 +191,3 @@ ExtrapolationEngine::getConfiguration() const
 }  // end of namespace
 
 #include "Acts/Extrapolation/detail/ExtrapolationEngine.ipp"
-
-#endif  // ACTS_EXTRAPOLATION_EXTRAPOLATIONENGINE_H

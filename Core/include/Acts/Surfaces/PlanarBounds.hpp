@@ -10,9 +10,7 @@
 // PlanarBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_PLANARBOUNDS_H
-#define ACTS_SURFACES_PLANARBOUNDS_H 1
-
+#pragma once
 #include <vector>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -47,5 +45,3 @@ public:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_PLANARBOUNDS_H

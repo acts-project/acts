@@ -10,9 +10,7 @@
 // MaterialTrack.hpp, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIALPLUGINS_MATERIALTRACK_H
-#define ACTS_MATERIALPLUGINS_MATERIALTRACK_H
-
+#pragma once
 #include <vector>
 #include "Acts/Plugins/MaterialPlugins/MaterialStep.hpp"
 
@@ -156,5 +154,3 @@ Acts::MaterialTrack::materialSteps() const
 {
   return m_materialSteps;
 }
-
-#endif  // ACTS_MATERIALPLUGINS_MATERIALTRACK_H

@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_DD4HEPPLUGIN_DD4HEPLAYERBUILDER_H
-#define ACTS_DD4HEPPLUGIN_DD4HEPLAYERBUILDER_H 1
-
+#pragma once
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
 #include "Acts/Tools/LayerCreator.hpp"
@@ -183,5 +181,3 @@ DD4hepLayerBuilder::getConfiguration() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_DD4HEPPLUGIN_DD4HEPLAYERBUILDER_H

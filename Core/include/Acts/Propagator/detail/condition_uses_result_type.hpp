@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_CONDITION_USES_RESULT_TYPE_HPP
-#define ACTS_CONDITION_USES_RESULT_TYPE_HPP 1
-
+#pragma once
 #include <type_traits>
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
@@ -36,4 +34,3 @@ namespace detail {
 }  // namespace detail
 
 }  // namespace Acts
-#endif  // ACTS_CONDITION_USES_RESULT_TYPE_HPP

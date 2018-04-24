@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_UTILITIES_THROWASSERT_H
-#define ACTS_UTILITIES_THROWASSERT_H 1
-
+#pragma once
 #include <exception>
 #include <iostream>
 #include <sstream>
@@ -86,5 +84,3 @@ private:
         __LINE__,                                                              \
         (Acts::AssertionFailureException::StreamFormatter() << MESSAGE));      \
   }
-
-#endif

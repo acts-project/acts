@@ -10,9 +10,7 @@
 // Geant4DetElement.h, ACTS project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEANT4PLUGINS_GEANT4DETECTORELEMENT_H
-#define ACTS_GEANT4PLUGINS_GEANT4DETECTORELEMENT_H 1
-
+#pragma once
 namespace Acts {
 
 /** @class Geant4DetElement
@@ -30,5 +28,3 @@ public:
 private:
 };
 }
-
-#endif  // ACTS_GEANT4PLUGINS_GEANT4DETECTORELEMENT_H

@@ -10,9 +10,7 @@
 // RadialBounds.h, c) ATLAS Detector software
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_RADIALBOUNDS_H
-#define ACTS_SURFACES_RADIALBOUNDS_H 1
-
+#pragma once
 #include <cmath>
 
 #include "Acts/Surfaces/DiscBounds.hpp"
@@ -156,5 +154,3 @@ RadialBounds::halfPhiSector() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_RADIALBOUNDS_H

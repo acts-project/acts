@@ -10,9 +10,7 @@
 // TrackingVolume.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETECTOR_TRACKINGVOLUME_H
-#define ACTS_DETECTOR_TRACKINGVOLUME_H 1
-
+#pragma once
 #include <map>
 #include <string>
 #include "Acts/Layers/Layer.hpp"
@@ -720,5 +718,3 @@ TrackingVolume::detectorElements() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_DETECTOR_TRACKINGVOLUME_H

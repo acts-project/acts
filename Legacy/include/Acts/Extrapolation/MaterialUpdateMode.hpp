@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_EXTRAPOLATIONUTILS_MATERIALUPDATEMODE_H
-#define ACTS_EXTRAPOLATIONUTILS_MATERIALUPDATEMODE_H 1
-
+#pragma once
 namespace Acts {
 
 /// This is a steering enum to force the material update
@@ -19,5 +17,3 @@ namespace Acts {
 
 enum MaterialUpdateMode { addNoise = 1, removeNoise = -1 };
 }
-
-#endif

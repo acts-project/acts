@@ -10,9 +10,7 @@
 // GeometryObjectSorter.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYUTILS_GEOMETRYOBJECTSORTER_H
-#define ACTS_GEOMETRYUTILS_GEOMETRYOBJECTSORTER_H 1
-
+#pragma once
 #include "Definitions.hpp"
 
 namespace Acts {
@@ -210,5 +208,3 @@ protected:
   std::shared_ptr<const Transform3D> m_transform;
 };
 }
-
-#endif  // ACTS_GEOMETRYUTILS_GEOMETRYOBJECTSORTER_H

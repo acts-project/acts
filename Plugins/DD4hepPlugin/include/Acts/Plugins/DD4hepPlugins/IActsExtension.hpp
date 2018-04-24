@@ -10,9 +10,7 @@
 // IDetExtension.h, ACTS project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DD4HEPDETECTORELEMENT_IACTSEXTENSION_H
-#define ACTS_DD4HEPDETECTORELEMENT_IACTSEXTENSION_H 1
-
+#pragma once
 // Algebra
 #include <memory>
 #include <vector>
@@ -148,5 +146,3 @@ protected:
   IActsExtension() {}
 };
 }
-
-#endif  // ACTS_DD4HEPDETECTORELEMENT_DET_IACTSEXTENSION_H

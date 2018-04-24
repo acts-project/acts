@@ -10,9 +10,7 @@
 // SurfaceBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_SURFACEBOUNDS_H
-#define ACTS_SURFACES_SURFACEBOUNDS_H
-
+#pragma once
 #include <ostream>
 
 #include "Acts/Surfaces/BoundaryCheck.hpp"
@@ -124,5 +122,3 @@ operator<<(std::ostream& os, const SurfaceBounds& sb)
 }
 
 }  // namespace Acts
-
-#endif  // ACTS_SURFACES_SURFACEBOUNDS_H

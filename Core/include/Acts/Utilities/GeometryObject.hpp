@@ -10,9 +10,7 @@
 // GeometryObject.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYUTILS_GEOMETRYOBJECT_H
-#define ACTS_GEOMETRYUTILS_GEOMETRYOBJECT_H
-
+#pragma once
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
@@ -118,5 +116,3 @@ GeometryObject::binningPositionValue(BinningValue bValue) const
   }
 }
 }
-
-#endif

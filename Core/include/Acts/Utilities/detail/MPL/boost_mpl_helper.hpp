@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_BOOST_MPL_HELPER_HPP
-#define ACTS_BOOST_MPL_HELPER_HPP 1
-
+#pragma once
 #include <boost/mpl/fold.hpp>
 #include <boost/mpl/inserter.hpp>
 #include <boost/mpl/set.hpp>
@@ -79,5 +77,3 @@ namespace detail {
 }  // namespace detail
 
 }  // namespace Acts
-
-#endif  // ACTS_BOOST_MPL_HELPER_HPP

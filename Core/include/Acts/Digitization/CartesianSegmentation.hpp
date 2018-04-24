@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_DIGITIZATION_CARTESIANSEGMENTATION_H
-#define ACTS_DIGITIZATION_CARTESIANSEGMENTATION_H
-
+#pragma once
 #include <memory>
 #include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
@@ -152,5 +150,3 @@ CartesianSegmentation::cell(const Vector2D& position) const
   return cellT<Vector2D>(position);
 }
 }
-
-#endif

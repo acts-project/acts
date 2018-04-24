@@ -9,9 +9,7 @@
 ///////////////////////////////////////////////////////////////////
 // BinUtility.h, ACTS project
 ///////////////////////////////////////////////////////////////////
-#ifndef ACTS_UTILITIES_BINNINGDATA_H
-#define ACTS_UTILITIES_BINNINGDATA_H 1
-
+#pragma once
 #include <cmath>
 #include <iostream>
 #include <memory>
@@ -583,5 +581,3 @@ private:
   }
 };
 }
-
-#endif  // ACTS_UTILITIES_BINNINGDATA_H

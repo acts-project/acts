@@ -10,9 +10,7 @@
 // SurfaceMaterial.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIAL_SURFACEMATERIAL_H
-#define ACTS_MATERIAL_SURFACEMATERIAL_H
-
+#pragma once
 #include <memory>
 #include <vector>
 #include "Acts/Material/MaterialProperties.hpp"
@@ -108,5 +106,3 @@ operator<<(std::ostream& sl, const SurfaceMaterial& sm);
 typedef std::pair<GeometryID, SurfaceMaterial*> IndexedSurfaceMaterial;
 
 }  // end of namespace
-
-#endif  // ACTS_MATERIAL_SURFACEMATERIAL_H

@@ -10,9 +10,7 @@
 // DiscLayer.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_LAYERS_DISCLAYER_H
-#define ACTS_LAYERS_DISCLAYER_H 1
-
+#pragma once
 class MsgStream;
 
 #include <algorithm>
@@ -123,5 +121,3 @@ protected:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_LAYERS_DISCLAYER_H

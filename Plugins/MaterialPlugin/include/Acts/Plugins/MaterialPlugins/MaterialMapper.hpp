@@ -10,9 +10,7 @@
 // MaterialMapper.h, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIALPLUGINS_MATERIALMAPPER_H
-#define ACTS_MATERIALPLUGINS_MATERIALMAPPER_H
-
+#pragma once
 #include <map>
 #include <utility>
 #include "Acts/Extrapolation/IExtrapolationEngine.hpp"
@@ -183,5 +181,3 @@ private:
   std::unique_ptr<const Logger> m_logger;
 };
 }
-
-#endif  // ACTS_MATERIALPLUGINS_MATERIALMAPPING_H

@@ -10,9 +10,7 @@
 // TrackingGeometry.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETECTOR_TRACKINGGEOMETRY_H
-#define ACTS_DETECTOR_TRACKINGGEOMETRY_H
-
+#pragma once
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
 // STD
@@ -167,5 +165,3 @@ private:
 };
 
 }  // end of namespace
-
-#endif

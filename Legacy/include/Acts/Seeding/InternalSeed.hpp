@@ -10,9 +10,7 @@
 // InternalSeed.hpp ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef InternalSeed_h
-#define InternalSeed_h
-
+#pragma once
 #include "Acts/Seeding/SPForSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
 
@@ -213,5 +211,3 @@ namespace Seeding {
 
 }  // end of Seeding namespace
 }  // end of Acts namespace
-
-#endif  // InternalSeed_h

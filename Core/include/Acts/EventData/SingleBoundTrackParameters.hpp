@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_SINGLEBOUNDTRACKPARAMETERS_H
-#define ACTS_SINGLEBOUNDTRACKPARAMETERS_H
-
+#pragma once
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -257,5 +255,3 @@ private:
 };
 
 }  // end of namespace Acts
-
-#endif  // ACTS_SINGLEBOUNDTRACKPARAMETERS_H

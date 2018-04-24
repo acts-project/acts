@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_Definitions_H
-#define ACTS_Definitions_H
-
+#pragma once
 // API addons
 #define EIGEN_MATRIXBASE_PLUGIN "Acts/Utilities/detail/MatrixBasePlugin.hpp"
 #define EIGEN_MATRIX_PLUGIN "Acts/Utilities/detail/MatrixPlugin.hpp"
@@ -146,5 +144,3 @@ typedef Eigen::Matrix<double, 2, 1> Vector2D;
 typedef Eigen::Matrix<double, 3, 3> RotationMatrix3D;
 
 }  // end of namespace Acts
-
-#endif

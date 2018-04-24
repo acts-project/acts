@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_PARAMETERSBASE_H
-#define ACTS_PARAMETERSBASE_H 1
-
+#pragma once
 // STL include(s)
 #include <ostream>
 
@@ -190,5 +188,3 @@ protected:
   print(std::ostream& out) const;
 };
 }  // end of namespace Acts
-
-#endif  // ACTS_PARAMETERSBASE_h

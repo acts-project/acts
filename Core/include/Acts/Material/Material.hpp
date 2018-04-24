@@ -10,9 +10,7 @@
 // Material.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIAL_MATERIAL_H
-#define ACTS_MATERIAL_MATERIAL_H
-
+#pragma once
 #include <algorithm>
 #include <climits>
 #include <iomanip>
@@ -314,5 +312,3 @@ private:
   MaterialComposition m_composition;
 };
 }
-
-#endif

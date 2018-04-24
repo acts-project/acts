@@ -10,9 +10,7 @@
 // VolumeBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_VOLUMES_VOLUMEBOUNDS_H
-#define ACTS_VOLUMES_VOLUMEBOUNDS_H 1
-
+#pragma once
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -112,5 +110,3 @@ std::ostream&
 operator<<(std::ostream& sl, const VolumeBounds& vb);
 
 }  // end of namespace
-
-#endif  // ACTS_VOLUMES_VOLUMEBOUNDS_H

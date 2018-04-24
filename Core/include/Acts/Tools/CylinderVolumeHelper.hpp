@@ -10,9 +10,7 @@
 // CylinderVolumeHelper.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_CYLINDERVOLUMEHELPER_H
-#define ACTS_TOOLS_CYLINDERVOLUMEHELPER_H 1
-
+#pragma once
 #ifndef ACTS_TOOLS_TAKESMALLERBIGGER
 #define ACTS_TOOLS_TAKESMALLERBIGGER
 #define takeSmaller(current, test) current = current < test ? current : test
@@ -320,5 +318,3 @@ CylinderVolumeHelper::getConfiguration() const
   return m_cfg;
 }
 }
-
-#endif  // ACTS_TOOLS_CYLINDERVOLUMEHELPER_H

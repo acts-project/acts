@@ -10,9 +10,7 @@
 // PassiveLayerBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYTOOLS_PASSIVELAYERBUILDER_H
-#define ACTS_GEOMETRYTOOLS_PASSIVELAYERBUILDER_H 1
-
+#pragma once
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -149,5 +147,3 @@ PassiveLayerBuilder::centralLayers() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_TOOLS_PASSIVELAYERBUILDER_H

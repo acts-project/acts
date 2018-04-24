@@ -10,9 +10,7 @@
 // GeometryID.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYUTILS_GEOMETRYID_H
-#define ACTS_GEOMETRYUTILS_GEOMETRYID_H 1
-
+#pragma once
 #include <iostream>
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -140,5 +138,3 @@ operator>=(const GeometryID& one, const GeometryID& two);
 std::ostream&
 operator<<(std::ostream& sl, const GeometryID& tddID);
 }
-
-#endif  // ACTS_GEOMETRYUTILS_GEOMETRYID_H

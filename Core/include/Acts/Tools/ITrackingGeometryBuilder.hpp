@@ -10,9 +10,7 @@
 // ITrackingGeometryBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYINTERFACES_ITRACKINGGEOMETRYBUILDER_H
-#define ACTS_GEOMETRYINTERFACES_ITRACKINGGEOMETRYBUILDER_H 1
-
+#pragma once
 #include <memory>
 
 namespace Acts {
@@ -41,5 +39,3 @@ public:
   trackingGeometry() const = 0;
 };
 }  // end of namespace
-
-#endif  // ACTS_GEOMETRYINTERFACES_IGEOMETRYBUILDER_H

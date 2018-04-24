@@ -10,9 +10,7 @@
 // GeoPrimitivesHelpers.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef EVENTPRIMITIVES_AMGTRANSFORMPLUGIN_H
-#define EVENTPRIMITIVES_AMGTRANSFORMPLUGIN_H
-
+#pragma once
 inline explicit Transform(const Vector3d& rotationMatrixCol0,
                           const Vector3d& rotationMatrixCol1,
                           const Vector3d& rotationMatrixCol2)
@@ -61,5 +59,3 @@ inline explicit Transform(const Vector3d& rotationMatrixCol0,
   m_matrix.block(0, 3, 3, 1) = translation;
   if (int(Mode) == Affine) makeAffine();
 }
-
-#endif

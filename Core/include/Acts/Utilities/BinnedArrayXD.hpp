@@ -10,9 +10,7 @@
 // BinnedArrayXD.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_UTILITIES_BINNEDARRAYXD_H
-#define ACTS_UTILITIES_BINNEDARRAYXD_H 1
-
+#pragma once
 #include <array>
 #include <iostream>
 #include <vector>
@@ -246,5 +244,3 @@ private:
 };
 
 }  // end of namespace Acts
-
-#endif  // ACTS_UTILITIES_BINNEDARRAYXD_H

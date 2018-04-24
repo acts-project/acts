@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_EXTRAPOLATION_PROPAGATOR_H
-#define ACTS_EXTRAPOLATION_PROPAGATOR_H 1
-
+#pragma once
 #include <cmath>
 #include <memory>
 #include <type_traits>
@@ -372,5 +370,3 @@ namespace propagation {
 }  // namespace propagation
 
 }  // namespace Acts
-
-#endif  // ACTS_EXTRAPOLATION_PROPAGATOR_H

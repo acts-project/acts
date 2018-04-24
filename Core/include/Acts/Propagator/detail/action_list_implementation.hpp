@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_ACTION_LIST_IMPLEMENTATION_HPP
-#define ACTS_ACTION_LIST_IMPLEMENTATION_HPP
-
+#pragma once
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 namespace Acts {
@@ -82,5 +80,3 @@ namespace detail {
 
 }  // namespace detail
 }  // namespace Acts
-
-#endif  // ACTS_ACTION_LIST_IMPLEMENTATION_HPP

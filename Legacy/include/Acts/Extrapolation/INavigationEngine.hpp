@@ -10,9 +10,7 @@
 // INavigationEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATION_INAVIGATIONENGINE_H
-#define ACTS_EXTRAPOLATION_INAVIGATIONENGINE_H
-
+#pragma once
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolation/ExtrapolationCell.hpp"
@@ -87,5 +85,3 @@ protected:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_EXTRAPOLATION_INAVIGATIONENGINE_H

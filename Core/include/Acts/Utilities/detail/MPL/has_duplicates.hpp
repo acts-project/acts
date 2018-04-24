@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_HAS_DUPLICATES_HPP
-#define ACTS_HAS_DUPLICATES_HPP 1
-
+#pragma once
 namespace Acts {
 
 namespace detail {
@@ -52,4 +50,3 @@ namespace detail {
 }  // namespace detail
 
 }  // namespace Acts
-#endif  // ACTS_HAS_DUPLICATES_HPP

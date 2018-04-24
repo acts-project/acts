@@ -10,9 +10,7 @@
 // BinUtility.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_UTILITIES_BINUTILITY_H
-#define ACTS_UTILITIES_BINUTILITY_H 1
-
+#pragma once
 #include <array>
 #include <iostream>
 #include <memory>
@@ -418,5 +416,3 @@ std::ostream&
 operator<<(std::ostream& sl, const BinUtility& bgen);
 
 }  // end of namespace Acts
-
-#endif  // ACTS_UTILITIES_BINUTILITY_H

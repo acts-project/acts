@@ -10,9 +10,7 @@
 // PerigeeSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_PERIGEESURFACE_H
-#define ACTS_SURFACES_PERIGEESURFACE_H 1
-
+#pragma once
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -94,5 +92,3 @@ public:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACESPERIGEESURFACE_H

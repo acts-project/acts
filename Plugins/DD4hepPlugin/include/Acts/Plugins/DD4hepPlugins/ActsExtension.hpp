@@ -10,14 +10,13 @@
 // ActsExtension.h, ACTS project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DD4HEPDETECTORELEMENT_ACTSEXTENSION_H
-#define ACTS_DD4HEPDETECTORELEMENT_ACTSEXTENSION_H 1
+#pragma once
 
-#include "Acts/Plugins/DD4hepPlugins/IActsExtension.hpp"
 #include <vector>
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Plugins/DD4hepPlugins/IActsExtension.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "DD4hep/CartesianGridXY.h"
 #include "DD4hep/Detector.h"
@@ -452,5 +451,3 @@ Acts::ActsExtension::material() const
   return m_material;
 }
 }
-
-#endif  // ACTS_DD4HEPDETECTORELEMENT_ACTSEXTENSION_H

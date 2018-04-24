@@ -10,9 +10,7 @@
 // BoundarySurfaceT.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_VOLUMES_BOUNDARYSURFACET_H
-#define ACTS_VOLUMES_BOUNDARYSURFACET_H
-
+#pragma once
 #include <memory>
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -218,5 +216,3 @@ BoundarySurfaceT<T>::attachedVolume(const Vector3D& pos,
   return attVolume;
 }
 }  // end of namespace Acts
-
-#endif  // ACTS_VOLUMES_BOUNDARYSURFACET_H

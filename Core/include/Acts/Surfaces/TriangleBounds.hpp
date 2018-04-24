@@ -10,9 +10,7 @@
 // TriangleBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACESTRIANGLEBOUNDS_H
-#define ACTS_SURFACESTRIANGLEBOUNDS_H
-
+#pragma once
 #include <array>
 #include <utility>
 
@@ -109,5 +107,3 @@ private:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACESRECTANGLEBOUNDS_H

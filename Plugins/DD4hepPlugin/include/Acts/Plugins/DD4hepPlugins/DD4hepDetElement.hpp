@@ -10,9 +10,7 @@
 // DD4hepDetElement.h, ACTS project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H
-#define ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H 1
-
+#pragma once
 #include "Acts/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 #include "DD4hep/DetElement.h"
 
@@ -108,5 +106,3 @@ private:
   std::shared_ptr<const DigitizationModule> m_digiModule;
 };
 }
-
-#endif  // ACTS_DD4HEPDETECTORELEMENT_DD4HEPDETELEMENT_H

@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_FULL_PARAMETER_SET_H
-#define ACTS_FULL_PARAMETER_SET_H 1
-
+#pragma once
 // STL include(s)
 #include <type_traits>
 #include <utility>
@@ -73,5 +71,3 @@ namespace detail {
 }  // end of namespace detail
 /// @endcond
 }  // end of namespace Acts
-
-#endif  // ACTS_FULL_PARAMETER_SET_H

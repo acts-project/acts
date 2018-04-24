@@ -5,9 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#ifndef ACTS_TEST_SURFACESTUB
-#define ACTS_TEST_SURFACESTUB 1
-
+#pragma once
 #include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -136,4 +134,3 @@ private:
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
 }
-#endif

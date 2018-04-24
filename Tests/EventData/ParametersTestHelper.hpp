@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_TESTS_EVENTDATA_PARAMETERTESTHELPER_H
-#define ACTS_TESTS_EVENTDATA_PARAMETERTESTHELPER_H
-
+#pragma once
 #include <boost/test/included/unit_test.hpp>
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -39,5 +37,3 @@ namespace Test {
   }
 }
 }
-
-#endif

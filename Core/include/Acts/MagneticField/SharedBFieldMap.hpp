@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_MAGNETICFIELD_SHAREDBFIELD_H
-#define ACTS_MAGNETICFIELD_SHAREDBFIELD_H
-
+#pragma once
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -72,5 +70,3 @@ private:
 };
 
 }  // namespace Acts
-
-#endif  // ACTS_MAGNETICFIELD_SHAREDBFIELD_H

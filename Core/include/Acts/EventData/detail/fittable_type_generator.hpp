@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_FITTABLE_TYPE_GENERATOR_H
-#define ACTS_FITTABLE_TYPE_GENERATOR_H 1
-
+#pragma once
 // boost include(s)
 #include <boost/mpl/vector.hpp>
 #include <boost/variant.hpp>
@@ -162,5 +160,3 @@ namespace detail {
 }  // end of namespace details
 /// @endcond
 }  // end of namespace Acts
-
-#endif  // ACTS_FITTABLE_TYPE_GENERATOR_H

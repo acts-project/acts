@@ -10,9 +10,7 @@
 // CylinderVolumeBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H
-#define ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H
-
+#pragma once
 #include <limits>
 #include <string>
 #include "Acts/Material/Material.hpp"
@@ -598,5 +596,3 @@ CylinderVolumeBuilder::getConfiguration() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_TOOLS_CYLINDERVOLUMEBUILDER_H

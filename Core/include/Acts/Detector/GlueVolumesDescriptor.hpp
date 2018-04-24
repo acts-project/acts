@@ -10,9 +10,7 @@
 // GlueVolumesDescriptor.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETECTOR_GLUEVOLUMESDESCRIPTOR_H
-#define ACTS_DETECTOR_GLUEVOLUMESDESCRIPTOR_H 1
-
+#pragma once
 #include <map>
 #include <memory>
 #include <vector>
@@ -87,5 +85,3 @@ GlueVolumesDescriptor::glueFaces() const
 std::ostream&
 operator<<(std::ostream& sl, const GlueVolumesDescriptor& mprop);
 }
-
-#endif

@@ -10,9 +10,7 @@
 // TrapezoidVolumeBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_VOLUMES_TRAPEZOIDVOLUMESBOUNDS_H
-#define ACTS_VOLUMES_TRAPEZOIDVOLUMESBOUNDS_H 1
-
+#pragma once
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/VolumeBounds.hpp"
 
@@ -236,5 +234,3 @@ TrapezoidVolumeBounds::dumpT(T& dt) const
   return dt;
 }
 }
-
-#endif  // ACTS_VOLUMES_TRAPEZOIDVOLUMESBOUNDS_H

@@ -10,9 +10,7 @@
 // StaticEngine.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATION_STATICENGINE_H
-#define ACTS_EXTRAPOLATION_STATICENGINE_H 1
-
+#pragma once
 #ifndef ACTS_EXTRAPOLATION_OUTPUTHELPER
 #define ACTS_EXTRAPOLATION_OUTPUTHELPER 1
 #define OH_CHECKFOUND(object) (object ? "found" : "not found")
@@ -241,5 +239,3 @@ StaticEngine::getConfiguration() const
 }  // end of namespace
 
 #include "Acts/Extrapolation/detail/StaticEngine.ipp"
-
-#endif  // ACTS_EXTRAPOLATION_STATICENGINE_H

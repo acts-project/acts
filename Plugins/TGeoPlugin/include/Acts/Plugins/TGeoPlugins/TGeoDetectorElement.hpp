@@ -10,9 +10,7 @@
 // TGeoDetectorElement.h, ACTS project, TGeoDetector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TGEODETECTORELEMENT_TGEODETECTORELEMENT
-#define ACTS_TGEODETECTORELEMENT_TGEODETECTORELEMENT 1
-
+#pragma once
 #include <iostream>
 #include "Acts/Detector/DetectorElementBase.hpp"
 #include "TGeoManager.h"
@@ -206,5 +204,3 @@ TGeoDetectorElement::thickness() const
   return m_thickness;
 }
 }
-
-#endif

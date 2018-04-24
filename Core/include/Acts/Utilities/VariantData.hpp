@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_UTILITIES_VARIANTDATA_H
-#define ACTS_UTILITIES_VARIANTDATA_H 1
-
+#pragma once
 // This file is a "Hello, world!" in C++ language by GCC for wandbox.
 #include <boost/variant.hpp>
 #include <iomanip>
@@ -608,5 +606,3 @@ from_variant<Vector2D>(const variant_data& data_)
 }
 
 }  // namespace Acts
-
-#endif

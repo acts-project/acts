@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_KALMANFITUTILS_H
-#define ACTS_KALMANFITUTILS_H
-
+#pragma once
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -152,5 +150,3 @@ initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
 
   return exEngine;
 };
-
-#endif

@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_NEUTRALPARAMETERS_H
-#define ACTS_NEUTRALPARAMETERS_H 1
-
+#pragma once
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
@@ -20,5 +18,3 @@ typedef SingleCurvilinearTrackParameters<NeutralPolicy>
                                                   NeutralCurvilinearParameters;
 typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundParameters;
 }  // end of namespace Acts
-
-#endif  // ACTS_NEUTRALPARAMETERS_H

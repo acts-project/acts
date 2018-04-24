@@ -10,9 +10,7 @@
 // DiscBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACESDISCBOUNDS_H
-#define ACTS_SURFACESDISCBOUNDS_H
-
+#pragma once
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
 namespace Acts {
@@ -27,5 +25,3 @@ class DiscBounds : public SurfaceBounds
 };
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACESDISCBOUNDS_H

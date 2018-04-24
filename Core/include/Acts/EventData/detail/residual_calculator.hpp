@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_RESIDUAL_CALCULATOR_H
-#define ACTS_RESIDUAL_CALCULATOR_H 1
-
+#pragma once
 // ACTS include(s)
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
@@ -75,5 +73,3 @@ namespace detail {
 }  // end of namespace detail
 /// @endcond
 }  // end of namespace Acts
-
-#endif  // ACTS_RESIDUAL_CALCULATOR_H

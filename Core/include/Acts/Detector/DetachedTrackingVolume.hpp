@@ -10,9 +10,7 @@
 // DetachedTrackingVolume.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETECTOR_DETACHEDTRACKINGVOLUME_H
-#define ACTS_DETECTOR_DETACHEDTRACKINGVOLUME_H 1
-
+#pragma once
 #include <memory>
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Layers/PlaneLayer.hpp"
@@ -182,5 +180,3 @@ DetachedTrackingVolume::constituents() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_DETECTOR_DETACHEDTRACKINGVOLUME_H

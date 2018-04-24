@@ -10,9 +10,7 @@
 // RectangleBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_RECTANGLEBOUNDS_H
-#define ACTS_SURFACES_RECTANGLEBOUNDS_H 1
-
+#pragma once
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
@@ -127,5 +125,3 @@ RectangleBounds::type() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_RECTANGLEBOUNDS_H

@@ -10,9 +10,7 @@
 // ILayerArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_ILAYERARRAYCREATOR_H
-#define ACTS_TOOLS_ILAYERARRAYCREATOR_H 1
-
+#pragma once
 #include <memory>
 #include <vector>
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -58,5 +56,3 @@ public:
              BinningValue       bvalue = binX) const = 0;
 };
 }  // end of namespace
-
-#endif  // ACTS_TOOLS_ILAYERARRAYCREATOR_H

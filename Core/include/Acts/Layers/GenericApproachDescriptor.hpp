@@ -10,9 +10,7 @@
 // GenericApproachDescriptor.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETECTOR_GENERICAPPROPACHDESCRIPTOR_H
-#define ACTS_DETECTOR_GENERICAPPROPACHDESCRIPTOR_H 1
-
+#pragma once
 #include <algorithm>
 #include "Acts/Utilities/ApproachDescriptor.hpp"
 
@@ -151,5 +149,3 @@ GenericApproachDescriptor<T>::containedSurfaces()
   return m_surfacesCache;
 }
 }
-
-#endif

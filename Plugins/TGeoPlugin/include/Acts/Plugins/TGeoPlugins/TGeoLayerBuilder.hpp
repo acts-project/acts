@@ -10,9 +10,7 @@
 // TGeoLayerBuilder.h, ACTS project, TGeoDetector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TGEOPLUGINS_TGEOLAYERBUILDER_H
-#define ACTS_TGEOPLUGINS_TGEOLAYERBUILDER_H
-
+#pragma once
 #include "Acts/Tools/ILayerBuilder.hpp"
 #include "Acts/Tools/LayerCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -166,5 +164,3 @@ TGeoLayerBuilder::identification() const
   return m_cfg.configurationName;
 }
 }
-
-#endif

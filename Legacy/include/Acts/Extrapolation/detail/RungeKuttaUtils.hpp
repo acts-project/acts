@@ -10,9 +10,7 @@
 //  RungeKuttaUtils.h, ACTS project
 /////////////////////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONDETAILS_RUNGEKUTTAUTILS_H
-#define ACTS_EXTRAPOLATIONDETAILS_RUNGEKUTTAUTILS_H 1
-
+#pragma once
 #include <limits>
 #include <map>
 #include <vector>
@@ -213,5 +211,3 @@ private:
   transformLocalToGlobal(bool, const Surface*, const double*, double*) const;
 };
 }  // end of namespace
-
-#endif  // ACTS_EXTRAPOLATIONDETAILS_RUNGEKUTTAUTILS_H

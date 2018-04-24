@@ -10,9 +10,7 @@
 // LineBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_LINEBOUNDS_H
-#define ACTS_SURFACES_LINEBOUNDS_H 1
-
+#pragma once
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
@@ -109,5 +107,3 @@ LineBounds::halflengthZ() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_LINEBOUNDS_H

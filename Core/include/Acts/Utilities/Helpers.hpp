@@ -10,9 +10,7 @@
 // AlgebraHelper.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_HELPERS_H
-#define ACTS_HELPERS_H 1
-
+#pragma once
 // STL include(s)
 #include <cmath>
 #include <iomanip>
@@ -342,5 +340,3 @@ getRotateZ3D(double angle)
 }
 
 }  // end of Acts namespace
-
-#endif

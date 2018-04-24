@@ -10,9 +10,7 @@
 // CylinderLayer.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_LAYERS_CYLINDERLAYER_H
-#define ACTS_LAYERS_CYLINDERLAYER_H
-
+#pragma once
 #include <algorithm>
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -135,5 +133,3 @@ protected:
 };
 
 }  // namespace Acts
-
-#endif  // ACTS_LAYERS_CYLINDERLAYER_H

@@ -10,9 +10,7 @@
 // Identifier.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_CORE_IDENTIFIER_H
-#define ACTS_CORE_IDENTIFIER_H 1
-
+#pragma once
 #ifdef ACTS_CORE_IDENTIFIER_PLUGIN
 #include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
@@ -241,5 +239,3 @@ Identifier::is_valid() const
 }
 
 #endif  // ACTS_CORE_IDENTIFIER_PLUGIN
-
-#endif  // ACTS_CORE_IDENTIFIER_H

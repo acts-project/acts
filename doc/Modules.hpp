@@ -6,8 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_MODULES_HPP
-#define ACTS_MODULES_HPP 1
+#pragma once
 // clang-format off
 
 /// @defgroup Design Design and concept descriptions
@@ -426,4 +425,3 @@
 /// @defgroup Contributing Contribution guide
 
 // clang-format on
-#endif  // ACTS_MODULES_HPP

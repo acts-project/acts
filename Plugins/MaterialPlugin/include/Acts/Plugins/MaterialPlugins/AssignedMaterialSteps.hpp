@@ -10,9 +10,7 @@
 // AssignedMaterialSteps.h, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H
-#define ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H
-
+#pragma once
 #include "Acts/Plugins/MaterialPlugins/MaterialStep.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
@@ -37,5 +35,3 @@ struct AssignedMaterialSteps
   }
 };
 }
-
-#endif  // ACTS_MATERIALPLUGINS_ASSIGNEDMATERIALSTEPS_H

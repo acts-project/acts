@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_PARAMETERDEFINITIONS_H
-#define ACTS_PARAMETERDEFINITIONS_H 1
-
+#pragma once
 #ifdef ACTS_PARAMETER_DEFINITIONS_PLUGIN
 #include ACTS_PARAMETER_DEFINITIONS_PLUGIN
 #endif
@@ -54,5 +52,3 @@ static_assert(Acts::eLOC_Z0 == Acts::eLOC_0 or Acts::eLOC_Z0 == Acts::eLOC_1,
 /// check for par_type_t definition
 static_assert(sizeof(Acts::par_type_t<Acts::eLOC_0>) > 0,
               "'par_type_t' is not defined");
-
-#endif  //  ACTS_PARAMETERDEFINITIONS_H

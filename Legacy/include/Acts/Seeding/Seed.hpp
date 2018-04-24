@@ -10,8 +10,7 @@
 // Seed.hpp ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef Seed_h
-#define Seed_h
+#pragma once
 #include <list>
 
 namespace Acts {
@@ -134,5 +133,3 @@ namespace Seeding {
   }
 }  // end of Seeding namespace
 }  // end of Acts namespace
-
-#endif  // Seed_h

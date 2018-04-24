@@ -10,9 +10,7 @@
 // BinnedArray.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_UTILITIES_BINNEDARRAY_H
-#define ACTS_UTILITIES_BINNEDARRAY_H 1
-
+#pragma once
 #include <array>
 #include <vector>
 #include "Acts/Utilities/BinUtility.hpp"
@@ -108,5 +106,3 @@ public:
 };
 
 }  // end of namespace Acts
-
-#endif  // ACTS_UTILITIES_BINNEDARRAY_H

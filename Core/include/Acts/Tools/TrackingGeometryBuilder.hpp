@@ -10,9 +10,7 @@
 // TrackingGeometryBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_CYLINDERGEOMETRYBUILDER_H
-#define ACTS_TOOLS_CYLINDERGEOMETRYBUILDER_H 1
-
+#pragma once
 #include <list>
 #include <memory>
 #include "Acts/Tools/ITrackingGeometryBuilder.hpp"
@@ -106,5 +104,3 @@ TrackingGeometryBuilder::getConfiguration() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_TOOLS_CYLINDERGEOMETRYBUILDER_H

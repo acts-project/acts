@@ -10,9 +10,7 @@
 // NavigationLayer.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_LAYERS_NAVIGATIONLAYER_H
-#define ACTS_LAYERS_NAVIGATIONLAYER_H
-
+#pragma once
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -149,5 +147,3 @@ NavigationLayer::isOnLayer(const Vector3D&      gp,
 }
 
 }  // end of namespace
-
-#endif  // ACTS_LAYERS_NAVIGATIONLAYER_H

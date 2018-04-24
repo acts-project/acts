@@ -10,9 +10,7 @@
 // EllipseBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_ELLIPSEBOUNDS_H
-#define ACTS_SURFACES_ELLIPSEBOUNDS_H 1
-
+#pragma once
 #include <cmath>
 #include <cstdlib>
 
@@ -180,5 +178,3 @@ EllipseBounds::halfPhiSector() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_ELLIPSEBOUNDS_H

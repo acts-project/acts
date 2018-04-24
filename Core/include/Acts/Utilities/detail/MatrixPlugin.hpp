@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef EVENTPRIMITIVES_SYMMETRICMATRIXHELPERS_H
-#define EVENTPRIMITIVES_SYMMETRICMATRIXHELPERS_H
-
+#pragma once
 #include <cmath>
 
 //////////////////////////////////////////////////////////////////////
@@ -267,5 +265,3 @@ similaritySym5(
 
   return out;
 }
-
-#endif

@@ -10,9 +10,7 @@
 // ApproachDescriptor.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_UTILITIES_APPROACHDESCRIPTOR_H
-#define ACTS_UTILITIES_APPROACHDESCRIPTOR_H 1
-
+#pragma once
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -76,5 +74,3 @@ public:
       = 0;
 };
 }
-
-#endif  // ACTS_GEOMETRYUTILS_APPROACHDESCRIPTOR_H

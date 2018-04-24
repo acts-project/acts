@@ -10,9 +10,7 @@
 // BoundaryCheck.hpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_BOUNDARYCHECK_H
-#define ACTS_SURFACES_BOUNDARYCHECK_H
-
+#pragma once
 #include <cfloat>
 #include <cmath>
 #include <iterator>
@@ -369,5 +367,3 @@ Acts::BoundaryCheck::computeClosestPointOnPolygon(
   }
   return closest;
 }
-
-#endif  // ACTS_SURFACES_BOUNDARYCHECK_H

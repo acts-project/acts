@@ -10,9 +10,7 @@
 // AbstractVolume.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_VOLUMES_ABSTRACTVOLUME_H
-#define ACTS_VOLUMES_ABSTRACTVOLUME_H
-
+#pragma once
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
@@ -91,5 +89,3 @@ private:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_VOLUMES_ABSTRACTVOLUME_H

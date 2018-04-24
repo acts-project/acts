@@ -10,9 +10,7 @@
 // Surface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_SURFACE_H
-#define ACTS_SURFACES_SURFACE_H 1
-
+#pragma once
 #include "Acts/Detector/DetectorElementBase.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -558,5 +556,3 @@ std::ostream&
 operator<<(std::ostream& sl, const Surface& sf);
 
 }  // end of namespace Acts
-
-#endif  // ACTS_SURFACES_SURFACE_H

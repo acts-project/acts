@@ -10,9 +10,7 @@
 // SPForSeed.hpp ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef SPForSeed_hpp
-#define SPForSeed_hpp
-
+#pragma once
 #include <cmath>
 
 // COLLECTION OF MAGIC NUMBERS IN HERE:
@@ -297,5 +295,3 @@ namespace Seeding {
 
 }  // end of Seeding namespace
 }  // end of Acts namespace
-
-#endif  // SPForSeed_hpp

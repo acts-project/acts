@@ -10,9 +10,7 @@
 // DetectorElementStub.h, ACTS project, Generic Detector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TEST_DetectorElementStub_DetectorElementStub
-#define ACTS_TEST_DetectorElementStub_DetectorElementStub 1
-
+#pragma once
 // Algebra and Identifier
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Identifier.hpp"
@@ -193,5 +191,3 @@ DetectorElementStub::thickness() const
 }
 
 }  // end of ns
-
-#endif

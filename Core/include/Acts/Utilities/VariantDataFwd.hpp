@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_UTILITIES_VARIANTDATA_FWD_H
-#define ACTS_UTILITIES_VARIANTDATA_FWD_H 1
-
+#pragma once
 #include <boost/variant/recursive_wrapper.hpp>
 #include <boost/variant/variant_fwd.hpp>
 #include <iostream>
@@ -31,4 +29,3 @@ using variant_data = boost::variant<int,
                                     boost::recursive_wrapper<variant_map>,
                                     boost::recursive_wrapper<variant_vector>>;
 }
-#endif

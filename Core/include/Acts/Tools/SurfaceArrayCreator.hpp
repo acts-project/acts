@@ -10,9 +10,7 @@
 // SurfaceArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_SURFACERARRAYCREATOR_H
-#define ACTS_TOOLS_SURFACERARRAYCREATOR_H 1
-
+#pragma once
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include "Acts/Layers/ProtoLayer.hpp"
@@ -436,5 +434,3 @@ private:
 };
 
 }  // namespace Acts
-
-#endif  // ACTS_TOOLS_SURFACERARRAYCREATOR_H

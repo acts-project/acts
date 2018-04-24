@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 // output stream macros to facilitate screen output and consistent checking
 
-#ifndef EXSCREENOUTPUTDEFS
-#define EXSCREENOUTPUTDEFS 1
+#pragma once
+
 #define EX_MSG_INFO(navstep, step, idx, x)                                     \
   ACTS_INFO(m_sopPrefix << std::setw(4) << navstep << m_sopPostfix             \
                         << std::setw(12)                                       \
@@ -58,15 +58,9 @@
                          << idx                                                \
                          << m_sopPostfix                                       \
                          << x)
-#endif
 
-#ifndef EXENINGE_OUTPUTHELPER
-#define TRKEXENINGE_OUTPUTHELPER 1
 #define OH_CHECKFOUND(object) (object ? "found" : "not found")
-#endif
 
-#ifndef EXENGINE_EXCODECHECKS
-#define TRKEXENGINE_EXCODECHECKS 1
 #define CHECK_ECODE_CONTINUE(ecell, ecode)                                     \
   if (!ecode.inProgress()) {                                                   \
     EX_MSG_VERBOSE(ecell.navigationStep,                                       \
@@ -91,4 +85,3 @@
                    ecode.toString() << " stops extrapolation sequence.");      \
     return ecode;                                                              \
   }
-#endif

@@ -10,9 +10,7 @@
 // IMultipleScatteringUpdator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONIN_IMULTIPLESCATTERINGUPDATOR_H
-#define ACTS_EXTRAPOLATIONIN_IMULTIPLESCATTERINGUPDATOR_H 1
-
+#pragma once
 #include "Acts/EventData/ParticleDefinitions.hpp"
 
 namespace Acts {
@@ -44,5 +42,3 @@ public:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_EXTRAPOLATIONIN_IMULTIPLESCATTERINGUPDATOR_H

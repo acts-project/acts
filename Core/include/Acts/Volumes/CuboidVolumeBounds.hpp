@@ -10,9 +10,7 @@
 // CuboidVolumeBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_VOLUMES_CUBOIDVOLUMESBOUNDS_H
-#define ACTS_VOLUMES_CUBOIDVOLUMESBOUNDS_H 1
-
+#pragma once
 #include <cmath>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/VolumeBounds.hpp"
@@ -186,5 +184,3 @@ CuboidVolumeBounds::dumpT(T& dt) const
   return dt;
 }
 }
-
-#endif  // ACTS_VOLUMES_CUBOIDVOLUMESBOUNDS_H

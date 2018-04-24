@@ -10,9 +10,7 @@
 // ITrackingVolumeBuilder.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_ITRACKINGVOLUMEBUILDER_H
-#define ACTS_TOOLS_ITRACKINGVOLUMEBUILDER_H 1
-
+#pragma once
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -58,5 +56,3 @@ public:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_TOOLS_ITRACKINGVOLUMEBUILDER_H

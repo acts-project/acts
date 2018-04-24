@@ -10,9 +10,7 @@
 // BinningType.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_UTILITIES_BINNINGTYPE_H
-#define ACTS_UTILITIES_BINNINGTYPE_H 1
-
+#pragma once
 #include <string>
 #include <vector>
 
@@ -61,4 +59,3 @@ static const std::vector<std::string> binningValueNames = {"binX",
                                                            "binEta",
                                                            "binMag"};
 }
-#endif  // ACTS_UTILITIES_BINNINGTYPE_H

@@ -10,9 +10,7 @@
 // StrawSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_STRAWSURFACE_H
-#define ACTS_SURFACES_STRAWSURFACE_H
-
+#pragma once
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -121,5 +119,3 @@ Acts::StrawSurface::name() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACESSTRAIGHTLINESURFACE_H

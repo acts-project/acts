@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_TYPE_COLLECTOR_HPP
-#define ACTS_TYPE_COLLECTOR_HPP 1
-
+#pragma once
 #include <boost/mpl/set.hpp>
 #include <type_traits>
 #include "Acts/Utilities/detail/MPL/boost_mpl_helper.hpp"
@@ -138,5 +136,3 @@ namespace detail {
 }  // namespace detail
 
 }  // namespace Acts
-
-#endif  // ACTS_TYPE_COLLECTOR_HPP

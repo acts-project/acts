@@ -10,9 +10,7 @@
 // AmgMatrixPlugin.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef EVENTPRIMITIVES_AMGMATRIXPLUGIN_H
-#define EVENTPRIMITIVES_AMGMATRIXPLUGIN_H
-
+#pragma once
 //#include <cmath>
 
 /** This is a plugin that makes Eigen look like CLHEP
@@ -149,5 +147,3 @@ similarityT(const MatrixBase<OtherDerived>& m) const
 {
   return m.transpose() * (this->derived() * m);
 }
-
-#endif

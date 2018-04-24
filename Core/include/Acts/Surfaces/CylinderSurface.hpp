@@ -10,9 +10,7 @@
 // CylinderSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_CYLINDERSURFACE_H
-#define ACTS_SURFACES_CYLINDERSURFACE_H 1
-
+#pragma once
 #include <cmath>
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -260,5 +258,3 @@ CylinderSurface::rotSymmetryAxis() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_CYLINDERSURFACE_H

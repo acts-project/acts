@@ -10,9 +10,7 @@
 // Layer.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETECTOR_LAYER_H
-#define ACTS_DETECTOR_LAYER_H 1
-
+#pragma once
 // Core module
 #include <map>
 #include "Acts/EventData/NeutralParameters.hpp"
@@ -546,5 +544,3 @@ typedef BinnedArray<LayerPtr> LayerArray;
 }  // end of namespace
 
 #include "Acts/Layers/detail/Layer.ipp"
-
-#endif  // ACTS_DETECTOR_LAYER_H

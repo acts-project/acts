@@ -10,9 +10,7 @@
 // ConeSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_CONESURFACE_H
-#define ACTS_SURFACES_CONESURFACE_H 1
-
+#pragma once
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -237,5 +235,3 @@ protected:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACESCONESURFACE_H

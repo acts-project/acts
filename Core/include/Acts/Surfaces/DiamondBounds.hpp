@@ -10,9 +10,7 @@
 // DiamondBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_DIAMONDDBOUNDS_H
-#define ACTS_SURFACES_DIAMONDDBOUNDS_H 1
-
+#pragma once
 #include <cmath>
 
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -167,5 +165,3 @@ DiamondBounds::halflengthY2() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_DIAMONDBOUNDS_H

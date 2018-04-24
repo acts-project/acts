@@ -10,9 +10,7 @@
 // DetectorElementBase.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_DETELEMENTBASE_DETELEMENTBASE_H
-#define ACTS_DETELEMENTBASE_DETELEMENTBASE_H 1
-
+#pragma once
 #ifdef ACTS_GEOMETRY_DETELEMENT_PLUGIN
 #include ACTS_GEOMETRY_DETELEMENT_PLUGIN
 #else
@@ -175,5 +173,3 @@ DetectorElementBase::registerNeighbours(
 
 }  // end of ns
 #endif
-
-#endif  // ACTS_GEOMETRY_DETELEMENT_PLUGIN

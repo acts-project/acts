@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_SINGLETRACKPARAMETERS_H
-#define ACTS_SINGLETRACKPARAMETERS_H
-
+#pragma once
 #include <type_traits>
 #include "Acts/EventData/TrackParametersBase.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
@@ -222,5 +220,3 @@ protected:
   ActsVectorD<3> m_vMomentum;      ///< 3D vector with global momentum
 };
 }  // end of namespace Acts
-
-#endif  // ACTS_SINGLETRACKPARAMETERS_h

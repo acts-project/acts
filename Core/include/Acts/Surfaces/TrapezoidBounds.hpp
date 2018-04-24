@@ -10,9 +10,7 @@
 // TrapezoidBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_TRAPEZOIDBOUNDS_H
-#define ACTS_SURFACES_TRAPEZOIDBOUNDS_H 1
-
+#pragma once
 #include <cmath>
 
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -183,5 +181,3 @@ TrapezoidBounds::halflengthY() const
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_TRAPEZOIDBOUNDS_H

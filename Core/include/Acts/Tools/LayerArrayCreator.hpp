@@ -10,9 +10,7 @@
 // LayerArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_LAYERARRAYCREATOR_H
-#define ACTS_TOOLS_LAYERARRAYCREATOR_H 1
-
+#pragma once
 #ifndef ACTS_TOOLS_TAKESMALLERBIGGER
 #define ACTS_TOOLS_TAKESMALLERBIGGER
 #define takeSmaller(current, test) current = current < test ? current : test
@@ -100,5 +98,3 @@ private:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_GEOMETRYTOOLS_LAYERARRAYCREATOR_H

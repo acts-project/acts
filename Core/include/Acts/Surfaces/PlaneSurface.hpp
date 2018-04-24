@@ -10,9 +10,7 @@
 // PlaneSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_PLANESURFACE_H
-#define ACTS_SURFACES_PLANESURFACE_H 1
-
+#pragma once
 #include <limits>
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -242,5 +240,3 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_PLANESURFACE_H

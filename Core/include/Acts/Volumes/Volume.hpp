@@ -9,9 +9,7 @@
 ///////////////////////////////////////////////////////////////////
 // AbstractVolume.h, ACTS project
 ///////////////////////////////////////////////////////////////////
-#ifndef ACTS_VOLUMES_VOLUME_H
-#define ACTS_VOLUMES_VOLUME_H 1
-
+#pragma once
 #include <memory>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryObject.hpp"
@@ -121,5 +119,3 @@ std::ostream&
 operator<<(std::ostream& sl, const Volume& vol);
 
 }  // end of namespace Acts
-
-#endif  // ACTS_VOLUMES_VOLUME_H

@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_TRACKPARAMETERS_H
-#define ACTS_TRACKPARAMETERS_H
-
+#pragma once
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
@@ -19,5 +17,3 @@ typedef SingleTrackParameters<ChargedPolicy>            TrackParameters;
 typedef SingleCurvilinearTrackParameters<ChargedPolicy> CurvilinearParameters;
 typedef SingleBoundTrackParameters<ChargedPolicy>       BoundParameters;
 }  // end of namespace Acts
-
-#endif  // ACTS_TRACKPARAMETERS_H

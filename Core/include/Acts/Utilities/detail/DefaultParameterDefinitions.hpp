@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_DEFAULTPARAMETERDEFINITIONS_H
-#define ACTS_DEFAULTPARAMETERDEFINITIONS_H 1
-
+#pragma once
 // STL include(s)
 #include <cmath>
 
@@ -93,5 +91,3 @@ struct par_type<ParDef::eQOP>
   typedef unbound_parameter type;
 };
 }  // end of namespace Acts
-
-#endif  // ACTS_DEFAULTPARAMETERDEFINITIONS_H

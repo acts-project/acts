@@ -10,9 +10,7 @@
 // ParticleDefinitions.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
-#define ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
-
+#pragma once
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -310,5 +308,3 @@ ProcessVertex::addOutgoing(const ParticleProperties& pProperties)
   m_outgoing.push_back(pProperties);
 }
 }
-
-#endif  // ACTS_EVENTDATA_PARTICLEDEFINITIONS_H

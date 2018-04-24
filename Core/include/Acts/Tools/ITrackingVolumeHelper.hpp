@@ -10,9 +10,7 @@
 // ITrackingVolumeHelper.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TOOLS_ITRACKINGVOLUMEHELPER_H
-#define ACTS_TOOLS_ITRACKINGVOLUMEHELPER_H 1
-
+#pragma once
 // Geometry module
 #include "Acts/Utilities/BinningType.hpp"
 // Core module
@@ -148,5 +146,3 @@ public:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_TOOLS_ITRACKINGVOLUMEHELPER_H

@@ -10,9 +10,7 @@
 // MaterialProperties.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIAL_MATERIALPROPERTIES_H
-#define ACTS_MATERIAL_MATERIALPROPERTIES_H
-
+#pragma once
 // Geometry module
 #include "Acts/Material/Material.hpp"
 // STD/STL
@@ -237,5 +235,3 @@ typedef std::vector<MaterialProperties*>      MaterialPropertiesVector;
 typedef std::vector<MaterialPropertiesVector> MaterialPropertiesMatrix;
 
 }  // end of namespace
-
-#endif  // ACTS_DETECTOR_MATERIALPROPERTIES_H

@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_PARAMETERSET_H
-#define ACTS_PARAMETERSET_H 1
-
+#pragma once
 // STL include(s)
 #include <memory>
 #include <type_traits>
@@ -604,5 +602,3 @@ const typename ParameterSet<params...>::Projection_t
                                      static_cast<unsigned int>(
                                          params)...>::init();
 }  // end of namespace Acts
-
-#endif  // ACTS_PARAMETERSET_H

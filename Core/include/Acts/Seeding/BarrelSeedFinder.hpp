@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_SEEDING_BARRELSEEDFINDER_HPP
-#define ACTS_SEEDING_BARRELSEEDFINDER_HPP
-
+#pragma once
 #include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/TrackSeed.hpp"
 #include "Acts/Seeding/detail/geometry.hpp"
@@ -66,5 +64,3 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
     }
   }
 }
-
-#endif  // ACTS_SEEDING_BARRELSEEDFINDER_HPP

@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_ABORT_CONDITION_SIGNATURE_CHECK_HPP
-#define ACTS_ABORT_CONDITION_SIGNATURE_CHECK_HPP 1
-
+#pragma once
 #include <type_traits>
 #include "Acts/Propagator/detail/condition_uses_result_type.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
@@ -94,4 +92,3 @@ namespace detail {
 }  // namespace detail
 
 }  // namespace Acts
-#endif  // ACTS_ABORT_CONDITION_SIGNATURE_CHECK_HPP

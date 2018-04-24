@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_LOGGER_H
-#define ACTS_LOGGER_H 1
-
+#pragma once
 // STL include(s)
 #include <ctime>
 #include <functional>
@@ -606,5 +604,3 @@ getDefaultLogger(const std::string&    name,
                  std::ostream*         log_stream = &std::cout);
 
 }  // end of namespace Acts
-
-#endif  // ACTS_LOGGER_H

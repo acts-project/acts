@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_MEASUREMENT_H
-#define ACTS_MEASUREMENT_H
-
+#pragma once
 #include <memory>
 #include <ostream>
 #include <type_traits>
@@ -348,5 +346,3 @@ getSurface(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& m)
   return boost::apply_visitor(sg, m);
 }
 }  // end of namespace Acts
-
-#endif  // ACTS_MEASUREMENT_H

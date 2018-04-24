@@ -10,9 +10,7 @@
 // LayerCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYTOOLS_LAYERCREATOR_H
-#define ACTS_GEOMETRYTOOLS_LAYERCREATOR_H 1
-
+#pragma once
 #include <boost/optional.hpp>
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/ApproachDescriptor.hpp"
@@ -242,5 +240,3 @@ LayerCreator::getConfiguration() const
 }
 
 }  // namespace Acts
-
-#endif  // ACTS_GEOMETRYTOOLS_LAYERCREATOR_H

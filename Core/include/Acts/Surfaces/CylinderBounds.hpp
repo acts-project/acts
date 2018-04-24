@@ -10,9 +10,7 @@
 // CylinderBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_CYLINDERBOUNDS_H
-#define ACTS_SURFACES_CYLINDERBOUNDS_H 1
-
+#pragma once
 #include <cmath>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -179,5 +177,3 @@ CylinderBounds::halflengthZ() const
   return m_halfZ;
 }
 }
-
-#endif  // ACTS_SURFACES_CYLINDERBOUNDS_H

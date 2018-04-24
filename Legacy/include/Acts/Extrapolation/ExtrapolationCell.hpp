@@ -10,9 +10,7 @@
 // ExtrapolationCell.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H
-#define ACTS_EXTRAPOLATIONUTILS_EXTRAPOLATIONCELL_H 1
-
+#pragma once
 #include "Acts/EventData/ParticleDefinitions.hpp"
 #include "Acts/EventData/TransportJacobian.hpp"
 #include "Acts/Extrapolation/MaterialUpdateMode.hpp"
@@ -604,5 +602,3 @@ public:
 }  // end of namespace
 
 #include "Acts/Extrapolation/detail/ExtrapolationCell.ipp"
-
-#endif  // TRKEXUTILS_SOLUTIONSELECTOR_H

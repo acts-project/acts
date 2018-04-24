@@ -10,9 +10,7 @@
 // BinnedSurfaceMaterial.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIAL_BINNEDSURFACEMATERIAL_H
-#define ACTS_MATERIAL_BINNEDSURFACEMATERIAL_H 1
-
+#pragma once
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -160,5 +158,3 @@ BinnedSurfaceMaterial::entries() const
   return m_entries;
 }
 }
-
-#endif

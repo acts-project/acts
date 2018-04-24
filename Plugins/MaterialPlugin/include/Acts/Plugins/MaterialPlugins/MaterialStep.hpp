@@ -10,9 +10,7 @@
 // MaterialStep.hpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIALPLUGINS_MATERIALSTEP_H
-#define ACTS_MATERIALPLUGINS_MATERIALSTEP_H
-
+#pragma once
 #include <memory>
 #include "Acts/Material/MaterialProperties.hpp"
 
@@ -155,5 +153,3 @@ Acts::MaterialStep::geoID() const
 {
   return m_geoID;
 }
-
-#endif  // ACTS_MATERIALPLUGINS_MATERIALSTEP_H

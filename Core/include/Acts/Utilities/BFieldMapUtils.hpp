@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTFW_BFIELD_BFIELDMAPUTILS_HPP
-#define ACTFW_BFIELD_BFIELDMAPUTILS_HPP
-
+#pragma once
 #include <vector>
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -130,5 +128,3 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> fieldMapperXYZ(
     bool                        firstOctant = false);
 
 }  // end of namespace Acts
-
-#endif  // ACTFW_BFIELD_BFIELDMAPUTILS_HPP

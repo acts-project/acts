@@ -10,9 +10,7 @@
 // DiscTrapezoidalBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_DISCTRAPEZOIDALBOUNDS_H
-#define ACTS_SURFACES_DISCTRAPEZOIDALBOUNDS_H
-
+#pragma once
 #include <cmath>
 
 #include "Acts/Surfaces/DiscBounds.hpp"
@@ -209,5 +207,3 @@ DiscTrapezoidalBounds::halflengthY() const
 }
 
 }  // namespace Acts
-
-#endif  // ACTS_SURFACES_DISCTRAPEZOIDALBOUNDS_H

@@ -10,9 +10,7 @@
 // GeometrySignature.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYUTILS_GEOMETRYSIGNATURE_H
-#define ACTS_GEOMETRYUTILS_GEOMETRYSIGNATURE_H 1
-
+#pragma once
 namespace Acts {
 
 ///@class GeometrySignature
@@ -43,5 +41,3 @@ enum GeometryType {
 };
 
 }  // end of namespace
-
-#endif  // ACTS_GEOMETRYUTILS_GEOMETRYSIGNATURE_H

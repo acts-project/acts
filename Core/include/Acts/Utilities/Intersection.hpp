@@ -10,9 +10,7 @@
 // Intersection.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYUTILS_INTERSECTION_H
-#define ACTS_GEOMETRYUTILS_INTERSECTION_H
-
+#pragma once
 #include <limits>
 #include "Definitions.hpp"
 
@@ -134,5 +132,3 @@ public:
   }
 };
 }
-
-#endif  // ACTS_GEOMETRYUTILS_INTERSECTION_H

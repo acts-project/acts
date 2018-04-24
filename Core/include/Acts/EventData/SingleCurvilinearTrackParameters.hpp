@@ -6,9 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_SINGLECURVILINEARTRACKPARAMETERS_H
-#define ACTS_SINGLECURVILINEARTRACKPARAMETERS_H
-
+#pragma once
 #include <memory>
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -204,5 +202,3 @@ private:
   PlaneSurface m_upSurface;
 };
 }  // end of namespace Acts
-
-#endif  // ACTS_SINGLECURVILINEARTRACKPARAMETERS_H

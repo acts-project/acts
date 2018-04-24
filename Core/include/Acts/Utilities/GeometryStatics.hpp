@@ -10,9 +10,7 @@
 // GeometryStatics.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETYRUTILS_GEOMETRYSTATICS_H
-#define ACTS_GEOMETYRUTILS_GEOMETRYSTATICS_H 1
-
+#pragma once
 #include "Acts/Utilities/Definitions.hpp"
 
 /// Define statics for Geometry in Tracking
@@ -42,5 +40,3 @@ static const double helper[9] = {0., 1., 0., 1., 0., 0., 0., 0., -1.};
 
 static const Acts::RotationMatrix3D s_idRotationZinverse(helper);
 }
-
-#endif  // ACTS_GEOMETYRUTILS_GEOMETRYSTATICS_H

@@ -10,9 +10,7 @@
 // PlaneLayer.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_LAYERS_PLANELAYER_H
-#define ACTS_LAYERS_PLANELAYER_H
-
+#pragma once
 #include <algorithm>
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -109,5 +107,3 @@ protected:
 };
 
 }  // end of namespace
-
-#endif  // ACTS_LAYERS_PLANELAYER_H

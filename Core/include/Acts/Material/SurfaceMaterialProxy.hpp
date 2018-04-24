@@ -10,9 +10,7 @@
 // SurfaceMaterialProxy.hpp, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIAL_SURFACEMATERIALPROXY_H
-#define ACTS_MATERIAL_SURFACEMATERIALPROXY_H
-
+#pragma once
 #include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
@@ -123,5 +121,3 @@ Acts::SurfaceMaterialProxy::binUtility() const
 {
   return m_binUtility.get();
 }
-
-#endif  // ACTS_MATERIAL_SURFACEMATERIALPROXY_H

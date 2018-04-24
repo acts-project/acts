@@ -10,9 +10,7 @@
 // BoundarySurfaceFace.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_VOLUMES_BOUNDARYSURFACEFACE_H
-#define ACTS_VOLUMES_BOUNDARYSURFACEFACE_H 1
-
+#pragma once
 namespace Acts {
 
 ///  @enum BoundarySurfaceFace
@@ -62,5 +60,3 @@ enum BoundarySurfaceFace {
 /// @brief specify the inside/outside with respect to the normal vector
 enum BoundaryOrientation { insideVolume = -1, outsideVolume = 1 };
 }
-
-#endif  // ACTS_VOLUMES_BOUNDARYSURFACEFACE_H

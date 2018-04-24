@@ -10,9 +10,7 @@
 // ATL_Seedmaker.hpp ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ATL_Seedmaker_hpp
-#define ATL_Seedmaker_hpp
-
+#pragma once
 #include <list>
 #include <map>
 #include <set>
@@ -332,5 +330,3 @@ namespace Seeding {
 }  // end of Seeding namespace
 }  // end of Acts namespace
 #include "Acts/Seeding/ATL_Seedmaker.ipp"
-
-#endif  // ATL_Seedmaker_hpp

@@ -10,9 +10,7 @@
 // CylinderVolumeBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_VOLUMES_CYLINDERVOLUMESBOUNDS_H
-#define ACTS_VOLUMES_CYLINDERVOLUMESBOUNDS_H 1
-
+#pragma once
 #include <cmath>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/VolumeBounds.hpp"
@@ -297,5 +295,3 @@ CylinderVolumeBounds::dumpT(T& tstream) const
   return tstream;
 }
 }
-
-#endif  // ACTS_VOLUMES_CYLINDERVOLUMESBOUNDS_H

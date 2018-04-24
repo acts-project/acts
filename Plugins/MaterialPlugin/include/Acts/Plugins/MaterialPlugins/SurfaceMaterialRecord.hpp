@@ -10,9 +10,7 @@
 // SurfaceMaterialRecord.h, ACTS project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H
-#define ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H
-
+#pragma once
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
@@ -131,5 +129,3 @@ SurfaceMaterialRecord::mappedMaterial() const
   return m_mappedMaterial;
 }
 }
-
-#endif  // ACTS_MATERIALPLUGINS_SURFACEMATERIALRECORD_H

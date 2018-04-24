@@ -10,9 +10,7 @@
 // ConeBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACESCONEBOUNDS_H
-#define ACTS_SURFACESCONEBOUNDS_H
-
+#pragma once
 #include <cfloat>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -221,5 +219,3 @@ ConeBounds::halfPhiSector() const
   return m_halfPhi;
 }
 }
-
-#endif  // ACTS_SURFACESCONEBOUNDS_H

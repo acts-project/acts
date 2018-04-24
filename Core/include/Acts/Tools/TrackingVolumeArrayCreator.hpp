@@ -10,9 +10,7 @@
 // TrackingVolumeArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYTOOLS_TRACKINGVOLUMEARRAYCREATOR_H
-#define ACTS_GEOMETRYTOOLS_TRACKINGVOLUMEARRAYCREATOR_H
-
+#pragma once
 #include <algorithm>
 #include "Acts/Tools/ITrackingVolumeArrayCreator.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -79,5 +77,3 @@ private:
   std::unique_ptr<const Logger> m_logger;
 };
 }
-
-#endif

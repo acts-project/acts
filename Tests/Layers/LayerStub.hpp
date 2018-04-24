@@ -5,9 +5,7 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#ifndef ACTS_TEST_LAYERSTUB
-#define ACTS_TEST_LAYERSTUB 1
-
+#pragma once
 #include "../Surfaces/SurfaceStub.hpp"
 #include "Acts/Layers/Layer.hpp"
 
@@ -66,4 +64,3 @@ public:
   /// templated 'onLayer()' from baseclass ?
 };
 }
-#endif

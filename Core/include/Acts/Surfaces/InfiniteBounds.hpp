@@ -10,9 +10,7 @@
 // InfiniteBounds.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_INFINITE_BOUNDS_H
-#define ACTS_INFINITE_BOUNDS_H 1
-
+#pragma once
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
@@ -85,5 +83,3 @@ public:
 static const InfiniteBounds s_noBounds{};
 
 }  // namespace Acts
-
-#endif  // ACTS_INFINITE_BOUNDS_H

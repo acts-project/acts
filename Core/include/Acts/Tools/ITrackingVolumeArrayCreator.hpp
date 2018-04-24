@@ -10,9 +10,7 @@
 // ITrackingVolumeArrayCreator.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEARRAYCREATOR_H
-#define ACTS_GEOMETRYINTERFACES_ITRACKINGVOLUMEARRAYCREATOR_H 1
-
+#pragma once
 #include <memory>
 #include <vector>
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -61,5 +59,3 @@ public:
                       BinningValue                bVal) const = 0;
 };
 }  // end of namespace
-
-#endif

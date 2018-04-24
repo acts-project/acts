@@ -10,9 +10,7 @@
 // LineSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_LINESURFACE_H
-#define ACTS_SURFACES_LINESURFACE_H
-
+#pragma once
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -384,5 +382,3 @@ LineSurface::derivativeFactors(const Vector3D&         pos,
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_LINESURFACE_H

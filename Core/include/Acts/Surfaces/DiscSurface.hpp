@@ -10,9 +10,7 @@
 // DiscSurface.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACE_SDISCSURFACE_H
-#define ACTS_SURFACE_SDISCSURFACE_H 1
-
+#pragma once
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -421,5 +419,3 @@ inline const RotationMatrix3D
 }
 
 }  // end of namespace
-
-#endif  // ACTS_SURFACES_DISCSURFACE_H

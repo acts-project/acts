@@ -10,9 +10,7 @@
 // RealQuadraticEquation.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_SURFACES_REALQUADRATICEQUATION_H
-#define ACTS_SURFACES_REALQUADRATICEQUATION_H
-
+#pragma once
 #include <cmath>
 #include <utility>
 
@@ -75,5 +73,3 @@ namespace detail {
 
 }  // namespace detail
 }  // namespace Acts
-
-#endif  //  ACTS_SURFACES_REALQUADRATICEQUATION_H
