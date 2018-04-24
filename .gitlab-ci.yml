@@ -41,6 +41,30 @@ include_guards:
   script:
     - CI/check_include_guards.py . --fail-global
 
+clang_tidy:
+  stage: check
+  image: gitlab-registry.cern.ch/acts/machines/check
+  before_script:
+    - CI/env_info.sh
+  dependencies: []
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS
+    - cd ..
+    - run-clang-tidy.py -p build -header-filter="$PWD/.*" -j${ACTS_NCPUS}
+
+oclint:
+  stage: check
+  image: gitlab-registry.cern.ch/acts/machines/check
+  before_script: []
+  dependencies: []
+  script:
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS
+    - cd ..
+    - oclint-json-compilation-database -p build -- -report-type html -o oclint_report.html
+
+
 # SLC6, LCG88 (legacy build)
 #
 # this is only here to test backwards compatibility with boost 1.62
