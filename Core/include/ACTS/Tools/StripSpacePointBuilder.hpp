@@ -67,10 +67,10 @@ public:
     /// Storage of a resolved space point
     Vector3D spacePoint = {0., 0., 0.};
   };
-  
+
   /// Constructor
   /// @param cfg is the configuration class
-  StripSpacePointBuilder(const Config&        cfg);
+  StripSpacePointBuilder(const Config& cfg);
 
   /// @brief Searches possible combinations of two hits on different surfaces
   /// that may come from the same particles
@@ -79,13 +79,13 @@ public:
   void
   combineHits(const std::vector<Acts::PlanarModuleCluster>& vec1,
               const std::vector<Acts::PlanarModuleCluster>& vec2);
-              
+
   /// @brief Calculates the space points out of a given collection of hits
   /// on several strip detectors and stores the data
   /// @return full collection of all resolved space points
   const std::vector<CombinedHits>&
   calculateSpacePoints();
-              
+
 private:
   /// @brief Storage container for variables related to the calculation of space
   /// points
@@ -171,18 +171,23 @@ private:
   /// @return vectors to the top and bottom end of the SDE
   std::pair<Acts::Vector3D, Acts::Vector3D>
   endsOfStrip(const Acts::PlanarModuleCluster& hit) const;
-  
+
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data
   /// @param a vector to the top end of the first SDE
   /// @param c vector to the top end of the second SDE
   /// @param q vector from the bottom to the top end of the first SDE
   /// @param r vector from the bottom to the top end of the second SDE
-  /// @return parameter that indicates the location of the space point; returns 1. if it failed
-  /// @note The meaning of the parameter is explained in more detail in the function body
+  /// @return parameter that indicates the location of the space point; returns
+  /// 1. if it failed
+  /// @note The meaning of the parameter is explained in more detail in the
+  /// function body
   double
-  calcPerpProj(const Acts::Vector3D& a, const Acts::Vector3D& c, const Acts::Vector3D& q, const Acts::Vector3D& r) const;
-  
+  calcPerpProj(const Acts::Vector3D& a,
+               const Acts::Vector3D& c,
+               const Acts::Vector3D& q,
+               const Acts::Vector3D& r) const;
+
   /// @brief This function tests if a space point can be estimated by a more
   /// tolerant treatment of construction. In fact, this function indirectly
   /// allows shifts of the vertex.

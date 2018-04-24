@@ -14,7 +14,8 @@
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
-Acts::StripSpacePointBuilder::StripSpacePointBuilder(const Config& cfg) : m_cfg(cfg)
+Acts::StripSpacePointBuilder::StripSpacePointBuilder(const Config& cfg)
+  : m_cfg(cfg)
 {
 }
 
@@ -63,30 +64,28 @@ Acts::StripSpacePointBuilder::differenceOfHits(
 
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
-  if (diffTheta2 > m_cfg.diffTheta2)
-    return -1.;
+  if (diffTheta2 > m_cfg.diffTheta2) return -1.;
 
   // Calculate the squared difference between the phi angles
   double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
-  if (diffPhi2 > m_cfg.diffPhi2) 
-    return -1.;
- 
+  if (diffPhi2 > m_cfg.diffPhi2) return -1.;
+
   // Return the squared distance between both hits
   return diffTheta2 + diffPhi2;
 }
 
 void
 Acts::StripSpacePointBuilder::combineHits(
-    const std::vector<Acts::PlanarModuleCluster>&          vec1,
-    const std::vector<Acts::PlanarModuleCluster>&          vec2)
+    const std::vector<Acts::PlanarModuleCluster>& vec1,
+    const std::vector<Acts::PlanarModuleCluster>& vec2)
 {
   // TODO: only the closest differences get selected -> some points are not
   // taken into account
   // Declare helper variables
-  double                                   currentDiff;
+  double                                     currentDiff;
   Acts::StripSpacePointBuilder::CombinedHits tmpCombHits;
-  double                                   diffMin;
-  unsigned int                             hitMin;
+  double                                     diffMin;
+  unsigned int                               hitMin;
 
   // Walk through all hits on both surfaces
   for (unsigned int iVec1 = 0; iVec1 < vec1.size(); iVec1++) {
@@ -121,8 +120,8 @@ Acts::StripSpacePointBuilder::endsOfStrip(
   const Acts::Vector2D local = localCoords(hit);
 
   // Receive the binning
-  auto& sur        = hit.referenceSurface();
-  auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
+  auto& sur     = hit.referenceSurface();
+  auto  segment = dynamic_cast<const Acts::CartesianSegmentation*>(
       &(sur.associatedDetectorElement()->digitizationModule()->segmentation()));
   auto& binData     = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
@@ -159,23 +158,31 @@ Acts::StripSpacePointBuilder::endsOfStrip(
 }
 
 double
-Acts::StripSpacePointBuilder::calcPerpProj(const Acts::Vector3D& a, const Acts::Vector3D& c, const Acts::Vector3D& q, const Acts::Vector3D& r) const
+Acts::StripSpacePointBuilder::calcPerpProj(const Acts::Vector3D& a,
+                                           const Acts::Vector3D& c,
+                                           const Acts::Vector3D& q,
+                                           const Acts::Vector3D& r) const
 {
-	/// This approach assumes that no vertex is available. This option aims to approximate the space points from cosmic data.
-	/// The underlying assumption is that the best point is given by the closest distance between both lines describing the SDEs.
-	/// The point x on the first SDE is parametrized as a + lambda0 * q with the top end a of the strip and the vector q = a - b(ottom end of the strip).
-	/// An analogous parametrization is performed of the second SDE with y = c + lambda1 * r.
-	/// x get resolved by resolving lambda0 from the condition that |x-y| is the shortest distance between two skew lines. 
-	Acts::Vector3D ac = c - a;
-	double qr = q.dot(r);
-	double denom = q.dot(q) - qr * qr;
-	
-	// Check for numerical stability
-	if(fabs(denom) > 10e-7)
-		// Return lambda0
-		return (ac.dot(r) * qr - ac.dot(q) * r.dot(r)) / denom;
-	// lambda0 is in the interval [-1,0]. This return serves as error check.
-	return 1.;
+  /// This approach assumes that no vertex is available. This option aims to
+  /// approximate the space points from cosmic data.
+  /// The underlying assumption is that the best point is given by the closest
+  /// distance between both lines describing the SDEs.
+  /// The point x on the first SDE is parametrized as a + lambda0 * q with the
+  /// top end a of the strip and the vector q = a - b(ottom end of the strip).
+  /// An analogous parametrization is performed of the second SDE with y = c +
+  /// lambda1 * r.
+  /// x get resolved by resolving lambda0 from the condition that |x-y| is the
+  /// shortest distance between two skew lines.
+  Acts::Vector3D ac    = c - a;
+  double         qr    = q.dot(r);
+  double         denom = q.dot(q) - qr * qr;
+
+  // Check for numerical stability
+  if (fabs(denom) > 10e-7)
+    // Return lambda0
+    return (ac.dot(r) * qr - ac.dot(q) * r.dot(r)) / denom;
+  // lambda0 is in the interval [-1,0]. This return serves as error check.
+  return 1.;
 }
 
 bool
@@ -263,72 +270,74 @@ Acts::StripSpacePointBuilder::calculateSpacePoints()
 
   // Walk over every found candidate pair
   for (auto& hits : m_allCombHits) {
-      // Calculate the ends of the SDEs
-      const auto& ends1 = endsOfStrip(*(hits.hitModule1));
-      const auto& ends2 = endsOfStrip(*(hits.hitModule2));
+    // Calculate the ends of the SDEs
+    const auto& ends1 = endsOfStrip(*(hits.hitModule1));
+    const auto& ends2 = endsOfStrip(*(hits.hitModule2));
 
-      /// The following algorithm is meant for finding the position on the first
-      /// strip if there is a corresponding hit on the second strip. The
-      /// resulting point is a point x on the first surfaces. This point is
-      /// along a line between the points a (top end of the strip)
-      /// and b (bottom end of the strip). The location can be parametrized as
-      /// 	2 * x = (1 + m) a + (1 - m) b
-      /// as function of the scalar m. m is a parameter in the interval
-      /// -1 < m < 1 since the hit was on the strip. Furthermore, the vector
-      /// from the vertex to the hit on the second strip y is needed to be a
-      /// multiple k of the vector from vertex to the hit on the first strip x.
-      /// As a consequence of this demand y = k * x needs to be on the
-      /// connecting line between the top (c) and bottom (d) end of
-      /// the second strip. If both hits correspond to each other, the condition
-      /// 	y * (c X d) = k * x (c X d) = 0 ("X" represents a cross product)
-      /// needs to be fulfilled. Inserting the first equation into this
-      /// equation leads to the condition for m as given in the following
-      /// algorithm and therefore to the calculation of x.
-      /// The same calculation can be repeated for y. Its corresponding
-      /// parameter will be named n.
+    /// The following algorithm is meant for finding the position on the first
+    /// strip if there is a corresponding hit on the second strip. The
+    /// resulting point is a point x on the first surfaces. This point is
+    /// along a line between the points a (top end of the strip)
+    /// and b (bottom end of the strip). The location can be parametrized as
+    /// 	2 * x = (1 + m) a + (1 - m) b
+    /// as function of the scalar m. m is a parameter in the interval
+    /// -1 < m < 1 since the hit was on the strip. Furthermore, the vector
+    /// from the vertex to the hit on the second strip y is needed to be a
+    /// multiple k of the vector from vertex to the hit on the first strip x.
+    /// As a consequence of this demand y = k * x needs to be on the
+    /// connecting line between the top (c) and bottom (d) end of
+    /// the second strip. If both hits correspond to each other, the condition
+    /// 	y * (c X d) = k * x (c X d) = 0 ("X" represents a cross product)
+    /// needs to be fulfilled. Inserting the first equation into this
+    /// equation leads to the condition for m as given in the following
+    /// algorithm and therefore to the calculation of x.
+    /// The same calculation can be repeated for y. Its corresponding
+    /// parameter will be named n.
 
-	  spaPoPa.reset();
-      spaPoPa.q  = ends1.first - ends1.second;
-      spaPoPa.r  = ends2.first - ends2.second;
-      
-      // Fast skipping if a perpendicular projection should be used
-      double resultPerpProj;
-      if(m_cfg.usePerpProj
-		 && (resultPerpProj = calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r) <= 0.))
-	  {
-		hits.spacePoint = ends1.first + resultPerpProj * spaPoPa.q;
-		continue;
-	  }
-      
-      spaPoPa.s  = ends1.first + ends1.second - 2 * m_cfg.vertex;
-      spaPoPa.t  = ends2.first + ends2.second - 2 * m_cfg.vertex;
-      spaPoPa.qs = spaPoPa.q.cross(spaPoPa.s);
-      spaPoPa.rt = spaPoPa.r.cross(spaPoPa.t);
-      spaPoPa.m  = -spaPoPa.s.dot(spaPoPa.rt)
-						/ spaPoPa.q.dot(spaPoPa.rt);
+    spaPoPa.reset();
+    spaPoPa.q = ends1.first - ends1.second;
+    spaPoPa.r = ends2.first - ends2.second;
 
-      // Set the limit for the parameter
-      if (spaPoPa.limit == 1. && m_cfg.stripLengthTolerance != 0.)
-        spaPoPa.limit = 1. + m_cfg.stripLengthTolerance;
-
-      // Check if m and n can be resolved in the interval (-1, 1)
-      if (fabs(spaPoPa.m) <= spaPoPa.limit
-          && fabs(spaPoPa.n
-                  = -spaPoPa.t.dot(spaPoPa.qs) / spaPoPa.r.dot(spaPoPa.qs))
-              <= spaPoPa.limit)
-        // Store the space point
-        hits.spacePoint = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-      else
-          /// If this point is reached then it was not possible to resolve both
-          /// points such that they are on their SDEs
-          /// The following code treats a possible recovery of points resolved
-          /// slightly outside of the SDE.
-          /// @note This procedure is an indirect variation of the vertex
-          /// position.
-          // Check if a recovery the point(s) and store them if successful
-          if (recoverSpacePoint(spaPoPa))
-			hits.spacePoint = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+    // Fast skipping if a perpendicular projection should be used
+    double resultPerpProj;
+    if (m_cfg.usePerpProj
+        && (resultPerpProj
+            = calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r)
+                <= 0.)) {
+      hits.spacePoint = ends1.first + resultPerpProj * spaPoPa.q;
+      continue;
     }
+
+    spaPoPa.s  = ends1.first + ends1.second - 2 * m_cfg.vertex;
+    spaPoPa.t  = ends2.first + ends2.second - 2 * m_cfg.vertex;
+    spaPoPa.qs = spaPoPa.q.cross(spaPoPa.s);
+    spaPoPa.rt = spaPoPa.r.cross(spaPoPa.t);
+    spaPoPa.m  = -spaPoPa.s.dot(spaPoPa.rt) / spaPoPa.q.dot(spaPoPa.rt);
+
+    // Set the limit for the parameter
+    if (spaPoPa.limit == 1. && m_cfg.stripLengthTolerance != 0.)
+      spaPoPa.limit = 1. + m_cfg.stripLengthTolerance;
+
+    // Check if m and n can be resolved in the interval (-1, 1)
+    if (fabs(spaPoPa.m) <= spaPoPa.limit
+        && fabs(spaPoPa.n
+                = -spaPoPa.t.dot(spaPoPa.qs) / spaPoPa.r.dot(spaPoPa.qs))
+            <= spaPoPa.limit)
+      // Store the space point
+      hits.spacePoint
+          = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+    else
+        /// If this point is reached then it was not possible to resolve both
+        /// points such that they are on their SDEs
+        /// The following code treats a possible recovery of points resolved
+        /// slightly outside of the SDE.
+        /// @note This procedure is an indirect variation of the vertex
+        /// position.
+        // Check if a recovery the point(s) and store them if successful
+        if (recoverSpacePoint(spaPoPa))
+      hits.spacePoint
+          = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+  }
   // Return the resolved hits
   return m_allCombHits;
 }
