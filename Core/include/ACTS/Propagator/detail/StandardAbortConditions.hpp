@@ -1,14 +1,16 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2017-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef ACTS_STANDARD_ABORT_CONDITIONS_HPP
+#define ACTS_STANDARD_ABORT_CONDITIONS_HPP
+
 #include <limits>
-#include "ACTS/Propagator/detail/constrained_step.hpp"
+#include "ACTS/Propagator/detail/ConstrainedStep.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 #ifndef ABORTER_DEBUG_OUTPUTS
@@ -16,11 +18,11 @@
 #define TARGETLOG(cache, status, message)                                      \
   if (debug) {                                                                 \
     std::stringstream dstream;                                                 \
-    dstream << " " << status << " " << std::setw(cache.debug_pfx_width);       \
+    dstream << " " << status << " " << std::setw(cache.debugPfxWidth);       \
     dstream << " target aborter "                                              \
             << " | ";                                                          \
-    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
-    cache.debug_string += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
+    cache.debugString += dstream.str();                                       \
   }
 #endif
 
@@ -29,11 +31,11 @@ namespace Acts {
 namespace detail {
 
   /// This is the condition that the pathLimit has been reached
-  struct path_limit_reached
+  struct PathLimitReached
   {
 
     /// this is direction * absolute path limit
-    double signed_path_limit = std::numeric_limits<double>::max();
+    double singedPathLimit = std::numeric_limits<double>::max();
 
     /// the tolerance used to defined "reached"
     double tolerance = 0.;
@@ -45,9 +47,9 @@ namespace detail {
     ///
     /// @param tlimit is the signed path limit for this propagation
     /// @param ttolerance The tolerance to declare "reached"
-    path_limit_reached(double tlimit     = std::numeric_limits<double>::max(),
-                       double ttolerance = 0.001)
-      : signed_path_limit(tlimit), tolerance(std::abs(ttolerance))
+    PathLimitReached(double tlimit     = std::numeric_limits<double>::max(),
+                     double ttolerance = 0.001)
+      : singedPathLimit(tlimit), tolerance(std::abs(ttolerance))
     {
     }
 
@@ -68,27 +70,27 @@ namespace detail {
     operator()(cache_t& cache) const
     {
       // Check if the maximum allowed step size has to be updated
-      double diff_to_limit = signed_path_limit - cache.accumulated_path;
-      cache.step_size.update(diff_to_limit, constrained_step::aborter);
-      bool limit_reached = (std::abs(diff_to_limit) < tolerance);
-      if (limit_reached) {
+      double diffToLimit = singedPathLimit - cache.accumulatedPath;
+      cache.stepSize.update(diffToLimit, ConstrainedStep::aborter);
+      bool limitReached = (std::abs(diffToLimit) < tolerance);
+      if (limitReached) {
         TARGETLOG(cache, "x", "Path limit reached.");
         // reaching the target means navigaiton break
-        cache.target_reached = true;
+        cache.targetReached = true;
       } else
         TARGETLOG(cache,
                   "o",
-                  "Target step_size (path limit) updated to "
-                      << cache.step_size.toString());
+                  "Target stepSize (path limit) updated to "
+                      << cache.stepSize.toString());
       // path limit check
-      return limit_reached;
+      return limitReached;
     }
   };
 
   /// This is the condition that the Surface has been reached
   /// it then triggers an propagation abort of the propgation
   template <typename Surface>
-  struct surface_reached
+  struct SurfaceReached
   {
     /// the plain pointer to the surface
     /// - safe as the condition lives shorter than the surface
@@ -107,7 +109,7 @@ namespace detail {
     ///
     /// @param tsurface The target surface
     /// @param ttolerance The tolerance to declare "reached"
-    surface_reached()
+    SurfaceReached()
       : surface(nullptr), tolerance(std::numeric_limits<double>::max())
     {
     }
@@ -130,11 +132,11 @@ namespace detail {
     {
       if (!surface) return false;
 
-      // check if the cache filled the current_surface
-      if (cache.current_surface == surface) {
+      // check if the cache filled the currentSurface
+      if (cache.currentSurface == surface) {
         TARGETLOG(cache, "x", "Target surface reached.");
         // reaching the target calls a navigation break
-        cache.target_reached = true;
+        cache.targetReached = true;
         return true;
       }
 
@@ -148,29 +150,31 @@ namespace detail {
                                        false)
                 .pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      cache.step_size.update(cache.nav_dir * distance,
-                             constrained_step::aborter);
+      cache.stepSize.update(cache.navDir * distance,
+                            ConstrainedStep::aborter);
       // return true if you fall below tolerance
-      bool targed_reached = (std::abs(distance) <= tolerance);
-      if (targed_reached) {
+      bool targetReached = (std::abs(distance) <= tolerance);
+      if (targetReached) {
         TARGETLOG(cache, "x", "Target surface reached.");
-        // assigning the current_surface
-        cache.current_surface = surface;
+        // assigning the currentSurface
+        cache.currentSurface = surface;
         TARGETLOG(cache,
                   "x",
                   "Current surface set to target surface "
-                      << cache.current_surface->geoID().toString());
+                      << cache.currentSurface->geoID().toString());
         // reaching the target calls a navigation break
-        cache.target_reached = true;
+        cache.targetReached = true;
       } else
         TARGETLOG(cache,
                   "o",
-                  "Target step_size (surface) updated to "
-                      << cache.step_size.toString());
+                  "Target stepSize (surface) updated to "
+                      << cache.stepSize.toString());
       // path limit check
-      return targed_reached;
+      return targetReached;
     }
   };
 
 }  // namespace detail
 }  // namespace Acts
+
+#endif

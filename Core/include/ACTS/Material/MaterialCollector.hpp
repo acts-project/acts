@@ -20,11 +20,11 @@
 #define MATCLOG(cache, result, message)                                        \
   if (debug) {                                                                 \
     std::stringstream dstream;                                                 \
-    dstream << "   " << std::setw(cache.debug_pfx_width);                      \
+    dstream << "   " << std::setw(cache.debugPfxWidth);                      \
     dstream << "material collection"                                           \
             << " | ";                                                          \
-    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
-    cache.debug_string += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
+    cache.debugString += dstream.str();                                       \
   }
 #endif
 
@@ -77,32 +77,32 @@ struct MaterialCollector
   operator()(cache_t& cache, result_type& result) const
   {
     // if we are on target, everything should have been done
-    if (cache.target_reached) return;
+    if (cache.targetReached) return;
 
-    if (cache.current_surface)
+    if (cache.currentSurface)
       MATCLOG(cache,
               result,
               "Material check on surface "
-                  << cache.current_surface->geoID().toString());
+                  << cache.currentSurface->geoID().toString());
 
     // a current surface has been already assigned by the navigator
-    if (cache.current_surface && cache.current_surface->associatedMaterial()) {
+    if (cache.currentSurface && cache.currentSurface->associatedMaterial()) {
 
       // get the material propertices and only continue
       const MaterialProperties* mProperties
-          = cache.current_surface->associatedMaterial()->material(
+          = cache.currentSurface->associatedMaterial()->material(
               cache.position());
       if (mProperties) {
         // check if you have a factor for pre/post/full update to do
         double prepofu = 1.;
-        if (cache.start_surface == cache.current_surface) {
+        if (cache.startSurface == cache.currentSurface) {
           MATCLOG(cache, result, "Update on start surface: post-update mode.");
-          prepofu = cache.current_surface->associatedMaterial()->factor(
-              cache.nav_dir, postUpdate);
-        } else if (cache.target_surface == cache.current_surface) {
+          prepofu = cache.currentSurface->associatedMaterial()->factor(
+              cache.navDir, postUpdate);
+        } else if (cache.targetSurface == cache.currentSurface) {
           MATCLOG(cache, result, "Update on target surface: pre-update mode.");
-          prepofu = cache.current_surface->associatedMaterial()->factor(
-              cache.nav_dir, preUpdate);
+          prepofu = cache.currentSurface->associatedMaterial()->factor(
+              cache.navDir, preUpdate);
         } else
           MATCLOG(cache, result, "Update while pass through: full mode.");
 
@@ -114,7 +114,7 @@ struct MaterialCollector
         MATCLOG(cache, result, "Material properties found for this surface.");
         // the path correction from the surface intersection
         double pCorrection = prepofu
-            * cache.current_surface->pathCorrection(cache.position(),
+            * cache.currentSurface->pathCorrection(cache.position(),
                                                     cache.direction());
         // the full material
         result.materialInX0 += pCorrection * mProperties->thicknessInX0();
@@ -127,7 +127,7 @@ struct MaterialCollector
         if (detailedCollection) {
           // create for recording
           MaterialHit material_hit;
-          material_hit.surface   = cache.current_surface;
+          material_hit.surface   = cache.currentSurface;
           material_hit.position  = cache.position();
           material_hit.direction = cache.direction();
           // get the material & path length

@@ -7,8 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <cmath>
 
+#include <cmath>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -24,14 +24,14 @@ class AtlasStepper
 {
 
 public:
-  typedef detail::constrained_step cstep;
+  typedef detail::ConstrainedStep cstep;
 
   struct Cache
   {
     // optimisation that init is not called twice
     bool cache_ready = false;
     // configuration
-    NavigationDirection nav_dir;
+    NavigationDirection navDir;
     bool                useJacobian;
     double              step;
     double              maxPathLength;
@@ -49,32 +49,32 @@ public:
     /// Lazily initialized cache for the magnetic field
     /// It caches the current magnetic field cell and stays interpolates within
     /// as long as this is valid. See step() code for details.
-    bool                    field_cache_ready = false;
-    concept::AnyFieldCell<> field_cache;
+    bool                    fieldCacheReady = false;
+    concept::AnyFieldCell<> fieldCache;
 
     // accummulated path length cache
-    double accumulated_path = 0.;
+    double accumulatedPath = 0.;
 
     // adaptive step size of the runge-kutta integration
-    cstep step_size = std::numeric_limits<double>::max();
+    cstep stepSize = std::numeric_limits<double>::max();
 
     /// Navigation cache: the start surface
-    const Surface* start_surface = nullptr;
+    const Surface* startSurface = nullptr;
 
     /// Navigation cache: the current surface
-    const Surface* current_surface = nullptr;
+    const Surface* currentSurface = nullptr;
 
     /// Navigation cache: the target surface
-    const Surface* target_surface = nullptr;
-    bool           target_reached = false;
+    const Surface* targetSurface = nullptr;
+    bool           targetReached = false;
 
     /// Debug output
     /// the string where things are stored (optionally)
     bool        debug        = false;
-    std::string debug_string = "";
+    std::string debugString = "";
     /// buffer & formatting for consistent output
-    size_t debug_pfx_width = 30;
-    size_t debug_msg_width = 50;
+    size_t debugPfxWidth = 30;
+    size_t debugMsgWidth = 50;
 
     Vector3D
     position() const
@@ -94,7 +94,7 @@ public:
           NavigationDirection ndir  = forward,
           double              ssize = std::numeric_limits<double>::max())
       : cache_ready(false)
-      , nav_dir(ndir)
+      , navDir(ndir)
       , useJacobian(false)
       , step(0.)
       , maxPathLength(0.)
@@ -103,7 +103,7 @@ public:
       , newfield(true)
       , field(0., 0., 0.)
       , covariance(nullptr)
-      , step_size(ssize)
+      , stepSize(ssize)
     {
       update(pars);
     }
@@ -688,12 +688,12 @@ public:
   Vector3D
   getField(Cache& cache, const Vector3D& pos) const
   {
-    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)) {
-      cache.field_cache_ready = true;
-      cache.field_cache       = m_bField.getFieldCell(pos);
+    if (!cache.fieldCacheReady || !cache.fieldCache.isInside(pos)) {
+      cache.fieldCacheReady = true;
+      cache.fieldCache       = m_bField.getFieldCell(pos);
     }
     // get the field from the cell
-    cache.field = cache.field_cache.getField(pos);
+    cache.field = cache.fieldCache.getField(pos);
     return cache.field;
   }
 
@@ -702,7 +702,7 @@ public:
   {
 
     // we use h for keeping the nominclature with the original atlas code
-    double h   = cache.step_size;
+    double h   = cache.stepSize;
     bool   Jac = cache.useJacobian;
 
     double* R  = &(cache.pVector[0]);  // Coordinates
@@ -787,7 +787,7 @@ public:
       }
 
       //      if (EST < dltm) h *= 2.;
-      cache.step_size = h;
+      cache.stepSize = h;
 
       // Parameters calculation
       //
@@ -902,10 +902,10 @@ public:
         d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
-      cache.accumulated_path += h;
+      cache.accumulatedPath += h;
       return h;
     }
-    cache.accumulated_path += h;
+    cache.accumulatedPath += h;
     return h;
   }
 

@@ -86,7 +86,7 @@ ionizationEnergyLoss(bool                  mean,
 }
 
 std::pair<double, double>
-ionizationEnergyLoss_mean(double                p,
+ionizationEnergyLossMean(double                p,
                           const Material&       mat,
                           ParticleType          particle,
                           double                path)
@@ -95,7 +95,7 @@ ionizationEnergyLoss_mean(double                p,
 }
 
 std::pair<double, double>
-ionizationEnergyLoss_mop(double                p,
+ionizationEnergyLossMpv(double                p,
                          const Material&       mat,
                          ParticleType          particle,
                          const ParticleMasses& particleMasses,
@@ -105,7 +105,7 @@ ionizationEnergyLoss_mop(double                p,
 }
 
 std::pair<double, double>
-ionizationEnergyLoss_mop(double          p,
+ionizationEnergyLossMpv(double          p,
                          double          m,
                          const Material& mat,
                          double          path)

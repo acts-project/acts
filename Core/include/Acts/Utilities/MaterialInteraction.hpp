@@ -38,7 +38,7 @@ static ParticleMasses particleMasses;
 /// ionization along a given path length. The second entry is the sigma of the
 /// distribution.
 std::pair<double, double>
-ionizationEnergyLoss_mean(double                p,
+ionizationEnergyLossMean(double                p,
                           const Material&       mat,
                           ParticleType          particle,
                           double                path = 1.);
@@ -60,14 +60,14 @@ ionizationEnergyLoss_mean(double                p,
 /// ionization along a given path length. The second entry is the sigma of the
 /// distribution.
 std::pair<double, double>
-ionizationEnergyLoss_mop(double                p,
+ionizationEnergyLossMpv(double                p,
                          const Material&       mat,
                          ParticleType          particle,
                          double                path = 1.);
 
 
 std::pair<double, double>
-ionizationEnergyLoss_mop(double                p,
+ionizationEnergyLossMpv(double                p,
                          double                m, 
                          const Material&       mat,
                          double                path = 1.);

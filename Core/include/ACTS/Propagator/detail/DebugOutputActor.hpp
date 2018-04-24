@@ -14,7 +14,7 @@ namespace Acts {
 namespace detail {
 
   /// This is an actor that deals with the
-  struct debug_output_actor
+  struct DebugOutputActor
   {
 
     /// mute the thing if you don't want any action
@@ -24,7 +24,7 @@ namespace detail {
     /// It collects the debug output string from the cache
     struct this_result
     {
-      std::string debug_string = "";
+      std::string debugString = "";
     };
 
     typedef this_result result_type;
@@ -42,8 +42,8 @@ namespace detail {
       // move the debug output from the cache to
       // to the output actor if it is not set to mute
       // only when the target is reached (or later otherwise triggered)
-      if (!mute && cache.target_reached)
-        result.debug_string = cache.debug_string;
+      if (!mute && cache.targetReached)
+        result.debugString = cache.debugString;
     }
 
     /// Pure observer interface

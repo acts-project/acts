@@ -87,7 +87,7 @@ namespace propagation {
       double target_tolerance = 1 * units::_um;
 
       /// Absolute maximum step size
-      double max_step_size = 1 * units::_m;
+      double maxStepSize = 1 * units::_m;
 
       /// Absolute maximum path length
       double max_path_length = std::numeric_limits<double>::max();
@@ -188,7 +188,7 @@ namespace propagation {
       // The extrapolation cell
       ExtrapolationCell<NeutralParameters> ec(start);
       ec.pathLimit              = options.max_path_length;
-      ec.maxStepSize            = options.max_step_size;
+      ec.maxStepSize            = options.maxStepSize;
       ec.destinationCurvilinear = false;
 
       return propagate_<ExtrapolationCell<NeutralParameters>,

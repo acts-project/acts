@@ -18,7 +18,7 @@ namespace Acts {
 namespace detail {
 
   /// A constrained step class for the steppers
-  struct constrained_step
+  struct ConstrainedStep
   {
 
     /// the types of constraints
@@ -65,7 +65,7 @@ namespace detail {
 
     /// constructor from double
     /// @paramn value is the initial value for all steps
-    constrained_step(const double& value)
+    ConstrainedStep(const double& value)
       : values({{value, value, value, value}})
       , direction(value > 0. ? forward : backward)
     {
@@ -76,7 +76,7 @@ namespace detail {
     /// exposed to the Propgator, this adapts also the direction
     ///
     /// @param value is the new accuracy value
-    constrained_step&
+    ConstrainedStep&
     operator=(const double& value)
     {
       /// set the accuracy value
@@ -108,7 +108,7 @@ namespace detail {
   };
 
   inline std::string
-  constrained_step::toString() const
+  ConstrainedStep::toString() const
   {
     std::stringstream dstream;
     dstream << "(" << std::setw(5) << values[accuracy];

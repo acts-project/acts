@@ -21,11 +21,11 @@
 #define PROPLOG(cache, message)                                                \
   if (cache.debug) {                                                           \
     std::stringstream dstream;                                                 \
-    dstream << "|->" << std::setw(cache.debug_pfx_width);                      \
+    dstream << "|->" << std::setw(cache.debugPfxWidth);                      \
     dstream << "Propagator"                                                    \
             << " | ";                                                          \
-    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
-    cache.debug_string += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
+    cache.debugString += dstream.str();                                       \
   }
 #endif
 
@@ -98,8 +98,8 @@ public:
   /// Type of cache object used by the propagation implementation
   typedef typename Impl::template cache_type<TrackParameters> cache_type;
 
-  /// Typedef the path_limit_reached aborter
-  typedef detail::path_limit_reached path_limit_reached;
+  /// Typedef the PathLimitReached aborter
+  typedef detail::PathLimitReached PathLimitReached;
 
   /// @brief Options for propagate() call
   ///
@@ -125,7 +125,7 @@ public:
     double target_tolerance = 1 * units::_um;
 
     /// Absolute maximum step size
-    double max_step_size = 1 * units::_m;
+    double maxStepSize = 1 * units::_m;
 
     /// Absolute maximum path length
     double max_path_length = std::numeric_limits<double>::max();
@@ -280,14 +280,14 @@ public:
     result_type result(Status::IN_PROGRESS);
 
     // Initialize the internal propagation cache
-    cache_type cache(start, options.direction, options.max_step_size);
+    cache_type cache(start, options.direction, options.maxStepSize);
     cache.debug = options.debug;
 
     // Internal Abort list
-    AbortList<path_limit_reached> internal_aborters;
+    AbortList<PathLimitReached> internal_aborters;
     // configure the aborter
     auto& path_limit_abort
-        = internal_aborters.template get<path_limit_reached>();
+        = internal_aborters.template get<PathLimitReached>();
     path_limit_abort.signed_path_limit
         = std::abs(options.max_path_length) * options.direction;
     path_limit_abort.tolerance = options.target_tolerance;
@@ -343,8 +343,8 @@ public:
             return_parameter_type;
 
     // Initialize the internal propagation cache
-    cache_type cache(start, options.direction, options.max_step_size);
-    cache.target_surface = &target;
+    cache_type cache(start, options.direction, options.maxStepSize);
+    cache.targetSurface = &target;
     cache.debug          = options.debug;
 
     // Type of the full propagation result, including output from actions
@@ -357,19 +357,19 @@ public:
     result_type result(Status::IN_PROGRESS);
 
     // Target surface abort condition with tolerance
-    typedef detail::surface_reached<Surface> target_reached;
+    typedef detail::SurfaceReached<Surface> targetReached;
 
     // Internal Abort list
-    AbortList<target_reached, path_limit_reached> internal_aborters;
+    AbortList<targetReached, PathLimitReached> internal_aborters;
     // configure the aborters
-    auto& target_abort     = internal_aborters.template get<target_reached>();
+    auto& target_abort     = internal_aborters.template get<targetReached>();
     target_abort.surface   = &target;
     target_abort.direction = options.direction;
     target_abort.tolerance = options.target_tolerance;
     target_abort.debug     = options.debug;
 
     auto& path_limit_abort
-        = internal_aborters.template get<path_limit_reached>();
+        = internal_aborters.template get<PathLimitReached>();
     path_limit_abort.signed_path_limit
         = std::abs(options.max_path_length) * options.direction;
     path_limit_abort.tolerance = options.target_tolerance;

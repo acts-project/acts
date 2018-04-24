@@ -37,7 +37,7 @@ namespace Acts {
 
 namespace Test {
 
-  typedef detail::constrained_step cstep;
+  typedef detail::ConstrainedStep cstep;
 
   /// An observer that measures the perpendicular distance
   struct PerpendicularMeasure
@@ -101,13 +101,13 @@ namespace Test {
                       cache.position(), cache.direction(), true, true)
                   .pathLength;
         // Adjust the step size so that we cannot cross the target surface
-        cache.step_size.update(distance, cstep::actor);
+        cache.stepSize.update(distance, cstep::actor);
         // return true if you fall below tolerance
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
           result.surface_passed_r = cache.position().perp();
           // release the step size, will be re-adjusted
-          cache.step_size.release(cstep::actor);
+          cache.stepSize.release(cstep::actor);
         }
       }
     }
@@ -148,11 +148,11 @@ namespace Test {
     operator()(cache_t& cache, result_type& result) const
     {
       if (!result.scattered
-          && std::abs(cache.accumulated_path - path_limit) < tolerance) {
+          && std::abs(cache.accumulatedPath - path_limit) < tolerance) {
         // now here we should apply the scattering
         result.scattered = true;
         // do the update and reinitialize the jacobians
-        cache.apply_cov_transport(true);
+        cache.applyCovTransport(true);
         cache.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
         cache.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
       }
@@ -168,7 +168,7 @@ namespace Test {
 
   // Global definitions
   // The path limit abort
-  typedef detail::path_limit_reached path_limit;
+  typedef detail::PathLimitReached path_limit;
 
   typedef ConstantBField                BField_type;
   typedef EigenStepper<BField_type>     EigenStepper_type;
@@ -238,7 +238,7 @@ namespace Test {
         options;
 
     options.max_path_length = 20 * units::_m;
-    options.max_step_size   = 1 * units::_cm;
+    options.maxStepSize   = 1 * units::_cm;
 
     // set the surface to be passed by
     options.action_list.get<CylinderObserver>().surface = &mSurface;
@@ -292,7 +292,7 @@ namespace Test {
     // setup propagation options - the tow step options
     typename EigenPropagator_type::template Options<> options_2s;
     options_2s.max_path_length = 50 * units::_cm;
-    options_2s.max_step_size   = 1 * units::_cm;
+    options_2s.maxStepSize   = 1 * units::_cm;
 
     // define start parameters
     double   x  = 0;
@@ -310,8 +310,8 @@ namespace Test {
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a path length of 100 with two steps of 50
     const auto& mid_parameters
         = epropagator.propagate(start, options_2s).endParameters;
@@ -321,7 +321,7 @@ namespace Test {
     // setup propagation options - the one step options
     typename EigenPropagator_type::template Options<> options_1s;
     options_1s.max_path_length = 100 * units::_cm;
-    options_1s.max_step_size   = 1 * units::_cm;
+    options_1s.maxStepSize   = 1 * units::_cm;
     // propagate to a path length of 100 in one step
     const auto& end_parameters_1s
         = epropagator.propagate(start, options_1s).endParameters;
@@ -364,7 +364,7 @@ namespace Test {
     // setup propagation options - 2 setp options
     typename EigenPropagator_type::template Options<> options_2s;
     options_2s.max_path_length = 10 * units::_m;
-    options_2s.max_step_size   = 1 * units::_cm;
+    options_2s.maxStepSize   = 1 * units::_cm;
 
     // define start parameters
     double   x  = 0;
@@ -382,8 +382,8 @@ namespace Test {
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a final surface with one stop in between
     const auto& mid_parameters
         = epropagator.propagate(start, mSurface, options_2s).endParameters;
@@ -395,7 +395,7 @@ namespace Test {
     // setup propagation options - one step options
     typename EigenPropagator_type::template Options<> options_1s;
     options_1s.max_path_length = 10 * units::_m;
-    options_1s.max_step_size   = 1 * units::_cm;
+    options_1s.maxStepSize   = 1 * units::_cm;
     // propagate to a final surface in one stop
     const auto& end_parameters_1s
         = epropagator.propagate(start, cSurface, options_1s).endParameters;

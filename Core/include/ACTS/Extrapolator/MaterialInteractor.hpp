@@ -21,24 +21,27 @@
 
 #ifndef MATINTERACTOR_DEBUG_OUTPUTS
 #define MATINTERACTOR_DEBUG_OUTPUTS
-#define MATILOG(cache, result, message)                                        \
-  if (debug) {                                                                 \
-    std::stringstream dstream;                                                 \
-    dstream << "   " << std::setw(cache.debug_pfx_width);                      \
-    dstream << "material interaction"                                          \
-            << " | ";                                                          \
-    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
-    cache.debug_string += dstream.str();                                       \
+#define MATILOG(cache, result, message)                            \
+  if (debug) {                                                     \
+    std::stringstream dstream;                                     \
+    dstream << "   " << std::setw(cache.debugPfxWidth);          \
+    dstream << "material interaction"                              \
+            << " | ";                                              \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';  \
+    cache.debugString += dstream.str();                            \
   }
 #endif
 
 namespace Acts {
 
+/// The Material interaction struct
+/// - it records the surface 
+/// and the passed material 
 struct MaterialInteraction
 {
   /// The material surface
   const Surface* surface = nullptr;
-  /// The passsed materials
+  /// The passsed materials - shall we do material properties ?
   std::pair<Material, double> passedMaterial;
 };
 
@@ -52,14 +55,14 @@ struct MaterialInteractor
 
   /// Configuration for this MaterialInteractor
   /// - multiple scattering
-  bool multiple_scattering = true;
+  bool multipleScattering = true;
   /// Configuration for this MaterialInteractor
   /// - energy loss
-  bool energy_loss = true;
+  bool energyLoss     = true;
   /// use the mean (or most probable) energy loss
-  bool energy_loss_mean = true;
+  bool energyLossMean = true;
   /// record material in detail
-  bool record_detailed = false;
+  bool recordDetailed = false;
   /// debug output flag
   bool debug = false;
   /// The particle masses for lookup
@@ -93,28 +96,28 @@ struct MaterialInteractor
   {
 
     // if we are on target, everything should have been done
-    if (cache.target_reached) return;
+    if (cache.targetReached) return;
 
     // a current surface has been assigned by the navigator
-    if (cache.current_surface && cache.current_surface->associatedMaterial()) {
+    if (cache.currentSurface && cache.currentSurface->associatedMaterial()) {
       // @todo adapt sign & particle type
       ParticleType pType = muon;
       // get the surface material and the corresponding material properties
-      auto sMaterial   = cache.current_surface->associatedMaterial();
+      auto sMaterial   = cache.currentSurface->associatedMaterial();
       auto mProperties = sMaterial->material(cache.position());
       if (mProperties) {
         // pre - full - post update test
 
         // check if you have a factor for pre/post/full update to do
         double prepofu = 1.;
-        if (cache.start_surface == cache.current_surface) {
+        if (cache.startSurface == cache.currentSurface) {
           MATILOG(cache, result, "Update on start surface: post-update mode.");
-          prepofu = cache.current_surface->associatedMaterial()->factor(
-              cache.nav_dir, postUpdate);
-        } else if (cache.target_surface == cache.current_surface) {
+          prepofu = cache.currentSurface->associatedMaterial()->factor(
+              cache.navDir, postUpdate);
+        } else if (cache.targetSurface == cache.currentSurface) {
           MATILOG(cache, result, "Update on target surface: pre-update mode.");
-          prepofu = cache.current_surface->associatedMaterial()->factor(
-              cache.nav_dir, preUpdate);
+          prepofu = cache.currentSurface->associatedMaterial()->factor(
+              cache.navDir, preUpdate);
         } else
           MATILOG(cache, result, "Update while pass through: full mode.");
         if (prepofu == 0.) {
@@ -124,11 +127,11 @@ struct MaterialInteractor
 
         // if we process noise, we need to transport
         // the covariance to the current place
-        cache.apply_cov_transport(true);
+        cache.applyCovTransport(true);
         // get the material thickness
         double thickness = mProperties->thickness();
         // get the path correction due to the incident angle
-        double pCorrection = cache.current_surface->pathCorrection(
+        double pCorrection = cache.currentSurface->pathCorrection(
             cache.position(), cache.direction());
         // the corrected thickness
         double cThickness = thickness * pCorrection;
@@ -138,7 +141,7 @@ struct MaterialInteractor
         double E    = std::sqrt(p * p + m * m);
         double beta = p / E;
         // apply the multiple scattering
-        if (multiple_scattering) {
+        if (multipleScattering) {
           // thickness in X0 from without path correction
           double tInX0 = mProperties->thicknessInX0();
           // retrieve the scattering contribution
@@ -148,19 +151,19 @@ struct MaterialInteractor
               = sigmaScat * sigmaScat / (sinTheta * sinTheta);
           double sigmaDeltaThetaSq = sigmaScat * sigmaScat;
           // add or remove @todo implement check for covariance matrix -> 0
-          cache.cov(ePHI, ePHI) += cache.nav_dir * sigmaDeltaPhiSq;
-          cache.cov(eTHETA, eTHETA) += cache.nav_dir * sigmaDeltaThetaSq;
+          cache.cov(ePHI, ePHI) += cache.navDir * sigmaDeltaPhiSq;
+          cache.cov(eTHETA, eTHETA) += cache.navDir * sigmaDeltaThetaSq;
         }
         // apply the energy loss
-        if (energy_loss) {
+        if (energyLoss) {
           // get the material
           const Material mat = mProperties->material();
           // energy loss and straggling
-          std::pair<double, double> eLoss = energy_loss_mean
-              ? ionizationEnergyLoss_mean(p, mat, pType)
-              : ionizationEnergyLoss_mop(p, mat, pType);
+          std::pair<double, double> eLoss = energyLossMean
+              ? ionizationEnergyLossMean(p, mat, pType)
+              : ionizationEnergyLossMpv(p, mat, pType);
           // apply the energy loss
-          const double dEdl   = cache.nav_dir * eLoss.first;
+          const double dEdl   = cache.navDir * eLoss.first;
           const double dE     = thickness * pCorrection * dEdl;
           double       sigmaP = eLoss.second;
           sigmaP *= thickness * pCorrection;
@@ -173,16 +176,16 @@ struct MaterialInteractor
           const double sigmaDeltaE = thickness * pCorrection * sigmaP;
           const double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);
           // update the covariance if needed
-          cache.cov(eQOP, eQOP) += cache.nav_dir * sigmaQoverP * sigmaQoverP;
+          cache.cov(eQOP, eQOP) += cache.navDir * sigmaQoverP * sigmaQoverP;
         }
         // record if configured to do so
-        if (record_detailed) {
+        if (recordDetailed) {
           // retrieves the material again (not optimal),
           // though this is not time critical
           const Material matr = mProperties->material();
           // create the material interaction class
           MaterialInteraction mInteraction;
-          mInteraction.surface = cache.current_surface;
+          mInteraction.surface = cache.currentSurface;
           mInteraction.passedMaterial
               = std::pair<Material, double>(matr, cThickness);
           // record the material

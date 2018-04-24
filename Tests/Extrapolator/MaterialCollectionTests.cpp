@@ -29,7 +29,7 @@
 #include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
-#include "ACTS/Propagator/detail/debug_output_actor.hpp"
+#include "ACTS/Propagator/detail/DebugOutputActor.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -44,7 +44,7 @@ namespace Test {
 
   // Global definitions
   // The path limit abort
-  typedef detail::path_limit_reached path_limit;
+  typedef detail::PathLimitReached path_limit;
 
   typedef ConstantBField                BField_type;
   typedef EigenStepper<BField_type>     EigenStepper_type;
@@ -107,7 +107,7 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
 
-    typedef detail::debug_output_actor DebugOutput;
+    typedef detail::DebugOutputActor DebugOutput;
 
     // Action list and abort list
     typedef ActionList<Navigator, MaterialCollector, DebugOutput>
@@ -118,7 +118,7 @@ namespace Test {
                                                     AbortConditions_type>
         fwd_navigator_options;
 
-    fwd_navigator_options.max_step_size   = 25. * units::_cm;
+    fwd_navigator_options.maxStepSize   = 25. * units::_cm;
     fwd_navigator_options.max_path_length = 25 * units::_cm;
     fwd_navigator_options.debug           = debug_mode_fwd;
 
@@ -157,7 +157,7 @@ namespace Test {
     if (debug_mode_fwd) {
       const auto& fwd_output = fwd_result.get<DebugOutput::result_type>();
       std::cout << ">>> Forward Propgation & Navigation output " << std::endl;
-      std::cout << fwd_output.debug_string << std::endl;
+      std::cout << fwd_output.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
       for (auto& fwd_steps_o : fwd_material.collected) {
@@ -170,7 +170,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         bwd_navigator_options;
-    bwd_navigator_options.max_step_size   = 25. * units::_cm;
+    bwd_navigator_options.maxStepSize   = 25. * units::_cm;
     bwd_navigator_options.max_path_length = 25 * units::_cm;
     bwd_navigator_options.direction       = backward;
     bwd_navigator_options.debug           = debug_mode_bwd;
@@ -213,7 +213,7 @@ namespace Test {
     if (debug_mode_bwd) {
       const auto& bwd_output = bwd_result.get<DebugOutput::result_type>();
       std::cout << ">>> Backward Propgation & Navigation output " << std::endl;
-      std::cout << bwd_output.debug_string << std::endl;
+      std::cout << bwd_output.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
       for (auto& bwd_steps_o : bwd_material.collected) {
@@ -236,7 +236,7 @@ namespace Test {
                                                     AbortConditions_type>
         fwdstep_navigator_options;
 
-    fwdstep_navigator_options.max_step_size   = 25. * units::_cm;
+    fwdstep_navigator_options.maxStepSize   = 25. * units::_cm;
     fwdstep_navigator_options.max_path_length = 25 * units::_cm;
     fwdstep_navigator_options.debug           = debug_mode_fwd_step;
 
@@ -275,7 +275,7 @@ namespace Test {
       // get the backward output to the screen
       if (debug_mode_fwd_step) {
         const auto& fwdstep_output = fwd_step.get<DebugOutput::result_type>();
-        std::cout << fwdstep_output.debug_string << std::endl;
+        std::cout << fwdstep_output.debugString << std::endl;
       }
 
       auto& fwdstep_material = fwd_step.get<MaterialCollector::result_type>();
@@ -309,7 +309,7 @@ namespace Test {
           = fwdstep_final.get<DebugOutput::result_type>();
       std::cout << ">>> Forward Final Step Propgation & Navigation output "
                 << std::endl;
-      std::cout << fwdstep_output.debug_string << std::endl;
+      std::cout << fwdstep_output.debugString << std::endl;
     }
 
     // stepping from one surface to the next : backwards
@@ -318,7 +318,7 @@ namespace Test {
                                                     AbortConditions_type>
         bwdstep_navigator_options;
 
-    bwdstep_navigator_options.max_step_size   = 25. * units::_cm;
+    bwdstep_navigator_options.maxStepSize   = 25. * units::_cm;
     bwdstep_navigator_options.max_path_length = 25 * units::_cm;
     bwdstep_navigator_options.direction       = backward;
     bwdstep_navigator_options.debug           = debug_mode_bwd_step;
@@ -357,7 +357,7 @@ namespace Test {
       // get the backward output to the screen
       if (debug_mode_bwd_step) {
         const auto& bwdstep_output = bwd_step.get<DebugOutput::result_type>();
-        std::cout << bwdstep_output.debug_string << std::endl;
+        std::cout << bwdstep_output.debugString << std::endl;
       }
 
       auto& bwdstep_material = bwd_step.get<MaterialCollector::result_type>();
@@ -391,7 +391,7 @@ namespace Test {
           = bwdstep_final.get<DebugOutput::result_type>();
       std::cout << ">>> Forward Final Step Propgation & Navigation output "
                 << std::endl;
-      std::cout << bwdstep_output.debug_string << std::endl;
+      std::cout << bwdstep_output.debugString << std::endl;
     }
   }
 

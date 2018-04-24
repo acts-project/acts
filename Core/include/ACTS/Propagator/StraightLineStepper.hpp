@@ -12,7 +12,7 @@
 #include <cmath>
 #include "ACTS/EventData/TrackParameters.hpp"
 #include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
-#include "ACTS/Propagator/detail/constrained_step.hpp"
+#include "ACTS/Propagator/detail/ConstrainedStep.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
@@ -22,11 +22,11 @@
 #define SLLOG(cache, message)                                                  \
   if (cache.debug) {                                                           \
     std::stringstream dstream;                                                 \
-    dstream << "|->" << std::setw(cache.debug_pfx_width);                      \
+    dstream << "|->" << std::setw(cache.debugPfxWidth);                      \
     dstream << "StraightLineStepper"                                           \
             << " | ";                                                          \
-    dstream << std::setw(cache.debug_msg_width) << message << '\n';            \
-    cache.debug_string += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
+    cache.debugString += dstream.str();                                       \
   }
 #endif
 
@@ -52,7 +52,7 @@ private:
   };
 
 public:
-  typedef detail::constrained_step cstep;
+  typedef detail::ConstrainedStep cstep;
 
   /// Cache for track parameter propagation
   ///
@@ -69,14 +69,14 @@ public:
       : pos(par.position())
       , dir(par.momentum().normalized())
       , qop(par.charge() / par.momentum().norm())
-      , nav_dir(ndir)
-      , accumulated_path(0.)
-      , step_size(ndir * ssize)
+      , navDir(ndir)
+      , accumulatedPath(0.)
+      , stepSize(ndir * ssize)
     {
       // Get the reference surface for navigation
       const auto& surface = par.referenceSurface();
       // cache the surface for navigation
-      start_surface = &surface;
+      startSurface = &surface;
     }
 
     /// Global particle position accessor
@@ -110,31 +110,31 @@ public:
     double qop = 1;
 
     /// Navigation direction, this is needed for searching
-    NavigationDirection nav_dir;
+    NavigationDirection navDir;
 
     /// accummulated path length cache
-    double accumulated_path = 0.;
+    double accumulatedPath = 0.;
 
     /// adaptive step size of the runge-kutta integration
-    cstep step_size = std::numeric_limits<double>::max();
+    cstep stepSize = std::numeric_limits<double>::max();
 
     /// Navigation cache: the start surface
-    const Surface* start_surface = nullptr;
+    const Surface* startSurface = nullptr;
 
     /// Navigation cache: the current surface
-    const Surface* current_surface = nullptr;
+    const Surface* currentSurface = nullptr;
 
     /// Navigation cache: the target surface
-    const Surface* target_surface = nullptr;
-    bool           target_reached = false;
+    const Surface* targetSurface = nullptr;
+    bool           targetReached = false;
 
     /// Debug output
     /// the string where things are stored (optionally)
     bool        debug        = false;
-    std::string debug_string = "";
+    std::string debugString = "";
     /// buffer & formatting for consistent output
-    size_t debug_pfx_width = 30;
-    size_t debug_msg_width = 50;
+    size_t debugPfxWidth = 30;
+    size_t debugMsgWidth = 50;
   };
 
   /// Always use the same propagation cache type, independently of the initial
@@ -199,13 +199,13 @@ public:
   step(Cache& cache) const
   {
     // use the adjusted step size
-    const double h = cache.step_size;
+    const double h = cache.stepSize;
     // debug output
     SLLOG(cache, "Performing StraightLine step with size " << h);
     // Update the track parameters according to the equations of motion
     cache.pos += h * cache.dir;
     // cache the path length
-    cache.accumulated_path += h;
+    cache.accumulatedPath += h;
     // return h
     return h;
   }

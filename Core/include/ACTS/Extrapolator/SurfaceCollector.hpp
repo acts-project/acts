@@ -57,10 +57,10 @@ struct SurfaceCollector
   {
     // a current surface has been assigned by the navigator
     //
-    if (cache.current_surface && this_selector(*cache.current_surface)) {
+    if (cache.currentSurface && this_selector(*cache.currentSurface)) {
       // create for recording
       SurfaceHit surface_hit;
-      surface_hit.surface   = cache.current_surface;
+      surface_hit.surface   = cache.currentSurface;
       surface_hit.position  = cache.position();
       surface_hit.direction = cache.direction();
       // save if in the result

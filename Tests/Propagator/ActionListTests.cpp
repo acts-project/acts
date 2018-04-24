@@ -40,10 +40,10 @@ namespace Test {
   struct Cache
   {
     // accummulated path length cache
-    double accumulated_path = 0.;
+    double accumulatedPath = 0.;
 
     // adaptive sep size of the runge-kutta integration
-    double step_size = std::numeric_limits<double>::max();
+    double stepSize = std::numeric_limits<double>::max();
   };
 
   struct DistanceObserver
@@ -63,7 +63,7 @@ namespace Test {
     void
     operator()(cache_t& cache, result_type& result) const
     {
-      result.distance = path_to_go - cache.accumulated_path;
+      result.distance = path_to_go - cache.accumulatedPath;
     }
 
     template <typename cache_t>
@@ -120,7 +120,7 @@ namespace Test {
                       100. * units::_mm);
 
     // now move the cache and check again
-    cache.accumulated_path = 50. * units::_mm;
+    cache.accumulatedPath = 50. * units::_mm;
     action_list(cache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
   }
@@ -147,7 +147,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
 
     // now move the cache and check again
-    cache.accumulated_path = 50. * units::_mm;
+    cache.accumulatedPath = 50. * units::_mm;
     action_list(cache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);

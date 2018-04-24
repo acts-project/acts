@@ -42,7 +42,7 @@ namespace Test {
 
   // Global definitions
   // The path limit abort
-  typedef detail::path_limit_reached path_limit;
+  typedef detail::PathLimitReached path_limit;
 
   typedef ConstantBField                BField_type;
   typedef EigenStepper<BField_type>     EigenStepper_type;
@@ -114,8 +114,8 @@ namespace Test {
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
     typedef ActionList<Navigator> ActionList_type;
@@ -124,7 +124,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.max_step_size   = 10. * units::_cm;
+    navigator_options.maxStepSize   = 10. * units::_cm;
     navigator_options.max_path_length = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry
@@ -183,8 +183,8 @@ namespace Test {
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // A PlaneSelector for the SurfaceCollector
     typedef SurfaceCollector<PlaneSelector> PlaneCollector;
@@ -196,7 +196,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.max_step_size = 10. * units::_cm;
+    navigator_options.maxStepSize = 10. * units::_cm;
 
     navigator_options.max_path_length = 25 * units::_cm;
 
@@ -218,7 +218,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_empty,
                                                     AbortConditions_type>
         options;
-    options.max_step_size = 25. * units::_cm;
+    options.maxStepSize = 25. * units::_cm;
     // try propagation from start to each surface
     for (const auto& colsf : collector_result.collected) {
       // get the surface
@@ -274,8 +274,8 @@ namespace Test {
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
     typedef ActionList<Navigator, MaterialInteractor> ActionList_type;
@@ -284,7 +284,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.max_step_size   = 25. * units::_cm;
+    navigator_options.maxStepSize   = 25. * units::_cm;
     navigator_options.max_path_length = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry

@@ -85,7 +85,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     options.max_path_length = 5 * units::_m;
-    options.max_step_size   = 1 * units::_cm;
+    options.maxStepSize   = 1 * units::_cm;
 
     // define start parameters
     double                x  = 0;
@@ -168,12 +168,12 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> fwd_options;
     fwd_options.max_path_length = plimit;
-    fwd_options.max_step_size   = 1 * units::_cm;
+    fwd_options.maxStepSize   = 1 * units::_cm;
 
     typename Propagator_type::template Options<> back_options;
     back_options.direction       = backward;
     back_options.max_path_length = plimit;
-    back_options.max_step_size   = 1 * units::_cm;
+    back_options.maxStepSize   = 1 * units::_cm;
 
     // define start parameters
     double                x  = 0;
@@ -219,7 +219,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = plimit;
+    options.maxStepSize   = plimit;
     options.max_path_length = plimit;
 
     // define start parameters
@@ -233,17 +233,17 @@ namespace IntegrationTest {
     Vector3D pos(x, y, z);
     Vector3D mom(px, py, pz);
 
-    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     if (covtransport) {
       ActsSymMatrixD<5> cov;
       // take some major correlations (off-diagonals)
       cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
           0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
           1. / (10 * units::_GeV);
-      cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+      covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     }
     // do propagation of the start parameters
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // The transform at the destination
     auto seTransform = createCylindricTransform(
@@ -279,7 +279,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = plimit;
+    options.maxStepSize   = plimit;
     options.max_path_length = plimit;
 
     // define start parameters
@@ -293,17 +293,17 @@ namespace IntegrationTest {
     Vector3D pos(x, y, z);
     Vector3D mom(px, py, pz);
 
-    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     if (covtransport) {
       ActsSymMatrixD<5> cov;
       // take some major correlations (off-diagonals)
       cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
           0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
           1. / (10 * units::_GeV);
-      cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+      covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     }
     // Create curvilinear start parameters
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     const auto            result_s = propagator.propagate(start, options);
     const auto&           tp_s     = result_s.endParameters;
 
@@ -342,7 +342,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = plimit;
+    options.maxStepSize   = plimit;
     options.max_path_length = plimit;
 
     // define start parameters
@@ -361,10 +361,10 @@ namespace IntegrationTest {
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     // do propagation of the start parameters
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     CurvilinearParameters start_wo_c(nullptr, pos, mom, q);
 
     const auto  result = propagator.propagate(start, options);
@@ -403,7 +403,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = plimit;
+    options.maxStepSize   = plimit;
     options.max_path_length = plimit;
 
     // define start parameters
@@ -427,7 +427,7 @@ namespace IntegrationTest {
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     // create curvilinear start parameters
     CurvilinearParameters start_c(nullptr, pos, mom, q);
