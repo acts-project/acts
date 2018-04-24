@@ -99,11 +99,10 @@ std::pair<double, double>
 ionizationEnergyLossMpv(double                p,
                         const Material&       mat,
                         ParticleType          particle,
-                        const ParticleMasses& particleMasses,
+                        const ParticleMasses& pMasses,
                         double                path)
 {
-  return ionizationEnergyLoss(
-      false, p, particleMasses.mass[particle], mat, path);
+  return ionizationEnergyLoss(false, p, pMasses.mass[particle], mat, path);
 }
 
 std::pair<double, double>

@@ -41,6 +41,7 @@ namespace Test {
     };
 
     detail::Extendable<> nullist;
+    (void)nullist;
     BOOST_TEST(std::tuple_size<std::tuple<>>::value == 0);
 
     detail::Extendable<type_a> alist;
