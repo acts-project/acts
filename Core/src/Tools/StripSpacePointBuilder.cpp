@@ -14,11 +14,24 @@
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
+
 Acts::StripSpacePointBuilder::StripSpacePointBuilder(const Config& cfg)
   : m_cfg(cfg)
 {
 }
 
+void
+Acts::StripSpacePointBuilder::addCombinedHit(const Acts::StripSpacePointBuilder::CombinedHits& combHit)
+{
+  m_allCombHits.push_back(combHit);
+} 
+ 
+const std::vector<Acts::StripSpacePointBuilder::CombinedHits>&
+Acts::StripSpacePointBuilder::combinedHits()
+{
+  return m_allCombHits;	
+}
+  
 Acts::Vector2D
 Acts::StripSpacePointBuilder::localCoords(
     const Acts::PlanarModuleCluster& hit) const
@@ -261,7 +274,7 @@ Acts::StripSpacePointBuilder::recoverSpacePoint(
   return false;
 }
 
-const std::vector<Acts::StripSpacePointBuilder::CombinedHits>&
+void
 Acts::StripSpacePointBuilder::calculateSpacePoints()
 {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
@@ -338,6 +351,4 @@ Acts::StripSpacePointBuilder::calculateSpacePoints()
       hits.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
   }
-  // Return the resolved hits
-  return m_allCombHits;
 }

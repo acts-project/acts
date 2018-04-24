@@ -64,7 +64,7 @@ public:
     /// Storage of (Delta eta)^2 + (Delta phi)^2
     /// Allows vetos between different possible combinations
     double diff;
-    /// Storage of a resolved space point
+    /// Storage of a resolved space point. Zero vector indicates unset point
     Vector3D spacePoint = {0., 0., 0.};
   };
 
@@ -80,11 +80,22 @@ public:
   combineHits(const std::vector<Acts::PlanarModuleCluster>& vec1,
               const std::vector<Acts::PlanarModuleCluster>& vec2);
 
+  /// @brief Adds a combined hit to the list of combined hits
+  /// @note This function does not test what is stored in the new element
+  /// @param combHit element added to the list
+  void
+  addCombinedHit(const CombinedHits& combHit);
+
   /// @brief Calculates the space points out of a given collection of hits
   /// on several strip detectors and stores the data
+  void
+  calculateSpacePoints();
+  
+  /// @brief Returns the list of all resolved space points
+  /// @note This function is a pure getter of the current state
   /// @return full collection of all resolved space points
   const std::vector<CombinedHits>&
-  calculateSpacePoints();
+  combinedHits();
 
 private:
   /// @brief Storage container for variables related to the calculation of space
