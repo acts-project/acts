@@ -20,18 +20,6 @@ Acts::StripSpacePointBuilder::StripSpacePointBuilder(const Config& cfg)
 {
 }
 
-void
-Acts::StripSpacePointBuilder::addCombinedHit(const Acts::StripSpacePointBuilder::CombinedHits& combHit)
-{
-  m_allCombHits.push_back(combHit);
-} 
- 
-const std::vector<Acts::StripSpacePointBuilder::CombinedHits>&
-Acts::StripSpacePointBuilder::combinedHits()
-{
-  return m_allCombHits;	
-}
-  
 Acts::Vector2D
 Acts::StripSpacePointBuilder::localCoords(
     const Acts::PlanarModuleCluster& hit) const
@@ -123,6 +111,13 @@ Acts::StripSpacePointBuilder::combineHits(
       m_allCombHits.push_back(tmpCombHits);
     }
   }
+}
+
+void
+Acts::StripSpacePointBuilder::addCombinedHit(
+    const Acts::StripSpacePointBuilder::CombinedHits& combHit)
+{
+  m_allCombHits.push_back(combHit);
 }
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
@@ -351,4 +346,10 @@ Acts::StripSpacePointBuilder::calculateSpacePoints()
       hits.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
   }
+}
+
+const std::vector<Acts::StripSpacePointBuilder::CombinedHits>&
+Acts::StripSpacePointBuilder::combinedHits()
+{
+  return m_allCombHits;
 }

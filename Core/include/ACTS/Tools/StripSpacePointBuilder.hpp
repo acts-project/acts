@@ -90,7 +90,7 @@ public:
   /// on several strip detectors and stores the data
   void
   calculateSpacePoints();
-  
+
   /// @brief Returns the list of all resolved space points
   /// @note This function is a pure getter of the current state
   /// @return full collection of all resolved space points
