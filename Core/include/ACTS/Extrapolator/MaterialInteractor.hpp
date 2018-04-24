@@ -65,8 +65,6 @@ struct MaterialInteractor
   bool recordDetailed = false;
   /// debug output flag
   bool debug = false;
-  /// The particle masses for lookup
-  ParticleMasses particleMasses;
 
   /// Simple result struct to be returned
   /// It mainly acts as an interal state cache which is
