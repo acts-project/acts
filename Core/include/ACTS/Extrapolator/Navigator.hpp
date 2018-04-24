@@ -231,7 +231,7 @@ struct Navigator
     // Volume be handled
     // - if you arrived
     // -> return is always to the stepper
-    if (handeBoundaries(navPar, cache, result)) {
+    if (handleBoundaries(navPar, cache, result)) {
       NAVLOG(cache,
              result,
              "Return to stepper"
@@ -458,10 +458,10 @@ struct Navigator
   /// return (bool) triggers return to the stepper
   template <typename cache_t, typename result_t>
   bool
-  handeBoundaries(const NavigationParameters& navPar,
-                  cache_t&                    cache,
-                  result_t&                   result,
-                  bool                        skipCurrent = false) const
+  handleBoundaries(const NavigationParameters& navPar,
+                   cache_t&                    cache,
+                   result_t&                   result,
+                   bool                        skipCurrent = false) const
   {
     // only handle boundaries if you are not in the target volume
     if (result.currentVolume == result.targetVolume || !result.currentVolume)
@@ -526,7 +526,7 @@ struct Navigator
         // return
         NAVLOG(cache, result, "No layers can be reached in the new volume.");
         // self call for new boundaries
-        return handeBoundaries(navPar, cache, result, true);
+        return handleBoundaries(navPar, cache, result, true);
       }
       ++result.navBoundaryIter;
     }
