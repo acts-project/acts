@@ -37,7 +37,7 @@ struct SurfaceCollector
   /// are collected (and thus have been selected)
   struct this_result
   {
-    std::vector<SurfaceHit> collected;
+    std::vector<const SurfaceHit> collected;
   };
 
   typedef this_result result_type;

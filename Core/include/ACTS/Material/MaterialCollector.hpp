@@ -56,7 +56,7 @@ struct MaterialCollector
   /// It collects the indivdual
   struct this_result
   {
-    std::vector<const MaterialHit> collected    = {};
+    std::vector<const MaterialHit> collected;
     double                         materialInX0 = 0.;
     double                         materialInL0 = 0.;
   };
