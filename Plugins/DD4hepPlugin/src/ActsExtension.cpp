@@ -99,12 +99,8 @@ Acts::ActsExtension::ActsExtension(
     std::shared_ptr<const DigitizationModule> digiModule)
   : Acts::IActsExtension(), m_material(nullptr), m_digiModule(digiModule)
 {
-  std::cout << "-----------hand over material: "
-            << "----------------" << std::endl;
-
   Acts::MaterialProperties matprop;
   for (auto& mat : materials) {
-    std::cout << "add material with name: " << mat.first.name() << std::endl;
     matprop.add(
         MaterialProperties(mat.first.radLength() * units::_cm,
                            mat.first.intLength() * units::_cm,
