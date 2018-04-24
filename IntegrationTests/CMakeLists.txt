@@ -12,3 +12,7 @@ endmacro()
 add_executable (PropagationTests PropagationTests.cpp)
 target_link_libraries (PropagationTests PRIVATE ACTSCore ACTSLegacy)
 add_integration_test(PropagationTests)
+
+add_executable (SeedingTest ATLSeedingIntegrationTest.cpp)
+target_link_libraries (SeedingTest PRIVATE ACTSLegacy)
+add_integration_test(SeedingTest)
