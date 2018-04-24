@@ -43,24 +43,24 @@ include_guards:
 
 clang_tidy:
   stage: check
-  image: gitlab-registry.cern.ch/acts/machines/check
+  image: gitlab-registry.cern.ch/acts/machines/static_analysis
   before_script:
-    - CI/env_info.sh
+    - source CI/env_info.sh
   dependencies: []
   script:
     - mkdir build && cd build
-    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS
+    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - run-clang-tidy.py -p build -header-filter="$PWD/.*" -j${ACTS_NCPUS}
 
 oclint:
   stage: check
-  image: gitlab-registry.cern.ch/acts/machines/check
+  image: gitlab-registry.cern.ch/acts/machines/static_analysis
   before_script: []
   dependencies: []
   script:
     - mkdir build && cd build
-    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS
+    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - oclint-json-compilation-database -p build -- -report-type html -o oclint_report.html
 
