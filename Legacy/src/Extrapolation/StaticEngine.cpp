@@ -13,7 +13,7 @@
 // STL
 #include <sstream>
 // Extrapolation module
-#include "ACTS/Extrapolation/StaticEngine.hpp"
+#include "Acts/Extrapolation/StaticEngine.hpp"
 
 // constructor
 Acts::StaticEngine::StaticEngine(const Acts::StaticEngine::Config& seConfig,

@@ -18,10 +18,10 @@
 // leave blank line
 
 //
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Surfaces/LineSurface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 //
 #include "DetectorElementStub.hpp"
 #include "LineSurfaceStub.hpp"

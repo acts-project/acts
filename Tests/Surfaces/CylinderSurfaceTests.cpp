@@ -19,10 +19,10 @@
 
 //
 #include <limits>
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 #include "DetectorElementStub.hpp"
 
 namespace tt = boost::test_tools;

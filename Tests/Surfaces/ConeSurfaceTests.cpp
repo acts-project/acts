@@ -19,10 +19,10 @@
 
 //
 #include <limits>
-#include "ACTS/Surfaces/ConeSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;

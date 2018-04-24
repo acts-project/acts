@@ -10,16 +10,16 @@
 // CylinderSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 
 #include <cassert>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Utilities/ThrowAssert.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)

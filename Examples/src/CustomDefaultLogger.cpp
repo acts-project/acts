@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-#include "ACTS/Utilities/Logger.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 

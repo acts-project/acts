@@ -10,19 +10,19 @@
 // DiscSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
-#include "ACTS/Surfaces/InfiniteBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/InstanceFactory.hpp"
-#include "ACTS/Utilities/ThrowAssert.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/InstanceFactory.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)

@@ -10,9 +10,9 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

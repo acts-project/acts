@@ -11,9 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "ACTS/Detector/DetachedTrackingVolume.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Layers/Layer.hpp"
+#include "Acts/Detector/DetachedTrackingVolume.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Layers/Layer.hpp"
 
 Acts::DetachedTrackingVolume::DetachedTrackingVolume()
   : m_name("undefined")

@@ -10,7 +10,7 @@
 // MaterialStep.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
+#include "Acts/Plugins/MaterialPlugins/MaterialStep.hpp"
 
 Acts::MaterialStep::MaterialStep()
   : m_position(Position()), m_material(), m_geoID(0)

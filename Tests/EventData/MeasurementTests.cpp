@@ -11,9 +11,9 @@
 #include <boost/test/included/unit_test.hpp>
 
 // ACTS include(s)
-#include "ACTS/EventData/Measurement.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 namespace Test {

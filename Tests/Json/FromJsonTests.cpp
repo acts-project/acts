@@ -11,17 +11,17 @@
 #include <climits>
 #include <fstream>
 
-#include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Layers/ProtoLayer.hpp"
-#include "ACTS/Plugins/JsonPlugin/lib/json.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Tools/LayerCreator.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Plugins/JsonPlugin/lib/json.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
-#include "ACTS/Plugins/JsonPlugin/FromJson.hpp"
+#include "Acts/Plugins/JsonPlugin/FromJson.hpp"
 
 namespace Acts {
 

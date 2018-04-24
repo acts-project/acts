@@ -12,12 +12,12 @@
 #include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
 
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Utilities/BinningType.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 #include <fstream>
 #include <random>

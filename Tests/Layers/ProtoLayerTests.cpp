@@ -12,7 +12,7 @@
 #include <boost/test/data/test_case.hpp>
 
 #include <cmath>
-#include "ACTS/Layers/ProtoLayer.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
 
 namespace Acts {
 

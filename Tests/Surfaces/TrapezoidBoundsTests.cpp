@@ -19,9 +19,9 @@
 
 #include <limits>
 
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 namespace utf    = boost::unit_test;
 const double NaN = std::numeric_limits<double>::quiet_NaN();

@@ -10,9 +10,9 @@
 // Volume.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Volumes/Volume.hpp"
+#include "Acts/Volumes/Volume.hpp"
 #include <iostream>
-#include "ACTS/Volumes/VolumeBounds.hpp"
+#include "Acts/Volumes/VolumeBounds.hpp"
 
 Acts::Volume::Volume()
   : GeometryObject()

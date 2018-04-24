@@ -18,15 +18,15 @@
 // leave blank line
 
 //#include <limits>
-#include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-//#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/EventData/SingleTrackParameters.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Volumes/CuboidVolumeBounds.hpp"
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+//#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Volumes/CuboidVolumeBounds.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

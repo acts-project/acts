@@ -11,12 +11,12 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/ApproachDescriptor.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/ApproachDescriptor.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 
 Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
                    double                              thickness,

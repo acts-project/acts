@@ -10,8 +10,8 @@
 // HomogeneousSurfaceMaterial.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
     const MaterialProperties& full,

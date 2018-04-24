@@ -10,11 +10,11 @@
 // MaterialEffectsEngine.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Extrapolation/MaterialEffectsEngine.hpp"
+#include "Acts/Extrapolation/MaterialEffectsEngine.hpp"
 #include <sstream>
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Utilities/MaterialInteraction.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Utilities/MaterialInteraction.hpp"
 
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(

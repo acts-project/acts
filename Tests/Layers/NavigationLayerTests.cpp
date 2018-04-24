@@ -18,13 +18,13 @@
 // leave blank line
 
 //#include <limits>
-#include "ACTS/Layers/NavigationLayer.hpp"
-//#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Volumes/CuboidVolumeBounds.hpp"
+#include "Acts/Layers/NavigationLayer.hpp"
+//#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

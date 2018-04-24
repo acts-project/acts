@@ -10,7 +10,7 @@
 // Surface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 #include <iomanip>
 #include <iostream>

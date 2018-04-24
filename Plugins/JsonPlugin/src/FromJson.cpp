@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Plugins/JsonPlugin/lib/json.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Plugins/JsonPlugin/lib/json.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
-#include "ACTS/Plugins/JsonPlugin/FromJson.hpp"
-#include "ACTS/Utilities/ThrowAssert.hpp"
+#include "Acts/Plugins/JsonPlugin/FromJson.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
 
 using json = nlohmann::json;
 

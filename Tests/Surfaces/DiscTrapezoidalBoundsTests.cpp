@@ -18,9 +18,9 @@
 // leave blank
 
 //
-#include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 #include <limits>
 

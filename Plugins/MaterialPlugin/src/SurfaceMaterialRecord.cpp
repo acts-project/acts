@@ -10,8 +10,8 @@
 // SurfaceMaterialRecord.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const Surface&    surface,
                                                    const BinUtility& binUtility)

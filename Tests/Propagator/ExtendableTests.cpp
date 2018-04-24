@@ -18,7 +18,7 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include "ACTS/Propagator/detail/Extendable.hpp"
+#include "Acts/Propagator/detail/Extendable.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

@@ -10,17 +10,17 @@
 // LayerCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Tools/LayerCreator.hpp"
+#include "Acts/Tools/LayerCreator.hpp"
 #include <cmath>
 #include <set>
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Layers/ProtoLayer.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Surfaces/PlanarBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Layers/CylinderLayer.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
                                  std::unique_ptr<const Logger>     logger)

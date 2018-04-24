@@ -9,7 +9,7 @@
 #define BOOST_TEST_MODULE grid axis tests
 #include <boost/test/included/unit_test.hpp>
 
-#include "ACTS/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 
 namespace Acts {
 

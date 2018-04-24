@@ -10,12 +10,12 @@
 // TrackingGeometry.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/Detector/DetachedTrackingVolume.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Surfaces/PerigeeSurface.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/DetachedTrackingVolume.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 Acts::TrackingGeometry::TrackingGeometry(MutableTrackingVolumePtr highestVolume)
   : m_world(highestVolume)

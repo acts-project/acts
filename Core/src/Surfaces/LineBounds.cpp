@@ -10,8 +10,8 @@
 // LineBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/LineBounds.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 #include <iomanip>
 #include <iostream>

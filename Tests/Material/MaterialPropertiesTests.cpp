@@ -10,7 +10,7 @@
 #define BOOST_TEST_MODULE Material Tests
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
-#include "ACTS/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 
 namespace Acts {
 

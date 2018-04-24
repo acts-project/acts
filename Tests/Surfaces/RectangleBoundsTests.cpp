@@ -19,9 +19,9 @@
 
 #include <algorithm>
 #include <limits>
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 namespace utf    = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();

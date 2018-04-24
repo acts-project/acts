@@ -10,14 +10,14 @@
 // CylinderBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Utilities/detail/periodic.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::CylinderBounds::CylinderBounds(double radius, double halfZ)
   : CylinderBounds(radius, 0, M_PI, halfZ)

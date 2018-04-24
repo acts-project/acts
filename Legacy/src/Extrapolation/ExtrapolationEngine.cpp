@@ -10,7 +10,7 @@
 // ExtrapolationEngine.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Extrapolation/ExtrapolationEngine.hpp"
+#include "Acts/Extrapolation/ExtrapolationEngine.hpp"
 
 // constructor
 Acts::ExtrapolationEngine::ExtrapolationEngine(

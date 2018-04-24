@@ -10,14 +10,14 @@
 // LineSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/LineSurface.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Utilities/ThrowAssert.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             radius,

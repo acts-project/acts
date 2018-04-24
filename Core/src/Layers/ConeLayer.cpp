@@ -10,10 +10,10 @@
 // ConeLayer.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Layers/ConeLayer.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Surfaces/ConeBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Layers/ConeLayer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 Acts::ConeLayer::ConeLayer(std::shared_ptr<const Transform3D>  transform,
                            std::shared_ptr<const ConeBounds>   cbounds,

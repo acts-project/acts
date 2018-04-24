@@ -18,8 +18,8 @@
 // leave blank
 
 //
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/detail/RealQuadraticEquation.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 //
 #include <limits>
 

@@ -10,8 +10,8 @@
 
 #include <iostream>
 
-#include "ACTS/Seeding/SpacePoint.hpp"
-#include "ACTS/Seeding/TrackSeed.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
+#include "Acts/Seeding/TrackSeed.hpp"
 
 /// Construct barrel layer w/ n points equidistant in phi.
 ///

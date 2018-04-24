@@ -10,10 +10,10 @@
 // NavigationLayer.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Layers/NavigationLayer.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/InstanceFactory.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Layers/NavigationLayer.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/InstanceFactory.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 Acts::NavigationLayer::NavigationLayer(
     std::unique_ptr<const Surface> surfaceRepresentation,

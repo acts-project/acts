@@ -18,9 +18,9 @@
 // leave blank
 
 //
-#include "ACTS/Surfaces/EllipseBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/EllipseBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 //
 #include <limits>
 

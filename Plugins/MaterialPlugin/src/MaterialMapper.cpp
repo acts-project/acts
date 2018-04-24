@@ -10,24 +10,24 @@
 // MaterialMapper.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
+#include "Acts/Plugins/MaterialPlugins/MaterialMapper.hpp"
 #include <climits>
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/EventData/NeutralParameters.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/ExtrapolationCell.hpp"
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Material/BinnedSurfaceMaterial.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Material/SurfaceMaterialProxy.hpp"
-#include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/GeometryObjectSorter.hpp"
-#include "ACTS/Utilities/Helpers.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolation/ExtrapolationCell.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/GeometryObjectSorter.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::MaterialMapper::MaterialMapper(const Config&                 cfg,
                                      std::unique_ptr<const Logger> log)

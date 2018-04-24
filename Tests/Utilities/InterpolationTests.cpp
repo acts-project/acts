@@ -9,9 +9,9 @@
 #define BOOST_TEST_MODULE interpolation tests
 #include <boost/test/included/unit_test.hpp>
 
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Interpolation.hpp"
-#include "ACTS/Utilities/detail/interpolation_impl.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Interpolation.hpp"
+#include "Acts/Utilities/detail/interpolation_impl.hpp"
 
 namespace Acts {
 

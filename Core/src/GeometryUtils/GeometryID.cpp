@@ -10,7 +10,7 @@
 // GeometryIDCalculator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Utilities/GeometryID.hpp"
+#include "Acts/Utilities/GeometryID.hpp"
 
 bool
 Acts::operator<(const Acts::GeometryID& one, const Acts::GeometryID& two)

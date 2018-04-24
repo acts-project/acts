@@ -10,14 +10,14 @@
 // RadialBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Utilities/detail/periodic.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::RadialBounds::RadialBounds(double minrad, double maxrad, double hphisec)
   : RadialBounds(minrad, maxrad, 0, hphisec)

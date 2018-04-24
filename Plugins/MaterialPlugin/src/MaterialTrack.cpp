@@ -10,7 +10,7 @@
 // MaterialTrack.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Plugins/MaterialPlugins/MaterialTrack.hpp"
+#include "Acts/Plugins/MaterialPlugins/MaterialTrack.hpp"
 
 Acts::MaterialTrack::MaterialTrack(const MaterialStep::Position& startPos,
                                    double                        theta,

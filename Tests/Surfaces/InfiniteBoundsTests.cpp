@@ -18,8 +18,8 @@
 // leave blank line
 
 //
-#include "ACTS/Surfaces/InfiniteBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 

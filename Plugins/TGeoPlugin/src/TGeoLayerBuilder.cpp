@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Plugins/TGeoPlugins/TGeoLayerBuilder.hpp"
+#include "Acts/Plugins/TGeoPlugins/TGeoLayerBuilder.hpp"
 #include <stdio.h>
-#include "ACTS/Layers/ProtoLayer.hpp"
-#include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 

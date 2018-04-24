@@ -10,22 +10,22 @@
 // LayerArrayCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Tools/LayerArrayCreator.hpp"
+#include "Acts/Tools/LayerArrayCreator.hpp"
 #include <cmath>
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Layers/NavigationLayer.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/DiscBounds.hpp"
-#include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/SurfaceBounds.hpp"
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinnedArrayXD.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/GeometryObjectSorter.hpp"
-#include "ACTS/Utilities/GeometryStatics.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Layers/NavigationLayer.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/SurfaceBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArrayXD.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryObjectSorter.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 
 std::unique_ptr<const Acts::LayerArray>
 Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,

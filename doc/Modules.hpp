@@ -47,7 +47,7 @@
 /// @code{.cpp}
 /// #include <fstream>
 /// #include <memory>
-/// #include "ACTS/Utilities/Logger.hpp"
+/// #include "Acts/Utilities/Logger.hpp"
 ///
 /// void myFunction() {
 ///    // open the logfile

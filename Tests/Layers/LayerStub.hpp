@@ -9,7 +9,7 @@
 #define ACTS_TEST_LAYERSTUB 1
 
 #include "../Surfaces/SurfaceStub.hpp"
-#include "ACTS/Layers/Layer.hpp"
+#include "Acts/Layers/Layer.hpp"
 
 namespace Acts {
 /// Layer derived class stub

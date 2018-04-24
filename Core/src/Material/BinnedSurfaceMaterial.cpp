@@ -10,8 +10,8 @@
 // BinnedSurfaceMaterial.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Material/BinnedSurfaceMaterial.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility&               binUtility,

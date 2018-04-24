@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
-#include "ACTS/Seeding/ATL_Seedmaker.hpp"
+#include "Acts/Seeding/ATL_Seedmaker.hpp"
 
 #define BOOST_TEST_MODULE SeedmakerIntegrationTest
 #include <boost/test/included/unit_test.hpp>

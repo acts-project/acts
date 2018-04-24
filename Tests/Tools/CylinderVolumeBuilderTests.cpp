@@ -10,8 +10,8 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "ACTS/Tools/CylinderVolumeBuilder.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Tools/CylinderVolumeBuilder.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

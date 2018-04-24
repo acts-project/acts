@@ -10,10 +10,10 @@
 #define BOOST_TEST_MODULE MaterialMapper Tests
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
-#include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
-#include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
-#include "ACTS/Plugins/MaterialPlugins/MaterialStep.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Plugins/MaterialPlugins/AssignedMaterialSteps.hpp"
+#include "Acts/Plugins/MaterialPlugins/MaterialMapper.hpp"
+#include "Acts/Plugins/MaterialPlugins/MaterialStep.hpp"
 
 namespace Acts {
 

@@ -18,11 +18,11 @@
 #include <boost/test/included/unit_test.hpp>
 
 // ATS include(s)
-#include "ACTS/EventData/Measurement.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Fitter/KalmanUpdator.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Utilities/ParameterDefinitions.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Fitter/KalmanUpdator.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 namespace Test {

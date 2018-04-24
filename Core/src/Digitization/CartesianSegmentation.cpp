@@ -10,10 +10,10 @@
 // CartesianSegmentation.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Digitization/CartesianSegmentation.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Utilities/Helpers.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::CartesianSegmentation::CartesianSegmentation(
     std::shared_ptr<const PlanarBounds> mBounds,

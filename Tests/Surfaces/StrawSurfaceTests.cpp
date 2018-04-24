@@ -18,12 +18,12 @@
 // leave blank line
 
 #include <limits>
-#include "ACTS/Layers/PlaneLayer.hpp"
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/StrawSurface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 #include "DetectorElementStub.hpp"
 
 using boost::test_tools::output_test_stream;

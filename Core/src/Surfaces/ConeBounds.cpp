@@ -10,15 +10,15 @@
 // ConeBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/ConeBounds.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Utilities/detail/periodic.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::ConeBounds::ConeBounds(double alpha,
                              bool   symm,

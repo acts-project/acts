@@ -10,19 +10,19 @@
 // PlaneSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Surfaces/InfiniteBounds.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Utilities/Identifier.hpp"
-#include "ACTS/Utilities/ThrowAssert.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Identifier.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
-#include "ACTS/Utilities/InstanceFactory.hpp"
+#include "Acts/Utilities/InstanceFactory.hpp"
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)

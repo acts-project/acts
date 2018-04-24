@@ -9,11 +9,11 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE ExtrapolationCell Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/EventData/NeutralParameters.hpp"
-#include "ACTS/Extrapolation/ExtrapolationCell.hpp"
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/Extrapolation/ExtrapolationCell.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 

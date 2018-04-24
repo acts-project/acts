@@ -10,9 +10,9 @@
 #define ACTS_COVARIANCE_VALIDATION_FIXTURE_HPP 1
 
 #include <array>
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 

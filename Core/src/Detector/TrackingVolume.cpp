@@ -10,13 +10,13 @@
 // TrackingVolume.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Detector/DetachedTrackingVolume.hpp"
-#include "ACTS/Detector/GlueVolumesDescriptor.hpp"
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Volumes/VolumeBounds.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Detector/DetachedTrackingVolume.hpp"
+#include "Acts/Detector/GlueVolumesDescriptor.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Volumes/VolumeBounds.hpp"
 
 Acts::TrackingVolume::TrackingVolume()
   : Volume()

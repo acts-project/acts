@@ -8,11 +8,11 @@
 #ifndef ACTS_TEST_SURFACESTUB
 #define ACTS_TEST_SURFACESTUB 1
 
-#include "ACTS/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
-#include "ACTS/Surfaces/PlanarBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 /// Surface derived class stub

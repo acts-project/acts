@@ -8,9 +8,9 @@
 
 #define BOOST_TEST_MODULE CurvilinearParameters Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/EventData/NeutralParameters.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "ParametersTestHelper.hpp"
 
 namespace Acts {

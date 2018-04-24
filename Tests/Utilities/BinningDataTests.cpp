@@ -10,8 +10,8 @@
 #define BOOST_TEST_MODULE BinningData Tests
 #include <boost/test/included/unit_test.hpp>
 #include <cmath>
-#include "ACTS/Utilities/BinningData.hpp"
-#include "ACTS/Utilities/BinningType.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 namespace Acts {
 namespace Test {

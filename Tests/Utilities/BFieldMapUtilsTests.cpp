@@ -11,8 +11,8 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "ACTS/Utilities/BFieldMapUtils.hpp"
-#include "ACTS/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/BFieldMapUtils.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 
 namespace bdata = boost::unit_test::data;
 

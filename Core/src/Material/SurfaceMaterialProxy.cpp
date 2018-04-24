@@ -10,7 +10,7 @@
 // SurfaceMaterialProxy.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Material/SurfaceMaterialProxy.hpp"
 
 Acts::SurfaceMaterialProxy::SurfaceMaterialProxy()
   : SurfaceMaterial(), m_binUtility(nullptr)

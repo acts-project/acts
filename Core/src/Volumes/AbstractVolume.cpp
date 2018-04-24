@@ -10,11 +10,11 @@
 // AbstractVolume.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Volumes/AbstractVolume.hpp"
+#include "Acts/Volumes/AbstractVolume.hpp"
 #include <iostream>
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Volumes/BoundarySurfaceT.hpp"
-#include "ACTS/Volumes/VolumeBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Volumes/BoundarySurfaceT.hpp"
+#include "Acts/Volumes/VolumeBounds.hpp"
 
 Acts::AbstractVolume::AbstractVolume(
     std::shared_ptr<const Transform3D>  htrans,

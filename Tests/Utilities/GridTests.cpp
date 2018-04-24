@@ -11,9 +11,9 @@
 #include <chrono>
 #include <random>
 
-#include "ACTS/Utilities/concept/AnyGrid.hpp"
-#include "ACTS/Utilities/detail/Axis.hpp"
-#include "ACTS/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/concept/AnyGrid.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
 namespace Acts {
 

@@ -10,7 +10,7 @@
 // ExtrapolationCell.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Extrapolation/ExtrapolationCell.hpp"
+#include "Acts/Extrapolation/ExtrapolationCell.hpp"
 
 const std::vector<std::string> Acts::ExtrapolationCode::s_ecodeNames
     = {"Unset",

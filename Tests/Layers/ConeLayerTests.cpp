@@ -18,13 +18,13 @@
 // leave blank line
 
 //#include <limits>
-#include "ACTS/Layers/ConeLayer.hpp"
-#include "ACTS/Surfaces/ConeBounds.hpp"
-//#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/EventData/SingleTrackParameters.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Volumes/CuboidVolumeBounds.hpp"
+#include "Acts/Layers/ConeLayer.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
+//#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

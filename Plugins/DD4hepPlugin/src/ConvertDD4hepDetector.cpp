@@ -6,18 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Plugins/DD4hepPlugins/ConvertDD4hepDetector.hpp"
+#include "Acts/Plugins/DD4hepPlugins/ConvertDD4hepDetector.hpp"
 #include <list>
 #include <stdexcept>
-#include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerBuilder.hpp"
-#include "ACTS/Plugins/DD4hepPlugins/IActsExtension.hpp"
-#include "ACTS/Tools/LayerArrayCreator.hpp"
-#include "ACTS/Tools/LayerCreator.hpp"
-#include "ACTS/Tools/PassiveLayerBuilder.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Tools/TrackingGeometryBuilder.hpp"
-#include "ACTS/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Plugins/DD4hepPlugins/DD4hepLayerBuilder.hpp"
+#include "Acts/Plugins/DD4hepPlugins/IActsExtension.hpp"
+#include "Acts/Tools/LayerArrayCreator.hpp"
+#include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Tools/PassiveLayerBuilder.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Tools/TrackingGeometryBuilder.hpp"
+#include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {

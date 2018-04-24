@@ -9,7 +9,7 @@
 // Boost include(s)
 #define BOOST_TEST_MODULE Unit Conversion Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 using namespace Acts::units;
 namespace utf = boost::unit_test;

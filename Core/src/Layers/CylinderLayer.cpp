@@ -10,17 +10,17 @@
 // CylinderLayer.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/InstanceFactory.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Volumes/AbstractVolume.hpp"
-#include "ACTS/Volumes/BoundarySurfaceFace.hpp"
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Layers/CylinderLayer.hpp"
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/InstanceFactory.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Volumes/AbstractVolume.hpp"
+#include "Acts/Volumes/BoundarySurfaceFace.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderLayer::CylinderLayer(
     std::shared_ptr<const Transform3D>    transform,

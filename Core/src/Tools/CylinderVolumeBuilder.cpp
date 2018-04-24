@@ -10,15 +10,15 @@
 // CylinderVolumeBuilder.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Tools/CylinderVolumeBuilder.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Tools/ITrackingVolumeHelper.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Tools/CylinderVolumeBuilder.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Layers/CylinderLayer.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Tools/ITrackingVolumeHelper.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
     const Acts::CylinderVolumeBuilder::Config& cvbConfig,

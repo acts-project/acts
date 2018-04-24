@@ -13,7 +13,7 @@
 // STL
 #include <sstream>
 // Extrapolation module
-#include "ACTS/Extrapolation/StaticNavigationEngine.hpp"
+#include "Acts/Extrapolation/StaticNavigationEngine.hpp"
 
 // constructor
 Acts::StaticNavigationEngine::StaticNavigationEngine(

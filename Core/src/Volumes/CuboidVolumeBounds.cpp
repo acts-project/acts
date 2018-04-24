@@ -10,12 +10,12 @@
 // CuboidVolumeBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Volumes/CuboidVolumeBounds.hpp"
+#include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include <cmath>
 #include <iostream>
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 Acts::CuboidVolumeBounds::CuboidVolumeBounds()
   : VolumeBounds(), m_valueStore(bv_length, 0.)

@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Layers/ProtoLayer.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
 #include <algorithm>
 
 namespace Acts {

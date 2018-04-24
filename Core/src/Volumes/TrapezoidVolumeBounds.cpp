@@ -10,14 +10,14 @@
 // TrapezoidVolumeBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Volumes/TrapezoidVolumeBounds.hpp"
+#include "Acts/Volumes/TrapezoidVolumeBounds.hpp"
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Utilities/GeometryStatics.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 
 Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds()
   : VolumeBounds(), m_valueStore(bv_length, 0.)

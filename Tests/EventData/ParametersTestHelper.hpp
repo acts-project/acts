@@ -10,7 +10,7 @@
 #define ACTS_TESTS_EVENTDATA_PARAMETERTESTHELPER_H
 
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 namespace Test {

@@ -10,13 +10,13 @@
 // DoubleTrapezoidVolumeBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Volumes/DoubleTrapezoidVolumeBounds.hpp"
+#include "Acts/Volumes/DoubleTrapezoidVolumeBounds.hpp"
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include "ACTS/Surfaces/DiamondBounds.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 
 Acts::DoubleTrapezoidVolumeBounds::DoubleTrapezoidVolumeBounds()
   : VolumeBounds(), m_valueStore(bv_length, 0.)

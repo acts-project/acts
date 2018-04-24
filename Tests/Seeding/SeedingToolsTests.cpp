@@ -14,9 +14,9 @@
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 
-#include "ACTS/Seeding/SpacePoint.hpp"
-#include "ACTS/Seeding/detail/cyclic_range.hpp"
-#include "ACTS/Seeding/detail/geometry.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
+#include "Acts/Seeding/detail/cyclic_range.hpp"
+#include "Acts/Seeding/detail/geometry.hpp"
 #include "SeedingTestsCommon.hpp"
 
 namespace data = boost::unit_test::data;

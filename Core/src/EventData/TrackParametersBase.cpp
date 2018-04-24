@@ -10,7 +10,7 @@
 #include <iomanip>
 
 // ACTS include(s)
-#include "ACTS/EventData/TrackParametersBase.hpp"
+#include "Acts/EventData/TrackParametersBase.hpp"
 
 namespace Acts {
 std::ostream&

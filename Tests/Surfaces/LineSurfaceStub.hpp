@@ -9,9 +9,9 @@
 #define ACTS_TESTS_SURFACES_LINESURFACESTUB 1
 
 //
-#include "ACTS/Surfaces/LineSurface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantDataFwd.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantDataFwd.hpp"
 //
 //
 #include <limits>

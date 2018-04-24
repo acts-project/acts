@@ -11,9 +11,9 @@
 #define BOOST_TEST_MODULE Seeding Tests
 #include <boost/test/included/unit_test.hpp>
 
-#include "ACTS/Seeding/BarrelSeedFinder.hpp"
-#include "ACTS/Seeding/SpacePoint.hpp"
-#include "ACTS/Seeding/TrackSeed.hpp"
+#include "Acts/Seeding/BarrelSeedFinder.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
+#include "Acts/Seeding/TrackSeed.hpp"
 #include "SeedingTestsCommon.hpp"
 
 using namespace Acts::Seeding;

@@ -12,8 +12,8 @@
 
 #define BOOST_TEST_MODULE ParameterSet Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/EventData/ParameterSet.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 using namespace Acts::detail;
 
 ///

@@ -11,7 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 // Trk
-#include "ACTS/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 
 // STD/STL
 #include <iostream>

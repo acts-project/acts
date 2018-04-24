@@ -10,14 +10,14 @@
 // EllipseBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/EllipseBounds.hpp"
+#include "Acts/Surfaces/EllipseBounds.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Utilities/detail/periodic.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::EllipseBounds::EllipseBounds(double minRadius0,
                                    double minRadius1,

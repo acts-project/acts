@@ -10,14 +10,14 @@
 // StrawSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Surfaces/InfiniteBounds.hpp"
-#include "ACTS/Utilities/Identifier.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Utilities/Identifier.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
                                  double                             radius,

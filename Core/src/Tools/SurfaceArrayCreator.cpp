@@ -10,17 +10,17 @@
 // SurfaceArrayCreator.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include <algorithm>
 #include <cmath>
-#include "ACTS/Surfaces/PlanarBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Surfaces/SurfaceArray.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinnedArrayXD.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
-#include "ACTS/Utilities/detail/Axis.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArrayXD.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(

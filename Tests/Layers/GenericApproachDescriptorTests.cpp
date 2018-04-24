@@ -18,8 +18,8 @@
 // leave blank line
 
 #include "../Surfaces/SurfaceStub.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

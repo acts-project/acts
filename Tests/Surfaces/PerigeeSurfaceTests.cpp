@@ -19,13 +19,13 @@
 
 //
 #include <limits>
-#include "ACTS/Layers/PlaneLayer.hpp"
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
-#include "ACTS/Surfaces/PerigeeSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;

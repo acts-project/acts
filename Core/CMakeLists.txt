@@ -17,11 +17,11 @@ install (DIRECTORY include/ACTS
 
 # generate version header and make it available to the build
 configure_file(
-  ACTSVersion.hpp.in
-  ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.hpp)
+  ActsVersion.hpp.in
+  ${CMAKE_CURRENT_BINARY_DIR}/Acts/ActsVersion.hpp)
 install(
-  FILES ${CMAKE_CURRENT_BINARY_DIR}/ACTS/ACTSVersion.hpp
-  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/ACTS)
+  FILES ${CMAKE_CURRENT_BINARY_DIR}/Acts/ActsVersion.hpp
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/Acts)
 target_include_directories(ACTSCore PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>)
 
 acts_add_targets_to_cdash_project(PROJECT ACore TARGETS ACTSCore)

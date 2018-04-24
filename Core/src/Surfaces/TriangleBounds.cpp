@@ -10,8 +10,8 @@
 // TriangleBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/TriangleBounds.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/TriangleBounds.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 #include <iomanip>
 #include <iostream>

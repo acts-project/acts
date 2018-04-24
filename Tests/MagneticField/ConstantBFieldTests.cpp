@@ -12,9 +12,9 @@
 // clang-format off
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include "ACTS/MagneticField/ConstantBField.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 // clang-format on
 
 namespace bdata = boost::unit_test::data;

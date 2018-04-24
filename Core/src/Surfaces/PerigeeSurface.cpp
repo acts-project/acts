@@ -10,8 +10,8 @@
 // PerigeeSurface.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/PerigeeSurface.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 #include <iomanip>
 #include <iostream>

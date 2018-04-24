@@ -11,11 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 /*
-#include "ACTS/Digitization/PolarSegmentation.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Utilities/Helpers.hpp"
+#include "Acts/Digitization/PolarSegmentation.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::TrapezoidSegmentation::TrapezoidSegmentation(
     std::shared_ptr<const TrapezoidBounds> mBounds,

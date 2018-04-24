@@ -10,14 +10,14 @@
 // RungeKuttaUtils.cpp , ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Extrapolation/detail/RungeKuttaUtils.hpp"
+#include "Acts/Extrapolation/detail/RungeKuttaUtils.hpp"
 #include <cmath>
-#include "ACTS/Surfaces/ConeSurface.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/PerigeeSurface.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 
 #ifndef __USE_GNU
 void

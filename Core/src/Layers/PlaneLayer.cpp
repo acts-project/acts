@@ -11,11 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "ACTS/Layers/PlaneLayer.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Helpers.hpp"
+#include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D>   transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,

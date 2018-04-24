@@ -10,12 +10,12 @@
 // TrapezoidBounds.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,

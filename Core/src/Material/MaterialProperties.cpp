@@ -10,7 +10,7 @@
 // MaterialProperties.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Material/MaterialProperties.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 #include <climits>
 
 Acts::MaterialProperties::MaterialProperties()

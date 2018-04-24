@@ -10,11 +10,11 @@
 // PlanarModuleStepper.cpp, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Digitization//PlanarModuleStepper.hpp"
-#include "ACTS/Digitization/DigitizationModule.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Intersection.hpp"
+#include "Acts/Digitization//PlanarModuleStepper.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 Acts::PlanarModuleStepper::PlanarModuleStepper(
     const Config&                 pmsConfig,
