@@ -49,6 +49,16 @@ namespace Test {
     std::vector<Acts::DigitizationCell> testCells2;
     testCells2.push_back(Acts::DigitizationCell(2, 3, 1));
     auto mergedCells3 = Acts::createClusters(testCells2, true);
+
+    // test in case just one cell is handed over
+    std::vector<Acts::DigitizationCell> testCells3;
+    testCells3.push_back(Acts::DigitizationCell(2, 3, 1));
+    auto mergedCells4 = Acts::createClusters(testCells3, false);
+    BOOST_CHECK_EQUAL(mergedCells4.size(), 1);
+    // test in case no cell is handed over
+    std::vector<Acts::DigitizationCell> testCells4;
+    auto mergedCells5 = Acts::createClusters(testCells4, false);
+    BOOST_CHECK_EQUAL(mergedCells5.size(), 0);
   }
 
   BOOST_AUTO_TEST_CASE(merge_clusters2)
@@ -216,9 +226,16 @@ namespace Test {
     }
     BOOST_CHECK_EQUAL(data2, 12);
 
+    // test in case only one cell is handed over
     std::vector<Acts::DigitizationCell> testCells2;
     testCells2.push_back(Acts::DigitizationCell(2, 3, 1));
     auto mergedCells3 = Acts::mergeCells(testCells2, true);
+    BOOST_CHECK_EQUAL(mergedCells3.size(), 1);
+
+    // test in case no cell is handed over
+    std::vector<Acts::DigitizationCell> testCells3;
+    auto mergedCells4 = Acts::mergeCells(testCells3, true);
+    BOOST_CHECK_EQUAL(mergedCells4.size(), 0);
   }
 }
 }

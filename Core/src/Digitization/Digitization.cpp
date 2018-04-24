@@ -14,6 +14,7 @@ Acts::mergeCells(std::vector<Acts::DigitizationCell>& cells,
                  bool                                 analogueReadout,
                  double                               energyCut)
 {
+  if (!cells.size()) return cells;
   // the output
   std::vector<std::vector<Acts::DigitizationCell>> mergedCells;
   // create the graph
@@ -88,7 +89,8 @@ Acts::createClusters(const std::vector<Acts::DigitizationCell>& cells,
 {
   // the output
   std::vector<std::vector<Acts::DigitizationCell>> mergedCells;
-  // create the graph
+  if (!cells.size()) return mergedCells;
+
   // create the graph
   boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> graph;
   //  add the needed amount of vertices to the graph
