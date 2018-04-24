@@ -38,10 +38,10 @@ static ParticleMasses particleMasses;
 /// ionization along a given path length. The second entry is the sigma of the
 /// distribution.
 std::pair<double, double>
-ionizationEnergyLossMean(double                p,
-                          const Material&       mat,
-                          ParticleType          particle,
-                          double                path = 1.);
+ionizationEnergyLossMean(double          p,
+                         const Material& mat,
+                         ParticleType    particle,
+                         double          path = 1.);
 
 /// The most probable ionization energy loss along a given path length. The
 /// meost probable energy loss should be used for simulation (fatras).
@@ -60,17 +60,16 @@ ionizationEnergyLossMean(double                p,
 /// ionization along a given path length. The second entry is the sigma of the
 /// distribution.
 std::pair<double, double>
-ionizationEnergyLossMpv(double                p,
-                         const Material&       mat,
-                         ParticleType          particle,
-                         double                path = 1.);
-
+ionizationEnergyLossMpv(double          p,
+                        const Material& mat,
+                        ParticleType    particle,
+                        double          path = 1.);
 
 std::pair<double, double>
-ionizationEnergyLossMpv(double                p,
-                         double                m, 
-                         const Material&       mat,
-                         double                path = 1.);
+ionizationEnergyLossMpv(double          p,
+                        double          m,
+                        const Material& mat,
+                        double          path = 1.);
 
 /// @todo To be validated
 /// Radiation energy loss along a given path length
@@ -80,9 +79,7 @@ ionizationEnergyLossMpv(double                p,
 /// @param[in] particleMasses The masses of the different particles
 /// @return dEdx from radiation and associate sigma (straggling)
 std::pair<double, double>
-radiationEnergyLoss(double                p,
-                    const Material&       mat,
-                    ParticleType          particle);
+radiationEnergyLoss(double p, const Material& mat, ParticleType particle);
 
 /// multiple scattering as function of dInX0
 ///

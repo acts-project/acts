@@ -36,7 +36,7 @@ namespace Test {
 
   // The path limit abort
   typedef detail::PathLimitReached path_limit;
-  typedef detail::ConstrainedStep   cstep;
+  typedef detail::ConstrainedStep  cstep;
 
   // This is a simple cache struct to mimic the
   // Stepper cache in the propagation
@@ -61,7 +61,7 @@ namespace Test {
 
     /// Debug output
     /// the string where things are stored (optionally)
-    bool        debug        = false;
+    bool        debug       = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
@@ -84,9 +84,9 @@ namespace Test {
     AbortList<path_limit> abort_list;
 
     // Configure path limit with tolerance
-    auto& limit             = abort_list.get<path_limit>();
+    auto& limit           = abort_list.get<path_limit>();
     limit.signedPathLimit = 1. * units::_m;
-    limit.tolerance         = 1. * units::_um;
+    limit.tolerance       = 1. * units::_um;
 
     // It should not abort yet
     BOOST_CHECK(!abort_list(result, cache));

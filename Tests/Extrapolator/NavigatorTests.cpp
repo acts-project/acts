@@ -79,7 +79,7 @@ namespace Test {
 
     /// Debug output
     /// the string where things are stored (optionally)
-    bool        debug        = false;
+    bool        debug       = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
@@ -149,7 +149,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    navPar             = step(cache);
+    navPar              = step(cache);
     Vector3D onBeamPipe = navPar.position();
 
     // (2) re-entering navigator:
@@ -171,7 +171,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    navPar             = step(cache);
+    navPar              = step(cache);
     Vector3D onBoundary = navPar.position();
 
     // (3) re-entering navigator:
@@ -194,7 +194,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    navPar                = step(cache);
+    navPar                 = step(cache);
     Vector3D on1stApproach = navPar.position();
 
     // (4) re-entering navigator:
@@ -214,7 +214,7 @@ namespace Test {
     }
 
     // positive return: do the step
-    navPar           = step(cache);
+    navPar            = step(cache);
     Vector3D on1stSf1 = navPar.position();
 
     // (5) re-entering navigator:

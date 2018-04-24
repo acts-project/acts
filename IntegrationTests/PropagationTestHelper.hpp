@@ -85,7 +85,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     options.max_path_length = 5 * units::_m;
-    options.maxStepSize   = 1 * units::_cm;
+    options.maxStepSize     = 1 * units::_cm;
 
     // define start parameters
     double                x  = 0;
@@ -168,12 +168,12 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> fwd_options;
     fwd_options.max_path_length = plimit;
-    fwd_options.maxStepSize   = 1 * units::_cm;
+    fwd_options.maxStepSize     = 1 * units::_cm;
 
     typename Propagator_type::template Options<> back_options;
     back_options.direction       = backward;
     back_options.max_path_length = plimit;
-    back_options.maxStepSize   = 1 * units::_cm;
+    back_options.maxStepSize     = 1 * units::_cm;
 
     // define start parameters
     double                x  = 0;
@@ -219,7 +219,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.maxStepSize   = plimit;
+    options.maxStepSize     = plimit;
     options.max_path_length = plimit;
 
     // define start parameters
@@ -279,7 +279,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.maxStepSize   = plimit;
+    options.maxStepSize     = plimit;
     options.max_path_length = plimit;
 
     // define start parameters
@@ -342,7 +342,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.maxStepSize   = plimit;
+    options.maxStepSize     = plimit;
     options.max_path_length = plimit;
 
     // define start parameters
@@ -403,7 +403,7 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.maxStepSize   = plimit;
+    options.maxStepSize     = plimit;
     options.max_path_length = plimit;
 
     // define start parameters

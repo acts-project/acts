@@ -21,11 +21,11 @@
 #define ESLOG(cache, message)                                                  \
   if (cache.debug) {                                                           \
     std::stringstream dstream;                                                 \
-    dstream << "|->" << std::setw(cache.debugPfxWidth);                      \
+    dstream << "|->" << std::setw(cache.debugPfxWidth);                        \
     dstream << "EigenStepper"                                                  \
             << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
-    cache.debugString += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
+    cache.debugString += dstream.str();                                        \
   }
 #endif
 
@@ -146,11 +146,11 @@ public:
       const double y = dir(1);  // == sin(phi) * sin(theta)
       const double z = dir(2);  // == cos(theta)
       // can be turned into cosine/sine
-      const double cosTheta     = z;
-      const double sinTheta     = sqrt(x * x + y * y);
+      const double cosTheta    = z;
+      const double sinTheta    = sqrt(x * x + y * y);
       const double invSinTheta = 1. / sinTheta;
-      const double cosPhi       = x * invSinTheta;
-      const double sinPhi       = y * invSinTheta;
+      const double cosPhi      = x * invSinTheta;
+      const double sinPhi      = y * invSinTheta;
       // prepare the jacobian to curvilinear
       ActsMatrixD<5, 7> jacToCurv = ActsMatrixD<5, 7>::Zero();
       if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
@@ -163,7 +163,7 @@ public:
       } else {
         // Under grazing incidence to z, the above coordinate system definition
         // becomes numerically unstable, and we need to switch to another one
-        const double c     = sqrt(y * y + z * z);
+        const double c    = sqrt(y * y + z * z);
         const double invC = 1. / c;
         jacToCurv(0, 1) = -z * invC;
         jacToCurv(0, 2) = y * invC;
@@ -191,7 +191,7 @@ public:
       // this is useful for interruption calls
       if (reinitialize) {
         // reset the jacobians
-        jacToGlobal = ActsMatrixD<7, 5>::Zero();
+        jacToGlobal  = ActsMatrixD<7, 5>::Zero();
         jacTransport = ActsMatrixD<7, 7>::Identity();
         // fill the jacobian to global for next transport
         jacToGlobal(0, eLOC_0) = -sinPhi;
@@ -246,7 +246,7 @@ public:
       // this is useful for interruption calls
       if (reinitialize) {
         // reset the jacobians
-        jacToGlobal = ActsMatrixD<7, 5>::Zero();
+        jacToGlobal  = ActsMatrixD<7, 5>::Zero();
         jacTransport = ActsMatrixD<7, 7>::Identity();
         // reset the derivative
         derivative = ActsVectorD<7>::Zero();
@@ -285,12 +285,12 @@ public:
     ActsMatrixD<7, 7> jacTransport = ActsMatrixD<7, 7>::Identity();
 
     /// The propagation derivative
-    ActsVectorD<7>    derivative = ActsVectorD<7>::Zero();
+    ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
 
     /// Covariance matrix (and indicator)
     //// assocated with the initial error on track parameters
     bool              covTransport = false;
-    ActsSymMatrixD<5> cov           = ActsSymMatrixD<5>::Zero();
+    ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
 
     /// Lazily initialized cache
     /// It caches the current magnetic field cell and stays interpolates within
@@ -316,7 +316,7 @@ public:
 
     /// Debug output
     /// the string where things are stored (optionally)
-    bool        debug        = false;
+    bool        debug       = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
@@ -398,7 +398,7 @@ public:
   {
     if (!cache.fieldCacheReady || !cache.fieldCache.isInside(pos)) {
       cache.fieldCacheReady = true;
-      cache.fieldCache       = m_bField.getFieldCell(pos);
+      cache.fieldCache      = m_bField.getFieldCell(pos);
     }
     // get the field from the cell
     return std::move(cache.fieldCache.getField(pos));
@@ -459,7 +459,7 @@ public:
     double error_estimate = tryRungeKuttaStep(cache.stepSize);
     while (error_estimate > 0.0002) {
       cache.stepSize = 0.5 * cache.stepSize;
-      error_estimate  = tryRungeKuttaStep(cache.stepSize);
+      error_estimate = tryRungeKuttaStep(cache.stepSize);
     }
 
     // use the adjusted step size

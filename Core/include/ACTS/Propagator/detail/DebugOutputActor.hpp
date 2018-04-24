@@ -42,8 +42,7 @@ namespace detail {
       // move the debug output from the cache to
       // to the output actor if it is not set to mute
       // only when the target is reached (or later otherwise triggered)
-      if (!mute && cache.targetReached)
-        result.debugString = cache.debugString;
+      if (!mute && cache.targetReached) result.debugString = cache.debugString;
     }
 
     /// Pure observer interface

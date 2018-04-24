@@ -21,22 +21,22 @@
 
 #ifndef MATINTERACTOR_DEBUG_OUTPUTS
 #define MATINTERACTOR_DEBUG_OUTPUTS
-#define MATILOG(cache, result, message)                            \
-  if (debug) {                                                     \
-    std::stringstream dstream;                                     \
-    dstream << "   " << std::setw(cache.debugPfxWidth);          \
-    dstream << "material interaction"                              \
-            << " | ";                                              \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';  \
-    cache.debugString += dstream.str();                            \
+#define MATILOG(cache, result, message)                                        \
+  if (debug) {                                                                 \
+    std::stringstream dstream;                                                 \
+    dstream << "   " << std::setw(cache.debugPfxWidth);                        \
+    dstream << "material interaction"                                          \
+            << " | ";                                                          \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
+    cache.debugString += dstream.str();                                        \
   }
 #endif
 
 namespace Acts {
 
 /// The Material interaction struct
-/// - it records the surface 
-/// and the passed material 
+/// - it records the surface
+/// and the passed material
 struct MaterialInteraction
 {
   /// The material surface
@@ -58,7 +58,7 @@ struct MaterialInteractor
   bool multipleScattering = true;
   /// Configuration for this MaterialInteractor
   /// - energy loss
-  bool energyLoss     = true;
+  bool energyLoss = true;
   /// use the mean (or most probable) energy loss
   bool energyLossMean = true;
   /// record material in detail

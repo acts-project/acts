@@ -22,11 +22,11 @@
 #define SLLOG(cache, message)                                                  \
   if (cache.debug) {                                                           \
     std::stringstream dstream;                                                 \
-    dstream << "|->" << std::setw(cache.debugPfxWidth);                      \
+    dstream << "|->" << std::setw(cache.debugPfxWidth);                        \
     dstream << "StraightLineStepper"                                           \
             << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
-    cache.debugString += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
+    cache.debugString += dstream.str();                                        \
   }
 #endif
 
@@ -130,7 +130,7 @@ public:
 
     /// Debug output
     /// the string where things are stored (optionally)
-    bool        debug        = false;
+    bool        debug       = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;

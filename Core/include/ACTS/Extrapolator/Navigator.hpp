@@ -20,14 +20,14 @@
 
 #ifndef NAVIGATOR_DEBUG_OUTPUTS
 #define NAVIGATOR_DEBUG_OUTPUTS
-#define NAVLOG(cache, result, message)                                       \
-  if (debug) {                                                               \
-    std::string vName                = "No Volume";                          \
-    if (result.currentVolume) vName = result.currentVolume->volumeName();  \
-    std::stringstream dstream;                                               \
-    dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | ";    \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
-    cache.debugString += dstream.str();                                      \
+#define NAVLOG(cache, result, message)                                         \
+  if (debug) {                                                                 \
+    std::string vName               = "No Volume";                             \
+    if (result.currentVolume) vName = result.currentVolume->volumeName();      \
+    std::stringstream dstream;                                                 \
+    dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | ";      \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
+    cache.debugString += dstream.str();                                        \
   }
 #endif
 
@@ -268,8 +268,8 @@ struct Navigator
   template <typename cache_t, typename result_type>
   bool
   navigationBreak(const NavigationParameters& navPar,
-                   cache_t&                    cache,
-                   result_type&                result) const
+                  cache_t&                    cache,
+                  result_type&                result) const
   {
     if (result.navigationBreak) {
       // target exists and reached, or no target exists
@@ -373,8 +373,8 @@ struct Navigator
                                           << targetIntersection.position.z()
                                           << ")");
       /// get the target volume from the intersection
-      result.targetVolume = trackingGeometry->lowestTrackingVolume(
-          targetIntersection.position);
+      result.targetVolume
+          = trackingGeometry->lowestTrackingVolume(targetIntersection.position);
       result.targetLayer = result.targetVolume
           ? result.targetVolume->associatedLayer(targetIntersection.position)
           : nullptr;
@@ -501,7 +501,7 @@ struct Navigator
         NAVLOG(
             cache, result, "Boundary surface reached, prepare volume switch.");
         // get the actual boundary for the navigation & the next volume
-        auto boundary         = result.navBoundaryIter->object;
+        auto boundary        = result.navBoundaryIter->object;
         result.currentVolume = boundary->attachedVolume(
             navPar.position(), navPar.momentum(), forward);
         // no volume anymore : end of known world
@@ -548,27 +548,26 @@ struct Navigator
   template <typename cache_t, typename result_t>
   bool
   resolveLayers(const NavigationParameters& navPar,
-                 cache_t&                    cache,
-                 result_t&                   result) const
+                cache_t&                    cache,
+                result_t&                   result) const
   {
     NAVLOG(cache, result, "We do not have any layers yet, searching.");
     // check if we are in the start volume
     bool start = (result.currentVolume == result.startVolume);
     // we do not have layers yet, get the candidates
-    result.navLayers = result.currentVolume->decompose(
-        (start ? result.startLayer : nullptr),
-        result.targetLayer,
-        navPar,
-        true,
-        cache.stepSize.value(cstep::aborter),
-        collectSensitive,
-        collectMaterial,
-        collectPassive);
+    result.navLayers
+        = result.currentVolume->decompose((start ? result.startLayer : nullptr),
+                                          result.targetLayer,
+                                          navPar,
+                                          true,
+                                          cache.stepSize.value(cstep::aborter),
+                                          collectSensitive,
+                                          collectMaterial,
+                                          collectPassive);
     // the number of layer candidates
     if (result.navLayers.size()) {
-      NAVLOG(cache,
-             result,
-             result.navLayers.size() << " layer candidates found.");
+      NAVLOG(
+          cache, result, result.navLayers.size() << " layer candidates found.");
       // set the iterator
       result.navLayerIter = result.navLayers.begin();
       if (result.navLayerIter->object != result.startLayer) {
@@ -611,8 +610,8 @@ struct Navigator
   template <typename cache_t, typename result_t>
   bool
   handleLayers(const NavigationParameters& navPar,
-                cache_t&                    cache,
-                result_t&                   result) const
+               cache_t&                    cache,
+               result_t&                   result) const
   {
     // of course only
     if (result.navLayers.size()) {
@@ -623,16 +622,14 @@ struct Navigator
         auto layerVolume  = layer->representingVolume();
         // check if we are on the layer
         bool onLayer = result.navLayerIter->intersection.pathLength == 0;
-        onLayer
-            = onLayer || layerSurface->isOnSurface(navPar.position(), true);
+        onLayer = onLayer || layerSurface->isOnSurface(navPar.position(), true);
         if (!onLayer && result.startLayer == result.navLayerIter->object) {
           onLayer = (layerVolume && layerVolume->inside(navPar.position()));
         }
         // check if we are on the layer
         if (onLayer) {
           // store the current surface in the cache
-          if (cache.startSurface
-              && result.currentVolume == result.startVolume
+          if (cache.startSurface && result.currentVolume == result.startVolume
               && layer == result.startLayer) {
             NAVLOG(cache, result, "Switch layer surface to start surface.");
             // setting layer surface & representation
@@ -670,7 +667,7 @@ struct Navigator
           } else {
             // update the navigation step size
             cache.stepSize.update(cache.navDir * layerIntersect.pathLength,
-                                   cstep::actor);
+                                  cstep::actor);
             NAVLOG(cache,
                    result,
                    "Navigation stepSize towards layer updated to "
@@ -686,7 +683,7 @@ struct Navigator
                "Done in final volume, release stepSize & proceed to target.");
         // the step size will be set to the aborter step size
         cache.stepSize.update(cache.stepSize.value(cstep::aborter),
-                               cstep::actor);
+                              cstep::actor);
         result.navigationBreak = true;
         return true;
       }
@@ -711,8 +708,8 @@ struct Navigator
   template <typename cache_t, typename result_t>
   bool
   resolveSurfaces(const NavigationParameters& navPar,
-                   cache_t&                    cache,
-                   result_t&                   result) const
+                  cache_t&                    cache,
+                  result_t&                   result) const
   {
     // get the layer and layer surface
     auto layerSurface = result.navLayerIter->representation;
@@ -722,16 +719,15 @@ struct Navigator
     auto startSurface = onStart ? cache.startSurface : layerSurface;
     // get the surfaces
     // @todo: could symmetrise with decompose() method
-    result.navSurfaces
-        = navLayer->getCompatibleSurfaces(navPar,
-                                          forward,
-                                          true,
-                                          collectSensitive,
-                                          collectMaterial,
-                                          collectPassive,
-                                          navigationLevel,
-                                          startSurface,
-                                          cache.targetSurface);
+    result.navSurfaces = navLayer->getCompatibleSurfaces(navPar,
+                                                         forward,
+                                                         true,
+                                                         collectSensitive,
+                                                         collectMaterial,
+                                                         collectPassive,
+                                                         navigationLevel,
+                                                         startSurface,
+                                                         cache.targetSurface);
     // the number of layer candidates
     if (result.navSurfaces.size()) {
       NAVLOG(cache,
@@ -757,8 +753,8 @@ struct Navigator
   template <typename cache_t, typename result_t>
   bool
   handeSurfaces(const NavigationParameters& navPar,
-                  cache_t&                    cache,
-                  result_t&                   result) const
+                cache_t&                    cache,
+                result_t&                   result) const
   {
     // no surfaces, do not return to stepper
     if (!result.navSurfaces.size()) return false;
@@ -811,8 +807,7 @@ struct Navigator
           ++result.navSurfaceIter;
           continue;
         } else {
-          cache.stepSize.update(cache.navDir * surfaceDistance,
-                                 cstep::actor);
+          cache.stepSize.update(cache.navDir * surfaceDistance, cstep::actor);
           NAVLOG(cache,
                  result,
                  "Navigation stepSize towards surface updated to "

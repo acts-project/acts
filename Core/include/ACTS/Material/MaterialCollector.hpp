@@ -20,11 +20,11 @@
 #define MATCLOG(cache, result, message)                                        \
   if (debug) {                                                                 \
     std::stringstream dstream;                                                 \
-    dstream << "   " << std::setw(cache.debugPfxWidth);                      \
+    dstream << "   " << std::setw(cache.debugPfxWidth);                        \
     dstream << "material collection"                                           \
             << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
-    cache.debugString += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
+    cache.debugString += dstream.str();                                        \
   }
 #endif
 
@@ -115,7 +115,7 @@ struct MaterialCollector
         // the path correction from the surface intersection
         double pCorrection = prepofu
             * cache.currentSurface->pathCorrection(cache.position(),
-                                                    cache.direction());
+                                                   cache.direction());
         // the full material
         result.materialInX0 += pCorrection * mProperties->thicknessInX0();
         result.materialInL0 += pCorrection * mProperties->thicknessInL0();

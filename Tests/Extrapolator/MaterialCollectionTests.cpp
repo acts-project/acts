@@ -118,7 +118,7 @@ namespace Test {
                                                     AbortConditions_type>
         fwd_navigator_options;
 
-    fwd_navigator_options.maxStepSize   = 25. * units::_cm;
+    fwd_navigator_options.maxStepSize     = 25. * units::_cm;
     fwd_navigator_options.max_path_length = 25 * units::_cm;
     fwd_navigator_options.debug           = debug_mode_fwd;
 
@@ -170,7 +170,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         bwd_navigator_options;
-    bwd_navigator_options.maxStepSize   = 25. * units::_cm;
+    bwd_navigator_options.maxStepSize     = 25. * units::_cm;
     bwd_navigator_options.max_path_length = 25 * units::_cm;
     bwd_navigator_options.direction       = backward;
     bwd_navigator_options.debug           = debug_mode_bwd;
@@ -236,7 +236,7 @@ namespace Test {
                                                     AbortConditions_type>
         fwdstep_navigator_options;
 
-    fwdstep_navigator_options.maxStepSize   = 25. * units::_cm;
+    fwdstep_navigator_options.maxStepSize     = 25. * units::_cm;
     fwdstep_navigator_options.max_path_length = 25 * units::_cm;
     fwdstep_navigator_options.debug           = debug_mode_fwd_step;
 
@@ -318,7 +318,7 @@ namespace Test {
                                                     AbortConditions_type>
         bwdstep_navigator_options;
 
-    bwdstep_navigator_options.maxStepSize   = 25. * units::_cm;
+    bwdstep_navigator_options.maxStepSize     = 25. * units::_cm;
     bwdstep_navigator_options.max_path_length = 25 * units::_cm;
     bwdstep_navigator_options.direction       = backward;
     bwdstep_navigator_options.debug           = debug_mode_bwd_step;

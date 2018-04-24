@@ -11,11 +11,11 @@
 namespace Acts {
 
 static std::pair<double, double>
-ionizationEnergyLoss(bool                  mean,
-                     double                p,
-                     double                m,
-                     const Material&       mat,
-                     double                path)
+ionizationEnergyLoss(bool            mean,
+                     double          p,
+                     double          m,
+                     const Material& mat,
+                     double          path)
 {
   // the return value
   double dE = 0.;
@@ -86,38 +86,34 @@ ionizationEnergyLoss(bool                  mean,
 }
 
 std::pair<double, double>
-ionizationEnergyLossMean(double                p,
-                          const Material&       mat,
-                          ParticleType          particle,
-                          double                path)
+ionizationEnergyLossMean(double          p,
+                         const Material& mat,
+                         ParticleType    particle,
+                         double          path)
 {
-  return ionizationEnergyLoss(true, p, particleMasses.mass[particle], mat, path);
+  return ionizationEnergyLoss(
+      true, p, particleMasses.mass[particle], mat, path);
 }
 
 std::pair<double, double>
 ionizationEnergyLossMpv(double                p,
-                         const Material&       mat,
-                         ParticleType          particle,
-                         const ParticleMasses& particleMasses,
-                         double                path)
+                        const Material&       mat,
+                        ParticleType          particle,
+                        const ParticleMasses& particleMasses,
+                        double                path)
 {
-  return ionizationEnergyLoss(false, p, particleMasses.mass[particle], mat, path);
+  return ionizationEnergyLoss(
+      false, p, particleMasses.mass[particle], mat, path);
 }
 
 std::pair<double, double>
-ionizationEnergyLossMpv(double          p,
-                         double          m,
-                         const Material& mat,
-                         double          path)
+ionizationEnergyLossMpv(double p, double m, const Material& mat, double path)
 {
   return ionizationEnergyLoss(false, p, m, mat, path);
 }
 
-
 std::pair<double, double>
-radiationEnergyLoss(double                p,
-                    const Material&       mat,
-                    ParticleType          particle)
+radiationEnergyLoss(double p, const Material& mat, ParticleType particle)
 {
   double sigma = 0.;
   if (!(mat)) return std::pair<double, double>(0., 0.);

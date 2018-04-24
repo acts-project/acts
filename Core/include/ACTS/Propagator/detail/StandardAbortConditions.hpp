@@ -18,11 +18,11 @@
 #define TARGETLOG(cache, status, message)                                      \
   if (debug) {                                                                 \
     std::stringstream dstream;                                                 \
-    dstream << " " << status << " " << std::setw(cache.debugPfxWidth);       \
+    dstream << " " << status << " " << std::setw(cache.debugPfxWidth);         \
     dstream << " target aborter "                                              \
             << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
-    cache.debugString += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
+    cache.debugString += dstream.str();                                        \
   }
 #endif
 
@@ -150,8 +150,7 @@ namespace detail {
                                        false)
                 .pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      cache.stepSize.update(cache.navDir * distance,
-                            ConstrainedStep::aborter);
+      cache.stepSize.update(cache.navDir * distance, ConstrainedStep::aborter);
       // return true if you fall below tolerance
       bool targetReached = (std::abs(distance) <= tolerance);
       if (targetReached) {

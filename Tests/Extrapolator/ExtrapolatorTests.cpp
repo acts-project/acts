@@ -124,7 +124,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.maxStepSize   = 10. * units::_cm;
+    navigator_options.maxStepSize     = 10. * units::_cm;
     navigator_options.max_path_length = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry
@@ -284,7 +284,7 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.maxStepSize   = 25. * units::_cm;
+    navigator_options.maxStepSize     = 25. * units::_cm;
     navigator_options.max_path_length = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry

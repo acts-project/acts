@@ -21,11 +21,11 @@
 #define PROPLOG(cache, message)                                                \
   if (cache.debug) {                                                           \
     std::stringstream dstream;                                                 \
-    dstream << "|->" << std::setw(cache.debugPfxWidth);                      \
+    dstream << "|->" << std::setw(cache.debugPfxWidth);                        \
     dstream << "Propagator"                                                    \
             << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';            \
-    cache.debugString += dstream.str();                                       \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
+    cache.debugString += dstream.str();                                        \
   }
 #endif
 
@@ -286,8 +286,7 @@ public:
     // Internal Abort list
     AbortList<PathLimitReached> internal_aborters;
     // configure the aborter
-    auto& path_limit_abort
-        = internal_aborters.template get<PathLimitReached>();
+    auto& path_limit_abort = internal_aborters.template get<PathLimitReached>();
     path_limit_abort.signedPathLimit
         = std::abs(options.max_path_length) * options.direction;
     path_limit_abort.tolerance = options.target_tolerance;
@@ -345,7 +344,7 @@ public:
     // Initialize the internal propagation cache
     cache_type cache(start, options.direction, options.maxStepSize);
     cache.targetSurface = &target;
-    cache.debug          = options.debug;
+    cache.debug         = options.debug;
 
     // Type of the full propagation result, including output from actions
     typedef action_list_result_t<return_parameter_type, Actions> result_type;
@@ -368,8 +367,7 @@ public:
     target_abort.tolerance = options.target_tolerance;
     target_abort.debug     = options.debug;
 
-    auto& path_limit_abort
-        = internal_aborters.template get<PathLimitReached>();
+    auto& path_limit_abort = internal_aborters.template get<PathLimitReached>();
     path_limit_abort.signedPathLimit
         = std::abs(options.max_path_length) * options.direction;
     path_limit_abort.tolerance = options.target_tolerance;

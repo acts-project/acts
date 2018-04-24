@@ -70,7 +70,7 @@ public:
 
     /// Debug output
     /// the string where things are stored (optionally)
-    bool        debug        = false;
+    bool        debug       = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
@@ -690,7 +690,7 @@ public:
   {
     if (!cache.fieldCacheReady || !cache.fieldCache.isInside(pos)) {
       cache.fieldCacheReady = true;
-      cache.fieldCache       = m_bField.getFieldCell(pos);
+      cache.fieldCache      = m_bField.getFieldCell(pos);
     }
     // get the field from the cell
     cache.field = cache.fieldCache.getField(pos);
