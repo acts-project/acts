@@ -14,7 +14,6 @@
 #define ACTS_GEOMETRYTOOLS_PASSIVELAYERBUILDER_H 1
 
 #include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Material/Material.hpp"
 #include "ACTS/Tools/ILayerBuilder.hpp"
 #include "ACTS/Utilities/Logger.hpp"
 
@@ -25,8 +24,8 @@ namespace Acts {
 ///   The PassiveLayerBuilder is able to build cylinder & disc layers with given
 ///  detector
 ///
-///   @todo Julia: make private tools private again after Gaudi update (bug in
-///  Gaudi), marked with //b
+
+class MaterialProperties;
 
 class PassiveLayerBuilder : public ILayerBuilder
 {
@@ -39,17 +38,18 @@ public:
     /// string based identification
     std::string layerIdentification;
 
-    std::vector<double>   centralLayerRadii;        ///< central layer specs
-    std::vector<double>   centralLayerHalflengthZ;  ///< central layer specs
-    std::vector<double>   centralLayerThickness;    ///< central layer specs
-    std::vector<Material> centralLayerMaterial;     ///< central layer specs
+    std::vector<double> centralLayerRadii;        ///< central layer specs
+    std::vector<double> centralLayerHalflengthZ;  ///< central layer specs
+    std::vector<double> centralLayerThickness;    ///< central layer specs
+    std::vector<MaterialProperties>
+        centralLayerMaterial;  ///< central layer specs
 
     // the layers at p/e side
-    std::vector<double>   posnegLayerPositionZ;  ///< p/n layer specs
-    std::vector<double>   posnegLayerRmin;       ///< p/n layer specs
-    std::vector<double>   posnegLayerRmax;       ///< p/n layer specs
-    std::vector<double>   posnegLayerThickness;  ///< p/n layer specs
-    std::vector<Material> posnegLayerMaterial;   ///< p/n layer specs
+    std::vector<double>             posnegLayerPositionZ;  ///< p/n layer specs
+    std::vector<double>             posnegLayerRmin;       ///< p/n layer specs
+    std::vector<double>             posnegLayerRmax;       ///< p/n layer specs
+    std::vector<double>             posnegLayerThickness;  ///< p/n layer specs
+    std::vector<MaterialProperties> posnegLayerMaterial;   ///< p/n layer specs
   };
 
   /// Constructor
