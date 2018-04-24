@@ -35,7 +35,7 @@ namespace detail {
   {
 
     /// this is direction * absolute path limit
-    double singedPathLimit = std::numeric_limits<double>::max();
+    double signedPathLimit = std::numeric_limits<double>::max();
 
     /// the tolerance used to defined "reached"
     double tolerance = 0.;
@@ -49,7 +49,7 @@ namespace detail {
     /// @param ttolerance The tolerance to declare "reached"
     PathLimitReached(double tlimit     = std::numeric_limits<double>::max(),
                      double ttolerance = 0.001)
-      : singedPathLimit(tlimit), tolerance(std::abs(ttolerance))
+      : signedPathLimit(tlimit), tolerance(std::abs(ttolerance))
     {
     }
 
@@ -70,7 +70,7 @@ namespace detail {
     operator()(cache_t& cache) const
     {
       // Check if the maximum allowed step size has to be updated
-      double diffToLimit = singedPathLimit - cache.accumulatedPath;
+      double diffToLimit = signedPathLimit - cache.accumulatedPath;
       cache.stepSize.update(diffToLimit, ConstrainedStep::aborter);
       bool limitReached = (std::abs(diffToLimit) < tolerance);
       if (limitReached) {

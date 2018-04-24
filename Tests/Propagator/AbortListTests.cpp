@@ -85,7 +85,7 @@ namespace Test {
 
     // Configure path limit with tolerance
     auto& limit             = abort_list.get<path_limit>();
-    limit.signed_path_limit = 1. * units::_m;
+    limit.signedPathLimit = 1. * units::_m;
     limit.tolerance         = 1. * units::_um;
 
     // It should not abort yet

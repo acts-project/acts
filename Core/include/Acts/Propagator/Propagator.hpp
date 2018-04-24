@@ -288,7 +288,7 @@ public:
     // configure the aborter
     auto& path_limit_abort
         = internal_aborters.template get<PathLimitReached>();
-    path_limit_abort.signed_path_limit
+    path_limit_abort.signedPathLimit
         = std::abs(options.max_path_length) * options.direction;
     path_limit_abort.tolerance = options.target_tolerance;
     path_limit_abort.debug     = options.debug;
@@ -370,7 +370,7 @@ public:
 
     auto& path_limit_abort
         = internal_aborters.template get<PathLimitReached>();
-    path_limit_abort.signed_path_limit
+    path_limit_abort.signedPathLimit
         = std::abs(options.max_path_length) * options.direction;
     path_limit_abort.tolerance = options.target_tolerance;
     path_limit_abort.debug     = options.debug;
