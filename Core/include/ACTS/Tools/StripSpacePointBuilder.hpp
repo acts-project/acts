@@ -33,10 +33,6 @@ public:
   /// @brief Configuration of the class to steer its behaviour
   struct Config
   {
-    /// Input collection of digitized particles
-    std::string collectionIn;
-    /// Output collection of calculated hit coordinates
-    std::string collectionOut;
     /// Accepted difference in eta for two hits
     double diffTheta2 = 1.;
     /// Accepted difference in phi for two hits

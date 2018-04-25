@@ -38,9 +38,16 @@ class DetectorElementStub : public DetectorElementBase
 public:
   DetectorElementStub() : DetectorElementBase() {}
 
-  DetectorElementStub(const Identifier id, std::shared_ptr<const Transform3D> transform, std::shared_ptr<const DigitizationModule> digMod) : DetectorElementBase(), m_elementIdentifier(id), m_elementTransform(std::move(transform)), m_digMod(digMod) {}
-  
-  
+  DetectorElementStub(const Identifier                          id,
+                      std::shared_ptr<const Transform3D>        transform,
+                      std::shared_ptr<const DigitizationModule> digMod)
+    : DetectorElementBase()
+    , m_elementIdentifier(id)
+    , m_elementTransform(std::move(transform))
+    , m_digMod(digMod)
+  {
+  }
+
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
   ///

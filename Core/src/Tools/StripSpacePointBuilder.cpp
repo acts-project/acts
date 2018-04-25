@@ -278,6 +278,9 @@ Acts::StripSpacePointBuilder::calculateSpacePoints()
 
   // Walk over every found candidate pair
   for (auto& hits : m_allCombHits) {
+
+    if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
+
     // Calculate the ends of the SDEs
     const auto& ends1 = endsOfStrip(*(hits.hitModule1));
     const auto& ends2 = endsOfStrip(*(hits.hitModule2));
