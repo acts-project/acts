@@ -17,8 +17,6 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
-#ifndef SLTEPPER_DEBUG_OUTPUTS
-#define SLTEPPER_DEBUG_OUTPUTS
 #define SLLOG(cache, message)                                                  \
   if (cache.debug) {                                                           \
     std::stringstream dstream;                                                 \
@@ -28,7 +26,6 @@
     dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
     cache.debugString += dstream.str();                                        \
   }
-#endif
 
 namespace Acts {
 
@@ -213,4 +210,5 @@ public:
 
 }  // namespace Acts
 
+#undef SLLOG
 #endif  // ACTS_STRAIGHTLINE_STEPPER_HPP

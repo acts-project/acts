@@ -49,7 +49,7 @@ namespace IntegrationTest {
       WrappedPropagator_type;
 
   // number of tests
-  const int  ntests = 100;
+  const int  ntests = 1;
   const bool covtpr = true;
 
   // setup propagator with constant B-field

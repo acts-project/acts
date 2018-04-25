@@ -29,6 +29,8 @@
 #include <Eigen/Dense>
 #endif
 
+#include "ACTS/Utilities/Units.hpp"
+
 #ifdef TRKDETDESCR_USEFLOATPRECISON
 typedef float TDD_real_t;
 #else
@@ -40,7 +42,7 @@ typedef double TDD_real_t;
 namespace Acts {
 
 ///  Tolerance for being on Surface
-static const double s_onSurfaceTolerance = 10e-5;
+static const double s_onSurfaceTolerance = 10e-5 * units::_mm;
 
 /// Tolerance for not being within curvilinear projection
 /// this allows using the same curvilinear frame to eta = 6,

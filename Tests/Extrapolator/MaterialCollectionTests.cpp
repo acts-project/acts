@@ -29,6 +29,7 @@
 #include "ACTS/Propagator/ActionList.hpp"
 #include "ACTS/Propagator/EigenStepper.hpp"
 #include "ACTS/Propagator/Propagator.hpp"
+#include "ACTS/Propagator/StraightLineStepper.hpp"
 #include "ACTS/Propagator/detail/DebugOutputActor.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
@@ -46,15 +47,19 @@ namespace Test {
   // The path limit abort
   typedef detail::PathLimitReached path_limit;
 
-  typedef ConstantBField                BField_type;
-  typedef EigenStepper<BField_type>     EigenStepper_type;
-  typedef Propagator<EigenStepper_type> EigenPropagator_type;
+  typedef ConstantBField                  BField;
+  typedef EigenStepper<BField>            EigenStepper;
+  typedef Propagator<EigenStepper>        EigenPropagator;
+  typedef Propagator<StraightLineStepper> StraightLinePropagator;
 
-  const double         Bz         = 0.;  // 2. * units::_T;
-  const double         stepFactor = 1.;  // avoid overstepping
-  BField_type          bField(0, 0, Bz);
-  EigenStepper_type    estepper(bField);
-  EigenPropagator_type epropagator(std::move(estepper));
+  const double    Bz         = 0.;  // 2. * units::_T;
+  const double    stepFactor = 1.;  // avoid overstepping
+  BField          bField(0, 0, Bz);
+  EigenStepper    estepper(bField);
+  EigenPropagator epropagator(std::move(estepper));
+
+  StraightLineStepper    slstepper;
+  StraightLinePropagator slpropagator(std::move(slstepper));
 
   std::vector<std::unique_ptr<const Surface>> sCache;
   auto tGeometry = testGeometry<ModuleSurface>(sCache);
@@ -66,31 +71,25 @@ namespace Test {
   bool      debug_mode_fwd_step = false;
   bool      debug_mode_bwd_step = false;
 
-  // This test case checks that no segmentation fault appears
-  // - this tests the collection of surfaces
-  BOOST_DATA_TEST_CASE(
-      test_material_collector_,
-      bdata::random((bdata::seed = 20,
-                     bdata::distribution
-                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
-                                                        10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 21,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((bdata::seed = 22,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
-          ^ bdata::random((bdata::seed = 23,
-                           bdata::distribution
-                           = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(ntests),
-      pT,
-      phi,
-      theta,
-      charge,
-      index)
+  /// the actual test nethod that runs the test
+  /// can be used with several paropagator types
+  /// @tparam Propagator_type is the actual propagator type
+  ///
+  /// @param prop is the propagator instance
+  /// @param pT the transverse momentum
+  /// @param phi the azimuthal angle of the track at creation
+  /// @param theta the polar angle of the track at creation
+  /// @parm charge is the charge of the particle
+  /// @param index is the run index from the test
+  template <typename Propagator_type>
+  void
+  runTest(const Propagator_type& prop,
+          double                 pT,
+          double                 phi,
+          double                 theta,
+          int                    charge,
+          int                    index)
   {
-
     double dcharge = -1 + 2 * charge;
 
     if (index < skip) return;
@@ -114,30 +113,31 @@ namespace Test {
                         ActionList_type;
     typedef AbortList<> AbortConditions_type;
 
-    typename EigenPropagator_type::template Options<ActionList_type,
-                                                    AbortConditions_type>
+    typename Propagator_type::template Options<ActionList_type,
+                                               AbortConditions_type>
         fwd_navigator_options;
 
-    fwd_navigator_options.maxStepSize     = 25. * units::_cm;
-    fwd_navigator_options.max_path_length = 25 * units::_cm;
-    fwd_navigator_options.debug           = debug_mode_fwd;
+    fwd_navigator_options.maxStepSize   = 25. * units::_cm;
+    fwd_navigator_options.maxPathLength = 25 * units::_cm;
+    fwd_navigator_options.debug         = debug_mode_fwd;
 
     // get the navigator and provide the TrackingGeometry
-    auto& fwd_navigator = fwd_navigator_options.action_list.get<Navigator>();
+    auto& fwd_navigator
+        = fwd_navigator_options.actionList.template get<Navigator>();
     fwd_navigator.trackingGeometry  = tGeometry;
     fwd_navigator.initialStepFactor = stepFactor;
     fwd_navigator.debug             = debug_mode_fwd;
 
     // get the material collector and configure it
     auto& fwd_materialCollector
-        = fwd_navigator_options.action_list.get<MaterialCollector>();
+        = fwd_navigator_options.actionList.template get<MaterialCollector>();
     fwd_materialCollector.detailedCollection = true;
     fwd_materialCollector.debug              = debug_mode_fwd;
 
     // forward material test
-    const auto& fwd_result
-        = epropagator.propagate(start, fwd_navigator_options);
-    auto& fwd_material = fwd_result.get<MaterialCollector::result_type>();
+    const auto& fwd_result = prop.propagate(start, fwd_navigator_options);
+    auto&       fwd_material
+        = fwd_result.template get<MaterialCollector::result_type>();
 
     double fwd_step_materialInX0 = 0.;
     double fwd_step_materialInL0 = 0.;
@@ -155,7 +155,8 @@ namespace Test {
 
     // get the forward output to the screen
     if (debug_mode_fwd) {
-      const auto& fwd_output = fwd_result.get<DebugOutput::result_type>();
+      const auto& fwd_output
+          = fwd_result.template get<DebugOutput::result_type>();
       std::cout << ">>> Forward Propgation & Navigation output " << std::endl;
       std::cout << fwd_output.debugString << std::endl;
       // check if the surfaces are free
@@ -167,31 +168,35 @@ namespace Test {
     }
 
     // backward material test
-    typename EigenPropagator_type::template Options<ActionList_type,
-                                                    AbortConditions_type>
+    typename Propagator_type::template Options<ActionList_type,
+                                               AbortConditions_type>
         bwd_navigator_options;
-    bwd_navigator_options.maxStepSize     = 25. * units::_cm;
-    bwd_navigator_options.max_path_length = 25 * units::_cm;
-    bwd_navigator_options.direction       = backward;
-    bwd_navigator_options.debug           = debug_mode_bwd;
+    bwd_navigator_options.maxStepSize   = 25. * units::_cm;
+    bwd_navigator_options.maxPathLength = 25 * units::_cm;
+    bwd_navigator_options.direction     = backward;
+    bwd_navigator_options.debug         = debug_mode_bwd;
 
     // get the backward navigator and provide the TrackingGeometry - for a
     // different logger
-    auto& bwd_navigator = bwd_navigator_options.action_list.get<Navigator>();
+    auto& bwd_navigator
+        = bwd_navigator_options.actionList.template get<Navigator>();
     bwd_navigator.trackingGeometry  = tGeometry;
     bwd_navigator.initialStepFactor = stepFactor;
     bwd_navigator.debug             = debug_mode_bwd;
 
     // get the material collector and configure it
     auto& bwd_materialCollector
-        = bwd_navigator_options.action_list.get<MaterialCollector>();
+        = bwd_navigator_options.actionList.template get<MaterialCollector>();
     bwd_materialCollector.detailedCollection = true;
     bwd_materialCollector.debug              = debug_mode_bwd;
 
     const auto& startSurface = start.referenceSurface();
-    const auto& bwd_result   = epropagator.propagate(
-        *fwd_result.endParameters.get(), startSurface, bwd_navigator_options);
-    auto& bwd_material = bwd_result.get<MaterialCollector::result_type>();
+    const auto& bwd_result
+        = prop.propagate(*fwd_result.endParameters.template get(),
+                         startSurface,
+                         bwd_navigator_options);
+    auto& bwd_material
+        = bwd_result.template get<MaterialCollector::result_type>();
 
     double bwd_step_materialInX0 = 0.;
     double bwd_step_materialInL0 = 0.;
@@ -211,7 +216,8 @@ namespace Test {
 
     // get the backward output to the screen
     if (debug_mode_bwd) {
-      const auto& bwd_output = bwd_result.get<DebugOutput::result_type>();
+      const auto& bwd_output
+          = bwd_result.template get<DebugOutput::result_type>();
       std::cout << ">>> Backward Propgation & Navigation output " << std::endl;
       std::cout << bwd_output.debugString << std::endl;
       // check if the surfaces are free
@@ -232,24 +238,24 @@ namespace Test {
 
     // stepping from one surface to the next
     // now go from surface to surface and check
-    typename EigenPropagator_type::template Options<ActionList_type,
-                                                    AbortConditions_type>
+    typename Propagator_type::template Options<ActionList_type,
+                                               AbortConditions_type>
         fwdstep_navigator_options;
 
-    fwdstep_navigator_options.maxStepSize     = 25. * units::_cm;
-    fwdstep_navigator_options.max_path_length = 25 * units::_cm;
-    fwdstep_navigator_options.debug           = debug_mode_fwd_step;
+    fwdstep_navigator_options.maxStepSize   = 25. * units::_cm;
+    fwdstep_navigator_options.maxPathLength = 25 * units::_cm;
+    fwdstep_navigator_options.debug         = debug_mode_fwd_step;
 
     // get the navigator and provide the TrackingGeometry
     auto& fwdstep_navigator
-        = fwdstep_navigator_options.action_list.get<Navigator>();
+        = fwdstep_navigator_options.actionList.template get<Navigator>();
     fwdstep_navigator.trackingGeometry  = tGeometry;
     fwdstep_navigator.initialStepFactor = stepFactor;
     fwdstep_navigator.debug             = debug_mode_fwd_step;
 
     // get the material collector and configure it
-    auto& fwdstep_materialCollector
-        = fwdstep_navigator_options.action_list.get<MaterialCollector>();
+    auto& fwdstep_materialCollector = fwdstep_navigator_options.actionList
+                                          .template get<MaterialCollector>();
     fwdstep_materialCollector.detailedCollection = true;
     fwdstep_materialCollector.debug              = debug_mode_fwd_step;
 
@@ -269,16 +275,24 @@ namespace Test {
     const TrackParameters*              sParameters = &start;
     std::vector<const TrackParameters*> stepParameters;
     for (auto& fwd_steps : fwd_material.collected) {
+      if (debug_mode_bwd_step)
+        std::cout << ">>> Step : "
+                  << sParameters->referenceSurface().geoID().toString()
+                  << " --> " << fwd_steps.surface->geoID().toString()
+                  << std::endl;
+
       // make a forward step
-      const auto& fwd_step = epropagator.propagate(
+      const auto& fwd_step = prop.propagate(
           *sParameters, (*fwd_steps.surface), fwdstep_navigator_options);
       // get the backward output to the screen
       if (debug_mode_fwd_step) {
-        const auto& fwdstep_output = fwd_step.get<DebugOutput::result_type>();
+        const auto& fwdstep_output
+            = fwd_step.template get<DebugOutput::result_type>();
         std::cout << fwdstep_output.debugString << std::endl;
       }
 
-      auto& fwdstep_material = fwd_step.get<MaterialCollector::result_type>();
+      auto& fwdstep_material
+          = fwd_step.template get<MaterialCollector::result_type>();
       fwdstep_step_materialInX0 += fwdstep_material.materialInX0;
       fwdstep_step_materialInL0 += fwdstep_material.materialInL0;
 
@@ -291,11 +305,16 @@ namespace Test {
     // final destination surface
     const Surface& dSurface = fwd_result.endParameters->referenceSurface();
 
-    const auto& fwdstep_final = epropagator.propagate(
-        *sParameters, dSurface, fwdstep_navigator_options);
+    if (debug_mode_fwd_step)
+      std::cout << ">>> Step : "
+                << sParameters->referenceSurface().geoID().toString() << " --> "
+                << dSurface.geoID().toString() << std::endl;
+
+    const auto& fwdstep_final
+        = prop.propagate(*sParameters, dSurface, fwdstep_navigator_options);
 
     auto& fwdstep_material
-        = fwdstep_final.get<MaterialCollector::result_type>();
+        = fwdstep_final.template get<MaterialCollector::result_type>();
     fwdstep_step_materialInX0 += fwdstep_material.materialInX0;
     fwdstep_step_materialInL0 += fwdstep_material.materialInL0;
 
@@ -306,7 +325,7 @@ namespace Test {
     // get the backward output to the screen
     if (debug_mode_fwd_step) {
       const auto& fwdstep_output
-          = fwdstep_final.get<DebugOutput::result_type>();
+          = fwdstep_final.template get<DebugOutput::result_type>();
       std::cout << ">>> Forward Final Step Propgation & Navigation output "
                 << std::endl;
       std::cout << fwdstep_output.debugString << std::endl;
@@ -314,25 +333,25 @@ namespace Test {
 
     // stepping from one surface to the next : backwards
     // now go from surface to surface and check
-    typename EigenPropagator_type::template Options<ActionList_type,
-                                                    AbortConditions_type>
+    typename Propagator_type::template Options<ActionList_type,
+                                               AbortConditions_type>
         bwdstep_navigator_options;
 
-    bwdstep_navigator_options.maxStepSize     = 25. * units::_cm;
-    bwdstep_navigator_options.max_path_length = 25 * units::_cm;
-    bwdstep_navigator_options.direction       = backward;
-    bwdstep_navigator_options.debug           = debug_mode_bwd_step;
+    bwdstep_navigator_options.maxStepSize   = 25. * units::_cm;
+    bwdstep_navigator_options.maxPathLength = 25 * units::_cm;
+    bwdstep_navigator_options.direction     = backward;
+    bwdstep_navigator_options.debug         = debug_mode_bwd_step;
 
     // get the navigator and provide the TrackingGeometry
     auto& bwdstep_navigator
-        = bwdstep_navigator_options.action_list.get<Navigator>();
+        = bwdstep_navigator_options.actionList.template get<Navigator>();
     bwdstep_navigator.trackingGeometry  = tGeometry;
     bwdstep_navigator.initialStepFactor = stepFactor;
     bwdstep_navigator.debug             = debug_mode_bwd_step;
 
     // get the material collector and configure it
-    auto& bwdstep_materialCollector
-        = bwdstep_navigator_options.action_list.get<MaterialCollector>();
+    auto& bwdstep_materialCollector = bwdstep_navigator_options.actionList
+                                          .template get<MaterialCollector>();
     bwdstep_materialCollector.detailedCollection = true;
     bwdstep_materialCollector.debug              = debug_mode_bwd_step;
 
@@ -349,18 +368,25 @@ namespace Test {
     }
 
     // move forward step by step through the surfaces
-    sParameters = fwd_result.endParameters.get();
+    sParameters = fwd_result.endParameters.template get();
     for (auto& bwd_steps : bwd_material.collected) {
+      if (debug_mode_bwd_step)
+        std::cout << ">>> Step : "
+                  << sParameters->referenceSurface().geoID().toString()
+                  << " --> " << bwd_steps.surface->geoID().toString()
+                  << std::endl;
       // make a forward step
-      const auto& bwd_step = epropagator.propagate(
+      const auto& bwd_step = prop.propagate(
           *sParameters, (*bwd_steps.surface), bwdstep_navigator_options);
       // get the backward output to the screen
       if (debug_mode_bwd_step) {
-        const auto& bwdstep_output = bwd_step.get<DebugOutput::result_type>();
+        const auto& bwdstep_output
+            = bwd_step.template get<DebugOutput::result_type>();
         std::cout << bwdstep_output.debugString << std::endl;
       }
 
-      auto& bwdstep_material = bwd_step.get<MaterialCollector::result_type>();
+      auto& bwdstep_material
+          = bwd_step.template get<MaterialCollector::result_type>();
       bwdstep_step_materialInX0 += bwdstep_material.materialInX0;
       bwdstep_step_materialInL0 += bwdstep_material.materialInL0;
 
@@ -373,11 +399,16 @@ namespace Test {
     // final destination surface
     const Surface& dbSurface = start.referenceSurface();
 
-    const auto& bwdstep_final = epropagator.propagate(
-        *sParameters, dbSurface, bwdstep_navigator_options);
+    if (debug_mode_bwd_step)
+      std::cout << ">>> Step : "
+                << sParameters->referenceSurface().geoID().toString() << " --> "
+                << dSurface.geoID().toString() << std::endl;
+
+    const auto& bwdstep_final
+        = prop.propagate(*sParameters, dbSurface, bwdstep_navigator_options);
 
     auto& bwdstep_material
-        = bwdstep_final.get<MaterialCollector::result_type>();
+        = bwdstep_final.template get<MaterialCollector::result_type>();
     bwdstep_step_materialInX0 += bwdstep_material.materialInX0;
     bwdstep_step_materialInL0 += bwdstep_material.materialInL0;
 
@@ -388,11 +419,39 @@ namespace Test {
     // get the backward output to the screen
     if (debug_mode_bwd_step) {
       const auto& bwdstep_output
-          = bwdstep_final.get<DebugOutput::result_type>();
+          = bwdstep_final.template get<DebugOutput::result_type>();
       std::cout << ">>> Forward Final Step Propgation & Navigation output "
                 << std::endl;
       std::cout << bwdstep_output.debugString << std::endl;
     }
+  }
+
+  // This test case checks that no segmentation fault appears
+  // - this tests the collection of surfaces
+  BOOST_DATA_TEST_CASE(
+      test_material_collector,
+      bdata::random((bdata::seed = 20,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 21,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 22,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+          ^ bdata::random((bdata::seed = 23,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::xrange(ntests),
+      pT,
+      phi,
+      theta,
+      charge,
+      index)
+  {
+    runTest(epropagator, pT, phi, theta, charge, index);
+    runTest(slpropagator, pT, phi, theta, charge, index);
   }
 
 }  // namespace Test

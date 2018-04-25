@@ -16,8 +16,6 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Propagator/detail/constrained_step.hpp"
 
-#ifndef ESTEPPER_DEBUG_OUTPUTS
-#define ESTEPPER_DEBUG_OUTPUTS
 #define ESLOG(cache, message)                                                  \
   if (cache.debug) {                                                           \
     std::stringstream dstream;                                                 \
@@ -27,7 +25,6 @@
     dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
     cache.debugString += dstream.str();                                        \
   }
-#endif
 
 namespace Acts {
 

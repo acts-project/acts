@@ -13,8 +13,6 @@
 #include "ACTS/Propagator/detail/ConstrainedStep.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
-#ifndef ABORTER_DEBUG_OUTPUTS
-#define ABORTER_DEBUG_OUTPUTS
 #define TARGETLOG(cache, status, message)                                      \
   if (debug) {                                                                 \
     std::stringstream dstream;                                                 \
@@ -24,7 +22,6 @@
     dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
     cache.debugString += dstream.str();                                        \
   }
-#endif
 
 namespace Acts {
 
@@ -74,7 +71,7 @@ namespace detail {
       cache.stepSize.update(diffToLimit, ConstrainedStep::aborter);
       bool limitReached = (std::abs(diffToLimit) < tolerance);
       if (limitReached) {
-        TARGETLOG(cache, "x", "Path limit reached.");
+        TARGETLOG(cache, "x", "Path limit reached at distance " << diffToLimit);
         // reaching the target means navigaiton break
         cache.targetReached = true;
       } else
@@ -154,7 +151,12 @@ namespace detail {
       // return true if you fall below tolerance
       bool targetReached = (std::abs(distance) <= tolerance);
       if (targetReached) {
-        TARGETLOG(cache, "x", "Target surface reached.");
+        TARGETLOG(cache,
+                  "x",
+                  "Target surface reached at distance (tolerance) " << distance
+                                                                    << " ("
+                                                                    << tolerance
+                                                                    << ")");
         // assigning the currentSurface
         cache.currentSurface = surface;
         TARGETLOG(cache,
@@ -176,4 +178,5 @@ namespace detail {
 }  // namespace detail
 }  // namespace Acts
 
+#undef TARGETLOG
 #endif

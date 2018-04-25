@@ -9,6 +9,7 @@
 #ifndef ACTS_CONSTRAINED_STEP_HPP
 #define ACTS_CONSTRAINED_STEP_HPP
 
+#include <algorithm>
 #include <limits>
 #include <sstream>
 #include "ACTS/Utilities/Definitions.hpp"
@@ -73,7 +74,7 @@ namespace detail {
 
     /// The assignment operator from one double
     /// @note this will set only the accuracy, as this is the most
-    /// exposed to the Propgator, this adapts also the direction
+    /// exposed to the Propagator, this adapts also the direction
     ///
     /// @param value is the new accuracy value
     ConstrainedStep&

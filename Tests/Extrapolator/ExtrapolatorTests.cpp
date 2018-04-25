@@ -124,11 +124,11 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.maxStepSize     = 10. * units::_cm;
-    navigator_options.max_path_length = 25 * units::_cm;
+    navigator_options.maxStepSize   = 10. * units::_cm;
+    navigator_options.maxPathLength = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry
-    auto& navigator            = navigator_options.action_list.get<Navigator>();
+    auto& navigator            = navigator_options.actionList.get<Navigator>();
     navigator.trackingGeometry = tGeometry;
     navigator.debug            = debug_mode;
     navigator.collectSensitive = true;
@@ -198,10 +198,10 @@ namespace Test {
         navigator_options;
     navigator_options.maxStepSize = 10. * units::_cm;
 
-    navigator_options.max_path_length = 25 * units::_cm;
+    navigator_options.maxPathLength = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry
-    auto& navigator            = navigator_options.action_list.get<Navigator>();
+    auto& navigator            = navigator_options.actionList.get<Navigator>();
     navigator.trackingGeometry = tGeometry;
     navigator.debug            = debug_mode;
     navigator.collectSensitive = true;
@@ -284,11 +284,11 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         navigator_options;
-    navigator_options.maxStepSize     = 25. * units::_cm;
-    navigator_options.max_path_length = 25 * units::_cm;
+    navigator_options.maxStepSize   = 25. * units::_cm;
+    navigator_options.maxPathLength = 25 * units::_cm;
 
     // get the navigator and provide the TrackingGeometry
-    auto& navigator            = navigator_options.action_list.get<Navigator>();
+    auto& navigator            = navigator_options.actionList.get<Navigator>();
     navigator.trackingGeometry = tGeometry;
     navigator.debug            = debug_mode;
 

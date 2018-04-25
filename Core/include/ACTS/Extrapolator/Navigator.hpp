@@ -28,6 +28,7 @@
     dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | ";      \
     dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
     cache.debugString += dstream.str();                                        \
+    std::cout << dstream.str();                                                \
   }
 #endif
 
@@ -35,7 +36,7 @@ namespace Acts {
 
 typedef detail::ConstrainedStep cstep;
 
-/// Struct to mimmick track parameters
+/// Struct to mimic track parameters
 /// @todo harmonize to eventual future update of
 /// TrackingVolume::layerCandidatesOrdered()
 /// TrackingVolume::boundarySurfacesOrdered()
@@ -174,6 +175,8 @@ struct Navigator
   {
     // fail if you have no tracking geometry
     assert(trackingGeometry != nullptr);
+
+    NAVLOG(cache, result, "Entering navigator.");
 
     // navigation parameters
     NavigationParameters navPar(cache.position(),

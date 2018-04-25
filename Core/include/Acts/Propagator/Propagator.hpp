@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <cmath>
 #include <memory>
 #include <type_traits>
@@ -16,8 +17,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#ifndef PROPAGATOR_DEBUG_OUTPUTS
-#define PROPAGATOR_DEBUG_OUTPUTS
 #define PROPLOG(cache, message)                                                \
   if (cache.debug) {                                                           \
     std::stringstream dstream;                                                 \
@@ -27,7 +26,6 @@
     dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
     cache.debugString += dstream.str();                                        \
   }
-#endif
 
 namespace Acts {
 
@@ -119,25 +117,25 @@ public:
     NavigationDirection direction = forward;
 
     /// Maximum number of steps for one propagate() call
-    unsigned int max_steps = 1000;
+    unsigned int maxSteps = 1000;
 
     /// Required tolerance to reach target (surface, pathlength)
-    double target_tolerance = 1 * units::_um;
+    double targetTolerance = s_onSurfaceTolerance;
 
     /// Absolute maximum step size
     double maxStepSize = 1 * units::_m;
 
     /// Absolute maximum path length
-    double max_path_length = std::numeric_limits<double>::max();
+    double maxPathLength = std::numeric_limits<double>::max();
 
-    /// Debugging option
+    /// Debugging option, this steers the output stream
     bool debug = false;
 
     /// List of actions
-    Actions action_list;
+    Actions actionList;
 
     /// List of abort conditions
-    Aborters stop_conditions;
+    Aborters stopConditions;
   };
 
   /// Constructor from implementation object
@@ -206,36 +204,36 @@ private:
   propagate_(Result&     result,
              cache_type& cache,
              const Options<Actions, Aborters>& options,
-             const InteralAborters& internal_stop_conditions) const
+             const InteralAborters& internalStopConditions) const
   {
 
     // check with surface_abort if it exists
     PROPLOG(cache, "Calling initial stop conditions.");
-    if (internal_stop_conditions(result, cache)) return Status::FAILURE;
+    if (internalStopConditions(result, cache)) return Status::FAILURE;
 
     // Pre-stepping call to the action list
     PROPLOG(cache, "Calling pre-stepping action list.");
-    options.action_list(cache, result);
+    options.actionList(cache, result);
 
     // Propagation loop : stepping
-    for (; result.steps < options.max_steps; ++result.steps) {
+    for (; result.steps < options.maxSteps; ++result.steps) {
       // Perform a propagation step
       result.pathLength += m_impl.step(cache);
       // Call the actions, can (& will likely) modify cache
       PROPLOG(cache, "Calling action list on individual step.");
-      options.action_list(cache, result);
+      options.actionList(cache, result);
       // Call the stop_conditions and the internal stop conditions
       // break condition triggered, but still count the step
       PROPLOG(cache, "Calling stop conditions on individual step.");
-      if (options.stop_conditions(result, cache)
-          || internal_stop_conditions(result, cache)) {
+      if (options.stopConditions(result, cache)
+          || internalStopConditions(result, cache)) {
         ++result.steps;
         break;
       }
     }
     // Post-stepping call to the action list
     PROPLOG(cache, "Calling post-stepping action list.");
-    options.action_list(cache, result);
+    options.actionList(cache, result);
 
     return Status::IN_PROGRESS;
   }
@@ -284,16 +282,16 @@ public:
     cache.debug = options.debug;
 
     // Internal Abort list
-    AbortList<PathLimitReached> internal_aborters;
+    AbortList<PathLimitReached> internalAborters;
     // configure the aborter
-    auto& path_limit_abort = internal_aborters.template get<PathLimitReached>();
-    path_limit_abort.signedPathLimit
-        = std::abs(options.max_path_length) * options.direction;
-    path_limit_abort.tolerance = options.target_tolerance;
-    path_limit_abort.debug     = options.debug;
+    auto& pathLimitAbort = internalAborters.template get<PathLimitReached>();
+    pathLimitAbort.signedPathLimit
+        = std::abs(options.maxPathLength) * options.direction;
+    pathLimitAbort.tolerance = options.targetTolerance;
+    pathLimitAbort.debug     = options.debug;
 
     // Perform the actual propagation & check it's outcome
-    if (propagate_(result, cache, options, internal_aborters)
+    if (propagate_(result, cache, options, internalAborters)
         != Status::IN_PROGRESS) {
       /// @todo screen output
     } else {
@@ -359,22 +357,22 @@ public:
     typedef detail::SurfaceReached<Surface> targetReached;
 
     // Internal Abort list
-    AbortList<targetReached, PathLimitReached> internal_aborters;
+    AbortList<targetReached, PathLimitReached> internalAborters;
     // configure the aborters
-    auto& target_abort     = internal_aborters.template get<targetReached>();
+    auto& target_abort     = internalAborters.template get<targetReached>();
     target_abort.surface   = &target;
     target_abort.direction = options.direction;
-    target_abort.tolerance = options.target_tolerance;
+    target_abort.tolerance = options.targetTolerance;
     target_abort.debug     = options.debug;
 
-    auto& path_limit_abort = internal_aborters.template get<PathLimitReached>();
-    path_limit_abort.signedPathLimit
-        = std::abs(options.max_path_length) * options.direction;
-    path_limit_abort.tolerance = options.target_tolerance;
-    path_limit_abort.debug     = options.debug;
+    auto& pathLimitAbort = internalAborters.template get<PathLimitReached>();
+    pathLimitAbort.signedPathLimit
+        = std::abs(options.maxPathLength) * options.direction;
+    pathLimitAbort.tolerance = options.targetTolerance;
+    pathLimitAbort.debug     = options.debug;
 
     // Perform the actual propagation
-    if (propagate_(result, cache, options, internal_aborters)
+    if (propagate_(result, cache, options, internalAborters)
         != Status::IN_PROGRESS) {
       // @todo: analyse and screen output
     } else {
