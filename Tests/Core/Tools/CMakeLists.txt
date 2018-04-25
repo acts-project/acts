@@ -17,3 +17,4 @@ add_executable (SimpleGeometryTests SimpleGeometryTests.cpp)
 target_link_libraries (SimpleGeometryTests PRIVATE ActsCore)
 add_test (NAME SimpleGeometryUnitTest COMMAND SimpleGeometryTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST SimpleGeometryUnitTest TARGETS SimpleGeometryTests)
+
