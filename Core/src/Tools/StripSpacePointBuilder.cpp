@@ -88,6 +88,28 @@ Acts::StripSpacePointBuilder::combineHits(
   double                                     diffMin;
   unsigned int                               hitMin;
 
+  // Return if no elements are given
+  if (vec1.empty() && vec2.empty()) return;
+  // Set the elements if only one vector has entries
+  if (!vec1.empty() && vec2.empty()) {
+    for (auto& cluster : vec1) {
+      tmpCombHits.hitModule1 = &cluster;
+      tmpCombHits.hitModule2 = nullptr;
+      tmpCombHits.diff       = 0.;
+      m_allCombHits.push_back(tmpCombHits);
+    }
+    return;
+  }
+  if (vec1.empty() && !vec2.empty()) {
+    for (auto& cluster : vec2) {
+      tmpCombHits.hitModule1 = nullptr;
+      tmpCombHits.hitModule2 = &cluster;
+      tmpCombHits.diff       = 0.;
+      m_allCombHits.push_back(tmpCombHits);
+    }
+    return;
+  }
+
   // Walk through all hits on both surfaces
   for (unsigned int iVec1 = 0; iVec1 < vec1.size(); iVec1++) {
     // Set the closest distance to the maximum of double
@@ -117,7 +139,8 @@ void
 Acts::StripSpacePointBuilder::addCombinedHit(
     const Acts::StripSpacePointBuilder::CombinedHits& combHit)
 {
-  m_allCombHits.push_back(combHit);
+  if (combHit.hitModule1 || combHit.hitModule2)
+    m_allCombHits.push_back(combHit);
 }
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
@@ -280,6 +303,11 @@ Acts::StripSpacePointBuilder::calculateSpacePoints()
   for (auto& hits : m_allCombHits) {
 
     if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
+    // Store the center of a strip if only a single one is available
+    if (hits.hitModule1 && !hits.hitModule2)
+      hits.spacePoint = globalCoords(*(hits.hitModule1));
+    if (!hits.hitModule1 && hits.hitModule2)
+      hits.spacePoint = globalCoords(*(hits.hitModule2));
 
     // Calculate the ends of the SDEs
     const auto& ends1 = endsOfStrip(*(hits.hitModule1));
