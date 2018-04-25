@@ -300,7 +300,7 @@ public:
   /// Acts::DigitizationModule will be shared amongst these modules which saves
   /// memory.
   /// @param materials A vector of dd4hep::Material and their corresponding
-  /// thickness
+  /// thickness in mm
   /// @param digiModule The Acts::DigitizationModule
   ActsExtension(
       const std::vector<std::pair<dd4hep::Material, double>>& materials,

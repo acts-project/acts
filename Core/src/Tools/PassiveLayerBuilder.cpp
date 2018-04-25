@@ -75,9 +75,7 @@ Acts::PassiveLayerBuilder::constructLayers()
       if (m_cfg.centralLayerMaterial.size()) {
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
-            MaterialProperties(m_cfg.centralLayerMaterial.at(icl),
-                               m_cfg.centralLayerThickness.at(icl)),
-            1.);
+            m_cfg.centralLayerMaterial.at(icl), 1.);
 
         // sign it to the surface
         cLayer->surfaceRepresentation().setAssociatedMaterial(material);
@@ -131,9 +129,7 @@ Acts::PassiveLayerBuilder::constructLayers()
       if (m_cfg.posnegLayerMaterial.size()) {
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
-            MaterialProperties(m_cfg.posnegLayerMaterial.at(ipnl),
-                               m_cfg.posnegLayerThickness.at(ipnl)),
-            1.);
+            m_cfg.posnegLayerMaterial.at(ipnl), 1.);
         // sign it to the surface
         nLayer->surfaceRepresentation().setAssociatedMaterial(material);
         pLayer->surfaceRepresentation().setAssociatedMaterial(material);
