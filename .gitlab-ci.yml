@@ -44,14 +44,13 @@ include_guards:
 clang_tidy:
   stage: check
   image: gitlab-registry.cern.ch/acts/machines/static_analysis
-  before_script:
-    - source CI/env_info.sh
+  before_script: []
   dependencies: []
   script:
     - mkdir build && cd build
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
-    - run-clang-tidy.py -p build -header-filter="$PWD/.*" -j${ACTS_NCPUS}
+    - run-clang-tidy.py -p build -header-filter="$PWD/.*" -j$(nproc)
 
 oclint:
   stage: check
