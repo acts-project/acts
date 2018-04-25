@@ -50,7 +50,7 @@ clang_tidy:
     - mkdir build && cd build
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
-    - run-clang-tidy.py -p build -header-filter="$PWD/.*" -j$(nproc)
+    - run-clang-tidy.py -p build -header-filter=".*" -j$(nproc)
 
 oclint:
   stage: check

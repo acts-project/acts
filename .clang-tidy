@@ -1,0 +1,4 @@
+---
+Checks:          'readability-*,modernize-*,-clang-analyzer-*,clang-analyzer-deadcode.DeadStores,clang-analyzer-core.*,clang-analyezer-cplusplus.*,bugprone-*,cppcoreguidelines-*,misc-*,performance-*'
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: true
