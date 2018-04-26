@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_TOOLS_STRIPSPACEPOINTBUILDER_H
-#define ACTS_TOOLS_STRIPSPACEPOINTBUILDER_H
+#ifndef ACTS_TOOLS_TWOHITSSPACEPOINTBUILDER_H
+#define ACTS_TOOLS_TWOHITSSPACEPOINTBUILDER_H
 
 #include <ACTS/Digitization/PlanarModuleCluster.hpp>
 #include <ACTS/Utilities/Units.hpp>
@@ -17,17 +17,17 @@
 
 namespace Acts {
 
-/// @class StripSpacePointBuilder
+/// @class TwoHitsSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
 /// the hits strip detectors need further treatment. This class takes
-/// the digitized hits and combines them on at least two different
-/// strips to a result of the combined detector element.
+/// the digitized hits and combines them on two different detector elements to a
+/// result of the combined detector element. The class is intended to handle
+/// strip detector elements in particular.
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
-/// @note This is a rough implementation underlying many assumptions
 ///
-class StripSpacePointBuilder
+class TwoHitsSpacePointBuilder
 {
 public:
   /// @brief Configuration of the class to steer its behaviour
@@ -66,7 +66,7 @@ public:
 
   /// Constructor
   /// @param cfg is the configuration class
-  StripSpacePointBuilder(const Config& cfg);
+  TwoHitsSpacePointBuilder(const Config& cfg);
 
   /// @brief Searches possible combinations of two hits on different surfaces
   /// that may come from the same particles
@@ -149,7 +149,7 @@ private:
   /// Storage of the user defined configuration of the class
   Config m_cfg;
   /// Storage of all resolved data
-  std::vector<StripSpacePointBuilder::CombinedHits> m_allCombHits;
+  std::vector<TwoHitsSpacePointBuilder::CombinedHits> m_allCombHits;
 
   /// @brief Getter method for the local coordinates of a hit
   /// on its corresponding surface
@@ -207,4 +207,4 @@ private:
 
 }  // namespace Acts
 
-#endif  // ACTS_TOOLS_STRIPSPACEPOINTBUILDER_H
+#endif  // ACTS_TOOLS_TWOHITSSPACEPOINTBUILDER_H

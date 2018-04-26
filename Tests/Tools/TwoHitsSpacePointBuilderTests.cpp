@@ -10,7 +10,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "ACTS/Tools/StripSpacePointBuilder.hpp"
+#include "ACTS/Tools/TwoHitsSpacePointBuilder.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 #include "ACTS/Digitization/PlanarModuleCluster.hpp"
@@ -25,11 +25,11 @@ namespace Acts {
 
 namespace Test {
 
-  /// Unit test for testing the main functions of StripSpacePointBuilder
-  BOOST_DATA_TEST_CASE(StripSpacePointBuilder_basic, bdata::xrange(1), index)
+  /// Unit test for testing the main functions of TwoHitsSpacePointBuilder
+  BOOST_DATA_TEST_CASE(TwoHitsSpacePointBuilder_basic, bdata::xrange(1), index)
   {
     (void)index;
-    StripSpacePointBuilder::CombinedHits combHits;
+    TwoHitsSpacePointBuilder::CombinedHits combHits;
 
     std::shared_ptr<const RectangleBounds> recBounds(
         new RectangleBounds(35. * Acts::units::_um, 25. * units::_mm));
@@ -80,7 +80,7 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
-    // Test for setting a StripSpacePointBuilder::CombinedHits
+    // Test for setting a TwoHitsSpacePointBuilder::CombinedHits
     combHits.hitModule1 = pmc;
     BOOST_TEST(combHits.hitModule1 == pmc,
                "Failed to set element in combHits.hitModule1");
@@ -98,12 +98,12 @@ namespace Test {
     BOOST_TEST(combHits.spacePoint == spacePoint,
                "Failed to set element in combHits.spacePoint");
 
-    StripSpacePointBuilder::Config sspb_cfg;
-    StripSpacePointBuilder         sspb(sspb_cfg);
+    TwoHitsSpacePointBuilder::Config sspb_cfg;
+    TwoHitsSpacePointBuilder         sspb(sspb_cfg);
     sspb.addCombinedHit(combHits);
 
-    // Test for adding a StripSpacePointBuilder::CombinedHits
-    const std::vector<StripSpacePointBuilder::CombinedHits> vecCombHits
+    // Test for adding a TwoHitsSpacePointBuilder::CombinedHits
+    const std::vector<TwoHitsSpacePointBuilder::CombinedHits> vecCombHits
         = sspb.combinedHits();
     BOOST_TEST(vecCombHits.size() == 1,
                "Failed to add element to SpacePointBuilder");
@@ -145,9 +145,10 @@ namespace Test {
     sspb.combineHits({*pmc}, {*pmc2});
     sspb.calculateSpacePoints();
 
-    const std::vector<StripSpacePointBuilder::CombinedHits> vecCombHits2
+    const std::vector<TwoHitsSpacePointBuilder::CombinedHits> vecCombHits2
         = sspb.combinedHits();
-    // Test for creating a new StripSpacePointBuilder::CombinedHits element with
+    // Test for creating a new TwoHitsSpacePointBuilder::CombinedHits element
+    // with
     // PlanarModuleClusters
     BOOST_TEST(vecCombHits2.size() == 2,
                "Failed to add element to SpacePointBuilder");

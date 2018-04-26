@@ -20,7 +20,8 @@ namespace Acts {
 ///
 /// After the particle interaction with surfaces are recorded and digitized
 /// the hits strip detectors need further treatment. This class takes
-/// the digitized hits and provides the corresponding space point.
+/// the digitized hits on a strip or pixel detector element and provides the
+/// corresponding space point.
 ///
 class OneHitSpacePointBuilder
 {
@@ -48,7 +49,8 @@ public:
   void
   addHit(const Hit& hit);
 
-  /// @brief Calculates the space points out of a given collection of hits and stores the data
+  /// @brief Calculates the space points out of a given collection of hits and
+  /// stores the data
   void
   calculateSpacePoints();
 

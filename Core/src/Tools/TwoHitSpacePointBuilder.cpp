@@ -6,22 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Tools/StripSpacePointBuilder.hpp"
 #include <cmath>
 #include <limits>
 #include <stdexcept>
+#include "ACTS/Tools/TwoHitsSpacePointBuilder.hpp"
 
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
 
-Acts::StripSpacePointBuilder::StripSpacePointBuilder(const Config& cfg)
+Acts::TwoHitsSpacePointBuilder::TwoHitsSpacePointBuilder(const Config& cfg)
   : m_cfg(cfg)
 {
 }
 
 Acts::Vector2D
-Acts::StripSpacePointBuilder::localCoords(
+Acts::TwoHitsSpacePointBuilder::localCoords(
     const Acts::PlanarModuleCluster& hit) const
 {
   // Local position information
@@ -31,7 +31,7 @@ Acts::StripSpacePointBuilder::localCoords(
 }
 
 Acts::Vector3D
-Acts::StripSpacePointBuilder::globalCoords(
+Acts::TwoHitsSpacePointBuilder::globalCoords(
     const Acts::PlanarModuleCluster& hit) const
 {
   // Receive corresponding surface
@@ -45,7 +45,7 @@ Acts::StripSpacePointBuilder::globalCoords(
 }
 
 double
-Acts::StripSpacePointBuilder::differenceOfHits(
+Acts::TwoHitsSpacePointBuilder::differenceOfHits(
     const Acts::PlanarModuleCluster& hit1,
     const Acts::PlanarModuleCluster& hit2) const
 {
@@ -76,39 +76,20 @@ Acts::StripSpacePointBuilder::differenceOfHits(
 }
 
 void
-Acts::StripSpacePointBuilder::combineHits(
+Acts::TwoHitsSpacePointBuilder::combineHits(
     const std::vector<Acts::PlanarModuleCluster>& vec1,
     const std::vector<Acts::PlanarModuleCluster>& vec2)
 {
   // TODO: only the closest differences get selected -> some points are not
   // taken into account
   // Declare helper variables
-  double                                     currentDiff;
-  Acts::StripSpacePointBuilder::CombinedHits tmpCombHits;
-  double                                     diffMin;
-  unsigned int                               hitMin;
+  double                                       currentDiff;
+  Acts::TwoHitsSpacePointBuilder::CombinedHits tmpCombHits;
+  double                                       diffMin;
+  unsigned int                                 hitMin;
 
   // Return if no elements are given
   if (vec1.empty() && vec2.empty()) return;
-  // Set the elements if only one vector has entries
-  if (!vec1.empty() && vec2.empty()) {
-    for (auto& cluster : vec1) {
-      tmpCombHits.hitModule1 = &cluster;
-      tmpCombHits.hitModule2 = nullptr;
-      tmpCombHits.diff       = 0.;
-      m_allCombHits.push_back(tmpCombHits);
-    }
-    return;
-  }
-  if (vec1.empty() && !vec2.empty()) {
-    for (auto& cluster : vec2) {
-      tmpCombHits.hitModule1 = nullptr;
-      tmpCombHits.hitModule2 = &cluster;
-      tmpCombHits.diff       = 0.;
-      m_allCombHits.push_back(tmpCombHits);
-    }
-    return;
-  }
 
   // Walk through all hits on both surfaces
   for (unsigned int iVec1 = 0; iVec1 < vec1.size(); iVec1++) {
@@ -136,15 +117,15 @@ Acts::StripSpacePointBuilder::combineHits(
 }
 
 void
-Acts::StripSpacePointBuilder::addCombinedHit(
-    const Acts::StripSpacePointBuilder::CombinedHits& combHit)
+Acts::TwoHitsSpacePointBuilder::addCombinedHit(
+    const Acts::TwoHitsSpacePointBuilder::CombinedHits& combHit)
 {
-  if (combHit.hitModule1 || combHit.hitModule2)
+  if (combHit.hitModule1 && combHit.hitModule2)
     m_allCombHits.push_back(combHit);
 }
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
-Acts::StripSpacePointBuilder::endsOfStrip(
+Acts::TwoHitsSpacePointBuilder::endsOfStrip(
     const Acts::PlanarModuleCluster& hit) const
 {
   // Calculate the local coordinates of the hit
@@ -189,10 +170,10 @@ Acts::StripSpacePointBuilder::endsOfStrip(
 }
 
 double
-Acts::StripSpacePointBuilder::calcPerpProj(const Acts::Vector3D& a,
-                                           const Acts::Vector3D& c,
-                                           const Acts::Vector3D& q,
-                                           const Acts::Vector3D& r) const
+Acts::TwoHitsSpacePointBuilder::calcPerpProj(const Acts::Vector3D& a,
+                                             const Acts::Vector3D& c,
+                                             const Acts::Vector3D& q,
+                                             const Acts::Vector3D& r) const
 {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
@@ -217,8 +198,8 @@ Acts::StripSpacePointBuilder::calcPerpProj(const Acts::Vector3D& a,
 }
 
 bool
-Acts::StripSpacePointBuilder::recoverSpacePoint(
-    Acts::StripSpacePointBuilder::SpacePointParameters& spaPoPa) const
+Acts::TwoHitsSpacePointBuilder::recoverSpacePoint(
+    Acts::TwoHitsSpacePointBuilder::SpacePointParameters& spaPoPa) const
 {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
@@ -293,21 +274,17 @@ Acts::StripSpacePointBuilder::recoverSpacePoint(
 }
 
 void
-Acts::StripSpacePointBuilder::calculateSpacePoints()
+Acts::TwoHitsSpacePointBuilder::calculateSpacePoints()
 {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
-  Acts::StripSpacePointBuilder::SpacePointParameters spaPoPa;
+  Acts::TwoHitsSpacePointBuilder::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
   for (auto& hits : m_allCombHits) {
 
+    // If the space point is already calculated this can be skipped
     if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
-    // Store the center of a strip if only a single one is available
-    if (hits.hitModule1 && !hits.hitModule2)
-      hits.spacePoint = globalCoords(*(hits.hitModule1));
-    if (!hits.hitModule1 && hits.hitModule2)
-      hits.spacePoint = globalCoords(*(hits.hitModule2));
 
     // Calculate the ends of the SDEs
     const auto& ends1 = endsOfStrip(*(hits.hitModule1));
@@ -379,8 +356,8 @@ Acts::StripSpacePointBuilder::calculateSpacePoints()
   }
 }
 
-const std::vector<Acts::StripSpacePointBuilder::CombinedHits>&
-Acts::StripSpacePointBuilder::combinedHits()
+const std::vector<Acts::TwoHitsSpacePointBuilder::CombinedHits>&
+Acts::TwoHitsSpacePointBuilder::combinedHits()
 {
   return m_allCombHits;
 }

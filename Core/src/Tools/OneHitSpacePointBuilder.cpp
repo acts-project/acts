@@ -43,31 +43,29 @@ Acts::OneHitSpacePointBuilder::addHits(
   // Declare helper variable
   Acts::OneHitSpacePointBuilder::Hit tmpHits;
 
-	// Add hits
-    for (auto& cluster : vec) {
-      tmpHits.hitModule = &cluster;
-      m_allHits.push_back(tmpCombHits);
-    }
+  // Add hits
+  for (auto& cluster : vec) {
+    tmpHits.hitModule = &cluster;
+    m_allHits.push_back(tmpHits);
+  }
 }
 
 void
 Acts::OneHitSpacePointBuilder::addHit(
     const Acts::OneHitSpacePointBuilder::Hit& hit)
 {
-	// Add a hit if the module is set
-  if (Hit.hitModule)
-    m_allHits.push_back(hit);
+  // Add a hit if the module is set
+  if (hit.hitModule) m_allHits.push_back(hit);
 }
 
 void
 Acts::OneHitSpacePointBuilder::calculateSpacePoints()
 {
-	// Set the space point for all stored hits
-  for(auto& hit : allHits)
-{
-	if (hit.spacePoint != Acts::Vector3D::Zero(3)) continue;
-	hit.spacePoint = globalCoords(*(hit.hitModule));
-}
+  // Set the space point for all stored hits
+  for (auto& hit : m_allHits) {
+    if (hit.spacePoint != Acts::Vector3D::Zero(3)) continue;
+    hit.spacePoint = globalCoords(*(hit.hitModule));
+  }
 }
 
 const std::vector<Acts::OneHitSpacePointBuilder::Hit>&
