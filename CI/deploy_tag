@@ -42,8 +42,8 @@ fi
 VERSION=`basename $CI_COMMIT_REF_NAME`
 
 # create tarball with source and copy it to server
-cd $ACTS_DIR/..
-tar -czf ACTS-$VERSION.tar.gz --exclude=.git --exclude=build --exclude=installed --exclude=CI --transform="s,^./,ACTS-$VERSION/," ./acts/
+#cd $ACTS_DIR/..
+#tar -czf ACTS-$VERSION.tar.gz --exclude=.git --exclude=build --exclude=installed --exclude=CI --transform="s,^./,ACTS-$VERSION/," ./acts/
 
 # configure ssh to use kerberos
 mkdir -p ~/.ssh/
@@ -53,8 +53,8 @@ StrictHostKeyChecking no
 GSSAPIDelegateCredentials yes" > ~/.ssh/config
 
 ssh atsjenkins@lxplus.CERN.CH "mkdir -p ~/www/ACTS/$VERSION"
-scp ACTS-$VERSION.tar.gz atsjenkins@lxplus.cern.ch:~/www/ACTS/$VERSION/
-rm ACTS-$VERSION.tar.gz
+#scp ACTS-$VERSION.tar.gz atsjenkins@lxplus.cern.ch:~/www/ACTS/$VERSION/
+#rm ACTS-$VERSION.tar.gz
 
 # copy doxygen documentation to server
 scp -r $DOC_DIR atsjenkins@lxplus.cern.ch:~/www/ACTS/$VERSION/doc
@@ -71,7 +71,7 @@ git checkout $VERSION
 
 or you can download a tarball with the source from 
 
-https://acts.web.cern.ch/ACTS/$VERSION/ACTS-$VERSION.tar.gz
+https://gitlab.cern.ch/acts/acts-core/repository/$VERSION/archive.tar.gz
 
 Detailed documentation can be found at
 
