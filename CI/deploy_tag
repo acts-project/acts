@@ -42,8 +42,6 @@ fi
 VERSION=`basename $CI_COMMIT_REF_NAME`
 
 # create tarball with source and copy it to server
-#cd $ACTS_DIR/..
-#tar -czf ACTS-$VERSION.tar.gz --exclude=.git --exclude=build --exclude=installed --exclude=CI --transform="s,^./,ACTS-$VERSION/," ./acts/
 
 # configure ssh to use kerberos
 mkdir -p ~/.ssh/
@@ -52,12 +50,12 @@ GSSAPITrustDNS yes
 StrictHostKeyChecking no
 GSSAPIDelegateCredentials yes" > ~/.ssh/config
 
-ssh atsjenkins@lxplus.CERN.CH "mkdir -p ~/www/ACTS/$VERSION"
-#scp ACTS-$VERSION.tar.gz atsjenkins@lxplus.cern.ch:~/www/ACTS/$VERSION/
-#rm ACTS-$VERSION.tar.gz
+ACTS_WWW_DIR="/eos/user/a/atsjenkins/www/ACTS"
+
+ssh atsjenkins@lxplus.CERN.CH "mkdir -p $ACTS_WWW_DIR/$VERSION"
 
 # copy doxygen documentation to server
-scp -r $DOC_DIR atsjenkins@lxplus.cern.ch:~/www/ACTS/$VERSION/doc
+scp -r $DOC_DIR atsjenkins@lxplus.cern.ch:$ACTS_WWW_DIR/$VERSION/doc
 
 # send notification email
 ssh atsjenkins@lxplus.CERN.CH "mail -v -s 'New tag ACTS-$VERSION' -r 'atsjenkins@cern.ch' $3 <<EOF
