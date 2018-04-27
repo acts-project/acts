@@ -30,6 +30,17 @@ struct DigitizationCell
     : channel0(dc.channel0), channel1(dc.channel1), data(dc.data)
   {
   }
+  /// the deposited energy
+  /// @param analogueReadout flag indicating if we have analgue readout
+  /// @note this function is needed because possible derived classes may
+  /// calculate the energy deposit differently. Furthermore this allows to apply
+  /// an energy cut, because the energy deposit can also be stored for digital
+  /// readout.
+  virtual double
+  depositedEnergy(bool /*analogueReadout*/) const
+  {
+    return data;
+  }
 };
 
 /// @brief DigitizationStep for further handling
