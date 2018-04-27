@@ -20,7 +20,8 @@ Acts::mergeCells(std::vector<Acts::DigitizationCell>& cells,
   // create the graph
   boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> graph;
   //  add the needed amount of vertices to the graph
-  for (auto cell : cells) {
+  for (auto& cell : cells) {
+    (void)cell;
     // add vertex to graph for each cell
     add_vertex(graph);
   }
@@ -48,7 +49,7 @@ Acts::mergeCells(std::vector<Acts::DigitizationCell>& cells,
   }      // cellsA
 
   std::vector<size_t> component(num_vertices(graph));
-  size_t              num = connected_components(graph, &component[0]);
+  connected_components(graph, &component[0]);
   // copy the component map
   std::vector<size_t> keys = component;
   // sort
@@ -94,7 +95,8 @@ Acts::createClusters(const std::vector<Acts::DigitizationCell>& cells,
   // create the graph
   boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> graph;
   //  add the needed amount of vertices to the graph
-  for (auto cell : cells) {
+  for (auto& cell : cells) {
+    (void)cell;
     // add vertex to graph for each cell
     add_vertex(graph);
   }
@@ -136,7 +138,7 @@ Acts::createClusters(const std::vector<Acts::DigitizationCell>& cells,
   }    // cellsA
 
   std::vector<size_t> component(num_vertices(graph));
-  size_t              num = connected_components(graph, &component[0]);
+  connected_components(graph, &component[0]);
   // copy the component map
   std::vector<size_t> keys = component;
   // sort

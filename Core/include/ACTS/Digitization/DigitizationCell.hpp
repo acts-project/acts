@@ -31,13 +31,13 @@ struct DigitizationCell
   {
   }
   /// the deposited energy
-  /// @param analgogueReadout flag indicating if we have analgue readout
+  /// @param analogueReadout flag indicating if we have analgue readout
   /// @note this function is needed because possible derived classes may
   /// calculate the energy deposit differently. Furthermore this allows to apply
   /// an energy cut, because the energy deposit can also be stored for digital
   /// readout.
   virtual double
-  depositedEnergy(bool analogueReadout) const
+  depositedEnergy(bool /*analogueReadout*/) const
   {
     return data;
   }
