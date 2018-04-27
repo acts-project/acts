@@ -29,7 +29,7 @@ typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS>
 /// readout
 /// @param energyCut Possible energy cut to be applied
 /// @return the merged digitization cells
-const std::vector<Acts::DigitizationCell>
+std::vector<Acts::DigitizationCell>
 mergeCells(std::vector<Acts::DigitizationCell>& cells,
            bool                                 analogueReadout = false,
            double                               energyCut       = 0.);
@@ -43,7 +43,7 @@ mergeCells(std::vector<Acts::DigitizationCell>& cells,
 /// should be merged (all cells sharing a common edge are merged per default)
 /// @return vector (the different clusters) of vector of digitization cells (the
 /// cells which belong to each cluster)
-const std::vector<std::vector<Acts::DigitizationCell>>
+std::vector<std::vector<Acts::DigitizationCell>>
 createClusters(const std::vector<Acts::DigitizationCell>& cells,
                bool                                       commonCorner = false);
 }

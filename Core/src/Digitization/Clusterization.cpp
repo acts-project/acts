@@ -9,7 +9,7 @@
 #include "ACTS/Digitization/Clusterization.hpp"
 #include <iostream>
 
-const std::vector<Acts::DigitizationCell>
+std::vector<Acts::DigitizationCell>
 Acts::mergeCells(std::vector<Acts::DigitizationCell>& cells,
                  bool                                 analogueReadout,
                  double                               energyCut)
@@ -83,7 +83,7 @@ Acts::mergeCells(std::vector<Acts::DigitizationCell>& cells,
   return sameCells;
 }
 
-const std::vector<std::vector<Acts::DigitizationCell>>
+std::vector<std::vector<Acts::DigitizationCell>>
 Acts::createClusters(const std::vector<Acts::DigitizationCell>& cells,
                      bool                                       commonCorner)
 {
