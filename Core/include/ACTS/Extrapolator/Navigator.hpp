@@ -18,14 +18,14 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Volumes/BoundarySurfaceT.hpp"
 
-#define NAVLOG(cache, result, message)                                    \
-  if (debug) {                                                            \
-    std::string vName               = "No Volume";                        \
-    if (result.currentVolume) vName = result.currentVolume->volumeName(); \
-    std::stringstream dstream;                                            \
-    dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | "; \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';         \
-    cache.debugString += dstream.str();                                   \
+#define NAVLOG(cache, result, message)                                         \
+  if (debug) {                                                                 \
+    std::string vName               = "No Volume";                             \
+    if (result.currentVolume) vName = result.currentVolume->volumeName();      \
+    std::stringstream dstream;                                                 \
+    dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | ";      \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
+    cache.debugString += dstream.str();                                        \
   }
 
 namespace Acts {

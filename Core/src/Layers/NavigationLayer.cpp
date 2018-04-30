@@ -53,12 +53,6 @@ Acts::NavigationLayer::~NavigationLayer()
 {
 }
 
-bool
-Acts::NavigationLayer::resolve(bool, bool, bool) const
-{
-  return false;
-}
-
 Acts::variant_data
 Acts::NavigationLayer::toVariantData() const
 {

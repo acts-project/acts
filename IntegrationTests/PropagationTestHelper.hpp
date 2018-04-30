@@ -446,7 +446,7 @@ namespace IntegrationTest {
               tp_c->position(), 0.05 * rand1, 0.05 * rand2);
 
     StartSurface_type startSurface(ssTransform, nullptr);
-    BoundParameters   start(std::move(cov_ptr), pos, mom, q, startSurface);
+    BoundParameters   start(std::move(covPtr), pos, mom, q, startSurface);
     BoundParameters   start_wo_c(nullptr, pos, mom, q, startSurface);
 
     // increase the path limit - to be safe hitting the surface
