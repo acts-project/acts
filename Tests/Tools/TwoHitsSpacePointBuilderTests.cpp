@@ -1,6 +1,6 @@
 // This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,15 +26,19 @@ namespace Acts {
 namespace Test {
 
   /// Unit test for testing the main functions of TwoHitsSpacePointBuilder
+  /// 1) A resolved dummy pair of hits gets created and added.
+  /// 2) A pair of hits gets added and resolved.
+  /// 3) A pair of hits gets added and rejected.
   BOOST_DATA_TEST_CASE(TwoHitsSpacePointBuilder_basic, bdata::xrange(1), index)
   {
     (void)index;
     TwoHitsSpacePointBuilder::CombinedHits combHits;
 
+    // Build Bounds
     std::shared_ptr<const RectangleBounds> recBounds(
         new RectangleBounds(35. * Acts::units::_um, 25. * units::_mm));
 
-    // Build Segmentation
+    // Build binning and segmentation
     std::vector<float> boundariesX, boundariesY;
     boundariesX.push_back(-35. * units::_um);
     boundariesX.push_back(35. * units::_um);
@@ -50,6 +54,7 @@ namespace Test {
     std::shared_ptr<const Segmentation> segmentation(
         new CartesianSegmentation(buX, recBounds));
 
+    // Build translation
     const Identifier id(0);
 
     double           rotation = 0.026;
@@ -63,6 +68,7 @@ namespace Test {
     Transform3D t3d    = getTransformFromRotTransl(
         rotationPos, Vector3D(0., 0., 10. * units::_m));
 
+    // Build Digitization
     const DigitizationModule digMod(segmentation, 1., 1., 0.);
     DetectorElementStub      detElem(
         id,
@@ -71,7 +77,9 @@ namespace Test {
     PlaneSurface      pSur(recBounds, detElem, detElem.identify());
     ActsSymMatrixD<2> cov;
     cov << 0., 0., 0., 0.;
-    Vector2D             local = {0.1, -0.1};
+    Vector2D local = {0.1, -0.1};
+
+    // Build PlanarModuleCluster
     PlanarModuleCluster* pmc
         = new PlanarModuleCluster(pSur,
                                   Identifier(0),
@@ -102,7 +110,7 @@ namespace Test {
     TwoHitsSpacePointBuilder         sspb(sspb_cfg);
     sspb.addCombinedHit(combHits);
 
-    // Test for adding a TwoHitsSpacePointBuilder::CombinedHits
+    // Test for adding a TwoHitsSpacePointBuilder::combinedHits()
     const std::vector<TwoHitsSpacePointBuilder::CombinedHits> vecCombHits
         = sspb.combinedHits();
     BOOST_TEST(vecCombHits.size() == 1,
@@ -115,6 +123,7 @@ namespace Test {
     BOOST_TEST(vecCombHits[0].spacePoint == combHits.spacePoint,
                "Wrong element added");
 
+    // Build second PlanarModuleCluster
     const Identifier id2(1);
 
     double           rotation2 = -0.026;
@@ -142,14 +151,14 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
+    // Combine two PlanarModuleClusters
     sspb.combineHits({*pmc}, {*pmc2});
     sspb.calculateSpacePoints();
 
     const std::vector<TwoHitsSpacePointBuilder::CombinedHits> vecCombHits2
         = sspb.combinedHits();
     // Test for creating a new TwoHitsSpacePointBuilder::CombinedHits element
-    // with
-    // PlanarModuleClusters
+    // with PlanarModuleClusters
     BOOST_TEST(vecCombHits2.size() == 2,
                "Failed to add element to SpacePointBuilder");
 
@@ -157,6 +166,7 @@ namespace Test {
     BOOST_TEST(vecCombHits2.back().spacePoint != Vector3D::Zero(3),
                "Failed to calculate space point");
 
+    // Build third PlanarModuleCluster
     const Identifier id3(2);
     Transform3D      t3d3 = getTransformFromRotTransl(
         rotationNeg, Vector3D(0., 10. * units::_m, 10.005 * units::_m));
@@ -175,6 +185,7 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
+    // Combine points
     sspb.combineHits({*pmc}, {*pmc3});
 
     // Test for rejecting unconnected hits
