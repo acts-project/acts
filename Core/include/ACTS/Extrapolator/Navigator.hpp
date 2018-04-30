@@ -245,6 +245,8 @@ struct Navigator
            result,
            "Return to stepper "
                << " - no more navigation actions.");
+    // release the navigation step size
+    cache.stepSize.release(cstep::actor);
     return;
   }
 
@@ -432,6 +434,8 @@ struct Navigator
     // navigation broken - switch navigator off
     result.navigationBreak = true;
     NAVLOG(cache, result, "Navigation broken, pure propagation.");
+    // release the navigation step size
+    cache.stepSize.release(cstep::actor);
     return false;
   }
 
