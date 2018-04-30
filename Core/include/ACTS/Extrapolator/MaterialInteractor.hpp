@@ -163,8 +163,7 @@ struct MaterialInteractor
           // calcuate the new momentum
           const double newP = sqrt((E + dE) * (E + dE) - m * m);
           // update the cache/momentum
-          double charge = cache.qop > 0. ? 1. : -1.;
-          cache.qop     = charge / newP;
+          std::copysign(1./newP,cache.qop)
           // transfer this into energy loss straggling
           const double sigmaDeltaE = thickness * pCorrection * sigmaP;
           const double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);
