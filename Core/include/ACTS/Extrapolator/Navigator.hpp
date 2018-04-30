@@ -18,19 +18,15 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Volumes/BoundarySurfaceT.hpp"
 
-#ifndef NAVIGATOR_DEBUG_OUTPUTS
-#define NAVIGATOR_DEBUG_OUTPUTS
-#define NAVLOG(cache, result, message)                                         \
-  if (debug) {                                                                 \
-    std::string vName               = "No Volume";                             \
-    if (result.currentVolume) vName = result.currentVolume->volumeName();      \
-    std::stringstream dstream;                                                 \
-    dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | ";      \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-    cache.debugString += dstream.str();                                        \
-    std::cout << dstream.str();                                                \
+#define NAVLOG(cache, result, message)                                    \
+  if (debug) {                                                            \
+    std::string vName               = "No Volume";                        \
+    if (result.currentVolume) vName = result.currentVolume->volumeName(); \
+    std::stringstream dstream;                                            \
+    dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | "; \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';         \
+    cache.debugString += dstream.str();                                   \
   }
-#endif
 
 namespace Acts {
 
@@ -850,4 +846,6 @@ struct Navigator
   }
 };
 }
+
+#undef NAVLOG
 #endif  // end of namespace Acts

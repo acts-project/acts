@@ -168,7 +168,7 @@ namespace Test {
     std::vector<double> pLayerRadii = {32., 72., 116., 172.};
     std::vector<std::pair<int, int>> pLayerBinning
         = {{16, 14}, {32, 14}, {52, 14}, {78, 14}};
-    std::vector<double> pModuleTiltPhi   = {0.14, 0.14, 0.14, 0.14};
+    std::vector<double> pModuleTiltPhi   = {0.145, 0.145, 0.145, 0.145};
     std::vector<double> pModuleHalfX     = {8.4, 8.4, 8.4, 8.4};
     std::vector<double> pModuleHalfY     = {36., 36., 36., 36.};
     std::vector<double> pModuleThickness = {0.15, 0.15, 0.15, 0.15};

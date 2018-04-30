@@ -13,14 +13,13 @@
 #include "ACTS/Propagator/detail/ConstrainedStep.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
-#define TARGETLOG(cache, status, message)                                      \
-  if (debug) {                                                                 \
-    std::stringstream dstream;                                                 \
-    dstream << " " << status << " " << std::setw(cache.debugPfxWidth);         \
-    dstream << " target aborter "                                              \
-            << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-    cache.debugString += dstream.str();                                        \
+#define TARGETLOG(cache, status, message)                              \
+  if (debug) {                                                         \
+    std::stringstream dstream;                                         \
+    dstream << " " << status << " " << std::setw(cache.debugPfxWidth); \
+    dstream << " target aborter "                                      \
+            << " | ";                                                  \
+    dstream << std::setw(cache.debugMsgWidth) << message << '\n';      \
   }
 
 namespace Acts {

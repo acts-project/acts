@@ -64,7 +64,7 @@ namespace Test {
   std::vector<std::unique_ptr<const Surface>> sCache;
   auto tGeometry = testGeometry<ModuleSurface>(sCache);
 
-  const int ntests              = 1000;
+  const int ntests              = 100000;
   const int skip                = 0;
   bool      debug_mode_fwd      = false;
   bool      debug_mode_bwd      = false;
