@@ -10,21 +10,38 @@
 #define ACTS_STANDARD_ABORT_CONDITIONS_HPP
 
 #include <limits>
+#include <sstream>
+#include <string>
 #include "ACTS/Propagator/detail/ConstrainedStep.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-
-#define TARGETLOG(cache, status, message)                                      \
-  if (debug) {                                                                 \
-    std::stringstream dstream;                                                 \
-    dstream << " " << status << " " << std::setw(cache.debugPfxWidth);         \
-    dstream << " target aborter "                                              \
-            << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-  }
 
 namespace Acts {
 
 namespace detail {
+
+  /// The debug logging for standard aborters
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the cache.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @param cache the stepper cache for the debug flag, prefix and length
+  /// @param logAction is a callable function that returns a stremable object
+  template <typename cache_t>
+  void
+  targetDebugLog(cache_t&                     cache,
+                 std::string                  status,
+                 std::function<std::string()> logAction)
+  {
+    if (cache.debug) {
+      std::stringstream dstream;
+      dstream << " " << status << " " << std::setw(cache.debugPfxWidth);
+      dstream << " target aborter "
+              << " | ";
+      dstream << std::setw(cache.debugMsgWidth) << logAction() << '\n';
+      cache.debugString += dstream.str();
+    }
+  }
 
   /// This is the condition that the pathLimit has been reached
   struct PathLimitReached
@@ -70,14 +87,20 @@ namespace detail {
       cache.stepSize.update(diffToLimit, ConstrainedStep::aborter);
       bool limitReached = (std::abs(diffToLimit) < tolerance);
       if (limitReached) {
-        TARGETLOG(cache, "x", "Path limit reached at distance " << diffToLimit);
+        targetDebugLog(cache, "x", [&] {
+          std::stringstream dstream;
+          dstream << "Path limit reached at distance " << diffToLimit;
+          return dstream.str();
+        });
         // reaching the target means navigaiton break
         cache.targetReached = true;
       } else
-        TARGETLOG(cache,
-                  "o",
-                  "Target stepSize (path limit) updated to "
-                      << cache.stepSize.toString());
+        targetDebugLog(cache, "o", [&] {
+          std::stringstream dstream;
+          dstream << "Target stepSize (path limit) updated to ";
+          dstream << cache.stepSize.toString();
+          return dstream.str();
+        });
       // path limit check
       return limitReached;
     }
@@ -130,7 +153,10 @@ namespace detail {
 
       // check if the cache filled the currentSurface
       if (cache.currentSurface == surface) {
-        TARGETLOG(cache, "x", "Target surface reached.");
+        targetDebugLog(cache, "x", [&] {
+          std::string ds("Target surface reached.");
+          return ds;
+        });
         // reaching the target calls a navigation break
         cache.targetReached = true;
         return true;
@@ -150,25 +176,29 @@ namespace detail {
       // return true if you fall below tolerance
       bool targetReached = (std::abs(distance) <= tolerance);
       if (targetReached) {
-        TARGETLOG(cache,
-                  "x",
-                  "Target surface reached at distance (tolerance) " << distance
-                                                                    << " ("
-                                                                    << tolerance
-                                                                    << ")");
+        targetDebugLog(cache, "x", [&] {
+          std::stringstream dstream;
+          dstream << "Target surface reached at distance (tolerance) ";
+          dstream << distance << " (" << tolerance << ")";
+          return dstream.str();
+        });
         // assigning the currentSurface
         cache.currentSurface = surface;
-        TARGETLOG(cache,
-                  "x",
-                  "Current surface set to target surface "
-                      << cache.currentSurface->geoID().toString());
+        targetDebugLog(cache, "x", [&] {
+          std::stringstream dstream;
+          dstream << "Current surface set to target surface  ";
+          dstream << cache.currentSurface->geoID().toString();
+          return dstream.str();
+        });
         // reaching the target calls a navigation break
         cache.targetReached = true;
       } else
-        TARGETLOG(cache,
-                  "o",
-                  "Target stepSize (surface) updated to "
-                      << cache.stepSize.toString());
+        targetDebugLog(cache, "o", [&] {
+          std::stringstream dstream;
+          dstream << "Target stepSize (surface) updated to ";
+          dstream << cache.stepSize.toString();
+          return dstream.str();
+        });
       // path limit check
       return targetReached;
     }
@@ -177,5 +207,4 @@ namespace detail {
 }  // namespace detail
 }  // namespace Acts
 
-#undef TARGETLOG
 #endif

@@ -16,16 +16,6 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Propagator/detail/constrained_step.hpp"
 
-#define ESLOG(cache, message)                                                  \
-  if (cache.debug) {                                                           \
-    std::stringstream dstream;                                                 \
-    dstream << "|->" << std::setw(cache.debugPfxWidth);                        \
-    dstream << "EigenStepper"                                                  \
-            << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-    cache.debugString += dstream.str();                                        \
-  }
-
 namespace Acts {
 
 ActsMatrixD<3, 3>
@@ -462,8 +452,12 @@ public:
     // use the adjusted step size
     const double h = cache.stepSize;
 
-    // debug output
-    ESLOG(cache, "Performing RungeKutta step with size " << h);
+    // debug output into the cache's debug stream
+    debugLog(cache, [&] {
+      std::stringstream dstream;
+      dstream << "Performing RungeKutta step with size." << h;
+      return dstream.str();
+    });
 
     // When doing error propagation, update the associated Jacobian matrix
     if (cache.covTransport) {
@@ -543,6 +537,27 @@ public:
 private:
   /// Magnetic field inside of the detector
   BField m_bField;
+
+  /// The private stepper debug logging
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the cache.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @param cache the stepper cache for the debug flag, prefix and length
+  /// @param logAction is a callable function that returns a stremable object
+  void
+  debugLog(Cache& cache, std::function<std::string()> logAction) const
+  {
+    if (cache.debug) {
+      std::stringstream dstream;
+      dstream << "|->" << std::setw(cache.debugPfxWidth);
+      dstream << "EigenStepper"
+              << " | ";
+      dstream << std::setw(cache.debugMsgWidth) << logAction() << '\n';
+      cache.debugString += dstream.str();
+    }
+  }
 };
 
 }  // namespace Acts

@@ -11,22 +11,13 @@
 
 #include <iterator>
 #include <sstream>
+#include <string>
 #include "ACTS/Detector/TrackingGeometry.hpp"
 #include "ACTS/Detector/TrackingVolume.hpp"
 #include "ACTS/Layers/Layer.hpp"
 #include "ACTS/Propagator/detail/ConstrainedStep.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Volumes/BoundarySurfaceT.hpp"
-
-#define NAVLOG(cache, result, message)                                         \
-  if (debug) {                                                                 \
-    std::string vName               = "No Volume";                             \
-    if (result.currentVolume) vName = result.currentVolume->volumeName();      \
-    std::stringstream dstream;                                                 \
-    dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | ";      \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-    cache.debugString += dstream.str();                                        \
-  }
 
 namespace Acts {
 
@@ -171,8 +162,7 @@ struct Navigator
   {
     // fail if you have no tracking geometry
     assert(trackingGeometry != nullptr);
-
-    NAVLOG(cache, result, "Entering navigator.");
+    debugLog(cache, result, [&] { return std::string("Entering navigator."); });
 
     // navigation parameters
     NavigationParameters navPar(cache.position(),
@@ -196,10 +186,9 @@ struct Navigator
     // - potentially also a current layer
     // -> return is always to the stepper
     if (initialize(navPar, cache, result)) {
-      NAVLOG(cache,
-             result,
-             "Return to stepper"
-                 << " - triggered by initialize.");
+      debugLog(cache, result, [&] {
+        return std::string("Return to stepper - from initialize.");
+      });
       return;
     }
 
@@ -208,10 +197,9 @@ struct Navigator
     // - this can only happen after a layer has  sucessfully been resolved
     // -> return is always to the stepper
     if (handeSurfaces(navPar, cache, result)) {
-      NAVLOG(cache,
-             result,
-             "Return to stepper"
-                 << " - triggered by surface handling.");
+      debugLog(cache, result, [&] {
+        return std::string("Return to stepper - from surface handling.");
+      });
       return;
     }
 
@@ -220,10 +208,9 @@ struct Navigator
     // - this can only happen after a volume has successfully been resolved
     // -> return is always to the stepper
     if (handleLayers(navPar, cache, result)) {
-      NAVLOG(cache,
-             result,
-             "Return to stepper"
-                 << " - triggered by layer handling.");
+      debugLog(cache, result, [&] {
+        return std::string("Return to stepper - from layer handling.");
+      });
       return;
     }
     // -------------------------------------------------
@@ -231,20 +218,18 @@ struct Navigator
     // - if you arrived
     // -> return is always to the stepper
     if (handleBoundaries(navPar, cache, result)) {
-      NAVLOG(cache,
-             result,
-             "Return to stepper"
-                 << " - triggered by boundary handling.");
+      debugLog(cache, result, [&] {
+        return std::string("Return to stepper - from boundary handling.");
+      });
       return;
     }
     // -------------------------------------------------
     // neither surfaces, layers nor boundaries triggered a return
     // navigation broken - switch navigator off
     result.navigationBreak = true;
-    NAVLOG(cache,
-           result,
-           "Return to stepper "
-               << " - no more navigation actions.");
+    debugLog(cache, result, [&] {
+      return std::string("Naivgation break - no valid actions left.");
+    });
     // release the navigation step size
     cache.stepSize.release(cstep::actor);
     return;
@@ -279,10 +264,12 @@ struct Navigator
       if (cache.targetSurface->isOnSurface(navPar.position(), true)) {
         // set the target surface
         cache.currentSurface = cache.targetSurface;
-        NAVLOG(cache,
-               result,
-               "Current surface set to target surface "
-                   << cache.currentSurface->geoID().toString());
+        debugLog(cache, result, [&] {
+          std::stringstream dstream;
+          dstream << "Current surface set to target surface ";
+          dstream << cache.currentSurface->geoID().toString();
+          return dstream.str();
+        });
         return true;
       }
     }
@@ -312,37 +299,46 @@ struct Navigator
     // no initialisation necessary
     if (result.currentVolume) return false;
 
-    NAVLOG(cache, result, "Initializing start volume.");
+    debugLog(cache, result, [&] {
+      return std::string("Initializing start volume.");
+    });
+
     // we set the current surface to the start surface
     // for eventual post-update actio, e.g. material integration
     // or collection when leaving a surface at the start of
     // an extrapolation process
     cache.currentSurface = cache.startSurface;
     if (cache.currentSurface)
-      NAVLOG(cache,
-             result,
-             "Current surface set to start surface "
-                 << cache.currentSurface->geoID().toString());
+      debugLog(cache, result, [&] {
+        std::stringstream dstream;
+        dstream << "Current surface set to start surface ";
+        dstream << cache.currentSurface->geoID().toString();
+        return dstream.str();
+      });
 
     // Fast Navigation initialization for start condition:
     // short-cut through object association, saves navigation in the
     // geometry and volume tree search for the lowest volume
     if (cache.startSurface && cache.startSurface->associatedLayer()) {
-      NAVLOG(cache, result, "Fast start initialization through association.")
+      debugLog(cache, result, [&] {
+        return std::string("Fast start initialization through association.");
+      });
       // assign the current layer and volume by association
       result.startLayer  = cache.startSurface->associatedLayer();
       result.startVolume = result.startLayer->trackingVolume();
     } else {
-      NAVLOG(cache, result, "Slow start initialization through search.")
-      // Slow navigation initialization for start condition:
+      debugLog(cache, result, [&] {
+        return std::string("Slow start initialization through search.");
+      });
+
       // current volume and layer search through global search
-      NAVLOG(cache,
-             result,
-             "Starting from position (" << navPar.position().x() << ", "
-                                        << navPar.position().y()
-                                        << ", "
-                                        << navPar.position().z()
-                                        << ")");
+      debugLog(cache, result, [&] {
+        std::stringstream dstream;
+        dstream << "Starting from position (" << navPar.position().x();
+        dstream << ", " << navPar.position().y();
+        dstream << ", " << navPar.position().z() << ")";
+        return dstream.str();
+      });
       result.startVolume
           = trackingGeometry->lowestTrackingVolume(navPar.position());
       result.startLayer = result.startVolume
@@ -351,12 +347,15 @@ struct Navigator
     }
     // Fast Navigation initialization for target:
     if (cache.targetSurface && cache.targetSurface->associatedLayer()) {
-      NAVLOG(cache, result, "Fast target initialization through association.")
-      NAVLOG(cache,
-             result,
-             "Target surface set to "
-                 << cache.targetSurface->geoID().toString());
-
+      debugLog(cache, result, [&] {
+        return std::string("Fast target initialization through association.");
+      });
+      debugLog(cache, result, [&] {
+        std::stringstream dstream;
+        dstream << "Target surface set to";
+        dstream << cache.targetSurface->geoID().toString();
+        return dstream.str();
+      });
       // assign the target volume and the target surface
       result.targetLayer  = cache.targetSurface->associatedLayer();
       result.targetVolume = result.targetLayer->trackingVolume();
@@ -365,14 +364,14 @@ struct Navigator
       // target volume and layer search through global search
       auto targetIntersection = cache.targetSurface->intersectionEstimate(
           navPar.position(), navPar.momentum(), true, false);
-      NAVLOG(cache,
-             result,
-             "Target estimate position (" << targetIntersection.position.x()
-                                          << ", "
-                                          << targetIntersection.position.y()
-                                          << ", "
-                                          << targetIntersection.position.z()
-                                          << ")");
+      debugLog(cache, result, [&] {
+        std::stringstream dstream;
+        dstream << "Target estimate position (";
+        dstream << targetIntersection.position.x() << ", ";
+        dstream << targetIntersection.position.y() << ", ";
+        dstream << targetIntersection.position.z() << ")";
+        return dstream.str();
+      });
       /// get the target volume from the intersection
       result.targetVolume
           = trackingGeometry->lowestTrackingVolume(targetIntersection.position);
@@ -386,9 +385,12 @@ struct Navigator
       result.currentVolume = result.startVolume;
       // fast exit if start and target layer are identical
       if (result.startLayer == result.targetLayer) {
-        NAVLOG(
-            cache, result, "Start and target layer identical, check surfaces.");
-        // resolve the surfaces only
+        debugLog(cache, result, [&] {
+          return std::string(
+              "Start and target layer identical, check surfaces.");
+        });
+        // resolve the surfaces only - this could be changed to a resolve()
+        // method
         result.navSurfaces
             = result.startLayer->getCompatibleSurfaces(navPar,
                                                        forward,
@@ -401,9 +403,12 @@ struct Navigator
                                                        cache.targetSurface);
         // the number of layer candidates
         if (result.navSurfaces.size()) {
-          NAVLOG(cache,
-                 result,
-                 result.navSurfaces.size() << " surface candidates found.");
+          debugLog(cache, result, [&] {
+            std::stringstream dstream;
+            dstream << result.navSurfaces.size();
+            dstream << " surface candidates found.";
+            return dstream.str();
+          });
           // set the iterator
           result.navSurfaceIter = result.navSurfaces.begin();
           // update the navigation step size before you return
@@ -415,13 +420,17 @@ struct Navigator
       // initialize layer - if it works go ahead
       if (resolveLayers(navPar, cache, result)) {
         if (cache.stepSize == 0.) {
-          NAVLOG(cache, result, "On the current layer surface, setting it.");
+          debugLog(cache, result, [&] {
+            return std::string("On current layer surface, setting it.");
+          });
           cache.currentSurface = result.navLayerIter->representation;
           if (cache.currentSurface)
-            NAVLOG(cache,
-                   result,
-                   "Current surface set to approach surface "
-                       << cache.currentSurface->geoID().toString());
+            debugLog(cache, result, [&] {
+              std::stringstream dstream;
+              dstream << "Current surface set to approach surface";
+              dstream << cache.currentSurface->geoID().toString();
+              return dstream.str();
+            });
           // no returning to the stepper at this stage
           return false;
         }
@@ -433,7 +442,9 @@ struct Navigator
     }
     // navigation broken - switch navigator off
     result.navigationBreak = true;
-    NAVLOG(cache, result, "Navigation broken, pure propagation.");
+    debugLog(cache, result, [&] {
+      return std::string("Navigation broken, pure propagation.");
+    });
     // release the navigation step size
     cache.stepSize.release(cstep::actor);
     return false;
@@ -469,7 +480,6 @@ struct Navigator
     // only handle boundaries if you are not in the target volume
     if (result.currentVolume == result.targetVolume || !result.currentVolume)
       return false;
-
     // if you came until here, and you have no boundaries
     // then retrieve them
     if (!result.navBoundaries.size()) {
@@ -477,10 +487,12 @@ struct Navigator
       result.navBoundaries = result.currentVolume->boundarySurfacesOrdered(
           navPar, forward, skipCurrent);
       // the number of boundary candidates
-      NAVLOG(cache,
-             result,
-             result.navBoundaries.size()
-                 << " boundary surface candidates found.");
+      debugLog(cache, result, [&] {
+        std::stringstream dstream;
+        dstream << result.navBoundaries.size();
+        dstream << " boundary surface candidates found.";
+        return dstream.str();
+      });
       // set the iterator - if we have boundary surfaces
       if (result.navBoundaries.size()) {
         result.navBoundaryIter = result.navBoundaries.begin();
@@ -488,9 +500,10 @@ struct Navigator
         updateStep(cache, result, result.navBoundaryIter);
         return true;
       } else {
-        NAVLOG(cache,
-               result,
-               "No valid boundary surface found, stopping navigation.");
+        debugLog(cache, result, [&] {
+          return std::string(
+              "No valid boundary surface found, stopping navigation.");
+        });
         return false;
       }
     }
@@ -501,33 +514,40 @@ struct Navigator
       //              only if you hadn't just done a volume switch
       // check if we are on already in this step
       if (boundarySurface->isOnSurface(navPar.position(), true)) {
-        NAVLOG(
-            cache, result, "Boundary surface reached, prepare volume switch.");
+        debugLog(cache, result, [&] {
+          return std::string(
+              "Boundary surface reached, prepare volume switch.");
+        });
         // get the actual boundary for the navigation & the next volume
         auto boundary        = result.navBoundaryIter->object;
         result.currentVolume = boundary->attachedVolume(
             navPar.position(), navPar.momentum(), forward);
         // no volume anymore : end of known world
         if (!result.currentVolume) {
-          NAVLOG(cache,
-                 result,
-                 "No more volume to progress to, stopping navigation. ");
+          debugLog(cache, result, [&] {
+            return std::string(
+                "No more volume to progress to, stopping navigation.");
+          });
           return false;
         }
         // store the boundary for eventual actors to work on it
         cache.currentSurface = boundarySurface;
         if (cache.currentSurface)
-          NAVLOG(cache,
-                 result,
-                 "Current surface set to boundary surface "
-                     << cache.currentSurface->geoID().toString());
+          debugLog(cache, result, [&] {
+            std::stringstream dstream;
+            dstream << "Current surface set to boundary surface";
+            dstream << cache.currentSurface->geoID().toString();
+            return dstream.str();
+          });
         // and we can invalidate the boundary surfaces and return
         result.navBoundaries.clear();
         result.navBoundaryIter = result.navBoundaries.end();
         // resolve the new layer situation
         if (resolveLayers(navPar, cache, result)) return true;
         // return
-        NAVLOG(cache, result, "No layers can be reached in the new volume.");
+        debugLog(cache, result, [&] {
+          return std::string("No layers can be reached in the new volume.");
+        });
         // self call for new boundaries
         return handleBoundaries(navPar, cache, result, true);
       }
@@ -554,7 +574,9 @@ struct Navigator
                 cache_t&                    cache,
                 result_t&                   result) const
   {
-    NAVLOG(cache, result, "We do not have any layers yet, searching.");
+    debugLog(cache, result, [&] {
+      return std::string("We do not have any layers yet, searching.");
+    });
     // check if we are in the start volume
     bool start = (result.currentVolume == result.startVolume);
     // we do not have layers yet, get the candidates
@@ -569,29 +591,39 @@ struct Navigator
                                           collectPassive);
     // the number of layer candidates
     if (result.navLayers.size()) {
-      NAVLOG(
-          cache, result, result.navLayers.size() << " layer candidates found.");
+      debugLog(cache, result, [&] {
+        std::stringstream dstream;
+        dstream << result.navLayers.size();
+        dstream << " layer candidates found.";
+        return dstream.str();
+      });
       // set the iterator
       result.navLayerIter = result.navLayers.begin();
       if (result.navLayerIter->object != result.startLayer) {
-        NAVLOG(cache, result, "Stepping towards first layer.");
+        debugLog(cache, result, [&] {
+          return std::string("Stepping towards first layer.");
+        });
         // update the navigation step size before you return
         updateStep(cache, result, result.navLayerIter);
         return true;
       } else {
-        NAVLOG(cache,
-               result,
-               "Start layer, avoid step to layer approach surface.");
+        debugLog(cache, result, [&] {
+          return std::string(
+              "Start layer, avoid step to layer approach surface.");
+        });
         return false;
       }
     }
     if (result.currentVolume != result.targetVolume) {
-      NAVLOG(cache, result, "No layer candidates found, switching volume.");
+      debugLog(cache, result, [&] {
+        return std::string("No layer candidates found, switching volume.");
+      });
       return false;
     }
-    NAVLOG(cache,
-           result,
-           "Done in final volume, release stepSize & proceed to target.");
+    debugLog(cache, result, [&] {
+      return std::string(
+          "Done in final volume, release stepSize & proceed to target.");
+    });
     // the step size will be set to the aborter step size
     cache.stepSize.update(cache.stepSize.value(cstep::aborter), cstep::actor);
     result.navigationBreak = true;
@@ -634,16 +666,20 @@ struct Navigator
           // store the current surface in the cache
           if (cache.startSurface && result.currentVolume == result.startVolume
               && layer == result.startLayer) {
-            NAVLOG(cache, result, "Switch layer surface to start surface.");
+            debugLog(cache, result, [&] {
+              return std::string("Switch layer surface to start surface.");
+            });
             // setting layer surface & representation
             result.navLayerIter->representation = cache.startSurface;
           } else {
             cache.currentSurface = layerSurface;
             if (cache.currentSurface)
-              NAVLOG(cache,
-                     result,
-                     "Current surface set to layer surface "
-                         << cache.currentSurface->geoID().toString());
+              debugLog(cache, result, [&] {
+                std::stringstream dstream;
+                dstream << "Current surface set to layer surface";
+                dstream << cache.currentSurface->geoID().toString();
+                return dstream.str();
+              });
           }
           // if you found surfaces return to the stepper
           if (resolveSurfaces(navPar, cache, result)) return true;
@@ -654,43 +690,52 @@ struct Navigator
           // update in case a switch was done
           layerSurface = result.navLayerIter->representation;
           // we are not on the layer
-          NAVLOG(cache,
-                 result,
-                 std::distance(result.navLayerIter, result.navLayers.end())
-                     << " out of "
-                     << result.navLayers.size()
-                     << " layers remain to try.");
+          debugLog(cache, result, [&] {
+            std::stringstream dstream;
+            dstream << std::distance(result.navLayerIter,
+                                     result.navLayers.end());
+            dstream << " out of " << result.navLayers.size();
+            dstream << " layers remain to try.";
+            return dstream.str();
+          });
           // intersection with next layer
           auto layerIntersect = layerSurface->intersectionEstimate(
               navPar.position(), navPar.momentum(), true, false);
           // check if the intersect is invalid
           if (!layerIntersect) {
-            NAVLOG(cache, result, "Layer intersection not valid, skipping it.");
+            debugLog(cache, result, [&] {
+              return std::string("Layer intersection not valid, skipping it.");
+            });
             ++result.navLayerIter;
           } else {
             // update the navigation step size
             cache.stepSize.update(cache.navDir * layerIntersect.pathLength,
                                   cstep::actor);
-            NAVLOG(cache,
-                   result,
-                   "Navigation stepSize towards layer updated to "
-                       << cache.stepSize.toString());
+            debugLog(cache, result, [&] {
+              std::stringstream dstream;
+              dstream << "Navigation stepSize towards layer updated to ";
+              dstream << cache.stepSize.toString();
+              return dstream.str();
+            });
             return true;
           }
         }
       }
       // we are at the end of trying layers
       if (result.currentVolume == result.targetVolume) {
-        NAVLOG(cache,
-               result,
-               "Done in final volume, release stepSize & proceed to target.");
+        debugLog(cache, result, [&] {
+          return std::string(
+              "Done in final volume, release stepSize & proceed to target.");
+        });
         // the step size will be set to the aborter step size
         cache.stepSize.update(cache.stepSize.value(cstep::aborter),
                               cstep::actor);
         result.navigationBreak = true;
         return true;
       }
-      NAVLOG(cache, result, "All layers been handled, switching volume.");
+      debugLog(cache, result, [&] {
+        return std::string("All layers been handled, switching volume.");
+      });
       // clear the layers
       result.navLayers.clear();
       result.navLayerIter = result.navLayers.end();
@@ -733,9 +778,12 @@ struct Navigator
                                                          cache.targetSurface);
     // the number of layer candidates
     if (result.navSurfaces.size()) {
-      NAVLOG(cache,
-             result,
-             result.navSurfaces.size() << " surface candidates found.");
+      debugLog(cache, result, [&] {
+        std::stringstream dstream;
+        dstream << result.navSurfaces.size();
+        dstream << " surface candidates found.";
+        return dstream.str();
+      });
       // set the iterator
       result.navSurfaceIter = result.navSurfaces.begin();
       // update the navigation step size before you return to the stepper
@@ -743,7 +791,9 @@ struct Navigator
       return true;
     }
     result.navSurfaceIter = result.navSurfaces.end();
-    NAVLOG(cache, result, "No surface candidates found, switching layer.");
+    debugLog(cache, result, [&] {
+      return std::string("No surface candidates found, switching layer.");
+    });
     return false;
   }
 
@@ -774,30 +824,38 @@ struct Navigator
       // If we are on the surface pointed at by the iterator, we can make
       // it the current one to pass it to the other actors
       if (surface->isOnSurface(navPar.position(), true)) {
-        NAVLOG(cache, result, "Surface successfully hit, storing it.");
+        debugLog(cache, result, [&] {
+          return std::string("Surface successfully hit, storing it.");
+        });
         // the surface will only appear due to correct
         // collect(Property) flag
         cache.currentSurface = surface;
         if (cache.currentSurface)
-          NAVLOG(cache,
-                 result,
-                 "Current surface set to resolved surface "
-                     << cache.currentSurface->geoID().toString());
+          debugLog(cache, result, [&] {
+            std::stringstream dstream;
+            dstream << "Current surface set to resolved surface";
+            dstream << cache.currentSurface->geoID().toString();
+            return dstream.str();
+          });
         // break if the surface is the target surface
         if (surface == cache.targetSurface) {
-          NAVLOG(cache, result, "This was the target surface. Done.");
+          debugLog(cache, result, [&] {
+            return std::string("This was the target surface. Done.");
+          });
           return true;
         }
         // switch to the next candidate
         ++result.navSurfaceIter;
       }
       // screen output how much is left to try
-      NAVLOG(cache,
-             result,
-             std::distance(result.navSurfaceIter, result.navSurfaces.end())
-                 << " out of "
-                 << result.navSurfaces.size()
-                 << " surfaces remain to try.");
+      debugLog(cache, result, [&] {
+        std::stringstream dstream;
+        dstream << std::distance(result.navSurfaceIter,
+                                 result.navSurfaces.end());
+        dstream << " out of " << result.navSurfaces.size();
+        dstream << " surfaces remain to try.";
+        return dstream.str();
+      });
       // case (s-b) : update step estimation to the new surface
       if (result.navSurfaceIter != result.navSurfaces.end()) {
         surface               = result.navSurfaceIter->object;
@@ -805,23 +863,29 @@ struct Navigator
             navPar.position(), navPar.momentum(), true, false);
         double surfaceDistance = surfaceIntersect.pathLength;
         if (!surfaceIntersect) {
-          NAVLOG(
-              cache, result, "Surface intersection is not valid, skipping it.");
+          debugLog(cache, result, [&] {
+            return std::string(
+                "Surface intersection is not valid, skipping it.");
+          });
           ++result.navSurfaceIter;
           continue;
         } else {
           cache.stepSize.update(cache.navDir * surfaceDistance, cstep::actor);
-          NAVLOG(cache,
-                 result,
-                 "Navigation stepSize towards surface updated to "
-                     << cache.stepSize.toString());
+          debugLog(cache, result, [&] {
+            std::stringstream dstream;
+            dstream << "Navigation stepSize towards surface updated to ";
+            dstream << cache.stepSize.toString();
+            return dstream.str();
+          });
           return true;
         }
       }
     }
     // case (s-c) : reached the end of the surface iteration
     if (result.navSurfaceIter == result.navSurfaces.end()) {
-      NAVLOG(cache, result, "Last surface on layer reached, switching layer.");
+      debugLog(cache, result, [&] {
+        return std::string("Last surface on layer reached, switching layer.");
+      });
       // first clear the surface cache
       result.navSurfaces.clear();
       result.navSurfaceIter = result.navSurfaces.end();
@@ -844,12 +908,39 @@ struct Navigator
     double ustep
         = initialStepFactor * cache.navDir * type->intersection.pathLength;
     cache.stepSize.update(ustep, cstep::actor);
-    NAVLOG(cache,
-           result,
-           "Navigation stepSize updated to " << cache.stepSize.toString());
+    debugLog(cache, result, [&] {
+      std::stringstream dstream;
+      dstream << "Navigation stepSize updated to ";
+      dstream << cache.stepSize.toString();
+      return dstream.str();
+    });
+  }
+
+private:
+  /// The private navigation debug logging
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the cache.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @param cache the stepper cache for the debug flag, prefix and length
+  /// @param logAction is a callable function that returns a stremable object
+  template <typename cache_t, typename result_t>
+  void
+  debugLog(cache_t&                     cache,
+           result_t&                    result,
+           std::function<std::string()> logAction) const
+  {
+    if (debug) {
+      std::string vName               = "No Volume";
+      if (result.currentVolume) vName = result.currentVolume->volumeName();
+      std::stringstream dstream;
+      dstream << ">>>" << std::setw(cache.debugPfxWidth) << vName << " | ";
+      dstream << std::setw(cache.debugMsgWidth) << logAction() << '\n';
+      cache.debugString += dstream.str();
+    }
   }
 };
 }
 
-#undef NAVLOG
 #endif  // end of namespace Acts

@@ -17,16 +17,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#define PROPLOG(cache, message)                                                \
-  if (cache.debug) {                                                           \
-    std::stringstream dstream;                                                 \
-    dstream << "|->" << std::setw(cache.debugPfxWidth);                        \
-    dstream << "Propagator"                                                    \
-            << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-    cache.debugString += dstream.str();                                        \
-  }
-
 namespace Acts {
 
 /// Result status of track parameter propagation
@@ -207,12 +197,15 @@ private:
              const InteralAborters& internalStopConditions) const
   {
 
-    // check with surface_abort if it exists
-    PROPLOG(cache, "Calling initial stop conditions.");
+    debugLog(options.debug, cache, [&] {
+      return std::string("Calling pre-stepping aborters.");
+    });
     if (internalStopConditions(result, cache)) return Status::FAILURE;
 
     // Pre-stepping call to the action list
-    PROPLOG(cache, "Calling pre-stepping action list.");
+    debugLog(options.debug, cache, [&] {
+      return std::string("Calling pre-stepping action list.");
+    });
     options.actionList(cache, result);
 
     // Propagation loop : stepping
@@ -220,11 +213,15 @@ private:
       // Perform a propagation step
       result.pathLength += m_impl.step(cache);
       // Call the actions, can (& will likely) modify cache
-      PROPLOG(cache, "Calling action list on individual step.");
+      debugLog(options.debug, cache, [&] {
+        return std::string("Calling action list on step.");
+      });
       options.actionList(cache, result);
       // Call the stop_conditions and the internal stop conditions
       // break condition triggered, but still count the step
-      PROPLOG(cache, "Calling stop conditions on individual step.");
+      debugLog(options.debug, cache, [&] {
+        return std::string("Calling aborters on step.");
+      });
       if (options.stopConditions(result, cache)
           || internalStopConditions(result, cache)) {
         ++result.steps;
@@ -232,7 +229,9 @@ private:
       }
     }
     // Post-stepping call to the action list
-    PROPLOG(cache, "Calling post-stepping action list.");
+    debugLog(options.debug, cache, [&] {
+      return std::string("Calling post-stepping action list.");
+    });
     options.actionList(cache, result);
 
     return Status::IN_PROGRESS;
@@ -374,7 +373,9 @@ public:
     // Perform the actual propagation
     if (propagate_(result, cache, options, internalAborters)
         != Status::IN_PROGRESS) {
-      // @todo: analyse and screen output
+      debugLog(options.debug, cache, [&] {
+        return std::string("Propagation not successful.");
+      });
     } else {
       // Compute the final results and mark the propagation as successful
       result.endParameters = std::make_unique<const return_parameter_type>(
@@ -387,6 +388,34 @@ public:
 private:
   /// implementation of propagation algorithm
   Impl m_impl;
+
+  /// The private propagation debug logging
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the cache.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @param cache the stepper cache for the debug flag, prefix and length
+  /// @param logAction is a callable function that returns a stremable object
+  void
+  debugLog(bool                         debug,
+           cache_type&                  cache,
+           std::function<std::string()> logAction) const
+  {
+    if (debug) {
+      std::stringstream dstream;
+      dstream << "|->" << std::setw(cache.debugPfxWidth);
+      dstream << "Propagator"
+              << " | ";
+      dstream << std::setw(cache.debugMsgWidth) << logAction() << '\n';
+      cache.debugString += dstream.str();
+    }
+  }
 };
 
 }  // namespace Acts
+<<<<<<< HEAD:Core/include/Acts/Propagator/Propagator.hpp
+=======
+
+#endif  // ACTS_EXTRAPOLATION_PROPAGATOR_H
+>>>>>>> 167ab66c... clang-format after message-format:Core/include/ACTS/Propagator/Propagator.hpp

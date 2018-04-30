@@ -19,19 +19,6 @@
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/MaterialInteraction.hpp"
 
-#ifndef MATINTERACTOR_DEBUG_OUTPUTS
-#define MATINTERACTOR_DEBUG_OUTPUTS
-#define MATILOG(cache, result, message)                                        \
-  if (debug) {                                                                 \
-    std::stringstream dstream;                                                 \
-    dstream << "   " << std::setw(cache.debugPfxWidth);                        \
-    dstream << "material interaction"                                          \
-            << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-    cache.debugString += dstream.str();                                        \
-  }
-#endif
-
 namespace Acts {
 
 /// The Material interaction struct
@@ -104,27 +91,35 @@ struct MaterialInteractor
       auto sMaterial   = cache.currentSurface->associatedMaterial();
       auto mProperties = sMaterial->material(cache.position());
       if (mProperties) {
-        // pre - full - post update test
-
+        // pre - full - post update test, i.e.
         // check if you have a factor for pre/post/full update to do
         double prepofu = 1.;
         if (cache.startSurface == cache.currentSurface) {
-          MATILOG(cache, result, "Update on start surface: post-update mode.");
+          debugLog(cache, [&] {
+            return std::string("Update on start surface: post-update mode.");
+          });
           prepofu = cache.currentSurface->associatedMaterial()->factor(
               cache.navDir, postUpdate);
         } else if (cache.targetSurface == cache.currentSurface) {
-          MATILOG(cache, result, "Update on target surface: pre-update mode.");
+          debugLog(cache, [&] {
+            return std::string("Update on target surface: pre-update mode");
+          });
           prepofu = cache.currentSurface->associatedMaterial()->factor(
               cache.navDir, preUpdate);
         } else
-          MATILOG(cache, result, "Update while pass through: full mode.");
+          debugLog(cache, [&] {
+            return std::string("Update while pass through: full mode.");
+          });
+        // now check if there's still something to do
         if (prepofu == 0.) {
-          MATILOG(cache, result, "Pre/Post factor set material to zero.");
+          debugLog(cache, [&] {
+            return std::string("Pre/Post factor set material to zero.");
+          });
           return;
         }
 
-        // if we process noise, we need to transport
-        // the covariance to the current place
+        // to integrate process noise, we need to transport
+        // the covariance to the current position in space
         cache.applyCovTransport(true);
         // get the material thickness
         double thickness = mProperties->thickness();
@@ -200,6 +195,29 @@ struct MaterialInteractor
   operator()(cache_t& cache) const
   {
     (void)cache;
+  }
+
+private:
+  /// The private propagation debug logging
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the cache.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @param cache the stepper cache for the debug flag, prefix and length
+  /// @param logAction is a callable function that returns a stremable object
+  template <typename cache_t>
+  void
+  debugLog(cache_t& cache, std::function<std::string()> logAction) const
+  {
+    if (debug) {
+      std::stringstream dstream;
+      dstream << "   " << std::setw(cache.debugPfxWidth);
+      dstream << "material interaction"
+              << " | ";
+      dstream << std::setw(cache.debugMsgWidth) << logAction() << '\n';
+      cache.debugString += dstream.str();
+    }
   }
 };
 }

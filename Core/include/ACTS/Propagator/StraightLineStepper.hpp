@@ -17,19 +17,13 @@
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
-#define SLLOG(cache, message)                                                  \
-  if (cache.debug) {                                                           \
-    std::stringstream dstream;                                                 \
-    dstream << "|->" << std::setw(cache.debugPfxWidth);                        \
-    dstream << "StraightLineStepper"                                           \
-            << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-    cache.debugString += dstream.str();                                        \
-  }
-
 namespace Acts {
 
 /// StraightLineStepper
+///
+/// The straight line stepper is a simple navigation stepper
+/// to be used to navigate through the tracking geometry. It can be
+/// used for simple material mapping, navigation validation
 class StraightLineStepper
 {
 
@@ -57,8 +51,6 @@ public:
   {
     /// Constructor from the initial track parameters
     /// @param [in] par The track parameters at start
-    ///
-    /// @note the covariance matrix is copied when needed
     template <typename T>
     explicit Cache(const T&            par,
                    NavigationDirection ndir = forward,
@@ -72,6 +64,7 @@ public:
     {
       // Get the reference surface for navigation
       const auto& surface = par.referenceSurface();
+
       // cache the surface for navigation
       startSurface = &surface;
     }
@@ -197,8 +190,12 @@ public:
   {
     // use the adjusted step size
     const double h = cache.stepSize;
-    // debug output
-    SLLOG(cache, "Performing StraightLine step with size " << h);
+    // debug output into the cache's debug stream
+    debugLog(cache, [&] {
+      std::stringstream dstream;
+      dstream << "Performing straight line step with size." << h;
+      return dstream.str();
+    });
     // Update the track parameters according to the equations of motion
     cache.pos += h * cache.dir;
     // cache the path length
@@ -206,9 +203,30 @@ public:
     // return h
     return h;
   }
+
+private:
+  /// The private stepper debug logging
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the cache.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @param cache the stepper cache for the debug flag, prefix and length
+  /// @param logAction is a callable function that returns a stremable object
+  void
+  debugLog(Cache& cache, std::function<std::string()> logAction) const
+  {
+    if (cache.debug) {
+      std::stringstream dstream;
+      dstream << "|->" << std::setw(cache.debugPfxWidth);
+      dstream << "StraightLineStepper"
+              << " | ";
+      dstream << std::setw(cache.debugMsgWidth) << logAction() << '\n';
+      cache.debugString += dstream.str();
+    }
+  }
 };
 
 }  // namespace Acts
 
-#undef SLLOG
 #endif  // ACTS_STRAIGHTLINE_STEPPER_HPP
