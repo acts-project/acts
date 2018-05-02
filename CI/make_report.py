@@ -7,6 +7,8 @@ from itertools import groupby
 import os
 import html
 
+from lxml import etree
+
 from codereport import CodeReport
 
 
@@ -76,16 +78,8 @@ def parse_clang_tidy_output(output):
 
     return files, items
 
-
-def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("inputfile", type=argparse.FileType("r"))
-    p.add_argument("reportdir", default="report")
-
-    args = p.parse_args()
-
-
-    files, items = parse_clang_tidy_output(args.inputfile.read())
+def get_clang_tidy_warnings(input):
+    files, items = parse_clang_tidy_output(input)
 
     files = filter(os.path.exists, files)
     files = list(files)
@@ -104,14 +98,15 @@ def main():
         return re.sub(r"([.\/\w]+):(\d+):(\d+):", repl, msg)
 
     items_by_file = {}
-    for f in files:
+    for f in ref_files:
         items_by_file[f] = []
 
     for item in items:
-        items_by_file[item.file].append(item)
+        items_by_file[os.path.normpath(item.file)].append(item)
 
     def get_comment(file, lineno, cr):
-        items = [i for i in items_by_file[file] if i.lineno == lineno]
+
+        items = [i for i in items_by_file[os.path.normpath(file)] if i.lineno == lineno]
         if len(items) == 0:
             return None
 
@@ -125,8 +120,83 @@ def main():
 
         return msgs
 
-    path_prefix = os.path.commonprefix(files)
-    print(path_prefix)
+    # ath_prefix = os.path.commonprefix(files)
+    # print(path_prefix)
+
+    return files, get_comment
+
+class CppcheckItem:
+    def __init__(self, file, line, verbose, severity, id):
+        self.file = file
+        self.line = line
+        self.verbose = verbose
+        self.severity = severity
+        self.id = id
+
+    def __str__(self):
+        return "{severity}: {msg} [{id}]".format(
+            severity= self.severity,
+            msg= self.verbose,
+            id= self.id
+        )
+
+def get_cppcheck_warnings(input):
+    root = etree.fromstring(input)
+
+    errors = root.xpath("/results/errors")[0]
+
+    items_by_file = {}
+
+
+    for error in errors:
+        location = error.xpath("./location")[0]
+        item = CppcheckItem(
+            file = location.attrib["file"],
+            line = int(location.attrib["line"]),
+            verbose = error.attrib["verbose"],
+            severity = error.attrib["severity"],
+            id = error.attrib["id"]
+        )
+
+        if not item.file in items_by_file:
+            items_by_file[item.file] = {}
+
+        if not item.line in items_by_file[item.file]:
+            items_by_file[item.file][item.line] = []
+        
+        items_by_file[item.file][item.line].append(item)
+
+    def get_comment(file, lineno, cr):
+        if file in items_by_file and lineno in items_by_file[file]:
+            items = items_by_file[file][lineno]
+        else:
+            return None
+
+        fmt = '<pre style="white-space:pre-wrap;display:block;">{}</pre>'
+        return list(map(lambda item: fmt.format(str(item)), items))
+
+    return list(items_by_file.keys()), get_comment
+
+
+
+def main():
+    p = argparse.ArgumentParser()
+    p.add_argument("mode", choices=("clang-tidy", "cppcheck"))
+    p.add_argument("inputfile")
+    p.add_argument("reportdir", default="report")
+
+    args = p.parse_args()
+
+
+    if args.mode == "clang-tidy":
+        with open(args.inputfile, "r", encoding="utf-8") as f:
+            inputstr = f.read()
+        files, get_comment = get_clang_tidy_warnings(inputstr)
+    elif args.mode == "cppcheck":
+        with open(args.inputfile, "rb") as f:
+            inputstr = f.read()
+        files, get_comment = get_cppcheck_warnings(inputstr)
+
 
     cr = CodeReport(files, 
                     title="ACTS clang-tidy report",

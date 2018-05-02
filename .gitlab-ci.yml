@@ -52,6 +52,7 @@ clang_tidy:
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - run-clang-tidy.py -p build -header-filter=.* -j$(nproc) 1> report/clang-tidy.log
+    - CI/make_report.py clang-tidy report/clang-tidy.log report
   artifacts:
     paths:
       - report
@@ -67,6 +68,22 @@ oclint:
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - oclint-json-compilation-database -p build -- -report-type html -o report/oclint_report.html
+  artifacts:
+    paths:
+      - report
+
+cppcheck:
+  stage: check
+  image: gitlab-registry.cern.ch/acts/machines/static_analysis
+  before_script: []
+  dependencies: []
+  script:
+    - mkdir report
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    - cd ..
+    - cppcheck --project=build_oclint/compile_commands.json --enable=warning,missingInclude,portability -UACTS_PARAMETER_DEFINITIONS_PLUGIN --xml-version=2 -j$(nproc) 2> report/report.xml
+    - CI/make_report.py cppcheck report/report.xml report
   artifacts:
     paths:
       - report
