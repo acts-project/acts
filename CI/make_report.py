@@ -30,9 +30,6 @@ class Item:
 
 def parse_clang_tidy_item(itemstr):
 
-    # print("\n"*5, warning, "\n"*5)
-
-    # m = re.match(r"([/.\-\w]+):(\d+):(\d+): (.*)\n((?:.|\n)+)", warning)
     m = re.match(r"([/.\-\w]+):(\d+):(\d+): (.*?):(.*?)\n((?:.|\n)*)", itemstr)
 
     if m is None:
@@ -52,24 +49,11 @@ def parse_clang_tidy_item(itemstr):
 
 
 def parse_clang_tidy_output(output):
-    
-    # parse global
-    # m = re.match(r"(\d+) warnings generated\.((?:.|\n)+)Suppressed (\d+) warnings \((\d+) in non-user code\)", output)
-    # itemstr = m.group(2)
-    # nwarntot = int(m.group(1))
-    # nsupp = int(m.group(3))
-    # nwarnings = nwarntot-nsupp
 
     # cleanup
     itemstr = re.sub(r"Enabled checks:\n(?:.|\n)+\n\n", "", output)
     itemstr = re.sub(r"clang-tidy-\d\.\d.*\n?", "", itemstr)
     itemstr = re.sub(r".*-header-filter.*", "", itemstr)
-    
-
-
-    # print(itemstr)
-    # sys.exit()
-
 
     items = []
     prevstart = 0
@@ -146,14 +130,11 @@ def main():
 
     cr = CodeReport(files, 
                     title="ACTS clang-tidy report",
-                    get_display_name=lambda f: os.path.relpath(f, os.getcwd()), 
                     get_comment=get_comment)
 
-    # print(cr._make_file_tree())
-    # return
 
     for file, content in cr:
-        with open(os.path.join(args.reportdir, file), "w") as f:
+        with open(os.path.join(args.reportdir, file), "w", encoding='utf-8') as f:
             print(os.path.join(args.reportdir, file))
             f.write(content)
 

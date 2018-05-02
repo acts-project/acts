@@ -47,10 +47,14 @@ clang_tidy:
   before_script: []
   dependencies: []
   script:
+    - mkdir report
     - mkdir build && cd build
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
-    - run-clang-tidy.py -p build -header-filter=.* -j$(nproc)
+    - run-clang-tidy.py -p build -header-filter=.* -j$(nproc) 1> report/clang-tidy.log
+  artifacts:
+    paths:
+      - report
 
 oclint:
   stage: check
@@ -58,10 +62,14 @@ oclint:
   before_script: []
   dependencies: []
   script:
+    - mkdir report
     - mkdir build && cd build
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
-    - oclint-json-compilation-database -p build -- -report-type html -o oclint_report.html
+    - oclint-json-compilation-database -p build -- -report-type html -o report/oclint_report.html
+  artifacts:
+    paths:
+      - report
 
 
 # SLC6, LCG88 (legacy build)
