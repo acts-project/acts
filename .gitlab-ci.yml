@@ -1,7 +1,7 @@
 stages:
-  - check
   - build
   - test
+  - static-analysis
   - deploy
 
 before_script:
@@ -12,7 +12,7 @@ before_script:
 # pre-build checks
 
 format:
-  stage: check
+  stage: build
   image: gitlab-registry.cern.ch/acts/machines/check:latest
   before_script: []
   dependencies: []
@@ -24,7 +24,7 @@ format:
     when: on_failure
 
 license:
-  stage: check
+  stage: build
   image: python:alpine3.6
   before_script: []
   dependencies: []
@@ -42,7 +42,7 @@ include_guards:
     - CI/check_include_guards.py . --fail-global
 
 clang_tidy:
-  stage: check
+  stage: static-analysis
   image: gitlab-registry.cern.ch/acts/machines/static_analysis
   before_script: []
   dependencies: []
@@ -58,7 +58,7 @@ clang_tidy:
       - report
 
 oclint:
-  stage: check
+  stage: static-analysis
   image: gitlab-registry.cern.ch/acts/machines/static_analysis
   before_script: []
   dependencies: []
@@ -73,7 +73,7 @@ oclint:
       - report
 
 cppcheck:
-  stage: check
+  stage: static-analysis
   image: gitlab-registry.cern.ch/acts/machines/static_analysis
   before_script: []
   dependencies: []
@@ -89,7 +89,7 @@ cppcheck:
       - report
 
 scan-build:
-  stage: check
+  stage: static-analysis
   image: alpine:edge
   before_script:
     - apk --no-cache add cmake clang clang-analyzer make alpine-sdk boost-dev eigen-dev
@@ -99,6 +99,9 @@ scan-build:
     - mkdir build && cd build
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - scan-build -enable-checker alpha -disable-checker alpha.deadcode -enable-checker core -enable-checker cplusplus -enable-checker deadcode -enable-checker llvm -enable-checker osx -enable-checker security -enable-checker unix make -j$(nproc) -o ../report
+  artifacts:
+    paths:
+      - report
 
 
 # SLC6, LCG88 (legacy build)
