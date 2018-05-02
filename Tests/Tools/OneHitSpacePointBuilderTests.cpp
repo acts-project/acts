@@ -31,7 +31,7 @@ namespace Test {
   BOOST_DATA_TEST_CASE(OneHitSpacePointBuilder_basic, bdata::xrange(1), index)
   {
     (void)index;
-    OneHitSpacePointBuilder::Hit vecHits;
+    SpacePoint vecHits;
 
     // Build bounds
     std::shared_ptr<const RectangleBounds> recBounds(
@@ -88,8 +88,9 @@ namespace Test {
                                   {DigitizationCell(0, 0, 1.)});
 
     // Test for setting a OneHitSpacePointBuilder::Hit
-    vecHits.hitModule = pmc;
-    BOOST_TEST(vecHits.hitModule == pmc,
+    vecHits.hitModule.resize(1);
+    vecHits.hitModule[0] = pmc;
+    BOOST_TEST(vecHits.hitModule[0] == pmc,
                "Failed to set element in vecHits.hitModule1");
 
     Vector3D spacePoint = {1., 1., 1.};
@@ -98,18 +99,20 @@ namespace Test {
                "Failed to set element in vecHits.spacePoint");
 
     OneHitSpacePointBuilder ohspb;
-    ohspb.addHit(vecHits);
+    ohspb.addSpacePoint(vecHits);
 
-    // Test for adding a OneHitSpacePointBuilder::hits()
-    const std::vector<OneHitSpacePointBuilder::Hit> hits = ohspb.hits();
+    // Test for adding a SpacePoint
+    const std::vector<SpacePoint> hits = ohspb.spacePoints();
     BOOST_TEST(hits.size() == 1, "Failed to add element to SpacePointBuilder");
     BOOST_TEST(hits[0].hitModule == vecHits.hitModule, "Wrong element added");
     BOOST_TEST(hits[0].spacePoint == vecHits.spacePoint, "Wrong element added");
 
-    ohspb.addHits({*pmc});
+	std::vector<std::vector<PlanarModuleCluster const*>> matCluster;
+	matCluster.push_back({pmc});
+    ohspb.addHits(matCluster);
     ohspb.calculateSpacePoints();
 
-    const std::vector<OneHitSpacePointBuilder::Hit> hits2 = ohspb.hits();
+    const std::vector<SpacePoint> hits2 = ohspb.spacePoints();
     // Test for creating a new OneHitSpacePointBuilder::Hit element
     // with PlanarModuleClusters
     BOOST_TEST(hits2.size() == 2, "Failed to add element to SpacePointBuilder");
