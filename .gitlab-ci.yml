@@ -82,7 +82,7 @@ cppcheck:
     - mkdir build && cd build
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
-    - cppcheck --project=build_oclint/compile_commands.json --enable=warning,missingInclude,portability -UACTS_PARAMETER_DEFINITIONS_PLUGIN --xml-version=2 -j$(nproc) 2> report/report.xml
+    - cppcheck --project=build/compile_commands.json --enable=warning,missingInclude,portability -UACTS_PARAMETER_DEFINITIONS_PLUGIN --xml-version=2 -j$(nproc) 2> report/report.xml
     - CI/make_report.py cppcheck report/report.xml report
   artifacts:
     paths:
