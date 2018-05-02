@@ -9,7 +9,6 @@
 #ifndef ACTS_TOOLS_ONEHITSPACEPOINTBUILDER_H
 #define ACTS_TOOLS_ONEHITSPACEPOINTBUILDER_H
 
-#include <array>
 #include "ACTS/Digitization/CartesianSegmentation.hpp"
 #include "ACTS/Digitization/DigitizationModule.hpp"
 #include "ACTS/Tools/ISpacePointBuilder.hpp"
@@ -30,15 +29,16 @@ public:
   OneHitSpacePointBuilder();
 
   /// @brief Adds hits on surfaces and stores them
-  /// @param vec vector of hits on a surface
+  /// @param hits vector of hits on surfaces
+  /// @note The structure of @p hits is hits[Surfaces][Hits on a surface]
   void
-  addHits(const std::vector<PlanarModuleCluster>& vec);
+  addHits(std::vector<std::vector<PlanarModuleCluster const*>>& hits) override;
 
   /// @brief Adds a hit structure to the list of hits
   /// @note This function does not test what is stored in the new element
   /// @param hit element added to the list
   void
-  addSpacePoint(const std::shared_ptr<SpacePoint>& sPoint) override;
+  addSpacePoint(SpacePoint& sPoint) override;
 
   /// @brief Calculates the space points out of a given collection of hits and
   /// stores the data
@@ -48,7 +48,7 @@ public:
   /// @brief Returns the list of all stored space points
   /// @note This function is a pure getter of the current state
   /// @return full collection of all stored space points
-  const std::vector<std::shared_ptr<SpacePoint>>&
+  const std::vector<SpacePoint>&
   spacePoints() override;
 
 protected:
@@ -67,7 +67,7 @@ protected:
 
 private:
   /// Storage of all stored data
-  std::vector<std::shared_ptr<SpacePoint>> m_allSpacePoints;
+  std::vector<SpacePoint> m_allSpacePoints;
 };
 
 }  // namespace Acts

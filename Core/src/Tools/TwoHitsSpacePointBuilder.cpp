@@ -76,52 +76,52 @@ Acts::TwoHitsSpacePointBuilder::differenceOfHits(
 }
 
 void
-Acts::TwoHitsSpacePointBuilder::combineHits(
-    const std::vector<Acts::PlanarModuleCluster>& vec1,
-    const std::vector<Acts::PlanarModuleCluster>& vec2)
+Acts::TwoHitsSpacePointBuilder::addHits(std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
 {
+  // Return if more/less surfaces given than 2
+  if(hits.size() != 2) return;
+  // Return if no hits are given
+  if (hits[0].empty() && hits[1].empty()) return;
+  
   // TODO: only the closest differences get selected -> some points are not
   // taken into account
   // Declare helper variables
   double                                       currentDiff;
-  Acts::TwoHitsSpacePointBuilder::CombinedHits tmpCombHits;
+  Acts::SpacePoint tmpSpacePoint;
   double                                       diffMin;
   unsigned int                                 hitMin;
 
-  // Return if no elements are given
-  if (vec1.empty() && vec2.empty()) return;
-
   // Walk through all hits on both surfaces
-  for (unsigned int iVec1 = 0; iVec1 < vec1.size(); iVec1++) {
+  for (unsigned int iHits0 = 0; iHits0 < hits[0].size(); iHits0++) {
     // Set the closest distance to the maximum of double
     diffMin = std::numeric_limits<double>::max();
     // Set the corresponding index to an element not in the list of hits
-    hitMin = vec2.size();
-    for (unsigned int iVec2 = 0; iVec2 < vec2.size(); iVec2++) {
+    hitMin = hits[1].size();
+    for (unsigned int iHits1 = 0; iHits1 < hits[1].size(); iHits1++) {
       // Calculate the distances between the hits
-      currentDiff = differenceOfHits(vec1[iVec1], vec2[iVec2]);
+      currentDiff = differenceOfHits(*(hits[0][iHits0]), *(hits[1][iHits1]));
       // Store the closest hits (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin = currentDiff;
-        hitMin  = iVec2;
+        hitMin  = iHits1;
       }
     }
     // Store the best (=closest) result
-    if (hitMin < vec2.size()) {
-      tmpCombHits.hitModule1 = &(vec1[iVec1]);
-      tmpCombHits.hitModule2 = &(vec2[hitMin]);
-      tmpCombHits.diff       = diffMin;
-      m_allCombHits.push_back(tmpCombHits);
+    if (hitMin < hits[1].size()) {
+	  tmpSpacePoint.hitModule.resize(2);
+	  tmpSpacePoint.hitModule.push_back(hits[0][iHits0]);
+      tmpSpacePoint.hitModule.push_back(hits[1][hitMin]);
+      m_allCombSpacePoints.push_back(tmpSpacePoint);
     }
   }
 }
 
 void
-Acts::TwoHitsSpacePointBuilder::addCombinedHit(
-    const Acts::TwoHitsSpacePointBuilder::CombinedHits& combHit)
+Acts::TwoHitsSpacePointBuilder::addSpacePoint(
+    Acts::SpacePoint& sPoint)
 {
-  if (combHit.hitModule1 && combHit.hitModule2)
-    m_allCombHits.push_back(combHit);
+  if (sPoint.hitModule.size() == 2 && sPoint.hitModule[0] && sPoint.hitModule[1])
+    m_allCombSpacePoints.push_back(sPoint);
 }
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
@@ -281,14 +281,14 @@ Acts::TwoHitsSpacePointBuilder::calculateSpacePoints()
   Acts::TwoHitsSpacePointBuilder::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
-  for (auto& hits : m_allCombHits) {
-
+  for (auto& hits : m_allCombSpacePoints) {
+	assert(hits.hitModule.size() == 2);
     // If the space point is already calculated this can be skipped
     if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
 
     // Calculate the ends of the SDEs
-    const auto& ends1 = endsOfStrip(*(hits.hitModule1));
-    const auto& ends2 = endsOfStrip(*(hits.hitModule2));
+    const auto& ends1 = endsOfStrip(*(hits.hitModule[0]));
+    const auto& ends2 = endsOfStrip(*(hits.hitModule[1]));
 
     /// The following algorithm is meant for finding the position on the first
     /// strip if there is a corresponding hit on the second strip. The
@@ -356,8 +356,8 @@ Acts::TwoHitsSpacePointBuilder::calculateSpacePoints()
   }
 }
 
-const std::vector<Acts::TwoHitsSpacePointBuilder::CombinedHits>&
-Acts::TwoHitsSpacePointBuilder::combinedHits()
+const std::vector<Acts::SpacePoint>&
+Acts::TwoHitsSpacePointBuilder::spacePoints()
 {
-  return m_allCombHits;
+  return m_allCombSpacePoints;
 }

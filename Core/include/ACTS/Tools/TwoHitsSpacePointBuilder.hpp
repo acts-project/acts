@@ -9,9 +9,8 @@
 #ifndef ACTS_TOOLS_TWOHITSSPACEPOINTBUILDER_H
 #define ACTS_TOOLS_TWOHITSSPACEPOINTBUILDER_H
 
-#include <ACTS/Digitization/PlanarModuleCluster.hpp>
-#include <ACTS/Utilities/Units.hpp>
-#include <array>
+#include "ACTS/Tools/ISpacePointBuilder.hpp"
+#include "ACTS/Utilities/Units.hpp"
 #include "ACTS/Digitization/CartesianSegmentation.hpp"
 #include "ACTS/Digitization/DigitizationModule.hpp"
 
@@ -27,7 +26,7 @@ namespace Acts {
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
-class TwoHitsSpacePointBuilder
+class TwoHitsSpacePointBuilder : public ISpacePointBuilder
 {
 public:
   /// @brief Configuration of the class to steer its behaviour
@@ -38,7 +37,7 @@ public:
     /// Accepted difference in phi for two hits
     double diffPhi2 = 1.;
     /// Accepted distance between two hits
-    double diffDist = 100.;
+    double diffDist = 100. * units::_mm;
     /// Allowed increase of strip length
     double stripLengthTolerance = 0.01;
     /// Allowed increase of strip length wrt gaps between strips
@@ -47,21 +46,6 @@ public:
     Vector3D vertex = {0., 0., 0.};
     /// Perform the perpendicular projection for space point finding
     bool usePerpProj = false;
-  };
-
-  /// @brief Structure for easier bookkeeping of potential hit combinations
-  /// on two surfaces
-  struct CombinedHits
-  {
-    /// Storage of the hit on the first surface
-    PlanarModuleCluster const* hitModule1;
-    /// Storage of the hit on the second surface
-    PlanarModuleCluster const* hitModule2;
-    /// Storage of (Delta eta)^2 + (Delta phi)^2
-    /// Allows vetos between different possible combinations
-    double diff;
-    /// Storage of a resolved space point. Zero vector indicates unset point
-    Vector3D spacePoint = {0., 0., 0.};
   };
 
   /// Constructor
@@ -73,25 +57,38 @@ public:
   /// @param vec1 vector of hits on the first surface
   /// @param vec2 vector of hits on the second surface
   void
-  combineHits(const std::vector<PlanarModuleCluster>& vec1,
-              const std::vector<PlanarModuleCluster>& vec2);
+  addHits(std::vector<std::vector<PlanarModuleCluster const*>>& hits);
 
   /// @brief Adds a combined hit to the list of combined hits
   /// @note This function does not test what is stored in the new element
   /// @param combHit element added to the list
   void
-  addCombinedHit(const CombinedHits& combHit);
+  addSpacePoint(SpacePoint& sPoint) override;
 
   /// @brief Calculates the space points out of a given collection of hits
   /// on several strip detectors and stores the data
   void
-  calculateSpacePoints();
+  calculateSpacePoints() override;
 
   /// @brief Returns the list of all resolved space points
   /// @note This function is a pure getter of the current state
   /// @return full collection of all resolved space points
-  const std::vector<CombinedHits>&
-  combinedHits();
+  const std::vector<SpacePoint>&
+  spacePoints() override;
+
+protected:
+  /// @brief Getter method for the local coordinates of a hit
+  /// on its corresponding surface
+  /// @param hit object related to the hit that holds the necessary information
+  /// @return vector of the local coordinates of the hit on the surface
+  Vector2D
+  localCoords(const PlanarModuleCluster& hit) const override;
+
+  /// @brief Getter method for the global coordinates of a hit
+  /// @param hit object related to the hit that holds the necessary information
+  /// @return vector of the global coordinates of the hit
+  Vector3D
+  globalCoords(const PlanarModuleCluster& hit) const override;
 
 private:
   /// @brief Storage container for variables related to the calculation of space
@@ -149,20 +146,9 @@ private:
   /// Storage of the user defined configuration of the class
   Config m_cfg;
   /// Storage of all resolved data
-  std::vector<CombinedHits> m_allCombHits;
+  std::vector<SpacePoint> m_allCombSpacePoints;
 
-  /// @brief Getter method for the local coordinates of a hit
-  /// on its corresponding surface
-  /// @param hit object related to the hit that holds the necessary information
-  /// @return vector of the local coordinates of the hit on the surface
-  Vector2D
-  localCoords(const PlanarModuleCluster& hit) const;
 
-  /// @brief Getter method for the global coordinates of a hit
-  /// @param hit object related to the hit that holds the necessary information
-  /// @return vector of the global coordinates of the hit
-  Vector3D
-  globalCoords(const PlanarModuleCluster& hit) const;
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two hits
   /// @param hit1 the first hit

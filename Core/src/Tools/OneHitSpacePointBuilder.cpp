@@ -37,25 +37,27 @@ Acts::OneHitSpacePointBuilder::globalCoords(
 }
 
 void
-Acts::OneHitSpacePointBuilder::addHits(
-    const std::vector<Acts::PlanarModuleCluster>& vec)
+Acts::OneHitSpacePointBuilder::addHits(std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
 {
-  // Declare helper variable
-  std::shared_ptr<Acts::SpacePoint> tmpSpacePoint;
-
-  // Add hits
-  for (auto& cluster : vec) {
-    tmpSpacePoint->hitModule = &cluster;
+  // Check that only a single surface is used
+  assert(hits.size() == 1);
+  
+  // Walk over every hit and add them
+  for (auto& cluster : hits[0]) {
+	// Declare helper variable
+    Acts::SpacePoint tmpSpacePoint;
+	tmpSpacePoint.hitModule.resize(1);
+	tmpSpacePoint.hitModule.push_back(cluster);
     m_allSpacePoints.push_back(tmpSpacePoint);
   }
 }
 
 void
 Acts::OneHitSpacePointBuilder::addSpacePoint(
-    const std::shared_ptr<Acts::SpacePoint>& sPoint)
+    Acts::SpacePoint& sPoint)
 {
   // Add a hit if the module is set
-  if (sPoint->hitModule) m_allSpacePoints.push_back(sPoint);
+  if (sPoint.hitModule.size() == 1 && sPoint.hitModule[0]) m_allSpacePoints.push_back(sPoint);
 }
 
 void
@@ -63,12 +65,12 @@ Acts::OneHitSpacePointBuilder::calculateSpacePoints()
 {
   // Set the space point for all stored hits
   for (auto& sPoint : m_allSpacePoints) {
-    if (sPoint->spacePoint != Acts::Vector3D::Zero(3)) continue;
-    sPoint->spacePoint = globalCoords(*(sPoint->hitModule));
+    if (sPoint.spacePoint != Acts::Vector3D::Zero(3)) continue;
+    sPoint.spacePoint = globalCoords(*(sPoint.hitModule[0]));
   }
 }
 
-const std::vector<std::shared_ptr<Acts::SpacePoint>>&
+const std::vector<Acts::SpacePoint>&
 Acts::OneHitSpacePointBuilder::spacePoints()
 {
   return m_allSpacePoints;
