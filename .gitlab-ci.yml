@@ -98,7 +98,7 @@ scan-build:
     - mkdir report
     - mkdir build && cd build
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-    - scan-build make -j$(nproc) -o ../report
+    - scan-build -enable-checker alpha -disable-checker alpha.deadcode -enable-checker core -enable-checker cplusplus -enable-checker deadcode -enable-checker llvm -enable-checker osx -enable-checker security -enable-checker unix make -j$(nproc) -o ../report
 
 
 # SLC6, LCG88 (legacy build)
