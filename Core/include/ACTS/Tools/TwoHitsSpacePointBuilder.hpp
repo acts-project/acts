@@ -44,7 +44,7 @@ public:
     /// Allowed increase of strip length wrt gaps between strips
     double stripLengthGapTolerance = 0.01;
     /// Assumed position of the vertex
-    Acts::Vector3D vertex = {0., 0., 0.};
+    Vector3D vertex = {0., 0., 0.};
     /// Perform the perpendicular projection for space point finding
     bool usePerpProj = false;
   };
@@ -54,9 +54,9 @@ public:
   struct CombinedHits
   {
     /// Storage of the hit on the first surface
-    Acts::PlanarModuleCluster const* hitModule1;
+    PlanarModuleCluster const* hitModule1;
     /// Storage of the hit on the second surface
-    Acts::PlanarModuleCluster const* hitModule2;
+    PlanarModuleCluster const* hitModule2;
     /// Storage of (Delta eta)^2 + (Delta phi)^2
     /// Allows vetos between different possible combinations
     double diff;
@@ -73,8 +73,8 @@ public:
   /// @param vec1 vector of hits on the first surface
   /// @param vec2 vector of hits on the second surface
   void
-  combineHits(const std::vector<Acts::PlanarModuleCluster>& vec1,
-              const std::vector<Acts::PlanarModuleCluster>& vec2);
+  combineHits(const std::vector<PlanarModuleCluster>& vec1,
+              const std::vector<PlanarModuleCluster>& vec2);
 
   /// @brief Adds a combined hit to the list of combined hits
   /// @note This function does not test what is stored in the new element
@@ -99,19 +99,19 @@ private:
   struct SpacePointParameters
   {
     /// Vector pointing from bottom to top end of first SDE
-    Acts::Vector3D q;
+    Vector3D q;
     /// Vector pointing from bottom to top end of second SDE
-    Acts::Vector3D r;
+    Vector3D r;
     /// Twice the vector pointing from vertex to to midpoint of first SDE
-    Acts::Vector3D s;
+    Vector3D s;
     /// Twice the vector pointing from vertex to to midpoint of second SDE
-    Acts::Vector3D t;
+    Vector3D t;
     /// Cross product between SpacePointParameters::q and
     /// SpacePointParameters::s
-    Acts::Vector3D qs;
+    Vector3D qs;
     /// Cross product between SpacePointParameters::r and
     /// SpacePointParameters::t
-    Acts::Vector3D rt;
+    Vector3D rt;
     /// Magnitude of SpacePointParameters::q
     double qmag = 0.;
     /// Parameter that determines the hit position on the first SDE
@@ -149,35 +149,35 @@ private:
   /// Storage of the user defined configuration of the class
   Config m_cfg;
   /// Storage of all resolved data
-  std::vector<TwoHitsSpacePointBuilder::CombinedHits> m_allCombHits;
+  std::vector<CombinedHits> m_allCombHits;
 
   /// @brief Getter method for the local coordinates of a hit
   /// on its corresponding surface
   /// @param hit object related to the hit that holds the necessary information
   /// @return vector of the local coordinates of the hit on the surface
-  Acts::Vector2D
-  localCoords(const Acts::PlanarModuleCluster& hit) const;
+  Vector2D
+  localCoords(const PlanarModuleCluster& hit) const;
 
   /// @brief Getter method for the global coordinates of a hit
   /// @param hit object related to the hit that holds the necessary information
   /// @return vector of the global coordinates of the hit
-  Acts::Vector3D
-  globalCoords(const Acts::PlanarModuleCluster& hit) const;
+  Vector3D
+  globalCoords(const PlanarModuleCluster& hit) const;
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two hits
   /// @param hit1 the first hit
   /// @param hit2 the second hit
   /// @return the squared sum in case of success, otherwise -1
   double
-  differenceOfHits(const Acts::PlanarModuleCluster& hit1,
-                   const Acts::PlanarModuleCluster& hit2) const;
+  differenceOfHits(const PlanarModuleCluster& hit1,
+                   const PlanarModuleCluster& hit2) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
   /// @param hit object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
-  std::pair<Acts::Vector3D, Acts::Vector3D>
-  endsOfStrip(const Acts::PlanarModuleCluster& hit) const;
+  std::pair<Vector3D, Vector3D>
+  endsOfStrip(const PlanarModuleCluster& hit) const;
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data
@@ -190,10 +190,10 @@ private:
   /// @note The meaning of the parameter is explained in more detail in the
   /// function body
   double
-  calcPerpProj(const Acts::Vector3D& a,
-               const Acts::Vector3D& c,
-               const Acts::Vector3D& q,
-               const Acts::Vector3D& r) const;
+  calcPerpProj(const Vector3D& a,
+               const Vector3D& c,
+               const Vector3D& q,
+               const Vector3D& r) const;
 
   /// @brief This function tests if a space point can be estimated by a more
   /// tolerant treatment of construction. In fact, this function indirectly
