@@ -1,7 +1,7 @@
 stages:
   - build
   - test
-  - static-analysis
+  - static analysis
   - deploy
 
 before_script:
@@ -42,7 +42,7 @@ include_guards:
     - CI/check_include_guards.py . --fail-global
 
 clang_tidy:
-  stage: static-analysis
+  stage: static analysis
   image: gitlab-registry.cern.ch/acts/machines/static_analysis
   before_script: []
   dependencies: []
@@ -58,7 +58,7 @@ clang_tidy:
       - report
 
 oclint:
-  stage: static-analysis
+  stage: static analysis
   image: gitlab-registry.cern.ch/acts/machines/static_analysis
   before_script: []
   dependencies: []
@@ -73,7 +73,7 @@ oclint:
       - report
 
 cppcheck:
-  stage: static-analysis
+  stage: static analysis
   image: gitlab-registry.cern.ch/acts/machines/static_analysis
   before_script: []
   dependencies: []
@@ -89,7 +89,7 @@ cppcheck:
       - report
 
 scan-build:
-  stage: static-analysis
+  stage: static analysis
   image: alpine:edge
   before_script:
     - apk --no-cache add cmake clang clang-analyzer make alpine-sdk boost-dev eigen-dev
