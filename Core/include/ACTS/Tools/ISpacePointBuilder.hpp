@@ -9,8 +9,8 @@
 #ifndef ACTS_TOOLS_ISPACEPOINTBUILDER_H
 #define ACTS_TOOLS_ISPACEPOINTBUILDER_H
 
-#include "ACTS/Digitization/PlanarModuleCluster.hpp"
 #include <vector>
+#include "ACTS/Digitization/PlanarModuleCluster.hpp"
 
 namespace Acts {
 
@@ -33,10 +33,13 @@ struct SpacePoint
 class ISpacePointBuilder
 {
 public:
-  /// @brief Adds hits to the list. Allows checks for possible combination vetos.
-  /// @param hits list of list of hits. The 2D setup allows possible combination vetos
+  /// @brief Adds hits to the list. Allows checks for possible combination
+  /// vetos.
+  /// @param hits list of list of hits. The 2D setup allows possible combination
+  /// vetos
   virtual void
-  addHits(std::vector<std::vector<PlanarModuleCluster const*>>& hits) = 0;
+  addHits(const std::vector<std::vector<PlanarModuleCluster const*>>& hits)
+      = 0;
 
   /// @brief Adds a space point structure to the list of space points
   /// @param space point element added to the list

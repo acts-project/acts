@@ -32,7 +32,7 @@ namespace Test {
   BOOST_DATA_TEST_CASE(TwoHitsSpacePointBuilder_basic, bdata::xrange(1), index)
   {
     (void)index;
-    SpacePoint combHits;
+    SpacePoint sPoint;
 
     // Build Bounds
     std::shared_ptr<const RectangleBounds> recBounds(
@@ -88,35 +88,34 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
-    // Test for setting a TwoHitsSpacePointBuilder::CombinedHits
-    combHits.hitModule.resize(2);
-    combHits.hitModule[0] = pmc;
-    BOOST_TEST(combHits.hitModule[0] == pmc,
-               "Failed to set element in combHits.hitModule1");
+    // Test for setting a SpacePoint
+    sPoint.hitModule.resize(2);
+    sPoint.hitModule[0] = pmc;
+    BOOST_TEST(sPoint.hitModule[0] == pmc,
+               "Failed to set element in sPoint.hitModule1");
 
-    combHits.hitModule[1] = pmc;
-    BOOST_TEST(combHits.hitModule[1] == pmc,
-               "Failed to set element in combHits.hitModule2");
+    sPoint.hitModule[1] = pmc;
+    BOOST_TEST(sPoint.hitModule[1] == pmc,
+               "Failed to set element in sPoint.hitModule2");
 
     Vector3D spacePoint = {1., 1., 1.};
-    combHits.spacePoint = spacePoint;
-    BOOST_TEST(combHits.spacePoint == spacePoint,
-               "Failed to set element in combHits.spacePoint");
+    sPoint.spacePoint   = spacePoint;
+    BOOST_TEST(sPoint.spacePoint == spacePoint,
+               "Failed to set element in sPoint.spacePoint");
 
-    TwoHitsSpacePointBuilder::Config sspb_cfg;
-    TwoHitsSpacePointBuilder         sspb(sspb_cfg);
-    sspb.addSpacePoint(combHits);
+    TwoHitsSpacePointBuilder::Config thspb_cfg;
+    TwoHitsSpacePointBuilder         thspb(thspb_cfg);
+    thspb.addSpacePoint(sPoint);
 
-    // Test for adding a TwoHitsSpacePointBuilder::combinedHits()
-    const std::vector<SpacePoint> vecCombHits
-        = sspb.spacePoints();
-    BOOST_TEST(vecCombHits.size() == 1,
+    // Test for adding a TwoHitsSpacePointBuilder::addHits()
+    const std::vector<SpacePoint> vecsPoint = thspb.spacePoints();
+    BOOST_TEST(vecsPoint.size() == 1,
                "Failed to add element to SpacePointBuilder");
-    BOOST_TEST(vecCombHits[0].hitModule[0] == combHits.hitModule[0],
+    BOOST_TEST(vecsPoint[0].hitModule[0] == sPoint.hitModule[0],
                "Wrong element added");
-    BOOST_TEST(vecCombHits[0].hitModule[1] == combHits.hitModule[1],
+    BOOST_TEST(vecsPoint[0].hitModule[1] == sPoint.hitModule[1],
                "Wrong element added");
-    BOOST_TEST(vecCombHits[0].spacePoint == combHits.spacePoint,
+    BOOST_TEST(vecsPoint[0].spacePoint == sPoint.spacePoint,
                "Wrong element added");
 
     // Build second PlanarModuleCluster
@@ -148,21 +147,20 @@ namespace Test {
                                   {DigitizationCell(0, 0, 1.)});
 
     // Combine two PlanarModuleClusters
-    std::vector<std::vector<PlanarModuleCluster const*>> matCluster;
-    matCluster.push_back({pmc});
-    matCluster.push_back({pmc2});
-    sspb.addHits(matCluster);
-    sspb.calculateSpacePoints();
+    std::vector<std::vector<PlanarModuleCluster const*>> matsPoint;
+    matsPoint.push_back({pmc});
+    matsPoint.push_back({pmc2});
+    thspb.addHits(matsPoint);
+    thspb.calculateSpacePoints();
 
-    const std::vector<SpacePoint> vecCombHits2
-        = sspb.spacePoints();
-    // Test for creating a new TwoHitsSpacePointBuilder::CombinedHits element
+    const std::vector<SpacePoint> vecsPoint2 = thspb.spacePoints();
+    // Test for creating a new SpacePoint element
     // with PlanarModuleClusters
-    BOOST_TEST(vecCombHits2.size() == 2,
+    BOOST_TEST(vecsPoint2.size() == 2,
                "Failed to add element to SpacePointBuilder");
 
     // Test for calculating space points
-    BOOST_TEST(vecCombHits2.back().spacePoint != Vector3D::Zero(3),
+    BOOST_TEST(vecsPoint2.back().spacePoint != Vector3D::Zero(3),
                "Failed to calculate space point");
 
     // Build third PlanarModuleCluster
@@ -185,13 +183,13 @@ namespace Test {
                                   {DigitizationCell(0, 0, 1.)});
 
     // Combine points
-    matCluster.clear();
-    matCluster.push_back({pmc});
-    matCluster.push_back({pmc3});
-    sspb.addHits(matCluster);
+    matsPoint.clear();
+    matsPoint.push_back({pmc});
+    matsPoint.push_back({pmc3});
+    thspb.addHits(matsPoint);
 
     // Test for rejecting unconnected hits
-    BOOST_TEST(sspb.spacePoints().size() == 2,
+    BOOST_TEST(thspb.spacePoints().size() == 2,
                "Failed to reject potential combination");
   }
 }  // end of namespace Test

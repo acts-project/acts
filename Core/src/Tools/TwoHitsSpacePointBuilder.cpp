@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "ACTS/Tools/TwoHitsSpacePointBuilder.hpp"
 #include <cmath>
 #include <limits>
 #include <stdexcept>
-#include "ACTS/Tools/TwoHitsSpacePointBuilder.hpp"
 
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
@@ -76,20 +76,21 @@ Acts::TwoHitsSpacePointBuilder::differenceOfHits(
 }
 
 void
-Acts::TwoHitsSpacePointBuilder::addHits(std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
+Acts::TwoHitsSpacePointBuilder::addHits(
+    const std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
 {
   // Return if more/less surfaces given than 2
-  if(hits.size() != 2) return;
+  if (hits.size() != 2) return;
   // Return if no hits are given
   if (hits[0].empty() && hits[1].empty()) return;
-  
+
   // TODO: only the closest differences get selected -> some points are not
   // taken into account
   // Declare helper variables
-  double                                       currentDiff;
+  double           currentDiff;
   Acts::SpacePoint tmpSpacePoint;
-  double                                       diffMin;
-  unsigned int                                 hitMin;
+  double           diffMin;
+  unsigned int     hitMin;
 
   // Walk through all hits on both surfaces
   for (unsigned int iHits0 = 0; iHits0 < hits[0].size(); iHits0++) {
@@ -108,19 +109,19 @@ Acts::TwoHitsSpacePointBuilder::addHits(std::vector<std::vector<Acts::PlanarModu
     }
     // Store the best (=closest) result
     if (hitMin < hits[1].size()) {
-	  tmpSpacePoint.hitModule.resize(2);
-	  tmpSpacePoint.hitModule.push_back(hits[0][iHits0]);
-      tmpSpacePoint.hitModule.push_back(hits[1][hitMin]);
+      tmpSpacePoint.hitModule.resize(2);
+      tmpSpacePoint.hitModule[0] = hits[0][iHits0];
+      tmpSpacePoint.hitModule[1] = hits[1][hitMin];
       m_allCombSpacePoints.push_back(tmpSpacePoint);
     }
   }
 }
 
 void
-Acts::TwoHitsSpacePointBuilder::addSpacePoint(
-    Acts::SpacePoint& sPoint)
+Acts::TwoHitsSpacePointBuilder::addSpacePoint(Acts::SpacePoint& sPoint)
 {
-  if (sPoint.hitModule.size() == 2 && sPoint.hitModule[0] && sPoint.hitModule[1])
+  if (sPoint.hitModule.size() == 2 && sPoint.hitModule[0]
+      && sPoint.hitModule[1])
     m_allCombSpacePoints.push_back(sPoint);
 }
 
@@ -282,7 +283,7 @@ Acts::TwoHitsSpacePointBuilder::calculateSpacePoints()
 
   // Walk over every found candidate pair
   for (auto& hits : m_allCombSpacePoints) {
-	assert(hits.hitModule.size() == 2);
+    assert(hits.hitModule.size() == 2);
     // If the space point is already calculated this can be skipped
     if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
 

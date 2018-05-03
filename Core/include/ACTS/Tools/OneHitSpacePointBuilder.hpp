@@ -32,7 +32,8 @@ public:
   /// @param hits vector of hits on surfaces
   /// @note The structure of @p hits is hits[Surfaces][Hits on a surface]
   void
-  addHits(std::vector<std::vector<PlanarModuleCluster const*>>& hits) override;
+  addHits(const std::vector<std::vector<PlanarModuleCluster const*>>& hits)
+      override;
 
   /// @brief Adds a hit structure to the list of hits
   /// @note This function does not test what is stored in the new element

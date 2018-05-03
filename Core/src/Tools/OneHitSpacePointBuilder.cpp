@@ -37,27 +37,28 @@ Acts::OneHitSpacePointBuilder::globalCoords(
 }
 
 void
-Acts::OneHitSpacePointBuilder::addHits(std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
+Acts::OneHitSpacePointBuilder::addHits(
+    const std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
 {
   // Check that only a single surface is used
   assert(hits.size() == 1);
-  
+
   // Walk over every hit and add them
   for (auto& cluster : hits[0]) {
-	// Declare helper variable
+    // Declare helper variable
     Acts::SpacePoint tmpSpacePoint;
-	tmpSpacePoint.hitModule.resize(1);
-	tmpSpacePoint.hitModule.push_back(cluster);
+    tmpSpacePoint.hitModule.resize(1);
+    tmpSpacePoint.hitModule[0] = cluster;
     m_allSpacePoints.push_back(tmpSpacePoint);
   }
 }
 
 void
-Acts::OneHitSpacePointBuilder::addSpacePoint(
-    Acts::SpacePoint& sPoint)
+Acts::OneHitSpacePointBuilder::addSpacePoint(Acts::SpacePoint& sPoint)
 {
   // Add a hit if the module is set
-  if (sPoint.hitModule.size() == 1 && sPoint.hitModule[0]) m_allSpacePoints.push_back(sPoint);
+  if (sPoint.hitModule.size() == 1 && sPoint.hitModule[0])
+    m_allSpacePoints.push_back(sPoint);
 }
 
 void

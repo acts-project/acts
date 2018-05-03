@@ -9,10 +9,10 @@
 #ifndef ACTS_TOOLS_TWOHITSSPACEPOINTBUILDER_H
 #define ACTS_TOOLS_TWOHITSSPACEPOINTBUILDER_H
 
-#include "ACTS/Tools/ISpacePointBuilder.hpp"
-#include "ACTS/Utilities/Units.hpp"
 #include "ACTS/Digitization/CartesianSegmentation.hpp"
 #include "ACTS/Digitization/DigitizationModule.hpp"
+#include "ACTS/Tools/ISpacePointBuilder.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
 
@@ -57,7 +57,7 @@ public:
   /// @param vec1 vector of hits on the first surface
   /// @param vec2 vector of hits on the second surface
   void
-  addHits(std::vector<std::vector<PlanarModuleCluster const*>>& hits);
+  addHits(const std::vector<std::vector<PlanarModuleCluster const*>>& hits);
 
   /// @brief Adds a combined hit to the list of combined hits
   /// @note This function does not test what is stored in the new element
@@ -147,8 +147,6 @@ private:
   Config m_cfg;
   /// Storage of all resolved data
   std::vector<SpacePoint> m_allCombSpacePoints;
-
-
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two hits
   /// @param hit1 the first hit
