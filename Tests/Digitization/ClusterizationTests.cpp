@@ -15,8 +15,8 @@
 #include <map>
 #include <utility>
 #include <vector>
-#include "ACTS/Digitization/Clusterization.hpp"
-#include "ACTS/Digitization/DigitizationCell.hpp"
+#include "Acts/Digitization/Clusterization.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

@@ -11,7 +11,7 @@
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
-#include "ACTS/Digitization/DigitizationCell.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 
 namespace Acts {
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS>
