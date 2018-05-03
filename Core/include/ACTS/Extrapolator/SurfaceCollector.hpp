@@ -47,22 +47,26 @@ struct SurfaceCollector
   /// in which case the action is performed:
   /// - it records the surface given the configuration
   ///
-  /// @tparam cache_t is the type of Stepper cache
+  /// @tparam propagator_cache_t is the type of Propagator cache
+  /// @tparam stepper_cache_t is the type of Stepper cache
   ///
-  /// @param cache is the mutable stepper cache object
+  /// @param pCache is the mutable stepper cache object
+  /// @param sCache is the mutable stepper cache object
   /// @param result is the mutable result cache object
-  template <typename cache_t>
+  template <typename propagator_cache_t, typename stepper_cache_t>
   void
-  operator()(cache_t& cache, result_type& result) const
+  operator()(propagator_cache_t& pCache,
+             stepper_cache_t&    sCache,
+             result_type&        result) const
   {
     // a current surface has been assigned by the navigator
     //
-    if (cache.currentSurface && this_selector(*cache.currentSurface)) {
+    if (pCache.currentSurface && this_selector(*pCache.currentSurface)) {
       // create for recording
       SurfaceHit surface_hit;
-      surface_hit.surface   = cache.currentSurface;
-      surface_hit.position  = cache.position();
-      surface_hit.direction = cache.direction();
+      surface_hit.surface   = pCache.currentSurface;
+      surface_hit.position  = sCache.position();
+      surface_hit.direction = sCache.direction();
       // save if in the result
       result.collected.push_back(surface_hit);
     }
@@ -70,11 +74,12 @@ struct SurfaceCollector
 
   /// Pure observer interface
   /// - this does not apply to the surface collector
-  template <typename cache_t>
+  template <typename propagator_cache_t, typename stepper_cache_t>
   void
-  operator()(cache_t& cache) const
+  operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
   {
-    (void)cache;
+    (void)pCache;
+    (void)sCache;
   }
 };
 }

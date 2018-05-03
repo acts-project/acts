@@ -42,24 +42,32 @@ public:
   /// Call operator that is that broadcasts the call to the tuple()
   /// members of the list
   ///
-  /// @tparam cache_t is the cache type from the propagator
+  /// @tparam propagator_cache_t is the cache type of the propagator
+  /// @tparam stepper_cache_t is the cache type of the stepper
   /// @tparam result_t is the result type from actions
   ///
-  /// @param cache[in,out] is the cache object from the propagator
+  /// @param pCache[in,out] is the propagator cache object
+  /// @param sCache[in,out] is the stepper cache object
   /// @param result[in,out] is the result object from actions
   ///
   /// @return bool type indiciating if the step size can be released
-  template <typename cache_t, typename result_t>
+  template <typename propagator_cache_t,
+            typename stepper_cache_t,
+            typename result_t>
   void
-  operator()(cache_t& cache, result_t& result) const
+  operator()(propagator_cache_t& pCache,
+             stepper_cache_t&    sCache,
+             result_t&           result) const
   {
     // clang-format off
-    static_assert(detail::all_of_v<detail::action_signature_check_v<actions, cache_t>...>,
-                  "not all actions support the specified cache_t");
+    static_assert(detail::all_of_v<detail::action_signature_check_v<actions, 
+                                      propagator_cache_t, 
+                                      stepper_cache_t>...>,
+                  "not all actions support the method signature");
     // clang-format on
 
     typedef detail::action_list_impl<actions...> impl;
-    impl::action(tuple(), cache, result);
+    impl::action(tuple(), pCache, sCache, result);
   }
 };
 

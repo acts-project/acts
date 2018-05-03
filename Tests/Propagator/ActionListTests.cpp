@@ -35,17 +35,45 @@ namespace Acts {
 
 namespace Test {
 
+  // the constrained step class
+  typedef detail::ConstrainedStep cstep;
+
+  // This is a simple cache struct to mimic the
+  // Propagator cache in the propagation
+  struct PropagatorCache
+  {
+
+    /// Navigation cache: the start surface
+    const Surface* startSurface = nullptr;
+
+    /// Navigation cache: the current surface
+    const Surface* currentSurface = nullptr;
+
+    /// Navigation cache: the target surface
+    const Surface* targetSurface = nullptr;
+    bool           targetReached = false;
+
+    /// Debug output
+    /// the string where debug messages are stored (optionally)
+    bool        debug       = false;
+    std::string debugString = "";
+    /// buffer & formatting for consistent output
+    size_t debugPfxWidth = 30;
+    size_t debugMsgWidth = 50;
+  };
+
   // This is a simple cache struct to mimic the
   // Stepper cache in the propagation
-  struct Cache
+  struct StepperCache
   {
     // accummulated path length cache
     double accumulatedPath = 0.;
 
     // adaptive sep size of the runge-kutta integration
-    double stepSize = std::numeric_limits<double>::max();
+    cstep stepSize = std::numeric_limits<double>::max();
   };
 
+  /// A distance observer struct as an actor
   struct DistanceObserver
   {
     double path_to_go = 100. * units::_mm;
@@ -59,21 +87,25 @@ namespace Test {
 
     DistanceObserver(double ptg = 0.) : path_to_go(ptg) {}
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache, result_type& result) const
+    operator()(propagator_cache_t&,
+               stepper_cache_t& sCache,
+               result_type&     result) const
     {
-      result.distance = path_to_go - cache.accumulatedPath;
+      result.distance = path_to_go - sCache.accumulatedPath;
     }
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache) const
+    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
     {
-      (void)cache;
+      (void)pCache;
+      (void)sCache;
     }
   };
 
+  /// A call counter struct as an actor
   struct CallCounter
   {
 
@@ -86,16 +118,16 @@ namespace Test {
 
     CallCounter() {}
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t&, result_type& r) const
+    operator()(propagator_cache_t&, stepper_cache_t&, result_type& r) const
     {
       ++r.calls;
     }
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t&) const
+    operator()(propagator_cache_t&, stepper_cache_t&) const
     {
     }
   };
@@ -104,8 +136,9 @@ namespace Test {
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(ActionListTest_Distance)
   {
-    // construct the cache and result
-    Cache cache;
+    // construct the (prop/step) cache and result
+    PropagatorCache pCache;
+    StepperCache    sCache;
 
     // Type of track parameters produced at the end of the propagation
     typedef typename DistanceObserver::result_type distance_result;
@@ -115,13 +148,13 @@ namespace Test {
     action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
 
     // observe and check
-    action_list(cache, result);
+    action_list(pCache, sCache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
                       100. * units::_mm);
 
     // now move the cache and check again
-    cache.accumulatedPath = 50. * units::_mm;
-    action_list(cache, result);
+    sCache.accumulatedPath = 50. * units::_mm;
+    action_list(pCache, sCache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
   }
 
@@ -129,8 +162,9 @@ namespace Test {
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(ActionListTest_TwoActions)
   {
-    // construct the cache and result
-    Cache cache;
+    // construct the (prop/step) cache and result
+    PropagatorCache pCache;
+    StepperCache    sCache;
 
     // Type of track parameters produced at the end of the propagation
     typedef typename DistanceObserver::result_type distance_result;
@@ -141,14 +175,14 @@ namespace Test {
     detail::Extendable<distance_result, caller_result> result;
 
     //// observe and check
-    action_list(cache, result);
+    action_list(pCache, sCache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
                       100. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
 
     // now move the cache and check again
-    cache.accumulatedPath = 50. * units::_mm;
-    action_list(cache, result);
+    sCache.accumulatedPath = 50. * units::_mm;
+    action_list(pCache, sCache, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
   }

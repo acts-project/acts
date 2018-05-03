@@ -68,68 +68,72 @@ struct MaterialCollector
   /// in which case the action is performed:
   /// - it records the surface given the configuration
   ///
-  /// @tparam cache_t is the type of Stepper cache
+  /// @tparam propagator_cache_t is the type of Propagator cache
+  /// @tparam stepper_cache_t is the type of Stepper cache
   ///
-  /// @param cache is the mutable stepper cache object
-  /// @param result is the mutable result cache object
-  template <typename cache_t>
+  /// @param pCache is the mutable propagator cache object
+  /// @param sCache is the mutable stepper cache object
+  /// @param result is the result object to be filled
+  template <typename propagator_cache_t, typename stepper_cache_t>
   void
-  operator()(cache_t& cache, result_type& result) const
+  operator()(propagator_cache_t& pCache,
+             stepper_cache_t&    sCache,
+             result_type&        result) const
   {
     // if we are on target, everything should have been done
-    if (cache.targetReached) return;
+    if (pCache.targetReached) return;
 
-    if (cache.currentSurface)
-      MATCLOG(cache,
+    if (pCache.currentSurface)
+      MATCLOG(pCache,
               result,
               "Material check on surface "
-                  << cache.currentSurface->geoID().toString());
+                  << pCache.currentSurface->geoID().toString());
 
     // a current surface has been already assigned by the navigator
-    if (cache.currentSurface && cache.currentSurface->associatedMaterial()) {
+    if (pCache.currentSurface && pCache.currentSurface->associatedMaterial()) {
 
       // get the material propertices and only continue
       const MaterialProperties* mProperties
-          = cache.currentSurface->associatedMaterial()->material(
-              cache.position());
+          = pCache.currentSurface->associatedMaterial()->material(
+              sCache.position());
       if (mProperties) {
         // check if you have a factor for pre/post/full update to do
         double prepofu = 1.;
-        if (cache.startSurface == cache.currentSurface) {
-          MATCLOG(cache, result, "Update on start surface: post-update mode.");
-          prepofu = cache.currentSurface->associatedMaterial()->factor(
-              cache.navDir, postUpdate);
-        } else if (cache.targetSurface == cache.currentSurface) {
-          MATCLOG(cache, result, "Update on target surface: pre-update mode.");
-          prepofu = cache.currentSurface->associatedMaterial()->factor(
-              cache.navDir, preUpdate);
+        if (pCache.startSurface == pCache.currentSurface) {
+          MATCLOG(pCache, result, "Update on start surface: post-update mode.");
+          prepofu = pCache.currentSurface->associatedMaterial()->factor(
+              sCache.navDir, postUpdate);
+        } else if (pCache.targetSurface == pCache.currentSurface) {
+          MATCLOG(pCache, result, "Update on target surface: pre-update mode.");
+          prepofu = pCache.currentSurface->associatedMaterial()->factor(
+              sCache.navDir, preUpdate);
         } else
-          MATCLOG(cache, result, "Update while pass through: full mode.");
+          MATCLOG(pCache, result, "Update while pass through: full mode.");
 
         if (prepofu == 0.) {
-          MATCLOG(cache, result, "Pre/Post factor set material to zero.");
+          MATCLOG(pCache, result, "Pre/Post factor set material to zero.");
           return;
         }
 
-        MATCLOG(cache, result, "Material properties found for this surface.");
+        MATCLOG(pCache, result, "Material properties found for this surface.");
         // the path correction from the surface intersection
         double pCorrection = prepofu
-            * cache.currentSurface->pathCorrection(cache.position(),
-                                                   cache.direction());
+            * pCache.currentSurface->pathCorrection(sCache.position(),
+                                                    sCache.direction());
         // the full material
         result.materialInX0 += pCorrection * mProperties->thicknessInX0();
         result.materialInL0 += pCorrection * mProperties->thicknessInL0();
 
-        MATCLOG(cache, result, "t/X0 increased to " << result.materialInX0);
-        MATCLOG(cache, result, "t/L0 increased to " << result.materialInL0);
+        MATCLOG(pCache, result, "t/X0 increased to " << result.materialInX0);
+        MATCLOG(pCache, result, "t/L0 increased to " << result.materialInL0);
 
         // if configured, record the individual material hits
         if (detailedCollection) {
           // create for recording
           MaterialHit material_hit;
-          material_hit.surface   = cache.currentSurface;
-          material_hit.position  = cache.position();
-          material_hit.direction = cache.direction();
+          material_hit.surface   = pCache.currentSurface;
+          material_hit.position  = sCache.position();
+          material_hit.direction = sCache.direction();
           // get the material & path length
           material_hit.material   = mProperties->material();
           material_hit.pathLength = pCorrection * mProperties->thickness();
@@ -142,11 +146,10 @@ struct MaterialCollector
 
   /// Pure observer interface
   /// - this does not apply to the surface collector
-  template <typename cache_t>
+  template <typename propagator_cache_t, typename stepper_cache_t>
   void
-  operator()(cache_t& cache) const
+  operator()(propagator_cache_t&, stepper_cache_t&) const
   {
-    (void)cache;
   }
 };
 }

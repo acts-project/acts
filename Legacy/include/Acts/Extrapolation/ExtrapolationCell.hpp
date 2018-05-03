@@ -391,6 +391,14 @@ public:
 
   float time;  ///< timing info
 
+  /// Debug output
+  /// the string where debug messages are stored (optionally)
+  bool        debug       = false;
+  std::string debugString = "";
+  /// buffer & formatting for consistent output
+  size_t debugPfxWidth = 30;
+  size_t debugMsgWidth = 50;
+
   /// Constructor of the Extrapolaton cell
   ///
   /// @param sParameters are the templated parameters

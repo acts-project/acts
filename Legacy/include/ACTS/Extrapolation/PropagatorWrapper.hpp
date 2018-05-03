@@ -1,35 +1,42 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2017-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
+#ifndef ACTS_EXTRAPOLATION_PROPAGATORWRAPPER_H
+#define ACTS_EXTRAPOLATION_PROPAGATORWRAPPER_H
 
 #include <cmath>
 #include <limits>
 #include <memory>
-#include "Acts/EventData/NeutralParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Extrapolation/ExtrapolationCell.hpp"
-#include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#include "ACTS/EventData/NeutralParameters.hpp"
+#include "ACTS/EventData/TrackParameters.hpp"
+#include "ACTS/Extrapolation/ExtrapolationCell.hpp"
+#include "ACTS/Propagator/AbortList.hpp"
+#include "ACTS/Propagator/ActionList.hpp"
+#include "ACTS/Propagator/Propagator.hpp"
+#include "ACTS/Surfaces/CylinderSurface.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
 
 /// @brief templated struct holding result of propagation call
 ///
-template <typename Parameters>
-struct WrapperResult
+template <typename Parameters, typename... ExResult>
+struct PropagatorWrapperResult : private detail::Extendable<ExResult...>
 {
   /// Constructor from initial propagation status
-  WrapperResult(Status s = Status::UNSET) : status(s) {}
+  PropagatorWrapperResult(Status s = Status::UNSET)
+    : detail::Extendable<ExResult...>(), status(s)
+  {
+  }
+
+  /// Accessor to additional propagation quantities
+  using detail::Extendable<ExResult...>::get;
 
   /// Final track parameters
   std::unique_ptr<const Parameters> endParameters = nullptr;
@@ -43,18 +50,20 @@ struct WrapperResult
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
 
+  /// @brief Check the validity of the propagation result
+  ///
   /// @return @c true if the final parameters are set and propagation status
   ///         is SUCCESS, otherwise @c false
   ///
   operator bool() const { return (endParameters && status == Status::SUCCESS); }
 };
 
-/// @brief Wrapper for PropagationEngine to compare with the
+/// @brief PropagatorWrapper for PropagationEngine to compare with the
 /// the ACTS Propagator
 ///
 /// @tparam Impl Implementation of the propagation algorithm
 template <typename Impl>
-class Wrapper final
+class PropagatorWrapper final
 {
 public:
   /// @brief Options for propagate() call
@@ -90,10 +99,47 @@ public:
 
     /// List of abort conditions
     Aborters stop_conditions;
+
+    /// debug flag
+    bool debug = false;
   };
 
   /// Constructor from implementation object
-  explicit Wrapper(Impl impl) : m_impl(impl) {}
+  explicit PropagatorWrapper(Impl impl) : m_impl(impl) {}
+
+private:
+  /// @brief Helper struct determining the result's type
+  ///
+  /// @tparam TrackParameters Type of final track parameters
+  /// @tparam Actions    List of propagation action types
+  ///
+  /// This helper struct provides type definitions to extract the correct
+  /// propagation result type from a given TrackParameter type and an
+  /// ActionList.
+  ///
+  template <typename Parameters, typename Actions>
+  struct result_type_helper
+  {
+    /// @brief Propagation result type for an arbitrary list of additional
+    ///        propagation results
+    ///
+    /// @tparam args Parameter pack specifying additional propagation results
+    ///
+    template <typename... args>
+    using this_result_type = PropagatorWrapperResult<Parameters, args...>;
+
+    /// @brief Propagation result type derived from a given action list
+    typedef typename Actions::template result_type<this_result_type> type;
+  };
+
+  /// @brief Short-hand type definition for propagation result derived from
+  ///        an action list
+  ///
+  /// @tparam T       Type of the final track parameters
+  /// @tparam Actions List of propagation action types
+  ///
+  template <typename T, typename Actions>
+  using action_list_result_t = typename result_type_helper<T, Actions>::type;
 
 public:
   /// @brief Propagate track parameters
@@ -115,8 +161,8 @@ public:
   ///
   /// neutral option
   template <typename Actions, typename Aborters>
-  WrapperResult<NeutralCurvilinearParameters>
-  propagate(const NeutralCurvilinearParameters& start,
+  action_list_result_t<NeutralCurvilinearParameters, Actions>
+  propagate(const NeutralParameters& start,
             const Options<Actions, Aborters>& options) const
   {
     // The extrapolation cell
@@ -131,9 +177,29 @@ public:
                       Actions,
                       Aborters>(ec, start, m_surface, options);
   }
-  /// charged option
+
+  /// charged option - starting from TrackParameters
   template <typename Actions, typename Aborters>
-  WrapperResult<CurvilinearParameters>
+  action_list_result_t<CurvilinearParameters, Actions>
+  propagate(const TrackParameters& start,
+            const Options<Actions, Aborters>& options) const
+  {
+    // The extrapolation cell
+    ExtrapolationCell<TrackParameters> ec(start);
+    ec.pathLimit              = options.maxPathLength;
+    ec.destinationCurvilinear = true;
+
+    return propagate_<ExtrapolationCell<TrackParameters>,
+                      CurvilinearParameters,
+                      TrackParameters,
+                      CylinderSurface,
+                      Actions,
+                      Aborters>(ec, start, m_surface, options);
+  }
+
+  /// charged option - starting from CurvilinearParameters
+  template <typename Actions, typename Aborters>
+  action_list_result_t<CurvilinearParameters, Actions>
   propagate(const CurvilinearParameters& start,
             const Options<Actions, Aborters>& options) const
   {
@@ -173,7 +239,7 @@ public:
   ///         track parameters, and output of actions (if they produce any)
   /// neutral option
   template <typename Surface, typename Actions, typename Aborters>
-  WrapperResult<NeutralParameters>
+  action_list_result_t<NeutralParameters, Actions>
   propagate(const NeutralParameters& start,
             const Surface&           target,
             const Options<Actions, Aborters>& options) const
@@ -194,7 +260,7 @@ public:
 
   /// charged option
   template <typename Surface, typename Actions, typename Aborters>
-  WrapperResult<TrackParameters>
+  action_list_result_t<TrackParameters, Actions>
   propagate(const TrackParameters& start,
             const Surface&         target,
             const Options<Actions, Aborters>& options) const
@@ -226,21 +292,23 @@ private:
   /// @param[in] surface The destination Surface
   /// @param[in] options the combined list of actions and aborters
   ///
-  /// @return a WrapperResult object templated to the right type
+  /// @return a PropagatorWrapperResult object templated to the right type
   template <typename Cache,
             typename Parameters,
             typename ParametersBase,
             typename Surface,
             typename Actions,
             typename Aborters>
-  WrapperResult<Parameters>
+  action_list_result_t<Parameters, Actions>
   propagate_(Cache& cache,
              const Parameters& /*start*/,
              const Surface& surface,
              const Options<Actions, Aborters>& options) const
   {
-    // Initialize the propagation result object
-    WrapperResult<Parameters> r(Status::IN_PROGRESS);
+    // Type of the full propagation result, including output from actions
+    typedef action_list_result_t<Parameters, Actions> result_type;
+    result_type r(Status::IN_PROGRESS);
+
     // Call the wrapped propagator with the ExtrapolationCell
     auto status = m_impl->propagate(cache,
                                     surface,
@@ -269,3 +337,5 @@ private:
 };
 
 }  // namespace Acts
+
+#endif  // ACTS_EXTRAPOLATION_PROPAGATORWRAPPER_H

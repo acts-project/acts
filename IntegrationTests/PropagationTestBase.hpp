@@ -41,6 +41,8 @@ BOOST_DATA_TEST_CASE(
     plimit,
     index)
 {
+  if (index < skip) return;
+
   double dcharge = -1 + 2 * charge;
   // foward backward check atlas stepper
   foward_backward(apropagator, pT, phi, theta, dcharge, plimit, index, 1e-3);
@@ -89,7 +91,7 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  (void)index;
+  if (index < skip) return;
 
   double dcharge = -1 + 2 * charge;
   // just make sure we can reach it
@@ -97,14 +99,41 @@ BOOST_DATA_TEST_CASE(
   r        = (r > 2.5 * Acts::units::_m) ? 2.5 * Acts::units::_m : r;
 
   // check atlas stepper
-  auto a_at_cylinder = to_cylinder(
-      apropagator, pT, phi, theta, dcharge, r, rand1, rand2, rand3, covtpr);
+  auto a_at_cylinder = to_cylinder(apropagator,
+                                   pT,
+                                   phi,
+                                   theta,
+                                   dcharge,
+                                   r,
+                                   rand1,
+                                   rand2,
+                                   rand3,
+                                   covtpr,
+                                   debug);
   // check eigen stepper
-  auto e_at_cylinder = to_cylinder(
-      epropagator, pT, phi, theta, dcharge, r, rand1, rand2, rand3, covtpr);
+  auto e_at_cylinder = to_cylinder(epropagator,
+                                   pT,
+                                   phi,
+                                   theta,
+                                   dcharge,
+                                   r,
+                                   rand1,
+                                   rand2,
+                                   rand3,
+                                   covtpr,
+                                   debug);
   // the runge kutta engine
-  auto w_at_cylinder = to_cylinder(
-      wpropagator, pT, phi, theta, dcharge, r, rand1, rand2, rand3, covtpr);
+  auto w_at_cylinder = to_cylinder(wpropagator,
+                                   pT,
+                                   phi,
+                                   theta,
+                                   dcharge,
+                                   r,
+                                   rand1,
+                                   rand2,
+                                   rand3,
+                                   covtpr,
+                                   debug);
   BOOST_CHECK(
       e_at_cylinder.first.isApprox(a_at_cylinder.first, 1 * units::_um));
   BOOST_CHECK(
@@ -150,7 +179,8 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  (void)index;
+  if (index < skip) return;
+
   double dcharge = -1 + 2 * charge;
   // to a plane with the atlas stepper
   auto a_at_plane
@@ -235,7 +265,8 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  (void)index;
+  if (index < skip) return;
+
   double dcharge = -1 + 2 * charge;
   // to a disc with the  atlas stepper
   auto a_at_disc
@@ -320,9 +351,12 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  (void)index;
+  if (index < skip) return;
+
   double dcharge = -1 + 2 * charge;
+
   // to a line with the atlas stepper
+  if (debug) std::cout << "[ >>>> Testing Atlas Propagator <<<< ]" << std::endl;
   auto a_at_line
       = to_surface<AtlasPropagator_type, StrawSurface>(apropagator,
                                                        pT,
@@ -334,8 +368,10 @@ BOOST_DATA_TEST_CASE(
                                                        rand2,
                                                        rand3,
                                                        false,
-                                                       covtpr);
+                                                       covtpr,
+                                                       debug);
   // to a line with the eigen stepper
+  if (debug) std::cout << "[ >>>> Testing Eigen Propagator <<<< ]" << std::endl;
   auto e_at_line
       = to_surface<EigenPropagator_type, StrawSurface>(epropagator,
                                                        pT,
@@ -347,8 +383,11 @@ BOOST_DATA_TEST_CASE(
                                                        rand2,
                                                        rand3,
                                                        false,
-                                                       covtpr);
+                                                       covtpr,
+                                                       debug);
   // to a line with the runge kutta engine
+  if (debug)
+    std::cout << "[ >>>> Testing Legacy Propagator <<<< ]" << std::endl;
   auto w_at_line = to_surface<WrappedPropagator_type, StrawSurface>(
       wpropagator,
       pT,
@@ -360,7 +399,8 @@ BOOST_DATA_TEST_CASE(
       rand2,
       rand3,
       false,
-      covtpr);
+      covtpr,
+      debug);
 
   BOOST_CHECK(e_at_line.first.isApprox(a_at_line.first, 1 * units::_um));
   BOOST_CHECK(e_at_line.first.isApprox(w_at_line.first, 1 * units::_um));
@@ -394,6 +434,8 @@ BOOST_DATA_TEST_CASE(
     plimit,
     index)
 {
+  if (index < skip) return;
+
   double dcharge = -1 + 2 * charge;
   // covariance check for eigen stepper
   covariance_curvilinear(
@@ -445,6 +487,8 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
+  if (index < skip) return;
+
   double dcharge = -1 + 2 * charge;
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagator_type, DiscSurface, DiscSurface>(
@@ -534,6 +578,8 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
+  if (index < skip) return;
+
   double dcharge = -1 + 2 * charge;
   // covariance check for atlas stepper
   covariance_bound<AtlasPropagator_type, PlaneSurface, PlaneSurface>(
@@ -616,6 +662,8 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
+  if (index < skip) return;
+
   double dcharge = -1 + 2 * charge;
 
   // covariance check for atlas stepper

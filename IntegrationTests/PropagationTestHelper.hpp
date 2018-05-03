@@ -7,6 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "covariance_validation_fixture.hpp"
 
 namespace tt = boost::test_tools;
@@ -79,13 +81,15 @@ namespace IntegrationTest {
                              double                 charge,
                              int /*index*/,
                              double Bz,
-                             double disttol = 0.1 * units::_um)
+                             double disttol = 0.1 * units::_um,
+                             bool   debug   = false)
   {
 
     // setup propagation options
     typename Propagator_type::template Options<> options;
     options.maxPathLength = 5 * units::_m;
     options.maxStepSize   = 1 * units::_cm;
+    options.debug         = debug;
 
     // define start parameters
     double                x  = 0;
@@ -162,18 +166,21 @@ namespace IntegrationTest {
                   double                 plimit,
                   int /*index*/,
                   double disttol = 1. * units::_um,
-                  double momtol  = 10. * units::_keV)
+                  double momtol  = 10. * units::_keV,
+                  bool   debug   = false)
   {
 
     // setup propagation options
     typename Propagator_type::template Options<> fwd_options;
     fwd_options.maxPathLength = plimit;
     fwd_options.maxStepSize   = 1 * units::_cm;
+    fwd_options.debug         = debug;
 
     typename Propagator_type::template Options<> back_options;
     back_options.direction     = backward;
     back_options.maxPathLength = plimit;
     back_options.maxStepSize   = 1 * units::_cm;
+    back_options.debug         = debug;
 
     // define start parameters
     double                x  = 0;
@@ -214,13 +221,15 @@ namespace IntegrationTest {
               double                 rand1,
               double                 rand2,
               double /*rand3*/,
-              bool covtransport = false)
+              bool covtransport = false,
+              bool debug        = false)
   {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
     options.maxStepSize   = plimit;
     options.maxPathLength = plimit;
+    options.debug         = debug;
 
     // define start parameters
     double   x  = 0;
@@ -274,13 +283,18 @@ namespace IntegrationTest {
              double                 rand2,
              double                 rand3,
              bool                   planar       = true,
-             bool                   covtransport = false)
+             bool                   covtransport = false,
+             bool                   debug        = false)
   {
+
+    typedef detail::DebugOutputActor DebugOutput;
+
     // setup propagation options
-    typename Propagator_type::template Options<> options;
+    typename Propagator_type::template Options<ActionList<DebugOutput>> options;
     // setup propagation options
     options.maxStepSize   = plimit;
     options.maxPathLength = plimit;
+    options.debug         = debug;
 
     // define start parameters
     double   x  = 0;
@@ -323,6 +337,16 @@ namespace IntegrationTest {
     const auto& tp     = result.endParameters;
     // check the result for nullptr
     BOOST_CHECK(tp != nullptr);
+
+    // screen output in case you are running in debug mode
+    if (debug) {
+      const auto& debugOutput = result.template get<DebugOutput::result_type>();
+      std::cout << ">>> Debug output of this propagation " << std::endl;
+      std::cout << debugOutput.debugString << std::endl;
+      std::cout << ">>> Propagation status is : " << int(result.status)
+                << std::endl;
+    }
+
     // The position and path length
     return std::pair<Vector3D, double>(tp->position(), result.pathLength);
   }
@@ -336,7 +360,8 @@ namespace IntegrationTest {
                          double                 charge,
                          double                 plimit,
                          int /*index*/,
-                         double reltol = 1e-4)
+                         double reltol = 1e-4,
+                         bool   debug  = false)
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
@@ -344,6 +369,7 @@ namespace IntegrationTest {
     // setup propagation options
     options.maxStepSize   = plimit;
     options.maxPathLength = plimit;
+    options.debug         = debug;
 
     // define start parameters
     double   x  = 0;
@@ -397,7 +423,8 @@ namespace IntegrationTest {
                    int /*index*/,
                    bool   startPlanar = true,
                    bool   destPlanar  = true,
-                   double reltol      = 1e-3)
+                   double reltol      = 1e-3,
+                   bool   debug       = false)
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
@@ -405,6 +432,7 @@ namespace IntegrationTest {
     // setup propagation options
     options.maxStepSize   = plimit;
     options.maxPathLength = plimit;
+    options.debug         = debug;
 
     // define start parameters
     double            x  = 0;

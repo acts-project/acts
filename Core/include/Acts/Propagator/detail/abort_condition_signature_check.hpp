@@ -17,79 +17,102 @@ namespace Acts {
 /// The following operators have to be inplemented in order to satisfy
 /// as an abort condition
 ///
+/// clang-format off
+///
 /// @code
 ///
-/// template <typename cache_t, typename result_t>
+/// template <typename propagator_cache_t, typename stepper_cache_t, typename
+/// result_t>
 /// bool
-/// operator()(const result_t& r, cache_t& cache) const
+/// operator()(const result_t& r, propagator_cache_t& pCache, stepper_cache_t&
+/// sCache) const
 /// {
 ///   return false;
 /// }
 ///
-/// template <typename cache_t>
+/// template <typename propagator_cache_t, typename stepper_cache_t>
 /// bool
-/// operator()(cache_t& cache) const
+/// operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
 /// {
 ///   return false;
 /// }
 ///
 /// @endcode
+///
+/// clang-format off
 namespace detail {
 
   namespace {
     template <typename T,
-              typename cache_t,
+              typename propagator_cache_t,
+              typename stepper_cache_t,
               typename result_t,
-              typename = decltype(std::declval<const T>().
-                                  operator()(std::declval<const result_t&>(),
-                                             std::declval<const cache_t&>()))>
+              typename
+              = decltype(std::declval<const T>().
+                         operator()(std::declval<const result_t&>(),
+                                    std::declval<const propagator_cache_t&>(),
+                                    std::declval<const stepper_cache_t&>()))>
     std::true_type
     test_condition_with_result(int);
 
-    template <typename, typename, typename>
+    template <typename, typename, typename, typename>
     std::false_type
     test_condition_with_result(...);
 
     template <typename T,
-              typename cache_t,
-              typename = decltype(std::declval<const T>().
-                                  operator()(std::declval<const cache_t&>()))>
+              typename propagator_cache_t,
+              typename stepper_cache_t,
+              typename
+              = decltype(std::declval<const T>().
+                         operator()(std::declval<const propagator_cache_t&>(),
+                                    std::declval<const stepper_cache_t&>()))>
     std::true_type
     test_condition_without_result(int);
 
-    template <typename, typename>
+    template <typename, typename, typename>
     std::false_type
     test_condition_without_result(...);
 
-    // clang-format on
-    template <typename T, typename cache_t, bool has_result = false>
+    template <typename T,
+              typename propagator_cache_t,
+              typename stepper_cache_t,
+              bool has_result = false>
     struct condition_signature_check_impl
-        : decltype(test_condition_without_result<T, cache_t>(0))
+        : decltype(test_condition_without_result<T,
+                                                 propagator_cache_t,
+                                                 stepper_cache_t>(0))
     {
     };
 
-    template <typename T, typename cache_t>
-    struct condition_signature_check_impl<T, cache_t, true>
+    template <typename T, typename propagator_cache_t, typename stepper_cache_t>
+    struct condition_signature_check_impl<T,
+                                          propagator_cache_t,
+                                          stepper_cache_t,
+                                          true>
         : decltype(
               test_condition_with_result<T,
-                                         cache_t,
+                                         propagator_cache_t,
+                                         stepper_cache_t,
                                          result_type_t<action_type_t<T>>>(0))
     {
     };
 
-    template <typename T, typename cache_t>
+    template <typename T, typename propagator_cache_t, typename stepper_cache_t>
     struct abort_condition_signature_check
         : condition_signature_check_impl<T,
-                                         cache_t,
+                                         propagator_cache_t,
+                                         stepper_cache_t,
                                          condition_uses_result_type<T>::value>
     {
     };
     // clang-format on
   }  // end of anonymous namespace
 
-  template <typename T, typename cache_t>
+  template <typename T, typename propagator_cache_t, typename stepper_cache_t>
   constexpr bool abort_condition_signature_check_v
-      = abort_condition_signature_check<T, cache_t>::value;
+      = abort_condition_signature_check<T,
+                                        propagator_cache_t,
+                                        stepper_cache_t>::value;
 }  // namespace detail
 
 }  // namespace Acts

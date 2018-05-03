@@ -374,7 +374,7 @@ public:
       serializedBin += (bin[1] * m_binningData[0].bins() * bin[2]
                         * m_binningData[1].bins());
     }
-    return bin[0];
+    return serializedBin;
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes

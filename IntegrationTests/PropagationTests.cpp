@@ -14,8 +14,10 @@
 #include <boost/test/data/test_case.hpp>
 
 #include <cmath>
+#include <iostream>
 
 #include <boost/test/data/test_case.hpp>
+
 #include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolation/RungeKuttaEngine.hpp"
@@ -45,12 +47,14 @@ namespace IntegrationTest {
   typedef Propagator<EigenStepper_type> EigenPropagator_type;
   typedef Propagator<AtlasStepper_type> AtlasPropagator_type;
   typedef RungeKuttaEngine<BField_type> PropagationEngine_type;
-  typedef Wrapper<std::shared_ptr<PropagationEngine_type>>
+  typedef PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>
       WrappedPropagator_type;
 
   // number of tests
-  const int  ntests = 1;
+  const int  ntests = 3;
+  const int  skip   = 2;
   const bool covtpr = true;
+  const bool debug  = true;
 
   // setup propagator with constant B-field
   const double         Bz = 2. * units::_T;
@@ -90,6 +94,8 @@ namespace IntegrationTest {
       charge,
       index)
   {
+    if (index < skip) return;
+
     double dcharge = -1 + 2 * charge;
     // constant field propagation atlas stepper
     auto aposition = constant_field_propagation(

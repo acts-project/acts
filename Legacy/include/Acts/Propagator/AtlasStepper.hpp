@@ -69,7 +69,7 @@ public:
     bool           targetReached = false;
 
     /// Debug output
-    /// the string where things are stored (optionally)
+    /// the string where debug messages are stored (optionally)
     bool        debug       = false;
     std::string debugString = "";
     /// buffer & formatting for consistent output

@@ -22,6 +22,7 @@ namespace detail {
 
     /// Simple result struct to be returned
     /// It collects the debug output string from the cache
+    /// into which all actors and aborters can write
     struct this_result
     {
       std::string debugString = "";
@@ -31,27 +32,33 @@ namespace detail {
 
     /// Debug output action for the ActionList of the Propagator
     ///
-    /// @tparam cache_t is the type of Stepper cache
+    /// @tparam propagator_cache_t is the type of the Propagator cache
+    /// @tparam stepper_cache_t is the type of Stepper cache,
+    /// it is not used in this stepper
     ///
-    /// @param cache is the mutable stepper cache object
+    /// @param pCache is the mutable propagator cache object
     /// @param result is the mutable result cache object
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache, result_type& result) const
+    operator()(propagator_cache_t& pCache,
+               stepper_cache_t&,
+               result_type& result) const
     {
       // move the debug output from the cache to
       // to the output actor if it is not set to mute
       // only when the target is reached (or later otherwise triggered)
-      if (!mute && cache.targetReached) result.debugString = cache.debugString;
+      if (!mute && (pCache.targetReached || pCache.navigationBreak))
+        result.debugString = pCache.debugString;
     }
 
     /// Pure observer interface
     /// - this does not apply to the output collector
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache) const
+    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
     {
-      (void)cache;
+      (void)pCache;
+      (void)sCache;
     }
   };
 

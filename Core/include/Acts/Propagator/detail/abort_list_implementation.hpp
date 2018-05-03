@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <algorithm>
 #include "Acts/Propagator/detail/condition_uses_result_type.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
@@ -21,14 +22,20 @@ namespace detail {
     template <bool has_result = true>
     struct condition_caller
     {
-      template <typename condition, typename result_t, typename cache_t>
+      template <typename condition,
+                typename result_t,
+                typename propagation_cache_t,
+                typename stepper_cache_t>
       static bool
-      check(const condition& c, const result_t& r, cache_t& cache)
+      check(const condition&     c,
+            const result_t&      r,
+            propagation_cache_t& pCache,
+            stepper_cache_t&     sCache)
       {
         typedef action_type_t<condition>   action_type;
         typedef result_type_t<action_type> result_type;
 
-        return c(r.template get<result_type>(), cache);
+        return c(r.template get<result_type>(), pCache, sCache);
       }
     };
 
@@ -37,11 +44,17 @@ namespace detail {
     template <>
     struct condition_caller<false>
     {
-      template <typename condition, typename result_t, typename cache_t>
+      template <typename condition,
+                typename result_t,
+                typename propagation_cache_t,
+                typename stepper_cache_t>
       static bool
-      check(const condition& c, const result_t&, cache_t& cache)
+      check(const condition& c,
+            const result_t&,
+            propagation_cache_t& pCache,
+            stepper_cache_t&     sCache)
       {
-        return c(cache);
+        return c(pCache, sCache);
       }
     };
   }  // end of anonymous namespace
@@ -49,12 +62,21 @@ namespace detail {
   template <typename... conditions>
   struct abort_list_impl;
 
+  /// This is the check call on the a list of conditions
+  /// it calls the aparant condition and broadcasts
+  /// the call to the remaining ones
   template <typename first, typename... others>
   struct abort_list_impl<first, others...>
   {
-    template <typename T, typename result_t, typename cache_t>
+    template <typename T,
+              typename result_t,
+              typename propagation_cache_t,
+              typename stepper_cache_t>
     static bool
-    check(const T& conditions_tuple, const result_t& r, cache_t& cache)
+    check(const T&             conditions_tuple,
+          const result_t&      r,
+          propagation_cache_t& pCache,
+          stepper_cache_t&     sCache)
     {
 
       // get the right helper for calling the abort condition
@@ -67,39 +89,52 @@ namespace detail {
       // - check abort conditions recursively
       // - make use of short-circuit evaluation
       // -> skip remaining conditions if this abort condition evaluates to true
-      bool abort = caller_type::check(this_condition, r, cache)
-          || abort_list_impl<others...>::check(conditions_tuple, r, cache);
+      bool abort = caller_type::check(this_condition, r, pCache, sCache)
+          || abort_list_impl<others...>::check(
+                       conditions_tuple, r, pCache, sCache);
 
       return abort;
     }
   };
 
+  /// This is the check call on the a last of all conditions
   template <typename last>
   struct abort_list_impl<last>
   {
-    template <typename T, typename result_t, typename cache_t>
+    template <typename T,
+              typename result_t,
+              typename propagation_cache_t,
+              typename stepper_cache_t>
     static bool
-    check(const T& conditions_tuple, const result_t& r, cache_t& cache)
+    check(const T&             conditions_tuple,
+          const result_t&      r,
+          propagation_cache_t& pCache,
+          stepper_cache_t&     sCache)
     {
       // get the right helper for calling the abort condition
       constexpr bool has_result     = condition_uses_result_type<last>::value;
       const auto&    this_condition = std::get<last>(conditions_tuple);
 
-      return condition_caller<has_result>::check(this_condition, r, cache);
+      return condition_caller<has_result>::check(
+          this_condition, r, pCache, sCache);
     }
   };
 
+  /// This is the empty call list - never abort
   template <>
   struct abort_list_impl<>
   {
-    template <typename T, typename result_t, typename cache_t>
+    template <typename T,
+              typename result_t,
+              typename propagation_cache_t,
+              typename stepper_cache_t>
     static bool
-    check(const T&, const result_t&, cache_t&)
+    check(const T&, const result_t&, propagation_cache_t&, stepper_cache_t&)
     {
       return false;
     }
   };
 
-}  // namespace
+}  // namespace detail
 
 }  // namespace Acts

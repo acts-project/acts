@@ -24,25 +24,25 @@ enum struct Status { SUCCESS, FAILURE, UNSET, IN_PROGRESS, WRONG_DIRECTION };
 
 /// @brief Simple class holding result of propagation call
 ///
-/// @tparam TrackParameters Type of final track parameters
+/// @tparam parameters_t Type of final track parameters
 ///
-/// @tparam ExResult        Parameter pack for additional propagation
-///                         quantities
+/// @tparam result_list  Result pack for additional propagation
+///                      quantities
 ///
-template <typename TrackParameters, typename... ExResult>
-struct Result : private detail::Extendable<ExResult...>
+template <typename parameters_t, typename... result_list>
+struct Result : private detail::Extendable<result_list...>
 {
   /// Constructor from initial propagation status
   Result(Status s = Status::UNSET)
-    : detail::Extendable<ExResult...>(), status(s)
+    : detail::Extendable<result_list...>(), status(s)
   {
   }
 
   /// Accessor to additional propagation quantities
-  using detail::Extendable<ExResult...>::get;
+  using detail::Extendable<result_list...>::get;
 
-  /// Final track parameters
-  std::unique_ptr<const TrackParameters> endParameters = nullptr;
+  /// Final track parameters - initialized to null pointer
+  std::unique_ptr<const parameters_t> endParameters = nullptr;
 
   /// Propagation status
   Status status = Status::UNSET;
@@ -61,13 +61,17 @@ struct Result : private detail::Extendable<ExResult...>
   operator bool() const { return (endParameters && status == Status::SUCCESS); }
 };
 
-/// @brief Propagator for particles in a magnetic field
+/// @brief Propagator for particles (optionally in a magnetic field)
 ///
-/// @tparam Impl Implementation of the propagation algorithm
+/// The Propagator works with two cache objects:
+///  - a propgator cache for object navigation and screen output
+///  - a stepper cache for the actual transport caching (pos,dir,field)
+///
+/// @tparam stepper_t stepper imentation of the propagation algorithm
 ///
 /// This Propagator class serves as high-level steering code for propagating
 /// track parameters. The actual implementation of the propagation has to be
-/// implemented in the Impl object, which has to provide the following:
+/// implemented in the stepper_t object, which has to provide the following:
 ///
 /// - a function for performing a single propagation step
 /// - a type mapping for: initial track parameter type -> type of final track
@@ -79,27 +83,28 @@ struct Result : private detail::Extendable<ExResult...>
 /// - a type mapping for: (initial track parameter type and destination
 ///   surface type) -> type of internal cache object
 ///
-template <typename Impl>
+template <typename stepper_t>
 class Propagator final
 {
 public:
   /// Type of cache object used by the propagation implementation
-  typedef typename Impl::template cache_type<TrackParameters> cache_type;
+  typedef typename stepper_t::template cache_type<TrackParameters> StepperCache;
 
   /// Typedef the PathLimitReached aborter
   typedef detail::PathLimitReached PathLimitReached;
 
   /// @brief Options for propagate() call
   ///
-  /// @tparam Actions List of action types called after each
+  /// @tparam action_list_t List of action types called after each
   ///                   propagation step with the current propagation
   ///                   cache
   ///
-  /// @tparam Aborters  List of abort conditions tested after each
+  /// @tparam aborter_list_t  List of abort conditions tested after each
   ///                   propagation step using the current propagation
   ///                   cache
   ///
-  template <typename Actions = ActionList<>, typename Aborters = AbortList<>>
+  template <typename action_list_t  = ActionList<>,
+            typename aborter_list_t = AbortList<>>
   struct Options
   {
 
@@ -122,26 +127,55 @@ public:
     bool debug = false;
 
     /// List of actions
-    Actions actionList;
+    action_list_t actionList;
 
     /// List of abort conditions
-    Aborters stopConditions;
+    aborter_list_t stopConditions;
   };
 
   /// Constructor from implementation object
-  explicit Propagator(Impl impl) : m_impl(std::move(impl)) {}
+  explicit Propagator(stepper_t stepper) : m_stepper(std::move(stepper)) {}
 
 private:
+  /// @brief private Propagator cache for navigation and debugging
+  ///
+  /// This struct holds the common cache information for propagating
+  /// which is independent of the actual stepper implementation.
+  struct PropagatorCache
+  {
+
+    /// Navigation cache: the start surface
+    const Surface* startSurface = nullptr;
+
+    /// Navigation cache: the current surface
+    const Surface* currentSurface = nullptr;
+
+    /// Navigation cache: the target surface
+    const Surface* targetSurface = nullptr;
+    bool           targetReached = false;
+
+    /// Navigation cache : a break has been detected
+    bool navigationBreak = false;
+
+    /// Debug output steering
+    /// - the string where debug messages are stored (optionally)
+    /// - it also has some formatting options
+    bool        debug         = false;
+    std::string debugString   = "";
+    size_t      debugPfxWidth = 30;
+    size_t      debugMsgWidth = 50;
+  };
+
   /// @brief Helper struct determining the result's type
   ///
-  /// @tparam TrackParameters Type of final track parameters
-  /// @tparam Actions    List of propagation action types
+  /// @tparam parameters_t Type of final track parameters
+  /// @tparam action_list_t    List of propagation action types
   ///
   /// This helper struct provides type definitions to extract the correct
   /// propagation result type from a given TrackParameter type and an
   /// ActionList.
   ///
-  template <typename TrackParameters, typename Actions>
+  template <typename parameters_t, typename action_list_t>
   struct result_type_helper
   {
     /// @brief Propagation result type for an arbitrary list of additional
@@ -150,20 +184,21 @@ private:
     /// @tparam args Parameter pack specifying additional propagation results
     ///
     template <typename... args>
-    using this_result_type = Result<TrackParameters, args...>;
+    using this_result_type = Result<parameters_t, args...>;
 
     /// @brief Propagation result type derived from a given action list
-    typedef typename Actions::template result_type<this_result_type> type;
+    typedef typename action_list_t::template result_type<this_result_type> type;
   };
 
   /// @brief Short-hand type definition for propagation result derived from
   ///        an action list
   ///
   /// @tparam T       Type of the final track parameters
-  /// @tparam Actions List of propagation action types
+  /// @tparam action_list_t List of propagation action types
   ///
-  template <typename T, typename Actions>
-  using action_list_result_t = typename result_type_helper<T, Actions>::type;
+  template <typename T, typename action_list_t>
+  using action_list_t_result_t =
+      typename result_type_helper<T, action_list_t>::type;
 
   /// @brief Propagate track parameters - Private method with cache
   ///
@@ -174,10 +209,10 @@ private:
   ///
   /// @note Does not (yet) convert into  the return_type of the propagation
   ///
-  /// @tparam Result the result type for this propagation
-  /// @tparam Actions       Type list of actions, type ActionList<>
-  /// @tparam Aborters        Type list of abort conditions, type AbortList<>
-  /// @tparam InteralAborter  additional internal aborters
+  /// @tparam result_t Type of the result object for this propagation
+  /// @tparam action_list_t  Type list of actions, type ActionList<>
+  /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
+  /// @tparam internal_aborter_list_t additional internal aborters
   ///
   /// @param [in,out] Result of the propagation
   /// @param [in,out] Cache Stepper cache built/updated from the start
@@ -186,54 +221,57 @@ private:
   /// @param [in] Options Propagation options
   ///
   /// @return Propagation Status
-  template <typename Result,
-            typename Actions,
-            typename Aborters,
-            typename InteralAborters>
+  template <typename result_t,
+            typename action_list_t,
+            typename aborter_list_t,
+            typename internal_aborter_list_t>
   Status
-  propagate_(Result&     result,
-             cache_type& cache,
-             const Options<Actions, Aborters>& options,
-             const InteralAborters& internalStopConditions) const
+  propagate_(result_t&        result,
+             PropagatorCache& pCache,
+             StepperCache&    sCache,
+             const Options<action_list_t, aborter_list_t>& options,
+             const internal_aborter_list_t& interalAborters) const
   {
 
-    debugLog(options.debug, cache, [&] {
+    // Pre-stepping call to the abort list
+    debugLog(options.debug, pCache, [&] {
       return std::string("Calling pre-stepping aborters.");
     });
-    if (internalStopConditions(result, cache)) return Status::FAILURE;
+    if (interalAborters(result, pCache, sCache)) return Status::FAILURE;
 
     // Pre-stepping call to the action list
-    debugLog(options.debug, cache, [&] {
+    debugLog(options.debug, pCache, [&] {
       return std::string("Calling pre-stepping action list.");
     });
-    options.actionList(cache, result);
+    options.actionList(pCache, sCache, result);
 
     // Propagation loop : stepping
     for (; result.steps < options.maxSteps; ++result.steps) {
-      // Perform a propagation step
-      result.pathLength += m_impl.step(cache);
+      // Perform a propagation step - it only takes the stepping cache
+      result.pathLength += m_stepper.step(sCache);
       // Call the actions, can (& will likely) modify cache
-      debugLog(options.debug, cache, [&] {
-        return std::string("Calling action list on step.");
+      debugLog(options.debug, pCache, [&] {
+        return std::string("Calling action list on single step.");
       });
-      options.actionList(cache, result);
+      options.actionList(pCache, sCache, result);
       // Call the stop_conditions and the internal stop conditions
       // break condition triggered, but still count the step
-      debugLog(options.debug, cache, [&] {
-        return std::string("Calling aborters on step.");
+      debugLog(options.debug, pCache, [&] {
+        return std::string("Calling aborters on single step.");
       });
-      if (options.stopConditions(result, cache)
-          || internalStopConditions(result, cache)) {
+      if (options.stopConditions(result, pCache, sCache)
+          || interalAborters(result, pCache, sCache)) {
         ++result.steps;
         break;
       }
     }
+
     // Post-stepping call to the action list
-    debugLog(options.debug, cache, [&] {
+    debugLog(options.debug, pCache, [&] {
       return std::string("Calling post-stepping action list.");
     });
-    options.actionList(cache, result);
-
+    options.actionList(pCache, sCache, result);
+    // return progress flag here, decide on SUCCESS later
     return Status::IN_PROGRESS;
   }
 
@@ -245,9 +283,10 @@ public:
   /// fulfilled or the maximum number of steps/path length provided in the
   /// propagation options is reached.
   ///
-  /// @tparam TrackParameters Type of initial track parameters to propagate
-  /// @tparam Actions       Type list of actions, type ActionList<>
-  /// @tparam Aborters        Type list of abort conditions, type AbortList<>
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam action_list_t       Type list of actions, type ActionList<>
+  /// @tparam aborter_list_t        Type list of abort conditions, type
+  /// AbortList<>
   ///
   /// @param [in] start   Initial track parameters to propagate
   /// @param [in] options Propagation options
@@ -255,48 +294,59 @@ public:
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename TrackParameters, typename Actions, typename Aborters>
-  action_list_result_t<
-      typename Impl::template return_parameter_type<TrackParameters>,
-      Actions>
-  propagate(const TrackParameters& start,
-            const Options<Actions, Aborters>& options) const
+  template <typename parameters_t,
+            typename action_list_t,
+            typename aborter_list_t>
+  action_list_t_result_t<
+      typename stepper_t::template return_parameter_type<parameters_t>,
+      action_list_t>
+  propagate(const parameters_t& start,
+            const Options<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced by the propagation
-    typedef typename Impl::template return_parameter_type<TrackParameters>
+    typedef typename stepper_t::template return_parameter_type<parameters_t>
         return_parameter_type;
 
     // Type of the full propagation result, including output from actions
-    typedef action_list_result_t<return_parameter_type, Actions> result_type;
+    typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
-    // Initialize the propagation result object
-    result_type result(Status::IN_PROGRESS);
+    // Get the reference surface for navigation
+    const auto& startSurface = start.referenceSurface();
 
-    // Initialize the internal propagation cache
-    cache_type cache(start, options.direction, options.maxStepSize);
-    cache.debug = options.debug;
+    // Initialize the propagation result object
+    Result result(Status::IN_PROGRESS);
+
+    // Initialize the interal propagator cache
+    PropagatorCache pCache;
+    pCache.startSurface = &startSurface;
+    pCache.debug        = options.debug;
+
+    // Initialize the internal stepper cache
+    StepperCache sCache(start, options.direction, options.maxStepSize);
 
     // Internal Abort list
-    AbortList<PathLimitReached> internalAborters;
+    AbortList<PathLimitReached> interalAborters;
     // configure the aborter
-    auto& pathLimitAbort = internalAborters.template get<PathLimitReached>();
+    auto& pathLimitAbort = interalAborters.template get<PathLimitReached>();
     pathLimitAbort.signedPathLimit
         = std::abs(options.maxPathLength) * options.direction;
     pathLimitAbort.tolerance = options.targetTolerance;
     pathLimitAbort.debug     = options.debug;
 
     // Perform the actual propagation & check it's outcome
-    if (propagate_(result, cache, options, internalAborters)
+    if (propagate_(result, pCache, sCache, options, interalAborters)
         != Status::IN_PROGRESS) {
-      /// @todo screen output
+      debugLog(options.debug, pCache, [&] {
+        return std::string("Propagation was not successful.");
+      });
     } else {
       /// Convert into the return type
       result.endParameters = std::make_unique<const return_parameter_type>(
-          m_impl.convert(cache));
+          m_stepper.convert(sCache));
       result.status = Status::SUCCESS;
     }
 
@@ -310,10 +360,10 @@ public:
   /// is fulfilled, the destination surface is hit or the maximum number of
   /// steps/path length as given in the propagation options is reached.
   ///
-  /// @tparam TrackParameters Type of initial track parameters to propagate
+  /// @tparam parameters_t Type of initial track parameters to propagate
   /// @tparam Surface         Type of target surface
-  /// @tparam Actions       Type list of actions
-  /// @tparam Aborters        Type list of abort conditions
+  /// @tparam action_list_t       Type list of actions
+  /// @tparam aborter_list_t        Type list of abort conditions
   ///
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
@@ -321,65 +371,72 @@ public:
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
-  template <typename TrackParameters,
-            typename Surface,
-            typename Actions,
-            typename Aborters>
-  action_list_result_t<
-      typename Impl::template return_parameter_type<TrackParameters, Surface>,
-      Actions>
-  propagate(const TrackParameters& start,
-            const Surface&         target,
-            const Options<Actions, Aborters>& options) const
+  template <typename parameters_t,
+            typename surface_t,
+            typename action_list_t,
+            typename aborter_list_t>
+  action_list_t_result_t<
+      typename stepper_t::template return_parameter_type<parameters_t,
+                                                         surface_t>,
+      action_list_t>
+  propagate(const parameters_t& start,
+            const surface_t&    target,
+            const Options<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced at the end of the propagation
-    typedef
-        typename Impl::template return_parameter_type<TrackParameters, Surface>
-            return_parameter_type;
+    typedef typename stepper_t::template return_parameter_type<parameters_t,
+                                                               surface_t>
+        return_parameter_type;
 
-    // Initialize the internal propagation cache
-    cache_type cache(start, options.direction, options.maxStepSize);
-    cache.targetSurface = &target;
-    cache.debug         = options.debug;
+    // Get the reference surface for navigation
+    const auto& startSurface = start.referenceSurface();
+
+    // Initialize the interal propagator cache
+    PropagatorCache pCache;
+    pCache.startSurface = &startSurface;
+    pCache.debug        = options.debug;
+
+    // Initialize the internal stepper cache
+    StepperCache sCache(start, options.direction, options.maxStepSize);
 
     // Type of the full propagation result, including output from actions
-    typedef action_list_result_t<return_parameter_type, Actions> result_type;
+    typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
+
+    // Initialize the propagation result object
+    Result result(Status::IN_PROGRESS);
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
-    // Initialize the propagation result object
-    result_type result(Status::IN_PROGRESS);
-
     // Target surface abort condition with tolerance
-    typedef detail::SurfaceReached<Surface> targetReached;
+    typedef detail::SurfaceReached<surface_t> targetReached;
 
     // Internal Abort list
-    AbortList<targetReached, PathLimitReached> internalAborters;
+    AbortList<targetReached, PathLimitReached> interalAborters;
     // configure the aborters
-    auto& target_abort     = internalAborters.template get<targetReached>();
+    auto& target_abort     = interalAborters.template get<targetReached>();
     target_abort.surface   = &target;
     target_abort.direction = options.direction;
     target_abort.tolerance = options.targetTolerance;
     target_abort.debug     = options.debug;
 
-    auto& pathLimitAbort = internalAborters.template get<PathLimitReached>();
+    auto& pathLimitAbort = interalAborters.template get<PathLimitReached>();
     pathLimitAbort.signedPathLimit
         = std::abs(options.maxPathLength) * options.direction;
     pathLimitAbort.tolerance = options.targetTolerance;
     pathLimitAbort.debug     = options.debug;
 
     // Perform the actual propagation
-    if (propagate_(result, cache, options, internalAborters)
+    if (propagate_(result, pCache, sCache, options, interalAborters)
         != Status::IN_PROGRESS) {
-      debugLog(options.debug, cache, [&] {
-        return std::string("Propagation not successful.");
+      debugLog(options.debug, pCache, [&] {
+        return std::string("Propagation was not successful.");
       });
     } else {
       // Compute the final results and mark the propagation as successful
       result.endParameters = std::make_unique<const return_parameter_type>(
-          m_impl.convert(cache, target));
+          m_stepper.convert(sCache, target));
       result.status = Status::SUCCESS;
     }
     return result;
@@ -387,7 +444,7 @@ public:
 
 private:
   /// implementation of propagation algorithm
-  Impl m_impl;
+  stepper_t m_stepper;
 
   /// The private propagation debug logging
   ///
@@ -397,18 +454,20 @@ private:
   ///
   /// @param cache the stepper cache for the debug flag, prefix and length
   /// @param logAction is a callable function that returns a stremable object
+  template <typename propagator_cache_t>
   void
   debugLog(bool                         debug,
-           cache_type&                  cache,
+           propagator_cache_t&          pCache,
            std::function<std::string()> logAction) const
   {
     if (debug) {
       std::stringstream dstream;
-      dstream << "|->" << std::setw(cache.debugPfxWidth);
+      dstream << "|->" << std::setw(pCache.debugPfxWidth);
       dstream << "Propagator"
               << " | ";
-      dstream << std::setw(cache.debugMsgWidth) << logAction() << '\n';
-      cache.debugString += dstream.str();
+      dstream << std::setw(pCache.debugMsgWidth) << logAction() << '\n';
+      pCache.debugString += dstream.str();
+      std::cout << dstream.str();
     }
   }
 };

@@ -53,18 +53,21 @@ namespace Test {
 
     PerpendicularMeasure() {}
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache, result_type& result) const
+    operator()(propagator_cache_t&,
+               stepper_cache_t& sCache,
+               result_type&     result) const
     {
-      result.distance = cache.pos.perp();
+      result.distance = sCache.pos.perp();
     }
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache) const
+    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
     {
-      (void)cache;
+      (void)pCache;
+      (void)sCache;
     }
   };
 
@@ -89,34 +92,37 @@ namespace Test {
 
     SurfaceObserver() {}
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache, result_type& result) const
+    operator()(propagator_cache_t&,
+               stepper_cache_t& sCache,
+               result_type&     result) const
     {
       if (surface && !result.surfaces_passed) {
         // calculate the distance to the surface
         const double distance
             = surface
                   ->intersectionEstimate(
-                      cache.position(), cache.direction(), true, true)
+                      sCache.position(), sCache.direction(), true, true)
                   .pathLength;
         // Adjust the step size so that we cannot cross the target surface
-        cache.stepSize.update(distance, cstep::actor);
+        sCache.stepSize.update(distance, cstep::actor);
         // return true if you fall below tolerance
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
-          result.surface_passed_r = cache.position().perp();
+          result.surface_passed_r = sCache.position().perp();
           // release the step size, will be re-adjusted
-          cache.stepSize.release(cstep::actor);
+          sCache.stepSize.release(cstep::actor);
         }
       }
     }
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache) const
+    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
     {
-      (void)cache;
+      (void)pCache;
+      (void)sCache;
     }
   };
 
@@ -143,26 +149,29 @@ namespace Test {
 
     PathScatterer() {}
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache, result_type& result) const
+    operator()(propagator_cache_t&,
+               stepper_cache_t& sCache,
+               result_type&     result) const
     {
       if (!result.scattered
-          && std::abs(cache.accumulatedPath - path_limit) < tolerance) {
+          && std::abs(sCache.accumulatedPath - path_limit) < tolerance) {
         // now here we should apply the scattering
         result.scattered = true;
         // do the update and reinitialize the jacobians
-        cache.applyCovTransport(true);
-        cache.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
-        cache.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
+        sCache.applyCovTransport(true);
+        sCache.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
+        sCache.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
       }
     }
 
-    template <typename cache_t>
+    template <typename propagator_cache_t, typename stepper_cache_t>
     void
-    operator()(cache_t& cache) const
+    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
     {
-      (void)cache;
+      (void)pCache;
+      (void)sCache;
     }
   };
 

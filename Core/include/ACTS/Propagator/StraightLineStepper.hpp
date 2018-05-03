@@ -62,11 +62,6 @@ public:
       , accumulatedPath(0.)
       , stepSize(ndir * ssize)
     {
-      // Get the reference surface for navigation
-      const auto& surface = par.referenceSurface();
-
-      // cache the surface for navigation
-      startSurface = &surface;
     }
 
     /// Global particle position accessor
@@ -107,24 +102,6 @@ public:
 
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
-
-    /// Navigation cache: the start surface
-    const Surface* startSurface = nullptr;
-
-    /// Navigation cache: the current surface
-    const Surface* currentSurface = nullptr;
-
-    /// Navigation cache: the target surface
-    const Surface* targetSurface = nullptr;
-    bool           targetReached = false;
-
-    /// Debug output
-    /// the string where things are stored (optionally)
-    bool        debug       = false;
-    std::string debugString = "";
-    /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
   };
 
   /// Always use the same propagation cache type, independently of the initial
@@ -190,40 +167,12 @@ public:
   {
     // use the adjusted step size
     const double h = cache.stepSize;
-    // debug output into the cache's debug stream
-    debugLog(cache, [&] {
-      std::stringstream dstream;
-      dstream << "Performing straight line step with size." << h;
-      return dstream.str();
-    });
     // Update the track parameters according to the equations of motion
     cache.pos += h * cache.dir;
     // cache the path length
     cache.accumulatedPath += h;
     // return h
     return h;
-  }
-
-private:
-  /// The private stepper debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the cache.debug == true
-  /// case in order not to spend time when not needed.
-  ///
-  /// @param cache the stepper cache for the debug flag, prefix and length
-  /// @param logAction is a callable function that returns a stremable object
-  void
-  debugLog(Cache& cache, std::function<std::string()> logAction) const
-  {
-    if (cache.debug) {
-      std::stringstream dstream;
-      dstream << "|->" << std::setw(cache.debugPfxWidth);
-      dstream << "StraightLineStepper"
-              << " | ";
-      dstream << std::setw(cache.debugMsgWidth) << logAction() << '\n';
-      cache.debugString += dstream.str();
-    }
   }
 };
 
