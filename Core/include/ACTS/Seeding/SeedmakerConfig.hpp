@@ -11,6 +11,7 @@ namespace Acts{
       struct Config {
         // BinFinder must return std::vector<Acts::Seeding::Bin> with content of 
         // each bin sorted in r (ascending)
+        // TODO: move helper tools to own struct
         std::unique_ptr<IBinFinder> bottomBinFinder;
         std::unique_ptr<IBinFinder> topBinFinder;
         std::unique_ptr<ISeedFilter> seedFilter;
@@ -30,7 +31,6 @@ namespace Acts{
         // are considered to have a compatible radius. delta of inverse radius
         // leads to this value being the cutoff. unit is 1/mm. default value
         // of 0.00003 leads to all helices with radius>33m to be considered compatible
-        float deltaInvHelixRadius = 0.00003;
 
         // impact parameter in mm
         float impactMax = 20.;

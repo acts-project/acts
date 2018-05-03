@@ -7,13 +7,13 @@
 
 namespace Acts {
 namespace Seeding {
-class BinFinder : IBinFinder
+class BinFinder : public IBinFinder
 {
 public:
 /// Virtual destructor
   ~BinFinder() = default;
 
-//   std::set<std::array<int, 2> >
+   virtual
    std::set<size_t>
    findBins(int phiBin, int zBin, std::unique_ptr<SPGrid>& binnedSP);
 

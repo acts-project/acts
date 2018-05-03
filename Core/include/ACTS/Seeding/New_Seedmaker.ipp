@@ -6,16 +6,14 @@
 
 namespace Acts{
 namespace Seeding{
-New_Seedmaker::New_Seedmaker(){
-}
 
 auto
 New_Seedmaker::initialize
-(std::unique_ptr<Acts::Seeding::Config > config)
--> std::unique_ptr<Acts::Seeding::Cache>
+(std::shared_ptr<Acts::Seeding::Config > config)
+-> std::shared_ptr<Acts::Seeding::Cache>
 {
   
-  std::unique_ptr<Acts::Seeding::Cache > cache;
+  auto cache = std::make_shared<Acts::Seeding::Cache>();
   // back-of-the-envelope calculation of scattering, leaving out the insignificant term
   // of the highland formula
   // convert pT to p once theta angle is known
@@ -32,8 +30,8 @@ New_Seedmaker::initialize
 void 
 New_Seedmaker::newEvent
 ( std::vector<SpacePoint*> spVec, 
-  std::unique_ptr<Acts::Seeding::Cache>& cache,
-  std::unique_ptr<Acts::Seeding::Config>& config)
+  std::shared_ptr<Acts::Seeding::Cache> cache,
+  std::shared_ptr<Acts::Seeding::Config> config)
 {
 // TODO: clear everything!
   cache->seeds.clear();
@@ -59,41 +57,42 @@ New_Seedmaker::newEvent
 }
 
 
-void 
+std::vector<std::shared_ptr<Seed> > 
 New_Seedmaker::production3Sp
-( std::unique_ptr<Acts::Seeding::Cache>& cache,
-  std::unique_ptr<Acts::Seeding::Config>& config)
+( std::shared_ptr<Acts::Seeding::Cache> cache,
+  std::shared_ptr<Acts::Seeding::Config> config)
 {
+  std::vector<std::shared_ptr<Seed> > outputSeeds;
+  // TODO: create neighborHoodIndices in BinFinder so it can be replaced by smarter neighbor choice
   auto phiZbins = cache->binnedSP->getNBins();
-  // TODO/FIXME: is this getting all bins or missing first/last?
-  for (int i =1; i < phiZbins[0]; ++i){
-    for (int j =1; j < phiZbins[1]; ++j){
+  for (int i =1; i <= phiZbins[0]; ++i){
+    for (int j =1; j <= phiZbins[1]; ++j){
     // if different combinations of spacepoints (i.e. only pixel, pixel + sct, only sct) should be 
-    // treated differently, call multiple times with different config and with findBottomBins returning 
-    // the corresponding space points
-    // TODO: create neighborHoodIndices in BinFinder so it can be replaced by smarter neighbor choice
+    // treated differently, call multiple times with different config and with findBottomBins (findTopBins)
+    // returning the corresponding space points
       std::set<size_t > bottomBins = config->bottomBinFinder->findBins(i,j,cache->binnedSP);
       std::set<size_t > topBins = config->topBinFinder->findBins(i,j,cache->binnedSP);
-      // FIXME: I HAVE NO IDEA IF THIS {i,j} RETURNS THE CORRECT BIN, MAY BE INTERPRETED AS phi-z????
-      production3Sp(cache->binnedSP->at({i,j}), bottomBins, topBins, cache, config);
+      std::vector<std::shared_ptr<Seed> > regionSeeds = production3Sp(cache->binnedSP->at({i,j}), bottomBins, topBins, cache, config);
+      outputSeeds.insert(outputSeeds.end(),regionSeeds.begin(),regionSeeds.end());
     }
   }
+  return outputSeeds;
 }
 
 
-void 
+std::vector<std::shared_ptr<Seed> > 
 New_Seedmaker::production3Sp
 ( std::vector<std::shared_ptr<SPForSeed > > currentBin,
   std::set<size_t > bottomBinIndices,
   std::set<size_t > topBinIndices,
-  std::unique_ptr<Acts::Seeding::Cache>& cache,
-  std::unique_ptr<Acts::Seeding::Config>& config) 
+  std::shared_ptr<Acts::Seeding::Cache> cache,
+  std::shared_ptr<Acts::Seeding::Config> config) 
 {
   std::vector<std::shared_ptr<SPForSeed> > compatBottomSP, compatTopSP;
+  std::vector<std::pair<float,std::shared_ptr<InternalSeed > > > regionSeeds;
 
   // middle space point
   for(auto spM : currentBin){
-    cache->seedsPerSpM.clear();
     float rM = spM->radius();
     float zM = spM->z();
     float covrM = spM->covr();
@@ -144,9 +143,13 @@ New_Seedmaker::production3Sp
     cache->linCircleTop.clear();
     transformCoordinates(compatTopSP, spM, false, cache->linCircleTop);
     
+    // TODO: significant benefit? avoids compatSp.size()^2 reallocations
     // create vectors here to avoid reallocation in each loop
     std::vector<std::shared_ptr<SPForSeed> > topSpVec;
     std::vector<float > curvatures, impactParameters;
+
+    // TODO: measure cost to reallocate seedsPerSpM each iteration
+    std::vector<std::pair<float,std::shared_ptr<InternalSeed > > > seedsPerSpM;
 
     for(int b = 0; b < compatBottomSP.size(); b++){
       auto lb = cache->linCircleBottom.at(b);
@@ -212,18 +215,18 @@ New_Seedmaker::production3Sp
         }
       }
       if(!topSpVec.empty()) {
-        config->seedFilter->filterSeeds_2SpFixed(compatBottomSP.at(b),
-                                                              spM,
-                                                              topSpVec,
-                                                              curvatures,
-                                                              impactParameters,
-                                                              Zob,
-                                                              config);
-        }
+        seedsPerSpM = config->seedFilter->filterSeeds_2SpFixed(compatBottomSP.at(b),
+                                                               spM,
+                                                               topSpVec,
+                                                               curvatures,
+                                                               impactParameters,
+                                                               Zob);
+      }
     }
-    config->seedFilter->filterSeeds_1SpFixed(cache,config);
+    auto filteredSpMSeeds = config->seedFilter->filterSeeds_1SpFixed(seedsPerSpM);
+    regionSeeds.insert(regionSeeds.end(), filteredSpMSeeds.begin(), filteredSpMSeeds.end());
   }
-  config->seedFilter->filterSeeds_byRegion(cache);
+  return config->seedFilter->filterSeeds_byRegion(regionSeeds);
 }
   
 

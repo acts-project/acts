@@ -1,7 +1,8 @@
-#ifndef Seed_h
-#define Seed_h
+#pragma once
+
 #include <list>
-#include "ACTS/Seeding/SpacePoint.hpp"
+
+#include "ACTS/Seeding/SpacePointConcept.hpp" 
 
 namespace Acts {
 namespace Seeding{
@@ -16,15 +17,15 @@ namespace Seeding{
     
     Seed();
     Seed
-      (const SpacePoint*&,const SpacePoint*&,const SpacePoint*&,
+      (const Acts::concept::AnySpacePoint<>*&,const Acts::concept::AnySpacePoint<>*&,const Acts::concept::AnySpacePoint<>*&,
        const double&);
     Seed(const Seed&) = default;
     Seed& operator = (const Seed&);
     virtual ~Seed();
     void                                     erase();
-    void                                     add(const SpacePoint*&);
+    void                                     add(const Acts::concept::AnySpacePoint<>*&);
     void                                     setZVertex(const double&);
-    const std::list<const SpacePoint*>& spacePoints() const;
+    const std::list<const Acts::concept::AnySpacePoint<>*>&      spacePoints() const;
     const double&                            zVertex    () const;
     
     /////////////////////////////////////////////////////////////////////////////////
@@ -33,8 +34,8 @@ namespace Seeding{
     
   protected:
     
-    std::list<const SpacePoint*> m_spacepoints;
-    double                            m_zvertex    ;  
+    std::list<const Acts::concept::AnySpacePoint<>*> m_spacepoints;
+    double                       m_zvertex    ;  
   };
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -43,7 +44,7 @@ namespace Seeding{
  
 
   
-  inline const std::list<const SpacePoint*>& Seed::spacePoints() const 
+  inline const std::list<const Acts::concept::AnySpacePoint<>*>& Seed::spacePoints() const 
     {
       return this->m_spacepoints;
     }
@@ -53,7 +54,7 @@ namespace Seeding{
       m_spacepoints.erase(m_spacepoints.begin(),m_spacepoints.end());
     }
 
-  inline void Seed::add(const SpacePoint*& p) 
+  inline void Seed::add(const Acts::concept::AnySpacePoint<>*& p) 
     {
       m_spacepoints.push_back(p);
     }
@@ -76,7 +77,7 @@ namespace Seeding{
   Seed::Seed(){}
 
   
-  Seed::Seed(const SpacePoint*& b, const SpacePoint*& m, const SpacePoint*& u,
+  Seed::Seed(const Acts::concept::AnySpacePoint<>*& b, const Acts::concept::AnySpacePoint<>*& m, const Acts::concept::AnySpacePoint<>*& u,
          const double& vertex){
     m_zvertex = vertex;
     m_spacepoints.push_back(b);
@@ -90,5 +91,3 @@ namespace Seeding{
   }
 } // end of Seeding namespace
 } // end of Acts namespace
-
-#endif  // Seed_h

@@ -14,7 +14,6 @@ public:
     ~IBinFinder() = default;
 
     virtual
-//    std::set<std::array<int, 2> > 
     std::set<size_t>
     findBins(int phiBin,int zBin, std::unique_ptr<SPGrid>& binnedSP) =0;
 

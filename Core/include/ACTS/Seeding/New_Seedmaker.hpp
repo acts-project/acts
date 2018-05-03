@@ -29,27 +29,25 @@ namespace Acts {
       
     public:
     
-
-
-      
-      ///////////////////////////////////////////////////////////////////
-      // Standard tool methods
-      ///////////////////////////////////////////////////////////////////
-      
-      New_Seedmaker ();
-      virtual ~New_Seedmaker();
+      New_Seedmaker () = default;
+      ~New_Seedmaker() = default;
 
       ///////////////////////////////////////////////////////////////////
       // Methods to initialize tool for new event or region
       ///////////////////////////////////////////////////////////////////
-      std::unique_ptr<Acts::Seeding::Cache>
-      initialize(std::unique_ptr<Acts::Seeding::Config> config);
+      std::shared_ptr<Acts::Seeding::Cache>
+      initialize(std::shared_ptr<Acts::Seeding::Config> config);
 
       void
       newEvent
        (std::vector<SpacePoint*> spVec,
-        std::unique_ptr<Acts::Seeding::Cache>& cache,
-        std::unique_ptr<Acts::Seeding::Config>& config);
+        std::shared_ptr<Acts::Seeding::Cache> cache,
+        std::shared_ptr<Acts::Seeding::Config> config);
+
+      
+      std::vector<std::shared_ptr<Seed> > 
+      production3Sp (std::shared_ptr<Acts::Seeding::Cache> cache,
+                          std::shared_ptr<Acts::Seeding::Config> config);
 
       
     protected:
@@ -63,14 +61,13 @@ namespace Acts {
       // Protected methods
       ///////////////////////////////////////////////////////////////////
 
-      void production3Sp (std::unique_ptr<Acts::Seeding::Cache>& cache,
-                          std::unique_ptr<Acts::Seeding::Config>& config);
 
-      void production3Sp (std::vector<std::shared_ptr<SPForSeed > > currentBin,
+      std::vector<std::shared_ptr<Seed> > 
+      production3Sp (std::vector<std::shared_ptr<SPForSeed > > currentBin,
                           std::set<size_t > bottomBins,
                           std::set<size_t > topBins,
-                          std::unique_ptr<Acts::Seeding::Cache>& cache,
-                          std::unique_ptr<Acts::Seeding::Config>& config)   ;
+                          std::shared_ptr<Acts::Seeding::Cache> cache,
+                          std::shared_ptr<Acts::Seeding::Config> config)   ;
 
       void transformCoordinates (std::vector<std::shared_ptr<SPForSeed> >& vec,
                                  std::shared_ptr<SPForSeed> spM,

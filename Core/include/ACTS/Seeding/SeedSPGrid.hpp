@@ -17,7 +17,7 @@ detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>>;
 class SPGridCreator{
 public:
 
-static std::unique_ptr<SPGrid> createGrid(std::unique_ptr<Acts::Seeding::Config>& cfg);
+static std::unique_ptr<SPGrid> createGrid(std::shared_ptr<Acts::Seeding::Config> cfg);
 
 };
 }

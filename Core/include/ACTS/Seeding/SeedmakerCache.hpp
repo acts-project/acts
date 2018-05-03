@@ -24,12 +24,10 @@ namespace Acts{
       std::unique_ptr<Acts::Seeding::SPGrid> binnedSP;
       std::vector<InternalSeed> seeds;
 
-      std::vector<std::pair<float,std::shared_ptr<InternalSeed > > > seedsPerSpM;
-      std::vector<std::pair<float,std::shared_ptr<InternalSeed > > > regionSeeds;
 
       std::vector<LinCircle> linCircleBottom;
       std::vector<LinCircle> linCircleTop;
-      std::vector<std::unique_ptr<Seed> > outputSeeds;
+      std::vector<std::shared_ptr<Seed> > outputSeeds;
 
       float highland;
       float maxScatteringAngle2;

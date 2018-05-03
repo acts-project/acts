@@ -1,7 +1,12 @@
+#include "TrkSpacePoint/SpacePoint.h"
 
+#include <boost/any.hpp>
 
 void Acts::ATL_CovarianceTool::setCovariance(SPForSeed& sp, float zAlign, float rAlign){
-  const InDet::SiCluster*           c  = static_cast<const InDet::SiCluster*>(sp->spacepoint->clusterList().first);
+
+  Trk::SpacePoint* atlasSp = boost::any_cast(sp->spacepoint);
+  
+  const InDet::SiCluster*           c  = static_cast<const InDet::SiCluster*>(atlasSp->clusterList().first);
   const InDetDD::SiDetectorElement* de = c ->detectorElement();
 
   if( de->isPixel() ) {
