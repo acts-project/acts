@@ -51,10 +51,10 @@ namespace IntegrationTest {
       WrappedPropagator_type;
 
   // number of tests
-  const int  ntests = 3;
-  const int  skip   = 2;
+  const int  ntests = 1;
+  const int  skip   = 0;
   const bool covtpr = true;
-  const bool debug  = true;
+  const bool debug  = false;
 
   // setup propagator with constant B-field
   const double         Bz = 2. * units::_T;

@@ -410,12 +410,12 @@ public:
                   "return track parameter type must be copy-constructible");
 
     // Target surface abort condition with tolerance
-    typedef detail::SurfaceReached<surface_t> targetReached;
+    typedef detail::SurfaceReached<surface_t> TargetReached;
 
     // Internal Abort list
-    AbortList<targetReached, PathLimitReached> interalAborters;
+    AbortList<TargetReached, PathLimitReached> interalAborters;
     // configure the aborters
-    auto& target_abort     = interalAborters.template get<targetReached>();
+    auto& target_abort     = interalAborters.template get<TargetReached>();
     target_abort.surface   = &target;
     target_abort.direction = options.direction;
     target_abort.tolerance = options.targetTolerance;
@@ -467,7 +467,6 @@ private:
               << " | ";
       dstream << std::setw(pCache.debugMsgWidth) << logAction() << '\n';
       pCache.debugString += dstream.str();
-      std::cout << dstream.str();
     }
   }
 };

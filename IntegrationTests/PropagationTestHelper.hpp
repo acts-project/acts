@@ -333,6 +333,7 @@ namespace IntegrationTest {
     Surface_type endSurface(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
     options.maxPathLength *= 2;
+    options.maxStepSize *= 0.9;
     const auto  result = propagator.propagate(start, endSurface, options);
     const auto& tp     = result.endParameters;
     // check the result for nullptr
