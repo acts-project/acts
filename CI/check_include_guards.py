@@ -8,11 +8,6 @@ from concurrent.futures import ProcessPoolExecutor
 import re
 import sys
 
-code_format = """
-#pragma once
-{code}
-""".strip()
-
 
 def line_fmt(line):
     return "{: >4d} ".format(line)
