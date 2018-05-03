@@ -6,8 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef DIGITIZATION_CLUSTERITIZATION_HPP
-#define DIGITIZATION_CLUSTERITIZATION_HPP
+#pragma once
 
 #include <boost/config.hpp>
 #include <boost/graph/adjacency_list.hpp>
@@ -47,5 +46,3 @@ std::vector<std::vector<Acts::DigitizationCell>>
 createClusters(const std::vector<Acts::DigitizationCell>& cells,
                bool                                       commonCorner = false);
 }
-
-#endif  // DIGITIZATION_CLUSTERITIZATION_HPP
