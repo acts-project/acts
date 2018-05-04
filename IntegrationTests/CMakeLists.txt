@@ -10,9 +10,9 @@ macro(add_integration_test)
 endmacro()
 
 add_executable (PropagationTests PropagationTests.cpp)
-target_link_libraries (PropagationTests PRIVATE ACTSCore ACTSLegacy)
+target_link_libraries (PropagationTests PRIVATE ActsCore ActsLegacy)
 add_integration_test(PropagationTests)
 
 add_executable (SeedingTest ATLSeedingIntegrationTest.cpp)
-target_link_libraries (SeedingTest PRIVATE ACTSLegacy)
+target_link_libraries (SeedingTest PRIVATE ActsLegacy)
 add_integration_test(SeedingTest)

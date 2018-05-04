@@ -1,5 +1,5 @@
 add_executable (MaterialMappingTests MaterialMappingTests.cpp)
 target_include_directories (MaterialMappingTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(MaterialMappingTests PRIVATE ACTSCore ACTSMaterialPlugin)
+target_link_libraries(MaterialMappingTests PRIVATE ActsCore ActsMaterialPlugin)
 add_test (NAME MaterialMappingUnitTest COMMAND MaterialMappingTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialMappingUnitTest TARGETS MaterialMappingTests)

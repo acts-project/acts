@@ -106,7 +106,7 @@
 /// @code{bash}
 /// cd <ACTS/INSTALL/DIRECTORY>
 /// source bin/setup.sh
-/// LD_PRELOAD=lib/libACTSCustomLogger.so bin/Examples/ACTSGenericDetector
+/// LD_PRELOAD=lib/libActsCustomLogger.so bin/Examples/ActsGenericDetector
 /// @endcode
 
 /// @defgroup Core Core classes

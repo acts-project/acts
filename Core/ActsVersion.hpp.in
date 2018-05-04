@@ -1,5 +1,5 @@
-#ifndef ACTSVersion_h
-#define ACTSVersion_h
+#ifndef ActsVersion_h
+#define ActsVersion_h
 
 //  Caution: this is the only ACTS header that is guaranteed
 //  to change with every ACTS release. Including this header
@@ -17,4 +17,4 @@ constexpr unsigned int Version
 // for backward compatibility
 #define ACTS_VERSION Acts::Version
 
-#endif  // ACTSVersion_h
+#endif  // ActsVersion_h
