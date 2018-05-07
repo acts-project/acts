@@ -394,8 +394,9 @@ public:
 
     // Initialize the interal propagator cache
     PropagatorCache pCache;
-    pCache.startSurface = &startSurface;
-    pCache.debug        = options.debug;
+    pCache.startSurface  = &startSurface;
+    pCache.targetSurface = &target;
+    pCache.debug         = options.debug;
 
     // Initialize the internal stepper cache
     StepperCache sCache(start, options.direction, options.maxStepSize);
