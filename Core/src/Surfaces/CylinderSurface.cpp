@@ -357,6 +357,7 @@ Acts::CylinderSurface::toVariantData() const
   data["type"]    = "CylinderSurface"s;
   data["payload"] = payload;
   return data;
+}
 
 Acts::PolyhedronRepresentation
 Acts::CylinderSurface::polyhedronRepresentation(size_t l0div, size_t /*l1div*/) const

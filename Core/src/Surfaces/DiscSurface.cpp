@@ -290,6 +290,7 @@ Acts::DiscSurface::toVariantData() const
   data["type"]    = "DiscSurface"s;
   data["payload"] = payload;
   return data;
+}
 
 Acts::PolyhedronRepresentation
 Acts::DiscSurface::polyhedronRepresentation(size_t l0div, size_t /*l1div*/) const
