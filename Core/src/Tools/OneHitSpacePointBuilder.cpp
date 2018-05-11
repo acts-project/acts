@@ -38,7 +38,9 @@ Acts::OneHitSpacePointBuilder::globalCoords(
 
 void
 Acts::OneHitSpacePointBuilder::addHits(
+    std::vector<Acts::SpacePoint>& spacePoints,
     const std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
+    const
 {
   // Check that only a single surface is used
   assert(hits.size() == 1);
@@ -47,24 +49,19 @@ Acts::OneHitSpacePointBuilder::addHits(
   for (auto& cluster : hits[0]) {
     // Declare helper variable
     Acts::SpacePoint tmpSpacePoint;
-    tmpSpacePoint.hitModule.resize(1);
-    tmpSpacePoint.hitModule[0] = cluster;
-    m_allSpacePoints.push_back(tmpSpacePoint);
+    tmpSpacePoint.hitModule.push_back(cluster);
+    spacePoints.push_back(tmpSpacePoint);
   }
 }
 
 void
-Acts::OneHitSpacePointBuilder::calculateSpacePoints()
+Acts::OneHitSpacePointBuilder::calculateSpacePoints(
+    std::vector<Acts::SpacePoint>& spacePoints) const
 {
   // Set the space point for all stored hits
-  for (auto& sPoint : m_allSpacePoints) {
+  for (auto& sPoint : spacePoints) {
     if (sPoint.spacePoint != Acts::Vector3D::Zero(3)) continue;
+    if (sPoint.hitModule.size() != 1) continue;
     sPoint.spacePoint = globalCoords(*(sPoint.hitModule[0]));
   }
-}
-
-const std::vector<Acts::SpacePoint>&
-Acts::OneHitSpacePointBuilder::spacePoints()
-{
-  return m_allSpacePoints;
 }

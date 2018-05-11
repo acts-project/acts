@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE Strip Space Point Builder Tests
+#define BOOST_TEST_MODULE Pixel Space Point Builder Tests
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
@@ -31,7 +31,6 @@ namespace Test {
   BOOST_DATA_TEST_CASE(OneHitSpacePointBuilder_basic, bdata::xrange(1), index)
   {
     (void)index;
-    SpacePoint sPoint;
 
     // Build bounds
     std::shared_ptr<const RectangleBounds> recBounds(
@@ -87,40 +86,24 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
-    // Test for setting a SpacePoint
-    sPoint.hitModule.resize(1);
-    sPoint.hitModule[0] = pmc;
-    BOOST_TEST(sPoint.hitModule[0] == pmc,
-               "Failed to set element in sPoint.hitModule1");
-
-    Vector3D spacePoint = {1., 1., 1.};
-    sPoint.spacePoint   = spacePoint;
-    BOOST_TEST(sPoint.spacePoint == spacePoint,
-               "Failed to set element in sPoint.spacePoint");
-
+	std::cout << "Hit created" << std::endl;
+	
+	std::vector<SpacePoint> data;
     OneHitSpacePointBuilder ohspb;
-    ohspb.addSpacePoint(sPoint);
+    std::vector<std::vector<PlanarModuleCluster const*>> matsPoint;
+    matsPoint.push_back({pmc});
+    ohspb.addHits(data, matsPoint);
 
     // Test for adding a SpacePoint
-    const std::vector<SpacePoint> hits = ohspb.spacePoints();
-    BOOST_TEST(hits.size() == 1, "Failed to add element to SpacePointBuilder");
-    BOOST_TEST(hits[0].hitModule == sPoint.hitModule, "Wrong element added");
-    BOOST_TEST(hits[0].spacePoint == sPoint.spacePoint, "Wrong element added");
+    BOOST_TEST(data.size() == 1, "Failed to add element to SpacePointBuilder");
+    BOOST_TEST(*(data[0].hitModule[0]) == *pmc, "Wrong element added");
 
-    std::vector<std::vector<PlanarModuleCluster const*>> matCluster;
-    matCluster.push_back({pmc});
-    ohspb.addHits(matCluster);
-
-    ohspb.calculateSpacePoints();
-    std::cout << "asdf3" << std::endl;
-    const std::vector<SpacePoint> hits2 = ohspb.spacePoints();
-    // Test for creating a new SpacePoint element
-    // with PlanarModuleClusters
-    BOOST_TEST(hits2.size() == 2, "Failed to add element to SpacePointBuilder");
-
-    // Test for calculating space points
-    BOOST_TEST(hits2.back().spacePoint != Vector3D::Zero(3),
-               "Failed to calculate space point");
+	std::cout << "Hit added to storage" << std::endl;
+	
+    ohspb.calculateSpacePoints(data);
+    BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3), "Failed to calculate space point");
+    
+    std::cout << "Space point calculated" << std::endl;
   }
 }  // end of namespace Test
 

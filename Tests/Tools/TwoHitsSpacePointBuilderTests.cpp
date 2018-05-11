@@ -32,8 +32,9 @@ namespace Test {
   BOOST_DATA_TEST_CASE(TwoHitsSpacePointBuilder_basic, bdata::xrange(1), index)
   {
     (void)index;
-    SpacePoint sPoint;
 
+	std::cout << "Create first hit" << std::endl;
+	
     // Build Bounds
     std::shared_ptr<const RectangleBounds> recBounds(
         new RectangleBounds(35. * Acts::units::_um, 25. * units::_mm));
@@ -88,36 +89,8 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
-    // Test for setting a SpacePoint
-    sPoint.hitModule.resize(2);
-    sPoint.hitModule[0] = pmc;
-    BOOST_TEST(sPoint.hitModule[0] == pmc,
-               "Failed to set element in sPoint.hitModule1");
-
-    sPoint.hitModule[1] = pmc;
-    BOOST_TEST(sPoint.hitModule[1] == pmc,
-               "Failed to set element in sPoint.hitModule2");
-
-    Vector3D spacePoint = {1., 1., 1.};
-    sPoint.spacePoint   = spacePoint;
-    BOOST_TEST(sPoint.spacePoint == spacePoint,
-               "Failed to set element in sPoint.spacePoint");
-
-    TwoHitsSpacePointBuilder::Config thspb_cfg;
-    TwoHitsSpacePointBuilder         thspb(thspb_cfg);
-    thspb.addSpacePoint(sPoint);
-
-    // Test for adding a TwoHitsSpacePointBuilder::addHits()
-    const std::vector<SpacePoint> vecsPoint = thspb.spacePoints();
-    BOOST_TEST(vecsPoint.size() == 1,
-               "Failed to add element to SpacePointBuilder");
-    BOOST_TEST(vecsPoint[0].hitModule[0] == sPoint.hitModule[0],
-               "Wrong element added");
-    BOOST_TEST(vecsPoint[0].hitModule[1] == sPoint.hitModule[1],
-               "Wrong element added");
-    BOOST_TEST(vecsPoint[0].spacePoint == sPoint.spacePoint,
-               "Wrong element added");
-
+	std::cout << "Create second hit" << std::endl;
+	
     // Build second PlanarModuleCluster
     const Identifier id2(1);
 
@@ -146,23 +119,30 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
+	std::cout << "Store both hits" << std::endl;
+	
+	std::vector<SpacePoint> data;
+    TwoHitsSpacePointBuilder::Config thspb_cfg;
+    TwoHitsSpacePointBuilder         thspb(thspb_cfg);
+    
     // Combine two PlanarModuleClusters
     std::vector<std::vector<PlanarModuleCluster const*>> matsPoint;
     matsPoint.push_back({pmc});
     matsPoint.push_back({pmc2});
-    thspb.addHits(matsPoint);
-    thspb.calculateSpacePoints();
+    thspb.addHits(data, matsPoint);
+    
+    BOOST_TEST(data.size() == 1, "Failed to add element");
+    BOOST_TEST(*(data[0].hitModule[0]) == *pmc, "Failed to set hit");
+    BOOST_TEST(*(data[0].hitModule[1]) == *pmc2, "Failed to set hit");
+    
+    std::cout << "Calculate space point" << std::endl;
+    
+    thspb.calculateSpacePoints(data);
+    
+    BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3), "Failed to calculate space point");
 
-    const std::vector<SpacePoint> vecsPoint2 = thspb.spacePoints();
-    // Test for creating a new SpacePoint element
-    // with PlanarModuleClusters
-    BOOST_TEST(vecsPoint2.size() == 2,
-               "Failed to add element to SpacePointBuilder");
-
-    // Test for calculating space points
-    BOOST_TEST(vecsPoint2.back().spacePoint != Vector3D::Zero(3),
-               "Failed to calculate space point");
-
+	std::cout << "Create third hit" << std::endl;
+	
     // Build third PlanarModuleCluster
     const Identifier id3(2);
     Transform3D      t3d3 = getTransformFromRotTransl(
@@ -182,14 +162,16 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
+	std::cout << "Try to store hits" << std::endl;
+	
     // Combine points
     matsPoint.clear();
     matsPoint.push_back({pmc});
     matsPoint.push_back({pmc3});
-    thspb.addHits(matsPoint);
+    thspb.addHits(data, matsPoint);
 
     // Test for rejecting unconnected hits
-    BOOST_TEST(thspb.spacePoints().size() == 2,
+    BOOST_TEST(data.size() == 1,
                "Failed to reject potential combination");
   }
 }  // end of namespace Test

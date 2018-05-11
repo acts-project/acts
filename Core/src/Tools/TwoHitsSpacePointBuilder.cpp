@@ -77,7 +77,9 @@ Acts::TwoHitsSpacePointBuilder::differenceOfHits(
 
 void
 Acts::TwoHitsSpacePointBuilder::addHits(
+    std::vector<Acts::SpacePoint>& spacePoints,
     const std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
+    const
 {
   // Return if more/less surfaces given than 2
   if (hits.size() != 2) return;
@@ -87,10 +89,9 @@ Acts::TwoHitsSpacePointBuilder::addHits(
   // TODO: only the closest differences get selected -> some points are not
   // taken into account
   // Declare helper variables
-  double           currentDiff;
-  Acts::SpacePoint tmpSpacePoint;
-  double           diffMin;
-  unsigned int     hitMin;
+  double       currentDiff;
+  double       diffMin;
+  unsigned int hitMin;
 
   // Walk through all hits on both surfaces
   for (unsigned int iHits0 = 0; iHits0 < hits[0].size(); iHits0++) {
@@ -98,6 +99,7 @@ Acts::TwoHitsSpacePointBuilder::addHits(
     diffMin = std::numeric_limits<double>::max();
     // Set the corresponding index to an element not in the list of hits
     hitMin = hits[1].size();
+
     for (unsigned int iHits1 = 0; iHits1 < hits[1].size(); iHits1++) {
       // Calculate the distances between the hits
       currentDiff = differenceOfHits(*(hits[0][iHits0]), *(hits[1][iHits1]));
@@ -109,10 +111,11 @@ Acts::TwoHitsSpacePointBuilder::addHits(
     }
     // Store the best (=closest) result
     if (hitMin < hits[1].size()) {
-      tmpSpacePoint.hitModule.resize(2);
-      tmpSpacePoint.hitModule[0] = hits[0][iHits0];
-      tmpSpacePoint.hitModule[1] = hits[1][hitMin];
-      m_allCombSpacePoints.push_back(tmpSpacePoint);
+
+      Acts::SpacePoint tmpSpacePoint;
+      tmpSpacePoint.hitModule.push_back(hits[0][iHits0]);
+      tmpSpacePoint.hitModule.push_back(hits[1][hitMin]);
+      spacePoints.push_back(tmpSpacePoint);
     }
   }
 }
@@ -267,17 +270,19 @@ Acts::TwoHitsSpacePointBuilder::recoverSpacePoint(
 }
 
 void
-Acts::TwoHitsSpacePointBuilder::calculateSpacePoints()
+Acts::TwoHitsSpacePointBuilder::calculateSpacePoints(
+    std::vector<Acts::SpacePoint>& spacePoints) const
 {
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
   Acts::TwoHitsSpacePointBuilder::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
-  for (auto& hits : m_allCombSpacePoints) {
-    assert(hits.hitModule.size() == 2);
+  for (auto& hits : spacePoints) {
+
     // If the space point is already calculated this can be skipped
     if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
+    if (hits.hitModule.size() != 2) continue;
 
     // Calculate the ends of the SDEs
     const auto& ends1 = endsOfStrip(*(hits.hitModule[0]));
@@ -347,10 +352,4 @@ Acts::TwoHitsSpacePointBuilder::calculateSpacePoints()
       hits.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
   }
-}
-
-const std::vector<Acts::SpacePoint>&
-Acts::TwoHitsSpacePointBuilder::spacePoints()
-{
-  return m_allCombSpacePoints;
 }

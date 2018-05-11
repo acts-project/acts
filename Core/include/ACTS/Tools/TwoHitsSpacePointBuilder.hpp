@@ -54,21 +54,20 @@ public:
 
   /// @brief Searches possible combinations of two hits on different surfaces
   /// that may come from the same particles
-  /// @param vec1 vector of hits on the first surface
-  /// @param vec2 vector of hits on the second surface
+  /// @param spacePoint storage of the space points
+  /// @param hits vector of hits on surfaces
+  /// @note The structure of @p hits is meant to be hits[Surfaces][Hits on a
+  /// surface]
   void
-  addHits(const std::vector<std::vector<PlanarModuleCluster const*>>& hits);
+  addHits(std::vector<SpacePoint>& spacePoints,
+          const std::vector<std::vector<Acts::PlanarModuleCluster const*>>&
+              hits) const override;
 
   /// @brief Calculates the space points out of a given collection of hits
   /// on several strip detectors and stores the data
+  /// @param spacePoints storage of the data
   void
-  calculateSpacePoints() override;
-
-  /// @brief Returns the list of all resolved space points
-  /// @note This function is a pure getter of the current state
-  /// @return full collection of all resolved space points
-  const std::vector<SpacePoint>&
-  spacePoints() override;
+  calculateSpacePoints(std::vector<SpacePoint>& spacePoints) const override;
 
 protected:
   /// @brief Getter method for the local coordinates of a hit
@@ -139,8 +138,6 @@ private:
 
   /// Storage of the user defined configuration of the class
   Config m_cfg;
-  /// Storage of all resolved data
-  std::vector<SpacePoint> m_allCombSpacePoints;
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two hits
   /// @param hit1 the first hit

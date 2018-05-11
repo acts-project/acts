@@ -9,6 +9,7 @@
 #ifndef ACTS_TOOLS_ISPACEPOINTBUILDER_H
 #define ACTS_TOOLS_ISPACEPOINTBUILDER_H
 
+#include <iterator>
 #include <vector>
 #include "ACTS/Digitization/PlanarModuleCluster.hpp"
 
@@ -17,7 +18,7 @@ namespace Acts {
 /// @brief Structure for easier bookkeeping of hits.
 struct SpacePoint
 {
-  /// Storage of the hit on a surface
+  /// Storage of the hit(s) on a surface/surfaces
   std::vector<PlanarModuleCluster const*> hitModule;
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
@@ -35,23 +36,19 @@ class ISpacePointBuilder
 public:
   /// @brief Adds hits to the list. Allows checks for possible combination
   /// vetos.
+  /// @param spacePoint storage of the space points
   /// @param hits list of list of hits. The 2D setup allows possible combination
   /// vetos
   virtual void
-  addHits(const std::vector<std::vector<PlanarModuleCluster const*>>& hits)
-      = 0;
+  addHits(std::vector<SpacePoint>& spacePoints,
+          const std::vector<std::vector<Acts::PlanarModuleCluster const*>>&
+              hits) const = 0;
 
   /// @brief Calculates the space points out of a given collection of hits and
   /// stores the data
+  /// @param spacePoints storage of the data
   virtual void
-  calculateSpacePoints()
-      = 0;
-
-  /// @brief Returns the list of all stored space points
-  /// @return full collection of all stored space points
-  virtual const std::vector<SpacePoint>&
-  spacePoints()
-      = 0;
+  calculateSpacePoints(std::vector<SpacePoint>& spacePoints) const = 0;
 
 protected:
   /// @brief Getter method for the local coordinates of a hit

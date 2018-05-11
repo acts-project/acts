@@ -29,22 +29,20 @@ public:
   OneHitSpacePointBuilder();
 
   /// @brief Adds hits on surfaces and stores them
+  /// @param spacePoint storage of the space points
   /// @param hits vector of hits on surfaces
-  /// @note The structure of @p hits is hits[Surfaces][Hits on a surface]
+  /// @note The structure of @p hits is meant to be hits[Surfaces][Hits on a
+  /// surface]
   void
-  addHits(const std::vector<std::vector<PlanarModuleCluster const*>>& hits)
-      override;
+  addHits(std::vector<SpacePoint>& spacePoints,
+          const std::vector<std::vector<Acts::PlanarModuleCluster const*>>&
+              hits) const override;
 
   /// @brief Calculates the space points out of a given collection of hits and
   /// stores the data
+  /// @param spacePoints storage of the data
   void
-  calculateSpacePoints() override;
-
-  /// @brief Returns the list of all stored space points
-  /// @note This function is a pure getter of the current state
-  /// @return full collection of all stored space points
-  const std::vector<SpacePoint>&
-  spacePoints() override;
+  calculateSpacePoints(std::vector<SpacePoint>& spacePoints) const override;
 
 protected:
   /// @brief Getter method for the local coordinates of a hit
@@ -59,10 +57,6 @@ protected:
   /// @return vector of the global coordinates of the hit
   Vector3D
   globalCoords(const PlanarModuleCluster& hit) const override;
-
-private:
-  /// Storage of all stored data
-  std::vector<SpacePoint> m_allSpacePoints;
 };
 
 }  // namespace Acts
