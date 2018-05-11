@@ -41,12 +41,6 @@ public:
   addHits(const std::vector<std::vector<PlanarModuleCluster const*>>& hits)
       = 0;
 
-  /// @brief Adds a space point structure to the list of space points
-  /// @param space point element added to the list
-  virtual void
-  addSpacePoint(SpacePoint& hit)
-      = 0;
-
   /// @brief Calculates the space points out of a given collection of hits and
   /// stores the data
   virtual void

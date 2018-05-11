@@ -54,14 +54,6 @@ Acts::OneHitSpacePointBuilder::addHits(
 }
 
 void
-Acts::OneHitSpacePointBuilder::addSpacePoint(Acts::SpacePoint& sPoint)
-{
-  // Add a hit if the module is set
-  if (sPoint.hitModule.size() == 1 && sPoint.hitModule[0])
-    m_allSpacePoints.push_back(sPoint);
-}
-
-void
 Acts::OneHitSpacePointBuilder::calculateSpacePoints()
 {
   // Set the space point for all stored hits

@@ -117,14 +117,6 @@ Acts::TwoHitsSpacePointBuilder::addHits(
   }
 }
 
-void
-Acts::TwoHitsSpacePointBuilder::addSpacePoint(Acts::SpacePoint& sPoint)
-{
-  if (sPoint.hitModule.size() == 2 && sPoint.hitModule[0]
-      && sPoint.hitModule[1])
-    m_allCombSpacePoints.push_back(sPoint);
-}
-
 std::pair<Acts::Vector3D, Acts::Vector3D>
 Acts::TwoHitsSpacePointBuilder::endsOfStrip(
     const Acts::PlanarModuleCluster& hit) const

@@ -59,12 +59,6 @@ public:
   void
   addHits(const std::vector<std::vector<PlanarModuleCluster const*>>& hits);
 
-  /// @brief Adds a combined hit to the list of combined hits
-  /// @note This function does not test what is stored in the new element
-  /// @param combHit element added to the list
-  void
-  addSpacePoint(SpacePoint& sPoint) override;
-
   /// @brief Calculates the space points out of a given collection of hits
   /// on several strip detectors and stores the data
   void
