@@ -86,10 +86,10 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
-	std::cout << "Hit created" << std::endl;
-	
-	std::vector<SpacePoint> data;
-    OneHitSpacePointBuilder ohspb;
+    std::cout << "Hit created" << std::endl;
+
+    std::vector<SpacePoint>                              data;
+    OneHitSpacePointBuilder                              ohspb;
     std::vector<std::vector<PlanarModuleCluster const*>> matsPoint;
     matsPoint.push_back({pmc});
     ohspb.addHits(data, matsPoint);
@@ -98,11 +98,12 @@ namespace Test {
     BOOST_TEST(data.size() == 1, "Failed to add element to SpacePointBuilder");
     BOOST_TEST(*(data[0].hitModule[0]) == *pmc, "Wrong element added");
 
-	std::cout << "Hit added to storage" << std::endl;
-	
+    std::cout << "Hit added to storage" << std::endl;
+
     ohspb.calculateSpacePoints(data);
-    BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3), "Failed to calculate space point");
-    
+    BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3),
+               "Failed to calculate space point");
+
     std::cout << "Space point calculated" << std::endl;
   }
 }  // end of namespace Test

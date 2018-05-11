@@ -33,8 +33,8 @@ namespace Test {
   {
     (void)index;
 
-	std::cout << "Create first hit" << std::endl;
-	
+    std::cout << "Create first hit" << std::endl;
+
     // Build Bounds
     std::shared_ptr<const RectangleBounds> recBounds(
         new RectangleBounds(35. * Acts::units::_um, 25. * units::_mm));
@@ -89,8 +89,8 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
-	std::cout << "Create second hit" << std::endl;
-	
+    std::cout << "Create second hit" << std::endl;
+
     // Build second PlanarModuleCluster
     const Identifier id2(1);
 
@@ -119,30 +119,31 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
-	std::cout << "Store both hits" << std::endl;
-	
-	std::vector<SpacePoint> data;
+    std::cout << "Store both hits" << std::endl;
+
+    std::vector<SpacePoint>          data;
     TwoHitsSpacePointBuilder::Config thspb_cfg;
     TwoHitsSpacePointBuilder         thspb(thspb_cfg);
-    
+
     // Combine two PlanarModuleClusters
     std::vector<std::vector<PlanarModuleCluster const*>> matsPoint;
     matsPoint.push_back({pmc});
     matsPoint.push_back({pmc2});
     thspb.addHits(data, matsPoint);
-    
+
     BOOST_TEST(data.size() == 1, "Failed to add element");
     BOOST_TEST(*(data[0].hitModule[0]) == *pmc, "Failed to set hit");
     BOOST_TEST(*(data[0].hitModule[1]) == *pmc2, "Failed to set hit");
-    
-    std::cout << "Calculate space point" << std::endl;
-    
-    thspb.calculateSpacePoints(data);
-    
-    BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3), "Failed to calculate space point");
 
-	std::cout << "Create third hit" << std::endl;
-	
+    std::cout << "Calculate space point" << std::endl;
+
+    thspb.calculateSpacePoints(data);
+
+    BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3),
+               "Failed to calculate space point");
+
+    std::cout << "Create third hit" << std::endl;
+
     // Build third PlanarModuleCluster
     const Identifier id3(2);
     Transform3D      t3d3 = getTransformFromRotTransl(
@@ -162,8 +163,8 @@ namespace Test {
                                   local[1],
                                   {DigitizationCell(0, 0, 1.)});
 
-	std::cout << "Try to store hits" << std::endl;
-	
+    std::cout << "Try to store hits" << std::endl;
+
     // Combine points
     matsPoint.clear();
     matsPoint.push_back({pmc});
@@ -171,8 +172,7 @@ namespace Test {
     thspb.addHits(data, matsPoint);
 
     // Test for rejecting unconnected hits
-    BOOST_TEST(data.size() == 1,
-               "Failed to reject potential combination");
+    BOOST_TEST(data.size() == 1, "Failed to reject potential combination");
   }
 }  // end of namespace Test
 
