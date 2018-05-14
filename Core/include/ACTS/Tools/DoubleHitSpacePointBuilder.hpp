@@ -61,8 +61,8 @@ class SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>
     : public SpacePointBuilder<SingleHitSpacePoint, void>
 {
 public:
-	/// Default constructor
-	SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>() = delete;
+  /// Default constructor
+  SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>() = delete;
 
   /// @brief This function is intended to use a single hit for the formation of
   /// a space point. Since this is not needed for this class this function is

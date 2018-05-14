@@ -28,7 +28,9 @@ namespace Test {
   /// Unit test for testing the main functions of OneHitSpacePointBuilder
   /// 1) A resolved dummy hit gets created and added.
   /// 2) A hit gets added and resolved.
-  BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1), index)
+  BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic,
+                       bdata::xrange(1),
+                       index)
   {
     (void)index;
 
@@ -88,7 +90,7 @@ namespace Test {
 
     std::cout << "Hit created" << std::endl;
 
-    std::vector<SingleHitSpacePoint>                              data;
+    std::vector<SingleHitSpacePoint> data;
     SPB::addHits<SingleHitSpacePoint>(data, {pmc});
 
     // Test for adding a SingleHitSpacePoint

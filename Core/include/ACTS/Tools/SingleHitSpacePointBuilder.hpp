@@ -34,8 +34,8 @@ template <>
 class SpacePointBuilder<SingleHitSpacePoint, void>
 {
 public:
-	/// Default constructor
-	SpacePointBuilder<SingleHitSpacePoint, void>() = delete;
+  /// Default constructor
+  SpacePointBuilder<SingleHitSpacePoint, void>() = delete;
 
   /// @brief Adds hits on surfaces and stores them
   /// @param spacePointStorage storage of hits and the therewith resulting space

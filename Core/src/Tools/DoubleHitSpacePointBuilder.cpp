@@ -66,7 +66,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     // Use default config
     dhCfg = std::make_shared<Acts::DoubleHitSpacePointConfig>(
         Acts::DoubleHitSpacePointConfig());
-	
+
   // TODO: only the closest differences get selected -> some points are not
   // taken into account
   // Declare helper variables
@@ -80,7 +80,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     diffMin = std::numeric_limits<double>::max();
     // Set the corresponding index to an element not in the list of hits
     hitMin = hits2.size();
-std::cout << hits1.size() << "\t" << hits2.size() << std::endl;
+    std::cout << hits1.size() << "\t" << hits2.size() << std::endl;
     for (unsigned int iHits2 = 0; iHits2 < hits2.size(); iHits2++) {
       // Calculate the distances between the hits
       currentDiff = differenceOfHits(*(hits1[iHits1]), *(hits2[iHits2]), dhCfg);
