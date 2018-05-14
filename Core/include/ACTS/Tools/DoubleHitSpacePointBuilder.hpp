@@ -27,26 +27,25 @@ struct DoubleHitSpacePoint
   Vector3D spacePoint = {0., 0., 0.};
 };
 
+/// @brief Configuration of the class to steer its behaviour
+struct DoubleHitSpacePointConfig
+{
+  /// Accepted difference in eta for two hits
+  double diffTheta2 = 1.;
+  /// Accepted difference in phi for two hits
+  double diffPhi2 = 1.;
+  /// Accepted distance between two hits
+  double diffDist = 100. * units::_mm;
+  /// Allowed increase of strip length
+  double stripLengthTolerance = 0.01;
+  /// Allowed increase of strip length wrt gaps between strips
+  double stripLengthGapTolerance = 0.01;
+  /// Assumed position of the vertex
+  Vector3D vertex = {0., 0., 0.};
+  /// Perform the perpendicular projection for space point finding
+  bool usePerpProj = false;
+};
 
-  /// @brief Configuration of the class to steer its behaviour
-  struct DoubleHitSpacePointConfig
-  {
-    /// Accepted difference in eta for two hits
-    double diffTheta2 = 1.;
-    /// Accepted difference in phi for two hits
-    double diffPhi2 = 1.;
-    /// Accepted distance between two hits
-    double diffDist = 100. * units::_mm;
-    /// Allowed increase of strip length
-    double stripLengthTolerance = 0.01;
-    /// Allowed increase of strip length wrt gaps between strips
-    double stripLengthGapTolerance = 0.01;
-    /// Assumed position of the vertex
-    Vector3D vertex = {0., 0., 0.};
-    /// Perform the perpendicular projection for space point finding
-    bool usePerpProj = false;
-  };
-  
 /// @class TwoHitsSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
@@ -57,37 +56,44 @@ struct DoubleHitSpacePoint
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
-template<>
-class SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig> : public SpacePointBuilder<SingleHitSpacePoint, void>
+template <>
+class SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>
+    : public SpacePointBuilder<SingleHitSpacePoint, void>
 {
 public:
-	/// @brief This function is intended to use a single hit for the formation of a space point. Since this is not needed for this class this function is deleted.
+  /// @brief This function is intended to use a single hit for the formation of
+  /// a space point. Since this is not needed for this class this function is
+  /// deleted.
   static void
   addHits(std::vector<DoubleHitSpacePoint>& spacePointStorage,
-          const std::vector<Acts::PlanarModuleCluster const*>&
-              hits) = delete;
-              
+          const std::vector<Acts::PlanarModuleCluster const*>& hits)
+      = delete;
+
   /// @brief Searches possible combinations of two hits on different surfaces
   /// that may come from the same particles
   /// @param spacePointStorage storage of the space points
   /// @param hits1 vector of hits on a surface
   /// @param hits2 vector of hits on another surface
-  /// @param cfg optional configuration to steer the combination process of @p hits1 and @p hits2
+  /// @param cfg optional configuration to steer the combination process of @p
+  /// hits1 and @p hits2
   /// @note The structure of @p hits is meant to be hits[Surfaces][Hits on a
   /// surface]
   static void
   addHits(std::vector<DoubleHitSpacePoint>& spacePointStorage,
-          const std::vector<Acts::PlanarModuleCluster const*>&
-              hits1, const std::vector<Acts::PlanarModuleCluster const*>&
-              hits2, const std::shared_ptr<DoubleHitSpacePointConfig> cfg = nullptr);
+          const std::vector<Acts::PlanarModuleCluster const*>& hits1,
+          const std::vector<Acts::PlanarModuleCluster const*>& hits2,
+          const std::shared_ptr<DoubleHitSpacePointConfig>     cfg = nullptr);
 
   /// @brief Calculates the space points out of a given collection of hits
   /// on several strip detectors and stores the data
   /// @param spacePointStorage storage of the data
-  /// @param cfg optional configuration to steer the calculation of the space points
+  /// @param cfg optional configuration to steer the calculation of the space
+  /// points
   /// @note If no configuration is set, the default values will be used
   static void
-  calculateSpacePoints(std::vector<DoubleHitSpacePoint>& spacePoints, const std::shared_ptr<DoubleHitSpacePointConfig> cfg = nullptr);
+  calculateSpacePoints(std::vector<DoubleHitSpacePoint>& spacePoints,
+                       const std::shared_ptr<DoubleHitSpacePointConfig> cfg
+                       = nullptr);
 
 private:
   /// @brief Storage container for variables related to the calculation of space
@@ -142,15 +148,16 @@ private:
     }
   };
 
-
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two hits
   /// @param hit1 the first hit
   /// @param hit2 the second hit
-  /// @param cfg optional configuration to steer the combination process of @p hit1 and @p hit2
+  /// @param cfg optional configuration to steer the combination process of @p
+  /// hit1 and @p hit2
   /// @return the squared sum in case of success, otherwise -1
   static double
-  differenceOfHits(const PlanarModuleCluster& hit1,
-                   const PlanarModuleCluster& hit2, const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
+  differenceOfHits(const PlanarModuleCluster&                       hit1,
+                   const PlanarModuleCluster&                       hit2,
+                   const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
@@ -183,8 +190,8 @@ private:
   /// @param cfg optional configuration to steer the recovery of space points
   /// @return indicator if the test was successful
   static bool
-  recoverSpacePoint(SpacePointParameters& spaPoPa, const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
+  recoverSpacePoint(SpacePointParameters&                            spaPoPa,
+                    const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
 };
 
 }  // namespace Acts
-

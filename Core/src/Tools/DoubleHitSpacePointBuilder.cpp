@@ -15,9 +15,11 @@
 ///
 
 double
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::differenceOfHits(
-    const Acts::PlanarModuleCluster& hit1,
-    const Acts::PlanarModuleCluster& hit2, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    differenceOfHits(const Acts::PlanarModuleCluster& hit1,
+                     const Acts::PlanarModuleCluster& hit2,
+                     const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   // Calculate the global position of the hits
   Acts::Vector3D pos1 = globalCoords(hit1);
@@ -46,11 +48,12 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConf
 }
 
 void
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::addHits(
-    std::vector<Acts::DoubleHitSpacePoint>& spacePoints,
-     const std::vector<Acts::PlanarModuleCluster const*>&
-              hits1, const std::vector<Acts::PlanarModuleCluster const*>&
-              hits2, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    addHits(std::vector<Acts::DoubleHitSpacePoint>&                spacePoints,
+            const std::vector<Acts::PlanarModuleCluster const*>&   hits1,
+            const std::vector<Acts::PlanarModuleCluster const*>&   hits2,
+            const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   // Return if no hits are given in a vector
   if (hits1.empty() || hits2.empty()) return;
@@ -89,8 +92,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConf
 }
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::endsOfStrip(
-    const Acts::PlanarModuleCluster& hit)
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    endsOfStrip(const Acts::PlanarModuleCluster& hit)
 {
   // Calculate the local coordinates of the hit
   const Acts::Vector2D local = localCoords(hit);
@@ -134,10 +138,12 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConf
 }
 
 double
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::calcPerpProj(const Acts::Vector3D& a,
-                                             const Acts::Vector3D& c,
-                                             const Acts::Vector3D& q,
-                                             const Acts::Vector3D& r)
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    calcPerpProj(const Acts::Vector3D& a,
+                 const Acts::Vector3D& c,
+                 const Acts::Vector3D& q,
+                 const Acts::Vector3D& r)
 {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
@@ -162,8 +168,13 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConf
 }
 
 bool
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::recoverSpacePoint(
-    Acts::SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>::SpacePointParameters& spaPoPa, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    recoverSpacePoint(
+        Acts::SpacePointBuilder<DoubleHitSpacePoint,
+                                DoubleHitSpacePointConfig>::
+            SpacePointParameters&                              spaPoPa,
+        const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
@@ -238,21 +249,27 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConf
 }
 
 void
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::calculateSpacePoints(
-    std::vector<Acts::DoubleHitSpacePoint>& spacePointStorage, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    calculateSpacePoints(
+        std::vector<Acts::DoubleHitSpacePoint>& spacePointStorage,
+        const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
 
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
-	// Test if config exists
-	std::shared_ptr<Acts::DoubleHitSpacePointConfig> dhCfg;
-	if(cfg)
-		dhCfg = cfg;
-	else
-		// Use default config
-		dhCfg = std::make_shared<Acts::DoubleHitSpacePointConfig>(Acts::DoubleHitSpacePointConfig());
-		
-  Acts::SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>::SpacePointParameters spaPoPa;
+  // Test if config exists
+  std::shared_ptr<Acts::DoubleHitSpacePointConfig> dhCfg;
+  if (cfg)
+    dhCfg = cfg;
+  else
+    // Use default config
+    dhCfg = std::make_shared<Acts::DoubleHitSpacePointConfig>(
+        Acts::DoubleHitSpacePointConfig());
+
+  Acts::SpacePointBuilder<DoubleHitSpacePoint,
+                          DoubleHitSpacePointConfig>::SpacePointParameters
+      spaPoPa;
 
   // Walk over every found candidate pair
   for (auto& hits : spacePointStorage) {

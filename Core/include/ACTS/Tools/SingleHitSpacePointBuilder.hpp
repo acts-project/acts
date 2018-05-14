@@ -30,34 +30,41 @@ struct SingleHitSpacePoint
 /// the digitized hits on a strip or pixel detector element and provides the
 /// corresponding space point.
 ///
-template<>
+template <>
 class SpacePointBuilder<SingleHitSpacePoint, void>
 {
 public:
   /// @brief Adds hits on surfaces and stores them
-  /// @param spacePointStorage storage of hits and the therewith resulting space points
+  /// @param spacePointStorage storage of hits and the therewith resulting space
+  /// points
   /// @param hits vector of hits on the surface
   static void
   addHits(std::vector<SingleHitSpacePoint>& spacePointStorage,
-          const std::vector<Acts::PlanarModuleCluster const*>&
-              hits);
-  
-  /// @brief This function is intended to use hits on multiple surfaces that need to be combined in order to calculate a resulting space point. Since this is not needed for this class this function is deleted.
+          const std::vector<Acts::PlanarModuleCluster const*>& hits);
+
+  /// @brief This function is intended to use hits on multiple surfaces that
+  /// need to be combined in order to calculate a resulting space point. Since
+  /// this is not needed for this class this function is deleted.
   static void
   addHits(std::vector<SingleHitSpacePoint>& spacePointStorage,
-          const std::vector<Acts::PlanarModuleCluster const*>&
-              hits1,  const std::vector<Acts::PlanarModuleCluster const*>&
-              hits2, const std::shared_ptr<void> cfg) = delete;          
-            
+          const std::vector<Acts::PlanarModuleCluster const*>& hits1,
+          const std::vector<Acts::PlanarModuleCluster const*>& hits2,
+          const std::shared_ptr<void>                          cfg)
+      = delete;
 
-  /// @brief Calculates the space points out of a given collection of hits and stores the results
+  /// @brief Calculates the space points out of a given collection of hits and
+  /// stores the results
   /// @param spacePointStorage storage of the data
   static void
   calculateSpacePoints(std::vector<SingleHitSpacePoint>& spacePointStorage);
-  
-  /// @brief This function is intended to calculate space points out of given collection of hits using a specific configuration. Since this is not needed for this class this function is deleted.
+
+  /// @brief This function is intended to calculate space points out of given
+  /// collection of hits using a specific configuration. Since this is not
+  /// needed for this class this function is deleted.
   static void
-  calculateSpacePoints(std::vector<SingleHitSpacePoint>& spacePointStorage, const std::shared_ptr<void> cfg) = delete;
+  calculateSpacePoints(std::vector<SingleHitSpacePoint>& spacePointStorage,
+                       const std::shared_ptr<void>       cfg)
+      = delete;
 
 protected:
   /// @brief Getter method for the local coordinates of a hit
@@ -75,4 +82,3 @@ protected:
 };
 
 }  // namespace Acts
-

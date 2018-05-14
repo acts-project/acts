@@ -15,7 +15,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::localCoords(
   // Local position information
   auto           par = hit.parameters();
   Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
-  return local; 
+  return local;
 }
 
 Acts::Vector3D
@@ -34,7 +34,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::globalCoords(
 
 void
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::addHits(
-    std::vector<Acts::SingleHitSpacePoint>& spacePointStorage,
+    std::vector<Acts::SingleHitSpacePoint>&              spacePointStorage,
     const std::vector<Acts::PlanarModuleCluster const*>& hits)
 {
   // Walk over every hit and add them
