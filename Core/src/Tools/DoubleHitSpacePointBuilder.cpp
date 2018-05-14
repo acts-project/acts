@@ -6,85 +6,54 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Tools/TwoHitsSpacePointBuilder.hpp"
+#include "ACTS/Tools/DoubleHitSpacePointBuilder.hpp"
 #include <cmath>
 #include <limits>
-#include <stdexcept>
 
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
 
-Acts::TwoHitsSpacePointBuilder::TwoHitsSpacePointBuilder(const Config& cfg)
-  : m_cfg(cfg)
-{
-}
-
-Acts::Vector2D
-Acts::TwoHitsSpacePointBuilder::localCoords(
-    const Acts::PlanarModuleCluster& hit) const
-{
-  // Local position information
-  auto           par = hit.parameters();
-  Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
-  return local;
-}
-
-Acts::Vector3D
-Acts::TwoHitsSpacePointBuilder::globalCoords(
-    const Acts::PlanarModuleCluster& hit) const
-{
-  // Receive corresponding surface
-  auto& clusterSurface = hit.referenceSurface();
-
-  // Transform local into global position information
-  Acts::Vector3D pos, mom;
-  clusterSurface.localToGlobal(localCoords(hit), mom, pos);
-
-  return pos;
-}
-
 double
-Acts::TwoHitsSpacePointBuilder::differenceOfHits(
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::differenceOfHits(
     const Acts::PlanarModuleCluster& hit1,
-    const Acts::PlanarModuleCluster& hit2) const
+    const Acts::PlanarModuleCluster& hit2, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   // Calculate the global position of the hits
   Acts::Vector3D pos1 = globalCoords(hit1);
   Acts::Vector3D pos2 = globalCoords(hit2);
 
   // Check if measurements are close enough to each other
-  if ((pos1 - pos2).norm() > m_cfg.diffDist) return -1.;
+  if ((pos1 - pos2).norm() > cfg->diffDist) return -1.;
 
   // Calculate the angles of the hits
   double phi1, theta1, phi2, theta2;
-  phi1   = (pos1 - m_cfg.vertex).phi();
-  theta1 = (pos1 - m_cfg.vertex).theta();
-  phi2   = (pos2 - m_cfg.vertex).phi();
-  theta2 = (pos2 - m_cfg.vertex).theta();
+  phi1   = (pos1 - cfg->vertex).phi();
+  theta1 = (pos1 - cfg->vertex).theta();
+  phi2   = (pos2 - cfg->vertex).phi();
+  theta2 = (pos2 - cfg->vertex).theta();
 
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
-  if (diffTheta2 > m_cfg.diffTheta2) return -1.;
+  if (diffTheta2 > cfg->diffTheta2) return -1.;
 
   // Calculate the squared difference between the phi angles
   double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
-  if (diffPhi2 > m_cfg.diffPhi2) return -1.;
+  if (diffPhi2 > cfg->diffPhi2) return -1.;
 
   // Return the squared distance between both hits
   return diffTheta2 + diffPhi2;
 }
 
 void
-Acts::TwoHitsSpacePointBuilder::addHits(
-    std::vector<Acts::SpacePoint>& spacePoints,
-    const std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
-    const
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::addHits(
+    std::vector<Acts::DoubleHitSpacePoint>& spacePoints,
+     const std::vector<Acts::PlanarModuleCluster const*>&
+              hits1, const std::vector<Acts::PlanarModuleCluster const*>&
+              hits2, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
-  // Return if more/less surfaces given than 2
-  if (hits.size() != 2) return;
-  // Return if no hits are given
-  if (hits[0].empty() && hits[1].empty()) return;
+  // Return if no hits are given in a vector
+  if (hits1.empty() || hits2.empty()) return;
 
   // TODO: only the closest differences get selected -> some points are not
   // taken into account
@@ -94,35 +63,34 @@ Acts::TwoHitsSpacePointBuilder::addHits(
   unsigned int hitMin;
 
   // Walk through all hits on both surfaces
-  for (unsigned int iHits0 = 0; iHits0 < hits[0].size(); iHits0++) {
+  for (unsigned int iHits1 = 0; iHits1 < hits1.size(); iHits1++) {
     // Set the closest distance to the maximum of double
     diffMin = std::numeric_limits<double>::max();
     // Set the corresponding index to an element not in the list of hits
-    hitMin = hits[1].size();
+    hitMin = hits2.size();
 
-    for (unsigned int iHits1 = 0; iHits1 < hits[1].size(); iHits1++) {
+    for (unsigned int iHits2 = 0; iHits2 < hits2.size(); iHits2++) {
       // Calculate the distances between the hits
-      currentDiff = differenceOfHits(*(hits[0][iHits0]), *(hits[1][iHits1]));
+      currentDiff = differenceOfHits(*(hits1[iHits1]), *(hits2[iHits2]), cfg);
       // Store the closest hits (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin = currentDiff;
-        hitMin  = iHits1;
+        hitMin  = iHits2;
       }
     }
     // Store the best (=closest) result
-    if (hitMin < hits[1].size()) {
-
-      Acts::SpacePoint tmpSpacePoint;
-      tmpSpacePoint.hitModule.push_back(hits[0][iHits0]);
-      tmpSpacePoint.hitModule.push_back(hits[1][hitMin]);
+    if (hitMin < hits2.size()) {
+      Acts::DoubleHitSpacePoint tmpSpacePoint;
+      tmpSpacePoint.hitModule1 = hits1[iHits1];
+      tmpSpacePoint.hitModule2 = hits2[hitMin];
       spacePoints.push_back(tmpSpacePoint);
     }
   }
 }
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
-Acts::TwoHitsSpacePointBuilder::endsOfStrip(
-    const Acts::PlanarModuleCluster& hit) const
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::endsOfStrip(
+    const Acts::PlanarModuleCluster& hit)
 {
   // Calculate the local coordinates of the hit
   const Acts::Vector2D local = localCoords(hit);
@@ -166,10 +134,10 @@ Acts::TwoHitsSpacePointBuilder::endsOfStrip(
 }
 
 double
-Acts::TwoHitsSpacePointBuilder::calcPerpProj(const Acts::Vector3D& a,
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::calcPerpProj(const Acts::Vector3D& a,
                                              const Acts::Vector3D& c,
                                              const Acts::Vector3D& q,
-                                             const Acts::Vector3D& r) const
+                                             const Acts::Vector3D& r)
 {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
@@ -194,17 +162,17 @@ Acts::TwoHitsSpacePointBuilder::calcPerpProj(const Acts::Vector3D& a,
 }
 
 bool
-Acts::TwoHitsSpacePointBuilder::recoverSpacePoint(
-    Acts::TwoHitsSpacePointBuilder::SpacePointParameters& spaPoPa) const
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::recoverSpacePoint(
+    Acts::SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>::SpacePointParameters& spaPoPa, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
-  if (m_cfg.stripLengthGapTolerance <= 0.) return false;
+  if (cfg->stripLengthGapTolerance <= 0.) return false;
   spaPoPa.qmag = spaPoPa.q.mag();
   // Increase the limits. This allows a check if the point is just slightly
   // outside the SDE
   spaPoPa.limitExtended
-      = spaPoPa.limit + m_cfg.stripLengthGapTolerance / spaPoPa.qmag;
+      = spaPoPa.limit + cfg->stripLengthGapTolerance / spaPoPa.qmag;
   // Check if m is just slightly outside
   if (fabs(spaPoPa.m) > spaPoPa.limitExtended) return false;
   // Calculate n if not performed previously
@@ -270,23 +238,31 @@ Acts::TwoHitsSpacePointBuilder::recoverSpacePoint(
 }
 
 void
-Acts::TwoHitsSpacePointBuilder::calculateSpacePoints(
-    std::vector<Acts::SpacePoint>& spacePoints) const
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint, Acts::DoubleHitSpacePointConfig>::calculateSpacePoints(
+    std::vector<Acts::DoubleHitSpacePoint>& spacePointStorage, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
+
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
 
-  Acts::TwoHitsSpacePointBuilder::SpacePointParameters spaPoPa;
+	// Test if config exists
+	std::shared_ptr<Acts::DoubleHitSpacePointConfig> dhCfg;
+	if(cfg)
+		dhCfg = cfg;
+	else
+		// Use default config
+		dhCfg = std::make_shared<Acts::DoubleHitSpacePointConfig>(Acts::DoubleHitSpacePointConfig());
+		
+  Acts::SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
-  for (auto& hits : spacePoints) {
+  for (auto& hits : spacePointStorage) {
 
     // If the space point is already calculated this can be skipped
     if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
-    if (hits.hitModule.size() != 2) continue;
 
     // Calculate the ends of the SDEs
-    const auto& ends1 = endsOfStrip(*(hits.hitModule[0]));
-    const auto& ends2 = endsOfStrip(*(hits.hitModule[1]));
+    const auto& ends1 = endsOfStrip(*(hits.hitModule1));
+    const auto& ends2 = endsOfStrip(*(hits.hitModule2));
 
     /// The following algorithm is meant for finding the position on the first
     /// strip if there is a corresponding hit on the second strip. The
@@ -314,7 +290,7 @@ Acts::TwoHitsSpacePointBuilder::calculateSpacePoints(
 
     // Fast skipping if a perpendicular projection should be used
     double resultPerpProj;
-    if (m_cfg.usePerpProj
+    if (dhCfg->usePerpProj
         && (resultPerpProj
             = calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r)
                 <= 0.)) {
@@ -322,15 +298,15 @@ Acts::TwoHitsSpacePointBuilder::calculateSpacePoints(
       continue;
     }
 
-    spaPoPa.s  = ends1.first + ends1.second - 2 * m_cfg.vertex;
-    spaPoPa.t  = ends2.first + ends2.second - 2 * m_cfg.vertex;
+    spaPoPa.s  = ends1.first + ends1.second - 2 * dhCfg->vertex;
+    spaPoPa.t  = ends2.first + ends2.second - 2 * dhCfg->vertex;
     spaPoPa.qs = spaPoPa.q.cross(spaPoPa.s);
     spaPoPa.rt = spaPoPa.r.cross(spaPoPa.t);
     spaPoPa.m  = -spaPoPa.s.dot(spaPoPa.rt) / spaPoPa.q.dot(spaPoPa.rt);
 
     // Set the limit for the parameter
-    if (spaPoPa.limit == 1. && m_cfg.stripLengthTolerance != 0.)
-      spaPoPa.limit = 1. + m_cfg.stripLengthTolerance;
+    if (spaPoPa.limit == 1. && dhCfg->stripLengthTolerance != 0.)
+      spaPoPa.limit = 1. + dhCfg->stripLengthTolerance;
 
     // Check if m and n can be resolved in the interval (-1, 1)
     if (fabs(spaPoPa.m) <= spaPoPa.limit
@@ -348,7 +324,7 @@ Acts::TwoHitsSpacePointBuilder::calculateSpacePoints(
         /// @note This procedure is an indirect variation of the vertex
         /// position.
         // Check if a recovery the point(s) and store them if successful
-        if (recoverSpacePoint(spaPoPa))
+        if (recoverSpacePoint(spaPoPa, dhCfg))
       hits.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
   }

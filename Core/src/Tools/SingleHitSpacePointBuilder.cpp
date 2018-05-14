@@ -6,25 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Tools/OneHitSpacePointBuilder.hpp"
-
-Acts::OneHitSpacePointBuilder::OneHitSpacePointBuilder()
-{
-}
+#include "ACTS/Tools/SingleHitSpacePointBuilder.hpp"
 
 Acts::Vector2D
-Acts::OneHitSpacePointBuilder::localCoords(
-    const Acts::PlanarModuleCluster& hit) const
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::localCoords(
+    const Acts::PlanarModuleCluster& hit)
 {
   // Local position information
   auto           par = hit.parameters();
   Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
-  return local;
+  return local; 
 }
 
 Acts::Vector3D
-Acts::OneHitSpacePointBuilder::globalCoords(
-    const Acts::PlanarModuleCluster& hit) const
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::globalCoords(
+    const Acts::PlanarModuleCluster& hit)
 {
   // Receive corresponding surface
   auto& clusterSurface = hit.referenceSurface();
@@ -37,29 +33,25 @@ Acts::OneHitSpacePointBuilder::globalCoords(
 }
 
 void
-Acts::OneHitSpacePointBuilder::addHits(
-    std::vector<Acts::SpacePoint>& spacePoints,
-    const std::vector<std::vector<Acts::PlanarModuleCluster const*>>& hits)
-    const
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::addHits(
+    std::vector<Acts::SingleHitSpacePoint>& spacePointStorage,
+    const std::vector<Acts::PlanarModuleCluster const*>& hits)
 {
-  // Check that only a single surface is used
-  assert(hits.size() == 1);
-
   // Walk over every hit and add them
-  for (auto& cluster : hits[0]) {
+  for (auto& cluster : hits) {
     // Declare helper variable
-    Acts::SpacePoint tmpSpacePoint;
+    Acts::SingleHitSpacePoint tmpSpacePoint;
     tmpSpacePoint.hitModule.push_back(cluster);
-    spacePoints.push_back(tmpSpacePoint);
+    spacePointStorage.push_back(tmpSpacePoint);
   }
 }
 
 void
-Acts::OneHitSpacePointBuilder::calculateSpacePoints(
-    std::vector<Acts::SpacePoint>& spacePoints) const
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::calculateSpacePoints(
+    std::vector<Acts::SingleHitSpacePoint>& spacePointStorage)
 {
   // Set the space point for all stored hits
-  for (auto& sPoint : spacePoints) {
+  for (auto& sPoint : spacePointStorage) {
     if (sPoint.spacePoint != Acts::Vector3D::Zero(3)) continue;
     if (sPoint.hitModule.size() != 1) continue;
     sPoint.spacePoint = globalCoords(*(sPoint.hitModule[0]));

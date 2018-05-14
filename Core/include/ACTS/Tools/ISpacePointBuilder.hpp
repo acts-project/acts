@@ -6,65 +6,72 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_TOOLS_ISPACEPOINTBUILDER_H
-#define ACTS_TOOLS_ISPACEPOINTBUILDER_H
+#pragma once
 
-#include <iterator>
 #include <vector>
 #include "ACTS/Digitization/PlanarModuleCluster.hpp"
 
 namespace Acts {
 
-/// @brief Structure for easier bookkeeping of hits.
-struct SpacePoint
-{
-  /// Storage of the hit(s) on a surface/surfaces
-  std::vector<PlanarModuleCluster const*> hitModule;
-  /// Storage of a space point. Zero vector indicates unset point
-  Vector3D spacePoint = {0., 0., 0.};
-};
-
-/// @class ISpacePointBuilder
+/// @struct SpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
-/// the hits on some detector elements need further treatment. This interface
-/// serves to take the digitized hits on a detector element and provide the
-/// corresponding space point.
+/// the hits on some detector elements need further treatment. This struct
+/// serves as default structure of the process to take the digitized hits on a detector element and provide the corresponding space point. The empty structe is used to forbid the usage of an arbitrary data type as template parameter and enforces the implementation of explicit structures.
 ///
-class ISpacePointBuilder
+/// @note The choice of which kind of data should be treated in which way is steered by the choice of the template parameter. This parameter represents a structure that needs to store at least a hit/multiple hits and the corresponding space point. The second template parameter allows the application of different configurations for the application.
+///
+template<class S, class C = void>
+struct SpacePointBuilder
 {
-public:
-  /// @brief Adds hits to the list. Allows checks for possible combination
-  /// vetos.
-  /// @param spacePoint storage of the space points
-  /// @param hits list of list of hits. The 2D setup allows possible combination
-  /// vetos
-  virtual void
-  addHits(std::vector<SpacePoint>& spacePoints,
-          const std::vector<std::vector<Acts::PlanarModuleCluster const*>>&
-              hits) const = 0;
-
-  /// @brief Calculates the space points out of a given collection of hits and
-  /// stores the data
-  /// @param spacePoints storage of the data
-  virtual void
-  calculateSpacePoints(std::vector<SpacePoint>& spacePoints) const = 0;
-
-protected:
-  /// @brief Getter method for the local coordinates of a hit
-  /// on its corresponding surface
-  /// @param hit object related to the hit that holds the necessary information
-  /// @return vector of the local coordinates of the hit on the surface
-  virtual Vector2D
-  localCoords(const PlanarModuleCluster& hit) const = 0;
-
-  /// @brief Getter method for the global coordinates of a hit
-  /// @param hit object related to the hit that holds the necessary information
-  /// @return vector of the global coordinates of the hit
-  virtual Vector3D
-  globalCoords(const PlanarModuleCluster& hit) const = 0;
 };
 
-}  // namespace Acts
+namespace SPB
+{
+	/// @brief Adds hits to the list
+	/// @param spacePointStorage storage of hits and the therewith resulting space points
+	/// @param hits list of hits
+	/// @note This function is intended to be used for the case that a single hit (e.g. in a pixel detector module) results in a space point.
+	template<class S>
+	static void
+	addHits(std::vector<S> spacePointStorage, const std::vector<Acts::PlanarModuleCluster const*>& hits)
+	{
+		SpacePointBuilder<S, void>::addHits(spacePointStorage, hits);
+	}
+	
+	/// @brief Adds hits to the list
+	/// @param spacePointStorage storage of hits and the therewith resulting space points
+	/// @param hits1 list of hits
+	/// @param hits2 list of hits on another surface(s) than @p hits1
+	/// @param cfg optional configuration to steer the combinations of the elements of @p hits1 and @p hits2
+	/// @note This function is intended to be used for the case that two hits (e.g. in a double strip detector module) result in a space point.
+	template<class S, class C>
+	static void
+	addHits(std::vector<S> spacePointStorage, const std::vector<Acts::PlanarModuleCluster const*>& hits1, const std::vector<Acts::PlanarModuleCluster const*>& hits2, const std::shared_ptr<C> cfg = nullptr)
+	{
+		SpacePointBuilder<S, C>::addHits(spacePointStorage, hits1, hits2, cfg);
+	}
+	
+	/// @brief Calculates the space points out of a given collection of hits and stores the results
+	/// @param spacePointStorage storage of the hits and the corresponding space points
+	/// @param cfg optional configuration to steer the calculation of space points
+	template<class S>
+	static void
+	calculateSpacePoints(std::vector<S>& spacePointStorage)
+	{
+			SpacePointBuilder<S, void>::calculateSpacePoints(spacePointStorage);
+	}
+	
+	/// @brief Calculates the space points out of a given collection of hits and stores the results
+	/// @param spacePointStorage storage of the hits and the corresponding space points
+	/// @param cfg optional configuration to steer the calculation of space points
+	template<class S, class C>
+	static void
+	calculateSpacePoints(std::vector<S>& spacePointStorage, const std::shared_ptr<C> cfg = nullptr)
+	{
+			SpacePointBuilder<S, C>::calculateSpacePoints(spacePointStorage, cfg);
+	}
+	
+}  // namespace SP
 
-#endif  // ACTS_TOOLS_ISPACEPOINTFINDER_H
+}  // namespace Acts
