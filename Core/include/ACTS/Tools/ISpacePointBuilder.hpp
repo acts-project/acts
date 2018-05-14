@@ -42,7 +42,7 @@ namespace SPB {
   /// (e.g. in a pixel detector module) results in a space point.
   template <class S>
   static void
-  addHits(std::vector<S> spacePointStorage,
+  addHits(std::vector<S>& spacePointStorage,
           const std::vector<Acts::PlanarModuleCluster const*>& hits)
   {
     SpacePointBuilder<S, void>::addHits(spacePointStorage, hits);
@@ -59,7 +59,7 @@ namespace SPB {
   /// (e.g. in a double strip detector module) result in a space point.
   template <class S, class C>
   static void
-  addHits(std::vector<S> spacePointStorage,
+  addHits(std::vector<S>& spacePointStorage,
           const std::vector<Acts::PlanarModuleCluster const*>& hits1,
           const std::vector<Acts::PlanarModuleCluster const*>& hits2,
           const std::shared_ptr<C>                             cfg = nullptr)

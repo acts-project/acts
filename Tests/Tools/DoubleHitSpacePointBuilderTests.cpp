@@ -10,7 +10,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "ACTS/Tools/TwoHitsSpacePointBuilder.hpp"
+#include "ACTS/Tools/DoubleHitSpacePointBuilder.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 #include "ACTS/Digitization/PlanarModuleCluster.hpp"
@@ -25,11 +25,10 @@ namespace Acts {
 
 namespace Test {
 
-  /// Unit test for testing the main functions of TwoHitsSpacePointBuilder
-  /// 1) A resolved dummy pair of hits gets created and added.
-  /// 2) A pair of hits gets added and resolved.
-  /// 3) A pair of hits gets added and rejected.
-  BOOST_DATA_TEST_CASE(TwoHitsSpacePointBuilder_basic, bdata::xrange(1), index)
+  /// Unit test for testing the main functions of DoubleHitSpacePointBuilder
+  /// 1) A pair of hits gets added and resolved.
+  /// 2) A pair of hits gets added and rejected.
+  BOOST_DATA_TEST_CASE(DoubleHitsSpacePointBuilder_basic, bdata::xrange(1), index)
   {
     (void)index;
 
@@ -121,23 +120,20 @@ namespace Test {
 
     std::cout << "Store both hits" << std::endl;
 
-    std::vector<SpacePoint>          data;
-    TwoHitsSpacePointBuilder::Config thspb_cfg;
-    TwoHitsSpacePointBuilder         thspb(thspb_cfg);
+    std::vector<DoubleHitSpacePoint>          data;
+    std::shared_ptr<DoubleHitSpacePointConfig> dhsp_cfg = std::make_shared<DoubleHitSpacePointConfig>(
+        DoubleHitSpacePointConfig());;
 
     // Combine two PlanarModuleClusters
-    std::vector<std::vector<PlanarModuleCluster const*>> matsPoint;
-    matsPoint.push_back({pmc});
-    matsPoint.push_back({pmc2});
-    thspb.addHits(data, matsPoint);
+    SPB::addHits<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(data, {pmc}, {pmc2}, dhsp_cfg);
 
     BOOST_TEST(data.size() == 1, "Failed to add element");
-    BOOST_TEST(*(data[0].hitModule[0]) == *pmc, "Failed to set hit");
-    BOOST_TEST(*(data[0].hitModule[1]) == *pmc2, "Failed to set hit");
+    BOOST_TEST(*(data[0].hitModule1) == *pmc, "Failed to set hit");
+    BOOST_TEST(*(data[0].hitModule2) == *pmc2, "Failed to set hit");
 
     std::cout << "Calculate space point" << std::endl;
 
-    thspb.calculateSpacePoints(data);
+    SPB::calculateSpacePoints<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(data, dhsp_cfg);
 
     BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3),
                "Failed to calculate space point");
@@ -166,10 +162,7 @@ namespace Test {
     std::cout << "Try to store hits" << std::endl;
 
     // Combine points
-    matsPoint.clear();
-    matsPoint.push_back({pmc});
-    matsPoint.push_back({pmc3});
-    thspb.addHits(data, matsPoint);
+    SPB::addHits<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(data, {pmc}, {pmc3}, dhsp_cfg);
 
     // Test for rejecting unconnected hits
     BOOST_TEST(data.size() == 1, "Failed to reject potential combination");

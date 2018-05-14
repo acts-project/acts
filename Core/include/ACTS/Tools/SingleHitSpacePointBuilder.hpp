@@ -18,7 +18,7 @@ namespace Acts {
 struct SingleHitSpacePoint
 {
   /// Storage of the hit(s) on a surface
-  std::vector<PlanarModuleCluster const*> hitModule;
+  PlanarModuleCluster const* hitModule;
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
 };
@@ -34,6 +34,9 @@ template <>
 class SpacePointBuilder<SingleHitSpacePoint, void>
 {
 public:
+	/// Default constructor
+	SpacePointBuilder<SingleHitSpacePoint, void>() = delete;
+
   /// @brief Adds hits on surfaces and stores them
   /// @param spacePointStorage storage of hits and the therewith resulting space
   /// points

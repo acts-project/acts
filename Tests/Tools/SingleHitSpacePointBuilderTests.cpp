@@ -10,7 +10,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "ACTS/Tools/OneHitSpacePointBuilder.hpp"
+#include "ACTS/Tools/SingleHitSpacePointBuilder.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 
 #include "ACTS/Digitization/PlanarModuleCluster.hpp"
@@ -28,13 +28,13 @@ namespace Test {
   /// Unit test for testing the main functions of OneHitSpacePointBuilder
   /// 1) A resolved dummy hit gets created and added.
   /// 2) A hit gets added and resolved.
-  BOOST_DATA_TEST_CASE(OneHitSpacePointBuilder_basic, bdata::xrange(1), index)
+  BOOST_DATA_TEST_CASE(SingleHitSpacePointBuilder_basic, bdata::xrange(1), index)
   {
     (void)index;
 
     // Build bounds
     std::shared_ptr<const RectangleBounds> recBounds(
-        new RectangleBounds(35. * Acts::units::_um, 25. * units::_mm));
+        new RectangleBounds(35. * units::_um, 25. * units::_mm));
 
     // Build binning and segmentation
     std::vector<float> boundariesX, boundariesY;
@@ -88,19 +88,16 @@ namespace Test {
 
     std::cout << "Hit created" << std::endl;
 
-    std::vector<SpacePoint>                              data;
-    OneHitSpacePointBuilder                              ohspb;
-    std::vector<std::vector<PlanarModuleCluster const*>> matsPoint;
-    matsPoint.push_back({pmc});
-    ohspb.addHits(data, matsPoint);
+    std::vector<SingleHitSpacePoint>                              data;
+    SPB::addHits<SingleHitSpacePoint>(data, {pmc});
 
-    // Test for adding a SpacePoint
-    BOOST_TEST(data.size() == 1, "Failed to add element to SpacePointBuilder");
-    BOOST_TEST(*(data[0].hitModule[0]) == *pmc, "Wrong element added");
+    // Test for adding a SingleHitSpacePoint
+    BOOST_TEST(data.size() == 1, "Failed to add element");
+    BOOST_TEST(*(data[0].hitModule) == *pmc, "Wrong element added");
 
     std::cout << "Hit added to storage" << std::endl;
 
-    ohspb.calculateSpacePoints(data);
+    SPB::calculateSpacePoints<SingleHitSpacePoint>(data);
     BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3),
                "Failed to calculate space point");
 

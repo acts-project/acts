@@ -41,7 +41,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::addHits(
   for (auto& cluster : hits) {
     // Declare helper variable
     Acts::SingleHitSpacePoint tmpSpacePoint;
-    tmpSpacePoint.hitModule.push_back(cluster);
+    tmpSpacePoint.hitModule = cluster;
     spacePointStorage.push_back(tmpSpacePoint);
   }
 }
@@ -53,7 +53,6 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::calculateSpacePoints(
   // Set the space point for all stored hits
   for (auto& sPoint : spacePointStorage) {
     if (sPoint.spacePoint != Acts::Vector3D::Zero(3)) continue;
-    if (sPoint.hitModule.size() != 1) continue;
-    sPoint.spacePoint = globalCoords(*(sPoint.hitModule[0]));
+    sPoint.spacePoint = globalCoords(*(sPoint.hitModule));
   }
 }
