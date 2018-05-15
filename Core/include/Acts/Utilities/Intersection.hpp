@@ -21,10 +21,10 @@ namespace Acts {
 ///  intersection struct used for position
 struct Intersection
 {
-  Vector3D position;  // position of the intersection
-  double   pathLength;
-  double   distance;
-  bool     valid;
+  Vector3D position;    ///< position of the intersection
+  double   pathLength;  ///< path length to the intersection (if valid)
+  double   distance;    ///< remaining distance (if not valid)
+  bool     valid;       ///< validiaty boolean
 
   /// Constructor with argoments
   ///
@@ -67,18 +67,24 @@ template <class T>
 class ObjectIntersection
 {
 public:
-  Intersection intersection;
-  const T*     object;
-  int          pDirection;
+  Intersection        intersection;  ///< the intersection iself
+  const T*            object;        ///< the object that was intersected
+  NavigationDirection pDirection;    ///< the direction in which it was taken
 
   /// Default constructor
-  ObjectIntersection() : intersection(), object(nullptr), pDirection(0) {}
+  ObjectIntersection()
+    : intersection(), object(nullptr), pDirection(anyDirection)
+  {
+  }
+
   /// Object intersection
   ///
   /// @param sInter is the intersection
   /// @param sObject is the object to be instersected
   /// @param dir is the direction of the intersection
-  ObjectIntersection(const Intersection& sInter, const T* sObject, int dir = 1)
+  ObjectIntersection(const Intersection& sInter,
+                     const T*            sObject,
+                     NavigationDirection dir = forward)
     : intersection(sInter), object(sObject), pDirection(dir)
   {
   }
@@ -97,15 +103,20 @@ public:
 };
 
 /// Class extension to return the object, a represenation & the result
+///
+/// The full intersection extends the object intersection by
+/// a possible result parameter, e.g. it could be that the intersection
+/// method already provides the final parameters
 template <class T, class R, class S>
 class FullIntersection
 {
 public:
-  Intersection intersection;
-  const T*     object;
-  const R*     representation;
-  const S*     result;  //@todo: remove bare pointer
-  int          pDirection;
+  Intersection intersection;    ///< the intersection iself
+  const T*     object;          ///< the object that was intersected
+  const R*     representation;  ///< the represenation of the object
+  std::unique_ptr<S>
+                      result;  ///< what's the result ? @todo: remove bare pointer
+  NavigationDirection pDirection;  ///< the direction in which it was taken
 
   /// Full intersection constructor
   ///
@@ -115,16 +126,15 @@ public:
   /// @param sResult is the type of result: neutral, charged TP e.g.
   /// @param dir is the direction
   ///
-  /// @todo use unique_ptr for result !
   FullIntersection(const Intersection& sInter,
                    const T*            sObject,
                    const R*            sRepresentation,
-                   const S*            sResult = nullptr,
-                   int                 dir     = 1)
+                   std::unique_ptr<S>  sResult = nullptr,
+                   NavigationDirection dir     = forward)
     : intersection(sInter)
     , object(sObject)
     , representation(sRepresentation)
-    , result(sResult)
+    , result(std::move(sResult))
     , pDirection(dir)
   {
   }

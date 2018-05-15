@@ -33,7 +33,7 @@ public:
   ///
   /// @param aSurfaces are the approach surfaces
   GenericApproachDescriptor(const std::vector<const T*>& aSurfaces)
-    : ApproachDescriptor(), m_surfaces(), m_surfacesCache(aSurfaces)
+    : ApproachDescriptor(), m_surfaces(), m_surfacestepState(aSurfaces)
   {
     // create the surface container with memory control
     for (const auto& sf : aSurfaces) {
@@ -46,12 +46,12 @@ public:
   ///
   /// @param aSurfaces are the approach surfaces
   GenericApproachDescriptor(std::vector<std::shared_ptr<const T>> aSurfaces)
-    : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfacesCache()
+    : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfacestepState()
   {
-    m_surfacesCache.reserve(m_surfaces.size());
+    m_surfacestepState.reserve(m_surfaces.size());
     // cache the surfaces
     for (const auto& sf : aSurfaces) {
-      m_surfacesCache.push_back(&(sf->surfaceRepresentation()));
+      m_surfacestepState.push_back(&(sf->surfaceRepresentation()));
     }
   }
 
@@ -94,7 +94,7 @@ private:
   /// We will need to mutate those surfaces in registerLayer, but the C++ type
   /// system has no const-correct way of expressing this constraint.
   ///
-  std::vector<const Surface*> m_surfacesCache;
+  std::vector<const Surface*> m_surfacestepState;
 };
 
 template <class T>
@@ -102,7 +102,7 @@ void
 GenericApproachDescriptor<T>::registerLayer(const Layer& lay)
 {
   // go through the surfaces
-  for (auto& sf : m_surfacesCache) {
+  for (auto& sf : m_surfacestepState) {
     auto mutableSf = const_cast<Surface*>(sf);
     mutableSf->associateLayer(lay);
   }
@@ -118,8 +118,8 @@ GenericApproachDescriptor<T>::approachSurface(
 {
   // the intersection estimates
   std::vector<std::pair<const Surface*, Intersection>> vIntersections;
-  vIntersections.reserve(m_surfacesCache.size());
-  for (auto& sf : m_surfacesCache) {
+  vIntersections.reserve(m_surfacestepState.size());
+  for (auto& sf : m_surfacestepState) {
     vIntersections.push_back(std::pair<const Surface*, Intersection>(
         sf, sf->intersectionEstimate(pos, dir, true, bcheck)));
   }
@@ -139,13 +139,13 @@ template <class T>
 const std::vector<const Surface*>&
 GenericApproachDescriptor<T>::containedSurfaces() const
 {
-  return m_surfacesCache;
+  return m_surfacestepState;
 }
 
 template <class T>
 std::vector<const Surface*>&
 GenericApproachDescriptor<T>::containedSurfaces()
 {
-  return m_surfacesCache;
+  return m_surfacestepState;
 }
 }

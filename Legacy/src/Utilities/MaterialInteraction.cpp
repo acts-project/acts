@@ -24,7 +24,7 @@ ionizationEnergyLoss(bool            mean,
 
   double me    = particleMasses.mass[electron];
   double mfrac = me / m;
-  double E     = sqrt(p * p + m * m);
+  double E     = std::sqrt(p * p + m * m);
   double beta  = p / E;
   double gamma = E / m;
 
@@ -44,9 +44,10 @@ ionizationEnergyLoss(bool            mean,
   double delta = 0.;
   if (gamma > 10.) {
     // See (1) table 32.1
-    double eplasma = 28.816 * units::_eV * sqrt(1000. * mat.zOverAtimesRho());
+    double eplasma
+        = 28.816 * units::_eV * std::sqrt(1000. * mat.zOverAtimesRho());
     // See (1) formula 32.6
-    delta = 2. * log(eplasma / I) + log(eta2) - 1.;
+    delta = 2. * std::log(eplasma / I) + std::log(eta2) - 1.;
   }
 
   //@todo implement energy loss for electrons
@@ -57,8 +58,8 @@ ionizationEnergyLoss(bool            mean,
 
   // The landau width (FWHM) is 4.*kazL
   // The factor is the conversion factor from FWHM to sigma for
-  // gaussian curve: 1. / (2. * sqrt(2. * log(2.))).
-  double sigma = 2. * kazL * 1. / (sqrt(2. * log(2.)));
+  // gaussian curve: 1. / (2. * std::sqrt(2. * std::log(2.))).
+  double sigma = 2. * kazL * 1. / (sqrt(2. * std::log(2.)));
 
   if (mean) {
     // Calculate the mean value for reconstruction
@@ -78,8 +79,9 @@ ionizationEnergyLoss(bool            mean,
     //    PDG formula 32.11 for MOP value from
     //    http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
     //
-    dE = kazL * (log(2. * m * eta2 / I) + log(kazL / I) + 0.2 - (beta * beta)
-                 - delta);
+    dE = kazL
+        * (log(2. * m * eta2 / I) + std::log(kazL / I) + 0.2 - (beta * beta)
+           - delta);
   }
 
   return std::make_pair(dE, sigma);
@@ -121,7 +123,7 @@ radiationEnergyLoss(double p, const Material& mat, ParticleType particle)
   double m     = particleMasses.mass[particle];
   double me    = particleMasses.mass[electron];
   double mfrac = me / m;
-  double E     = sqrt(p * p + m * m);
+  double E     = std::sqrt(p * p + m * m);
 
   // Bremsstrahlung - Bethe-Heitler
   // See also ATL-SOFT-PUB-2008-003 equation (6)
@@ -139,8 +141,8 @@ radiationEnergyLoss(double p, const Material& mat, ParticleType particle)
   if ((particle == muon) && (E > 8000.)) {
     if (E < 1.e6) {
       Radiation += 0.5345 - 6.803e-5 * E - 2.278e-11 * E * E
-          + 9.899e-18 * E * E * E;                            // E below 1 TeV
-      sigma += (0.1828 - 3.966e-3 * sqrt(E) + 2.151e-5 * E);  // idem
+          + 9.899e-18 * E * E * E;  // E below 1 TeV
+      sigma += (0.1828 - 3.966e-3 * std::sqrt(E) + 2.151e-5 * E);  // idem
     } else {
       Radiation += 2.986 - 9.253e-5 * E;           // E above 1 TeV
       sigma += 17.73 + 2.409e-5 * (E - 1000000.);  // idem
@@ -159,8 +161,8 @@ sigmaMS(double dInX0, double p, double beta)
 
   // Highland formula - projected sigma_s
   // ATL-SOFT-PUB-2008-003 equation (15)
-  double sig_ms = 13.6 * units::_MeV * sqrt(dInX0) / (beta * p)
-      * (1. + 0.038 * log(dInX0 / (beta * beta)));
+  double sig_ms = 13.6 * units::_MeV * std::sqrt(dInX0) / (beta * p)
+      * (1. + 0.038 * std::log(dInX0 / (beta * beta)));
   return sig_ms;
 }
 }

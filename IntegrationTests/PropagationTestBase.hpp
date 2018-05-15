@@ -52,7 +52,7 @@ BOOST_DATA_TEST_CASE(
   foward_backward(wpropagator, pT, phi, theta, dcharge, plimit, index, 1e-3);
 }
 
-/// test consistency of propgators when approaching a cylinder
+/// test consistency of propagators when approaching a cylinder
 BOOST_DATA_TEST_CASE(
     propagation_to_cylinder_,
     bdata::random((bdata::seed = 1010,

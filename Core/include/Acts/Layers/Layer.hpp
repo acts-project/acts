@@ -49,22 +49,21 @@ typedef std::shared_ptr<const Layer> LayerPtr;
 typedef std::shared_ptr<Layer>       MutableLayerPtr;
 typedef std::pair<const Layer*, const Layer*> NextLayers;
 
-///
 /// @enum LayerType
 ///
-/// For readability
-///
+/// For code readability, it distinguishes between different
+/// type of layers, which steers the behaviour in the navigation
 enum LayerType { navigation = -1, passive = 0, active = 1 };
 
 /// @class Layer
 ///
-/// Base Class for a Detector Layer in the Tracking
+/// Base Class for a Detector Layer in the Tracking Geometry
 ///
 /// An actual implemented Detector Layer inheriting from this base
 /// class has to inherit from a specific type of Surface as well.
 /// In addition, a Layer can carry:
 ///
-/// - a SurfaceArray of Surfaces holding the actual detector elements or
+/// A SurfaceArray of Surfaces holding the actual detector elements or
 /// subSurfaces.
 /// - SurfaceMaterial for Surface-based materialUpdates
 /// - a pointer to the TrackingVolume (can only be set by such)

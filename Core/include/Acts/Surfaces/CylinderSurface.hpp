@@ -315,12 +315,12 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
     if (!direction.y()) return Intersection(gpos, 0., false);
     // x value ise th one of point1
     // x^2 + y^2 = R^2
-    // y = sqrt(R^2-x^2)
+    // y = std::sqrt(R^2-x^2)
     double x     = point1.x();
     double r2mx2 = R * R - x * x;
     // bail out if no solution
     if (r2mx2 < 0.) return Intersection(gpos, 0., false);
-    double y = sqrt(r2mx2);
+    double y = std::sqrt(r2mx2);
     // assign parameters and solutions
     t1 = (y - point1.y()) / direction.y();
     t2 = (-y - point1.y()) / direction.y();

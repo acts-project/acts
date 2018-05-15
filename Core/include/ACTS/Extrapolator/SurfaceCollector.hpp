@@ -14,7 +14,7 @@
 
 namespace Acts {
 
-/// The information to written out per hit surface
+/// The information to be writtern out per hit surface
 struct SurfaceHit
 {
 
@@ -23,8 +23,12 @@ struct SurfaceHit
   Vector3D       direction;
 };
 
-/// A Surface Collector struct struct
-/// templated with a Selector
+/// A Surface Collector struct
+/// templated with a Selector type
+///
+/// Whenever a surface is passed in the propagation
+/// that satisfies the selector, it is recorded
+/// for further usage in the flow.
 template <typename Selector>
 struct SurfaceCollector
 {
@@ -43,30 +47,30 @@ struct SurfaceCollector
   typedef this_result result_type;
 
   /// Collector action for the ActionList of the Propagator
-  /// It checks if the cache has a current surface,
+  /// It checks if the propagator state has a current surface,
   /// in which case the action is performed:
   /// - it records the surface given the configuration
   ///
-  /// @tparam propagator_cache_t is the type of Propagator cache
-  /// @tparam stepper_cache_t is the type of Stepper cache
+  /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_state_t is the type of Stepper state
   ///
-  /// @param pCache is the mutable stepper cache object
-  /// @param sCache is the mutable stepper cache object
-  /// @param result is the mutable result cache object
-  template <typename propagator_cache_t, typename stepper_cache_t>
+  /// @param propState is the mutable stepper state object
+  /// @param stepState is the mutable stepper state object
+  /// @param result is the mutable result object
+  template <typename propagator_state_t, typename stepper_state_t>
   void
-  operator()(propagator_cache_t& pCache,
-             stepper_cache_t&    sCache,
+  operator()(propagator_state_t& propState,
+             stepper_state_t&    stepState,
              result_type&        result) const
   {
     // a current surface has been assigned by the navigator
     //
-    if (pCache.currentSurface && this_selector(*pCache.currentSurface)) {
+    if (propState.currentSurface && this_selector(*propState.currentSurface)) {
       // create for recording
       SurfaceHit surface_hit;
-      surface_hit.surface   = pCache.currentSurface;
-      surface_hit.position  = sCache.position();
-      surface_hit.direction = sCache.direction();
+      surface_hit.surface   = propState.currentSurface;
+      surface_hit.position  = stepState.position();
+      surface_hit.direction = stepState.direction();
       // save if in the result
       result.collected.push_back(surface_hit);
     }
@@ -74,12 +78,10 @@ struct SurfaceCollector
 
   /// Pure observer interface
   /// - this does not apply to the surface collector
-  template <typename propagator_cache_t, typename stepper_cache_t>
+  template <typename propagator_state_t, typename stepper_state_t>
   void
-  operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
+  operator()(propagator_state_t&, stepper_state_t&) const
   {
-    (void)pCache;
-    (void)sCache;
   }
 };
 }

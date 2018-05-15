@@ -24,18 +24,18 @@ namespace detail {
     {
       template <typename condition,
                 typename result_t,
-                typename propagation_cache_t,
-                typename stepper_cache_t>
+                typename propagator_state_t,
+                typename stepper_state_t>
       static bool
-      check(const condition&     c,
-            const result_t&      r,
-            propagation_cache_t& pCache,
-            stepper_cache_t&     sCache)
+      check(const condition&    c,
+            const result_t&     r,
+            propagator_state_t& propState,
+            stepper_state_t&    stepState)
       {
         typedef action_type_t<condition>   action_type;
         typedef result_type_t<action_type> result_type;
 
-        return c(r.template get<result_type>(), pCache, sCache);
+        return c(r.template get<result_type>(), propState, stepState);
       }
     };
 
@@ -46,15 +46,15 @@ namespace detail {
     {
       template <typename condition,
                 typename result_t,
-                typename propagation_cache_t,
-                typename stepper_cache_t>
+                typename propagator_state_t,
+                typename stepper_state_t>
       static bool
       check(const condition& c,
             const result_t&,
-            propagation_cache_t& pCache,
-            stepper_cache_t&     sCache)
+            propagator_state_t& propState,
+            stepper_state_t&    stepState)
       {
-        return c(pCache, sCache);
+        return c(propState, stepState);
       }
     };
   }  // end of anonymous namespace
@@ -70,13 +70,13 @@ namespace detail {
   {
     template <typename T,
               typename result_t,
-              typename propagation_cache_t,
-              typename stepper_cache_t>
+              typename propagator_state_t,
+              typename stepper_state_t>
     static bool
-    check(const T&             conditions_tuple,
-          const result_t&      r,
-          propagation_cache_t& pCache,
-          stepper_cache_t&     sCache)
+    check(const T&            conditions_tuple,
+          const result_t&     r,
+          propagator_state_t& propState,
+          stepper_state_t&    stepState)
     {
 
       // get the right helper for calling the abort condition
@@ -89,9 +89,9 @@ namespace detail {
       // - check abort conditions recursively
       // - make use of short-circuit evaluation
       // -> skip remaining conditions if this abort condition evaluates to true
-      bool abort = caller_type::check(this_condition, r, pCache, sCache)
+      bool abort = caller_type::check(this_condition, r, propState, stepState)
           || abort_list_impl<others...>::check(
-                       conditions_tuple, r, pCache, sCache);
+                       conditions_tuple, r, propState, stepState);
 
       return abort;
     }
@@ -103,20 +103,20 @@ namespace detail {
   {
     template <typename T,
               typename result_t,
-              typename propagation_cache_t,
-              typename stepper_cache_t>
+              typename propagator_state_t,
+              typename stepper_state_t>
     static bool
-    check(const T&             conditions_tuple,
-          const result_t&      r,
-          propagation_cache_t& pCache,
-          stepper_cache_t&     sCache)
+    check(const T&            conditions_tuple,
+          const result_t&     r,
+          propagator_state_t& propState,
+          stepper_state_t&    stepState)
     {
       // get the right helper for calling the abort condition
       constexpr bool has_result     = condition_uses_result_type<last>::value;
       const auto&    this_condition = std::get<last>(conditions_tuple);
 
       return condition_caller<has_result>::check(
-          this_condition, r, pCache, sCache);
+          this_condition, r, propState, stepState);
     }
   };
 
@@ -126,10 +126,10 @@ namespace detail {
   {
     template <typename T,
               typename result_t,
-              typename propagation_cache_t,
-              typename stepper_cache_t>
+              typename propagator_state_t,
+              typename stepper_state_t>
     static bool
-    check(const T&, const result_t&, propagation_cache_t&, stepper_cache_t&)
+    check(const T&, const result_t&, propagator_state_t&, stepper_state_t&)
     {
       return false;
     }

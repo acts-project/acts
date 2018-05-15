@@ -23,15 +23,17 @@ namespace detail {
     {
       template <typename actor,
                 typename result_t,
-                typename propagation_cache_t,
-                typename stepper_cache_t>
+                typename propagator_state_t,
+                typename stepper_state_t>
       static void
-      action(const actor&         act,
-             propagation_cache_t& pCache,
-             stepper_cache_t&     sCache,
-             result_t&            r)
+      action(const actor&        act,
+             propagator_state_t& propState,
+             stepper_state_t&    stepState,
+             result_t&           r)
       {
-        act(pCache, sCache, r.template get<detail::result_type_t<actor>>());
+        act(propState,
+            stepState,
+            r.template get<detail::result_type_t<actor>>());
       }
     };
 
@@ -41,15 +43,15 @@ namespace detail {
     {
       template <typename actor,
                 typename result_t,
-                typename propagation_cache_t,
-                typename stepper_cache_t>
+                typename propagator_state_t,
+                typename stepper_state_t>
       static void
-      action(const actor&         act,
-             propagation_cache_t& pCache,
-             stepper_cache_t&     sCache,
+      action(const actor&        act,
+             propagator_state_t& propState,
+             stepper_state_t&    stepState,
              result_t&)
       {
-        act(pCache, sCache);
+        act(propState, stepState);
       }
     };
   }  // end of anonymous namespace
@@ -66,18 +68,18 @@ namespace detail {
   {
     template <typename T,
               typename result_t,
-              typename propagation_cache_t,
-              typename stepper_cache_t>
+              typename propagator_state_t,
+              typename stepper_state_t>
     static void
-    action(const T&             obs_tuple,
-           propagation_cache_t& pCache,
-           stepper_cache_t&     sCache,
-           result_t&            r)
+    action(const T&            obs_tuple,
+           propagator_state_t& propState,
+           stepper_state_t&    stepState,
+           result_t&           r)
     {
       constexpr bool has_result  = has_result_type_v<first>;
       const auto&    this_action = std::get<first>(obs_tuple);
-      action_caller<has_result>::action(this_action, pCache, sCache, r);
-      action_list_impl<others...>::action(obs_tuple, pCache, sCache, r);
+      action_caller<has_result>::action(this_action, propState, stepState, r);
+      action_list_impl<others...>::action(obs_tuple, propState, stepState, r);
     }
   };
 
@@ -88,17 +90,17 @@ namespace detail {
   {
     template <typename T,
               typename result_t,
-              typename propagation_cache_t,
-              typename stepper_cache_t>
+              typename propagator_state_t,
+              typename stepper_state_t>
     static void
-    action(const T&             obs_tuple,
-           propagation_cache_t& pCache,
-           stepper_cache_t&     sCache,
-           result_t&            r)
+    action(const T&            obs_tuple,
+           propagator_state_t& propState,
+           stepper_state_t&    stepState,
+           result_t&           r)
     {
       constexpr bool has_result  = has_result_type_v<last>;
       const auto&    this_action = std::get<last>(obs_tuple);
-      action_caller<has_result>::action(this_action, pCache, sCache, r);
+      action_caller<has_result>::action(this_action, propState, stepState, r);
     }
   };
 
@@ -108,10 +110,10 @@ namespace detail {
   {
     template <typename T,
               typename result_t,
-              typename propagation_cache_t,
-              typename stepper_cache_t>
+              typename propagator_state_t,
+              typename stepper_state_t>
     static void
-    action(const T&, propagation_cache_t&, stepper_cache_t&, result_t&)
+    action(const T&, propagator_state_t&, stepper_state_t&, result_t&)
     {
     }
   };

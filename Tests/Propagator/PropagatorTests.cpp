@@ -53,21 +53,21 @@ namespace Test {
 
     PerpendicularMeasure() {}
 
-    template <typename propagator_cache_t, typename stepper_cache_t>
+    template <typename propagator_state_t, typename stepper_state_t>
     void
-    operator()(propagator_cache_t&,
-               stepper_cache_t& sCache,
+    operator()(propagator_state_t&,
+               stepper_state_t& stepState,
                result_type&     result) const
     {
-      result.distance = sCache.pos.perp();
+      result.distance = stepState.pos.perp();
     }
 
-    template <typename propagator_cache_t, typename stepper_cache_t>
+    template <typename propagator_state_t, typename stepper_state_t>
     void
-    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
+    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
     {
-      (void)pCache;
-      (void)sCache;
+      (void)propState;
+      (void)stepState;
     }
   };
 
@@ -92,10 +92,10 @@ namespace Test {
 
     SurfaceObserver() {}
 
-    template <typename propagator_cache_t, typename stepper_cache_t>
+    template <typename propagator_state_t, typename stepper_state_t>
     void
-    operator()(propagator_cache_t&,
-               stepper_cache_t& sCache,
+    operator()(propagator_state_t&,
+               stepper_state_t& stepState,
                result_type&     result) const
     {
       if (surface && !result.surfaces_passed) {
@@ -103,26 +103,26 @@ namespace Test {
         const double distance
             = surface
                   ->intersectionEstimate(
-                      sCache.position(), sCache.direction(), true, true)
+                      stepState.position(), stepState.direction(), true, true)
                   .pathLength;
         // Adjust the step size so that we cannot cross the target surface
-        sCache.stepSize.update(distance, cstep::actor);
+        stepState.stepSize.update(distance, cstep::actor);
         // return true if you fall below tolerance
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
-          result.surface_passed_r = sCache.position().perp();
+          result.surface_passed_r = stepState.position().perp();
           // release the step size, will be re-adjusted
-          sCache.stepSize.release(cstep::actor);
+          stepState.stepSize.release(cstep::actor);
         }
       }
     }
 
-    template <typename propagator_cache_t, typename stepper_cache_t>
+    template <typename propagator_state_t, typename stepper_state_t>
     void
-    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
+    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
     {
-      (void)pCache;
-      (void)sCache;
+      (void)propState;
+      (void)stepState;
     }
   };
 
@@ -149,29 +149,29 @@ namespace Test {
 
     PathScatterer() {}
 
-    template <typename propagator_cache_t, typename stepper_cache_t>
+    template <typename propagator_state_t, typename stepper_state_t>
     void
-    operator()(propagator_cache_t&,
-               stepper_cache_t& sCache,
+    operator()(propagator_state_t&,
+               stepper_state_t& stepState,
                result_type&     result) const
     {
       if (!result.scattered
-          && std::abs(sCache.accumulatedPath - path_limit) < tolerance) {
+          && std::abs(stepState.accumulatedPath - path_limit) < tolerance) {
         // now here we should apply the scattering
         result.scattered = true;
         // do the update and reinitialize the jacobians
-        sCache.applyCovTransport(true);
-        sCache.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
-        sCache.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
+        stepState.applyCovTransport(true);
+        stepState.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
+        stepState.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
       }
     }
 
-    template <typename propagator_cache_t, typename stepper_cache_t>
+    template <typename propagator_state_t, typename stepper_state_t>
     void
-    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
+    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
     {
-      (void)pCache;
-      (void)sCache;
+      (void)propState;
+      (void)stepState;
     }
   };
 

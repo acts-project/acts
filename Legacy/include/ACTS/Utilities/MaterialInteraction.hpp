@@ -1,15 +1,17 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2017 Acts project team
+// Copyright (C) 2017 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#pragma once
-#include "Acts/EventData/ParticleDefinitions.hpp"
-#include "Acts/Material/Material.hpp"
-#include "Acts/Utilities/Definitions.hpp"
+#ifndef ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
+#define ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
+
+#include "ACTS/Material/Material.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/ParticleDefinitions.hpp"
 
 /// Collection of parametrizations used for
 /// energy loss and scattering
@@ -89,3 +91,5 @@ double
 sigmaMS(double dInX0, double p, double beta);
 
 }  // end of namespace
+
+#endif

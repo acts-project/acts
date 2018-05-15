@@ -42,30 +42,31 @@ public:
   /// This is the call signature for the abort list, it broadcasts the call
   /// to the tuple() memembers of the list
   ///
-  /// @tparam propagator_cache_t is the cache type of the propagator
-  /// @tparam stepper_cache_t is the cache type of the stepper
+  /// @tparam propagator_state_t is the state type of the propagator
+  /// @tparam stepper_state_t is the state type of the stepper
   /// @tparam result_t is the result type from a certain action
   ///
-  /// @param r[in] is the result object from a certin action
-  /// @param cache[in,out] is the cache object from the propagator
-  template <typename propagator_cache_t,
-            typename stepper_cache_t,
+  /// @param result[in] is the result object from a certin action
+  /// @param propState[in,out] is the state object from the propagator
+  /// @param stepState[in,out] is the state object from the stepper
+  template <typename propagator_state_t,
+            typename stepper_state_t,
             typename result_t>
   bool
   operator()(const result_t&     result,
-             propagator_cache_t& pCache,
-             stepper_cache_t&    sCache) const
+             propagator_state_t& propState,
+             stepper_state_t&    stepState) const
   {
     // clang-format off
     static_assert(detail::all_of_v<detail::abort_condition_signature_check_v<
                         conditions, 
-                        propagator_cache_t, 
-                        stepper_cache_t>...>,
+                        propagator_state_t, 
+                        stepper_state_t>...>,
                   "not all abort conditions support the specified input");
     // clang-format on
 
     return detail::abort_list_impl<conditions...>::check(
-        tuple(), result, pCache, sCache);
+        tuple(), result, propState, stepState);
   }
 };
 

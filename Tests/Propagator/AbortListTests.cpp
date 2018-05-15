@@ -39,10 +39,21 @@ namespace Test {
   // the constrained step class
   typedef detail::ConstrainedStep cstep;
 
-  // This is a simple cache struct to mimic the
-  // Propagator cache in the propagation
-  struct PropagagorCache
+  /// This is a simple cache struct to mimic the
+  /// Propagator cache
+  struct PropagatorCache
   {
+    /// emulate the options template
+    struct Options
+    {
+      /// Debug output
+      /// the string where debug messages are stored (optionally)
+      bool        debug       = false;
+      std::string debugString = "";
+      /// buffer & formatting for consistent output
+      size_t debugPfxWidth = 30;
+      size_t debugMsgWidth = 50;
+    };
 
     /// Navigation cache: the start surface
     const Surface* startSurface = nullptr;
@@ -54,13 +65,8 @@ namespace Test {
     const Surface* targetSurface = nullptr;
     bool           targetReached = false;
 
-    /// Debug output
-    /// the string where debug messages are stored (optionally)
-    bool        debug       = false;
-    std::string debugString = "";
-    /// buffer & formatting for consistent output
-    size_t debugPfxWidth = 30;
-    size_t debugMsgWidth = 50;
+    /// Give some options
+    Options options;
   };
 
   // This is a simple cache struct to mimic the
@@ -84,8 +90,8 @@ namespace Test {
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit)
   {
-    PropagagorCache pCache;
-    StepperCache    sCache;
+    PropagatorCache propState;
+    StepperCache    stepState;
     Result          result;
 
     AbortList<path_limit> abort_list;
@@ -96,24 +102,24 @@ namespace Test {
     limit.tolerance       = 1. * units::_um;
 
     // It should not abort yet
-    BOOST_CHECK(!abort_list(result, pCache, sCache));
+    BOOST_CHECK(!abort_list(result, propState, stepState));
     // The step size should be adapted to 1 meter now
-    BOOST_CHECK_EQUAL(sCache.stepSize, 1. * units::_m);
+    BOOST_CHECK_EQUAL(stepState.stepSize, 1. * units::_m);
     // Let's do a step of 90 cm now
-    sCache.accumulatedPath = 90. * units::_cm;
+    stepState.accumulatedPath = 90. * units::_cm;
     // Still no abort yet
-    BOOST_CHECK(!abort_list(result, pCache, sCache));
+    BOOST_CHECK(!abort_list(result, propState, stepState));
     // 10 cm are left
     // The step size should be adapted to 10 cm now
-    BOOST_CHECK_EQUAL(sCache.stepSize, 10. * units::_cm);
+    BOOST_CHECK_EQUAL(stepState.stepSize, 10. * units::_cm);
 
     // approach the
-    while (!abort_list(result, pCache, sCache)) {
-      sCache.accumulatedPath += 0.5 * sCache.stepSize;
+    while (!abort_list(result, propState, stepState)) {
+      stepState.accumulatedPath += 0.5 * stepState.stepSize;
     }
 
     // now we need to be smaller than the tolerance
-    BOOST_CHECK(sCache.stepSize < 1. * units::_um);
+    BOOST_CHECK(stepState.stepSize < 1. * units::_um);
   }
 
 }  // namespace Test

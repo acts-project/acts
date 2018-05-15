@@ -103,7 +103,10 @@ public:
     return (m_value == tddID.value());
   }
 
-  /// Add some stuff - a new
+  /// Add some stuff
+  ///
+  /// @param type_id which identifier do you wanna add
+  /// @param type_mask the mask that is supposed to be applied
   void
   add(geo_id_value type_id, geo_id_value type_mask)
   {
@@ -121,7 +124,7 @@ public:
   toString() const;
 
 private:
-  geo_id_value m_value = 0;  ///!< this is the value of the geoID
+  geo_id_value m_value = 0;
 };
 
 inline geo_id_value

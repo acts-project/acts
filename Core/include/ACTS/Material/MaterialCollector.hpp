@@ -15,22 +15,9 @@
 #include "ACTS/Material/SurfaceMaterial.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 
-#ifndef MATCOLLECTOR_DEBUG_OUTPUTS
-#define MATCOLLECTOR_DEBUG_OUTPUTS
-#define MATCLOG(cache, result, message)                                        \
-  if (debug) {                                                                 \
-    std::stringstream dstream;                                                 \
-    dstream << "   " << std::setw(cache.debugPfxWidth);                        \
-    dstream << "material collection"                                           \
-            << " | ";                                                          \
-    dstream << std::setw(cache.debugMsgWidth) << message << '\n';              \
-    cache.debugString += dstream.str();                                        \
-  }
-#endif
-
 namespace Acts {
 
-/// The information to written out per hit surface
+/// The information to be writtern out per hit surface
 struct MaterialHit
 {
   const Surface* surface = nullptr;
@@ -40,7 +27,7 @@ struct MaterialHit
   double         pathLength;
 };
 
-/// A Material Collector struct struct
+/// A Material Collector struct
 struct MaterialCollector
 {
 
@@ -49,11 +36,14 @@ struct MaterialCollector
   /// pathlength in X0 or L0 are recorded
   bool detailedCollection = false;
 
-  /// Screen output steering
+  /// Enable debug output writing
   bool debug = false;
 
   /// Simple result struct to be returned
-  /// It collects the indivdual
+  ///
+  /// Result of the material collection process
+  /// It collects the overall X0 and L0 path lengths,
+  /// and optionally a detailed per-material breakdown
   struct this_result
   {
     std::vector<MaterialHit> collected;
@@ -64,76 +54,99 @@ struct MaterialCollector
   typedef this_result result_type;
 
   /// Collector action for the ActionList of the Propagator
-  /// It checks if the cache has a current surface,
+  /// It checks if the state has a current surface,
   /// in which case the action is performed:
   /// - it records the surface given the configuration
   ///
-  /// @tparam propagator_cache_t is the type of Propagator cache
-  /// @tparam stepper_cache_t is the type of Stepper cache
+  /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_state_t is the type of Stepper state
   ///
-  /// @param pCache is the mutable propagator cache object
-  /// @param sCache is the mutable stepper cache object
+  /// @param propState is the mutable propagator state object
+  /// @param stepState is the mutable stepper state object
   /// @param result is the result object to be filled
-  template <typename propagator_cache_t, typename stepper_cache_t>
+  template <typename propagator_state_t, typename stepper_state_t>
   void
-  operator()(propagator_cache_t& pCache,
-             stepper_cache_t&    sCache,
+  operator()(propagator_state_t& propState,
+             stepper_state_t&    stepState,
              result_type&        result) const
   {
     // if we are on target, everything should have been done
-    if (pCache.targetReached) return;
+    if (propState.targetReached) return;
 
-    if (pCache.currentSurface)
-      MATCLOG(pCache,
-              result,
-              "Material check on surface "
-                  << pCache.currentSurface->geoID().toString());
+    if (propState.currentSurface) {
+      debugLog(propState, [&] {
+        std::stringstream dstream;
+        dstream << "Material check on surface ";
+        dstream << propState.currentSurface->geoID().toString();
+        return dstream.str();
+      });
+    }
 
     // a current surface has been already assigned by the navigator
-    if (pCache.currentSurface && pCache.currentSurface->associatedMaterial()) {
+    if (propState.currentSurface
+        && propState.currentSurface->associatedMaterial()) {
 
       // get the material propertices and only continue
       const MaterialProperties* mProperties
-          = pCache.currentSurface->associatedMaterial()->material(
-              sCache.position());
+          = propState.currentSurface->associatedMaterial()->material(
+              stepState.position());
       if (mProperties) {
-        // check if you have a factor for pre/post/full update to do
+        // pre/post/full update
         double prepofu = 1.;
-        if (pCache.startSurface == pCache.currentSurface) {
-          MATCLOG(pCache, result, "Update on start surface: post-update mode.");
-          prepofu = pCache.currentSurface->associatedMaterial()->factor(
-              sCache.navDir, postUpdate);
-        } else if (pCache.targetSurface == pCache.currentSurface) {
-          MATCLOG(pCache, result, "Update on target surface: pre-update mode.");
-          prepofu = pCache.currentSurface->associatedMaterial()->factor(
-              sCache.navDir, preUpdate);
-        } else
-          MATCLOG(pCache, result, "Update while pass through: full mode.");
-
-        if (prepofu == 0.) {
-          MATCLOG(pCache, result, "Pre/Post factor set material to zero.");
-          return;
+        if (propState.startSurface == propState.currentSurface) {
+          debugLog(propState, [&] {
+            return std::string("Update on start surface: post-update mode.");
+          });
+          prepofu = propState.currentSurface->associatedMaterial()->factor(
+              stepState.navDir, postUpdate);
+        } else if (propState.targetSurface == propState.currentSurface) {
+          debugLog(propState, [&] {
+            return std::string("Update on target surface: pre-update mode");
+          });
+          prepofu = propState.currentSurface->associatedMaterial()->factor(
+              stepState.navDir, preUpdate);
+        } else {
+          debugLog(propState, [&] {
+            return std::string("Update while pass through: full mode.");
+          });
         }
 
-        MATCLOG(pCache, result, "Material properties found for this surface.");
+        // the pre/post factor has been applied
+        // now check if there's still something to do
+        if (prepofu == 0.) {
+          debugLog(propState, [&] {
+            return std::string("Pre/Post factor set material to zero.");
+          });
+          return;
+        }
+        // more debugging output to the screen
+        debugLog(propState, [&] {
+          return std::string("Material properties found for this surface.");
+        });
+
         // the path correction from the surface intersection
         double pCorrection = prepofu
-            * pCache.currentSurface->pathCorrection(sCache.position(),
-                                                    sCache.direction());
+            * propState.currentSurface->pathCorrection(stepState.position(),
+                                                       stepState.direction());
         // the full material
         result.materialInX0 += pCorrection * mProperties->thicknessInX0();
         result.materialInL0 += pCorrection * mProperties->thicknessInL0();
 
-        MATCLOG(pCache, result, "t/X0 increased to " << result.materialInX0);
-        MATCLOG(pCache, result, "t/L0 increased to " << result.materialInL0);
+        debugLog(propState, [&] {
+          std::stringstream dstream;
+          dstream << "t/X0 (t/L0) increased to ";
+          dstream << result.materialInX0 << " (";
+          dstream << result.materialInL0 << " )";
+          return dstream.str();
+        });
 
         // if configured, record the individual material hits
         if (detailedCollection) {
           // create for recording
           MaterialHit material_hit;
-          material_hit.surface   = pCache.currentSurface;
-          material_hit.position  = sCache.position();
-          material_hit.direction = sCache.direction();
+          material_hit.surface   = propState.currentSurface;
+          material_hit.position  = stepState.position();
+          material_hit.direction = stepState.direction();
           // get the material & path length
           material_hit.material   = mProperties->material();
           material_hit.pathLength = pCorrection * mProperties->thickness();
@@ -146,10 +159,38 @@ struct MaterialCollector
 
   /// Pure observer interface
   /// - this does not apply to the surface collector
-  template <typename propagator_cache_t, typename stepper_cache_t>
+  template <typename propagator_state_t, typename stepper_state_t>
   void
-  operator()(propagator_cache_t&, stepper_cache_t&) const
+  operator()(propagator_state_t&, stepper_state_t&) const
   {
+  }
+
+private:
+  /// The private propagation debug logging
+  ///
+  /// It needs to be fed by a lambda function that returns a string,
+  /// that guarantees that the lambda is only called in the state.debug == true
+  /// case in order not to spend time when not needed.
+  ///
+  /// @tparam propagator_state_t Type of the propagator state
+  ///
+  /// @param propState the propagator state for the debug flag, prefix and
+  /// length
+  /// @param logAction is a callable function that returns a stremable object
+  template <typename propagator_state_t>
+  void
+  debugLog(propagator_state_t&          propState,
+           std::function<std::string()> logAction) const
+  {
+    if (debug) {
+      std::stringstream dstream;
+      dstream << "   " << std::setw(propState.options.debugPfxWidth);
+      dstream << "material collector"
+              << " | ";
+      dstream << std::setw(propState.options.debugMsgWidth) << logAction()
+              << '\n';
+      propState.options.debugString += dstream.str();
+    }
   }
 };
 }

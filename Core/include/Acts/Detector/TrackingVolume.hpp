@@ -34,23 +34,23 @@ class Material;
 typedef std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>
     TrackingVolumeBoundaryPtr;
 
-/// master typedefs
+// master typedefs
 typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
 typedef std::shared_ptr<TrackingVolume>               MutableTrackingVolumePtr;
 typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
 
-/// possible contained
+// possible contained
 typedef BinnedArray<TrackingVolumePtr>         TrackingVolumeArray;
 typedef std::vector<TrackingVolumePtr>         TrackingVolumeVector;
 typedef BinnedArray<LayerPtr>                  LayerArray;
 typedef std::vector<LayerPtr>                  LayerVector;
 typedef std::vector<DetachedTrackingVolumePtr> DetachedVolumeVector;
 
-/// full intersection with Layer
+// full intersection with Layer
 template <class T>
 using LayerIntersection = FullIntersection<Layer, Surface, T>;
 
-/// full intersection with surface
+// full intersection with surface
 template <class T>
 using BoundaryIntersection
     = FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface, T>;
@@ -554,7 +554,7 @@ TrackingVolume::decompose(const Layer*         sLayer,
     const Layer* tLayer = sLayer ? sLayer : associatedLayer(pos);
     if (tLayer) {
       do {
-        // @note if anyDirection is given, you allow to stay on the layer
+        // note if anyDirection is given, you allow to stay on the layer
         // i.e. you pick the actually closest one, which could be 0.
         NavigationDirection ndir = (tLayer == sLayer) ? anyDirection : forward;
         // - collectSensitive -> always take layer if it has a surface array
@@ -582,9 +582,9 @@ TrackingVolume::decompose(const Layer*         sLayer,
         tLayer = (tLayer == eLayer) ? nullptr : tLayer->nextLayer(pos, dir);
       } while (tLayer);
     }
+    // sort them accordingly to the path length
+    std::sort(lIntersections.begin(), lIntersections.end());
   }
-  // sort them accordingly to the path length
-  std::sort(lIntersections.begin(), lIntersections.end());
   // and return
   return lIntersections;
 }
@@ -608,7 +608,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
   std::vector<LayerIntersection<T>> lIntersections;
   // assign the direction
   const Vector3D& dir
-      = (pDir == forward ? gm.unit() : Vector3D(-1 * gm.unit()));
+      = (pDir == forward) ? gm.unit() : Vector3D(-1 * gm.unit());
   // the confinedLayers
   if (m_confinedLayers) {
     // cache the longest path length to avoid punch-through to the other side
@@ -682,9 +682,10 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
         && sLayer->resolve(collectSensitive, collectMaterial, collectPassive))
       lIntersections.push_back(LayerIntersection<T>(
           sLayerIntersection, sLayer, sLayerSurface, 0, pDir));
+
+    // sort them accordingly to the path length
+    std::sort(lIntersections.begin(), lIntersections.end());
   }
-  // sort them accordingly to the path length
-  std::sort(lIntersections.begin(), lIntersections.end());
   // and return
   return lIntersections;
 }

@@ -21,18 +21,19 @@ namespace Acts {
 ///
 /// @code
 ///
-/// template <typename propagator_cache_t, typename stepper_cache_t, typename
+/// template <typename propagator_state_t, typename stepper_state_t, typename
 /// result_t>
 /// bool
-/// operator()(const result_t& r, propagator_cache_t& pCache, stepper_cache_t&
-/// sCache) const
+/// operator()(const result_t& r, propagator_state_t& propState,
+/// stepper_state_t&
+/// stepState) const
 /// {
 ///   return false;
 /// }
 ///
-/// template <typename propagator_cache_t, typename stepper_cache_t>
+/// template <typename propagator_state_t, typename stepper_state_t>
 /// bool
-/// operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
+/// operator()(propagator_state_t& propState, stepper_state_t& stepState) const
 /// {
 ///   return false;
 /// }
@@ -44,14 +45,14 @@ namespace detail {
 
   namespace {
     template <typename T,
-              typename propagator_cache_t,
-              typename stepper_cache_t,
+              typename propagator_state_t,
+              typename stepper_state_t,
               typename result_t,
               typename
               = decltype(std::declval<const T>().
                          operator()(std::declval<const result_t&>(),
-                                    std::declval<const propagator_cache_t&>(),
-                                    std::declval<const stepper_cache_t&>()))>
+                                    std::declval<const propagator_state_t&>(),
+                                    std::declval<const stepper_state_t&>()))>
     std::true_type
     test_condition_with_result(int);
 
@@ -60,12 +61,12 @@ namespace detail {
     test_condition_with_result(...);
 
     template <typename T,
-              typename propagator_cache_t,
-              typename stepper_cache_t,
+              typename propagator_state_t,
+              typename stepper_state_t,
               typename
               = decltype(std::declval<const T>().
-                         operator()(std::declval<const propagator_cache_t&>(),
-                                    std::declval<const stepper_cache_t&>()))>
+                         operator()(std::declval<const propagator_state_t&>(),
+                                    std::declval<const stepper_state_t&>()))>
     std::true_type
     test_condition_without_result(int);
 
@@ -74,45 +75,45 @@ namespace detail {
     test_condition_without_result(...);
 
     template <typename T,
-              typename propagator_cache_t,
-              typename stepper_cache_t,
+              typename propagator_state_t,
+              typename stepper_state_t,
               bool has_result = false>
     struct condition_signature_check_impl
         : decltype(test_condition_without_result<T,
-                                                 propagator_cache_t,
-                                                 stepper_cache_t>(0))
+                                                 propagator_state_t,
+                                                 stepper_state_t>(0))
     {
     };
 
-    template <typename T, typename propagator_cache_t, typename stepper_cache_t>
+    template <typename T, typename propagator_state_t, typename stepper_state_t>
     struct condition_signature_check_impl<T,
-                                          propagator_cache_t,
-                                          stepper_cache_t,
+                                          propagator_state_t,
+                                          stepper_state_t,
                                           true>
         : decltype(
               test_condition_with_result<T,
-                                         propagator_cache_t,
-                                         stepper_cache_t,
+                                         propagator_state_t,
+                                         stepper_state_t,
                                          result_type_t<action_type_t<T>>>(0))
     {
     };
 
-    template <typename T, typename propagator_cache_t, typename stepper_cache_t>
+    template <typename T, typename propagator_state_t, typename stepper_state_t>
     struct abort_condition_signature_check
         : condition_signature_check_impl<T,
-                                         propagator_cache_t,
-                                         stepper_cache_t,
+                                         propagator_state_t,
+                                         stepper_state_t,
                                          condition_uses_result_type<T>::value>
     {
     };
     // clang-format on
   }  // end of anonymous namespace
 
-  template <typename T, typename propagator_cache_t, typename stepper_cache_t>
+  template <typename T, typename propagator_state_t, typename stepper_state_t>
   constexpr bool abort_condition_signature_check_v
       = abort_condition_signature_check<T,
-                                        propagator_cache_t,
-                                        stepper_cache_t>::value;
+                                        propagator_state_t,
+                                        stepper_state_t>::value;
 }  // namespace detail
 
 }  // namespace Acts

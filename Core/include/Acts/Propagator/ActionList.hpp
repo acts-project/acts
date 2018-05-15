@@ -42,32 +42,32 @@ public:
   /// Call operator that is that broadcasts the call to the tuple()
   /// members of the list
   ///
-  /// @tparam propagator_cache_t is the cache type of the propagator
-  /// @tparam stepper_cache_t is the cache type of the stepper
+  /// @tparam propagator_state_t is the state type of the propagator
+  /// @tparam stepper_state_t is the state type of the stepper
   /// @tparam result_t is the result type from actions
   ///
-  /// @param pCache[in,out] is the propagator cache object
-  /// @param sCache[in,out] is the stepper cache object
+  /// @param propState[in,out] is the propagator state object
+  /// @param stepState[in,out] is the stepper state object
   /// @param result[in,out] is the result object from actions
   ///
   /// @return bool type indiciating if the step size can be released
-  template <typename propagator_cache_t,
-            typename stepper_cache_t,
+  template <typename propagator_state_t,
+            typename stepper_state_t,
             typename result_t>
   void
-  operator()(propagator_cache_t& pCache,
-             stepper_cache_t&    sCache,
+  operator()(propagator_state_t& propState,
+             stepper_state_t&    stepState,
              result_t&           result) const
   {
     // clang-format off
     static_assert(detail::all_of_v<detail::action_signature_check_v<actions, 
-                                      propagator_cache_t, 
-                                      stepper_cache_t>...>,
+                                      propagator_state_t, 
+                                      stepper_state_t>...>,
                   "not all actions support the method signature");
     // clang-format on
 
     typedef detail::action_list_impl<actions...> impl;
-    impl::action(tuple(), pCache, sCache, result);
+    impl::action(tuple(), propState, stepState, result);
   }
 };
 

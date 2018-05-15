@@ -64,7 +64,7 @@ enum MaterialUpdateStage : int {
   postUpdate = 1
 };
 
-/// Eigen definitions
+// Eigen definitions
 template <typename T, unsigned int rows, unsigned int cols>
 using ActsMatrix = Eigen::Matrix<T, rows, cols>;
 

@@ -61,8 +61,8 @@ namespace Test {
   StraightLineStepper    slstepper;
   StraightLinePropagator slpropagator(std::move(slstepper));
 
-  std::vector<std::unique_ptr<const Surface>> sCache;
-  auto tGeometry = testGeometry<ModuleSurface>(sCache);
+  std::vector<std::unique_ptr<const Surface>> stepState;
+  auto tGeometry = testGeometry<ModuleSurface>(stepState);
 
   const int ntests              = 1000;
   const int skip                = 0;
@@ -72,7 +72,7 @@ namespace Test {
   bool      debug_mode_bwd_step = false;
 
   /// the actual test nethod that runs the test
-  /// can be used with several paropagator types
+  /// can be used with several propagator types
   /// @tparam Propagator_type is the actual propagator type
   ///
   /// @param prop is the propagator instance

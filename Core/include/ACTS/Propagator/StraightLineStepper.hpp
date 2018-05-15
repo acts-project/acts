@@ -45,14 +45,14 @@ private:
 public:
   typedef detail::ConstrainedStep cstep;
 
-  /// Cache for track parameter propagation
+  /// State for track parameter propagation
   ///
-  struct Cache
+  struct State
   {
     /// Constructor from the initial track parameters
     /// @param [in] par The track parameters at start
     template <typename T>
-    explicit Cache(const T&            par,
+    explicit State(const T&            par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
@@ -97,17 +97,17 @@ public:
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
-    /// accummulated path length cache
+    /// accummulated path length state
     double accumulatedPath = 0.;
 
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
   };
 
-  /// Always use the same propagation cache type, independently of the initial
+  /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
   template <typename T, typename S = int>
-  using cache_type = Cache;
+  using state_type = State;
 
   /// Intermediate track parameters are always in curvilinear parametrization
   template <typename T>
@@ -122,55 +122,55 @@ public:
   /// Constructor
   StraightLineStepper() = default;
 
-  /// Convert the propagation cache (global) to curvilinear parameters
-  /// @param cache The stepper cache
+  /// Convert the propagation state (global) to curvilinear parameters
+  /// @param state The stepper state
   /// @return curvilinear parameters
   static CurvilinearParameters
-  convert(Cache& cache)
+  convert(State& state)
   {
-    double charge = cache.qop > 0. ? 1. : -1.;
+    double charge = state.qop > 0. ? 1. : -1.;
     // return the parameters
     return CurvilinearParameters(
-        nullptr, cache.pos, cache.dir / std::abs(cache.qop), charge);
+        nullptr, state.pos, state.dir / std::abs(state.qop), charge);
   }
 
-  /// Convert the propagation cache to track parameters at a certain surface
+  /// Convert the propagation state to track parameters at a certain surface
   ///
   /// @tparam S The surface type
   ///
-  /// @param [in] cache Propagation cache used
+  /// @param [in] state Propagation state used
   /// @param [in] surface Destination surface to which the conversion is done
   ///
   /// @return are parameters bound to the target surface
   template <typename S>
   static BoundParameters
-  convert(Cache& cache, const S& surface)
+  convert(State& state, const S& surface)
   {
-    double charge = cache.qop > 0. ? 1. : -1.;
+    double charge = state.qop > 0. ? 1. : -1.;
     // return the bound parameters
     return BoundParameters(
-        nullptr, cache.pos, cache.dir / std::abs(cache.qop), charge, surface);
+        nullptr, state.pos, state.dir / std::abs(state.qop), charge, surface);
   }
 
   /// Perform a straight line propagation step
   ///
-  /// @param[in,out] cache is the propagation cache associated with the track
+  /// @param[in,out] state is the propagation state associated with the track
   ///                parameters that are being propagated.
-  ///                The cache contains the desired step size,
+  ///                The state contains the desired step size,
   ///                it can be negative during backwards track propagation,
   ///                and since we're using an adaptive algorithm, it can
   ///                be modified by the stepper class during propagation.
   ///
   /// @return the step size taken
   double
-  step(Cache& cache) const
+  step(State& state) const
   {
     // use the adjusted step size
-    const double h = cache.stepSize;
+    const double h = state.stepSize;
     // Update the track parameters according to the equations of motion
-    cache.pos += h * cache.dir;
-    // cache the path length
-    cache.accumulatedPath += h;
+    state.pos += h * state.dir;
+    // state the path length
+    state.accumulatedPath += h;
     // return h
     return h;
   }

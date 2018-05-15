@@ -141,17 +141,17 @@ namespace Test {
     auto            tfl = rkUtils.transformLocalToGlobal(true, pars, P);
     BOOST_CHECK(tfl);
     // b) ATLAS stepper
-    AtlasStepper_type::Cache asCache(pars);
+    AtlasStepper_type::State astepState(pars);
     // c) Eigen stepper
-    EigenStepper_type::Cache esCache(pars);
+    EigenStepper_type::State estepState(pars);
 
     // create the matrices
     auto rkMatrix = convertToMatrix(P);
-    auto asMatrix = convertToMatrix(asCache.pVector);
+    auto asMatrix = convertToMatrix(astepState.pVector);
 
     bool rkas = rkMatrix.isApprox(asMatrix);
-    bool rkes = rkMatrix.isApprox(esCache.jacToGlobal);
-    bool ases = asMatrix.isApprox(esCache.jacToGlobal);
+    bool rkes = rkMatrix.isApprox(estepState.jacToGlobal);
+    bool ases = asMatrix.isApprox(estepState.jacToGlobal);
     // cross comparison checks
     BOOST_CHECK(rkas);
     BOOST_CHECK(rkes);

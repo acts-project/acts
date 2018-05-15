@@ -53,8 +53,8 @@ namespace Test {
   EigenStepper_type    estepper(bField);
   EigenPropagator_type epropagator(std::move(estepper));
 
-  std::vector<std::unique_ptr<const Surface>> sCache;
-  auto tGeometry = testGeometry<PlaneSurface>(sCache);
+  std::vector<std::unique_ptr<const Surface>> stepState;
+  auto tGeometry = testGeometry<PlaneSurface>(stepState);
 
   const int ntests     = 1;
   bool      debug_mode = true;

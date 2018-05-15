@@ -13,7 +13,10 @@ namespace Acts {
 
 namespace detail {
 
-  /// This is an actor that deals with the
+  /// This is an actor that deals with the output string
+  /// It is called upon targetReached and navigationBreak
+  /// of the state and then copies the debugString into
+  /// the final output object (result), which leaves the propagation
   struct DebugOutputActor
   {
 
@@ -21,7 +24,7 @@ namespace detail {
     bool mute = false;
 
     /// Simple result struct to be returned
-    /// It collects the debug output string from the cache
+    /// It collects the debug output string from the state
     /// into which all actors and aborters can write
     struct this_result
     {
@@ -32,33 +35,31 @@ namespace detail {
 
     /// Debug output action for the ActionList of the Propagator
     ///
-    /// @tparam propagator_cache_t is the type of the Propagator cache
-    /// @tparam stepper_cache_t is the type of Stepper cache,
+    /// @tparam propagator_state_t is the type of the Propagator state
+    /// @tparam stepper_state_t is the type of Stepper state,
     /// it is not used in this stepper
     ///
-    /// @param pCache is the mutable propagator cache object
-    /// @param result is the mutable result cache object
-    template <typename propagator_cache_t, typename stepper_cache_t>
+    /// @param propState is the mutable propagator state object
+    /// @param result is the mutable result state object
+    template <typename propagator_state_t, typename stepper_state_t>
     void
-    operator()(propagator_cache_t& pCache,
-               stepper_cache_t&,
+    operator()(propagator_state_t& propState,
+               stepper_state_t&,
                result_type& result) const
     {
-      // move the debug output from the cache to
+      // move the debug output from the state to
       // to the output actor if it is not set to mute
       // only when the target is reached (or later otherwise triggered)
-      if (!mute && (pCache.targetReached || pCache.navigationBreak))
-        result.debugString = pCache.debugString;
+      if (!mute && (propState.targetReached || propState.navigationBreak))
+        result.debugString = std::move(propState.options.debugString);
     }
 
     /// Pure observer interface
     /// - this does not apply to the output collector
-    template <typename propagator_cache_t, typename stepper_cache_t>
+    template <typename propagator_state_t, typename stepper_state_t>
     void
-    operator()(propagator_cache_t& pCache, stepper_cache_t& sCache) const
+    operator()(propagator_state_t&, stepper_state_t&) const
     {
-      (void)pCache;
-      (void)sCache;
     }
   };
 

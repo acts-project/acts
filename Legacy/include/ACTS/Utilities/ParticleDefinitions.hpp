@@ -1,19 +1,21 @@
-// This file is part of the Acts project.
+// This file is part of the ACTS project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// ParticleDefinitions.h, Acts project
+// ParticleDefinitions.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#pragma once
+#ifndef ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
+#define ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
+
 #include <vector>
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
+#include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Units.hpp"
 
 // barcodes
 typedef unsigned long barcode_type;
@@ -308,3 +310,5 @@ ProcessVertex::addOutgoing(const ParticleProperties& pProperties)
   m_outgoing.push_back(pProperties);
 }
 }
+
+#endif  // ACTS_EVENTDATA_PARTICLEDEFINITIONS_H

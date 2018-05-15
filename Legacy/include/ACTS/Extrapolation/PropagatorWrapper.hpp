@@ -283,9 +283,9 @@ private:
   /// Helper function for curvilinear transport
   ///
   /// @tparam Parameters The parameters type at call and return
-  /// @tparam ParametrsBase The according neutral/charged base class
+  /// @tparam ParametersBase The according neutral/charged base class
   /// @tparam Surface The destination surface
-  /// @tparam Actions The list of propgation actions
+  /// @tparam Actions The list of propagation actions
   /// @tparam Surface The list of propagation aborters
   ///
   /// @param[in] start The start Parameters

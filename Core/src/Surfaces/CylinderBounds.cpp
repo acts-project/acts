@@ -130,11 +130,13 @@ Acts::CylinderBounds::inside3D(const Vector3D&      pos,
       = (checkAbsolute && m_closed) ? bcheck.m_tolerance[0] : 0.;
   double addToleranceZ = checkAbsolute ? bcheck.m_tolerance[1] : 0.;
   // check if the position compatible with the radius
-  if ((s_onSurfaceTolerance + addToleranceR) <= std::abs(pos.perp() - m_radius))
+  if ((s_onSurfaceTolerance + addToleranceR)
+      <= std::abs(pos.perp() - m_radius)) {
     return false;
-  else if (checkAbsolute && m_closed)
+  } else if (checkAbsolute && m_closed) {
     return ((s_onSurfaceTolerance + addToleranceZ + m_halfZ)
             >= std::abs(pos.z()));
+  }
 
   // detailed, but slower check
   Vector2D lpos(detail::radian_sym(pos.phi() - m_avgPhi), pos.z());
