@@ -377,7 +377,7 @@ public:
     typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
 
     // Type of provided options which consist action and abort list
-    typedef Options<action_list_t, aborter_list_t> Options;
+    typedef Options<action_list_t, aborter_list_t> PropagatorOptions;
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
@@ -397,8 +397,9 @@ public:
     pathLimitAbort.debug     = options.debug;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, Options, TargetAborters> State;
-    State state(start, options, targetAborters);
+    typedef State<parameters_t, PropagatorOptions, TargetAborters>
+                    PropagatorState;
+    PropagatorState state(start, options, targetAborters);
 
     // Perform the actual propagation & check its outcome
     if (propagate_(result, state) != Status::IN_PROGRESS) {
@@ -451,7 +452,7 @@ public:
         return_parameter_type;
 
     // Type of provided options
-    typedef Options<action_list_t, aborter_list_t> Options;
+    typedef Options<action_list_t, aborter_list_t> PropagatorOptions;
 
     // Type of the full propagation result, including output from actions
     typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
@@ -485,8 +486,9 @@ public:
     pathLimitAbort.debug     = options.debug;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, Options, TargetAborters> State;
-    State state(start, options, targetAborters);
+    typedef State<parameters_t, PropagatorOptions, TargetAborters>
+                    PropagatorState;
+    PropagatorState state(start, options, targetAborters);
     state.targetSurface = &target;
 
     // Perform the actual propagation
