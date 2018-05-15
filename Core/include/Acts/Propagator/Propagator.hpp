@@ -22,6 +22,33 @@ namespace Acts {
 /// Result status of track parameter propagation
 enum struct Status { SUCCESS, FAILURE, UNSET, IN_PROGRESS, WRONG_DIRECTION };
 
+/// @brief The void navigator struct as a default navigator
+///
+/// It does not provide any navigation action, the compiler
+/// should eventually optimise that the function core is not done
+struct VoidNavigator
+{
+
+  /// Nested State struct
+  struct State
+  {
+  };
+
+  /// Unique typedef to publish to the Propagator
+  typedef State state_type;
+
+  /// Navigation call
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  ///
+  /// Empty call, hopefully the compiler checks this
+  template <typename propagator_state_t>
+  void
+  operator()(propagator_state_t&) const
+  {
+  }
+};
+
 /// @brief Simple class holding result of propagation call
 ///
 /// @tparam parameters_t Type of final track parameters
@@ -64,11 +91,15 @@ struct Result : private detail::Extendable<result_list...>
 
 /// @brief Propagator for particles (optionally in a magnetic field)
 ///
-/// The Propagator works with two state objects given at function call
-///  - a propagator state for object navigation and screen output
-///  - a stepper state for the actual transport caching (pos,dir,field)
+/// The Propagator works with a state objects given at function call
+/// This state object contains the thread local state objects
+///  - Navigator::state_type for object navigation and screen output
+///  - Stepper::state_type state for the actual transport caching
+///  (pos,dir,field)
 ///
 /// @tparam stepper_t stepper implementation of the propagation algorithm
+/// @tparam navigator_list_t the (optional) navigator type, it is a type
+///         of action_list with is called before all the other optios
 ///
 /// This Propagator class serves as high-level steering code for propagating
 /// track parameters. The actual implementation of the propagation has to be
@@ -84,12 +115,15 @@ struct Result : private detail::Extendable<result_list...>
 /// - a type mapping for: (initial track parameter type and destination
 ///   surface type) -> type of internal state object
 ///
-template <typename stepper_t>
+template <typename stepper_t, typename navigator_t = VoidNavigator>
 class Propagator final
 {
 public:
   /// Type of state object used by the propagation implementation
   typedef typename stepper_t::template state_type<TrackParameters> StepperState;
+
+  /// Typedef the navigator state
+  typedef typename navigator_t::state_type NavigatorState;
 
   /// Typedef the PathLimitReached aborter
   typedef detail::PathLimitReached PathLimitReached;
@@ -144,26 +178,38 @@ public:
   };
 
   /// Constructor from implementation object
-  explicit Propagator(stepper_t stepper) : m_stepper(std::move(stepper)) {}
+  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
+    : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
+  {
+  }
 
 private:
   /// @brief private Propagator state for navigation and debugging
   ///
   /// This struct holds the common state information for propagating
   /// which is independent of the actual stepper implementation.
-  template <typename propagator_option_t, typename target_aborter_list_t>
-  struct PropagatorState
+  template <typename parameters_t,
+            typename propagator_option_t,
+            typename target_aborter_list_t>
+  struct State
   {
 
     /// Create the propagator state from the options
     ///
+    /// @tparam parameters_t the type of the start parameters
     /// @tparam propagator_option_t the type of the propagator options
     /// @tparam target_aborter_list_t the type of the target aborters
     ///
+    /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param tabs The internal target aborters created in the call nethod
-    PropagatorState(propagator_option_t topts, target_aborter_list_t tabs)
-      : options(std::move(topts)), targetAborters(std::move(tabs))
+    State(const parameters_t&   start,
+          propagator_option_t   topts,
+          target_aborter_list_t tabs)
+      : options(std::move(topts))
+      , targetAborters(std::move(tabs))
+      , stepping(start, options.direction, options.maxStepSize)
+      , startSurface(&start.referenceSurface())
     {
     }
 
@@ -173,13 +219,19 @@ private:
     /// These are the target aborters (internally created)
     target_aborter_list_t targetAborters;
 
-    /// Navigation state: the start surface
+    /// Stepper state - internal state of the Stepper
+    StepperState stepping;
+
+    /// Navigation state - internal state of the Navigator
+    NavigatorState navigation;
+
+    /// Navigation state - external state: the start surface
     const Surface* startSurface = nullptr;
 
-    /// Navigation state: the current surface
+    /// Navigation state - external state: the current surface
     const Surface* currentSurface = nullptr;
 
-    /// Navigation state: the target surface
+    /// Navigation state - external state: the target surface
     const Surface* targetSurface = nullptr;
 
     /// Indicator if the target is reached
@@ -235,57 +287,55 @@ private:
   ///
   /// @tparam result_t Type of the result object for this propagation
   /// @tparam propagator_state_t Type of of propagator state with options
-  /// @tparam stepper_state_t Type of the stepper implementation state
   ///
   /// @param [in,out] result of the propagation
-  /// @param [in,out] propState the propagator state object
-  /// @param [in,out] stepState the stepper state object
+  /// @param [in,out] state the propagator state object
   ///
   /// @return Propagation Status
-  template <typename result_t,
-            typename propagator_state_t,
-            typename stepper_state_t>
+  template <typename result_t, typename propagator_state_t>
   Status
-  propagate_(result_t&           result,
-             propagator_state_t& propState,
-             stepper_state_t&    stepState) const
+  propagate_(result_t& result, propagator_state_t& state) const
   {
 
     // Pre-stepping call to the abort list
-    debugLog(propState,
+    debugLog(state,
              [&] { return std::string("Calling pre-stepping aborters."); });
-    if (propState.targetAborters(result, propState, stepState))
+    if (state.targetAborters(result, state)) {
       return Status::FAILURE;
+    }
 
-    // Pre-stepping call to the action list
-    debugLog(propState,
-             [&] { return std::string("Calling pre-stepping action list."); });
-    propState.options.actionList(propState, stepState, result);
+    // Pre-stepping call to the navigator and action list
+    debugLog(state, [&] {
+      return std::string("Calling pre-stepping navigator & actions.");
+    });
+    m_navigator(state);
+    state.options.actionList(state, result);
 
     // Propagation loop : stepping
-    for (; result.steps < propState.options.maxSteps; ++result.steps) {
+    for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it only takes the stepping state
-      result.pathLength += m_stepper.step(stepState);
+      result.pathLength += m_stepper.step(state.stepping);
       // Call the actions, can (& will likely) modify the state
-      debugLog(propState, [&] {
-        return std::string("Calling action list on single step.");
+      debugLog(state, [&] {
+        return std::string("Calling navigator & actions on single step.");
       });
-      propState.options.actionList(propState, stepState, result);
+      m_navigator(state);
+      state.options.actionList(state, result);
       // Call the stop_conditions and the internal stop conditions
       // break condition triggered, but still count the step
-      debugLog(propState,
+      debugLog(state,
                [&] { return std::string("Calling aborters on single step."); });
-      if (propState.options.stopConditions(result, propState, stepState)
-          || propState.targetAborters(result, propState, stepState)) {
+      if (state.options.stopConditions(result, state)
+          || state.targetAborters(result, state)) {
         ++result.steps;
         break;
       }
     }
 
     // Post-stepping call to the action list
-    debugLog(propState,
+    debugLog(state,
              [&] { return std::string("Calling post-stepping action list."); });
-    propState.options.actionList(propState, stepState, result);
+    state.options.actionList(state, result);
 
     // return progress flag here, decide on SUCCESS later
     return Status::IN_PROGRESS;
@@ -326,20 +376,14 @@ public:
     // Type of the full propagation result, including output from actions
     typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
 
-    // Type of provided options
+    // Type of provided options which consist action and abort list
     typedef Options<action_list_t, aborter_list_t> Options;
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
-    // Get the reference surface for navigation
-    const auto& startSurface = start.referenceSurface();
-
     // Initialize the propagation result object
     Result result(Status::IN_PROGRESS);
-
-    // Initialize the internal stepper state
-    StepperState stepState(start, options.direction, options.maxStepSize);
 
     // Internal Abort list - only with path limit as no target surface given
     typedef AbortList<PathLimitReached> TargetAborters;
@@ -353,17 +397,17 @@ public:
     pathLimitAbort.debug     = options.debug;
 
     // Initialize the internal propagator state
-    PropagatorState<Options, TargetAborters> propState(options, targetAborters);
-    propState.startSurface = &startSurface;
+    typedef State<parameters_t, Options, TargetAborters> State;
+    State state(start, options, targetAborters);
 
     // Perform the actual propagation & check its outcome
-    if (propagate_(result, propState, stepState) != Status::IN_PROGRESS) {
-      debugLog(propState,
+    if (propagate_(result, state) != Status::IN_PROGRESS) {
+      debugLog(state,
                [&] { return std::string("Propagation was not successful."); });
     } else {
       /// Convert into the return type
       result.endParameters = std::make_unique<const return_parameter_type>(
-          m_stepper.convert(stepState));
+          m_stepper.convert(state.stepping));
       result.status = Status::SUCCESS;
     }
 
@@ -409,12 +453,6 @@ public:
     // Type of provided options
     typedef Options<action_list_t, aborter_list_t> Options;
 
-    // Get the reference surface for navigation
-    const auto& startSurface = start.referenceSurface();
-
-    // Initialize the internal stepper state
-    StepperState stepState(start, options.direction, options.maxStepSize);
-
     // Type of the full propagation result, including output from actions
     typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
 
@@ -447,18 +485,18 @@ public:
     pathLimitAbort.debug     = options.debug;
 
     // Initialize the internal propagator state
-    PropagatorState<Options, TargetAborters> propState(options, targetAborters);
-    propState.startSurface  = &startSurface;
-    propState.targetSurface = &target;
+    typedef State<parameters_t, Options, TargetAborters> State;
+    State state(start, options, targetAborters);
+    state.targetSurface = &target;
 
     // Perform the actual propagation
-    if (propagate_(result, propState, stepState) != Status::IN_PROGRESS) {
-      debugLog(propState,
+    if (propagate_(result, state) != Status::IN_PROGRESS) {
+      debugLog(state,
                [&] { return std::string("Propagation was not successful."); });
     } else {
       // Compute the final results and mark the propagation as successful
       result.endParameters = std::make_unique<const return_parameter_type>(
-          m_stepper.convert(stepState, target));
+          m_stepper.convert(state.stepping, target));
       result.status = Status::SUCCESS;
     }
     return result;
@@ -468,27 +506,29 @@ private:
   /// implementation of propagation algorithm
   stepper_t m_stepper;
 
+  /// implementation of navigator
+  navigator_t m_navigator;
+
   /// The private propagation debug logging
   ///
   /// It needs to be fed by a lambda function that returns a string,
   /// that guarantees that the lambda is only called in the
   /// options.debug == true case in order not to spend time when not needed.
   ///
-  /// @param propState the propagator state for the debug flag, prefix/length
+  /// @param state the propagator state for the debug flag, prefix/length
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  debugLog(propagator_state_t&          propState,
+  debugLog(propagator_state_t&          state,
            std::function<std::string()> logAction) const
   {
-    if (propState.options.debug) {
+    if (state.options.debug) {
       std::stringstream dstream;
-      dstream << "|->" << std::setw(propState.options.debugPfxWidth);
+      dstream << "|->" << std::setw(state.options.debugPfxWidth);
       dstream << "Propagator"
               << " | ";
-      dstream << std::setw(propState.options.debugMsgWidth) << logAction()
-              << '\n';
-      propState.options.debugString += dstream.str();
+      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
+      state.options.debugString += dstream.str();
     }
   }
 };

@@ -62,8 +62,10 @@ private:
 public:
   typedef detail::ConstrainedStep cstep;
 
-  /// State for track parameter propagation
+  /// @brief State for track parameter propagation
   ///
+  /// It contains the stepping information and is provided thread local
+  /// by the propagator
   struct State
   {
     /// Constructor from the initial track parameters
@@ -84,11 +86,11 @@ public:
       , accumulatedPath(0.)
       , stepSize(ndir * ssize)
     {
-      // Get the reference surface for navigation
-      const auto& surface = par.referenceSurface();
-
       // Init the jacobian matrix if needed
       if (par.covariance()) {
+        // Get the reference surface for navigation
+        const auto& surface = par.referenceSurface();
+        // set the covariance transport flag to true and copy
         covTransport = true;
         cov          = ActsSymMatrixD<5>(*par.covariance());
         surface.initJacobianToGlobal(jacToGlobal, pos, dir, par.parameters());

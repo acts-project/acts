@@ -111,11 +111,10 @@ template <class T, class R, class S>
 class FullIntersection
 {
 public:
-  Intersection intersection;    ///< the intersection iself
-  const T*     object;          ///< the object that was intersected
-  const R*     representation;  ///< the represenation of the object
-  std::unique_ptr<S>
-                      result;  ///< what's the result ? @todo: remove bare pointer
+  Intersection        intersection;    ///< the intersection iself
+  const T*            object;          ///< the object that was intersected
+  const R*            representation;  ///< the represenation of the object
+  std::unique_ptr<S>  result;      ///< the result, which could be parameters
   NavigationDirection pDirection;  ///< the direction in which it was taken
 
   /// Full intersection constructor

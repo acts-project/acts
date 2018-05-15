@@ -36,29 +36,26 @@ namespace detail {
     /// Debug output action for the ActionList of the Propagator
     ///
     /// @tparam propagator_state_t is the type of the Propagator state
-    /// @tparam stepper_state_t is the type of Stepper state,
     /// it is not used in this stepper
     ///
-    /// @param propState is the mutable propagator state object
+    /// @param state is the mutable propagator state object
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t& propState,
-               stepper_state_t&,
-               result_type& result) const
+    operator()(propagator_state_t& state, result_type& result) const
     {
       // move the debug output from the state to
       // to the output actor if it is not set to mute
       // only when the target is reached (or later otherwise triggered)
-      if (!mute && (propState.targetReached || propState.navigationBreak))
-        result.debugString = std::move(propState.options.debugString);
+      if (!mute && (state.targetReached || state.navigationBreak))
+        result.debugString = std::move(state.options.debugString);
     }
 
     /// Pure observer interface
     /// - this does not apply to the output collector
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&, stepper_state_t&) const
+    operator()(propagator_state_t&) const
     {
     }
   };

@@ -53,21 +53,17 @@ namespace Test {
 
     PerpendicularMeasure() {}
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&,
-               stepper_state_t& stepState,
-               result_type&     result) const
+    operator()(propagator_state_t& state, result_type& result) const
     {
-      result.distance = stepState.pos.perp();
+      result.distance = state.stepping.position().perp();
     }
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
+    operator()(propagator_state_t&) const
     {
-      (void)propState;
-      (void)stepState;
     }
   };
 
@@ -92,37 +88,35 @@ namespace Test {
 
     SurfaceObserver() {}
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&,
-               stepper_state_t& stepState,
-               result_type&     result) const
+    operator()(propagator_state_t& state, result_type& result) const
     {
       if (surface && !result.surfaces_passed) {
         // calculate the distance to the surface
         const double distance
             = surface
-                  ->intersectionEstimate(
-                      stepState.position(), stepState.direction(), true, true)
+                  ->intersectionEstimate(state.stepping.position(),
+                                         state.stepping.direction(),
+                                         true,
+                                         true)
                   .pathLength;
         // Adjust the step size so that we cannot cross the target surface
-        stepState.stepSize.update(distance, cstep::actor);
+        state.stepping.stepSize.update(distance, cstep::actor);
         // return true if you fall below tolerance
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
-          result.surface_passed_r = stepState.position().perp();
+          result.surface_passed_r = state.stepping.position().perp();
           // release the step size, will be re-adjusted
-          stepState.stepSize.release(cstep::actor);
+          state.stepping.stepSize.release(cstep::actor);
         }
       }
     }
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
+    operator()(propagator_state_t&) const
     {
-      (void)propState;
-      (void)stepState;
     }
   };
 
@@ -149,29 +143,26 @@ namespace Test {
 
     PathScatterer() {}
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&,
-               stepper_state_t& stepState,
-               result_type&     result) const
+    operator()(propagator_state_t& state, result_type& result) const
     {
       if (!result.scattered
-          && std::abs(stepState.accumulatedPath - path_limit) < tolerance) {
+          && std::abs(state.stepping.accumulatedPath - path_limit)
+              < tolerance) {
         // now here we should apply the scattering
         result.scattered = true;
         // do the update and reinitialize the jacobians
-        stepState.applyCovTransport(true);
-        stepState.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
-        stepState.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
+        state.stepping.applyCovTransport(true);
+        state.stepping.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
+        state.stepping.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
       }
     }
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
+    operator()(propagator_state_t&) const
     {
-      (void)propState;
-      (void)stepState;
     }
   };
 

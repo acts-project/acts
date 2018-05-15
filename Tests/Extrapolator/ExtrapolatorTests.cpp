@@ -44,20 +44,22 @@ namespace Test {
   // The path limit abort
   typedef detail::PathLimitReached path_limit;
 
-  typedef ConstantBField                BField_type;
-  typedef EigenStepper<BField_type>     EigenStepper_type;
-  typedef Propagator<EigenStepper_type> EigenPropagator_type;
+  std::vector<std::unique_ptr<const Surface>> stepState;
+  auto tGeometry = testGeometry<PlaneSurface>(stepState);
+
+  // get the navigator and provide the TrackingGeometry
+  Navigator                         navigator(tGeometry);
+  typedef ConstantBField            BField_type;
+  typedef EigenStepper<BField_type> EigenStepper_type;
+  typedef Propagator<EigenStepper_type, Navigator> EigenPropagator_type;
 
   const double         Bz = 0.;  // 2. * units::_T;
   BField_type          bField(0, 0, Bz);
   EigenStepper_type    estepper(bField);
-  EigenPropagator_type epropagator(std::move(estepper));
+  EigenPropagator_type epropagator(std::move(estepper), std::move(navigator));
 
-  std::vector<std::unique_ptr<const Surface>> stepState;
-  auto tGeometry = testGeometry<PlaneSurface>(stepState);
-
-  const int ntests     = 1;
-  bool      debug_mode = true;
+  const int ntests    = 1;
+  bool      debugMode = true;
 
   // A plane selector for the SurfaceCollector
   struct PlaneSelector
@@ -118,25 +120,17 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-    typedef ActionList<Navigator> ActionList_type;
-    typedef AbortList<>           AbortConditions_type;
+    typedef ActionList<> ActionList_type;
+    typedef AbortList<>  AbortConditions_type;
 
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
-        navigator_options;
-    navigator_options.maxStepSize   = 10. * units::_cm;
-    navigator_options.maxPathLength = 25 * units::_cm;
+        options;
+    options.maxStepSize   = 10. * units::_cm;
+    options.maxPathLength = 25 * units::_cm;
 
-    // get the navigator and provide the TrackingGeometry
-    auto& navigator            = navigator_options.actionList.get<Navigator>();
-    navigator.trackingGeometry = tGeometry;
-    navigator.debug            = debug_mode;
-    navigator.collectSensitive = true;
-    navigator.collectMaterial  = true;
-    navigator.collectPassive   = false;
-
-    BOOST_TEST((epropagator.propagate(start, navigator_options).endParameters
-                != nullptr));
+    BOOST_TEST(
+        (epropagator.propagate(start, options).endParameters != nullptr));
   }
 
   // This test case checks that no segmentation fault appears
@@ -190,28 +184,17 @@ namespace Test {
     typedef SurfaceCollector<PlaneSelector> PlaneCollector;
 
     // Action list and abort list
-    typedef ActionList<Navigator, PlaneCollector> ActionList_type;
-    typedef AbortList<> AbortConditions_type;
+    typedef ActionList<PlaneCollector> ActionList_type;
+    typedef AbortList<>                AbortConditions_type;
 
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
-        navigator_options;
-    navigator_options.maxStepSize = 10. * units::_cm;
+        options;
+    options.maxStepSize   = 10. * units::_cm;
+    options.maxPathLength = 25 * units::_cm;
 
-    navigator_options.maxPathLength = 25 * units::_cm;
-
-    // get the navigator and provide the TrackingGeometry
-    auto& navigator            = navigator_options.actionList.get<Navigator>();
-    navigator.trackingGeometry = tGeometry;
-    navigator.debug            = debug_mode;
-    navigator.collectSensitive = true;
-    navigator.collectMaterial  = true;
-    navigator.collectPassive   = false;
-
-    const auto& result = epropagator.propagate(start, navigator_options);
-
-    auto navigator_result = result.get<Navigator::result_type>();
-    auto collector_result = result.get<PlaneCollector::result_type>();
+    const auto& result           = epropagator.propagate(start, options);
+    auto        collector_result = result.get<PlaneCollector::result_type>();
 
     // step through the surfaces and go step by step
     typedef ActionList<> ActionList_empty;
@@ -278,22 +261,16 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-    typedef ActionList<Navigator, MaterialInteractor> ActionList_type;
-    typedef AbortList<> AbortConditions_type;
+    typedef ActionList<MaterialInteractor> ActionList_type;
+    typedef AbortList<>                    AbortConditions_type;
 
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
-        navigator_options;
-    navigator_options.maxStepSize   = 25. * units::_cm;
-    navigator_options.maxPathLength = 25 * units::_cm;
+        options;
+    options.maxStepSize   = 25. * units::_cm;
+    options.maxPathLength = 25 * units::_cm;
 
-    // get the navigator and provide the TrackingGeometry
-    auto& navigator            = navigator_options.actionList.get<Navigator>();
-    navigator.trackingGeometry = tGeometry;
-    navigator.debug            = debug_mode;
-
-    const auto& result
-        = epropagator.propagate(start, navigator_options).endParameters;
+    const auto& result = epropagator.propagate(start, options).endParameters;
     if (result) {
       // test that you actually lost some energy
       BOOST_TEST(result->momentum().mag() < start.momentum().mag());

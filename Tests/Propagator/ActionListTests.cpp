@@ -40,8 +40,20 @@ namespace Test {
 
   /// This is a simple cache struct to mimic the
   /// Propagator cache
-  struct PropagatorCache
+  struct PropagatorState
   {
+
+    // This is a simple cache struct to mimic the
+    // Stepper cache in the propagation
+    struct StepperState
+    {
+      // accummulated path length cache
+      double accumulatedPath = 0.;
+
+      // adaptive sep size of the runge-kutta integration
+      cstep stepSize = std::numeric_limits<double>::max();
+    };
+
     /// emulate the options template
     struct Options
     {
@@ -66,17 +78,9 @@ namespace Test {
 
     /// Give some options
     Options options;
-  };
 
-  // This is a simple cache struct to mimic the
-  // Stepper cache in the propagation
-  struct StepperCache
-  {
-    // accummulated path length cache
-    double accumulatedPath = 0.;
-
-    // adaptive sep size of the runge-kutta integration
-    cstep stepSize = std::numeric_limits<double>::max();
+    /// The Stepper cache
+    StepperState stepping;
   };
 
   /// A distance observer struct as an actor
@@ -93,21 +97,17 @@ namespace Test {
 
     DistanceObserver(double ptg = 0.) : path_to_go(ptg) {}
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&,
-               stepper_state_t& stepState,
-               result_type&     result) const
+    operator()(propagator_state_t& state, result_type& result) const
     {
-      result.distance = path_to_go - stepState.accumulatedPath;
+      result.distance = path_to_go - state.stepping.accumulatedPath;
     }
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
+    operator()(propagator_state_t&) const
     {
-      (void)propState;
-      (void)stepState;
     }
   };
 
@@ -124,16 +124,16 @@ namespace Test {
 
     CallCounter() {}
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&, stepper_state_t&, result_type& r) const
+    operator()(propagator_state_t&, result_type& r) const
     {
       ++r.calls;
     }
 
-    template <typename propagator_state_t, typename stepper_state_t>
+    template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&, stepper_state_t&) const
+    operator()(propagator_state_t&) const
     {
     }
   };
@@ -143,8 +143,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(ActionListTest_Distance)
   {
     // construct the (prop/step) cache and result
-    PropagatorCache propState;
-    StepperCache    stepState;
+    PropagatorState state;
 
     // Type of track parameters produced at the end of the propagation
     typedef typename DistanceObserver::result_type distance_result;
@@ -154,13 +153,13 @@ namespace Test {
     action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
 
     // observe and check
-    action_list(propState, stepState, result);
+    action_list(state, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
                       100. * units::_mm);
 
     // now move the cache and check again
-    stepState.accumulatedPath = 50. * units::_mm;
-    action_list(propState, stepState, result);
+    state.stepping.accumulatedPath = 50. * units::_mm;
+    action_list(state, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
   }
 
@@ -169,8 +168,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(ActionListTest_TwoActions)
   {
     // construct the (prop/step) cache and result
-    PropagatorCache propState;
-    StepperCache    stepState;
+    PropagatorState state;
 
     // Type of track parameters produced at the end of the propagation
     typedef typename DistanceObserver::result_type distance_result;
@@ -181,14 +179,14 @@ namespace Test {
     detail::Extendable<distance_result, caller_result> result;
 
     //// observe and check
-    action_list(propState, stepState, result);
+    action_list(state, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
                       100. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
 
     // now move the cache and check again
-    stepState.accumulatedPath = 50. * units::_mm;
-    action_list(propState, stepState, result);
+    state.stepping.accumulatedPath = 50. * units::_mm;
+    action_list(state, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
   }

@@ -59,54 +59,49 @@ struct MaterialCollector
   /// - it records the surface given the configuration
   ///
   /// @tparam propagator_state_t is the type of Propagator state
-  /// @tparam stepper_state_t is the type of Stepper state
   ///
-  /// @param propState is the mutable propagator state object
-  /// @param stepState is the mutable stepper state object
+  /// @param state is the mutable propagator state object
   /// @param result is the result object to be filled
-  template <typename propagator_state_t, typename stepper_state_t>
+  template <typename propagator_state_t>
   void
-  operator()(propagator_state_t& propState,
-             stepper_state_t&    stepState,
-             result_type&        result) const
+  operator()(propagator_state_t& state, result_type& result) const
   {
     // if we are on target, everything should have been done
-    if (propState.targetReached) return;
+    if (state.targetReached) return;
 
-    if (propState.currentSurface) {
-      debugLog(propState, [&] {
+    if (state.currentSurface) {
+      debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Material check on surface ";
-        dstream << propState.currentSurface->geoID().toString();
+        dstream << state.currentSurface->geoID().toString();
         return dstream.str();
       });
     }
 
     // a current surface has been already assigned by the navigator
-    if (propState.currentSurface
-        && propState.currentSurface->associatedMaterial()) {
+    if (state.currentSurface && state.currentSurface->associatedMaterial()) {
 
       // get the material propertices and only continue
       const MaterialProperties* mProperties
-          = propState.currentSurface->associatedMaterial()->material(
-              stepState.position());
+          = state.currentSurface->associatedMaterial()->material(
+              state.stepping.position());
       if (mProperties) {
         // pre/post/full update
         double prepofu = 1.;
-        if (propState.startSurface == propState.currentSurface) {
-          debugLog(propState, [&] {
+        if (state.startSurface == state.currentSurface) {
+          debugLog(state, [&] {
             return std::string("Update on start surface: post-update mode.");
           });
-          prepofu = propState.currentSurface->associatedMaterial()->factor(
-              stepState.navDir, postUpdate);
-        } else if (propState.targetSurface == propState.currentSurface) {
-          debugLog(propState, [&] {
+          prepofu = state.currentSurface->associatedMaterial()->factor(
+              state.stepping.navDir, postUpdate);
+        } else if (state.targetSurface == state.currentSurface) {
+          debugLog(state, [&] {
             return std::string("Update on target surface: pre-update mode");
           });
-          prepofu = propState.currentSurface->associatedMaterial()->factor(
-              stepState.navDir, preUpdate);
+          prepofu = state.currentSurface->associatedMaterial()->factor(
+              state.stepping.navDir, preUpdate);
         } else {
-          debugLog(propState, [&] {
+          debugLog(state, [&] {
             return std::string("Update while pass through: full mode.");
           });
         }
@@ -114,25 +109,25 @@ struct MaterialCollector
         // the pre/post factor has been applied
         // now check if there's still something to do
         if (prepofu == 0.) {
-          debugLog(propState, [&] {
+          debugLog(state, [&] {
             return std::string("Pre/Post factor set material to zero.");
           });
           return;
         }
         // more debugging output to the screen
-        debugLog(propState, [&] {
+        debugLog(state, [&] {
           return std::string("Material properties found for this surface.");
         });
 
         // the path correction from the surface intersection
         double pCorrection = prepofu
-            * propState.currentSurface->pathCorrection(stepState.position(),
-                                                       stepState.direction());
+            * state.currentSurface->pathCorrection(state.stepping.position(),
+                                                   state.stepping.direction());
         // the full material
         result.materialInX0 += pCorrection * mProperties->thicknessInX0();
         result.materialInL0 += pCorrection * mProperties->thicknessInL0();
 
-        debugLog(propState, [&] {
+        debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "t/X0 (t/L0) increased to ";
           dstream << result.materialInX0 << " (";
@@ -144,9 +139,9 @@ struct MaterialCollector
         if (detailedCollection) {
           // create for recording
           MaterialHit material_hit;
-          material_hit.surface   = propState.currentSurface;
-          material_hit.position  = stepState.position();
-          material_hit.direction = stepState.direction();
+          material_hit.surface   = state.currentSurface;
+          material_hit.position  = state.stepping.position();
+          material_hit.direction = state.stepping.direction();
           // get the material & path length
           material_hit.material   = mProperties->material();
           material_hit.pathLength = pCorrection * mProperties->thickness();
@@ -159,9 +154,9 @@ struct MaterialCollector
 
   /// Pure observer interface
   /// - this does not apply to the surface collector
-  template <typename propagator_state_t, typename stepper_state_t>
+  template <typename propagator_state_t>
   void
-  operator()(propagator_state_t&, stepper_state_t&) const
+  operator()(propagator_state_t&) const
   {
   }
 
@@ -174,22 +169,21 @@ private:
   ///
   /// @tparam propagator_state_t Type of the propagator state
   ///
-  /// @param propState the propagator state for the debug flag, prefix and
+  /// @param state the propagator state for the debug flag, prefix and
   /// length
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  debugLog(propagator_state_t&          propState,
+  debugLog(propagator_state_t&          state,
            std::function<std::string()> logAction) const
   {
     if (debug) {
       std::stringstream dstream;
-      dstream << "   " << std::setw(propState.options.debugPfxWidth);
+      dstream << "   " << std::setw(state.options.debugPfxWidth);
       dstream << "material collector"
               << " | ";
-      dstream << std::setw(propState.options.debugMsgWidth) << logAction()
-              << '\n';
-      propState.options.debugString += dstream.str();
+      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
+      state.options.debugString += dstream.str();
     }
   }
 };

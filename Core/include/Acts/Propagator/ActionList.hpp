@@ -43,31 +43,24 @@ public:
   /// members of the list
   ///
   /// @tparam propagator_state_t is the state type of the propagator
-  /// @tparam stepper_state_t is the state type of the stepper
   /// @tparam result_t is the result type from actions
   ///
   /// @param propState[in,out] is the propagator state object
-  /// @param stepState[in,out] is the stepper state object
   /// @param result[in,out] is the result object from actions
   ///
   /// @return bool type indiciating if the step size can be released
-  template <typename propagator_state_t,
-            typename stepper_state_t,
-            typename result_t>
+  template <typename propagator_state_t, typename result_t>
   void
-  operator()(propagator_state_t& propState,
-             stepper_state_t&    stepState,
-             result_t&           result) const
+  operator()(propagator_state_t& state, result_t& result) const
   {
     // clang-format off
     static_assert(detail::all_of_v<detail::action_signature_check_v<actions, 
-                                      propagator_state_t, 
-                                      stepper_state_t>...>,
+                                      propagator_state_t>...>,
                   "not all actions support the method signature");
     // clang-format on
 
     typedef detail::action_list_impl<actions...> impl;
-    impl::action(tuple(), propState, stepState, result);
+    impl::action(tuple(), state, result);
   }
 };
 

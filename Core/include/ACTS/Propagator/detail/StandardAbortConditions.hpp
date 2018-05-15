@@ -26,23 +26,23 @@ namespace detail {
   /// state.options.debug == true case in order not to spend time
   /// when not needed.
   ///
-  /// @param propState the propagator cache for the debug flag, prefix/stream
+  /// @param state the propagator cache for the debug flag, prefix/stream
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  targetDebugLog(propagator_state_t&          propState,
+  targetDebugLog(propagator_state_t&          state,
                  std::string                  status,
                  std::function<std::string()> logAction)
   {
-    if (propState.options.debug) {
+    if (state.options.debug) {
       std::stringstream dstream;
       dstream << " " << status << " ";
-      dstream << std::setw(propState.options.debugPfxWidth);
+      dstream << std::setw(state.options.debugPfxWidth);
       dstream << " target aborter "
               << " | ";
-      dstream << std::setw(propState.options.debugMsgWidth);
+      dstream << std::setw(state.options.debugMsgWidth);
       dstream << logAction() << '\n';
-      propState.options.debugString += dstream.str();
+      state.options.debugString += dstream.str();
     }
   }
 
@@ -70,45 +70,39 @@ namespace detail {
     }
 
     /// boolean operator for abort condition using the result
-    template <typename propagator_state_t,
-              typename stepper_state_t,
-              typename result_t>
+    template <typename propagator_state_t, typename result_t>
     bool
-    operator()(const result_t& /*r*/,
-               propagator_state_t& propState,
-               stepper_state_t&    stepState) const
+    operator()(const result_t& /*r*/, propagator_state_t& state) const
     {
-      return operator()(propState, stepState);
+      return operator()(state);
     }
 
     /// boolean operator for abort condition without using the result
     ///
     /// @tparam propagator_state_t Type of the propagator state
-    /// @tparam stepper_state_t Type of the stepper state
     ///
-    /// @param[in,out] propState The propagation state object
-    /// @param[in,out] stepState The stepper state object
-    template <typename propagator_state_t, typename stepper_state_t>
+    /// @param[in,out] state The propagation state object
+    template <typename propagator_state_t>
     bool
-    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
+    operator()(propagator_state_t& state) const
     {
       // Check if the maximum allowed step size has to be updated
-      double diffToLimit = signedPathLimit - stepState.accumulatedPath;
-      stepState.stepSize.update(diffToLimit, ConstrainedStep::aborter);
+      double diffToLimit = signedPathLimit - state.stepping.accumulatedPath;
+      state.stepping.stepSize.update(diffToLimit, ConstrainedStep::aborter);
       bool limitReached = (std::abs(diffToLimit) < tolerance);
       if (limitReached) {
-        targetDebugLog(propState, "x", [&] {
+        targetDebugLog(state, "x", [&] {
           std::stringstream dstream;
           dstream << "Path limit reached at distance " << diffToLimit;
           return dstream.str();
         });
         // reaching the target means navigaiton break
-        propState.targetReached = true;
+        state.targetReached = true;
       } else
-        targetDebugLog(propState, "o", [&] {
+        targetDebugLog(state, "o", [&] {
           std::stringstream dstream;
           dstream << "Target stepSize (path limit) updated to ";
-          dstream << stepState.stepSize.toString();
+          dstream << state.stepping.stepSize.toString();
           return dstream.str();
         });
       // path limit check
@@ -140,38 +134,32 @@ namespace detail {
     }
 
     /// boolean operator for abort condition using the result (ignored)
-    template <typename propagator_state_t,
-              typename stepper_state_t,
-              typename result_t>
+    template <typename propagator_state_t, typename result_t>
     bool
-    operator()(const result_t&,
-               propagator_state_t& propState,
-               stepper_state_t&    stepState) const
+    operator()(const result_t&, propagator_state_t& state) const
     {
-      return operator()(propState, stepState);
+      return operator()(state);
     }
 
     /// boolean operator for abort condition without using the result
     ///
     /// @tparam propagator_state_t Type of the propagator state
-    /// @tparam stepper_state_t Type of the stepper state
     ///
-    /// @param[in,out] propState The propagation state object
-    /// @param[in,out] stepState The stepper state object
-    template <typename propagator_state_t, typename stepper_state_t>
+    /// @param[in,out] state The propagation state object
+    template <typename propagator_state_t>
     bool
-    operator()(propagator_state_t& propState, stepper_state_t& stepState) const
+    operator()(propagator_state_t& state) const
     {
       if (!surface) return false;
 
       // check if the cache filled the currentSurface
-      if (propState.currentSurface == surface) {
-        targetDebugLog(propState, "x", [&] {
+      if (state.currentSurface == surface) {
+        targetDebugLog(state, "x", [&] {
           std::string ds("Target surface reached.");
           return ds;
         });
         // reaching the target calls a navigation break
-        propState.targetReached = true;
+        state.targetReached = true;
         return true;
       }
 
@@ -179,38 +167,38 @@ namespace detail {
       // @todo that might cause problems with a cylinder
       const double distance
           = surface
-                ->intersectionEstimate(stepState.position(),
-                                       direction * stepState.direction(),
+                ->intersectionEstimate(state.stepping.position(),
+                                       direction * state.stepping.direction(),
                                        true,
                                        false)
                 .pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      stepState.stepSize.update(stepState.navDir * distance,
-                                ConstrainedStep::aborter);
+      state.stepping.stepSize.update(state.stepping.navDir * distance,
+                                     ConstrainedStep::aborter);
       // return true if you fall below tolerance
       bool targetReached = (std::abs(distance) <= tolerance);
       if (targetReached) {
-        targetDebugLog(propState, "x", [&] {
+        targetDebugLog(state, "x", [&] {
           std::stringstream dstream;
           dstream << "Target surface reached at distance (tolerance) ";
           dstream << distance << " (" << tolerance << ")";
           return dstream.str();
         });
         // assigning the currentSurface
-        propState.currentSurface = surface;
-        targetDebugLog(propState, "x", [&] {
+        state.currentSurface = surface;
+        targetDebugLog(state, "x", [&] {
           std::stringstream dstream;
           dstream << "Current surface set to target surface  ";
-          dstream << propState.currentSurface->geoID().toString();
+          dstream << state.currentSurface->geoID().toString();
           return dstream.str();
         });
         // reaching the target calls a navigation break
-        propState.targetReached = true;
+        state.targetReached = true;
       } else
-        targetDebugLog(propState, "o", [&] {
+        targetDebugLog(state, "o", [&] {
           std::stringstream dstream;
           dstream << "Target stepSize (surface) updated to ";
-          dstream << stepState.stepSize.toString();
+          dstream << state.stepping.stepSize.toString();
           return dstream.str();
         });
       // path limit check

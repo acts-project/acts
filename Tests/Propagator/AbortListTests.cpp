@@ -41,8 +41,20 @@ namespace Test {
 
   /// This is a simple cache struct to mimic the
   /// Propagator cache
-  struct PropagatorCache
+  struct PropagatorState
   {
+
+    // This is a simple cache struct to mimic the
+    // Stepper cache in the propagation
+    struct StepperState
+    {
+      // accummulated path length cache
+      double accumulatedPath = 0.;
+
+      // adaptive sep size of the runge-kutta integration
+      cstep stepSize = std::numeric_limits<double>::max();
+    };
+
     /// emulate the options template
     struct Options
     {
@@ -67,17 +79,9 @@ namespace Test {
 
     /// Give some options
     Options options;
-  };
 
-  // This is a simple cache struct to mimic the
-  // Stepper cache in the propagation
-  struct StepperCache
-  {
-    // accummulated path length cache
-    double accumulatedPath = 0.;
-
-    // adaptive sep size of the runge-kutta integration
-    cstep stepSize = std::numeric_limits<double>::max();
+    /// The Stepper cache
+    StepperState stepping;
   };
 
   /// This is a simple result struct to mimic the
@@ -90,8 +94,7 @@ namespace Test {
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit)
   {
-    PropagatorCache propState;
-    StepperCache    stepState;
+    PropagatorState state;
     Result          result;
 
     AbortList<path_limit> abort_list;
@@ -102,24 +105,24 @@ namespace Test {
     limit.tolerance       = 1. * units::_um;
 
     // It should not abort yet
-    BOOST_CHECK(!abort_list(result, propState, stepState));
+    BOOST_CHECK(!abort_list(result, state));
     // The step size should be adapted to 1 meter now
-    BOOST_CHECK_EQUAL(stepState.stepSize, 1. * units::_m);
+    BOOST_CHECK_EQUAL(state.stepping.stepSize, 1. * units::_m);
     // Let's do a step of 90 cm now
-    stepState.accumulatedPath = 90. * units::_cm;
+    state.stepping.accumulatedPath = 90. * units::_cm;
     // Still no abort yet
-    BOOST_CHECK(!abort_list(result, propState, stepState));
+    BOOST_CHECK(!abort_list(result, state));
     // 10 cm are left
     // The step size should be adapted to 10 cm now
-    BOOST_CHECK_EQUAL(stepState.stepSize, 10. * units::_cm);
+    BOOST_CHECK_EQUAL(state.stepping.stepSize, 10. * units::_cm);
 
     // approach the
-    while (!abort_list(result, propState, stepState)) {
-      stepState.accumulatedPath += 0.5 * stepState.stepSize;
+    while (!abort_list(result, state)) {
+      state.stepping.accumulatedPath += 0.5 * state.stepping.stepSize;
     }
 
     // now we need to be smaller than the tolerance
-    BOOST_CHECK(stepState.stepSize < 1. * units::_um);
+    BOOST_CHECK(state.stepping.stepSize < 1. * units::_um);
   }
 
 }  // namespace Test

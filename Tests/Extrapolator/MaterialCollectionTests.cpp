@@ -47,29 +47,33 @@ namespace Test {
   // The path limit abort
   typedef detail::PathLimitReached path_limit;
 
-  typedef ConstantBField                  BField;
-  typedef EigenStepper<BField>            EigenStepper;
-  typedef Propagator<EigenStepper>        EigenPropagator;
-  typedef Propagator<StraightLineStepper> StraightLinePropagator;
-
-  const double    Bz         = 0.;  // 2. * units::_T;
-  const double    stepFactor = 1.;  // avoid overstepping
-  BField          bField(0, 0, Bz);
-  EigenStepper    estepper(bField);
-  EigenPropagator epropagator(std::move(estepper));
-
-  StraightLineStepper    slstepper;
-  StraightLinePropagator slpropagator(std::move(slstepper));
-
   std::vector<std::unique_ptr<const Surface>> stepState;
   auto tGeometry = testGeometry<ModuleSurface>(stepState);
 
-  const int ntests              = 1000;
-  const int skip                = 0;
-  bool      debug_mode_fwd      = false;
-  bool      debug_mode_bwd      = false;
-  bool      debug_mode_fwd_step = false;
-  bool      debug_mode_bwd_step = false;
+  // create a navigator for this tracking geometry
+  Navigator navigatorES(tGeometry);
+  Navigator navigatorSL(tGeometry);
+
+  typedef ConstantBField       BField;
+  typedef EigenStepper<BField> EigenStepper;
+  typedef Propagator<EigenStepper, Navigator>        EigenPropagator;
+  typedef Propagator<StraightLineStepper, Navigator> StraightLinePropagator;
+
+  const double    Bz = 0.;  // 2. * units::_T;
+  BField          bField(0, 0, Bz);
+  EigenStepper    estepper(bField);
+  EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
+
+  StraightLineStepper    slstepper;
+  StraightLinePropagator slpropagator(std::move(slstepper),
+                                      std::move(navigatorSL));
+
+  const int ntests           = 1000;
+  const int skip             = 0;
+  bool      debugModeFwd     = false;
+  bool      debugModeBwd     = false;
+  bool      debugModeFwdStep = false;
+  bool      debugModeBwdStep = false;
 
   /// the actual test nethod that runs the test
   /// can be used with several propagator types
@@ -109,289 +113,255 @@ namespace Test {
     typedef detail::DebugOutputActor DebugOutput;
 
     // Action list and abort list
-    typedef ActionList<Navigator, MaterialCollector, DebugOutput>
-                        ActionList_type;
+    typedef ActionList<MaterialCollector, DebugOutput> ActionList_type;
     typedef AbortList<> AbortConditions_type;
 
     typename Propagator_type::template Options<ActionList_type,
                                                AbortConditions_type>
-        fwd_navigator_options;
+        fwdOptions;
 
-    fwd_navigator_options.maxStepSize   = 25. * units::_cm;
-    fwd_navigator_options.maxPathLength = 25 * units::_cm;
-    fwd_navigator_options.debug         = debug_mode_fwd;
-
-    // get the navigator and provide the TrackingGeometry
-    auto& fwd_navigator
-        = fwd_navigator_options.actionList.template get<Navigator>();
-    fwd_navigator.trackingGeometry  = tGeometry;
-    fwd_navigator.initialStepFactor = stepFactor;
-    fwd_navigator.debug             = debug_mode_fwd;
+    fwdOptions.maxStepSize   = 25. * units::_cm;
+    fwdOptions.maxPathLength = 25 * units::_cm;
+    fwdOptions.debug         = debugModeFwd;
 
     // get the material collector and configure it
-    auto& fwd_materialCollector
-        = fwd_navigator_options.actionList.template get<MaterialCollector>();
-    fwd_materialCollector.detailedCollection = true;
-    fwd_materialCollector.debug              = debug_mode_fwd;
+    auto& fwdMaterialCollector
+        = fwdOptions.actionList.template get<MaterialCollector>();
+    fwdMaterialCollector.detailedCollection = true;
+    fwdMaterialCollector.debug              = debugModeFwd;
 
     // forward material test
-    const auto& fwd_result = prop.propagate(start, fwd_navigator_options);
-    auto&       fwd_material
-        = fwd_result.template get<MaterialCollector::result_type>();
+    const auto& fwdResult = prop.propagate(start, fwdOptions);
+    auto&       fwdMaterial
+        = fwdResult.template get<MaterialCollector::result_type>();
 
-    double fwd_step_materialInX0 = 0.;
-    double fwd_step_materialInL0 = 0.;
+    double fwdStepMaterialInX0 = 0.;
+    double fwdStepMaterialInL0 = 0.;
     // check that the collected material is not zero
-    BOOST_TEST(fwd_material.materialInX0 != 0.);
-    BOOST_TEST(fwd_material.materialInL0 != 0.);
+    BOOST_TEST(fwdMaterial.materialInX0 != 0.);
+    BOOST_TEST(fwdMaterial.materialInL0 != 0.);
     // check that the sum of all steps is the total material
-    for (auto& materialHit : fwd_material.collected) {
+    for (auto& materialHit : fwdMaterial.collected) {
       auto material = materialHit.material;
-      fwd_step_materialInX0 += materialHit.pathLength / material.X0();
-      fwd_step_materialInL0 += materialHit.pathLength / material.L0();
+      fwdStepMaterialInX0 += materialHit.pathLength / material.X0();
+      fwdStepMaterialInL0 += materialHit.pathLength / material.L0();
     }
-    BOOST_CHECK_CLOSE(fwd_material.materialInX0, fwd_step_materialInX0, 1e-5);
-    BOOST_CHECK_CLOSE(fwd_material.materialInL0, fwd_step_materialInL0, 1e-5);
+    BOOST_CHECK_CLOSE(fwdMaterial.materialInX0, fwdStepMaterialInX0, 1e-5);
+    BOOST_CHECK_CLOSE(fwdMaterial.materialInL0, fwdStepMaterialInL0, 1e-5);
 
     // get the forward output to the screen
-    if (debug_mode_fwd) {
+    if (debugModeFwd) {
       const auto& fwd_output
-          = fwd_result.template get<DebugOutput::result_type>();
+          = fwdResult.template get<DebugOutput::result_type>();
       std::cout << ">>> Forward Propgation & Navigation output " << std::endl;
       std::cout << fwd_output.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
-      for (auto& fwd_steps_o : fwd_material.collected) {
+      for (auto& fwdStepsC : fwdMaterial.collected) {
         std::cout << "--> Surface with "
-                  << fwd_steps_o.surface->geoID().toString() << std::endl;
+                  << fwdStepsC.surface->geoID().toString() << std::endl;
       }
     }
 
     // backward material test
     typename Propagator_type::template Options<ActionList_type,
                                                AbortConditions_type>
-        bwd_navigator_options;
-    bwd_navigator_options.maxStepSize   = 25. * units::_cm;
-    bwd_navigator_options.maxPathLength = 25 * units::_cm;
-    bwd_navigator_options.direction     = backward;
-    bwd_navigator_options.debug         = debug_mode_bwd;
-
-    // get the backward navigator and provide the TrackingGeometry - for a
-    // different logger
-    auto& bwd_navigator
-        = bwd_navigator_options.actionList.template get<Navigator>();
-    bwd_navigator.trackingGeometry  = tGeometry;
-    bwd_navigator.initialStepFactor = stepFactor;
-    bwd_navigator.debug             = debug_mode_bwd;
+        bwdOptions;
+    bwdOptions.maxStepSize   = 25. * units::_cm;
+    bwdOptions.maxPathLength = 25 * units::_cm;
+    bwdOptions.direction     = backward;
+    bwdOptions.debug         = debugModeBwd;
 
     // get the material collector and configure it
-    auto& bwd_materialCollector
-        = bwd_navigator_options.actionList.template get<MaterialCollector>();
-    bwd_materialCollector.detailedCollection = true;
-    bwd_materialCollector.debug              = debug_mode_bwd;
+    auto& bwdMaterialCollector
+        = bwdOptions.actionList.template get<MaterialCollector>();
+    bwdMaterialCollector.detailedCollection = true;
+    bwdMaterialCollector.debug              = debugModeBwd;
 
     const auto& startSurface = start.referenceSurface();
-    const auto& bwd_result
-        = prop.propagate(*fwd_result.endParameters.template get(),
-                         startSurface,
-                         bwd_navigator_options);
-    auto& bwd_material
-        = bwd_result.template get<MaterialCollector::result_type>();
+    const auto& bwdResult    = prop.propagate(
+        *fwdResult.endParameters.template get(), startSurface, bwdOptions);
+    auto& bwdMaterial
+        = bwdResult.template get<MaterialCollector::result_type>();
 
-    double bwd_step_materialInX0 = 0.;
-    double bwd_step_materialInL0 = 0.;
+    double bwdStepMaterialInX0 = 0.;
+    double bwdStepMaterialInL0 = 0.;
 
     // check that the collected material is not zero
-    BOOST_TEST(bwd_material.materialInX0 != 0.);
-    BOOST_TEST(bwd_material.materialInL0 != 0.);
+    BOOST_TEST(bwdMaterial.materialInX0 != 0.);
+    BOOST_TEST(bwdMaterial.materialInL0 != 0.);
     // check that the sum of all steps is the total material
-    for (auto& materialHit : bwd_material.collected) {
+    for (auto& materialHit : bwdMaterial.collected) {
       auto material = materialHit.material;
-      bwd_step_materialInX0 += materialHit.pathLength / material.X0();
-      bwd_step_materialInL0 += materialHit.pathLength / material.L0();
+      bwdStepMaterialInX0 += materialHit.pathLength / material.X0();
+      bwdStepMaterialInL0 += materialHit.pathLength / material.L0();
     }
 
-    BOOST_CHECK_CLOSE(bwd_material.materialInX0, bwd_step_materialInX0, 1e-5);
-    BOOST_CHECK_CLOSE(bwd_material.materialInL0, bwd_step_materialInL0, 1e-5);
+    BOOST_CHECK_CLOSE(bwdMaterial.materialInX0, bwdStepMaterialInX0, 1e-5);
+    BOOST_CHECK_CLOSE(bwdMaterial.materialInL0, bwdStepMaterialInL0, 1e-5);
 
     // get the backward output to the screen
-    if (debug_mode_bwd) {
+    if (debugModeBwd) {
       const auto& bwd_output
-          = bwd_result.template get<DebugOutput::result_type>();
+          = bwdResult.template get<DebugOutput::result_type>();
       std::cout << ">>> Backward Propgation & Navigation output " << std::endl;
       std::cout << bwd_output.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
-      for (auto& bwd_steps_o : bwd_material.collected) {
+      for (auto& bwdStepsC : bwdMaterial.collected) {
         std::cout << "--> Surface with "
-                  << bwd_steps_o.surface->geoID().toString() << std::endl;
+                  << bwdStepsC.surface->geoID().toString() << std::endl;
       }
     }
 
     // forward-backward compatibility test
-    BOOST_TEST(bwd_material.collected.size() == fwd_material.collected.size());
+    BOOST_TEST(bwdMaterial.collected.size() == fwdMaterial.collected.size());
 
-    BOOST_CHECK_CLOSE(
-        bwd_material.materialInX0, fwd_material.materialInX0, 1e-5);
-    BOOST_CHECK_CLOSE(
-        bwd_material.materialInL0, bwd_material.materialInL0, 1e-5);
+    BOOST_CHECK_CLOSE(bwdMaterial.materialInX0, fwdMaterial.materialInX0, 1e-5);
+    BOOST_CHECK_CLOSE(bwdMaterial.materialInL0, bwdMaterial.materialInL0, 1e-5);
 
     // stepping from one surface to the next
     // now go from surface to surface and check
     typename Propagator_type::template Options<ActionList_type,
                                                AbortConditions_type>
-        fwdstep_navigator_options;
+        fwdStepOptions;
 
-    fwdstep_navigator_options.maxStepSize   = 25. * units::_cm;
-    fwdstep_navigator_options.maxPathLength = 25 * units::_cm;
-    fwdstep_navigator_options.debug         = debug_mode_fwd_step;
-
-    // get the navigator and provide the TrackingGeometry
-    auto& fwdstep_navigator
-        = fwdstep_navigator_options.actionList.template get<Navigator>();
-    fwdstep_navigator.trackingGeometry  = tGeometry;
-    fwdstep_navigator.initialStepFactor = stepFactor;
-    fwdstep_navigator.debug             = debug_mode_fwd_step;
+    fwdStepOptions.maxStepSize   = 25. * units::_cm;
+    fwdStepOptions.maxPathLength = 25 * units::_cm;
+    fwdStepOptions.debug         = debugModeFwdStep;
 
     // get the material collector and configure it
-    auto& fwdstep_materialCollector = fwdstep_navigator_options.actionList
-                                          .template get<MaterialCollector>();
-    fwdstep_materialCollector.detailedCollection = true;
-    fwdstep_materialCollector.debug              = debug_mode_fwd_step;
+    auto& fwdStepMaterialCollector
+        = fwdStepOptions.actionList.template get<MaterialCollector>();
+    fwdStepMaterialCollector.detailedCollection = true;
+    fwdStepMaterialCollector.debug              = debugModeFwdStep;
 
-    double fwdstep_step_materialInX0 = 0.;
-    double fwdstep_step_materialInL0 = 0.;
+    double fwdStepStepMaterialInX0 = 0.;
+    double fwdStepStepMaterialInL0 = 0.;
 
-    if (debug_mode_fwd_step) {
+    if (debugModeFwdStep) {
       // check if the surfaces are free
       std::cout << ">>> Steps to be processed sequentially ..." << std::endl;
-      for (auto& fwd_steps_o : fwd_material.collected) {
+      for (auto& fwdStepsC : fwdMaterial.collected) {
         std::cout << "--> Surface with "
-                  << fwd_steps_o.surface->geoID().toString() << std::endl;
+                  << fwdStepsC.surface->geoID().toString() << std::endl;
       }
     }
 
     // move forward step by step through the surfaces
     const TrackParameters*              sParameters = &start;
     std::vector<const TrackParameters*> stepParameters;
-    for (auto& fwd_steps : fwd_material.collected) {
-      if (debug_mode_bwd_step)
+    for (auto& fwdSteps : fwdMaterial.collected) {
+      if (debugModeBwdStep)
         std::cout << ">>> Step : "
                   << sParameters->referenceSurface().geoID().toString()
-                  << " --> " << fwd_steps.surface->geoID().toString()
+                  << " --> " << fwdSteps.surface->geoID().toString()
                   << std::endl;
 
       // make a forward step
-      const auto& fwd_step = prop.propagate(
-          *sParameters, (*fwd_steps.surface), fwdstep_navigator_options);
+      const auto& fwdStep
+          = prop.propagate(*sParameters, (*fwdSteps.surface), fwdStepOptions);
       // get the backward output to the screen
-      if (debug_mode_fwd_step) {
-        const auto& fwdstep_output
-            = fwd_step.template get<DebugOutput::result_type>();
-        std::cout << fwdstep_output.debugString << std::endl;
+      if (debugModeFwdStep) {
+        const auto& fwdStepOutput
+            = fwdStep.template get<DebugOutput::result_type>();
+        std::cout << fwdStepOutput.debugString << std::endl;
       }
 
-      auto& fwdstep_material
-          = fwd_step.template get<MaterialCollector::result_type>();
-      fwdstep_step_materialInX0 += fwdstep_material.materialInX0;
-      fwdstep_step_materialInL0 += fwdstep_material.materialInL0;
+      auto& fwdStepMaterial
+          = fwdStep.template get<MaterialCollector::result_type>();
+      fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
+      fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
-      if (fwd_step.endParameters != nullptr) {
-        sParameters = fwd_step.endParameters->clone();
+      if (fwdStep.endParameters != nullptr) {
+        sParameters = fwdStep.endParameters->clone();
         // make sure the parameters do not run out of scope
         stepParameters.push_back(sParameters);
       }
     }
     // final destination surface
-    const Surface& dSurface = fwd_result.endParameters->referenceSurface();
+    const Surface& dSurface = fwdResult.endParameters->referenceSurface();
 
-    if (debug_mode_fwd_step)
+    if (debugModeFwdStep)
       std::cout << ">>> Step : "
                 << sParameters->referenceSurface().geoID().toString() << " --> "
                 << dSurface.geoID().toString() << std::endl;
 
-    const auto& fwdstep_final
-        = prop.propagate(*sParameters, dSurface, fwdstep_navigator_options);
+    const auto& fwdStepFinal
+        = prop.propagate(*sParameters, dSurface, fwdStepOptions);
 
-    auto& fwdstep_material
-        = fwdstep_final.template get<MaterialCollector::result_type>();
-    fwdstep_step_materialInX0 += fwdstep_material.materialInX0;
-    fwdstep_step_materialInL0 += fwdstep_material.materialInL0;
+    auto& fwdStepMaterial
+        = fwdStepFinal.template get<MaterialCollector::result_type>();
+    fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
+    fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
     // forward-forward step compatibility test
-    BOOST_CHECK_CLOSE(fwdstep_step_materialInX0, fwd_step_materialInX0, 1e-5);
-    BOOST_CHECK_CLOSE(fwdstep_step_materialInL0, fwd_step_materialInL0, 1e-5);
+    BOOST_CHECK_CLOSE(fwdStepStepMaterialInX0, fwdStepMaterialInX0, 1e-5);
+    BOOST_CHECK_CLOSE(fwdStepStepMaterialInL0, fwdStepMaterialInL0, 1e-5);
 
     // get the backward output to the screen
-    if (debug_mode_fwd_step) {
-      const auto& fwdstep_output
-          = fwdstep_final.template get<DebugOutput::result_type>();
+    if (debugModeFwdStep) {
+      const auto& fwdStepOutput
+          = fwdStepFinal.template get<DebugOutput::result_type>();
       std::cout << ">>> Forward Final Step Propgation & Navigation output "
                 << std::endl;
-      std::cout << fwdstep_output.debugString << std::endl;
+      std::cout << fwdStepOutput.debugString << std::endl;
     }
 
     // stepping from one surface to the next : backwards
     // now go from surface to surface and check
     typename Propagator_type::template Options<ActionList_type,
                                                AbortConditions_type>
-        bwdstep_navigator_options;
+        bwdStepOptions;
 
-    bwdstep_navigator_options.maxStepSize   = 25. * units::_cm;
-    bwdstep_navigator_options.maxPathLength = 25 * units::_cm;
-    bwdstep_navigator_options.direction     = backward;
-    bwdstep_navigator_options.debug         = debug_mode_bwd_step;
-
-    // get the navigator and provide the TrackingGeometry
-    auto& bwdstep_navigator
-        = bwdstep_navigator_options.actionList.template get<Navigator>();
-    bwdstep_navigator.trackingGeometry  = tGeometry;
-    bwdstep_navigator.initialStepFactor = stepFactor;
-    bwdstep_navigator.debug             = debug_mode_bwd_step;
+    bwdStepOptions.maxStepSize   = 25. * units::_cm;
+    bwdStepOptions.maxPathLength = 25 * units::_cm;
+    bwdStepOptions.direction     = backward;
+    bwdStepOptions.debug         = debugModeBwdStep;
 
     // get the material collector and configure it
-    auto& bwdstep_materialCollector = bwdstep_navigator_options.actionList
-                                          .template get<MaterialCollector>();
-    bwdstep_materialCollector.detailedCollection = true;
-    bwdstep_materialCollector.debug              = debug_mode_bwd_step;
+    auto& bwdStepMaterialCollector
+        = bwdStepOptions.actionList.template get<MaterialCollector>();
+    bwdStepMaterialCollector.detailedCollection = true;
+    bwdStepMaterialCollector.debug              = debugModeBwdStep;
 
-    double bwdstep_step_materialInX0 = 0.;
-    double bwdstep_step_materialInL0 = 0.;
+    double bwdStepStepMaterialInX0 = 0.;
+    double bwdStepStepMaterialInL0 = 0.;
 
-    if (debug_mode_bwd_step) {
+    if (debugModeBwdStep) {
       // check if the surfaces are free
       std::cout << ">>> Steps to be processed sequentially ..." << std::endl;
-      for (auto& bwd_steps_o : bwd_material.collected) {
+      for (auto& bwdStepsC : bwdMaterial.collected) {
         std::cout << "--> Surface with "
-                  << bwd_steps_o.surface->geoID().toString() << std::endl;
+                  << bwdStepsC.surface->geoID().toString() << std::endl;
       }
     }
 
     // move forward step by step through the surfaces
-    sParameters = fwd_result.endParameters.template get();
-    for (auto& bwd_steps : bwd_material.collected) {
-      if (debug_mode_bwd_step)
+    sParameters = fwdResult.endParameters.template get();
+    for (auto& bwdSteps : bwdMaterial.collected) {
+      if (debugModeBwdStep)
         std::cout << ">>> Step : "
                   << sParameters->referenceSurface().geoID().toString()
-                  << " --> " << bwd_steps.surface->geoID().toString()
+                  << " --> " << bwdSteps.surface->geoID().toString()
                   << std::endl;
       // make a forward step
-      const auto& bwd_step = prop.propagate(
-          *sParameters, (*bwd_steps.surface), bwdstep_navigator_options);
+      const auto& bwdStep
+          = prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions);
       // get the backward output to the screen
-      if (debug_mode_bwd_step) {
-        const auto& bwdstep_output
-            = bwd_step.template get<DebugOutput::result_type>();
-        std::cout << bwdstep_output.debugString << std::endl;
+      if (debugModeBwdStep) {
+        const auto& bwdStepOutput
+            = bwdStep.template get<DebugOutput::result_type>();
+        std::cout << bwdStepOutput.debugString << std::endl;
       }
 
-      auto& bwdstep_material
-          = bwd_step.template get<MaterialCollector::result_type>();
-      bwdstep_step_materialInX0 += bwdstep_material.materialInX0;
-      bwdstep_step_materialInL0 += bwdstep_material.materialInL0;
+      auto& bwdStepMaterial
+          = bwdStep.template get<MaterialCollector::result_type>();
+      bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
+      bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
-      if (bwd_step.endParameters != nullptr) {
-        sParameters = bwd_step.endParameters->clone();
+      if (bwdStep.endParameters != nullptr) {
+        sParameters = bwdStep.endParameters->clone();
         // make sure the parameters do not run out of scope
         stepParameters.push_back(sParameters);
       }
@@ -399,30 +369,30 @@ namespace Test {
     // final destination surface
     const Surface& dbSurface = start.referenceSurface();
 
-    if (debug_mode_bwd_step)
+    if (debugModeBwdStep)
       std::cout << ">>> Step : "
                 << sParameters->referenceSurface().geoID().toString() << " --> "
                 << dSurface.geoID().toString() << std::endl;
 
-    const auto& bwdstep_final
-        = prop.propagate(*sParameters, dbSurface, bwdstep_navigator_options);
+    const auto& bwdStepFinal
+        = prop.propagate(*sParameters, dbSurface, bwdStepOptions);
 
-    auto& bwdstep_material
-        = bwdstep_final.template get<MaterialCollector::result_type>();
-    bwdstep_step_materialInX0 += bwdstep_material.materialInX0;
-    bwdstep_step_materialInL0 += bwdstep_material.materialInL0;
+    auto& bwdStepMaterial
+        = bwdStepFinal.template get<MaterialCollector::result_type>();
+    bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
+    bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
     // forward-forward step compatibility test
-    BOOST_CHECK_CLOSE(bwdstep_step_materialInX0, bwd_step_materialInX0, 1e-5);
-    BOOST_CHECK_CLOSE(bwdstep_step_materialInL0, bwd_step_materialInL0, 1e-5);
+    BOOST_CHECK_CLOSE(bwdStepStepMaterialInX0, bwdStepMaterialInX0, 1e-5);
+    BOOST_CHECK_CLOSE(bwdStepStepMaterialInL0, bwdStepMaterialInL0, 1e-5);
 
     // get the backward output to the screen
-    if (debug_mode_bwd_step) {
-      const auto& bwdstep_output
-          = bwdstep_final.template get<DebugOutput::result_type>();
+    if (debugModeBwdStep) {
+      const auto& bwdStepOutput
+          = bwdStepFinal.template get<DebugOutput::result_type>();
       std::cout << ">>> Forward Final Step Propgation & Navigation output "
                 << std::endl;
-      std::cout << bwdstep_output.debugString << std::endl;
+      std::cout << bwdStepOutput.debugString << std::endl;
     }
   }
 
