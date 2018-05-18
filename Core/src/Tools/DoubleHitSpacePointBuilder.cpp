@@ -47,6 +47,67 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
   return diffTheta2 + diffPhi2;
 }
 
+std::vector<Acts::BinningData>
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    binningData(Acts::PlanarModuleCluster const* hit)
+{
+  // Receive the binning
+  auto& sur     = hit->referenceSurface();
+  auto  segment = dynamic_cast<const Acts::CartesianSegmentation*>(
+      &(sur.associatedDetectorElement()->digitizationModule()->segmentation()));
+  return segment->binUtility().binningData();
+}
+
+std::pair<size_t, size_t>
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    binOfHit(Acts::PlanarModuleCluster const* hit)
+{
+  // Calculate the local coordinates of the hit
+  const Acts::Vector2D local = localCoords(*hit);
+
+  auto binData = binningData(hit);
+
+  // Search the x-/y-bin hit
+  size_t binX = binData[0].searchLocal(local);
+  size_t binY = binData[1].searchLocal(local);
+
+  return std::make_pair(binX, binY);
+}
+
+const std::vector<std::pair<Acts::PlanarModuleCluster const*,
+                            Acts::PlanarModuleCluster const*>>
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    clusterSpacePointsFrontSide(
+        const std::vector<Acts::PlanarModuleCluster const*>& hits)
+{
+  std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins;
+  auto binData = binningData(hits[0]);
+
+  bins.resize(binData[0].bins());
+  for (unsigned int index = 0; index < bins.size(); index++)
+    bins[index].resize(binData[1].bins());
+
+  for (unsigned int iHits = 0; iHits < hits.size(); iHits++) {
+    std::pair<size_t, size_t> bin = binOfHit(hits[iHits]);
+    bins[bin.first][bin.second] = hits[iHits];
+  }
+
+  std::vector<std::pair<Acts::PlanarModuleCluster const*,
+                        Acts::PlanarModuleCluster const*>>
+      clusters;
+
+  if (bins.size() > bins[0].size())
+    for (unsigned int iRow = 0; iRow < bins.size(); iRow++) {
+    }  // TODO
+  else {
+    // TODO
+  }
+  return clusters;
+}
+
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
@@ -67,8 +128,6 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     dhCfg = std::make_shared<Acts::DoubleHitSpacePointConfig>(
         Acts::DoubleHitSpacePointConfig());
 
-  // TODO: only the closest differences get selected -> some points are not
-  // taken into account
   // Declare helper variables
   double       currentDiff;
   double       diffMin;
@@ -80,7 +139,6 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     diffMin = std::numeric_limits<double>::max();
     // Set the corresponding index to an element not in the list of hits
     hitMin = hits2.size();
-    std::cout << hits1.size() << "\t" << hits2.size() << std::endl;
     for (unsigned int iHits2 = 0; iHits2 < hits2.size(); iHits2++) {
       // Calculate the distances between the hits
       currentDiff = differenceOfHits(*(hits1[iHits1]), *(hits2[iHits2]), dhCfg);
@@ -94,8 +152,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     // Store the best (=closest) result
     if (hitMin < hits2.size()) {
       Acts::DoubleHitSpacePoint tmpSpacePoint;
-      tmpSpacePoint.hitModule1 = hits1[iHits1];
-      tmpSpacePoint.hitModule2 = hits2[hitMin];
+      tmpSpacePoint.hitModuleFront = hits1[iHits1];
+      tmpSpacePoint.hitModuleBack  = hits2[hitMin];
       spacePoints.push_back(tmpSpacePoint);
     }
   }
@@ -288,8 +346,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
 
     // Calculate the ends of the SDEs
-    const auto& ends1 = endsOfStrip(*(hits.hitModule1));
-    const auto& ends2 = endsOfStrip(*(hits.hitModule2));
+    const auto& ends1 = endsOfStrip(*(hits.hitModuleFront));
+    const auto& ends2 = endsOfStrip(*(hits.hitModuleBack));
 
     /// The following algorithm is meant for finding the position on the first
     /// strip if there is a corresponding hit on the second strip. The

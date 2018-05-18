@@ -20,9 +20,13 @@ namespace Acts {
 struct DoubleHitSpacePoint
 {
   /// Storage of the hit on a surface
-  PlanarModuleCluster const* hitModule1;
+  //~ std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>
+  //hitModuleFront;
+  PlanarModuleCluster const* hitModuleFront;
   /// Storage of the hit on another surface
-  PlanarModuleCluster const* hitModule2;
+  PlanarModuleCluster const* hitModuleBack;
+  /// Combined coordinate of a cluster of hits
+  Vector3D clusterCoords = {0., 0., 0.};
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
 };
@@ -68,8 +72,8 @@ public:
   /// a space point. Since this is not needed for this class this function is
   /// deleted.
   static void
-  addHits(std::vector<DoubleHitSpacePoint>& spacePointStorage,
-          const std::vector<Acts::PlanarModuleCluster const*>& hits)
+  addHits(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
+          const std::vector<PlanarModuleCluster const*>& hits)
       = delete;
 
   /// @brief Searches possible combinations of two hits on different surfaces
@@ -82,10 +86,10 @@ public:
   /// @note The structure of @p hits is meant to be hits[Surfaces][Hits on a
   /// surface]
   static void
-  addHits(std::vector<DoubleHitSpacePoint>& spacePointStorage,
-          const std::vector<Acts::PlanarModuleCluster const*>& hits1,
-          const std::vector<Acts::PlanarModuleCluster const*>& hits2,
-          const std::shared_ptr<DoubleHitSpacePointConfig>     cfg = nullptr);
+  addHits(std::vector<DoubleHitSpacePoint>&                spacePointStorage,
+          const std::vector<PlanarModuleCluster const*>&   hits1,
+          const std::vector<PlanarModuleCluster const*>&   hits2,
+          const std::shared_ptr<DoubleHitSpacePointConfig> cfg = nullptr);
 
   /// @brief Calculates the space points out of a given collection of hits
   /// on several strip detectors and stores the data
@@ -161,6 +165,26 @@ private:
   differenceOfHits(const PlanarModuleCluster&                       hit1,
                    const PlanarModuleCluster&                       hit2,
                    const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
+
+  static std::vector<BinningData>
+  binningData(PlanarModuleCluster const* hit);
+
+  // TODO: differenceofhits needs to be calculated with a vector3d & a hit
+  /// @brief Calculates the bin of a hit
+  /// @param hit recorded hit
+  /// @return channel 0 and 1 of the hit
+  static std::pair<size_t, size_t>
+  binOfHit(PlanarModuleCluster const* hit);
+
+  /// @brief Build pair of hits on neighboring bins
+  /// @param hits collection of hits on a front surface
+  /// @return collection of found pairs
+  static const std::vector<std::pair<Acts::PlanarModuleCluster const*,
+                                     Acts::PlanarModuleCluster const*>>
+  clusterSpacePointsFrontSide(
+      const std::vector<PlanarModuleCluster const*>& hits);
+
+  // TODO: Clustering backside
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
