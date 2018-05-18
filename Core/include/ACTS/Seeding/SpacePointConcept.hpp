@@ -22,7 +22,8 @@
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_x), x, 0)
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_y), y, 0)
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_z), z, 0)
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_covariance), covariance, 0)
+BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_r), r, 0)
+//BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_covariance), covariance, 0)
 // clang-format on
 
 namespace Acts {
@@ -35,11 +36,12 @@ namespace concept {
   namespace anySpacepointDetail {
     namespace mpl = boost::mpl;
     using spacepointConcept = mpl::vector<has_x <float (), const bte::_self>,
-                                     has_y <float (), const bte::_self>,
-                                     has_z <float (), const bte::_self>,
-                                     has_covariance <const ActsSymMatrixF<5> (), const bte::_self>,
-                                     bte::copy_constructible<>,
-                                     bte::relaxed>;
+                                          has_y <float (), const bte::_self>,
+                                          has_z <float (), const bte::_self>,
+                                          has_r <float (), const bte::_self>,
+//                                          has_covariance <const ActsSymMatrixF<5> (), const bte::_self>,
+                                          bte::copy_constructible<>,
+                                          bte::relaxed>;
 
   }
 /// Contains any axis type and exposes common methods

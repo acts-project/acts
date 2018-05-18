@@ -16,14 +16,13 @@ namespace Seeding{
     
   public:
     
-    SPForSeed()                                             ;
-    SPForSeed(Acts::concept::AnySpacePoint<>* const&, const std::array<float,2>);
+    SPForSeed() = delete;
+    SPForSeed(const Acts::concept::AnySpacePoint<>*,
+              const std::array<float,2> offsetXY,
+              const std::array<float,2> cov)                ;
     SPForSeed(const SPForSeed&)                             ;
     ~SPForSeed() = default                                  ;
     SPForSeed& operator  = (const SPForSeed&)               ;
-
-    void set(Acts::concept::AnySpacePoint<>* const&, const std::array<float,2>)   ;
-    void setQuality(float)                                  ;
 
     const Acts::concept::AnySpacePoint<>* spacepoint                            ; 
     const float&          x() const {return m_x;}
@@ -50,39 +49,29 @@ namespace Seeding{
   // Inline methods
   /////////////////////////////////////////////////////////////////////////////////
 
-  
-  inline SPForSeed::SPForSeed ()
-    {
-      spacepoint = 0;
-      m_x     = 0.;
-      m_y     = 0.;
-      m_z     = 0.;
-      m_r     = 0.;
-      m_covr  = 0.;
-      m_covz  = 0.;
-   }
-
-  
   inline SPForSeed& SPForSeed::operator = 
     (const SPForSeed& sp) 
     {
-      if(&sp!=this) {
-    spacepoint  = sp.spacepoint;
-    m_x         = sp.m_x       ;
-    m_y         = sp.m_y       ;
-    m_z         = sp.m_z       ;
-    m_r         = sp.m_r       ;
-    m_covr      = sp.m_covr    ;
-    m_covz      = sp.m_covz    ;
-      }
+      spacepoint  = sp.spacepoint;
+      m_x         = sp.m_x       ;
+      m_y         = sp.m_y       ;
+      m_z         = sp.m_z       ;
+      m_r         = sp.m_r       ;
+      m_covr      = sp.m_covr    ;
+      m_covz      = sp.m_covz    ;
       return(*this);
     }
  
-  
   inline SPForSeed::SPForSeed
-    (Acts::concept::AnySpacePoint<>* const& sp, const std::array<float,2> r) 
+    (const Acts::concept::AnySpacePoint<>* sp, const std::array<float,2> offsetXY, const std::array<float,2> cov) 
     {
-      set(sp,r); 
+      spacepoint = sp  ;
+      m_x        = sp->x()+offsetXY[0];
+      m_y        = sp->y()+offsetXY[1];
+      m_z        = sp->z();
+      m_r        = sqrt(m_x*m_x+m_y*m_y);
+      m_covr     = cov[0];
+      m_covz     = cov[1];
     }
 
 
@@ -96,20 +85,5 @@ namespace Seeding{
       *this = sp;
     }
 
-  /////////////////////////////////////////////////////////////////////////////////
-  // Set
-  /////////////////////////////////////////////////////////////////////////////////
-
-  
-  inline void SPForSeed::set
-    (Acts::concept::AnySpacePoint<>* const& sp,const std::array<float,2> r)
-    {
-      spacepoint = sp  ;
-      m_x        = sp->x()+r[0];
-      m_y        = sp->y()+r[1];
-      m_z        = sp->z();
-      m_r        =sqrt(m_x*m_x+m_y*m_y);
-    } 
- 
 } // end of namespace Seeding
 } // end of namespace Acts

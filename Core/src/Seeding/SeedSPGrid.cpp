@@ -20,14 +20,14 @@ std::unique_ptr<Acts::Seeding::SPGrid> Acts::Seeding::SPGridCreator::createGrid(
 
   // divide 2pi by angle delta to get number of phi-bins
   // size is always 2pi even for regions of interest
-  int phiBins = 2*M_PI/(outerAngle-innerAngle);
+  int phiBins = std::ceil(2*M_PI/(outerAngle-innerAngle));
   Acts::detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed> phiAxis(-M_PI, M_PI, phiBins);
 
   // TODO: can probably be optimized using smaller z bins 
   // and returning (multiple) neighbors only in one z-direction for forward seeds
   // FIXME: zBinSize must include scattering
   float zBinSize = config->cotThetaMax * config->deltaRMax;
-  int zBins = (config->zMax - config->zMin)/zBinSize;
+  int zBins = std::ceil((config->zMax - config->zMin)/zBinSize);
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound> zAxis(config->zMin, config->zMax, zBins);
 
   Acts::Seeding::SPGrid grid(std::make_tuple(phiAxis, zAxis));

@@ -7,11 +7,18 @@
 namespace Acts{
 namespace Seeding{
   struct SeedFilterConfig{
+    // the allowed delta between two seed radii for them to be considered compatible.
     float deltaInvHelixRadius = 0.00003;
+    // the impact parameters (d0) is multiplied by this factor and subtracted from quality
     float impactQualityFactor = 1.;
+    // seed quality increased by this value if a compatible seed has been found.
     float compatSeedQuality = 200.;
+    // minimum distance between compatible seeds to be considered for quality boost
     float deltaRMin = 5.;
+    // in jets many seeds may be found per middle space point.
+    // only seeds with the highest quality will be kept if this limit is reached.
     int maxSeedsPerSpM = 10;
+    // how often do you want to increase the quality of a seed for finding a compatible seed?
     int compatSeedLimit = 2;
   };
 
@@ -27,18 +34,18 @@ namespace Seeding{
     std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >
     filterSeeds_2SpFixed(std::shared_ptr<SPForSeed> bottomSP,
                          std::shared_ptr<SPForSeed> middleSP,
-                         std::vector<std::shared_ptr<SPForSeed>> topSpVec,
-                         std::vector<float> invHelixRadiusVec,
-                         std::vector<float> impactParametersVec,
+                         std::vector<std::shared_ptr<SPForSeed>>& topSpVec,
+                         std::vector<float>& invHelixRadiusVec,
+                         std::vector<float>& impactParametersVec,
                          float zOrigin) override;
 
     virtual
-    std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >
-    filterSeeds_1SpFixed(std::vector<std::pair<float, std::shared_ptr<InternalSeed> > > seedsPerSpM) override;
+    std::vector<std::shared_ptr<InternalSeed> >
+    filterSeeds_1SpFixed(std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >& seedsPerSpM) override;
 
     virtual
     std::vector<std::shared_ptr<Seed> >
-    filterSeeds_byRegion(std::vector<std::pair<float, std::shared_ptr<InternalSeed> > > seedsPerRegion) override;
+    filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& seedsPerRegion) override;
 
     private:
     const SeedFilterConfig m_cfg;

@@ -17,9 +17,9 @@ namespace Seeding{
   std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >
   SeedFilter::filterSeeds_2SpFixed(std::shared_ptr<SPForSeed> bottomSP,
                                    std::shared_ptr<SPForSeed> middleSP,
-                                   std::vector<std::shared_ptr<SPForSeed >> topSpVec,
-                                   std::vector<float> invHelixRadiusVec,
-                                   std::vector<float> impactParametersVec,
+                                   std::vector<std::shared_ptr<SPForSeed >>& topSpVec,
+                                   std::vector<float>& invHelixRadiusVec,
+                                   std::vector<float>& impactParametersVec,
                                    float zOrigin){
   
     std::vector<std::pair<float, std::shared_ptr<InternalSeed> > > selectedSeeds;
@@ -62,7 +62,7 @@ namespace Seeding{
         if(compatibleSeedRadii.size() >= m_cfg.compatSeedLimit) break;
       }
       // discard low quality seeds
-      if (m_qualityTool->qualityCut(quality, bottomSP, middleSP, topSpVec.at(i))) continue;
+      if (!m_qualityTool->passesQualityCut(quality, bottomSP, middleSP, topSpVec.at(i))) continue;
       selectedSeeds.push_back(std::make_pair(quality, std::make_shared<InternalSeed>(bottomSP,middleSP,topSpVec.at(i),zOrigin)));
       }
     return selectedSeeds;
@@ -72,13 +72,13 @@ namespace Seeding{
 
   // after creating all seeds with a common middle space point, filter again
   std::vector<std::shared_ptr<InternalSeed> >
-  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > > seedsPerSpM){
+  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM){
 
     //sort by quality and iterate only up to configured max number of seeds per middle SP
     std::sort(seedsPerSpM.begin(),seedsPerSpM.end(),comQuality());
     int maxSeeds = seedsPerSpM.size();
-    if(itEnd > m_cfg.maxSeedsPerSpM){
-      itEnd = m_cfg.maxSeedsPerSpM + 1;
+    if(maxSeeds > m_cfg.maxSeedsPerSpM){
+      maxSeeds = m_cfg.maxSeedsPerSpM + 1;
     }
     auto itBegin = seedsPerSpM.begin();
     auto it = seedsPerSpM.begin();
@@ -86,8 +86,7 @@ namespace Seeding{
     std::vector<std::shared_ptr<InternalSeed> > filteredSeeds;
     // default filter removes the last seeds if maximum amount exceeded
     // ordering by quality by filterSeeds_2SpFixed means these are the lowest quality seeds
-    for(; it<=itBegin+itEnd; ++it) {
-      float w = (*it).first ;
+    for(; it<itBegin+maxSeeds; ++it) {
       std::shared_ptr<InternalSeed> internalSeed       = (*it).second;
       filteredSeeds.push_back(internalSeed);
     }
@@ -97,7 +96,7 @@ namespace Seeding{
 
 
   std::vector<std::shared_ptr<Seed> >
-  SeedFilter::filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> > regionSeeds){
+  SeedFilter::filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& regionSeeds){
 
     std::vector<std::shared_ptr<Seed> > outputSeeds;
     for(auto s : regionSeeds){

@@ -4,6 +4,10 @@
 #include "ACTS/Seeding/ISeedFilter.hpp"
 
 
+// TODO: remove all debug output
+#include <iostream>
+
+
 namespace Acts{
 namespace Seeding{
 
@@ -29,7 +33,7 @@ New_Seedmaker::initialize
 
 void 
 New_Seedmaker::newEvent
-( std::vector<SpacePoint*> spVec, 
+( std::vector<const Acts::concept::AnySpacePoint<>*> spVec, 
   std::shared_ptr<Acts::Seeding::Cache> cache,
   std::shared_ptr<Acts::Seeding::Config> config)
 {
@@ -43,14 +47,15 @@ New_Seedmaker::newEvent
 
   std::sort(spVec.begin(),spVec.end(),comR());
   for(auto sp : spVec){
-    SPForSeed sps(sp, config->beamPos);
-    config->covarianceTool->setCovariances(sps,config->zAlign, config->rAlign,config->sigmaError);
+    std::array<float,2> cov = config->covarianceTool->getCovariances(sp,config->zAlign, config->rAlign, config->sigmaError);
+    SPForSeed sps(sp, config->beamPos,cov);
     float spPhi = sps.phi();
     if(spPhi > phiMax || spPhi < phiMin) continue;
     float spZ = sps.z();
     if(spZ > zMax || spZ < zMin) continue;
     Acts::Vector2D spLocation(spPhi,spZ);
-    std::vector<std::shared_ptr<SPForSeed > > bin = grid->at(spLocation);
+    std::vector<std::shared_ptr<SPForSeed > >& bin = grid->at(spLocation);
+    //grid->at(spLocation)
     bin.push_back(std::make_shared<SPForSeed>(sps));
   }
   cache->binnedSP = std::move(grid);
@@ -89,7 +94,7 @@ New_Seedmaker::production3Sp
   std::shared_ptr<Acts::Seeding::Config> config) 
 {
   std::vector<std::shared_ptr<SPForSeed> > compatBottomSP, compatTopSP;
-  std::vector<std::pair<float,std::shared_ptr<InternalSeed > > > regionSeeds;
+  std::vector<std::shared_ptr<InternalSeed> > regionSeeds;
 
   // middle space point
   for(auto spM : currentBin){
@@ -97,6 +102,8 @@ New_Seedmaker::production3Sp
     float zM = spM->z();
     float covrM = spM->covr();
     float covzM = spM->covz();
+
+    compatBottomSP.clear();
 
     // bottom space point
     for(auto bottomBinIndex : bottomBinIndices){
@@ -109,7 +116,7 @@ New_Seedmaker::production3Sp
         // if r-distance is too small, break because bins are r-sorted
         if (deltaR < config->deltaRMin) break;
         // ratio Z/R (forward angle) of space point duplet
-        float cotTheta = (spB->z()-zM)/deltaR;
+        float cotTheta = (zM-spB->z())/deltaR;
         if(std::fabs(cotTheta) > config->cotThetaMax) continue;
         // duplet origin on z axis within collision region?
         float zOrigin = zM-rM*cotTheta;
@@ -120,13 +127,14 @@ New_Seedmaker::production3Sp
     // no bottom SP found -> try next spM
     if(compatBottomSP.size()==0) continue;
     
+    compatTopSP.clear();
 
     for(auto topBinIndex : topBinIndices){ 
       auto topBin = cache->binnedSP->at(topBinIndex);
       for (auto spT : topBin){
         float rT = spT->radius();
         float deltaR = rT-rM;
-        // condition is opposite of condition for bottom SP
+        // this condition is the opposite of the condition for bottom SP
         if(deltaR < config->deltaRMin ) continue;
         if(deltaR > config->deltaRMax ) break;
 
@@ -165,9 +173,14 @@ New_Seedmaker::production3Sp
       float sinTheta2 = 1/iSinTheta2;
       // calculate max scattering for min momentum at the seed's theta angle
       // scattering angles are assumed to be small (<25°) so tan(scatter) = scatter
-      float scatteringInRegion2 = cache->maxScatteringAngle2 * sinTheta2;
+      // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
+      // approximating cotTheta by scaling by 1/sin^4(theta), resolving with pT to p scaling
+      // --> only divide by sin^2(theta)
+      // approximation breaks for angles above ~0.04 rad
+      float scatteringInRegion2 = cache->maxScatteringAngle2 * iSinTheta2;
       std::cout << "max scattering angle in this detector region (1 sigma): " << sqrt(scatteringInRegion2) << std::endl;
-      scatteringInRegion2 *= config->sigmaScattering;
+      // multiply the squared sigma onto the squared scattering
+      scatteringInRegion2 *= config->sigmaScattering*config->sigmaScattering;
 
       // clear all vectors used in each inner for loop
       topSpVec.clear();
@@ -179,13 +192,16 @@ New_Seedmaker::production3Sp
         // add errors of spB-spM and spM-spT pairs and add the correlation term for errors on spM
         float error = lt.Er + ErB + 2*(cotThetaB * lt.cotTheta * covrM + covzM) * iDeltaRB * lt.iDeltaR;
 
-        // tan(theta1-theta2) = (cot(theta2)-cot(theta1))/(cot(theta1)*cot(theta2)+1)
-        float deltaTanTheta = std::abs((cotThetaB - lt.cotTheta)/(cotThetaB*lt.cotTheta+1));
-        float deltaTan2Theta = deltaTanTheta*deltaTanTheta-1/error;
+//        // tan(theta1-theta2) = (cot(theta2)-cot(theta1))/(cot(theta1)*cot(theta2)+1)
+//        float deltaTanTheta = std::abs((cotThetaB - lt.cotTheta)/(cotThetaB*lt.cotTheta+1));
+//        float deltaTan2Theta = deltaTanTheta*deltaTanTheta-error*iSinTheta2;
+        float deltaCotTheta = cotThetaB - lt.cotTheta;
+        float dCotThetaCorrected = deltaCotTheta*deltaCotTheta - error;
 
-        if ( deltaTan2Theta > scatteringInRegion2) continue;
+        // if deltaTheta larger than the scattering for the lower pT cut, skip
+        if ( dCotThetaCorrected > scatteringInRegion2) continue;
 
-        // protects from division by 0
+        // protects against division by 0
         float dU  = lt.U-Ub; if(dU == 0.) continue ;
         // A and B are evaluated as a function of the circumference parameters x_0 and y_0
         float A   = (lt.V-Vb)/dU                     ;
@@ -193,16 +209,18 @@ New_Seedmaker::production3Sp
         float B   = Vb-A*Ub                          ;
         float B2  = B*B                              ;
         // sqrt(S2)/B = helixradius
-        if(S2 > B2*cache->minHelixRadius2) continue;
+        // calculated radius must not be smaller than minimum radius
+        if(S2 < B2*cache->minHelixRadius2) continue;
         float S = sqrt(S2);
         // calculate 1/helixradius: B/sqrt(S2)
         float iHelixradius = B/S;
         // calculate scattering for p(T) calculated from seed curvature
         float pT2scatter = iHelixradius * cache->highland/cache->pTPerHelixRadius;
         pT2scatter *= pT2scatter;
-        //convert p(T) to p
-        float p2scatter = pT2scatter * sinTheta2;
-        if(deltaTan2Theta > p2scatter * config->sigmaScattering) continue;
+        //convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta) from rad to deltaCotTheta
+        float p2scatter = pT2scatter * iSinTheta2;
+        // if deltaTheta larger than allowed scattering for calculated pT, skip
+        if(dCotThetaCorrected > p2scatter * config->sigmaScattering* config->sigmaScattering) continue;
         // A and B allow calculation of impact params in U/V plane with linear function
         // (in contrast to x^2 in x/y plane)
         float Im  = fabs((A-B*rM)*rM)                ;
@@ -215,15 +233,18 @@ New_Seedmaker::production3Sp
         }
       }
       if(!topSpVec.empty()) {
-        seedsPerSpM = config->seedFilter->filterSeeds_2SpFixed(compatBottomSP.at(b),
+        std::vector<std::pair<float, std::shared_ptr<InternalSeed > > > sameTrackSeeds;
+        sameTrackSeeds = config->seedFilter->filterSeeds_2SpFixed(compatBottomSP.at(b),
                                                                spM,
                                                                topSpVec,
                                                                curvatures,
                                                                impactParameters,
                                                                Zob);
+        seedsPerSpM.insert(seedsPerSpM.end(), sameTrackSeeds.begin(), sameTrackSeeds.end());
       }
     }
-    auto filteredSpMSeeds = config->seedFilter->filterSeeds_1SpFixed(seedsPerSpM);
+    std::vector<std::shared_ptr<InternalSeed> > filteredSpMSeeds;
+    filteredSpMSeeds = config->seedFilter->filterSeeds_1SpFixed(seedsPerSpM);
     regionSeeds.insert(regionSeeds.end(), filteredSpMSeeds.begin(), filteredSpMSeeds.end());
   }
   return config->seedFilter->filterSeeds_byRegion(regionSeeds);
@@ -259,8 +280,9 @@ void New_Seedmaker::transformCoordinates
     // 1/(length of M -> SP) 
     float iDeltaR2 = 1./(deltaX*deltaX+deltaY*deltaY);
     float iDeltaR = sqrt(iDeltaR2);
+    // 
+    int bottomFactor = 1 * (!bottom) - 1*bottom ;
     // cot_theta = (deltaZ/deltaR)
-    int bottomFactor = 1 * (!bottom) - 1*bottom;
     float cot_theta = deltaZ*iDeltaR*bottomFactor;
     // VERY frequent (SP^3) access
     LinCircle l;
@@ -273,11 +295,11 @@ void New_Seedmaker::transformCoordinates
     // is transformed into
     // 1 - 2x_0*u - 2y_0*v = 0
     // using the following m_U and m_V
-    // (u = A + B*v); A and B are used later on
+    // (u = A + B*v); A and B are created later on
     l.U    = x*iDeltaR2                                             ;
     l.V    = y*iDeltaR2                                             ;
     //error term for sp-pair without correlation of middle space point
-    l.Er   = ((covzM+sp->covz())+(cot_theta*cot_theta)*(covrM+sp->covr()))*iDeltaR2*bottomFactor;
+    l.Er   = ((covzM+sp->covz())+(cot_theta*cot_theta)*(covrM+sp->covr()))*iDeltaR2;
     linCircleVec.push_back(l);
   }
 }

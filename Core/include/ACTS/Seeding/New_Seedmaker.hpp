@@ -1,5 +1,4 @@
-#ifndef New_Seedmaker_H
-#define New_Seedmaker_H
+#pragma once
 
 #include <list>
 #include <string>
@@ -14,10 +13,7 @@
 #include "ACTS/Seeding/InternalSeed.hpp"
 #include "ACTS/Seeding/SeedmakerConfig.hpp"
 #include "ACTS/Seeding/SeedmakerCache.hpp"
-#include "ACTS/Seeding/SpacePoint.hpp"
-
-/// ist das kunst oder kann das weg?
-#include <iostream>
+#include "ACTS/Seeding/SpacePointConcept.hpp"
 
 namespace Acts {
   namespace Seeding{
@@ -40,14 +36,14 @@ namespace Acts {
 
       void
       newEvent
-       (std::vector<SpacePoint*> spVec,
+       (std::vector<const Acts::concept::AnySpacePoint<>*> spVec,
         std::shared_ptr<Acts::Seeding::Cache> cache,
         std::shared_ptr<Acts::Seeding::Config> config);
 
       
       std::vector<std::shared_ptr<Seed> > 
       production3Sp (std::shared_ptr<Acts::Seeding::Cache> cache,
-                          std::shared_ptr<Acts::Seeding::Config> config);
+                     std::shared_ptr<Acts::Seeding::Config> config);
 
       
     protected:
@@ -96,10 +92,8 @@ public:
 class comR {
 public:
   
-  bool operator()(SpacePoint* i1, SpacePoint* i2){
+  bool operator()(const Acts::concept::AnySpacePoint<>* i1, const Acts::concept::AnySpacePoint<>* i2){
     return i1->r() < i2->r();
   }
 };
 #include "ACTS/Seeding/New_Seedmaker.ipp"
-
-#endif // New_Seedmaker_H
