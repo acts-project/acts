@@ -8,6 +8,6 @@ target_link_libraries (MaterialPlugin PUBLIC Acts::Core Acts::Legacy)
 install (TARGETS MaterialPlugin
          EXPORT ActsMaterialPluginTargets
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install (DIRECTORY include/ACTS DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install (DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 acts_add_targets_to_cdash_project(PROJECT MaterialPlugin TARGETS MaterialPlugin)

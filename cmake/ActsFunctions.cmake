@@ -54,6 +54,13 @@ function (acts_add_test_to_cdash_project)
   endforeach ()
 endfunction ()
 
+# This functions adds a library for acts
+# It registers the library unprefixed locally and sets up an 
+# alias which is namespaces Acts::. This allows usage of Acts::LibName
+# when linking against targets within this project and if core is included as 
+# a subdirectory.
+# The library output file names is set to ActsLibName, to compensate for 
+# CMake not outputting the namespace.
 function (acts_add_library NAME ...)
   list(REMOVE_AT ARGV 0)
   set(lib_type "${ARGV1}")
