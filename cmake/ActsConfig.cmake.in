@@ -1,10 +1,10 @@
-# - Config file for the ACTS package
+# - Config file for the Acts package
 #
 # It include the cmake targets of all defined components. Additionally, the 
 # following variables are set:
-# - ACTS_INCLUDE_DIR ... directory containing the ACTS header files
-# - ACTS_LIBRARY_DIR ... directory containing the ACTS libraries
-# - compiler flags used during the compilation of ACTS:
+# - ACTS_INCLUDE_DIR ... directory containing the Acts header files
+# - ACTS_LIBRARY_DIR ... directory containing the Acts libraries
+# - compiler flags used during the compilation of Acts:
 #  + ACTS_CXX_FLAGS
 #  + ACTS_CXX_FLAGS_DEBUG
 #  + ACTS_CXX_FLAGS_MINSIZEREL
@@ -19,9 +19,12 @@
 
 set(_supported_components @_supported_components@)
 
+# copy version to all uppercase
+set(ACTS_VERSION "${Acts_VERSION}")
+
 # print information about found version
-if (NOT (${ACTS_FIND_QUIETLY}))
-  message (STATUS "found ACTS version ${ACTS_VERSION}")
+if (NOT (${Acts_FIND_QUIETLY}))
+  message (STATUS "found Acts version ${Acts_VERSION}")
   message (STATUS "supported components are:")
   foreach (_scomp ${_supported_components})
     message (STATUS "   - ${_scomp}")
@@ -29,33 +32,33 @@ if (NOT (${ACTS_FIND_QUIETLY}))
 endif()
 
 # check for all required components
-foreach (_comp ${ACTS_FIND_COMPONENTS})
+foreach (_comp ${Acts_FIND_COMPONENTS})
   # check if this component is supported
   if (NOT ";${_supported_components};" MATCHES ";${_comp};")
     # not supported, but required -> fail
-    if (${ACTS_FIND_REQUIRED_${_comp}})
-      set (ACTS_FOUND False)
+    if (${Acts_FIND_REQUIRED_${_comp}})
+      set (Acts_FOUND False)
       message (FATAL_ERROR "required component \"${_comp}\" not found")
     # not supported and optional -> skip
     else ()
-      list (REMOVE_ITEM ACTS_FIND_COMPONENTS ${_comp})
-      if (NOT (${ACTS_FIND_QUIETLY}))
+      list (REMOVE_ITEM Acts_FIND_COMPONENTS ${_comp})
+      if (NOT (${Acts_FIND_QUIETLY}))
       	message (STATUS "optional component \"${_comp}\" not found")
       endif ()
     endif ()
   endif ()
 endforeach ()
 
-if (NOT (${ACTS_FIND_QUIETLY}))
+if (NOT (${Acts_FIND_QUIETLY}))
   message (STATUS "loading components:")
 endif ()
-foreach (_comp ${ACTS_FIND_COMPONENTS})
-  if (NOT (${ACTS_FIND_QUIETLY}))
+foreach (_comp ${Acts_FIND_COMPONENTS})
+  if (NOT (${Acts_FIND_QUIETLY}))
     message (STATUS "   - ${_comp}")
   endif ()
   # - Include the targets file to create the imported targets that a client can
   # link to (libraries) or execute (programs)
-  include ("${CMAKE_CURRENT_LIST_DIR}/ACTS${_comp}Targets.cmake")
+  include ("${CMAKE_CURRENT_LIST_DIR}/Acts${_comp}Targets.cmake")
 endforeach ()
 
 # - Create relocatable paths
@@ -65,10 +68,10 @@ set_and_check (ACTS_INCLUDE_DIR "@PACKAGE_CMAKE_INSTALL_INCLUDEDIR@")
 set_and_check (ACTS_LIBRARY_DIR "@PACKAGE_CMAKE_INSTALL_LIBDIR@")
 
 # set ACTS compilation and linker flags
-set (ACTS_CXX_FLAGS "@ACTS_CXX_FLAGS@")
-set (ACTS_CXX_FLAGS_DEBUG "@ACTS_CXX_FLAGS_DEBUG@")
-set (ACTS_CXX_FLAGS_MINSIZEREL "@ACTS_CXX_FLAGS_MINSIZEREL@")
-set (ACTS_CXX_FLAGS_RELEASE "@ACTS_CXX_FLAGS_RELEASE@")
-set (ACTS_CXX_FLAGS_RELWITHDEBINFO "@ACTS_CXX_FLAGS_RELWITHDEBINFO@")
-set (ACTS_EXE_LINKER_FLAGS_DEBUG "@ACTS_EXE_LINKER_FLAGS_DEBUG@")
-set (ACTS_SHARED_LINKER_FLAGS_DEBUG "@ACTS_SHARED_LINKER_FLAGS_DEBUG@")
+set (ACTS_CXX_FLAGS "@Acts_CXX_FLAGS@")
+set (ACTS_CXX_FLAGS_DEBUG "@Acts_CXX_FLAGS_DEBUG@")
+set (ACTS_CXX_FLAGS_MINSIZEREL "@Acts_CXX_FLAGS_MINSIZEREL@")
+set (ACTS_CXX_FLAGS_RELEASE "@Acts_CXX_FLAGS_RELEASE@")
+set (ACTS_CXX_FLAGS_RELWITHDEBINFO "@Acts_CXX_FLAGS_RELWITHDEBINFO@")
+set (ACTS_EXE_LINKER_FLAGS_DEBUG "@Acts_EXE_LINKER_FLAGS_DEBUG@")
+set (ACTS_SHARED_LINKER_FLAGS_DEBUG "@Acts_SHARED_LINKER_FLAGS_DEBUG@")
