@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -40,7 +40,7 @@ convertDD4hepDetector(
       = Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
   ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
 
-  ACTS_INFO("Translating DD4hep geometry into ACTS geometry");
+  ACTS_INFO("Translating DD4hep geometry into Acts geometry");
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
   // strip detector
   std::vector<dd4hep::DetElement> subDetectors;

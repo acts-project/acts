@@ -1,13 +1,13 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// ActsExtension.h, ACTS project, DD4hepDetector plugin
+// ActsExtension.h, Acts project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -61,7 +61,7 @@ trapezoidalDigiModule(double                      minHalflengthX,
 /// @class ActsExtension
 ///
 /// @brief Extension of the \a %DD4hep \a DetElement needed for translation
-/// into the ACTS tracking geometry
+/// into the Acts tracking geometry
 ///
 /// @todo re-validate material mapping with new implementation + allow material
 /// mapping onto modules ++ allow handing over average material to layers(?)
@@ -69,7 +69,7 @@ trapezoidalDigiModule(double                      minHalflengthX,
 /// Implementation of the Acts::IActsExtension class, which uses the
 /// extension mechanism of DD4hep for the \a %DD4hep \a DetElement.
 /// This extensions are needed for the translation from the \a %DD4hep
-/// geometry into the tracking geometry of the ACTS package.
+/// geometry into the tracking geometry of the Acts package.
 ///
 /// This extensions are necessary in order to distinguish during the translation
 /// if
@@ -89,12 +89,12 @@ trapezoidalDigiModule(double                      minHalflengthX,
 /// declared as a layer and the specific parameters needed for material mapping
 /// should be handed over.
 /// In case the sensitive modules/components contained by a layer have a
-/// different orientation in respect to the local tracking frame of ACTS,
+/// different orientation in respect to the local tracking frame of Acts,
 /// the axes orientation of these modules can be set for the layer.
 ///
 /// In \a %DD4hep cylinder and disc volumes are both described with the
 /// underlying
-/// \a ROOT \c TGeoConeSeg class. In ACTS one needs to distinguish these two
+/// \a ROOT \c TGeoConeSeg class. In Acts one needs to distinguish these two
 /// volume
 /// types. Therefore volumes which are endcaps or barrels should be
 /// indicated as
@@ -160,7 +160,7 @@ trapezoidalDigiModule(double                      minHalflengthX,
 /// segmentation please use the global functions rectangleDigiModule() and
 /// trapezoidalDigiModule().
 ///
-/// If one wants to build the ACTS Tracking Geometry with \a %DD4hep input
+/// If one wants to build the Acts Tracking Geometry with \a %DD4hep input
 /// these
 /// extension should be used during the construction of the \a %DD4hep
 /// geometry
@@ -235,7 +235,7 @@ public:
     /// Orientation of the modules contained by a layer in respect to the
     /// tracking frame. A different orientation can occur because in TGeo (which
     /// is the underlying geometry model of %DD4hep) all shapes are 3D volumes
-    /// also the sensitive components of a detector. In the ACTS tracking
+    /// also the sensitive components of a detector. In the Acts tracking
     /// geometry these sensitive components are described as 2D surfaces, which
     /// have their local 2D coordinate system. Therefore one needs to know which
     /// coordinates should be taken as the local coordinates.

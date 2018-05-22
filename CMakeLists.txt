@@ -50,7 +50,7 @@ endif()
 
 include (GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
 include (ActsCompilerOptions) # default compile options
-include (ActsFunctions) # ACTS-specific helper functions
+include (ActsFunctions) # Acts-specific helper functions
 include (ActsComponentsHelpers) # handle components via add_..._if commands
 
 # core library and plugins

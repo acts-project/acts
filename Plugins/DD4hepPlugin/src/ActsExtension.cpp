@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,7 +23,7 @@ Acts::rectangleDigiModule(double                      halflengthX,
                           double                      thickness,
                           const dd4hep::Segmentation& segmentation)
 {
-  // convert to ACTS units
+  // convert to Acts units
   double scalor = units::_cm;
   halflengthX *= scalor;
   halflengthY *= scalor;
@@ -58,7 +58,7 @@ Acts::trapezoidalDigiModule(double                      minHalflengthX,
                             double                      thickness,
                             const dd4hep::Segmentation& segmentation)
 {
-  // convert to ACTS units
+  // convert to Acts units
   double scalor = units::_cm;
   minHalflengthX *= scalor;
   maxHalflengthX *= scalor;

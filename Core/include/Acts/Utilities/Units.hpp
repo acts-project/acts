@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,7 +15,7 @@ namespace Acts {
 /// calculations, one should make use of the constants defined in this
 /// namespace to express the units of numerical values. The following
 /// conventions are used:
-/// - Input values to ACTS must be given as `numerical_value * unit_constant`.
+/// - Input values to Acts must be given as `numerical_value * unit_constant`.
 /// - Output values can be converted into the desired unit using
 ///   `numerical_value / unit_constant`.
 /// - Converting between SI and natural units should be done using the template

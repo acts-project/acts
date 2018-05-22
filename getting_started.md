@@ -4,14 +4,14 @@
     1. [Prerequisites](#prerequisites)
     2. [Installation](#installation)
     3. [CMake build system](#cmake)
-    4. [Build ACTS on lxplus](#build-lxplus)
-    5. [Build ACTS on your local machine](#build-local)
-2. [Using ACTS in your own cmake project](#using-acts)
+    4. [Build Acts on lxplus](#build-lxplus)
+    5. [Build Acts on your local machine](#build-local)
+2. [Using Acts in your own cmake project](#using-acts)
 3. [Documentation](#documentation)
 
 ## <a name="prerequisites">Prerequisites</a>
 
-Only few dependencies are required to build the Core library of ACTS. A list of
+Only few dependencies are required to build the Core library of Acts. A list of
 prerequisites required is given below with the version numbers indicating which
 versions were tested. Older versions may or may not work, feedback is very
 welcome.
@@ -32,7 +32,7 @@ components:
 *   [ROOT](https://root.cern.ch) (>= 6.10.00) for the TGeo plugin
 
 Compatible versions of all dependencies are provided by **LCG releases**.
-The current recommended release for building ACTS is the
+The current recommended release for building Acts is the
 [LCG91 Release](http://lcginfo.cern.ch/release/91). This release is also used in the
 continous integration (CI) system to test the software. Setup scripts are provided
 in the repository that can be used to setup this release, and a few others, on
@@ -41,14 +41,14 @@ lxplus machines at CERN (see [below](#installation)).
 
 ## <a name="installation">Installation and quick start</a>
 
-The ACTS repository is hosted on the GitLab instance at CERN. In order to aquire the latest
+The Acts repository is hosted on the GitLab instance at CERN. In order to aquire the latest
 version from the git repository you can simply clone:
 
 ```bash
 git clone https://gitlab.cern.ch/acts/acts-core.git <ACTS_DIR>
 ```
 
-You can then `cd <ACTS_DIR>` continue building ACTS:
+You can then `cd <ACTS_DIR>` continue building Acts:
 
 ```bash
 source CI/setup_lcg91.sh
@@ -60,10 +60,10 @@ cmake --build . -- install
 
 ## <a name="cmake">CMake build system</a>
 
-CMake is used as build system for compiling and installing ACTS.  For a
+CMake is used as build system for compiling and installing Acts.  For a
 complete list of CMake options please refer to the [official documentation](https://cmake.org/cmake/help/v3.1/index.html) 
 and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Useful_Variables).
-Important options relevant for the ACTS project are given below. They are set
+Important options relevant for the Acts project are given below. They are set
 by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 
 | option                       | default | description                                             |
@@ -82,11 +82,11 @@ by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 | CMAKE_BUILD_TYPE             |         | build type (e.g. Debug, Release) affects compiler flags |
 | DD4hep_DIR                   |         | path to the DD4hep installation                         |
 
-## <a name="building-acts">Building ACTS</a>
+## <a name="building-acts">Building Acts</a>
 
-### <a name="build-lxplus">Building ACTS on lxplus</a>
+### <a name="build-lxplus">Building Acts on lxplus</a>
 
-The first step to build ACTS is to acquire supported versions of the
+The first step to build Acts is to acquire supported versions of the
 dependencies.  Which dependencies are required depends on the plugins you
 enable, as mentioned above.
 
@@ -102,11 +102,11 @@ source <ACTS_DIR>/CI/setup_lcgXYZ.sh
 where `XYZ` is the version number of the LCG release. There are multiple setup
 scripts for different LCG releases, which corresponds to the releases the CI
 tests against. The releases which can be set up using these scripts are therefore
-sure to be compatible. **You can build ACTS with any of these releases**. 
+sure to be compatible. **You can build Acts with any of these releases**. 
 Additionally, there is a script called `setup_clang.sh` which will make the `clang` compiler available on top of one
 of the LCG releases. This configuration is also tested by the CI.
 
-Using one of the scripts, you can use the following commands to build ACTS with
+Using one of the scripts, you can use the following commands to build Acts with
 all plugins using the same dependency versions as in the continous integration
 system.
 
@@ -123,26 +123,26 @@ cmake --build . -- install
 In this example the DD4hep, Material and TGeo plugins. The install prefix is
 set to `<path you want>`.
 
-### <a name="build-local">Building ACTS on your local machine</a>
+### <a name="build-local">Building Acts on your local machine</a>
 
-Building and running ACTS on your local machine is not offically supported.
+Building and running Acts on your local machine is not offically supported.
 However, if you have the necessary prerequisites installed it should be
-possible to use it locally. ACTS developers regularly use different
-recent Linux distributions and macOS to build and develop ACTS.
+possible to use it locally. Acts developers regularly use different
+recent Linux distributions and macOS to build and develop Acts.
 
-# <a name="using-acts">Using ACTS in your own cmake project</a>
+# <a name="using-acts">Using Acts in your own cmake project</a>
 
-When using ACTS in your own cmake-based project, you need to include the
+When using Acts in your own cmake-based project, you need to include the
 following lines in your `CMakeLists.txt` file:
 
 ```bash
-find_package (ACTS COMPONENTS comp1 comp2 ...)
+find_package (Acts COMPONENTS comp1 comp2 ...)
 ```
 
-where `compX` are the required components from the ACTS project. See the
+where `compX` are the required components from the Acts project. See the
 `cmake` output for more information about which components are available.
 
 # <a name="documentation">Documentation</a>
 
-You can find a complete documentation of the ACTS functionality and the class reference guide at [http://acts.web.cern.ch/ACTS/latest/doc/index.html](http://acts.web.cern.ch/ACTS/latest/doc/index.html).
+You can find a complete documentation of the Acts functionality and the class reference guide at [http://acts.web.cern.ch/ACTS/latest/doc/index.html](http://acts.web.cern.ch/ACTS/latest/doc/index.html).
 

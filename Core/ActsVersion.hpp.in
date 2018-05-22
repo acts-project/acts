@@ -1,9 +1,9 @@
 #ifndef ActsVersion_h
 #define ActsVersion_h
 
-//  Caution: this is the only ACTS header that is guaranteed
-//  to change with every ACTS release. Including this header
-//  will cause a recompile every time a new ACTS version is
+//  Caution: this is the only Acts header that is guaranteed
+//  to change with every Acts release. Including this header
+//  will cause a recompile every time a new Acts version is
 //  used.
 
 namespace Acts {

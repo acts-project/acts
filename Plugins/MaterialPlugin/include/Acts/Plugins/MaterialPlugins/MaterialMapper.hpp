@@ -1,13 +1,13 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// MaterialMapper.h, ACTS project MaterialPlugins
+// MaterialMapper.h, Acts project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -32,7 +32,7 @@ class MaterialProperties;
 /// @brief Class for material mapping
 ///
 /// This class should be used to map material from the full and detailed
-/// detector geometry onto the simplified ACTS geometry. It offers options to
+/// detector geometry onto the simplified Acts geometry. It offers options to
 /// map, average and finalize the material.
 ///
 /// Preconditions are:
@@ -48,7 +48,7 @@ class MaterialProperties;
 /// One MaterialTrack (containing all the MaterialSteps along a Track) is
 /// mapped by using the function Acts::MaterialMapper::mapMaterial(). The
 /// mapping process starts by extrapolating from the same starting
-/// point and direction as the MaterialTrack through the ACTS geometry.
+/// point and direction as the MaterialTrack through the Acts geometry.
 /// The extrapolation engine then finds  the closest surface marked to carry
 /// material (by carrying a SurfaceMaterialProxy).
 /// The material steps are then assigned to the corresponding surfaces

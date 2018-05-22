@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -142,7 +142,7 @@ private:
   /// @param detElement the DD4hep::DetElement of the layer
   /// @param surfaces the vector of surfaces which should be filled with the
   /// sensitive detector elements
-  /// @param axes the orientation of the modules to the ACTS frame
+  /// @param axes the orientation of the modules to the Acts frame
   void
   collectSensitive(const dd4hep::DetElement&          detElement,
                    std::vector<const Acts::Surface*>& surfaces,
@@ -154,7 +154,7 @@ private:
   /// created
   /// @param isDisc in case the sensitive detector module should be translated
   ///        as disc (e.g. for endcaps) this flag should be set to true
-  /// @param axes the orientation of the modules to the ACTS frame
+  /// @param axes the orientation of the modules to the Acts frame
   const Acts::Surface*
   createSensitiveSurface(const dd4hep::DetElement& detElement,
                          bool                      isDisc = false,
@@ -162,7 +162,7 @@ private:
 
   // Private helper function to convert the TGeo transformation matrix into
   // a
-  // ACTS transformation matrix
+  // Acts transformation matrix
   /// @param tGeoTrans TGeo transformation matrix which should be converted
   std::shared_ptr<const Acts::Transform3D>
   convertTransform(const TGeoMatrix* tGeoTrans) const;

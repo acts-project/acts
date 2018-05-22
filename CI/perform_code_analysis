@@ -24,7 +24,7 @@ ACTS_DIR=$1
 BUILD_DIR=$2
 OUTDIR=$3
 
-# check for ACTS
+# check for Acts
 if [ ! -d "$ACTS_DIR" ]
 then
     echo "ACTS_DIR='$ACTS_DIR' not found -> aborting"

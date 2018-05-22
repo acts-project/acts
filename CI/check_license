@@ -17,7 +17,7 @@ fi
 : ${gitlabTargetRepoName:?"'gitlabTargetRepoName' not set or empty"}
 : ${gitlabMergeRequestId:?"'gitlabMergeRequestId' not set or empty"}
 
-# check for ACTS
+# check for Acts
 ACTS_DIR=`readlink -f $1`
 if [ ! -d "$ACTS_DIR" ]
 then
@@ -26,10 +26,10 @@ then
 fi
 
 # license template
-MPLv2_BEGIN="// This file is part of the ACTS project.
+MPLv2_BEGIN="// This file is part of the Acts project.
 //
 // Copyright (C) 20"
-MPLv2_END=" ACTS project team
+MPLv2_END=" Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this

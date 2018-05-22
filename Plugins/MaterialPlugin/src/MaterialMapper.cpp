@@ -1,13 +1,13 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// MaterialMapper.cpp, ACTS project
+// MaterialMapper.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Plugins/MaterialPlugins/MaterialMapper.hpp"
@@ -94,7 +94,7 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
   // collect for validation output
   std::map<geo_id_value, std::pair<double, double>> collectedMaterial;
 
-  // let's extrapolate through the ACTS detector and record all surfaces
+  // let's extrapolate through the Acts detector and record all surfaces
   // that have a material proxy
   if (materialSteps.size()) {
     // get the number of materialsteps

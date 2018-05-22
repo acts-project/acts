@@ -1,13 +1,13 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 ACTS project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// Surface.h, ACTS project
+// Surface.h, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -35,7 +35,7 @@ class TrackingVolume;
 ///
 /// @brief Abstract Base Class for tracking surfaces
 ///
-/// The Surface class builds the core of the ACTS Tracking Geometry.
+/// The Surface class builds the core of the Acts Tracking Geometry.
 /// All other geometrical objects are either extending the surface or
 /// are built from it.
 ///

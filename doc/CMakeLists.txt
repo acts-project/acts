@@ -1,5 +1,5 @@
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/doxygen.config.in ${CMAKE_CURRENT_BINARY_DIR}/doxygen.config @ONLY)
-configure_file (${CMAKE_CURRENT_SOURCE_DIR}/figures/ACTSlogo.gif ${CMAKE_CURRENT_BINARY_DIR}/ACTSlogo.gif COPYONLY)
+configure_file (${CMAKE_CURRENT_SOURCE_DIR}/figures/Actslogo.gif ${CMAKE_CURRENT_BINARY_DIR}/Actslogo.gif COPYONLY)
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/DoxygenLayout.xml ${CMAKE_CURRENT_BINARY_DIR}/DoxygenLayout.xml COPYONLY)
 
 add_custom_target (doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxygen.config

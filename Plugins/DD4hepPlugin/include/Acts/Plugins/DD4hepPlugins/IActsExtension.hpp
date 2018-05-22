@@ -1,13 +1,13 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// IDetExtension.h, ACTS project, DD4hepDetector plugin
+// IDetExtension.h, Acts project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -28,11 +28,11 @@ namespace Acts {
 /// @class IActsExtension
 ///
 /// @brief Interface for Extension of the DD4hep \a DetElement needed for
-/// translation into ACTS tracking geometry
+/// translation into Acts tracking geometry
 ///
 /// Interface class for making extensions to the DD4hep \a DetElement class,
 /// needed  for the translation from the DD4hep geometry into the tracking
-/// geometry of the ACTS package.
+/// geometry of the Acts package.
 ///
 /// This extensions are necessary in order to distinguish in the translation if
 /// a DD4hep \a DetElement is
@@ -51,7 +51,7 @@ namespace Acts {
 /// which should carry material should also be declared as a layer and the
 /// specific parameters needed for material mapping should be handed over.
 /// In case the sensitive modules/components contained by a layer have a
-/// different orientation in respect to the local tracking frame of ACTS, the
+/// different orientation in respect to the local tracking frame of Acts, the
 /// axes orientation of these modules can be set for the layer.
 /// In case the segmentation is set for the module (by using the second
 /// constructor setting the segmentation or using the setSegmentation()
@@ -59,7 +59,7 @@ namespace Acts {
 /// the modules.
 ///
 /// In DD4hep cylinder and disc volumes are both described with the underlying
-/// ROOT TGeoConeSeg class. In ACTS one needs to distinguish these two volume
+/// ROOT TGeoConeSeg class. In Acts one needs to distinguish these two volume
 /// types. Therefore volumes which are endcaps or barrels should be indicated as
 /// these.
 /// The ActsExtension should also be used to indicate that a \a DetElement is

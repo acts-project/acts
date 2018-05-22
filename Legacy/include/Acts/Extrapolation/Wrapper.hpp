@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -55,7 +55,7 @@ namespace propagation {
   };
 
   /// @brief Wrapper for PropagationEngine to compare with the
-  /// the ACTS Propagator
+  /// the Acts Propagator
   ///
   /// @tparam Impl Implementation of the propagation algorithm
   template <typename Impl>
