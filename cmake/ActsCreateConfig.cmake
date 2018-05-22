@@ -9,7 +9,7 @@ write_basic_package_version_file ("${CMAKE_CURRENT_BINARY_DIR}/ActsConfigVersion
 
 # - Install time config and target files
 configure_package_config_file (${CMAKE_CURRENT_LIST_DIR}/ActsConfig.cmake.in "${PROJECT_BINARY_DIR}/ActsConfig.cmake"
-                              INSTALL_DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/Acts"
+                               INSTALL_DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/Acts"
                                PATH_VARS CMAKE_INSTALL_BINDIR CMAKE_INSTALL_INCLUDEDIR CMAKE_INSTALL_LIBDIR)
 
 # - install and export

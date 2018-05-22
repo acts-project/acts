@@ -1,11 +1,11 @@
 add_executable (ConstantBFieldTests ConstantBFieldTests.cpp)
 target_include_directories (ConstantBFieldTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (ConstantBFieldTests PRIVATE ActsCore)
+target_link_libraries (ConstantBFieldTests PRIVATE Acts::Core)
 add_test (NAME ConstantBFieldUnitTest COMMAND ConstantBFieldTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST ConstantBFieldUnitTest TARGETS ConstantBFieldTests)
 
 add_executable (InterpolatedBFieldMapTests InterpolatedBFieldMapTests.cpp)
 target_include_directories (InterpolatedBFieldMapTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (InterpolatedBFieldMapTests PRIVATE ActsCore)
+target_link_libraries (InterpolatedBFieldMapTests PRIVATE Acts::Core)
 add_test (NAME InterpolatedBFieldMapUnitTest COMMAND InterpolatedBFieldMapTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST InterpolatedBFieldMapUnitTest TARGETS InterpolatedBFieldMapTests)

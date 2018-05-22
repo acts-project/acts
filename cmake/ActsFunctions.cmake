@@ -53,3 +53,19 @@ function (acts_add_test_to_cdash_project)
     acts_add_targets_to_cdash_project (PROJECT ${ARG_PROJECT} TARGETS ${_target})
   endforeach ()
 endfunction ()
+
+function (acts_add_library NAME ...)
+  list(REMOVE_AT ARGV 0)
+  set(lib_type "${ARGV1}")
+  list(REMOVE_AT ARGV 0)
+  set(sources "${ARGV}")
+
+  add_library("${NAME}" "${lib_type}" "${src_files}")
+
+  # this makes this library consistently available as Acts::LibName
+  add_library("Acts::${NAME}" ALIAS "${NAME}")
+
+  # prefix output library file name with Acts
+  set_target_properties("${NAME}" PROPERTIES OUTPUT_NAME "Acts${NAME}")
+
+endfunction ()
