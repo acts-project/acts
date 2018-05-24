@@ -178,6 +178,7 @@ Acts::PlaneSurface::bounds() const
   return s_noBounds;
 }
 
+<<<<<<< HEAD
 const Acts::Vector3D
 Acts::PlaneSurface::normal(const Acts::Vector3D&) const
 {
@@ -214,6 +215,8 @@ Acts::PlaneSurface::pathCorrection(const Acts::Vector3D&,
   return 1. / std::abs(normal().dot(mom.unit()));
 }
 
+=======
+>>>>>>> 287cbe83... split Navigator, speed-up intersection method, synchronise compatibleObjects() method
 Acts::variant_data
 Acts::PlaneSurface::toVariantData() const
 {

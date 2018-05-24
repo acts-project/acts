@@ -219,6 +219,7 @@ Acts::DiscSurface::bounds() const
   return s_noBounds;
 }
 
+<<<<<<< HEAD
 const Acts::Vector3D
 Acts::DiscSurface::normal(const Acts::Vector2D&) const
 {
@@ -274,6 +275,8 @@ Acts::DiscSurface::intersectionEstimate(const Acts::Vector3D&      gpos,
   return Intersection(gpos, 0., false);
 }
 
+=======
+>>>>>>> 287cbe83... split Navigator, speed-up intersection method, synchronise compatibleObjects() method
 Acts::variant_data
 Acts::DiscSurface::toVariantData() const
 {

@@ -106,7 +106,7 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
     TGeoVolume* tvolume = gGeoManager->GetTopVolume();
     if (tvolume) {
       // recursively step down
-      collectSensitive(
+      resolveSensitive(
           layerSurfaces, tvolume, nullptr, TGeoIdentity(), layerCfg, type);
       // screen output
       ACTS_DEBUG(
@@ -130,7 +130,7 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
 }
 
 void
-Acts::TGeoLayerBuilder::collectSensitive(
+Acts::TGeoLayerBuilder::resolveSensitive(
     std::vector<const Acts::Surface*>& layerSurfaces,
     TGeoVolume*                        tgVolume,
     TGeoNode*                          tgNode,
@@ -169,7 +169,7 @@ Acts::TGeoLayerBuilder::collectSensitive(
       // dynamic_cast to a node
       TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
       if (node)
-        collectSensitive(layerSurfaces,
+        resolveSensitive(layerSurfaces,
                          nullptr,
                          node,
                          tgTransform,
@@ -224,7 +224,7 @@ Acts::TGeoLayerBuilder::collectSensitive(
       // if it's not accepted, get the associated volume
       TGeoVolume* nodeVolume = tgNode->GetVolume();
       // step down one further
-      collectSensitive(layerSurfaces,
+      resolveSensitive(layerSurfaces,
                        nodeVolume,
                        nullptr,
                        nTransform,

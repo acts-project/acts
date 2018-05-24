@@ -59,7 +59,7 @@ Acts::MaterialMapper::materialMappingCache(
   // create the map
   std::map<GeometryID, SurfaceMaterialRecord> sMap;
   // fill it
-  collectMaterialSurfaces(sMap, *world);
+  resolveMaterialSurfaces(sMap, *world);
 
   ACTS_DEBUG(sMap.size() << " Surfaces with PROXIES collected ... ");
   for (auto& smg : sMap) {
@@ -343,7 +343,7 @@ Acts::MaterialMapper::assignSteps(
 }
 
 void
-Acts::MaterialMapper::collectMaterialSurfaces(
+Acts::MaterialMapper::resolveMaterialSurfaces(
     std::map<GeometryID, SurfaceMaterialRecord>& sMap,
     const TrackingVolume& tVolume) const
 {
@@ -381,7 +381,7 @@ Acts::MaterialMapper::collectMaterialSurfaces(
   if (tVolume.confinedVolumes()) {
     for (auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
       // recursive call
-      collectMaterialSurfaces(sMap, *sVolume);
+      resolveMaterialSurfaces(sMap, *sVolume);
     }
   }
 }

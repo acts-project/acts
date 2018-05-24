@@ -12,6 +12,11 @@ target_link_libraries (GeometryIDTests PRIVATE Acts::Core)
 add_test (NAME GeometryIDUnitTest COMMAND GeometryIDTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST GeometryIDUnitTest TARGETS GeometryIDTests)
 
+add_executable (IntersectionTests IntersectionTests.cpp)
+target_link_libraries (IntersectionTests PRIVATE ACTSCore)
+add_test (NAME IntersectionUnitTests COMMAND IntersectionTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST IntersectionUnitTests TARGETS IntersectionTests)
+
 add_executable (BinningDataTests BinningDataTests.cpp)
 target_link_libraries (BinningDataTests PRIVATE Acts::Core)
 add_test (NAME BinningDataUnitTest COMMAND BinningDataTests)

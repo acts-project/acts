@@ -103,9 +103,11 @@ public:
   Intersection
   intersectionEstimate(const Vector3D& /*gpos*/,
                        const Vector3D& /*gdir*/,
-                       bool /*forceDir = false*/,
-                       const BoundaryCheck& /*bcheck   = false*/) const final
+                       NavigationDirection /*navDir*/,
+                       const BoundaryCheck& /*bcheck*/,
+                       CorrFnc corrfnc = nullptr) const final
   {
+    (void)corrfnc;
     const Intersection is{Vector3D{1, 1, 1}, 20., true};
     return is;
   }

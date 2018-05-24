@@ -123,9 +123,9 @@ namespace Test {
         outside));  // fails: m_bounds only in derived classes
     // intersectionEstimate (should delegate to derived class method of same
     // name)
-    Vector3D              mom{100., 200., 300.};
-    const Acts::MockTrack track{mom, reference};
-    auto intersectionEstimate = surface.Surface::intersectionEstimate(track);
+    Vector3D mom{100., 200., 300.};
+    auto     intersectionEstimate
+        = surface.intersectionEstimate(reference, mom, forward, false);
     const Intersection ref{Vector3D{1, 1, 1}, 20., true};
     bool               trial = (ref.position == intersectionEstimate.position);
     BOOST_TEST(trial, "intersectionEstimate() delegates to derived class");

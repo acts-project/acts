@@ -50,14 +50,17 @@ public:
   struct State
   {
     /// Constructor from the initial track parameters
-    /// @param [in] par The track parameters at start
+    /// @param[in] par The track parameters at start
+    /// @param[in] dir is the navigation direction
+    /// @param[in] ssize is the (absolute) maximum step size
     template <typename T>
     explicit State(const T&            par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
       , dir(par.momentum().normalized())
-      , qop(par.charge() / par.momentum().norm())
+      , p(par.momentum().norm())
+      , charge(par.charge())
       , navDir(ndir)
       , accumulatedPath(0.)
       , stepSize(ndir * ssize)
@@ -82,7 +85,7 @@ public:
     Vector3D
     momentum() const
     {
-      return (1. / qop) * dir;
+      return p * dir;
     }
 
     /// Global particle position
@@ -91,8 +94,11 @@ public:
     /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
 
-    /// Charge-momentum ratio, in natural units
-    double qop = 1;
+    /// Momentum
+    double p = 0.;
+
+    /// Save the charge
+    double charge = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -128,10 +134,9 @@ public:
   static CurvilinearParameters
   convert(State& state)
   {
-    double charge = state.qop > 0. ? 1. : -1.;
     // return the parameters
     return CurvilinearParameters(
-        nullptr, state.pos, state.dir / std::abs(state.qop), charge);
+        nullptr, state.pos, state.p * state.dir, state.charge);
   }
 
   /// Convert the propagation state to track parameters at a certain surface
@@ -146,10 +151,9 @@ public:
   static BoundParameters
   convert(State& state, const S& surface)
   {
-    double charge = state.qop > 0. ? 1. : -1.;
     // return the bound parameters
     return BoundParameters(
-        nullptr, state.pos, state.dir / std::abs(state.qop), charge, surface);
+        nullptr, state.pos, state.p * state.dir, state.charge, surface);
   }
 
   /// Perform a straight line propagation step

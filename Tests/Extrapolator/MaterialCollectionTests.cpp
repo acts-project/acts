@@ -68,7 +68,7 @@ namespace Test {
   StraightLinePropagator slpropagator(std::move(slstepper),
                                       std::move(navigatorSL));
 
-  const int ntests           = 1000;
+  const int ntests           = 10;
   const int skip             = 0;
   bool      debugModeFwd     = false;
   bool      debugModeBwd     = false;
@@ -283,7 +283,7 @@ namespace Test {
     const Surface& dSurface = fwdResult.endParameters->referenceSurface();
 
     if (debugModeFwdStep)
-      std::cout << ">>> Step : "
+      std::cout << ">>> Forward Step : "
                 << sParameters->referenceSurface().geoID().toString() << " --> "
                 << dSurface.geoID().toString() << std::endl;
 
@@ -341,7 +341,7 @@ namespace Test {
     sParameters = fwdResult.endParameters.template get();
     for (auto& bwdSteps : bwdMaterial.collected) {
       if (debugModeBwdStep)
-        std::cout << ">>> Step : "
+        std::cout << ">>> Backward Step : "
                   << sParameters->referenceSurface().geoID().toString()
                   << " --> " << bwdSteps.surface->geoID().toString()
                   << std::endl;
@@ -390,7 +390,7 @@ namespace Test {
     if (debugModeBwdStep) {
       const auto& bwdStepOutput
           = bwdStepFinal.template get<DebugOutput::result_type>();
-      std::cout << ">>> Forward Final Step Propgation & Navigation output "
+      std::cout << ">>> Backward Final Step Propgation & Navigation output "
                 << std::endl;
       std::cout << bwdStepOutput.debugString << std::endl;
     }

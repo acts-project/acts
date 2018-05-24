@@ -106,11 +106,11 @@ namespace Test {
     BOOST_CHECK(expectedResult == localPosition);
     //
     // intersectionEstimate
-    const Vector3D direction{0., 1., 2.};
-    bool           forceDir = false;
-    BoundaryCheck  bcheck(false);
-    auto           intersection
-        = line.intersectionEstimate({0., 0., 0.}, direction, forceDir, bcheck);
+    const Vector3D      direction{0., 1., 2.};
+    NavigationDirection navDir = anyDirection;
+    BoundaryCheck       bcheck(false);
+    auto                intersection
+        = line.intersectionEstimate({0., 0., 0.}, direction, navDir, bcheck);
     BOOST_CHECK(intersection.valid);
     Vector3D expectedIntersection(0, -1. / 3., -2. / 3.);
     BOOST_TEST(intersection.position

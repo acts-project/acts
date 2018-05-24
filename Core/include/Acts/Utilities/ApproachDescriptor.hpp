@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -20,9 +21,6 @@ namespace Acts {
 class Surface;
 class Layer;
 class BoundaryCheck;
-class ICompatibilityEstimator;
-
-typedef ObjectIntersection<Surface> SurfaceIntersection;
 
 /// @class ApproachDescriptor
 ///
@@ -38,9 +36,11 @@ class ApproachDescriptor
 public:
   /// Default constructor
   ApproachDescriptor() {}
+
   /// Virtual destructor
   virtual ~ApproachDescriptor() {}
-  /// Register Layer
+
+  /// @brief Register Layer
   /// this gives the approach surfaces the link to the layer
   ///
   /// @param lay is the layer to be assigned
@@ -48,20 +48,36 @@ public:
   registerLayer(const Layer& lay)
       = 0;
 
-  // Get the surface on approach
-  // - nullptr means that there's no surface on approach
+  /// @brief Get the surface on approach
+  ///
+  /// @tparam parameters_t Type of the Parameters for the approach search
+  /// @tparam options_t Type of the Navigation options for the search
+  /// @tparam corrector_t Type of the Corrector for the approach search
+  ///
+  /// @param parameters The actual parameters object
+  /// @param options are the steering options for the search
+  template <typename parameters_t,
+            typename options_t,
+            typename corrector_t = VoidCorrector>
+  ObjectIntersection<Surface>
+  approachSurface(const parameters_t& parameters,
+                  const options_t&    options,
+                  const corrector_t&  correct = corrector_t()) const;
+
+  /// @brief Get the surface on approach
   ///
   /// @param pos is the position from start of the search
-  /// @param dir is the direction
+  /// @param mom is the momentum
   /// @param bcheck is the boundary check directive
-  /// @param ice is a (future) compatibility estimator
+  /// @param correciton is the function pointer to a corrector
   ///
-  /// @return is a surface isntersection
-  virtual const SurfaceIntersection
-  approachSurface(const Vector3D&                pos,
-                  const Vector3D&                dir,
-                  const BoundaryCheck&           bcheck,
-                  const ICompatibilityEstimator* ice = nullptr) const = 0;
+  /// @return is a surface intersection
+  virtual ObjectIntersection<Surface>
+  approachSurface(const Vector3D&      pos,
+                  const Vector3D&      mom,
+                  NavigationDirection  navDir,
+                  const BoundaryCheck& bcheck,
+                  CorrFnc              correct = nullptr) const = 0;
 
   /// Tet to all the contained surfaces
   /// @return all contained surfaces of this approach descriptor
@@ -73,4 +89,19 @@ public:
   containedSurfaces()
       = 0;
 };
+
+template <typename parameters_t, typename options_t, typename corrector_t>
+ObjectIntersection<Surface>
+ApproachDescriptor::approachSurface(const parameters_t& parameters,
+                                    const options_t&    options,
+                                    const corrector_t&  corrfnc) const
+{
+  // calculate the actual intersection
+  return approachSurface(parameters.position(),
+                         parameters.momentum(),
+                         options.navDir,
+                         options.boundaryCheck,
+                         corrfnc);
 }
+
+}  // end of namespace Acts

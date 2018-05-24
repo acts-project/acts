@@ -125,6 +125,7 @@ Acts::CylinderBounds::inside3D(const Vector3D&      pos,
 {
   // additional tolerance from the boundary check if configred
   bool checkAbsolute = bcheck.m_type == BoundaryCheck::Type::eAbsolute;
+
   // this fast check only applies to closed cylindrical bounds
   double addToleranceR
       = (checkAbsolute && m_closed) ? bcheck.m_tolerance[0] : 0.;

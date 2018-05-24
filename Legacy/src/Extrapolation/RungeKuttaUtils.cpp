@@ -617,6 +617,8 @@ Acts::RungeKuttaUtils::stepEstimatorToPlane(double*       S,
                                             bool&         Q,
                                             bool) const
 {
+  // straight line step estimation
+
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
 

@@ -291,40 +291,39 @@ public:
   pathCorrection(const Vector3D& gpos,
                  const Vector3D& mom) const final override;
 
-  /// fast straight line intersection schema - standard: provides closest
-  /// intersection and (signed) path length
-  ///  forceDir is to provide the closest forward solution
+  /// @brief Fast straight line intersection schema
+  ///
+  /// navDir=anyDirection is to provide the closest solution
   ///
   /// @param gpos is the global position as a starting point
-  /// @param gdir is the global direction at the starting point
-  ///        @note has to be normalized
-  /// @param forceDir is a boolean forcing a solution along direction
+  /// @param gmom is the global direction at the starting point
+  ///        @note will o be normalized
+  /// @param navDir is a navigation direction
   /// @param bcheck is the boundary check
   ///
   ///  <b>mathematical motivation:</b>
   ///
-  ///  the equation of the plane is given by: <br>
-  ///  @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
-  ///  where @f$ \vec n = (n_{x}, n_{y}, n_{z})@f$ denotes the normal vector of
-  /// the plane,
-  ///  @f$ \vec p = (p_{x}, p_{y}, p_{z})@f$ one specific point on the plane and
-  /// @f$ \vec x = (x,y,z) @f$ all possible points
-  ///  on the plane.<br>
-  ///  Given a line with:<br>
-  ///  @f$ \vec l(u) = \vec l_{1} + u \cdot \vec v @f$, <br>
-  ///  the solution for @f$ u @f$ can be written:
-  ///  @f$ u = \frac{\vec n (\vec p - \vec l_{1})}{\vec n \vec v}@f$ <br>
-  ///  If the denominator is 0 then the line lies:
-  ///  - either in the plane
-  ///  - perpendicular to the normal of the plane
+  /// the equation of the plane is given by: <br>
+  /// @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
+  /// where @f$ \vec n = (n_{x}, n_{y}, n_{z})@f$ denotes the normal vector of
+  /// the plane, @f$ \vec p = (p_{x}, p_{y}, p_{z})@f$ one specific point on
+  /// the plane and @f$ \vec x = (x,y,z) @f$ all possible points
+  /// on the plane.<br>
+  /// Given a line with:<br>
+  /// @f$ \vec l(u) = \vec l_{1} + u \cdot \vec v @f$, <br>
+  /// the solution for @f$ u @f$ can be written:
+  /// @f$ u = \frac{\vec n (\vec p - \vec l_{1})}{\vec n \vec v}@f$ <br>
+  /// If the denominator is 0 then the line lies:
+  /// - either in the plane
+  /// - perpendicular to the normal of the plane
   ///
-  /// @return is the intersection object
+  /// @return is the surface intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
-                       bool                 forceDir = false,
-                       const BoundaryCheck& bcheck
-                       = false) const final override;
+                       NavigationDirection  navDir = forward,
+                       const BoundaryCheck& bcheck = false,
+                       CorrFnc correct = nullptr) const final override;
 
   /// Return properly formatted class name for screen output
   virtual std::string
@@ -345,98 +344,6 @@ protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
 
-inline const Vector2D
-DiscSurface::localPolarToCartesian(const Vector2D& lpolar) const
-{
-  return Vector2D(lpolar[Acts::eLOC_R] * cos(lpolar[Acts::eLOC_PHI]),
-                  lpolar[Acts::eLOC_R] * sin(lpolar[Acts::eLOC_PHI]));
-}
-
-inline const Vector2D
-DiscSurface::localCartesianToPolar(const Vector2D& lcart) const
-{
-  return Vector2D(sqrt(lcart[Acts::eLOC_X] * lcart[Acts::eLOC_X]
-                       + lcart[Acts::eLOC_Y] * lcart[Acts::eLOC_Y]),
-                  atan2(lcart[Acts::eLOC_Y], lcart[Acts::eLOC_X]));
-}
-
-inline void DiscSurface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
-                                              const Vector3D&       gpos,
-                                              const Vector3D&       dir,
-                                              const ActsVectorD<5>& pars) const
-{
-  // The trigonometry required to convert the direction to spherical
-  // coordinates and then compute the sines and cosines again can be
-  // surprisingly expensive from a performance point of view.
-  //
-  // Here, we can avoid it because the direction is by definition a unit
-  // vector, with the following coordinate conversions...
-  const double x = dir(0);  // == cos(phi) * sin(theta)
-  const double y = dir(1);  // == sin(phi) * sin(theta)
-  const double z = dir(2);  // == cos(theta)
-
-  // ...which we can invert to directly get the sines and cosines:
-  const double cos_theta     = z;
-  const double sin_theta     = sqrt(x * x + y * y);
-  const double inv_sin_theta = 1. / sin_theta;
-  const double cos_phi       = x * inv_sin_theta;
-  const double sin_phi       = y * inv_sin_theta;
-  // retrieve the reference frame
-  const auto rframe = referenceFrame(gpos, dir);
-
-  // special polar coordinates for the Disc
-  double lrad     = pars[eLOC_0];
-  double lphi     = pars[eLOC_1];
-  double lcos_phi = cos(lphi);
-  double lsin_phi = sin(lphi);
-  // the local error components - rotated from reference frame
-  jacobian.block<3, 1>(0, eLOC_0) = lcos_phi * rframe.block<3, 1>(0, 0)
-      + lsin_phi * rframe.block<3, 1>(0, 1);
-  jacobian.block<3, 1>(0, eLOC_1)
-      = lrad * (lcos_phi * rframe.block<3, 1>(0, 1)
-                - lsin_phi * rframe.block<3, 1>(0, 0));
-  // the momentum components
-  jacobian(3, ePHI)   = (-sin_theta) * sin_phi;
-  jacobian(3, eTHETA) = cos_theta * cos_phi;
-  jacobian(4, ePHI)   = sin_theta * cos_phi;
-  jacobian(4, eTHETA) = cos_theta * sin_phi;
-  jacobian(5, eTHETA) = (-sin_theta);
-  jacobian(6, eQOP)   = 1;
-}
-
-inline const RotationMatrix3D
-    DiscSurface::initJacobianToLocal(ActsMatrixD<5, 7>& jacobian,
-                                     const Vector3D& gpos,
-                                     const Vector3D& dir) const
-{
-  // Optimized trigonometry on the propagation direction
-  const double x = dir(0);  // == cos(phi) * sin(theta)
-  const double y = dir(1);  // == sin(phi) * sin(theta)
-  // component expressions - global
-  const double inv_sin_theta_2        = 1. / (x * x + y * y);
-  const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
-  const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
-  const double inv_sin_theta          = sqrt(inv_sin_theta_2);
-  // The measurement frame of the surface
-  RotationMatrix3D rframeT = referenceFrame(gpos, dir).transpose();
-  // calculate the transformation to local coorinates
-  const Vector3D pos_loc = transform().inverse() * gpos;
-  const double   lr      = pos_loc.perp();
-  const double   lphi    = pos_loc.phi();
-  const double   lcphi   = cos(lphi);
-  const double   lsphi   = sin(lphi);
-  // rotate into the polar coorindates
-  auto lx = rframeT.block<1, 3>(0, 0);
-  auto ly = rframeT.block<1, 3>(1, 0);
-  jacobian.block<1, 3>(0, 0) = lcphi * lx + lsphi * ly;
-  jacobian.block<1, 3>(1, 0) = (lcphi * ly - lsphi * lx) / lr;
-  // Directional and momentum elements for reference frame surface
-  jacobian(ePHI, 3)   = -sin_phi_over_sin_theta;
-  jacobian(ePHI, 4)   = cos_phi_over_sin_theta;
-  jacobian(eTHETA, 5) = -inv_sin_theta;
-  jacobian(eQOP, 6)   = 1;
-  // return the transposed reference frame
-  return rframeT;
-}
+#include "detail/DiscSurface.ipp"
 
 }  // end of namespace

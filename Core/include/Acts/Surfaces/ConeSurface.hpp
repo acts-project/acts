@@ -11,11 +11,13 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
+#include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 namespace Acts {
 
@@ -163,14 +165,14 @@ public:
                 const Vector3D& mom,
                 Vector2D&       lpos) const final override;
 
-  /// straight line intersection schema - provides closest intersection and
-  /// (signed) path length
+  /// @brief Straight line intersection schema - provides closest intersection
+  /// and (signed) path length
   ///
-  /// @param gpos is the start position for the intersection
-  /// @param gir is the start direction for the intersection,
-  ///        @note has to be normalized
-  /// @param forceDir is the flag to force to go along the forward direction
-  /// @param bcheck is the boundary check to be used in this directive
+  /// @param gpos The start position for the intersection
+  /// @param gmom The start momentum for the intersection (will be normalized)
+  /// @param navDir The navigation direction with respect to the momentum
+  /// @param bcheck The boundary check to be used in this directive
+  /// @param correct is an (optional) correction function pointer
   ///
   /// <b>mathematical motivation:</b>
   ///
@@ -207,10 +209,10 @@ public:
   /// @return is the Intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gdir,
-                       bool                 forceDir = false,
-                       const BoundaryCheck& bcheck
-                       = false) const final override;
+                       const Vector3D&      gmom,
+                       NavigationDirection  navDir,
+                       const BoundaryCheck& bcheck = false,
+                       CorrFnc correct = nullptr) const final override;
 
   /// the pathCorrection for derived classes with thickness
   ///
@@ -233,5 +235,7 @@ public:
 protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
 };
+
+#include "detail/ConeSurface.ipp"
 
 }  // end of namespace

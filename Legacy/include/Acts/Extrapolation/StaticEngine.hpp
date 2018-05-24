@@ -192,8 +192,8 @@ private:
   /// @param dir is the additional direction prescription
   /// @param bcheck is the boudnary check directive
   /// @param collectSenstivie steers whether sensitive surfaces are searched
-  /// @param collectMaterial steers whether material has to be integrated
-  /// @param collectPassive steers whether all passive steps are being done
+  /// @param resolveMaterial steers whether material has to be integrated
+  /// @param resolvePassive steers whether all passive steps are being done
   ///
   /// @return is a extrapolation code indication
   template <class T>

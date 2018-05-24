@@ -16,6 +16,9 @@
 
 namespace Acts {
 
+/// A function typedef for the intersection correction
+typedef std::function<bool(Vector3D&, Vector3D&, double)> CorrFnc;
+
 ///  @struct Intersection
 ///
 ///  intersection struct used for position
@@ -26,7 +29,7 @@ struct Intersection
   double   distance;    ///< remaining distance (if not valid)
   bool     valid;       ///< validiaty boolean
 
-  /// Constructor with argoments
+  /// Constructor with arguments
   ///
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
@@ -52,23 +55,40 @@ struct Intersection
   /// Bool() operator for validity checking
   explicit operator bool() const { return valid; }
 
-  /// Smaller operator for sorting
-  ///
+  /// Smaller operator for sorting,
+  /// - it respects the validity of the intersection
   /// @param si is the intersection for testing
   bool
   operator<(const Intersection& si) const
   {
-    return (valid && pathLength < si.pathLength);
+    if (!valid) return false;
+    // now check the pathLenght
+    if (si.valid) return (pathLength < si.pathLength);
+    // the current path length wins
+    return true;
+  }
+
+  /// Greater operator for sorting,
+  /// - it respects the validity of the intersection
+  /// @param si is the intersection for testing
+  bool
+  operator>(const Intersection& si) const
+  {
+    if (!valid) return false;
+    // now check the pathLenght
+    if (si.valid) return (pathLength > si.pathLength);
+    // the current path length wins
+    return true;
   }
 };
 
 /// class extensions to return also the object
-template <class T>
+template <typename object_t>
 class ObjectIntersection
 {
 public:
   Intersection        intersection;  ///< the intersection iself
-  const T*            object;        ///< the object that was intersected
+  const object_t*     object;        ///< the object that was intersected
   NavigationDirection pDirection;    ///< the direction in which it was taken
 
   /// Default constructor
@@ -83,7 +103,7 @@ public:
   /// @param sObject is the object to be instersected
   /// @param dir is the direction of the intersection
   ObjectIntersection(const Intersection& sInter,
-                     const T*            sObject,
+                     const object_t*     sObject,
                      NavigationDirection dir = forward)
     : intersection(sInter), object(sObject), pDirection(dir)
   {
@@ -96,44 +116,51 @@ public:
   ///
   /// @param oi is the source intersection for comparison
   bool
-  operator<(const ObjectIntersection<T>& oi) const
+  operator<(const ObjectIntersection<object_t>& oi) const
   {
     return (intersection < oi.intersection);
   }
+
+  /// greater operator for ordering & sorting
+  ///
+  /// @param oi is the source intersection for comparison
+  bool
+  operator>(const ObjectIntersection<object_t>& oi) const
+  {
+    return (intersection > oi.intersection);
+  }
 };
 
-/// Class extension to return the object, a represenation & the result
+/// @brief Class with full intersection information
 ///
-/// The full intersection extends the object intersection by
-/// a possible result parameter, e.g. it could be that the intersection
-/// method already provides the final parameters
-template <class T, class R, class S>
+/// It contains the interscetion, the object that was intersected
+/// and the representation of the object (identical if doesn't differ)
+///
+/// @tparam object_t Type of the object to be intersected
+/// @tparam representation_t Type of the representation
+template <typename object_t, typename representation_t>
 class FullIntersection
 {
 public:
-  Intersection        intersection;    ///< the intersection iself
-  const T*            object;          ///< the object that was intersected
-  const R*            representation;  ///< the represenation of the object
-  std::unique_ptr<S>  result;      ///< the result, which could be parameters
-  NavigationDirection pDirection;  ///< the direction in which it was taken
+  Intersection            intersection;    ///< the intersection iself
+  const object_t*         object;          ///< the object that was intersected
+  const representation_t* representation;  ///< the represenation of the object
+  NavigationDirection     pDirection;  ///< the direction in which it was taken
 
   /// Full intersection constructor
   ///
   /// @param sInter is the intersection struct
   /// @param sObject is the intersected object
   /// @param sRepresentation is the surface representation of the object
-  /// @param sResult is the type of result: neutral, charged TP e.g.
   /// @param dir is the direction
   ///
-  FullIntersection(const Intersection& sInter,
-                   const T*            sObject,
-                   const R*            sRepresentation,
-                   std::unique_ptr<S>  sResult = nullptr,
-                   NavigationDirection dir     = forward)
+  FullIntersection(const Intersection&     sInter,
+                   const object_t*         sObject,
+                   const representation_t* sRepresentation,
+                   NavigationDirection     dir = forward)
     : intersection(sInter)
     , object(sObject)
     , representation(sRepresentation)
-    , result(std::move(sResult))
     , pDirection(dir)
   {
   }
@@ -145,9 +172,36 @@ public:
   ///
   /// @param fi is the full intersection to be tested
   bool
-  operator<(const FullIntersection<T, R, S>& fi) const
+  operator<(const FullIntersection<object_t, representation_t>& fi) const
   {
     return (intersection < fi.intersection);
+  }
+
+  /// Greater operator for ordering & sorting
+  ///
+  /// @param fi is the full intersection to be tested
+  bool
+  operator>(const FullIntersection<object_t, representation_t>& fi) const
+  {
+    return (intersection > fi.intersection);
+  }
+};
+
+/// @brief Void Direction corrector
+///
+/// This is used to evaluate a modified
+/// intersection (e.g. curvature updated)
+struct VoidCorrector
+{
+
+  /// Boolean() operator - returns false for void modifier
+  explicit operator bool() const { return false; }
+
+  /// empty correction interface
+  bool
+  operator()(Vector3D&, Vector3D&, double)
+  {
+    return false;
   }
 };
 }

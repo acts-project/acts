@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 ACTS project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -47,13 +47,11 @@ typedef std::vector<LayerPtr>                  LayerVector;
 typedef std::vector<DetachedTrackingVolumePtr> DetachedVolumeVector;
 
 // full intersection with Layer
-template <class T>
-using LayerIntersection = FullIntersection<Layer, Surface, T>;
+using LayerIntersection = FullIntersection<Layer, Surface>;
 
 // full intersection with surface
-template <class T>
 using BoundaryIntersection
-    = FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface, T>;
+    = FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface>;
 
 /// @class TrackingVolume
 ///
@@ -145,35 +143,53 @@ public:
   const Layer*
   associatedLayer(const Vector3D& gpos) const;
 
-  /// Resolves the volume into Layers
+  /// @brief Resolves the volume into (compatible) Layers
   ///
-  /// @param sLayer is the start layer for the search
-  /// @param eLayer is the end layer for the search
-  /// @param parameters are the templated parameters for searching
-  /// @param bcheck is a boundary check directive
-  /// @param is a maximum path limit for decomposition
-  /// @param collectSensitive resolve for sensitive surfaces in any case
-  /// @param collectMaterial resolve for material in any case
-  /// @param collectPassive resolve for all surfaces in any case
+  /// This is the method for the propagator/extrapolator
+  /// @param_t parameters_t Type of parameters used for the decomposition
+  /// @param_t options_t Type of navigation options object for decomposition
+  /// @param_t corrector_t Type of (optional) corrector for surface intersection
   ///
-  /// @return intersection wiht the layer
-  template <class T>
-  std::vector<LayerIntersection<T>>
-  decompose(const Layer*         sLayer,
-            const Layer*         eLayer,
-            const T&             parameters,
-            const BoundaryCheck& bcheck = true,
-            double               pLimit = std::numeric_limits<double>::max(),
-            bool                 collectSensitive = true,
-            bool                 collectMaterial  = true,
-            bool                 collectPassive   = false) const;
+  /// @param parameters The templated parameters for searching
+  /// @param options The templated navigation options
+  /// @param corrfnc is the corrector struct / function
+  ///
+  /// @return vector of compatible intersections with layers
+  template <typename parameters_t,
+            typename options_t,
+            typename corrector_t = VoidCorrector>
+  std::vector<LayerIntersection>
+  compatibleLayers(const parameters_t& parameters,
+                   const options_t&    options,
+                   const corrector_t&  corrfnc = corrector_t()) const;
 
-  /// LEGACY method for old ExtrapolationEngine
+  /// @brief Returns the boundary surfaces ordered in probability
+  ///
+  /// @param_t parameters_t Type of parameters used for the decomposition
+  /// @param_t options_t Type of navigation options object for decomposition
+  /// @param_t corrector_t Type of (optional) corrector for surface intersection
+  ///
+  /// @param parameters The templated parameters for searching
+  /// @param options The templated navigation options
+  /// @param corrfnc is the corrector struct / function
+  ///
+  /// @return is the templated boundary intersection
+  template <typename parameters_t,
+            typename options_t,
+            typename corrector_t = VoidCorrector>
+  std::vector<BoundaryIntersection>
+  compatibleBoundaries(const parameters_t& parameters,
+                       const options_t&    options,
+                       const corrector_t&  corrfnc = corrector_t()) const;
+
+  /// LEGACY method for old ExtrapolationEngine -------------------------------
+  ///
   /// --------- to be deprecated with release 0.07.00
+  /// - it will be replace by compatibleLayers()
   ///
   /// Return the material layers ordered based on straight line intersections:
   ///
-  /// - startLayer and endLayer are included in the list
+  /// - startObject and endLayer are included in the list
   /// @param sLayer is the start layer for the search (@todo docu: check if
   /// returned)
   /// @param eLayer is the end layer for the search (@todo docu: check if
@@ -186,16 +202,34 @@ public:
   /// sensitive surfaces
   ///
   /// @return intersection wiht the layer
-  template <class T>
-  std::vector<LayerIntersection<T>>
+  template <typename parameters_t>
+  std::vector<LayerIntersection>
   layerCandidatesOrdered(const Layer*         sLayer,
                          const Layer*         eLayer,
-                         const T&             parameters,
+                         const parameters_t&  parameters,
                          NavigationDirection  pDir             = forward,
                          const BoundaryCheck& bcheck           = true,
-                         bool                 collectSensitive = true,
-                         bool                 collectMaterial  = true,
-                         bool                 collectPassive   = false) const;
+                         bool                 resolveSensitive = true,
+                         bool                 resolveMaterial  = true,
+                         bool                 resolvePassive   = false) const;
+
+  /// LEGACY method for old ExtrapolationEngine -------------------------------
+  ///
+  /// --------- to be deprecated with release 0.07.00
+  /// - it will be replace by compatibleBoundaries()
+  ///
+  /// Returns the boundary surfaces ordered in probability to hit them based
+  /// on straight line intersection
+  ///
+  /// @param parameters are the templated tracking parameters
+  /// @param pDir is the additional direction presciprion
+  ///
+  /// @return is the templated boundary intersection
+  template <typename parameters_t>
+  std::vector<BoundaryIntersection>
+  boundarySurfacesOrdered(const parameters_t& parameters,
+                          NavigationDirection pDir        = forward,
+                          bool                skipCurrent = false) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
@@ -248,19 +282,6 @@ public:
   /// Method to return the BoundarySurfaces
   const std::vector<TrackingVolumeBoundaryPtr>&
   boundarySurfaces() const;
-
-  /// Returns the boundary surfaces ordered in probability to hit them based
-  /// on straight line intersection
-  ///
-  /// @param parameters are the templated tracking parameters
-  /// @param pDir is the additional direction presciprion
-  ///
-  /// @return is the templated boundary intersection
-  template <class T>
-  std::vector<BoundaryIntersection<T>>
-  boundarySurfacesOrdered(const T&            parameters,
-                          NavigationDirection pDir        = forward,
-                          bool                skipCurrent = false) const;
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -528,206 +549,6 @@ TrackingVolume::confinedDenseVolumes() const
   return m_confinedDenseVolumes;
 }
 
-template <class T>
-std::vector<LayerIntersection<T>>
-TrackingVolume::decompose(const Layer*         sLayer,
-                          const Layer*         eLayer,
-                          const T&             pars,
-                          const BoundaryCheck& bcheck,
-                          double               pLimit,
-                          bool                 collectSensitive,
-                          bool                 collectMaterial,
-                          bool                 collectPassive) const
-{
-  // get position and momentum from the parameters
-  const Vector3D& pos = pars.position();
-  const Vector3D& dir = pars.momentum().unit();
-
-  // the layer intersections which are valid
-  std::vector<LayerIntersection<T>> lIntersections;
-
-  // the confinedLayers
-  if (m_confinedLayers) {
-    // - get compatible layers back from the LayerArray simply because of the
-    // binning
-    // start layer given or not - test layer
-    const Layer* tLayer = sLayer ? sLayer : associatedLayer(pos);
-    if (tLayer) {
-      do {
-        // note if anyDirection is given, you allow to stay on the layer
-        // i.e. you pick the actually closest one, which could be 0.
-        NavigationDirection ndir = (tLayer == sLayer) ? anyDirection : forward;
-        // - collectSensitive -> always take layer if it has a surface array
-        // - collectMaterial -> always take layer if it has material
-        // - collectPassive -> always take, unless it's a navigation layer
-        if (tLayer->resolve(
-                collectSensitive, collectMaterial, collectPassive)) {
-          // layer on approach intersection
-          auto atIntersection = tLayer->surfaceOnApproach(pos,
-                                                          dir,
-                                                          ndir,
-                                                          bcheck,
-                                                          collectSensitive,
-                                                          collectMaterial,
-                                                          collectPassive);
-          // Intersection is ok - take it
-          if (atIntersection
-              && atIntersection.intersection.pathLength <= std::abs(pLimit)) {
-            // create a layer intersection
-            lIntersections.push_back(LayerIntersection<T>(
-                atIntersection.intersection, tLayer, atIntersection.object));
-          }
-        }
-        // move to next one or break because you reached the end layer
-        tLayer = (tLayer == eLayer) ? nullptr : tLayer->nextLayer(pos, dir);
-      } while (tLayer);
-    }
-    // sort them accordingly to the path length
-    std::sort(lIntersections.begin(), lIntersections.end());
-  }
-  // and return
-  return lIntersections;
-}
-
-template <class T>
-std::vector<LayerIntersection<T>>
-TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
-                                       const Layer*         eLayer,
-                                       const T&             pars,
-                                       NavigationDirection  pDir,
-                                       const BoundaryCheck& bcheck,
-                                       bool                 collectSensitive,
-                                       bool                 collectMaterial,
-                                       bool collectPassive) const
-{
-  // get position and momentum from the parameters
-  const Vector3D& gp = pars.position();
-  const Vector3D& gm = pars.momentum();
-
-  // the layer intersections
-  std::vector<LayerIntersection<T>> lIntersections;
-  // assign the direction
-  const Vector3D& dir
-      = (pDir == forward) ? gm.unit() : Vector3D(-1 * gm.unit());
-  // the confinedLayers
-  if (m_confinedLayers) {
-    // cache the longest path length to avoid punch-through to the other side
-    Intersection   sLayerIntersection(Vector3D(0., 0., 0), 0., true, 0.);
-    const Surface* sLayerSurface   = 0;
-    double         validPathLength = 0.;
-    // - get compatible layers back from the LayerArray simply because of the
-    // binning
-    // start layer given or not - test layer
-    const Layer* tLayer = sLayer ? sLayer : associatedLayer(gp);
-    if (tLayer) {
-      do {
-        // Fist:
-        // - collect the startLayer
-        // Then:
-        // - collectSensitive -> always take layer if it has a surface array
-        // - collectMaterial -> always take layer if it has material
-        // - collectPassive -> always take, unless it's a navigation layer
-        // Last:
-        // - also collect the finalLayer
-        if (tLayer->resolve(collectSensitive, collectMaterial, collectPassive)
-            || tLayer == sLayer
-            || tLayer == eLayer) {
-          // layer on approach intersection
-          auto atIntersection = tLayer->surfaceOnApproach(gp,
-                                                          gm,
-                                                          pDir,
-                                                          bcheck,
-                                                          collectSensitive,
-                                                          collectMaterial,
-                                                          collectPassive);
-
-          // (a) if the current layer is NOT the start layer
-          // - intersection is ok
-          if (tLayer != sLayer && atIntersection.intersection.valid) {
-            // create a layer intersection
-            lIntersections.push_back(
-                LayerIntersection<T>(atIntersection.intersection,
-                                     tLayer,
-                                     atIntersection.object,
-                                     0,
-                                     pDir));
-            validPathLength = atIntersection.intersection.pathLength;
-          } else if (tLayer == sLayer) {
-            // (b) the current layer is the start layer - we need to cache it
-            // and check with the path length
-            //     this avoids potential punch-through to other side of
-            sLayerIntersection = atIntersection.intersection;
-            sLayerSurface      = atIntersection.object;
-          } else if (tLayer == eLayer) {
-            // (c) it is the end layer after all
-            // - provide it and break the loop
-            lIntersections.push_back(
-                LayerIntersection<T>(atIntersection.intersection,
-                                     tLayer,
-                                     atIntersection.object,
-                                     0,
-                                     pDir));
-            break;
-          }
-        }
-        // move to next one or break because you reached the end layer
-        tLayer = (tLayer == eLayer) ? nullptr : tLayer->nextLayer(gp, dir);
-      } while (tLayer);
-    }
-
-    // final check for compatibility of the start layer in order to avoid
-    // punch-through
-    if (sLayer && sLayerIntersection.valid
-        && sLayerIntersection.pathLength < validPathLength
-        && sLayer->resolve(collectSensitive, collectMaterial, collectPassive))
-      lIntersections.push_back(LayerIntersection<T>(
-          sLayerIntersection, sLayer, sLayerSurface, 0, pDir));
-
-    // sort them accordingly to the path length
-    std::sort(lIntersections.begin(), lIntersections.end());
-  }
-  // and return
-  return lIntersections;
-}
-
-// Returns the boundary surfaces ordered in probability to hit them based on
-// straight line intersection @todo change hard-coded default
-template <class T>
-std::vector<BoundaryIntersection<T>>
-TrackingVolume::boundarySurfacesOrdered(const T&            pars,
-                                        NavigationDirection pDir,
-                                        bool                skipCurrent) const
-{
-  // assign the direction
-  const Vector3D dir
-      = (pDir == forward ? pars.momentum().unit()
-                         : Vector3D(-1 * pars.momentum().unit()));
-  // loop over boundarySurfaces and calculate the intersection
-  std::vector<BoundaryIntersection<T>> bIntersections;
-  auto&                                bSurfaces = boundarySurfaces();
-  for (auto& bsIter : bSurfaces) {
-    const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
-    Intersection                            bsIntersection
-        = bSurface->surfaceRepresentation().intersectionEstimate(
-            pars.position(), dir, true, false);
-    // check if the intersection is valid, but exlude the on-surface case
-    // when requested
-    if (bsIntersection.valid
-        && (!skipCurrent
-            || std::abs(bsIntersection.pathLength) < s_onSurfaceTolerance))
-      bIntersections.push_back(
-          BoundaryIntersection<T>(bsIntersection,
-                                  bSurface,
-                                  &(bSurface->surfaceRepresentation()),
-                                  0,
-                                  pDir));
-  }
-  // and now sort to get the closest
-  std::sort(bIntersections.begin(), bIntersections.end());
-  // and return
-  return bIntersections;
-}
-
 inline GeometrySignature
 TrackingVolume::geometrySignature() const
 {
@@ -769,5 +590,8 @@ TrackingVolume::detectorElements() const
 {
   return m_detectorElements;
 }
+
+}  // end of namespace
+#include "detail/TrackingVolume.ipp"
 
 }  // end of namespace

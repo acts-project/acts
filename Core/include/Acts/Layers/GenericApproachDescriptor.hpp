@@ -11,8 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <algorithm>
 #include "Acts/Utilities/ApproachDescriptor.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 
@@ -66,16 +68,17 @@ public:
   /// get the compatible surfaces
   ///
   /// @param gpos is the global position to start the approach from
-  /// @param dir is the direction in which you approach the layer
+  /// @param mom is the momentum vector
   /// @param bcheck is the boundary check prescription
-  /// @param ice is a (future) compatibility estimater if needed
+  /// @param corrfnc is an noption correction function
   ///
   /// @return : a boolean indicating if an actual intersection had been tried
-  const SurfaceIntersection
-  approachSurface(const Vector3D&                gpos,
-                  const Vector3D&                dir,
-                  const BoundaryCheck&           bcheck,
-                  const ICompatibilityEstimator* ice = nullptr) const override;
+  ObjectIntersection<Surface>
+  approachSurface(const Vector3D&      gpos,
+                  const Vector3D&      mom,
+                  NavigationDirection  navDir,
+                  const BoundaryCheck& bcheck,
+                  CorrFnc              corrfnc = nullptr) const override;
 
   /// return all contained surfaces of this approach descriptor
   const std::vector<const Surface*>&
@@ -109,30 +112,31 @@ GenericApproachDescriptor<T>::registerLayer(const Layer& lay)
 }
 
 template <class T>
-const SurfaceIntersection
-GenericApproachDescriptor<T>::approachSurface(
-    const Vector3D&      pos,
-    const Vector3D&      dir,
-    const BoundaryCheck& bcheck,
-    const ICompatibilityEstimator*) const
+ObjectIntersection<Surface>
+GenericApproachDescriptor<T>::approachSurface(const Vector3D&      pos,
+                                              const Vector3D&      mom,
+                                              NavigationDirection  navDir,
+                                              const BoundaryCheck& bcheck,
+                                              CorrFnc corrfnc) const
 {
   // the intersection estimates
-  std::vector<std::pair<const Surface*, Intersection>> vIntersections;
-  vIntersections.reserve(m_surfacestepState.size());
+  std::vector<ObjectIntersection<Surface>> sIntersections;
+  sIntersections.reserve(m_surfacestepState.size());
   for (auto& sf : m_surfacestepState) {
-    vIntersections.push_back(std::pair<const Surface*, Intersection>(
-        sf, sf->intersectionEstimate(pos, dir, true, bcheck)));
+    // intersect
+    auto intersection
+        = sf->intersectionEstimate(pos, mom, navDir, bcheck, corrfnc);
+    sIntersections.push_back(
+        ObjectIntersection<Surface>(intersection, sf, navDir));
   }
-  // find nearest intersection
-  auto returnIntersection
-      = std::min_element(vIntersections.begin(),
-                         vIntersections.end(),
-                         [](const auto& a, const auto& b) {
-                           return a.second.pathLength < b.second.pathLength;
-                         });
+  // sort depedning on the navigation direction
+  if (navDir == forward) {
+    std::sort(sIntersections.begin(), sIntersections.end());
+  } else {
+    std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
+  }
   // return what you have
-  return SurfaceIntersection(
-      returnIntersection->second, returnIntersection->first, forward);
+  return (*sIntersections.begin());
 }
 
 template <class T>
@@ -148,4 +152,5 @@ GenericApproachDescriptor<T>::containedSurfaces()
 {
   return m_surfacestepState;
 }
-}
+
+} // end of namespace Acts

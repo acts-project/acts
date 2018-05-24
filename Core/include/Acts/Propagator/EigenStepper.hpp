@@ -80,7 +80,8 @@ public:
                    double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
       , dir(par.momentum().normalized())
-      , qop(par.charge() / par.momentum().norm())
+      , p(par.momentum().norm())
+      , charge(par.charge())
       , navDir(ndir)
       , covTransport(false)
       , accumulatedPath(0.)
@@ -115,7 +116,7 @@ public:
     Vector3D
     momentum() const
     {
-      return (1. / qop) * dir;
+      return p * dir;
     }
 
     /// Method for on-demand transport of the covariance
@@ -243,7 +244,7 @@ public:
         Vector2D loc{0., 0.};
         surface.globalToLocal(pos, dir, loc);
         ActsVectorD<5> pars;
-        pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), qop;
+        pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), charge / p;
         surface.initJacobianToGlobal(jacToGlobal, pos, dir, pars);
       }
       // store in the global jacobian
@@ -258,8 +259,11 @@ public:
     /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
 
-    /// Charge-momentum ratio, in natural units
-    double qop = 1;
+    /// Momentum
+    double p = 0.;
+
+    /// The charge
+    double charge = 1.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -281,11 +285,11 @@ public:
     bool              covTransport = false;
     ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
 
-    /// Lazily initialized state
-    /// It caches the current magnetic field cell and stays (and interpolates)
-    /// within
-    /// as long as this is valid. See step() code for details.
-    bool                    fieldCacheReady = false;
+    /// Lazily initialized state of the field Cache
+    bool fieldCacheReady = false;
+    /// This caches the current magnetic field cell and stays
+    /// (and interpolates) within it as long as this is valid.
+    /// See step() code for details.
     concept::AnyFieldCell<> fieldCache;
 
     /// accummulated path length state
@@ -320,7 +324,6 @@ public:
   static CurvilinearParameters
   convert(State& state, bool reinitialize = false)
   {
-    double                                   charge = state.qop > 0. ? 1. : -1.;
     std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     // only do the covariance transport if needed
     if (state.covTransport) {
@@ -330,7 +333,7 @@ public:
     }
     // return the parameters
     return CurvilinearParameters(
-        std::move(covPtr), state.pos, state.dir / std::abs(state.qop), charge);
+        std::move(covPtr), state.pos, state.p * state.dir, state.charge);
   }
 
   /// Convert the propagation state to track parameters at a certain surface
@@ -350,12 +353,11 @@ public:
       state.applyCovTransport(surface, reinitialize);
       covPtr = std::make_unique<const ActsSymMatrixD<5>>(state.cov);
     }
-    double charge = state.qop > 0. ? 1. : -1.;
     // return the bound parameters
     return BoundParameters(std::move(covPtr),
                            state.pos,
-                           state.dir / std::abs(state.qop),
-                           charge,
+                           state.p * state.dir,
+                           state.charge,
                            surface);
   }
 
@@ -390,7 +392,7 @@ public:
   step(State& state) const
   {
     // Charge-momentum ratio, in SI units
-    const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / state.qop);
+    const double qop = state.charge / units::Nat2SI<units::MOMENTUM>(state.p);
 
     // Runge-Kutta integrator state
     double   h2, half_h;

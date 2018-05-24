@@ -1292,28 +1292,35 @@ Acts::RungeKuttaEngine<MagneticField>::stepEstimatorWithCurvature(
     bool&             Q,
     bool              istep) const
 {
-  // Straight step estimation
+  // Straight line step estimation first
   double Step = m_rkUtils.stepEstimator(
       kind, Su, propState.pVector, Q, istep, propState.maxStepSize);
 
+  // check to
   if (!Q) return 0.;
   double AStep = std::abs(Step);
+
+  // the step is good : so returen
   if (kind || AStep < m_cfg.straightStep || !propState.mcondition) return Step;
 
-  const double* SA = &(propState.pVector[42]);  // Start direction
+  // Use start direction
+  const double* SA = &(propState.pVector[42]);
   double        S  = .5 * Step;
 
+  // update the direction vector with half of the step times oringal direction
   double Ax = propState.pVector[3] + S * SA[0];
   double Ay = propState.pVector[4] + S * SA[1];
   double Az = propState.pVector[5] + S * SA[2];
   double As = 1. / sqrt(Ax * Ax + Ay * Ay + Az * Az);
 
-  double PN[6] = {propState.pVector[0],
-                  propState.pVector[1],
-                  propState.pVector[2],
-                  Ax * As,
-                  Ay * As,
-                  Az * As};
+  // new parameter build from position and updated direction
+  double PN[6] = {propState.pVector[0],  // current position
+                  propState.pVector[1],  // current position
+                  propState.pVector[2],  // current position
+                  Ax * As,               // normalized updated direction
+                  Ay * As,               // normalized updated direction
+                  Az * As};              // normalized updated direction
+  ///
   double StepN = m_rkUtils.stepEstimator(kind, Su, PN, Q);
   if (!Q) {
     Q = true;

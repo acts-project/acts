@@ -164,17 +164,15 @@ namespace detail {
       }
 
       // calculate the distance to the surface
-      // @todo that might cause problems with a cylinder
       const double distance
           = surface
                 ->intersectionEstimate(state.stepping.position(),
-                                       direction * state.stepping.direction(),
-                                       true,
+                                       state.stepping.direction(),
+                                       direction,
                                        false)
                 .pathLength;
       // Adjust the step size so that we cannot cross the target surface
-      state.stepping.stepSize.update(state.stepping.navDir * distance,
-                                     ConstrainedStep::aborter);
+      state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
       // return true if you fall below tolerance
       bool targetReached = (std::abs(distance) <= tolerance);
       if (targetReached) {

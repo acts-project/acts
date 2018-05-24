@@ -89,9 +89,9 @@ public:
 
   /// Accept layer according to the following colelction directives
   ///
-  /// @param collectSensitive is the prescription to find the sensitive surfaces
-  /// @param collectMaterial is the precription to find material surfaces
-  /// @param collectPassive is the prescription to find all passive surfaces
+  /// @param resolveSensitive is the prescription to find the sensitive surfaces
+  /// @param resolveMaterial is the precription to find material surfaces
+  /// @param resolvePassive is the prescription to find all passive surfaces
   ///
   /// @note navigation layers are never accepted
   ///

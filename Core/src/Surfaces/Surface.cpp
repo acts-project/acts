@@ -173,7 +173,7 @@ const Acts::Vector3D
 Acts::Surface::center() const
 {
   // fast access via tranform matrix (and not translation())
-  auto tMatrix = transform().matrix();
+  const auto& tMatrix = transform().matrix();
   return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 

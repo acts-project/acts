@@ -100,6 +100,9 @@ struct Result : private detail::Extendable<result_list...>
 /// @tparam stepper_t stepper implementation of the propagation algorithm
 /// @tparam navigator_list_t the (optional) navigator type, it is a type
 ///         of action_list with is called before all the other optios
+/// @tparam path_aborter_t Type of object to abort when path limit reached
+/// @tparam target_aborter_t Type of the object to do initial step estimation
+///                          and target abort
 ///
 /// This Propagator class serves as high-level steering code for propagating
 /// track parameters. The actual implementation of the propagation has to be
@@ -124,9 +127,6 @@ public:
 
   /// Typedef the navigator state
   typedef typename navigator_t::state_type NavigatorState;
-
-  /// Typedef the PathLimitReached aborter
-  typedef detail::PathLimitReached PathLimitReached;
 
   /// @brief Options for propagate() call
   ///
@@ -296,14 +296,12 @@ private:
   Status
   propagate_(result_t& result, propagator_state_t& state) const
   {
-
     // Pre-stepping call to the abort list
     debugLog(state,
              [&] { return std::string("Calling pre-stepping aborters."); });
     if (state.targetAborters(result, state)) {
       return Status::FAILURE;
     }
-
     // Pre-stepping call to the navigator and action list
     debugLog(state, [&] {
       return std::string("Calling pre-stepping navigator & actions.");
@@ -314,17 +312,21 @@ private:
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it only takes the stepping state
-      result.pathLength += m_stepper.step(state.stepping);
+      double s = m_stepper.step(state.stepping);
+      result.pathLength += s;
       // Call the actions, can (& will likely) modify the state
       debugLog(state, [&] {
-        return std::string("Calling navigator & actions on single step.");
+        std::stringstream dstream;
+        dstream << "Calling navigator & actions after step of size = ";
+        dstream << s;
+        return dstream.str();
       });
       m_navigator(state);
       state.options.actionList(state, result);
       // Call the stop_conditions and the internal stop conditions
       // break condition triggered, but still count the step
       debugLog(state,
-               [&] { return std::string("Calling aborters on single step."); });
+               [&] { return std::string("Calling aborters after step."); });
       if (state.options.stopConditions(result, state)
           || state.targetAborters(result, state)) {
         ++result.steps;
@@ -361,7 +363,8 @@ public:
   ///
   template <typename parameters_t,
             typename action_list_t,
-            typename aborter_list_t>
+            typename aborter_list_t,
+            typename path_arborter_t = detail::PathLimitReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
@@ -386,15 +389,14 @@ public:
     Result result(Status::IN_PROGRESS);
 
     // Internal Abort list - only with path limit as no target surface given
-    typedef AbortList<PathLimitReached> TargetAborters;
-    TargetAborters                      targetAborters;
+    typedef AbortList<path_arborter_t> TargetAborters;
+    TargetAborters                     targetAborters;
 
     // Configure the aborter
-    auto& pathLimitAbort = targetAborters.template get<PathLimitReached>();
+    auto& pathLimitAbort = targetAborters.template get<path_arborter_t>();
     pathLimitAbort.signedPathLimit
         = std::abs(options.maxPathLength) * options.direction;
     pathLimitAbort.tolerance = options.targetTolerance;
-    pathLimitAbort.debug     = options.debug;
 
     // Initialize the internal propagator state
     typedef State<parameters_t, PropagatorOptions, TargetAborters>
@@ -436,7 +438,9 @@ public:
   template <typename parameters_t,
             typename surface_t,
             typename action_list_t,
-            typename aborter_list_t>
+            typename aborter_list_t,
+            typename path_arborter_t  = detail::PathLimitReached,
+            typename target_aborter_t = detail::SurfaceReached<surface_t>>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,
@@ -463,27 +467,22 @@ public:
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
-    // Target surface abort condition with tolerance
-    typedef detail::SurfaceReached<surface_t> TargetReached;
-
     // Internal Abort list for target and path surface
-    typedef AbortList<TargetReached, PathLimitReached> TargetAborters;
+    typedef AbortList<target_aborter_t, path_arborter_t> TargetAborters;
     TargetAborters targetAborters;
 
     // configure the internal aborters
     // this is the one for the target surface
-    auto& targetAbort     = targetAborters.template get<TargetReached>();
+    auto& targetAbort     = targetAborters.template get<target_aborter_t>();
     targetAbort.surface   = &target;
     targetAbort.direction = options.direction;
     targetAbort.tolerance = options.targetTolerance;
-    targetAbort.debug     = options.debug;
 
     // this is the one for the path limit
-    auto& pathLimitAbort = targetAborters.template get<PathLimitReached>();
+    auto& pathLimitAbort = targetAborters.template get<path_arborter_t>();
     pathLimitAbort.signedPathLimit
         = std::abs(options.maxPathLength) * options.direction;
     pathLimitAbort.tolerance = options.targetTolerance;
-    pathLimitAbort.debug     = options.debug;
 
     // Initialize the internal propagator state
     typedef State<parameters_t, PropagatorOptions, TargetAborters>

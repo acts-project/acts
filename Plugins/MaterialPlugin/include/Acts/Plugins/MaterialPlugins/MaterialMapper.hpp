@@ -156,7 +156,7 @@ private:
   /// @param sMap is the map to be filled
   /// @param tVolume is current TrackingVolume
   void
-  collectMaterialSurfaces(std::map<GeometryID, SurfaceMaterialRecord>& sMap,
+  resolveMaterialSurfaces(std::map<GeometryID, SurfaceMaterialRecord>& sMap,
                           const TrackingVolume& tVolume) const;
 
   /// check and insert

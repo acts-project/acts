@@ -53,6 +53,16 @@ Acts::LineSurface::LineSurface(const LineSurface& other,
 {
 }
 
+Acts::LineSurface&
+Acts::LineSurface::operator=(const LineSurface& other)
+{
+  if (this != &other) {
+    Surface::operator=(other);
+    m_bounds         = other.m_bounds;
+  }
+  return *this;
+}
+
 Acts::LineSurface::LineSurface(const variant_data& data_) : GeometryObject()
 {
   throw_assert(data_.which() == 4, "Variant data must be map");
@@ -83,6 +93,7 @@ Acts::LineSurface::~LineSurface()
 {
 }
 
+<<<<<<< HEAD
 Acts::LineSurface&
 Acts::LineSurface::operator=(const LineSurface& other)
 {
@@ -234,6 +245,8 @@ Acts::LineSurface::bounds() const
   return s_noBounds;
 }
 
+=======
+>>>>>>> 287cbe83... split Navigator, speed-up intersection method, synchronise compatibleObjects() method
 Acts::variant_data
 Acts::LineSurface::toVariantData() const
 {

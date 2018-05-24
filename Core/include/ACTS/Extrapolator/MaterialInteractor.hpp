@@ -59,8 +59,6 @@ struct MaterialInteractor
 
   /// record material in detail
   bool recordDetailed = false;
-  /// debug output flag as standard for propagation
-  bool debug = false;
 
   /// Simple result struct to be returned
   /// It mainly acts as an internal state state which is
@@ -271,7 +269,7 @@ private:
   debugLog(propagator_state_t&          state,
            std::function<std::string()> logAction) const
   {
-    if (debug) {
+    if (state.options.debug) {
       std::stringstream dstream;
       dstream << "   " << std::setw(state.options.debugPfxWidth);
       dstream << "material interaction"

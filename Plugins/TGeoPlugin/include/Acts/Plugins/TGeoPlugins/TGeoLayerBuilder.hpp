@@ -136,7 +136,7 @@ private:
 
   /// Private helper function to parse the geometry tree
   void
-  collectSensitive(std::vector<const Surface*>& layerSurfaces,
+  resolveSensitive(std::vector<const Surface*>& layerSurfaces,
                    TGeoVolume*                  tgVolume,
                    TGeoNode*                    tgNode,
                    const TGeoMatrix&            ctGlobal,

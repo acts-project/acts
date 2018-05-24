@@ -28,6 +28,7 @@ public:
 
   struct State
   {
+
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
