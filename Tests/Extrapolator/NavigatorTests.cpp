@@ -374,7 +374,7 @@ namespace Test {
     // handleSurfaces : set step size and return
     BOOST_TEST(navigator.handleSurfaces(navPar, state) == true);
     // check that we have the current surface
-    BOOST_TEST(state.currentSurface != nullptr);
+    BOOST_TEST(state.currentSurface);
     // the iterator should point to it
     if (debug) {
       std::cout << "<<< Test 1l >>> advance to next surface, update at "
@@ -417,7 +417,7 @@ namespace Test {
     BOOST_TEST(navigator.initialize(navPar, state) == true);
 
     // check that the currentVolume is set
-    BOOST_TEST((state.navigation.currentVolume != nullptr));
+    BOOST_TEST(state.navigation.currentVolume);
     // check that the currentVolume is the startVolume
     BOOST_TEST(
         (state.navigation.currentVolume == state.navigation.startVolume));
