@@ -98,7 +98,7 @@ public:
   /// return a Vector3D by value
   const Vector3D
   normal(const Vector2D& lpos) const override final;
-  
+
   /// Normal vector return
   ///
   /// @param lpos is the global position is ignored

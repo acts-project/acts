@@ -134,7 +134,8 @@ public:
   ///
   /// @return is the object in that bin
   T
-  object(const Vector2D& lposition, std::array<size_t, 3>& bins) const override final
+  object(const Vector2D& lposition,
+         std::array<size_t, 3>& bins) const override final
   {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
@@ -145,7 +146,7 @@ public:
     }
     return m_objectGrid[0][0][0];
   }
-  
+
   // satisfy overload / override
   virtual T
   object(const Vector2D& lposition) const
@@ -161,7 +162,8 @@ public:
   ///
   /// @return is the object in that bin
   T
-  object(const Vector3D& position, std::array<size_t, 3>& bins) const override final
+  object(const Vector3D& position,
+         std::array<size_t, 3>& bins) const override final
   {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();

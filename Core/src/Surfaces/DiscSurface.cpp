@@ -18,12 +18,12 @@
 
 #include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/InstanceFactory.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
@@ -293,9 +293,10 @@ Acts::DiscSurface::toVariantData() const
 }
 
 Acts::PolyhedronRepresentation
-Acts::DiscSurface::polyhedronRepresentation(size_t l0div, size_t /*l1div*/) const
+Acts::DiscSurface::polyhedronRepresentation(size_t l0div,
+                                            size_t /*l1div*/) const
 {
-  std::vector<Vector3D> vertices;
+  std::vector<Vector3D>            vertices;
   std::vector<std::vector<size_t>> faces;
 
   if (l0div < 3) {
@@ -304,28 +305,29 @@ Acts::DiscSurface::polyhedronRepresentation(size_t l0div, size_t /*l1div*/) cons
 
   auto bounds = std::dynamic_pointer_cast<const RadialBounds>(m_bounds);
   if (!bounds) {
-    throw std::domain_error("Polyhedron repr of disk with non RadialBounds currently unsupported");
+    throw std::domain_error(
+        "Polyhedron repr of disk with non RadialBounds currently unsupported");
   }
 
-  double phistep = 2*M_PI / l0div;
-  double rMin = bounds->rMin();
-  double rMax = bounds->rMax();
+  double phistep = 2 * M_PI / l0div;
+  double rMin    = bounds->rMin();
+  double rMax    = bounds->rMax();
 
   Vector3D inner(rMin, 0, 0);
   Vector3D outer(rMax, 0, 0);
 
-  for(size_t i=0;i<l0div;i++) {
-    Transform3D rot(AngleAxis3D(i*phistep, Vector3D::UnitZ()));
+  for (size_t i = 0; i < l0div; i++) {
+    Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
     vertices.push_back(transform() * rot * inner);
     vertices.push_back(transform() * rot * outer);
   }
 
-  for (size_t v=0;v<vertices.size()-2;v=v+2) {
+  for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {
 
-    faces.push_back({v, v+1, v+3, v+2});
+    faces.push_back({v, v + 1, v + 3, v + 2});
   }
   if (l0div > 2) {
-    faces.push_back({vertices.size()-2, vertices.size()-1, 1, 0});
+    faces.push_back({vertices.size() - 2, vertices.size() - 1, 1, 0});
   }
 
   return PolyhedronRepresentation(vertices, faces);

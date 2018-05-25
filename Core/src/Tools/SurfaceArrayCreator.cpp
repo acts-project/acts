@@ -227,13 +227,15 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     }
 
     std::vector<size_t> nPhiModules;
-    auto matcher = m_cfg.surfaceMatcher;
-    auto equal   = [&matcher](const Surface* a, const Surface* b) {
+    auto                matcher = m_cfg.surfaceMatcher;
+    auto equal = [&matcher](const Surface* a, const Surface* b) {
       return matcher(binPhi, a, b);
     };
 
     std::transform(
-        phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules), 
+        phiModules.begin(),
+        phiModules.end(),
+        std::back_inserter(nPhiModules),
         [&equal, this](std::vector<const Surface*> surfaces_) -> size_t {
           return this->findKeySurfaces(surfaces_, equal).size();
         });
@@ -522,17 +524,17 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   // now check the binning value
   if (bValue == Acts::binPhi) {
 
-    if(m_cfg.doPhiBinningOptimization) {
+    if (m_cfg.doPhiBinningOptimization) {
       // Phi binning
       // set the binning option for phi
       // sort first in phi
-      const Acts::Surface* maxElem
-          = *std::max_element(surfaces.begin(),
-                              surfaces.end(),
-                              [](const Acts::Surface* a, const Acts::Surface* b) {
-                                return a->binningPosition(binR).phi()
-                                    < b->binningPosition(binR).phi();
-                              });
+      const Acts::Surface* maxElem = *std::max_element(
+          surfaces.begin(),
+          surfaces.end(),
+          [](const Acts::Surface* a, const Acts::Surface* b) {
+            return a->binningPosition(binR).phi()
+                < b->binningPosition(binR).phi();
+          });
 
       // get the key surfaces at the different phi positions
       auto equal = [&bValue, &matcher](const Surface* a, const Surface* b) {
@@ -564,8 +566,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
 
         // we do not need a transform in this case
       }
-    }
-    else {
+    } else {
       minimum = -M_PI;
       maximum = M_PI;
     }

@@ -15,13 +15,13 @@ Acts::PolyhedronRepresentation::objString(size_t vtxOffset) const
 {
   std::stringstream sstr;
 
-  for (const auto &vtx : vertices) {
+  for (const auto& vtx : vertices) {
     sstr << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << std::endl;
   }
-  for (const auto &face : faces) {
+  for (const auto& face : faces) {
     sstr << "f";
-    for (const auto &idx : face) {
-      sstr << " " << (vtxOffset+idx+1);
+    for (const auto& idx : face) {
+      sstr << " " << (vtxOffset + idx + 1);
     }
     sstr << std::endl;
   }

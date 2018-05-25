@@ -11,13 +11,14 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <cmath>
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
-#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
 namespace Acts {
 
@@ -247,8 +248,7 @@ public:
   virtual variant_data
   toVariantData() const override;
 
-  virtual 
-  PolyhedronRepresentation
+  virtual PolyhedronRepresentation
   polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
 
 protected:

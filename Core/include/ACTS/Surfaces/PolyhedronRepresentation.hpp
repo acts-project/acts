@@ -15,10 +15,14 @@
 
 namespace Acts {
 
-struct PolyhedronRepresentation {
+struct PolyhedronRepresentation
+{
 
-  PolyhedronRepresentation(std::vector<Vector3D> _vertices, std::vector<std::vector<size_t>> _faces)
-    : vertices(_vertices), faces(_faces) {}
+  PolyhedronRepresentation(std::vector<Vector3D>            _vertices,
+                           std::vector<std::vector<size_t>> _faces)
+    : vertices(_vertices), faces(_faces)
+  {
+  }
 
   // list of 3D vertices as vectors
   std::vector<Vector3D> vertices;
@@ -29,9 +33,7 @@ struct PolyhedronRepresentation {
 
   std::string
   objString(size_t vtxOffset = 0) const;
-
 };
-
 }
 
 #endif

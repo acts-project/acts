@@ -60,37 +60,40 @@ enum BoundarySurfaceFace {
 /// @brief specify the inside/outside with respect to the normal vector
 enum BoundaryOrientation { insideVolume = -1, outsideVolume = 1 };
 
-inline std::ostream& operator<<(std::ostream &os, BoundarySurfaceFace& face) {
+inline std::ostream&
+operator<<(std::ostream& os, BoundarySurfaceFace& face)
+{
   os << "BoundarySurfaceFace::";
 
-  switch(face) {
-    case negativeFaceXY:
-      os << "negativeFaceXY";
-      break;
-    case positiveFaceXY:
-      os << "positiveFaceXY";
-      break;
-    case negativeFaceYZ:
-      os << "negativeFaceYZ|cylinderCover|tubeOuterCover|tubeSectorOuterCover|trapezoidFaceAlpha";
-      break;
-    case positiveFaceYZ:
-      os << "positiveFaceYZ|tubeInnerCover|tubeSectorInnerCover|trapezoidFaceBeta";
-      break;
-    case negativeFaceZX:
-      os << "negativeFaceZX|tubeSectorNegativePhi";
-      break;
-    case positiveFaceZX:
-      os << "positiveFaceZX|tubeSectorPositivePhi";
-      break;
-    case undefinedFace:
-      os << "undefinedFace";
-      break;
-    default:
-      os << face;
+  switch (face) {
+  case negativeFaceXY:
+    os << "negativeFaceXY";
+    break;
+  case positiveFaceXY:
+    os << "positiveFaceXY";
+    break;
+  case negativeFaceYZ:
+    os << "negativeFaceYZ|cylinderCover|tubeOuterCover|tubeSectorOuterCover|"
+          "trapezoidFaceAlpha";
+    break;
+  case positiveFaceYZ:
+    os << "positiveFaceYZ|tubeInnerCover|tubeSectorInnerCover|"
+          "trapezoidFaceBeta";
+    break;
+  case negativeFaceZX:
+    os << "negativeFaceZX|tubeSectorNegativePhi";
+    break;
+  case positiveFaceZX:
+    os << "positiveFaceZX|tubeSectorPositivePhi";
+    break;
+  case undefinedFace:
+    os << "undefinedFace";
+    break;
+  default:
+    os << face;
   }
 
   return os;
 }
-
 }
 
