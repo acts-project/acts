@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
 namespace Acts {
 
@@ -245,6 +246,10 @@ public:
   /// @return The representation
   virtual variant_data
   toVariantData() const override;
+
+  virtual 
+  PolyhedronRepresentation
+  polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
 
 protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
