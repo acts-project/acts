@@ -92,6 +92,7 @@ oclint:
 scan-build:
   stage: static analysis
   image: gitlab-registry.cern.ch/acts/machines/scan-build
+  before_script: []
   dependencies: []
   script:
     - mkdir report
