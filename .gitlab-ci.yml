@@ -57,21 +57,6 @@ clang_tidy:
     paths:
       - report
 
-oclint:
-  stage: static analysis
-  image: gitlab-registry.cern.ch/acts/machines/static_analysis
-  before_script: []
-  dependencies: []
-  script:
-    - mkdir report
-    - mkdir build && cd build
-    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-    - cd ..
-    - oclint-json-compilation-database -p build -- -report-type html -o report/oclint_report.html
-  artifacts:
-    paths:
-      - report
-
 cppcheck:
   stage: static analysis
   image: gitlab-registry.cern.ch/acts/machines/static_analysis
@@ -88,6 +73,24 @@ cppcheck:
     paths:
       - report
 
+oclint:
+  stage: static analysis
+  image: gitlab-registry.cern.ch/acts/machines/static_analysis
+  before_script: []
+  dependencies: []
+  script:
+    - mkdir report
+    - mkdir build && cd build
+    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    - cd ..
+    - oclint-json-compilation-database -p build -- -report-type html -o report/oclint_report.html
+  artifacts:
+    paths:
+      - report
+  only:
+    - master
+  when: manual
+    
 scan-build:
   stage: static analysis
   image: alpine:edge
@@ -102,6 +105,9 @@ scan-build:
   artifacts:
     paths:
       - report
+  only:
+    - master
+  when: manual
 
 
 # SLC6, LCG88 (legacy build)
