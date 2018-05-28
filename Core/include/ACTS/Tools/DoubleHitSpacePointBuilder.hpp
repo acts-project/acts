@@ -19,14 +19,14 @@ namespace Acts {
 /// @brief Structure for easier bookkeeping of hits.
 struct DoubleHitSpacePoint
 {
-  /// Storage of the hit on a surface
-  //~ std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>
-  //hitModuleFront;
-  PlanarModuleCluster const* hitModuleFront;
-  /// Storage of the hit on another surface
-  PlanarModuleCluster const* hitModuleBack;
-  /// Combined coordinate of a cluster of hits
-  Vector3D clusterPoint = {0., 0., 0.};
+  /// Storage of the hit cluster on a surface
+  std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*> hitModuleFront;
+  /// Storage of the hit cluster on another surface
+  std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>  hitModuleBack;
+  /// Combined coordinate of a cluster of hits on the front side
+  Vector3D clusterPointFront = {0., 0., 0.};
+  /// Combined coordinate of a cluster of hits on the back side
+  Vector3D clusterPointBack = {0., 0., 0.};
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
 };
@@ -48,12 +48,10 @@ struct DoubleHitSpacePointConfig
   Vector3D vertex = {0., 0., 0.};
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
-  /// Sort the hits on the front side strip module
+  /// Cluster the hits on the front side strip module
   bool clusterFrontHits = true;
-  /// Sort the hits on the back side strip module
+  /// Cluster the hits on the back side strip module
   bool clusterBackHits = true;
-  /// Determines the maximum amount of hits on the back side strip module that will be clustered together
-  unsigned int clusterSizeBackSide = 4;
 };
 
 /// @class TwoHitsSpacePointBuilder
@@ -162,20 +160,19 @@ private:
   };
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two hits
-  /// @param hit1 the first hit
-  /// @param hit2 the second hit
+  /// @param pos1 the first hit
+  /// @param pos2 the second hit
   /// @param cfg optional configuration to steer the combination process of @p
   /// hit1 and @p hit2
   /// @return the squared sum in case of success, otherwise -1
   static double
-  differenceOfHits(const PlanarModuleCluster&                       hit1,
-                   const PlanarModuleCluster&                       hit2,
+  differenceOfHits(const Vector3D&                       pos1,
+                   const Vector3D&                       pos2,
                    const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
 
   static std::vector<BinningData>
   binningData(PlanarModuleCluster const* hit);
 
-  // TODO: differenceofhits needs to be calculated with a vector3d & a hit
   /// @brief Calculates the bin of a hit
   /// @param hit recorded hit
   /// @return channel 0 and 1 of the hit
@@ -191,21 +188,20 @@ private:
                         
 
   /// @brief Build pair of hits on neighboring bins
-  /// @param hits collection of hits on a front surface
-  /// @param cfg configuration that steers if a clustering should be performed
+  /// @param hits collection of hits on a single surface
+  /// @param peformClustering configuration that steers if a clustering should be performed
   /// @return collection of found pairs
   static const std::vector<std::pair<PlanarModuleCluster const*,
                                      PlanarModuleCluster const*>>
-  clusterSpacePointsFrontSide(
-      const std::vector<PlanarModuleCluster const*>& hits, const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
+  clusterSpacePoints(
+      const std::vector<PlanarModuleCluster const*>& hits, bool performClustering);
 
-  /// @brief Build list of hits on neighboring bins
-  /// @param hits collection of hits on a front surface
-  /// @param cfg configuration that steers if a clustering should be performed and determines the amount of hits that are clustered together
-  /// @return collection of found pairs
-  static const std::vector<std::vector<PlanarModuleCluster const*>>
-  clusterSpacePointsBackSide(
-      const std::vector<PlanarModuleCluster const*>& hits, const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
+	/// @brief Calculate the mean of the coordinates of two hits
+	/// @param cluster pair of neighbouring hits
+	/// @return vector with the combined coordinates
+  static const Vector3D
+  clusterPoint(std::pair<PlanarModuleCluster const*,
+                                     PlanarModuleCluster const*> cluster);
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
