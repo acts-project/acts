@@ -18,10 +18,10 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
+#include "ACTS/Propagator/detail/IntersectionCorrector.hpp"
+#include "ACTS/Surfaces/PlaneSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
 #include "ACTS/Utilities/Helpers.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Propagator/detail/IntersectionCorrector.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -33,53 +33,51 @@ namespace Test {
   // This tests the implementation of the Step corrector
   BOOST_AUTO_TEST_CASE(IntersectionCorrectorTests)
   {
-    // construct the surface 
-    Vector3D pcenter(-4.,4.,0.);
-    Vector3D pnormal = Vector3D(-1.,4.,0.).unit();
-    PlaneSurface plane(pcenter,pnormal);
-    
+    // construct the surface
+    Vector3D     pcenter(-4., 4., 0.);
+    Vector3D     pnormal = Vector3D(-1., 4., 0.).unit();
+    PlaneSurface plane(pcenter, pnormal);
+
     // The current position - origin
-    Vector3D position(0.,0.,0.);
-    Vector3D originalDirection = Vector3D(4.,7.,0.).unit();
-    Vector3D direction = originalDirection;
-    
-    // The two tracks 
+    Vector3D position(0., 0., 0.);
+    Vector3D originalDirection = Vector3D(4., 7., 0.).unit();
+    Vector3D direction         = originalDirection;
+
+    // The two tracks
     // (n)
-    Vector3D p0n(-7.,7.,0.);
-    Vector3D d0n = Vector3D(8.,4.,0.).unit();
-    double pathn = 10.5;
+    Vector3D p0n(-7., 7., 0.);
+    Vector3D d0n   = Vector3D(8., 4., 0.).unit();
+    double   pathn = 10.5;
     // (p)
-    Vector3D p0p(-1.5,-12.,0.);
-    Vector3D d0p = Vector3D(-2.,9.,0.).unit();
-    double pathp = 13.;
-    
+    Vector3D p0p(-1.5, -12., 0.);
+    Vector3D d0p   = Vector3D(-2., 9., 0.).unit();
+    double   pathp = 13.;
+
     auto intersect = [&position, &direction, &plane]() -> Intersection {
-      auto pi 
-        = plane.intersectionEstimate(position,direction,forward,false); 
+      auto pi = plane.intersectionEstimate(position, direction, forward, false);
       std::cout << "Interseciton it at " << toString(pi.position) << std::endl;
       return pi;
     };
-    
+
     // original intersection
     auto ointersect = intersect();
-    
+
     // Step corrector for the (n) track
-    detail::IntersectionCorrector corrFncn(p0n,d0n,pathn);
+    detail::IntersectionCorrector corrFncn(p0n, d0n, pathn);
     // -> correct & intersect
-    corrFncn(position,direction,ointersect.pathLength);
+    corrFncn(position, direction, ointersect.pathLength);
     auto nintersect = intersect();
-     
+
     // re-assign the original direction
     direction = originalDirection;
-    
-    // Step corrector for the (p) track
-    detail::IntersectionCorrector corrFncp(p0p,d0p,pathp);
-    // -> correct & intersect
-    corrFncp(position,direction,ointersect.pathLength);
-    auto pintersect = intersect();
-    
-    BOOST_TEST(nintersect.pathLength < pintersect.pathLength);
 
+    // Step corrector for the (p) track
+    detail::IntersectionCorrector corrFncp(p0p, d0p, pathp);
+    // -> correct & intersect
+    corrFncp(position, direction, ointersect.pathLength);
+    auto pintersect = intersect();
+
+    BOOST_TEST(nintersect.pathLength < pintersect.pathLength);
   }
 
 }  // namespace Test

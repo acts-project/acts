@@ -32,6 +32,20 @@ struct VoidNavigator
   /// Nested State struct
   struct State
   {
+    /// Navigation state - external state: the start surface
+    const Surface* startSurface = nullptr;
+
+    /// Navigation state - external state: the current surface
+    const Surface* currentSurface = nullptr;
+
+    /// Navigation state - external state: the target surface
+    const Surface* targetSurface = nullptr;
+
+    /// Indicator if the target is reached
+    bool targetReached = false;
+
+    /// Navigation state : a break has been detected
+    bool navigationBreak = false;
   };
 
   /// Unique typedef to publish to the Propagator
@@ -79,7 +93,7 @@ struct Result : private detail::Extendable<result_list...>
   unsigned int steps = 0;
 
   /// Signed distance over which the parameters were propagated
-  double pathLength  = 0.;
+  double pathLength = 0.;
 
   /// @brief Check the validity of the propagation result
   ///
@@ -160,7 +174,7 @@ public:
     double maxStepSize = 1 * units::_m;
 
     /// Absolute maximum path length
-    double maxPathLength = std::numeric_limits<double>::max();
+    double pathLimit = std::numeric_limits<double>::max();
 
     /// Debug output steering:
     // - the string where debug messages are stored (optionally)
@@ -206,10 +220,9 @@ private:
     State(const parameters_t&   start,
           propagator_option_t   topts,
           target_aborter_list_t tabs)
-      : options(std::move(topts))
+      : options(topts)
       , targetAborters(std::move(tabs))
       , stepping(start, options.direction, options.maxStepSize)
-      , startSurface(&start.referenceSurface())
     {
     }
 
@@ -224,21 +237,6 @@ private:
 
     /// Navigation state - internal state of the Navigator
     NavigatorState navigation;
-
-    /// Navigation state - external state: the start surface
-    const Surface* startSurface = nullptr;
-
-    /// Navigation state - external state: the current surface
-    const Surface* currentSurface = nullptr;
-
-    /// Navigation state - external state: the target surface
-    const Surface* targetSurface = nullptr;
-
-    /// Indicator if the target is reached
-    bool targetReached = false;
-
-    /// Navigation state : a break has been detected
-    bool navigationBreak = false;
   };
 
   /// @brief Helper struct determining the result's type
@@ -313,7 +311,9 @@ private:
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it only takes the stepping state
       double s = m_stepper.step(state.stepping);
+      // accumulate the path and the steps
       result.pathLength += s;
+      ++result.steps;
       // Call the actions, can (& will likely) modify the state
       debugLog(state, [&] {
         std::stringstream dstream;
@@ -329,14 +329,13 @@ private:
                [&] { return std::string("Calling aborters after step."); });
       if (state.options.stopConditions(result, state)
           || state.targetAborters(result, state)) {
-        ++result.steps;
         break;
       }
     }
-
     // Post-stepping call to the action list
     debugLog(state,
              [&] { return std::string("Calling post-stepping action list."); });
+
     state.options.actionList(state, result);
 
     // return progress flag here, decide on SUCCESS later
@@ -392,12 +391,6 @@ public:
     typedef AbortList<path_arborter_t> TargetAborters;
     TargetAborters                     targetAborters;
 
-    // Configure the aborter
-    auto& pathLimitAbort = targetAborters.template get<path_arborter_t>();
-    pathLimitAbort.signedPathLimit
-        = std::abs(options.maxPathLength) * options.direction;
-    pathLimitAbort.tolerance = options.targetTolerance;
-
     // Initialize the internal propagator state
     typedef State<parameters_t, PropagatorOptions, TargetAborters>
                     PropagatorState;
@@ -405,8 +398,7 @@ public:
 
     // Perform the actual propagation & check its outcome
     if (propagate_(result, state) != Status::IN_PROGRESS) {
-      debugLog(state,
-               [&] { return std::string("Propagation was not successful."); });
+      result.status = Status::FAILURE;
     } else {
       /// Convert into the return type
       result.endParameters = std::make_unique<const return_parameter_type>(
@@ -440,7 +432,7 @@ public:
             typename action_list_t,
             typename aborter_list_t,
             typename path_arborter_t  = detail::PathLimitReached,
-            typename target_aborter_t = detail::SurfaceReached<surface_t>>
+            typename target_aborter_t = detail::SurfaceReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,
@@ -471,29 +463,17 @@ public:
     typedef AbortList<target_aborter_t, path_arborter_t> TargetAborters;
     TargetAborters targetAborters;
 
-    // configure the internal aborters
-    // this is the one for the target surface
-    auto& targetAbort     = targetAborters.template get<target_aborter_t>();
-    targetAbort.surface   = &target;
-    targetAbort.direction = options.direction;
-    targetAbort.tolerance = options.targetTolerance;
-
-    // this is the one for the path limit
-    auto& pathLimitAbort = targetAborters.template get<path_arborter_t>();
-    pathLimitAbort.signedPathLimit
-        = std::abs(options.maxPathLength) * options.direction;
-    pathLimitAbort.tolerance = options.targetTolerance;
-
     // Initialize the internal propagator state
     typedef State<parameters_t, PropagatorOptions, TargetAborters>
                     PropagatorState;
     PropagatorState state(start, options, targetAborters);
-    state.targetSurface = &target;
+    // setting the start and the target surface
+    state.navigation.startSurface  = &start.referenceSurface();
+    state.navigation.targetSurface = &target;
 
     // Perform the actual propagation
     if (propagate_(result, state) != Status::IN_PROGRESS) {
-      debugLog(state,
-               [&] { return std::string("Propagation was not successful."); });
+      result.status = Status::FAILURE;
     } else {
       // Compute the final results and mark the propagation as successful
       result.endParameters = std::make_unique<const return_parameter_type>(

@@ -79,14 +79,14 @@ public:
     explicit State(const T&            par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
-      : pos(par.position())               
+      : pos(par.position())
       , dir(par.momentum().normalized())
       , p(par.momentum().norm())
       , charge(par.charge())
       , navDir(ndir)
       , covTransport(false)
-      , accumulatedPath(0.)
-      , stepSize(ndir * ssize)
+      , pathAccumulated(0.)
+      , stepSize(ssize)
     {
       // remember the start parameters
       startPos = pos;
@@ -124,10 +124,12 @@ public:
     }
 
     /// Return a corrector
-    corrector_t corrector() const { 
-      return corrector_t(startPos,startDir,accumulatedPath);
+    corrector_t
+    corrector() const
+    {
+      return corrector_t(startPos, startDir, pathAccumulated);
     }
-    
+
     /// Method for on-demand transport of the covariance
     /// to a new curvilinear frame at current  position,
     /// or direction of the state
@@ -262,9 +264,9 @@ public:
       return jacFull;
     }
 
-    /// Global particle position 
+    /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
-    /// Global start particle position 
+    /// Global start particle position
     Vector3D startPos = Vector3D(0, 0, 0);
 
     /// Momentum direction (normalized)
@@ -306,7 +308,7 @@ public:
     concept::AnyFieldCell<> fieldCache;
 
     /// accummulated path length state
-    double accumulatedPath = 0.;
+    double pathAccumulated = 0.;
 
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
@@ -523,7 +525,7 @@ public:
     state.derivative.template segment<3>(3) = k4;
 
     // Return the updated step size
-    state.accumulatedPath += h;
+    state.pathAccumulated += h;
     return h;
   }
 

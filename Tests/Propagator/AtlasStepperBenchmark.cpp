@@ -70,7 +70,7 @@ main(int argc, char* argv[])
   Propagator_type propagator(std::move(atlas_stepper));
 
   Propagator_type::Options<> options;
-  options.maxPathLength = maxPath * units::_m;
+  options.pathLimit = maxPath * units::_m;
 
   Vector3D          pos(0, 0, 0);
   Vector3D          mom(pT * units::_GeV, 0, 0);

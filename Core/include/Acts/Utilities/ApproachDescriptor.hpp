@@ -66,15 +66,15 @@ public:
 
   /// @brief Get the surface on approach
   ///
-  /// @param pos is the position from start of the search
-  /// @param mom is the momentum
+  /// @param gpos is the position from start of the search
+  /// @param gdir is the direction at the start of the search
   /// @param bcheck is the boundary check directive
   /// @param correciton is the function pointer to a corrector
   ///
   /// @return is a surface intersection
   virtual ObjectIntersection<Surface>
   approachSurface(const Vector3D&      pos,
-                  const Vector3D&      mom,
+                  const Vector3D&      gdir,
                   NavigationDirection  navDir,
                   const BoundaryCheck& bcheck,
                   CorrFnc              correct = nullptr) const = 0;
@@ -98,7 +98,7 @@ ApproachDescriptor::approachSurface(const parameters_t& parameters,
 {
   // calculate the actual intersection
   return approachSurface(parameters.position(),
-                         parameters.momentum(),
+                         parameters.direction(),
                          options.navDir,
                          options.boundaryCheck,
                          corrfnc);

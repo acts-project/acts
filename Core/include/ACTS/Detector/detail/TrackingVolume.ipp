@@ -19,10 +19,10 @@ TrackingVolume::compatibleLayers(const parameters_t& parameters,
 
   // get position and momentum from the parameters
   const Vector3D& pos = parameters.position();
-  Vector3D        mom = options.navDir * parameters.momentum();
 
   // the layer intersections which are valid
   std::vector<LayerIntersection> lIntersections;
+
   // the confinedLayers
   if (m_confinedLayers) {
     // start layer given or not - test layer
@@ -35,7 +35,7 @@ TrackingVolume::compatibleLayers(const parameters_t& parameters,
         // - resolveMaterial -> always take layer if it has material
         // - resolvePassive -> always take, unless it's a navigation layer
         if (tLayer->resolve(options)) {
-          // if it's a resolveable start layer, you ar by definition on it
+          // if it's a resolveable start layer, you are by definition on it
           if (tLayer == options.startObject) {
             // create an intersection with path length 0.
             Intersection   cIntersection(pos, 0., true);
@@ -47,6 +47,7 @@ TrackingVolume::compatibleLayers(const parameters_t& parameters,
             auto atIntersection
                 = tLayer->surfaceOnApproach(parameters, options, corrfnc);
             auto path = atIntersection.intersection.pathLength;
+
             // Intersection is ok - take it (move to surface on appraoch)
             if (atIntersection
                 && path * path <= options.pathLimit * options.pathLimit) {
@@ -57,8 +58,10 @@ TrackingVolume::compatibleLayers(const parameters_t& parameters,
           }
         }
         // move to next one or break because you reached the end layer
-        tLayer = (tLayer == options.endObject) ? nullptr
-                                               : tLayer->nextLayer(pos, mom);
+        tLayer = (tLayer == options.endObject)
+            ? nullptr
+            : tLayer->nextLayer(pos, options.navDir * parameters.direction());
+
       } while (tLayer);
     }
     // sort them accordingly to the navigation direction
@@ -82,15 +85,15 @@ TrackingVolume::compatibleBoundaries(const parameters_t& parameters,
 {
   // Loop over boundarySurfaces and calculate the intersection
   std::vector<BoundaryIntersection> bIntersections;
-  auto excludeObject = options.startObject;
-  auto&                             bSurfaces = boundarySurfaces();
+  auto                              excludeObject = options.startObject;
+  auto&                             bSurfaces     = boundarySurfaces();
   for (auto& bsIter : bSurfaces) {
     // get the boundary surface pointer
     const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
     const auto& bSurfaceRep = bSurface->surfaceRepresentation();
     // exclude the on boundary object
     if (excludeObject && excludeObject == &bSurfaceRep) continue;
-    // intersect the surface 
+    // intersect the surface
     SurfaceIntersection bsIntersection
         = bSurfaceRep.intersectionEstimate(parameters, options, corrfnc);
     // check if the intersection is valid, but exlude the on-surface case

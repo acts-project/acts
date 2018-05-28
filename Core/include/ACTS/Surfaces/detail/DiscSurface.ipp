@@ -112,15 +112,15 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
                                   CorrFnc              correct) const
 {
   // minimize the call to transform()
-  const auto& tMatrix = transform().matrix();
+  const auto&    tMatrix = transform().matrix();
   const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
   const Vector3D pcenter = tMatrix.block<3, 1>(0, 3).transpose();
-  // return solution and path 
+  // return solution and path
   Vector3D solution(0., 0., 0.);
   double   path = std::numeric_limits<double>::infinity();
   // lemma : the solver -> should catch current values
-  auto solve = [&solution, &path, &pnormal, &pcenter, &navDir]
-    (const Vector3D& lpos, const Vector3D& ldir) -> bool {
+  auto solve = [&solution, &path, &pnormal, &pcenter, &navDir](
+      const Vector3D& lpos, const Vector3D& ldir) -> bool {
     double denom = ldir.dot(pnormal);
     if (denom) {
       path     = (pnormal.dot((pcenter - lpos))) / (denom);
@@ -132,12 +132,11 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
   // solve first
   bool valid = solve(gpos, gdir);
   // if configured to correct, do it and solve again
-  if (correct){
+  if (correct) {
     // copy as the corrector may change them
     Vector3D lposc = gpos;
     Vector3D ldirc = gdir;
-    if (correct(lposc, ldirc, path)) 
-        valid = solve(lposc, ldirc);
+    if (correct(lposc, ldirc, path)) valid = solve(lposc, ldirc);
   }
   // evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface

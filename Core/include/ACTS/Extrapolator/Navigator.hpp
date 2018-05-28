@@ -101,7 +101,7 @@ typedef NavigationBoundaries::iterator    NavigationBoundaryIter;
 /// the current surface (or layer/volume boundary) is reached via isOnSurface.
 /// The current target surface is the surface pointed to by of the iterators
 /// for the surfaces, layers or volume boundaries.
-/// If a surface is found, the state.currentSurface
+/// If a surface is found, the state.navigation.currentSurface
 /// pointer is set. This  enables subsequent actors to react. Secondly, this
 /// actor uses the ordered  iterators  to figure out which surface, layer or
 /// volume boundary is _supposed_ to be hit next. It then sets the maximum
@@ -125,8 +125,11 @@ struct Navigator
   /// the tolerance used to defined "reached"
   double tolerance = s_onSurfaceTolerance;
 
-  /// the navigation level, see Layer for more information
-  int navigationLevel = 2;
+  /// Change initial step (avoids overstepping, when no correction done)
+  double initialStepFactor = 0.5;
+
+  /// Number of target attempts for the targetVolume
+  int targetAttempts = 2;
 
   /// Configuration for this Navigator
   /// stop at every sensitive surface (whether it has material or not)
@@ -144,19 +147,19 @@ struct Navigator
   struct State
   {
     // Navigation on surface level
-    /// the vector of navigation surfaces to work throgh
+    /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
     /// the current surface iterator of the navigation state
     NavigationSurfaceIter navSurfaceIter = navSurfaces.end();
 
     // Navigation on layer level
-    /// the vector of navigation layers to work throgh
+    /// the vector of navigation layers to work through
     NavigationLayers navLayers = {};
     /// the current layer iterator of the navigation state
     NavigationLayerIter navLayerIter = navLayers.end();
 
     // Navigation on volume level
-    /// the vector of boundary surfaces to work throgh
+    /// the vector of boundary surfaces to work through
     NavigationBoundaries navBoundaries = {};
     /// the current boundary iterator of the navigation state
     NavigationBoundaryIter navBoundaryIter = navBoundaries.end();
@@ -165,14 +168,21 @@ struct Navigator
     const TrackingVolume* startVolume = nullptr;
     /// Navigation state: the start layer
     const Layer* startLayer = nullptr;
+    /// Navigation state: the start surface
+    const Surface* startSurface = nullptr;
+    /// Navigation state - external state: the current surface
+    const Surface* currentSurface = nullptr;
     /// Navigation state: the current volume
     const TrackingVolume* currentVolume = nullptr;
     /// Navigation state: the target volume
     const TrackingVolume* targetVolume = nullptr;
     /// Navigation state: the target layer
     const Layer* targetLayer = nullptr;
-
-    /// break the navigation
+    /// Navigation state: the target surface
+    const Surface* targetSurface = nullptr;
+    /// Indicator if the target is reached
+    bool targetReached = false;
+    /// Navigation state : a break has been detected
     bool navigationBreak = false;
   };
 
@@ -193,7 +203,7 @@ struct Navigator
     debugLog(state, [&] { return std::string("Entering navigator."); });
 
     // Navigator always resets the current surface first
-    state.currentSurface = nullptr;
+    state.navigation.currentSurface = nullptr;
 
     // --------------------------------------------------------------------
     // Navigation break handling
@@ -204,8 +214,8 @@ struct Navigator
     if (navigationBreak(state)) return;
 
     // get a  navigation corrector associated to the stepper
-    auto navCorr = state.stepping.corrector();                                     
-    
+    auto navCorr = state.stepping.corrector();
+
     // -------------------------------------------------
     // Initialization
     // This should lead to:
@@ -280,15 +290,17 @@ struct Navigator
   {
     if (state.navigation.navigationBreak) {
       // target exists and reached, or no target exists
-      if (state.targetReached || !state.targetSurface) return true;
+      if (state.navigation.targetReached || !state.navigation.targetSurface)
+        return true;
       // the only advance could have been to the target
-      if (state.targetSurface->isOnSurface(state.stepping.position(), true)) {
+      if (state.navigation.targetSurface->isOnSurface(state.stepping.position(),
+                                                      true)) {
         // set the target surface
-        state.currentSurface = state.targetSurface;
+        state.navigation.currentSurface = state.navigation.targetSurface;
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Current surface set to target surface ";
-          dstream << state.currentSurface->geoID().toString();
+          dstream << state.navigation.currentSurface->geoID().toString();
           return dstream.str();
         });
         return true;
@@ -316,14 +328,12 @@ struct Navigator
   /// @param[in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename corrector_t>
+  template <typename propagator_state_t, typename corrector_t>
   bool
-  initialize(propagator_state_t& state,
-             const corrector_t& navCorr) const
+  initialize(propagator_state_t& state, const corrector_t& navCorr) const
   {
 
-    // no initialisation necessary
+    // No initialisation necessary
     if (state.navigation.currentVolume) return false;
 
     debugLog(state, [&] { return std::string("Initializing start volume."); });
@@ -332,12 +342,12 @@ struct Navigator
     // for eventual post-update action, e.g. material integration
     // or collection when leaving a surface at the start of
     // an extrapolation process
-    state.currentSurface = state.startSurface;
-    if (state.currentSurface) {
+    state.navigation.currentSurface = state.navigation.startSurface;
+    if (state.navigation.currentSurface) {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Current surface set to start surface ";
-        dstream << state.currentSurface->geoID().toString();
+        dstream << state.navigation.currentSurface->geoID().toString();
         return dstream.str();
       });
     }
@@ -345,12 +355,14 @@ struct Navigator
     // Fast Navigation initialization for start condition:
     // short-cut through object association, saves navigation in the
     // geometry and volume tree search for the lowest volume
-    if (state.startSurface && state.startSurface->associatedLayer()) {
+    if (state.navigation.startSurface
+        && state.navigation.startSurface->associatedLayer()) {
       debugLog(state, [&] {
         return std::string("Fast start initialization through association.");
       });
       // assign the current layer and volume by association
-      state.navigation.startLayer = state.startSurface->associatedLayer();
+      state.navigation.startLayer
+          = state.navigation.startSurface->associatedLayer();
       state.navigation.startVolume
           = state.navigation.startLayer->trackingVolume();
     } else {
@@ -360,68 +372,32 @@ struct Navigator
       // current volume and layer search through global search
       debugLog(state, [&] {
         std::stringstream dstream;
-        dstream << "Starting from position " << toString(state.stepping.position());
-        dstream << " and direction " << toString(state.stepping.momentum().unit());
+        dstream << "Starting from position "
+                << toString(state.stepping.position());
+        dstream << " and direction " << toString(state.stepping.direction());
         return dstream.str();
       });
       state.navigation.startVolume
           = trackingGeometry->lowestTrackingVolume(state.stepping.position());
       state.navigation.startLayer = state.navigation.startVolume
-          ? state.navigation.startVolume->associatedLayer(state.stepping.position())
+          ? state.navigation.startVolume->associatedLayer(
+                state.stepping.position())
           : nullptr;
-    }
-    // Fast Navigation initialization for target:
-    if (state.targetSurface && state.targetSurface->associatedLayer()) {
-      debugLog(state, [&] {
-        return std::string("Fast target initialization through association.");
-      });
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Target surface set to";
-        dstream << state.targetSurface->geoID().toString();
-        return dstream.str();
-      });
-      // assign the target volume and the target surface
-      state.navigation.targetLayer = state.targetSurface->associatedLayer();
-      state.navigation.targetVolume
-          = state.navigation.targetLayer->trackingVolume();
-    } else if (state.targetSurface) {
-      // Slow navigation initialization for target:
-      // target volume and layer search through global search
-      NavigationOptions<Surface> navOpts(state.stepping.navDir,
-                                         false,
-                                         resolveSensitive,
-                                         resolveMaterial,
-                                         resolvePassive);
-      // take the target intersection
-      auto targetIntersection
-          = state.targetSurface->intersectionEstimate(state.stepping, 
-                                                      navOpts,
-                                                      navCorr);
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Target estimate position (";
-        dstream << targetIntersection.intersection.position.x() << ", ";
-        dstream << targetIntersection.intersection.position.y() << ", ";
-        dstream << targetIntersection.intersection.position.z() << ")";
-        return dstream.str();
-      });
-      /// get the target volume from the intersection
-      auto tPosition = targetIntersection.intersection.position;
-      state.navigation.targetVolume
-          = trackingGeometry->lowestTrackingVolume(tPosition);
-      state.navigation.targetLayer = state.navigation.targetVolume
-          ? state.navigation.targetVolume->associatedLayer(tPosition)
-          : nullptr;
-      if (state.navigation.targetVolume){
+      // set the start volume as current volume
+      state.navigation.currentVolume = state.navigation.startVolume;
+      if (state.navigation.startVolume) {
         debugLog(state, [&] {
           std::stringstream dstream;
-          dstream << "Target volume estimated : ";
-          dstream << state.navigation.targetVolume->volumeName();
+          dstream << "Start volume estimated : ";
+          dstream << state.navigation.startVolume->volumeName();
           return dstream.str();
         });
       }
     }
+
+    // Target initialization
+    initializeTarget(state, navCorr);
+
     // A current volume exists
     if (state.navigation.startVolume) {
       // assign to the currentVolume
@@ -438,12 +414,11 @@ struct Navigator
                                            resolveSensitive,
                                            resolveMaterial,
                                            resolvePassive,
-                                           state.startSurface,
-                                           state.targetSurface);                                                                                
+                                           state.navigation.startSurface,
+                                           state.navigation.targetSurface);
         state.navigation.navSurfaces
-            = state.navigation.startLayer->compatibleSurfaces(state.stepping, 
-                                                              navOpts,
-                                                              navCorr);
+            = state.navigation.startLayer->compatibleSurfaces(
+                state.stepping, navOpts, navCorr);
 
         // the number of surface candidates
         if (state.navigation.navSurfaces.size()) {
@@ -459,7 +434,8 @@ struct Navigator
           state.navigation.navSurfaceIter
               = state.navigation.navSurfaces.begin();
           // update the navigation step size before you return
-          updateStep(state, state.navigation.navSurfaceIter);
+          updateStep(state,
+                     state.navigation.navSurfaceIter->intersection.pathLength);
           return true;
         }
         return false;
@@ -470,12 +446,13 @@ struct Navigator
           debugLog(state, [&] {
             return std::string("On current layer surface, setting it.");
           });
-          state.currentSurface = state.navigation.navLayerIter->representation;
-          if (state.currentSurface)
+          state.navigation.currentSurface
+              = state.navigation.navLayerIter->representation;
+          if (state.navigation.currentSurface)
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Current surface set to approach surface ";
-              dstream << state.currentSurface->geoID().toString();
+              dstream << state.navigation.currentSurface->geoID().toString();
               return dstream.str();
             });
           // no returning to the stepper at this stage
@@ -495,6 +472,100 @@ struct Navigator
     // release the navigation step size
     state.stepping.stepSize.release(cstep::actor);
     return false;
+  }
+
+  /// --------------------------------------------------------------------
+  /// Navigation (re-)initialisation for the target
+  ///
+  /// This is only called a few times every propagation/extrapolation
+  ///
+  /// ---------------------------------------------------------------------
+  ///
+  /// As a straight line estimate can lead you to the wrong destination
+  /// Volume, this will be called at:
+  /// - initialization
+  /// - attempted volume switch
+  /// Target findin by association will not be done again
+  ///
+  /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam is a step corrector (can be void corrector)
+  ///
+  /// @param[in,out] state is the propagation state object
+  /// @param[in] navCorr is the navigation path corrector
+  ///
+  /// boolean return triggers exit to stepper
+  template <typename propagator_state_t, typename corrector_t>
+  void
+  initializeTarget(propagator_state_t& state, const corrector_t& navCorr) const
+  {
+
+    if (state.navigation.targetVolume && state.stepping.pathAccumulated == 0.) {
+      debugLog(state, [&] {
+        return std::string("Re-initialzing cancelled as it is the first step.");
+      });
+      return;
+    }
+
+    // Fast Navigation initialization for target:
+    if (state.navigation.targetSurface
+        && state.navigation.targetSurface->associatedLayer()
+        && !state.navigation.targetVolume) {
+      debugLog(state, [&] {
+        return std::string("Fast target initialization through association.");
+      });
+      debugLog(state, [&] {
+        std::stringstream dstream;
+        dstream << "Target surface set to ";
+        dstream << state.navigation.targetSurface->geoID().toString();
+        return dstream.str();
+      });
+      // assign the target volume and the target surface
+      state.navigation.targetLayer
+          = state.navigation.targetSurface->associatedLayer();
+      state.navigation.targetVolume
+          = state.navigation.targetLayer->trackingVolume();
+    } else if (state.navigation.targetSurface) {
+      // screen output that you do a re-initialization
+      if (state.navigation.targetVolume) {
+        debugLog(state, [&] {
+          return std::string("Re-initialization of target volume triggered.");
+        });
+      }
+      // Slow navigation initialization for target:
+      // target volume and layer search through global search
+      NavigationOptions<Surface> navOpts(state.stepping.navDir,
+                                         false,
+                                         resolveSensitive,
+                                         resolveMaterial,
+                                         resolvePassive);
+      // take the target intersection
+      auto targetIntersection
+          = state.navigation.targetSurface->intersectionEstimate(
+              state.stepping, navOpts, navCorr);
+      debugLog(state, [&] {
+        std::stringstream dstream;
+        dstream << "Target estimate position (";
+        dstream << targetIntersection.intersection.position.x() << ", ";
+        dstream << targetIntersection.intersection.position.y() << ", ";
+        dstream << targetIntersection.intersection.position.z() << ")";
+        return dstream.str();
+      });
+      /// get the target volume from the intersection
+      auto tPosition = targetIntersection.intersection.position;
+      state.navigation.targetVolume
+          = trackingGeometry->lowestTrackingVolume(tPosition);
+      state.navigation.targetLayer = state.navigation.targetVolume
+          ? state.navigation.targetVolume->associatedLayer(tPosition)
+          : nullptr;
+      if (state.navigation.targetVolume) {
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Target volume estimated : ";
+          dstream << state.navigation.targetVolume->volumeName();
+          return dstream.str();
+        });
+      }
+    }
   }
 
   /// Navigation through volumes
@@ -523,12 +594,14 @@ struct Navigator
   /// @param[in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename corrector_t>
+  template <typename propagator_state_t, typename corrector_t>
   bool
-  handleBoundaries(propagator_state_t& state,
-                   const corrector_t& navCorr) const
+  handleBoundaries(propagator_state_t& state, const corrector_t& navCorr) const
   {
+
+    // re-initialize target: @todo we know better when to do this
+    initializeTarget(state, navCorr);
+
     // only handle boundaries if you are not in the target volume
     if (!state.navigation.currentVolume) {
       debugLog(state, [&] {
@@ -554,9 +627,8 @@ struct Navigator
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       // get the navigation boundaries
       state.navigation.navBoundaries
-          = state.navigation.currentVolume->compatibleBoundaries(state.stepping,
-                                                                 navOpts,
-                                                                 navCorr);
+          = state.navigation.currentVolume->compatibleBoundaries(
+              state.stepping, navOpts, navCorr);
       // the number of boundary candidates
       debugLog(state, [&] {
         std::stringstream dstream;
@@ -574,12 +646,12 @@ struct Navigator
         if (step * step < s_onSurfaceTolerance * s_onSurfaceTolerance) {
           lastBoundary = state.navigation.navBoundaryIter->representation;
           debugLog(state, [&] {
-            return std::string(
-                "Starting from boundary surface.");
+            return std::string("Starting from boundary surface.");
           });
         } else {
           // update the navigation step size before you return
-          updateStep(state, state.navigation.navBoundaryIter);
+          updateStep(state,
+                     state.navigation.navBoundaryIter->intersection.pathLength);
           return true;
         }
       } else {
@@ -597,16 +669,19 @@ struct Navigator
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
       // case (v-a) : you are on the boundary surface
       //              only if you hadn't just done a volume switch
-      // check if we are on already in this step      
-      if (lastBoundary || boundarySurface->isOnSurface(state.stepping.position(), true)) {
+      // check if we are on already in this step
+      if (lastBoundary
+          || boundarySurface->isOnSurface(state.stepping.position(), true)) {
         debugLog(state, [&] {
           return std::string(
               "Boundary surface reached, prepare volume switch.");
         });
         // get the actual boundary for the navigation & the next volume
         auto boundary = state.navigation.navBoundaryIter->object;
-        state.navigation.currentVolume = boundary->attachedVolume(
-            state.stepping.position(), state.stepping.momentum(), state.stepping.navDir);
+        state.navigation.currentVolume
+            = boundary->attachedVolume(state.stepping.position(),
+                                       state.stepping.direction(),
+                                       state.stepping.navDir);
         // no volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           debugLog(state, [&] {
@@ -616,12 +691,12 @@ struct Navigator
           return false;
         }
         // store the boundary for eventual actors to work on it
-        state.currentSurface = boundarySurface;
-        if (state.currentSurface)
+        state.navigation.currentSurface = boundarySurface;
+        if (state.navigation.currentSurface)
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Current surface set to boundary surface ";
-            dstream << state.currentSurface->geoID().toString();
+            dstream << state.navigation.currentSurface->geoID().toString();
             return dstream.str();
           });
         // resolve the new layer situation
@@ -641,8 +716,8 @@ struct Navigator
         }
         // switch to new boundary
         ++state.navigation.navBoundaryIter;
-      } 
-      // (re-)evaluate the distance to the boundary 
+      }
+      // (re-)evaluate the distance to the boundary
       if (state.navigation.navBoundaryIter
           != state.navigation.navBoundaries.end()) {
         // we are not on the layer
@@ -654,38 +729,30 @@ struct Navigator
           dstream << " boundaries remain to try.";
           return dstream.str();
         });
-     
+
         // update the boundary Surface (could have been switched)
         boundarySurface = state.navigation.navBoundaryIter->representation;
-        // intersection with next layer 
+        // intersection with next layer
         NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-        auto boundaryIntersect = boundarySurface->intersectionEstimate(state.stepping, 
-                                                                       navOpts, 
-                                                                       navCorr);
+        auto boundaryIntersect = boundarySurface->intersectionEstimate(
+            state.stepping, navOpts, navCorr);
         // check if the intersect is invalid
         auto step = boundaryIntersect.intersection.pathLength;
-        if (boundaryIntersect){
+        if (boundaryIntersect) {
           if (step * step < s_onSurfaceTolerance * s_onSurfaceTolerance) {
-              // very unlikely edge-case
-              lastBoundary = boundarySurface;
-              continue;
-           } else {
-             // update the navigation step size
-             state.stepping.stepSize.update(boundaryIntersect.intersection.pathLength,
-                                            cstep::actor);
-             debugLog(state, [&] {
-               std::stringstream dstream;
-               dstream << "Navigation stepSize towards boundary updated to ";
-               dstream << state.stepping.stepSize.toString();
-               return dstream.str();
-             });
-             return true;
-           } 
+            // very unlikely edge-case
+            lastBoundary = boundarySurface;
+            continue;
+          } else {
+            // update the navigation step size
+            updateStep(state, boundaryIntersect.intersection.pathLength);
+            return true;
+          }
         } else {
           // switch to new boundary and re-enter
           ++state.navigation.navBoundaryIter;
           continue;
-        }     
+        }
       }
     }
     return false;
@@ -706,11 +773,9 @@ struct Navigator
   /// @param[in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename corrector_t>
+  template <typename propagator_state_t, typename corrector_t>
   bool
-  resolveLayers(propagator_state_t& state,
-                const corrector_t& navCorr) const
+  resolveLayers(propagator_state_t& state, const corrector_t& navCorr) const
   {
     debugLog(state, [&] {
       return std::string("We do not have any layers yet, searching.");
@@ -720,7 +785,7 @@ struct Navigator
         = (state.navigation.currentVolume == state.navigation.startVolume);
     // we do not have layers yet, get the candidates
     auto startLayer = start ? state.navigation.startLayer : nullptr;
-    auto endLayer   = state.navigation.targetLayer;
+    auto endLayer   = nullptr;  // state.navigation.targetLayer;
     // create the navigaiton options - and get the compatible layers
     NavigationOptions<Layer> navOpts(state.stepping.navDir,
                                      true,
@@ -729,11 +794,10 @@ struct Navigator
                                      resolvePassive,
                                      startLayer,
                                      endLayer);
-    // get a corrector associated with the stepper                                 
+    // get a corrector associated with the stepper
     state.navigation.navLayers
-        = state.navigation.currentVolume->compatibleLayers(state.stepping, 
-                                                           navOpts,
-                                                           navCorr);
+        = state.navigation.currentVolume->compatibleLayers(
+            state.stepping, navOpts, navCorr);
 
     // the number of layer candidates
     if (state.navigation.navLayers.size()) {
@@ -754,7 +818,8 @@ struct Navigator
         debugLog(state,
                  [&] { return std::string("Stepping towards first layer."); });
         // update the navigation step size before you return
-        updateStep(state, state.navigation.navLayerIter);
+        updateStep(state,
+                   state.navigation.navLayerIter->intersection.pathLength);
         return true;
       } else {
         debugLog(state, [&] {
@@ -766,7 +831,8 @@ struct Navigator
           return std::string("Switch layer surface to start surface.");
         });
         // setting layer surface & representation
-        state.navigation.navLayerIter->representation = state.startSurface;
+        state.navigation.navLayerIter->representation
+            = state.navigation.startSurface;
         // if you found surfaces return to the stepper
         if (resolveSurfaces(state, navCorr)) return true;
         // increase the iterator
@@ -774,6 +840,10 @@ struct Navigator
         return false;
       }
     }
+
+    // your estimate about the target may have been changed
+    initializeTarget(state, navCorr);
+
     if (state.navigation.currentVolume != state.navigation.targetVolume) {
       debugLog(state, [&] {
         return std::string("No layer candidates found, switching volume.");
@@ -785,8 +855,8 @@ struct Navigator
           "Done in final volume, release stepSize & proceed to target.");
     });
     // the step size will be set to the aborter step size
-    state.stepping.stepSize.update(
-        state.stepping.stepSize.value(cstep::aborter), cstep::actor);
+    double abortStep = state.stepping.stepSize.value(cstep::aborter);
+    updateStep(state, abortStep);
     state.navigation.navigationBreak = true;
     return true;
   }
@@ -809,11 +879,9 @@ struct Navigator
   /// @param[in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename corrector_t>
+  template <typename propagator_state_t, typename corrector_t>
   bool
-  handleLayers(propagator_state_t& state,
-               const corrector_t& navCorr) const
+  handleLayers(propagator_state_t& state, const corrector_t& navCorr) const
   {
     // if there are no layers, go back to the navigagor (not stepper yet)
     if (state.navigation.navLayers.empty()) {
@@ -835,11 +903,13 @@ struct Navigator
       // @todo: check if another fast association can be used
       if (!onLayer) {
         // - not so fast : inside volume
-        onLayer = (onLayer
-                   || (layerVolume && layerVolume->inside(state.stepping.position())));
+        onLayer
+            = (onLayer || (layerVolume
+                           && layerVolume->inside(state.stepping.position())));
         // - not so fast: on layer surface
         onLayer
-            = (onLayer || layerSurface->isOnSurface(state.stepping.position(), true));
+            = (onLayer
+               || layerSurface->isOnSurface(state.stepping.position(), true));
       }
       // if we are on the layer alreay at this step
       // - we can resolve the compatible surfaces
@@ -849,21 +919,22 @@ struct Navigator
         });
         // this is the case where you actually start from a surface within the
         // layer : store the current surface in the propagator state
-        if (state.startSurface
+        if (state.navigation.startSurface
             && state.navigation.currentVolume == state.navigation.startVolume
             && layer == state.navigation.startLayer) {
           debugLog(state, [&] {
             return std::string("Switch layer surface to start surface.");
           });
           // setting layer surface & representation
-          state.navigation.navLayerIter->representation = state.startSurface;
+          state.navigation.navLayerIter->representation
+              = state.navigation.startSurface;
         } else {
-          state.currentSurface = layerSurface;
-          if (state.currentSurface)
+          state.navigation.currentSurface = layerSurface;
+          if (state.navigation.currentSurface)
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Current surface set to layer surface ";
-              dstream << state.currentSurface->geoID().toString();
+              dstream << state.navigation.currentSurface->geoID().toString();
               return dstream.str();
             });
         }
@@ -872,8 +943,8 @@ struct Navigator
         // increase the iterator
         ++state.navigation.navLayerIter;
       }
-      // we either re-evaluate the step to the current layer 
-      // or evaluate the step to the next layer 
+      // we either re-evaluate the step to the current layer
+      // or evaluate the step to the next layer
       if (state.navigation.navLayerIter != state.navigation.navLayers.end()) {
         // update in case a switch was done
         layerSurface = state.navigation.navLayerIter->representation;
@@ -888,8 +959,8 @@ struct Navigator
         });
         /// intersection with next layer
         NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-        auto                       layerIntersect
-            = layerSurface->intersectionEstimate(state.stepping, navOpts, navCorr);
+        auto layerIntersect = layerSurface->intersectionEstimate(
+            state.stepping, navOpts, navCorr);
         // check if the intersect is invalid
         if (!layerIntersect) {
           debugLog(state, [&] {
@@ -898,18 +969,13 @@ struct Navigator
           ++state.navigation.navLayerIter;
         } else {
           // update the navigation step size
-          state.stepping.stepSize.update(layerIntersect.intersection.pathLength,
-                                         cstep::actor);
-          debugLog(state, [&] {
-            std::stringstream dstream;
-            dstream << "Navigation stepSize towards layer updated to ";
-            dstream << state.stepping.stepSize.toString();
-            return dstream.str();
-          });
+          updateStep(state, layerIntersect.intersection.pathLength);
           return true;
         }
       }
     }
+    // let's re-initialize the target
+    initializeTarget(state, navCorr);
     // we are at the end of trying layers
     if (state.navigation.currentVolume == state.navigation.targetVolume) {
       debugLog(state, [&] {
@@ -917,8 +983,8 @@ struct Navigator
             "Done in final volume, release stepSize & proceed to target.");
       });
       // the step size will be set to the aborter step size
-      state.stepping.stepSize.update(
-          state.stepping.stepSize.value(cstep::aborter), cstep::actor);
+      double abortStep = state.stepping.stepSize.value(cstep::aborter);
+      updateStep(state, abortStep);
       state.navigation.navigationBreak = true;
       return true;
     }
@@ -944,25 +1010,23 @@ struct Navigator
   /// @param[in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename corrector_t>
+  template <typename propagator_state_t, typename corrector_t>
   bool
-  resolveSurfaces(propagator_state_t& state,
-                  const corrector_t& navCorr) const
+  resolveSurfaces(propagator_state_t& state, const corrector_t& navCorr) const
   {
     // get the layer and layer surface
     auto layerSurface = state.navigation.navLayerIter->representation;
     auto navLayer     = state.navigation.navLayerIter->object;
     // are we on the start layer
     bool onStart      = (navLayer == state.navigation.startLayer);
-    auto startSurface = onStart ? state.startSurface : layerSurface;
+    auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
     NavigationOptions<Surface> navOpts(state.stepping.navDir,
                                        true,
                                        resolveSensitive,
                                        resolveMaterial,
                                        resolvePassive,
                                        startSurface,
-                                       state.targetSurface);
+                                       state.navigation.targetSurface);
     // get the surfaces
     state.navigation.navSurfaces
         = navLayer->compatibleSurfaces(state.stepping, navOpts, navCorr);
@@ -979,7 +1043,8 @@ struct Navigator
       // set the iterator
       state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
       // update the navigation step size before you return to the stepper
-      updateStep(state, state.navigation.navSurfaceIter);
+      updateStep(state,
+                 state.navigation.navSurfaceIter->intersection.pathLength);
       return true;
     }
     state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
@@ -1001,11 +1066,9 @@ struct Navigator
   /// @param[in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename corrector_t>
+  template <typename propagator_state_t, typename corrector_t>
   bool
-  handleSurfaces(propagator_state_t& state,
-                 const corrector_t& navCorr) const
+  handleSurfaces(propagator_state_t& state, const corrector_t& navCorr) const
   {
     // no surfaces, do not return to stepper
     if (!state.navigation.navSurfaces.size()) {
@@ -1030,16 +1093,16 @@ struct Navigator
         });
         // the surface will only appear due to correct
         // collect(Property) flag
-        state.currentSurface = surface;
-        if (state.currentSurface)
+        state.navigation.currentSurface = surface;
+        if (state.navigation.currentSurface)
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Current surface set to resolved surface ";
-            dstream << state.currentSurface->geoID().toString();
+            dstream << state.navigation.currentSurface->geoID().toString();
             return dstream.str();
           });
         // break if the surface is the target surface
-        if (surface == state.targetSurface) {
+        if (surface == state.navigation.targetSurface) {
           debugLog(state, [&] {
             return std::string("This was the target surface. Done.");
           });
@@ -1070,11 +1133,10 @@ struct Navigator
         // create the navigaton options
         NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
         // now intersect (should exclude punch-through)
-        auto surfaceIntersect  = surface->intersectionEstimate(state.stepping, 
-                                                               navOpts, 
-                                                               navCorr);
+        auto surfaceIntersect
+            = surface->intersectionEstimate(state.stepping, navOpts, navCorr);
         double surfaceDistance = surfaceIntersect.intersection.pathLength;
-                 
+
         if (!surfaceIntersect) {
           debugLog(state, [&] {
             return std::string(
@@ -1083,13 +1145,7 @@ struct Navigator
           ++state.navigation.navSurfaceIter;
           continue;
         } else {
-          state.stepping.stepSize.update(surfaceDistance, cstep::actor);
-          debugLog(state, [&] {
-            std::stringstream dstream;
-            dstream << "Navigation stepSize towards surface updated to ";
-            dstream << state.stepping.stepSize.toString() << '\n';
-            return dstream.str();
-          });
+          updateStep(state, surfaceDistance);
           return true;
         }
       }
@@ -1111,14 +1167,20 @@ struct Navigator
 
   /// This method updates the constrained step size
   /// @tparam propagator_state_t is the state type
-  /// @tparam type_t is the intersection type (surface, layer, etc.)
-  template <typename propagator_state_t, typename naviter_type_t>
+  template <typename propagator_state_t>
   void
-  updateStep(propagator_state_t& state, naviter_type_t& ntype) const
+  updateStep(propagator_state_t& state, double step) const
   {
+    /// If we have an initial step and are configured to modify it
+    if (state.stepping.pathAccumulated == 0. && initialStepFactor != 1.) {
+      debugLog(state, [&] {
+        return std::string("Initial step modification detected.");
+      });
+      step *= initialStepFactor;
+    }
+
     //  update the step
-    state.stepping.stepSize.update(ntype->intersection.pathLength,
-                                   cstep::actor);
+    state.stepping.stepSize.update(step, cstep::actor);
     debugLog(state, [&] {
       std::stringstream dstream;
       dstream << "Navigation stepSize updated to ";

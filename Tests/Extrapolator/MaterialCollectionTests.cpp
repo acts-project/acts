@@ -55,9 +55,9 @@ namespace Test {
   Navigator navigatorES(tGeometry);
   Navigator navigatorSL(tGeometry);
 
-  typedef ConstantBField       BField;
+  typedef ConstantBField                BField;
   typedef detail::IntersectionCorrector StepCorrector;
-  typedef EigenStepper<BField,StepCorrector> EigenStepper;
+  typedef EigenStepper<BField, StepCorrector>        EigenStepper;
   typedef Propagator<EigenStepper, Navigator>        EigenPropagator;
   typedef Propagator<StraightLineStepper, Navigator> StraightLinePropagator;
 
@@ -70,12 +70,12 @@ namespace Test {
   StraightLinePropagator slpropagator(std::move(slstepper),
                                       std::move(navigatorSL));
 
-  const int ntests           = 51;
-  const int skip             = 50;
-  bool      debugModeFwd     = true;
-  bool      debugModeBwd     = true;
-  bool      debugModeFwdStep = true;
-  bool      debugModeBwdStep = true;
+  const int ntests           = 1000;  // test with 0.4 lower boundary - 952;
+  const int skip             = 0;     // test with 0.4 lower boundary - 951;
+  bool      debugModeFwd     = false;
+  bool      debugModeBwd     = false;
+  bool      debugModeFwdStep = false;
+  bool      debugModeBwdStep = false;
 
   /// the actual test nethod that runs the test
   /// can be used with several propagator types
@@ -122,15 +122,14 @@ namespace Test {
                                                AbortConditions_type>
         fwdOptions;
 
-    fwdOptions.maxStepSize   = 25. * units::_cm;
-    fwdOptions.maxPathLength = 25 * units::_cm;
-    fwdOptions.debug         = debugModeFwd;
+    fwdOptions.maxStepSize = 25. * units::_cm;
+    fwdOptions.pathLimit   = 25 * units::_cm;
+    fwdOptions.debug       = debugModeFwd;
 
     // get the material collector and configure it
     auto& fwdMaterialCollector
         = fwdOptions.actionList.template get<MaterialCollector>();
     fwdMaterialCollector.detailedCollection = true;
-    fwdMaterialCollector.debug              = debugModeFwd;
 
     // forward material test
     const auto& fwdResult = prop.propagate(start, fwdOptions);
@@ -153,10 +152,10 @@ namespace Test {
 
     // get the forward output to the screen
     if (debugModeFwd) {
-      const auto& fwd_output
+      const auto& fwdOutput
           = fwdResult.template get<DebugOutput::result_type>();
       std::cout << ">>> Forward Propgation & Navigation output " << std::endl;
-      std::cout << fwd_output.debugString << std::endl;
+      std::cout << fwdOutput.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
       for (auto& fwdStepsC : fwdMaterial.collected) {
@@ -169,16 +168,15 @@ namespace Test {
     typename Propagator_type::template Options<ActionList_type,
                                                AbortConditions_type>
         bwdOptions;
-    bwdOptions.maxStepSize   = 25. * units::_cm;
-    bwdOptions.maxPathLength = 25 * units::_cm;
-    bwdOptions.direction     = backward;
-    bwdOptions.debug         = debugModeBwd;
+    bwdOptions.maxStepSize = -25 * units::_cm;
+    bwdOptions.pathLimit   = -25 * units::_cm;
+    bwdOptions.direction   = backward;
+    bwdOptions.debug       = debugModeBwd;
 
     // get the material collector and configure it
     auto& bwdMaterialCollector
         = bwdOptions.actionList.template get<MaterialCollector>();
     bwdMaterialCollector.detailedCollection = true;
-    bwdMaterialCollector.debug              = debugModeBwd;
 
     const auto& startSurface = start.referenceSurface();
     const auto& bwdResult    = prop.propagate(
@@ -228,22 +226,22 @@ namespace Test {
                                                AbortConditions_type>
         fwdStepOptions;
 
-    fwdStepOptions.maxStepSize   = 25. * units::_cm;
-    fwdStepOptions.maxPathLength = 25 * units::_cm;
-    fwdStepOptions.debug         = debugModeFwdStep;
+    fwdStepOptions.maxStepSize = 25. * units::_cm;
+    fwdStepOptions.pathLimit   = 25 * units::_cm;
+    fwdStepOptions.debug       = debugModeFwdStep;
 
     // get the material collector and configure it
     auto& fwdStepMaterialCollector
         = fwdStepOptions.actionList.template get<MaterialCollector>();
     fwdStepMaterialCollector.detailedCollection = true;
-    fwdStepMaterialCollector.debug              = debugModeFwdStep;
 
     double fwdStepStepMaterialInX0 = 0.;
     double fwdStepStepMaterialInL0 = 0.;
 
     if (debugModeFwdStep) {
       // check if the surfaces are free
-      std::cout << ">>> Forward steps to be processed sequentially ..." << std::endl;
+      std::cout << ">>> Forward steps to be processed sequentially ..."
+                << std::endl;
       for (auto& fwdStepsC : fwdMaterial.collected) {
         std::cout << "--> Surface with "
                   << fwdStepsC.surface->geoID().toString() << std::endl;
@@ -305,7 +303,7 @@ namespace Test {
     if (debugModeFwdStep) {
       const auto& fwdStepOutput
           = fwdStepFinal.template get<DebugOutput::result_type>();
-      std::cout << ">>> Forward final step propgation & Nnvigation output "
+      std::cout << ">>> Forward final step propgation & navigation output "
                 << std::endl;
       std::cout << fwdStepOutput.debugString << std::endl;
     }
@@ -316,23 +314,23 @@ namespace Test {
                                                AbortConditions_type>
         bwdStepOptions;
 
-    bwdStepOptions.maxStepSize   = 25. * units::_cm;
-    bwdStepOptions.maxPathLength = 25 * units::_cm;
-    bwdStepOptions.direction     = backward;
-    bwdStepOptions.debug         = debugModeBwdStep;
+    bwdStepOptions.maxStepSize = -25 * units::_cm;
+    bwdStepOptions.pathLimit   = -25 * units::_cm;
+    bwdStepOptions.direction   = backward;
+    bwdStepOptions.debug       = debugModeBwdStep;
 
     // get the material collector and configure it
     auto& bwdStepMaterialCollector
         = bwdStepOptions.actionList.template get<MaterialCollector>();
     bwdStepMaterialCollector.detailedCollection = true;
-    bwdStepMaterialCollector.debug              = debugModeBwdStep;
 
     double bwdStepStepMaterialInX0 = 0.;
     double bwdStepStepMaterialInL0 = 0.;
 
     if (debugModeBwdStep) {
       // check if the surfaces are free
-      std::cout << ">>> Backeard steps to be processed sequentially ..." << std::endl;
+      std::cout << ">>> Backeard steps to be processed sequentially ..."
+                << std::endl;
       for (auto& bwdStepsC : bwdMaterial.collected) {
         std::cout << "--> Surface with "
                   << bwdStepsC.surface->geoID().toString() << std::endl;
@@ -397,14 +395,13 @@ namespace Test {
       std::cout << bwdStepOutput.debugString << std::endl;
     }
   }
-
   // This test case checks that no segmentation fault appears
   // - this tests the collection of surfaces
   BOOST_DATA_TEST_CASE(
       test_material_collector,
       bdata::random((bdata::seed = 20,
                      bdata::distribution
-                     = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                     = std::uniform_real_distribution<>(0.5 * units::_GeV,
                                                         10. * units::_GeV)))
           ^ bdata::random((bdata::seed = 21,
                            bdata::distribution
@@ -423,7 +420,7 @@ namespace Test {
       index)
   {
     runTest(epropagator, pT, phi, theta, charge, index);
-    //runTest(slpropagator, pT, phi, theta, charge, index);
+    runTest(slpropagator, pT, phi, theta, charge, index);
   }
 
 }  // namespace Test

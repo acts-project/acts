@@ -36,9 +36,6 @@ struct MaterialCollector
   /// pathlength in X0 or L0 are recorded
   bool detailedCollection = false;
 
-  /// Enable debug output writing
-  bool debug = false;
-
   /// Simple result struct to be returned
   ///
   /// Result of the material collection process
@@ -67,39 +64,43 @@ struct MaterialCollector
   operator()(propagator_state_t& state, result_type& result) const
   {
     // if we are on target, everything should have been done
-    if (state.targetReached) return;
+    if (state.navigation.targetReached) return;
 
-    if (state.currentSurface) {
+    if (state.navigation.currentSurface) {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Material check on surface ";
-        dstream << state.currentSurface->geoID().toString();
+        dstream << state.navigation.currentSurface->geoID().toString();
         return dstream.str();
       });
     }
 
     // a current surface has been already assigned by the navigator
-    if (state.currentSurface && state.currentSurface->associatedMaterial()) {
+    if (state.navigation.currentSurface
+        && state.navigation.currentSurface->associatedMaterial()) {
 
       // get the material propertices and only continue
       const MaterialProperties* mProperties
-          = state.currentSurface->associatedMaterial()->material(
+          = state.navigation.currentSurface->associatedMaterial()->material(
               state.stepping.position());
       if (mProperties) {
         // pre/post/full update
         double prepofu = 1.;
-        if (state.startSurface == state.currentSurface) {
+        if (state.navigation.startSurface == state.navigation.currentSurface) {
           debugLog(state, [&] {
             return std::string("Update on start surface: post-update mode.");
           });
-          prepofu = state.currentSurface->associatedMaterial()->factor(
-              state.stepping.navDir, postUpdate);
-        } else if (state.targetSurface == state.currentSurface) {
+          prepofu
+              = state.navigation.currentSurface->associatedMaterial()->factor(
+                  state.stepping.navDir, postUpdate);
+        } else if (state.navigation.targetSurface
+                   == state.navigation.currentSurface) {
           debugLog(state, [&] {
             return std::string("Update on target surface: pre-update mode");
           });
-          prepofu = state.currentSurface->associatedMaterial()->factor(
-              state.stepping.navDir, preUpdate);
+          prepofu
+              = state.navigation.currentSurface->associatedMaterial()->factor(
+                  state.stepping.navDir, preUpdate);
         } else {
           debugLog(state, [&] {
             return std::string("Update while pass through: full mode.");
@@ -121,8 +122,8 @@ struct MaterialCollector
 
         // the path correction from the surface intersection
         double pCorrection = prepofu
-            * state.currentSurface->pathCorrection(state.stepping.position(),
-                                                   state.stepping.direction());
+            * state.navigation.currentSurface->pathCorrection(
+                  state.stepping.position(), state.stepping.direction());
         // the full material
         result.materialInX0 += pCorrection * mProperties->thicknessInX0();
         result.materialInL0 += pCorrection * mProperties->thicknessInL0();
@@ -139,7 +140,7 @@ struct MaterialCollector
         if (detailedCollection) {
           // create for recording
           MaterialHit material_hit;
-          material_hit.surface   = state.currentSurface;
+          material_hit.surface   = state.navigation.currentSurface;
           material_hit.position  = state.stepping.position();
           material_hit.direction = state.stepping.direction();
           // get the material & path length
@@ -177,7 +178,7 @@ private:
   debugLog(propagator_state_t&          state,
            std::function<std::string()> logAction) const
   {
-    if (debug) {
+    if (state.options.debug) {
       std::stringstream dstream;
       dstream << "   " << std::setw(state.options.debugPfxWidth);
       dstream << "material collector"

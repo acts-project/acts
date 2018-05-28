@@ -18,7 +18,6 @@
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
 

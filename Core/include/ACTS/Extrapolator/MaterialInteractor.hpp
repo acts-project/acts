@@ -88,33 +88,37 @@ struct MaterialInteractor
   {
 
     // if we are on target, everything should have been done
-    if (state.targetReached) return;
+    if (state.navigation.targetReached) return;
 
     // if switched off, then return - alows run-time configuration
     if (!multipleScattering && !energyLoss) return;
 
     // a current surface has been assigned by the navigator
-    if (state.currentSurface && state.currentSurface->associatedMaterial()) {
+    if (state.navigation.currentSurface
+        && state.navigation.currentSurface->associatedMaterial()) {
 
       // get the surface material and the corresponding material properties
-      auto sMaterial   = state.currentSurface->associatedMaterial();
+      auto sMaterial   = state.navigation.currentSurface->associatedMaterial();
       auto mProperties = sMaterial->material(state.stepping.position());
       if (mProperties) {
         // pre - full - post update test, i.e.
         // check if you have a factor for pre/post/full update to do
         double prepofu = 1.;
-        if (state.startSurface == state.currentSurface) {
+        if (state.navigation.startSurface == state.navigation.currentSurface) {
           debugLog(state, [&] {
             return std::string("Update on start surface: post-update mode.");
           });
-          prepofu = state.currentSurface->associatedMaterial()->factor(
-              state.stepping.navDir, postUpdate);
-        } else if (state.targetSurface == state.currentSurface) {
+          prepofu
+              = state.navigation.currentSurface->associatedMaterial()->factor(
+                  state.stepping.navDir, postUpdate);
+        } else if (state.navigation.targetSurface
+                   == state.navigation.currentSurface) {
           debugLog(state, [&] {
             return std::string("Update on target surface: pre-update mode");
           });
-          prepofu = state.currentSurface->associatedMaterial()->factor(
-              state.stepping.navDir, preUpdate);
+          prepofu
+              = state.navigation.currentSurface->associatedMaterial()->factor(
+                  state.stepping.navDir, preUpdate);
         } else {
           debugLog(state, [&] {
             return std::string("Update while pass through: full mode.");
@@ -123,7 +127,7 @@ struct MaterialInteractor
 
         // create the material interaction class, in case we record afterwards
         MaterialInteraction mInteraction;
-        mInteraction.surface = state.currentSurface;
+        mInteraction.surface = state.navigation.currentSurface;
 
         // the pre/post factor has been applied
         // now check if there's still something to do
@@ -141,7 +145,7 @@ struct MaterialInteractor
         // get the material thickness - and correct it with incidence
         double thickness = mProperties->thickness();
         // get the path correction due to the incident angle
-        double pCorrection = state.currentSurface->pathCorrection(
+        double pCorrection = state.navigation.currentSurface->pathCorrection(
             state.stepping.position(), state.stepping.direction());
         // the corrected thickness
         double cThickness = thickness * pCorrection;

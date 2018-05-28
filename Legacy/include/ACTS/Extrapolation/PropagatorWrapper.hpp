@@ -92,7 +92,7 @@ public:
     double maxStepSize = 1 * units::_m;
 
     /// Absolute maximum path length
-    double maxPathLength = std::numeric_limits<double>::max();
+    double pathLimit = std::numeric_limits<double>::max();
 
     /// List of actions
     Actions action_list;
@@ -167,7 +167,7 @@ public:
   {
     // The extrapolation cell
     ExtrapolationCell<NeutralParameters> ec(start);
-    ec.pathLimit              = options.maxPathLength;
+    ec.pathLimit              = options.pathLimit;
     ec.destinationCurvilinear = true;
 
     return propagate_<ExtrapolationCell<NeutralParameters>,
@@ -186,7 +186,7 @@ public:
   {
     // The extrapolation cell
     ExtrapolationCell<TrackParameters> ec(start);
-    ec.pathLimit              = options.maxPathLength;
+    ec.pathLimit              = options.pathLimit;
     ec.destinationCurvilinear = true;
 
     return propagate_<ExtrapolationCell<TrackParameters>,
@@ -205,7 +205,7 @@ public:
   {
     // The extrapolation cell
     ExtrapolationCell<TrackParameters> ec(start);
-    ec.pathLimit              = options.maxPathLength;
+    ec.pathLimit              = options.pathLimit;
     ec.destinationCurvilinear = true;
 
     return propagate_<ExtrapolationCell<TrackParameters>,
@@ -246,7 +246,7 @@ public:
   {
     // The extrapolation cell
     ExtrapolationCell<NeutralParameters> ec(start);
-    ec.pathLimit              = options.maxPathLength;
+    ec.pathLimit              = options.pathLimit;
     ec.maxStepSize            = options.maxStepSize;
     ec.destinationCurvilinear = false;
 
@@ -268,7 +268,7 @@ public:
 
     // The extrapolation cell
     ExtrapolationCell<TrackParameters> ec(start);
-    ec.pathLimit              = options.maxPathLength;
+    ec.pathLimit              = options.pathLimit;
     ec.destinationCurvilinear = false;
 
     return propagate_<ExtrapolationCell<TrackParameters>,

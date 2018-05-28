@@ -63,8 +63,8 @@ public:
       , p(par.momentum().norm())
       , charge(par.charge())
       , navDir(ndir)
-      , accumulatedPath(0.)
-      , stepSize(ndir * ssize)
+      , pathAccumulated(0.)
+      , stepSize(ssize)
     {
     }
 
@@ -90,7 +90,9 @@ public:
     }
 
     /// Return a corrector
-    VoidCorrector corrector() const { 
+    VoidCorrector
+    corrector() const
+    {
       return VoidCorrector();
     }
 
@@ -110,7 +112,7 @@ public:
     NavigationDirection navDir;
 
     /// accummulated path length state
-    double accumulatedPath = 0.;
+    double pathAccumulated = 0.;
 
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
@@ -180,7 +182,7 @@ public:
     // Update the track parameters according to the equations of motion
     state.pos += h * state.dir;
     // state the path length
-    state.accumulatedPath += h;
+    state.pathAccumulated += h;
     // return h
     return h;
   }

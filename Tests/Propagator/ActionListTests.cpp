@@ -48,7 +48,7 @@ namespace Test {
     struct StepperState
     {
       // accummulated path length cache
-      double accumulatedPath = 0.;
+      double pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
       cstep stepSize = std::numeric_limits<double>::max();
@@ -101,7 +101,7 @@ namespace Test {
     void
     operator()(propagator_state_t& state, result_type& result) const
     {
-      result.distance = path_to_go - state.stepping.accumulatedPath;
+      result.distance = path_to_go - state.stepping.pathAccumulated;
     }
 
     template <typename propagator_state_t>
@@ -158,7 +158,7 @@ namespace Test {
                       100. * units::_mm);
 
     // now move the cache and check again
-    state.stepping.accumulatedPath = 50. * units::_mm;
+    state.stepping.pathAccumulated = 50. * units::_mm;
     action_list(state, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
   }
@@ -185,7 +185,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
 
     // now move the cache and check again
-    state.stepping.accumulatedPath = 50. * units::_mm;
+    state.stepping.pathAccumulated = 50. * units::_mm;
     action_list(state, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);

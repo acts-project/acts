@@ -126,8 +126,8 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         options;
-    options.maxStepSize   = 10. * units::_cm;
-    options.maxPathLength = 25 * units::_cm;
+    options.maxStepSize = 10. * units::_cm;
+    options.pathLimit   = 25 * units::_cm;
 
     BOOST_TEST(
         (epropagator.propagate(start, options).endParameters != nullptr));
@@ -190,8 +190,8 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         options;
-    options.maxStepSize   = 10. * units::_cm;
-    options.maxPathLength = 25 * units::_cm;
+    options.maxStepSize = 10. * units::_cm;
+    options.pathLimit   = 25 * units::_cm;
 
     const auto& result           = epropagator.propagate(start, options);
     auto        collector_result = result.get<PlaneCollector::result_type>();
@@ -267,8 +267,8 @@ namespace Test {
     typename EigenPropagator_type::template Options<ActionList_type,
                                                     AbortConditions_type>
         options;
-    options.maxStepSize   = 25. * units::_cm;
-    options.maxPathLength = 25 * units::_cm;
+    options.maxStepSize = 25. * units::_cm;
+    options.pathLimit   = 25 * units::_cm;
 
     const auto& result = epropagator.propagate(start, options).endParameters;
     if (result) {

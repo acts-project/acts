@@ -13,11 +13,34 @@
 #include <sstream>
 #include <string>
 #include "ACTS/Propagator/detail/ConstrainedStep.hpp"
+#include "ACTS/Surfaces/BoundaryCheck.hpp"
+#include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Intersection.hpp"
 
 namespace Acts {
 
 namespace detail {
+
+  /// @brief TargetOptions struct for geometry interface
+  struct TargetOptions
+  {
+
+    /// the navigation direction
+    NavigationDirection navDir = forward;
+
+    /// the boundary check directive - always false here
+    BoundaryCheck boundaryCheck = false;
+
+    /// object to check against - always nullptr here
+    const Surface* startObject = nullptr;
+
+    /// The path limit
+    double pathLimit = std::numeric_limits<double>::max();
+
+    /// create target options
+    TargetOptions(NavigationDirection ndir) : navDir(ndir) {}
+  };
 
   /// The debug logging for standard aborters
   ///
@@ -50,25 +73,6 @@ namespace detail {
   struct PathLimitReached
   {
 
-    /// this is direction * absolute path limit
-    double signedPathLimit = std::numeric_limits<double>::max();
-
-    /// the tolerance used to defined "reached"
-    double tolerance = 0.;
-
-    /// write out debug information
-    double debug = false;
-
-    /// constructor
-    ///
-    /// @param tlimit is the signed path limit for this propagation
-    /// @param ttolerance The tolerance to declare "reached"
-    PathLimitReached(double tlimit     = std::numeric_limits<double>::max(),
-                     double ttolerance = 0.001)
-      : signedPathLimit(tlimit), tolerance(std::abs(ttolerance))
-    {
-    }
-
     /// boolean operator for abort condition using the result
     template <typename propagator_state_t, typename result_t>
     bool
@@ -87,17 +91,19 @@ namespace detail {
     operator()(propagator_state_t& state) const
     {
       // Check if the maximum allowed step size has to be updated
-      double diffToLimit = signedPathLimit - state.stepping.accumulatedPath;
-      state.stepping.stepSize.update(diffToLimit, ConstrainedStep::aborter);
-      bool limitReached = (std::abs(diffToLimit) < tolerance);
+      double distance
+          = state.options.pathLimit - state.stepping.pathAccumulated;
+      double tolerance = state.options.targetTolerance;
+      state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
+      bool limitReached = (distance * distance < tolerance * tolerance);
       if (limitReached) {
         targetDebugLog(state, "x", [&] {
           std::stringstream dstream;
-          dstream << "Path limit reached at distance " << diffToLimit;
+          dstream << "Path limit reached at distance " << distance;
           return dstream.str();
         });
         // reaching the target means navigaiton break
-        state.targetReached = true;
+        state.navigation.targetReached = true;
       } else
         targetDebugLog(state, "o", [&] {
           std::stringstream dstream;
@@ -112,25 +118,10 @@ namespace detail {
 
   /// This is the condition that the Surface has been reached
   /// it then triggers an propagation abort of the propagation
-  template <typename Surface>
   struct SurfaceReached
   {
-    /// the plain pointer to the surface
-    /// - safe as the condition lives shorter than the surface
-    const Surface* surface = nullptr;
-    /// the direction
-    NavigationDirection direction = forward;
-    /// the tolerance to be defined on surface
-    double tolerance = 0.;
-    /// output debug
-    bool debug = false;
-
     /// Default Constructor
-    ///
-    SurfaceReached()
-      : surface(nullptr), tolerance(std::numeric_limits<double>::max())
-    {
-    }
+    SurfaceReached() {}
 
     /// boolean operator for abort condition using the result (ignored)
     template <typename propagator_state_t, typename result_t>
@@ -149,30 +140,31 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (!surface) return false;
+      if (state.navigation.targetReached) return true;
 
       // check if the cache filled the currentSurface
-      if (state.currentSurface == surface) {
+      if (state.navigation.currentSurface
+          && state.navigation.currentSurface
+              == state.navigation.targetSurface) {
         targetDebugLog(state, "x", [&] {
           std::string ds("Target surface reached.");
           return ds;
         });
         // reaching the target calls a navigation break
-        state.targetReached = true;
+        state.navigation.targetReached = true;
         return true;
       }
-
       // calculate the distance to the surface
-      const double distance = 
-         surface->intersectionEstimate(state.stepping.position(),
-                                       state.stepping.direction(),
-                                       direction,
-                                       false)
-                .pathLength;
+      // @todo: add corrector
+      const double tolerance = state.options.targetTolerance;
+      const auto   iestimate
+          = state.navigation.targetSurface->intersectionEstimate(
+              state.stepping, TargetOptions(state.options.direction), nullptr);
+      const double distance = iestimate.intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
       // return true if you fall below tolerance
-      bool targetReached = (std::abs(distance) <= tolerance);
+      bool targetReached = (distance * distance <= tolerance * tolerance);
       if (targetReached) {
         targetDebugLog(state, "x", [&] {
           std::stringstream dstream;
@@ -181,22 +173,23 @@ namespace detail {
           return dstream.str();
         });
         // assigning the currentSurface
-        state.currentSurface = surface;
+        state.navigation.currentSurface = state.navigation.targetSurface;
         targetDebugLog(state, "x", [&] {
           std::stringstream dstream;
           dstream << "Current surface set to target surface  ";
-          dstream << state.currentSurface->geoID().toString();
+          dstream << state.navigation.currentSurface->geoID().toString();
           return dstream.str();
         });
         // reaching the target calls a navigation break
-        state.targetReached = true;
-      } else
+        state.navigation.targetReached = true;
+      } else {
         targetDebugLog(state, "o", [&] {
           std::stringstream dstream;
           dstream << "Target stepSize (surface) updated to ";
           dstream << state.stepping.stepSize.toString();
           return dstream.str();
         });
+      }
       // path limit check
       return targetReached;
     }

@@ -24,8 +24,8 @@
 #include "ACTS/Propagator/detail/ConstrainedStep.hpp"
 #include "ACTS/Surfaces/CylinderSurface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
 #include "ACTS/Utilities/Intersection.hpp"
+#include "ACTS/Utilities/Units.hpp"
 #include "ExtrapolatorTestGeometry.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -65,12 +65,14 @@ namespace Test {
       {
         return dir;
       }
-      
+
       /// Return a corrector
-      VoidCorrector corrector() const { 
+      VoidCorrector
+      corrector() const
+      {
         return VoidCorrector();
       }
-      
+
       /// Position
       Vector3D pos = Vector3D(0., 0., 0.);
 
@@ -81,7 +83,7 @@ namespace Test {
       NavigationDirection navDir = forward;
 
       // accummulated path length cache
-      double accumulatedPath = 0.;
+      double pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
       cstep stepSize = cstep(100 * units::_cm);
@@ -176,7 +178,7 @@ namespace Test {
     BOOST_TEST(
         (state.navigation.currentVolume == state.navigation.startVolume));
     // check that the currentSurface is reset to:
-    BOOST_TEST((state.currentSurface == nullptr));
+    BOOST_TEST((state.navigation.currentSurface == nullptr));
     // one layer has been found
     BOOST_TEST((state.navigation.navLayers.size() == 1));
     // the iterator should point to it
@@ -205,7 +207,7 @@ namespace Test {
     BOOST_TEST(navigator.handleSurfaces(state, navCorr) == false);
     // handle_layer should store the layer surface, but return false
     BOOST_TEST(navigator.handleLayers(state, navCorr) == false);
-    BOOST_TEST((state.currentSurface != nullptr));
+    BOOST_TEST((state.navigation.currentSurface != nullptr));
     // handleBoundaries should return true
     BOOST_TEST(navigator.handleBoundaries(state, navCorr) == true);
     // the iterator should point to it
@@ -227,7 +229,7 @@ namespace Test {
     BOOST_TEST(navigator.handleSurfaces(state, navCorr) == false);
     // handle_layer should sore the layer surface, but return false
     BOOST_TEST(navigator.handleLayers(state, navCorr) == false);
-    BOOST_TEST((state.currentSurface != nullptr));
+    BOOST_TEST((state.navigation.currentSurface != nullptr));
     // handleBoundaries should return true
     BOOST_TEST(navigator.handleBoundaries(state, navCorr) == true);
 
@@ -386,7 +388,7 @@ namespace Test {
     // handleSurfaces : set step size and return
     BOOST_TEST(navigator.handleSurfaces(state, navCorr) == true);
     // check that we have the current surface
-    BOOST_TEST(state.currentSurface);
+    BOOST_TEST(state.navigation.currentSurface);
     // the iterator should point to it
     if (debug) {
       std::cout << "<<< Test 1l >>> advance to next surface, update at "
@@ -398,7 +400,7 @@ namespace Test {
     // remember the end parameters for the backward navigation
     Vector3D eposition = state.stepping.position();
     // remember the end surface for the backward navidation
-    const Surface* esurface = state.currentSurface;
+    const Surface* esurface = state.navigation.currentSurface;
 
     // backward navigation ----------------------------------------------
     if (debug) {
@@ -408,13 +410,13 @@ namespace Test {
     }
 
     // re-initialize the propagator state
-    state                   = PropagatorState();
-    state.stepping.navDir   = backward;
-    state.stepping.stepSize =  cstep(-100 * units::_cm);
-    state.stepping.dir      = momentum.unit();
-    state.stepping.pos      = eposition;
-    state.options.debug     = debug;
-    state.startSurface      = esurface;
+    state                         = PropagatorState();
+    state.stepping.navDir         = backward;
+    state.stepping.stepSize       = cstep(-100 * units::_cm);
+    state.stepping.dir            = momentum.unit();
+    state.stepping.pos            = eposition;
+    state.options.debug           = debug;
+    state.navigation.startSurface = esurface;
 
     // initialize the navigator
     // this one avoids the stepping towards layer
@@ -596,7 +598,7 @@ namespace Test {
     // - try hitting layers, do not hit layers
     // - switch boundary to next and update step size to that
     // re-initialize/update the stepping state
-    state = PropagatorState();
+    state               = PropagatorState();
     state.options.debug = debug;
     // let's shift the boundary position in z
     onBoundary[2] = 400.;

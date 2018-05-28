@@ -61,10 +61,11 @@ struct SurfaceCollector
   {
     // a current surface has been assigned by the navigator
     //
-    if (state.currentSurface && this_selector(*state.currentSurface)) {
+    if (state.navigation.currentSurface
+        && this_selector(*state.navigation.currentSurface)) {
       // create for recording
       SurfaceHit surface_hit;
-      surface_hit.surface   = state.currentSurface;
+      surface_hit.surface   = state.navigation.currentSurface;
       surface_hit.position  = state.stepping.position();
       surface_hit.direction = state.stepping.direction();
       // save if in the result

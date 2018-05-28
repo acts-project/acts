@@ -40,7 +40,24 @@ namespace Test {
   typedef detail::ConstrainedStep cstep;
 
   /// This is a simple cache struct to mimic the
-  /// Propagator cache
+  /// Navigator state
+  struct NavigatorState
+  {
+    /// Navigation cache: the start surface
+    const Surface* startSurface = nullptr;
+
+    /// Navigation cache: the current surface
+    const Surface* currentSurface = nullptr;
+
+    /// Navigation cache: the target surface
+    const Surface* targetSurface = nullptr;
+
+    /// The boolean is reached
+    bool targetReached = false;
+  };
+
+  /// This is a simple cache struct to mimic the
+  /// Propagator state
   struct PropagatorState
   {
 
@@ -49,7 +66,7 @@ namespace Test {
     struct StepperState
     {
       // accummulated path length cache
-      double accumulatedPath = 0.;
+      double pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
       cstep stepSize = std::numeric_limits<double>::max();
@@ -58,6 +75,13 @@ namespace Test {
     /// emulate the options template
     struct Options
     {
+
+      /// The path limit
+      double pathLimit = std::numeric_limits<double>::max();
+
+      /// The target tolerance
+      double targetTolerance = 1. * units::_um;
+
       /// Debug output
       /// the string where debug messages are stored (optionally)
       bool        debug       = false;
@@ -67,21 +91,14 @@ namespace Test {
       size_t debugMsgWidth = 50;
     };
 
-    /// Navigation cache: the start surface
-    const Surface* startSurface = nullptr;
-
-    /// Navigation cache: the current surface
-    const Surface* currentSurface = nullptr;
-
-    /// Navigation cache: the target surface
-    const Surface* targetSurface = nullptr;
-    bool           targetReached = false;
-
     /// Give some options
     Options options;
 
-    /// The Stepper cache
+    /// The stepper state
     StepperState stepping;
+
+    /// The navigator state
+    NavigatorState navigation;
   };
 
   /// This is a simple result struct to mimic the
@@ -95,21 +112,17 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit)
   {
     PropagatorState state;
-    Result          result;
+    state.options.pathLimit = 1. * units::_m;
+    Result result;
 
     AbortList<path_limit> abort_list;
-
-    // Configure path limit with tolerance
-    auto& limit           = abort_list.get<path_limit>();
-    limit.signedPathLimit = 1. * units::_m;
-    limit.tolerance       = 1. * units::_um;
 
     // It should not abort yet
     BOOST_CHECK(!abort_list(result, state));
     // The step size should be adapted to 1 meter now
     BOOST_CHECK_EQUAL(state.stepping.stepSize, 1. * units::_m);
     // Let's do a step of 90 cm now
-    state.stepping.accumulatedPath = 90. * units::_cm;
+    state.stepping.pathAccumulated = 90. * units::_cm;
     // Still no abort yet
     BOOST_CHECK(!abort_list(result, state));
     // 10 cm are left
@@ -118,7 +131,7 @@ namespace Test {
 
     // approach the
     while (!abort_list(result, state)) {
-      state.stepping.accumulatedPath += 0.5 * state.stepping.stepSize;
+      state.stepping.pathAccumulated += 0.5 * state.stepping.stepSize;
     }
 
     // now we need to be smaller than the tolerance

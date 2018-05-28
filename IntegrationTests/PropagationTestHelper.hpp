@@ -87,9 +87,9 @@ namespace IntegrationTest {
 
     // setup propagation options
     typename Propagator_type::template Options<> options;
-    options.maxPathLength = 5 * units::_m;
-    options.maxStepSize   = 1 * units::_cm;
-    options.debug         = debug;
+    options.pathLimit   = 5 * units::_m;
+    options.maxStepSize = 1 * units::_cm;
+    options.debug       = debug;
 
     // define start parameters
     double                x  = 0;
@@ -116,7 +116,7 @@ namespace IntegrationTest {
     double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
 
     // calculate number of turns of helix
-    double turns = options.maxPathLength / (2 * M_PI * r) * sin(theta);
+    double turns = options.pathLimit / (2 * M_PI * r) * sin(theta);
     // respect direction of curl
     turns = (q * Bz < 0) ? turns : -turns;
 
@@ -172,15 +172,15 @@ namespace IntegrationTest {
 
     // setup propagation options
     typename Propagator_type::template Options<> fwd_options;
-    fwd_options.maxPathLength = plimit;
-    fwd_options.maxStepSize   = 1 * units::_cm;
-    fwd_options.debug         = debug;
+    fwd_options.pathLimit   = plimit;
+    fwd_options.maxStepSize = 1 * units::_cm;
+    fwd_options.debug       = debug;
 
     typename Propagator_type::template Options<> back_options;
-    back_options.direction     = backward;
-    back_options.maxPathLength = plimit;
-    back_options.maxStepSize   = 1 * units::_cm;
-    back_options.debug         = debug;
+    back_options.direction   = backward;
+    back_options.pathLimit   = plimit;
+    back_options.maxStepSize = 1 * units::_cm;
+    back_options.debug       = debug;
 
     // define start parameters
     double                x  = 0;
@@ -227,9 +227,9 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.maxStepSize   = plimit;
-    options.maxPathLength = plimit;
-    options.debug         = debug;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
 
     // define start parameters
     double   x  = 0;
@@ -261,7 +261,7 @@ namespace IntegrationTest {
         seTransform, plimit * units::_m, std::numeric_limits<double>::max());
 
     // Increase the path limit - to be safe hitting the surface
-    options.maxPathLength *= 2;
+    options.pathLimit *= 2;
     const auto  result = propagator.propagate(start, endSurface, options);
     const auto& tp     = result.endParameters;
     // check for null pointer
@@ -292,9 +292,9 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<ActionList<DebugOutput>> options;
     // setup propagation options
-    options.maxStepSize   = plimit;
-    options.maxPathLength = plimit;
-    options.debug         = debug;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
 
     // define start parameters
     double   x  = 0;
@@ -332,7 +332,7 @@ namespace IntegrationTest {
 
     Surface_type endSurface(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
-    options.maxPathLength *= 2;
+    options.pathLimit *= 2;
     options.maxStepSize *= 0.9;
     const auto  result = propagator.propagate(start, endSurface, options);
     const auto& tp     = result.endParameters;
@@ -368,9 +368,9 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.maxStepSize   = plimit;
-    options.maxPathLength = plimit;
-    options.debug         = debug;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
 
     // define start parameters
     double   x  = 0;
@@ -431,9 +431,9 @@ namespace IntegrationTest {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.maxStepSize   = plimit;
-    options.maxPathLength = plimit;
-    options.debug         = debug;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
 
     // define start parameters
     double            x  = 0;
@@ -479,7 +479,7 @@ namespace IntegrationTest {
     BoundParameters   start_wo_c(nullptr, pos, mom, q, startSurface);
 
     // increase the path limit - to be safe hitting the surface
-    options.maxPathLength *= 2;
+    options.pathLimit *= 2;
 
     DestSurface_type endSurface(seTransform, nullptr);
     const auto       result = propagator.propagate(start, endSurface, options);

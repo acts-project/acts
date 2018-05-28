@@ -39,7 +39,7 @@ struct PropagationCache
   bool          useJacobian;
   double        step;
   double        maxStepSize;
-  double        maxPathLength;
+  double        pathLimit;
   bool          maxPathLimit;
   bool          mcondition;
   bool          needgradient;
@@ -60,7 +60,7 @@ struct PropagationCache
     , useJacobian(false)
     , step(0.)
     , maxStepSize(1000.)
-    , maxPathLength(0.)
+    , pathLimit(0.)
     , maxPathLimit(false)
     , mcondition(false)
     , needgradient(false)
@@ -175,7 +175,7 @@ public:
     /// max step whith srtaight line model
     double straightStep = 0.001;
     /// max overal path length
-    double maxPathLength = 25000.;
+    double pathLimit = 25000.;
     /// use magnetif field gradient
     bool usegradient = false;
     /// screen output prefix

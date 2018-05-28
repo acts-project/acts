@@ -96,7 +96,7 @@ namespace Test {
                "bounds() equals construction bounds");
     //
     // globalToLocal()
-    Vector3D gpos{0., 1., 0.};
+    Vector3D       gpos{0., 1., 0.};
     const Vector3D mom{20., 0., 0.};  // needs more realistic parameters
     Vector2D       localPosition;
     BOOST_CHECK(line.globalToLocal(gpos, mom, localPosition));

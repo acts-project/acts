@@ -123,7 +123,7 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
   sIntersections.reserve(20);
 
   // (0) End surface check
-  // @todo: - we might be able to skip this by use of options.maxPathLength
+  // @todo: - we might be able to skip this by use of options.pathLimit
   // check if you have to stop at the endSurface
   double maxPath = options.pathLimit;
   if (options.endObject) {
@@ -172,7 +172,7 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
     // the surface intersection
     SurfaceIntersection sfi
         = sf.intersectionEstimate(parameters, options, corrfnc);
-    // check if intersection is valid and maxPathLength has not been exceeded
+    // check if intersection is valid and pathLimit has not been exceeded
     double sifPath = sfi.intersection.pathLength;
     // check the maximum path length
     if (sfi && sifPath * sifPath <= maxPath * maxPath) {
@@ -308,7 +308,7 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
       : pars.momentum().unit();
 
   // check if you have to stop at the endSurface
-  double maxPathLength = std::numeric_limits<double>::infinity();
+  double pathLimit = std::numeric_limits<double>::infinity();
   if (endSurface) {
     // intersect the end surface
     // - it is the final one don't use the bounday check at all
@@ -319,7 +319,7 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
     // -> do not return compatible surfaces since they may lead you on a wrong
     // navigation path
     if (endInter.valid && endInter.pathLength > 0.)
-      maxPathLength = endInter.pathLength;
+      pathLimit = endInter.pathLength;
     else
       return cSurfaces;
   }
@@ -342,7 +342,7 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
       // we fill passive always, rest is only for material
       if (resolvePassive || aSurface->associatedMaterial())
         testCompatibleSurface(
-            cSurfaces, *aSurface, pos, dir, pDir, tCheck, maxPathLength);
+            cSurfaces, *aSurface, pos, dir, pDir, tCheck, pathLimit);
     }
   }
 
@@ -391,7 +391,7 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
     // sensitive surfaces and test them
     for (auto& ctSurface : ctestSurfaces)
       testCompatibleSurface(
-          cSurfaces, *ctSurface, pos, dir, pDir, tCheck, maxPathLength);
+          cSurfaces, *ctSurface, pos, dir, pDir, tCheck, pathLimit);
 
   }  // end of sensitive surfaces to exist
 
@@ -404,7 +404,7 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
       && (resolvePassive
           || (resolveMaterial && layerSurface->associatedMaterial()))) {
     testCompatibleSurface(
-        cSurfaces, *layerSurface, pos, dir, pDir, tCheck, maxPathLength);
+        cSurfaces, *layerSurface, pos, dir, pDir, tCheck, pathLimit);
   }
 
   // only sort it if the intersection was done
@@ -421,16 +421,16 @@ Layer::testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
                              const Vector3D&                   dir,
                              NavigationDirection               navDir,
                              const BoundaryCheck&              bcheck,
-                             double maxPathLength) const
+                             double                            pathLimit) const
 {
   // the intersection
   Intersection sfIntersection
       = surface.intersectionEstimate(pos, dir, navDir, bcheck);
-  // check if intersection is valid and maxPathLength has not been exceeded
+  // check if intersection is valid and pathLimit has not been exceeded
   if (sfIntersection.valid
-      && sfIntersection.pathLength < maxPathLength) {  // and the surfaces &
-                                                       // direction to push back
-                                                       // - take all
+      && sfIntersection.pathLength < pathLimit) {  // and the surfaces &
+                                                   // direction to push back
+                                                   // - take all
     cSurfaces.push_back(SurfaceIntersection(sfIntersection, &surface, navDir));
   }
 }

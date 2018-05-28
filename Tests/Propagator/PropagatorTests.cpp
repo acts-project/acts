@@ -148,7 +148,7 @@ namespace Test {
     operator()(propagator_state_t& state, result_type& result) const
     {
       if (!result.scattered
-          && std::abs(state.stepping.accumulatedPath - path_limit)
+          && std::abs(state.stepping.pathAccumulated - path_limit)
               < tolerance) {
         // now here we should apply the scattering
         result.scattered = true;
@@ -237,8 +237,8 @@ namespace Test {
                                                     AbortConditions_type>
         options;
 
-    options.maxPathLength = 20 * units::_m;
-    options.maxStepSize   = 1 * units::_cm;
+    options.pathLimit   = 20 * units::_m;
+    options.maxStepSize = 1 * units::_cm;
 
     // set the surface to be passed by
     options.actionList.get<CylinderObserver>().surface = &mSurface;
@@ -291,8 +291,8 @@ namespace Test {
 
     // setup propagation options - the tow step options
     typename EigenPropagator_type::template Options<> options_2s;
-    options_2s.maxPathLength = 50 * units::_cm;
-    options_2s.maxStepSize   = 1 * units::_cm;
+    options_2s.pathLimit   = 50 * units::_cm;
+    options_2s.maxStepSize = 1 * units::_cm;
 
     // define start parameters
     double   x  = 0;
@@ -320,8 +320,8 @@ namespace Test {
 
     // setup propagation options - the one step options
     typename EigenPropagator_type::template Options<> options_1s;
-    options_1s.maxPathLength = 100 * units::_cm;
-    options_1s.maxStepSize   = 1 * units::_cm;
+    options_1s.pathLimit   = 100 * units::_cm;
+    options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a path length of 100 in one step
     const auto& end_parameters_1s
         = epropagator.propagate(start, options_1s).endParameters;
@@ -363,8 +363,8 @@ namespace Test {
 
     // setup propagation options - 2 setp options
     typename EigenPropagator_type::template Options<> options_2s;
-    options_2s.maxPathLength = 10 * units::_m;
-    options_2s.maxStepSize   = 1 * units::_cm;
+    options_2s.pathLimit   = 10 * units::_m;
+    options_2s.maxStepSize = 1 * units::_cm;
 
     // define start parameters
     double   x  = 0;
@@ -394,8 +394,8 @@ namespace Test {
 
     // setup propagation options - one step options
     typename EigenPropagator_type::template Options<> options_1s;
-    options_1s.maxPathLength = 10 * units::_m;
-    options_1s.maxStepSize   = 1 * units::_cm;
+    options_1s.pathLimit   = 10 * units::_m;
+    options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a final surface in one stop
     const auto& end_parameters_1s
         = epropagator.propagate(start, cSurface, options_1s).endParameters;

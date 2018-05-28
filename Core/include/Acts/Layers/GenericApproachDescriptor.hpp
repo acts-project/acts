@@ -113,8 +113,8 @@ GenericApproachDescriptor<T>::registerLayer(const Layer& lay)
 
 template <class T>
 ObjectIntersection<Surface>
-GenericApproachDescriptor<T>::approachSurface(const Vector3D&      pos,
-                                              const Vector3D&      mom,
+GenericApproachDescriptor<T>::approachSurface(const Vector3D&      gpos,
+                                              const Vector3D&      gdir,
                                               NavigationDirection  navDir,
                                               const BoundaryCheck& bcheck,
                                               CorrFnc corrfnc) const
@@ -125,7 +125,7 @@ GenericApproachDescriptor<T>::approachSurface(const Vector3D&      pos,
   for (auto& sf : m_surfacestepState) {
     // intersect
     auto intersection
-        = sf->intersectionEstimate(pos, mom, navDir, bcheck, corrfnc);
+        = sf->intersectionEstimate(gpos, gdir, navDir, bcheck, corrfnc);
     sIntersections.push_back(
         ObjectIntersection<Surface>(intersection, sf, navDir));
   }

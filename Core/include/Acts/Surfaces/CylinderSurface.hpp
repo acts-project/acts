@@ -197,8 +197,8 @@ public:
   ///  and (signed) path length
   ///
   /// @param gpos is the global position as a starting point
-  /// @param gdir is the global direction at the starting point, expected to 
-   ///  be normalized
+  /// @param gdir is the global direction at the starting point, expected to
+  ///  be normalized
   /// @param navDir The navigation direction with respect to the momentum
   /// @param bcheck is the boundary check
   /// @param correct is an optional correction function pointer that
@@ -214,14 +214,14 @@ public:
   ///   - a reference position : lposition (L0)
   ///   - the line direction: ldirection (DL)
   ///   the parametric form for the line is then : L(t) = L0 + t * DL
-  /// 
+  ///
   /// Any point P on infinite cylinder if :
   ///      ((P - C) x DZ)^2 = r^2 * DZ^2
-  /// We know that DZ is a unit vector: 
+  /// We know that DZ is a unit vector:
   ///   DZ^2 == 1
-  /// When expanded with the line equation, this is  : 
+  /// When expanded with the line equation, this is  :
   ///      ((L0 - C) x DZ + t * (DL x DZ))^2 = r^2 * DZ^2
-  /// which is a quadratic equation in the form (X + t * Y)^2 = d, where : 
+  /// which is a quadratic equation in the form (X + t * Y)^2 = d, where :
   ///  X = (L0 - C) x DZ
   ///  Y = DL x DZ
   ///  d = r^2 * (DZ)^2
@@ -230,7 +230,7 @@ public:
   /// => second order equation in the form : a*t^2 + b*t + c = 0 where
   /// a = (Y . Y)
   /// b = 2 * (X . Y)
-  /// c = (X . X) - d  
+  /// c = (X . X) - d
   /// finally solve the second order equation : a*t^2 + b*t + c = 0
   /// reinsertion into the line equation.
   ///

@@ -243,8 +243,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                              : ExtrapolationCode::InProgress);
   }
   // specify the parameters for the propagation
-  propState.maxPathLength = eCell.pathLimit < 0.
-      ? m_cfg.maxPathLength
+  propState.pathLimit = eCell.pathLimit < 0.
+      ? m_cfg.pathLimit
       : (eCell.pathLimit - eCell.pathLength);
   propState.direction         = double(pDir);
   propState.boundaryCheck     = bcheck;
@@ -399,8 +399,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
   }
 
   // and configure the propagation cache now
-  propState.maxPathLength = eCell.pathLimit < 0.
-      ? m_cfg.maxPathLength
+  propState.pathLimit = eCell.pathLimit < 0.
+      ? m_cfg.pathLimit
       : (eCell.pathLimit - eCell.pathLength);
   propState.direction         = double(pDir);
   propState.boundaryCheck     = bcheck;
@@ -511,8 +511,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
                  "propagateWithJacobian called with  internal surface type "
                      << kind);
 
-  const double Smax   = propState.maxPathLength;  // max. step allowed
-  double       Wwrong = 500.;  // Max way with wrong direction
+  const double Smax   = propState.pathLimit;  // max. step allowed
+  double       Wwrong = 500.;                 // Max way with wrong direction
   double*      R      = &(propState.pVector[0]);  // Start coordinates
   double*      A      = &(propState.pVector[3]);  // Start directions
   double*      SA     = &(propState.pVector[42]);
@@ -617,7 +617,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
       return false;
     }
 
-    double dW = propState.maxPathLength - std::abs(propState.step);
+    double dW = propState.pathLimit - std::abs(propState.step);
     if (std::abs(S) > dW) {
       S > 0. ? S = dW : S    = -dW;
       step                   = S;

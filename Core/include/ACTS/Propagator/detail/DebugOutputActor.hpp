@@ -47,8 +47,11 @@ namespace detail {
       // move the debug output from the state to
       // to the output actor if it is not set to mute
       // only when the target is reached (or later otherwise triggered)
-      if (!mute && (state.targetReached || state.navigationBreak))
-        result.debugString = std::move(state.options.debugString);
+      if (!mute && (state.navigation.targetReached
+                    || state.navigation.navigationBreak)) {
+        result.debugString += state.options.debugString;
+        state.options.debugString = "";
+      }
     }
 
     /// Pure observer interface

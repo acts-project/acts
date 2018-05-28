@@ -385,7 +385,8 @@ public:
   ///
   /// @param gpos global 3D position - considered to be on surface but not
   ///        inside bounds (check is done)
-  /// @param 3D direction representation - expected to be normalized (no check done)
+  /// @param 3D direction representation - expected to be normalized (no check
+  /// done)
   /// @param navDir The navigation direction : if you want to find the closest,
   ///        chose anyDirection and the closest will be chosen
   /// @param bcheck boundary check directive for this operation

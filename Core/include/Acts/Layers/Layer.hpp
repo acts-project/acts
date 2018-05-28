@@ -367,7 +367,7 @@ public:
   /// @param dir is themomentum direction
   /// @param pdir is the propagation direction prescription
   /// @param bcheck is the boundary check directive
-  /// @param maxPathLength is the maximal path length allowed to the surface
+  /// @param pathLimit is the maximal path length allowed to the surface
   /// @param intersectionTest is a boolean idicating if intersection is done
   /// @param startSurface is an (optional) start surface for the search:
   /// excluded in return
@@ -382,7 +382,7 @@ public:
                         const Vector3D&                   dir,
                         NavigationDirection               pdir,
                         const BoundaryCheck&              bcheck,
-                        double                            maxPathLength) const;
+                        double                            pathLimit) const;
 
   // -------------- legacy method block: end
   // ------------------------------------

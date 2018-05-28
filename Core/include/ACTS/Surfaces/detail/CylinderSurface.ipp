@@ -44,7 +44,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
   // what you need at the and
   Vector3D solution(0, 0, 0);
   double   path = 0.;
-  
+
   // lemma : the solver -> should catch current values
   auto solve = [&solution, &path, &lpos, &ldir, &ccenter, &caxis, &navDir](
       double R) -> bool {
@@ -56,7 +56,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
     double   b     = 2. * (ldXcd.dot(pcXcd));
     double   c     = pcXcd.dot(pcXcd) - (R * R);
     // and solve the qaudratic equation - todo, validity check
-    detail::RealQuadraticEquation qe(a, b, c);      
+    detail::RealQuadraticEquation qe(a, b, c);
     // check how many solution you have
     if (!qe.solutions) return false;
     // chose the solution
