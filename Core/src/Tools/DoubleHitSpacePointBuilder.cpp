@@ -148,7 +148,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 
     // Check the orientation of a strip module = check which dimension has more
     // bins
-    if (bins.size() > bins[0].size())
+    if (bins.size() > bins[0].size()) {
       // Walk through all bins
       for (unsigned int iY = 0; iY < bins[0].size(); iY++)
         for (unsigned int iX = 0; iX < bins.size(); iX++) {
@@ -156,8 +156,14 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
           if (bins[iX][iY] && !cluster.first) {
             cluster.first = bins[iX][iY];
             if (iX == bins.size() - 1) {
-              cluster.second = nullptr;
-              clusters.push_back(cluster);
+              if (binningData(hits[0])[0].option == closed && !clusters.empty()
+                  && clusters[0].first == bins[0][iY]
+                  && clusters[0].second == nullptr)
+                clusters[0].second = bins[iX][iY];
+              else {
+                cluster.second = nullptr;
+                clusters.push_back(cluster);
+              }
             }
             continue;
           }
@@ -169,7 +175,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
             cluster.first = cluster.second;
           }
         }
-    else
+    } else
       // Perform the same computation as before with exchanged dimensions
       for (unsigned int iX = 0; iX < bins.size(); iX++)
         for (unsigned int iY = 0; iY < bins[0].size(); iY++) {
@@ -177,8 +183,14 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
           if (bins[iX][iY] && !cluster.first) {
             cluster.first = bins[iX][iY];
             if (iY == bins[0].size() - 1) {
-              cluster.second = nullptr;
-              clusters.push_back(cluster);
+              if (binningData(hits[0])[1].option == closed && !clusters.empty()
+                  && clusters[0].first == bins[iX][0]
+                  && clusters[0].second == nullptr)
+                clusters[0].second = bins[iX][iY];
+              else {
+                cluster.second = nullptr;
+                clusters.push_back(cluster);
+              }
             }
             continue;
           }
