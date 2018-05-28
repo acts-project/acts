@@ -52,7 +52,7 @@ clang_tidy:
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - run-clang-tidy.py -p build -header-filter=.* -j$(nproc) 1> report/clang-tidy.log
-    - CI/make_report.py clang-tidy report/clang-tidy.log report
+    - CI/make_report.py clang-tidy report/clang-tidy.log report -e "/src/Tests/*"
   artifacts:
     paths:
       - report
@@ -68,7 +68,7 @@ cppcheck:
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - cppcheck --project=build/compile_commands.json --enable=warning,missingInclude,portability -UACTS_PARAMETER_DEFINITIONS_PLUGIN --xml-version=2 -j$(nproc) 2> report/report.xml
-    - CI/make_report.py cppcheck report/report.xml report
+    - CI/make_report.py cppcheck report/report.xml report -e "/src/Tests/*"
   artifacts:
     paths:
       - report
@@ -91,15 +91,13 @@ oclint:
     
 scan-build:
   stage: static analysis
-  image: alpine:edge
-  before_script:
-    - apk --no-cache add cmake clang clang-analyzer make alpine-sdk boost-dev eigen-dev
+  image: gitlab-registry.cern.ch/acts/machines/scan-build
   dependencies: []
   script:
     - mkdir report
     - mkdir build && cd build
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-    - scan-build -enable-checker alpha -disable-checker alpha.deadcode -enable-checker core -enable-checker cplusplus -enable-checker deadcode -enable-checker llvm -enable-checker osx -enable-checker security -enable-checker unix make -j$(nproc) -o ../report
+    - analyze-build -enable-checker alpha -enable-checker core -enable-checker cplusplus -enable-checker deadcode -enable-checker llvm -enable-checker security -enable-checker unix -enable-checker nullability make -j$(nproc) -o ../report --cdb compile_commands.json
   artifacts:
     paths:
       - report

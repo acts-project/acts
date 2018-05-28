@@ -6,6 +6,7 @@ from collections import namedtuple
 from itertools import groupby
 import os
 import html
+from fnmatch import fnmatch
 
 from lxml import etree
 
@@ -184,6 +185,7 @@ def main():
     p.add_argument("mode", choices=("clang-tidy", "cppcheck"))
     p.add_argument("inputfile")
     p.add_argument("reportdir", default="report")
+    p.add_argument("--exclude", "-e", action="append", default=[])
 
     args = p.parse_args()
 
@@ -199,6 +201,7 @@ def main():
         files, get_comment = get_cppcheck_warnings(inputstr)
         title = "ACTS cppcheck report"
 
+    files = filter(lambda f: not any(fnmatch(f, e) for e in args.exclude), files)
 
     cr = CodeReport(files, 
                     title=title,
