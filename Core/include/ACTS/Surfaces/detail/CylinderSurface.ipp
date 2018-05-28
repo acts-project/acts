@@ -28,7 +28,7 @@ CylinderSurface::isOnSurface(const Vector3D&      gpos,
 
 inline Intersection
 CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
-                                      const Vector3D&      gmom,
+                                      const Vector3D&      gdir,
                                       NavigationDirection  navDir,
                                       const BoundaryCheck& bcheck,
                                       CorrFnc              correct) const
@@ -36,7 +36,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
 
   // create line parameters
   Vector3D lpos = gpos;
-  Vector3D ldir = gmom.unit();
+  Vector3D ldir = gdir;
   // minimize the call to transform()
   const auto& tMatrix = transform().matrix();
   Vector3D    caxis   = tMatrix.block<3, 1>(0, 2).transpose();
@@ -44,6 +44,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
   // what you need at the and
   Vector3D solution(0, 0, 0);
   double   path = 0.;
+  
   // lemma : the solver -> should catch current values
   auto solve = [&solution, &path, &lpos, &ldir, &ccenter, &caxis, &navDir](
       double R) -> bool {
@@ -55,7 +56,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
     double   b     = 2. * (ldXcd.dot(pcXcd));
     double   c     = pcXcd.dot(pcXcd) - (R * R);
     // and solve the qaudratic equation - todo, validity check
-    detail::RealQuadraticEquation qe(a, b, c);
+    detail::RealQuadraticEquation qe(a, b, c);      
     // check how many solution you have
     if (!qe.solutions) return false;
     // chose the solution
@@ -72,7 +73,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
   double R     = bounds().r();
   bool   valid = solve(R);
   // if configured, correct and solve again
-  if (valid && correct && correct(lpos, ldir, path)) valid = solve(R);
+  if (correct && correct(lpos, ldir, path)) valid = solve(R);
   // update for inside if requested :
   // @todo fix this : fast inside bounds check needed
   valid = bcheck ? (valid && isOnSurface(solution, bcheck)) : valid;

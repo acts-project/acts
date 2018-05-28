@@ -32,23 +32,21 @@ PlaneSurface::pathCorrection(const Vector3D&, const Vector3D& mom) const
 
 inline Intersection
 PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
-                                   const Vector3D&      gmom,
+                                   const Vector3D&      gdir,
                                    NavigationDirection  navDir,
                                    const BoundaryCheck& bcheck,
                                    CorrFnc              correct) const
 {
   // minimize the call to transform()
   const auto& tMatrix = transform().matrix();
-  Vector3D    pnormal = tMatrix.block<3, 1>(0, 2).transpose();
-  Vector3D    pcenter = tMatrix.block<3, 1>(0, 3).transpose();
-  // position and direciton information
-  Vector3D lpos = gpos;
-  Vector3D ldir = gmom.unit();
+  const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
+  const Vector3D pcenter = tMatrix.block<3, 1>(0, 3).transpose();
+  // return solution and path 
   Vector3D solution(0., 0., 0.);
   double   path = std::numeric_limits<double>::infinity();
   // lemma : the solver -> should catch current values
-  auto solve =
-      [&solution, &path, &lpos, &ldir, &pnormal, &pcenter, &navDir]() -> bool {
+  auto solve = [&solution, &path, &pnormal, &pcenter, &navDir]
+    (const Vector3D& lpos, const Vector3D& ldir) -> bool {
     double denom = ldir.dot(pnormal);
     if (denom) {
       path     = (pnormal.dot((pcenter - lpos))) / (denom);
@@ -58,9 +56,15 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
     return (!navDir || path * navDir >= 0.);
   };
   // solve first
-  bool valid = solve();
+  bool valid = solve(gpos, gdir);
   // if configured to correct, do it and solve again
-  if (valid and correct and correct(lpos, ldir, path)) valid = solve();
+  if (correct){
+    // copy as the corrector may change them
+    Vector3D lposc = gpos;
+    Vector3D ldirc = gdir;
+    if (correct(lposc, ldirc, path)) 
+        valid = solve(lposc, ldirc);
+  }
   // evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
   //  all we need is to check if it's inside bounds

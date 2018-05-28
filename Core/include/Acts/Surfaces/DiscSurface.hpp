@@ -296,10 +296,11 @@ public:
   /// navDir=anyDirection is to provide the closest solution
   ///
   /// @param gpos is the global position as a starting point
-  /// @param gmom is the global direction at the starting point
-  ///        @note will o be normalized
+  /// @param gdir is the global direction at the starting point
+  ///        @note expected to be normalized (no checking)
   /// @param navDir is a navigation direction
-  /// @param bcheck is the boundary check
+  /// @param bcheck is the boundary check prescription
+  /// @param correct is a corrector function (e.g. for curvature correction)
   ///
   ///  <b>mathematical motivation:</b>
   ///

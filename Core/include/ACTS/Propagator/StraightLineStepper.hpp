@@ -15,6 +15,7 @@
 #include "ACTS/Propagator/detail/ConstrainedStep.hpp"
 #include "ACTS/Surfaces/Surface.hpp"
 #include "ACTS/Utilities/Definitions.hpp"
+#include "ACTS/Utilities/Intersection.hpp"
 #include "ACTS/Utilities/Units.hpp"
 
 namespace Acts {
@@ -86,6 +87,11 @@ public:
     momentum() const
     {
       return p * dir;
+    }
+
+    /// Return a corrector
+    VoidCorrector corrector() const { 
+      return VoidCorrector();
     }
 
     /// Global particle position

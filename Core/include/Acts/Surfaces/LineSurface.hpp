@@ -218,10 +218,11 @@ public:
   /// @brief fast straight line intersection schema
   ///
   /// @param gpos The global position as a starting point
-  /// @param gmom The global direction at the starting point
-  ///        @note it will be normalized
+  /// @param gdir The global direction at the starting point
+  ///        @note exptected to be normalized
   /// @param navDir The navigation direction
   /// @param bcheck The boundary check directive for the estimate
+  /// @param correct is a corrector function (e.g. for curvature correction)
   ///
   ///   <b>mathematical motivation:</b>
   ///   Given two lines in parameteric form:<br>
@@ -253,7 +254,7 @@ public:
   /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gmom,
+                       const Vector3D&      gdir,
                        NavigationDirection  navDir = forward,
                        const BoundaryCheck& bcheck = false,
                        CorrFnc correct = nullptr) const final override;

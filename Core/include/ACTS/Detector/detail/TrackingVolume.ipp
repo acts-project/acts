@@ -82,12 +82,15 @@ TrackingVolume::compatibleBoundaries(const parameters_t& parameters,
 {
   // Loop over boundarySurfaces and calculate the intersection
   std::vector<BoundaryIntersection> bIntersections;
+  auto excludeObject = options.startObject;
   auto&                             bSurfaces = boundarySurfaces();
   for (auto& bsIter : bSurfaces) {
     // get the boundary surface pointer
     const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
     const auto& bSurfaceRep = bSurface->surfaceRepresentation();
-    // intersect
+    // exclude the on boundary object
+    if (excludeObject && excludeObject == &bSurfaceRep) continue;
+    // intersect the surface 
     SurfaceIntersection bsIntersection
         = bSurfaceRep.intersectionEstimate(parameters, options, corrfnc);
     // check if the intersection is valid, but exlude the on-surface case

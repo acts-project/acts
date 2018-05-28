@@ -138,7 +138,6 @@ Acts::CylinderBounds::inside3D(const Vector3D&      pos,
     return ((s_onSurfaceTolerance + addToleranceZ + m_halfZ)
             >= std::abs(pos.z()));
   }
-
   // detailed, but slower check
   Vector2D lpos(detail::radian_sym(pos.phi() - m_avgPhi), pos.z());
   return bcheck.transformed(jacobian())

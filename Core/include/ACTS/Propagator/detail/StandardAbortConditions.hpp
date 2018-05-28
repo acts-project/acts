@@ -118,7 +118,6 @@ namespace detail {
     /// the plain pointer to the surface
     /// - safe as the condition lives shorter than the surface
     const Surface* surface = nullptr;
-
     /// the direction
     NavigationDirection direction = forward;
     /// the tolerance to be defined on surface
@@ -164,9 +163,8 @@ namespace detail {
       }
 
       // calculate the distance to the surface
-      const double distance
-          = surface
-                ->intersectionEstimate(state.stepping.position(),
+      const double distance = 
+         surface->intersectionEstimate(state.stepping.position(),
                                        state.stepping.direction(),
                                        direction,
                                        false)

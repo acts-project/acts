@@ -60,7 +60,7 @@ LineSurface::isOnSurface(const Vector3D&      gpos,
 inline std::string
 LineSurface::name() const
 {
-  return "LineSurface";
+  return "Acts::LineSurface";
 }
 
 inline const RotationMatrix3D
@@ -107,7 +107,7 @@ LineSurface::bounds() const
 
 inline Intersection
 LineSurface::intersectionEstimate(const Vector3D&      gpos,
-                                  const Vector3D&      gmom,
+                                  const Vector3D&      gdir,
                                   NavigationDirection  navDir,
                                   const BoundaryCheck& bcheck,
                                   CorrFnc              correct) const
@@ -115,7 +115,7 @@ LineSurface::intersectionEstimate(const Vector3D&      gpos,
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track
   Vector3D ma = gpos;
-  Vector3D ea = gmom.unit();
+  Vector3D ea = gdir;
   // line two is the line surface
   const auto& tMatrix = transform().matrix();
   Vector3D    mb      = tMatrix.block<3, 1>(0, 3).transpose();
@@ -145,7 +145,6 @@ LineSurface::intersectionEstimate(const Vector3D&      gpos,
       } else
         valid = false;
     }
-    // @todo improve speed of isOnSurface check,
     // it just needs to be a insideBounds() check
     valid = bcheck ? (valid && isOnSurface(result, bcheck)) : valid;
     // return the result with validity

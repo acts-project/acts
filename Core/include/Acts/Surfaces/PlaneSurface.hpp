@@ -188,10 +188,11 @@ public:
   /// @brief Fast straight line intersection schema
   ///
   /// @param gpos The start position of the intersection attempt
-  /// @param gmom The direction of the interesection attempt,
-  ///       @note it will be normalized
+  /// @param gdir The direction of the interesection attempt,
+  ///       @note expected to be normalized
   /// @param navDir The navigation direction with respect to the momentum
   /// @param bcheck The boundary check directive
+  /// @param correct is a corrector function (e.g. for curvature correction)
   ///
   /// <b>mathematical motivation:</b>
   ///
@@ -213,10 +214,10 @@ public:
   /// @return the Intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gmom,
+                       const Vector3D&      gdir,
                        NavigationDirection  navDir = forward,
                        const BoundaryCheck& bcheck = false,
-                       CorrFnc corr = nullptr) const final override;
+                       CorrFnc correct = nullptr) const final override;
 
   /// Return properly formatted class name for screen output
   virtual std::string

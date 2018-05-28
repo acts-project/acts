@@ -9,12 +9,15 @@
 #pragma once
 
 #include <cmath>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Propagator/detail/constrained_step.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
@@ -89,6 +92,11 @@ public:
     direction() const
     {
       return Vector3D(pVector[3], pVector[4], pVector[5]);
+    }
+
+    /// Return a corrector
+    VoidCorrector corrector() const { 
+      return VoidCorrector();
     }
 
     /// Constructor

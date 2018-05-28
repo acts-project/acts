@@ -197,8 +197,8 @@ public:
   ///  and (signed) path length
   ///
   /// @param gpos is the global position as a starting point
-  /// @param gmom is the global direction at the starting point,
-  ///        @note it will be normalized
+  /// @param gdir is the global direction at the starting point, expected to 
+   ///  be normalized
   /// @param navDir The navigation direction with respect to the momentum
   /// @param bcheck is the boundary check
   /// @param correct is an optional correction function pointer that
@@ -206,29 +206,38 @@ public:
   ///
   ///  <b>mathematical motivation:</b>
   ///
-  ///  The calculation will be done in the 3-dim frame of the cylinder,
-  ///  i.e. the symmetry axis of the cylinder is the z-axis, x- and y-axis are
-  /// perpendicular
-  ///  to the the z-axis. In this frame the cylinder is centered around the
-  /// origin.
-  ///  Therefore the two points describing the line have to be first
-  ///  recalculated
-  /// into the new frame.
-  ///  Suppose, this is done, the intersection is straight forward:
-  ///  @f$p_{1}=(p_{1x}, p_{1y}, p_{1z}), p_{2}=(p_{2x}, p_{2y}, p_{2z}) @f$
-  ///  are the two points describing the 3D-line,
-  ///  then the line in the \f$x-y@f$ plane can be written as
-  ///  @f$y=kx+d\f$, where @f$k =\frac{p_{2y}-p_{1y}}{p_{2x}-p_{1x}}@f$such as
-  /// @f$d=\frac{p_{2x}p_{1y}-p_{1x}p_{2y}}{p_{2x}-p_{1x}},\f$<br>
-  ///  and intersects with the corresponding circle @f$x^{2}+y^{2} = R^{2}.
-  /// @f$<br>
-  ///  The solutions can then be found by a simple quadratic equation and
+  /// The cylinder is given by :
+  ///   - cylinder center: ccenter (C)
+  ///   - the direction of the cylinder axis: cdirection (DZ)
+  ///   - the radius r
+  /// The line is given by :
+  ///   - a reference position : lposition (L0)
+  ///   - the line direction: ldirection (DL)
+  ///   the parametric form for the line is then : L(t) = L0 + t * DL
+  /// 
+  /// Any point P on infinite cylinder if :
+  ///      ((P - C) x DZ)^2 = r^2 * DZ^2
+  /// We know that DZ is a unit vector: 
+  ///   DZ^2 == 1
+  /// When expanded with the line equation, this is  : 
+  ///      ((L0 - C) x DZ + t * (DL x DZ))^2 = r^2 * DZ^2
+  /// which is a quadratic equation in the form (X + t * Y)^2 = d, where : 
+  ///  X = (L0 - C) x DZ
+  ///  Y = DL x DZ
+  ///  d = r^2 * (DZ)^2
+  /// Now, expand the equation :
+  /// t^2 * (Y . Y) + t * (2 * (X . Y)) + (X . X) - d = 0
+  /// => second order equation in the form : a*t^2 + b*t + c = 0 where
+  /// a = (Y . Y)
+  /// b = 2 * (X . Y)
+  /// c = (X . X) - d  
+  /// finally solve the second order equation : a*t^2 + b*t + c = 0
   /// reinsertion into the line equation.
   ///
   /// @return is the intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gmom,
+                       const Vector3D&      gidr,
                        NavigationDirection  navDir = forward,
                        const BoundaryCheck& bcheck = false,
                        CorrFnc correct = nullptr) const final override;

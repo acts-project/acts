@@ -94,7 +94,8 @@ bool
 Surface::onSurface(const parameters_t& pars, const BoundaryCheck& bcheck) const
 {
   // surface pointer comparison as a first fast check (w/o transform)
-  if ((&pars.referenceSurface() == this) && !bcheck) return true;
+  // @todo check if we can find a fast way that works for stepper state and parameters
+  // if ((&pars.referenceSurface() == this) && !bcheck) return true;
   return isOnSurface(pars.position(), bcheck);
 }
 

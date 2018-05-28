@@ -11,10 +11,11 @@
 #include <cmath>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Propagator/detail/constrained_step.hpp"
 
 namespace Acts {
 
@@ -40,7 +41,7 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField>
+template <typename BField, typename corrector_t = VoidCorrector>
 class EigenStepper
 {
 
@@ -78,7 +79,7 @@ public:
     explicit State(const T&            par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
-      : pos(par.position())
+      : pos(par.position())               
       , dir(par.momentum().normalized())
       , p(par.momentum().norm())
       , charge(par.charge())
@@ -87,6 +88,9 @@ public:
       , accumulatedPath(0.)
       , stepSize(ndir * ssize)
     {
+      // remember the start parameters
+      startPos = pos;
+      startDir = dir;
       // Init the jacobian matrix if needed
       if (par.covariance()) {
         // Get the reference surface for navigation
@@ -119,6 +123,11 @@ public:
       return p * dir;
     }
 
+    /// Return a corrector
+    corrector_t corrector() const { 
+      return corrector_t(startPos,startDir,accumulatedPath);
+    }
+    
     /// Method for on-demand transport of the covariance
     /// to a new curvilinear frame at current  position,
     /// or direction of the state
@@ -253,11 +262,15 @@ public:
       return jacFull;
     }
 
-    /// Global particle position
+    /// Global particle position 
     Vector3D pos = Vector3D(0, 0, 0);
+    /// Global start particle position 
+    Vector3D startPos = Vector3D(0, 0, 0);
 
     /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
+    /// Momentum start direction (normalized)
+    Vector3D startDir = Vector3D(1, 0, 0);
 
     /// Momentum
     double p = 0.;

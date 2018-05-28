@@ -373,7 +373,7 @@ public:
   {
     // get the intersection with the surface
     auto sIntersection = intersectionEstimate(parameters.position(),
-                                              parameters.momentum(),
+                                              parameters.direction(),
                                               options.navDir,
                                               options.boundaryCheck,
                                               correct);
@@ -384,8 +384,8 @@ public:
   /// Straight line intersection from position and momentum
   ///
   /// @param gpos global 3D position - considered to be on surface but not
-  ///         inside bounds (check is done)
-  /// @param gmom global 3D momentum representation - will be normalized
+  ///        inside bounds (check is done)
+  /// @param 3D direction representation - expected to be normalized (no check done)
   /// @param navDir The navigation direction : if you want to find the closest,
   ///        chose anyDirection and the closest will be chosen
   /// @param bcheck boundary check directive for this operation
@@ -395,7 +395,7 @@ public:
   /// @return Intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gmom,
+                       const Vector3D&      gidr,
                        NavigationDirection  navDir = forward,
                        const BoundaryCheck& bcheck = false,
                        CorrFnc              corr = nullptr) const = 0;

@@ -17,7 +17,7 @@
 namespace Acts {
 
 /// A function typedef for the intersection correction
-typedef std::function<bool(Vector3D&, Vector3D&, double)> CorrFnc;
+typedef std::function<bool(Vector3D&, Vector3D&, double&)> CorrFnc;
 
 ///  @struct Intersection
 ///
@@ -194,6 +194,14 @@ public:
 struct VoidCorrector
 {
 
+  // Void Corrector default constructor
+  VoidCorrector()
+    {} 
+
+  // Void Corrector parameter constructor
+  VoidCorrector(const Vector3D&, const Vector3D&, double&)
+    {} 
+  
   /// Boolean() operator - returns false for void modifier
   explicit operator bool() const { return false; }
 
