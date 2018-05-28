@@ -128,13 +128,12 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
       clusters;
 
   // Easy exit if a single hit is provided
-  if(hits.size() == 1)
-  {
-	clusters.push_back(std::make_pair(hits[0], nullptr));
-	return clusters;
+  if (hits.size() == 1) {
+    clusters.push_back(std::make_pair(hits[0], nullptr));
+    return clusters;
   }
 
-  if (performClustering) {	  
+  if (performClustering) {
     // Create a matrix of hits out of the collection of hits
     std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins
         = sortHits(hits);
@@ -143,7 +142,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     // cannot be combined
     if (bins.empty()) return clusters;
 
-	std::pair<Acts::PlanarModuleCluster const*, Acts::PlanarModuleCluster const*> cluster;
+    std::pair<Acts::PlanarModuleCluster const*,
+              Acts::PlanarModuleCluster const*>
+        cluster;
 
     // Check the orientation of a strip module = check which dimension has more
     // bins
@@ -151,49 +152,43 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
       // Walk through all bins
       for (unsigned int iY = 0; iY < bins[0].size(); iY++)
         for (unsigned int iX = 0; iX < bins.size(); iX++) {
-			// Store the first hit
-			if(bins[iX][iY] && !cluster.first)
-			{
-				cluster.first = bins[iX][iY];
-				if(iX == bins.size() - 1)
-				{
-					cluster.second = nullptr;
-					clusters.push_back(cluster);
-				}
-				continue;
-			}
-			if(cluster.first)
-			{
-				// Store the pointer to the second hit; nullptr if it does not exist
-				cluster.second = bins[iX][iY];
-				clusters.push_back(cluster);
-				// Reset pair
-				cluster.first = cluster.second;
-			}
+          // Store the first hit
+          if (bins[iX][iY] && !cluster.first) {
+            cluster.first = bins[iX][iY];
+            if (iX == bins.size() - 1) {
+              cluster.second = nullptr;
+              clusters.push_back(cluster);
+            }
+            continue;
+          }
+          if (cluster.first) {
+            // Store the pointer to the second hit; nullptr if it does not exist
+            cluster.second = bins[iX][iY];
+            clusters.push_back(cluster);
+            // Reset pair
+            cluster.first = cluster.second;
+          }
         }
     else
       // Perform the same computation as before with exchanged dimensions
       for (unsigned int iX = 0; iX < bins.size(); iX++)
         for (unsigned int iY = 0; iY < bins[0].size(); iY++) {
-			// Store the first hit
-			if(bins[iX][iY] && !cluster.first)
-			{
-				cluster.first = bins[iX][iY];
-				if(iY == bins[0].size() - 1)
-				{
-					cluster.second = nullptr;
-					clusters.push_back(cluster);
-				}
-				continue;
-			}
-			if(cluster.first)
-			{
-				// Store the pointer to the second hit; nullptr if it does not exist
-				cluster.second = bins[iX][iY];
-				clusters.push_back(cluster);
-				// Reset pair
-				cluster.first = cluster.second;
-			}
+          // Store the first hit
+          if (bins[iX][iY] && !cluster.first) {
+            cluster.first = bins[iX][iY];
+            if (iY == bins[0].size() - 1) {
+              cluster.second = nullptr;
+              clusters.push_back(cluster);
+            }
+            continue;
+          }
+          if (cluster.first) {
+            // Store the pointer to the second hit; nullptr if it does not exist
+            cluster.second = bins[iX][iY];
+            clusters.push_back(cluster);
+            // Reset pair
+            cluster.first = cluster.second;
+          }
         }
   } else
     // No clustering means that every hit is its own cluster
