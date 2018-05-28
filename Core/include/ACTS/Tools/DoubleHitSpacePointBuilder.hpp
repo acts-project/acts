@@ -26,7 +26,7 @@ struct DoubleHitSpacePoint
   /// Storage of the hit on another surface
   PlanarModuleCluster const* hitModuleBack;
   /// Combined coordinate of a cluster of hits
-  Vector3D clusterCoords = {0., 0., 0.};
+  Vector3D clusterPoint = {0., 0., 0.};
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
 };
@@ -48,6 +48,12 @@ struct DoubleHitSpacePointConfig
   Vector3D vertex = {0., 0., 0.};
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
+  /// Sort the hits on the front side strip module
+  bool clusterFrontHits = true;
+  /// Sort the hits on the back side strip module
+  bool clusterBackHits = true;
+  /// Determines the maximum amount of hits on the back side strip module that will be clustered together
+  unsigned int clusterSizeBackSide = 4;
 };
 
 /// @class TwoHitsSpacePointBuilder
@@ -175,16 +181,31 @@ private:
   /// @return channel 0 and 1 of the hit
   static std::pair<size_t, size_t>
   binOfHit(PlanarModuleCluster const* hit);
+  
+  /// @brief Create a sparse matrix of hits based on the bin numbers as look up
+  /// @param hits list of hits
+  /// @return matrix with hits
+  /// @note If the hits are given from more than one surface the matrix will be empty. This prevents false listing since it is based on bin indices.
+  static std::vector<std::vector<PlanarModuleCluster const*>>
+  sortHits(const std::vector<PlanarModuleCluster const*>& hits);
+                        
 
   /// @brief Build pair of hits on neighboring bins
   /// @param hits collection of hits on a front surface
+  /// @param cfg configuration that steers if a clustering should be performed
   /// @return collection of found pairs
-  static const std::vector<std::pair<Acts::PlanarModuleCluster const*,
-                                     Acts::PlanarModuleCluster const*>>
+  static const std::vector<std::pair<PlanarModuleCluster const*,
+                                     PlanarModuleCluster const*>>
   clusterSpacePointsFrontSide(
-      const std::vector<PlanarModuleCluster const*>& hits);
+      const std::vector<PlanarModuleCluster const*>& hits, const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
 
-  // TODO: Clustering backside
+  /// @brief Build list of hits on neighboring bins
+  /// @param hits collection of hits on a front surface
+  /// @param cfg configuration that steers if a clustering should be performed and determines the amount of hits that are clustered together
+  /// @return collection of found pairs
+  static const std::vector<std::vector<PlanarModuleCluster const*>>
+  clusterSpacePointsBackSide(
+      const std::vector<PlanarModuleCluster const*>& hits, const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit

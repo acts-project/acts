@@ -76,48 +76,124 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
   return std::make_pair(binX, binY);
 }
 
-const std::vector<std::pair<Acts::PlanarModuleCluster const*,
-                            Acts::PlanarModuleCluster const*>>
+std::vector<std::vector<Acts::PlanarModuleCluster const*>>
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::
-    clusterSpacePointsFrontSide(
-        const std::vector<Acts::PlanarModuleCluster const*>& hits)
+                        Acts::DoubleHitSpacePointConfig>::sortHits(const std::vector<Acts::PlanarModuleCluster const*>& hits)
 {
+     
+  auto* surface = &(hits[0]->referenceSurface());
+	
+	// Create a matrix of hits out of the collection of hits
   std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins;
+  
+  // Resize the matrix
   auto binData = binningData(hits[0]);
 
   bins.resize(binData[0].bins());
   for (unsigned int index = 0; index < bins.size(); index++)
     bins[index].resize(binData[1].bins());
 
+	// Fill the hits in the matrix
   for (unsigned int iHits = 0; iHits < hits.size(); iHits++) {
+	  // Check if all hits are from the same surface. This is necessary for clustering based on bin numbers.
+	  if(&(hits[iHits]->referenceSurface()) != surface)
+	  {
+		  // Return empty matrix if multiple surfaces were given
+		  bins.clear();
+		  return bins;
+		}
     std::pair<size_t, size_t> bin = binOfHit(hits[iHits]);
     bins[bin.first][bin.second] = hits[iHits];
   }
+	
+return std::move(bins);
+}
 
+const std::vector<std::pair<Acts::PlanarModuleCluster const*,
+                            Acts::PlanarModuleCluster const*>>
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::
+    clusterSpacePointsFrontSide(
+        const std::vector<Acts::PlanarModuleCluster const*>& hits, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
+{
+	/// This function is a slow and stable sorting algorithm to cluster a collection of hits on the front side of the detector module. The idea is a combination of two hits in neighbouring strips. This follows the assumption that a particle can hit at most two strips.
+	/// Since the hits can be provided in an arbitrary order, this function starts with the creation of a matrix of hits. This allows an easy look up afterwards by checking if a hit has also a hit on the previous bin. If this is the case both hits will be stored.
+	
   std::vector<std::pair<Acts::PlanarModuleCluster const*,
                         Acts::PlanarModuleCluster const*>>
       clusters;
-
-  if (bins.size() > bins[0].size())
-    for (unsigned int iRow = 0; iRow < bins.size(); iRow++) {
-    }  // TODO
-  else {
-    // TODO
-  }
-  return clusters;
+		
+	if(cfg->clusterFrontHits)
+	{
+		// Create a matrix of hits out of the collection of hits
+	  std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins = sortHits(hits);
+	  
+	  // Empty matrix means that hits were from different surfaces and therefore cannot be combined
+	  if(bins.empty())
+		return clusters;
+	
+		// Check the orientation of a strip module = check which dimension has more bins
+	  if (bins.size() > bins[0].size())
+		// Walk through all bins
+		for(unsigned int iY = 0; iY < bins[0].size(); iY++)
+			for (unsigned int iX = 0; iX < bins.size(); iX++)
+			{
+				// Check if a bin and its previous one has a hit recorded and store them if it is the case
+				if(iX == 0)
+					continue;
+				if(bins[iX][iY] && bins[iX - 1][iY])
+					clusters.push_back(std::make_pair(bins[iX - 1][iY], bins[iX][iY]));
+			}
+	  else
+		// Perform the same computation as before with exchanged dimensions
+		for(unsigned int iX = 0; iX < bins.size(); iX++)
+			for(unsigned int iY = 0; iY < bins[0].size(); iY++)
+			{
+				if(iY == 0)
+					continue;
+				if(bins[iX][iY] && bins[iX][iY - 1])
+					clusters.push_back(std::make_pair(bins[iX][iY - 1], bins[iX][iY]));
+			}
+	}
+	else
+		// No clustering means that every hit is its own cluster
+		for(auto& hit : hits)
+			clusters.push_back(std::make_pair(hit, nullptr));
+			
+  return std::move(clusters);
 }
 
+const std::vector<std::vector<Acts::PlanarModuleCluster const*>>
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::clusterSpacePointsBackSide(
+      const std::vector<Acts::PlanarModuleCluster const*>& hits, const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
+{
+	  std::vector<std::vector<Acts::PlanarModuleCluster const*>> clusters;
+      
+      if(cfg->clusterBackHits && cfg->clusterSizeBackSide > 1)
+      {
+		 // Create a matrix of hits out of the collection of hits
+		std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins = sortHits(hits); 
+		  
+	  }
+	  else
+		for(auto& hit : hits)
+			clusters.push_back(std::vector<Acts::PlanarModuleCluster const*>(1, hit));
+      
+      return clusters;
+	
+}
+      
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
     addHits(std::vector<Acts::DoubleHitSpacePoint>&                spacePoints,
-            const std::vector<Acts::PlanarModuleCluster const*>&   hits1,
-            const std::vector<Acts::PlanarModuleCluster const*>&   hits2,
+            const std::vector<Acts::PlanarModuleCluster const*>&   hitsFront,
+            const std::vector<Acts::PlanarModuleCluster const*>&   hitsBack,
             const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   // Return if no hits are given in a vector
-  if (hits1.empty() || hits2.empty()) return;
+  if (hitsFront.empty() || hitsBack.empty()) return;
 
   // Test if config exists
   std::shared_ptr<Acts::DoubleHitSpacePointConfig> dhCfg;
@@ -127,6 +203,14 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     // Use default config
     dhCfg = std::make_shared<Acts::DoubleHitSpacePointConfig>(
         Acts::DoubleHitSpacePointConfig());
+        
+  // Cluster hits
+  auto clustersFront = clusterSpacePointsFrontSide(hitsFront, cfg);
+  if(clustersFront.empty())
+	return;
+  auto clustersBack = clusterSpacePointsBackSide(hitsBack, cfg);
+  if(clustersBack.empty())
+	return;
 
   // Declare helper variables
   double       currentDiff;
@@ -134,26 +218,27 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
   unsigned int hitMin;
 
   // Walk through all hits on both surfaces
-  for (unsigned int iHits1 = 0; iHits1 < hits1.size(); iHits1++) {
+  for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size(); iClustersFront++) {
     // Set the closest distance to the maximum of double
     diffMin = std::numeric_limits<double>::max();
     // Set the corresponding index to an element not in the list of hits
-    hitMin = hits2.size();
-    for (unsigned int iHits2 = 0; iHits2 < hits2.size(); iHits2++) {
-      // Calculate the distances between the hits
-      currentDiff = differenceOfHits(*(hits1[iHits1]), *(hits2[iHits2]), dhCfg);
-      // Store the closest hits (distance and index) calculated so far
-      if (currentDiff < diffMin && currentDiff >= 0.) {
-        diffMin = currentDiff;
-        hitMin  = iHits2;
-      }
-    }
+    hitMin = hitsBack.size();
+    // TODO
+    //~ for (unsigned int iHitsBack = 0; iHitsBack < hitsBack.size(); iHitsBack++) {
+      //~ // Calculate the distances between the hits
+      //~ currentDiff = differenceOfHits(*(hitsFront[iHitsFront]), *(hitsBack[iHitsBack]), dhCfg);
+      //~ // Store the closest hits (distance and index) calculated so far
+      //~ if (currentDiff < diffMin && currentDiff >= 0.) {
+        //~ diffMin = currentDiff;
+        //~ hitMin  = iHitsBack;
+      //~ }
+    //~ }
 
     // Store the best (=closest) result
-    if (hitMin < hits2.size()) {
+    if (hitMin < hitsBack.size()) {
       Acts::DoubleHitSpacePoint tmpSpacePoint;
-      tmpSpacePoint.hitModuleFront = hits1[iHits1];
-      tmpSpacePoint.hitModuleBack  = hits2[hitMin];
+      tmpSpacePoint.hitModuleFront = hitsFront[iClustersFront];
+      tmpSpacePoint.hitModuleBack  = hitsBack[hitMin];
       spacePoints.push_back(tmpSpacePoint);
     }
   }
