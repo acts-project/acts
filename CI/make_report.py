@@ -192,14 +192,16 @@ def main():
         with open(args.inputfile, "r", encoding="utf-8") as f:
             inputstr = f.read()
         files, get_comment = get_clang_tidy_warnings(inputstr)
+        title = "ACTS clang-tidy report"
     elif args.mode == "cppcheck":
         with open(args.inputfile, "rb") as f:
             inputstr = f.read()
         files, get_comment = get_cppcheck_warnings(inputstr)
+        title = "ACTS cppcheck report"
 
 
     cr = CodeReport(files, 
-                    title="ACTS clang-tidy report",
+                    title=title,
                     get_comment=get_comment)
 
 
