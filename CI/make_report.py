@@ -186,6 +186,7 @@ def main():
     p.add_argument("inputfile")
     p.add_argument("reportdir", default="report")
     p.add_argument("--exclude", "-e", action="append", default=[])
+    p.add_argument("--filter", action="append", default=[])
 
     args = p.parse_args()
 
@@ -201,10 +202,14 @@ def main():
         files, get_comment = get_cppcheck_warnings(inputstr)
         title = "ACTS cppcheck report"
 
+    if len(args.filter) > 0:
+        files = filter(lambda f: all(fnmatch(f, e) for e in args.filter), files)
+
     files = filter(lambda f: not any(fnmatch(f, e) for e in args.exclude), files)
 
     cr = CodeReport(files, 
                     title=title,
+                    commonprefix=lambda _: os.getcwd()+"/",
                     get_comment=get_comment)
 
 
