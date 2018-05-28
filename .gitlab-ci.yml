@@ -87,8 +87,6 @@ oclint:
   artifacts:
     paths:
       - report
-  only:
-    - master
   when: manual
     
 scan-build:
@@ -105,8 +103,6 @@ scan-build:
   artifacts:
     paths:
       - report
-  only:
-    - master
   when: manual
 
 
