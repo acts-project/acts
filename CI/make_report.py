@@ -7,6 +7,7 @@ from itertools import groupby
 import os
 import html
 from fnmatch import fnmatch
+import json
 
 from lxml import etree
 
@@ -135,7 +136,7 @@ class CppcheckItem:
         self.id = id
 
     def __str__(self):
-        return "{severity}: {msg} [{id}]".format(
+        return "- {severity}: {msg} [{id}]".format(
             severity= self.severity,
             msg= self.verbose,
             id= self.id
@@ -178,11 +179,54 @@ def get_cppcheck_warnings(input):
 
     return list(items_by_file.keys()), get_comment
 
+class OCLintItem:
+    def __init__(self, file, line, rule, priority, message):
+        self.file = file
+        self.line = line
+        self.rule = rule
+        self.priority = priority
+        self.message = message
 
+    def __str__(self):
+        return "- priority={priority}: {msg} [{rule}]".format(
+            priority=self.priority, msg=self.message, rule=self.rule)
+
+def get_oclint_warnings(input):
+    info = json.loads(input)
+
+    items_by_file = {}
+
+    for viol in info["violation"]:
+        item = OCLintItem(
+            file=viol["path"],
+            line=viol["startLine"],
+            rule=viol["rule"],
+            priority=viol["priority"],
+            message=viol["message"]
+        )
+        
+        if not item.file in items_by_file:
+            items_by_file[item.file] = {}
+
+        if not item.line in items_by_file[item.file]:
+            items_by_file[item.file][item.line] = []
+        
+        items_by_file[item.file][item.line].append(item)
+    
+    def get_comment(file, lineno, cr):
+        if file in items_by_file and lineno in items_by_file[file]:
+            items = items_by_file[file][lineno]
+        else:
+            return None
+
+        fmt = '<pre style="white-space:pre-wrap;display:block;">{}</pre>'
+        return list(map(lambda item: fmt.format(str(item)), items))
+
+    return list(items_by_file.keys()), get_comment
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("mode", choices=("clang-tidy", "cppcheck"))
+    p.add_argument("mode", choices=("clang-tidy", "cppcheck", "oclint"))
     p.add_argument("inputfile")
     p.add_argument("reportdir", default="report")
     p.add_argument("--exclude", "-e", action="append", default=[])
@@ -201,6 +245,11 @@ def main():
             inputstr = f.read()
         files, get_comment = get_cppcheck_warnings(inputstr)
         title = "ACTS cppcheck report"
+    elif args.mode == "oclint":
+        with open(args.inputfile, "r") as f:
+            inputstr = f.read()
+            files, get_comment = get_oclint_warnings(inputstr)
+            title = "ACTS OCLint report"
 
     if len(args.filter) > 0:
         files = filter(lambda f: all(fnmatch(f, e) for e in args.filter), files)
