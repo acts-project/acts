@@ -74,14 +74,15 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 
 std::vector<std::vector<Acts::PlanarModuleCluster const*>>
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::sortHits(const std::vector<Acts::PlanarModuleCluster const*>& hits)
+                        Acts::DoubleHitSpacePointConfig>::
+    sortHits(const std::vector<Acts::PlanarModuleCluster const*>& hits)
 {
-     
+
   auto* surface = &(hits[0]->referenceSurface());
-	
-	// Create a matrix of hits out of the collection of hits
+
+  // Create a matrix of hits out of the collection of hits
   std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins;
-  
+
   // Resize the matrix
   auto binData = binningData(hits[0]);
 
@@ -89,20 +90,20 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
   for (unsigned int index = 0; index < bins.size(); index++)
     bins[index].resize(binData[1].bins());
 
-	// Fill the hits in the matrix
+  // Fill the hits in the matrix
   for (unsigned int iHits = 0; iHits < hits.size(); iHits++) {
-	  // Check if all hits are from the same surface. This is necessary for clustering based on bin numbers.
-	  if(&(hits[iHits]->referenceSurface()) != surface)
-	  {
-		  // Return empty matrix if multiple surfaces were given
-		  bins.clear();
-		  return bins;
-		}
+    // Check if all hits are from the same surface. This is necessary for
+    // clustering based on bin numbers.
+    if (&(hits[iHits]->referenceSurface()) != surface) {
+      // Return empty matrix if multiple surfaces were given
+      bins.clear();
+      return bins;
+    }
     std::pair<size_t, size_t> bin = binOfHit(hits[iHits]);
     bins[bin.first][bin.second] = hits[iHits];
   }
-	
-return std::move(bins);
+
+  return std::move(bins);
 }
 
 const std::vector<std::pair<Acts::PlanarModuleCluster const*,
@@ -110,84 +111,85 @@ const std::vector<std::pair<Acts::PlanarModuleCluster const*,
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
     clusterSpacePoints(
-        const std::vector<Acts::PlanarModuleCluster const*>& hits, bool performClustering)
+        const std::vector<Acts::PlanarModuleCluster const*>& hits,
+        bool                                                 performClustering)
 {
-	/// This function is a slow and stable sorting algorithm to cluster a collection of hits on the detector module. The idea is a combination of two hits in neighbouring strips. This follows the assumption that a particle can hit at most two strips.
-	/// Since the hits can be provided in an arbitrary order, this function starts with the creation of a matrix of hits. This allows an easy look up afterwards by checking if a hit has also a hit on the previous bin. If this is the case both hits will be stored.
-	
+  /// This function is a slow and stable sorting algorithm to cluster a
+  /// collection of hits on the detector module. The idea is a combination of
+  /// two hits in neighbouring strips. This follows the assumption that a
+  /// particle can hit at most two strips.
+  /// Since the hits can be provided in an arbitrary order, this function starts
+  /// with the creation of a matrix of hits. This allows an easy look up
+  /// afterwards by checking if a hit has also a hit on the previous bin. If
+  /// this is the case both hits will be stored.
+
   std::vector<std::pair<Acts::PlanarModuleCluster const*,
                         Acts::PlanarModuleCluster const*>>
       clusters;
-		
-	if(performClustering)
-	{
-		// Create a matrix of hits out of the collection of hits
-	  std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins = sortHits(hits);
-	  
-	  // Empty matrix means that hits were from different surfaces and therefore cannot be combined
-	  if(bins.empty())
-		return clusters;
-	
-		// Check the orientation of a strip module = check which dimension has more bins
-	  if (bins.size() > bins[0].size())
-		// Walk through all bins
-		for(unsigned int iY = 0; iY < bins[0].size(); iY++)
-			for (unsigned int iX = 0; iX < bins.size(); iX++)
-			{
-				// Check if a bin and its previous one has a hit recorded and store them if it is the case
-				if(iX == 0)
-					continue;
-				if(bins[iX][iY] && bins[iX - 1][iY])
-				{
-					clusters.push_back(std::make_pair(bins[iX - 1][iY], bins[iX][iY]));
-					continue;
-				}
-				// Consider the special case of a hit on a single strip
-				if(iX > 1 && !bins[iX][iY] && bins[iX - 1][iY] && !bins[iX - 2][iY])
-					clusters.push_back(std::make_pair(bins[iX - 1][iY], nullptr));
-			}
-	  else
-		// Perform the same computation as before with exchanged dimensions
-		for(unsigned int iX = 0; iX < bins.size(); iX++)
-			for(unsigned int iY = 0; iY < bins[0].size(); iY++)
-			{
-				if(iY == 0)
-					continue;
-				if(bins[iX][iY] && bins[iX][iY - 1])
-				{
-					clusters.push_back(std::make_pair(bins[iX][iY - 1], bins[iX][iY]));
-					continue;
-				}
-				if(iY > 1 && !bins[iX][iY] && bins[iX][iY - 1] && !bins[iX][iY - 2])
-					clusters.push_back(std::make_pair(bins[iX][iY - 1], nullptr));
-			}
-	}
-	else
-		// No clustering means that every hit is its own cluster
-		for(auto& hit : hits)
-			clusters.push_back(std::make_pair(hit, nullptr));
-			
+
+  if (performClustering) {
+    // Create a matrix of hits out of the collection of hits
+    std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins
+        = sortHits(hits);
+
+    // Empty matrix means that hits were from different surfaces and therefore
+    // cannot be combined
+    if (bins.empty()) return clusters;
+
+    // Check the orientation of a strip module = check which dimension has more
+    // bins
+    if (bins.size() > bins[0].size())
+      // Walk through all bins
+      for (unsigned int iY = 0; iY < bins[0].size(); iY++)
+        for (unsigned int iX = 0; iX < bins.size(); iX++) {
+          // Check if a bin and its previous one has a hit recorded and store
+          // them if it is the case
+          if (iX == 0) continue;
+          if (bins[iX][iY] && bins[iX - 1][iY]) {
+            clusters.push_back(std::make_pair(bins[iX - 1][iY], bins[iX][iY]));
+            continue;
+          }
+          // Consider the special case of a hit on a single strip
+          if (iX > 1 && !bins[iX][iY] && bins[iX - 1][iY] && !bins[iX - 2][iY])
+            clusters.push_back(std::make_pair(bins[iX - 1][iY], nullptr));
+        }
+    else
+      // Perform the same computation as before with exchanged dimensions
+      for (unsigned int iX = 0; iX < bins.size(); iX++)
+        for (unsigned int iY = 0; iY < bins[0].size(); iY++) {
+          if (iY == 0) continue;
+          if (bins[iX][iY] && bins[iX][iY - 1]) {
+            clusters.push_back(std::make_pair(bins[iX][iY - 1], bins[iX][iY]));
+            continue;
+          }
+          if (iY > 1 && !bins[iX][iY] && bins[iX][iY - 1] && !bins[iX][iY - 2])
+            clusters.push_back(std::make_pair(bins[iX][iY - 1], nullptr));
+        }
+  } else
+    // No clustering means that every hit is its own cluster
+    for (auto& hit : hits) clusters.push_back(std::make_pair(hit, nullptr));
+
   return std::move(clusters);
 }
 
 const Acts::Vector3D
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::clusterPoint(std::pair<Acts::PlanarModuleCluster const*,
-                                     Acts::PlanarModuleCluster const*> cluster)
+                        Acts::DoubleHitSpacePointConfig>::
+    clusterPoint(std::pair<Acts::PlanarModuleCluster const*,
+                           Acts::PlanarModuleCluster const*> cluster)
 {
-	// Get the hit coordinates
+  // Get the hit coordinates
   Acts::Vector3D pos1 = globalCoords(*(cluster.first));
-  
-  if(cluster.second)
-  {
-	  Acts::Vector3D pos2 = globalCoords(*(cluster.second));
-	  
-		// Calculate the mean of both hits
-		pos1(0) = (pos1(0) + pos2(0)) / 2;
-		pos1(1) = (pos1(1) + pos2(1)) / 2;
-		pos1(2) = (pos1(2) + pos2(2)) / 2;
-}
-	return pos1;
+
+  if (cluster.second) {
+    Acts::Vector3D pos2 = globalCoords(*(cluster.second));
+
+    // Calculate the mean of both hits
+    pos1(0) = (pos1(0) + pos2(0)) / 2;
+    pos1(1) = (pos1(1) + pos2(1)) / 2;
+    pos1(2) = (pos1(2) + pos2(2)) / 2;
+  }
+  return pos1;
 }
 
 void
@@ -209,37 +211,38 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     // Use default config
     dhCfg = std::make_shared<Acts::DoubleHitSpacePointConfig>(
         Acts::DoubleHitSpacePointConfig());
-        
+
   // Cluster hits and exit if no clusters are given
   auto clustersFront = clusterSpacePoints(hitsFront, dhCfg->clusterFrontHits);
-  if(clustersFront.empty())
-	return;
+  if (clustersFront.empty()) return;
   auto clustersBack = clusterSpacePoints(hitsBack, dhCfg->clusterBackHits);
-  if(clustersBack.empty())
-	return;
+  if (clustersBack.empty()) return;
 
   // Declare helper variables
-  double       currentDiff;
-  double       diffMin;
-  unsigned int clusterMin;
+  double         currentDiff;
+  double         diffMin;
+  unsigned int   clusterMin;
   Acts::Vector3D clusterPointFront;
   Acts::Vector3D clusterPointBack;
 
   // Walk through all hits on both surfaces
-  for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size(); iClustersFront++) {
-	  clusterPointFront = clusterPoint(clustersFront[iClustersFront]);
+  for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size();
+       iClustersFront++) {
+    clusterPointFront = clusterPoint(clustersFront[iClustersFront]);
     // Set the closest distance to the maximum of double
     diffMin = std::numeric_limits<double>::max();
     // Set the corresponding index to an element not in the list of hits
     clusterMin = clustersBack.size();
-    for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size(); iClustersBack++) {
-		clusterPointBack = clusterPoint(clustersBack[iClustersBack]);
+    for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
+         iClustersBack++) {
+      clusterPointBack = clusterPoint(clustersBack[iClustersBack]);
       // Calculate the distances between the hits
-      currentDiff = differenceOfHits(clusterPointFront, clusterPointBack, dhCfg);
+      currentDiff
+          = differenceOfHits(clusterPointFront, clusterPointBack, dhCfg);
       // Store the closest hits (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
-        diffMin = currentDiff;
-        clusterMin  = iClustersBack;
+        diffMin    = currentDiff;
+        clusterMin = iClustersBack;
       }
     }
 
@@ -301,25 +304,26 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::endsOfCluster(std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*> cluster)
+                        Acts::DoubleHitSpacePointConfig>::
+    endsOfCluster(std::pair<PlanarModuleCluster const*,
+                            PlanarModuleCluster const*> cluster)
 {
-	// Get the end of the strip(s)
-	auto ends1 = endsOfStrip(*(cluster.first));
-	if(cluster.second)
-	{
-		auto ends2 = endsOfStrip(*(cluster.second));
-		
-		// Calculate the mean of both ends
-		ends1.first(0) = (ends1.first(0) + ends2.first(0)) / 2;
-		ends1.first(1) = (ends1.first(1) + ends2.first(1)) / 2;
-		ends1.first(2) = (ends1.first(2) + ends2.first(2)) / 2;
-		
-		ends1.second(0) = (ends1.second(0) + ends2.second(0)) / 2;
-		ends1.second(1) = (ends1.second(1) + ends2.second(1)) / 2;
-		ends1.second(2) = (ends1.second(2) + ends2.second(2)) / 2;
-	}
-	return ends1;
-}           
+  // Get the end of the strip(s)
+  auto ends1 = endsOfStrip(*(cluster.first));
+  if (cluster.second) {
+    auto ends2 = endsOfStrip(*(cluster.second));
+
+    // Calculate the mean of both ends
+    ends1.first(0) = (ends1.first(0) + ends2.first(0)) / 2;
+    ends1.first(1) = (ends1.first(1) + ends2.first(1)) / 2;
+    ends1.first(2) = (ends1.first(2) + ends2.first(2)) / 2;
+
+    ends1.second(0) = (ends1.second(0) + ends2.second(0)) / 2;
+    ends1.second(1) = (ends1.second(1) + ends2.second(1)) / 2;
+    ends1.second(2) = (ends1.second(2) + ends2.second(2)) / 2;
+  }
+  return ends1;
+}
 
 double
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,

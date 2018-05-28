@@ -20,9 +20,11 @@ namespace Acts {
 struct DoubleHitSpacePoint
 {
   /// Storage of the hit cluster on a surface
-  std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*> hitModuleFront;
+  std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>
+      hitModuleFront;
   /// Storage of the hit cluster on another surface
-  std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>  hitModuleBack;
+  std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>
+      hitModuleBack;
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
 };
@@ -162,8 +164,8 @@ private:
   /// hit1 and @p hit2
   /// @return the squared sum in case of success, otherwise -1
   static double
-  differenceOfHits(const Vector3D&                       pos1,
-                   const Vector3D&                       pos2,
+  differenceOfHits(const Vector3D&                                  pos1,
+                   const Vector3D&                                  pos2,
                    const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
 
   static std::vector<BinningData>
@@ -174,30 +176,31 @@ private:
   /// @return channel 0 and 1 of the hit
   static std::pair<size_t, size_t>
   binOfHit(PlanarModuleCluster const* hit);
-  
+
   /// @brief Create a sparse matrix of hits based on the bin numbers as look up
   /// @param hits list of hits
   /// @return matrix with hits
-  /// @note If the hits are given from more than one surface the matrix will be empty. This prevents false listing since it is based on bin indices.
+  /// @note If the hits are given from more than one surface the matrix will be
+  /// empty. This prevents false listing since it is based on bin indices.
   static std::vector<std::vector<PlanarModuleCluster const*>>
   sortHits(const std::vector<PlanarModuleCluster const*>& hits);
-                        
 
   /// @brief Build pair of hits on neighboring bins
   /// @param hits collection of hits on a single surface
-  /// @param peformClustering configuration that steers if a clustering should be performed
+  /// @param peformClustering configuration that steers if a clustering should
+  /// be performed
   /// @return collection of found pairs
   static const std::vector<std::pair<PlanarModuleCluster const*,
                                      PlanarModuleCluster const*>>
-  clusterSpacePoints(
-      const std::vector<PlanarModuleCluster const*>& hits, bool performClustering);
+  clusterSpacePoints(const std::vector<PlanarModuleCluster const*>& hits,
+                     bool performClustering);
 
-	/// @brief Calculate the mean of the coordinates of two hits
-	/// @param cluster pair of neighbouring hits
-	/// @return vector with the combined coordinates
+  /// @brief Calculate the mean of the coordinates of two hits
+  /// @param cluster pair of neighbouring hits
+  /// @return vector with the combined coordinates
   static const Vector3D
-  clusterPoint(std::pair<PlanarModuleCluster const*,
-                                     PlanarModuleCluster const*> cluster);
+  clusterPoint(std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>
+                   cluster);
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
@@ -205,12 +208,13 @@ private:
   /// @return vectors to the top and bottom end of the SDE
   static std::pair<Vector3D, Vector3D>
   endsOfStrip(const PlanarModuleCluster& hit);
-  
+
   /// @brief Calculates the combined ends of two SDEs
   /// @param cluster pair of hits on two SDEs
   /// @return mean of the ends of both SDEs
   static std::pair<Vector3D, Vector3D>
-  endsOfCluster(std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*> cluster);
+  endsOfCluster(std::pair<PlanarModuleCluster const*,
+                          PlanarModuleCluster const*> cluster);
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data
