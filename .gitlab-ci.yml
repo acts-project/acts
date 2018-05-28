@@ -53,7 +53,7 @@ clang_tidy:
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - run-clang-tidy.py -p build -header-filter=.* -j$(nproc) 1> report/clang-tidy.log
-    - CI/make_report.py clang-tidy report/clang-tidy.log report -e "$PWD/Tests/*" -e "$PWD/Legacy/*"
+    - CI/make_report.py clang-tidy report/clang-tidy.log report -e "$PWD/Tests/*" -e "$PWD/Legacy/*" --filter "$PWD/*"
   artifacts:
     paths:
       - report
@@ -70,7 +70,7 @@ cppcheck:
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - cppcheck --project=build/compile_commands.json --enable=warning,missingInclude,portability -UACTS_PARAMETER_DEFINITIONS_PLUGIN --xml-version=2 -j$(nproc) 2> report/report.xml
-    - CI/make_report.py cppcheck report/report.xml report -e "$PWD/Tests/*" -e "$PWD/Legacy/*"
+    - CI/make_report.py cppcheck report/report.xml report -e "$PWD/Tests/*" -e "$PWD/Legacy/*" --filter "$PWD/*"
   artifacts:
     paths:
       - report
@@ -86,7 +86,7 @@ oclint:
     - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
     - cd ..
     - oclint-json-compilation-database -p build -- -report-type json -o report/oclint_report.json
-    - CI/make_report.py oclint report/oclint_report.json report -e "$PWD/Tests/*" -e "$PWD/Legacy/*"
+    - CI/make_report.py oclint report/oclint_report.json report -e "$PWD/Tests/*" -e "$PWD/Legacy/*" --filter "$PWD/*"
   artifacts:
     paths:
       - report
