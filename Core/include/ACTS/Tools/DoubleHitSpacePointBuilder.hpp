@@ -23,10 +23,6 @@ struct DoubleHitSpacePoint
   std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*> hitModuleFront;
   /// Storage of the hit cluster on another surface
   std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>  hitModuleBack;
-  /// Combined coordinate of a cluster of hits on the front side
-  Vector3D clusterPointFront = {0., 0., 0.};
-  /// Combined coordinate of a cluster of hits on the back side
-  Vector3D clusterPointBack = {0., 0., 0.};
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
 };
@@ -209,6 +205,12 @@ private:
   /// @return vectors to the top and bottom end of the SDE
   static std::pair<Vector3D, Vector3D>
   endsOfStrip(const PlanarModuleCluster& hit);
+  
+  /// @brief Calculates the combined ends of two SDEs
+  /// @param cluster pair of hits on two SDEs
+  /// @return mean of the ends of both SDEs
+  static std::pair<Vector3D, Vector3D>
+  endsOfCluster(std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*> cluster);
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data

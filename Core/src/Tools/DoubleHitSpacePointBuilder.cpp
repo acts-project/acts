@@ -144,7 +144,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 				}
 				// Consider the special case of a hit on a single strip
 				if(iX > 1 && !bins[iX][iY] && bins[iX - 1][iY] && !bins[iX - 2][iY])
-					clusters.push_back(std::make_pair(bins[iX - 1][iY], nullptr);
+					clusters.push_back(std::make_pair(bins[iX - 1][iY], nullptr));
 			}
 	  else
 		// Perform the same computation as before with exchanged dimensions
@@ -159,7 +159,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 					continue;
 				}
 				if(iY > 1 && !bins[iX][iY] && bins[iX][iY - 1] && !bins[iX][iY - 2])
-					clusters.push_back(std::make_pair(bins[iX][iY - 1], nullptr);
+					clusters.push_back(std::make_pair(bins[iX][iY - 1], nullptr));
 			}
 	}
 	else
@@ -248,8 +248,6 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
       Acts::DoubleHitSpacePoint tmpSpacePoint;
       tmpSpacePoint.hitModuleFront = clustersFront[iClustersFront];
       tmpSpacePoint.hitModuleBack  = clustersBack[clusterMin];
-      tmpSpacePoint.clusterPointFront = clusterPointFront;
-      tmpSpacePoint.clusterPointBack = clusterPoint(clustersBack[clusterMin]);
       spacePoints.push_back(tmpSpacePoint);
     }
   }
@@ -300,6 +298,28 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
 }
+
+std::pair<Acts::Vector3D, Acts::Vector3D>
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
+                        Acts::DoubleHitSpacePointConfig>::endsOfCluster(std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*> cluster)
+{
+	// Get the end of the strip(s)
+	auto ends1 = endsOfStrip(*(cluster.first));
+	if(cluster.second)
+	{
+		auto ends2 = endsOfStrip(*(cluster.second));
+		
+		// Calculate the mean of both ends
+		ends1.first(0) = (ends1.first(0) + ends2.first(0)) / 2;
+		ends1.first(1) = (ends1.first(1) + ends2.first(1)) / 2;
+		ends1.first(2) = (ends1.first(2) + ends2.first(2)) / 2;
+		
+		ends1.second(0) = (ends1.second(0) + ends2.second(0)) / 2;
+		ends1.second(1) = (ends1.second(1) + ends2.second(1)) / 2;
+		ends1.second(2) = (ends1.second(2) + ends2.second(2)) / 2;
+	}
+	return ends1;
+}           
 
 double
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
@@ -442,8 +462,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
 
     // Calculate the ends of the SDEs
-    const auto& ends1 = endsOfStrip(*(hits.hitModuleFront));
-    const auto& ends2 = endsOfStrip(*(hits.hitModuleBack));
+    const auto& ends1 = endsOfCluster(hits.hitModuleFront);
+    const auto& ends2 = endsOfCluster(hits.hitModuleBack);
 
     /// The following algorithm is meant for finding the position on the first
     /// strip if there is a corresponding hit on the second strip. The
