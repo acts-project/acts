@@ -196,8 +196,7 @@ private:
   /// @param cluster cluster of neighbouring hits
   /// @return vector with the combined coordinates
   static const Vector3D
-  clusterPoint(std::vector<PlanarModuleCluster const*>
-                   cluster);
+  clusterPoint(std::vector<PlanarModuleCluster const*> cluster);
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
