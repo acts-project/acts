@@ -1,36 +1,34 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_KALMANFITUTILS_H
-#define ACTS_KALMANFITUTILS_H
-
+#pragma once
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <random>
 #include <vector>
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/EventData/Measurement.hpp"
-#include "ACTS/Extrapolation/ExtrapolationCell.hpp"
-#include "ACTS/Extrapolation/ExtrapolationEngine.hpp"
-#include "ACTS/Extrapolation/IExtrapolationEngine.hpp"
-#include "ACTS/Extrapolation/MaterialEffectsEngine.hpp"
-#include "ACTS/Extrapolation/RungeKuttaEngine.hpp"
-#include "ACTS/Extrapolation/StaticEngine.hpp"
-#include "ACTS/Extrapolation/StaticNavigationEngine.hpp"
-#include "ACTS/Fitter/KalmanFitter.hpp"
-#include "ACTS/Fitter/KalmanUpdator.hpp"
-#include "ACTS/MagneticField/ConstantBField.hpp"
-#include "ACTS/Surfaces/PerigeeSurface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Logger.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Extrapolation/ExtrapolationCell.hpp"
+#include "Acts/Extrapolation/ExtrapolationEngine.hpp"
+#include "Acts/Extrapolation/IExtrapolationEngine.hpp"
+#include "Acts/Extrapolation/MaterialEffectsEngine.hpp"
+#include "Acts/Extrapolation/RungeKuttaEngine.hpp"
+#include "Acts/Extrapolation/StaticEngine.hpp"
+#include "Acts/Extrapolation/StaticNavigationEngine.hpp"
+#include "Acts/Fitter/KalmanFitter.hpp"
+#include "Acts/Fitter/KalmanUpdator.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 // shorthands
 using namespace Acts;
@@ -152,5 +150,3 @@ initExtrapolator(const std::shared_ptr<const TrackingGeometry>& geo)
 
   return exEngine;
 };
-
-#endif

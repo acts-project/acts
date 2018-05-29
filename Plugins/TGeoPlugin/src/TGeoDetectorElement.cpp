@@ -1,24 +1,24 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
+#include "Acts/Plugins/TGeoPlugins/TGeoDetectorElement.hpp"
 #include <boost/algorithm/string.hpp>
 #include <iostream>
-#include "ACTS/Digitization/DigitizationModule.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "TGeoBBox.h"
 #include "TGeoTrd2.h"
 #include "TGeoTube.h"

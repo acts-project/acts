@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,7 @@
 
 #include <algorithm>
 
-#include "ACTS/Utilities/Logger.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -60,7 +60,7 @@ namespace Logging {
 /// @param [in] log_stream output stream used for printing debug messages
 ///
 /// This function returns a pointer to an alternative Logger instance to
-/// the default ACTS logger. This instance prints the log output mirrored
+/// the default Acts logger. This instance prints the log output mirrored
 /// from right to left.
 ///
 /// @return pointer to logging instance

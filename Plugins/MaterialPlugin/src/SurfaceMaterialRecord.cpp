@@ -1,17 +1,17 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// SurfaceMaterialRecord.cpp, ACTS project
+// SurfaceMaterialRecord.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const Surface&    surface,
                                                    const BinUtility& binUtility)

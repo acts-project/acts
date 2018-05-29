@@ -8,7 +8,7 @@ set -ex
 : ${gitlabSourceRepoName:?"'gitlabSourceRepoName' not set or empty"}
 : ${gitlabSourceBranch:?"'gitlabSourceBranch' not set or empty"}
 
-# check for ACTS
+# check for Acts
 ACTS_DIR=`readlink -f $1`
 if [ ! -d "$ACTS_DIR" ]
 then

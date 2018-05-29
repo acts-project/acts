@@ -1,28 +1,28 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 ACTS project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// DiscSurface.cpp, ACTS project
+// DiscSurface.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
-#include "ACTS/Surfaces/DiscTrapezoidalBounds.hpp"
-#include "ACTS/Surfaces/InfiniteBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/InstanceFactory.hpp"
-#include "ACTS/Utilities/ThrowAssert.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
+#include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/InstanceFactory.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 Acts::DiscSurface::DiscSurface(const DiscSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)

@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project (ACTS VERSION 0.6.0 LANGUAGES CXX)
+project (Acts VERSION 0.6.0 LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -19,7 +19,7 @@ option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
 option (ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
-set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "ACTS/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
+set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "Acts/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
 
 # handle inter-plugin dependencies
 if (ACTS_BUILD_DD4HEP_PLUGIN)
@@ -49,9 +49,9 @@ endif()
 # additional configuration and tools
 
 include (GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
-include (ACTSCompilerOptions) # default compile options
-include (ACTSFunctions) # ACTS-specific helper functions
-include (ACTSComponentsHelpers) # handle components via add_..._if commands
+include (ActsCompilerOptions) # default compile options
+include (ActsFunctions) # Acts-specific helper functions
+include (ActsComponentsHelpers) # handle components via add_..._if commands
 
 # core library and plugins
 
@@ -74,4 +74,4 @@ add_subdirectory_if (doc ACTS_BUILD_DOC)
 
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in ${CMAKE_CURRENT_BINARY_DIR}/setup.sh)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
-include (ACTSCreateConfig)
+include (ActsCreateConfig)

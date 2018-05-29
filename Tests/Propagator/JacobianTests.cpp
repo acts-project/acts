@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2018 ACTS project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,16 +18,16 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/detail/RungeKuttaUtils.hpp"
-#include "ACTS/MagneticField/ConstantBField.hpp"
-#include "ACTS/Propagator/AtlasStepper.hpp"
-#include "ACTS/Propagator/EigenStepper.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/PerigeeSurface.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/StrawSurface.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolation/detail/RungeKuttaUtils.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Propagator/AtlasStepper.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

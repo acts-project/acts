@@ -1,26 +1,26 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 ACTS project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// SurfaceArrayCreator.cpp, ACTS project
+// SurfaceArrayCreator.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include <algorithm>
 #include <cmath>
-#include "ACTS/Surfaces/PlanarBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Surfaces/SurfaceArray.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinnedArrayXD.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
-#include "ACTS/Utilities/detail/Axis.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArrayXD.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(

@@ -1,20 +1,20 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 ACTS project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// MaterialEffectsEngine.cpp, ACTS project
+// MaterialEffectsEngine.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Extrapolation/MaterialEffectsEngine.hpp"
+#include "Acts/Extrapolation/MaterialEffectsEngine.hpp"
 #include <sstream>
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Utilities/MaterialInteraction.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Utilities/MaterialInteraction.hpp"
 
 // constructor
 Acts::MaterialEffectsEngine::MaterialEffectsEngine(

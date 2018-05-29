@@ -1,18 +1,16 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_COVARIANCE_VALIDATION_FIXTURE_HPP
-#define ACTS_COVARIANCE_VALIDATION_FIXTURE_HPP 1
-
+#pragma once
 #include <array>
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 
@@ -156,4 +154,3 @@ namespace IntegrationTest {
 }  // namespace Test
 
 }  // namespace Acts
-#endif  // ACTS_COVARIANCE_VALIDATION_FIXTURE_HPP

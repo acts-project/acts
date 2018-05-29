@@ -1,11 +1,11 @@
 add_executable (SeedingTests SeedingTests.cpp)
 target_include_directories (SeedingTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (SeedingTests PRIVATE ACTSCore)
+target_link_libraries (SeedingTests PRIVATE Acts::Core)
 add_test (NAME SeedingUnitTest COMMAND SeedingTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST SeedingUnitTest TARGETS SeedingTests)
 
 add_executable (SeedingToolsTests SeedingToolsTests.cpp)
 target_include_directories (SeedingToolsTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (SeedingToolsTests PRIVATE ACTSCore)
+target_link_libraries (SeedingToolsTests PRIVATE Acts::Core)
 add_test (NAME SeedingToolsUnitTest COMMAND SeedingToolsTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST SeedingToolsUnitTest TARGETS SeedingToolsTests)

@@ -1,18 +1,18 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Digitization/CartesianSegmentation.hpp"
-#include "ACTS/Digitization/DigitizationModule.hpp"
-#include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "DD4hep/CartesianGridXY.h"
 
 Acts::DD4hepDetElement::DD4hepDetElement(

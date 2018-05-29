@@ -1,24 +1,24 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// CylinderVolumeBounds.cpp, ACTS project
+// CylinderVolumeBounds.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 #include <cmath>
 #include <iostream>
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 
 const double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
 

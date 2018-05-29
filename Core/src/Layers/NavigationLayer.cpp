@@ -1,19 +1,19 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// NavigationLayer.cpp, ACTS project
+// NavigationLayer.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Layers/NavigationLayer.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/InstanceFactory.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Layers/NavigationLayer.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/InstanceFactory.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 Acts::NavigationLayer::NavigationLayer(
     std::unique_ptr<const Surface> surfaceRepresentation,

@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,10 +19,10 @@
 
 //
 #include <limits>
-#include "ACTS/Surfaces/ConeSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;

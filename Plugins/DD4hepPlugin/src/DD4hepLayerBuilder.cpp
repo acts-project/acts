@@ -1,34 +1,34 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Plugins/DD4hepPlugins/DD4hepLayerBuilder.hpp"
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Layers/ProtoLayer.hpp"
-#include "ACTS/Material/SurfaceMaterialProxy.hpp"
-#include "ACTS/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
-#include "ACTS/Plugins/DD4hepPlugins/IActsExtension.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Surfaces/SurfaceArray.hpp"
-#include "ACTS/Tools/LayerCreator.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinnedArrayXD.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Plugins/DD4hepPlugins/DD4hepLayerBuilder.hpp"
+#include "Acts/Layers/CylinderLayer.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
+#include "Acts/Plugins/DD4hepPlugins/IActsExtension.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArrayXD.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "DD4hep/Detector.h"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"
 
 #include <boost/algorithm/string.hpp>
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 
 Acts::DD4hepLayerBuilder::DD4hepLayerBuilder(
     const Acts::DD4hepLayerBuilder::Config& config,

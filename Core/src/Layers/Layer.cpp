@@ -1,22 +1,22 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// Layer.cpp, ACTS project
+// Layer.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/ApproachDescriptor.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/ApproachDescriptor.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 
 Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
                    double                              thickness,

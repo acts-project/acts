@@ -1,17 +1,17 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// HomogeneousSurfaceMaterial.cpp, ACTS project
+// HomogeneousSurfaceMaterial.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
     const MaterialProperties& full,

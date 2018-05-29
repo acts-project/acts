@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,19 +12,19 @@
 #include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
 
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Layers/ProtoLayer.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Tools/LayerCreator.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Utilities/BinningType.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Layers/CylinderLayer.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 #include <fstream>
 #include <random>

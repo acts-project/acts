@@ -32,6 +32,15 @@ license:
     - apk add --no-cache git
     - CI/check_license.py . --check-years
 
+  
+include_guards:
+  stage: check
+  image: python:alpine3.6
+  before_script: []
+  dependencies: []
+  script:
+    - CI/check_include_guards.py . --fail-global
+
 # SLC6, LCG88 (legacy build)
 #
 # this is only here to test backwards compatibility with boost 1.62

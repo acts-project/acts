@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,9 +9,9 @@
 #define BOOST_TEST_MODULE interpolation tests
 #include <boost/test/included/unit_test.hpp>
 
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Interpolation.hpp"
-#include "ACTS/Utilities/detail/interpolation_impl.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Interpolation.hpp"
+#include "Acts/Utilities/detail/interpolation_impl.hpp"
 
 namespace Acts {
 

@@ -1,27 +1,27 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// DiscLayer.cpp, ACTS project
+// DiscLayer.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Surfaces/DiscBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Volumes/AbstractVolume.hpp"
-#include "ACTS/Volumes/BoundarySurfaceFace.hpp"
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Surfaces/DiscBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Volumes/AbstractVolume.hpp"
+#include "Acts/Volumes/BoundarySurfaceFace.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
                            std::shared_ptr<const DiscBounds>   dbounds,

@@ -1,22 +1,22 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// TrackingVolumeArrayCreator.cpp, ACTS project
+// TrackingVolumeArrayCreator.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Tools/TrackingVolumeArrayCreator.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinnedArrayXD.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/GeometryObjectSorter.hpp"
-#include "ACTS/Volumes/VolumeBounds.hpp"
+#include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinnedArrayXD.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryObjectSorter.hpp"
+#include "Acts/Volumes/VolumeBounds.hpp"
 
 std::shared_ptr<const Acts::TrackingVolumeArray>
 Acts::TrackingVolumeArrayCreator::trackingVolumeArray(

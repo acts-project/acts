@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,8 +18,8 @@
 // leave blank line
 
 #include "../Surfaces/SurfaceStub.hpp"
-#include "ACTS/Layers/GenericApproachDescriptor.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

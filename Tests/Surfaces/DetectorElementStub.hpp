@@ -1,27 +1,25 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// DetectorElementStub.h, ACTS project, Generic Detector plugin
+// DetectorElementStub.h, Acts project, Generic Detector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TEST_DetectorElementStub_DetectorElementStub
-#define ACTS_TEST_DetectorElementStub_DetectorElementStub 1
-
+#pragma once
 // Algebra and Identifier
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Identifier.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Identifier.hpp"
 // Geometry module
-#include "ACTS/Detector/DetectorElementBase.hpp"
-#include "ACTS/Surfaces/PlanarBounds.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
+#include "Acts/Detector/DetectorElementBase.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "LineSurfaceStub.hpp"
-//#include "ACTS/Surfaces/DiscSurface.hpp"
+//#include "Acts/Surfaces/DiscSurface.hpp"
 
 namespace Acts {
 
@@ -193,5 +191,3 @@ DetectorElementStub::thickness() const
 }
 
 }  // end of ns
-
-#endif

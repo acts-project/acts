@@ -23,7 +23,7 @@ ACTS_DIR=$1
 BUILD_DIR=$2
 OUTDIR=$3
 
-# check for ACTS
+# check for Acts
 if [ ! -d "$ACTS_DIR" ]
 then
     echo "ACTS_DIR='$ACTS_DIR' not found -> aborting"
@@ -34,12 +34,12 @@ fi
 rm -rf $OUTDIR
 
 # run lcov
-lcov -c -t ACTS -o coverage.info --no-external -d $BUILD_DIR -d $ACTS_DIR
+lcov -c -t Acts -o coverage.info --no-external -d $BUILD_DIR -d $ACTS_DIR
 # remove test source files
 lcov -r coverage.info "Tests/*" > tmp.info
 mv tmp.info coverage.info
 # generate HTML output
-genhtml coverage.info -t ACTS -p /acts/Core/src/ -p /acts/Core/include/ --demangle-cpp -s --output-directory $OUTDIR > coverage.log
+genhtml coverage.info -t Acts -p /acts/Core/src/ -p /acts/Core/include/ --demangle-cpp -s --output-directory $OUTDIR > coverage.log
 
 COMMENT="test coverage result:<br />"`tail -n 3 coverage.log | head -n 1`"<br />"
 COMMENT="$COMMENT"`tail -n 2 coverage.log | head -n 1`"<br />"

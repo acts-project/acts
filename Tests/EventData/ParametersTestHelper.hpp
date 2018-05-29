@@ -1,16 +1,14 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_TESTS_EVENTDATA_PARAMETERTESTHELPER_H
-#define ACTS_TESTS_EVENTDATA_PARAMETERTESTHELPER_H
-
+#pragma once
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 namespace Test {
@@ -39,5 +37,3 @@ namespace Test {
   }
 }
 }
-
-#endif

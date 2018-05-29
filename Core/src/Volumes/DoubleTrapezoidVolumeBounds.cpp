@@ -1,22 +1,22 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// DoubleTrapezoidVolumeBounds.cpp, ACTS project
+// DoubleTrapezoidVolumeBounds.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Volumes/DoubleTrapezoidVolumeBounds.hpp"
+#include "Acts/Volumes/DoubleTrapezoidVolumeBounds.hpp"
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include "ACTS/Surfaces/DiamondBounds.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 
 Acts::DoubleTrapezoidVolumeBounds::DoubleTrapezoidVolumeBounds()
   : VolumeBounds(), m_valueStore(bv_length, 0.)

@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2018 ACTS project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,7 @@
 #include <boost/test/data/test_case.hpp>
 
 #include <cmath>
-#include "ACTS/Layers/ProtoLayer.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
 
 namespace Acts {
 

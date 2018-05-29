@@ -1,17 +1,17 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2018 ACTS project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Surfaces/SurfaceArray.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/InstanceFactory.hpp"
-#include "ACTS/Utilities/ThrowAssert.hpp"
-#include "ACTS/Utilities/VariantData.hpp"
+#include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/InstanceFactory.hpp"
+#include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 // implementation for pure virtual destructor of ISurfaceGridLookup
 Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup()

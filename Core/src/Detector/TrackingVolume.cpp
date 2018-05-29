@@ -1,22 +1,22 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// TrackingVolume.cpp, ACTS project
+// TrackingVolume.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Detector/DetachedTrackingVolume.hpp"
-#include "ACTS/Detector/GlueVolumesDescriptor.hpp"
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Volumes/VolumeBounds.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Detector/DetachedTrackingVolume.hpp"
+#include "Acts/Detector/GlueVolumesDescriptor.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Volumes/VolumeBounds.hpp"
 
 Acts::TrackingVolume::TrackingVolume()
   : Volume()

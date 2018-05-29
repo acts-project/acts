@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,12 +8,12 @@
 
 #include <boost/program_options.hpp>
 #include <iostream>
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/RungeKuttaEngine.hpp"
-#include "ACTS/MagneticField/ConstantBField.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Utilities/Logger.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolation/RungeKuttaEngine.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace po = boost::program_options;
 using namespace Acts;

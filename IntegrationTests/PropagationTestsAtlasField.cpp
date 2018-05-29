@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,24 +13,24 @@
 // leave blank
 #include <boost/test/data/test_case.hpp>
 
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/RungeKuttaEngine.hpp"
-#include "ACTS/Extrapolation/Wrapper.hpp"
-#include "ACTS/MagneticField/InterpolatedBFieldMap.hpp"
-#include "ACTS/MagneticField/SharedBFieldMap.hpp"
-#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
-#include "ACTS/Propagator/AtlasStepper.hpp"
-#include "ACTS/Propagator/EigenStepper.hpp"
-#include "ACTS/Propagator/Propagator.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/StrawSurface.hpp"
-#include "ACTS/Utilities/BFieldMapUtils.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
-#include "ACTS/Utilities/detail/Axis.hpp"
-#include "ACTS/Utilities/detail/Grid.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolation/RungeKuttaEngine.hpp"
+#include "Acts/Extrapolation/Wrapper.hpp"
+#include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/MagneticField/SharedBFieldMap.hpp"
+#include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/AtlasStepper.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Utilities/BFieldMapUtils.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 #include "PropagationTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;

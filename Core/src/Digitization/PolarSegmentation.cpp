@@ -1,21 +1,21 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// TrapezoidSegmentation.cpp, ACTS project
+// TrapezoidSegmentation.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 /*
-#include "ACTS/Digitization/PolarSegmentation.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Utilities/Helpers.hpp"
+#include "Acts/Digitization/PolarSegmentation.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::TrapezoidSegmentation::TrapezoidSegmentation(
     std::shared_ptr<const TrapezoidBounds> mBounds,

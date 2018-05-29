@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,9 +9,9 @@
 // Boost include(s)
 #define BOOST_TEST_MODULE BinUtility Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/BinningData.hpp"
-#include "ACTS/Utilities/BinningType.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 namespace Acts {
 namespace Test {

@@ -1,21 +1,21 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// TrackingGeometryBuilder.cpp, ACTS project
+// TrackingGeometryBuilder.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Tools/TrackingGeometryBuilder.hpp"
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Tools/ITrackingVolumeBuilder.hpp"
-#include "ACTS/Tools/ITrackingVolumeHelper.hpp"
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Tools/TrackingGeometryBuilder.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Tools/ITrackingVolumeBuilder.hpp"
+#include "Acts/Tools/ITrackingVolumeHelper.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig,

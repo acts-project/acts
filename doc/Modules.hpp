@@ -1,23 +1,22 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_MODULES_HPP
-#define ACTS_MODULES_HPP 1
+#pragma once
 // clang-format off
 
 /// @defgroup Design Design and concept descriptions
-/// @brief description of general concepts used in ACTS
+/// @brief description of general concepts used in Acts
 
 /// @defgroup Logging Debug output options
 /// @ingroup Design
 /// @brief description of debug output options
 ///
-/// The ACTS logging facility supports several severity levels which allow you
+/// The Acts logging facility supports several severity levels which allow you
 /// to control the amount of information displayed at run-time. Logger objects
 /// can easily be created using the Acts::getDefaultLogger function which
 /// should be sufficient to get you started. In case you need more customized
@@ -47,7 +46,7 @@
 /// @code{.cpp}
 /// #include <fstream>
 /// #include <memory>
-/// #include "ACTS/Utilities/Logger.hpp"
+/// #include "Acts/Utilities/Logger.hpp"
 ///
 /// void myFunction() {
 ///    // open the logfile
@@ -58,7 +57,7 @@
 ///    std::unique_ptr<const Acts::Logger> myLogger
 ///        = Acts::getDefaultLogger("MyLogger", Acts::Logging::INFO, &logfile);
 ///
-///    // make sure the ACTS debug macros can work with your logger
+///    // make sure the Acts debug macros can work with your logger
 ///    ACTS_LOCAL_LOGGER(myLogger);
 ///
 ///    ACTS_VERBOSE("This message will not appear in the logfile.");
@@ -69,14 +68,14 @@
 /// }
 /// @endcode
 ///
-/// In case you are using ACTS in another framework which comes with its own
-/// logging facility (e.g. Gaudi) you can pipe the logging output from ACTS
+/// In case you are using Acts in another framework which comes with its own
+/// logging facility (e.g. Gaudi) you can pipe the logging output from Acts
 /// tools and algorithms to your framework's logging system by supplying different
 /// implementations of:
 /// - Acts::Logging::OutputFilterPolicy (for mapping logging levels)
-/// - Acts::Logging::OutputPrintPolicy (for passing the ACTS output to your internal logging system)
+/// - Acts::Logging::OutputPrintPolicy (for passing the Acts output to your internal logging system)
 ///
-/// Since ACTS makes extensive use of Acts::getDefaultLogger to provide
+/// Since Acts makes extensive use of Acts::getDefaultLogger to provide
 /// sufficient information for debugging, you would need to provide a modified
 /// implementation of this function (using your output filter and printing
 /// policies) to also pipe this output to your framework.
@@ -95,7 +94,7 @@
 /// }
 /// @endcode
 ///
-/// Then you can run your executable, which uses ACTS tools and algorithms, in
+/// Then you can run your executable, which uses Acts tools and algorithms, in
 /// the following way (tested under Unix)
 ///
 /// @code{bash}
@@ -107,11 +106,11 @@
 /// @code{bash}
 /// cd <ACTS/INSTALL/DIRECTORY>
 /// source bin/setup.sh
-/// LD_PRELOAD=lib/libACTSCustomLogger.so bin/Examples/ACTSGenericDetector
+/// LD_PRELOAD=lib/libActsCustomLogger.so bin/Examples/ActsGenericDetector
 /// @endcode
 
 /// @defgroup Core Core classes
-/// @brief ACTS core classes
+/// @brief Acts core classes
 
 /// @defgroup Detector Tracking geometry
 /// @ingroup Core
@@ -210,15 +209,15 @@
 /// @brief Description of geometric volumes
 
 /// @defgroup Examples Examples
-/// @brief ACTS Examples
+/// @brief Acts Examples
 
 
 /// @defgroup Plugins Plugins
-/// @brief ACTS extensions
+/// @brief Acts extensions
 
 /// @defgroup DD4hepPlugins DD4hepPlugins
 /// @ingroup Plugins
-/// @brief Build ACTS tracking geometry from \a %DD4hep input.
+/// @brief Build Acts tracking geometry from \a %DD4hep input.
 ///
 /// The DD4hepPlugin allows building of the Acts TrackingGeometry from <a href="http://aidasoft.web.cern.ch/DD4hep">DD4hep</a> input.
 /// \a %DD4hep uses <a href="https://root.cern.ch">ROOT</a> TGeo as an underlying geometry model.
@@ -257,7 +256,7 @@
 /// The extensions are used to indicate certain volumes, e.g. if a \a DetElement is the
 /// beam pipe or if a \a DetElement is a layer carrying the sensitive modules. In addition
 /// the extensions are used in order to distinguish if a sub detector is a barrel (described
-/// as a cylinder volume in ACTS) or an endcap (which is described as a disc volume in Acts).
+/// as a cylinder volume in Acts) or an endcap (which is described as a disc volume in Acts).
 /// Furthermore the
 /// extensions are used to hand over specific information needed for tracking, e.g.
 /// paramters for material mapping.
@@ -281,7 +280,7 @@
 ///
 /// <B>Prerequisites</B>
 ///
-/// To guarantee a working translation from \a %DD4hep input to ACTS geometry the
+/// To guarantee a working translation from \a %DD4hep input to Acts geometry the
 /// following conditions need to be met:
 ///
 /// * The detector needs to have a barrel-endcap structure:
@@ -345,7 +344,7 @@
 ///
 /// There are two modes building the layers around the sensitive detector modules:
 /// * The \a DetElements containing the sensitive modules have a geometrical shape
-/// 	- the boundaries of the layers in ACTS are taken directly from the given shape
+/// 	- the boundaries of the layers in Acts are taken directly from the given shape
 /// * The \a DetElements containing the sensitive modules have no specific shape (assembliy)
 /// 	- the boundaries of the layers are calculated automatically by adding a tolerance to the geometric extension of the contained surfaces
 ///		- the tolerances in r and z need to be set for every \a DetElement representing layer using envelopeR and envelopeZ in the Acts::ActsExtension's
@@ -379,9 +378,9 @@
 
 /// @defgroup MaterialPlugins MaterialPlugins
 /// @ingroup Plugins
-/// @brief Map material onto the ACTS geometry.
+/// @brief Map material onto the Acts geometry.
 ///
-/// The MaterialPlugins allow to map material from a detailed full detector geometry onto the simplfied ACTS geometry.
+/// The MaterialPlugins allow to map material from a detailed full detector geometry onto the simplfied Acts geometry.
 /// The material is mapped onto layers of the tracking geometry which are marked to carry support material. The marking
 /// is done during the geometry building process. The material can be mapped onto either, the inner, the outer
 /// boundary surface or the central (representing) Acts::Surface of the Acts::Layer. The Acts::Material is described on a two dimensional
@@ -389,7 +388,7 @@
 /// @note The DD4hepPlugin offers the possiility to mark layers which should carry material and to determine the
 /// grid granularity, using the class Acts::ActsExtension.
 ///
-/// Following the ACTS philosophy the material mapping is agnostic to any file format and software used to create or store
+/// Following the Acts philosophy the material mapping is agnostic to any file format and software used to create or store
 /// the material maps. The material should be stored in instances of the class Acts::MaterialTrack. This material track record
 /// represents a track starting from a certain position, in a certain direction, containing all material along this
 /// track. The material along the material track record ist stored as a container of Acts::MaterialStep instances. Each material
@@ -426,4 +425,3 @@
 /// @defgroup Contributing Contribution guide
 
 // clang-format on
-#endif  // ACTS_MODULES_HPP

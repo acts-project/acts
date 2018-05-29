@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,8 +9,8 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "GeometryCreation.hpp"
 
 namespace Acts {

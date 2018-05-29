@@ -1,6 +1,6 @@
-# Contributing to ACTS
+# Contributing to Acts
 
-Contributions to the ACTS project are very welcome and feedback on the documentation is greatly appreciated. In order to be able to contribute to the ACTS project, developers must have a valid CERN user account. Unfortunately, lightweight CERN accounts for external users do not have sufficient permissions to access certain CERN services used by the ACTS project.
+Contributions to the Acts project are very welcome and feedback on the documentation is greatly appreciated. In order to be able to contribute to the Acts project, developers must have a valid CERN user account. Unfortunately, lightweight CERN accounts for external users do not have sufficient permissions to access certain CERN services used by the Acts project.
 
 1. [Mailing lists](#mailing-lists)
 2. [Bug reports and feature requests](#bug-reports-and-feature-requests)
@@ -16,30 +16,30 @@ Contributions to the ACTS project are very welcome and feedback on the documenta
     1. [Approving a merge request](#approving-a-merge-request)
     2. [Merging a merge request](#merging-a-merge-request)
 5. [Administrator's corner](#admin-corner)
-    1. [Making a new ACTS release](#tag-release)
+    1. [Making a new Acts release](#tag-release)
 
 ## <a name="mailing-lists">Mailing lists</a>
 
-1. [acts-users@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-users): Users of the ACTS project should subscribe to this list as it provides:
+1. [acts-users@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-users): Users of the Acts project should subscribe to this list as it provides:
     - regular updates on the software,
-    - access to the ACTS JIRA project for bug fixes/feature requests,
+    - access to the Acts JIRA project for bug fixes/feature requests,
     - a common place for asking any kind of questions.
 1. [acts-developers@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-developers): Developers are encouraged to also subscribe to this list as it provides you with:
-    - a developer role in the ACTS JIRA project (allows you to handle tickets),
-    - developer access to the [ACTS git repository](https://gitlab.cern.ch/acts/acts-core)
+    - a developer role in the Acts JIRA project (allows you to handle tickets),
+    - developer access to the [Acts git repository](https://gitlab.cern.ch/acts/acts-core)
     - information about developer meetings,
     - a common place for technical discussions.
 
 ## <a name="bug-reports-and-feature-requests">Bug reports and feature requests</a>
 
-If you want to report or start a feature request, please open a ticket in the [ACTS JIRA](https://its.cern.ch/jira/projects/ACTS/) (**Note:** access is restricted to members of the mailing lists mentioned above). A comprehensive explanation will help the development team to respond in a timely manner. Therefore, the following details should be mentioned:
+If you want to report or start a feature request, please open a ticket in the [Acts JIRA](https://its.cern.ch/jira/projects/ACTS/) (**Note:** access is restricted to members of the mailing lists mentioned above). A comprehensive explanation will help the development team to respond in a timely manner. Therefore, the following details should be mentioned:
 
 - bug reports
     - issue type: "Bug"
     - summary: short description of the problem
     - priority: will be set by the development team
-    - components: if known, part of ACTS affected by this bug; leave empty otherwise
-    - affects version: version of ACTS affected by this bug
+    - components: if known, part of Acts affected by this bug; leave empty otherwise
+    - affects version: version of Acts affected by this bug
     - a detailed description of the bug including a receipe on how to reproduce it and any hints which may help diagnosing the problem
 - feature requests
     - issue type: "Improvement" or "New Feature"
@@ -49,9 +49,9 @@ If you want to report or start a feature request, please open a ticket in the [A
 
 ## <a name="make-a-contribution">Make a contribution</a>
 
-The instructions below should help you getting started with development process in the ACTS project. If you have any questions, feel free to ask [acts-developers@cern](mailto:acts-developers@cern.ch) for help or guidance.
+The instructions below should help you getting started with development process in the Acts project. If you have any questions, feel free to ask [acts-developers@cern](mailto:acts-developers@cern.ch) for help or guidance.
 
-The ACTS project uses a git repository which is hosted on the CERN GitLab server. In order to be able to push your changes and to create merge requests (and thus, contribute to the development of ACTS), you must be subscribed to acts-developers@cern.ch.
+The Acts project uses a git repository which is hosted on the CERN GitLab server. In order to be able to push your changes and to create merge requests (and thus, contribute to the development of Acts), you must be subscribed to acts-developers@cern.ch.
 A general introduction to the GitLab web interface can be found [here](http://gitlab.cern.ch/help/gitlab-basics/README). Very nice tutorials as well as explanations of concepts and workflows with git can be found on [Atlassian](http://www.atlassian.com/git/). For a shorter introduction and the full git documentation have a look at the [git tutorial](http://git-scm.com/docs/gittutorial).
 
 ### <a name="preparation">Preparation</a>
@@ -83,18 +83,18 @@ git config --global pull.rebase true
 
 #### Getting a local working copy
 
-As a first step, you need to clone the ACTS repository which gives you a local, fully functional and self-contained git repository. This means you can work locally (commit changes, compare versions, inspect the history) while being offline. An internet connection is only required for *pull*ing in new updates or *push*ing your changes to the Gitlab server.
+As a first step, you need to clone the Acts repository which gives you a local, fully functional and self-contained git repository. This means you can work locally (commit changes, compare versions, inspect the history) while being offline. An internet connection is only required for *pull*ing in new updates or *push*ing your changes to the Gitlab server.
 
 ```bash
 git clone <ACTS_URL> <DESTINATION>
 ```
 
-- &lt;ACTS_URL&gt; can be found on the project page of the [ACTS git repository](https://gitlab.cern.ch/acts/acts-core). There are different URLs for different authentication methods.
+- &lt;ACTS_URL&gt; can be found on the project page of the [Acts git repository](https://gitlab.cern.ch/acts/acts-core). There are different URLs for different authentication methods.
 - &lt;DESTINATION&gt; is optional and gives the path on your local machine where the clone will be created.
 
 ### <a name="new-development">Starting a new development</a>
 
-When you start a new development, you should make sure to start from the most recent version. Therefore, you need to *fetch* the latest changes from the remote repository by running from inside the ACTS directory:
+When you start a new development, you should make sure to start from the most recent version. Therefore, you need to *fetch* the latest changes from the remote repository by running from inside the Acts directory:
 
 ```bash
 git fetch origin
@@ -114,7 +114,7 @@ Let's go through the options one by one:
 
 ### <a name="creating-a-merge-request">Creating a merge request</a>
 
-Once your development is ready for integration, you should open a merge request at the [ACTS project](https://gitlab.cern.ch/acts/acts-core) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The ACTS projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by fetching upstream changes and rebasing afterwards:
+Once your development is ready for integration, you should open a merge request at the [Acts project](https://gitlab.cern.ch/acts/acts-core) ([GitLab Help: Create a merge request](https://gitlab.cern.ch/help/gitlab-basics/add-merge-request)). The target branch should usually be _master_ for feature requests and _releas-X,Y,Z_ for bugfixes. The Acts projects accepts only fast-foward merges which means that your branch must have been rebased on the target branch. This can be achieved by fetching upstream changes and rebasing afterwards:
 
 ```bash
 git fetch origin
@@ -124,19 +124,19 @@ git push -u origin <my_feature_branch>
 ```
 
 At this point you should make use of the interactive rebase procedure to clean up your commits (squash small fixes, improve commit messages etc; [Rewriting history](https://robots.thoughtbot.com/git-interactive-rebase-squash-amend-rewriting-history)).
-Merge requests are required to close a ACTS JIRA ticket. This is achieved by adding e.g. 'fixes ACTS-XYZ' to the end of the merge request description. Please note that JIRA tickets should only be referenced by merge requests and not individual commits (since strictly there should only be one JIRA ticket per merge request). Once the merge request is opened, a continous integration job is triggered which will add multiple comments to the merge request (e.g. build status, missing license statements, doxygen errors, test coverage etc). Please have a look at them and fix them by adding more commits to your branch if needed.
+Merge requests are required to close a Acts JIRA ticket. This is achieved by adding e.g. 'fixes ACTS-XYZ' to the end of the merge request description. Please note that JIRA tickets should only be referenced by merge requests and not individual commits (since strictly there should only be one JIRA ticket per merge request). Once the merge request is opened, a continous integration job is triggered which will add multiple comments to the merge request (e.g. build status, missing license statements, doxygen errors, test coverage etc). Please have a look at them and fix them by adding more commits to your branch if needed.
 Please find below a short checklist for merge requests.
 
 ### <a name="using-forks">Using forks</a>
 
 Users or groups with git experience may prefer to use their own forks of the
-ACTS project to develop and test their changes before they are integrated back
-into the main ACTS repository. We assume that you are experienced with a
+Acts project to develop and test their changes before they are integrated back
+into the main Acts repository. We assume that you are experienced with a
 fork-based workflow in git and only summarise the most important commands at the
 end of this section.
 
-As a first step, you need to create your own fork of the ACTS project. For doing
-this, please go to the [ACTS GitLab
+As a first step, you need to create your own fork of the Acts project. For doing
+this, please go to the [Acts GitLab
 page](https://gitlab.cern.ch/acts/acts-core), click on the fork
 button, and follow the instructions ([GitLab Help "How to fork a
 project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project)). In a second
@@ -148,12 +148,12 @@ setup:
 "Username" and leave it empty
 
 **Important:** The second option is needed due to some limitations in the GitLab
-JIRA integration. If you fail to do so, the ACTS JIRA project will be spammed
+JIRA integration. If you fail to do so, the Acts JIRA project will be spammed
 with hundreds of duplicates comments and you will likely receive an angry email
 from the development team ;-).
 
 ```bash
-# adding the central ACTS repository as remote
+# adding the central Acts repository as remote
 git remote add upstream ssh://git@gitlab.cern.ch:7999/acts/acts-core.git
 # get latest upstream changes
 git fetch upstream
@@ -187,7 +187,7 @@ git push
 
 ### <a name="workflow-recommendations">Workflow recommendations</a>
 
-In the following a few recommendations are outlined which should help you to get familiar with development process in the ACTS project.
+In the following a few recommendations are outlined which should help you to get familiar with development process in the Acts project.
 
 1. **Each development its own branch!**
 Branching in git is simple, it is fun and it helps you keep your working copy clean. Therefore, you should start a new branch for every development. All work which is logically/conceptually linked should happen in one branch. Keep your branches short. This helps immensly to understand the git history if you need to look at it in the future.
@@ -195,7 +195,7 @@ If projects are complex (e.g. large code refactoring or complex new features), y
 
 <img src="doc/figures/sub_dev.png" alt="workflow for large feature">
 1. **Never, ever directly work on any "official" branch!**
-Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the ACTS project you should not work directly on branches which are **protected** in the CERN GitLab repository. Usually, these are the _master_ and _release-X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.
+Though not strictly necessary and in the end it is up to you, it is strongly recommended that you never commit directly on a branch which tracks an "official" branch. As all branches are equal in git, the definition of "official" branch is quite subjective. In the Acts project you should not work directly on branches which are **protected** in the CERN GitLab repository. Usually, these are the _master_ and _release-X.Y.Z_ branches. The benefit of this strategy is that you will never have problems to update your fork. Any git merge in your local repository on such an "official" branch will always be a fast-forward merge.
 
 1. **Use atomic commits!**
 Similarly to the concept of branches, each commit should reflect a self-contained change. Try to avoid overly large commits (bad examples are for instance mixing logical change with code cleanup and typo fixes).
@@ -216,9 +216,9 @@ Make sure that the documentation is still valid after your changes. Perform upda
 
 ### <a name="coding-style-and-guidelines">Coding style and guidelines</a>
 
-The ACTS project uses [clang-format](http://clang.llvm.org/docs/ClangFormat.html) (currently v3.8.0) for formatting its source code. A `.clang-format` configuration file comes with the project and should be used to automatically format the code. There are several instructions available on how to integrate clang-format with your favourite IDE (e.g. [eclipse](https://marketplace.eclipse.org/content/cppstyle), [Xcode](https://github.com/travisjeffery/ClangFormat-Xcode), [emacs](http://clang.llvm.org/docs/ClangFormat.html#emacs-integration)). The ACTS CI system will automatically apply code reformatting using the provided clang-format configuration once merge requests are opened. However, developers are strongly encouraged to use this code formatter also locally to reduce conflicts due to formatting issues.
+The Acts project uses [clang-format](http://clang.llvm.org/docs/ClangFormat.html) (currently v3.8.0) for formatting its source code. A `.clang-format` configuration file comes with the project and should be used to automatically format the code. There are several instructions available on how to integrate clang-format with your favourite IDE (e.g. [eclipse](https://marketplace.eclipse.org/content/cppstyle), [Xcode](https://github.com/travisjeffery/ClangFormat-Xcode), [emacs](http://clang.llvm.org/docs/ClangFormat.html#emacs-integration)). The Acts CI system will automatically apply code reformatting using the provided clang-format configuration once merge requests are opened. However, developers are strongly encouraged to use this code formatter also locally to reduce conflicts due to formatting issues.
 
-In addition, the following conventions are used in ACTS code:
+In addition, the following conventions are used in Acts code:
 
 - Class names start with a capital letter.
 - Function names start with a lower-case letter and use camel-case.
@@ -333,39 +333,39 @@ Now, master is pointing to B, HEAD and &lt;new\_branch\_name&gt; are pointing to
 
 ### <a name="approving-a-merge-request">Approving a merge request</a>
 
-Writing new code is not the only way one can contribute to the ACTS project. Another greatly appreciated contribution is looking at other proposed contributions to the project. The more eyeballs look at a piece of code before it is merged into the ACTS repository, the smaller the chances that a bug or other unwanted behaviour is accidentally introduced into the ACTS codebase. This is why we require that every ACTS merge request receives at least one human review before being merged.
+Writing new code is not the only way one can contribute to the Acts project. Another greatly appreciated contribution is looking at other proposed contributions to the project. The more eyeballs look at a piece of code before it is merged into the Acts repository, the smaller the chances that a bug or other unwanted behaviour is accidentally introduced into the Acts codebase. This is why we require that every Acts merge request receives at least one human review before being merged.
 
-You can help reviewing proposed contributions by going to [the "merge requests" section of the ACTS Gitlab repository](https://gitlab.cern.ch/acts/acts-core/merge_requests) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the merge request itself:
+You can help reviewing proposed contributions by going to [the "merge requests" section of the Acts Gitlab repository](https://gitlab.cern.ch/acts/acts-core/merge_requests) and having a look at the proposals that are being made here. The present contribution guide should serve as a good indication of what we expect from code submissions. In addition, please look at the merge request itself:
 
 * Does its title and description reflect its contents?
 * Is it associated with a JIRA ticket so that we can easily document it in the release notes?
 * Do the automated continuous integration tests pass without problems?
 * Have all the comments raised by previous reviewers been addressed?
 
-If you are confident that a merge request is ready for integration, please make it known by clicking the "Approve merge request" button of the Gitlab interface. This notifies other members of the ACTS team of your decision, and marks the merge request as ready to be merged.
+If you are confident that a merge request is ready for integration, please make it known by clicking the "Approve merge request" button of the Gitlab interface. This notifies other members of the Acts team of your decision, and marks the merge request as ready to be merged.
 
 ### <a name="merging-a-merge-request">Merging a merge request</a>
 
-If you have been granted merge rights on the ACTS repository, you can merge a merge request into the ACTS master branch after it has been approved by someone else. In order to give everyone a chance to review the merge request, please wait for at least two days (48h) after the merge request has been submitted before doing so, even if the merge request has been approved by someone before this delay has elapsed.
+If you have been granted merge rights on the Acts repository, you can merge a merge request into the Acts master branch after it has been approved by someone else. In order to give everyone a chance to review the merge request, please wait for at least two days (48h) after the merge request has been submitted before doing so, even if the merge request has been approved by someone before this delay has elapsed.
 
-Gitlab may warn you that a "Fast-forward merge is not possible". This warning means that the merge request has fallen behind the current ACTS master branch, and should be updated through a rebase. Please notify the merge request author in order to make sure that the latest master changes do not affect the merge request, and to have it updated as appropriate.
+Gitlab may warn you that a "Fast-forward merge is not possible". This warning means that the merge request has fallen behind the current Acts master branch, and should be updated through a rebase. Please notify the merge request author in order to make sure that the latest master changes do not affect the merge request, and to have it updated as appropriate.
 
 ## <a name="admin-corner">Administrator's corner</a>
 
-This section gives useful information to the administrators of the ACTS project. For normal developers the sections below are irrelevant.
+This section gives useful information to the administrators of the Acts project. For normal developers the sections below are irrelevant.
 
-### <a name="tag-release">Make a new ACTS release</a>
+### <a name="tag-release">Make a new Acts release</a>
 
-In order to release a new version of ACTS the following steps need to be taken:
+In order to release a new version of Acts the following steps need to be taken:
 
 1. Check out all open JIRA issues for the next release in <a href="https://its.cern.ch/jira/projects/ACTS/versions/">JIRA</a>.
 2. Create a new branch called <tt>release-X.YY.ZZ</tt> branching off from <tt>origin/master</tt>.
 3. In this branch, update the <tt>ACTS_VERSION</tt> variable in the top-level CMakeLists.txt file to <tt>X.YY.ZZ</tt> and commit the change.
 4. Pushing this commit to the remote repository should trigger a CI build. Make sure that everything compiles without any warnings and all tests look fine.
 5. Create a new annotated tag locally. The tag should have the format <tt>vX.YY.ZZ</tt> and an associated tag message 'version vX.YY.ZZ'.
-6. Push the tag to the remote repository. This should trigger a CI job which rebuilds to documentation and deploys it together with a tar file of the source code to the ACTS webpage. Make sure that the new release appears under the **Releases** section on the <a href="http://acts.web.cern.ch/ACTS/">ACTS webpage</a>.
+6. Push the tag to the remote repository. This should trigger a CI job which rebuilds to documentation and deploys it together with a tar file of the source code to the Acts webpage. Make sure that the new release appears under the **Releases** section on the <a href="http://acts.web.cern.ch/ACTS/">Acts webpage</a>.
 7. If there is not yet a JIRA version for the next minor release, create it in the <a href="https://its.cern.ch/jira/plugins/servlet/project-config/ACTS/versions">JIRA project administration</a> area (e.g. if 1.23.02 was just released, version 1.23.03 should exist in JIRA for the next minor release for bug fixes).
-8. Got to the <a href="https://its.cern.ch/jira/projects/ACTS/versions/">ACTS Releases page in JIRA</a> and release the version. Make sure that a correct release data is set and that all open issues get moved to the next major/minor release.
+8. Got to the <a href="https://its.cern.ch/jira/projects/ACTS/versions/">Acts Releases page in JIRA</a> and release the version. Make sure that a correct release data is set and that all open issues get moved to the next major/minor release.
 9. From the JIRA release page, copy (all) the HTML code for the release notes. Login to lxplus using the service account <tt>atsjenkins</tt> (<tt>ssh atsjenkins@lxplus.cern.ch</tt>). Create the file <tt>~/www/ACTS/vX.YY.ZZ/ReleaseNotes.html</tt> with the copied HTML code for the release notes. Please make sure that _sub_-tasks appear as nested lists (JIRA unfortunately puts them all on one level in alphabetical order).
-10. Check that the release notes appear on the <a href="http://acts.web.cern.ch/ACTS/">ACTS webpage</a> and are available from the respective link in the **Releases** section.
+10. Check that the release notes appear on the <a href="http://acts.web.cern.ch/ACTS/">Acts webpage</a> and are available from the respective link in the **Releases** section.
 

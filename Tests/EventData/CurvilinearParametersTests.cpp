@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,9 +8,9 @@
 
 #define BOOST_TEST_MODULE CurvilinearParameters Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/EventData/NeutralParameters.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "ParametersTestHelper.hpp"
 
 namespace Acts {

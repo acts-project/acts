@@ -1,24 +1,24 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// ConeBounds.cpp, ACTS project
+// ConeBounds.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Surfaces/ConeBounds.hpp"
+#include "Acts/Surfaces/ConeBounds.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <limits>
 
-#include "ACTS/Utilities/VariantData.hpp"
-#include "ACTS/Utilities/detail/periodic.hpp"
+#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::ConeBounds::ConeBounds(double alpha,
                              bool   symm,

@@ -1,33 +1,33 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// MaterialMapper.cpp, ACTS project
+// MaterialMapper.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Plugins/MaterialPlugins/MaterialMapper.hpp"
+#include "Acts/Plugins/MaterialPlugins/MaterialMapper.hpp"
 #include <climits>
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/EventData/NeutralParameters.hpp"
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolation/ExtrapolationCell.hpp"
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Material/BinnedSurfaceMaterial.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Material/SurfaceMaterialProxy.hpp"
-#include "ACTS/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/BinUtility.hpp"
-#include "ACTS/Utilities/GeometryObjectSorter.hpp"
-#include "ACTS/Utilities/Helpers.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolation/ExtrapolationCell.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Plugins/MaterialPlugins/SurfaceMaterialRecord.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/GeometryObjectSorter.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::MaterialMapper::MaterialMapper(const Config&                 cfg,
                                      std::unique_ptr<const Logger> log)
@@ -94,7 +94,7 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
   // collect for validation output
   std::map<geo_id_value, std::pair<double, double>> collectedMaterial;
 
-  // let's extrapolate through the ACTS detector and record all surfaces
+  // let's extrapolate through the Acts detector and record all surfaces
   // that have a material proxy
   if (materialSteps.size()) {
     // get the number of materialsteps

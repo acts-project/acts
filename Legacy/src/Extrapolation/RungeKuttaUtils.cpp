@@ -1,23 +1,23 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 ACTS project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /////////////////////////////////////////////////////////////////////////////////
-// RungeKuttaUtils.cpp , ACTS project
+// RungeKuttaUtils.cpp , Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Extrapolation/detail/RungeKuttaUtils.hpp"
+#include "Acts/Extrapolation/detail/RungeKuttaUtils.hpp"
 #include <cmath>
-#include "ACTS/Surfaces/ConeSurface.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Surfaces/DiscSurface.hpp"
-#include "ACTS/Surfaces/PerigeeSurface.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/StrawSurface.hpp"
+#include "Acts/Surfaces/ConeSurface.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 
 #ifndef __USE_GNU
 void

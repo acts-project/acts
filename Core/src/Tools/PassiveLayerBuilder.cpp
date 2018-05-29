@@ -1,23 +1,23 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// PassiveLayerBuilder.cpp, ACTS project
+// PassiveLayerBuilder.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Tools/PassiveLayerBuilder.hpp"
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Layers/DiscLayer.hpp"
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Surfaces/CylinderBounds.hpp"
-#include "ACTS/Surfaces/RadialBounds.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Tools/PassiveLayerBuilder.hpp"
+#include "Acts/Layers/CylinderLayer.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 Acts::PassiveLayerBuilder::PassiveLayerBuilder(
     const PassiveLayerBuilder::Config& plConfig,

@@ -1,20 +1,20 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ACTS/Plugins/DD4hepPlugins/ActsExtension.hpp"
+#include "Acts/Plugins/DD4hepPlugins/ActsExtension.hpp"
 #include <boost/algorithm/string.hpp>
-#include "ACTS/Digitization/CartesianSegmentation.hpp"
-#include "ACTS/Digitization/DigitizationModule.hpp"
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Surfaces/PlanarBounds.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Surfaces/TrapezoidBounds.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "DD4hep/CartesianGridXY.h"
 
 std::shared_ptr<const Acts::DigitizationModule>
@@ -23,7 +23,7 @@ Acts::rectangleDigiModule(double                      halflengthX,
                           double                      thickness,
                           const dd4hep::Segmentation& segmentation)
 {
-  // convert to ACTS units
+  // convert to Acts units
   double scalor = units::_cm;
   halflengthX *= scalor;
   halflengthY *= scalor;
@@ -58,7 +58,7 @@ Acts::trapezoidalDigiModule(double                      minHalflengthX,
                             double                      thickness,
                             const dd4hep::Segmentation& segmentation)
 {
-  // convert to ACTS units
+  // convert to Acts units
   double scalor = units::_cm;
   minHalflengthX *= scalor;
   maxHalflengthX *= scalor;

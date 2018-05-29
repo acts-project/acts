@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,11 +18,11 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include "ACTS/Propagator/AbortList.hpp"
-#include "ACTS/Propagator/detail/Extendable.hpp"
-#include "ACTS/Propagator/detail/standard_abort_conditions.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/detail/Extendable.hpp"
+#include "Acts/Propagator/detail/standard_abort_conditions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

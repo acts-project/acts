@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,9 +11,9 @@
 #include <chrono>
 #include <random>
 
-#include "ACTS/Utilities/concept/AnyGrid.hpp"
-#include "ACTS/Utilities/detail/Axis.hpp"
-#include "ACTS/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/concept/AnyGrid.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
 namespace Acts {
 

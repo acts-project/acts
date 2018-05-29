@@ -1,9 +1,9 @@
 add_executable (TrackingGeometryGeoIDTests TrackingGeometryGeoIDTests.cpp)
-target_link_libraries (TrackingGeometryGeoIDTests PRIVATE ACTSCore)
+target_link_libraries (TrackingGeometryGeoIDTests PRIVATE Acts::Core)
 add_test (NAME TrackingGeometryGeoIDUnitTest COMMAND TrackingGeometryGeoIDTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST TrackingGeometryGeoIDUnitTest TARGETS TrackingGeometryGeoIDTests)
 
 add_executable (TrackingGeometryCloseGeometryTests TrackingGeometryClosureTests.cpp)
-target_link_libraries (TrackingGeometryCloseGeometryTests PRIVATE ACTSCore)
+target_link_libraries (TrackingGeometryCloseGeometryTests PRIVATE Acts::Core)
 add_test (NAME TrackingGeometryCloseGeometryUnitTest COMMAND TrackingGeometryCloseGeometryTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST TrackingGeometryCloseGeometryUnitTest TARGETS TrackingGeometryCloseGeometryTests)

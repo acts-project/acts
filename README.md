@@ -1,4 +1,4 @@
-# A Common Tracking Software (ACTS) Project
+# A Common Tracking Software (Acts) Project
 
 [![build status](https://gitlab.cern.ch/acts/acts-core/badges/master/build.svg)](https://gitlab.cern.ch/acts/acts-core/commits/master)
 [![coverage report](https://gitlab.cern.ch/acts/acts-core/badges/master/coverage.svg)](https://gitlab.cern.ch/acts/acts-core/commits/master)
@@ -17,18 +17,18 @@ Key features of this project include:
 * performant and highly flexible algorithms for track propagation and fitting,
 * basic seed finding algorithms.
 
-The git repository for the ACTS project can be found at <a href="https://gitlab.cern.ch/acts/acts-core.git">https://gitlab.cern.ch/acts/acts-core.git</a>.
+The git repository for the Acts project can be found at <a href="https://gitlab.cern.ch/acts/acts-core.git">https://gitlab.cern.ch/acts/acts-core.git</a>.
 
 To get started, you can have a look at our [Getting Started Guide](getting_started.md)
 
 # <a name="mailing-list">Mailing list</a>
 
-In order to receive the latest updates, users of the ACTS project are encouraged to subscribe to [acts-users@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-users). This list provides:
+In order to receive the latest updates, users of the Acts project are encouraged to subscribe to [acts-users@cern.ch](https://e-groups.cern.ch/e-groups/Egroup.do?egroupName=acts-users). This list provides:
 - regular updates on the software,
-- access to the ACTS JIRA project for bug fixes/feature requests,
+- access to the Acts JIRA project for bug fixes/feature requests,
 - a common place for asking any kind of questions.
 
-If you find a bug, have a feature request, or want to contribute to ACTS, please have a look at the [contribution guide](CONTRIBUTING.md).
+If you find a bug, have a feature request, or want to contribute to Acts, please have a look at the [contribution guide](CONTRIBUTING.md).
 
 # <a name="license-authors">License and authors</a>
 
@@ -36,12 +36,12 @@ This project is published under the Mozilla Public License, v. 2.0. Details of
 this license can be found in the [LICENSE](LICENSE) file or at
 http://mozilla.org/MPL/2.0/.
 
-Contributors to the ACTS project are listed in [AUTHORS](AUTHORS).
+Contributors to the Acts project are listed in [AUTHORS](AUTHORS).
 
-The ACTS project is based on the ATLAS tracking software. A list of contributors
+The Acts project is based on the ATLAS tracking software. A list of contributors
 to the ATLAS tracking repository can be found <a href="http://acts.web.cern.ch/ACTS/ATLAS_authors.html">here</a>.
 
-The ACTS project contains a copy of [gcovr](http://gcovr.com) licensed under
+The Acts project contains a copy of [gcovr](http://gcovr.com) licensed under
 the 3-Clause BSD license.
 
 This software contains a copy of the `JSON for Modern C++`-library by Niels Lohmann licensed under the MIT License.

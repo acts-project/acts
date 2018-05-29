@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017 ACTS project team
+// Copyright (C) 2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,11 +9,11 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE ExtrapolationCell Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/EventData/NeutralParameters.hpp"
-#include "ACTS/Extrapolation/ExtrapolationCell.hpp"
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/EventData/NeutralParameters.hpp"
+#include "Acts/Extrapolation/ExtrapolationCell.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 

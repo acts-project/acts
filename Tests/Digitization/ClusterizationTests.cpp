@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2018 ACTS project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,8 +15,8 @@
 #include <map>
 #include <utility>
 #include <vector>
-#include "ACTS/Digitization/Clusterization.hpp"
-#include "ACTS/Digitization/DigitizationCell.hpp"
+#include "Acts/Digitization/Clusterization.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

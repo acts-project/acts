@@ -22,7 +22,7 @@ fi
 # check for required environment variables
 : ${CI_COMMIT_REF_NAME:?"'CI_COMMIT_REF_NAME' not set or empty"}
 
-# check for ACTS
+# check for Acts
 ACTS_DIR=`readlink -f $1`
 if [ ! -d "$ACTS_DIR" ]
 then
@@ -38,7 +38,7 @@ then
     exit 1
 fi
 
-# get ACTS version tag
+# get Acts version tag
 VERSION=`basename $CI_COMMIT_REF_NAME`
 
 # create tarball with source and copy it to server
@@ -58,10 +58,10 @@ ssh atsjenkins@lxplus.CERN.CH "mkdir -p $ACTS_WWW_DIR/$VERSION"
 scp -r $DOC_DIR atsjenkins@lxplus.cern.ch:$ACTS_WWW_DIR/$VERSION/doc
 
 # send notification email
-ssh atsjenkins@lxplus.CERN.CH "mail -v -s 'New tag ACTS-$VERSION' -r 'atsjenkins@cern.ch' $3 <<EOF
-Dear ACTS enthusiasts,
+ssh atsjenkins@lxplus.CERN.CH "mail -v -s 'New tag Acts-$VERSION' -r 'atsjenkins@cern.ch' $3 <<EOF
+Dear Acts enthusiasts,
 
-a new tag '$VERSION' of the ACTS project has been released. You can get the source code from git using
+a new tag '$VERSION' of the Acts project has been released. You can get the source code from git using
 
 git clone https://gitlab.cern.ch/acts/acts-core.git acts
 cd acts/
@@ -76,5 +76,5 @@ Detailed documentation can be found at
 https://acts.web.cern.ch/ACTS/$VERSION/doc/index.html
 
 Cheers,
-your friendly ACTS robot
+your friendly Acts robot
 EOF"

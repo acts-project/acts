@@ -1,17 +1,15 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-#ifndef ACTS_TESTS_SURFACES_LINESURFACESTUB
-#define ACTS_TESTS_SURFACES_LINESURFACESTUB 1
-
+#pragma once
 //
-#include "ACTS/Surfaces/LineSurface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/VariantDataFwd.hpp"
+#include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantDataFwd.hpp"
 //
 //
 #include <limits>
@@ -77,4 +75,3 @@ public:
   }
 };
 }  // end of ns
-#endif

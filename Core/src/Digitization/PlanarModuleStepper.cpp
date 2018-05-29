@@ -1,20 +1,20 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 ACTS project team
+// Copyright (C) 2016-2017 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// PlanarModuleStepper.cpp, ACTS project
+// PlanarModuleStepper.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "ACTS/Digitization//PlanarModuleStepper.hpp"
-#include "ACTS/Digitization/DigitizationModule.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Intersection.hpp"
+#include "Acts/Digitization//PlanarModuleStepper.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 Acts::PlanarModuleStepper::PlanarModuleStepper(
     const Config&                 pmsConfig,
