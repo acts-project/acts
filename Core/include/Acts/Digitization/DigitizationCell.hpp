@@ -51,7 +51,7 @@ struct DigitizationCell
   /// an energy cut, because the energy deposit can also be stored for digital
   /// readout.
   virtual double
-  depositedEnergy(bool /*analogueReadout*/) const
+  depositedEnergy() const
   {
     return data;
   }

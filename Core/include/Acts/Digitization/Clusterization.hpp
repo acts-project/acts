@@ -24,30 +24,25 @@ namespace Acts {
 /// @tparam Cell the digitization cell
 /// @param [in] cells all digitization cells
 /// @param [in] nBins0 number of bins in direction 0
-/// @param [in] nBins1 number of bins in direction 1
 /// @param [in] commonCorner flag indicating if also cells sharing a common
 /// corner should be merged into one cluster
-/// @param [in] analogueReadout flag indicating if analogue readout is used
-/// (deposited energy is added up in case of cell merging)
 /// @param [in] energyCut possible energy cut to be applied
 /// @return vector (the different clusters) of vector of digitization cells (the
 /// cells which belong to each cluster)
 template <typename Cell>
 std::vector<std::vector<Cell>>
-createClusters(const std::vector<Cell>& cells,
-               size_t                   nBins0,
-               size_t                   nBins1,
-               bool                     commonCorner    = true,
-               bool                     analogueReadout = false,
-               double                   energyCut       = 0.);
+createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
+               size_t nBins0,
+               bool   commonCorner = true,
+               double energyCut    = 0.);
 
 /// @brief ccl
 /// This function is a helper function of Acts::createClusters. It does
 /// connected component labelling using a hash map in order to find out which
-/// cells are neighbours. This function is called recursively by all neighbours
-/// of the current cell. The function is templated on the digitization cell type
-/// to allow users to use their own implementation inheriting from
-/// Acts::DigitizationCell.
+/// cells are neighbours. This function is called recursively by all
+/// neighbours of the current cell. The function is templated on the
+/// digitization cell type to allow users to use their own implementation
+/// inheriting from Acts::DigitizationCell.
 /// @tparam Cell the digitization cell
 /// @param [in,out] mergedCells the final vector of cells to which cells of one
 /// cluster should be added
@@ -56,9 +51,6 @@ createClusters(const std::vector<Cell>& cells,
 /// grid index
 /// @param [in] index the current global grid index of the cell
 /// @param [in] nBins0 number of bins in direction 0
-/// @param [in] nBins1 number of bins in direction 1
-/// @param [in] analogueReadout flag indicating if analogue readout is used
-/// (deposited energy is added up in case of cell merging)
 /// @param [in] energyCut possible energy cut to be applied
 template <typename Cell>
 void
@@ -66,10 +58,8 @@ ccl(std::vector<std::vector<Cell>>& mergedCells,
     std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
     size_t index,
     size_t nBins0,
-    size_t nBins1,
-    bool   commonCorner    = true,
-    bool   analogueReadout = false,
-    double energyCut       = 0.);
+    bool   commonCorner = true,
+    double energyCut    = 0.);
 }
 
 #include "ACTS/Digitization/detail/Clusterization.ipp"
