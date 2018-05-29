@@ -133,8 +133,8 @@ namespace Test {
         data, {pmc}, {pmc2}, dhsp_cfg);
 
     BOOST_TEST(data.size() == 1, "Failed to add element");
-    BOOST_TEST(*(data[0].hitModuleFront.first) == *pmc, "Failed to set hit");
-    BOOST_TEST(*(data[0].hitModuleBack.first) == *pmc2, "Failed to set hit");
+    BOOST_TEST(*(data[0].hitModuleFront[0]) == *pmc, "Failed to set hit");
+    BOOST_TEST(*(data[0].hitModuleBack[0]) == *pmc2, "Failed to set hit");
 
     std::cout << "Calculate space point" << std::endl;
 

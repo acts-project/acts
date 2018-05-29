@@ -20,11 +20,9 @@ namespace Acts {
 struct DoubleHitSpacePoint
 {
   /// Storage of the hit cluster on a surface
-  std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>
-      hitModuleFront;
+  std::vector<PlanarModuleCluster const*> hitModuleFront;
   /// Storage of the hit cluster on another surface
-  std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>
-      hitModuleBack;
+  std::vector<PlanarModuleCluster const*> hitModuleBack;
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
 };
@@ -185,21 +183,20 @@ private:
   static std::vector<std::vector<PlanarModuleCluster const*>>
   sortHits(const std::vector<PlanarModuleCluster const*>& hits);
 
-  /// @brief Build pair of hits on neighboring bins
+  /// @brief Build cluster of hits on neighboring bins
   /// @param hits collection of hits on a single surface
   /// @param peformClustering configuration that steers if a clustering should
   /// be performed
-  /// @return collection of found pairs
-  static const std::vector<std::pair<PlanarModuleCluster const*,
-                                     PlanarModuleCluster const*>>
+  /// @return collection of found clusters
+  static const std::vector<std::vector<PlanarModuleCluster const*>>
   clusterSpacePoints(const std::vector<PlanarModuleCluster const*>& hits,
                      bool performClustering);
 
-  /// @brief Calculate the mean of the coordinates of two hits
-  /// @param cluster pair of neighbouring hits
+  /// @brief Calculate the mean of the coordinates of multiple hits
+  /// @param cluster cluster of neighbouring hits
   /// @return vector with the combined coordinates
   static const Vector3D
-  clusterPoint(std::pair<PlanarModuleCluster const*, PlanarModuleCluster const*>
+  clusterPoint(std::vector<PlanarModuleCluster const*>
                    cluster);
 
   /// @brief Calculates the top and bottom ends of a SDE
@@ -210,11 +207,10 @@ private:
   endsOfStrip(const PlanarModuleCluster& hit);
 
   /// @brief Calculates the combined ends of two SDEs
-  /// @param cluster pair of hits on two SDEs
-  /// @return mean of the ends of both SDEs
+  /// @param cluster cluster of hits on two SDEs
+  /// @return mean of the ends of cluster of SDEs
   static std::pair<Vector3D, Vector3D>
-  endsOfCluster(std::pair<PlanarModuleCluster const*,
-                          PlanarModuleCluster const*> cluster);
+  endsOfCluster(std::vector<PlanarModuleCluster const*> cluster);
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data

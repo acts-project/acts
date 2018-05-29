@@ -106,8 +106,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
   return std::move(bins);
 }
 
-const std::vector<std::pair<Acts::PlanarModuleCluster const*,
-                            Acts::PlanarModuleCluster const*>>
+const std::vector<std::vector<Acts::PlanarModuleCluster const*>>
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
     clusterSpacePoints(
@@ -123,13 +122,12 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
   /// afterwards by checking if a hit has also a hit on the previous bin. If
   /// this is the case both hits will be stored.
 
-  std::vector<std::pair<Acts::PlanarModuleCluster const*,
-                        Acts::PlanarModuleCluster const*>>
+  std::vector<std::vector<Acts::PlanarModuleCluster const*>>
       clusters;
 
   // Easy exit if a single hit is provided
   if (hits.size() == 1) {
-    clusters.push_back(std::make_pair(hits[0], nullptr));
+    clusters.push_back({hits[0]});
     return clusters;
   }
 
@@ -142,8 +140,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     // cannot be combined
     if (bins.empty()) return clusters;
 
-    std::pair<Acts::PlanarModuleCluster const*,
-              Acts::PlanarModuleCluster const*>
+    std::vector<Acts::PlanarModuleCluster const*>
         cluster;
 
     // Check the orientation of a strip module = check which dimension has more
@@ -151,60 +148,71 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     if (bins.size() > bins[0].size()) {
       // Walk through all bins
       for (unsigned int iY = 0; iY < bins[0].size(); iY++)
+      {
         for (unsigned int iX = 0; iX < bins.size(); iX++) {
           // Store the first hit
-          if (bins[iX][iY] && !cluster.first) {
-            cluster.first = bins[iX][iY];
-            if (iX == bins.size() - 1) {
-              if (binningData(hits[0])[0].option == closed && !clusters.empty()
-                  && clusters[0].first == bins[0][iY]
-                  && clusters[0].second == nullptr)
-                clusters[0].second = bins[iX][iY];
-              else {
-                cluster.second = nullptr;
-                clusters.push_back(cluster);
-              }
-            }
+          if (bins[iX][iY] && cluster.empty()) {
+            cluster.push_back(bins[iX][iY]);
             continue;
           }
-          if (cluster.first) {
-            // Store the pointer to the second hit; nullptr if it does not exist
-            cluster.second = bins[iX][iY];
-            clusters.push_back(cluster);
-            // Reset pair
-            cluster.first = cluster.second;
-          }
+          if (!cluster.empty())
+          {
+			// Fill vector with neighbouring hits
+			  if(bins[iX][iY])
+				cluster.push_back(bins[iX][iY]);
+			  else
+				{
+					// If no further hit exists the vector gets stored and cleared
+					clusters.push_back(cluster);
+					cluster.clear();
+				}
+			}
         }
+        // If hits remain unstored at the end of the loop ...
+        if(!cluster.empty())
+        {
+			// ... store the hits in the first cluster if the geometry is closed
+			if (binningData(hits[0])[0].option == closed && !clusters.empty() && clusters[0][0] == bins[0][iY])
+				clusters[0].insert(clusters[0].begin(), cluster.begin(), cluster.end());
+			// ... store the current vector
+			clusters.push_back(cluster);
+		}
+     }
     } else
       // Perform the same computation as before with exchanged dimensions
-      for (unsigned int iX = 0; iX < bins.size(); iX++)
+      for (unsigned int iX = 0; iX < bins.size(); iX++) {
         for (unsigned int iY = 0; iY < bins[0].size(); iY++) {
-          // Store the first hit
-          if (bins[iX][iY] && !cluster.first) {
-            cluster.first = bins[iX][iY];
-            if (iY == bins[0].size() - 1) {
-              if (binningData(hits[0])[1].option == closed && !clusters.empty()
-                  && clusters[0].first == bins[iX][0]
-                  && clusters[0].second == nullptr)
-                clusters[0].second = bins[iX][iY];
-              else {
-                cluster.second = nullptr;
-                clusters.push_back(cluster);
-              }
-            }
+           // Store the first hit
+          if (bins[iX][iY] && cluster.empty()) {
+            cluster.push_back(bins[iX][iY]);
             continue;
           }
-          if (cluster.first) {
-            // Store the pointer to the second hit; nullptr if it does not exist
-            cluster.second = bins[iX][iY];
-            clusters.push_back(cluster);
-            // Reset pair
-            cluster.first = cluster.second;
-          }
+          if (!cluster.empty())
+          {
+			// Fill vector with neighbouring hits
+			  if(bins[iX][iY])
+				cluster.push_back(bins[iX][iY]);
+			  else
+				{
+					// If no further hit exists the vector gets stored and cleared
+					clusters.push_back(cluster);
+					cluster.clear();
+				}
+			}
+        }
+        // If hits remain unstored at the end of the loop ...
+        if(!cluster.empty())
+        {
+			// ... store the hits in the first cluster if the geometry is closed
+			if (binningData(hits[0])[0].option == closed && !clusters.empty() && clusters[0][0] == bins[iX][0])
+				clusters[0].insert(clusters[0].begin(), cluster.begin(), cluster.end());
+			// ... store the current vector
+			clusters.push_back(cluster);
+		}
         }
   } else
     // No clustering means that every hit is its own cluster
-    for (auto& hit : hits) clusters.push_back(std::make_pair(hit, nullptr));
+    for (auto& hit : hits) clusters.push_back({hit});
 
   return std::move(clusters);
 }
@@ -212,21 +220,15 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 const Acts::Vector3D
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
-    clusterPoint(std::pair<Acts::PlanarModuleCluster const*,
-                           Acts::PlanarModuleCluster const*> cluster)
+    clusterPoint(std::vector<Acts::PlanarModuleCluster const*> cluster)
 {
   // Get the hit coordinates
-  Acts::Vector3D pos1 = globalCoords(*(cluster.first));
+  Acts::Vector3D pos = globalCoords(*(cluster[0]));
 
-  if (cluster.second) {
-    Acts::Vector3D pos2 = globalCoords(*(cluster.second));
-
-    // Calculate the mean of both hits
-    pos1(0) = (pos1(0) + pos2(0)) / 2;
-    pos1(1) = (pos1(1) + pos2(1)) / 2;
-    pos1(2) = (pos1(2) + pos2(2)) / 2;
-  }
-  return pos1;
+	for(unsigned int iCluster = 1; iCluster < cluster.size(); iCluster++)
+		pos += globalCoords(*(cluster[iCluster]));
+		
+	return pos / cluster.size();
 }
 
 void
@@ -342,23 +344,21 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 std::pair<Acts::Vector3D, Acts::Vector3D>
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
-    endsOfCluster(std::pair<PlanarModuleCluster const*,
-                            PlanarModuleCluster const*> cluster)
+    endsOfCluster(std::vector<Acts::PlanarModuleCluster const*> cluster)
 {
   // Get the end of the strip(s)
-  auto ends1 = endsOfStrip(*(cluster.first));
-  if (cluster.second) {
-    auto ends2 = endsOfStrip(*(cluster.second));
-
-    // Calculate the mean of both ends
-    ends1.first(0) = (ends1.first(0) + ends2.first(0)) / 2;
-    ends1.first(1) = (ends1.first(1) + ends2.first(1)) / 2;
-    ends1.first(2) = (ends1.first(2) + ends2.first(2)) / 2;
-
-    ends1.second(0) = (ends1.second(0) + ends2.second(0)) / 2;
-    ends1.second(1) = (ends1.second(1) + ends2.second(1)) / 2;
-    ends1.second(2) = (ends1.second(2) + ends2.second(2)) / 2;
+  auto ends1 = endsOfStrip(*(cluster[0]));
+  
+  for(unsigned int iCluster = 1; iCluster < cluster.size(); iCluster++)
+  {
+	  auto ends2 = endsOfStrip(*(cluster[iCluster]));
+	  ends1.first += ends2.first;
+	  ends1.second += ends2.second;
   }
+  
+  ends1.first /= cluster.size();
+  ends1.second /= cluster.size();
+  
   return ends1;
 }
 
