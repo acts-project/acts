@@ -28,7 +28,8 @@ Acts::createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
       // create new cluster
       mergedCells.push_back(std::vector<Cell>());
       // fill all cells belonging to that cluster
-      ccl(mergedCells, cellMap, cell.first, nBins0, commonCorner, energyCut);
+      fillCluster(
+          mergedCells, cellMap, cell.first, nBins0, commonCorner, energyCut);
     }
   }
   // return the grouped together cells
@@ -37,12 +38,12 @@ Acts::createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
 
 template <typename Cell>
 void
-Acts::ccl(std::vector<std::vector<Cell>>& mergedCells,
-          std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
-          size_t index,
-          size_t nBins0,
-          bool   commonCorner,
-          double energyCut)
+Acts::fillCluster(std::vector<std::vector<Cell>>& mergedCells,
+                  std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
+                  size_t index,
+                  size_t nBins0,
+                  bool   commonCorner,
+                  double energyCut)
 {
   // add current cell to cluster
   auto cellA = cellMap.at(index).first;
@@ -53,9 +54,9 @@ Acts::ccl(std::vector<std::vector<Cell>>& mergedCells,
     cellMap.at(index).second = true;
     // go recursively through all neighbours of this cell, if present
     // calculate neighbour indices first
-    int              iMin = -1;
+    constexpr int    iMin = -1;
     int              jMin = -nBins0;
-    int              iMax = 1;
+    constexpr int    iMax = 1;
     int              jMax = nBins0;
     std::vector<int> neighbourIndices;
     // the neighbour indices - filled depending on merging case
@@ -98,7 +99,8 @@ Acts::ccl(std::vector<std::vector<Cell>>& mergedCells,
         // get the corresponding index and call function again
         auto newIndex = search->first;
         if (!cellMap.at(newIndex).second) {
-          ccl(mergedCells, cellMap, newIndex, nBins0, commonCorner, energyCut);
+          fillCluster(
+              mergedCells, cellMap, newIndex, nBins0, commonCorner, energyCut);
         }  // check if was used already
       }    // check if neighbour is there
     }      // go through neighbour indics

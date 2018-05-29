@@ -20,7 +20,7 @@ namespace Acts {
 /// create clusters later and does cell merging. Furthermore an energy
 /// cut (excluding cells which fall below threshold) can be applied. The
 /// function is templated on the digitization cell type to allow users to use
-/// their own implementation inheriting from Acts::DigitizationCell.
+/// their own implementation of Acts::DigitizationCell.
 /// @tparam Cell the digitization cell
 /// @param [in] cells all digitization cells
 /// @param [in] nBins0 number of bins in direction 0
@@ -36,7 +36,7 @@ createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
                bool   commonCorner = true,
                double energyCut    = 0.);
 
-/// @brief ccl
+/// @brief fillCluster
 /// This function is a helper function of Acts::createClusters. It does
 /// connected component labelling using a hash map in order to find out which
 /// cells are neighbours. This function is called recursively by all
@@ -54,12 +54,12 @@ createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
 /// @param [in] energyCut possible energy cut to be applied
 template <typename Cell>
 void
-ccl(std::vector<std::vector<Cell>>& mergedCells,
-    std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
-    size_t index,
-    size_t nBins0,
-    bool   commonCorner = true,
-    double energyCut    = 0.);
+fillCluster(std::vector<std::vector<Cell>>& mergedCells,
+            std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
+            size_t index,
+            size_t nBins0,
+            bool   commonCorner = true,
+            double energyCut    = 0.);
 }
 
 #include "ACTS/Digitization/detail/Clusterization.ipp"
