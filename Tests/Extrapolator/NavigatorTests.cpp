@@ -143,10 +143,11 @@ namespace Test {
 
     // create a navigator
     Navigator navigator;
-    navigator.trackingGeometry = tGeometry;
-    navigator.resolveSensitive = true;
-    navigator.resolveMaterial  = true;
-    navigator.resolvePassive   = false;
+    navigator.initialStepFactor = 1.;
+    navigator.trackingGeometry  = tGeometry;
+    navigator.resolveSensitive  = true;
+    navigator.resolveMaterial   = true;
+    navigator.resolvePassive    = false;
 
     // position and direction vector
     Vector3D position(0., 0., 0);

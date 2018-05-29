@@ -107,8 +107,8 @@ namespace Test {
     const Vector3D      direction{0., 1., 2.};
     NavigationDirection navDir = anyDirection;
     BoundaryCheck       bcheck(false);
-    auto                intersection
-        = line.intersectionEstimate({0., 0., 0.}, direction, navDir, bcheck);
+    auto                intersection = line.intersectionEstimate(
+        {0., 0., 0.}, direction.unit(), navDir, bcheck);
     BOOST_CHECK(intersection.valid);
     Vector3D expectedIntersection(0, 1., 2.);
     BOOST_TEST(intersection.position
