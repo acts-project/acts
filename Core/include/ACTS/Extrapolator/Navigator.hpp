@@ -6,18 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_NAVIGATOR_H
-#define ACTS_NAVIGATOR_H
+#pragma once
 
 #include <iterator>
 #include <sstream>
 #include <string>
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Layers/Layer.hpp"
-#include "ACTS/Propagator/detail/ConstrainedStep.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Volumes/BoundarySurfaceT.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Volumes/BoundarySurfaceT.hpp"
 
 namespace Acts {
 
@@ -1219,6 +1218,4 @@ private:
     }
   }
 };
-}
-
-#endif  // end of namespace Acts
+}  // namespace Acts

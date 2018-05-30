@@ -268,5 +268,5 @@ namespace Test {
     // the end parameters are the material-updated destination parameters
     BOOST_CHECK_EQUAL(ecc.endParameters.get(), dMatParametersPtr);
   }
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

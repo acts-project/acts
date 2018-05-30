@@ -6,17 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_STRAIGHTLINE_STEPPER_HPP
-#define ACTS_STRAIGHTLINE_STEPPER_HPP
+#pragma once
 
 #include <cmath>
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/MagneticField/concept/AnyFieldLookup.hpp"
-#include "ACTS/Propagator/detail/ConstrainedStep.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Intersection.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 
@@ -189,5 +188,3 @@ public:
 };
 
 }  // namespace Acts
-
-#endif  // ACTS_STRAIGHTLINE_STEPPER_HPP

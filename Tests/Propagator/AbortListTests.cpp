@@ -19,11 +19,11 @@
 // leave blank line
 
 #include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/detail/Extendable.hpp"
-#include "Acts/Propagator/detail/standard_abort_conditions.hpp"
-#include "Acts/Propagator/detail/constrained_step.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/detail/Extendable.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

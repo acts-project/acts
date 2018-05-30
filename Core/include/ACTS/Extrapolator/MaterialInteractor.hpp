@@ -6,17 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_MATERIALINTERACTOR_H
-#define ACTS_MATERIALINTERACTOR_H
+#pragma once
 
 #include <cmath>
 #include <sstream>
 #include <utility>
-#include "ACTS/Extrapolator/detail/InteractionFormulas.hpp"
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 
@@ -284,5 +283,3 @@ private:
   }
 };
 }
-
-#endif

@@ -163,4 +163,4 @@ private:
   /// The field cell
   FieldCell m_fieldCell;
 };
-}  // end of namespace Acts
+}  // namespace Acts

@@ -121,5 +121,5 @@ namespace Test {
     }
   }
 
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

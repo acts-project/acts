@@ -39,7 +39,7 @@ namespace Test {
     {
       return std::string("'") + expected + "' != '" + found + "'";
     }
-  }  // end of namespace detail
+  }  // namespace detail
   /// @endcond
 
   /// @brief unit test for FATAL debug level
@@ -236,5 +236,5 @@ namespace Test {
       BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
     }
   }
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

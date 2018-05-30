@@ -6,13 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_CONSTRAINED_STEP_HPP
-#define ACTS_CONSTRAINED_STEP_HPP
+#pragma once
 
 #include <algorithm>
 #include <limits>
 #include <sstream>
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -121,5 +120,3 @@ namespace detail {
 
 }  // namespace detail
 }  // namespace Acts
-
-#endif

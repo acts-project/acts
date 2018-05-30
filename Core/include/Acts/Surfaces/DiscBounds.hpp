@@ -24,4 +24,4 @@ class DiscBounds : public SurfaceBounds
 {
 };
 
-}  // end of namespace
+}  // namespace

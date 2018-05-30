@@ -177,4 +177,4 @@ EllipseBounds::halfPhiSector() const
   return m_halfPhi;
 }
 
-}  // end of namespace
+}  // namespace

@@ -58,4 +58,4 @@ public:
   trackingVolumeArray(const TrackingVolumeVector& vols,
                       BinningValue                bVal) const = 0;
 };
-}  // end of namespace
+}  // namespace

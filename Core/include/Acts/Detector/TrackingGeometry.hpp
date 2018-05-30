@@ -164,4 +164,4 @@ private:
   std::map<std::string, const TrackingVolume*> m_trackingVolumes;
 };
 
-}  // end of namespace
+}  // namespace

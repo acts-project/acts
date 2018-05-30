@@ -157,6 +157,6 @@ namespace detail {
     typedef typename converter<permutations>::type   type;
   };
   /// @endcond
-}  // end of namespace details
+}  // namespace details
 /// @endcond
-}  // end of namespace Acts
+}  // namespace Acts

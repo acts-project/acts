@@ -127,4 +127,4 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> fieldMapperXYZ(
     double                      BFieldUnit  = Acts::units::_T,
     bool                        firstOctant = false);
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -23,12 +23,11 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/constrained_step.hpp"
-#include "Acts/Propagator/detail/standard_abort_conditions.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

@@ -55,4 +55,4 @@ public:
                  VolumeBoundsPtr   outsideBounds = nullptr) const = 0;
 };
 
-}  // end of namespace
+}  // namespace

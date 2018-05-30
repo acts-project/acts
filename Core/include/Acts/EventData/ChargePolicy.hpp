@@ -118,4 +118,4 @@ public:
     return 0.;
   }
 };
-}  // end of namespace Acts
+}  // namespace Acts

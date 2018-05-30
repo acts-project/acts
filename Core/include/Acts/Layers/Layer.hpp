@@ -521,6 +521,6 @@ private:
 /// describes as:
 typedef BinnedArray<LayerPtr> LayerArray;
 
-}  // end of namespace
+}  // namespace
 
 #include "Acts/Layers/detail/Layer.ipp"

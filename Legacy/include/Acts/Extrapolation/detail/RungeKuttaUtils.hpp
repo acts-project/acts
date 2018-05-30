@@ -210,4 +210,4 @@ private:
   bool
   transformLocalToGlobal(bool, const Surface*, const double*, double*) const;
 };
-}  // end of namespace
+}  // namespace

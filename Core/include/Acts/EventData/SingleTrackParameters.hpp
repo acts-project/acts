@@ -219,4 +219,4 @@ protected:
   ActsVectorD<3> m_vPosition;      ///< 3D vector with global position
   ActsVectorD<3> m_vMomentum;      ///< 3D vector with global momentum
 };
-}  // end of namespace Acts
+}  // namespace Acts

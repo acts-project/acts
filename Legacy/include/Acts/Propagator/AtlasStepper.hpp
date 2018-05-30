@@ -12,11 +12,11 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
@@ -94,7 +94,9 @@ public:
     }
 
     /// Return a corrector
-    VoidCorrector corrector() const { 
+    VoidCorrector
+    corrector() const
+    {
       return VoidCorrector();
     }
 

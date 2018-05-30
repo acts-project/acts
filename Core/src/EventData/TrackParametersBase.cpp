@@ -39,4 +39,4 @@ TrackParametersBase::print(std::ostream& sl) const
 
   return sl;
 }
-}  // end of namespace Acts
+}  // namespace Acts

@@ -189,6 +189,6 @@ StaticNavigationEngine::getConfiguration() const
   return m_cfg;
 }
 
-}  // end of namespace
+}  // namespace
 
 #include "Acts/Extrapolation/detail/StaticNavigationEngine.ipp"

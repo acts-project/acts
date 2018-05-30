@@ -601,4 +601,4 @@ const typename ParameterSet<params...>::Projection_t
     = detail::make_projection_matrix<Acts::NGlobalPars,
                                      static_cast<unsigned int>(
                                          params)...>::init();
-}  // end of namespace Acts
+}  // namespace Acts

@@ -254,4 +254,4 @@ private:
   const Surface* m_pSurface;
 };
 
-}  // end of namespace Acts
+}  // namespace Acts

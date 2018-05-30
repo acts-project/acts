@@ -103,6 +103,6 @@ namespace Test {
     BOOST_TEST(boundarySurfaces.at(2)->center() == pos, tt::tolerance(10e-12));
   }
 
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -164,4 +164,4 @@ DiamondBounds::halflengthY2() const
   return m_maxY;
 }
 
-}  // end of namespace
+}  // namespace

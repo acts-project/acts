@@ -68,6 +68,6 @@ namespace detail {
         typename tparam_generator<ParID_t, Acts::NGlobalPars - 1>::type>::type
         type;
   };
-}  // end of namespace detail
+}  // namespace detail
 /// @endcond
-}  // end of namespace Acts
+}  // namespace Acts

@@ -10,12 +10,11 @@
 // ParticleDefinitions.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
-#define ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
+#pragma once
 
 #include <vector>
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 // barcodes
 typedef unsigned long barcode_type;
@@ -309,6 +308,5 @@ ProcessVertex::addOutgoing(const ParticleProperties& pProperties)
 {
   m_outgoing.push_back(pProperties);
 }
-}
 
-#endif  // ACTS_EVENTDATA_PARTICLEDEFINITIONS_H
+}  // namespace Acts

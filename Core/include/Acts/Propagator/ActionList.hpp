@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/Extendable.hpp"
 #include "Acts/Propagator/detail/action_list_implementation.hpp"
 #include "Acts/Propagator/detail/action_signature_check.hpp"
+#include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"

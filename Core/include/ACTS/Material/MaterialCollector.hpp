@@ -6,14 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_MATERIALCOLLECTOR_H
-#define ACTS_MATERIALCOLLECTOR_H
+#pragma once
 
 #include <sstream>
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Material/SurfaceMaterial.hpp"
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 
@@ -189,5 +188,3 @@ private:
   }
 };
 }
-
-#endif

@@ -272,4 +272,4 @@ protected:
 
 #include "detail/CylinderSurface.ipp"
 
-}  // end of namespace
+}  // namespace

@@ -16,4 +16,4 @@ namespace Acts {
 typedef SingleTrackParameters<ChargedPolicy>            TrackParameters;
 typedef SingleCurvilinearTrackParameters<ChargedPolicy> CurvilinearParameters;
 typedef SingleBoundTrackParameters<ChargedPolicy>       BoundParameters;
-}  // end of namespace Acts
+}  // namespace Acts

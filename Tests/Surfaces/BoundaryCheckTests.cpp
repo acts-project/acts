@@ -139,5 +139,5 @@ namespace Test {
     BOOST_TEST(check.isInside({0, 5}, vertices) == false);
   }
   BOOST_AUTO_TEST_SUITE_END()
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

@@ -234,4 +234,4 @@ operator<<(std::ostream& sl, const MaterialProperties& mprop);
 typedef std::vector<MaterialProperties*>      MaterialPropertiesVector;
 typedef std::vector<MaterialPropertiesVector> MaterialPropertiesMatrix;
 
-}  // end of namespace
+}  // namespace

@@ -656,5 +656,5 @@ namespace Test {
     BOOST_CHECK((std::is_same<decltype(FullSet::getParID<0>()),
                               decltype(eLOC_0)>::value));
   }
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

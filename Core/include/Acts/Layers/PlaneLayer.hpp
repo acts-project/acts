@@ -106,4 +106,4 @@ protected:
   PlaneLayer(const PlaneLayer& pla, const Transform3D& shift);
 };
 
-}  // end of namespace
+}  // namespace

@@ -18,10 +18,10 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include "ACTS/Propagator/detail/IntersectionCorrector.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Helpers.hpp"
+#include "Acts/Propagator/detail/IntersectionCorrector.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

@@ -104,4 +104,4 @@ ApproachDescriptor::approachSurface(const parameters_t& parameters,
                          corrfnc);
 }
 
-}  // end of namespace Acts
+}  // namespace Acts

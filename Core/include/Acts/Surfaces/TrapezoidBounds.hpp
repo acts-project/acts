@@ -180,4 +180,4 @@ TrapezoidBounds::halflengthY() const
   return m_halfY;
 }
 
-}  // end of namespace
+}  // namespace

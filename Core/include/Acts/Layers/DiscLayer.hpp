@@ -120,4 +120,4 @@ protected:
   DiscLayer(const DiscLayer& cla, const Transform3D& tr);
 };
 
-}  // end of namespace
+}  // namespace

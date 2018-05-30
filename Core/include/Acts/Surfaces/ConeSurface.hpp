@@ -238,4 +238,4 @@ protected:
 
 #include "detail/ConeSurface.ipp"
 
-}  // end of namespace
+}  // namespace

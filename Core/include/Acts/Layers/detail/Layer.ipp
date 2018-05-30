@@ -544,4 +544,4 @@ Layer::compatibleSurfaces(const NeutralParameters& pars,
 
 // ----------- legacy method block: start ----------------------
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -1,5 +1,5 @@
 add_executable (ExtendableTests ExtendableTests.cpp)
-target_link_libraries (ExtendableTests PRIVATE ACTSCore)
+target_link_libraries (ExtendableTests PRIVATE Acts::Core)
 add_test(NAME ExtendableUnitTests COMMAND ExtendableTests)
 
 add_executable (UnitConversionTests UnitConversionTests.cpp)
@@ -13,7 +13,7 @@ add_test (NAME GeometryIDUnitTest COMMAND GeometryIDTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST GeometryIDUnitTest TARGETS GeometryIDTests)
 
 add_executable (IntersectionTests IntersectionTests.cpp)
-target_link_libraries (IntersectionTests PRIVATE ACTSCore)
+target_link_libraries (IntersectionTests PRIVATE Acts::Core)
 add_test (NAME IntersectionUnitTests COMMAND IntersectionTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST IntersectionUnitTests TARGETS IntersectionTests)
 

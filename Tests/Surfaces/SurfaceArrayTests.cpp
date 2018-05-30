@@ -402,4 +402,4 @@ namespace Test {
   BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -69,4 +69,4 @@ protected:
   std::string m_sopPostfix;  ///< prefix for screen output
 };
 
-}  // end of namespace
+}  // namespace

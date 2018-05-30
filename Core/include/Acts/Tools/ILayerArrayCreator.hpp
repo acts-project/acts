@@ -55,4 +55,4 @@ public:
              BinningType        btype  = arbitrary,
              BinningValue       bvalue = binX) const = 0;
 };
-}  // end of namespace
+}  // namespace

@@ -9,7 +9,7 @@
 // Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
 #include <boost/test/included/unit_test.hpp>
-#include "ACTS/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 namespace Test {
@@ -141,5 +141,5 @@ namespace Test {
     BOOST_CHECK_EQUAL(ztfsnIntersections[3].pathLength, -3.);
   }
 
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

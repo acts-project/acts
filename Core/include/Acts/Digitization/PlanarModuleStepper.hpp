@@ -93,4 +93,4 @@ private:
   std::unique_ptr<const Logger> m_logger;
 };
 
-}  // end of namespace
+}  // namespace

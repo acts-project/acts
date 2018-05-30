@@ -235,4 +235,4 @@ protected:
 
 #include "detail/PlaneSurface.ipp"
 
-}  // end of namespace
+}  // namespace

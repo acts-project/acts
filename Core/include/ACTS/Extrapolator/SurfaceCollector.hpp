@@ -6,11 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_SURFACECOLLECTOR_H
-#define ACTS_SURFACECOLLECTOR_H
+#pragma once
 
 #include <sstream>
-#include "ACTS/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
 
@@ -81,6 +80,5 @@ struct SurfaceCollector
   {
   }
 };
-}
 
-#endif
+}  // namespace Acts

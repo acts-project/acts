@@ -110,4 +110,4 @@ inline const MaterialProperties*
   return (&m_fullMaterial);
 }
 
-}  // end of namespace
+}  // namespace

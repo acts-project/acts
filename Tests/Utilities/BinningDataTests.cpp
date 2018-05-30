@@ -451,5 +451,5 @@ namespace Test {
     BOOST_CHECK_EQUAL(phiData_mod.searchGlobal(underscaledPos), size_t(4));
   }
 
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

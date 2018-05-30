@@ -172,4 +172,4 @@ struct cyclic_parameter
 //  template<typename ParameterPolicy,typename ParameterPolicy::par_id_type
 //  parID>
 //  struct parameter_traits;
-}  // end of namespace Acts
+}  // namespace Acts

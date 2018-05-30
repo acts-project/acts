@@ -145,4 +145,4 @@ public:
   createContainerTrackingVolume(const TrackingVolumeVector& volumes) const = 0;
 };
 
-}  // end of namespace
+}  // namespace

@@ -591,7 +591,6 @@ TrackingVolume::detectorElements() const
   return m_detectorElements;
 }
 
-}  // end of namespace
 #include "detail/TrackingVolume.ipp"
 
-}  // end of namespace
+}  // namespace

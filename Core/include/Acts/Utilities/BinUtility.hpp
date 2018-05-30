@@ -415,4 +415,4 @@ private:
 std::ostream&
 operator<<(std::ostream& sl, const BinUtility& bgen);
 
-}  // end of namespace Acts
+}  // namespace Acts

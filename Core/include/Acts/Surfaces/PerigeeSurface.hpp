@@ -91,4 +91,4 @@ public:
   toVariantData() const override;
 };
 
-}  // end of namespace
+}  // namespace

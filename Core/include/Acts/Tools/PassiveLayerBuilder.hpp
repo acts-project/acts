@@ -147,4 +147,4 @@ PassiveLayerBuilder::centralLayers() const
   return m_cLayers;
 }
 
-}  // end of namespace
+}  // namespace

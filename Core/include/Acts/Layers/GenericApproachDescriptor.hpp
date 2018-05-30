@@ -153,4 +153,4 @@ GenericApproachDescriptor<T>::containedSurfaces()
   return m_surfacestepState;
 }
 
-} // end of namespace Acts
+}  // namespace Acts

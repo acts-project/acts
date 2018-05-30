@@ -40,4 +40,4 @@ enum GeometryType {
   NumberOfGeometryTypes = 3
 };
 
-}  // end of namespace
+}  // namespace

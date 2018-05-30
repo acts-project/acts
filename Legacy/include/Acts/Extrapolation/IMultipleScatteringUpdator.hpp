@@ -41,4 +41,4 @@ public:
               double                    deltaE = 0.) const = 0;
 };
 
-}  // end of namespace
+}  // namespace

@@ -29,7 +29,7 @@
 #include <Eigen/Dense>
 #endif
 
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 #ifdef TRKDETDESCR_USEFLOATPRECISON
 typedef float TDD_real_t;
@@ -143,4 +143,4 @@ enum AxisDefs : int {
   ePZ = 2
 };
 
-}  // end of namespace Acts
+}  // namespace Acts

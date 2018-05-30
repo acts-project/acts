@@ -90,4 +90,4 @@ struct par_type<ParDef::eQOP>
 {
   typedef unbound_parameter type;
 };
-}  // end of namespace Acts
+}  // namespace Acts

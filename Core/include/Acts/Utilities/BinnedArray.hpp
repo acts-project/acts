@@ -105,4 +105,4 @@ public:
   binUtility() const = 0;
 };
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -10,10 +10,9 @@
 // TransportJacobian.h, ACTS project
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
-#define ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H 1
+#pragma once
 
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -64,6 +63,4 @@ public:
 std::ostream&
 operator<<(std::ostream& sl, const TransportJacobian& jac);
 
-}  // end of namespace
-
-#endif  // ACTS_EXTRAPOLATIONUTILS_TRANSPORTJACOBIAN_H
+}  // namespace

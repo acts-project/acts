@@ -76,6 +76,6 @@ namespace detail {
     }
   };
   /// @endcond
-}  // end of namespace detail
+}  // namespace detail
 /// @endcond
-}  // end of namespace Acts
+}  // namespace Acts

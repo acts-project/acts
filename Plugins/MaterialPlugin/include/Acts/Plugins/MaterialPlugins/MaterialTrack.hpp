@@ -108,7 +108,7 @@ private:
   std::vector<MaterialStep> m_materialSteps;
 };
 
-}  // end of namespace
+}  // namespace
 
 inline double
 Acts::MaterialTrack::theta() const

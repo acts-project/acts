@@ -104,4 +104,4 @@ protected:
   ConeLayer(const ConeLayer& cla, const Transform3D& shift);
 };
 
-}  // end of namespace
+}  // namespace

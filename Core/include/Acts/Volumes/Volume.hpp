@@ -118,4 +118,4 @@ Volume::volumeBounds() const
 std::ostream&
 operator<<(std::ostream& sl, const Volume& vol);
 
-}  // end of namespace Acts
+}  // namespace Acts

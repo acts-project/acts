@@ -31,5 +31,5 @@ namespace Test {
     Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1> m(
         cylinder, 0, std::move(cov), -0.1, 0.45);
   }
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

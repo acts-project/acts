@@ -106,4 +106,4 @@ private:
   RectangleBounds m_boundingBox;  ///< internal bounding box cache
 };
 
-}  // end of namespace
+}  // namespace

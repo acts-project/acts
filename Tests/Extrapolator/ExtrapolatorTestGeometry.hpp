@@ -6,29 +6,28 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_EXTRAPOLATION_TEST_GEOMETRY_HPP
-#define ACTS_EXTRAPOLATION_TEST_GEOMETRY_HPP
+#pragma once
 
 #include <vector>
-#include "ACTS/Detector/TrackingGeometry.hpp"
-#include "ACTS/Detector/TrackingVolume.hpp"
-#include "ACTS/Layers/CylinderLayer.hpp"
-#include "ACTS/Layers/ProtoLayer.hpp"
-#include "ACTS/Material/HomogeneousSurfaceMaterial.hpp"
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Material/MaterialProperties.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
-#include "ACTS/Tools/CylinderVolumeBuilder.hpp"
-#include "ACTS/Tools/CylinderVolumeHelper.hpp"
-#include "ACTS/Tools/LayerArrayCreator.hpp"
-#include "ACTS/Tools/LayerCreator.hpp"
-#include "ACTS/Tools/PassiveLayerBuilder.hpp"
-#include "ACTS/Tools/SurfaceArrayCreator.hpp"
-#include "ACTS/Tools/TrackingVolumeArrayCreator.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Units.hpp"
-#include "ACTS/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Layers/CylinderLayer.hpp"
+#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tools/CylinderVolumeBuilder.hpp"
+#include "Acts/Tools/CylinderVolumeHelper.hpp"
+#include "Acts/Tools/LayerArrayCreator.hpp"
+#include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Tools/PassiveLayerBuilder.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 namespace Acts {
 
@@ -265,8 +264,6 @@ namespace Test {
     return std::make_shared<const TrackingGeometry>(detectorVolume);
   }
 
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
-
-#endif
+}  // namespace Acts

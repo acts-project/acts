@@ -10,8 +10,8 @@
 // Surface.h, Acts project
 ///////////////////////////////////////////////////////////////////
 
-<<<<<<< HEAD:Core/include/Acts/Surfaces/Surface.hpp
 #pragma once
+
 #include "Acts/Detector/DetectorElementBase.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -23,22 +23,6 @@
 #include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
-=======
-#ifndef ACTS_SURFACES_SURFACE_H
-#define ACTS_SURFACES_SURFACE_H
-
-#include "ACTS/Detector/DetectorElementBase.hpp"
-#include "ACTS/Surfaces/BoundaryCheck.hpp"
-#include "ACTS/Surfaces/SurfaceBounds.hpp"
-#include "ACTS/Utilities/BinnedArray.hpp"
-#include "ACTS/Utilities/BinningType.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/GeometryObject.hpp"
-#include "ACTS/Utilities/GeometryStatics.hpp"
-#include "ACTS/Utilities/Identifier.hpp"
-#include "ACTS/Utilities/Intersection.hpp"
-#include "ACTS/Utilities/VariantDataFwd.hpp"
->>>>>>> 1819cdb3... split Navigator, speed-up intersection method, synchronise compatibleObjects() method:Core/include/ACTS/Surfaces/Surface.hpp
 
 namespace Acts {
 
@@ -451,4 +435,4 @@ protected:
 std::ostream&
 operator<<(std::ostream& sl, const Surface& sf);
 
-}  // end of namespace Acts
+}  // namespace Acts

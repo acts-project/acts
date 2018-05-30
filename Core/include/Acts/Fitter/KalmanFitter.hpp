@@ -234,4 +234,4 @@ public:
   Updator        m_oUpdator;
 };
 
-}  // end of namespace Acts
+}  // namespace Acts

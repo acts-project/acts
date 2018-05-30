@@ -6,17 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-<<<<<<< HEAD:Core/include/Acts/Propagator/AbortList.hpp
 #pragma once
-=======
-#ifndef ACTS_ABORT_LIST_HPP
-#define ACTS_ABORT_LIST_HPP
->>>>>>> cc97e037... split of propator and stepper cache:Core/include/ACTS/Propagator/AbortList.hpp
 
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/detail/Extendable.hpp"
 #include "Acts/Propagator/detail/abort_condition_signature_check.hpp"
 #include "Acts/Propagator/detail/abort_list_implementation.hpp"
+#include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/boost_mpl_helper.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 

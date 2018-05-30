@@ -18,7 +18,7 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include "ACTS/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

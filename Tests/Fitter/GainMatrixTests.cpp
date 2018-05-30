@@ -56,5 +56,5 @@ namespace Test {
     std::cout << pars << std::endl;
     if (filtered) std::cout << *filtered << std::endl;
   }
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

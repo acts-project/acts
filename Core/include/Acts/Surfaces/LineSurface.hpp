@@ -310,4 +310,4 @@ private:
 
 #include "detail/LineSurface.ipp"
 
-}  // end of namespace
+}  // namespace

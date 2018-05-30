@@ -83,7 +83,7 @@ namespace detail {
       return (pars(Acts::eQOP) > 0) ? 1. : -1.;
     }
   };
-}  // end of namespace detail
+}  // namespace detail
 /// @endcond
-}  // end of namespace Acts
+}  // namespace Acts
 #endif  // ACTS_COORDINATE_TRANSFORM_PLUGIN

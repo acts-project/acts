@@ -19,13 +19,13 @@
 // leave blank line
 
 #include <memory>
-#include "ACTS/EventData/TrackParameters.hpp"
-#include "ACTS/Extrapolator/Navigator.hpp"
-#include "ACTS/Propagator/detail/ConstrainedStep.hpp"
-#include "ACTS/Surfaces/CylinderSurface.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Intersection.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "ExtrapolatorTestGeometry.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -623,6 +623,6 @@ namespace Test {
     }
   }
 
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -77,7 +77,7 @@ namespace Test {
     }
 
     BOOST_AUTO_TEST_SUITE_END()
-  }  // end of namespace Layers
-}  // end of namespace Test
+  }  // namespace Layers
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

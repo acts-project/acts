@@ -82,6 +82,6 @@ namespace Test {
     BOOST_CHECK_EQUAL(150ul, assignedStepsVector[4].assignedSteps.size());
   }
 
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

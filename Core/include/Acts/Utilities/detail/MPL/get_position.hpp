@@ -39,6 +39,6 @@ namespace detail {
     enum { value = get_position<T, target, others...>::value + 1 };
   };
   /// @endcond
-}  // end of namespace detail
+}  // namespace detail
 /// @endcond
-}  // end of namespace Acts
+}  // namespace Acts

@@ -187,4 +187,4 @@ protected:
   virtual std::ostream&
   print(std::ostream& out) const;
 };
-}  // end of namespace Acts
+}  // namespace Acts

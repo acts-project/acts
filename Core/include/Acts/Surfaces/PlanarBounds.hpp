@@ -44,4 +44,4 @@ public:
   toVariantData() const = 0;
 };
 
-}  // end of namespace
+}  // namespace

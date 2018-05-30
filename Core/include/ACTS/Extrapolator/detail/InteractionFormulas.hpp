@@ -6,11 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
-#define ACTS_EXTRAPOLATIONUTILS_MATERIALINTERACTION_H
+#pragma once
 
-#include "ACTS/Material/Material.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -138,7 +137,5 @@ namespace detail {
     }
   };
 
-}  // end of namespace detail
-}  // end of namespace Acts
-
-#endif
+}  // namespace detail
+}  // namespace Acts

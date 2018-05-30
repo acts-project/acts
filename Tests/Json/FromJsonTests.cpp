@@ -196,6 +196,6 @@ namespace Test {
     }
   }
 
-}  // end of namespace Test
+}  // namespace Test
 
 }  // namespace Acts

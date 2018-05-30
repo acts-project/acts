@@ -201,4 +201,4 @@ public:
 private:
   PlaneSurface m_upSurface;
 };
-}  // end of namespace Acts
+}  // namespace Acts

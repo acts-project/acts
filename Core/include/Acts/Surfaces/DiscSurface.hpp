@@ -347,4 +347,4 @@ protected:
 
 #include "detail/DiscSurface.ipp"
 
-}  // end of namespace
+}  // end of namespace Acts

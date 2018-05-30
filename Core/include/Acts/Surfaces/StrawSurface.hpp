@@ -125,4 +125,4 @@ Acts::StrawSurface::name() const
   return "Acts::StrawSurface";
 }
 
-}  // end of namespace
+}  // end of namespace Acts

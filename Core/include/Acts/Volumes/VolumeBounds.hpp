@@ -109,4 +109,4 @@ inline double VolumeBounds::binningBorder(BinningValue) const
 std::ostream&
 operator<<(std::ostream& sl, const VolumeBounds& vb);
 
-}  // end of namespace
+}  // namespace

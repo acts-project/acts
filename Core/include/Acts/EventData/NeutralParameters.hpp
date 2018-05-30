@@ -17,4 +17,4 @@ typedef SingleTrackParameters<NeutralPolicy> NeutralParameters;
 typedef SingleCurvilinearTrackParameters<NeutralPolicy>
                                                   NeutralCurvilinearParameters;
 typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundParameters;
-}  // end of namespace Acts
+}  // namespace Acts

@@ -13,7 +13,7 @@
 #include <type_traits>
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/detail/standard_abort_conditions.hpp"
+#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -515,8 +515,3 @@ private:
 };
 
 }  // namespace Acts
-<<<<<<< HEAD:Core/include/Acts/Propagator/Propagator.hpp
-=======
-
-#endif  // ACTS_EXTRAPOLATION_PROPAGATOR_H
->>>>>>> 167ab66c... clang-format after message-format:Core/include/ACTS/Propagator/Propagator.hpp

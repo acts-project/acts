@@ -77,4 +77,4 @@ private:
   };
 };
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -24,4 +24,4 @@ getDefaultLogger(const std::string&    name,
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
-}  // end of namespace Acts
+}  // namespace Acts

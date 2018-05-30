@@ -138,4 +138,4 @@ RectangleBounds::type() const
   return SurfaceBounds::Rectangle;
 }
 
-}  // end of namespace
+}  // namespace

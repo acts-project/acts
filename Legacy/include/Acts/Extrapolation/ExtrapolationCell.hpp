@@ -608,6 +608,6 @@ public:
     return false;
   }
 };
-}  // end of namespace
+}  // namespace
 
 #include "Acts/Extrapolation/detail/ExtrapolationCell.ipp"

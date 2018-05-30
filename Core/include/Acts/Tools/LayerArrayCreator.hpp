@@ -97,4 +97,4 @@ private:
                           double       offset) const;
 };
 
-}  // end of namespace
+}  // namespace

@@ -88,4 +88,4 @@ private:
   std::vector<BoundarySurfacePtr> m_boundarySurfaces;
 };
 
-}  // end of namespace
+}  // namespace

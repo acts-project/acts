@@ -595,4 +595,4 @@ CylinderVolumeBuilder::getConfiguration() const
   return m_cfg;
 }
 
-}  // end of namespace
+}  // namespace

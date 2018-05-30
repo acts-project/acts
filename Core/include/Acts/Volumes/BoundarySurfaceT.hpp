@@ -215,4 +215,4 @@ BoundarySurfaceT<T>::attachedVolume(const Vector3D&     pos,
                                     : m_insideVolume;
   return attVolume;
 }
-}  // end of namespace Acts
+}  // namespace Acts

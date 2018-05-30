@@ -109,5 +109,5 @@ namespace Test {
     BOOST_CHECK(umomentum.unit().isApprox(
         curvilinear_pos_copy.referenceSurface().transform().rotation().col(2)));
   }
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

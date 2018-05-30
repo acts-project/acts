@@ -147,16 +147,10 @@ NavigationLayer::isOnLayer(const Vector3D&      gp,
   return m_surfaceRepresentation->isOnSurface(gp, bcheck);
 }
 
-<<<<<<< HEAD:Core/include/Acts/Layers/NavigationLayer.hpp
-}  // end of namespace
-=======
 inline bool
 NavigationLayer::resolve(bool, bool, bool) const
 {
   return false;
 }
 
-}  // end of namespace
-
-#endif  // ACTS_LAYERS_NAVIGATIONLAYER_H
->>>>>>> e0dec299... forward-backward consitency test:Core/include/ACTS/Layers/NavigationLayer.hpp
+}  // namespace Acts

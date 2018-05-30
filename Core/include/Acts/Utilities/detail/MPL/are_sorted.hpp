@@ -65,6 +65,6 @@ namespace detail {
     enum { value = (a >= b && are_sorted<false, false, T, b, N...>::value) };
   };
   /// @endcond
-}  // end of namespace detail
+}  // namespace detail
 /// @endcond
-}  // end of namespace Acts
+}  // namespace Acts

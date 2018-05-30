@@ -106,4 +106,4 @@ LineBounds::halflengthZ() const
   return m_halfZ;
 }
 
-}  // end of namespace
+}  // namespace
