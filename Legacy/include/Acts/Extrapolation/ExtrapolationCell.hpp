@@ -12,13 +12,13 @@
 
 #pragma once
 
-#include "Acts/EventData/ParticleDefinitions.hpp"
-#include "Acts/EventData/TransportJacobian.hpp"
 #include "Acts/Extrapolation/MaterialUpdateMode.hpp"
+#include "Acts/Extrapolation/TransportJacobian.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
+#include "Acts/Utilities/ParticleDefinitions.hpp"
 
 #ifndef ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO
 #define ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO 1

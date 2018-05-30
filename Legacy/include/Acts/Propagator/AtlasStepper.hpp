@@ -56,22 +56,10 @@ public:
     concept::AnyFieldCell<> fieldCache;
 
     // accummulated path length cache
-    double accumulatedPath = 0.;
+    double pathAccumulated = 0.;
 
     // adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
-
-    /// Navigation state: the start surface
-    const Surface* startSurface = nullptr;
-
-    /// Navigation state: the current surface
-    const Surface* currentSurface = nullptr;
-
-    /// Navigation state: the target surface
-    const Surface* targetSurface = nullptr;
-
-    /// Navigation state: trigger the target to be reached
-    bool targetReached = false;
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
@@ -921,10 +909,8 @@ public:
         d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
-      state.accumulatedPath += h;
-      return h;
     }
-    state.accumulatedPath += h;
+    state.pathAccumulated += h;
     return h;
   }
 

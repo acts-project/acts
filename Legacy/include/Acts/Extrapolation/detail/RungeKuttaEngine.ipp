@@ -8,8 +8,8 @@
 
 #include <cmath>
 
-#include "Acts/EventData/TransportJacobian.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/Extrapolation/TransportJacobian.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"

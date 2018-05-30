@@ -302,6 +302,7 @@ public:
 
     /// Lazily initialized state of the field Cache
     bool fieldCacheReady = false;
+
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.

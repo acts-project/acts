@@ -10,7 +10,7 @@
 // TransportJacobian.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/EventData/TransportJacobian.hpp"
+#include "Acts/Extrapolation/TransportJacobian.hpp"
 
 #include <iomanip>
 #include <iostream>
