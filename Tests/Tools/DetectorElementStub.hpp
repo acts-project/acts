@@ -1,6 +1,6 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 ACTS project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,8 +10,7 @@
 // DetectorElementStub.h, ACTS project, Generic Detector plugin
 ///////////////////////////////////////////////////////////////////
 
-#ifndef ACTS_TEST_DetectorElementStub_DetectorElementStub
-#define ACTS_TEST_DetectorElementStub_DetectorElementStub 1
+#pragma once
 
 // Algebra and Identifier
 #include "Acts/Utilities/Definitions.hpp"
@@ -176,5 +175,3 @@ DetectorElementStub::thickness() const
 }
 
 }  // end of ns
-
-#endif
