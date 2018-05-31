@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "ACTS/Digitization/CartesianSegmentation.hpp"
-#include "ACTS/Digitization/DigitizationModule.hpp"
-#include "ACTS/Tools/ISpacePointBuilder.hpp"
-#include "ACTS/Tools/SingleHitSpacePointBuilder.hpp"
-#include "ACTS/Utilities/Units.hpp"
+#include "Acts/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Tools/ISpacePointBuilder.hpp"
+#include "Acts/Tools/SingleHitSpacePointBuilder.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 

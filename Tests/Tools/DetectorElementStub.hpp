@@ -14,12 +14,12 @@
 #define ACTS_TEST_DetectorElementStub_DetectorElementStub 1
 
 // Algebra and Identifier
-#include "ACTS/Utilities/Definitions.hpp"
-#include "ACTS/Utilities/Identifier.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Identifier.hpp"
 // Geometry module
-#include "ACTS/Detector/DetectorElementBase.hpp"
-#include "ACTS/Surfaces/PlanarBounds.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
+#include "Acts/Detector/DetectorElementBase.hpp"
+#include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 
 namespace Acts {
 

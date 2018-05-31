@@ -9,7 +9,7 @@
 #pragma once
 
 #include <vector>
-#include "ACTS/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 
 namespace Acts {
 

@@ -10,12 +10,12 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "ACTS/Tools/DoubleHitSpacePointBuilder.hpp"
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Tools/DoubleHitSpacePointBuilder.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
-#include "ACTS/Digitization/PlanarModuleCluster.hpp"
-#include "ACTS/Surfaces/PlaneSurface.hpp"
-#include "ACTS/Surfaces/RectangleBounds.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "DetectorElementStub.hpp"
 
 namespace bdata = boost::unit_test::data;
