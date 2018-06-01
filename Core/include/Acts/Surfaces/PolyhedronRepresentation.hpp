@@ -6,12 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef ACTS_SURFACES_POLYHEDRONREPRESENTATION_H
-#define ACTS_SURFACES_POLYHEDRONREPRESENTATION_H 1
+#pragma once
 
 #include <vector>
 
-#include "ACTS/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -36,4 +35,3 @@ struct PolyhedronRepresentation
 };
 }
 
-#endif

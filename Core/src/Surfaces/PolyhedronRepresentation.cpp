@@ -8,7 +8,7 @@
 
 #include <sstream>
 
-#include "ACTS/Surfaces/PolyhedronRepresentation.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
 std::string
 Acts::PolyhedronRepresentation::objString(size_t vtxOffset) const

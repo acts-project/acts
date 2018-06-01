@@ -20,7 +20,7 @@
 namespace Acts {
 
 class DetectorElementBase;
-class PolyhedronRepresentation;
+struct PolyhedronRepresentation;
 
 ///  @class StrawSurface
 ///

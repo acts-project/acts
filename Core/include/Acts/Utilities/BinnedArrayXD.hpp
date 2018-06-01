@@ -148,8 +148,8 @@ public:
   }
 
   // satisfy overload / override
-  virtual T
-  object(const Vector2D& lposition) const
+  T
+  object(const Vector2D& lposition) const override
   {
     std::array<size_t, 3> bins;
     return object(lposition, bins);
@@ -176,8 +176,8 @@ public:
   }
 
   // satisfy overload / override
-  virtual T
-  object(const Vector3D& position) const
+  T
+  object(const Vector3D& position) const override
   {
     std::array<size_t, 3> bins;
     return object(position, bins);
@@ -207,7 +207,7 @@ public:
   ///
   /// @return a vector of unique objects
   std::vector<T>
-  objectCluster(const std::array<size_t, 3>& binTriple) const
+  objectCluster(const std::array<size_t, 3>& binTriple) const override
   {
     // prepare the return vector
     std::vector<T> rvector;
