@@ -20,7 +20,7 @@ namespace Seeding{
                                    std::vector<std::shared_ptr<SPForSeed >>& topSpVec,
                                    std::vector<float>& invHelixRadiusVec,
                                    std::vector<float>& impactParametersVec,
-                                   float zOrigin){
+                                   float zOrigin) const {
   
     std::vector<std::pair<float, std::shared_ptr<InternalSeed> > > selectedSeeds;
   
@@ -72,7 +72,7 @@ namespace Seeding{
 
   // after creating all seeds with a common middle space point, filter again
   std::vector<std::shared_ptr<InternalSeed> >
-  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM){
+  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM) const {
 
     //sort by quality and iterate only up to configured max number of seeds per middle SP
     std::sort(seedsPerSpM.begin(),seedsPerSpM.end(),comQuality());
@@ -96,7 +96,7 @@ namespace Seeding{
 
 
   std::vector<std::shared_ptr<Seed> >
-  SeedFilter::filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& regionSeeds){
+  SeedFilter::filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& regionSeeds) const {
 
     std::vector<std::shared_ptr<Seed> > outputSeeds;
     for(auto s : regionSeeds){

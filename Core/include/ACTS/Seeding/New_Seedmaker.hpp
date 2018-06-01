@@ -24,51 +24,46 @@ namespace Acts {
       ///////////////////////////////////////////////////////////////////
       
     public:
-    
-      New_Seedmaker () = default;
+      New_Seedmaker(const Acts::Seeding::Config& config);
       ~New_Seedmaker() = default;
 
       ///////////////////////////////////////////////////////////////////
       // Methods to initialize tool for new event or region
       ///////////////////////////////////////////////////////////////////
       std::shared_ptr<Acts::Seeding::Cache>
-      initialize(std::shared_ptr<Acts::Seeding::Config> config);
+      initialize() const ;
 
       void
       newEvent
        (std::vector<const Acts::concept::AnySpacePoint<>*> spVec,
-        std::shared_ptr<Acts::Seeding::Cache> cache,
-        std::shared_ptr<Acts::Seeding::Config> config);
+        std::shared_ptr<Acts::Seeding::Cache> cache) const ;
 
       
       std::vector<std::shared_ptr<Seed> > 
-      production3Sp (std::shared_ptr<Acts::Seeding::Cache> cache,
-                     std::shared_ptr<Acts::Seeding::Config> config);
+      production3Sp (std::shared_ptr<Acts::Seeding::Cache> cache) const ;
 
       
-    protected:
+    private:
               /**    @name Disallow default instantiation, copy, assignment */
-  //@{
-  New_Seedmaker(const New_Seedmaker&) = delete;
-  New_Seedmaker &operator=(const New_Seedmaker&) = delete;
-  //@}
+      //@{
+      New_Seedmaker()                                = delete;
+      New_Seedmaker(const New_Seedmaker&)            = delete;
+      New_Seedmaker &operator=(const New_Seedmaker&) = delete;
+      //@}
 
-      ///////////////////////////////////////////////////////////////////
-      // Protected methods
-      ///////////////////////////////////////////////////////////////////
-
-
+      // Private methods
       std::vector<std::shared_ptr<Seed> > 
       production3Sp (std::vector<std::shared_ptr<SPForSeed > > currentBin,
                           std::set<size_t > bottomBins,
                           std::set<size_t > topBins,
-                          std::shared_ptr<Acts::Seeding::Cache> cache,
-                          std::shared_ptr<Acts::Seeding::Config> config)   ;
+                          std::shared_ptr<Acts::Seeding::Cache> cache) const ;
 
       void transformCoordinates (std::vector<std::shared_ptr<SPForSeed> >& vec,
                                  std::shared_ptr<SPForSeed> spM,
                                  bool bottom,
-                                 std::vector<LinCircle>& linCircle);
+                                 std::vector<LinCircle>& linCircle) const ;
+
+      Acts::Seeding::Config m_config;
    };
 
   } // end of Seeding namespace

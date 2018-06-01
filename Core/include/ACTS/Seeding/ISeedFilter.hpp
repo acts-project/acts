@@ -22,15 +22,15 @@ namespace Seeding {
                          std::vector<std::shared_ptr<SPForSeed> >& topSpVec,
                          std::vector<float>& invHelixRadiusVec,
                          std::vector<float>& impactParametersVec,
-                         float zOrigin) = 0;
+                         float zOrigin) const = 0;
 
     virtual
     std::vector<std::shared_ptr<InternalSeed> > 
-    filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM) = 0;
+    filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM) const = 0;
 
     virtual 
     std::vector<std::shared_ptr<Seed> >
-    filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& seedsPerRegion) = 0;
+    filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& seedsPerRegion) const = 0;
     
   };
 }

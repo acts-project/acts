@@ -12,10 +12,10 @@ namespace Acts{
         // BinFinder must return std::vector<Acts::Seeding::Bin> with content of 
         // each bin sorted in r (ascending)
         // TODO: move helper tools to own struct
-        std::unique_ptr<IBinFinder> bottomBinFinder;
-        std::unique_ptr<IBinFinder> topBinFinder;
-        std::unique_ptr<ISeedFilter> seedFilter;
-        std::unique_ptr<ICovarianceTool> covarianceTool;
+        std::shared_ptr<IBinFinder> bottomBinFinder;
+        std::shared_ptr<IBinFinder> topBinFinder;
+        std::shared_ptr<ISeedFilter> seedFilter;
+        std::shared_ptr<ICovarianceTool> covarianceTool;
 
 // Seed Cuts
         // lower cutoff for seeds in MeV

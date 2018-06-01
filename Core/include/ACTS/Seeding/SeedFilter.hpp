@@ -37,15 +37,15 @@ namespace Seeding{
                          std::vector<std::shared_ptr<SPForSeed>>& topSpVec,
                          std::vector<float>& invHelixRadiusVec,
                          std::vector<float>& impactParametersVec,
-                         float zOrigin) override;
+                         float zOrigin) const override;
 
     virtual
     std::vector<std::shared_ptr<InternalSeed> >
-    filterSeeds_1SpFixed(std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >& seedsPerSpM) override;
+    filterSeeds_1SpFixed(std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >& seedsPerSpM) const override;
 
     virtual
     std::vector<std::shared_ptr<Seed> >
-    filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& seedsPerRegion) override;
+    filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& seedsPerRegion) const override;
 
     private:
     const SeedFilterConfig m_cfg;

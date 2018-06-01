@@ -15,7 +15,7 @@ public:
 
    virtual
    std::set<size_t>
-   findBins(int phiBin, int zBin, std::unique_ptr<SPGrid>& binnedSP);
+   findBins(size_t phiBin, size_t zBin, std::unique_ptr<SPGrid>& binnedSP);
 
 };
 }
