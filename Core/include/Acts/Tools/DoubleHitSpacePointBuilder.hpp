@@ -50,7 +50,8 @@ struct DoubleHitSpacePointConfig
 ///
 /// After the particle interaction with surfaces are recorded and digitized
 /// the hits strip detectors need further treatment. This class takes
-/// the digitized clusters and combines them on two different detector elements to a
+/// the digitized clusters and combines them on two different detector elements
+/// to a
 /// result of the combined detector element. The class is intended to handle
 /// strip detector elements in particular.
 ///
@@ -64,27 +65,30 @@ public:
   /// Default constructor
   SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>() = delete;
 
-  /// @brief This function is intended to use a single cluster for the formation of
+  /// @brief This function is intended to use a single cluster for the formation
+  /// of
   /// a space point. Since this is not needed for this class this function is
   /// deleted.
   static void
   addClusters(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
-          const std::vector<PlanarModuleCluster const*>& hits)
+              const std::vector<PlanarModuleCluster const*>& hits)
       = delete;
 
-  /// @brief Searches possible combinations of two clusters on different surfaces
+  /// @brief Searches possible combinations of two clusters on different
+  /// surfaces
   /// that may come from the same particles
   /// @param spacePointStorage storage of the space points
   /// @param clustersFront vector of clusters on a surface
   /// @param clustersBack vector of clusters on another surface
   /// @param cfg optional configuration to steer the combination process of @p
   /// clustersFront and @p clustersBack
-  /// @note The structure of @p clustersFront and @p clustersBack is meant to be clusters[Independent clusters on a single surface]
+  /// @note The structure of @p clustersFront and @p clustersBack is meant to be
+  /// clusters[Independent clusters on a single surface]
   static void
-  addClusters(std::vector<DoubleHitSpacePoint>&                spacePointStorage,
-          const std::vector<PlanarModuleCluster const*>&   clustersFront,
-          const std::vector<PlanarModuleCluster const*>&   clustersBack,
-          const std::shared_ptr<DoubleHitSpacePointConfig> cfg = nullptr);
+  addClusters(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
+              const std::vector<PlanarModuleCluster const*>& clustersFront,
+              const std::vector<PlanarModuleCluster const*>& clustersBack,
+              const std::shared_ptr<DoubleHitSpacePointConfig> cfg = nullptr);
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
@@ -158,8 +162,8 @@ private:
   /// @return the squared sum in case of success, otherwise -1
   static double
   differenceOfClusters(const Vector3D&                                  pos1,
-                   const Vector3D&                                  pos2,
-                   const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
+                       const Vector3D&                                  pos2,
+                       const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit

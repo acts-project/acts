@@ -91,11 +91,11 @@ namespace Test {
     std::cout << "Hit created" << std::endl;
 
     std::vector<SingleHitSpacePoint> data;
-    SPB::addHits<SingleHitSpacePoint>(data, {pmc});
+    SPB::addClusters<SingleHitSpacePoint>(data, {pmc});
 
     // Test for adding a SingleHitSpacePoint
     BOOST_TEST(data.size() == 1, "Failed to add element");
-    BOOST_TEST(*(data[0].hitModule) == *pmc, "Wrong element added");
+    BOOST_TEST(*(data[0].clusterModule) == *pmc, "Wrong element added");
 
     std::cout << "Hit added to storage" << std::endl;
 

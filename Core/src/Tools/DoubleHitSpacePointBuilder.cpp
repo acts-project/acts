@@ -17,9 +17,10 @@
 double
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
-    differenceOfClusters(const Acts::Vector3D& pos1,
-                     const Acts::Vector3D& pos2,
-                     const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
+    differenceOfClusters(
+        const Acts::Vector3D&                                  pos1,
+        const Acts::Vector3D&                                  pos2,
+        const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > cfg->diffDist) return -1.;
@@ -46,10 +47,11 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
-    addClusters(std::vector<Acts::DoubleHitSpacePoint>&                spacePoints,
-            const std::vector<Acts::PlanarModuleCluster const*>&   clustersFront,
-            const std::vector<Acts::PlanarModuleCluster const*>&   clustersBack,
-            const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
+    addClusters(
+        std::vector<Acts::DoubleHitSpacePoint>&                spacePoints,
+        const std::vector<Acts::PlanarModuleCluster const*>&   clustersFront,
+        const std::vector<Acts::PlanarModuleCluster const*>&   clustersBack,
+        const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   // Return if no clusters are given in a vector
   if (clustersFront.empty() || clustersBack.empty()) return;
@@ -64,9 +66,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
         Acts::DoubleHitSpacePointConfig());
 
   // Declare helper variables
-  double         currentDiff;
-  double         diffMin;
-  unsigned int   clusterMinDist;
+  double       currentDiff;
+  double       diffMin;
+  unsigned int clusterMinDist;
 
   // Walk through all clusters on both surfaces
   for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size();
@@ -79,10 +81,12 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
          iClustersBack++) {
       // Calculate the distances between the hits
       currentDiff
-          = differenceOfClusters(globalCoords(*(clustersFront[iClustersFront])), globalCoords(*(clustersBack[iClustersBack])), dhCfg);
+          = differenceOfClusters(globalCoords(*(clustersFront[iClustersFront])),
+                                 globalCoords(*(clustersBack[iClustersBack])),
+                                 dhCfg);
       // Store the closest clusters (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
-        diffMin    = currentDiff;
+        diffMin        = currentDiff;
         clusterMinDist = iClustersBack;
       }
     }
@@ -299,7 +303,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     /// multiple k of the vector from vertex to the hit on the first strip x.
     /// As a consequence of this demand y = k * x needs to be on the
     /// connecting line between the top (c) and bottom (d) end of
-    /// the second strip. If both clusters correspond to each other, the condition
+    /// the second strip. If both clusters correspond to each other, the
+    /// condition
     /// 	y * (c X d) = k * x (c X d) = 0 ("X" represents a cross product)
     /// needs to be fulfilled. Inserting the first equation into this
     /// equation leads to the condition for m as given in the following

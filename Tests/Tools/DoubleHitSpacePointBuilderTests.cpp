@@ -129,12 +129,12 @@ namespace Test {
     ;
 
     // Combine two PlanarModuleClusters
-    SPB::addHits<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(
+    SPB::addClusters<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(
         data, {pmc}, {pmc2}, dhsp_cfg);
 
     BOOST_TEST(data.size() == 1, "Failed to add element");
-    BOOST_TEST(*(data[0].hitModuleFront[0]) == *pmc, "Failed to set hit");
-    BOOST_TEST(*(data[0].hitModuleBack[0]) == *pmc2, "Failed to set hit");
+    BOOST_TEST(*(data[0].clusterFront) == *pmc, "Failed to set hit");
+    BOOST_TEST(*(data[0].clusterBack) == *pmc2, "Failed to set hit");
 
     std::cout << "Calculate space point" << std::endl;
 
@@ -168,7 +168,7 @@ namespace Test {
     std::cout << "Try to store hits" << std::endl;
 
     // Combine points
-    SPB::addHits<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(
+    SPB::addClusters<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(
         data, {pmc}, {pmc3}, dhsp_cfg);
 
     // Test for rejecting unconnected hits

@@ -10,38 +10,38 @@
 
 Acts::Vector2D
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::localCoords(
-    const Acts::PlanarModuleCluster& hit)
+    const Acts::PlanarModuleCluster& cluster)
 {
   // Local position information
-  auto           par = hit.parameters();
+  auto           par = cluster.parameters();
   Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
   return local;
 }
 
 Acts::Vector3D
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::globalCoords(
-    const Acts::PlanarModuleCluster& hit)
+    const Acts::PlanarModuleCluster& cluster)
 {
   // Receive corresponding surface
-  auto& clusterSurface = hit.referenceSurface();
+  auto& clusterSurface = cluster.referenceSurface();
 
   // Transform local into global position information
   Acts::Vector3D pos, mom;
-  clusterSurface.localToGlobal(localCoords(hit), mom, pos);
+  clusterSurface.localToGlobal(localCoords(cluster), mom, pos);
 
   return pos;
 }
 
 void
-Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::addHits(
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::addClusters(
     std::vector<Acts::SingleHitSpacePoint>&              spacePointStorage,
-    const std::vector<Acts::PlanarModuleCluster const*>& hits)
+    const std::vector<Acts::PlanarModuleCluster const*>& clusters)
 {
   // Walk over every hit and add them
-  for (auto& cluster : hits) {
+  for (auto& cluster : clusters) {
     // Declare helper variable
     Acts::SingleHitSpacePoint tmpSpacePoint;
-    tmpSpacePoint.hitModule = cluster;
+    tmpSpacePoint.clusterModule = cluster;
     spacePointStorage.push_back(tmpSpacePoint);
   }
 }
@@ -53,6 +53,6 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::calculateSpacePoints(
   // Set the space point for all stored hits
   for (auto& sPoint : spacePointStorage) {
     if (sPoint.spacePoint != Acts::Vector3D::Zero(3)) continue;
-    sPoint.spacePoint = globalCoords(*(sPoint.hitModule));
+    sPoint.spacePoint = globalCoords(*(sPoint.clusterModule));
   }
 }
