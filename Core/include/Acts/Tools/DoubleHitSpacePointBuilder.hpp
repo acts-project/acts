@@ -16,13 +16,13 @@
 
 namespace Acts {
 
-/// @brief Structure for easier bookkeeping of hits.
+/// @brief Structure for easier bookkeeping of clusters.
 struct DoubleHitSpacePoint
 {
   /// Storage of the hit cluster on a surface
-  std::vector<PlanarModuleCluster const*> hitModuleFront;
+  PlanarModuleCluster const* clusterFront;
   /// Storage of the hit cluster on another surface
-  std::vector<PlanarModuleCluster const*> hitModuleBack;
+  PlanarModuleCluster const* clusterBack;
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
 };
@@ -30,11 +30,11 @@ struct DoubleHitSpacePoint
 /// @brief Configuration of the class to steer its behaviour
 struct DoubleHitSpacePointConfig
 {
-  /// Accepted difference in eta for two hits
+  /// Accepted difference in eta for two clusters
   double diffTheta2 = 1.;
-  /// Accepted difference in phi for two hits
+  /// Accepted difference in phi for two clusters
   double diffPhi2 = 1.;
-  /// Accepted distance between two hits
+  /// Accepted distance between two clusters
   double diffDist = 100. * units::_mm;
   /// Allowed increase of strip length
   double stripLengthTolerance = 0.01;
@@ -44,17 +44,13 @@ struct DoubleHitSpacePointConfig
   Vector3D vertex = {0., 0., 0.};
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
-  /// Cluster the hits on the front side strip module
-  bool clusterFrontHits = true;
-  /// Cluster the hits on the back side strip module
-  bool clusterBackHits = true;
 };
 
 /// @class TwoHitsSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
 /// the hits strip detectors need further treatment. This class takes
-/// the digitized hits and combines them on two different detector elements to a
+/// the digitized clusters and combines them on two different detector elements to a
 /// result of the combined detector element. The class is intended to handle
 /// strip detector elements in particular.
 ///
@@ -68,30 +64,29 @@ public:
   /// Default constructor
   SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>() = delete;
 
-  /// @brief This function is intended to use a single hit for the formation of
+  /// @brief This function is intended to use a single cluster for the formation of
   /// a space point. Since this is not needed for this class this function is
   /// deleted.
   static void
-  addHits(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
+  addClusters(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
           const std::vector<PlanarModuleCluster const*>& hits)
       = delete;
 
-  /// @brief Searches possible combinations of two hits on different surfaces
+  /// @brief Searches possible combinations of two clusters on different surfaces
   /// that may come from the same particles
   /// @param spacePointStorage storage of the space points
-  /// @param hits1 vector of hits on a surface
-  /// @param hits2 vector of hits on another surface
+  /// @param clustersFront vector of clusters on a surface
+  /// @param clustersBack vector of clusters on another surface
   /// @param cfg optional configuration to steer the combination process of @p
-  /// hits1 and @p hits2
-  /// @note The structure of @p hits is meant to be hits[Surfaces][Hits on a
-  /// surface]
+  /// clustersFront and @p clustersBack
+  /// @note The structure of @p clustersFront and @p clustersBack is meant to be clusters[Independent clusters on a single surface]
   static void
-  addHits(std::vector<DoubleHitSpacePoint>&                spacePointStorage,
-          const std::vector<PlanarModuleCluster const*>&   hits1,
-          const std::vector<PlanarModuleCluster const*>&   hits2,
+  addClusters(std::vector<DoubleHitSpacePoint>&                spacePointStorage,
+          const std::vector<PlanarModuleCluster const*>&   clustersFront,
+          const std::vector<PlanarModuleCluster const*>&   clustersBack,
           const std::shared_ptr<DoubleHitSpacePointConfig> cfg = nullptr);
 
-  /// @brief Calculates the space points out of a given collection of hits
+  /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
   /// @param spacePointStorage storage of the data
   /// @param cfg optional configuration to steer the calculation of the space
@@ -155,61 +150,23 @@ private:
     }
   };
 
-  /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two hits
-  /// @param pos1 the first hit
-  /// @param pos2 the second hit
+  /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
+  /// @param pos1 position of the first cluster
+  /// @param pos2 position the second cluster
   /// @param cfg optional configuration to steer the combination process of @p
-  /// hit1 and @p hit2
+  /// pos1 and @p pos2
   /// @return the squared sum in case of success, otherwise -1
   static double
-  differenceOfHits(const Vector3D&                                  pos1,
+  differenceOfClusters(const Vector3D&                                  pos1,
                    const Vector3D&                                  pos2,
                    const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
 
-  static std::vector<BinningData>
-  binningData(PlanarModuleCluster const* hit);
-
-  /// @brief Calculates the bin of a hit
-  /// @param hit recorded hit
-  /// @return channel 0 and 1 of the hit
-  static std::pair<size_t, size_t>
-  binOfHit(PlanarModuleCluster const* hit);
-
-  /// @brief Create a sparse matrix of hits based on the bin numbers as look up
-  /// @param hits list of hits
-  /// @return matrix with hits
-  /// @note If the hits are given from more than one surface the matrix will be
-  /// empty. This prevents false listing since it is based on bin indices.
-  static std::vector<std::vector<PlanarModuleCluster const*>>
-  sortHits(const std::vector<PlanarModuleCluster const*>& hits);
-
-  /// @brief Build cluster of hits on neighboring bins
-  /// @param hits collection of hits on a single surface
-  /// @param peformClustering configuration that steers if a clustering should
-  /// be performed
-  /// @return collection of found clusters
-  static const std::vector<std::vector<PlanarModuleCluster const*>>
-  clusterSpacePoints(const std::vector<PlanarModuleCluster const*>& hits,
-                     bool performClustering);
-
-  /// @brief Calculate the mean of the coordinates of multiple hits
-  /// @param cluster cluster of neighbouring hits
-  /// @return vector with the combined coordinates
-  static const Vector3D
-  clusterPoint(std::vector<PlanarModuleCluster const*> cluster);
-
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
-  /// @param hit object that stores the information about the hit
+  /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
   static std::pair<Vector3D, Vector3D>
-  endsOfStrip(const PlanarModuleCluster& hit);
-
-  /// @brief Calculates the combined ends of two SDEs
-  /// @param cluster cluster of hits on two SDEs
-  /// @return mean of the ends of cluster of SDEs
-  static std::pair<Vector3D, Vector3D>
-  endsOfCluster(std::vector<PlanarModuleCluster const*> cluster);
+  endsOfStrip(const PlanarModuleCluster& cluster);
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data

@@ -17,14 +17,14 @@
 double
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
-    differenceOfHits(const Acts::Vector3D& pos1,
+    differenceOfClusters(const Acts::Vector3D& pos1,
                      const Acts::Vector3D& pos2,
                      const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > cfg->diffDist) return -1.;
 
-  // Calculate the angles of the hits
+  // Calculate the angles of the vectors
   double phi1, theta1, phi2, theta2;
   phi1   = (pos1 - cfg->vertex).phi();
   theta1 = (pos1 - cfg->vertex).theta();
@@ -39,203 +39,20 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
   double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
   if (diffPhi2 > cfg->diffPhi2) return -1.;
 
-  // Return the squared distance between both hits
+  // Return the squared distance between both vector
   return diffTheta2 + diffPhi2;
-}
-
-std::vector<Acts::BinningData>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::
-    binningData(Acts::PlanarModuleCluster const* hit)
-{
-  // Receive the binning
-  auto& sur     = hit->referenceSurface();
-  auto  segment = dynamic_cast<const Acts::CartesianSegmentation*>(
-      &(sur.associatedDetectorElement()->digitizationModule()->segmentation()));
-  return segment->binUtility().binningData();
-}
-
-std::pair<size_t, size_t>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::
-    binOfHit(Acts::PlanarModuleCluster const* hit)
-{
-  // Calculate the local coordinates of the hit
-  const Acts::Vector2D local = localCoords(*hit);
-
-  auto binData = binningData(hit);
-
-  // Search the x-/y-bin hit
-  size_t binX = binData[0].searchLocal(local);
-  size_t binY = binData[1].searchLocal(local);
-
-  return std::make_pair(binX, binY);
-}
-
-std::vector<std::vector<Acts::PlanarModuleCluster const*>>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::
-    sortHits(const std::vector<Acts::PlanarModuleCluster const*>& hits)
-{
-
-  auto* surface = &(hits[0]->referenceSurface());
-
-  // Create a matrix of hits out of the collection of hits
-  std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins;
-
-  // Resize the matrix
-  auto binData = binningData(hits[0]);
-
-  bins.resize(binData[0].bins());
-  for (unsigned int index = 0; index < bins.size(); index++)
-    bins[index].resize(binData[1].bins());
-
-  // Fill the hits in the matrix
-  for (unsigned int iHits = 0; iHits < hits.size(); iHits++) {
-    // Check if all hits are from the same surface. This is necessary for
-    // clustering based on bin numbers.
-    if (&(hits[iHits]->referenceSurface()) != surface) {
-      // Return empty matrix if multiple surfaces were given
-      bins.clear();
-      return bins;
-    }
-    std::pair<size_t, size_t> bin = binOfHit(hits[iHits]);
-    bins[bin.first][bin.second] = hits[iHits];
-  }
-
-  return std::move(bins);
-}
-
-const std::vector<std::vector<Acts::PlanarModuleCluster const*>>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::
-    clusterSpacePoints(
-        const std::vector<Acts::PlanarModuleCluster const*>& hits,
-        bool                                                 performClustering)
-{
-  /// This function is a slow and stable sorting algorithm to cluster a
-  /// collection of hits on the detector module. The idea is a combination of
-  /// two hits in neighbouring strips. This follows the assumption that a
-  /// particle can hit at most two strips.
-  /// Since the hits can be provided in an arbitrary order, this function starts
-  /// with the creation of a matrix of hits. This allows an easy look up
-  /// afterwards by checking if a hit has also a hit on the previous bin. If
-  /// this is the case both hits will be stored.
-
-  std::vector<std::vector<Acts::PlanarModuleCluster const*>> clusters;
-
-  // Easy exit if a single hit is provided
-  if (hits.size() == 1) {
-    clusters.push_back({hits[0]});
-    return clusters;
-  }
-
-  if (performClustering) {
-    // Create a matrix of hits out of the collection of hits
-    std::vector<std::vector<Acts::PlanarModuleCluster const*>> bins
-        = sortHits(hits);
-
-    // Empty matrix means that hits were from different surfaces and therefore
-    // cannot be combined
-    if (bins.empty()) return clusters;
-
-    std::vector<Acts::PlanarModuleCluster const*> cluster;
-
-    // Check the orientation of a strip module = check which dimension has more
-    // bins
-    if (bins.size() > bins[0].size()) {
-      // Walk through all bins
-      for (unsigned int iY = 0; iY < bins[0].size(); iY++) {
-        for (unsigned int iX = 0; iX < bins.size(); iX++) {
-          // Store the first hit
-          if (bins[iX][iY] && cluster.empty()) {
-            cluster.push_back(bins[iX][iY]);
-            continue;
-          }
-          if (!cluster.empty()) {
-            // Fill vector with neighbouring hits
-            if (bins[iX][iY])
-              cluster.push_back(bins[iX][iY]);
-            else {
-              // If no further hit exists the vector gets stored and cleared
-              clusters.push_back(cluster);
-              cluster.clear();
-            }
-          }
-        }
-        // If hits remain unstored at the end of the loop ...
-        if (!cluster.empty()) {
-          // ... store the hits in the first cluster if the geometry is closed
-          if (binningData(hits[0])[0].option == closed && !clusters.empty()
-              && clusters[0][0] == bins[0][iY])
-            clusters[0].insert(
-                clusters[0].begin(), cluster.begin(), cluster.end());
-          // ... store the current vector
-          clusters.push_back(cluster);
-        }
-      }
-    } else
-      // Perform the same computation as before with exchanged dimensions
-      for (unsigned int iX = 0; iX < bins.size(); iX++) {
-        for (unsigned int iY = 0; iY < bins[0].size(); iY++) {
-          // Store the first hit
-          if (bins[iX][iY] && cluster.empty()) {
-            cluster.push_back(bins[iX][iY]);
-            continue;
-          }
-          if (!cluster.empty()) {
-            // Fill vector with neighbouring hits
-            if (bins[iX][iY])
-              cluster.push_back(bins[iX][iY]);
-            else {
-              // If no further hit exists the vector gets stored and cleared
-              clusters.push_back(cluster);
-              cluster.clear();
-            }
-          }
-        }
-        // If hits remain unstored at the end of the loop ...
-        if (!cluster.empty()) {
-          // ... store the hits in the first cluster if the geometry is closed
-          if (binningData(hits[0])[0].option == closed && !clusters.empty()
-              && clusters[0][0] == bins[iX][0])
-            clusters[0].insert(
-                clusters[0].begin(), cluster.begin(), cluster.end());
-          // ... store the current vector
-          clusters.push_back(cluster);
-        }
-      }
-  } else
-    // No clustering means that every hit is its own cluster
-    for (auto& hit : hits) clusters.push_back({hit});
-
-  return std::move(clusters);
-}
-
-const Acts::Vector3D
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::
-    clusterPoint(std::vector<Acts::PlanarModuleCluster const*> cluster)
-{
-  // Get the hit coordinates
-  Acts::Vector3D pos = globalCoords(*(cluster[0]));
-
-  for (unsigned int iCluster = 1; iCluster < cluster.size(); iCluster++)
-    pos += globalCoords(*(cluster[iCluster]));
-
-  return pos / cluster.size();
 }
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
-    addHits(std::vector<Acts::DoubleHitSpacePoint>&                spacePoints,
-            const std::vector<Acts::PlanarModuleCluster const*>&   hitsFront,
-            const std::vector<Acts::PlanarModuleCluster const*>&   hitsBack,
+    addClusters(std::vector<Acts::DoubleHitSpacePoint>&                spacePoints,
+            const std::vector<Acts::PlanarModuleCluster const*>&   clustersFront,
+            const std::vector<Acts::PlanarModuleCluster const*>&   clustersBack,
             const std::shared_ptr<Acts::DoubleHitSpacePointConfig> cfg)
 {
-  // Return if no hits are given in a vector
-  if (hitsFront.empty() || hitsBack.empty()) return;
+  // Return if no clusters are given in a vector
+  if (clustersFront.empty() || clustersBack.empty()) return;
 
   // Test if config exists
   std::shared_ptr<Acts::DoubleHitSpacePointConfig> dhCfg;
@@ -246,45 +63,35 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
     dhCfg = std::make_shared<Acts::DoubleHitSpacePointConfig>(
         Acts::DoubleHitSpacePointConfig());
 
-  // Cluster hits and exit if no clusters are given
-  auto clustersFront = clusterSpacePoints(hitsFront, dhCfg->clusterFrontHits);
-  if (clustersFront.empty()) return;
-  auto clustersBack = clusterSpacePoints(hitsBack, dhCfg->clusterBackHits);
-  if (clustersBack.empty()) return;
-
   // Declare helper variables
   double         currentDiff;
   double         diffMin;
-  unsigned int   clusterMin;
-  Acts::Vector3D clusterPointFront;
-  Acts::Vector3D clusterPointBack;
+  unsigned int   clusterMinDist;
 
-  // Walk through all hits on both surfaces
+  // Walk through all clusters on both surfaces
   for (unsigned int iClustersFront = 0; iClustersFront < clustersFront.size();
        iClustersFront++) {
-    clusterPointFront = clusterPoint(clustersFront[iClustersFront]);
     // Set the closest distance to the maximum of double
     diffMin = std::numeric_limits<double>::max();
-    // Set the corresponding index to an element not in the list of hits
-    clusterMin = clustersBack.size();
+    // Set the corresponding index to an element not in the list of clusters
+    clusterMinDist = clustersBack.size();
     for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
          iClustersBack++) {
-      clusterPointBack = clusterPoint(clustersBack[iClustersBack]);
       // Calculate the distances between the hits
       currentDiff
-          = differenceOfHits(clusterPointFront, clusterPointBack, dhCfg);
-      // Store the closest hits (distance and index) calculated so far
+          = differenceOfClusters(globalCoords(*(clustersFront[iClustersFront])), globalCoords(*(clustersBack[iClustersBack])), dhCfg);
+      // Store the closest clusters (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin    = currentDiff;
-        clusterMin = iClustersBack;
+        clusterMinDist = iClustersBack;
       }
     }
 
     // Store the best (=closest) result
-    if (clusterMin < clustersBack.size()) {
+    if (clusterMinDist < clustersBack.size()) {
       Acts::DoubleHitSpacePoint tmpSpacePoint;
-      tmpSpacePoint.hitModuleFront = clustersFront[iClustersFront];
-      tmpSpacePoint.hitModuleBack  = clustersBack[clusterMin];
+      tmpSpacePoint.clusterFront = clustersFront[iClustersFront];
+      tmpSpacePoint.clusterBack  = clustersBack[clusterMinDist];
       spacePoints.push_back(tmpSpacePoint);
     }
   }
@@ -293,20 +100,20 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 std::pair<Acts::Vector3D, Acts::Vector3D>
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                         Acts::DoubleHitSpacePointConfig>::
-    endsOfStrip(const Acts::PlanarModuleCluster& hit)
+    endsOfStrip(const Acts::PlanarModuleCluster& cluster)
 {
-  // Calculate the local coordinates of the hit
-  const Acts::Vector2D local = localCoords(hit);
+  // Calculate the local coordinates of the cluster
+  const Acts::Vector2D local = localCoords(cluster);
 
   // Receive the binning
-  auto& sur     = hit.referenceSurface();
+  auto& sur     = cluster.referenceSurface();
   auto  segment = dynamic_cast<const Acts::CartesianSegmentation*>(
       &(sur.associatedDetectorElement()->digitizationModule()->segmentation()));
   auto& binData     = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
 
-  // Search the x-/y-bin hit
+  // Search the x-/y-bin of the cluster
   size_t binX = binData[0].searchLocal(local);
   size_t binY = binData[1].searchLocal(local);
 
@@ -334,26 +141,6 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
 
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
-}
-
-std::pair<Acts::Vector3D, Acts::Vector3D>
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
-                        Acts::DoubleHitSpacePointConfig>::
-    endsOfCluster(std::vector<Acts::PlanarModuleCluster const*> cluster)
-{
-  // Get the end of the strip(s)
-  auto ends1 = endsOfStrip(*(cluster[0]));
-
-  for (unsigned int iCluster = 1; iCluster < cluster.size(); iCluster++) {
-    auto ends2 = endsOfStrip(*(cluster[iCluster]));
-    ends1.first += ends2.first;
-    ends1.second += ends2.second;
-  }
-
-  ends1.first /= cluster.size();
-  ends1.second /= cluster.size();
-
-  return ends1;
 }
 
 double
@@ -491,28 +278,28 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
       spaPoPa;
 
   // Walk over every found candidate pair
-  for (auto& hits : spacePointStorage) {
+  for (auto& sp : spacePointStorage) {
 
     // If the space point is already calculated this can be skipped
-    if (hits.spacePoint != Acts::Vector3D::Zero(3)) continue;
+    if (sp.spacePoint != Acts::Vector3D::Zero(3)) continue;
 
     // Calculate the ends of the SDEs
-    const auto& ends1 = endsOfCluster(hits.hitModuleFront);
-    const auto& ends2 = endsOfCluster(hits.hitModuleBack);
+    const auto& ends1 = endsOfStrip(*(sp.clusterFront));
+    const auto& ends2 = endsOfStrip(*(sp.clusterBack));
 
     /// The following algorithm is meant for finding the position on the first
-    /// strip if there is a corresponding hit on the second strip. The
+    /// strip if there is a corresponding cluster on the second strip. The
     /// resulting point is a point x on the first surfaces. This point is
     /// along a line between the points a (top end of the strip)
     /// and b (bottom end of the strip). The location can be parametrized as
     /// 	2 * x = (1 + m) a + (1 - m) b
     /// as function of the scalar m. m is a parameter in the interval
     /// -1 < m < 1 since the hit was on the strip. Furthermore, the vector
-    /// from the vertex to the hit on the second strip y is needed to be a
+    /// from the vertex to the cluster on the second strip y is needed to be a
     /// multiple k of the vector from vertex to the hit on the first strip x.
     /// As a consequence of this demand y = k * x needs to be on the
     /// connecting line between the top (c) and bottom (d) end of
-    /// the second strip. If both hits correspond to each other, the condition
+    /// the second strip. If both clusters correspond to each other, the condition
     /// 	y * (c X d) = k * x (c X d) = 0 ("X" represents a cross product)
     /// needs to be fulfilled. Inserting the first equation into this
     /// equation leads to the condition for m as given in the following
@@ -530,7 +317,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
         && (resultPerpProj
             = calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r)
                 <= 0.)) {
-      hits.spacePoint = ends1.first + resultPerpProj * spaPoPa.q;
+      sp.spacePoint = ends1.first + resultPerpProj * spaPoPa.q;
       continue;
     }
 
@@ -550,7 +337,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
                 = -spaPoPa.t.dot(spaPoPa.qs) / spaPoPa.r.dot(spaPoPa.qs))
             <= spaPoPa.limit)
       // Store the space point
-      hits.spacePoint
+      sp.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
     else
         /// If this point is reached then it was not possible to resolve both
@@ -561,7 +348,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint,
         /// position.
         // Check if a recovery the point(s) and store them if successful
         if (recoverSpacePoint(spaPoPa, dhCfg))
-      hits.spacePoint
+      sp.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
   }
 }
