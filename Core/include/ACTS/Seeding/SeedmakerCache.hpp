@@ -9,7 +9,6 @@
 #include <memory>
 
 namespace Acts{
-  namespace Seeding{
      
     struct LinCircle{
       float Zo;
@@ -21,7 +20,7 @@ namespace Acts{
     };
 
     struct Cache {
-      std::unique_ptr<Acts::Seeding::SPGrid> binnedSP;
+      std::unique_ptr<Acts::SPGrid> binnedSP;
       std::vector<InternalSeed> seeds;
 
 
@@ -36,6 +35,5 @@ namespace Acts{
 
 
     };
-  }
 }
 #endif //SeedmakerCache_hpp

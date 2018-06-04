@@ -3,7 +3,6 @@
 
 
 namespace Acts{
-  namespace Seeding{
       // forward declaration to avoid cyclic dependence
       class IBinFinder;
       class ISeedFilter;
@@ -70,7 +69,6 @@ namespace Acts{
         // used for measurement (+alignment) uncertainties.
         float sigmaError = 5;
       };
-  } //namespace Seeding
 } //namespace Acts
 
 #endif //SeedmakerConfig

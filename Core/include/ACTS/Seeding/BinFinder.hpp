@@ -6,7 +6,6 @@
 #include <set>
 
 namespace Acts {
-namespace Seeding {
 class BinFinder : public IBinFinder
 {
 public:
@@ -18,6 +17,5 @@ public:
    findBins(size_t phiBin, size_t zBin, std::unique_ptr<SPGrid>& binnedSP);
 
 };
-}
 }
 #endif //BOTTOMBINFINDER_H

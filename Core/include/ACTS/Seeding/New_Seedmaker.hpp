@@ -16,7 +16,6 @@
 #include "ACTS/Seeding/SpacePointConcept.hpp"
 
 namespace Acts {
-  namespace Seeding{
   class New_Seedmaker 
     {
       ///////////////////////////////////////////////////////////////////
@@ -24,23 +23,23 @@ namespace Acts {
       ///////////////////////////////////////////////////////////////////
       
     public:
-      New_Seedmaker(const Acts::Seeding::Config& config);
+      New_Seedmaker(const Acts::Config& config);
       ~New_Seedmaker() = default;
 
       ///////////////////////////////////////////////////////////////////
       // Methods to initialize tool for new event or region
       ///////////////////////////////////////////////////////////////////
-      std::shared_ptr<Acts::Seeding::Cache>
+      std::shared_ptr<Acts::Cache>
       initialize() const ;
 
       void
       newEvent
        (std::vector<const Acts::concept::AnySpacePoint<>*> spVec,
-        std::shared_ptr<Acts::Seeding::Cache> cache) const ;
+        std::shared_ptr<Acts::Cache> cache) const ;
 
       
       std::vector<std::shared_ptr<Seed> > 
-      production3Sp (std::shared_ptr<Acts::Seeding::Cache> cache) const ;
+      production3Sp (std::shared_ptr<Acts::Cache> cache) const ;
 
       
     private:
@@ -56,17 +55,16 @@ namespace Acts {
       production3Sp (std::vector<std::shared_ptr<SPForSeed > > currentBin,
                           std::set<size_t > bottomBins,
                           std::set<size_t > topBins,
-                          std::shared_ptr<Acts::Seeding::Cache> cache) const ;
+                          std::shared_ptr<Acts::Cache> cache) const ;
 
       void transformCoordinates (std::vector<std::shared_ptr<SPForSeed> >& vec,
                                  std::shared_ptr<SPForSeed> spM,
                                  bool bottom,
                                  std::vector<LinCircle>& linCircle) const ;
 
-      Acts::Seeding::Config m_config;
+      Acts::Config m_config;
    };
 
-  } // end of Seeding namespace
 } // end of Acts namespace
 
 ///////////////////////////////////////////////////////////////////
@@ -77,8 +75,8 @@ class comCurvature  {
 public:
   
   bool operator ()
-  (const std::pair<float,Acts::Seeding::SPForSeed*>& i1, 
-   const std::pair<float,Acts::Seeding::SPForSeed*>& i2)
+  (const std::pair<float,Acts::SPForSeed*>& i1, 
+   const std::pair<float,Acts::SPForSeed*>& i2)
   {
     return i1.first < i2.first;
   }

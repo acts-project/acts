@@ -49,7 +49,7 @@ int main(){
   std::vector<const Acts::concept::AnySpacePoint<>*> spVec = readFile("sp.txt");
   std::cout << "size of read SP: " <<spVec.size() << std::endl;
 
-  Acts::Seeding::Config config;
+  Acts::Config config;
 // silicon detector max
   config.rMax = 600.;
   config.deltaRMin = 5.;
@@ -65,14 +65,14 @@ int main(){
   config.minPt = 400.;
 
 //  this is wrong on so many levels
-  config.bottomBinFinder = std::make_unique<Acts::Seeding::BinFinder>(Acts::Seeding::BinFinder());
-  config.topBinFinder = std::make_unique<Acts::Seeding::BinFinder>(Acts::Seeding::BinFinder());
-  Acts::Seeding::SeedFilterConfig sfconf;
-  auto qTool = std::make_shared<Acts::Seeding::QualityTool>(Acts::Seeding::QualityTool());
-  config.seedFilter = std::make_unique<Acts::Seeding::SeedFilter>(Acts::Seeding::SeedFilter(sfconf,qTool));
-  config.covarianceTool = std::make_unique<Acts::Seeding::CovarianceTool>(Acts::Seeding::CovarianceTool());
-  Acts::Seeding::New_Seedmaker a(config);
-  std::shared_ptr<Acts::Seeding::Cache> cache = a.initialize();
+  config.bottomBinFinder = std::make_unique<Acts::BinFinder>(Acts::BinFinder());
+  config.topBinFinder = std::make_unique<Acts::BinFinder>(Acts::BinFinder());
+  Acts::SeedFilterConfig sfconf;
+  auto qTool = std::make_shared<Acts::QualityTool>(Acts::QualityTool());
+  config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf,qTool));
+  config.covarianceTool = std::make_unique<Acts::CovarianceTool>(Acts::CovarianceTool());
+  Acts::New_Seedmaker a(config);
+  std::shared_ptr<Acts::Cache> cache = a.initialize();
   a.newEvent(spVec,cache);
   auto outputSeeds = a.production3Sp(cache);
   for(int i = 0; i < outputSeeds.size(); i++){

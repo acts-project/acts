@@ -9,17 +9,16 @@
 
 
 namespace Acts{
-namespace Seeding{
 
-New_Seedmaker::New_Seedmaker(const Acts::Seeding::Config& config): m_config(config){
+New_Seedmaker::New_Seedmaker(const Acts::Config& config): m_config(config){
 
 }
 
-std::shared_ptr<Acts::Seeding::Cache>
+std::shared_ptr<Acts::Cache>
 New_Seedmaker::initialize() const
 {
   
-  auto cache = std::make_shared<Acts::Seeding::Cache>();
+  auto cache = std::make_shared<Acts::Cache>();
   // back-of-the-envelope calculation of scattering, leaving out the insignificant term
   // of the highland formula
   // convert pT to p once theta angle is known
@@ -36,11 +35,20 @@ New_Seedmaker::initialize() const
 void 
 New_Seedmaker::newEvent
 ( std::vector<const Acts::concept::AnySpacePoint<>*> spVec, 
-  std::shared_ptr<Acts::Seeding::Cache> cache) const
+  std::shared_ptr<Acts::Cache> cache) const
 {
 // TODO: clear everything!
   cache->seeds.clear();
-  std::unique_ptr<SPGrid> grid = SPGridCreator::createGrid(m_config);
+
+  SeedingGridConfig gridConf;
+  gridConf.bFieldInZ = m_config.bFieldInZ;
+  gridConf.minPt = m_config.minPt;
+  gridConf.rMax = m_config.rMax;
+  gridConf.zMax = m_config.zMax;
+  gridConf.zMin = m_config.zMin;
+  gridConf.deltaRMax = m_config.deltaRMax;
+  gridConf.cotThetaMax = m_config.cotThetaMax;
+  std::unique_ptr<SPGrid> grid = SPGridCreator::createGrid(gridConf);
   float phiMin = m_config.minPhi;
   float phiMax = m_config.maxPhi;
   float zMin = m_config.zMin;
@@ -64,7 +72,7 @@ New_Seedmaker::newEvent
 
 std::vector<std::shared_ptr<Seed> > 
 New_Seedmaker::production3Sp
-( std::shared_ptr<Acts::Seeding::Cache> cache) const
+( std::shared_ptr<Acts::Cache> cache) const
 {
   std::vector<std::shared_ptr<Seed> > outputSeeds;
   // TODO: create neighborHoodIndices in BinFinder so it can be replaced by smarter neighbor choice
@@ -89,7 +97,7 @@ New_Seedmaker::production3Sp
 ( std::vector<std::shared_ptr<SPForSeed > > currentBin,
   std::set<size_t > bottomBinIndices,
   std::set<size_t > topBinIndices,
-  std::shared_ptr<Acts::Seeding::Cache> cache) const
+  std::shared_ptr<Acts::Cache> cache) const
 {
   std::vector<std::shared_ptr<SPForSeed> > compatBottomSP, compatTopSP;
   std::vector<std::shared_ptr<InternalSeed> > regionSeeds;
@@ -298,5 +306,4 @@ void New_Seedmaker::transformCoordinates
     linCircleVec.push_back(l);
   }
 }
-} // Seeding namespace
 } // Acts namespace

@@ -8,7 +8,6 @@
 
 //TODO: still unchanged from ATLAS
 namespace Acts {
-namespace Seeding {
   class InternalSeed {
     
     /////////////////////////////////////////////////////////////////////////////////
@@ -102,7 +101,6 @@ namespace Seeding {
       m_s2  = s2;
     }
 
-} // end of Seeding namespace
 } // end of Acts namespace
 
 #endif  // InternalSeed_h

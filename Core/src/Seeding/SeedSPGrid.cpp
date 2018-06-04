@@ -4,7 +4,7 @@
 #include "ACTS/Utilities/detail/Axis.hpp"
 
 
-std::unique_ptr<Acts::Seeding::SPGrid> Acts::Seeding::SPGridCreator::createGrid(const Acts::Seeding::Config& config)
+std::unique_ptr<Acts::SPGrid> Acts::SPGridCreator::createGrid(const Acts::SeedingGridConfig& config)
 {
   //calculate circle intersections of helix and max detector radius
   float minHelixRadius = config.minPt/(300.*config.bFieldInZ); // in mm
@@ -30,7 +30,7 @@ std::unique_ptr<Acts::Seeding::SPGrid> Acts::Seeding::SPGridCreator::createGrid(
   int zBins = std::ceil((config.zMax - config.zMin)/zBinSize);
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound> zAxis(config.zMin, config.zMax, zBins);
 
-  Acts::Seeding::SPGrid grid(std::make_tuple(phiAxis, zAxis));
-  return std::make_unique<Acts::Seeding::SPGrid>(grid);
+  Acts::SPGrid grid(std::make_tuple(phiAxis, zAxis));
+  return std::make_unique<Acts::SPGrid>(grid);
 }
 

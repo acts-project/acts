@@ -2,7 +2,6 @@
 #include <utility>
 
 namespace Acts{
-namespace Seeding{
   //constructor
   SeedFilter::SeedFilter(SeedFilterConfig config,
                          std::shared_ptr<IQualityTool> qualityTool)
@@ -108,5 +107,4 @@ namespace Seeding{
     }
     return outputSeeds;
   }
-}//namespace Seeding
 }//namespace Acts

@@ -5,7 +5,6 @@
 #include "ACTS/Seeding/SpacePointConcept.hpp" 
 
 namespace Acts {
-namespace Seeding{
   
   class Seed {
     
@@ -89,5 +88,4 @@ namespace Seeding{
   
   Seed::~Seed(){
   }
-} // end of Seeding namespace
 } // end of Acts namespace

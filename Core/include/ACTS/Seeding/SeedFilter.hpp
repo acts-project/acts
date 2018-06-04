@@ -5,7 +5,6 @@
 #include "ACTS/Seeding/IQualityTool.hpp"
 
 namespace Acts{
-namespace Seeding{
   struct SeedFilterConfig{
     // the allowed delta between two seed radii for them to be considered compatible.
     float deltaInvHelixRadius = 0.00003;
@@ -52,7 +51,6 @@ namespace Seeding{
     const std::shared_ptr<IQualityTool> m_qualityTool;
   };
 }
-}
 
 
 // quality comparator, returns true if first value is larger than second value
@@ -61,8 +59,8 @@ class comQuality  {
 public:
   
   bool operator ()
-  (const std::pair<float,std::shared_ptr<Acts::Seeding::InternalSeed>>& i1,
-   const std::pair<float,std::shared_ptr<Acts::Seeding::InternalSeed>>& i2)
+  (const std::pair<float,std::shared_ptr<Acts::InternalSeed>>& i1,
+   const std::pair<float,std::shared_ptr<Acts::InternalSeed>>& i2)
   {
     return i1.first > i2.first;
   }

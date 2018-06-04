@@ -8,7 +8,6 @@
 #include "ACTS/Seeding/SeedmakerCache.hpp"
 
 namespace Acts {
-namespace Seeding {
   class ISeedFilter{
     public: 
     virtual
@@ -33,6 +32,5 @@ namespace Seeding {
     filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& seedsPerRegion) const = 0;
     
   };
-}
 }
 #endif  // ISeedFilter_h

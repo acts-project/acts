@@ -5,7 +5,6 @@
 
 
 namespace Acts {
-namespace Seeding{
 class IBinFinder
 {
 public:
@@ -18,7 +17,6 @@ public:
     findBins(size_t phiBin,size_t zBin, std::unique_ptr<SPGrid>& binnedSP) =0;
 
 };
-}
 }
 #endif //IBINFINDER_H
 

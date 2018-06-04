@@ -7,7 +7,6 @@
 #include "ACTS/Seeding/SpacePointConcept.hpp" 
 
 namespace Acts {
-namespace Seeding{
   class SPForSeed {
     
     /////////////////////////////////////////////////////////////////////////////////
@@ -85,5 +84,4 @@ namespace Seeding{
       *this = sp;
     }
 
-} // end of namespace Seeding
 } // end of namespace Acts
