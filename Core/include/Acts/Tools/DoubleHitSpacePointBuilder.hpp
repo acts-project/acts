@@ -27,49 +27,48 @@ struct DoubleHitSpacePoint
   Vector3D spacePoint = {0., 0., 0.};
 };
 
-/// @brief Configuration of the class to steer its behaviour
-struct DoubleHitSpacePointConfig
-{
-  /// Accepted difference in eta for two clusters
-  double diffTheta2 = 1.;
-  /// Accepted difference in phi for two clusters
-  double diffPhi2 = 1.;
-  /// Accepted distance between two clusters
-  double diffDist = 100. * units::_mm;
-  /// Allowed increase of strip length
-  double stripLengthTolerance = 0.01;
-  /// Allowed increase of strip length wrt gaps between strips
-  double stripLengthGapTolerance = 0.01;
-  /// Assumed position of the vertex
-  Vector3D vertex = {0., 0., 0.};
-  /// Perform the perpendicular projection for space point finding
-  bool usePerpProj = false;
-};
-
 /// @class TwoHitsSpacePointBuilder
 ///
 /// After the particle interaction with surfaces are recorded and digitized
 /// the hits strip detectors need further treatment. This class takes
 /// the digitized clusters and combines them on two different detector elements
-/// to a
-/// result of the combined detector element. The class is intended to handle
-/// strip detector elements in particular.
+/// to a result of the combined detector element. The class is intended to
+/// handle strip detector elements in particular.
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE
 ///
 template <>
-class SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>
-    : public SpacePointBuilder<SingleHitSpacePoint, void>
+class SpacePointBuilder<DoubleHitSpacePoint>
+    : public SpacePointBuilder<SingleHitSpacePoint>
 {
 public:
-  /// Default constructor
-  SpacePointBuilder<DoubleHitSpacePoint, DoubleHitSpacePointConfig>() = delete;
+  /// @brief Configuration of the class to steer its behaviour
+  struct DoubleHitSpacePointConfig
+  {
+    /// Accepted difference in eta for two clusters
+    double diffTheta2 = 1.;
+    /// Accepted difference in phi for two clusters
+    double diffPhi2 = 1.;
+    /// Accepted distance between two clusters
+    double diffDist = 100. * units::_mm;
+    /// Allowed increase of strip length
+    double stripLengthTolerance = 0.01;
+    /// Allowed increase of strip length wrt gaps between strips
+    double stripLengthGapTolerance = 0.01;
+    /// Assumed position of the vertex
+    Vector3D vertex = {0., 0., 0.};
+    /// Perform the perpendicular projection for space point finding
+    bool usePerpProj = false;
+  };
+
+  /// Constructor
+  /// @param cfg Specific config that will be used instead of the default values
+  SpacePointBuilder(DoubleHitSpacePointConfig cfg);
 
   /// @brief This function is intended to use a single cluster for the formation
-  /// of
-  /// a space point. Since this is not needed for this class this function is
+  /// of a space point. Since this is not needed for this class this function is
   /// deleted.
-  static void
+  void
   addClusters(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
               const std::vector<PlanarModuleCluster const*>& hits)
       = delete;
@@ -80,28 +79,24 @@ public:
   /// @param spacePointStorage storage of the space points
   /// @param clustersFront vector of clusters on a surface
   /// @param clustersBack vector of clusters on another surface
-  /// @param cfg optional configuration to steer the combination process of @p
-  /// clustersFront and @p clustersBack
   /// @note The structure of @p clustersFront and @p clustersBack is meant to be
   /// clusters[Independent clusters on a single surface]
-  static void
+  void
   addClusters(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
               const std::vector<PlanarModuleCluster const*>& clustersFront,
-              const std::vector<PlanarModuleCluster const*>& clustersBack,
-              const std::shared_ptr<DoubleHitSpacePointConfig> cfg = nullptr);
+              const std::vector<PlanarModuleCluster const*>& clustersBack);
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
   /// @param spacePointStorage storage of the data
-  /// @param cfg optional configuration to steer the calculation of the space
-  /// points
   /// @note If no configuration is set, the default values will be used
-  static void
-  calculateSpacePoints(std::vector<DoubleHitSpacePoint>& spacePoints,
-                       const std::shared_ptr<DoubleHitSpacePointConfig> cfg
-                       = nullptr);
+  void
+  calculateSpacePoints(std::vector<DoubleHitSpacePoint>& spacePoints);
 
 private:
+  /// Config
+  DoubleHitSpacePointConfig m_cfg;
+
   /// @brief Storage container for variables related to the calculation of space
   /// points
   struct SpacePointParameters
@@ -157,19 +152,15 @@ private:
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
   /// @param pos1 position of the first cluster
   /// @param pos2 position the second cluster
-  /// @param cfg optional configuration to steer the combination process of @p
-  /// pos1 and @p pos2
   /// @return the squared sum in case of success, otherwise -1
-  static double
-  differenceOfClusters(const Vector3D&                                  pos1,
-                       const Vector3D&                                  pos2,
-                       const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
+  double
+  differenceOfClusters(const Vector3D& pos1, const Vector3D& pos2);
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
   /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
-  static std::pair<Vector3D, Vector3D>
+  std::pair<Vector3D, Vector3D>
   endsOfStrip(const PlanarModuleCluster& cluster);
 
   /// @brief Calculates a space point whithout using the vertex
@@ -182,7 +173,7 @@ private:
   /// 1. if it failed
   /// @note The meaning of the parameter is explained in more detail in the
   /// function body
-  static double
+  double
   calcPerpProj(const Vector3D& a,
                const Vector3D& c,
                const Vector3D& q,
@@ -193,11 +184,9 @@ private:
   /// allows shifts of the vertex.
   /// @param spaPoPa container that stores geometric parameters and rules of the
   /// space point formation
-  /// @param cfg optional configuration to steer the recovery of space points
   /// @return indicator if the test was successful
-  static bool
-  recoverSpacePoint(SpacePointParameters&                            spaPoPa,
-                    const std::shared_ptr<DoubleHitSpacePointConfig> cfg);
+  bool
+  recoverSpacePoint(SpacePointParameters& spaPoPa);
 };
 
 }  // namespace Acts

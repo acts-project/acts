@@ -8,8 +8,12 @@
 
 #include "Acts/Tools/SingleHitSpacePointBuilder.hpp"
 
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::SpacePointBuilder()
+{
+}
+
 Acts::Vector2D
-Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::localCoords(
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::localCoords(
     const Acts::PlanarModuleCluster& cluster)
 {
   // Local position information
@@ -19,7 +23,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::localCoords(
 }
 
 Acts::Vector3D
-Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::globalCoords(
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::globalCoords(
     const Acts::PlanarModuleCluster& cluster)
 {
   // Receive corresponding surface
@@ -33,7 +37,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::globalCoords(
 }
 
 void
-Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::addClusters(
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::addClusters(
     std::vector<Acts::SingleHitSpacePoint>&              spacePointStorage,
     const std::vector<Acts::PlanarModuleCluster const*>& clusters)
 {
@@ -47,7 +51,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::addClusters(
 }
 
 void
-Acts::SpacePointBuilder<Acts::SingleHitSpacePoint, void>::calculateSpacePoints(
+Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::calculateSpacePoints(
     std::vector<Acts::SingleHitSpacePoint>& spacePointStorage)
 {
   // Set the space point for all stored hits

@@ -90,8 +90,9 @@ namespace Test {
 
     std::cout << "Hit created" << std::endl;
 
-    std::vector<SingleHitSpacePoint> data;
-    SPB::addClusters<SingleHitSpacePoint>(data, {pmc});
+    std::vector<SingleHitSpacePoint>       data;
+    SpacePointBuilder<SingleHitSpacePoint> shsp;
+    shsp.addClusters(data, {pmc});
 
     // Test for adding a SingleHitSpacePoint
     BOOST_TEST(data.size() == 1, "Failed to add element");
@@ -99,7 +100,7 @@ namespace Test {
 
     std::cout << "Hit added to storage" << std::endl;
 
-    SPB::calculateSpacePoints<SingleHitSpacePoint>(data);
+    shsp.calculateSpacePoints(data);
     BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3),
                "Failed to calculate space point");
 

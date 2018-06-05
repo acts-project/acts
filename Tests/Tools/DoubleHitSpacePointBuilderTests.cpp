@@ -122,15 +122,12 @@ namespace Test {
 
     std::cout << "Store both hits" << std::endl;
 
-    std::vector<DoubleHitSpacePoint>           data;
-    std::shared_ptr<DoubleHitSpacePointConfig> dhsp_cfg
-        = std::make_shared<DoubleHitSpacePointConfig>(
-            DoubleHitSpacePointConfig());
-    ;
+    std::vector<DoubleHitSpacePoint>                                  data;
+    SpacePointBuilder<DoubleHitSpacePoint>::DoubleHitSpacePointConfig dhsp_cfg;
 
     // Combine two PlanarModuleClusters
-    SPB::addClusters<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(
-        data, {pmc}, {pmc2}, dhsp_cfg);
+    SpacePointBuilder<DoubleHitSpacePoint> dhsp(dhsp_cfg);
+    dhsp.addClusters(data, {pmc}, {pmc2});
 
     BOOST_TEST(data.size() == 1, "Failed to add element");
     BOOST_TEST(*(data[0].clusterFront) == *pmc, "Failed to set hit");
@@ -138,8 +135,7 @@ namespace Test {
 
     std::cout << "Calculate space point" << std::endl;
 
-    SPB::calculateSpacePoints<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(
-        data, dhsp_cfg);
+    dhsp.calculateSpacePoints(data);
 
     BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3),
                "Failed to calculate space point");
@@ -168,8 +164,7 @@ namespace Test {
     std::cout << "Try to store hits" << std::endl;
 
     // Combine points
-    SPB::addClusters<DoubleHitSpacePoint, DoubleHitSpacePointConfig>(
-        data, {pmc}, {pmc3}, dhsp_cfg);
+    dhsp.addClusters(data, {pmc}, {pmc3});
 
     // Test for rejecting unconnected hits
     BOOST_TEST(data.size() == 1, "Failed to reject potential combination");

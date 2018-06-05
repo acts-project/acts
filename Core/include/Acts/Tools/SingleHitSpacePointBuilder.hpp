@@ -31,45 +31,25 @@ struct SingleHitSpacePoint
 /// corresponding space point.
 ///
 template <>
-class SpacePointBuilder<SingleHitSpacePoint, void>
+class SpacePointBuilder<SingleHitSpacePoint>
 {
 public:
   /// Default constructor
-  SpacePointBuilder<SingleHitSpacePoint, void>() = delete;
+  SpacePointBuilder<SingleHitSpacePoint>();
 
   /// @brief Adds clusters on surfaces and stores them
   /// @param spacePointStorage storage of clusters and the therewith resulting
-  /// space
-  /// points
+  /// space points
   /// @param clusters vector of clusters on the surface
-  static void
+  void
   addClusters(std::vector<SingleHitSpacePoint>& spacePointStorage,
               const std::vector<Acts::PlanarModuleCluster const*>& clusters);
 
-  /// @brief This function is intended to use clusters on multiple surfaces that
-  /// need to be combined in order to calculate a resulting space point. Since
-  /// this is not needed for this class this function is deleted.
-  static void
-  addClusters(std::vector<SingleHitSpacePoint>& spacePointStorage,
-              const std::vector<Acts::PlanarModuleCluster const*>& clusters1,
-              const std::vector<Acts::PlanarModuleCluster const*>& clusters2,
-              const std::shared_ptr<void>                          cfg)
-      = delete;
-
   /// @brief Calculates the space points out of a given collection of clusters
-  /// and
-  /// stores the results
+  /// and stores the results
   /// @param spacePointStorage storage of the data
-  static void
+  void
   calculateSpacePoints(std::vector<SingleHitSpacePoint>& spacePointStorage);
-
-  /// @brief This function is intended to calculate space points out of given
-  /// collection of clusters using a specific configuration. Since this is not
-  /// needed for this class this function is deleted.
-  static void
-  calculateSpacePoints(std::vector<SingleHitSpacePoint>& spacePointStorage,
-                       const std::shared_ptr<void>       cfg)
-      = delete;
 
 protected:
   /// @brief Getter method for the local coordinates of a cluster
@@ -77,14 +57,14 @@ protected:
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
-  static Vector2D
+  Vector2D
   localCoords(const PlanarModuleCluster& cluster);
 
   /// @brief Getter method for the global coordinates of a cluster
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
-  static Vector3D
+  Vector3D
   globalCoords(const PlanarModuleCluster& cluster);
 };
 
