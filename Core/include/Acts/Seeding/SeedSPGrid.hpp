@@ -1,9 +1,8 @@
-#ifndef SEEDSPGRIDCREATOR_H
-#define SEEDSPGRIDCREATOR_H
+#pragma once
 
-#include "ACTS/Utilities/detail/Grid.hpp"
-#include "ACTS/Seeding/SPForSeed.hpp"
-#include "ACTS/Seeding/SeedmakerConfig.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Seeding/SPForSeed.hpp"
 #include <memory>
 
 
@@ -37,4 +36,3 @@ static std::unique_ptr<SPGrid> createGrid(const Acts::SeedingGridConfig& cfg);
 
 };
 }
-#endif //SEEDSPGRIDCREATOR_H

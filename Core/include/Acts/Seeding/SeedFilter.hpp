@@ -1,8 +1,8 @@
 #pragma once
 
-#include "ACTS/Seeding/InternalSeed.hpp"
-#include "ACTS/Seeding/ISeedFilter.hpp"
-#include "ACTS/Seeding/IQualityTool.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/ISeedFilter.hpp"
+#include "Acts/Seeding/IQualityTool.hpp"
 
 namespace Acts{
   struct SeedFilterConfig{

@@ -2,7 +2,7 @@
 
 #include <list>
 
-#include "ACTS/Seeding/SpacePointConcept.hpp" 
+#include "Acts/Seeding/SpacePointConcept.hpp" 
 
 namespace Acts {
   

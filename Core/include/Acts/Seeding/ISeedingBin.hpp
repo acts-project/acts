@@ -1,10 +1,8 @@
-#ifndef ISEEDINGBIN_H
-#define ISEEDINGBIN_H
+#pragma once
 
-#include "ACTS/Seeding/ISeedingBin.hpp"
+#include "Acts/Seeding/ISeedingBin.hpp"
 
 namespace Acts {
-namespace Seeding {
 class ISeedingBin
 {
 public:
@@ -15,5 +13,3 @@ public:
 
 };
 }
-}
-#endif //ISEEDINGBIN_H

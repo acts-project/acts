@@ -4,14 +4,13 @@
 /// @class ICovarianceTool
 /// Interface Class that returns covariance on SPForSeed locations in r and z
 
-#include "ACTS/Seeding/ICovarianceTool.hpp"
+#include "Acts/Seeding/ICovarianceTool.hpp"
 #include "SpacePoint.hpp"
 
 #include <boost/type_erasure/any_cast.hpp>
 
 
 namespace Acts {
-namespace Seeding{
 class CovarianceTool : public ICovarianceTool
 {
 public:
@@ -45,5 +44,4 @@ public:
       cov[1] = ((boost::type_erasure::any_cast<SpacePoint>(*sp)).covz + zAlign*zAlign) * sigma;
       return cov;
     }
-}
 }

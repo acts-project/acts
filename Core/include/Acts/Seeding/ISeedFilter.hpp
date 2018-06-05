@@ -1,11 +1,10 @@
-#ifndef ISeedFilter_h
-#define ISeedFilter_h
+#pragma once
 
 #include <vector>
 #include <memory>
 
-#include "ACTS/Seeding/InternalSeed.hpp"
-#include "ACTS/Seeding/SeedmakerCache.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/SeedmakerCache.hpp"
 
 namespace Acts {
   class ISeedFilter{
@@ -33,4 +32,3 @@ namespace Acts {
     
   };
 }
-#endif  // ISeedFilter_h

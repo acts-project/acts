@@ -1,7 +1,7 @@
-#include "ACTS/Seeding/New_Seedmaker.hpp"
-#include "ACTS/Seeding/BinFinder.hpp"
-#include "ACTS/Seeding/SeedFilter.hpp"
-#include "ACTS/Seeding/SpacePointConcept.hpp"
+#include "Acts/Seeding/New_Seedmaker.hpp"
+#include "Acts/Seeding/BinFinder.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SpacePointConcept.hpp"
 
 #include "TestQualityTool.hpp"
 #include "TestCovarianceTool.hpp"

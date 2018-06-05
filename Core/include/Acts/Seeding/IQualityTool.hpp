@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ACTS/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
 #include <memory>
 
 namespace Acts{

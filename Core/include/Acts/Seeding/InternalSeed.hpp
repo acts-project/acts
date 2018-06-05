@@ -1,12 +1,10 @@
-#ifndef InternalSeed_h
-#define InternalSeed_h
+#pragma once
 
-#include "ACTS/Seeding/SPForSeed.hpp"
-#include "ACTS/Seeding/Seed.hpp"
+#include "Acts/Seeding/SPForSeed.hpp"
+#include "Acts/Seeding/Seed.hpp"
 
 #include <memory>
 
-//TODO: still unchanged from ATLAS
 namespace Acts {
   class InternalSeed {
     
@@ -26,10 +24,6 @@ namespace Acts {
     std::shared_ptr<SPForSeed> spacepoint1() {return m_s1;}
     std::shared_ptr<SPForSeed> spacepoint2() {return m_s2;}
     float                      z()           {return m_z ;}
-
-    void set(std::shared_ptr<SPForSeed>,std::shared_ptr<SPForSeed>,std::shared_ptr<SPForSeed>,float);
-
-    bool set3(Seed&);
 
   protected:
     
@@ -68,7 +62,10 @@ namespace Acts {
   inline InternalSeed::InternalSeed
     (std::shared_ptr<SPForSeed> s0,std::shared_ptr<SPForSeed> s1,std::shared_ptr<SPForSeed> s2,float z)
     {
-      set(s0,s1,s2,z);
+      m_z   = z ;
+      m_s0  = s0;
+      m_s1  = s1;
+      m_s2  = s2;
     }
 
   /////////////////////////////////////////////////////////////////////////////////
@@ -88,19 +85,5 @@ namespace Acts {
   {
   }
 
-  /////////////////////////////////////////////////////////////////////////////////
-  // Set 
-  /////////////////////////////////////////////////////////////////////////////////
-
-  inline void InternalSeed::set
-    (std::shared_ptr<SPForSeed> s0,std::shared_ptr<SPForSeed> s1,std::shared_ptr<SPForSeed> s2,float z)
-    {
-      m_z   = z ;
-      m_s0  = s0;
-      m_s1  = s1;
-      m_s2  = s2;
-    }
-
 } // end of Acts namespace
 
-#endif  // InternalSeed_h

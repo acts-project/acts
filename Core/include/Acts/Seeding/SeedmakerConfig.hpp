@@ -1,6 +1,4 @@
-#ifndef SeedmakerConfig
-#define SeedmakerConfig
-
+#pragma once
 
 namespace Acts{
       // forward declaration to avoid cyclic dependence
@@ -10,7 +8,6 @@ namespace Acts{
       struct Config {
         // BinFinder must return std::vector<Acts::Seeding::Bin> with content of 
         // each bin sorted in r (ascending)
-        // TODO: move helper tools to own struct
         std::shared_ptr<IBinFinder> bottomBinFinder;
         std::shared_ptr<IBinFinder> topBinFinder;
         std::shared_ptr<ISeedFilter> seedFilter;
@@ -71,4 +68,3 @@ namespace Acts{
       };
 } //namespace Acts
 
-#endif //SeedmakerConfig

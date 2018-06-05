@@ -1,4 +1,4 @@
-#include "ACTS/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
 #include <utility>
 
 namespace Acts{

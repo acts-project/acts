@@ -1,7 +1,6 @@
-#ifndef BINFINDER_H
-#define BINFINDER_H
+#pragma once
 
-#include "ACTS/Seeding/IBinFinder.hpp"
+#include "Acts/Seeding/IBinFinder.hpp"
 
 #include <set>
 
@@ -18,4 +17,3 @@ public:
 
 };
 }
-#endif //BOTTOMBINFINDER_H

@@ -1,13 +1,11 @@
 #pragma once
 
-
 /// @class ICovarianceTool
 /// Interface Class that sets covariance on SPForSeed locations in r and z
 
-#include "ACTS/Seeding/SPForSeed.hpp"
+#include "Acts/Seeding/SPForSeed.hpp"
 
 namespace Acts {
-namespace Seeding{
 class ICovarianceTool
 {
 public:
@@ -25,5 +23,4 @@ public:
     virtual std::array<float,2> getCovariances(const Acts::concept::AnySpacePoint<>* sp, float zAlign = 0, float rAlign = 0, float sigma=1) =0;
 
 };
-}
 }

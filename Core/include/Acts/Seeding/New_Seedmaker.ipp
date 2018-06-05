@@ -1,12 +1,7 @@
 #include <cmath>
-#include "ACTS/Seeding/ICovarianceTool.hpp"
-#include "ACTS/Seeding/IBinFinder.hpp"
-#include "ACTS/Seeding/ISeedFilter.hpp"
-
-
-// TODO: remove all debug output
-#include <iostream>
-
+#include "Acts/Seeding/ICovarianceTool.hpp"
+#include "Acts/Seeding/IBinFinder.hpp"
+#include "Acts/Seeding/ISeedFilter.hpp"
 
 namespace Acts{
 
@@ -25,7 +20,7 @@ New_Seedmaker::initialize() const
   cache->highland =  13.6*sqrt(m_config.radLengthPerSeed)*(1+0.038*log(m_config.radLengthPerSeed));
   float maxScatteringAngle = cache->highland/m_config.minPt;
   cache->maxScatteringAngle2 = maxScatteringAngle*maxScatteringAngle;
-  // helix radius in homogeneous magnetic field. units are Tesla, MeV and millimeter
+  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and millimeter
   // TODO: change using ACTS units
   cache->pTPerHelixRadius = 300.*m_config.bFieldInZ;
   cache->minHelixRadius2 = std::pow(m_config.minPt/cache->pTPerHelixRadius,2);
@@ -37,7 +32,6 @@ New_Seedmaker::newEvent
 ( std::vector<const Acts::concept::AnySpacePoint<>*> spVec, 
   std::shared_ptr<Acts::Cache> cache) const
 {
-// TODO: clear everything!
   cache->seeds.clear();
 
   SeedingGridConfig gridConf;
@@ -48,20 +42,24 @@ New_Seedmaker::newEvent
   gridConf.zMin = m_config.zMin;
   gridConf.deltaRMax = m_config.deltaRMax;
   gridConf.cotThetaMax = m_config.cotThetaMax;
+  // create grid with bin sizes according to the configured geometry
   std::unique_ptr<SPGrid> grid = SPGridCreator::createGrid(gridConf);
+
+  // get region of interest (or full detector if configured accordingly)
   float phiMin = m_config.minPhi;
   float phiMax = m_config.maxPhi;
   float zMin = m_config.zMin;
   float zMax = m_config.zMax;
 
+  // sort by radius
   std::sort(spVec.begin(),spVec.end(),comR());
   for(auto sp : spVec){
+    float spZ = sp->z();
+    if(spZ > zMax || spZ < zMin) continue;
+    float spPhi = std::atan2(sp->y(),sp->x());
+    if(spPhi > phiMax || spPhi < phiMin) continue;
     std::array<float,2> cov = m_config.covarianceTool->getCovariances(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
     SPForSeed sps(sp, m_config.beamPos,cov);
-    float spPhi = sps.phi();
-    if(spPhi > phiMax || spPhi < phiMin) continue;
-    float spZ = sps.z();
-    if(spZ > zMax || spZ < zMin) continue;
     Acts::Vector2D spLocation(spPhi,spZ);
     std::vector<std::shared_ptr<SPForSeed > >& bin = grid->at(spLocation);
     bin.push_back(std::make_shared<SPForSeed>(sps));
@@ -75,7 +73,6 @@ New_Seedmaker::production3Sp
 ( std::shared_ptr<Acts::Cache> cache) const
 {
   std::vector<std::shared_ptr<Seed> > outputSeeds;
-  // TODO: create neighborHoodIndices in BinFinder so it can be replaced by smarter neighbor choice
   auto phiZbins = cache->binnedSP->getNBins();
   for (size_t i =1; i <= phiZbins[0]; ++i){
     for (size_t j =1; j <= phiZbins[1]; ++j){
@@ -183,7 +180,6 @@ New_Seedmaker::production3Sp
       // resolving with pT to p scaling --> only divide by sin^2(theta)
       // max approximation error for allowed scattering angles of 0.04 rad at eta=0: ~8.5%
       float scatteringInRegion2 = cache->maxScatteringAngle2 * iSinTheta2;
-      std::cout << "max scattering angle in this detector region (1 sigma): " << sqrt(scatteringInRegion2) << std::endl;
       // multiply the squared sigma onto the squared scattering
       scatteringInRegion2 *= m_config.sigmaScattering*m_config.sigmaScattering;
 

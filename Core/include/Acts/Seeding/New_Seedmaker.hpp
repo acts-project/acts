@@ -9,11 +9,11 @@
 #include <array>
 #include <memory>
 
-#include "ACTS/Seeding/SPForSeed.hpp"
-#include "ACTS/Seeding/InternalSeed.hpp"
-#include "ACTS/Seeding/SeedmakerConfig.hpp"
-#include "ACTS/Seeding/SeedmakerCache.hpp"
-#include "ACTS/Seeding/SpacePointConcept.hpp"
+#include "Acts/Seeding/SPForSeed.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/SeedmakerConfig.hpp"
+#include "Acts/Seeding/SeedmakerCache.hpp"
+#include "Acts/Seeding/SpacePointConcept.hpp"
 
 namespace Acts {
   class New_Seedmaker 
@@ -82,11 +82,14 @@ public:
   }
 };
 
+// TODO: check if calculating r^2 is expensive
 class comR {
 public:
   
   bool operator()(const Acts::concept::AnySpacePoint<>* i1, const Acts::concept::AnySpacePoint<>* i2){
-    return i1->r() < i2->r();
+    float r1 = i1->x()*i1->x()+i1->y()*i1->y();
+    float r2 = i2->x()*i2->x()+i2->y()*i2->y();
+    return r1 < r2;
   }
 };
-#include "ACTS/Seeding/New_Seedmaker.ipp"
+#include "Acts/Seeding/New_Seedmaker.ipp"

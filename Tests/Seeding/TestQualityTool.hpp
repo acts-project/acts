@@ -1,10 +1,9 @@
 #pragma once
 
-#include "ACTS/Seeding/IQualityTool.hpp"
+#include "Acts/Seeding/IQualityTool.hpp"
 #include <memory>
 
 namespace Acts{
-  namespace Seeding{
     class QualityTool : public IQualityTool{
     public:
       float seedQuality(std::shared_ptr<SPForSeed> bottom, std::shared_ptr<SPForSeed> middle, std::shared_ptr<SPForSeed> top) override;
@@ -16,5 +15,4 @@ namespace Acts{
     inline bool QualityTool::passesQualityCut(float quality, std::shared_ptr<SPForSeed> bottom, std::shared_ptr<SPForSeed> middle, std::shared_ptr<SPForSeed> top){
       return true;
     }
-  }
 }

@@ -1,7 +1,7 @@
 #include <memory>
 
-#include "ACTS/Seeding/SeedSPGrid.hpp"
-#include "ACTS/Utilities/detail/Axis.hpp"
+#include "Acts/Seeding/SeedSPGrid.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 
 
 std::unique_ptr<Acts::SPGrid> Acts::SPGridCreator::createGrid(const Acts::SeedingGridConfig& config)

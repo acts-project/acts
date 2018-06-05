@@ -1,7 +1,6 @@
-#ifndef IBINFINDER_H
-#define IBINFINDER_H
+#pragma once
 
-#include "ACTS/Seeding/SeedSPGrid.hpp"
+#include "Acts/Seeding/SeedSPGrid.hpp"
 
 
 namespace Acts {
@@ -18,5 +17,3 @@ public:
 
 };
 }
-#endif //IBINFINDER_H
-

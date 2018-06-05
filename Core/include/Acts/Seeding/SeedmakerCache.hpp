@@ -1,9 +1,8 @@
-#ifndef SeedmakerCache_hpp
-#define SeedmakerCache_hpp
+#pragma once
 
-#include "ACTS/Seeding/SeedSPGrid.hpp"
-#include "ACTS/Seeding/InternalSeed.hpp"
-#include "ACTS/Seeding/Seed.hpp"
+#include "Acts/Seeding/SeedSPGrid.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/Seed.hpp"
 
 #include <vector>
 #include <memory>
@@ -23,10 +22,8 @@ namespace Acts{
       std::unique_ptr<Acts::SPGrid> binnedSP;
       std::vector<InternalSeed> seeds;
 
-
       std::vector<LinCircle> linCircleBottom;
       std::vector<LinCircle> linCircleTop;
-      std::vector<std::shared_ptr<Seed> > outputSeeds;
 
       float highland;
       float maxScatteringAngle2;
@@ -36,4 +33,3 @@ namespace Acts{
 
     };
 }
-#endif //SeedmakerCache_hpp
