@@ -25,6 +25,22 @@ struct DoubleHitSpacePoint
   PlanarModuleCluster const* clusterBack;
   /// Storage of a space point. Zero vector indicates unset point
   Vector3D spacePoint = {0., 0., 0.};
+
+  double
+  x()
+  {
+    return spacePoint(0);
+  }
+  double
+  y()
+  {
+    return spacePoint(1);
+  }
+  double
+  z()
+  {
+    return spacePoint(2);
+  }
 };
 
 /// @class TwoHitsSpacePointBuilder
