@@ -214,8 +214,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
     double nOvershoot
         = (spaPoPa.n - 1.) * secOnFirstScale;  // Perform projection
     // Resolve worse overshoot
-    double biggerOvershoot
-        = (mOvershoot > nOvershoot) ? mOvershoot : nOvershoot;
+    double biggerOvershoot = std::max(mOvershoot, nOvershoot);
     // Move m and n towards 0
     spaPoPa.m -= biggerOvershoot;
     spaPoPa.n -= (biggerOvershoot / secOnFirstScale);
@@ -229,8 +228,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
     double nOvershoot
         = -(spaPoPa.n + 1.) * secOnFirstScale;  // Perform projection
     // Resolve worse overshoot
-    double biggerOvershoot
-        = (mOvershoot > nOvershoot) ? mOvershoot : nOvershoot;
+    double biggerOvershoot = std::max(mOvershoot, nOvershoot);
     // Move m and n towards 0
     spaPoPa.m += biggerOvershoot;
     spaPoPa.n += (biggerOvershoot / secOnFirstScale);
