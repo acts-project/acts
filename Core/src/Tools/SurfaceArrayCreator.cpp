@@ -219,13 +219,33 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   if (pAxisR.nBins > 1) {
     // more than one R-Ring, we need to adjust
     // this FORCES equidistant binning
-    std::vector<size_t> nPhiModules(pAxisR.nBins);
+    std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfaces) {
       Vector3D bpos = srf->binningPosition(binR);
       size_t   bin  = pAxisR.getBin(bpos.perp());
-      nPhiModules.at(bin)++;
+      phiModules.at(bin).push_back(srf);
     }
 
+    std::vector<size_t> nPhiModules;
+    auto                matcher = m_cfg.surfaceMatcher;
+    auto equal = [&matcher](const Surface* a, const Surface* b) {
+      return matcher(binPhi, a, b);
+    };
+
+    std::transform(
+        phiModules.begin(),
+        phiModules.end(),
+        std::back_inserter(nPhiModules),
+        [&equal, this](std::vector<const Surface*> surfaces_) -> size_t {
+          return this->findKeySurfaces(surfaces_, equal).size();
+        });
+
+    // @FIXME: Problem: phi binning runs rotation to optimize
+    // for bin edges. This FAILS after this modification, since
+    // the bin count is the one from the lowest module-count bin,
+    // but the rotation is done considering all bins.
+    // This might be resolved through bin completion, but not sure.
+    // @TODO: check in extrapolation
     size_t nBinsPhi
         = (*std::min_element(nPhiModules.begin(), nPhiModules.end()));
     pAxisPhi = createEquidistantAxis(
@@ -503,46 +523,52 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
 
   // now check the binning value
   if (bValue == Acts::binPhi) {
-    // Phi binning
-    // set the binning option for phi
-    // sort first in phi
-    const Acts::Surface* maxElem
-        = *std::max_element(surfaces.begin(),
-                            surfaces.end(),
-                            [](const Acts::Surface* a, const Acts::Surface* b) {
-                              return a->binningPosition(binPhi).phi()
-                                  < b->binningPosition(binPhi).phi();
-                            });
 
-    // get the key surfaces at the different phi positions
-    auto equal = [&bValue, &matcher](const Surface* a, const Surface* b) {
-      return matcher(bValue, a, b);
-    };
-    keys = findKeySurfaces(surfaces, equal);
+    if (m_cfg.doPhiBinningOptimization) {
+      // Phi binning
+      // set the binning option for phi
+      // sort first in phi
+      const Acts::Surface* maxElem = *std::max_element(
+          surfaces.begin(),
+          surfaces.end(),
+          [](const Acts::Surface* a, const Acts::Surface* b) {
+            return a->binningPosition(binR).phi()
+                < b->binningPosition(binR).phi();
+          });
 
-    // multiple surfaces, we bin from -pi to pi closed
-    if (keys.size() > 1) {
-      // bOption = Acts::closed;
+      // get the key surfaces at the different phi positions
+      auto equal = [&bValue, &matcher](const Surface* a, const Surface* b) {
+        return matcher(bValue, a, b);
+      };
+      keys = findKeySurfaces(surfaces, equal);
 
+      // multiple surfaces, we bin from -pi to pi closed
+      if (keys.size() > 1) {
+        // bOption = Acts::closed;
+
+        minimum = -M_PI;
+        maximum = M_PI;
+
+        // double step = 2 * M_PI / keys.size();
+        double step = 2 * M_PI / binNumber;
+        // rotate to max phi module plus one half step
+        // this should make sure that phi wrapping at +- pi
+        // never falls on a module center
+        double max   = maxElem->binningPosition(binR).phi();
+        double angle = M_PI - (max + 0.5 * step);
+
+        // replace given transform ref
+        transform = (transform)*AngleAxis3D(angle, Vector3D::UnitZ());
+
+      } else {
+        minimum = protoLayer.minPhi;
+        maximum = protoLayer.maxPhi;
+
+        // we do not need a transform in this case
+      }
+    } else {
       minimum = -M_PI;
       maximum = M_PI;
-
-      // double step = 2 * M_PI / keys.size();
-      double step = 2 * M_PI / binNumber;
-      // rotate to max phi module plus one half step
-      // this should make sure that phi wrapping at +- pi
-      // never falls on a module center
-      double max   = maxElem->binningPosition(binPhi).phi();
-      double angle = M_PI - (max + 0.5 * step);
-
-      // replace given transform ref
-      transform = (transform)*AngleAxis3D(angle, Vector3D::UnitZ());
-
-    } else {
-      minimum = protoLayer.minPhi;
-      maximum = protoLayer.maxPhi;
-
-      // we do not need a transform in this case
     }
 
   } else if (bValue == Acts::binZ) {

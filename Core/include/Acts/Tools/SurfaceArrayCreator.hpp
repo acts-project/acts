@@ -75,7 +75,13 @@ public:
   // Configuration struct
   struct Config
   {
+    /// Type-erased function which determines whether two surfaces are supposed
+    /// to be considered equivalent in terms of the binning
     SurfaceMatcher surfaceMatcher = SurfaceArrayCreator::isSurfaceEquivalent;
+    /// Optimize the binning in phi for disc layers. Reduces the number
+    /// of bins to the lowest number of non-equivalent phi surfaces
+    /// of all r-bins. If false, this step is skipped.
+    bool doPhiBinningOptimization = true;
   };
 
   /// Constructor with default config

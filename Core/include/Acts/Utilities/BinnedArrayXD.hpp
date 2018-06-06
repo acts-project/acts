@@ -134,7 +134,8 @@ public:
   ///
   /// @return is the object in that bin
   T
-  object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final
+  object(const Vector2D& lposition,
+         std::array<size_t, 3>& bins) const override final
   {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
@@ -146,6 +147,14 @@ public:
     return m_objectGrid[0][0][0];
   }
 
+  // satisfy overload / override
+  T
+  object(const Vector2D& lposition) const override
+  {
+    std::array<size_t, 3> bins;
+    return object(lposition, bins);
+  }
+
   /// Returns the object in the array from a global position
   ///
   /// @param position is the global position for the bin search
@@ -153,7 +162,8 @@ public:
   ///
   /// @return is the object in that bin
   T
-  object(const Vector3D& position, std::array<size_t, 3>& bins) const final
+  object(const Vector3D& position,
+         std::array<size_t, 3>& bins) const override final
   {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
@@ -163,6 +173,14 @@ public:
       return m_objectGrid[bins[2]][bins[1]][bins[0]];
     }
     return m_objectGrid[0][0][0];
+  }
+
+  // satisfy overload / override
+  T
+  object(const Vector3D& position) const override
+  {
+    std::array<size_t, 3> bins;
+    return object(position, bins);
   }
 
   /// Return all unqiue object
@@ -189,7 +207,7 @@ public:
   ///
   /// @return a vector of unique objects
   std::vector<T>
-  objectCluster(const std::array<size_t, 3>& binTriple) const
+  objectCluster(const std::array<size_t, 3>& binTriple) const override
   {
     // prepare the return vector
     std::vector<T> rvector;

@@ -412,10 +412,11 @@ private:
 
   /// close the Geometry, i.e. set the TDD_ID
   ///
-  /// @param volumeID is the geometry id of the volume
-  ///        as calculated by the TrackingGeometry
   /// @param volumeMap is a map to find the a volume
   ///        by a given name
+  /// @param vol is the geometry id of the volume
+  ///        as calculated by the TrackingGeometry
+  ///
   void
   closeGeometry(std::map<std::string, const TrackingVolume*>& volumeMap,
                 size_t& vol);

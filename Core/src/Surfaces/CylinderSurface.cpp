@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
 #include <cassert>
 #include <cmath>
@@ -356,4 +357,40 @@ Acts::CylinderSurface::toVariantData() const
   data["type"]    = "CylinderSurface"s;
   data["payload"] = payload;
   return data;
+}
+
+Acts::PolyhedronRepresentation
+Acts::CylinderSurface::polyhedronRepresentation(size_t l0div,
+                                                size_t /*l1div*/) const
+{
+  std::vector<Vector3D>            vertices;
+  std::vector<std::vector<size_t>> faces;
+
+  if (l0div <= 1) {
+    throw std::domain_error(
+        "Polyhedron repr of cylinder with 1 div is undefined");
+  }
+
+  double phistep = 2 * M_PI / l0div;
+  double hlZ     = bounds().halflengthZ();
+  double r       = bounds().r();
+
+  Vector3D left(r, 0, -hlZ);
+  Vector3D right(r, 0, hlZ);
+
+  for (size_t i = 0; i < l0div; i++) {
+    Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
+    vertices.push_back(transform() * rot * left);
+    vertices.push_back(transform() * rot * right);
+  }
+
+  for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {
+
+    faces.push_back({v, v + 1, v + 3, v + 2});
+  }
+  if (l0div > 2) {
+    faces.push_back({vertices.size() - 2, vertices.size() - 1, 1, 0});
+  }
+
+  return PolyhedronRepresentation(vertices, faces);
 }

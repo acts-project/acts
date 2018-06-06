@@ -51,6 +51,18 @@ public:
   const Vector3D
   normal(const Vector2D& /*lpos*/) const final
   {
+    return normal();
+  }
+
+  const Vector3D
+  normal(const Vector3D&) const final
+  {
+    return normal();
+  }
+
+  const Vector3D
+  normal() const
+  {
     return Vector3D{0., 0., 0.};
   }
 

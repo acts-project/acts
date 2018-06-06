@@ -236,7 +236,7 @@ namespace Test {
 
           auto srfA = std::make_unique<const PlaneSurface>(transAptr, bounds);
 
-          Vector3D    nrm    = srfA->normal({0, 0});
+          Vector3D    nrm    = srfA->normal();
           Transform3D transB = trans;
           transB.pretranslate(nrm * 0.1);
           auto transBptr = std::make_shared<const Transform3D>(transB);

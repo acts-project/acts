@@ -6,8 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Layers/ProtoLayer.hpp"
+#include <cmath>
+
 #include <algorithm>
+#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
 namespace Acts {
 
@@ -35,6 +39,9 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
     // check the shape
     const PlanarBounds* pBounds
         = dynamic_cast<const PlanarBounds*>(&(sf->bounds()));
+
+    const CylinderSurface* cylSurface
+        = dynamic_cast<const CylinderSurface*>(sf);
     if (pBounds) {
 
       // get the vertices
@@ -72,8 +79,58 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
           minPhi = std::min(minPhi, p2.phi());
         }
       }
+    } else if (cylSurface) {
+      // this is an explicit cast and if right now.
+      // It should work with all PolyhedronRepresentations
+      // @TODO: Remove the cast and if as soon as ::polyhedronRepresentation()
+      //        makes it into the Surface base class
+      //        The envelopes might need special treatments though
+
+      PolyhedronRepresentation ph = cylSurface->polyhedronRepresentation();
+      // evaluate at all vertices
+      for (const auto& vtx : ph.vertices) {
+        maxX = std::max(maxX, vtx.x());
+        minX = std::min(minX, vtx.x());
+
+        maxY = std::max(maxY, vtx.y());
+        minY = std::min(minY, vtx.y());
+
+        maxZ = std::max(maxZ, vtx.z());
+        minZ = std::min(minZ, vtx.z());
+
+        maxR = std::max(maxR, vtx.perp());
+
+        maxPhi = std::max(maxPhi, vtx.phi());
+        minPhi = std::min(minPhi, vtx.phi());
+      }
+
+      // trace all face connections to possibly catch min-r approach
+      for (const auto& face : ph.faces) {
+        for (size_t i = 0; i < face.size(); i++) {
+          Vector3D p1 = ph.vertices.at(face.at(i));
+          Vector3D p2 = ph.vertices.at(face.at((i + 1) % face.size()));
+          minR        = std::min(minR, radialDistance(p1, p2));
+        }
+      }
+
+      // set envelopes to half radius
+      double cylBoundsR = cylSurface->bounds().r();
+      double env        = cylBoundsR / 2.;
+      envX              = {env, env};
+      envY              = {env, env};
+      envZ              = {env, env};
+      envR              = {env, env};
+
+      // evaluate impact of r shift on phi
+      double cylPosR = cylSurface->center().perp();
+      double dPhi    = std::atan((cylBoundsR + env) / cylPosR)
+          - std::atan(cylBoundsR / cylPosR);
+
+      // use this as phi envelope
+      envPhi = {dPhi, dPhi};
+
     } else {
-      throw std::domain_error("Not implemented yet for Non-planar bounds");
+      throw std::domain_error("Not implemented for this surface type.");
     }
   }
 }
@@ -106,9 +163,12 @@ std::ostream&
 ProtoLayer::dump(std::ostream& sl) const
 {
   sl << "ProtoLayer with dimensions (min/max)" << std::endl;
-  sl << " - r : " << minR << "/" << maxR << std::endl;
-  sl << " - z : " << minZ << "/" << maxZ << std::endl;
-  sl << " - phi : " << minPhi << "/" << maxPhi << std::endl;
+  sl << " - r : " << minR << " - " << envR.first << " / " << maxR << " + "
+     << envR.second << std::endl;
+  sl << " - z : " << minZ << " - " << envZ.first << " / " << maxZ << " + "
+     << envZ.second << std::endl;
+  sl << " - phi : " << minPhi << " - " << envPhi.first << " / " << maxPhi
+     << " + " << envPhi.second << std::endl;
 
   return sl;
 }

@@ -18,6 +18,7 @@
 
 #include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/InstanceFactory.hpp"
@@ -227,6 +228,18 @@ Acts::DiscSurface::normal(const Acts::Vector2D&) const
 }
 
 const Acts::Vector3D
+Acts::DiscSurface::normal(const Acts::Vector3D&) const
+{
+  return normal(s_origin2D);
+}
+
+const Acts::Vector3D
+Acts::DiscSurface::normal() const
+{
+  return normal(s_origin2D);
+}
+
+const Acts::Vector3D
     Acts::DiscSurface::binningPosition(Acts::BinningValue) const
 {
   return center();
@@ -277,4 +290,45 @@ Acts::DiscSurface::toVariantData() const
   data["type"]    = "DiscSurface"s;
   data["payload"] = payload;
   return data;
+}
+
+Acts::PolyhedronRepresentation
+Acts::DiscSurface::polyhedronRepresentation(size_t l0div,
+                                            size_t /*l1div*/) const
+{
+  std::vector<Vector3D>            vertices;
+  std::vector<std::vector<size_t>> faces;
+
+  if (l0div < 3) {
+    throw std::domain_error("Polyhedron repr of disk with <3 div is undefined");
+  }
+
+  auto bounds = std::dynamic_pointer_cast<const RadialBounds>(m_bounds);
+  if (!bounds) {
+    throw std::domain_error(
+        "Polyhedron repr of disk with non RadialBounds currently unsupported");
+  }
+
+  double phistep = 2 * M_PI / l0div;
+  double rMin    = bounds->rMin();
+  double rMax    = bounds->rMax();
+
+  Vector3D inner(rMin, 0, 0);
+  Vector3D outer(rMax, 0, 0);
+
+  for (size_t i = 0; i < l0div; i++) {
+    Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
+    vertices.push_back(transform() * rot * inner);
+    vertices.push_back(transform() * rot * outer);
+  }
+
+  for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {
+
+    faces.push_back({v, v + 1, v + 3, v + 2});
+  }
+  if (l0div > 2) {
+    faces.push_back({vertices.size() - 2, vertices.size() - 1, 1, 0});
+  }
+
+  return PolyhedronRepresentation(vertices, faces);
 }

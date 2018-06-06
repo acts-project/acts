@@ -11,8 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Identifier.hpp"
@@ -136,12 +138,25 @@ public:
   virtual SurfaceType
   type() const override;
 
-  /// Normal vector
+  /// Normal vector return
   ///
-  /// @param lpos the local position where the normal is requested (ignored)
-  /// @return is a normal vector
+  /// @param lpos is the local position is ignored
+  /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos = s_origin2D) const final;
+  normal(const Vector2D& lpos) const override final;
+
+  /// Normal vector return
+  ///
+  /// @param lpos is the global position is ignored
+  /// return a Vector3D by value
+  const Vector3D
+  normal(const Vector3D& gpos) const override final;
+
+  /// Normal vector return
+  ///
+  /// @note No param, this overload resolves default parameter ambiguity
+  const Vector3D
+  normal() const;
 
   /// The binning position is the position calcualted
   /// for a certain binning type
@@ -314,6 +329,12 @@ public:
   /// Return properly formatted class name for screen output
   virtual std::string
   name() const override;
+
+  /// Return a PolyhedronRepresentation for this object
+  /// @param l0div Number of divisions along l0 (phi)
+  /// @param l1div Number of divisions along l1 (r)
+  virtual PolyhedronRepresentation
+  polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation

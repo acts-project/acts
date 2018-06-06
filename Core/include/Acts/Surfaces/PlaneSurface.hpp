@@ -97,7 +97,20 @@ public:
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos = s_origin2D) const final;
+  normal(const Vector2D& lpos) const override final;
+
+  /// Normal vector return
+  ///
+  /// @param lpos is the global position is ignored
+  /// return a Vector3D by value
+  const Vector3D
+  normal(const Vector3D& gpos) const override final;
+
+  /// Normal vector return
+  ///
+  /// @note No param, this overload resolves default parameter ambiguity
+  const Vector3D
+  normal() const;
 
   /// The binning position is the position calcualted
   /// for a certain binning type
@@ -106,7 +119,7 @@ public:
   ///
   /// @return position that can beused for this binning
   virtual const Vector3D
-  binningPosition(BinningValue bValue) const final;
+  binningPosition(BinningValue bValue) const override final;
 
   /// Return the surface type
   virtual SurfaceType

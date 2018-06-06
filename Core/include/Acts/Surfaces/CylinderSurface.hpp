@@ -11,9 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <cmath>
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
@@ -245,6 +247,12 @@ public:
   /// @return The representation
   virtual variant_data
   toVariantData() const override;
+
+  /// Return a PolyhedronRepresentation for this object
+  /// @param l0div Number of divisions along l0 (phi)
+  /// @param l1div Number of divisions along l1 (z)
+  virtual PolyhedronRepresentation
+  polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
 
 protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)

@@ -398,7 +398,7 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
       : new CylinderVolumeBounds(rMax, 0.5 * std::abs(zMax - zMin));
 
   // some screen output
-  ACTS_VERBOSE("Container voume bounds are " << (*topVolumeBounds));
+  ACTS_VERBOSE("Container volume bounds are " << (*topVolumeBounds));
 
   // create the volume array with the ITrackingVolumeArrayCreator
   std::shared_ptr<const TrackingVolumeArray> volumeArray = (rCase)
@@ -748,30 +748,25 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     }
 
     ACTS_VERBOSE("[GV] Register " << glueVolumesNegativeFace.size()
-                                  << " volumes at face "
-                                  << negativeFaceXY
-                                  << ":");
+                                  << " volumes at face negativeFaceXY:");
     for (tVolIter = glueVolumesNegativeFace.begin();
          tVolIter != glueVolumesNegativeFace.end();
          ++tVolIter)
-      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesPositiveFace.size()
-                                  << " volumes at face "
-                                  << positiveFaceXY);
+                                  << " volumes at face positiveFaceXY: ");
     for (tVolIter = glueVolumesPositiveFace.begin();
          tVolIter != glueVolumesPositiveFace.end();
          ++tVolIter)
-      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesInnerTube.size()
-                                  << " volumes at face "
-                                  << tubeInnerCover);
+                                  << " volumes at face tubeInnerCover: ");
     for (tVolIter = glueVolumesInnerTube.begin();
          tVolIter != glueVolumesInnerTube.end();
          ++tVolIter)
-      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+      ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
     ACTS_VERBOSE("[GV] Register " << glueVolumesOuterTube.size()
-                                  << " volumes at face "
-                                  << tubeOuterCover);
+                                  << " volumes at face tubeOuterCover:");
     for (tVolIter = glueVolumesOuterTube.begin();
          tVolIter != glueVolumesOuterTube.end();
          ++tVolIter)
