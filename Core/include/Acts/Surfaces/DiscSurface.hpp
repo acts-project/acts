@@ -152,6 +152,9 @@ public:
   const Vector3D
   normal(const Vector3D& gpos) const override final;
 
+  /// Normal vector return
+  ///
+  /// @note No param, this overload resolves default parameter ambiguity
   const Vector3D
   normal() const;
 
@@ -327,6 +330,9 @@ public:
   virtual std::string
   name() const override;
 
+  /// Return a PolyhedronRepresentation for this object
+  /// @param l0div Number of divisions along l0 (phi)
+  /// @param l1div Number of divisions along l1 (r)
   virtual PolyhedronRepresentation
   polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
 

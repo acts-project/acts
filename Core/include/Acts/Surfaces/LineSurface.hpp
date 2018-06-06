@@ -100,6 +100,9 @@ public:
   const Vector3D
   normal(const Vector3D& gpos) const override final;
 
+  /// Normal vector return
+  ///
+  /// @note No param, this overload resolves default parameter ambiguity
   const Vector3D
   normal() const;
 

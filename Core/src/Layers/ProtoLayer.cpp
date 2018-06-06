@@ -80,6 +80,11 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
         }
       }
     } else if (cylSurface) {
+      // this is an explicit cast and if right now.
+      // It should work with all PolyhedronRepresentations
+      // @TODO: Remove the cast and if as soon as ::polyhedronRepresentation()
+      //        makes it into the Surface base class
+      //        The envelopes might need special treatments though
 
       PolyhedronRepresentation ph = cylSurface->polyhedronRepresentation();
       // evaluate at all vertices
