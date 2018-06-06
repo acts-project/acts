@@ -414,7 +414,7 @@ private:
   ///
   /// @param volumeMap is a map to find the a volume
   ///        by a given name
-  /// @param volumeID is the geometry id of the volume
+  /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
   ///
   void

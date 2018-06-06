@@ -366,7 +366,7 @@ Acts::CylinderSurface::polyhedronRepresentation(size_t l0div,
   std::vector<Vector3D>            vertices;
   std::vector<std::vector<size_t>> faces;
 
-  if (l0div == 1) {
+  if (l0div <= 1) {
     throw std::domain_error(
         "Polyhedron repr of cylinder with 1 div is undefined");
   }
