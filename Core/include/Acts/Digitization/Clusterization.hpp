@@ -11,7 +11,7 @@
 #include <boost/config.hpp>
 #include <unordered_map>
 #include <vector>
-#include "ACTS/Digitization/DigitizationCell.hpp"
+#include "Acts/Digitization/DigitizationCell.hpp"
 
 namespace Acts {
 
@@ -65,6 +65,4 @@ fillCluster(std::vector<std::vector<Cell>>& mergedCells,
             double energyCut    = 0.);
 }
 
-#include "ACTS/Digitization/detail/Clusterization.ipp"
-
-#endif  // DIGITIZATION_CLUSTERITIZATION_HPP
+#include "Acts/Digitization/detail/Clusterization.ipp"
