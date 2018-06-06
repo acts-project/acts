@@ -114,19 +114,19 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
       }
 
       // set envelopes to half radius
-      double r   = cylSurface->bounds().r();
-      double env = r / 4.;
-      envX       = {env, env};
-      envY       = {env, env};
-      envZ       = {env, env};
-      envR       = {env, env};
+      double cylBoundsR = cylSurface->bounds().r();
+      double env        = cylBoundsR / 2.;
+      envX              = {env, env};
+      envY              = {env, env};
+      envZ              = {env, env};
+      envR              = {env, env};
 
       // evaluate impact of r shift on phi
-      double R    = cylSurface->center().perp();
-      double dPhi = std::atan((r + env) / R) - std::atan(r / R);
+      double cylPosR = cylSurface->center().perp();
+      double dPhi    = std::atan((cylBoundsR + env) / cylPosR)
+          - std::atan(cylBoundsR / cylPosR);
 
       // use this as phi envelope
-
       envPhi = {dPhi, dPhi};
 
     } else {
