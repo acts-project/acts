@@ -13,8 +13,13 @@ namespace Acts{
         std::shared_ptr<ISeedFilter> seedFilter;
         std::shared_ptr<ICovarianceTool> covarianceTool;
 
+// Algorithm settings
+        // number of seeds to be produced before returning
+        int minSeeds = 50000;
+
 // Seed Cuts
         // lower cutoff for seeds in MeV
+        // FIXME: Acts units
         float minPt = 400.;
         float cotThetaMax;
         float deltaRMin;
@@ -29,6 +34,7 @@ namespace Acts{
         // of 0.00003 leads to all helices with radius>33m to be considered compatible
 
         // impact parameter in mm
+        // FIXME: Acts units
         float impactMax = 20.;
 
         // how many sigmas of scattering angle should be considered?
@@ -49,12 +55,13 @@ namespace Acts{
         float rMax;
 
         // Unit in kiloTesla
+        // FIXME: Acts units
         float bFieldInZ = 0.00208;
         // location of beam in x,y plane. 
         // used to moveints
         std::array<float,2> beamPos{{0,0}};
 
-        // average amount of material on the length of a seed. used for scattering.
+        // average radiation lengths of material on the length of a seed. used for scattering.
         // default is 5%
         // TODO: necessary to make amount of material dependent on detector region?
         float radLengthPerSeed = 0.05;

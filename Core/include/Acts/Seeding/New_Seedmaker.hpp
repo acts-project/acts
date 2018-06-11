@@ -1,4 +1,18 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #pragma once
+
+#include "Acts/Seeding/SPForSeed.hpp"
+#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/SeedmakerConfig.hpp"
+#include "Acts/Seeding/SeedmakerState.hpp"
+#include "Acts/Seeding/SpacePointConcept.hpp"
 
 #include <list>
 #include <string>
@@ -9,12 +23,6 @@
 #include <array>
 #include <memory>
 
-#include "Acts/Seeding/SPForSeed.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/SeedmakerConfig.hpp"
-#include "Acts/Seeding/SeedmakerCache.hpp"
-#include "Acts/Seeding/SpacePointConcept.hpp"
-
 namespace Acts {
   class New_Seedmaker 
     {
@@ -23,25 +31,30 @@ namespace Acts {
       ///////////////////////////////////////////////////////////////////
       
     public:
+/// The only constructor. Requires a config object.
+/// @param config the configuration for the Seedmaker
       New_Seedmaker(const Acts::Config& config);
       ~New_Seedmaker() = default;
 
-      ///////////////////////////////////////////////////////////////////
-      // Methods to initialize tool for new event or region
-      ///////////////////////////////////////////////////////////////////
-      std::shared_ptr<Acts::Cache>
-      initialize() const ;
+/// Initialize and return the SeedmakerState object using the config.
+      std::shared_ptr<Acts::SeedmakerState>
+      initState() const ;
 
+/// Create a new space point grid, fill all space points from input parameter
+/// into the grid and save grid in the state.
+/// @param spVec the unordered vector containing all input space points
+/// @param state the state of the object in which the space point grid will
+/// be stored
       void
-      newEvent
+      createSpacePointGrid
        (std::vector<const Acts::concept::AnySpacePoint<>*> spVec,
-        std::shared_ptr<Acts::Cache> cache) const ;
+        std::shared_ptr<Acts::SeedmakerState> state) const ;
 
-      
-      std::vector<std::shared_ptr<Seed> > 
-      production3Sp (std::shared_ptr<Acts::Cache> cache) const ;
+/// Create all seed from the space points passed in createSpacePointGrid
+/// Specify number of seeds
+      void
+      createSeeds(std::shared_ptr<Acts::SeedmakerState> state) const ;
 
-      
     private:
               /**    @name Disallow default instantiation, copy, assignment */
       //@{
@@ -51,21 +64,21 @@ namespace Acts {
       //@}
 
       // Private methods
-      std::vector<std::shared_ptr<Seed> > 
-      production3Sp (std::vector<std::shared_ptr<SPForSeed > > currentBin,
-                          std::set<size_t > bottomBins,
-                          std::set<size_t > topBins,
-                          std::shared_ptr<Acts::Cache> cache) const ;
+      void
+      createSeedsInRegion (std::vector<std::shared_ptr<SPForSeed > > currentBin,
+                            std::set<size_t > bottomBins,
+                            std::set<size_t > topBins,
+                            std::shared_ptr<Acts::SeedmakerState> state) const ;
 
       void transformCoordinates (std::vector<std::shared_ptr<SPForSeed> >& vec,
-                                 std::shared_ptr<SPForSeed> spM,
-                                 bool bottom,
-                                 std::vector<LinCircle>& linCircle) const ;
+                                   std::shared_ptr<SPForSeed> spM,
+                                   bool bottom,
+                                   std::vector<LinCircle>& linCircle) const ;
 
-      Acts::Config m_config;
-   };
+        Acts::Config m_config;
+     };
 
-} // end of Acts namespace
+  } // end of Acts namespace
 
 ///////////////////////////////////////////////////////////////////
 // Object-function for curvature seeds comparison

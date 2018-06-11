@@ -72,11 +72,13 @@ int main(){
   config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf,qTool));
   config.covarianceTool = std::make_unique<Acts::CovarianceTool>(Acts::CovarianceTool());
   Acts::New_Seedmaker a(config);
-  std::shared_ptr<Acts::Cache> cache = a.initialize();
-  a.newEvent(spVec,cache);
-  auto outputSeeds = a.production3Sp(cache);
-  for(int i = 0; i < outputSeeds.size(); i++){
-    for (auto spC : outputSeeds.at(i)->spacePoints()){
+  std::shared_ptr<Acts::SeedmakerState> state = a.initState();
+  a.createSpacePointGrid(spVec,state);
+  a.createSeeds(state);
+  while(!(state->outputQueue.empty())){
+    auto seed = state->outputQueue.front();
+    state->outputQueue.pop();
+    for (auto spC : seed->spacePoints()){
       const SpacePoint* sp = boost::type_erasure::any_cast<const SpacePoint *>(spC);
       std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     }

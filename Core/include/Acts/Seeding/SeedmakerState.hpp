@@ -6,6 +6,7 @@
 
 #include <vector>
 #include <memory>
+#include <queue>
 
 namespace Acts{
      
@@ -18,7 +19,7 @@ namespace Acts{
       float V;
     };
 
-    struct Cache {
+    struct SeedmakerState {
       std::unique_ptr<Acts::SPGrid> binnedSP;
       std::vector<InternalSeed> seeds;
 
@@ -29,6 +30,12 @@ namespace Acts{
       float maxScatteringAngle2;
       float pTPerHelixRadius;
       float minHelixRadius2;
+
+
+      size_t phiIndex = 1;
+      size_t zIndex = 1;
+
+      std::queue<std::shared_ptr<Seed>> outputQueue;
 
 
     };

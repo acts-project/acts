@@ -1,3 +1,11 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include <cmath>
 #include "Acts/Seeding/ICovarianceTool.hpp"
 #include "Acts/Seeding/IBinFinder.hpp"
@@ -9,30 +17,28 @@ New_Seedmaker::New_Seedmaker(const Acts::Config& config): m_config(config){
 
 }
 
-std::shared_ptr<Acts::Cache>
-New_Seedmaker::initialize() const
+std::shared_ptr<Acts::SeedmakerState>
+New_Seedmaker::initState() const
 {
-  
-  auto cache = std::make_shared<Acts::Cache>();
-  // back-of-the-envelope calculation of scattering, leaving out the insignificant term
-  // of the highland formula
+  auto state = std::make_shared<Acts::SeedmakerState>();
+  // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
-  cache->highland =  13.6*sqrt(m_config.radLengthPerSeed)*(1+0.038*log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = cache->highland/m_config.minPt;
-  cache->maxScatteringAngle2 = maxScatteringAngle*maxScatteringAngle;
+  state->highland =  13.6*sqrt(m_config.radLengthPerSeed)*(1+0.038*log(m_config.radLengthPerSeed));
+  float maxScatteringAngle = state->highland/m_config.minPt;
+  state->maxScatteringAngle2 = maxScatteringAngle*maxScatteringAngle;
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and millimeter
   // TODO: change using ACTS units
-  cache->pTPerHelixRadius = 300.*m_config.bFieldInZ;
-  cache->minHelixRadius2 = std::pow(m_config.minPt/cache->pTPerHelixRadius,2);
-  return cache;
+  state->pTPerHelixRadius = 300.*m_config.bFieldInZ;
+  state->minHelixRadius2 = std::pow(m_config.minPt/state->pTPerHelixRadius,2);
+  return state;
 }
 
 void 
-New_Seedmaker::newEvent
+New_Seedmaker::createSpacePointGrid
 ( std::vector<const Acts::concept::AnySpacePoint<>*> spVec, 
-  std::shared_ptr<Acts::Cache> cache) const
+  std::shared_ptr<Acts::SeedmakerState> state) const
 {
-  cache->seeds.clear();
+  state->seeds.clear();
 
   SeedingGridConfig gridConf;
   gridConf.bFieldInZ = m_config.bFieldInZ;
@@ -64,53 +70,60 @@ New_Seedmaker::newEvent
     std::vector<std::shared_ptr<SPForSeed > >& bin = grid->at(spLocation);
     bin.push_back(std::make_shared<SPForSeed>(sps));
   }
-  cache->binnedSP = std::move(grid);
+  state->binnedSP = std::move(grid);
+  state->phiIndex = 1;
+  state->zIndex = 1;
 }
 
-
-std::vector<std::shared_ptr<Seed> > 
-New_Seedmaker::production3Sp
-( std::shared_ptr<Acts::Cache> cache) const
+void
+New_Seedmaker::createSeeds
+( std::shared_ptr<Acts::SeedmakerState> state) const
 {
-  std::vector<std::shared_ptr<Seed> > outputSeeds;
-  auto phiZbins = cache->binnedSP->getNBins();
-  for (size_t i =1; i <= phiZbins[0]; ++i){
-    for (size_t j =1; j <= phiZbins[1]; ++j){
-    // if different combinations of spacepoints (i.e. only pixel, pixel + sct, only sct) should be 
-    // treated differently, call multiple times with different config and with findBottomBins (findTopBins)
-    // returning the corresponding space points
-      std::set<size_t > bottomBins = m_config.bottomBinFinder->findBins(i,j,cache->binnedSP);
-      std::set<size_t > topBins = m_config.topBinFinder->findBins(i,j,cache->binnedSP);
-      std::vector<std::shared_ptr<Seed> > regionSeeds = production3Sp(cache->binnedSP->at({i,j}), bottomBins, topBins, cache);
-      outputSeeds.insert(outputSeeds.end(),regionSeeds.begin(),regionSeeds.end());
-    }
+  std::array<long unsigned int,2ul> phiZbins = state->binnedSP->getNBins();
+
+  
+  if(state->outputQueue.size() >= m_config.minSeeds) {
+    return;
   }
-  return outputSeeds;
+  bool queueFull = false;
+
+  // loop over all space point bins, break out of loop if queue full
+  // store indices in state to continue seed creation after break
+  for (; state->phiIndex <= phiZbins[0]; state->phiIndex++){
+    for (; state->zIndex <= phiZbins[1]; state->zIndex++){
+      std::set<size_t > bottomBins = m_config.bottomBinFinder->findBins(state->phiIndex,state->zIndex,state->binnedSP);
+      std::set<size_t > topBins = m_config.topBinFinder->findBins(state->phiIndex,state->zIndex,state->binnedSP);
+      createSeedsInRegion(state->binnedSP->at({state->phiIndex,state->zIndex}), bottomBins, topBins, state);
+      if(state->outputQueue.size() >= m_config.minSeeds){queueFull = true; break;}
+    }
+    if(queueFull){break;}
+  }
+  return;
 }
 
-
-std::vector<std::shared_ptr<Seed> > 
-New_Seedmaker::production3Sp
+void
+New_Seedmaker::createSeedsInRegion
 ( std::vector<std::shared_ptr<SPForSeed > > currentBin,
   std::set<size_t > bottomBinIndices,
   std::set<size_t > topBinIndices,
-  std::shared_ptr<Acts::Cache> cache) const
+  std::shared_ptr<Acts::SeedmakerState> state) const
 {
-  std::vector<std::shared_ptr<SPForSeed> > compatBottomSP, compatTopSP;
-  std::vector<std::shared_ptr<InternalSeed> > regionSeeds;
 
-  // middle space point
+  // loop over all middle space points
+  // parallelization requires removal of linCircle* from state
+  // and usage of reentrant queue
+  // TODO: check how much time reallocation of linCircles in each iteration costs
   for(auto spM : currentBin){
     float rM = spM->radius();
     float zM = spM->z();
     float covrM = spM->covr();
     float covzM = spM->covz();
 
-    compatBottomSP.clear();
+    std::vector<std::shared_ptr<SPForSeed> > compatBottomSP;
 
     // bottom space point
     for(auto bottomBinIndex : bottomBinIndices){
-      auto bottomBin = cache->binnedSP->at(bottomBinIndex);
+      auto bottomBin = state->binnedSP->at(bottomBinIndex);
       for(auto spB : bottomBin){
         float rB = spB->radius();
         float deltaR = rM - rB;
@@ -130,10 +143,10 @@ New_Seedmaker::production3Sp
     // no bottom SP found -> try next spM
     if(compatBottomSP.size()==0) continue;
     
-    compatTopSP.clear();
+    std::vector<std::shared_ptr<SPForSeed> > compatTopSP;
 
     for(auto topBinIndex : topBinIndices){ 
-      auto topBin = cache->binnedSP->at(topBinIndex);
+      auto topBin = state->binnedSP->at(topBinIndex);
       for (auto spT : topBin){
         float rT = spT->radius();
         float deltaR = rT-rM;
@@ -149,10 +162,10 @@ New_Seedmaker::production3Sp
       }
     }
     if(compatTopSP.size()==0) continue;
-    cache->linCircleBottom.clear();
-    transformCoordinates(compatBottomSP, spM, true, cache->linCircleBottom);
-    cache->linCircleTop.clear();
-    transformCoordinates(compatTopSP, spM, false, cache->linCircleTop);
+    state->linCircleBottom.clear();
+    transformCoordinates(compatBottomSP, spM, true, state->linCircleBottom);
+    state->linCircleTop.clear();
+    transformCoordinates(compatTopSP, spM, false, state->linCircleTop);
     
     // TODO: significant benefit? avoids compatSp.size()^2 reallocations
     // create vectors here to avoid reallocation in each loop
@@ -163,7 +176,7 @@ New_Seedmaker::production3Sp
     std::vector<std::pair<float,std::shared_ptr<InternalSeed > > > seedsPerSpM;
 
     for(size_t b = 0; b < compatBottomSP.size(); b++){
-      auto lb = cache->linCircleBottom.at(b);
+      auto lb = state->linCircleBottom.at(b);
       float  Zob  = lb.Zo      ;
       float  cotThetaB = lb.cotTheta ;
       float  Vb   = lb.V       ;
@@ -179,7 +192,7 @@ New_Seedmaker::production3Sp
       // but to avoid trig functions we approximate cot by scaling by 1/sin^4(theta)
       // resolving with pT to p scaling --> only divide by sin^2(theta)
       // max approximation error for allowed scattering angles of 0.04 rad at eta=0: ~8.5%
-      float scatteringInRegion2 = cache->maxScatteringAngle2 * iSinTheta2;
+      float scatteringInRegion2 = state->maxScatteringAngle2 * iSinTheta2;
       // multiply the squared sigma onto the squared scattering
       scatteringInRegion2 *= m_config.sigmaScattering*m_config.sigmaScattering;
 
@@ -188,7 +201,7 @@ New_Seedmaker::production3Sp
       curvatures.clear();
       impactParameters.clear();
       for(size_t t = 0; t < compatTopSP.size(); t++) {
-        auto lt = cache->linCircleTop.at(t);
+        auto lt = state->linCircleTop.at(t);
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term for errors on spM
         float error = lt.Er + ErB + 2*(cotThetaB * lt.cotTheta * covrM + covzM) * iDeltaRB * lt.iDeltaR;
@@ -208,11 +221,11 @@ New_Seedmaker::production3Sp
         float B2  = B*B                              ;
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
-        if(S2 < B2*cache->minHelixRadius2*2) continue;
+        if(S2 < B2*state->minHelixRadius2*2) continue;
         // 1/helixradius: (B/sqrt(S2))/2 (we leave everything squared)
         float iHelixradius2 = 4*B2/S2;
         // calculate scattering for p(T) calculated from seed curvature
-        float pT2perRadius = cache->highland/cache->pTPerHelixRadius;
+        float pT2perRadius = state->highland/state->pTPerHelixRadius;
         pT2perRadius = pT2perRadius*pT2perRadius;
         float pT2scatter = iHelixradius2 * pT2perRadius;
         pT2scatter *= pT2scatter;
@@ -242,11 +255,8 @@ New_Seedmaker::production3Sp
         seedsPerSpM.insert(seedsPerSpM.end(), sameTrackSeeds.begin(), sameTrackSeeds.end());
       }
     }
-    std::vector<std::shared_ptr<InternalSeed> > filteredSpMSeeds;
-    filteredSpMSeeds = m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM);
-    regionSeeds.insert(regionSeeds.end(), filteredSpMSeeds.begin(), filteredSpMSeeds.end());
+    m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, state->outputQueue);
   }
-  return m_config.seedFilter->filterSeeds_byRegion(regionSeeds);
 }
   
 

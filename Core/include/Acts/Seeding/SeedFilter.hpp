@@ -3,10 +3,11 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/ISeedFilter.hpp"
 #include "Acts/Seeding/IQualityTool.hpp"
+#include "Acts/Seeding/Seed.hpp"
 
 namespace Acts{
   struct SeedFilterConfig{
-    // the allowed delta between two seed radii for them to be considered compatible.
+    // the allowed delta between two inverted seed radii for them to be considered compatible.
     float deltaInvHelixRadius = 0.00003;
     // the impact parameters (d0) is multiplied by this factor and subtracted from quality
     float impactQualityFactor = 1.;
@@ -14,7 +15,7 @@ namespace Acts{
     float compatSeedQuality = 200.;
     // minimum distance between compatible seeds to be considered for quality boost
     float deltaRMin = 5.;
-    // in jets many seeds may be found per middle space point.
+    // in dense environments many seeds may be found per middle space point.
     // only seeds with the highest quality will be kept if this limit is reached.
     int maxSeedsPerSpM = 10;
     // how often do you want to increase the quality of a seed for finding a compatible seed?
@@ -39,12 +40,8 @@ namespace Acts{
                          float zOrigin) const override;
 
     virtual
-    std::vector<std::shared_ptr<InternalSeed> >
-    filterSeeds_1SpFixed(std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >& seedsPerSpM) const override;
-
-    virtual
-    std::vector<std::shared_ptr<Seed> >
-    filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& seedsPerRegion) const override;
+    void
+    filterSeeds_1SpFixed(std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >& seedsPerSpM, std::queue<std::shared_ptr<Seed> >& queue) const override;
 
     private:
     const SeedFilterConfig m_cfg;

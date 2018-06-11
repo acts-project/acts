@@ -1,3 +1,12 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+
 #include "Acts/Seeding/SeedFilter.hpp"
 #include <utility>
 
@@ -36,7 +45,6 @@ namespace Acts{
       float impact         = impactParametersVec.at(i);
 
       float quality = -(impact * m_cfg.impactQualityFactor);
-      quality += m_qualityTool->seedQuality(bottomSP, middleSP, topSpVec.at(i));
       for (int j = 0; j < topSpVec.size(); j++){
         if (i == j) continue;
         // compared top SP should have at least deltaRMin distance
@@ -60,6 +68,8 @@ namespace Acts{
         }
         if(compatibleSeedRadii.size() >= m_cfg.compatSeedLimit) break;
       }
+      // add detector specific considerations on the seed quality
+      quality += m_qualityTool->seedQuality(bottomSP, middleSP, topSpVec.at(i));
       // discard low quality seeds
       if (!m_qualityTool->passesQualityCut(quality, bottomSP, middleSP, topSpVec.at(i))) continue;
       selectedSeeds.push_back(std::make_pair(quality, std::make_shared<InternalSeed>(bottomSP,middleSP,topSpVec.at(i),zOrigin)));
@@ -70,8 +80,8 @@ namespace Acts{
 
 
   // after creating all seeds with a common middle space point, filter again
-  std::vector<std::shared_ptr<InternalSeed> >
-  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM) const {
+  void
+  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM, std::queue<std::shared_ptr<Seed> >& queue) const {
 
     //sort by quality and iterate only up to configured max number of seeds per middle SP
     std::sort(seedsPerSpM.begin(),seedsPerSpM.end(),comQuality());
@@ -87,24 +97,13 @@ namespace Acts{
     // ordering by quality by filterSeeds_2SpFixed means these are the lowest quality seeds
     for(; it<itBegin+maxSeeds; ++it) {
       std::shared_ptr<InternalSeed> internalSeed       = (*it).second;
-      filteredSeeds.push_back(internalSeed);
+
+      auto outSeed = std::make_shared<Seed>(internalSeed->spacepoint0()->spacepoint,
+                                            internalSeed->spacepoint1()->spacepoint,
+                                            internalSeed->spacepoint2()->spacepoint,
+                                            internalSeed->z());
+      queue.push(outSeed);
     }
-    return filteredSeeds;
   }
 
-
-
-  std::vector<std::shared_ptr<Seed> >
-  SeedFilter::filterSeeds_byRegion(std::vector<std::shared_ptr<InternalSeed> >& regionSeeds) const {
-
-    std::vector<std::shared_ptr<Seed> > outputSeeds;
-    for(auto s : regionSeeds){
-      Seed outSeed = Seed(s->spacepoint0()->spacepoint,
-          s->spacepoint1()->spacepoint,
-          s->spacepoint2()->spacepoint,
-          s->z());
-      outputSeeds.push_back(std::make_shared<Seed>(outSeed ) );
-    }
-    return outputSeeds;
-  }
 }//namespace Acts
