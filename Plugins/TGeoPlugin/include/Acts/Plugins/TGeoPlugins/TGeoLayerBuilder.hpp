@@ -37,11 +37,11 @@ public:
   {
   public:
     /// identify the layer by name
-    std::string layerName;
+    std::string layerName   = "";
     /// identify the sensor by name
-    std::string sensorName;
+    std::string sensorName  = "";
     // the local axis definition
-    std::string localAxes;
+    std::string localAxes   = "xyz";
     // the envolpoe
     std::pair<double, double> envelope;
     /// define the number of bins in loc0
@@ -53,9 +53,9 @@ public:
       : layerName("")
       , sensorName("")
       , localAxes("xyz")
-      , envelope(std::pair<double, double>(0., 0.))
-      , binsLoc0(0)
-      , binsLoc1(0)
+      , envelope(std::pair<double, double>(1., 1.))
+      , binsLoc0(100)
+      , binsLoc1(100)
     {
     }
   };

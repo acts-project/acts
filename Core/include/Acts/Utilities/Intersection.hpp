@@ -198,7 +198,7 @@ struct VoidCorrector
   VoidCorrector() {}
 
   // Void Corrector parameter constructor
-  VoidCorrector(const Vector3D&, const Vector3D&, double&) {}
+  VoidCorrector(const Vector3D&, const Vector3D&, double) {}
 
   /// Boolean() operator - returns false for void modifier
   explicit operator bool() const { return false; }

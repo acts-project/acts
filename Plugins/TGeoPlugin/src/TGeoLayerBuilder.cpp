@@ -178,7 +178,9 @@ Acts::TGeoLayerBuilder::resolveSensitive(
                          correctVolume,
                          offset + "  ");
     }
-  }
+  } else 
+    ACTS_VERBOSE("No volume present.");
+  
   /// if you have a node, get the volume and step down further
   if (tgNode) {
     // get the matrix of the current
@@ -233,5 +235,7 @@ Acts::TGeoLayerBuilder::resolveSensitive(
                        correctBranch,
                        offset + "  ");
     }
-  }
+  } else 
+    ACTS_VERBOSE("No node present.");
+  
 }

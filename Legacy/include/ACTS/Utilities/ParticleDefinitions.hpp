@@ -272,7 +272,7 @@ public:
   }
   /// Return the outgoing particles
   const std::vector<ParticleProperties>&
-  outgoingParticles() const
+  out() const
   {
     return m_outgoing;
   }

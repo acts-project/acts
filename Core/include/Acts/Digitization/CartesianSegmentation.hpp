@@ -7,10 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <memory>
 #include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -108,6 +110,10 @@ public:
   /// readout segmentation
   const BinUtility&
   binUtility() const final override;
+  
+  /// return the pitch sizes as a pair
+  std::pair<double, double>
+  pitch() const;
 
 private:
   template <class T>
@@ -149,4 +155,15 @@ CartesianSegmentation::cell(const Vector2D& position) const
 {
   return cellT<Vector2D>(position);
 }
+
+inline std::pair<double,double>
+CartesianSegmentation::pitch() const
+{
+  auto boundingBox =  m_activeBounds->boundingBox();
+  auto values = boundingBox.valueStore();
+  double pitchX = 2.*values[0]/m_binUtility->bins(0);
+  double pitchY = 2.*values[1]/m_binUtility->bins(1);
+  return std::pair<double,double>(pitchX,pitchY);  
 }
+
+} // namespace Acts
