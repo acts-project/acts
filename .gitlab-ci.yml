@@ -34,7 +34,7 @@ license:
 
   
 include_guards:
-  stage: check
+  stage: build
   image: python:alpine3.6
   before_script: []
   dependencies: []
@@ -57,6 +57,9 @@ clang_tidy:
   artifacts:
     paths:
       - report
+  only:
+    variables:
+      - $IS_MR == "true"
 
 cppcheck:
   stage: static analysis
@@ -74,6 +77,9 @@ cppcheck:
   artifacts:
     paths:
       - report
+  only:
+    variables:
+      - $IS_MR == "true"
 
 oclint:
   stage: static analysis
@@ -90,7 +96,9 @@ oclint:
   artifacts:
     paths:
       - report
-  when: manual
+  only:
+    variables:
+      - $IS_MR == "true"
     
 scan-build:
   stage: static analysis
@@ -105,7 +113,9 @@ scan-build:
   artifacts:
     paths:
       - report
-  when: manual
+  only:
+    variables:
+      - $IS_MR == "true"
 
 
 # SLC6, LCG88 (legacy build)
