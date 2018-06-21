@@ -25,7 +25,7 @@ public:
     /// @param rAlign is the alignment uncertainty in r.
     /// it is going to be squared and added to covr.
     /// @param sigma is multiplied with the combined alignment and covariance errors
-    std::array<float,2>
+    Acts::Vector2D
     getCovariances(const Acts::concept::AnySpacePoint<>* sp, 
                    float zAlign = 0, 
                    float rAlign = 0, 
@@ -33,13 +33,13 @@ public:
 
 };
     inline
-    std::array<float,2>
+    Acts::Vector2D
     CovarianceTool::getCovariances(const Acts::concept::AnySpacePoint<>* sp, 
                                    float zAlign,
                                    float rAlign,
                                    float sigma)
     {
-      std::array<float,2> cov;
+      Acts::Vector2D cov;
       cov[0] = ((boost::type_erasure::any_cast<SpacePoint>(*sp)).covr + rAlign*rAlign) * sigma;
       cov[1] = ((boost::type_erasure::any_cast<SpacePoint>(*sp)).covz + zAlign*zAlign) * sigma;
       return cov;

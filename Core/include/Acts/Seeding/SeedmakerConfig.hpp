@@ -1,21 +1,29 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #pragma once
 
 namespace Acts{
       // forward declaration to avoid cyclic dependence
       class IBinFinder;
-      class ISeedFilter;
+      class SeedFilter;
       class ICovarianceTool;
-      struct Config {
+      struct SeedmakerConfig {
         // BinFinder must return std::vector<Acts::Seeding::Bin> with content of 
         // each bin sorted in r (ascending)
         std::shared_ptr<IBinFinder> bottomBinFinder;
         std::shared_ptr<IBinFinder> topBinFinder;
-        std::shared_ptr<ISeedFilter> seedFilter;
+        std::shared_ptr<SeedFilter> seedFilter;
         std::shared_ptr<ICovarianceTool> covarianceTool;
 
 // Algorithm settings
         // number of seeds to be produced before returning
-        int minSeeds = 50000;
+        size_t minSeeds = 50000;
 
 // Seed Cuts
         // lower cutoff for seeds in MeV
@@ -59,7 +67,7 @@ namespace Acts{
         float bFieldInZ = 0.00208;
         // location of beam in x,y plane. 
         // used to moveints
-        std::array<float,2> beamPos{{0,0}};
+        Acts::Vector2D beamPos{0,0};
 
         // average radiation lengths of material on the length of a seed. used for scattering.
         // default is 5%
@@ -72,6 +80,12 @@ namespace Acts{
         float rAlign = 0;
         // used for measurement (+alignment) uncertainties.
         float sigmaError = 5;
+        
+        //derived values, set on Seedmaker construction
+        float highland;
+        float maxScatteringAngle2;
+        float pTPerHelixRadius;
+        float minHelixRadius2;
       };
 } //namespace Acts
 

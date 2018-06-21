@@ -33,22 +33,18 @@ namespace Acts {
     public:
 /// The only constructor. Requires a config object.
 /// @param config the configuration for the Seedmaker
-      New_Seedmaker(const Acts::Config& config);
+      New_Seedmaker(const Acts::SeedmakerConfig& config);
       ~New_Seedmaker() = default;
-
-/// Initialize and return the SeedmakerState object using the config.
-      std::shared_ptr<Acts::SeedmakerState>
-      initState() const ;
 
 /// Create a new space point grid, fill all space points from input parameter
 /// into the grid and save grid in the state.
 /// @param spVec the unordered vector containing all input space points
 /// @param state the state of the object in which the space point grid will
 /// be stored
-      void
-      createSpacePointGrid
-       (std::vector<const Acts::concept::AnySpacePoint<>*> spVec,
-        std::shared_ptr<Acts::SeedmakerState> state) const ;
+      std::shared_ptr<Acts::SeedmakerState>
+      initState
+        ( std::vector<const Acts::concept::AnySpacePoint<>*> spVec) const;
+
 
 /// Create all seed from the space points passed in createSpacePointGrid
 /// Specify number of seeds
@@ -75,7 +71,7 @@ namespace Acts {
                                    bool bottom,
                                    std::vector<LinCircle>& linCircle) const ;
 
-        Acts::Config m_config;
+        Acts::SeedmakerConfig m_config;
      };
 
   } // end of Acts namespace
@@ -95,14 +91,4 @@ public:
   }
 };
 
-// TODO: check if calculating r^2 is expensive
-class comR {
-public:
-  
-  bool operator()(const Acts::concept::AnySpacePoint<>* i1, const Acts::concept::AnySpacePoint<>* i2){
-    float r1 = i1->x()*i1->x()+i1->y()*i1->y();
-    float r2 = i2->x()*i2->x()+i2->y()*i2->y();
-    return r1 < r2;
-  }
-};
 #include "Acts/Seeding/New_Seedmaker.ipp"

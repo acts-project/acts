@@ -24,14 +24,15 @@ namespace Acts {
   public:
     
     SPForSeed() = delete;
-    SPForSeed(const Acts::concept::AnySpacePoint<>*,
-              const std::array<float,2> offsetXY,
-              const std::array<float,2> cov)                ;
+    SPForSeed(const size_t spIndex,
+              const Acts::Vector3D& globalPos,
+              const Acts::Vector2D& offsetXY,
+              const Acts::Vector2D& cov)                    ;
+
     SPForSeed(const SPForSeed&)                             ;
     ~SPForSeed() = default                                  ;
     SPForSeed& operator  = (const SPForSeed&)               ;
 
-    const Acts::concept::AnySpacePoint<>* spacepoint                            ; 
     const float&          x() const {return m_x;}
     const float&          y() const {return m_y;}
     const float&          z() const {return m_z;}
@@ -39,6 +40,7 @@ namespace Acts {
           float         phi() const {return atan2(m_y,m_x);}
     const float&       covr() const {return m_covr;}
     const float&       covz() const {return m_covz;}
+    const size_t&      spIndex() const{return m_spIndex;}
 
   protected:
     
@@ -48,6 +50,7 @@ namespace Acts {
     float m_r   ; // radius       in beam system coordinates
     float m_covr; //
     float m_covz; //
+    size_t m_spIndex; // index in given space point array
 
   };
 
@@ -56,29 +59,16 @@ namespace Acts {
   // Inline methods
   /////////////////////////////////////////////////////////////////////////////////
 
-  inline SPForSeed& SPForSeed::operator = 
-    (const SPForSeed& sp) 
-    {
-      spacepoint  = sp.spacepoint;
-      m_x         = sp.m_x       ;
-      m_y         = sp.m_y       ;
-      m_z         = sp.m_z       ;
-      m_r         = sp.m_r       ;
-      m_covr      = sp.m_covr    ;
-      m_covz      = sp.m_covz    ;
-      return(*this);
-    }
- 
   inline SPForSeed::SPForSeed
-    (const Acts::concept::AnySpacePoint<>* sp, const std::array<float,2> offsetXY, const std::array<float,2> cov) 
+    (const size_t spIndex, const Acts::Vector3D& globalPos, const Acts::Vector2D& offsetXY, const Acts::Vector2D& cov)
     {
-      spacepoint = sp  ;
-      m_x        = sp->x()+offsetXY[0];
-      m_y        = sp->y()+offsetXY[1];
-      m_z        = sp->z();
-      m_r        = sqrt(m_x*m_x+m_y*m_y);
-      m_covr     = cov[0];
-      m_covz     = cov[1];
+      m_spIndex  = spIndex;
+      m_x        = globalPos.x()+offsetXY.x();
+      m_y        = globalPos.y()+offsetXY.y();
+      m_z        = globalPos.z();
+      m_r        = std::sqrt(m_x*m_x+m_y*m_y);
+      m_covr     = cov.x();
+      m_covz     = cov.y();
     }
 
 
@@ -89,7 +79,13 @@ namespace Acts {
   
   inline SPForSeed::SPForSeed (const SPForSeed& sp)
     {
-      *this = sp;
+      m_spIndex   = sp.m_spIndex ;
+      m_x         = sp.m_x       ;
+      m_y         = sp.m_y       ;
+      m_z         = sp.m_z       ;
+      m_r         = sp.m_r       ;
+      m_covr      = sp.m_covr    ;
+      m_covz      = sp.m_covz    ;
     }
 
 } // end of namespace Acts

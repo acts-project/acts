@@ -21,22 +21,13 @@ namespace Acts{
 
     struct SeedmakerState {
       std::unique_ptr<Acts::SPGrid> binnedSP;
-      std::vector<InternalSeed> seeds;
 
       std::vector<LinCircle> linCircleBottom;
       std::vector<LinCircle> linCircleTop;
 
-      float highland;
-      float maxScatteringAngle2;
-      float pTPerHelixRadius;
-      float minHelixRadius2;
-
-
       size_t phiIndex = 1;
       size_t zIndex = 1;
 
-      std::queue<std::shared_ptr<Seed>> outputQueue;
-
-
+      std::queue<std::shared_ptr<InternalSeed>> outputQueue;
     };
 }

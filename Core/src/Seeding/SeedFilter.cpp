@@ -81,7 +81,7 @@ namespace Acts{
 
   // after creating all seeds with a common middle space point, filter again
   void
-  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM, std::queue<std::shared_ptr<Seed> >& queue) const {
+  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM, std::queue<std::shared_ptr<InternalSeed> >& queue) const {
 
     //sort by quality and iterate only up to configured max number of seeds per middle SP
     std::sort(seedsPerSpM.begin(),seedsPerSpM.end(),comQuality());
@@ -98,11 +98,11 @@ namespace Acts{
     for(; it<itBegin+maxSeeds; ++it) {
       std::shared_ptr<InternalSeed> internalSeed       = (*it).second;
 
-      auto outSeed = std::make_shared<Seed>(internalSeed->spacepoint0()->spacepoint,
-                                            internalSeed->spacepoint1()->spacepoint,
-                                            internalSeed->spacepoint2()->spacepoint,
-                                            internalSeed->z());
-      queue.push(outSeed);
+      //auto outSeed = std::make_shared<Seed>(internalSeed->spacepoint0()->spacepoint,
+      //                                      internalSeed->spacepoint1()->spacepoint,
+      //                                      internalSeed->spacepoint2()->spacepoint,
+      //                                      internalSeed->z());
+      queue.push(internalSeed);
     }
   }
 

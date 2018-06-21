@@ -7,39 +7,33 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <cmath>
+#include <numeric>
+
 #include "Acts/Seeding/ICovarianceTool.hpp"
 #include "Acts/Seeding/IBinFinder.hpp"
-#include "Acts/Seeding/ISeedFilter.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
 
 namespace Acts{
 
-New_Seedmaker::New_Seedmaker(const Acts::Config& config): m_config(config){
+New_Seedmaker::New_Seedmaker(const Acts::SeedmakerConfig& config): m_config(config){
 
+  // calculation of scattering using the highland formula
+  // convert pT to p once theta angle is known
+  m_config.highland =  13.6*sqrt(m_config.radLengthPerSeed)*(1+0.038*log(m_config.radLengthPerSeed));
+  float maxScatteringAngle = m_config.highland/m_config.minPt;
+  m_config.maxScatteringAngle2 = maxScatteringAngle*maxScatteringAngle;
+  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and millimeter
+  // TODO: change using ACTS units
+  m_config.pTPerHelixRadius = 300.*m_config.bFieldInZ;
+  m_config.minHelixRadius2 = std::pow(m_config.minPt/m_config.pTPerHelixRadius,2);
 }
 
 std::shared_ptr<Acts::SeedmakerState>
-New_Seedmaker::initState() const
+New_Seedmaker::initState
+(const std::vector<const Acts::concept::AnySpacePoint<>*> spVec) const
 {
   auto state = std::make_shared<Acts::SeedmakerState>();
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
-  state->highland =  13.6*sqrt(m_config.radLengthPerSeed)*(1+0.038*log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = state->highland/m_config.minPt;
-  state->maxScatteringAngle2 = maxScatteringAngle*maxScatteringAngle;
-  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and millimeter
-  // TODO: change using ACTS units
-  state->pTPerHelixRadius = 300.*m_config.bFieldInZ;
-  state->minHelixRadius2 = std::pow(m_config.minPt/state->pTPerHelixRadius,2);
-  return state;
-}
-
-void 
-New_Seedmaker::createSpacePointGrid
-( std::vector<const Acts::concept::AnySpacePoint<>*> spVec, 
-  std::shared_ptr<Acts::SeedmakerState> state) const
-{
-  state->seeds.clear();
-
+  // setup spacepoint grid config
   SeedingGridConfig gridConf;
   gridConf.bFieldInZ = m_config.bFieldInZ;
   gridConf.minPt = m_config.minPt;
@@ -56,16 +50,31 @@ New_Seedmaker::createSpacePointGrid
   float phiMax = m_config.maxPhi;
   float zMin = m_config.zMin;
   float zMax = m_config.zMax;
+  
+  std::vector<size_t> indexVec(spVec.size());
+  std::iota(std::begin(indexVec),std::end(indexVec),0);
 
   // sort by radius
-  std::sort(spVec.begin(),spVec.end(),comR());
-  for(auto sp : spVec){
+  std::sort(indexVec.begin(),indexVec.end(),[spVec]
+       (const size_t indA, const size_t indB)
+        {auto spA = spVec[indA];
+        auto spB = spVec[indB];
+        // compare x*x+y*y (i.e. r^2) of both SP
+        float rA = spA->x()*spA->x()+spA->y()*spA->y();
+        float rB = spB->x()*spB->x()+spB->y()*spB->y();
+        return rA < rB; });
+  for(auto spIndex : indexVec){
+    auto sp = spVec[spIndex];
+    float spX = sp->x();
+    float spY = sp->y();
     float spZ = sp->z();
     if(spZ > zMax || spZ < zMin) continue;
-    float spPhi = std::atan2(sp->y(),sp->x());
+    float spPhi = std::atan2(spY,spX);
     if(spPhi > phiMax || spPhi < phiMin) continue;
-    std::array<float,2> cov = m_config.covarianceTool->getCovariances(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
-    SPForSeed sps(sp, m_config.beamPos,cov);
+    // covariance configuration should be done outside of the Seedmaker
+    Acts::Vector2D cov = m_config.covarianceTool->getCovariances(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
+    Acts::Vector3D globalPos(spX,spY,spZ);
+    SPForSeed sps(spIndex, globalPos, m_config.beamPos, cov);
     Acts::Vector2D spLocation(spPhi,spZ);
     std::vector<std::shared_ptr<SPForSeed > >& bin = grid->at(spLocation);
     bin.push_back(std::make_shared<SPForSeed>(sps));
@@ -73,6 +82,7 @@ New_Seedmaker::createSpacePointGrid
   state->binnedSP = std::move(grid);
   state->phiIndex = 1;
   state->zIndex = 1;
+  return state;
 }
 
 void
@@ -192,7 +202,7 @@ New_Seedmaker::createSeedsInRegion
       // but to avoid trig functions we approximate cot by scaling by 1/sin^4(theta)
       // resolving with pT to p scaling --> only divide by sin^2(theta)
       // max approximation error for allowed scattering angles of 0.04 rad at eta=0: ~8.5%
-      float scatteringInRegion2 = state->maxScatteringAngle2 * iSinTheta2;
+      float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
       // multiply the squared sigma onto the squared scattering
       scatteringInRegion2 *= m_config.sigmaScattering*m_config.sigmaScattering;
 
@@ -221,11 +231,11 @@ New_Seedmaker::createSeedsInRegion
         float B2  = B*B                              ;
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
-        if(S2 < B2*state->minHelixRadius2*2) continue;
+        if(S2 < B2*m_config.minHelixRadius2*2) continue;
         // 1/helixradius: (B/sqrt(S2))/2 (we leave everything squared)
         float iHelixradius2 = 4*B2/S2;
         // calculate scattering for p(T) calculated from seed curvature
-        float pT2perRadius = state->highland/state->pTPerHelixRadius;
+        float pT2perRadius = m_config.highland/m_config.pTPerHelixRadius;
         pT2perRadius = pT2perRadius*pT2perRadius;
         float pT2scatter = iHelixradius2 * pT2perRadius;
         pT2scatter *= pT2scatter;

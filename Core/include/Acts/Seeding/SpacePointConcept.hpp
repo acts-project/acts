@@ -22,7 +22,6 @@
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_x), x, 0)
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_y), y, 0)
 BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_z), z, 0)
-BOOST_TYPE_ERASURE_MEMBER((Acts)(concept)(anySpacepointDetail)(has_r), r, 0)
 // clang-format on
 
 namespace Acts {

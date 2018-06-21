@@ -31,7 +31,7 @@ public:
     /// errors
     /// @returns squared errors in z and r for the passed SpacePoint (ignoring
     /// correlations)
-    virtual std::array<float,2> getCovariances(const Acts::concept::AnySpacePoint<>* sp, float zAlign = 0, float rAlign = 0, float sigma=1) =0;
+    virtual Acts::Vector2D getCovariances(const Acts::concept::AnySpacePoint<>* sp, float zAlign = 0, float rAlign = 0, float sigma=1) =0;
 
 };
 }
