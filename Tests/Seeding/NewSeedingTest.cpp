@@ -70,6 +70,7 @@ int main(){
   config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf));
   Acts::New_Seedmaker a(config);
 
+  // covariance tool, sets covariances per spacepoint as required
   std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> ct = [=]
           (const SpacePoint* sp,float zAlign,float rAlign,float sigma=1)
           -> Acts::Vector2D
