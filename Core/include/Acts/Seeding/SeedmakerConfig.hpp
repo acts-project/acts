@@ -12,14 +12,12 @@ namespace Acts{
       // forward declaration to avoid cyclic dependence
       class IBinFinder;
       class SeedFilter;
-      class ICovarianceTool;
       struct SeedmakerConfig {
         // BinFinder must return std::vector<Acts::Seeding::Bin> with content of 
         // each bin sorted in r (ascending)
         std::shared_ptr<IBinFinder> bottomBinFinder;
         std::shared_ptr<IBinFinder> topBinFinder;
         std::shared_ptr<SeedFilter> seedFilter;
-        std::shared_ptr<ICovarianceTool> covarianceTool;
 
 // Algorithm settings
         // number of seeds to be produced before returning

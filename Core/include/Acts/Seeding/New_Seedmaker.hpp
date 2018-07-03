@@ -44,7 +44,8 @@ namespace Acts {
       template <typename SpacePoint>
       std::shared_ptr<Acts::SeedmakerState>
       initState
-        (const std::vector<const SpacePoint*>& spVec) const;
+        (const std::vector<const SpacePoint*>& spVec,
+         std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> covTool) const;
 
 
 /// Create all seed from the space points passed in createSpacePointGrid

@@ -4,14 +4,8 @@
 /// @class ICovarianceTool
 /// Interface Class that returns covariance on SPForSeed locations in r and z
 
-#include "Acts/Seeding/ICovarianceTool.hpp"
-#include "SpacePoint.hpp"
-
-#include <boost/type_erasure/any_cast.hpp>
-
-
 namespace Acts {
-class CovarianceTool : public ICovarianceTool
+class CovarianceTool
 {
 public:
   /// Virtual destructor
@@ -25,23 +19,25 @@ public:
     /// @param rAlign is the alignment uncertainty in r.
     /// it is going to be squared and added to covr.
     /// @param sigma is multiplied with the combined alignment and covariance errors
+    template <typename SpacePoint> 
     Acts::Vector2D
-    getCovariances(const Acts::concept::AnySpacePoint<>* sp, 
+    getCovariances(const SpacePoint* sp, 
                    float zAlign = 0, 
                    float rAlign = 0, 
                    float sigma=1);
 
 };
+    template <typename SpacePoint> 
     inline
     Acts::Vector2D
-    CovarianceTool::getCovariances(const Acts::concept::AnySpacePoint<>* sp, 
+    CovarianceTool::getCovariances(const SpacePoint* sp, 
                                    float zAlign,
                                    float rAlign,
                                    float sigma)
     {
       Acts::Vector2D cov;
-      cov[0] = ((boost::type_erasure::any_cast<SpacePoint>(*sp)).covr + rAlign*rAlign) * sigma;
-      cov[1] = ((boost::type_erasure::any_cast<SpacePoint>(*sp)).covz + zAlign*zAlign) * sigma;
+      cov[0] = ((*sp).covr + rAlign*rAlign) * sigma;
+      cov[1] = ((*sp).covz + zAlign*zAlign) * sigma;
       return cov;
     }
 }

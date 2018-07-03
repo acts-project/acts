@@ -28,9 +28,9 @@ namespace Acts{
     float deltaRMin = 5.;
     // in dense environments many seeds may be found per middle space point.
     // only seeds with the highest quality will be kept if this limit is reached.
-    int maxSeedsPerSpM = 10;
+    unsigned int maxSeedsPerSpM = 10;
     // how often do you want to increase the quality of a seed for finding a compatible seed?
-    int compatSeedLimit = 2;
+    size_t compatSeedLimit = 2;
   };
 
 /// @class Filter seeds at various stages with the currently
@@ -39,6 +39,7 @@ namespace Acts{
     public: 
     SeedFilter(SeedFilterConfig cfg,
                std::shared_ptr<IQualityTool> qualityTool);
+    SeedFilter(SeedFilterConfig cfg);
 
     SeedFilter() = delete;
     ~SeedFilter();

@@ -17,11 +17,14 @@ namespace Acts{
                          :m_cfg (config),
                           m_qualityTool (qualityTool){}
 
+  SeedFilter::SeedFilter(SeedFilterConfig config): m_cfg (config) {}
+
   //destructor
   SeedFilter::~SeedFilter(){}
 
   // function to filter seeds based on all seeds with same bottom- and middle-spacepoint.
   // return vector must contain quality of each seed 
+  // TODO: performance of shared_ptr vs raw pointer?
   std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >
   SeedFilter::filterSeeds_2SpFixed(std::shared_ptr<SPForSeed> bottomSP,
                                    std::shared_ptr<SPForSeed> middleSP,
@@ -36,7 +39,7 @@ namespace Acts{
     // -> very good seed
     std::vector<float> compatibleSeedRadii;
 
-    for(int i = 0; i < topSpVec.size(); i++){
+    for(size_t i = 0; i < topSpVec.size(); i++){
 
       float invHelixRadius = invHelixRadiusVec.at(i);
       float lowerLimitCurv = invHelixRadius - m_cfg.deltaInvHelixRadius; 
@@ -45,7 +48,7 @@ namespace Acts{
       float impact         = impactParametersVec.at(i);
 
       float quality = -(impact * m_cfg.impactQualityFactor);
-      for (int j = 0; j < topSpVec.size(); j++){
+      for (size_t j = 0; j < topSpVec.size(); j++){
         if (i == j) continue;
         // compared top SP should have at least deltaRMin distance
         float otherTop_r = topSpVec.at(j)->radius();
@@ -68,10 +71,12 @@ namespace Acts{
         }
         if(compatibleSeedRadii.size() >= m_cfg.compatSeedLimit) break;
       }
-      // add detector specific considerations on the seed quality
-      quality += m_qualityTool->seedQuality(bottomSP, middleSP, topSpVec.at(i));
-      // discard low quality seeds
-      if (!m_qualityTool->passesQualityCut(quality, bottomSP, middleSP, topSpVec.at(i))) continue;
+      if(m_qualityTool != nullptr){
+        // add detector specific considerations on the seed quality
+        quality += m_qualityTool->seedQuality(bottomSP, middleSP, topSpVec.at(i));
+        // discard low quality seeds
+        if (!m_qualityTool->passesQualityCut(quality, bottomSP, middleSP, topSpVec.at(i))) continue;
+      }
       selectedSeeds.push_back(std::make_pair(quality, std::make_shared<InternalSeed>(bottomSP,middleSP,topSpVec.at(i),zOrigin)));
       }
     return selectedSeeds;
@@ -80,12 +85,13 @@ namespace Acts{
 
 
   // after creating all seeds with a common middle space point, filter again
+  // TODO: performance of shared_ptr vs raw pointer?
   void
   SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM, std::queue<std::shared_ptr<InternalSeed> >& queue) const {
 
     //sort by quality and iterate only up to configured max number of seeds per middle SP
     std::sort(seedsPerSpM.begin(),seedsPerSpM.end(),comQuality());
-    int maxSeeds = seedsPerSpM.size();
+    unsigned int maxSeeds = seedsPerSpM.size();
     if(maxSeeds > m_cfg.maxSeedsPerSpM){
       maxSeeds = m_cfg.maxSeedsPerSpM + 1;
     }

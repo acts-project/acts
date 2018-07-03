@@ -9,7 +9,6 @@
 #include <cmath>
 #include <numeric>
 
-#include "Acts/Seeding/ICovarianceTool.hpp"
 #include "Acts/Seeding/IBinFinder.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 
@@ -31,7 +30,8 @@ New_Seedmaker::New_Seedmaker(const Acts::SeedmakerConfig& config): m_config(conf
 template <typename SpacePoint>
 std::shared_ptr<Acts::SeedmakerState>
 New_Seedmaker::initState
-(const std::vector<const SpacePoint* >& spVec) const
+(const std::vector<const SpacePoint* >& spVec,
+ std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> covTool) const
 {
   auto state = std::make_shared<Acts::SeedmakerState>();
   // setup spacepoint grid config
@@ -73,7 +73,7 @@ New_Seedmaker::initState
     float spPhi = std::atan2(spY,spX);
     if(spPhi > phiMax || spPhi < phiMin) continue;
     // covariance configuration should be done outside of the Seedmaker
-    Acts::Vector2D cov = m_config.covarianceTool->getCovariances(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
+    Acts::Vector2D cov = covTool(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
     Acts::Vector3D globalPos(spX,spY,spZ);
     SPForSeed sps(spIndex, globalPos, m_config.beamPos, cov);
     Acts::Vector2D spLocation(spPhi,spZ);
@@ -248,8 +248,7 @@ New_Seedmaker::createSeedsInRegion
         float Im  = fabs((A-B*rM)*rM)                ;
 
         if(Im <= m_config.impactMax) {
-          // TODO: test impact of at() instead of [] access. should never be out of bounds.
-          topSpVec.push_back(compatTopSP.at(t));
+          topSpVec.push_back(compatTopSP[t]);
           curvatures.push_back(sqrt(iHelixradius2));
           impactParameters.push_back(Im);
         }

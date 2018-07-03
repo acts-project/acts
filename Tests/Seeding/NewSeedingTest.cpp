@@ -5,8 +5,6 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SPForSeed.hpp"
 
-#include "TestQualityTool.hpp"
-#include "TestCovarianceTool.hpp"
 #include "SpacePoint.hpp"
 
 #include <boost/type_erasure/any_cast.hpp>
@@ -17,12 +15,12 @@
 #include <utility>
 
 
-std::vector<const Acts::concept::AnySpacePoint<>*> readFile(std::string filename){
+std::vector<const SpacePoint*> readFile(std::string filename){
 
   std::string line;
   int   layer, ns, hitid;
   float r, phi, z;
-  std::vector<const Acts::concept::AnySpacePoint<>*> readSP;
+  std::vector<const SpacePoint*> readSP;
 
   std::ifstream spFile(filename);
   if (spFile.is_open()){
@@ -36,7 +34,7 @@ std::vector<const Acts::concept::AnySpacePoint<>*> readFile(std::string filename
       if (linetype == "lxyz"){
         ss >> layer >> x >> y >> z;
         r = std::sqrt(x*x+y*y);
-        Acts::concept::AnySpacePoint<>* sp = new Acts::concept::AnySpacePoint<>(SpacePoint{x,y,z,r,layer,0.003,0.003});
+        SpacePoint * sp = new SpacePoint{x,y,z,r,layer,0.003,0.003};
    //     if(r < 200.){
    //       sp->setClusterList(1,0);
    //     }
@@ -69,11 +67,19 @@ int main(){
   config.bottomBinFinder = std::make_unique<Acts::BinFinder>(Acts::BinFinder());
   config.topBinFinder = std::make_unique<Acts::BinFinder>(Acts::BinFinder());
   Acts::SeedFilterConfig sfconf;
-  auto qTool = std::make_shared<Acts::QualityTool>(Acts::QualityTool());
-  config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf,qTool));
-  config.covarianceTool = std::make_unique<Acts::CovarianceTool>(Acts::CovarianceTool());
+  config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf));
   Acts::New_Seedmaker a(config);
-  std::shared_ptr<Acts::SeedmakerState> state = a.initState(spVec);
+
+  std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> ct = [=]
+          (const SpacePoint* sp,float zAlign,float rAlign,float sigma=1)
+          -> Acts::Vector2D
+          { Acts::Vector2D cov;
+            cov[0] = ((*sp).covr + rAlign*rAlign) * sigma;
+            cov[1] = ((*sp).covz + zAlign*zAlign) * sigma;
+            return cov;
+          };
+
+  std::shared_ptr<Acts::SeedmakerState> state = a.initState(spVec, ct);
   a.createSeeds(state);
   while(!(state->outputQueue.empty())){
     std::shared_ptr<Acts::InternalSeed> seed = state->outputQueue.front();
