@@ -76,8 +76,16 @@ namespace Test {
     Vector2D origin(0., 0.);
     Vector2D outside(30., 0.);
     Vector2D inSurface(2., 0.0);
-    BOOST_TEST(discTrapezoidalBoundsObject.distanceToBoundary(origin) == 2.0);
-    BOOST_TEST(discTrapezoidalBoundsObject.distanceToBoundary(outside) == 24.0);
+    BOOST_CHECK_CLOSE_FRACTION(
+        discTrapezoidalBoundsObject.distanceToBoundary(origin),
+        2.0,
+        1e-6
+    );
+    BOOST_CHECK_CLOSE_FRACTION(
+        discTrapezoidalBoundsObject.distanceToBoundary(outside),
+        24.0,
+        1e-6
+    );
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
@@ -96,29 +104,38 @@ namespace Test {
                == false);
     //
     /// Test rMin
-    BOOST_TEST(discTrapezoidalBoundsObject.rMin() == rMin);
+    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.rMin(), rMin, 1e-6);
     //
     /// Test rMax
-    BOOST_TEST(discTrapezoidalBoundsObject.rMax() == rMax);
+    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.rMax(), rMax, 1e-6);
     //
     /// Test averagePhi
-    BOOST_TEST(discTrapezoidalBoundsObject.averagePhi() == averagePhi);
+    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.averagePhi(),
+                               averagePhi,
+                               1e-6);
     //
     /// Test rCenter (redundant; not configurable)
-    BOOST_TEST(discTrapezoidalBoundsObject.rCenter() == 2.5243377989621383);
+    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.rCenter(),
+                               2.5243377989621383,
+                               1e-6);
     //
     /// Test halfPhiSector (redundant; not configurable)
-    BOOST_TEST(discTrapezoidalBoundsObject.stereo() == 0.0);
+    BOOST_CHECK_SMALL(discTrapezoidalBoundsObject.stereo(), 1e-6);
     //
     /// Test minHalflengthX
-    BOOST_TEST(discTrapezoidalBoundsObject.minHalflengthX() == minHalfX);
+    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.minHalflengthX(),
+                               minHalfX,
+                               1e-6);
     //
     /// Test maxHalflengthX
-    BOOST_TEST(discTrapezoidalBoundsObject.maxHalflengthX() == maxHalfX);
+    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.maxHalflengthX(),
+                               maxHalfX,
+                               1e-6);
     //
     /// Test halflengthY
-    BOOST_TEST(discTrapezoidalBoundsObject.halflengthY()
-               == 0.79228699139326131);
+    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.halflengthY(),
+                               0.79228699139326131,
+                               1e-6);
   }
   /// Unit test for testing DiscTrapezoidalBounds assignment
   BOOST_AUTO_TEST_CASE(DiscTrapezoidalBoundsAssignment)
@@ -149,20 +166,20 @@ namespace Test {
     variant_map var_dt_map = boost::get<variant_map>(var_dt);
     BOOST_TEST(var_dt_map.get<std::string>("type") == "DiscTrapezoidalBounds");
     variant_map pl = var_dt_map.get<variant_map>("payload");
-    BOOST_TEST(pl.get<double>("rMin") == rMin);
-    BOOST_TEST(pl.get<double>("rMax") == rMax);
-    BOOST_TEST(pl.get<double>("avgPhi") == avgPhi);
-    BOOST_TEST(pl.get<double>("minHalfX") == minHalfX);
-    BOOST_TEST(pl.get<double>("maxHalfX") == maxHalfX);
-    BOOST_TEST(pl.get<double>("stereo") == stereo);
+    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("rMin"), rMin, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("rMax"), rMax, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("avgPhi"), avgPhi, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("minHalfX"), minHalfX, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("maxHalfX"), maxHalfX, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("stereo"), stereo, 1e-6);
 
     DiscTrapezoidalBounds dt2(var_dt);
 
-    BOOST_TEST(dt.rMin() == dt2.rMin());
-    BOOST_TEST(dt.rMax() == dt2.rMax());
-    BOOST_TEST(dt.minHalflengthX() == dt2.minHalflengthX());
-    BOOST_TEST(dt.maxHalflengthX() == dt2.maxHalflengthX());
-    BOOST_TEST(dt.stereo() == dt2.stereo());
+    BOOST_CHECK_CLOSE_FRACTION(dt.rMin(), dt2.rMin(), 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(dt.rMax(), dt2.rMax(), 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(dt.minHalflengthX(), dt2.minHalflengthX(), 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(dt.maxHalflengthX(), dt2.maxHalflengthX(), 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(dt.stereo(), dt2.stereo(), 1e-6);
   }
 
   BOOST_AUTO_TEST_SUITE_END()
