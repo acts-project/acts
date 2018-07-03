@@ -659,36 +659,7 @@ public:
   /// @param sl Output stream to write to
   /// @return the output stream given as @p sl
   std::ostream&
-  dump(std::ostream& sl) const
-  {
-    sl << "SurfaceArray:" << std::endl;
-    sl << " - no surfaces: " << m_surfaces.size() << std::endl;
-    sl << " - grid dim:    " << p_gridLookup->dimensions() << std::endl;
-
-    auto axes = p_gridLookup->getAxes();
-
-    for (size_t j = 0; j < axes.size(); ++j) {
-      detail::AxisBoundaryType bdt = axes.at(j)->getBoundaryType();
-      sl << " - axis " << (j + 1) << std::endl;
-      sl << "   - boundary type: ";
-      if (bdt == detail::AxisBoundaryType::Open) sl << "open";
-      if (bdt == detail::AxisBoundaryType::Bound) sl << "bound";
-      if (bdt == detail::AxisBoundaryType::Closed) sl << "closed";
-      sl << std::endl;
-      sl << "   - type: "
-         << (axes.at(j)->isEquidistant() ? "equidistant" : "variable")
-         << std::endl;
-      sl << "   - n bins: " << axes.at(j)->getNBins() << std::endl;
-      sl << "   - bin edges: [ ";
-      auto binEdges = axes.at(j)->getBinEdges();
-      for (size_t i = 0; i < binEdges.size(); ++i) {
-        if (i > 0) sl << ", ";
-        sl << binEdges.at(i);
-      }
-      sl << " ]" << std::endl;
-    }
-    return sl;
-  }
+  dump(std::ostream& sl) const;
 
   variant_data
   toVariantData() const;
