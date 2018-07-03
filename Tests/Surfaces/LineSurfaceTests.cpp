@@ -25,6 +25,7 @@
 //
 #include "DetectorElementStub.hpp"
 #include "LineSurfaceStub.hpp"
+#include "../Utilities/TestHelper.hpp"
 //
 #include <limits>
 
@@ -85,7 +86,7 @@ namespace Test {
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub line(pTransform, 2.0, 20.);
     Vector3D        referencePosition{0., 1., 2.};
-    BOOST_TEST(referencePosition == line.binningPosition(binX));
+    checkCloseVec3D(referencePosition, line.binningPosition(binX));
     //
     // bounds()
     auto              pLineBounds = std::make_shared<const LineBounds>(10.0);
@@ -101,7 +102,7 @@ namespace Test {
     Vector2D       localPosition;
     BOOST_CHECK(line.globalToLocal(gpos, mom, localPosition));
     const Vector2D expectedResult{0, -2};
-    BOOST_CHECK(expectedResult == localPosition);
+    checkCloseVec2D(expectedResult, localPosition);
     //
     // intersectionEstimate
     const Vector3D      direction{0., 1., 2.};
@@ -111,8 +112,8 @@ namespace Test {
         {0., 0., 0.}, direction.unit(), navDir, bcheck);
     BOOST_CHECK(intersection.valid);
     Vector3D expectedIntersection(0, 1., 2.);
-    BOOST_TEST(intersection.position
-               == expectedIntersection);  // need more tests..
+    checkCloseVec3D(intersection.position,
+                    expectedIntersection);  // need more tests..
     //
     // isOnSurface
     const Vector3D insidePosition{0., 2.5, 0.};
@@ -123,7 +124,7 @@ namespace Test {
     //
     // lineDirection
     const Vector3D zDirection{0., 0., 1.};
-    BOOST_TEST(line.lineDirection() == zDirection);
+    checkCloseVec3D(line.lineDirection(), zDirection);
     //
     // localToGlobal
     Vector3D returnedGlobalPosition{0., 0., 0.};
@@ -131,7 +132,7 @@ namespace Test {
     const Vector3D momentum{300., 200., 0.};  // find better values!
     line.localToGlobal(localPosition, momentum, returnedGlobalPosition);
     const Vector3D expectedGlobalPosition{0, 1, 0};
-    BOOST_TEST(returnedGlobalPosition == expectedGlobalPosition);
+    checkCloseVec3D(returnedGlobalPosition, expectedGlobalPosition);
     //
     // referenceFrame
     Vector3D globalPosition{0., 0., 0.};
@@ -151,11 +152,13 @@ namespace Test {
     //
     // normal
     Vector3D normalVector{0., 0., 1.};  // line direction is same as normal????
-    BOOST_TEST(line.normal() == normalVector);
+    checkCloseVec3D(line.normal(), normalVector);
     //
     // pathCorrection
     auto any3DVector = normalVector;
-    BOOST_TEST(line.pathCorrection(any3DVector, any3DVector) == 1.);
+    BOOST_CHECK_CLOSE_FRACTION(line.pathCorrection(any3DVector, any3DVector),
+                               1.,
+                               1e-6);
   }
   /// Unit test for testing LineSurface assignment
   BOOST_AUTO_TEST_CASE(LineSurface_assignment_test)
@@ -188,13 +191,13 @@ namespace Test {
         = boost::get<variant_map>(var_line).get<variant_map>("payload");
     const variant_map& bounds_pl
         = pl.get<variant_map>("bounds").get<variant_map>("payload");
-    BOOST_TEST(bounds_pl.get<double>("radius") == radius);
-    BOOST_TEST(bounds_pl.get<double>("halfZ") == hlZ);
+    BOOST_CHECK_CLOSE_FRACTION(bounds_pl.get<double>("radius"), radius, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(bounds_pl.get<double>("halfZ"), hlZ, 1e-6);
 
     LineSurfaceStub line2(var_line);
     auto            lbounds = dynamic_cast<const LineBounds*>(&line2.bounds());
-    BOOST_TEST(lbounds->r() == radius);
-    BOOST_TEST(lbounds->halflengthZ() == hlZ);
+    BOOST_CHECK_CLOSE_FRACTION(lbounds->r(), radius, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(lbounds->halflengthZ(), hlZ, 1e-6);
   }
 
   BOOST_AUTO_TEST_SUITE_END()
