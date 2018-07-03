@@ -28,9 +28,10 @@ New_Seedmaker::New_Seedmaker(const Acts::SeedmakerConfig& config): m_config(conf
   m_config.minHelixRadius2 = std::pow(m_config.minPt/m_config.pTPerHelixRadius,2);
 }
 
+template <typename SpacePoint>
 std::shared_ptr<Acts::SeedmakerState>
 New_Seedmaker::initState
-(const std::vector<const Acts::concept::AnySpacePoint<>*> spVec) const
+(const std::vector<const SpacePoint* >& spVec) const
 {
   auto state = std::make_shared<Acts::SeedmakerState>();
   // setup spacepoint grid config
@@ -95,18 +96,17 @@ New_Seedmaker::createSeeds
   if(state->outputQueue.size() >= m_config.minSeeds) {
     return;
   }
-  bool queueFull = false;
-
   // loop over all space point bins, break out of loop if queue full
   // store indices in state to continue seed creation after break
   for (; state->phiIndex <= phiZbins[0]; state->phiIndex++){
     for (; state->zIndex <= phiZbins[1]; state->zIndex++){
       std::set<size_t > bottomBins = m_config.bottomBinFinder->findBins(state->phiIndex,state->zIndex,state->binnedSP);
       std::set<size_t > topBins = m_config.topBinFinder->findBins(state->phiIndex,state->zIndex,state->binnedSP);
-      createSeedsInRegion(state->binnedSP->at({state->phiIndex,state->zIndex}), bottomBins, topBins, state);
-      if(state->outputQueue.size() >= m_config.minSeeds){queueFull = true; break;}
+      auto curbin = state->binnedSP->at({state->phiIndex,state->zIndex});
+      createSeedsInRegion(curbin, bottomBins, topBins, state);
+      if(state->outputQueue.size() >= m_config.minSeeds){return;}
     }
-    if(queueFull){break;}
+    state->zIndex = 1;
   }
   return;
 }

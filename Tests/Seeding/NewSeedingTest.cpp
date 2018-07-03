@@ -48,7 +48,7 @@ std::vector<const Acts::concept::AnySpacePoint<>*> readFile(std::string filename
 }
 
 int main(){
-  std::vector<const Acts::concept::AnySpacePoint<>*> spVec = readFile("sp.txt");
+  std::vector<const SpacePoint*> spVec = readFile("sp.txt");
   std::cout << "size of read SP: " <<spVec.size() << std::endl;
 
   Acts::SeedmakerConfig config;
@@ -79,13 +79,13 @@ int main(){
     std::shared_ptr<Acts::InternalSeed> seed = state->outputQueue.front();
     state->outputQueue.pop();
     std::shared_ptr<Acts::SPForSeed> spC = seed->spacepoint0();
-    const SpacePoint* sp = boost::type_erasure::any_cast<const SpacePoint *>(spVec[spC->spIndex()]);
+    const SpacePoint* sp = spVec[spC->spIndex()];
     std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     spC = seed->spacepoint1();
-    sp = boost::type_erasure::any_cast<const SpacePoint *>(spVec[spC->spIndex()]);
+    sp = spVec[spC->spIndex()];
     std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     spC = seed->spacepoint2();
-    sp = boost::type_erasure::any_cast<const SpacePoint *>(spVec[spC->spIndex()]);
+    sp = spVec[spC->spIndex()];
     std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     std::cout << std::endl;
   }

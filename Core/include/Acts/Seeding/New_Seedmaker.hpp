@@ -41,9 +41,10 @@ namespace Acts {
 /// @param spVec the unordered vector containing all input space points
 /// @param state the state of the object in which the space point grid will
 /// be stored
+      template <typename SpacePoint>
       std::shared_ptr<Acts::SeedmakerState>
       initState
-        ( std::vector<const Acts::concept::AnySpacePoint<>*> spVec) const;
+        (const std::vector<const SpacePoint*>& spVec) const;
 
 
 /// Create all seed from the space points passed in createSpacePointGrid
