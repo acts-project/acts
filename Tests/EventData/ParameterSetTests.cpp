@@ -14,7 +14,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "ParametersTestHelper.hpp"
+#include "../Utilities/TestHelper.hpp"
 using namespace Acts::detail;
 
 ///

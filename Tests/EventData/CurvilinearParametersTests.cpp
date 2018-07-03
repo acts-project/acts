@@ -11,7 +11,9 @@
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
 #include "ParametersTestHelper.hpp"
+#include "../Utilities/TestHelper.hpp"
 
 namespace Acts {
 namespace Test {
