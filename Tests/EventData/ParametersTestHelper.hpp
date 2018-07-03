@@ -13,6 +13,24 @@
 namespace Acts {
 namespace Test {
 
+  template <typename T, int rows, int cols>
+  void checkCloseImpl(const ActsMatrix<T, rows, cols>& m1,
+                      const ActsMatrix<T, rows, cols>& m2)
+  {
+    const int m_size = rows * cols;
+    for (int i = 0; i < m_size; ++i) {
+      BOOST_CHECK_CLOSE_FRACTION(m1(i), m2(i), 1e-6);
+    }
+  }
+
+  void checkCloseVec3D(const Vector3D& v1, const Vector3D& v2) {
+    checkCloseImpl(v1, v2);
+  }
+
+  void checkCloseRM3D(const RotationMatrix3D& m1, const RotationMatrix3D& m2) {
+    checkCloseImpl(m1, m2);
+  }
+
   template <typename Parameter>
   void
   consistencyCheck(const Parameter& pars,

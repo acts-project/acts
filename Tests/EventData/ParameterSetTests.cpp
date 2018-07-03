@@ -14,6 +14,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "ParametersTestHelper.hpp"
 using namespace Acts::detail;
 
 ///
@@ -600,7 +601,7 @@ namespace Test {
         nullptr, first_loc0, first_phi, first_theta);
     ParameterSet<ParID_t::eLOC_0, ParID_t::ePHI, ParID_t::eTHETA> second(
         nullptr, second_loc0, second_phi, second_theta);
-    BOOST_CHECK((residuals == second.residual(first)));
+    checkCloseVec3D(residuals, second.residual(first));
 
     // some more checks for bound variables
     check_residuals_for_bound_parameters();

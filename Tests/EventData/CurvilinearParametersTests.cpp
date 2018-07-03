@@ -45,14 +45,14 @@ namespace Test {
         curvilinear_neut, pos, mom, 0., {{0., 0., fphi, ftheta, oOp}});
 
     // check that the created surface is at the position
-    BOOST_CHECK_EQUAL(curvilinear_pos.referenceSurface().center(), pos);
-    BOOST_CHECK_EQUAL(curvilinear_neg.referenceSurface().center(), pos);
-    BOOST_CHECK_EQUAL(curvilinear_neut.referenceSurface().center(), pos);
+    checkCloseVec3D(curvilinear_pos.referenceSurface().center(), pos);
+    checkCloseVec3D(curvilinear_neg.referenceSurface().center(), pos);
+    checkCloseVec3D(curvilinear_neut.referenceSurface().center(), pos);
 
     // check that the z-axis of the created surface is along momentum direction
-    BOOST_CHECK_EQUAL(curvilinear_pos.referenceSurface().normal(pos), dir);
-    BOOST_CHECK_EQUAL(curvilinear_neg.referenceSurface().normal(pos), dir);
-    BOOST_CHECK_EQUAL(curvilinear_neut.referenceSurface().normal(pos), dir);
+    checkCloseVec3D(curvilinear_pos.referenceSurface().normal(pos), dir);
+    checkCloseVec3D(curvilinear_neg.referenceSurface().normal(pos), dir);
+    checkCloseVec3D(curvilinear_neut.referenceSurface().normal(pos), dir);
 
     // check the reference frame of curvilinear parameters
     // it is the x-y frame of the created surface
@@ -63,9 +63,9 @@ namespace Test {
     mFrame.col(0)           = uAxis;
     mFrame.col(1)           = vAxis;
     mFrame.col(2)           = tAxis;
-    BOOST_CHECK_EQUAL(mFrame, curvilinear_pos.referenceFrame());
-    BOOST_CHECK_EQUAL(mFrame, curvilinear_neg.referenceFrame());
-    BOOST_CHECK_EQUAL(mFrame, curvilinear_neut.referenceFrame());
+    checkCloseRM3D(mFrame, curvilinear_pos.referenceFrame());
+    checkCloseRM3D(mFrame, curvilinear_neg.referenceFrame());
+    checkCloseRM3D(mFrame, curvilinear_neut.referenceFrame());
 
     /// copy construction test
     CurvilinearParameters        curvilinear_pos_copy(curvilinear_pos);
