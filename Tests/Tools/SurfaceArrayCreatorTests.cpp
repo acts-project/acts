@@ -98,15 +98,14 @@ namespace Test {
     {
 
       SrfVec res;
-
       double phiStep = 2 * M_PI / n;
       for (size_t i = 0; i < n; ++i) {
-
         double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
+        double phi = std::fma(i, phiStep, shift);
 
         Transform3D trans;
         trans.setIdentity();
-        trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
+        trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
         trans.translate(Vector3D(r, 0, z));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
@@ -132,15 +131,14 @@ namespace Test {
     {
 
       SrfVec res;
-
       double phiStep = 2 * M_PI / n;
       for (size_t i = 0; i < n; ++i) {
-
         double z = zbase;
+        double phi = std::fma(i, phiStep, shift);
 
         Transform3D trans;
         trans.setIdentity();
-        trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
+        trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
         trans.translate(Vector3D(10, 0, z));
         trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
         trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
@@ -213,19 +211,15 @@ namespace Test {
     {
       double z0 = -(nZ - 1) * w;
       SrfVec res;
-
       std::vector<std::pair<const Surface*, const Surface*>> pairs;
-
+      double phiStep = 2 * M_PI / nPhi;
       for (int i = 0; i < nZ; i++) {
         double z = i * w * 2 + z0;
-
-        double phiStep = 2 * M_PI / nPhi;
         for (int j = 0; j < nPhi; ++j) {
-
+          double phi = std::fma(j, phiStep, shift);
           Transform3D trans;
           trans.setIdentity();
-          trans.rotate(
-              Eigen::AngleAxisd(j * phiStep + shift, Vector3D(0, 0, 1)));
+          trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
           trans.translate(Vector3D(10, 0, z));
           trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
           trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
