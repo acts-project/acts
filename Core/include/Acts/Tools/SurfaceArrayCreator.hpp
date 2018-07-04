@@ -240,7 +240,6 @@ public:
 
       // ...so by injecting them into atan2, we get the angle between them
       auto dPhi = std::atan2(sin_dPhi_n2, cos_dPhi_n2);
-
       return std::abs(dPhi) < M_PI / 180.;
     }
 
