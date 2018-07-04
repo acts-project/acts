@@ -227,12 +227,21 @@ public:
   {
 
     if (bValue == Acts::binPhi) {
-      double dPhi = std::abs(a->binningPosition(binR).phi()
-                             - b->binningPosition(binR).phi());
-      dPhi = std::abs(
-          dPhi - (dPhi > M_PI) * (2 * M_PI));  // subtract dPhi if over 2pi
+      // Take the two binning positions
+      auto pos1 = a->binningPosition(binR), pos2 = b->binningPosition(binR);
 
-      return dPhi < M_PI * 1 / 180.;
+      // Project them on the (x, y) plane, where Phi angles are calculated
+      auto proj1 = pos1.head<2>(), proj2 = pos2.head<2>();
+
+      // Basic dot and cross products identities give us the cosine and sine
+      // of these angles, time the squared vector norm
+      auto cos_dPhi_n2 = proj1.dot(proj2);
+      auto sin_dPhi_n2 = proj1.x()*proj2.y() - proj2.x()*proj1.y();
+
+      // ...so by injecting them into atan2, we get the angle between them
+      auto dPhi = std::atan2(sin_dPhi_n2, cos_dPhi_n2);
+
+      return std::abs(dPhi) < M_PI / 180.;
     }
 
     if (bValue == Acts::binZ)
