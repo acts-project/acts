@@ -98,6 +98,8 @@ namespace Test {
     {
 
       SrfVec res;
+      // TODO: The test is extremely numerically unstable in the face of upward
+      //       rounding in this multiplication and division. Find out why.
       double phiStep = 2 * M_PI / n;
       for (size_t i = 0; i < n; ++i) {
         double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
@@ -131,6 +133,8 @@ namespace Test {
     {
 
       SrfVec res;
+      // TODO: The test is extremely numerically unstable in the face of upward
+      //       rounding in this multiplication and division. Find out why.
       double phiStep = 2 * M_PI / n;
       for (size_t i = 0; i < n; ++i) {
         double z = zbase;
@@ -212,6 +216,8 @@ namespace Test {
       double z0 = -(nZ - 1) * w;
       SrfVec res;
       std::vector<std::pair<const Surface*, const Surface*>> pairs;
+      // TODO: The test is extremely numerically unstable in the face of upward
+      //       rounding in this multiplication and division. Find out why.
       double phiStep = 2 * M_PI / nPhi;
       for (int i = 0; i < nZ; i++) {
         double z = i * w * 2 + z0;
