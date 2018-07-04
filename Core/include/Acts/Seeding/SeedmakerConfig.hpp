@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Definitions.hpp"
+
 namespace Acts{
       // forward declaration to avoid cyclic dependence
       class IBinFinder;
