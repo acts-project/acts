@@ -60,7 +60,7 @@ public:
       : pos(par.position())
       , dir(par.momentum().normalized())
       , p(par.momentum().norm())
-      , charge(par.charge())
+      , q(par.charge())
       , navDir(ndir)
       , pathAccumulated(0.)
       , stepSize(ssize)
@@ -81,11 +81,18 @@ public:
       return dir;
     }
 
-    /// Actual momentum accessor
+    /// Momentum accessor
     Vector3D
     momentum() const
     {
       return p * dir;
+    }
+
+    /// Charge access
+    double
+    charge() const
+    {
+      return q;
     }
 
     /// Return a corrector
@@ -93,6 +100,19 @@ public:
     corrector() const
     {
       return VoidCorrector();
+    }
+
+    /// Method to update momentum, direction and p
+    ///
+    /// @param uposition the updated position
+    /// @param udirection the updated direction
+    /// @param p the updated momentum value
+    void
+    update(const Vector3D& uposition, const Vector3D& udirection, double up)
+    {
+      pos = uposition;
+      dir = udirection;
+      p   = up;
     }
 
     /// Global particle position
@@ -104,8 +124,8 @@ public:
     /// Momentum
     double p = 0.;
 
-    /// Save the charge
-    double charge = 0.;
+    /// Save the charge: neutral as default for SL stepper
+    double q = 0.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -143,7 +163,7 @@ public:
   {
     // return the parameters
     return CurvilinearParameters(
-        nullptr, state.pos, state.p * state.dir, state.charge);
+        nullptr, state.pos, state.p * state.dir, state.q);
   }
 
   /// Convert the propagation state to track parameters at a certain surface
@@ -160,7 +180,7 @@ public:
   {
     // return the bound parameters
     return BoundParameters(
-        nullptr, state.pos, state.p * state.dir, state.charge, surface);
+        nullptr, state.pos, state.p * state.dir, state.q, surface);
   }
 
   /// Perform a straight line propagation step

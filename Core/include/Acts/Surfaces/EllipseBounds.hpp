@@ -26,7 +26,7 @@ namespace Acts {
 /// Class to describe the bounds for a planar EllipseSurface,
 /// i.e. the surface between two ellipses.
 /// By providing an argument for hphisec, the bounds can
-/// be restricted to a phirange around the center position.
+/// be restricted to a phi-range around the center position.
 ///
 /// @image html EllipseBounds.png
 ///

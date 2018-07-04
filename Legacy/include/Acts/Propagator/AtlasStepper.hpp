@@ -81,6 +81,38 @@ public:
       return Vector3D(pVector[3], pVector[4], pVector[5]);
     }
 
+    Vector3D
+    momentum() const
+    {
+      double p = 1. / std::abs(pVector[6]);
+      return p * direction();
+    }
+
+    /// Charge access
+    double
+    charge() const
+    {
+      return pVector[6] > 0. ? 1. : -1.;
+    }
+
+    /// Method to update momentum, direction and p
+    ///
+    /// @param uposition the updated position
+    /// @param udirection the updated direction
+    /// @param p the updated momentum value
+    void
+    update(const Vector3D& uposition, const Vector3D& udirection, double up)
+    {
+      // update the vector
+      pVector[0] = uposition[0];
+      pVector[1] = uposition[1];
+      pVector[2] = uposition[2];
+      pVector[3] = udirection[0];
+      pVector[4] = udirection[1];
+      pVector[5] = udirection[2];
+      pVector[6] = charge() / up;
+    }
+
     /// Return a corrector
     VoidCorrector
     corrector() const
@@ -297,7 +329,6 @@ public:
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
     //
-    double         charge = state.pVector[6] > 0. ? 1. : -1.;
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
     mom /= std::abs(state.pVector[6]);
@@ -430,7 +461,7 @@ public:
           J * (*state.covariance) * J.transpose());
     }
 
-    return CurvilinearParameters(std::move(cov), gp, mom, charge);
+    return CurvilinearParameters(std::move(cov), gp, mom, state.charge());
   }
 
   /// convert method into bound parameters
@@ -443,7 +474,6 @@ public:
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
 
-    double         charge = state.pVector[6] > 0. ? 1. : -1.;
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
     mom /= std::abs(state.pVector[6]);
@@ -677,7 +707,7 @@ public:
           J * (*state.covariance) * J.transpose());
     }
 
-    return BoundParameters(std::move(cov), gp, mom, charge, s);
+    return BoundParameters(std::move(cov), gp, mom, state.charge(), s);
   }
 
   AtlasStepper(BField bField = BField()) : m_bField(std::move(bField)){};
@@ -707,7 +737,6 @@ public:
   double
   step(State& state) const
   {
-
     // we use h for keeping the nominclature with the original atlas code
     double h   = state.stepSize;
     bool   Jac = state.useJacobian;
@@ -718,7 +747,6 @@ public:
     // Invert mometum/2.
     double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.pVector[6]);
     //    double dltm = 0.0002 * .03;
-
     Vector3D f0, f;
 
     // if new field is required get it
@@ -733,6 +761,7 @@ public:
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
     while (h != 0.) {
+
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
 
       // First point
@@ -794,7 +823,6 @@ public:
       }
 
       //      if (EST < dltm) h *= 2.;
-      state.stepSize = h;
 
       // Parameters calculation
       //
@@ -909,7 +937,11 @@ public:
         d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
+      state.pathAccumulated += h;
+      return h;
     }
+
+    // that exit path should actually not happen
     state.pathAccumulated += h;
     return h;
   }

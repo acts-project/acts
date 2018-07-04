@@ -37,11 +37,11 @@ public:
   {
   public:
     /// identify the layer by name
-    std::string layerName   = "";
+    std::string layerName = "";
     /// identify the sensor by name
-    std::string sensorName  = "";
+    std::string sensorName = "";
     // the local axis definition
-    std::string localAxes   = "xyz";
+    std::string localAxes = "xyz";
     // the envolpoe
     std::pair<double, double> envelope;
     /// define the number of bins in loc0
@@ -117,6 +117,10 @@ public:
   void
   setLogger(std::unique_ptr<const Logger> logger);
 
+  /// Return the created detector elements
+  const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
+  detectorElements() const;
+
 private:
   /// configruation object
   Config m_cfg;
@@ -156,6 +160,12 @@ inline TGeoLayerBuilder::Config
 TGeoLayerBuilder::getConfiguration() const
 {
   return m_cfg;
+}
+
+inline const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
+TGeoLayerBuilder::detectorElements() const
+{
+  return m_elementStore;
 }
 
 inline const std::string&

@@ -82,7 +82,7 @@ public:
       : pos(par.position())
       , dir(par.momentum().normalized())
       , p(par.momentum().norm())
-      , charge(par.charge())
+      , q(par.charge())
       , navDir(ndir)
       , covTransport(false)
       , pathAccumulated(0.)
@@ -123,11 +123,31 @@ public:
       return p * dir;
     }
 
+    /// Charge access
+    double
+    charge() const
+    {
+      return q;
+    }
+
     /// Return a corrector
     corrector_t
     corrector() const
     {
       return corrector_t(startPos, startDir, pathAccumulated);
+    }
+
+    /// Method to update momentum, direction and p
+    ///
+    /// @param uposition the updated position
+    /// @param udirection the updated direction
+    /// @param p the updated momentum value
+    void
+    update(const Vector3D& uposition, const Vector3D& udirection, double up)
+    {
+      pos = uposition;
+      dir = udirection;
+      p   = up;
     }
 
     /// Method for on-demand transport of the covariance
@@ -255,7 +275,7 @@ public:
         Vector2D loc{0., 0.};
         surface.globalToLocal(pos, dir, loc);
         ActsVectorD<5> pars;
-        pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), charge / p;
+        pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), q / p;
         surface.initJacobianToGlobal(jacToGlobal, pos, dir, pars);
       }
       // store in the global jacobian
@@ -278,7 +298,7 @@ public:
     double p = 0.;
 
     /// The charge
-    double charge = 1.;
+    double q = 1.;
 
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
@@ -349,7 +369,7 @@ public:
     }
     // return the parameters
     return CurvilinearParameters(
-        std::move(covPtr), state.pos, state.p * state.dir, state.charge);
+        std::move(covPtr), state.pos, state.p * state.dir, state.q);
   }
 
   /// Convert the propagation state to track parameters at a certain surface
@@ -370,11 +390,8 @@ public:
       covPtr = std::make_unique<const ActsSymMatrixD<5>>(state.cov);
     }
     // return the bound parameters
-    return BoundParameters(std::move(covPtr),
-                           state.pos,
-                           state.p * state.dir,
-                           state.charge,
-                           surface);
+    return BoundParameters(
+        std::move(covPtr), state.pos, state.p * state.dir, state.q, surface);
   }
 
   /// Get the field for the stepping, it checks first if the access is still
@@ -408,7 +425,7 @@ public:
   step(State& state) const
   {
     // Charge-momentum ratio, in SI units
-    const double qop = state.charge / units::Nat2SI<units::MOMENTUM>(state.p);
+    const double qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
 
     // Runge-Kutta integrator state
     double   h2, half_h;
@@ -525,7 +542,6 @@ public:
     state.derivative.template head<3>()     = state.dir;
     state.derivative.template segment<3>(3) = k4;
 
-    // Return the updated step size
     state.pathAccumulated += h;
     return h;
   }

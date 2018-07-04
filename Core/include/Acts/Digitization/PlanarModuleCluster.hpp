@@ -60,5 +60,4 @@ PlanarModuleCluster::digitizationCells() const
 {
   return m_digitizationCells;
 }
-
 }

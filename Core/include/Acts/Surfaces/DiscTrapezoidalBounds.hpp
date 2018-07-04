@@ -25,7 +25,7 @@ namespace Acts {
 ///
 /// Class to describe the bounds for a planar DiscSurface.
 /// By providing an argument for hphisec, the bounds can
-/// be restricted to a phirange around the center position.
+/// be restricted to a phi-range around the center position.
 ///
 
 class DiscTrapezoidalBounds : public DiscBounds

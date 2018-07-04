@@ -197,6 +197,10 @@ struct Navigator
   void
   operator()(propagator_state_t& state) const
   {
+
+    // turn the navigator into void when you are intructed to do nothing
+    if (!resolveSensitive && !resolveMaterial && !resolvePassive) return;
+
     // fail if you have no tracking geometry
     assert(trackingGeometry != nullptr);
     debugLog(state, [&] { return std::string("Entering navigator."); });

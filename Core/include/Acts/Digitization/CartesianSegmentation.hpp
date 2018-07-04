@@ -110,7 +110,7 @@ public:
   /// readout segmentation
   const BinUtility&
   binUtility() const final override;
-  
+
   /// return the pitch sizes as a pair
   std::pair<double, double>
   pitch() const;
@@ -156,14 +156,14 @@ CartesianSegmentation::cell(const Vector2D& position) const
   return cellT<Vector2D>(position);
 }
 
-inline std::pair<double,double>
+inline std::pair<double, double>
 CartesianSegmentation::pitch() const
 {
-  auto boundingBox =  m_activeBounds->boundingBox();
-  auto values = boundingBox.valueStore();
-  double pitchX = 2.*values[0]/m_binUtility->bins(0);
-  double pitchY = 2.*values[1]/m_binUtility->bins(1);
-  return std::pair<double,double>(pitchX,pitchY);  
+  auto   boundingBox = m_activeBounds->boundingBox();
+  auto   values      = boundingBox.valueStore();
+  double pitchX      = 2. * values[0] / m_binUtility->bins(0);
+  double pitchY      = 2. * values[1] / m_binUtility->bins(1);
+  return std::pair<double, double>(pitchX, pitchY);
 }
 
-} // namespace Acts
+}  // namespace Acts
