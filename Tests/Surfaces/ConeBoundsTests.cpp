@@ -88,22 +88,20 @@ namespace Test {
     // std::cout << coneBoundsObject.distanceToBoundary(origin) << std::endl;
     //
     /// test for r
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.r(zMin),
-                               zMin * std::tan(alpha),
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneBoundsObject.r(zMin), zMin * std::tan(alpha), 1e-6);
     //
     /// test for tanAlpha
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.tanAlpha(),
-                               std::tan(alpha),
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneBoundsObject.tanAlpha(), std::tan(alpha), 1e-6);
     //
     /// test for sinAlpha
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.sinAlpha(),
-                               std::sin(alpha),
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneBoundsObject.sinAlpha(), std::sin(alpha), 1e-6);
     //
     /// test for cosAlpha
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.cosAlpha(), std::cos(alpha), 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneBoundsObject.cosAlpha(), std::cos(alpha), 1e-6);
     //
     /// test for alpha
     BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.alpha(), alpha, 1e-6);
@@ -115,9 +113,7 @@ namespace Test {
     BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.maxZ(), zMax, 1e-6);
     //
     /// test for averagePhi
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.halfPhiSector(),
-                               halfPhi,
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.halfPhiSector(), halfPhi, 1e-6);
     //
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
@@ -162,9 +158,8 @@ namespace Test {
     BOOST_CHECK_CLOSE_FRACTION(cone.minZ(), cone2.minZ(), 1e-6);
     BOOST_CHECK_CLOSE_FRACTION(cone.maxZ(), cone2.maxZ(), 1e-6);
     BOOST_CHECK_CLOSE_FRACTION(cone.averagePhi(), cone2.averagePhi(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(cone.halfPhiSector(),
-                               cone2.halfPhiSector(),
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        cone.halfPhiSector(), cone2.halfPhiSector(), 1e-6);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

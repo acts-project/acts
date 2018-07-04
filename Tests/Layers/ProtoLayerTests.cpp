@@ -34,9 +34,8 @@ namespace Test {
 
       Vector3D p5(6, 6, 0);
       Vector3D p6(8, 9, 0);
-      BOOST_CHECK_CLOSE_FRACTION(pl.radialDistance(p5, p6),
-                                 sqrt(6 * 6 + 6 * 6),
-                                 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(
+          pl.radialDistance(p5, p6), sqrt(6 * 6 + 6 * 6), 1e-6);
 
       Vector3D p7(0, 10, 0);
       Vector3D p8(5, 5, 0);

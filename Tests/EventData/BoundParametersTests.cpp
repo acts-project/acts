@@ -26,8 +26,8 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
-#include "ParametersTestHelper.hpp"
 #include "../Utilities/TestHelper.hpp"
+#include "ParametersTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

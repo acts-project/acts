@@ -12,9 +12,9 @@
 
 #define BOOST_TEST_MODULE ParameterSet Tests
 #include <boost/test/included/unit_test.hpp>
+#include "../Utilities/TestHelper.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "../Utilities/TestHelper.hpp"
 using namespace Acts::detail;
 
 ///

@@ -331,9 +331,8 @@ namespace Test {
         = zAxis_pl.get<variant_vector>("bin_edges");
     BOOST_TEST(zAxis_bin_edges.size() == 6);
     for (size_t i = 0; i < zAxis_bin_edges.size(); i++) {
-      BOOST_CHECK_CLOSE_FRACTION(zAxis_bin_edges.get<double>(i),
-                                 zAxis_bin_edges_exp.at(i),
-                                 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(
+          zAxis_bin_edges.get<double>(i), zAxis_bin_edges_exp.at(i), 1e-6);
     }
 
     SurfaceArray sa2(data, transform, itransform);

@@ -236,7 +236,7 @@ public:
       // Basic dot and cross products identities give us the cosine and sine
       // of these angles, time the squared vector norm
       auto cos_dPhi_n2 = proj1.dot(proj2);
-      auto sin_dPhi_n2 = proj1.x()*proj2.y() - proj2.x()*proj1.y();
+      auto sin_dPhi_n2 = proj1.x() * proj2.y() - proj2.x() * proj1.y();
 
       // ...so by injecting them into atan2, we get the angle between them
       auto dPhi = std::atan2(sin_dPhi_n2, cos_dPhi_n2);

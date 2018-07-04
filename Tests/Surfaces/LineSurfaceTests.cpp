@@ -23,9 +23,9 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 //
+#include "../Utilities/TestHelper.hpp"
 #include "DetectorElementStub.hpp"
 #include "LineSurfaceStub.hpp"
-#include "../Utilities/TestHelper.hpp"
 //
 #include <limits>
 
@@ -156,9 +156,8 @@ namespace Test {
     //
     // pathCorrection
     auto any3DVector = normalVector;
-    BOOST_CHECK_CLOSE_FRACTION(line.pathCorrection(any3DVector, any3DVector),
-                               1.,
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        line.pathCorrection(any3DVector, any3DVector), 1., 1e-6);
   }
   /// Unit test for testing LineSurface assignment
   BOOST_AUTO_TEST_CASE(LineSurface_assignment_test)

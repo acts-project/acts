@@ -13,11 +13,11 @@
 #pragma once
 
 // libc/STL include(s)
-#include "strings.h"
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include "strings.h"
 
 // Acts include(s)
 #include "Definitions.hpp"

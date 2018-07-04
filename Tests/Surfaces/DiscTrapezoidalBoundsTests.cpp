@@ -77,15 +77,9 @@ namespace Test {
     Vector2D outside(30., 0.);
     Vector2D inSurface(2., 0.0);
     BOOST_CHECK_CLOSE_FRACTION(
-        discTrapezoidalBoundsObject.distanceToBoundary(origin),
-        2.0,
-        1e-6
-    );
+        discTrapezoidalBoundsObject.distanceToBoundary(origin), 2.0, 1e-6);
     BOOST_CHECK_CLOSE_FRACTION(
-        discTrapezoidalBoundsObject.distanceToBoundary(outside),
-        24.0,
-        1e-6
-    );
+        discTrapezoidalBoundsObject.distanceToBoundary(outside), 24.0, 1e-6);
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
@@ -110,32 +104,27 @@ namespace Test {
     BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.rMax(), rMax, 1e-6);
     //
     /// Test averagePhi
-    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.averagePhi(),
-                               averagePhi,
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        discTrapezoidalBoundsObject.averagePhi(), averagePhi, 1e-6);
     //
     /// Test rCenter (redundant; not configurable)
-    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.rCenter(),
-                               2.5243377989621383,
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        discTrapezoidalBoundsObject.rCenter(), 2.5243377989621383, 1e-6);
     //
     /// Test halfPhiSector (redundant; not configurable)
     BOOST_CHECK_SMALL(discTrapezoidalBoundsObject.stereo(), 1e-6);
     //
     /// Test minHalflengthX
-    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.minHalflengthX(),
-                               minHalfX,
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        discTrapezoidalBoundsObject.minHalflengthX(), minHalfX, 1e-6);
     //
     /// Test maxHalflengthX
-    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.maxHalflengthX(),
-                               maxHalfX,
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        discTrapezoidalBoundsObject.maxHalflengthX(), maxHalfX, 1e-6);
     //
     /// Test halflengthY
-    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.halflengthY(),
-                               0.79228699139326131,
-                               1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        discTrapezoidalBoundsObject.halflengthY(), 0.79228699139326131, 1e-6);
   }
   /// Unit test for testing DiscTrapezoidalBounds assignment
   BOOST_AUTO_TEST_CASE(DiscTrapezoidalBoundsAssignment)

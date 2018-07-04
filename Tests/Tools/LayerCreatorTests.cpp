@@ -273,9 +273,8 @@ namespace Test {
             p_LC->cylinderLayer(srf, equidistant, equidistant, pl));
 
     double rMax = 10.6071, rMin = 9.59111;  // empirical
-    BOOST_CHECK_CLOSE_FRACTION(layer->thickness(),
-                               (rMax - rMin) + 2 * envR,
-                               1e-3);
+    BOOST_CHECK_CLOSE_FRACTION(
+        layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
 
     const CylinderBounds* bounds = &layer->bounds();
     BOOST_CHECK_CLOSE_FRACTION(bounds->r(), (rMax + rMin) / 2., 1e-3);
@@ -296,9 +295,8 @@ namespace Test {
     pl2.envZ = {envZ, envZ};
     layer    = std::dynamic_pointer_cast<CylinderLayer>(
         p_LC->cylinderLayer(srf, 30, 7, pl2));
-    BOOST_CHECK_CLOSE_FRACTION(layer->thickness(),
-                               (rMax - rMin) + 2 * envR,
-                               1e-3);
+    BOOST_CHECK_CLOSE_FRACTION(
+        layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
     bounds = &layer->bounds();
     BOOST_CHECK_CLOSE_FRACTION(bounds->r(), (rMax + rMin) / 2., 1e-3);
     BOOST_CHECK_CLOSE_FRACTION(bounds->halflengthZ(), 14 + envZ, 1e-3);
@@ -313,9 +311,8 @@ namespace Test {
 
     layer = std::dynamic_pointer_cast<CylinderLayer>(
         p_LC->cylinderLayer(srf, 13, 3, pl2));
-    BOOST_CHECK_CLOSE_FRACTION(layer->thickness(),
-                               (rMax - rMin) + 2 * envR,
-                               1e-3);
+    BOOST_CHECK_CLOSE_FRACTION(
+        layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
     bounds = &layer->bounds();
     BOOST_CHECK_CLOSE_FRACTION(bounds->r(), (rMax + rMin) / 2., 1e-3);
     BOOST_CHECK_CLOSE_FRACTION(bounds->halflengthZ(), 14 + envZ, 1e-3);
