@@ -714,7 +714,12 @@ namespace Test {
       size_t              i         = 0;
       for (const auto& edge : axes.at(0)->getBinEdges()) {
         BOOST_TEST_INFO("phi edge index " << i);
-        BOOST_CHECK_CLOSE_FRACTION(edge, phiEdgesExp.at(i), 1e-3);
+        auto phiEdge = phiEdgesExp.at(i);
+        if (std::abs(phiEdge) > 1e-10) {
+          BOOST_CHECK_CLOSE_FRACTION(edge, phiEdge, 1e-3);
+        } else {
+          BOOST_CHECK_SMALL(edge, 10*phiEdge);
+        }
         i++;
       }
       i = 0;
