@@ -187,7 +187,7 @@ ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
   // clamp to [0, |p1p2|]
   f = std::min(L, std::max(0., f));
 
-  Vector2D closest = f * p1p2.unit() + p1;
+  Vector2D closest = f * p1p2.normalized() + p1;
   double   dist    = (closest - O).norm();
 
   return dist;

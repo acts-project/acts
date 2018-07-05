@@ -12,12 +12,6 @@
 #ifndef EIGEN_MATRIXBASE_PLUGIN
 #define EIGEN_MATRIXBASE_PLUGIN "Acts/Utilities/detail/MatrixBasePlugin.hpp"
 #endif
-#ifndef EIGEN_MATRIX_PLUGIN
-#define EIGEN_MATRIX_PLUGIN "Acts/Utilities/detail/MatrixPlugin.hpp"
-#endif
-#ifndef EIGEN_TRANSFORM_PLUGIN
-#define EIGEN_TRANSFORM_PLUGIN "Acts/Utilities/detail/TransformPlugin.hpp"
-#endif
 
 // for GNU: ignore this specific warning, otherwise just include Eigen/Dense
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)

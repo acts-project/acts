@@ -152,7 +152,7 @@ public:
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(typename par_type<par>::type());
     // recreate the surface
-    m_upSurface = PlaneSurface(this->position(), this->momentum().unit());
+    m_upSurface = PlaneSurface(this->position(), this->momentum().normalized());
     // reset to (0,0)
     this->getParameterSet().template setParameter<par>(0.);
   }
@@ -176,7 +176,7 @@ public:
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(typename par_type<par>::type());
     // recreate the surface
-    m_upSurface = PlaneSurface(this->position(), this->momentum().unit());
+    m_upSurface = PlaneSurface(this->position(), this->momentum().normalized());
   }
 
   /// @brief access to the reference surface

@@ -34,7 +34,7 @@ Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
   auto& stepSurfaces = dmodule.stepSurfaces(startPoint, endPoint);
 
   // the track direction
-  Vector3D trackDirection((endPoint - startPoint).unit());
+  Vector3D trackDirection((endPoint - startPoint).normalized());
 
   // the intersections through the surfaces, start one is the first valid one
   std::vector<Acts::Intersection> stepIntersections;
@@ -58,7 +58,7 @@ Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
   }
   // last one is also valid - now sort
   stepIntersections.push_back(
-      Intersection(endPoint, (startPoint - endPoint).mag(), true));
+      Intersection(endPoint, (startPoint - endPoint).norm(), true));
   std::sort(stepIntersections.begin(), stepIntersections.end());
 
   Vector3D lastPosition = startPoint;

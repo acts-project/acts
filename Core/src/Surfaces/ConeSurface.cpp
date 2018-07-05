@@ -127,9 +127,9 @@ Acts::ConeSurface::referenceFrame(const Vector3D& pos,
   // measured Y is the local z axis
   Vector3D measY = rotSymmetryAxis();
   // measured z is the position transverse normalized
-  Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).unit();
+  Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).normalized();
   // measured X is what comoes out of it
-  Acts::Vector3D measX(measY.cross(measDepth).unit());
+  Acts::Vector3D measX(measY.cross(measDepth).normalized());
   // the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
@@ -184,7 +184,7 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
     normalC = transform() * normalC;
   }
   // back in global frame
-  double cAlpha = normalC.dot(mom.unit());
+  double cAlpha = normalC.dot(mom.normalized());
   return std::abs(1. / cAlpha);
 }
 
@@ -226,7 +226,7 @@ Acts::ConeSurface::normal(const Acts::Vector3D& gpos) const
     pos3D     = transform().inverse() * gpos;
     pos3D.z() = 0;
   }
-  return pos3D.unit();
+  return pos3D.normalized();
 }
 
 const Acts::ConeBounds&

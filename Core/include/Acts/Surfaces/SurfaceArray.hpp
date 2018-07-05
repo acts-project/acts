@@ -206,7 +206,7 @@ public:
         Vector3D binCtr = getBinCenter(b);
         minPath         = std::numeric_limits<double>::max();
         for (const auto& srf : surfaces) {
-          curPath = (binCtr - srf->binningPosition(binR)).mag();
+          curPath = (binCtr - srf->binningPosition(binR)).norm();
 
           if (curPath < minPath) {
             minPath = curPath;

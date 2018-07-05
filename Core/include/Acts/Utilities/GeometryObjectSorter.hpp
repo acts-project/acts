@@ -65,7 +65,7 @@ public:
     }
     // default for the moment
     default: {
-      return (one.mag() < two.mag());
+      return (one.norm() < two.norm());
     }
     }
   }

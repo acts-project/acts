@@ -592,7 +592,7 @@ public:
       // else the leadParamenters are used
       if (leadParameters->position().perp()
           > (leadParameters->position()
-             + navigationDirection * leadParameters->momentum().unit())
+             + navigationDirection * leadParameters->momentum().normalized())
                 .perp()) {
         radialDirection = -1;
       }
@@ -611,7 +611,7 @@ public:
     // this was radially inwards moving and stays like this
     if (leadParameters->position().perp()
         > (leadParameters->position()
-           + navigationDirection * leadParameters->momentum().unit())
+           + navigationDirection * leadParameters->momentum().normalized())
               .perp()) {
       return true;
     }

@@ -271,10 +271,11 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     const TrackingVolume* nextVolume = stepout
         ? m_cfg.trackingGeometry->lowestTrackingVolume(
               Vector3D(eCell.leadParameters->position()
-                       + pDir * eCell.leadParameters->momentum().unit()))
-        : bSurfaceTV.attachedVolume(eCell.leadParameters->position(),
-                                    eCell.leadParameters->momentum().unit(),
-                                    pDir);
+                       + pDir * eCell.leadParameters->momentum().normalized()))
+        : bSurfaceTV.attachedVolume(
+              eCell.leadParameters->position(),
+              eCell.leadParameters->momentum().normalized(),
+              pDir);
     // check if we have no nextVolume : boundary rechaed @todo it's not really a
     // success
     if (!nextVolume) {

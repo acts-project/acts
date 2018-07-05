@@ -210,7 +210,7 @@ Acts::TrapezoidSegmentation::digitizationStep(const Vector3D& startStep,
   DigitizationCell dCell      = cell(stepCenterProjected);
   Vector2D         cellCenter = cellPosition(dCell);
   // we are ready to return what we have
-  return DigitizationStep((endStep - startStep).mag(),
+  return DigitizationStep((endStep - startStep).norm(),
                           driftLength,
                           dCell,
                           startStep,

@@ -36,7 +36,7 @@ namespace Test {
     /// check local coordinates
     const auto   fphi   = mom.phi();
     const auto   ftheta = mom.theta();
-    const double oOp    = 1. / mom.mag();
+    const double oOp    = 1. / mom.norm();
 
     // check parameters
     consistencyCheck(
@@ -108,7 +108,7 @@ namespace Test {
                                         cos(utheta));
     BOOST_CHECK(umomentum.isApprox(curvilinear_pos_copy.momentum()));
     // the updated momentum should be the col(2) of the transform
-    BOOST_CHECK(umomentum.unit().isApprox(
+    BOOST_CHECK(umomentum.normalized().isApprox(
         curvilinear_pos_copy.referenceSurface().transform().rotation().col(2)));
   }
 }  // namespace Test

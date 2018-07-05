@@ -133,7 +133,7 @@ inline double
 angle(const Acts::Vector3D& v1, const Acts::Vector3D& v2)
 {
   double dp = v1.dot(v2);
-  dp /= v1.mag() * v2.mag();
+  dp /= v1.norm() * v2.norm();
   if (dp > 1) {
     dp = 1;
   }
@@ -171,7 +171,7 @@ setPhi(Acts::Vector3D& v, double phi)
 inline void
 setThetaPhi(Acts::Vector3D& v, double theta, double phi)
 {
-  double mag = v.mag();
+  double mag = v.norm();
   v[0]       = mag * sin(theta) * cos(phi);
   v[1]       = mag * sin(theta) * sin(phi);
   v[2]       = mag * cos(theta);
@@ -211,7 +211,7 @@ setPerp(Acts::Vector3D& v, double perp)
 inline void
 setMag(Acts::Vector3D& v, double mag)
 {
-  double p = v.mag();
+  double p = v.norm();
   if (p != 0.0) {
     double scale = mag / p;
     v[0] *= scale;

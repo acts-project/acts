@@ -133,7 +133,7 @@ Acts::CylinderSurface::referenceFrame(const Vector3D& gpos,
   // measured z is the position normalized transverse (in local)
   Vector3D measDepth = normal(gpos);
   // measured X is what comoes out of it
-  Vector3D measX(measY.cross(measDepth).unit());
+  Vector3D measX(measY.cross(measDepth).normalized());
   // assign the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
@@ -228,7 +228,8 @@ Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
   // set the z coordinate to 0
   pos3D.z() = 0.;
   // normalize and rotate back into global if needed
-  return needsTransform ? transform().linear() * pos3D.unit() : pos3D.unit();
+  return needsTransform ? transform().linear() * pos3D.normalized()
+                        : pos3D.normalized();
 }
 
 double
@@ -236,7 +237,7 @@ Acts::CylinderSurface::pathCorrection(const Acts::Vector3D& gpos,
                                       const Acts::Vector3D& mom) const
 {
   Vector3D normalT  = normal(gpos);
-  double   cosAlpha = normalT.dot(mom.unit());
+  double   cosAlpha = normalT.dot(mom.normalized());
   return std::fabs(1. / cosAlpha);
 }
 

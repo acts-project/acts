@@ -351,13 +351,13 @@ namespace IntegrationTest {
     const auto&           tp_s     = result_s.endParameters;
 
     // The transform at the destination
-    auto seTransform = planar ? createPlanarTransform(tp_s->position(),
-                                                      tp_s->momentum().unit(),
-                                                      0.1 * rand3,
-                                                      0.1 * rand1)
-                              : createCylindricTransform(tp_s->position(),
-                                                         0.05 * rand1,
-                                                         0.05 * rand2);
+    auto seTransform = planar
+        ? createPlanarTransform(tp_s->position(),
+                                tp_s->momentum().normalized(),
+                                0.1 * rand3,
+                                0.1 * rand1)
+        : createCylindricTransform(
+              tp_s->position(), 0.05 * rand1, 0.05 * rand2);
 
     Surface_type endSurface(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
@@ -493,11 +493,11 @@ namespace IntegrationTest {
     const auto&           tp_c     = result_c.endParameters;
 
     auto ssTransform = startPlanar
-        ? createPlanarTransform(pos, mom.unit(), 0.1 * rand1, 0.1 * rand2)
+        ? createPlanarTransform(pos, mom.normalized(), 0.1 * rand1, 0.1 * rand2)
         : createCylindricTransform(pos, 0.05 * rand1, 0.05 * rand2);
     auto seTransform = destPlanar
         ? createPlanarTransform(tp_c->position(),
-                                tp_c->momentum().unit(),
+                                tp_c->momentum().normalized(),
                                 0.1 * rand3,
                                 0.1 * rand1)
         : createCylindricTransform(

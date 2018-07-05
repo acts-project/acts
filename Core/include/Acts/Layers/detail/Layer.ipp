@@ -328,8 +328,8 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
   // position and momentum/dir
   const Vector3D& pos = pars.position();
   const Vector3D  dir = (pDir == backward)
-      ? Vector3D(-1. * pars.momentum().unit())
-      : pars.momentum().unit();
+      ? Vector3D(-1. * pars.momentum().normalized())
+      : pars.momentum().normalized();
 
   // check if you have to stop at the endSurface
   double pathLimit = std::numeric_limits<double>::infinity();

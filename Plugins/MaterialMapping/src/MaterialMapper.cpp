@@ -166,7 +166,7 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
       geoID = aSteps.assignedGeoID.value();
 
       // assign the material
-      Vector3D direction(aSteps.assignedPosition.unit());
+      Vector3D direction(aSteps.assignedPosition.normalized());
       double pathC = surface.pathCorrection(aSteps.assignedPosition, direction);
       // loop over the steps and average the material
       // and collpas into one
@@ -314,7 +314,8 @@ Acts::MaterialMapper::assignSteps(
     asIter = asIterFlush;
     for (; asIter != asIterEnd; ++asIter) {
       // the currentDist
-      double cDist2 = (mStep.position() - asIter->assignedPosition).mag2();
+      double cDist2
+          = (mStep.position() - asIter->assignedPosition).squaredNorm();
       if (cDist2 < lDist2) {
         // set the new closest distance
         lDist2 = cDist2;
