@@ -28,5 +28,25 @@ namespace TGeoPrimitivesHelpers {
     return trf;
   }
 
+  Transform3D
+  makeTransform(const Eigen::Matrix<double, 3, 3>& rotation,
+                const Eigen::Vector3d& translation)
+  {
+    Transform3D trf;
+    trf.matrix().block(0, 0, 3, 3) = rotation;
+    trf.matrix().block(0, 3, 3, 1) = translation;
+    return trf;
+  }
+
+  Transform3D
+  makeTransform(const Eigen::Matrix<double, 3, 3>& rotation,
+                const Translation3D& translation)
+  {
+    Transform3D trf;
+    trf.matrix().block(0, 0, 3, 3) = rotation;
+    trf.matrix().block(0, 3, 3, 1) = translation.vector();
+    return trf;
+  }
+
 }  // namespace TGeoPrimitivesHelpers
 }  // namespace Acts
