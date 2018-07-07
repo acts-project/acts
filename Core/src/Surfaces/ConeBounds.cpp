@@ -101,8 +101,8 @@ Acts::ConeBounds::shifted(const Acts::Vector2D& lpos) const
   Vector2D shifted;
   shifted[eLOC_Z] = lpos[eLOC_Z];
   shifted[eLOC_RPHI] =
-    (std::isnormal(x)) ? (x * radian_sym((lpos[eLOC_RPHI] / x) - averagePhi()))
-                       : lpos[eLOC_RPHI];
+    std::isnormal(x) ? (x * radian_sym((lpos[eLOC_RPHI] / x) - averagePhi()))
+                     : lpos[eLOC_RPHI];
   return shifted;
 }
 
