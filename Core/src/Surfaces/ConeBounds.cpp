@@ -97,7 +97,7 @@ Acts::ConeBounds::shifted(const Acts::Vector2D& lpos) const
 {
   using Acts::detail::radian_sym;
 
-  auto     x = r(lpos[eLOC_RPHI]);  // cone radius at the local position
+  auto     x = r(lpos[eLOC_Z]);  // cone radius at the local position
   Vector2D shifted;
   shifted[eLOC_Z] = lpos[eLOC_Z];
   // TODO 2017-04-08 msmk: this has undefined behaviour at z -> 0
