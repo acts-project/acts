@@ -70,7 +70,7 @@ namespace Test {
     //
     /// Test assignment (implicit)
     RealQuadraticEquation assignedRealQuadraticEquationObject(
-        NaN, NaN, NaN);  // invalid object, in some sense
+        9., -3.5, 6.7);
     assignedRealQuadraticEquationObject = realQuadraticEquationObject;
     BOOST_TEST(assignedRealQuadraticEquationObject.first == 2.);
     BOOST_TEST(assignedRealQuadraticEquationObject.second == 1.);

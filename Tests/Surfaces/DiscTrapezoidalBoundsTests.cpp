@@ -137,7 +137,7 @@ namespace Test {
     //
     /// Test assignment
     DiscTrapezoidalBounds assignedDiscTrapezoidalBoundsObject(
-        NaN, NaN, NaN, NaN, NaN);  // invalid object, in some sense
+        2.1, 6.6, 3.4, 4.2, 33.);
     assignedDiscTrapezoidalBoundsObject = discTrapezoidalBoundsObject;
     BOOST_TEST(assignedDiscTrapezoidalBoundsObject
                == discTrapezoidalBoundsObject);

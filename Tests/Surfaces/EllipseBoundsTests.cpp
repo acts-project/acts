@@ -24,8 +24,6 @@
 //
 #include <limits>
 
-const double NaN = std::numeric_limits<double>::quiet_NaN();
-
 namespace Acts {
 
 namespace Test {
@@ -132,8 +130,7 @@ namespace Test {
     BOOST_TEST(ellipseBoundsObject == similarlyConstructeEllipseBoundsObject);
     //
     /// Test assignment
-    EllipseBounds assignedEllipseBoundsObject(
-        NaN, NaN, NaN, NaN, NaN);  // invalid
+    EllipseBounds assignedEllipseBoundsObject(11., 12., 17., 18., 1.);
     // object, in some sense
     assignedEllipseBoundsObject = ellipseBoundsObject;
     BOOST_TEST(assignedEllipseBoundsObject == ellipseBoundsObject);
