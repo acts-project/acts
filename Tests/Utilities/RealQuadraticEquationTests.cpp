@@ -26,7 +26,7 @@
 using Acts::detail::RealQuadraticEquation;
 
 // namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
+namespace utf = boost::unit_test;
 
 namespace Acts {
 

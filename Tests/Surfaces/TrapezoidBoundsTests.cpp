@@ -23,7 +23,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
-namespace utf    = boost::unit_test;
+namespace utf = boost::unit_test;
 
 namespace Acts {
 

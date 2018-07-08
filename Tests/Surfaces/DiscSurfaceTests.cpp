@@ -29,8 +29,8 @@
 //
 #include <limits>
 
-namespace utf    = boost::unit_test;
-namespace tt     = boost::test_tools;
+namespace utf = boost::unit_test;
+namespace tt  = boost::test_tools;
 
 namespace Acts {
 

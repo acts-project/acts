@@ -27,7 +27,7 @@
 #include "DetectorElementStub.hpp"
 
 using boost::test_tools::output_test_stream;
-namespace utf    = boost::unit_test;
+namespace utf = boost::unit_test;
 
 namespace Acts {
 
