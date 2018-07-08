@@ -69,8 +69,7 @@ namespace Test {
     // operator == not implemented in this class
     //
     /// Test assignment (implicit)
-    RealQuadraticEquation assignedRealQuadraticEquationObject(
-        9., -3.5, 6.7);
+    RealQuadraticEquation assignedRealQuadraticEquationObject(9., -3.5, 6.7);
     assignedRealQuadraticEquationObject = realQuadraticEquationObject;
     BOOST_TEST(assignedRealQuadraticEquationObject.first == 2.);
     BOOST_TEST(assignedRealQuadraticEquationObject.second == 1.);
