@@ -24,8 +24,6 @@
 
 #include <limits>
 
-const double NaN = std::numeric_limits<double>::quiet_NaN();
-
 namespace Acts {
 
 namespace Test {

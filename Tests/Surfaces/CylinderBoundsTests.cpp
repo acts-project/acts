@@ -24,8 +24,6 @@
 //
 #include <limits>
 
-const double NaN = std::numeric_limits<double>::quiet_NaN();
-
 namespace Acts {
 
 namespace Test {
@@ -128,7 +126,7 @@ namespace Test {
     double         nominalRadius{0.5};
     double         nominalHalfLength{20.};
     CylinderBounds cylinderBoundsObject(nominalRadius, nominalHalfLength);
-    CylinderBounds assignedCylinderBounds(NaN, NaN);
+    CylinderBounds assignedCylinderBounds(10.5, 6.6);
     assignedCylinderBounds = cylinderBoundsObject;
     BOOST_TEST(assignedCylinderBounds.r() == cylinderBoundsObject.r());
     BOOST_TEST(assignedCylinderBounds == cylinderBoundsObject);

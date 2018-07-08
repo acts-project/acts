@@ -29,7 +29,6 @@
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -205,7 +204,7 @@ namespace Test {
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a ConeSurface object to the existing one");
     /// Test assignment
-    ConeSurface assignedConeSurface(nullptr, NaN, NaN);
+    ConeSurface assignedConeSurface(nullptr, 0.1, true);
     assignedConeSurface = coneSurfaceObject;
     /// Test equality of assigned to original
     BOOST_TEST(assignedConeSurface == coneSurfaceObject);

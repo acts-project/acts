@@ -31,7 +31,6 @@
 
 namespace utf    = boost::unit_test;
 namespace tt     = boost::test_tools;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -113,11 +112,11 @@ namespace Test {
                == true);  // passes
     //
     /// Test localToGlobal
-    Vector3D returnedPosition{NaN, NaN, NaN};
+    Vector3D returnedPosition{10.9, 8.7, 6.5};
     Vector3D expectedPosition{1.2, 0, 0};
     Vector2D rPhiOnDisc{1.2, 0.0};
     Vector2D rPhiNotInSector{1.2, M_PI};  // outside sector at Phi=0, +/- pi/8
-    Vector3D ignoredMomentum{NaN, NaN, NaN};
+    Vector3D ignoredMomentum{0., 0., 0.};
     discSurfaceObject.localToGlobal(
         rPhiOnDisc, ignoredMomentum, returnedPosition);
     BOOST_TEST(returnedPosition.isApprox(expectedPosition),
@@ -129,7 +128,7 @@ namespace Test {
     BOOST_TEST(returnedPosition.isApprox(expectedNonPosition));
     //
     /// Test globalToLocal
-    Vector2D returnedLocalPosition{NaN, NaN};
+    Vector2D returnedLocalPosition{33., 44.};
     Vector2D expectedLocalPosition{1.2, 0.0};
     BOOST_TEST(discSurfaceObject.globalToLocal(
         point3DOnSurface, ignoredMomentum, returnedLocalPosition));  // pass
@@ -171,7 +170,7 @@ namespace Test {
     double   projected3DMomentum = std::sqrt(3.) * 1.e6;
     Vector3D momentum{
         projected3DMomentum, projected3DMomentum, projected3DMomentum};
-    Vector3D ignoredPosition{NaN, NaN, NaN};
+    Vector3D ignoredPosition{1.1, 2.2, 3.3};
     BOOST_TEST(discSurfaceObject.pathCorrection(ignoredPosition, momentum)
                    == std::sqrt(3),
                tt::tolerance(0.01));
@@ -203,7 +202,7 @@ namespace Test {
     std::shared_ptr<const Transform3D> pTransform;  // nullptr
     double      rMin(1.0), rMax(5.0), halfPhiSector(M_PI / 8.);
     DiscSurface discSurfaceObject(pTransform, rMin, rMax, halfPhiSector);
-    DiscSurface assignedDisc(nullptr, NaN, NaN, NaN);
+    DiscSurface assignedDisc(nullptr, 2.2, 4.4, 0.07);
     //
     BOOST_CHECK_NO_THROW(assignedDisc = discSurfaceObject);
     BOOST_CHECK(assignedDisc == discSurfaceObject);

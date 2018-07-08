@@ -26,7 +26,6 @@
 //
 #include <limits>
 
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 /* Note on nomenclature:
   alpha = cone opening half angle
   z is the axis of symmetry
@@ -129,7 +128,7 @@ namespace Test {
         averagePhi(0.);
     // const bool symmetric(false);
     ConeBounds originalConeBounds(alpha, zMin, zMax, halfPhi, averagePhi);
-    ConeBounds assignedConeBounds(NaN, zMin, zMax, halfPhi, averagePhi);
+    ConeBounds assignedConeBounds(0.1, 2.3, 4.5, 1.2, 2.1);
     assignedConeBounds = originalConeBounds;
     BOOST_TEST(assignedConeBounds == originalConeBounds);
   }

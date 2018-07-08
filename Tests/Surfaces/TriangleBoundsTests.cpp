@@ -24,7 +24,6 @@
 #include "Acts/Utilities/VariantData.hpp"
 
 namespace utf = boost::unit_test;
-// const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 

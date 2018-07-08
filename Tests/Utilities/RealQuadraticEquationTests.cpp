@@ -27,7 +27,6 @@ using Acts::detail::RealQuadraticEquation;
 
 // namespace bdata = boost::unit_test::data;
 namespace utf    = boost::unit_test;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 

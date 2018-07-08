@@ -29,7 +29,6 @@
 
 using boost::test_tools::output_test_stream;
 namespace utf    = boost::unit_test;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 
 namespace Acts {
 
@@ -90,7 +89,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
     Vector3D       unitXYZ{1., 1., 1.};
-    Vector3D       invalidPosition{NaN, NaN, NaN};
+    Vector3D       invalidPosition{0.0, 0.0, 0.0};
     PerigeeSurface perigeeSurfaceObject(unitXYZ);
     PerigeeSurface perigeeSurfaceObject2(unitXYZ);
     PerigeeSurface assignedPerigeeSurface(invalidPosition);
