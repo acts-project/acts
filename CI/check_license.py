@@ -186,7 +186,8 @@ def main():
                     f.seek(0)
                     file_content = f.read()
                     f.seek(0)
-                    f.write(rawstr+"\n\n")
+                    stmnt = raw.format(year=year)
+                    f.write(stmnt+"\n\n")
                     f.write(file_content)
 
                 exit = 1
