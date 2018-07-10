@@ -164,6 +164,18 @@ public:
   virtual const Vector3D
   normal(const Vector3D& pos) const;
 
+  /// Return method for the normal vector of the surface
+  ///
+  /// It will return a normal vector at the center() position
+  ///
+  /// @param pos is the global position where the normal vector is constructed
+  /// @return normal vector by value
+  virtual const Vector3D
+  normal() const
+  {
+    return normal(center());
+  }
+
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
   virtual const SurfaceBounds&

@@ -1,14 +1,22 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2018 ACTS project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// Surface.ipp, ACTS project
+// Surface.ipp, Acts project
 ///////////////////////////////////////////////////////////////////
+
+inline const Vector3D
+Surface::center() const
+{
+  // fast access via tranform matrix (and not translation())
+  auto tMatrix = transform().matrix();
+  return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
+}
 
 inline const RotationMatrix3D
 Surface::referenceFrame(const Vector3D&, const Vector3D&) const

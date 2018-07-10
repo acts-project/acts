@@ -10,9 +10,9 @@
 
 #include <algorithm>
 #include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
 
 namespace Acts {
 

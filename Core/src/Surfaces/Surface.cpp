@@ -96,6 +96,12 @@ Acts::Surface::operator==(const Surface& other) const
   return true;
 }
 
+const Acts::Vector3D
+Acts::Surface::normal(const Vector3D&) const
+{
+  return normal(s_origin2D);
+}
+
 bool
 Acts::Surface::isFree() const
 {
@@ -167,20 +173,6 @@ Acts::Surface::transform() const
     return m_associatedDetElement->transform(m_associatedDetElementId);
   if (m_associatedDetElement) return m_associatedDetElement->transform();
   return s_idTransform;
-}
-
-const Acts::Vector3D
-Acts::Surface::center() const
-{
-  // fast access via tranform matrix (and not translation())
-  const auto& tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
-}
-
-const Acts::Vector3D
-Acts::Surface::normal(const Acts::Vector3D&) const
-{
-  return normal(s_origin2D);
 }
 
 bool

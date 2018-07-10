@@ -58,7 +58,7 @@ Acts::PlaneLayer::buildApproachDescriptor()
   const Transform3D& lTransform = PlaneSurface::transform();
   RotationMatrix3D   lRotation  = lTransform.rotation();
   const Vector3D&    lCenter    = PlaneSurface::center();
-  const Vector3D&    lVector    = PlaneSurface::normal();
+  const Vector3D&    lVector    = Surface::normal(center());
   // create new surfaces
   const Transform3D* apnTransform = new Transform3D(getTransformFromRotTransl(
       lRotation, (lCenter - 0.5 * Layer::m_layerThickness * lVector)));

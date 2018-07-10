@@ -1,13 +1,13 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
-// Copyright (C) 2018 ACTS project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /////////////////////////////////////////////////////////////////
-// DiscSurface.ipp, ACTS project
+// DiscSurface.ipp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 inline const Vector2D
@@ -160,8 +160,8 @@ inline const Vector3D DiscSurface::binningPosition(BinningValue) const
 }
 
 inline double
-DiscSurface::pathCorrection(const Vector3D&, const Vector3D& mom) const
+DiscSurface::pathCorrection(const Vector3D& pos, const Vector3D& mom) const
 {
   /// we can ignore the global position here
-  return 1. / std::abs(normal().dot(mom.unit()));
+  return 1. / std::abs(Surface::normal(pos).dot(mom.unit()));
 }

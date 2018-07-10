@@ -93,18 +93,8 @@ public:
   const Vector3D
   normal(const Vector2D& lpos) const override final;
 
-  /// Normal vector return
-  ///
-  /// @param lpos is the global position is ignored
-  /// return a Vector3D by value
-  const Vector3D
-  normal(const Vector3D& gpos) const override final;
-
-  /// Normal vector return
-  ///
-  /// @note No param, this overload resolves default parameter ambiguity
-  const Vector3D
-  normal() const;
+  /// Normal vector return without argument
+  using Surface::normal;
 
   /// The binning position is the position calcualted
   /// for a certain binning type

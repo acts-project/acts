@@ -153,6 +153,9 @@ public:
   virtual const Vector3D
   normal(const Vector3D& gpos) const final override;
 
+  /// Normal vector return without argument
+  using Surface::normal;
+
   /// Return method for the rotational symmetry axis
   ///
   /// @return  the z-Axis of transform
