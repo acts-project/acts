@@ -52,7 +52,7 @@ public:
     LayerConfig()
       : layerName("")
       , sensorName("")
-      , localAxes("xyz")
+      , localAxes("XZY")
       , envelope(std::pair<double, double>(1., 1.))
       , binsLoc0(100)
       , binsLoc1(100)
@@ -154,6 +154,12 @@ private:
   // @param type is the indication which ones to build -1 | 0 | 1
   void
   buildLayers(LayerVector& layers, int type = 0);
+
+  // Private helper mehtod : match string with wildcards
+  // @param wc is the one with the potential wildcard
+  // @param test is the test string
+  bool
+  match(const char* wc, const char* test) const;
 };
 
 inline TGeoLayerBuilder::Config
@@ -172,5 +178,30 @@ inline const std::string&
 TGeoLayerBuilder::identification() const
 {
   return m_cfg.configurationName;
+}
+
+// The main function that checks if two given strings
+// match. The first string may contain wildcard characters
+inline bool
+TGeoLayerBuilder::match(const char* first, const char* second) const
+{
+  // If we reach at the end of both strings, we are done
+  if (*first == '\0' && *second == '\0') return true;
+
+  // Make sure that the characters after '*' are present
+  // in second string. This function assumes that the first
+  // string will not contain two consecutive '*'
+  if (*first == '*' && *(first + 1) != '\0' && *second == '\0') return false;
+
+  // If the first string contains '?', or current characters
+  // of both strings match
+  if (*first == '?' || *first == *second) return match(first + 1, second + 1);
+
+  // If there is *, then there are two possibilities
+  // a) We consider current character of second string
+  // b) We ignore current character of second string.
+  if (*first == '*')
+    return match(first + 1, second) || match(first, second + 1);
+  return false;
 }
 }

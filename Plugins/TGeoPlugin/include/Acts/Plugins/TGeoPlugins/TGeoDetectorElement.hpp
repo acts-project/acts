@@ -108,7 +108,7 @@ public:
   TGeoDetectorElement(const Identifier&  identifier,
                       const TGeoMatrix&  transform,
                       TGeoNode*          tGeoDetElement,
-                      const std::string& axes   = "XYZ",
+                      const std::string& axes   = "XYZ",  //"XYZ",
                       double             scalor = 1.,
                       bool               isDisc = false,
                       std::shared_ptr<const Acts::SurfaceMaterial> material

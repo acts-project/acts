@@ -219,6 +219,7 @@ namespace detail {
     operator()(propagator_state_t& state) const
     {
       if (state.navigation.currentVolume) return false;
+      state.navigation.targetReached = true;
       return true;
     }
   };

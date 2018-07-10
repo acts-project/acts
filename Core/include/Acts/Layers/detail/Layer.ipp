@@ -114,6 +114,8 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
 {
   // the list of valid intersection
   std::vector<SurfaceIntersection> sIntersections;
+  // remember the surfaces for duplicate removal
+  std::map<const Surface*, bool> accepted;
 
   // fast exit - there is nothing to
   if (!m_surfaceArray || !m_approachDescriptor || !options.navDir)
@@ -152,8 +154,10 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
   }
 
   // lemma 0 : accept the surface
-  auto acceptSurface
-      = [&options](const Surface& sf, bool sensitive = false) -> bool {
+  auto acceptSurface = [&options, &accepted](const Surface& sf,
+                                             bool sensitive = false) -> bool {
+    // check for duplicates
+    if (accepted.find(&sf) != accepted.end()) return false;
     // surface is sensitive and you're asked to resolve
     if (sensitive && options.resolveSensitive) return true;
     // next option: it's a material surface and you want to have it
@@ -177,6 +181,7 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
     // check the maximum path length
     if (sfi && sifPath * sifPath <= maxPath * maxPath) {
       sIntersections.push_back(sfi);
+      accepted[&sf] = true;
     }
     return;
   };

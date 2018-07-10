@@ -150,11 +150,15 @@ Acts::TGeoLayerBuilder::resolveSensitive(
   if (tgVolume) {
     std::string volumeName = tgVolume->GetName();
     /// some screen output indicating that the volume was found
-    ACTS_VERBOSE(offset << "[o] Volume : " << volumeName);
+    ACTS_VERBOSE(offset << "[o] Volume : " << volumeName
+                        << " - checking for volume name "
+                        << layerConfig.layerName);
+
     // once in the current branch, always in the current branch
     bool correctVolume = correctBranch;
-    if (correctVolume == false
-        && volumeName.find(layerConfig.layerName) != std::string::npos) {
+    if (!correctVolume
+        && (volumeName.find(layerConfig.layerName) != std::string::npos
+            || match(layerConfig.layerName.c_str(), volumeName.c_str()))) {
       correctVolume = true;
       ACTS_VERBOSE(offset << "    triggered current branch!");
     }
@@ -192,9 +196,19 @@ Acts::TGeoLayerBuilder::resolveSensitive(
     double z = translation[2];
     // get the name of the node
     std::string tNodeName = tgNode->GetName();
-    ACTS_VERBOSE(offset << "[>] Node : " << tNodeName);
-    if (correctBranch
-        && tNodeName.find(layerConfig.sensorName) != std::string::npos) {
+    ACTS_VERBOSE(offset << "[>] Node : " << tNodeName
+                        << " - checking for sensor name "
+                        << layerConfig.sensorName);
+    // find out the branch hit - single layer depth is supported by
+    // sensor==layer
+    bool branchHit
+        = correctBranch || (layerConfig.sensorName == layerConfig.layerName);
+    if (branchHit
+        && (tNodeName.find(layerConfig.sensorName) != std::string::npos
+            || match(layerConfig.sensorName.c_str(), tNodeName.c_str()))) {
+
+      ACTS_VERBOSE(offset << "Sensor name found in correct branch.");
+
       // set the visibility to kTrue
       if (m_cfg.setVisibility) tgNode->SetVisibility(kTRUE);
       // create the detector element - check on the type for the size

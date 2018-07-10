@@ -198,11 +198,12 @@ struct Navigator
   operator()(propagator_state_t& state) const
   {
 
+    // void behavior in case no tracking geometry is present
+    if (!trackingGeometry) return;
+
     // turn the navigator into void when you are intructed to do nothing
     if (!resolveSensitive && !resolveMaterial && !resolvePassive) return;
 
-    // fail if you have no tracking geometry
-    assert(trackingGeometry != nullptr);
     debugLog(state, [&] { return std::string("Entering navigator."); });
 
     // Navigator always resets the current surface first
@@ -429,8 +430,9 @@ struct Navigator
             std::stringstream dstream;
             dstream << state.navigation.navSurfaces.size();
             dstream << " surface candidates found at path(s): ";
-            for (auto& sfc : state.navigation.navSurfaces)
+            for (auto& sfc : state.navigation.navSurfaces) {
               dstream << sfc.intersection.pathLength << "  ";
+            }
             return dstream.str();
           });
           // set the iterator
@@ -711,14 +713,27 @@ struct Navigator
               = state.navigation.navBoundaries.end();
           // return to the stepper
           return true;
-        } else {
-          // return
-          debugLog(state, [&] {
-            return std::string("No layers can be reached in the new volume.");
-          });
         }
+        // return
+        debugLog(state, [&] {
+          return std::string("No layers can be reached in the new volume.");
+        });
+        // create the navigaiton options - we could give the start surface here
+        NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
+        navOpts.startObject = boundarySurface;  // exclude the current boundary
+        // re-evaluate the boundary surfaces
+        state.navigation.navBoundaries
+            = state.navigation.currentVolume->compatibleBoundaries(
+                state.stepping, navOpts, navCorr);
+        state.navigation.navBoundaryIter
+            = state.navigation.navBoundaries.begin();
+        // bool skipPresent =
+        //  (state.navigation.navBoundaryIter ==
+        //  state.navigation.navBoundaries.begin());
+        // if (skipPresent) ++state.navigation.navBoundaryIter;
+        // }
         // switch to new boundary
-        ++state.navigation.navBoundaryIter;
+        // ++state.navigation.navBoundaryIter;
       }
       // (re-)evaluate the distance to the boundary
       if (state.navigation.navBoundaryIter
@@ -1039,8 +1054,9 @@ struct Navigator
         std::stringstream dstream;
         dstream << state.navigation.navSurfaces.size();
         dstream << " surface candidates found at path(s): ";
-        for (auto& sfc : state.navigation.navSurfaces)
+        for (auto& sfc : state.navigation.navSurfaces) {
           dstream << sfc.intersection.pathLength << "  ";
+        }
         return dstream.str();
       });
       // set the iterator
