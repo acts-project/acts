@@ -194,8 +194,8 @@ namespace detail {
     }
   };
 
-  /// This is the condition that the Surface has been reached
-  /// it then triggers an propagation abort of the propagation
+  /// This is the condition that the end of World has been reached
+  /// it then triggers an propagation abort
   struct EndOfWorldReached
   {
     /// Default Constructor
@@ -224,5 +224,37 @@ namespace detail {
     }
   };
 
+  /// This is a simple detection class for loops, it breaks the loop 
+  /// when detected
+  struct AzimuthalLoopAborter
+  {
+    /// Default Constructor
+    AzimuthalLoopAborter() {}
+
+    /// break the loop after deltaPhi
+    
+
+    /// boolean operator for abort condition using the result (ignored)
+    template <typename propagator_state_t, typename result_t>
+    bool
+    operator()(const result_t&, propagator_state_t& state) const
+    {
+      return operator()(state);
+    }
+
+    /// boolean operator for abort condition without using the result
+    ///
+    /// @tparam propagator_state_t Type of the propagator state
+    ///
+    /// @param[in,out] state The propagation state object
+    template <typename propagator_state_t>
+    bool
+    operator()(propagator_state_t& state) const
+    {
+
+        return true;
+    }
+  };
+   
 }  // namespace detail
 }  // namespace Acts
