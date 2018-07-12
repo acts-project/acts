@@ -14,6 +14,7 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/StandardAbortConditions.hpp"
+#include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -175,6 +176,10 @@ public:
 
     /// Absolute maximum path length
     double pathLimit = std::numeric_limits<double>::max();
+    
+    /// Loop protection step, it adapts the pathLimit
+    bool loopProtection    = true;
+    double loopFraction    = 0.5; ///< Allowed loop fraction, 1 is a full loop
 
     /// Debug output steering:
     // - the string where debug messages are stored (optionally)
@@ -218,7 +223,7 @@ private:
     /// @param topts The options handed over by the propagate call
     /// @param tabs The internal target aborters created in the call nethod
     State(const parameters_t&   start,
-          propagator_option_t   topts,
+          const propagator_option_t& topts,
           target_aborter_list_t tabs)
       : options(topts)
       , targetAborters(std::move(tabs))
@@ -335,7 +340,7 @@ private:
     // Post-stepping call to the action list
     debugLog(state,
              [&] { return std::string("Calling post-stepping action list."); });
-
+             
     state.options.actionList(state, result);
 
     // return progress flag here, decide on SUCCESS later
@@ -379,7 +384,7 @@ public:
     typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
 
     // Type of provided options which consist action and abort list
-    typedef Options<action_list_t, aborter_list_t> PropagatorOptions;
+    typedef Options<action_list_t, aborter_list_t> Options;
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
@@ -392,9 +397,13 @@ public:
     TargetAborters                     targetAborters;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, PropagatorOptions, TargetAborters>
-                    PropagatorState;
-    PropagatorState state(start, options, targetAborters);
+    typedef State<parameters_t, Options, TargetAborters>
+                    State;
+    State state(start, options, targetAborters);
+
+    // Apply the loop protection 
+    detail::LoopProtection<path_arborter_t> lProtection;
+    lProtection(state,m_stepper);
 
     // Perform the actual propagation & check its outcome
     if (propagate_(result, state) != Status::IN_PROGRESS) {
@@ -448,7 +457,7 @@ public:
         return_parameter_type;
 
     // Type of provided options
-    typedef Options<action_list_t, aborter_list_t> PropagatorOptions;
+    typedef Options<action_list_t, aborter_list_t> Options;
 
     // Type of the full propagation result, including output from actions
     typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
@@ -464,13 +473,17 @@ public:
     TargetAborters targetAborters;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, PropagatorOptions, TargetAborters>
-                    PropagatorState;
-    PropagatorState state(start, options, targetAborters);
-    // setting the start and the target surface
+    typedef State<parameters_t, Options, TargetAborters> State;
+    State state(start, options, targetAborters);
+        
+    // Setting the start and the target surface
     state.navigation.startSurface  = &start.referenceSurface();
     state.navigation.targetSurface = &target;
 
+    // Apply the loop protection 
+    detail::LoopProtection<path_arborter_t> lProtection;
+    lProtection(state,m_stepper);
+    
     // Perform the actual propagation
     if (propagate_(result, state) != Status::IN_PROGRESS) {
       result.status = Status::FAILURE;

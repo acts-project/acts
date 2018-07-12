@@ -10,6 +10,10 @@ add_executable (IntersectionCorrectorTests IntersectionCorrectorTests.cpp)
 target_link_libraries (IntersectionCorrectorTests PRIVATE Acts::Core)
 add_test(NAME IntersectionCorrectorUnitTests COMMAND IntersectionCorrectorTests)
 
+add_executable (LoopProtectionTests LoopProtectionTests.cpp)
+target_link_libraries (LoopProtectionTests PRIVATE Acts::Core)
+add_test(NAME LoopProtectionUnitTests COMMAND LoopProtectionTests)
+
 add_executable (ConstrainedStepTests ConstrainedStepTests.cpp)
 target_link_libraries (ConstrainedStepTests PRIVATE Acts::Core)
 add_test(NAME ConstrainedStepUnitTest COMMAND ConstrainedStepTests)

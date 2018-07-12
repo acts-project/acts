@@ -72,6 +72,9 @@ namespace detail {
   struct PathLimitReached
   {
 
+    /// Boolean switch for Loop protection
+    double internalLimit = std::numeric_limits<double>::max();
+
     /// boolean operator for abort condition using the result
     template <typename propagator_state_t, typename result_t>
     bool
@@ -90,8 +93,8 @@ namespace detail {
     operator()(propagator_state_t& state) const
     {
       // Check if the maximum allowed step size has to be updated
-      double distance
-          = state.options.pathLimit - state.stepping.pathAccumulated;
+      double limit = std::min(internalLimit,state.options.pathLimit);
+      double distance = limit - state.stepping.pathAccumulated;
       double tolerance = state.options.targetTolerance;
       state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
       bool limitReached = (distance * distance < tolerance * tolerance);
@@ -220,37 +223,6 @@ namespace detail {
     {
       if (state.navigation.currentVolume) return false;
       state.navigation.targetReached = true;
-      return true;
-    }
-  };
-
-  /// This is a simple detection class for loops, it breaks the loop
-  /// when detected
-  struct AzimuthalLoopAborter
-  {
-    /// Default Constructor
-    AzimuthalLoopAborter() {}
-
-    /// break the loop after deltaPhi
-
-    /// boolean operator for abort condition using the result (ignored)
-    template <typename propagator_state_t, typename result_t>
-    bool
-    operator()(const result_t&, propagator_state_t& state) const
-    {
-      return operator()(state);
-    }
-
-    /// boolean operator for abort condition without using the result
-    ///
-    /// @tparam propagator_state_t Type of the propagator state
-    ///
-    /// @param[in,out] state The propagation state object
-    template <typename propagator_state_t>
-    bool
-    operator()(propagator_state_t& state) const
-    {
-
       return true;
     }
   };

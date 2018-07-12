@@ -18,7 +18,7 @@ namespace detail {
 
   namespace {
     /// This is the caller used if the condition uses the result
-    /// - and that result type exists
+    /// and that result type exists
     template <bool has_result = true>
     struct condition_caller
     {
