@@ -93,8 +93,8 @@ namespace detail {
     operator()(propagator_state_t& state) const
     {
       // Check if the maximum allowed step size has to be updated
-      double limit = std::min(internalLimit,state.options.pathLimit);
-      double distance = limit - state.stepping.pathAccumulated;
+      double limit     = std::min(internalLimit, state.options.pathLimit);
+      double distance  = limit - state.stepping.pathAccumulated;
       double tolerance = state.options.targetTolerance;
       state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
       bool limitReached = (distance * distance < tolerance * tolerance);

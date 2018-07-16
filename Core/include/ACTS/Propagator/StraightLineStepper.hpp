@@ -114,7 +114,7 @@ public:
       dir = udirection;
       p   = up;
     }
-    
+
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
 
@@ -205,7 +205,7 @@ public:
     // return h
     return h;
   }
-  
+
   /// Get the field for the stepping, this gives back a zero field
   ///
   /// @param [in,out] state is the propagation state associated with the track
@@ -215,9 +215,8 @@ public:
   getField(State&, const Vector3D&) const
   {
     // get the field from the cell
-    return Vector3D(0.,0.,0.);
+    return Vector3D(0., 0., 0.);
   }
-  
 };
 
 }  // namespace Acts

@@ -19,9 +19,9 @@
 
 namespace Acts {
 
-/// The Material interaction struct
-/// - it records the surface
-/// and the passed material
+/// @brief The Material interaction struct
+/// It records the surface  and the passed material
+/// This is only nessecary recorded when configured
 struct MaterialInteraction
 {
   /// The material surface

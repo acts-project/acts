@@ -10,10 +10,12 @@
 
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Constants.hpp"
 
 namespace Acts {
 
 namespace detail {
+
   /// The ionization energy loss along a given path length.
   ///
   /// The mean energy loss should be used for reconstruction,
@@ -31,9 +33,10 @@ namespace detail {
   struct IonisationLoss
   {
 
-    bool   mean = true;
-    double me   = 0.51099891 * units::_MeV;  // electron mass
-
+    /// @brief call operator for the Ionisation class
+    ///
+    /// @tparam material_t Type of the material class
+    ///
     /// @param[in] p The value of the momentum
     /// @param[in] m The masses of the different particles
     /// @param[in] mat The material that is traversed
@@ -43,12 +46,14 @@ namespace detail {
     /// ionization along a given path length. The second entry is the sigma of
     /// the
     /// distribution.
+    template <typename material_t>
     std::pair<double, double>
-    operator()(double          m,
-               double          lbeta,
-               double          lgamma,
-               const Material& mat,
-               double          path = 1.) const
+    operator()(double            m,
+               double            lbeta,
+               double            lgamma,
+               const material_t& mat,
+               double            path = 1.,
+               bool              mean = true) const
     {
 
       // the return value
@@ -56,14 +61,12 @@ namespace detail {
 
       // Ionization - Bethe-Bloch
       // See ATL-SOFT-PUB-2008-003 equation (4)
-      // 16 eV * Z**0.9 - bring to MeV
-      double I = 16 * units::_eV * std::pow(mat.Z(), 0.9);
+      // 16 eV * Z**0.9
+      double I = constants::eionisation * std::pow(mat.material().Z(), 0.9);
 
       // See (1) table 32.1
-      // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]  / scale to mm by
-      // this
-      double kaz = 0.5 * 30.7075 * (units::_MeV * units::_mm * units::_mm)
-          * mat.zOverAtimesRho();
+      // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]
+      double kaz  = 0.5 * constants::ka_BetheBloch * mat.zOverAtimesRho();
       double eta2 = lbeta * lgamma;
       eta2 *= eta2;
       // density effect, only valid for high energies
@@ -72,7 +75,7 @@ namespace detail {
       if (lgamma > 10.) {
         // See (1) table 32.1
         double eplasma
-            = 28.816 * units::_eV * sqrt(1000. * mat.zOverAtimesRho());
+            = constants::eplasma * sqrt(1000. * mat.zOverAtimesRho());
         // See (1) formula 32.6
         delta = 2. * std::log(eplasma / I) + std::log(eta2) - 1.;
       }
@@ -84,21 +87,21 @@ namespace detail {
       // The landau width (FWHM) is 4.*kazL
       // The factor is the conversion factor from FWHM to sigma for
       // gaussian curve: 1. / (2. * sqrt(2. * log(2.))).
-      double sigma = 2. * kazL * 1. / (sqrt(2. * log(2.)));
+      double sigma = 2. * kazL * 1. / (std::sqrt(2. * std::log(2.)));
       if (mean) {
         // calculate the fraction to the electron mass
-        double mfrac = me / m;
+        double mfrac = constants::me / m;
         // Calculate the mean value for reconstruction
         // See ATL-SOFT-PUB-2008-003 equation (2)
-        double tMax
-            = 2. * eta2 * me / (1. + 2. * lgamma * mfrac + mfrac * mfrac);
+        double tMax = 2. * eta2 * constants::me
+            / (1. + 2. * lgamma * mfrac + mfrac * mfrac);
         // See ATL-SOFT-PUB-2008-003 equation (1)
         // or:
         // http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
         // PDG formula 32.5
-        dE = -kaz * 0.5
-            * (std::log(2. * me * eta2 * tMax / (I * I)) - (lbeta * lbeta)
-               - delta * 0.5);
+        dE = -kaz * 0.5 * (std::log(2. * constants::me * eta2 * tMax / (I * I))
+                           - (lbeta * lbeta)
+                           - delta * 0.5);
         dE *= path;
       } else {
         // Calculate the most probably value for simulation
@@ -116,24 +119,48 @@ namespace detail {
     }
   };
 
-  /// Multiple scattering as function of dInX0
+  /// @brield Multiple scattering as function of dInX0
   ///
+  /// It supports MIP and electron scattering and return
+  /// the space angle which has to be transformed into actual
+  /// scattering components for the azimuthal and polar angles,
+  /// respectively (for reconstruction).
   struct HighlandScattering
   {
 
+    /// @brief call operator for the HighlandScattering formula
+    ///
     /// @param p is the momentum
-    /// @param lbeta is the Lorentz parameter
+    /// @param lbeta is the Lorentz beta parameter
     /// @param dInX0 is the passed thickness in d0
     double
-    operator()(double p, double lbeta, double dInX0) const
+    operator()(double p,
+               double lbeta,
+               double dInX0,
+               bool   electron = false) const
     {
       if (dInX0 == 0. || p == 0. || lbeta == 0.) return 0.;
-
       // Highland formula - projected sigma_s
       // ATL-SOFT-PUB-2008-003 equation (15)
-      double sigmaSpace = 13.6 * units::_MeV * std::sqrt(dInX0) / (lbeta * p)
-          * (1. + 0.038 * std::log(dInX0 / (lbeta * lbeta)));
-      return sigmaSpace;
+      if (!electron) {
+        double sigmaSpace = constants::main_RutherfordScott * std::sqrt(dInX0)
+            / (lbeta * p) * (1. + 0.038 * std::log(dInX0 / (lbeta * lbeta)));
+        // return the space scattering angle
+        return sigmaSpace;
+      }
+      // Electron specification multiple scattering effects
+      // Source: Highland NIM 129 (1975)  p497-499
+      // (Highland extension to the Rossi-Greisen formulation)
+      // @note: The formula can be extended by replacing
+      // the momentum^2 term with pi * pf
+      double sigma2 = constants::main_RossiGreisen / (lbeta * p);
+      sigma2 *= (sigma2 * dInX0);
+      // logarithmic term
+      double factor
+          = 1. + constants::log_RossiGreisen * std::log10(10. * dInX0);
+      factor *= factor;
+      sigma2 *= factor;
+      return std::sqrt(sigma2);
     }
   };
 
