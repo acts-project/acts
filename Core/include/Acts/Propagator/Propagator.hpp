@@ -381,24 +381,25 @@ public:
         return_parameter_type;
 
     // Type of the full propagation result, including output from actions
-    typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
+    typedef action_list_t_result_t<return_parameter_type, action_list_t>
+        ResultType;
 
     // Type of provided options which consist action and abort list
-    typedef Options<action_list_t, aborter_list_t> Options;
+    typedef Options<action_list_t, aborter_list_t> OptionsType;
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
     // Initialize the propagation result object
-    Result result(Status::IN_PROGRESS);
+    ResultType result(Status::IN_PROGRESS);
 
     // Internal Abort list - only with path limit as no target surface given
     typedef AbortList<path_arborter_t> TargetAborters;
     TargetAborters                     targetAborters;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, Options, TargetAborters> State;
-    State state(start, options, targetAborters);
+    typedef State<parameters_t, OptionsType, TargetAborters> StateType;
+    StateType state(start, options, targetAborters);
 
     // Apply the loop protection
     detail::LoopProtection<path_arborter_t> lProtection;
@@ -456,13 +457,14 @@ public:
         return_parameter_type;
 
     // Type of provided options
-    typedef Options<action_list_t, aborter_list_t> Options;
+    typedef Options<action_list_t, aborter_list_t> OptionsType;
 
     // Type of the full propagation result, including output from actions
-    typedef action_list_t_result_t<return_parameter_type, action_list_t> Result;
+    typedef action_list_t_result_t<return_parameter_type, action_list_t>
+        ResultType;
 
     // Initialize the propagation result object
-    Result result(Status::IN_PROGRESS);
+    ResultType result(Status::IN_PROGRESS);
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
@@ -472,7 +474,7 @@ public:
     TargetAborters targetAborters;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, Options, TargetAborters> State;
+    typedef State<parameters_t, OptionsType, TargetAborters> State;
     State state(start, options, targetAborters);
 
     // Setting the start and the target surface
