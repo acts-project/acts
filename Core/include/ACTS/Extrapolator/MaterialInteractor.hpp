@@ -139,7 +139,8 @@ struct MaterialInteractor
 
         // to integrate process noise, we need to transport
         // the covariance to the current position in space
-        if (state.stepping.covTransport) state.stepping.applyCovTransport(true);
+        if (state.stepping.covTransport)
+          state.stepping.covarianceTransport(true);
 
         // get the material thickness - and correct it with incidence
         double thickness = mProperties->thickness();

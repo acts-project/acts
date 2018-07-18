@@ -464,7 +464,8 @@ public:
     return CurvilinearParameters(std::move(cov), gp, mom, state.charge());
   }
 
-  /// convert method into bound parameters
+  /// @brief convert method into bound parameters
+  ///
   /// @param state is the propagation state to be converted
   /// @param s the target surface
   static BoundParameters

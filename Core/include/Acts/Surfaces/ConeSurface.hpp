@@ -239,6 +239,6 @@ protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
 };
 
-#include "detail/ConeSurface.ipp"
+#include "Acts/Surfaces/detail/ConeSurface.ipp"
 
 }  // namespace

@@ -152,7 +152,7 @@ namespace Test {
         // now here we should apply the scattering
         result.scattered = true;
         // do the update and reinitialize the jacobians
-        state.stepping.applyCovTransport(true);
+        state.stepping.covarianceTransport(true);
         state.stepping.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
         state.stepping.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
       }

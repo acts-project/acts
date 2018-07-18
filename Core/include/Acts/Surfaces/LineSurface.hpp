@@ -298,6 +298,6 @@ private:
                      Vector2D&       lpos) const;
 };
 
-#include "detail/LineSurface.ipp"
+#include "Acts/Surfaces/detail/LineSurface.ipp"
 
 }  // namespace

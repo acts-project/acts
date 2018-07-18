@@ -335,6 +335,6 @@ protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 };
 
-#include "detail/DiscSurface.ipp"
+#include "Acts/Surfaces/detail/DiscSurface.ipp"
 
 }  // end of namespace Acts

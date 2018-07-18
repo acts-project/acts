@@ -160,7 +160,7 @@ public:
     ///
     /// @return the full transport jacobian
     const ActsMatrixD<5, 5>
-    applyCovTransport(bool reinitialize = false)
+    covarianceTransport(bool reinitialize = false)
     {
       // Optimized trigonometry on the propagation direction
       const double x = dir(0);  // == cos(phi) * sin(theta)
@@ -247,7 +247,7 @@ public:
     /// @return the full transport jacobian
     template <typename S>
     const ActsMatrixD<5, 5>
-    applyCovTransport(const S& surface, bool reinitialize = false)
+    covarianceTransport(const S& surface, bool reinitialize = false)
     {
       // Initialize the transport final frame jacobian
       ActsMatrixD<5, 7> jacToLocal = ActsMatrixD<5, 7>::Zero();
@@ -364,7 +364,7 @@ public:
     // only do the covariance transport if needed
     if (state.covTransport) {
       // transport the covariance forward
-      state.applyCovTransport(reinitialize);
+      state.covarianceTransport(reinitialize);
       covPtr = std::make_unique<const ActsMatrixD<5, 5>>(state.cov);
     }
     // return the parameters
@@ -386,7 +386,7 @@ public:
     // Perform error propagation if an initial covariance matrix was provided
     if (state.covTransport) {
       // transport the covariance forward
-      state.applyCovTransport(surface, reinitialize);
+      state.covarianceTransport(surface, reinitialize);
       covPtr = std::make_unique<const ActsSymMatrixD<5>>(state.cov);
     }
     // return the bound parameters

@@ -273,6 +273,6 @@ protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
 };
 
-#include "detail/CylinderSurface.ipp"
+#include "Acts/Surfaces/detail/CylinderSurface.ipp"
 
 }  // namespace

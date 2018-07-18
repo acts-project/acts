@@ -61,7 +61,7 @@ public:
   }
 
   const Vector3D
-  normal() const
+  normal() const final
   {
     return Vector3D{0., 0., 0.};
   }

@@ -223,6 +223,6 @@ protected:
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
 
-#include "detail/PlaneSurface.ipp"
+#include "Acts/Surfaces/detail/PlaneSurface.ipp"
 
-}  // namespace
+}  // end of namespace Acts
