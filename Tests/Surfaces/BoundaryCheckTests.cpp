@@ -45,6 +45,37 @@ namespace Test {
     BOOST_TEST(check.isInside({0, 2}, -1, 1, -1, 1) == true);
     BOOST_TEST(check.isInside({2, 0}, -1, 1, -1, 1) == true);
   }
+
+  BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance)
+  {
+
+#include "BoundaryCheckTestsRefs.hpp"
+
+    BoundaryCheck bcheck(true);
+
+    for (size_t i = 0; i < rectTestPoints.size(); i++) {
+      const Vector2D& testPoint   = rectTestPoints.at(i);
+      double          refDistance = rectDistances.at(i);
+      double          distance    = bcheck.distance(testPoint,
+                                        rectDimensions.xmin,
+                                        rectDimensions.xmax,
+                                        rectDimensions.ymin,
+                                        rectDimensions.ymax);
+      BOOST_CHECK_CLOSE_FRACTION(refDistance, distance, 1e-6);
+    }
+
+    for (size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
+      const Vector2D& testPoint   = rectShiftedTestPoints.at(i);
+      double          refDistance = rectShiftedDistances.at(i);
+      double          distance    = bcheck.distance(testPoint,
+                                        rectShiftedDimensions.xmin,
+                                        rectShiftedDimensions.xmax,
+                                        rectShiftedDimensions.ymin,
+                                        rectShiftedDimensions.ymax);
+      BOOST_CHECK_CLOSE_FRACTION(refDistance, distance, 1e-6);
+    }
+  }
+
   // Aligned box w/ covariance check
   BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance)
   {
@@ -57,6 +88,30 @@ namespace Test {
     BOOST_TEST(check.isInside({0, 3}, -1, 1, -1, 1) == true);
     BOOST_TEST(check.isInside({3, 0}, -1, 1, -1, 1) == true);
   }
+
+  BOOST_AUTO_TEST_CASE(BoundaryCheckPolyDistance)
+  {
+// we check a box again, but this time described as a poly
+
+#include "BoundaryCheckTestsRefs.hpp"
+
+    BoundaryCheck bcheck(true);
+
+    for (size_t i = 0; i < rectTestPoints.size(); i++) {
+      const Vector2D& testPoint   = rectTestPoints.at(i);
+      double          refDistance = rectDistances.at(i);
+      double          distance    = bcheck.distance(testPoint, rectVertices);
+      BOOST_CHECK_CLOSE_FRACTION(refDistance, distance, 1e-6);
+    }
+
+    for (size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
+      const Vector2D& testPoint   = rectShiftedTestPoints.at(i);
+      double          refDistance = rectShiftedDistances.at(i);
+      double distance = bcheck.distance(testPoint, rectShiftedVertices);
+      BOOST_CHECK_CLOSE_FRACTION(refDistance, distance, 1e-6);
+    }
+  }
+
   // Triangle w/ simple check
   BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleSimple)
   {
