@@ -25,7 +25,7 @@ struct SingleHitSpacePoint
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint
   double
-  x()
+  x() const
   {
     return spacePoint(0);
   }
@@ -33,7 +33,7 @@ struct SingleHitSpacePoint
   /// @brief Getter of the second element in @p spacePoint
   /// @return Second element in @p spacePoint
   double
-  y()
+  y() const
   {
     return spacePoint(1);
   }
@@ -41,7 +41,7 @@ struct SingleHitSpacePoint
   /// @brief Getter of the third element in @p spacePoint
   /// @return Third element in @p spacePoint
   double
-  z()
+  z() const
   {
     return spacePoint(2);
   }
@@ -66,14 +66,16 @@ public:
   /// space points
   /// @param clusters vector of clusters on the surface
   void
-  addClusters(std::vector<SingleHitSpacePoint>& spacePointStorage,
-              const std::vector<Acts::PlanarModuleCluster const*>& clusters);
+  addClusters(
+      std::vector<SingleHitSpacePoint>&                    spacePointStorage,
+      const std::vector<Acts::PlanarModuleCluster const*>& clusters) const;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// and stores the results
   /// @param spacePointStorage storage of the data
   void
-  calculateSpacePoints(std::vector<SingleHitSpacePoint>& spacePointStorage);
+  calculateSpacePoints(
+      std::vector<SingleHitSpacePoint>& spacePointStorage) const;
 
 protected:
   /// @brief Getter method for the local coordinates of a cluster
@@ -82,14 +84,14 @@ protected:
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
   Vector2D
-  localCoords(const PlanarModuleCluster& cluster);
+  localCoords(const PlanarModuleCluster& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
   Vector3D
-  globalCoords(const PlanarModuleCluster& cluster);
+  globalCoords(const PlanarModuleCluster& cluster) const;
 };
 
 }  // namespace Acts

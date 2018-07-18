@@ -14,7 +14,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::SpacePointBuilder()
 
 Acts::Vector2D
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::localCoords(
-    const Acts::PlanarModuleCluster& cluster)
+    const Acts::PlanarModuleCluster& cluster) const
 {
   // Local position information
   auto           par = cluster.parameters();
@@ -24,7 +24,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::localCoords(
 
 Acts::Vector3D
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::globalCoords(
-    const Acts::PlanarModuleCluster& cluster)
+    const Acts::PlanarModuleCluster& cluster) const
 {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
@@ -39,7 +39,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::globalCoords(
 void
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::addClusters(
     std::vector<Acts::SingleHitSpacePoint>&              spacePointStorage,
-    const std::vector<Acts::PlanarModuleCluster const*>& clusters)
+    const std::vector<Acts::PlanarModuleCluster const*>& clusters) const
 {
   // Walk over every hit and add them
   for (auto& cluster : clusters) {
@@ -52,7 +52,7 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::addClusters(
 
 void
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::calculateSpacePoints(
-    std::vector<Acts::SingleHitSpacePoint>& spacePointStorage)
+    std::vector<Acts::SingleHitSpacePoint>& spacePointStorage) const
 {
   // Set the space point for all stored hits
   for (auto& sPoint : spacePointStorage) {

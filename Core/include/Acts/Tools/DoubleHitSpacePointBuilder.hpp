@@ -29,7 +29,7 @@ struct DoubleHitSpacePoint
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint
   double
-  x()
+  x() const
   {
     return spacePoint(0);
   }
@@ -37,7 +37,7 @@ struct DoubleHitSpacePoint
   /// @brief Getter of the second element in @p spacePoint
   /// @return Second element in @p spacePoint
   double
-  y()
+  y() const
   {
     return spacePoint(1);
   }
@@ -45,7 +45,7 @@ struct DoubleHitSpacePoint
   /// @brief Getter of the third element in @p spacePoint
   /// @return Third element in @p spacePoint
   double
-  z()
+  z() const
   {
     return spacePoint(2);
   }
@@ -93,9 +93,9 @@ public:
   /// of a space point. Since this is not needed for this class this function is
   /// deleted.
   void
-  addClusters(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
-              const std::vector<PlanarModuleCluster const*>& hits)
-      = delete;
+  addClusters(
+      std::vector<DoubleHitSpacePoint>&              spacePointStorage,
+      const std::vector<PlanarModuleCluster const*>& hits) const = delete;
 
   /// @brief Searches possible combinations of two clusters on different
   /// surfaces
@@ -106,16 +106,17 @@ public:
   /// @note The structure of @p clustersFront and @p clustersBack is meant to be
   /// clusters[Independent clusters on a single surface]
   void
-  addClusters(std::vector<DoubleHitSpacePoint>&              spacePointStorage,
-              const std::vector<PlanarModuleCluster const*>& clustersFront,
-              const std::vector<PlanarModuleCluster const*>& clustersBack);
+  addClusters(
+      std::vector<DoubleHitSpacePoint>&              spacePointStorage,
+      const std::vector<PlanarModuleCluster const*>& clustersFront,
+      const std::vector<PlanarModuleCluster const*>& clustersBack) const;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
   /// @param spacePointStorage storage of the data
   /// @note If no configuration is set, the default values will be used
   void
-  calculateSpacePoints(std::vector<DoubleHitSpacePoint>& spacePoints);
+  calculateSpacePoints(std::vector<DoubleHitSpacePoint>& spacePoints) const;
 
 private:
   /// Config
@@ -158,14 +159,14 @@ private:
   /// @param pos2 position the second cluster
   /// @return the squared sum in case of success, otherwise -1
   double
-  differenceOfClusters(const Vector3D& pos1, const Vector3D& pos2);
+  differenceOfClusters(const Vector3D& pos1, const Vector3D& pos2) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
   /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
   std::pair<Vector3D, Vector3D>
-  endsOfStrip(const PlanarModuleCluster& cluster);
+  endsOfStrip(const PlanarModuleCluster& cluster) const;
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data
@@ -181,7 +182,7 @@ private:
   calcPerpProj(const Vector3D& a,
                const Vector3D& c,
                const Vector3D& q,
-               const Vector3D& r);
+               const Vector3D& r) const;
 
   /// @brief This function tests if a space point can be estimated by a more
   /// tolerant treatment of construction. In fact, this function indirectly
@@ -190,7 +191,7 @@ private:
   /// space point formation
   /// @return indicator if the test was successful
   bool
-  recoverSpacePoint(SpacePointParameters& spaPoPa);
+  recoverSpacePoint(SpacePointParameters& spaPoPa) const;
 };
 
 }  // namespace Acts

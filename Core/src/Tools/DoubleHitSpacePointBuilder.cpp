@@ -23,7 +23,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::SpacePointBuilder(
 double
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClusters(
     const Acts::Vector3D& pos1,
-    const Acts::Vector3D& pos2)
+    const Acts::Vector3D& pos2) const
 {
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > m_cfg.diffDist) return -1.;
@@ -51,7 +51,7 @@ void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::addClusters(
     std::vector<Acts::DoubleHitSpacePoint>&              spacePoints,
     const std::vector<Acts::PlanarModuleCluster const*>& clustersFront,
-    const std::vector<Acts::PlanarModuleCluster const*>& clustersBack)
+    const std::vector<Acts::PlanarModuleCluster const*>& clustersBack) const
 {
   // Return if no clusters are given in a vector
   if (clustersFront.empty() || clustersBack.empty()) return;
@@ -93,7 +93,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::addClusters(
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::endsOfStrip(
-    const Acts::PlanarModuleCluster& cluster)
+    const Acts::PlanarModuleCluster& cluster) const
 {
   // Calculate the local coordinates of the cluster
   const Acts::Vector2D local = localCoords(cluster);
@@ -141,7 +141,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calcPerpProj(
     const Acts::Vector3D& a,
     const Acts::Vector3D& c,
     const Acts::Vector3D& q,
-    const Acts::Vector3D& r)
+    const Acts::Vector3D& r) const
 {
   /// This approach assumes that no vertex is available. This option aims to
   /// approximate the space points from cosmic data.
@@ -168,6 +168,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calcPerpProj(
 bool
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
     Acts::SpacePointBuilder<DoubleHitSpacePoint>::SpacePointParameters& spaPoPa)
+    const
 {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
@@ -241,7 +242,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
-    std::vector<Acts::DoubleHitSpacePoint>& spacePointStorage)
+    std::vector<Acts::DoubleHitSpacePoint>& spacePointStorage) const
 {
 
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
