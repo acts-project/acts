@@ -279,7 +279,6 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
     /// The same calculation can be repeated for y. Its corresponding
     /// parameter will be named n.
 
-    spaPoPa.reset();
     spaPoPa.q = ends1.first - ends1.second;
     spaPoPa.r = ends2.first - ends2.second;
 

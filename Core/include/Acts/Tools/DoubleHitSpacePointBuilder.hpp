@@ -140,37 +140,17 @@ private:
     /// SpacePointParameters::t
     Vector3D rt;
     /// Magnitude of SpacePointParameters::q
-    double qmag = 0.;
+    double qmag;
     /// Parameter that determines the hit position on the first SDE
-    double m = 0.;
+    double m;
     /// Parameter that determines the hit position on the second SDE
-    double n = 0.;
+    double n;
     /// Regular limit of the absolut values of SpacePointParameters::m and
     /// SpacePointParameters::n
-    double limit = 1.;
+    const double limit = 1.;
     /// Limit of SpacePointParameters::m and SpacePointParameters::n in case of
     /// variable vertex
-    double limitExtended = 1.;
-
-    /// @brief reset structure and allows to reuse the same structure
-    void
-    reset()
-    {
-      // Set every vector to nullvector. This allows checks, if a variable was
-      // already set.
-      q  = {0., 0., 0.};
-      r  = {0., 0., 0.};
-      s  = {0., 0., 0.};
-      t  = {0., 0., 0.};
-      qs = {0., 0., 0.};
-      rt = {0., 0., 0.};
-      // Set every double to default values
-      qmag          = 0;
-      m             = 0;
-      n             = 0;
-      limit         = 1.;
-      limitExtended = 1.;
-    }
+    double limitExtended;
   };
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
