@@ -45,8 +45,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
   // propagate with different surface types
   if (sType == Surface::Plane || sType == Surface::Disc) {
     // (i) planar surface types
-    double s[4],
-        d = sTransform(0, 3) * sTransform(0, 2)
+    double s[4], d = sTransform(0, 3) * sTransform(0, 2)
         + sTransform(1, 3) * sTransform(1, 2)
         + sTransform(2, 3) * sTransform(2, 2);
     if (d >= 0.) {
