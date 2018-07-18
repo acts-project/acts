@@ -10,8 +10,8 @@
 
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
-#include "Acts/Tools/ISpacePointBuilder.hpp"
 #include "Acts/Tools/SingleHitSpacePointBuilder.hpp"
+#include "Acts/Tools/SpacePointBuilder.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
@@ -24,7 +24,7 @@ struct DoubleHitSpacePoint
   /// Storage of the hit cluster on another surface
   PlanarModuleCluster const* clusterBack;
   /// Storage of a space point. Zero vector indicates unset point
-  Vector3D spacePoint = {0., 0., 0.};
+  Vector3D spacePoint;
 
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint
@@ -63,7 +63,6 @@ struct DoubleHitSpacePoint
 ///
 template <>
 class SpacePointBuilder<DoubleHitSpacePoint>
-    : public SpacePointBuilder<SingleHitSpacePoint>
 {
 public:
   /// @brief Configuration of the class to steer its behaviour
@@ -89,34 +88,32 @@ public:
   /// @param cfg Specific config that will be used instead of the default values
   SpacePointBuilder(DoubleHitSpacePointConfig cfg);
 
-  /// @brief This function is intended to use a single cluster for the formation
-  /// of a space point. Since this is not needed for this class this function is
-  /// deleted.
-  void
-  addClusters(
-      std::vector<DoubleHitSpacePoint>&              spacePointStorage,
-      const std::vector<PlanarModuleCluster const*>& hits) const = delete;
-
   /// @brief Searches possible combinations of two clusters on different
   /// surfaces
   /// that may come from the same particles
-  /// @param spacePointStorage storage of the space points
   /// @param clustersFront vector of clusters on a surface
   /// @param clustersBack vector of clusters on another surface
+  /// @param clusterPairs storage of the cluster pairs
   /// @note The structure of @p clustersFront and @p clustersBack is meant to be
   /// clusters[Independent clusters on a single surface]
   void
-  addClusters(
-      std::vector<DoubleHitSpacePoint>&              spacePointStorage,
+  makeClusterPairs(
+
       const std::vector<PlanarModuleCluster const*>& clustersFront,
-      const std::vector<PlanarModuleCluster const*>& clustersBack) const;
+      const std::vector<PlanarModuleCluster const*>& clustersBack,
+      std::vector<std::pair<PlanarModuleCluster const*,
+                            PlanarModuleCluster const*>>& clusterPairs) const;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
-  /// @param spacePointStorage storage of the data
+  /// @param clusterPairs pairs of clusters that are space point candidates
+  /// @param spacePoints storage of the results
   /// @note If no configuration is set, the default values will be used
   void
-  calculateSpacePoints(std::vector<DoubleHitSpacePoint>& spacePoints) const;
+  calculateSpacePoints(
+      std::vector<std::pair<PlanarModuleCluster const*,
+                            PlanarModuleCluster const*>>& clusterPairs,
+      std::vector<DoubleHitSpacePoint>&                   spacePoints) const;
 
 private:
   /// Config
@@ -153,6 +150,21 @@ private:
     /// variable vertex
     double limitExtended;
   };
+
+  /// @brief Getter method for the local coordinates of a cluster
+  /// on its corresponding surface
+  /// @param cluster object related to the cluster that holds the necessary
+  /// information
+  /// @return vector of the local coordinates of the cluster on the surface
+  Vector2D
+  localCoords(const PlanarModuleCluster& cluster) const;
+
+  /// @brief Getter method for the global coordinates of a cluster
+  /// @param cluster object related to the cluster that holds the necessary
+  /// information
+  /// @return vector of the global coordinates of the cluster
+  Vector3D
+  globalCoords(const PlanarModuleCluster& cluster) const;
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
   /// @param pos1 position of the first cluster

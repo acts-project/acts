@@ -47,11 +47,38 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClusters(
   return diffTheta2 + diffPhi2;
 }
 
+Acts::Vector2D
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::localCoords(
+    const Acts::PlanarModuleCluster& cluster) const
+{
+  // Local position information
+  auto           par = cluster.parameters();
+  Acts::Vector2D local(par[Acts::ParDef::eLOC_0], par[Acts::ParDef::eLOC_1]);
+  return local;
+}
+
+Acts::Vector3D
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::globalCoords(
+    const Acts::PlanarModuleCluster& cluster) const
+{
+  // Receive corresponding surface
+  auto& clusterSurface = cluster.referenceSurface();
+
+  // Transform local into global position information
+  Acts::Vector3D pos, mom;
+  clusterSurface.localToGlobal(localCoords(cluster), mom, pos);
+
+  return pos;
+}
+
 void
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::addClusters(
-    std::vector<Acts::DoubleHitSpacePoint>&              spacePoints,
-    const std::vector<Acts::PlanarModuleCluster const*>& clustersFront,
-    const std::vector<Acts::PlanarModuleCluster const*>& clustersBack) const
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
+
+    const std::vector<PlanarModuleCluster const*>& clustersFront,
+    const std::vector<PlanarModuleCluster const*>& clustersBack,
+    std::vector<std::pair<Acts::PlanarModuleCluster const*,
+                          Acts::PlanarModuleCluster const*>>& clusterPairs)
+    const
 {
   // Return if no clusters are given in a vector
   if (clustersFront.empty() || clustersBack.empty()) return;
@@ -83,10 +110,12 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::addClusters(
 
     // Store the best (=closest) result
     if (clusterMinDist < clustersBack.size()) {
-      Acts::DoubleHitSpacePoint tmpSpacePoint;
-      tmpSpacePoint.clusterFront = clustersFront[iClustersFront];
-      tmpSpacePoint.clusterBack  = clustersBack[clusterMinDist];
-      spacePoints.push_back(tmpSpacePoint);
+      std::pair<Acts::PlanarModuleCluster const*,
+                Acts::PlanarModuleCluster const*>
+          clusterPair;
+      clusterPair = std::make_pair(clustersFront[iClustersFront],
+                                   clustersBack[clusterMinDist]);
+      clusterPairs.push_back(clusterPair);
     }
   }
 }
@@ -242,7 +271,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
-    std::vector<Acts::DoubleHitSpacePoint>& spacePointStorage) const
+    std::vector<std::pair<Acts::PlanarModuleCluster const*,
+                          Acts::PlanarModuleCluster const*>>& clusterPairs,
+    std::vector<Acts::DoubleHitSpacePoint>&                   spacePoints) const
 {
 
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
@@ -250,14 +281,11 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
   Acts::SpacePointBuilder<DoubleHitSpacePoint>::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
-  for (auto& sp : spacePointStorage) {
-
-    // If the space point is already calculated this can be skipped
-    if (sp.spacePoint != Acts::Vector3D::Zero(3)) continue;
+  for (auto& cp : clusterPairs) {
 
     // Calculate the ends of the SDEs
-    const auto& ends1 = endsOfStrip(*(sp.clusterFront));
-    const auto& ends2 = endsOfStrip(*(sp.clusterBack));
+    const auto& ends1 = endsOfStrip(*(cp.first));
+    const auto& ends2 = endsOfStrip(*(cp.second));
 
     /// The following algorithm is meant for finding the position on the first
     /// strip if there is a corresponding cluster on the second strip. The
@@ -289,7 +317,11 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
         && (resultPerpProj
             = calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r)
                 <= 0.)) {
-      sp.spacePoint = ends1.first + resultPerpProj * spaPoPa.q;
+      Acts::DoubleHitSpacePoint sp;
+      sp.clusterFront = cp.first;
+      sp.clusterBack  = cp.second;
+      sp.spacePoint   = ends1.first + resultPerpProj * spaPoPa.q;
+      spacePoints.push_back(std::move(sp));
       continue;
     }
 
@@ -307,11 +339,15 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
     if (fabs(spaPoPa.m) <= spaPoPa.limit
         && fabs(spaPoPa.n
                 = -spaPoPa.t.dot(spaPoPa.qs) / spaPoPa.r.dot(spaPoPa.qs))
-            <= spaPoPa.limit)
+            <= spaPoPa.limit) {
       // Store the space point
+      Acts::DoubleHitSpacePoint sp;
+      sp.clusterFront = cp.first;
+      sp.clusterBack  = cp.second;
       sp.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-    else
+      spacePoints.push_back(std::move(sp));
+    } else
         /// If this point is reached then it was not possible to resolve both
         /// points such that they are on their SDEs
         /// The following code treats a possible recovery of points resolved
@@ -319,8 +355,13 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
         /// @note This procedure is an indirect variation of the vertex
         /// position.
         // Check if a recovery the point(s) and store them if successful
-        if (recoverSpacePoint(spaPoPa))
+        if (recoverSpacePoint(spaPoPa)) {
+      Acts::DoubleHitSpacePoint sp;
+      sp.clusterFront = cp.first;
+      sp.clusterBack  = cp.second;
       sp.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+      spacePoints.push_back(std::move(sp));
+    }
   }
 }

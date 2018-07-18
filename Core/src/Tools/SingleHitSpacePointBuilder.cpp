@@ -38,14 +38,14 @@ Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::globalCoords(
 
 void
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::calculateSpacePoints(
-std::vector<Acts::PlanarModuleCluster const*> clusters,
-    std::vector<Acts::SingleHitSpacePoint>& spacePointStorage) const
+    std::vector<Acts::PlanarModuleCluster const*> clusters,
+    std::vector<Acts::SingleHitSpacePoint>&       spacePointStorage) const
 {
   // Set the space point for all stored hits
   for (auto*& c : clusters) {
-	  Acts::SingleHitSpacePoint spacePoint;
-	  spacePoint.spacePoint = globalCoords(*c);
-	  spacePoint.clusterModule = c;
-	  spacePointStorage.push_back(std::move(spacePoint));
+    Acts::SingleHitSpacePoint spacePoint;
+    spacePoint.spacePoint    = globalCoords(*c);
+    spacePoint.clusterModule = c;
+    spacePointStorage.push_back(std::move(spacePoint));
   }
 }

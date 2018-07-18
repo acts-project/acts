@@ -10,7 +10,7 @@
 
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
-#include "Acts/Tools/ISpacePointBuilder.hpp"
+#include "Acts/Tools/SpacePointBuilder.hpp"
 
 namespace Acts {
 
@@ -67,8 +67,8 @@ public:
   /// @param spacePointStorage storage of the results
   void
   calculateSpacePoints(
-		std::vector<PlanarModuleCluster const*> clusters,
-      std::vector<SingleHitSpacePoint>& spacePointStorage) const;
+      std::vector<PlanarModuleCluster const*> clusters,
+      std::vector<SingleHitSpacePoint>&       spacePointStorage) const;
 
 protected:
   /// @brief Getter method for the local coordinates of a cluster

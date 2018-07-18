@@ -122,23 +122,25 @@ namespace Test {
 
     std::cout << "Store both hits" << std::endl;
 
-    std::vector<DoubleHitSpacePoint>                                  data;
+    std::vector<DoubleHitSpacePoint> resultSP;
+    std::vector<std::pair<Acts::PlanarModuleCluster const*,
+                          Acts::PlanarModuleCluster const*>>
+                                                                      clusterPairs;
     SpacePointBuilder<DoubleHitSpacePoint>::DoubleHitSpacePointConfig dhsp_cfg;
 
     // Combine two PlanarModuleClusters
     SpacePointBuilder<DoubleHitSpacePoint> dhsp(dhsp_cfg);
-    dhsp.addClusters(data, {pmc}, {pmc2});
+    dhsp.makeClusterPairs({pmc}, {pmc2}, clusterPairs);
 
-    BOOST_TEST(data.size() == 1, "Failed to add element");
-    BOOST_TEST(*(data[0].clusterFront) == *pmc, "Failed to set hit");
-    BOOST_TEST(*(data[0].clusterBack) == *pmc2, "Failed to set hit");
+    BOOST_TEST(clusterPairs.size() == 1, "Failed to add element");
+    BOOST_TEST(*(clusterPairs[0].first) == *pmc, "Failed to set hit");
+    BOOST_TEST(*(clusterPairs[0].second) == *pmc2, "Failed to set hit");
 
     std::cout << "Calculate space point" << std::endl;
 
-    dhsp.calculateSpacePoints(data);
+    dhsp.calculateSpacePoints(clusterPairs, resultSP);
 
-    BOOST_TEST(data[0].spacePoint != Vector3D::Zero(3),
-               "Failed to calculate space point");
+    BOOST_TEST(resultSP.size() == 1, "Failed to calculate space point");
 
     std::cout << "Create third hit" << std::endl;
 
@@ -164,10 +166,10 @@ namespace Test {
     std::cout << "Try to store hits" << std::endl;
 
     // Combine points
-    dhsp.addClusters(data, {pmc}, {pmc3});
+    dhsp.makeClusterPairs({pmc}, {pmc3}, clusterPairs);
 
     // Test for rejecting unconnected hits
-    BOOST_TEST(data.size() == 1, "Failed to reject potential combination");
+    BOOST_TEST(resultSP.size() == 1, "Failed to reject potential combination");
   }
 }  // end of namespace Test
 
