@@ -20,7 +20,7 @@ struct SingleHitSpacePoint
   /// Storage of the cluster on a surface
   PlanarModuleCluster const* clusterModule;
   /// Storage of a space point. Zero vector indicates unset point
-  Vector3D spacePoint = {0., 0., 0.};
+  Vector3D spacePoint;
 
   /// @brief Getter of the first element in @p spacePoint
   /// @return First element in @p spacePoint
@@ -61,20 +61,13 @@ public:
   /// Default constructor
   SpacePointBuilder<SingleHitSpacePoint>();
 
-  /// @brief Adds clusters on surfaces and stores them
-  /// @param spacePointStorage storage of clusters and the therewith resulting
-  /// space points
-  /// @param clusters vector of clusters on the surface
-  void
-  addClusters(
-      std::vector<SingleHitSpacePoint>&                    spacePointStorage,
-      const std::vector<Acts::PlanarModuleCluster const*>& clusters) const;
-
   /// @brief Calculates the space points out of a given collection of clusters
   /// and stores the results
-  /// @param spacePointStorage storage of the data
+  /// @param cluster vector of clusters
+  /// @param spacePointStorage storage of the results
   void
   calculateSpacePoints(
+		std::vector<PlanarModuleCluster const*> clusters,
       std::vector<SingleHitSpacePoint>& spacePointStorage) const;
 
 protected:
