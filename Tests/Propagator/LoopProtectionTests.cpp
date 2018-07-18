@@ -126,6 +126,7 @@ namespace Test {
       index)
   {
     (void)index;
+    (void)deltaPhi;
 
     PropagatorState pState;
     pState.stepping.dir = Vector3D(cos(phi), sin(phi), 0.);

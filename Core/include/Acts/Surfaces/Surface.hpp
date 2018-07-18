@@ -442,7 +442,7 @@ protected:
   std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
 };
 
-#include "detail/Surface.ipp"
+#include "Acts/Surfaces/detail/Surface.ipp"
 
 std::ostream&
 operator<<(std::ostream& sl, const Surface& sf);
