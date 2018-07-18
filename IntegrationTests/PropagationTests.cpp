@@ -21,7 +21,7 @@
 #include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolation/RungeKuttaEngine.hpp"
-#include "Acts/Extrapolation/Wrapper.hpp"
+#include "Acts/Extrapolation/PropagatorWrapper.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
