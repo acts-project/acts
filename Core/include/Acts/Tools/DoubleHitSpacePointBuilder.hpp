@@ -147,7 +147,7 @@ private:
     double n;
     /// Regular limit of the absolut values of SpacePointParameters::m and
     /// SpacePointParameters::n
-    const double limit = 1.;
+    double limit = 1.;
     /// Limit of SpacePointParameters::m and SpacePointParameters::n in case of
     /// variable vertex
     double limitExtended;
