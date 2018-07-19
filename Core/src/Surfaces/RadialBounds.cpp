@@ -91,15 +91,17 @@ bool
 Acts::RadialBounds::inside(const Acts::Vector2D&      lpos,
                            const Acts::BoundaryCheck& bcheck) const
 {
-  return bcheck.isInside(
-      shifted(lpos), rMin(), rMax(), -halfPhiSector(), halfPhiSector());
+  return bcheck.isInside(shifted(lpos),
+                         Vector2D(rMin(), -halfPhiSector()),
+                         Vector2D(rMax(), halfPhiSector()));
 }
 
 double
 Acts::RadialBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  return BoundaryCheck(true).distance(
-      shifted(lpos), rMin(), rMax(), -halfPhiSector(), halfPhiSector());
+  return BoundaryCheck(true).distance(shifted(lpos),
+                                      Vector2D(rMin(), -halfPhiSector()),
+                                      Vector2D(rMax(), halfPhiSector()));
 }
 
 // ostream operator overload

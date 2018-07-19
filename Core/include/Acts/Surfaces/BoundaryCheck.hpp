@@ -88,10 +88,8 @@ public:
   /// for the boundary check.
   bool
   isInside(const Vector2D& point,
-           double          loc0Min,
-           double          loc0Max,
-           double          loc1Min,
-           double          loc1Max) const;
+           const Vector2D& lowerLeft,
+           const Vector2D& upperRight) const;
 
   /// Calculate the signed, weighted, closest distance to a polygonal boundary.
   ///
@@ -121,10 +119,8 @@ public:
   /// distance. Otherwise, it is the Eucleadian distance.
   double
   distance(const Vector2D& point,
-           double          loc0Min,
-           double          loc0Max,
-           double          loc1Min,
-           double          loc1Max) const;
+           const Vector2D& lowerLeft,
+           const Vector2D& upperRight) const;
 
 private:
   enum class Type {
@@ -149,10 +145,8 @@ private:
   /// Check if the point is inside the aligned box
   bool
   isInsideBox(const Vector2D& point,
-              double          loc0Min,
-              double          loc0Max,
-              double          loc1Min,
-              double          loc1Max) const;
+              const Vector2D& lowerLeft,
+              const Vector2D& upperRight) const;
 
   /// Check if the distance vector is within the absolute or relative limits.
   bool
@@ -171,10 +165,8 @@ private:
   /// Calculate the closest point on the box
   Vector2D
   computeClosestPointOnBox(const Vector2D& point,
-                           double          loc0Min,
-                           double          loc0Max,
-                           double          loc1Min,
-                           double          loc1Max) const;
+                           const Vector2D& lowerLeft,
+                           const Vector2D& upperRight) const;
 
   /// metric weight matrix: identity for absolute mode or inverse covariance
   ActsSymMatrixD<2> m_weight;
@@ -289,23 +281,19 @@ Acts::BoundaryCheck::isInsidePolygon(const Vector2D&          point,
 
 inline bool
 Acts::BoundaryCheck::isInsideBox(const Vector2D& point,
-                                 double          loc0Min,
-                                 double          loc0Max,
-                                 double          loc1Min,
-                                 double          loc1Max) const
+                                 const Vector2D& lowerLeft,
+                                 const Vector2D& upperRight) const
 {
-  return (loc0Min <= point[0]) && (point[0] < loc0Max) && (loc1Min <= point[1])
-      && (point[1] < loc1Max);
+  return (lowerLeft[0] <= point[0]) && (point[0] < upperRight[0])
+      && (lowerLeft[1] <= point[1]) && (point[1] < upperRight[1]);
 }
 
 inline bool
 Acts::BoundaryCheck::isInside(const Vector2D& point,
-                              double          loc0Min,
-                              double          loc0Max,
-                              double          loc1Min,
-                              double          loc1Max) const
+                              const Vector2D& lowerLeft,
+                              const Vector2D& upperRight) const
 {
-  if (isInsideBox(point, loc0Min, loc0Max, loc1Min, loc1Max)) {
+  if (isInsideBox(point, lowerLeft, upperRight)) {
     return true;
   } else {
 
@@ -313,16 +301,14 @@ Acts::BoundaryCheck::isInside(const Vector2D& point,
 
     if (m_type == Type::eNone || m_type == Type::eAbsolute) {
       // absolute, can calculate directly
-      closestPoint
-          = computeClosestPointOnBox(point, loc0Min, loc0Max, loc1Min, loc1Max);
+      closestPoint = computeClosestPointOnBox(point, lowerLeft, upperRight);
 
     } else /* Type::eChi2 */ {
       // need to calculate by projection and squarednorm
-      // TODO 2017-03-29 msmk: direct implementation for closest point on box
-      Vector2D vertices[] = {{loc0Min, loc1Min},
-                             {loc0Max, loc1Min},
-                             {loc0Max, loc1Max},
-                             {loc0Min, loc1Max}};
+      Vector2D vertices[] = {{lowerLeft[0], lowerLeft[1]},
+                             {upperRight[0], lowerLeft[1]},
+                             {upperRight[0], upperRight[1]},
+                             {lowerLeft[0], upperRight[1]}};
       closestPoint = computeClosestPointOnPolygon(point, vertices);
     }
 
@@ -343,25 +329,21 @@ Acts::BoundaryCheck::distance(const Acts::Vector2D&    point,
 
 inline double
 Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
-                              double                loc0Min,
-                              double                loc0Max,
-                              double                loc1Min,
-                              double                loc1Max) const
+                              const Vector2D&       lowerLeft,
+                              const Vector2D&       upperRight) const
 {
   if (m_type == Type::eNone || m_type == Type::eAbsolute) {
 
     // compute closest point on box
-    double d = (point - computeClosestPointOnBox(
-                            point, loc0Min, loc0Max, loc1Min, loc1Max))
+    double d = (point - computeClosestPointOnBox(point, lowerLeft, upperRight))
                    .norm();
-    return isInsideBox(point, loc0Min, loc0Max, loc1Min, loc1Max) ? -d : d;
+    return isInsideBox(point, lowerLeft, upperRight) ? -d : d;
 
   } else /* Type::eChi2 */ {
-    // TODO 2017-04-04 msmk: direct implementation for closest point on box
-    Vector2D vertices[] = {{loc0Min, loc1Min},
-                           {loc0Max, loc1Min},
-                           {loc0Max, loc1Max},
-                           {loc0Min, loc1Max}};
+    Vector2D vertices[] = {{lowerLeft[0], lowerLeft[1]},
+                           {upperRight[0], lowerLeft[1]},
+                           {upperRight[0], upperRight[1]},
+                           {lowerLeft[0], upperRight[1]}};
     return distance(point, vertices);
   }
 }
@@ -426,10 +408,8 @@ Acts::BoundaryCheck::computeClosestPointOnPolygon(
 
 inline Acts::Vector2D
 Acts::BoundaryCheck::computeClosestPointOnBox(const Vector2D& point,
-                                              double          loc0Min,
-                                              double          loc0Max,
-                                              double          loc1Min,
-                                              double          loc1Max) const
+                                              const Vector2D& lowerLeft,
+                                              const Vector2D& upperRight) const
 {
 
   /*
@@ -451,6 +431,8 @@ Acts::BoundaryCheck::computeClosestPointOnBox(const Vector2D& point,
    */
 
   double l0 = point[0], l1 = point[1];
+  double loc0Min = lowerLeft[0], loc0Max = upperRight[0];
+  double loc1Min = lowerLeft[1], loc1Max = upperRight[1];
 
   // check if inside
   if (loc0Min <= l0 && l0 < loc0Max && loc1Min <= l1 && l1 < loc1Max) {

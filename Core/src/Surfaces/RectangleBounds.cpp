@@ -59,15 +59,17 @@ bool
 Acts::RectangleBounds::inside(const Acts::Vector2D&      lpos,
                               const Acts::BoundaryCheck& bcheck) const
 {
-  return bcheck.isInside(
-      lpos, -halflengthX(), halflengthX(), -halflengthY(), halflengthY());
+  return bcheck.isInside(lpos,
+                         Vector2D(-halflengthX(), -halflengthY()),
+                         Vector2D(halflengthX(), halflengthY()));
 }
 
 double
 Acts::RectangleBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  return BoundaryCheck(true).distance(
-      lpos, -halflengthX(), halflengthX(), -halflengthY(), halflengthY());
+  return BoundaryCheck(true).distance(lpos,
+                                      Vector2D(-halflengthX(), -halflengthY()),
+                                      Vector2D(halflengthX(), halflengthY()));
 }
 
 std::vector<Acts::Vector2D>

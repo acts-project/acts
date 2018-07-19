@@ -66,7 +66,8 @@ bool
 Acts::LineBounds::inside(const Acts::Vector2D&      lpos,
                          const Acts::BoundaryCheck& bcheck) const
 {
-  return bcheck.isInside(lpos, 0, r(), -halflengthZ(), halflengthZ());
+  return bcheck.isInside(
+      lpos, Vector2D(0, -halflengthZ()), Vector2D(r(), halflengthZ()));
 }
 
 double
