@@ -127,8 +127,8 @@ namespace Test {
       auto pCylinderLayer2 = std::dynamic_pointer_cast<CylinderLayer>(
           CylinderLayer::create(var_data));
 
-      BOOST_CHECK_EQUAL(
-          pCylinderLayer->thickness(), pCylinderLayer2->thickness());
+      BOOST_CHECK_EQUAL(pCylinderLayer->thickness(),
+                        pCylinderLayer2->thickness());
       BOOST_TEST(
           pCylinderLayer->transform().isApprox(pCylinderLayer2->transform()));
 
@@ -139,8 +139,8 @@ namespace Test {
 
       BOOST_CHECK_EQUAL(cvBoundsExp->innerRadius(), cvBoundsAct->innerRadius());
       BOOST_CHECK_EQUAL(cvBoundsExp->outerRadius(), cvBoundsAct->outerRadius());
-      BOOST_CHECK_EQUAL(
-          cvBoundsExp->halfPhiSector(), cvBoundsAct->halfPhiSector());
+      BOOST_CHECK_EQUAL(cvBoundsExp->halfPhiSector(),
+                        cvBoundsAct->halfPhiSector());
       BOOST_CHECK_EQUAL(cvBoundsExp->halflengthZ(), cvBoundsAct->halflengthZ());
     }
 
