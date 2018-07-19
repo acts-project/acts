@@ -145,20 +145,19 @@ namespace Test {
     variant_map var_cone_map = boost::get<variant_map>(var_cone);
     BOOST_TEST(var_cone_map.get<std::string>("type") == "ConeBounds");
     variant_map pl = var_cone_map.get<variant_map>("payload");
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("alpha"), alpha, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("zMin"), zMin, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("zMax"), zMax, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("avgPhi"), avgPhi, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("halfPhi"), halfPhi, 1e-6);
+    BOOST_CHECK_EQUAL(pl.get<double>("alpha"), alpha);
+    BOOST_CHECK_EQUAL(pl.get<double>("zMin"), zMin);
+    BOOST_CHECK_EQUAL(pl.get<double>("zMax"), zMax);
+    BOOST_CHECK_EQUAL(pl.get<double>("avgPhi"), avgPhi);
+    BOOST_CHECK_EQUAL(pl.get<double>("halfPhi"), halfPhi);
 
     ConeBounds cone2(var_cone);
 
-    BOOST_CHECK_CLOSE_FRACTION(cone.alpha(), cone2.alpha(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(cone.minZ(), cone2.minZ(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(cone.maxZ(), cone2.maxZ(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(cone.averagePhi(), cone2.averagePhi(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        cone.halfPhiSector(), cone2.halfPhiSector(), 1e-6);
+    BOOST_CHECK_EQUAL(cone.alpha(), cone2.alpha());
+    BOOST_CHECK_EQUAL(cone.minZ(), cone2.minZ());
+    BOOST_CHECK_EQUAL(cone.maxZ(), cone2.maxZ());
+    BOOST_CHECK_EQUAL(cone.averagePhi(), cone2.averagePhi());
+    BOOST_CHECK_EQUAL(cone.halfPhiSector(), cone2.halfPhiSector());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

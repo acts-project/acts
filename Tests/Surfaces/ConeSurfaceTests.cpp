@@ -224,17 +224,17 @@ namespace Test {
         = boost::get<variant_map>(var_cone).get<variant_map>("payload");
     const variant_map& bounds_pl
         = pl.get<variant_map>("bounds").get<variant_map>("payload");
-    BOOST_CHECK_CLOSE_FRACTION(bounds_pl.get<double>("alpha"), alpha, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(bounds_pl.get<double>("zMin"), zMin, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(bounds_pl.get<double>("zMax"), zMax, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(bounds_pl.get<double>("halfPhi"), halfPhi, 1e-6);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("alpha"), alpha);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("zMin"), zMin);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("zMax"), zMax);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfPhi"), halfPhi);
 
     ConeSurface cone2(var_cone);
     auto        conebounds = dynamic_cast<const ConeBounds*>(&cone2.bounds());
-    BOOST_CHECK_CLOSE_FRACTION(conebounds->alpha(), alpha, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(conebounds->halfPhiSector(), halfPhi, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(conebounds->minZ(), zMin, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(conebounds->maxZ(), zMax, 1e-6);
+    BOOST_CHECK_EQUAL(conebounds->alpha(), alpha);
+    BOOST_CHECK_EQUAL(conebounds->halfPhiSector(), halfPhi);
+    BOOST_CHECK_EQUAL(conebounds->minZ(), zMin);
+    BOOST_CHECK_EQUAL(conebounds->maxZ(), zMax);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

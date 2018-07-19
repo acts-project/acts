@@ -153,20 +153,20 @@ namespace Test {
     variant_map var_dt_map = boost::get<variant_map>(var_dt);
     BOOST_TEST(var_dt_map.get<std::string>("type") == "DiscTrapezoidalBounds");
     variant_map pl = var_dt_map.get<variant_map>("payload");
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("rMin"), rMin, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("rMax"), rMax, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("avgPhi"), avgPhi, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("minHalfX"), minHalfX, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("maxHalfX"), maxHalfX, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(pl.get<double>("stereo"), stereo, 1e-6);
+    BOOST_CHECK_EQUAL(pl.get<double>("rMin"), rMin);
+    BOOST_CHECK_EQUAL(pl.get<double>("rMax"), rMax);
+    BOOST_CHECK_EQUAL(pl.get<double>("avgPhi"), avgPhi);
+    BOOST_CHECK_EQUAL(pl.get<double>("minHalfX"), minHalfX);
+    BOOST_CHECK_EQUAL(pl.get<double>("maxHalfX"), maxHalfX);
+    BOOST_CHECK_EQUAL(pl.get<double>("stereo"), stereo);
 
     DiscTrapezoidalBounds dt2(var_dt);
 
-    BOOST_CHECK_CLOSE_FRACTION(dt.rMin(), dt2.rMin(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(dt.rMax(), dt2.rMax(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(dt.minHalflengthX(), dt2.minHalflengthX(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(dt.maxHalflengthX(), dt2.maxHalflengthX(), 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(dt.stereo(), dt2.stereo(), 1e-6);
+    BOOST_CHECK_EQUAL(dt.rMin(), dt2.rMin());
+    BOOST_CHECK_EQUAL(dt.rMax(), dt2.rMax());
+    BOOST_CHECK_EQUAL(dt.minHalflengthX(), dt2.minHalflengthX());
+    BOOST_CHECK_EQUAL(dt.maxHalflengthX(), dt2.maxHalflengthX());
+    BOOST_CHECK_EQUAL(dt.stereo(), dt2.stereo());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

@@ -190,13 +190,13 @@ namespace Test {
         = boost::get<variant_map>(var_line).get<variant_map>("payload");
     const variant_map& bounds_pl
         = pl.get<variant_map>("bounds").get<variant_map>("payload");
-    BOOST_CHECK_CLOSE_FRACTION(bounds_pl.get<double>("radius"), radius, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(bounds_pl.get<double>("halfZ"), hlZ, 1e-6);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("radius"), radius);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfZ"), hlZ);
 
     LineSurfaceStub line2(var_line);
     auto            lbounds = dynamic_cast<const LineBounds*>(&line2.bounds());
-    BOOST_CHECK_CLOSE_FRACTION(lbounds->r(), radius, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(lbounds->halflengthZ(), hlZ, 1e-6);
+    BOOST_CHECK_EQUAL(lbounds->r(), radius);
+    BOOST_CHECK_EQUAL(lbounds->halflengthZ(), hlZ);
   }
 
   BOOST_AUTO_TEST_SUITE_END()
