@@ -431,10 +431,30 @@ Acts::BoundaryCheck::computeClosestPointOnBox(const Vector2D& point,
                                               double          loc1Min,
                                               double          loc1Max) const
 {
+
+  /*
+   *
+   *        |                 |
+   *   IV   |       V         | I
+   *        |                 |
+   *  ------------------------------
+   *        |                 |
+   *        |                 |
+   *   VIII |     INSIDE      | VI
+   *        |                 |
+   *        |                 |
+   *  ------------------------------
+   *        |                 |
+   *   III  |      VII        | II
+   *        |                 |
+   *
+   */
+
   double l0 = point[0], l1 = point[1];
 
   // check if inside
   if (loc0Min <= l0 && l0 < loc0Max && loc1Min <= l1 && l1 < loc1Max) {
+    // INSIDE
     double   dist = std::abs(loc0Max - l0);
     Vector2D cls(loc0Max, l1);
 
@@ -456,6 +476,7 @@ Acts::BoundaryCheck::computeClosestPointOnBox(const Vector2D& point,
     }
     return cls;
   } else {
+    // OUTSIDE, check sectors
     if (l0 > loc0Max) {
       if (l1 > loc1Max) {  // I
         return {loc0Max, loc1Max};
@@ -469,15 +490,16 @@ Acts::BoundaryCheck::computeClosestPointOnBox(const Vector2D& point,
         return {loc0Min, loc1Max};
       } else if (l1 <= loc1Min) {  // III
         return {loc0Min, loc1Min};
-      } else {  // IX
+      } else {  // VIII
         return {loc0Min, l1};
       }
     } else {
       if (l1 > loc1Max) {  // V
         return {l0, loc1Max};
-      } else {  // l1 <= loc1Min # VIII
+      } else {  // l1 <= loc1Min # VII
         return {l0, loc1Min};
       }
+      // third case not necessary, see INSIDE above
     }
   }
 }
