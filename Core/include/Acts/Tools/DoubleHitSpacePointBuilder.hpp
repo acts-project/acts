@@ -23,7 +23,7 @@ struct DoubleHitSpacePoint
   PlanarModuleCluster const* clusterFront;
   /// Storage of the hit cluster on another surface
   PlanarModuleCluster const* clusterBack;
-  /// Storage of a space point. Zero vector indicates unset point
+  /// Storage of a space point.
   Vector3D spacePoint;
 
   /// @brief Getter of the first element in @p spacePoint
@@ -98,7 +98,6 @@ public:
   /// clusters[Independent clusters on a single surface]
   void
   makeClusterPairs(
-
       const std::vector<PlanarModuleCluster const*>& clustersFront,
       const std::vector<PlanarModuleCluster const*>& clustersBack,
       std::vector<std::pair<PlanarModuleCluster const*,
@@ -111,7 +110,7 @@ public:
   /// @note If no configuration is set, the default values will be used
   void
   calculateSpacePoints(
-      std::vector<std::pair<PlanarModuleCluster const*,
+      const std::vector<std::pair<PlanarModuleCluster const*,
                             PlanarModuleCluster const*>>& clusterPairs,
       std::vector<DoubleHitSpacePoint>&                   spacePoints) const;
 

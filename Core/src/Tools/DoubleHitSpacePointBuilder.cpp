@@ -73,7 +73,6 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::globalCoords(
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
-
     const std::vector<PlanarModuleCluster const*>& clustersFront,
     const std::vector<PlanarModuleCluster const*>& clustersBack,
     std::vector<std::pair<Acts::PlanarModuleCluster const*,
@@ -271,7 +270,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
-    std::vector<std::pair<Acts::PlanarModuleCluster const*,
+    const std::vector<std::pair<Acts::PlanarModuleCluster const*,
                           Acts::PlanarModuleCluster const*>>& clusterPairs,
     std::vector<Acts::DoubleHitSpacePoint>&                   spacePoints) const
 {
@@ -281,7 +280,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
   Acts::SpacePointBuilder<DoubleHitSpacePoint>::SpacePointParameters spaPoPa;
 
   // Walk over every found candidate pair
-  for (auto& cp : clusterPairs) {
+  for (const auto& cp : clusterPairs) {
 
     // Calculate the ends of the SDEs
     const auto& ends1 = endsOfStrip(*(cp.first));
@@ -347,7 +346,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
       sp.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
       spacePoints.push_back(std::move(sp));
-    } else
+    } else {
         /// If this point is reached then it was not possible to resolve both
         /// points such that they are on their SDEs
         /// The following code treats a possible recovery of points resolved
@@ -362,6 +361,6 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
       sp.spacePoint
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
       spacePoints.push_back(std::move(sp));
-    }
+    }}
   }
 }
