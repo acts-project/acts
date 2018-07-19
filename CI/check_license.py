@@ -12,6 +12,23 @@ EXCLUDE = [
     "./Plugins/JsonPlugin/include/Acts/Plugins/JsonPlugin/lib/*"
 ]
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+CROSS_SYMBOL = u"\u2717"
+def err(string):
+    if sys.stdout.isatty():
+        return bcolors.FAIL + bcolors.BOLD + string + bcolors.ENDC
+    else:
+        return string
+
 class CommitInfo:
     date = None
     year = None
@@ -213,9 +230,18 @@ def main():
                             # need year range in licence
                             if not (year1 and year2):
                                 year_print("File: {}".format(src))
-                                year_print("File was modified in a different year than it was added.")
-                                year_print("License should say {}-{}".format(git_add_year, git_mod_year))
-                                year_print("But says: {}-{}".format(year1, year2))
+                                # year_print("o File was modified in a different year ({}) than it was added ({})."
+                                           # .format(git_mod_year, git_add_year))
+                                year_print("- File was added in {}".format(git_add_year))
+                                year_print("- File was modified on {} by {}:\n{}".format(
+                                    git_mod_commit.date, 
+                                    git_mod_commit.author, 
+                                    git_mod_commit.subject + git_mod_commit.body))
+                                year_print("=> License should say {}-{}".format(git_add_year, git_mod_year))
+
+                                act_year = year1 if year1 else year2
+                                year_print(err("{} But says: {}".format(CROSS_SYMBOL, act_year)))
+
                                 if args.fail_year_mismatch:
                                     exit = 1
                                     year_print("\n")
@@ -227,12 +253,13 @@ def main():
 
                                     year_print("File: {}".format(src))
                                     year_print("Year range {}-{} does not match range from git {}-{}".format(year1, year2, git_add_year, git_mod_year))
-                                    year_print("File was added in {}".format(git_add_year))
-                                    year_print("File was modified on {} by {}:\n{}".format(
+                                    year_print("- File was added in {}".format(git_add_year))
+                                    year_print("- File was modified on {} by {}:\n{}".format(
                                         git_mod_commit.date, 
                                         git_mod_commit.author, 
                                         git_mod_commit.subject + git_mod_commit.body))
-                                    year_print("License should say {}-{}".format(git_add_year, git_mod_year))
+                                    year_print("=> License should say {}-{}".format(git_add_year, git_mod_year))
+                                    year_print(err("{} But says: {}-{}".format(CROSS_SYMBOL, year1, year2)))
                                     if args.fail_year_mismatch:
                                         exit = 1
                                         year_print("\n")
@@ -243,12 +270,13 @@ def main():
                         else:
                             if int(year1) < git_mod_year:
                                 year_print("File: {}".format(src))
-                                year_print("Year {} does not match git modification year {}".format(year1, git_mod_year))
-                                year_print("License should say {}".format(git_mod_year))
-                                year_print("File was modified on {} by {}:{}".format(
+                                year_print("- Year {} does not match git modification year {}".format(year1, git_mod_year))
+                                year_print("- File was modified on {} by {}:\n{}".format(
                                         git_mod_commit.date, 
                                         git_mod_commit.author, 
                                         git_mod_commit.subject + git_mod_commit.body))
+                                year_print("=> License should say {}".format(git_mod_year))
+                                year_print(err("{} But says: {}".format(CROSS_SYMBOL, year1)))
                                 if args.fail_year_mismatch:
                                     exit = 1
                                     year_print("\n")
