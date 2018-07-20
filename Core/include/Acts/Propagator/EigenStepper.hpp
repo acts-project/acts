@@ -86,7 +86,7 @@ public:
       , navDir(ndir)
       , covTransport(false)
       , pathAccumulated(0.)
-      , stepSize(ssize)
+      , stepSize(ndir * std::abs(ssize))
     {
       // remember the start parameters
       startPos = pos;

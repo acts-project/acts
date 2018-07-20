@@ -44,12 +44,24 @@ BOOST_DATA_TEST_CASE(
   if (index < skip) return;
 
   double dcharge = -1 + 2 * charge;
+
   // foward backward check atlas stepper
-  foward_backward(apropagator, pT, phi, theta, dcharge, plimit, index, 1e-3);
+  // foward_backward(apropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
+  // Acts::units::_eV, debug);
   // foward backward check eigen stepper
-  foward_backward(epropagator, pT, phi, theta, dcharge, plimit, index, 1e-3);
+  foward_backward(epropagator,
+                  pT,
+                  phi,
+                  theta,
+                  dcharge,
+                  plimit,
+                  index,
+                  1e-3,
+                  Acts::units::_eV,
+                  debug);
   // foward backward runge kutta engine
-  foward_backward(wpropagator, pT, phi, theta, dcharge, plimit, index, 1e-3);
+  // foward_backward(wpropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
+  // Acts::units::_eV, debug);
 }
 
 /// test consistency of propagators when approaching a cylinder

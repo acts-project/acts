@@ -171,16 +171,23 @@ namespace IntegrationTest {
   {
 
     // setup propagation options
-    typename Propagator_type::template Options<> fwd_options;
-    fwd_options.pathLimit   = plimit;
-    fwd_options.maxStepSize = 1 * units::_cm;
-    fwd_options.debug       = debug;
+    // Action list and abort list
+    typedef Acts::detail::DebugOutputActor DebugOutput;
+    typedef Acts::ActionList<DebugOutput>  ActionList;
+    typedef Acts::AbortList<>              AbortConditions;
 
-    typename Propagator_type::template Options<> back_options;
-    back_options.direction   = backward;
-    back_options.pathLimit   = plimit;
-    back_options.maxStepSize = 1 * units::_cm;
-    back_options.debug       = debug;
+    typename Propagator_type::template Options<ActionList, AbortConditions>
+        fwdOptions;
+    fwdOptions.pathLimit   = plimit;
+    fwdOptions.maxStepSize = 1 * units::_cm;
+    fwdOptions.debug       = debug;
+
+    typename Propagator_type::template Options<ActionList, AbortConditions>
+        bwdOptions;
+    bwdOptions.direction   = backward;
+    bwdOptions.pathLimit   = -plimit;
+    bwdOptions.maxStepSize = 1 * units::_cm;
+    bwdOptions.debug       = debug;
 
     // define start parameters
     double                x  = 0;
@@ -195,18 +202,36 @@ namespace IntegrationTest {
     CurvilinearParameters start(nullptr, pos, mom, q);
 
     // do forward-backward propagation
-    const auto& tp1 = propagator.propagate(start, fwd_options).endParameters;
-    const auto& tp2 = propagator.propagate(*tp1, back_options).endParameters;
+    const auto& fwdResult = propagator.propagate(start, fwdOptions);
+    const auto& bwdResult
+        = propagator.propagate(*fwdResult.endParameters, bwdOptions);
+
+    const Vector3D& bwdPosition = bwdResult.endParameters->position();
+    const Vector3D& bwdMomentum = bwdResult.endParameters->momentum();
 
     // test propagation invariants
     // clang-format off
-    BOOST_TEST((x - tp2->position()(0)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((y - tp2->position()(1)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((z - tp2->position()(2)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((px - tp2->momentum()(0)) == 0., tt::tolerance(momtol));
-    BOOST_TEST((py - tp2->momentum()(1)) == 0., tt::tolerance(momtol));
-    BOOST_TEST((pz - tp2->momentum()(2)) == 0., tt::tolerance(momtol));
+    BOOST_TEST((x - bwdPosition(0)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((y - bwdPosition(1)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((z - bwdPosition(2)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((px - bwdMomentum(0)) == 0., tt::tolerance(momtol));
+    BOOST_TEST((py - bwdMomentum(1)) == 0., tt::tolerance(momtol));
+    BOOST_TEST((pz - bwdMomentum(2)) == 0., tt::tolerance(momtol));
     // clang-format on
+
+    if (debug) {
+      auto fwdOutput = fwdResult.template get<DebugOutput::result_type>();
+      std::cout << ">>>>> Output for forward propagation " << std::endl;
+      std::cout << fwdOutput.debugString << std::endl;
+      std::cout << " - resulted at position : "
+                << fwdResult.endParameters->position() << std::endl;
+
+      auto bwdOutput = fwdResult.template get<DebugOutput::result_type>();
+      std::cout << ">>>>> Output for backward propagation " << std::endl;
+      std::cout << bwdOutput.debugString << std::endl;
+      std::cout << " - resulted at position : "
+                << bwdResult.endParameters->position() << std::endl;
+    }
   }
 
   // test propagation to cylinder
