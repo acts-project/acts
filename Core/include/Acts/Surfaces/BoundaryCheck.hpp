@@ -144,9 +144,9 @@ private:
 
   /// Check if the point is inside the aligned box
   bool
-  isInsideBox(const Vector2D& point,
-              const Vector2D& lowerLeft,
-              const Vector2D& upperRight) const;
+  isInsideRectangle(const Vector2D& point,
+                    const Vector2D& lowerLeft,
+                    const Vector2D& upperRight) const;
 
   /// Check if the distance vector is within the absolute or relative limits.
   bool
@@ -164,9 +164,9 @@ private:
 
   /// Calculate the closest point on the box
   Vector2D
-  computeEuclideanClosestPointOnBox(const Vector2D& point,
-                                    const Vector2D& lowerLeft,
-                                    const Vector2D& upperRight) const;
+  computeEuclideanClosestPointOnRectangle(const Vector2D& point,
+                                          const Vector2D& lowerLeft,
+                                          const Vector2D& upperRight) const;
 
   /// metric weight matrix: identity for absolute mode or inverse covariance
   ActsSymMatrixD<2> m_weight;
@@ -280,9 +280,9 @@ Acts::BoundaryCheck::isInsidePolygon(const Vector2D&          point,
 }
 
 inline bool
-Acts::BoundaryCheck::isInsideBox(const Vector2D& point,
-                                 const Vector2D& lowerLeft,
-                                 const Vector2D& upperRight) const
+Acts::BoundaryCheck::isInsideRectangle(const Vector2D& point,
+                                       const Vector2D& lowerLeft,
+                                       const Vector2D& upperRight) const
 {
   return (lowerLeft[0] <= point[0]) && (point[0] < upperRight[0])
       && (lowerLeft[1] <= point[1]) && (point[1] < upperRight[1]);
@@ -293,7 +293,7 @@ Acts::BoundaryCheck::isInside(const Vector2D& point,
                               const Vector2D& lowerLeft,
                               const Vector2D& upperRight) const
 {
-  if (isInsideBox(point, lowerLeft, upperRight)) {
+  if (isInsideRectangle(point, lowerLeft, upperRight)) {
     return true;
   } else {
 
@@ -301,8 +301,8 @@ Acts::BoundaryCheck::isInside(const Vector2D& point,
 
     if (m_type == Type::eNone || m_type == Type::eAbsolute) {
       // absolute, can calculate directly
-      closestPoint
-          = computeEuclideanClosestPointOnBox(point, lowerLeft, upperRight);
+      closestPoint = computeEuclideanClosestPointOnRectangle(
+          point, lowerLeft, upperRight);
 
     } else /* Type::eChi2 */ {
       // need to calculate by projection and squarednorm
@@ -336,10 +336,10 @@ Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
   if (m_type == Type::eNone || m_type == Type::eAbsolute) {
 
     // compute closest point on box
-    double d = (point - computeEuclideanClosestPointOnBox(
+    double d = (point - computeEuclideanClosestPointOnRectangle(
                             point, lowerLeft, upperRight))
                    .norm();
-    return isInsideBox(point, lowerLeft, upperRight) ? -d : d;
+    return isInsideRectangle(point, lowerLeft, upperRight) ? -d : d;
 
   } else /* Type::eChi2 */ {
     Vector2D vertices[] = {{lowerLeft[0], lowerLeft[1]},
@@ -409,7 +409,7 @@ Acts::BoundaryCheck::computeClosestPointOnPolygon(
 }
 
 inline Acts::Vector2D
-Acts::BoundaryCheck::computeEuclideanClosestPointOnBox(
+Acts::BoundaryCheck::computeEuclideanClosestPointOnRectangle(
     const Vector2D& point,
     const Vector2D& lowerLeft,
     const Vector2D& upperRight) const
