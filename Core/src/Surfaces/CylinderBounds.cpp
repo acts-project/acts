@@ -111,7 +111,9 @@ Acts::CylinderBounds::inside(const Acts::Vector2D&      lpos,
                              const Acts::BoundaryCheck& bcheck) const
 {
   return bcheck.transformed(jacobian())
-      .isInside(shifted(lpos), -m_halfPhi, m_halfPhi, -m_halfZ, m_halfZ);
+      .isInside(shifted(lpos),
+                Vector2D(-m_halfPhi, -m_halfZ),
+                Vector2D(m_halfPhi, m_halfZ));
 }
 
 bool
@@ -123,14 +125,16 @@ Acts::CylinderBounds::inside3D(const Acts::Vector3D&      pos,
 
   Vector2D lpos(detail::radian_sym(pos.phi() - m_avgPhi), pos.z());
   return bcheck.transformed(jacobian())
-      .isInside(lpos, -m_halfPhi, m_halfPhi, -m_halfZ, m_halfZ);
+      .isInside(
+          lpos, Vector2D(-m_halfPhi, -m_halfZ), Vector2D(m_halfPhi, m_halfZ));
 }
 
 double
 Acts::CylinderBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  return BoundaryCheck(true).distance(
-      shifted(lpos), -m_halfPhi, m_halfPhi, -m_halfZ, m_halfZ);
+  return BoundaryCheck(true).distance(shifted(lpos),
+                                      Vector2D(-m_halfPhi, -m_halfZ),
+                                      Vector2D(m_halfPhi, m_halfZ));
 }
 
 // ostream operator overload

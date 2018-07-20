@@ -110,7 +110,8 @@ Acts::ConeBounds::inside(const Acts::Vector2D&      lpos,
                          const Acts::BoundaryCheck& bcheck) const
 {
   auto rphiHalf = r(lpos[eLOC_Z]) * halfPhiSector();
-  return bcheck.isInside(shifted(lpos), -rphiHalf, rphiHalf, minZ(), maxZ());
+  return bcheck.isInside(
+      shifted(lpos), Vector2D(-rphiHalf, minZ()), Vector2D(rphiHalf, maxZ()));
 }
 
 double
@@ -118,7 +119,7 @@ Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
   auto rphiHalf = r(lpos[eLOC_Z]) * halfPhiSector();
   return BoundaryCheck(true).distance(
-      shifted(lpos), -rphiHalf, rphiHalf, minZ(), maxZ());
+      shifted(lpos), Vector2D(-rphiHalf, minZ()), Vector2D(rphiHalf, maxZ()));
 }
 
 std::ostream&

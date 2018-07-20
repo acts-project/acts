@@ -41,6 +41,7 @@ class BoundaryCheck
 public:
   /// Construct either hard cut in both dimensions or no cut at all.
   BoundaryCheck(bool check);
+
   /// Construct a tolerance based check.
   ///
   /// @param checkLocal0 Boolean directive to check coordinate 0
@@ -51,6 +52,7 @@ public:
                 bool   checkLocal1,
                 double tolerance0 = 0,
                 double tolerance1 = 0);
+
   /// Construct a chi2-based check.
   ///
   /// @param localCovariance Coverance matrix in local coordinates
@@ -73,6 +75,7 @@ public:
   template <typename Vector2DContainer>
   bool
   isInside(const Vector2D& point, const Vector2DContainer& vertices) const;
+
   /// Check if the point is inside a box aligned with the local axes.
   ///
   /// @param point   Test point
@@ -85,10 +88,8 @@ public:
   /// for the boundary check.
   bool
   isInside(const Vector2D& point,
-           double          loc0Min,
-           double          loc0Max,
-           double          loc1Min,
-           double          loc1Max) const;
+           const Vector2D& lowerLeft,
+           const Vector2D& upperRight) const;
 
   /// Calculate the signed, weighted, closest distance to a polygonal boundary.
   ///
@@ -104,6 +105,7 @@ public:
   template <typename Vector2DContainer>
   double
   distance(const Vector2D& point, const Vector2DContainer& vertices) const;
+
   /// Calculate the signed, weighted, closest distance to an aligned box.
   ///
   /// @param point Test point
@@ -117,10 +119,8 @@ public:
   /// distance. Otherwise, it is the Eucleadian distance.
   double
   distance(const Vector2D& point,
-           double          loc0Min,
-           double          loc0Max,
-           double          loc1Min,
-           double          loc1Max) const;
+           const Vector2D& lowerLeft,
+           const Vector2D& upperRight) const;
 
 private:
   enum class Type {
@@ -141,20 +141,36 @@ private:
   bool
   isInsidePolygon(const Vector2D&          point,
                   const Vector2DContainer& vertices) const;
+
+  /// Check if the point is inside the aligned box
+  bool
+  isInsideRectangle(const Vector2D& point,
+                    const Vector2D& lowerLeft,
+                    const Vector2D& upperRight) const;
+
   /// Check if the distance vector is within the absolute or relative limits.
   bool
   isTolerated(const Vector2D& delta) const;
+
   /// Compute vector norm based on the covariance.
   double
   squaredNorm(const Vector2D& x) const;
+
   /// Calculate the closest point on the polygon.
   template <typename Vector2DContainer>
   Vector2D
   computeClosestPointOnPolygon(const Vector2D&          point,
                                const Vector2DContainer& vertices) const;
 
+  /// Calculate the closest point on the box
+  Vector2D
+  computeEuclideanClosestPointOnRectangle(const Vector2D& point,
+                                          const Vector2D& lowerLeft,
+                                          const Vector2D& upperRight) const;
+
   /// metric weight matrix: identity for absolute mode or inverse covariance
   ActsSymMatrixD<2> m_weight;
+
   /// dual use: absolute tolerances or relative chi2/ sigma cut.
   Vector2D m_tolerance;
   Type     m_type;
@@ -264,22 +280,39 @@ Acts::BoundaryCheck::isInsidePolygon(const Vector2D&          point,
 }
 
 inline bool
-Acts::BoundaryCheck::isInside(const Vector2D& point,
-                              double          loc0Min,
-                              double          loc0Max,
-                              double          loc1Min,
-                              double          loc1Max) const
+Acts::BoundaryCheck::isInsideRectangle(const Vector2D& point,
+                                       const Vector2D& lowerLeft,
+                                       const Vector2D& upperRight) const
 {
-  if ((loc0Min <= point[0]) && (point[0] < loc0Max) && (loc1Min <= point[1])
-      && (point[1] < loc1Max)) {
+  return (lowerLeft[0] <= point[0]) && (point[0] < upperRight[0])
+      && (lowerLeft[1] <= point[1]) && (point[1] < upperRight[1]);
+}
+
+inline bool
+Acts::BoundaryCheck::isInside(const Vector2D& point,
+                              const Vector2D& lowerLeft,
+                              const Vector2D& upperRight) const
+{
+  if (isInsideRectangle(point, lowerLeft, upperRight)) {
     return true;
   } else {
-    // TODO 2017-03-29 msmk: direct implementation for closest point on box
-    Vector2D vertices[] = {{loc0Min, loc1Min},
-                           {loc0Max, loc1Min},
-                           {loc0Max, loc1Max},
-                           {loc0Min, loc1Max}};
-    Vector2D closestPoint = computeClosestPointOnPolygon(point, vertices);
+
+    Vector2D closestPoint;
+
+    if (m_type == Type::eNone || m_type == Type::eAbsolute) {
+      // absolute, can calculate directly
+      closestPoint = computeEuclideanClosestPointOnRectangle(
+          point, lowerLeft, upperRight);
+
+    } else /* Type::eChi2 */ {
+      // need to calculate by projection and squarednorm
+      Vector2D vertices[] = {{lowerLeft[0], lowerLeft[1]},
+                             {upperRight[0], lowerLeft[1]},
+                             {upperRight[0], upperRight[1]},
+                             {lowerLeft[0], upperRight[1]}};
+      closestPoint = computeClosestPointOnPolygon(point, vertices);
+    }
+
     return isTolerated(closestPoint - point);
   }
 }
@@ -297,17 +330,24 @@ Acts::BoundaryCheck::distance(const Acts::Vector2D&    point,
 
 inline double
 Acts::BoundaryCheck::distance(const Acts::Vector2D& point,
-                              double                loc0Min,
-                              double                loc0Max,
-                              double                loc1Min,
-                              double                loc1Max) const
+                              const Vector2D&       lowerLeft,
+                              const Vector2D&       upperRight) const
 {
-  // TODO 2017-04-04 msmk: direct implementation for closest point on box
-  Vector2D vertices[] = {{loc0Min, loc1Min},
-                         {loc0Max, loc1Min},
-                         {loc0Max, loc1Max},
-                         {loc0Min, loc1Max}};
-  return distance(point, vertices);
+  if (m_type == Type::eNone || m_type == Type::eAbsolute) {
+
+    // compute closest point on box
+    double d = (point - computeEuclideanClosestPointOnRectangle(
+                            point, lowerLeft, upperRight))
+                   .norm();
+    return isInsideRectangle(point, lowerLeft, upperRight) ? -d : d;
+
+  } else /* Type::eChi2 */ {
+    Vector2D vertices[] = {{lowerLeft[0], lowerLeft[1]},
+                           {upperRight[0], lowerLeft[1]},
+                           {upperRight[0], upperRight[1]},
+                           {lowerLeft[0], upperRight[1]}};
+    return distance(point, vertices);
+  }
 }
 
 inline bool
@@ -366,4 +406,85 @@ Acts::BoundaryCheck::computeClosestPointOnPolygon(
     closest = last;
   }
   return closest;
+}
+
+inline Acts::Vector2D
+Acts::BoundaryCheck::computeEuclideanClosestPointOnRectangle(
+    const Vector2D& point,
+    const Vector2D& lowerLeft,
+    const Vector2D& upperRight) const
+{
+
+  /*
+   *
+   *        |                 |
+   *   IV   |       V         | I
+   *        |                 |
+   *  ------------------------------
+   *        |                 |
+   *        |                 |
+   *   VIII |     INSIDE      | VI
+   *        |                 |
+   *        |                 |
+   *  ------------------------------
+   *        |                 |
+   *   III  |      VII        | II
+   *        |                 |
+   *
+   */
+
+  double l0 = point[0], l1 = point[1];
+  double loc0Min = lowerLeft[0], loc0Max = upperRight[0];
+  double loc1Min = lowerLeft[1], loc1Max = upperRight[1];
+
+  // check if inside
+  if (loc0Min <= l0 && l0 < loc0Max && loc1Min <= l1 && l1 < loc1Max) {
+    // INSIDE
+    double   dist = std::abs(loc0Max - l0);
+    Vector2D cls(loc0Max, l1);
+
+    double test = std::abs(loc0Min - l0);
+    if (test <= dist) {
+      dist = test;
+      cls  = {loc0Min, l1};
+    }
+
+    test = std::abs(loc1Max - l1);
+    if (test <= dist) {
+      dist = test;
+      cls  = {l0, loc1Max};
+    }
+
+    test = std::abs(loc1Min - l1);
+    if (test <= dist) {
+      return {l0, loc1Min};
+    }
+    return cls;
+  } else {
+    // OUTSIDE, check sectors
+    if (l0 > loc0Max) {
+      if (l1 > loc1Max) {  // I
+        return {loc0Max, loc1Max};
+      } else if (l1 <= loc1Min) {  // II
+        return {loc0Max, loc1Min};
+      } else {  // VI
+        return {loc0Max, l1};
+      }
+    } else if (l0 < loc0Min) {
+      if (l1 > loc1Max) {  // IV
+        return {loc0Min, loc1Max};
+      } else if (l1 <= loc1Min) {  // III
+        return {loc0Min, loc1Min};
+      } else {  // VIII
+        return {loc0Min, l1};
+      }
+    } else {
+      if (l1 > loc1Max) {  // V
+        return {l0, loc1Max};
+      } else {  // l1 <= loc1Min # VII
+        return {l0, loc1Min};
+      }
+      // third case not necessary, see INSIDE above
+    }
+  }
 }
