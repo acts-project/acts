@@ -1,9 +1,6 @@
 #pragma once
 
 
-/// @class ICovarianceTool
-/// Interface Class that returns covariance on SPForSeed locations in r and z
-
 namespace Acts {
 class CovarianceTool
 {

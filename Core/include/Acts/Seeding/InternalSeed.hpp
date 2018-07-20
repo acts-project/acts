@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Acts/Seeding/SPForSeed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 
 #include <memory>
@@ -15,21 +15,21 @@ namespace Acts {
   public:
     
     InternalSeed();
-    InternalSeed(std::shared_ptr<SPForSeed>,std::shared_ptr<SPForSeed>,std::shared_ptr<SPForSeed>,float);
+    InternalSeed(std::shared_ptr<InternalSpacePoint>,std::shared_ptr<InternalSpacePoint>,std::shared_ptr<InternalSpacePoint>,float);
     InternalSeed(const InternalSeed&);
     virtual ~InternalSeed();
     InternalSeed& operator  = (const InternalSeed&);
 
-    std::shared_ptr<SPForSeed> spacepoint0() {return m_s0;}
-    std::shared_ptr<SPForSeed> spacepoint1() {return m_s1;}
-    std::shared_ptr<SPForSeed> spacepoint2() {return m_s2;}
+    std::shared_ptr<InternalSpacePoint> spacepoint0() {return m_s0;}
+    std::shared_ptr<InternalSpacePoint> spacepoint1() {return m_s1;}
+    std::shared_ptr<InternalSpacePoint> spacepoint2() {return m_s2;}
     float                      z()           {return m_z ;}
 
   protected:
     
-    std::shared_ptr<SPForSeed> m_s0;
-    std::shared_ptr<SPForSeed> m_s1;
-    std::shared_ptr<SPForSeed> m_s2;
+    std::shared_ptr<InternalSpacePoint> m_s0;
+    std::shared_ptr<InternalSpacePoint> m_s1;
+    std::shared_ptr<InternalSpacePoint> m_s2;
     float                      m_z ;
   };
 
@@ -60,7 +60,7 @@ namespace Acts {
     }
  
   inline InternalSeed::InternalSeed
-    (std::shared_ptr<SPForSeed> s0,std::shared_ptr<SPForSeed> s1,std::shared_ptr<SPForSeed> s2,float z)
+    (std::shared_ptr<InternalSpacePoint> s0,std::shared_ptr<InternalSpacePoint> s1,std::shared_ptr<InternalSpacePoint> s2,float z)
     {
       m_z   = z ;
       m_s0  = s0;

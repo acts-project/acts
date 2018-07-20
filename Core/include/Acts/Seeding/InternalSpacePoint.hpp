@@ -12,10 +12,10 @@
 #include <limits>
 #include <array>
 
-#include "Acts/Seeding/SpacePointConcept.hpp" 
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
-  class SPForSeed {
+  class InternalSpacePoint {
     
     /////////////////////////////////////////////////////////////////////////////////
     // Public methods:
@@ -23,15 +23,15 @@ namespace Acts {
     
   public:
     
-    SPForSeed() = delete;
-    SPForSeed(const size_t spIndex,
+    InternalSpacePoint() = delete;
+    InternalSpacePoint(const size_t spIndex,
               const Acts::Vector3D& globalPos,
               const Acts::Vector2D& offsetXY,
               const Acts::Vector2D& cov)                    ;
 
-    SPForSeed(const SPForSeed&)                             ;
-    ~SPForSeed() = default                                  ;
-    SPForSeed& operator  = (const SPForSeed&)               ;
+    InternalSpacePoint(const InternalSpacePoint&)                             ;
+    ~InternalSpacePoint() = default                                  ;
+    InternalSpacePoint& operator  = (const InternalSpacePoint&)               ;
 
     const float&          x() const {return m_x;}
     const float&          y() const {return m_y;}
@@ -59,7 +59,7 @@ namespace Acts {
   // Inline methods
   /////////////////////////////////////////////////////////////////////////////////
 
-  inline SPForSeed::SPForSeed
+  inline InternalSpacePoint::InternalSpacePoint
     (const size_t spIndex, const Acts::Vector3D& globalPos, const Acts::Vector2D& offsetXY, const Acts::Vector2D& cov)
     {
       m_spIndex  = spIndex;
@@ -77,7 +77,7 @@ namespace Acts {
   /////////////////////////////////////////////////////////////////////////////////
 
   
-  inline SPForSeed::SPForSeed (const SPForSeed& sp)
+  inline InternalSpacePoint::InternalSpacePoint (const InternalSpacePoint& sp)
     {
       m_spIndex   = sp.m_spIndex ;
       m_x         = sp.m_x       ;

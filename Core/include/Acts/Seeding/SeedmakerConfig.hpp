@@ -30,11 +30,14 @@ namespace Acts{
         // FIXME: Acts units
         float minPt = 400.;
         float cotThetaMax;
-        float deltaRMin;
+        float deltaRMin = 0;
         float deltaRMax;
 
         float minPhi = -M_PI;
         float maxPhi = M_PI;
+
+        // FIXME: this is not used yet
+//        float upperPtResolutionPerSeed = 20* Acts::GeV;
 
         // the delta for inverse helix radius up to which compared seeds
         // are considered to have a compatible radius. delta of inverse radius

@@ -18,11 +18,11 @@
 #include <utility>
 #include <vector>
 
-#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/LegacyInternalSeed.hpp"
 #include "Acts/Seeding/SPForSeed.hpp"
 
 namespace Acts {
-namespace Seeding {
+namespace Legacy {
   template <typename SpacePoint>
   class ATL_Seedmaker
   {
@@ -324,12 +324,12 @@ namespace Seeding {
     template <typename SpacePoint>
     bool
     operator()(
-        const std::pair<float, Acts::Seeding::SPForSeed<SpacePoint>*>& i1,
-        const std::pair<float, Acts::Seeding::SPForSeed<SpacePoint>*>& i2)
+        const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i1,
+        const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i2)
     {
       return i1.first < i2.first;
     }
   };
-}  // end of Seeding namespace
+}  // end of Legacy namespace
 }  // end of Acts namespace
 #include "Acts/Seeding/ATL_Seedmaker.ipp"

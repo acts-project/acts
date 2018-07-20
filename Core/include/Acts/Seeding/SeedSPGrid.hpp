@@ -2,7 +2,7 @@
 
 #include "Acts/Utilities/detail/Grid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Seeding/SPForSeed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include <memory>
 
 
@@ -25,7 +25,7 @@ struct SeedingGridConfig{
     float cotThetaMax;
 };
 
-using SPGrid = detail::Grid<std::vector<std::shared_ptr<SPForSeed> >,
+using SPGrid = detail::Grid<std::vector<std::shared_ptr<InternalSpacePoint> >,
 detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed>,
 detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>>;
 

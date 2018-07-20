@@ -1,14 +1,15 @@
 #include "Acts/Seeding/New_Seedmaker.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SpacePointConcept.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/SPForSeed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
 
 #include "SpacePoint.hpp"
+#include "ATLASCuts.hpp"
 
 #include <boost/type_erasure/any_cast.hpp>
-
+ 
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <sstream>
@@ -18,8 +19,7 @@
 std::vector<const SpacePoint*> readFile(std::string filename){
 
   std::string line;
-  int   layer, ns, hitid;
-  float r, phi, z;
+  int   layer;
   std::vector<const SpacePoint*> readSP;
 
   std::ifstream spFile(filename);
@@ -30,11 +30,11 @@ std::vector<const SpacePoint*> readFile(std::string filename){
       std::stringstream ss(line);
       std::string linetype;
       ss >> linetype;
-      float x, y;
+      float x, y, z, r, covr, covz;
       if (linetype == "lxyz"){
-        ss >> layer >> x >> y >> z;
+        ss >> layer >> x >> y >> z >> covr >> covz;
         r = std::sqrt(x*x+y*y);
-        SpacePoint * sp = new SpacePoint{x,y,z,r,layer,0.003,0.003};
+        SpacePoint * sp = new SpacePoint{x,y,z,r,layer,covr,covz};
    //     if(r < 200.){
    //       sp->setClusterList(1,0);
    //     }
@@ -61,40 +61,47 @@ int main(){
   config.maxSeedsPerSpM = 10;
   //2.7 eta
   config.cotThetaMax = 7.40627;
+  config.sigmaScattering = 1.00000;
 
   config.minPt = 400.;
+
+  config.beamPos={-.5,-.5};
 
   config.bottomBinFinder = std::make_unique<Acts::BinFinder>(Acts::BinFinder());
   config.topBinFinder = std::make_unique<Acts::BinFinder>(Acts::BinFinder());
   Acts::SeedFilterConfig sfconf;
-  config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf));
+  Acts::ATLASCuts atlasCuts = Acts::ATLASCuts();
+  config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf, &atlasCuts));
   Acts::New_Seedmaker a(config);
 
   // covariance tool, sets covariances per spacepoint as required
   std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> ct = [=]
-          (const SpacePoint* sp,float zAlign,float rAlign,float sigma=1)
-          -> Acts::Vector2D
-          { Acts::Vector2D cov;
-            cov[0] = ((*sp).covr + rAlign*rAlign) * sigma;
-            cov[1] = ((*sp).covz + zAlign*zAlign) * sigma;
-            return cov;
-          };
+    (const SpacePoint* sp,float zAlign,float rAlign,float sigma=1)
+    -> Acts::Vector2D
+    {
+      return {sp->covz,sp->covr};
+    };
 
   std::shared_ptr<Acts::SeedmakerState> state = a.initState(spVec, ct);
+  auto start = std::chrono::system_clock::now();
   a.createSeeds(state);
+  auto end = std::chrono::system_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end-start;
+  std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
+  std::cout << "Seeds created: "<<state->outputQueue.size() << std::endl;
   while(!(state->outputQueue.empty())){
     std::shared_ptr<Acts::InternalSeed> seed = state->outputQueue.front();
     state->outputQueue.pop();
-    std::shared_ptr<Acts::SPForSeed> spC = seed->spacepoint0();
+    std::shared_ptr<Acts::InternalSpacePoint> spC = seed->spacepoint0();
     const SpacePoint* sp = spVec[spC->spIndex()];
-    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+//    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     spC = seed->spacepoint1();
     sp = spVec[spC->spIndex()];
-    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+//    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     spC = seed->spacepoint2();
     sp = spVec[spC->spIndex()];
-    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-    std::cout << std::endl;
+//    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+//    std::cout << std::endl;
   }
   return 0;
 }

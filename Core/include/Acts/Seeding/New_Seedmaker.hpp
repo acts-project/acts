@@ -8,11 +8,10 @@
 
 #pragma once
 
-#include "Acts/Seeding/SPForSeed.hpp"
+#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedmakerConfig.hpp"
 #include "Acts/Seeding/SeedmakerState.hpp"
-#include "Acts/Seeding/SpacePointConcept.hpp"
 
 #include <list>
 #include <string>
@@ -35,6 +34,13 @@ namespace Acts {
 /// @param config the configuration for the Seedmaker
       New_Seedmaker(const Acts::SeedmakerConfig& config);
       ~New_Seedmaker() = default;
+
+/// converter function from internal seeds to external seeds. avoids templating all functions.
+/// @param intSeed the internal seed to be converted taken from a state
+/// @param inputSP the vector that has been used to call initState to generate intSeed
+/// @return the Seed return type with constructor Seed(SpacePoint, SpacePoint, Spacepoint, float z)
+      template <typename Seed, typename SpacePoint>
+      Seed intToExtSeed(std::shared_ptr<Acts::InternalSeed> intSeed, std::vector<const SpacePoint*>& inputSP);
 
 /// Create a new space point grid, fill all space points from input parameter
 /// into the grid and save grid in the state.
@@ -63,13 +69,13 @@ namespace Acts {
 
       // Private methods
       void
-      createSeedsInRegion (std::vector<std::shared_ptr<SPForSeed > > currentBin,
+      createSeedsInRegion (std::vector<std::shared_ptr<InternalSpacePoint > > currentBin,
                             std::set<size_t > bottomBins,
                             std::set<size_t > topBins,
                             std::shared_ptr<Acts::SeedmakerState> state) const ;
 
-      void transformCoordinates (std::vector<std::shared_ptr<SPForSeed> >& vec,
-                                   std::shared_ptr<SPForSeed> spM,
+      void transformCoordinates (std::vector<std::shared_ptr<InternalSpacePoint> >& vec,
+                                   std::shared_ptr<InternalSpacePoint> spM,
                                    bool bottom,
                                    std::vector<LinCircle>& linCircle) const ;
 
@@ -86,8 +92,8 @@ class comCurvature  {
 public:
   
   bool operator ()
-  (const std::pair<float,Acts::SPForSeed*>& i1, 
-   const std::pair<float,Acts::SPForSeed*>& i2)
+  (const std::pair<float,Acts::InternalSpacePoint*>& i1, 
+   const std::pair<float,Acts::InternalSpacePoint*>& i2)
   {
     return i1.first < i2.first;
   }

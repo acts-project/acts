@@ -39,14 +39,14 @@ struct SpacePoint
 
 // call sequence to create seeds. Seeds are copied as the
 // call to next() overwrites the previous seed object
-std::vector<Acts::Seeding::Seed<SpacePoint>>
+std::vector<Acts::Legacy::Seed<SpacePoint>>
 runSeeding(std::vector<SpacePoint*> spVec)
 {
 
-  Acts::Seeding::ATL_Seedmaker<SpacePoint> seedMaker;
+  Acts::Legacy::ATL_Seedmaker<SpacePoint> seedMaker;
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
-  const Acts::Seeding::Seed<SpacePoint>*       seed     = seedMaker.next();
+  const Acts::Legacy::Seed<SpacePoint>*       seed     = seedMaker.next();
   int                                          numSeeds = 0;
   std::vector<Acts::Seeding::Seed<SpacePoint>> seedVec;
   while (seed != nullptr) {
@@ -131,15 +131,15 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
   }
   // create seeds (without z component) that are found by the ATLAS seed finder
   // as reference
-  Acts::Seeding::Seed<SpacePoint> s1(spVec.at(0), spVec.at(1), spVec.at(3), 0);
-  Acts::Seeding::Seed<SpacePoint> s2(spVec.at(0), spVec.at(1), spVec.at(4), 0);
-  Acts::Seeding::Seed<SpacePoint> s3(spVec.at(0), spVec.at(2), spVec.at(3), 0);
-  Acts::Seeding::Seed<SpacePoint> s4(spVec.at(0), spVec.at(2), spVec.at(4), 0);
-  Acts::Seeding::Seed<SpacePoint> s5(spVec.at(0), spVec.at(3), spVec.at(4), 0);
-  Acts::Seeding::Seed<SpacePoint> s6(spVec.at(1), spVec.at(3), spVec.at(4), 0);
-  Acts::Seeding::Seed<SpacePoint> s7(spVec.at(2), spVec.at(3), spVec.at(4), 0);
-  Acts::Seeding::Seed<SpacePoint> s8(spVec.at(5), spVec.at(6), spVec.at(7), 0);
-  std::vector<Acts::Seeding::Seed<SpacePoint>> refVec;
+  Acts::Legacy::Seed<SpacePoint> s1(spVec.at(0), spVec.at(1), spVec.at(3), 0);
+  Acts::Legacy::Seed<SpacePoint> s2(spVec.at(0), spVec.at(1), spVec.at(4), 0);
+  Acts::Legacy::Seed<SpacePoint> s3(spVec.at(0), spVec.at(2), spVec.at(3), 0);
+  Acts::Legacy::Seed<SpacePoint> s4(spVec.at(0), spVec.at(2), spVec.at(4), 0);
+  Acts::Legacy::Seed<SpacePoint> s5(spVec.at(0), spVec.at(3), spVec.at(4), 0);
+  Acts::Legacy::Seed<SpacePoint> s6(spVec.at(1), spVec.at(3), spVec.at(4), 0);
+  Acts::Legacy::Seed<SpacePoint> s7(spVec.at(2), spVec.at(3), spVec.at(4), 0);
+  Acts::Legacy::Seed<SpacePoint> s8(spVec.at(5), spVec.at(6), spVec.at(7), 0);
+  std::vector<Acts::Legacy::Seed<SpacePoint>> refVec;
   refVec.push_back(s1);
   refVec.push_back(s2);
   refVec.push_back(s3);
@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
 
   // difference between reference and result shows if results exactly the same
   // (i.e. difference is 0)
-  std::vector<Acts::Seeding::Seed<SpacePoint>> diff;
+  std::vector<Acts::Legacy::Seed<SpacePoint>> diff;
   std::set_difference(refVec.begin(),
                       refVec.end(),
                       seedVec.begin(),
