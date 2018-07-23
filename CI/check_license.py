@@ -12,6 +12,23 @@ EXCLUDE = [
     "./Plugins/JsonPlugin/include/Acts/Plugins/JsonPlugin/lib/*"
 ]
 
+class bcolors:
+    HEADER = '\033[95m'
+    OKBLUE = '\033[94m'
+    OKGREEN = '\033[92m'
+    WARNING = '\033[93m'
+    FAIL = '\033[91m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+CROSS_SYMBOL = u"\u2717"
+def err(string):
+    if sys.stdout.isatty():
+        return bcolors.FAIL + bcolors.BOLD + string + bcolors.ENDC
+    else:
+        return string
+
 class CommitInfo:
     date = None
     year = None
@@ -111,6 +128,22 @@ def main():
                 return False
         return True
 
+    error_summary = ""
+    info_summary = ""
+
+    def eprint(*args):
+        nonlocal error_summary
+        error_summary += " ".join(map(str, args)) + "\n"
+
+    def year_print(*pargs):
+        nonlocal error_summary
+        nonlocal info_summary
+        string = " ".join(map(str, pargs)) + "\n"
+        if args.fail_year_mismatch:
+            error_summary += string
+        else:
+            info_summary += string
+
     exit = 0
     srcs = list(srcs)
     nsrcs = len(srcs)
@@ -122,8 +155,11 @@ def main():
 
 
         if nsrcs > 1 and i%step == 0:
-            print("{}/{} -> {:.2f}%".format(i, nsrcs, i/float(nsrcs)*100.))
-        
+            string = "{}/{} -> {:.2f}%".format(i, nsrcs, i/float(nsrcs)*100.)
+            if sys.stdout.isatty():
+                sys.stdout.write(string+"\r")
+            else:
+                print(string)
 
         with open(src, "r+") as f:
             license = ""
@@ -136,18 +172,17 @@ def main():
             m = ref.search(license)
 
             if m == None:
-                sys.stderr.write("Invalid / missing license in "+src+"\n")
-                sys.stderr.flush()
-                
+                eprint("Invalid / missing license in "+src+"")
+
                 exp = [l+"\n" for l in raw.format(year="XXXX").split("\n")]
                 act = get_clean_lines(license)
 
                 diff = difflib.unified_diff(exp, act)
-                sys.stderr.writelines(diff)
-                sys.stderr.write("\n")
+                eprint("".join(diff))
+                eprint()
 
                 if args.fix:
-                    print("-> fixing file (prepend)")
+                    eprint("-> fixing file (prepend)")
                     f.seek(0)
                     file_content = f.read()
                     f.seek(0)
@@ -157,7 +192,7 @@ def main():
                 exit = 1
             else:
                 # we have a match, need to verify year string is right
-                
+
                 if args.check_years:
                     git_add_commit, git_mod_commit = check_git_dates(src)
                     git_add_year = git_add_commit.year
@@ -166,11 +201,10 @@ def main():
                 ym = year_re.match(year_act)
                 valid = True
                 if not ym:
-                    sys.stderr.write("Year string does not match format in {}\n".format(src))
-                    sys.stderr.write("Expected: YYYY or YYYY-YYYY (year or year range)\n")
-                    sys.stderr.write("Actual:   {}\n\n".format(year_act))
-                    sys.stderr.flush()
-                    
+                    eprint("Year string does not match format in {}".format(src))
+                    eprint("Expected: YYYY or YYYY-YYYY (year or year range)")
+                    eprint("Actual:   {}\n".format(year_act))
+
                     if args.fix:
                         extract = extract_re.search(year_act)
                         year1 = extract.group(1)
@@ -183,73 +217,75 @@ def main():
                     extract = extract_re.search(year_act)
                     year1 = extract.group(1)
                     year2 = extract.group(2)
-                    
+
                     if not validate_years(year1, year2):
-                        sys.stderr.write("Year string is not valid in {}\n".format(src))
-                        sys.stderr.write("Year string is: "+year_act+"\n\n")
-                        sys.stderr.flush()
+                        eprint("Year string is not valid in {}".format(src))
+                        eprint("Year string is: "+year_act+"\n")
                         exit = 1
                         valid = False
 
                     if args.check_years:
-                        if args.fail_year_mismatch:
-                            ostr = sys.stderr
-                        else:
-                            ostr = sys.stdout
-
 
                         if git_add_year != git_mod_year:
                             # need year range in licence
                             if not (year1 and year2):
-                                ostr.write("File: {}\n".format(src))
-                                ostr.write("File was modified in a different year than it was added.\n")
-                                ostr.write("License should say {}-{}\n".format(git_add_year, git_mod_year))
-                                ostr.write("But says: {}-{}\n".format(year1, year2))
+                                year_print("File: {}".format(src))
+                                # year_print("o File was modified in a different year ({}) than it was added ({})."
+                                           # .format(git_mod_year, git_add_year))
+                                year_print("- File was added in {}".format(git_add_year))
+                                year_print("- File was modified on {} by {}:\n{}".format(
+                                    git_mod_commit.date, 
+                                    git_mod_commit.author, 
+                                    git_mod_commit.subject + git_mod_commit.body))
+                                year_print("=> License should say {}-{}".format(git_add_year, git_mod_year))
+
+                                act_year = year1 if year1 else year2
+                                year_print(err("{} But says: {}".format(CROSS_SYMBOL, act_year)))
+
                                 if args.fail_year_mismatch:
                                     exit = 1
-                                    ostr.write("\n\n")
+                                    year_print("\n")
                                 else:
-                                    ostr.write("This is not an error\n\n")
-                                ostr.flush()
+                                    year_print("This is not treated as an error\n")
                                 valid = False
                             else:
                                 if int(year1) != git_add_year or int(year2) != git_mod_year:
 
-                                    ostr.write("File: {}\n".format(src))
-                                    ostr.write("Year range {}-{} does not match range from git {}-{}\n".format(year1, year2, git_add_year, git_mod_year))
-                                    ostr.write("File was added in {}\n".format(git_add_year))
-                                    ostr.write("File was modified on {} by {}:\n{}\n".format(
+                                    year_print("File: {}".format(src))
+                                    year_print("Year range {}-{} does not match range from git {}-{}".format(year1, year2, git_add_year, git_mod_year))
+                                    year_print("- File was added in {}".format(git_add_year))
+                                    year_print("- File was modified on {} by {}:\n{}".format(
                                         git_mod_commit.date, 
                                         git_mod_commit.author, 
                                         git_mod_commit.subject + git_mod_commit.body))
-                                    ostr.write("License should say {}-{}\n".format(git_add_year, git_mod_year))
+                                    year_print("=> License should say {}-{}".format(git_add_year, git_mod_year))
+                                    year_print(err("{} But says: {}-{}".format(CROSS_SYMBOL, year1, year2)))
                                     if args.fail_year_mismatch:
                                         exit = 1
-                                        ostr.write("\n\n")
+                                        year_print("\n")
                                     else:
-                                        ostr.write("This is not an error\n\n")
-                                    ostr.flush()
+                                        year_print("This is not treated as an error\n")
                                     valid = False
 
                         else:
                             if int(year1) < git_mod_year:
-                                ostr.write("File: {}\n".format(src))
-                                ostr.write("Year {} does not match git modification year {}\n".format(year1, git_mod_year))
-                                ostr.write("License should say {}\n".format(git_mod_year))
-                                ostr.write("File was modified on {} by {}:\n{}\n".format(
+                                year_print("File: {}".format(src))
+                                year_print("- Year {} does not match git modification year {}".format(year1, git_mod_year))
+                                year_print("- File was modified on {} by {}:\n{}".format(
                                         git_mod_commit.date, 
                                         git_mod_commit.author, 
                                         git_mod_commit.subject + git_mod_commit.body))
+                                year_print("=> License should say {}".format(git_mod_year))
+                                year_print(err("{} But says: {}".format(CROSS_SYMBOL, year1)))
                                 if args.fail_year_mismatch:
                                     exit = 1
-                                    ostr.write("\n\n")
+                                    year_print("\n")
                                 else:
-                                    ostr.write("This is not an error\n\n")
-                                ostr.flush()
+                                    year_print("This is not treated as an error\n")
                                 valid = False
-                    
+
                 if args.fix and not valid:
-                    print("-> fixing file (patch year)")
+                    eprint("-> fixing file (patch year)")
                     year_str = "2016-{}".format(year)
                     if args.check_years:
                         if git_add_year == git_mod_year:
@@ -272,8 +308,14 @@ def main():
                     if args.check_years:
                         f.write(file_body)
 
+    print("\n--- INFO ---\n")
+    print(info_summary)
+    print("\n--- ERROR ---\n")
+    print(error_summary)
+
     if exit != 0 and not args.fix:
-        sys.stderr.write("License problems found. You can try running again with --fix\n")
+        print("License problems found. You can try running again with --fix")
+
     sys.exit(exit)
 
 
