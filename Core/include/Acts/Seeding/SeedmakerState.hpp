@@ -20,14 +20,19 @@ namespace Acts{
     };
 
     struct SeedmakerState {
+      // grid with ownership of all InternalSpacePoint
       std::unique_ptr<Acts::SPGrid> binnedSP;
 
+      // contains parameters required to calculate circle with linear equation 
+      // ...for bottom-middle
       std::vector<LinCircle> linCircleBottom;
+      // ...for middle-top
       std::vector<LinCircle> linCircleTop;
 
       size_t phiIndex = 1;
       size_t zIndex = 1;
 
-      std::queue<std::shared_ptr<InternalSeed>> outputQueue;
+      // container with seeds created so far
+      std::queue<std::unique_ptr<const InternalSeed> > outputQueue;
     };
 }

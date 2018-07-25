@@ -38,8 +38,6 @@ std::unique_ptr<Acts::SPGrid> Acts::SPGridCreator::createGrid(const Acts::Seedin
   float zBinSize = config.cotThetaMax * config.deltaRMax;
   int zBins = std::ceil((config.zMax - config.zMin)/zBinSize);
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound> zAxis(config.zMin, config.zMax, zBins);
-
-  Acts::SPGrid grid(std::make_tuple(phiAxis, zAxis));
-  return std::make_unique<Acts::SPGrid>(grid);
+  return std::make_unique<Acts::SPGrid>(std::make_tuple(phiAxis, zAxis));
 }
 

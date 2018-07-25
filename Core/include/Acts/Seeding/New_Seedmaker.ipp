@@ -29,13 +29,20 @@ New_Seedmaker::New_Seedmaker(const Acts::SeedmakerConfig& config): m_config(conf
 }
 
 template <typename Seed, typename SpacePoint>
-Seed New_Seedmaker::intToExtSeed(std::shared_ptr<Acts::InternalSeed> intSeed,
-                                 std::vector<const SpacePoint*>&     inputSP){
 
-  return Seed(inputSP.at(intSeed->spacepoint0()->spIndex()),
-              inputSP.at(intSeed->spacepoint1()->spIndex()),
-              inputSP.at(intSeed->spacepoint2()->spIndex()),
-              intSeed->z());
+std::unique_ptr<Seed> New_Seedmaker::nextSeed(Acts::SeedmakerState* state,
+                             std::vector<const SpacePoint*>&     inputSP){
+  auto seed = std::make_unique<Seed>();
+  if(state->outputQueue.size()>0){
+    auto intSeed = std::move(state->outputQueue.front());
+    state->outputQueue.pop();
+    seed->erase();
+    seed->add(inputSP[intSeed->spacepoint0()->spIndex()]);
+    seed->add(inputSP[intSeed->spacepoint1()->spIndex()]);
+    seed->add(inputSP[intSeed->spacepoint2()->spIndex()]);
+    seed->setZVertex(intSeed->z());
+  }
+  return seed;
 }
 
 
@@ -68,29 +75,60 @@ New_Seedmaker::initState
   std::iota(std::begin(indexVec),std::end(indexVec),0);
 
   // sort by radius
-  std::sort(indexVec.begin(),indexVec.end(),[spVec]
-       (const size_t indA, const size_t indB)
-        {auto spA = spVec[indA];
-        auto spB = spVec[indB];
-        // compare x*x+y*y (i.e. r^2) of both SP
-        float rA = spA->x()*spA->x()+spA->y()*spA->y();
-        float rB = spB->x()*spB->x()+spB->y()*spB->y();
-        return rA < rB; });
-  for(auto spIndex : indexVec){
-    auto sp = spVec[spIndex];
+  float inverseRBinSize = m_config.deltaRMin * 3;
+  // add magnitude of beamPos to rMax to avoid excluding measurements
+  size_t numRBins = (m_config.rMax + m_config.beamPos.norm()) * inverseRBinSize;
+  std::vector<std::vector<std::unique_ptr<const InternalSpacePoint> > >rBins(numRBins);
+  for (size_t spIndex : indexVec){
+    const SpacePoint* sp = spVec[spIndex];
     float spX = sp->x();
     float spY = sp->y();
     float spZ = sp->z();
+
     if(spZ > zMax || spZ < zMin) continue;
     float spPhi = std::atan2(spY,spX);
     if(spPhi > phiMax || spPhi < phiMin) continue;
-    // covariance configuration should be done outside of the Seedmaker
+
+    // covariance tool provided by user
     Acts::Vector2D cov = covTool(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
-    Acts::Vector3D globalPos(spX,spY,spZ);
-    InternalSpacePoint sps(spIndex, globalPos, m_config.beamPos, cov);
-    Acts::Vector2D spLocation(spPhi,spZ);
-    std::vector<std::shared_ptr<InternalSpacePoint > >& bin = grid->at(spLocation);
-    bin.push_back(std::make_shared<InternalSpacePoint>(sps));
+    Acts::Vector3D spPosition(spX,spY,spZ);
+    auto isp = std::make_unique<const InternalSpacePoint>(spIndex, spPosition, m_config.beamPos, cov);
+    // calculate r-Bin index and protect against overflow (underflow not possible)
+    int rIndex = isp->radius()*inverseRBinSize;
+    // if index out of bounds, the SP is outside the region of interest
+    if (rIndex >= numRBins){
+      continue;
+    }
+    rBins[rIndex].push_back(std::move(isp));
+  }
+//  too expensive :(
+//  std::sort(indexVec.begin(),indexVec.end(),[spVec]
+//       (const size_t indA, const size_t indB)
+//        {auto spA = spVec[indA];
+//        auto spB = spVec[indB];
+//        // compare x*x+y*y (i.e. r^2) of both SP
+//        float rA = spA->x()*spA->x()+spA->y()*spA->y();
+//        float rB = spB->x()*spB->x()+spB->y()*spB->y();
+//        return rA < rB; });
+  for(auto& rbin : rBins){
+    for(auto& isp : rbin){
+//    done during r-binning
+//    for(auto spIndex : indexVec){
+//      auto sp = spVec[spIndex];
+//      float spX = sp->x();
+//      float spY = sp->y();
+//      float spZ = sp->z();
+//      if(spZ > zMax || spZ < zMin) continue;
+//      float spPhi = std::atan2(spY,spX);
+//      if(spPhi > phiMax || spPhi < phiMin) continue;
+//      // covariance configuration should be done outside of the Seedmaker
+//      Acts::Vector2D cov = covTool(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
+//      Acts::Vector3D globalPos(spX,spY,spZ);
+//      InternalSpacePoint sps(spIndex, globalPos, m_config.beamPos, cov);
+      Acts::Vector2D spLocation(isp->phi(),isp->z());
+      std::vector<std::unique_ptr<const InternalSpacePoint> >& bin = grid->at(spLocation);
+      bin.push_back(std::move(isp));
+    }
   }
   state->binnedSP = std::move(grid);
   state->phiIndex = 1;
@@ -114,7 +152,7 @@ New_Seedmaker::createSeeds
     for (; state->zIndex <= phiZbins[1]; state->zIndex++){
       std::set<size_t > bottomBins = m_config.bottomBinFinder->findBins(state->phiIndex,state->zIndex,state->binnedSP);
       std::set<size_t > topBins = m_config.topBinFinder->findBins(state->phiIndex,state->zIndex,state->binnedSP);
-      auto curbin = state->binnedSP->at({state->phiIndex,state->zIndex});
+      auto& curbin = state->binnedSP->at({state->phiIndex,state->zIndex});
       createSeedsInRegion(curbin, bottomBins, topBins, state);
       if(state->outputQueue.size() >= m_config.minSeeds){return;}
     }
@@ -125,7 +163,7 @@ New_Seedmaker::createSeeds
 
 void
 New_Seedmaker::createSeedsInRegion
-( std::vector<std::shared_ptr<InternalSpacePoint > > currentBin,
+( std::vector<std::unique_ptr<const InternalSpacePoint > >& currentBin,
   std::set<size_t > bottomBinIndices,
   std::set<size_t > topBinIndices,
   std::shared_ptr<Acts::SeedmakerState> state) const
@@ -135,18 +173,19 @@ New_Seedmaker::createSeedsInRegion
   // parallelization requires removal of linCircle* from state
   // and usage of reentrant queue
   // TODO: check how much time reallocation of linCircles in each iteration costs
-  for(auto spM : currentBin){
+  for(auto& spMunique : currentBin){
+    const InternalSpacePoint* spM = spMunique.get();
     float rM = spM->radius();
     float zM = spM->z();
     float covrM = spM->covr();
     float covzM = spM->covz();
 
-    std::vector<std::shared_ptr<InternalSpacePoint> > compatBottomSP;
+    std::vector<const InternalSpacePoint* > compatBottomSP;
 
     // bottom space point
     for(auto bottomBinIndex : bottomBinIndices){
-      auto bottomBin = state->binnedSP->at(bottomBinIndex);
-      for(auto spB : bottomBin){
+      auto& bottomBin = state->binnedSP->at(bottomBinIndex);
+      for(auto& spB : bottomBin){
         float rB = spB->radius();
         float deltaR = rM - rB;
         // if r-distance is too big, try next SP in r-sorted bin
@@ -159,17 +198,17 @@ New_Seedmaker::createSeedsInRegion
         // check if duplet origin on z axis within collision region
         float zOrigin = zM-rM*cotTheta;
         if(zOrigin < m_config.collisionRegionMin || zOrigin > m_config.collisionRegionMax) continue;
-        compatBottomSP.push_back(spB);
+        compatBottomSP.push_back(spB.get());
       }
     }
     // no bottom SP found -> try next spM
     if(compatBottomSP.size()==0) continue;
     
-    std::vector<std::shared_ptr<InternalSpacePoint> > compatTopSP;
+    std::vector<const InternalSpacePoint* > compatTopSP;
 
     for(auto topBinIndex : topBinIndices){ 
-      auto topBin = state->binnedSP->at(topBinIndex);
-      for (auto spT : topBin){
+      auto& topBin = state->binnedSP->at(topBinIndex);
+      for (auto& spT : topBin){
         float rT = spT->radius();
         float deltaR = rT-rM;
         // this condition is the opposite of the condition for bottom SP
@@ -180,7 +219,7 @@ New_Seedmaker::createSeedsInRegion
         if(std::fabs(cotTheta) > m_config.cotThetaMax) continue;
         float zOrigin = zM-rM*cotTheta;
         if(zOrigin < m_config.collisionRegionMin || zOrigin > m_config.collisionRegionMax) continue;
-        compatTopSP.push_back(spT);
+        compatTopSP.push_back(spT.get());
       }
     }
     if(compatTopSP.size()==0) continue;
@@ -191,14 +230,15 @@ New_Seedmaker::createSeedsInRegion
     
     // TODO: significant benefit? avoids compatSp.size()^2 reallocations
     // create vectors here to avoid reallocation in each loop
-    std::vector<std::shared_ptr<InternalSpacePoint> > topSpVec;
-    std::vector<float > curvatures, impactParameters;
+    std::vector<const InternalSpacePoint* > topSpVec;
+    std::vector<float > curvatures;
+    std::vector<float > impactParameters;
 
     // TODO: measure cost to reallocate seedsPerSpM each iteration
-    std::vector<std::pair<float,std::shared_ptr<InternalSeed > > > seedsPerSpM;
+    std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > seedsPerSpM;
 
     for(size_t b = 0; b < compatBottomSP.size(); b++){
-      auto lb = state->linCircleBottom.at(b);
+      auto lb = state->linCircleBottom[b];
       float  Zob  = lb.Zo      ;
       float  cotThetaB = lb.cotTheta ;
       float  Vb   = lb.V       ;
@@ -223,7 +263,7 @@ New_Seedmaker::createSeedsInRegion
       curvatures.clear();
       impactParameters.clear();
       for(size_t t = 0; t < compatTopSP.size(); t++) {
-        auto lt = state->linCircleTop.at(t);
+        auto lt = state->linCircleTop[t];
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term for errors on spM
         float error2 = lt.Er + ErB + 2*(cotThetaB * lt.cotTheta * covrM + covzM) * iDeltaRB * lt.iDeltaR;
@@ -274,14 +314,14 @@ New_Seedmaker::createSeedsInRegion
         }
       }
       if(!topSpVec.empty()) {
-        std::vector<std::pair<float, std::shared_ptr<InternalSeed > > > sameTrackSeeds;
-        sameTrackSeeds = m_config.seedFilter->filterSeeds_2SpFixed(compatBottomSP.at(b),
+        std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > > sameTrackSeeds;
+        sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(compatBottomSP[b],
                                                                spM,
                                                                topSpVec,
                                                                curvatures,
                                                                impactParameters,
-                                                               Zob);
-        seedsPerSpM.insert(seedsPerSpM.end(), sameTrackSeeds.begin(), sameTrackSeeds.end());
+                                                               Zob));
+        seedsPerSpM.insert(seedsPerSpM.end(), std::make_move_iterator(sameTrackSeeds.begin()), std::make_move_iterator(sameTrackSeeds.end()));
       }
     }
     m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, state->outputQueue);
@@ -290,8 +330,8 @@ New_Seedmaker::createSeedsInRegion
   
 
 void New_Seedmaker::transformCoordinates
-( std::vector<std::shared_ptr<InternalSpacePoint> >& vec,
-  std::shared_ptr<InternalSpacePoint> spM,
+( std::vector<const InternalSpacePoint* >& vec,
+  const InternalSpacePoint * spM,
   bool bottom,
   std::vector<LinCircle>& linCircleVec) const
 {

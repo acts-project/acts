@@ -55,10 +55,10 @@ namespace Acts{
 /// @return vector of pairs containing seed weight and seed for all valid
 /// created seeds
     virtual
-    std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >
-    filterSeeds_2SpFixed(std::shared_ptr<InternalSpacePoint> bottomSP,
-                         std::shared_ptr<InternalSpacePoint> middleSP,
-                         std::vector<std::shared_ptr<InternalSpacePoint>>& topSpVec,
+    std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > >
+    filterSeeds_2SpFixed(const InternalSpacePoint* bottomSP,
+                         const InternalSpacePoint* middleSP,
+                         std::vector<const InternalSpacePoint*>& topSpVec,
                          std::vector<float>& invHelixRadiusVec,
                          std::vector<float>& impactParametersVec,
                          float zOrigin) const;
@@ -69,7 +69,7 @@ namespace Acts{
 /// @return vector of all InternalSeeds that not filtered out
     virtual
     void
-    filterSeeds_1SpFixed(std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >& seedsPerSpM, std::queue<std::shared_ptr<InternalSeed> >& queue) const;
+    filterSeeds_1SpFixed(std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed> >& queue) const;
 
     private:
     const SeedFilterConfig m_cfg;

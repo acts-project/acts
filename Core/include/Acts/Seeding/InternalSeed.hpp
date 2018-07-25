@@ -15,21 +15,21 @@ namespace Acts {
   public:
     
     InternalSeed();
-    InternalSeed(std::shared_ptr<InternalSpacePoint>,std::shared_ptr<InternalSpacePoint>,std::shared_ptr<InternalSpacePoint>,float);
+    InternalSeed(const InternalSpacePoint*,const InternalSpacePoint*,const InternalSpacePoint*,float);
     InternalSeed(const InternalSeed&);
     virtual ~InternalSeed();
     InternalSeed& operator  = (const InternalSeed&);
 
-    std::shared_ptr<InternalSpacePoint> spacepoint0() {return m_s0;}
-    std::shared_ptr<InternalSpacePoint> spacepoint1() {return m_s1;}
-    std::shared_ptr<InternalSpacePoint> spacepoint2() {return m_s2;}
-    float                      z()           {return m_z ;}
+    const InternalSpacePoint* spacepoint0() const {return m_s0;}
+    const InternalSpacePoint* spacepoint1() const {return m_s1;}
+    const InternalSpacePoint* spacepoint2() const {return m_s2;}
+    float                      z()          const {return m_z ;}
 
   protected:
     
-    std::shared_ptr<InternalSpacePoint> m_s0;
-    std::shared_ptr<InternalSpacePoint> m_s1;
-    std::shared_ptr<InternalSpacePoint> m_s2;
+    const InternalSpacePoint* m_s0;
+    const InternalSpacePoint* m_s1;
+    const InternalSpacePoint* m_s2;
     float                      m_z ;
   };
 
@@ -60,7 +60,7 @@ namespace Acts {
     }
  
   inline InternalSeed::InternalSeed
-    (std::shared_ptr<InternalSpacePoint> s0,std::shared_ptr<InternalSpacePoint> s1,std::shared_ptr<InternalSpacePoint> s2,float z)
+    (const InternalSpacePoint* s0,const InternalSpacePoint* s1,const InternalSpacePoint* s2,float z)
     {
       m_z   = z ;
       m_s0  = s0;

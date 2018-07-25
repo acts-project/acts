@@ -40,7 +40,7 @@ namespace Acts {
 /// @param inputSP the vector that has been used to call initState to generate intSeed
 /// @return the Seed return type with constructor Seed(SpacePoint, SpacePoint, Spacepoint, float z)
       template <typename Seed, typename SpacePoint>
-      Seed intToExtSeed(std::shared_ptr<Acts::InternalSeed> intSeed, std::vector<const SpacePoint*>& inputSP);
+      std::unique_ptr<Seed> nextSeed(Acts::SeedmakerState* state , std::vector<const SpacePoint*>& inputSP);
 
 /// Create a new space point grid, fill all space points from input parameter
 /// into the grid and save grid in the state.
@@ -69,13 +69,13 @@ namespace Acts {
 
       // Private methods
       void
-      createSeedsInRegion (std::vector<std::shared_ptr<InternalSpacePoint > > currentBin,
+      createSeedsInRegion (std::vector<std::unique_ptr<const InternalSpacePoint > >& currentBin,
                             std::set<size_t > bottomBins,
                             std::set<size_t > topBins,
                             std::shared_ptr<Acts::SeedmakerState> state) const ;
 
-      void transformCoordinates (std::vector<std::shared_ptr<InternalSpacePoint> >& vec,
-                                   std::shared_ptr<InternalSpacePoint> spM,
+      void transformCoordinates (std::vector< const InternalSpacePoint* >& vec,
+                                   const InternalSpacePoint* spM,
                                    bool bottom,
                                    std::vector<LinCircle>& linCircle) const ;
 

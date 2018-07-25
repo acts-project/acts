@@ -25,7 +25,7 @@ struct SeedingGridConfig{
     float cotThetaMax;
 };
 
-using SPGrid = detail::Grid<std::vector<std::shared_ptr<InternalSpacePoint> >,
+using SPGrid = detail::Grid<std::vector<std::unique_ptr<const InternalSpacePoint> >,
 detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed>,
 detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>>;
 

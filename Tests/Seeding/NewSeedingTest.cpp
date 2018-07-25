@@ -90,9 +90,9 @@ int main(){
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
   std::cout << "Seeds created: "<<state->outputQueue.size() << std::endl;
   while(!(state->outputQueue.empty())){
-    std::shared_ptr<Acts::InternalSeed> seed = state->outputQueue.front();
+    std::unique_ptr<const Acts::InternalSeed> seed = std::move(state->outputQueue.front());
     state->outputQueue.pop();
-    std::shared_ptr<Acts::InternalSpacePoint> spC = seed->spacepoint0();
+    const Acts::InternalSpacePoint* spC = seed->spacepoint0();
     const SpacePoint* sp = spVec[spC->spIndex()];
 //    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     spC = seed->spacepoint1();

@@ -30,7 +30,7 @@ namespace Acts{
         // FIXME: Acts units
         float minPt = 400.;
         float cotThetaMax;
-        float deltaRMin = 0;
+        float deltaRMin = 5;
         float deltaRMax;
 
         float minPhi = -M_PI;
@@ -62,7 +62,6 @@ namespace Acts{
         float phiMax = M_PI;
         float zMin;
         float zMax;
-        // rmax only influences phi bin size
         float rMax;
 
         // Unit in kiloTesla

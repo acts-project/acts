@@ -24,16 +24,15 @@ namespace Acts{
 
   // function to filter seeds based on all seeds with same bottom- and middle-spacepoint.
   // return vector must contain weight of each seed 
-  // TODO: performance of shared_ptr vs raw pointer?
-  std::vector<std::pair<float, std::shared_ptr<InternalSeed> > >
-  SeedFilter::filterSeeds_2SpFixed(std::shared_ptr<InternalSpacePoint> bottomSP,
-                                   std::shared_ptr<InternalSpacePoint> middleSP,
-                                   std::vector<std::shared_ptr<InternalSpacePoint >>& topSpVec,
+  std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > >
+  SeedFilter::filterSeeds_2SpFixed(const InternalSpacePoint* bottomSP,
+                                   const InternalSpacePoint* middleSP,
+                                   std::vector<const InternalSpacePoint* >& topSpVec,
                                    std::vector<float>& invHelixRadiusVec,
                                    std::vector<float>& impactParametersVec,
                                    float zOrigin) const {
   
-    std::vector<std::pair<float, std::shared_ptr<InternalSeed> > > selectedSeeds;
+    std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > > selectedSeeds;
   
     // if two compatible seeds with high distance in r are found, compatible seeds span 5 layers
     // -> very good seed
@@ -73,11 +72,11 @@ namespace Acts{
       }
       if(m_experimentCuts != nullptr){
         // add detector specific considerations on the seed weight
-        weight += m_experimentCuts->seedWeight(bottomSP, middleSP, topSpVec.at(i));
+        weight += m_experimentCuts->seedWeight(bottomSP, middleSP, topSpVec[i]);
         // discard seeds according to detector specific cuts (e.g.: weight)
-        if (!m_experimentCuts->singleSeedCut(weight, bottomSP, middleSP, topSpVec.at(i))) continue;
+        if (!m_experimentCuts->singleSeedCut(weight, bottomSP, middleSP, topSpVec[i])) continue;
       }
-      selectedSeeds.push_back(std::make_pair(weight, std::make_shared<InternalSeed>(bottomSP,middleSP,topSpVec.at(i),zOrigin)));
+      selectedSeeds.push_back(std::make_pair(weight, std::make_unique<const InternalSeed>(bottomSP,middleSP,topSpVec[i],zOrigin)));
       }
     return selectedSeeds;
   }
@@ -85,14 +84,13 @@ namespace Acts{
 
 
   // after creating all seeds with a common middle space point, filter again
-  // TODO: performance of shared_ptr vs raw pointer?
   void
-  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::shared_ptr<InternalSeed > > >& seedsPerSpM, std::queue<std::shared_ptr<InternalSeed> >& queue) const {
+  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::unique_ptr<const InternalSeed > > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed> >& queue) const {
 
     //sort by weight and iterate only up to configured max number of seeds per middle SP
-    std::sort(seedsPerSpM.begin(),seedsPerSpM.end(),[]
-                   (const std::pair<float,std::shared_ptr<Acts::InternalSeed>>& i1,
-                    const std::pair<float,std::shared_ptr<Acts::InternalSeed>>& i2)
+    std::sort((seedsPerSpM.begin()),(seedsPerSpM.end()),[]
+                   (const std::pair<float,std::unique_ptr<const Acts::InternalSeed>>& i1,
+                    const std::pair<float,std::unique_ptr<const Acts::InternalSeed>>& i2)
                    {
                      return i1.first > i2.first;
                    });
@@ -105,7 +103,6 @@ namespace Acts{
     }
     auto itBegin = seedsPerSpM.begin();
     auto it = seedsPerSpM.begin();
-    std::vector<std::shared_ptr<InternalSeed> > filteredSeeds;
     // default filter removes the last seeds if maximum amount exceeded
     // ordering by weight by filterSeeds_2SpFixed means these are the lowest weight seeds
     for(; it<itBegin+maxSeeds; ++it) {

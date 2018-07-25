@@ -1,0 +1,5 @@
+add_executable (NewSeedingTest NewSeedingTest.cpp)
+target_include_directories (NewSeedingTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (NewSeedingTest PRIVATE Acts::Core)
+add_test (NAME NewSeedingTests COMMAND NewSeedingTest)
+acts_add_test_to_cdash_project (PROJECT ACore TEST NewSeedingTests TARGETS NewSeedingTest)

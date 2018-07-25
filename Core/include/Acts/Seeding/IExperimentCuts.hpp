@@ -24,18 +24,18 @@ namespace Acts{
 /// @param middle middle space point of the current seed
 /// @param top top space point of the current seed
 /// @return seed weight to be added to the seed's weight
-      virtual float seedWeight(std::shared_ptr<InternalSpacePoint> bottom, std::shared_ptr<InternalSpacePoint> middle, std::shared_ptr<InternalSpacePoint> top) const = 0;
+      virtual float seedWeight(const InternalSpacePoint* bottom, const InternalSpacePoint* middle, const InternalSpacePoint* top) const = 0;
 /// @param weight the current seed weight
 /// @param bottom bottom space point of the current seed
 /// @param middle middle space point of the current seed
 /// @param top top space point of the current seed
 /// @return true if the seed should be kept, false if the seed should be
 /// discarded
-      virtual bool singleSeedCut(float weight, std::shared_ptr<InternalSpacePoint> bottom, std::shared_ptr<InternalSpacePoint> middle, std::shared_ptr<InternalSpacePoint> top) const = 0;
+      virtual bool singleSeedCut(float weight, const InternalSpacePoint* bottom, const InternalSpacePoint* middle, const InternalSpacePoint* top) const = 0;
 
 /// @param seeds contains pairs of weight and seed created for one middle space
 /// point
 /// @return vector of seeds that pass the cut
-      virtual std::vector<std::pair<float,std::shared_ptr<InternalSeed> > > cutPerMiddleSP(std::vector<std::pair<float,std::shared_ptr<InternalSeed> > > seeds) const = 0;
+      virtual std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > cutPerMiddleSP(std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > seeds) const = 0;
     };
 }
