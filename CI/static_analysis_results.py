@@ -84,7 +84,7 @@ def analysis(limitfile, results, verbose=False, md=False):
 
     if verbose:
         output += tabulate(reversed(sorted(list(codes.items()), key=itemgetter(1))), headers=("code", "count"), tablefmt="psql")
-        output += "\n"
+        output += "\n\n"
 
     exit = 0
     lines = []
@@ -117,24 +117,24 @@ def analysis(limitfile, results, verbose=False, md=False):
 
     if exit == 1:
         if not md:
-            output += red("\n=> Failed rules")
+            output += red("\n\n=> Failed rules")
 
     return exit, output
 
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("limitfile")
-    p.add_argument("results")
+    p.add_argument("--limitfile", required=True)
+    p.add_argument("--itemfile", required=True)
     p.add_argument("--verbose", "-v", action="store_true")
     p.add_argument("--markdown", "-md", action="store_true")
 
     args = p.parse_args()
 
     assert os.path.exists(args.limitfile)
-    assert os.path.exists(args.results)
+    assert os.path.exists(args.itemfile)
 
-    exit, string = analysis(args.limitfile, args.results, args.verbose, args.markdown)
+    exit, string = analysis(args.limitfile, args.itemfile, args.verbose, args.markdown)
     print(string)
     sys.exit(exit)
 

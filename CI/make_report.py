@@ -9,7 +9,6 @@ import html
 from fnmatch import fnmatch
 import json
 
-from lxml import etree
 
 from codereport import CodeReport, ReportItem
 
@@ -69,7 +68,7 @@ def main():
     p = argparse.ArgumentParser()
     p.add_argument("mode", choices=("clang-tidy"))
     p.add_argument("inputfile")
-    p.add_argument("reportdir", default="report")
+    p.add_argument("output", default="codereport_clang_tidy.json")
     p.add_argument("--exclude", "-e", action="append", default=[])
     p.add_argument("--filter", action="append", default=[])
 
@@ -79,8 +78,20 @@ def main():
         with open(args.inputfile, "r", encoding="utf-8") as f:
             inputstr = f.read()
         items = parse_clang_tidy_output(inputstr)
+
+        def select(item):
+            accept = True
+            if len(args.filter) > 0:
+                accept = accept and all(fnmatch(item.path, e) for e in args.filter)
+
+            accept = accept and not any(fnmatch(item.path, e) for e in args.exclude)
+            return accept
+
+        items = filter(select, items)
+
+
         data = [i.dict() for i in items]
-        with open("codereport_clang_tidy.json", "w+") as jf:
+        with open(args.output, "w+") as jf:
             json.dump(data, jf, indent=2)
 
 
