@@ -1,0 +1,6 @@
+PyYAML
+fs
+fs.sshfs
+tabulate
+codereport==0.2.0
+python-gitlab
