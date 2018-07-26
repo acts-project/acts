@@ -1,0 +1,10 @@
+gitlab:
+  gitlab_project: "acts/acts-core"
+  gitlab_url: "https://gitlab.cern.ch"
+www:
+  ssh_host: lxplus.cern.ch
+  eos_www_root: /eos/user/a/atsjenkins/www/ACTS
+  public_root: https://acts.web.cern.ch/ACTS/
+  coverage_dir: coverage
+  static_analysis_dir: static_analysis
+
