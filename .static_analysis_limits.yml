@@ -1,10 +1,10 @@
 limits:
   "*": 10000 # total limit
-  "readability-*": 0 # no readability failures
-  "cppcoreguidelines-*": 50 
-  "cppcoreguidelines-pro-bounds-pointer-arithmetic": 0
-  "performance-*": 20
-  "modernize-*": 1000
+  #"readability-*": 0 # no readability failures
+  #"cppcoreguidelines-*": 50 
+  #"cppcoreguidelines-pro-bounds-pointer-arithmetic": 0
+  #"performance-*": 20
+  #"modernize-*": 1000
 
 ignore:
   - cppcoreguidelines-pro-type-vararg
