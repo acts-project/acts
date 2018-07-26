@@ -1,7 +1,7 @@
 stages:
   - build
   - test
-  - static analysis
+  - static_analysis
   - deploy
 
 before_script:
@@ -42,68 +42,30 @@ include_guards:
     - CI/check_include_guards.py . --fail-global
 
 clang_tidy:
-  stage: static analysis
-  image: gitlab-registry.cern.ch/acts/machines/static_analysis
-  before_script: 
-    - pip install --upgrade codereport
+  stage: static_analysis
+  image: gitlab-registry.cern.ch/acts/machines/static_analysis/cc7-clang-tidy
+  tags:
+    - cvmfs
+  before_script: []
   dependencies: []
   script:
     - mkdir report
     - mkdir build && cd build
-    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
     - cd ..
     - run-clang-tidy.py -p build -header-filter=.* -j$(nproc) 1> report/clang-tidy.log
-    - CI/make_report.py clang-tidy report/clang-tidy.log report -e "$PWD/Tests/*" -e "$PWD/Legacy/*" --filter "$PWD/*"
+    - virtualenv civenv
+    - source civenv/bin/activate
+    - pip install -r CI/requirements.txt
+    - CI/make_report.py clang-tidy report/clang-tidy.log report/clang-tidy.json -e "$PWD/Tests/*" -e "$PWD/Legacy/*" --filter "$PWD/*"
+    - codereport report/clang-tidy.json report --title="clang-tidy - commit: ${CI_COMMIT_SHA:0:8}" --prefix $PWD
+    - CI/static_analysis_results.py --limitfile .static_analysis_limits.yml --itemfile report/clang-tidy.json -v
   artifacts:
     paths:
       - report
+    when: always
 
-cppcheck:
-  stage: static analysis
-  image: gitlab-registry.cern.ch/acts/machines/static_analysis
-  before_script: 
-    - pip install --upgrade codereport
-  dependencies: []
-  script:
-    - mkdir report
-    - mkdir build && cd build
-    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-    - cd ..
-    - cppcheck --project=build/compile_commands.json --enable=warning,missingInclude,portability -UACTS_PARAMETER_DEFINITIONS_PLUGIN --xml-version=2 -j$(nproc) 2> report/report.xml
-    - CI/make_report.py cppcheck report/report.xml report -e "$PWD/Tests/*" -e "$PWD/Legacy/*" --filter "$PWD/*"
-  artifacts:
-    paths:
-      - report
-
-oclint:
-  stage: static analysis
-  image: gitlab-registry.cern.ch/acts/machines/static_analysis
-  before_script: []
-  dependencies: []
-  script:
-    - mkdir report
-    - mkdir build && cd build
-    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-    - cd ..
-    - oclint-json-compilation-database -p build -- -report-type json -o report/oclint_report.json
-    - CI/make_report.py oclint report/oclint_report.json report -e "$PWD/Tests/*" -e "$PWD/Legacy/*" --filter "$PWD/*"
-  artifacts:
-    paths:
-      - report
     
-scan-build:
-  stage: static analysis
-  image: gitlab-registry.cern.ch/acts/machines/scan-build
-  before_script: []
-  dependencies: []
-  script:
-    - mkdir report
-    - mkdir build && cd build
-    - cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
-    - analyze-build -enable-checker alpha -enable-checker core -enable-checker cplusplus -enable-checker deadcode -enable-checker llvm -enable-checker security -enable-checker unix -enable-checker nullability -o ../report --cdb compile_commands.json
-  artifacts:
-    paths:
-      - report
 
 
 # SLC6, LCG88 (legacy build)
