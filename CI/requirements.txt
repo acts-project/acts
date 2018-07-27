@@ -2,5 +2,5 @@ PyYAML
 fs
 fs.sshfs
 tabulate
-codereport==0.2.2
+codereport==0.2.*
 python-gitlab
