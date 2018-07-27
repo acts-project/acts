@@ -9,6 +9,8 @@
 #pragma once
 #include "Acts/Utilities/Definitions.hpp"
 
+#include <iostream>
+
 namespace Acts {
 
 /// @brief pair of ints for definition of a cell
@@ -28,6 +30,20 @@ struct DigitizationCell
     : channel0(dc.channel0), channel1(dc.channel1), data(dc.data)
   {
   }
+  /// To merge cells in case they are at the same position
+  /// @param dc the cell to be added to the current cell
+  /// @param analogueReadout flag indicating if we have analgue readout
+  /// @note this function is needed because possible derived classes may
+  /// calculate the energy deposit differently. Furthermore this allows to apply
+  /// an energy cut, because the energy deposit can also be stored for digital
+  /// readout.
+  virtual void
+  addCell(const DigitizationCell& dc, bool analogueReadout)
+  {
+    if (analogueReadout) {
+      data += dc.data;
+    }
+  }
   /// the deposited energy
   /// @param analogueReadout flag indicating if we have analgue readout
   /// @note this function is needed because possible derived classes may
@@ -35,7 +51,7 @@ struct DigitizationCell
   /// an energy cut, because the energy deposit can also be stored for digital
   /// readout.
   virtual double
-  depositedEnergy(bool /*analogueReadout*/) const
+  depositedEnergy() const
   {
     return data;
   }

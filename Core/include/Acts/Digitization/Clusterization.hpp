@@ -9,40 +9,60 @@
 #pragma once
 
 #include <boost/config.hpp>
-#include <boost/graph/adjacency_list.hpp>
-#include <boost/graph/connected_components.hpp>
+#include <unordered_map>
+#include <vector>
 #include "Acts/Digitization/DigitizationCell.hpp"
 
 namespace Acts {
-typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS>
-    Graph;
-
-/// @brief merge cells
-/// This function recieves digitization cells and merges the cells which are at
-/// the same position. In case we have analgue readout the energy is summed up.
-/// Furthermore an energycut can be applied. It uses boost
-/// connected_components
-/// (https://www.boost.org/doc/libs/1_46_1/libs/graph/doc/connected_components.html)
-/// @param cells all digitization cells
-/// @param anaglogueReadout flag indicating if the module has analgue
-/// readout
-/// @param energyCut Possible energy cut to be applied
-/// @return the merged digitization cells
-std::vector<Acts::DigitizationCell>
-mergeCells(std::vector<Acts::DigitizationCell>& cells,
-           bool                                 analogueReadout = false,
-           double                               energyCut       = 0.);
 
 /// @brief create clusters
-/// This function recieves digitization cells and bundles the neighbouring
-/// cells. It uses boost connected_components
-/// (https://www.boost.org/doc/libs/1_46_1/libs/graph/doc/connected_components.html)
-/// @param cells all digitization cells
-/// @param commonCorner flag indicating if also cells sharing a common corner
-/// should be merged (all cells sharing a common edge are merged per default)
+/// This function recieves digitization cells and bundles the neighbouring to
+/// create clusters later and does cell merging. Furthermore an energy
+/// cut (excluding cells which fall below threshold) can be applied. The
+/// function is templated on the digitization cell type to allow users to use
+/// their own implementation of Acts::DigitizationCell.
+/// @tparam Cell the digitization cell
+/// @param [in] cellMap map of all cells per cell ID on module
+/// @param [in] nBins0 number of bins in direction 0
+/// @param [in] commonCorner flag indicating if also cells sharing a common
+/// corner should be merged into one cluster
+/// @param [in] energyCut possible energy cut to be applied
 /// @return vector (the different clusters) of vector of digitization cells (the
 /// cells which belong to each cluster)
-std::vector<std::vector<Acts::DigitizationCell>>
-createClusters(const std::vector<Acts::DigitizationCell>& cells,
-               bool                                       commonCorner = false);
+template <typename Cell>
+std::vector<std::vector<Cell>>
+createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
+               size_t nBins0,
+               bool   commonCorner = true,
+               double energyCut    = 0.);
+
+/// @brief fillCluster
+/// This function is a helper function internally used by Acts::createClusters.
+/// It does connected component labelling using a hash map in order to find out
+/// which cells are neighbours. This function is called recursively by all
+/// neighbours of the current cell. The function is templated on the
+/// digitization cell type to allow users to use their own implementation
+/// inheriting from Acts::DigitizationCell.
+/// @tparam Cell the digitization cell
+/// @param [in,out] mergedCells the final vector of cells to which cells of one
+/// cluster should be added
+/// @param [in,out] cellMap the hashmap of all present cells + a flag indicating
+/// if they have been added to a cluster already, with the key being the global
+/// grid index
+/// @param [in] index the current global grid index of the cell
+/// @param [in] cellA the current cell
+/// @param [in] nBins0 number of bins in direction 0
+/// @param [in] commonCorner flag indicating if also cells sharing a common
+/// corner should be merged into one cluster
+/// @param [in] energyCut possible energy cut to be applied
+template <typename Cell>
+void
+fillCluster(std::vector<std::vector<Cell>>& mergedCells,
+            std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
+            size_t index,
+            size_t nBins0,
+            bool   commonCorner = true,
+            double energyCut    = 0.);
 }
+
+#include "Acts/Digitization/detail/Clusterization.ipp"
