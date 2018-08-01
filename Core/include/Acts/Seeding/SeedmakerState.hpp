@@ -29,6 +29,7 @@ namespace Acts{
       // ...for middle-top
       std::vector<LinCircle> linCircleTop;
 
+      // middle spacepoint bin indices
       size_t phiIndex = 1;
       size_t zIndex = 1;
 

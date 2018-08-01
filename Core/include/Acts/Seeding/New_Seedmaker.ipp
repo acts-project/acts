@@ -25,22 +25,23 @@ New_Seedmaker::New_Seedmaker(const Acts::SeedmakerConfig& config): m_config(conf
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and millimeter
   // TODO: change using ACTS units
   m_config.pTPerHelixRadius = 300.*m_config.bFieldInZ;
-  m_config.minHelixRadius2 = std::pow(m_config.minPt/m_config.pTPerHelixRadius,2);
+  m_config.minHelixDiameter2 = std::pow(m_config.minPt*2/m_config.pTPerHelixRadius,2);
+  m_config.pT2perRadius = std::pow(m_config.highland/m_config.pTPerHelixRadius,2);
 }
 
 template <typename Seed, typename SpacePoint>
 
 std::unique_ptr<Seed> New_Seedmaker::nextSeed(Acts::SeedmakerState* state,
                              std::vector<const SpacePoint*>&     inputSP){
-  auto seed = std::make_unique<Seed>();
+  std::unique_ptr<Seed> seed;
   if(state->outputQueue.size()>0){
     auto intSeed = std::move(state->outputQueue.front());
     state->outputQueue.pop();
-    seed->erase();
-    seed->add(inputSP[intSeed->spacepoint0()->spIndex()]);
-    seed->add(inputSP[intSeed->spacepoint1()->spIndex()]);
-    seed->add(inputSP[intSeed->spacepoint2()->spIndex()]);
-    seed->setZVertex(intSeed->z());
+    seed = std::make_unique<Seed>(inputSP[intSeed->spacepoint0()->spIndex()],
+                                  inputSP[intSeed->spacepoint1()->spIndex()],
+                                  inputSP[intSeed->spacepoint2()->spIndex()],
+                                  intSeed->z());
+    return seed;
   }
   return seed;
 }
@@ -66,8 +67,8 @@ New_Seedmaker::initState
   std::unique_ptr<SPGrid> grid = SPGridCreator::createGrid(gridConf);
 
   // get region of interest (or full detector if configured accordingly)
-  float phiMin = m_config.minPhi;
-  float phiMax = m_config.maxPhi;
+  float phiMin = m_config.phiMin;
+  float phiMax = m_config.phiMax;
   float zMin = m_config.zMin;
   float zMax = m_config.zMax;
   
@@ -75,9 +76,10 @@ New_Seedmaker::initState
   std::iota(std::begin(indexVec),std::end(indexVec),0);
 
   // sort by radius
-  float inverseRBinSize = m_config.deltaRMin * 3;
   // add magnitude of beamPos to rMax to avoid excluding measurements
-  size_t numRBins = (m_config.rMax + m_config.beamPos.norm()) * inverseRBinSize;
+  // create number of bins equal to number of millimeters rMax
+  // (worst case minR: configured minR + 1mm)
+  size_t numRBins = (m_config.rMax + m_config.beamPos.norm());
   std::vector<std::vector<std::unique_ptr<const InternalSpacePoint> > >rBins(numRBins);
   for (size_t spIndex : indexVec){
     const SpacePoint* sp = spVec[spIndex];
@@ -94,7 +96,7 @@ New_Seedmaker::initState
     Acts::Vector3D spPosition(spX,spY,spZ);
     auto isp = std::make_unique<const InternalSpacePoint>(spIndex, spPosition, m_config.beamPos, cov);
     // calculate r-Bin index and protect against overflow (underflow not possible)
-    int rIndex = isp->radius()*inverseRBinSize;
+    int rIndex = isp->radius();
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins){
       continue;
@@ -228,7 +230,6 @@ New_Seedmaker::createSeedsInRegion
     state->linCircleTop.clear();
     transformCoordinates(compatTopSP, spM, false, state->linCircleTop);
     
-    // TODO: significant benefit? avoids compatSp.size()^2 reallocations
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint* > topSpVec;
     std::vector<float > curvatures;
@@ -236,8 +237,10 @@ New_Seedmaker::createSeedsInRegion
 
     // TODO: measure cost to reallocate seedsPerSpM each iteration
     std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > seedsPerSpM;
+    size_t numBotSP = compatBottomSP.size();
+    size_t numTopSP = compatTopSP.size();
 
-    for(size_t b = 0; b < compatBottomSP.size(); b++){
+    for(size_t b = 0; b < numBotSP; b++){
       auto lb = state->linCircleBottom[b];
       float  Zob  = lb.Zo      ;
       float  cotThetaB = lb.cotTheta ;
@@ -262,22 +265,28 @@ New_Seedmaker::createSeedsInRegion
       topSpVec.clear();
       curvatures.clear();
       impactParameters.clear();
-      for(size_t t = 0; t < compatTopSP.size(); t++) {
+      for(size_t t = 0; t < numTopSP; t++) {
         auto lt = state->linCircleTop[t];
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term for errors on spM
         float error2 = lt.Er + ErB + 2*(cotThetaB * lt.cotTheta * covrM + covzM) * iDeltaRB * lt.iDeltaR;
 
-        float deltaCotTheta = std::abs(cotThetaB - lt.cotTheta);
-
-        // if deltaTheta larger than the scattering for the lower pT cut, skip
+        float deltaCotTheta = cotThetaB - lt.cotTheta;
         float deltaCotTheta2 = deltaCotTheta*deltaCotTheta;
-        float error = std::sqrt(error2);
-        float dCotThetaMinusError2 = deltaCotTheta2 + error2 - 2*deltaCotTheta*error;
-        // avoid taking root of scatteringInRegion
-        // if left side of ">" is positive, both sides of unequality can be squared 
-        // (scattering is always positive)
-        if (deltaCotTheta - error > 0 && dCotThetaMinusError2 > scatteringInRegion2 ) continue;
+        float error;
+        float dCotThetaMinusError2;
+        // if the error is larger than the difference in theta, no need to compare with scattering
+        if (deltaCotTheta2 - error2 > 0){
+          float deltaCotTheta = std::abs(deltaCotTheta);
+          // if deltaTheta larger than the scattering for the lower pT cut, skip
+          error = std::sqrt(error2);
+          dCotThetaMinusError2 = deltaCotTheta2 + error2 - 2*deltaCotTheta*error;
+          // avoid taking root of scatteringInRegion
+          // if left side of ">" is positive, both sides of unequality can be squared 
+          // (scattering is always positive)
+
+          if(dCotThetaMinusError2 > scatteringInRegion2 ) continue;
+        }
         //TODO: did everything squared, taking root now. slows down by how much?
         //float dCotThetaCorrected = deltaCotTheta*deltaCotTheta - error;
         //if ( dCotThetaCorrected > scatteringInRegion2) continue;
@@ -291,18 +300,16 @@ New_Seedmaker::createSeedsInRegion
         float B2  = B*B                              ;
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
-        if(S2 < B2*m_config.minHelixRadius2*4) continue;
+        if(S2 < B2*m_config.minHelixDiameter2) continue;
         // 1/helixradius: (B/sqrt(S2))/2 (we leave everything squared)
         float iHelixradius2 = 4*B2/S2;
         // calculate scattering for p(T) calculated from seed curvature
-        float pT2perRadius = m_config.highland/m_config.pTPerHelixRadius;
-        pT2perRadius = pT2perRadius*pT2perRadius;
-        float pT2scatter = iHelixradius2 * pT2perRadius;
+        float pT2scatter = iHelixradius2 * m_config.pT2perRadius;
         //FIXME: include upper pT limit for scatter calc
         //convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta) from rad to deltaCotTheta
         float p2scatter = pT2scatter * iSinTheta2;
         // if deltaTheta larger than allowed scattering for calculated pT, skip
-        if(deltaCotTheta - error > 0 && dCotThetaMinusError2 > p2scatter * m_config.sigmaScattering* m_config.sigmaScattering) continue;
+        if(deltaCotTheta2 - error2 > 0 && dCotThetaMinusError2 > p2scatter * m_config.sigmaScattering* m_config.sigmaScattering) continue;
         // A and B allow calculation of impact params in U/V plane with linear function
         // (in contrast to x^2 in x/y plane)
         float Im  = std::abs((A-B*rM)*rM)                ;
