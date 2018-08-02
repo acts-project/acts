@@ -58,7 +58,7 @@ int main(){
   config.collisionRegionMax = 250.;
   config.zMin = -2800.;
   config.zMax = 2800.;
-  config.maxSeedsPerSpM = 10;
+  config.maxSeedsPerSpM = 5;
   //2.7 eta
   config.cotThetaMax = 7.40627;
   config.sigmaScattering = 1.00000;
@@ -67,8 +67,8 @@ int main(){
 
   config.beamPos={-.5,-.5};
 
-  config.bottomBinFinder = std::make_unique<Acts::BinFinder>(Acts::BinFinder());
-  config.topBinFinder = std::make_unique<Acts::BinFinder>(Acts::BinFinder());
+  auto bottomBinFinder = std::make_shared<Acts::BinFinder>(Acts::BinFinder());
+  auto topBinFinder = std::make_shared<Acts::BinFinder>(Acts::BinFinder());
   Acts::SeedFilterConfig sfconf;
   Acts::ATLASCuts atlasCuts = Acts::ATLASCuts();
   config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf, &atlasCuts));
@@ -82,9 +82,11 @@ int main(){
       return {sp->covz,sp->covr};
     };
 
-  std::shared_ptr<Acts::SeedmakerState> state = a.initState(spVec, ct);
+  std::shared_ptr<Acts::SeedmakerState> state = a.initState(spVec, ct, bottomBinFinder, topBinFinder);
   auto start = std::chrono::system_clock::now();
-  a.createSeeds(state);
+  for(Acts::SeedingStateIterator it = state->begin(); !(it == state->end()); ++it){
+    a.createSeedsForSP(it, state);
+  }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end-start;
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;

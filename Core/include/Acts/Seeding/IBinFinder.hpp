@@ -34,7 +34,7 @@ public:
 /// middle space points from the provided bin
     virtual
     std::set<size_t>
-    findBins(size_t phiBin,size_t zBin, std::unique_ptr<SPGrid>& binnedSP) =0;
+    findBins(size_t phiBin,size_t zBin, const SPGrid* binnedSP) = 0;
 
 };
 }

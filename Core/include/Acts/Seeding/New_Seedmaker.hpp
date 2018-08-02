@@ -23,6 +23,14 @@
 #include <memory>
 
 namespace Acts {
+  struct LinCircle{
+    float Zo;
+    float cotTheta;
+    float iDeltaR;
+    float Er;
+    float U;
+    float V;
+  };
   class New_Seedmaker 
     {
       ///////////////////////////////////////////////////////////////////
@@ -51,13 +59,18 @@ namespace Acts {
       std::shared_ptr<Acts::SeedmakerState>
       initState
         (const std::vector<const SpacePoint*>& spVec,
-         std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> covTool) const;
+         std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> covTool,
+         std::shared_ptr<Acts::IBinFinder> bottomBinFinder,
+         std::shared_ptr<Acts::IBinFinder> topBinFinder) const;
 
 
 /// Create all seed from the space points passed in createSpacePointGrid
 /// Specify number of seeds
+//      void
+//      createSeeds(std::shared_ptr<Acts::SeedmakerState> state) const ;
       void
-      createSeeds(std::shared_ptr<Acts::SeedmakerState> state) const ;
+      createSeedsForSP ( SeedingStateIterator it,
+                         std::shared_ptr<Acts::SeedmakerState> state) const;
 
     private:
               /**    @name Disallow default instantiation, copy, assignment */
@@ -68,11 +81,11 @@ namespace Acts {
       //@}
 
       // Private methods
-      void
-      createSeedsInRegion (std::vector<std::unique_ptr<const InternalSpacePoint > >& currentBin,
-                            std::set<size_t > bottomBins,
-                            std::set<size_t > topBins,
-                            std::shared_ptr<Acts::SeedmakerState> state) const ;
+//      void
+//      createSeedsInRegion (std::vector<std::unique_ptr<const InternalSpacePoint > >& currentBin,
+//                            std::set<size_t > bottomBins,
+//                            std::set<size_t > topBins,
+//                            std::shared_ptr<Acts::SeedmakerState> state) const ;
 
       void transformCoordinates (std::vector< const InternalSpacePoint* >& vec,
                                    const InternalSpacePoint* spM,
@@ -82,21 +95,7 @@ namespace Acts {
         Acts::SeedmakerConfig m_config;
      };
 
+
   } // end of Acts namespace
-
-///////////////////////////////////////////////////////////////////
-// Object-function for curvature seeds comparison
-///////////////////////////////////////////////////////////////////
-
-class comCurvature  {
-public:
-  
-  bool operator ()
-  (const std::pair<float,Acts::InternalSpacePoint*>& i1, 
-   const std::pair<float,Acts::InternalSpacePoint*>& i2)
-  {
-    return i1.first < i2.first;
-  }
-};
 
 #include "Acts/Seeding/New_Seedmaker.ipp"

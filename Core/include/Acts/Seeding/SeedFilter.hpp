@@ -11,6 +11,7 @@
 #include <vector>
 #include <memory>
 #include <queue>
+#include <mutex>
 
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
@@ -69,7 +70,7 @@ namespace Acts{
 /// @return vector of all InternalSeeds that not filtered out
     virtual
     void
-    filterSeeds_1SpFixed(std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed> >& queue) const;
+    filterSeeds_1SpFixed(std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed> >& queue, std::mutex& outputMutex) const;
 
     private:
     const SeedFilterConfig m_cfg;

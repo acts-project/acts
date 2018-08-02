@@ -22,10 +22,13 @@ std::unique_ptr<Acts::SPGrid> Acts::SPGridCreator::createGrid(const Acts::Seedin
   float yOuter = sqrt(maxR2-xOuter*xOuter);
   float outerAngle = atan(xOuter/yOuter);
   // intersection of helix and max detector radius minus maximum R distance from middle SP to top SP
-  float innerCircleR2 = (config.rMax - config.deltaRMax) * (config.rMax - config.deltaRMax);
-  float xInner = innerCircleR2/(2*minHelixRadius);
-  float yInner = std::sqrt(innerCircleR2-xInner*xInner);
-  float innerAngle = std::atan(xInner/yInner);
+  float innerAngle = 0;
+  if(config.rMax > config.deltaRMax){
+    float innerCircleR2 = (config.rMax - config.deltaRMax) * (config.rMax - config.deltaRMax);
+    float xInner = innerCircleR2/(2*minHelixRadius);
+    float yInner = std::sqrt(innerCircleR2-xInner*xInner);
+    innerAngle = std::atan(xInner/yInner);
+  }
 
   // divide 2pi by angle delta to get number of phi-bins
   // size is always 2pi even for regions of interest

@@ -15,10 +15,6 @@ namespace Acts{
       class IBinFinder;
       class SeedFilter;
       struct SeedmakerConfig {
-        // BinFinder must return std::vector<Acts::Seeding::Bin> with content of 
-        // each bin sorted in r (ascending)
-        std::shared_ptr<IBinFinder> bottomBinFinder;
-        std::shared_ptr<IBinFinder> topBinFinder;
         std::shared_ptr<SeedFilter> seedFilter;
 
 // Algorithm settings

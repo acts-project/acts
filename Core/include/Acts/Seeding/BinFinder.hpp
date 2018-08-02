@@ -34,7 +34,7 @@ public:
 /// @param binnedSP phi-z grid containing all bins
    virtual
    std::set<size_t>
-   findBins(size_t phiBin, size_t zBin, std::unique_ptr<SPGrid>& binnedSP);
+   findBins(size_t phiBin, size_t zBin,const SPGrid* binnedSP);
 
 };
 }
