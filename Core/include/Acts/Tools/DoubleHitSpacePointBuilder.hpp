@@ -20,9 +20,9 @@ namespace Acts {
 struct DoubleHitSpacePoint
 {
   /// Storage of the hit cluster on a surface
-  PlanarModuleCluster const* clusterFront;
+  const PlanarModuleCluster* clusterFront;
   /// Storage of the hit cluster on another surface
-  PlanarModuleCluster const* clusterBack;
+  constPlanarModuleCluster* clusterBack;
   /// Storage of a space point.
   Vector3D spacePoint;
 
@@ -98,10 +98,10 @@ public:
   /// clusters[Independent clusters on a single surface]
   void
   makeClusterPairs(
-      const std::vector<PlanarModuleCluster const*>& clustersFront,
-      const std::vector<PlanarModuleCluster const*>& clustersBack,
-      std::vector<std::pair<PlanarModuleCluster const*,
-                            PlanarModuleCluster const*>>& clusterPairs) const;
+      const std::vector<const PlanarModuleCluster*>& clustersFront,
+      const std::vector<const PlanarModuleCluster*>& clustersBack,
+      std::vector<std::pair<const PlanarModuleCluster*,
+                            const PlanarModuleCluster*>>& clusterPairs) const;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
@@ -110,9 +110,9 @@ public:
   /// @note If no configuration is set, the default values will be used
   void
   calculateSpacePoints(
-      const std::vector<std::pair<PlanarModuleCluster const*,
-                            PlanarModuleCluster const*>>& clusterPairs,
-      std::vector<DoubleHitSpacePoint>&                   spacePoints) const;
+      const std::vector<std::pair<const PlanarModuleCluster*,
+                                  const PlanarModuleCluster*>>& clusterPairs,
+      std::vector<DoubleHitSpacePoint>& spacePoints) const;
 
 private:
   /// Config

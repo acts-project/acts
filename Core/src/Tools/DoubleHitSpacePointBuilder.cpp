@@ -73,10 +73,10 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::globalCoords(
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
-    const std::vector<PlanarModuleCluster const*>& clustersFront,
-    const std::vector<PlanarModuleCluster const*>& clustersBack,
-    std::vector<std::pair<Acts::PlanarModuleCluster const*,
-                          Acts::PlanarModuleCluster const*>>& clusterPairs)
+    const std::vector<const PlanarModuleCluster*>& clustersFront,
+    const std::vector<const PlanarModuleCluster*>& clustersBack,
+    std::vector<std::pair<const Acts::PlanarModuleCluster*,
+                          const Acts::PlanarModuleCluster*>>& clusterPairs)
     const
 {
   // Return if no clusters are given in a vector
@@ -109,8 +109,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
 
     // Store the best (=closest) result
     if (clusterMinDist < clustersBack.size()) {
-      std::pair<Acts::PlanarModuleCluster const*,
-                Acts::PlanarModuleCluster const*>
+      std::pair<const Acts::PlanarModuleCluster*,
+                const Acts::PlanarModuleCluster*>
           clusterPair;
       clusterPair = std::make_pair(clustersFront[iClustersFront],
                                    clustersBack[clusterMinDist]);
@@ -270,9 +270,10 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
-    const std::vector<std::pair<Acts::PlanarModuleCluster const*,
-                          Acts::PlanarModuleCluster const*>>& clusterPairs,
-    std::vector<Acts::DoubleHitSpacePoint>&                   spacePoints) const
+    const std::vector<std::pair<const Acts::PlanarModuleCluster*,
+                                const Acts::PlanarModuleCluster*>>&
+                                            clusterPairs,
+    std::vector<Acts::DoubleHitSpacePoint>& spacePoints) const
 {
 
   /// Source of algorithm: Athena, SiSpacePointMakerTool::makeSCT_SpacePoint()
@@ -347,20 +348,21 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
           = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
       spacePoints.push_back(std::move(sp));
     } else {
-        /// If this point is reached then it was not possible to resolve both
-        /// points such that they are on their SDEs
-        /// The following code treats a possible recovery of points resolved
-        /// slightly outside of the SDE.
-        /// @note This procedure is an indirect variation of the vertex
-        /// position.
-        // Check if a recovery the point(s) and store them if successful
-        if (recoverSpacePoint(spaPoPa)) {
-      Acts::DoubleHitSpacePoint sp;
-      sp.clusterFront = cp.first;
-      sp.clusterBack  = cp.second;
-      sp.spacePoint
-          = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
-      spacePoints.push_back(std::move(sp));
-    }}
+      /// If this point is reached then it was not possible to resolve both
+      /// points such that they are on their SDEs
+      /// The following code treats a possible recovery of points resolved
+      /// slightly outside of the SDE.
+      /// @note This procedure is an indirect variation of the vertex
+      /// position.
+      // Check if a recovery the point(s) and store them if successful
+      if (recoverSpacePoint(spaPoPa)) {
+        Acts::DoubleHitSpacePoint sp;
+        sp.clusterFront = cp.first;
+        sp.clusterBack  = cp.second;
+        sp.spacePoint
+            = 0.5 * (ends1.first + ends1.second + spaPoPa.m * spaPoPa.q);
+        spacePoints.push_back(std::move(sp));
+      }
+    }
   }
 }

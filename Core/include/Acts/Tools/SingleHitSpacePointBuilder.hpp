@@ -18,7 +18,7 @@ namespace Acts {
 struct SingleHitSpacePoint
 {
   /// Storage of the cluster on a surface
-  PlanarModuleCluster const* clusterModule;
+  const PlanarModuleCluster* clusterModule;
   /// Storage of a space point.
   Vector3D spacePoint;
 
@@ -67,8 +67,8 @@ public:
   /// @param spacePointStorage storage of the results
   void
   calculateSpacePoints(
-      const std::vector<PlanarModuleCluster const*>& clusters,
-      std::vector<SingleHitSpacePoint>&       spacePointStorage) const;
+      const std::vector<const PlanarModuleCluster*>& clusters,
+      std::vector<SingleHitSpacePoint>&              spacePointStorage) const;
 
 protected:
   /// @brief Getter method for the local coordinates of a cluster
