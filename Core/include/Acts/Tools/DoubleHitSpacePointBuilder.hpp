@@ -22,7 +22,7 @@ struct DoubleHitSpacePoint
   /// Storage of the hit cluster on a surface
   const PlanarModuleCluster* clusterFront;
   /// Storage of the hit cluster on another surface
-  constPlanarModuleCluster* clusterBack;
+  const PlanarModuleCluster* clusterBack;
   /// Storage of a space point.
   Vector3D spacePoint;
 
