@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <tuple>
 #include <type_traits>
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
@@ -66,5 +67,4 @@ namespace detail {
   };
 
 }  // namespace detail
-
 }  // namespace Acts

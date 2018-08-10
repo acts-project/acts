@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 Acts project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -65,8 +65,8 @@ main(int argc, char* argv[])
   auto magnetic_field = std::make_unique<const BField_type>(0, 0, Bz / 1000.);
 
   RungeKuttaEngine<>::Config c;
-  c.fieldService  = std::move(magnetic_field);
-  c.maxPathLength = maxPath * units::_m;
+  c.fieldService = std::move(magnetic_field);
+  c.pathLimit    = maxPath * units::_m;
 
   RungeKuttaEngine<> propagator(c);
 

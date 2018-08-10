@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -22,6 +22,7 @@
 Acts::CylinderBounds::CylinderBounds(double radius, double halfZ)
   : CylinderBounds(radius, 0, M_PI, halfZ)
 {
+  m_closed = true;
 }
 
 Acts::CylinderBounds::CylinderBounds(double radius,
@@ -39,7 +40,9 @@ Acts::CylinderBounds::CylinderBounds(double radius,
   , m_avgPhi(detail::radian_sym(averagePhi))
   , m_halfPhi(std::abs(halfPhi))
   , m_halfZ(std::abs(halfZ))
+  , m_closed(false)
 {
+  if (halfPhi == M_PI) m_closed = true;
 }
 
 Acts::CylinderBounds::CylinderBounds(const variant_data& data_)
@@ -107,8 +110,8 @@ Acts::CylinderBounds::jacobian() const
 }
 
 bool
-Acts::CylinderBounds::inside(const Acts::Vector2D&      lpos,
-                             const Acts::BoundaryCheck& bcheck) const
+Acts::CylinderBounds::inside(const Vector2D&      lpos,
+                             const BoundaryCheck& bcheck) const
 {
   return bcheck.transformed(jacobian())
       .isInside(shifted(lpos),
@@ -117,12 +120,25 @@ Acts::CylinderBounds::inside(const Acts::Vector2D&      lpos,
 }
 
 bool
-Acts::CylinderBounds::inside3D(const Acts::Vector3D&      pos,
-                               const Acts::BoundaryCheck& bcheck) const
+Acts::CylinderBounds::inside3D(const Vector3D&      pos,
+                               const BoundaryCheck& bcheck) const
 {
+  // additional tolerance from the boundary check if configred
+  bool checkAbsolute = bcheck.m_type == BoundaryCheck::Type::eAbsolute;
 
-  if (s_onSurfaceTolerance <= std::abs(pos.perp() - m_radius)) return false;
-
+  // this fast check only applies to closed cylindrical bounds
+  double addToleranceR
+      = (checkAbsolute && m_closed) ? bcheck.m_tolerance[0] : 0.;
+  double addToleranceZ = checkAbsolute ? bcheck.m_tolerance[1] : 0.;
+  // check if the position compatible with the radius
+  if ((s_onSurfaceTolerance + addToleranceR)
+      <= std::abs(pos.perp() - m_radius)) {
+    return false;
+  } else if (checkAbsolute && m_closed) {
+    return ((s_onSurfaceTolerance + addToleranceZ + m_halfZ)
+            >= std::abs(pos.z()));
+  }
+  // detailed, but slower check
   Vector2D lpos(detail::radian_sym(pos.phi() - m_avgPhi), pos.z());
   return bcheck.transformed(jacobian())
       .isInside(

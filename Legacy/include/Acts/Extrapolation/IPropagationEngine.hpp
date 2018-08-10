@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -55,7 +55,7 @@ public:
   virtual ExtrapolationCode
   propagate(ExCellCharged&                        ecCell,
             const Surface&                        sf,
-            PropDirection                         dir = alongMomentum,
+            NavigationDirection                   dir = forward,
             std::vector<ExtrapolationMode::eMode> purpose
             = {ExtrapolationMode::Destination},
             const BoundaryCheck& bcheck            = true,
@@ -79,7 +79,7 @@ public:
   virtual ExtrapolationCode
   propagate(ExCellNeutral&                        enCell,
             const Surface&                        sf,
-            PropDirection                         dir = alongMomentum,
+            NavigationDirection                   dir = forward,
             std::vector<ExtrapolationMode::eMode> purpose
             = {ExtrapolationMode::Destination},
             const BoundaryCheck& bcheck            = true,
@@ -90,4 +90,4 @@ protected:
   std::string m_sopPostfix;  ///< prefix for screen output
 };
 
-}  // end of namespace
+}  // namespace

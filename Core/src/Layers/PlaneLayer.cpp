@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -58,7 +58,7 @@ Acts::PlaneLayer::buildApproachDescriptor()
   const Transform3D& lTransform = PlaneSurface::transform();
   RotationMatrix3D   lRotation  = lTransform.rotation();
   const Vector3D&    lCenter    = PlaneSurface::center();
-  const Vector3D&    lVector    = PlaneSurface::normal();
+  const Vector3D&    lVector    = Surface::normal(center());
   // create new surfaces
   const Transform3D* apnTransform = new Transform3D(getTransformFromRotTransl(
       lRotation, (lCenter - 0.5 * Layer::m_layerThickness * lVector)));

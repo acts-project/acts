@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -47,7 +47,7 @@ public:
   virtual ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
                  const Surface*      msurface   = nullptr,
-                 PropDirection       dir        = alongMomentum,
+                 NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
   /// Public neutral material effects interface
@@ -61,7 +61,7 @@ public:
   virtual ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
                  const Surface*      msurface   = nullptr,
-                 PropDirection       dir        = alongMomentum,
+                 NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const = 0;
 
 protected:
@@ -69,4 +69,4 @@ protected:
   std::string m_sopPostfix;  ///< prefix for screen output
 };
 
-}  // end of namespace
+}  // namespace

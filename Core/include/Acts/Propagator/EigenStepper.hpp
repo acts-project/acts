@@ -7,11 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <cmath>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
@@ -38,7 +41,7 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField>
+template <typename BField, typename corrector_t = VoidCorrector>
 class EigenStepper
 {
 
@@ -58,32 +61,44 @@ private:
   };
 
 public:
-  /// Cache for track parameter propagation
+  typedef detail::ConstrainedStep cstep;
+
+  /// @brief State for track parameter propagation
   ///
-  struct Cache
+  /// It contains the stepping information and is provided thread local
+  /// by the propagator
+  struct State
   {
     /// Constructor from the initial track parameters
-    /// @param [in] par The track parameters at start
+    /// @param[in] par The track parameters at start
+    /// @param[in] ndir The navigation direciton w.r.t momentum
+    /// @param[in] sszice is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
-    explicit Cache(const T& par,
-                   double   ssize = std::numeric_limits<double>::max())
+    explicit State(const T&            par,
+                   NavigationDirection ndir = forward,
+                   double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
       , dir(par.momentum().normalized())
-      , qop(par.charge() / par.momentum().norm())
-      , cov_transport(false)
-      , accumulated_path(0.)
-      , step_size(ssize)
-      , max_step_size(ssize)
+      , p(par.momentum().norm())
+      , q(par.charge())
+      , navDir(ndir)
+      , covTransport(false)
+      , pathAccumulated(0.)
+      , stepSize(ndir * std::abs(ssize))
     {
+      // remember the start parameters
+      startPos = pos;
+      startDir = dir;
       // Init the jacobian matrix if needed
       if (par.covariance()) {
-        cov_transport = true;
-        cov           = ActsSymMatrixD<5>(*par.covariance());
-        // Get the reference surface
+        // Get the reference surface for navigation
         const auto& surface = par.referenceSurface();
-        surface.initJacobianToGlobal(jac_to_global, pos, dir, par.parameters());
+        // set the covariance transport flag to true and copy
+        covTransport = true;
+        cov          = ActsSymMatrixD<5>(*par.covariance());
+        surface.initJacobianToGlobal(jacToGlobal, pos, dir, par.parameters());
       }
     }
 
@@ -101,181 +116,229 @@ public:
       return dir;
     }
 
+    /// Actual momentum accessor
+    Vector3D
+    momentum() const
+    {
+      return p * dir;
+    }
+
+    /// Charge access
+    double
+    charge() const
+    {
+      return q;
+    }
+
+    /// Return a corrector
+    corrector_t
+    corrector() const
+    {
+      return corrector_t(startPos, startDir, pathAccumulated);
+    }
+
+    /// Method to update momentum, direction and p
+    ///
+    /// @param uposition the updated position
+    /// @param udirection the updated direction
+    /// @param p the updated momentum value
+    void
+    update(const Vector3D& uposition, const Vector3D& udirection, double up)
+    {
+      pos = uposition;
+      dir = udirection;
+      p   = up;
+    }
+
     /// Method for on-demand transport of the covariance
     /// to a new curvilinear frame at current  position,
-    /// or direction of the cache
+    /// or direction of the state
     ///
     /// @param reinitialize is a flag to steer whether the
-    ///        cache should be reinitialized at the new
+    ///        state should be reinitialized at the new
     ///        position
     ///
     /// @return the full transport jacobian
     const ActsMatrixD<5, 5>
-    apply_cov_transport(bool reinitialize = false)
+    covarianceTransport(bool reinitialize = false)
     {
       // Optimized trigonometry on the propagation direction
       const double x = dir(0);  // == cos(phi) * sin(theta)
       const double y = dir(1);  // == sin(phi) * sin(theta)
       const double z = dir(2);  // == cos(theta)
       // can be turned into cosine/sine
-      const double cos_theta     = z;
-      const double sin_theta     = sqrt(x * x + y * y);
-      const double inv_sin_theta = 1. / sin_theta;
-      const double cos_phi       = x * inv_sin_theta;
-      const double sin_phi       = y * inv_sin_theta;
+      const double cosTheta    = z;
+      const double sinTheta    = sqrt(x * x + y * y);
+      const double invSinTheta = 1. / sinTheta;
+      const double cosPhi      = x * invSinTheta;
+      const double sinPhi      = y * invSinTheta;
       // prepare the jacobian to curvilinear
-      ActsMatrixD<5, 7> jac_to_curv = ActsMatrixD<5, 7>::Zero();
-      if (std::abs(cos_theta) < s_curvilinearProjTolerance) {
+      ActsMatrixD<5, 7> jacToCurv = ActsMatrixD<5, 7>::Zero();
+      if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
         // We normally operate in curvilinear coordinates defined as follows
-        jac_to_curv(0, 0) = -sin_phi;
-        jac_to_curv(0, 1) = cos_phi;
-        jac_to_curv(1, 0) = -cos_phi * cos_theta;
-        jac_to_curv(1, 1) = -sin_phi * cos_theta;
-        jac_to_curv(1, 2) = sin_theta;
+        jacToCurv(0, 0) = -sinPhi;
+        jacToCurv(0, 1) = cosPhi;
+        jacToCurv(1, 0) = -cosPhi * cosTheta;
+        jacToCurv(1, 1) = -sinPhi * cosTheta;
+        jacToCurv(1, 2) = sinTheta;
       } else {
         // Under grazing incidence to z, the above coordinate system definition
         // becomes numerically unstable, and we need to switch to another one
-        const double c     = sqrt(y * y + z * z);
-        const double inv_c = 1. / c;
-        jac_to_curv(0, 1) = -z * inv_c;
-        jac_to_curv(0, 2) = y * inv_c;
-        jac_to_curv(1, 0) = c;
-        jac_to_curv(1, 1) = -x * y * inv_c;
-        jac_to_curv(1, 2) = -x * z * inv_c;
+        const double c    = sqrt(y * y + z * z);
+        const double invC = 1. / c;
+        jacToCurv(0, 1) = -z * invC;
+        jacToCurv(0, 2) = y * invC;
+        jacToCurv(1, 0) = c;
+        jacToCurv(1, 1) = -x * y * invC;
+        jacToCurv(1, 2) = -x * z * invC;
       }
       // Directional and momentum parameters for curvilinear
-      jac_to_curv(2, 3) = -sin_phi * inv_sin_theta;
-      jac_to_curv(2, 4) = cos_phi * inv_sin_theta;
-      jac_to_curv(3, 5) = -inv_sin_theta;
-      jac_to_curv(4, 6) = 1;
+      jacToCurv(2, 3) = -sinPhi * invSinTheta;
+      jacToCurv(2, 4) = cosPhi * invSinTheta;
+      jacToCurv(3, 5) = -invSinTheta;
+      jacToCurv(4, 6) = 1;
       // Apply the transport from the steps on the jacobian
-      jac_to_global = jac_transport * jac_to_global;
+      jacToGlobal = jacTransport * jacToGlobal;
       // Transport the covariance
-      ActsRowVectorD<3>       norm_vec(dir);
+      ActsRowVectorD<3>       normVec(dir);
       const ActsRowVectorD<5> sfactors
-          = norm_vec * jac_to_global.topLeftCorner<3, 5>();
+          = normVec * jacToGlobal.topLeftCorner<3, 5>();
       // The full jacobian is ([to local] jacobian) * ([transport] jacobian)
-      const ActsMatrixD<5, 5> jac_full
-          = jac_to_curv * (jac_to_global - derivative * sfactors);
+      const ActsMatrixD<5, 5> jacFull
+          = jacToCurv * (jacToGlobal - derivative * sfactors);
       // Apply the actual covariance transport
-      cov = (jac_full * cov * jac_full.transpose());
+      cov = (jacFull * cov * jacFull.transpose());
       // Reinitialize if asked to do so
       // this is useful for interruption calls
       if (reinitialize) {
         // reset the jacobians
-        jac_to_global = ActsMatrixD<7, 5>::Zero();
-        jac_transport = ActsMatrixD<7, 7>::Identity();
+        jacToGlobal  = ActsMatrixD<7, 5>::Zero();
+        jacTransport = ActsMatrixD<7, 7>::Identity();
         // fill the jacobian to global for next transport
-        jac_to_global(0, eLOC_0) = -sin_phi;
-        jac_to_global(0, eLOC_1) = -cos_phi * cos_theta;
-        jac_to_global(1, eLOC_0) = cos_phi;
-        jac_to_global(1, eLOC_1) = -sin_phi * cos_theta;
-        jac_to_global(2, eLOC_1) = sin_theta;
-        jac_to_global(3, ePHI)   = -sin_theta * sin_phi;
-        jac_to_global(3, eTHETA) = cos_theta * cos_phi;
-        jac_to_global(4, ePHI)   = sin_theta * cos_phi;
-        jac_to_global(4, eTHETA) = cos_theta * sin_phi;
-        jac_to_global(5, eTHETA) = -sin_theta;
-        jac_to_global(6, eQOP)   = 1;
+        jacToGlobal(0, eLOC_0) = -sinPhi;
+        jacToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
+        jacToGlobal(1, eLOC_0) = cosPhi;
+        jacToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
+        jacToGlobal(2, eLOC_1) = sinTheta;
+        jacToGlobal(3, ePHI)   = -sinTheta * sinPhi;
+        jacToGlobal(3, eTHETA) = cosTheta * cosPhi;
+        jacToGlobal(4, ePHI)   = sinTheta * cosPhi;
+        jacToGlobal(4, eTHETA) = cosTheta * sinPhi;
+        jacToGlobal(5, eTHETA) = -sinTheta;
+        jacToGlobal(6, eQOP)   = 1;
       }
       // return the full transport jacobian
-      return jac_full;
+      return jacFull;
     }
 
     /// Method for on-demand transport of the covariance
     /// to a new curvilinear frame at current  position,
-    /// or direction of the cache
+    /// or direction of the state
     ///
     /// @tparam S the Surfac type
     ///
     /// @param surface is the surface to which the covariance is
     ///        forwarded to
     /// @param reinitialize is a flag to steer whether the
-    ///        cache should be reinitialized at the new
+    ///        state should be reinitialized at the new
     ///        position
     /// @note no check is done if the position is actually on the surface
     ///
     /// @return the full transport jacobian
     template <typename S>
     const ActsMatrixD<5, 5>
-    apply_cov_transport(const S& surface, bool reinitialize = false)
+    covarianceTransport(const S& surface, bool reinitialize = false)
     {
       // Initialize the transport final frame jacobian
-      ActsMatrixD<5, 7> jac_to_local = ActsMatrixD<5, 7>::Zero();
+      ActsMatrixD<5, 7> jacToLocal = ActsMatrixD<5, 7>::Zero();
       // initalize the jacobian to local, returns the transposed ref frame
-      auto rframeT = surface.initJacobianToLocal(jac_to_local, pos, dir);
+      auto rframeT = surface.initJacobianToLocal(jacToLocal, pos, dir);
       // Update the jacobian with the transport from the steps
-      jac_to_global = jac_transport * jac_to_global;
+      jacToGlobal = jacTransport * jacToGlobal;
       // calculate the form factors for the derivatives
-      const ActsRowVectorD<5> s_vec
-          = surface.derivativeFactors(pos, dir, rframeT, jac_to_global);
+      const ActsRowVectorD<5> sVec
+          = surface.derivativeFactors(pos, dir, rframeT, jacToGlobal);
       // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
-      const ActsMatrixD<5, 5> jac_full
-          = jac_to_local * (jac_to_global - derivative * s_vec);
+      const ActsMatrixD<5, 5> jacFull
+          = jacToLocal * (jacToGlobal - derivative * sVec);
       // Apply the actual covariance transport
-      cov = (jac_full * cov * jac_full.transpose());
+      cov = (jacFull * cov * jacFull.transpose());
       // Reinitialize if asked to do so
       // this is useful for interruption calls
       if (reinitialize) {
         // reset the jacobians
-        jac_to_global = ActsMatrixD<7, 5>::Zero();
-        jac_transport = ActsMatrixD<7, 7>::Identity();
+        jacToGlobal  = ActsMatrixD<7, 5>::Zero();
+        jacTransport = ActsMatrixD<7, 7>::Identity();
         // reset the derivative
         derivative = ActsVectorD<7>::Zero();
         // fill the jacobian to global for next transport
         Vector2D loc{0., 0.};
         surface.globalToLocal(pos, dir, loc);
         ActsVectorD<5> pars;
-        pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), qop;
-        surface.initJacobianToGlobal(jac_to_global, pos, dir, pars);
+        pars << loc[eLOC_0], loc[eLOC_1], dir.phi(), dir.theta(), q / p;
+        surface.initJacobianToGlobal(jacToGlobal, pos, dir, pars);
       }
+      // store in the global jacobian
+      jacobian = jacFull * jacobian;
       // return the full transport jacobian
-      return jac_full;
+      return jacFull;
     }
 
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
+    /// Global start particle position
+    Vector3D startPos = Vector3D(0, 0, 0);
 
     /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
+    /// Momentum start direction (normalized)
+    Vector3D startDir = Vector3D(1, 0, 0);
 
-    /// Charge-momentum ratio, in natural units
-    double qop = 1;
+    /// Momentum
+    double p = 0.;
+
+    /// The charge
+    double q = 1.;
+
+    /// Navigation direction, this is needed for searching
+    NavigationDirection navDir;
+
+    /// The full jacobian of the transport
+    ActsMatrixD<5, 5> jacobian = ActsMatrixD<5, 5>::Identity();
 
     /// Jacobian from local to the global frame
-    ActsMatrixD<7, 5> jac_to_global = ActsMatrixD<7, 5>::Zero();
+    ActsMatrixD<7, 5> jacToGlobal = ActsMatrixD<7, 5>::Zero();
 
     /// Pure transport jacobian part from runge kutta integration
-    ActsMatrixD<7, 7> jac_transport = ActsMatrixD<7, 7>::Identity();
+    ActsMatrixD<7, 7> jacTransport = ActsMatrixD<7, 7>::Identity();
 
     /// The propagation derivative
     ActsVectorD<7> derivative = ActsVectorD<7>::Zero();
 
     /// Covariance matrix (and indicator)
-    //// assocated with the initial error on track parameters
-    bool              cov_transport = false;
-    ActsSymMatrixD<5> cov           = ActsSymMatrixD<5>::Zero();
+    //// associated with the initial error on track parameters
+    bool              covTransport = false;
+    ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
 
-    /// Lazily initialized cache
-    /// It caches the current magnetic field cell and stays interpolates within
-    /// as long as this is valid. See step() code for details.
-    bool                    field_cache_ready = false;
-    concept::AnyFieldCell<> field_cache;
+    /// Lazily initialized state of the field Cache
+    bool fieldCacheReady = false;
 
-    // accummulated path length cache
-    double accumulated_path = 0.;
+    /// This caches the current magnetic field cell and stays
+    /// (and interpolates) within it as long as this is valid.
+    /// See step() code for details.
+    concept::AnyFieldCell<> fieldCache;
 
-    // adaptive step size of the runge-kutta integration
-    double step_size = std::numeric_limits<double>::max();
+    /// accummulated path length state
+    double pathAccumulated = 0.;
 
-    // maximal step size of the runge-kutta integration
-    double max_step_size = std::numeric_limits<double>::max();
+    /// adaptive step size of the runge-kutta integration
+    cstep stepSize = std::numeric_limits<double>::max();
   };
 
-  /// Always use the same propagation cache type, independently of the initial
+  /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
   template <typename T, typename S = int>
-  using cache_type = Cache;
+  using state_type = State;
 
   /// Intermediate track parameters are always in curvilinear parametrization
   template <typename T>
@@ -290,113 +353,109 @@ public:
   /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
-  /// Convert the propagation cache (global) to curvilinear parameters
-  /// @param cache The stepper cache
-  /// @param reinitialize is a flag to (optionally) reinitialse the cache
+  /// Convert the propagation state (global) to curvilinear parameters
+  /// @param state The stepper state
+  /// @param reinitialize is a flag to (optionally) reinitialse the state
   /// @return curvilinear parameters
   static CurvilinearParameters
-  convert(Cache& cache, bool reinitialize = false)
+  convert(State& state, bool reinitialize = false)
   {
-    double                                   charge = cache.qop > 0. ? 1. : -1.;
-    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     // only do the covariance transport if needed
-    if (cache.cov_transport) {
+    if (state.covTransport) {
       // transport the covariance forward
-      cache.apply_cov_transport(reinitialize);
-      cov_ptr = std::make_unique<const ActsMatrixD<5, 5>>(cache.cov);
+      state.covarianceTransport(reinitialize);
+      covPtr = std::make_unique<const ActsMatrixD<5, 5>>(state.cov);
     }
     // return the parameters
     return CurvilinearParameters(
-        std::move(cov_ptr), cache.pos, cache.dir / std::abs(cache.qop), charge);
+        std::move(covPtr), state.pos, state.p * state.dir, state.q);
   }
 
-  /// Convert the propagation cache to track parameters at a certain surface
+  /// Convert the propagation state to track parameters at a certain surface
   ///
   /// @tparam S The surface type
   ///
-  /// @param [in] cache Propagation cache used
+  /// @param [in] state Propagation state used
   /// @param [in] surface Destination surface to which the conversion is done
   template <typename S>
   static BoundParameters
-  convert(Cache& cache, const S& surface, bool reinitialize = false)
+  convert(State& state, const S& surface, bool reinitialize = false)
   {
-    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     // Perform error propagation if an initial covariance matrix was provided
-    if (cache.cov_transport) {
+    if (state.covTransport) {
       // transport the covariance forward
-      cache.apply_cov_transport(surface, reinitialize);
-      cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cache.cov);
+      state.covarianceTransport(surface, reinitialize);
+      covPtr = std::make_unique<const ActsSymMatrixD<5>>(state.cov);
     }
-    double charge = cache.qop > 0. ? 1. : -1.;
     // return the bound parameters
-    return BoundParameters(std::move(cov_ptr),
-                           cache.pos,
-                           cache.dir / std::abs(cache.qop),
-                           charge,
-                           surface);
+    return BoundParameters(
+        std::move(covPtr), state.pos, state.p * state.dir, state.q, surface);
   }
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
   ///
-  /// @param [in,out] cache is the propagation cache associated with the track
+  /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
   Vector3D
-  getField(Cache& cache, const Vector3D& pos) const
+  getField(State& state, const Vector3D& pos) const
   {
-    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)) {
-      cache.field_cache_ready = true;
-      cache.field_cache       = m_bField.getFieldCell(pos);
+    if (!state.fieldCacheReady || !state.fieldCache.isInside(pos)) {
+      state.fieldCacheReady = true;
+      state.fieldCache      = m_bField.getFieldCell(pos);
     }
     // get the field from the cell
-    return std::move(cache.field_cache.getField(pos));
+    return std::move(state.fieldCache.getField(pos));
   }
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param[in,out] cache is the propagation cache associated with the track
+  /// @param[in,out] state is the propagation state associated with the track
   ///                      parameters that are being propagated.
   ///
-  ///                      the cache contains the desired step size.
-  ///                      It can be negative during ackwards track propagation,
+  ///                      the state contains the desired step size.
+  ///                      It can be negative during backwards track
+  ///                      propagation,
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
   double
-  step(Cache& cache) const
+  step(State& state) const
   {
     // Charge-momentum ratio, in SI units
-    const double qop = 1. / units::Nat2SI<units::MOMENTUM>(1. / cache.qop);
+    const double qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
 
     // Runge-Kutta integrator state
     double   h2, half_h;
     Vector3D B_middle, B_last, k2, k3, k4;
 
     // First Runge-Kutta point (at current position)
-    const Vector3D B_first = getField(cache, cache.pos);
-    const Vector3D k1      = qop * cache.dir.cross(B_first);
+    const Vector3D B_first = getField(state, state.pos);
+    const Vector3D k1      = qop * state.dir.cross(B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
-    // integration error. The results are cached in the local variables above,
+    // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
     const auto tryRungeKuttaStep = [&](const double h) -> double {
-      // Cache the square and half of the step size
+      // State the square and half of the step size
       h2     = h * h;
       half_h = h / 2;
 
       // Second Runge-Kutta point
-      const Vector3D pos1 = cache.pos + half_h * cache.dir + h2 / 8 * k1;
-      B_middle            = getField(cache, pos1);
-      k2                  = qop * (cache.dir + half_h * k1).cross(B_middle);
+      const Vector3D pos1 = state.pos + half_h * state.dir + h2 / 8 * k1;
+      B_middle            = getField(state, pos1);
+      k2                  = qop * (state.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
-      k3 = qop * (cache.dir + half_h * k2).cross(B_middle);
+      k3 = qop * (state.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
-      const Vector3D pos2 = cache.pos + h * cache.dir + h2 / 2 * k3;
-      B_last              = getField(cache, pos2);
-      k4                  = qop * (cache.dir + h * k3).cross(B_last);
+      const Vector3D pos2 = state.pos + h * state.dir + h2 / 2 * k3;
+      B_last              = getField(state, pos2);
+      k4                  = qop * (state.dir + h * k3).cross(B_last);
 
       // Return an estimate of the local integration error
       return h * (k1 - k2 - k3 + k4).template lpNorm<1>();
@@ -404,17 +463,17 @@ public:
 
     // Select and adjust the appropriate Runge-Kutta step size
     // @todo remove magic numbers and implement better step estimation
-    double error_estimate = tryRungeKuttaStep(cache.step_size);
+    double error_estimate = tryRungeKuttaStep(state.stepSize);
     while (error_estimate > 0.0002) {
-      cache.step_size *= 0.5;
-      error_estimate = tryRungeKuttaStep(cache.step_size);
+      state.stepSize = 0.5 * state.stepSize;
+      error_estimate = tryRungeKuttaStep(state.stepSize);
     }
 
     // use the adjusted step size
-    const double h = cache.step_size;
+    const double h = state.stepSize;
 
     // When doing error propagation, update the associated Jacobian matrix
-    if (cache.cov_transport) {
+    if (state.covTransport) {
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
       const double conv = units::SI2Nat<units::MOMENTUM>(1);
@@ -437,13 +496,13 @@ public:
       ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
-      dk1dL = cache.dir.cross(B_first);
-      dk2dL = (cache.dir + half_h * k1).cross(B_middle)
+      dk1dL = state.dir.cross(B_first);
+      dk2dL = (state.dir + half_h * k1).cross(B_middle)
           + qop * half_h * dk1dL.cross(B_middle);
-      dk3dL = (cache.dir + half_h * k2).cross(B_middle)
+      dk3dL = (state.dir + half_h * k2).cross(B_middle)
           + qop * half_h * dk2dL.cross(B_middle);
       dk4dL
-          = (cache.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
+          = (state.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
 
       dk1dT(0, 1) = B_first.z();
       dk1dT(0, 2) = -B_first.y();
@@ -473,18 +532,17 @@ public:
       dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
       // for moment, only update the transport part
-      cache.jac_transport = D * cache.jac_transport;
+      state.jacTransport = D * state.jacTransport;
     }
 
     // Update the track parameters according to the equations of motion
-    cache.pos += h * cache.dir + h2 / 6 * (k1 + k2 + k3);
-    cache.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
-    cache.dir /= cache.dir.norm();
-    cache.derivative.template head<3>()     = cache.dir;
-    cache.derivative.template segment<3>(3) = k4;
+    state.pos += h * state.dir + h2 / 6 * (k1 + k2 + k3);
+    state.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
+    state.dir /= state.dir.norm();
+    state.derivative.template head<3>()     = state.dir;
+    state.derivative.template segment<3>(3) = k4;
 
-    // Return the updated step size
-    cache.accumulated_path += h;
+    state.pathAccumulated += h;
     return h;
   }
 

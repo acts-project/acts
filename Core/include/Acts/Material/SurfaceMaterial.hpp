@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -81,7 +81,7 @@ public:
 
   /// Update pre factor
   double
-  factor(PropDirection pDir, MaterialUpdateStage mStage) const;
+  factor(NavigationDirection pDir, MaterialUpdateStage mStage) const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream&
@@ -93,7 +93,8 @@ protected:
 
 /// inline return methods for the pre/post factors
 inline double
-SurfaceMaterial::factor(PropDirection pDir, MaterialUpdateStage mStage) const
+SurfaceMaterial::factor(NavigationDirection pDir,
+                        MaterialUpdateStage mStage) const
 {
   if (mStage == Acts::fullUpdate) return 1.;
   return (pDir * mStage > 0 ? m_splitFactor : 1. - m_splitFactor);
@@ -105,4 +106,4 @@ operator<<(std::ostream& sl, const SurfaceMaterial& sm);
 
 typedef std::pair<GeometryID, SurfaceMaterial*> IndexedSurfaceMaterial;
 
-}  // end of namespace
+}  // namespace

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -26,7 +26,7 @@ namespace Acts {
 /// Class to describe the bounds for a planar EllipseSurface,
 /// i.e. the surface between two ellipses.
 /// By providing an argument for hphisec, the bounds can
-/// be restricted to a phirange around the center position.
+/// be restricted to a phi-range around the center position.
 ///
 /// @image html EllipseBounds.png
 ///
@@ -177,4 +177,4 @@ EllipseBounds::halfPhiSector() const
   return m_halfPhi;
 }
 
-}  // end of namespace
+}  // namespace

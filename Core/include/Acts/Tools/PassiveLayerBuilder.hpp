@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,17 +11,18 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
-///  @class PassiveLayerBuilder
+/// @class PassiveLayerBuilder
 ///
-///   The PassiveLayerBuilder is able to build cylinder & disc layers with given
-///  detector
-///
+/// The PassiveLayerBuilder is able to build cylinder & disc layers with given
+/// dimensions and material. The specifications of the the layers have to be
+/// given by the configuration struct.
 
 class MaterialProperties;
 
@@ -146,4 +147,4 @@ PassiveLayerBuilder::centralLayers() const
   return m_cLayers;
 }
 
-}  // end of namespace
+}  // namespace

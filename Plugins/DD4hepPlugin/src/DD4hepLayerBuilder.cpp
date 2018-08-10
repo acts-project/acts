@@ -70,7 +70,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       // access the axis orienation of the modules
       std::string axes = detExtension->axes();
       // collect the sensitive detector elements possibly contained by the layer
-      collectSensitive(detElement, layerSurfaces, axes);
+      resolveSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
       auto transform
           = convertTransform(&(detElement.nominal().worldTransformation()));
@@ -289,7 +289,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       // access the axis orienation of the modules
       std::string axes = detExtension->axes();
       // collect the sensitive detector elements possibly contained by the layer
-      collectSensitive(detElement, layerSurfaces, axes);
+      resolveSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
       auto transform
           = convertTransform(&(detElement.nominal().worldTransformation()));
@@ -494,7 +494,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
       // access the axis orienation of the modules
       std::string axes = detExtension->axes();
       // collect the sensitive detector elements possibly contained by the layer
-      collectSensitive(detElement, layerSurfaces, axes);
+      resolveSensitive(detElement, layerSurfaces, axes);
       // access the global transformation matrix of the layer
       auto transform
           = convertTransform(&(detElement.nominal().worldTransformation()));
@@ -691,7 +691,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
 }
 
 void
-Acts::DD4hepLayerBuilder::collectSensitive(
+Acts::DD4hepLayerBuilder::resolveSensitive(
     const dd4hep::DetElement&          detElement,
     std::vector<const Acts::Surface*>& surfaces,
     const std::string&                 axes) const
@@ -705,7 +705,7 @@ Acts::DD4hepLayerBuilder::collectSensitive(
         surfaces.push_back(
             createSensitiveSurface(childDetElement, false, axes));
       }
-      collectSensitive(childDetElement, surfaces, axes);
+      resolveSensitive(childDetElement, surfaces, axes);
     }
   }
 }

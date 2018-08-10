@@ -18,7 +18,7 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include "Acts/Propagator/detail/Extendable.hpp"
+#include "Acts/Utilities/detail/Extendable.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -41,6 +41,7 @@ namespace Test {
     };
 
     detail::Extendable<> nullist;
+    (void)nullist;
     BOOST_TEST(std::tuple_size<std::tuple<>>::value == 0);
 
     detail::Extendable<type_a> alist;

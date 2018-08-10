@@ -68,7 +68,7 @@ namespace Test {
       BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
       // approachSurface
       SurfaceIntersection surfIntersection
-          = approachDescriptor.approachSurface(origin, zDir, bcheck);
+          = approachDescriptor.approachSurface(origin, zDir, forward, bcheck);
       double expectedIntersection = 20.0;  // property of SurfaceStub
       BOOST_CHECK(surfIntersection.intersection.pathLength
                   == expectedIntersection);
@@ -77,7 +77,7 @@ namespace Test {
     }
 
     BOOST_AUTO_TEST_SUITE_END()
-  }  // end of namespace Layers
-}  // end of namespace Test
+  }  // namespace Layers
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

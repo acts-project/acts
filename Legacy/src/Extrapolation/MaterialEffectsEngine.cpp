@@ -56,7 +56,7 @@ Acts::ExtrapolationCode
 Acts::MaterialEffectsEngine::handleMaterial(
     ExCellNeutral& eCell,
     const Surface* surface,
-    PropDirection /*dir*/,
+    NavigationDirection /*dir*/,
     MaterialUpdateStage /*matupstage*/) const
 {
   // parameters are the lead parameters
@@ -113,7 +113,7 @@ Acts::ExtrapolationCode
 Acts::MaterialEffectsEngine::handleMaterial(
     ExCellCharged&      eCell,
     const Surface*      surface,
-    PropDirection       dir,
+    NavigationDirection dir,
     MaterialUpdateStage matupstage) const
 {
 
@@ -144,9 +144,9 @@ Acts::MaterialEffectsEngine::handleMaterial(
 // update method for charged extrapolation
 void
 Acts::MaterialEffectsEngine::updateTrackParameters(
-    ExCellCharged& eCell,
-    const Surface& mSurface,
-    PropDirection  dir,
+    ExCellCharged&      eCell,
+    const Surface&      mSurface,
+    NavigationDirection dir,
     MaterialUpdateStage /*matupstage*/,
     const std::string& surfaceType,
     size_t             surfaceID) const
@@ -193,17 +193,17 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double          thicknessInX0 = materialProperties->thicknessInX0();
     double          thickness     = materialProperties->thickness();
     // calculate energy loss and multiple scattering
-    double p    = mParameters.momentum().mag();
-    double m    = m_particleMasses.mass.at(eCell.particleType);
-    double E    = sqrt(p * p + m * m);
-    double beta = p / E;
+    const double p    = mParameters.momentum().mag();
+    const double m    = m_particleMasses.mass.at(eCell.particleType);
+    const double E    = sqrt(p * p + m * m);
+    const double beta = p / E;
     //
     double pScalor = 1.;
     // (A) - energy loss correction
     if (m_cfg.eLossCorrection) {
       // dE/dl ionization energy loss per path unit
-      auto eLoss = Acts::ionizationEnergyLoss_mean(
-          p, material, eCell.particleType, m_particleMasses);
+      auto eLoss
+          = Acts::ionizationEnergyLossMean(p, material, eCell.particleType);
       double dEdl   = sign * dir * eLoss.first;
       double sigmaP = eLoss.second;
       double dE     = thickness * pathCorrection * dEdl;

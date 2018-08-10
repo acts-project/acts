@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,7 +45,7 @@ Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
   for (auto& sSurface : stepSurfaces) {
     // try it out by intersecting, but do not force the direction
     Acts::Intersection sIntersection = sSurface->intersectionEstimate(
-        startPoint, trackDirection, true, true);
+        startPoint, trackDirection, forward, true);
     if (sIntersection.valid) {
       // now record
       stepIntersections.push_back(sIntersection);
@@ -95,7 +95,7 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
     ++attempts;
     // try it out by intersecting, but do not force the direction
     Acts::Intersection bIntersection = bSurface->intersectionEstimate(
-        intersection3D, trackDirection, false, true);
+        intersection3D, trackDirection, forward, true);
     if (bIntersection.valid) {
       // now record
       boundaryIntersections.push_back(bIntersection);

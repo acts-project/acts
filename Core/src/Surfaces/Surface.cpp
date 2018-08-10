@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,7 +39,7 @@ Acts::Surface::Surface(const DetectorElementBase& detelement,
 }
 
 Acts::Surface::Surface(const Surface& other)
-  : GeometryObject()
+  : GeometryObject(other)
   , m_transform(other.m_transform)
   , m_associatedDetElement(nullptr)
   , m_associatedDetElementId()
@@ -94,6 +94,19 @@ Acts::Surface::operator==(const Surface& other) const
   if (!other.transform().isApprox(transform(), 10e-9)) return false;
   // we should be good
   return true;
+}
+
+const Acts::Vector3D
+Acts::Surface::normal(const Vector3D&) const
+{
+  return normal(s_origin2D);
+}
+
+bool
+Acts::Surface::isFree() const
+{
+  return (!m_associatedDetElement && !m_associatedTrackingVolume
+          && !m_associatedLayer);
 }
 
 bool
@@ -160,20 +173,6 @@ Acts::Surface::transform() const
     return m_associatedDetElement->transform(m_associatedDetElementId);
   if (m_associatedDetElement) return m_associatedDetElement->transform();
   return s_idTransform;
-}
-
-const Acts::Vector3D
-Acts::Surface::center() const
-{
-  // fast access via tranform matrix (and not translation())
-  auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
-}
-
-const Acts::Vector3D
-Acts::Surface::normal(const Acts::Vector3D&) const
-{
-  return normal(s_origin2D);
 }
 
 bool

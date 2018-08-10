@@ -36,6 +36,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   , m_identifier(identifier)
   , m_thickness(0.)
 {
+
   // create temporary local non const surface (to allow setting the material)
   std::shared_ptr<Surface> surface = nullptr;
   // get the placement and orientation in respect to its mother
@@ -66,6 +67,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   // check if it's a box - always true ...
   TGeoBBox* box
       = dynamic_cast<TGeoBBox*>(m_detElement->GetVolume()->GetShape());
+
   // check if it's a trapezoid - unfortunately box is the base of everything
   TGeoTrd2* trapezoid
       = dynamic_cast<TGeoTrd2*>(m_detElement->GetVolume()->GetShape());

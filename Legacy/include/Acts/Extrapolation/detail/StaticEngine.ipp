@@ -24,7 +24,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                                  const Acts::Surface*        sf,
-                                 Acts::PropDirection         pDir,
+                                 Acts::NavigationDirection   pDir,
                                  const Acts::BoundaryCheck&  bcheck) const
 {
   Acts::ExtrapolationCode eCode = Acts::ExtrapolationCode::InProgress;
@@ -96,11 +96,11 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
   // - the content of layers is given by the configuration mode
   // -- the surface on approach is already resolved
   // shortcuts for the collection bools
-  bool collectSensitive
+  bool resolveSensitive
       = eCell.configurationMode(ExtrapolationMode::CollectSensitive);
-  bool collectMaterial
+  bool resolveMaterial
       = eCell.configurationMode(ExtrapolationMode::CollectMaterial);
-  bool collectPassive
+  bool resolvePassive
       = eCell.configurationMode(ExtrapolationMode::CollectPassive);
 
   // check for the final volume
@@ -114,9 +114,9 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                                                  *eCell.leadParameters,
                                                  pDir,
                                                  true,
-                                                 collectSensitive,
-                                                 collectMaterial,
-                                                 collectPassive);
+                                                 resolveSensitive,
+                                                 resolveMaterial,
+                                                 resolvePassive);
   // some screen output
   EX_MSG_VERBOSE(eCell.navigationStep,
                  "layer",
@@ -180,7 +180,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::initNavigationT(Acts::ExtrapolationCell<T>& eCell,
                                     const Acts::Surface*        sf,
-                                    Acts::PropDirection         pDir,
+                                    Acts::NavigationDirection   pDir,
                                     const Acts::BoundaryCheck&  bcheck) const
 {
   // initialize the Navigation stream
@@ -228,10 +228,11 @@ Acts::StaticEngine::initNavigationT(Acts::ExtrapolationCell<T>& eCell,
       return ExtrapolationCode::InProgress;
     } else {
       // make a straight line intersection
-      Acts::Intersection sfI = sf->intersectionEstimate(
-          eCell.leadParameters->position(),
-          pDir * eCell.leadParameters->momentum().unit(),
-          true);
+      Acts::Intersection sfI
+          = sf->intersectionEstimate(eCell.leadParameters->position(),
+                                     eCell.leadParameters->momentum(),
+                                     pDir,
+                                     true);
       // use this to find endVolume and endLayer
       eCell.endLayer = eCell.leadVolume->associatedLayer(sfI.position);
       // if you have a surface you need to require an end layer for the
@@ -250,7 +251,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
                                  const Surface*        sf,
-                                 PropDirection         pDir,
+                                 NavigationDirection   pDir,
                                  const BoundaryCheck&  bcheck) const
 {
 
@@ -272,11 +273,11 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
   bool isFinalLayer = (eCell.leadLayer == eCell.endLayer);
 
   // shortcuts for the collection bools
-  bool collectSensitive
+  bool resolveSensitive
       = eCell.configurationMode(ExtrapolationMode::CollectSensitive);
-  bool collectMaterial
+  bool resolveMaterial
       = eCell.configurationMode(ExtrapolationMode::CollectMaterial);
-  bool collectPassive
+  bool resolvePassive
       = eCell.configurationMode(ExtrapolationMode::CollectPassive);
 
   // ----- [0] the start situation on the layer needs to be resolved
@@ -365,9 +366,9 @@ Acts::StaticEngine::handleLayerT(ExtrapolationCell<T>& eCell,
       = eCell.leadLayer->compatibleSurfaces(*eCell.leadParameters,
                                             pDir,
                                             bcheck,
-                                            collectSensitive,
-                                            collectMaterial,
-                                            collectPassive,
+                                            resolveSensitive,
+                                            resolveMaterial,
+                                            resolvePassive,
                                             eCell.searchMode,
                                             eCell.leadLayerSurface,
                                             (isFinalLayer ? sf : nullptr));
@@ -502,7 +503,7 @@ Acts::ExtrapolationCode
 Acts::StaticEngine::handleReturnT(ExtrapolationCode     eCode,
                                   ExtrapolationCell<T>& eCell,
                                   const Surface*        sf,
-                                  PropDirection         pDir,
+                                  NavigationDirection   pDir,
                                   const BoundaryCheck&  bcheck) const
 {
   EX_MSG_DEBUG(++eCell.navigationStep,

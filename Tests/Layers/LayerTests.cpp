@@ -94,7 +94,7 @@ namespace Test {
       auto           surfaceOnApproach
           = layerStub.surfaceOnApproach(gpos,
                                         direction,
-                                        PropDirection::alongMomentum,
+                                        NavigationDirection::forward,
                                         true,
                                         false,
                                         false,
@@ -109,7 +109,7 @@ namespace Test {
       // signature in the doxygen documentation!
       auto compatibleSurfaces
           = layerStub.compatibleSurfaces(par,
-                                         PropDirection::alongMomentum,
+                                         NavigationDirection::forward,
                                          true,
                                          false,
                                          false,
@@ -120,8 +120,8 @@ namespace Test {
       BOOST_TEST(compatibleSurfaces.size() == 0u);
       /// nextLayer()
       BOOST_TEST(!(layerStub.nextLayer(gpos, direction)));
-      /// enclosingTrackingVolume()
-      BOOST_TEST(!layerStub.enclosingTrackingVolume());
+      /// trackingVolume()
+      BOOST_TEST(!layerStub.trackingVolume());
       /// enclosingDetachedTrackingVolume()
       BOOST_TEST(!layerStub.enclosingDetachedTrackingVolume());
       /// registerRepresentingVolume(const AbstractVolume* avol)
@@ -142,7 +142,7 @@ namespace Test {
     }
 
     BOOST_AUTO_TEST_SUITE_END()
-  }  // end of namespace Layers
-}  // end of namespace Test
+  }  // namespace Layers
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -21,7 +21,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::ExtrapolationEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
                                         const Acts::Surface*        sf,
-                                        Acts::PropDirection         dir,
+                                        Acts::NavigationDirection   dir,
                                         const Acts::BoundaryCheck& bcheck) const
 {
   EX_MSG_DEBUG(eCell.navigationStep,
@@ -77,7 +77,7 @@ template <class T>
 Acts::ExtrapolationCode
 Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
                                           const Acts::Surface*        sf,
-                                          Acts::PropDirection         dir) const
+                                          Acts::NavigationDirection   dir) const
 {
   // initialize the Navigation stream
   // ----------------------------------------------------------------------------------------
@@ -108,8 +108,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
       : eCell.leadParameters->referenceSurface().associatedLayer();
   eCell.startVolume = eCell.startVolume
       ? eCell.startVolume
-      : (eCell.startLayer ? eCell.startLayer->enclosingTrackingVolume()
-                          : nullptr);
+      : (eCell.startLayer ? eCell.startLayer->trackingVolume() : nullptr);
   // check if you are at the volume boundary
   if (!eCell.startVolume) {
     // get the start volume
@@ -153,7 +152,7 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
     // trying association via the layer : associated layer of material layer
     eCell.endLayer = sf->associatedLayer();
     eCell.endVolume
-        = eCell.endLayer ? eCell.endLayer->enclosingTrackingVolume() : nullptr;
+        = eCell.endLayer ? eCell.endLayer->trackingVolume() : nullptr;
     // check if you found layer and volume
     if (!eCell.endVolume) {
       EX_MSG_VERBOSE(

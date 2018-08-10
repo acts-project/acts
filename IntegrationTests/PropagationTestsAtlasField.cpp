@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 Acts project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,8 +37,6 @@ namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
 
 namespace Acts {
-
-using namespace propagation;
 
 /// Get the ATLAS field from :
 /// http://acts.web.cern.ch/ACTS/data/AtlasField/AtlasField.tar.gz
@@ -133,7 +131,7 @@ namespace IntegrationTest {
   typedef Propagator<EigenStepper_type>       EigenPropagator_type;
   typedef Propagator<AtlasStepper_type>       AtlasPropagator_type;
   typedef RungeKuttaEngine<BField_type>       PropagationEngine_type;
-  typedef Wrapper<std::shared_ptr<PropagationEngine_type>>
+  typedef PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>
       WrappedPropagator_type;
 
   auto bField        = atlasBField("Field.txt");

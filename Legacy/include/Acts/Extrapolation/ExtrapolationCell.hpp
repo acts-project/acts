@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,13 +11,14 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "Acts/EventData/ParticleDefinitions.hpp"
-#include "Acts/EventData/TransportJacobian.hpp"
+
 #include "Acts/Extrapolation/MaterialUpdateMode.hpp"
+#include "Acts/Extrapolation/TransportJacobian.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
+#include "Acts/Utilities/ParticleDefinitions.hpp"
 
 #ifndef ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO
 #define ACTS_EXTRAPOLATIONUTILSS_CHECKPATHMACRO 1
@@ -336,7 +337,7 @@ public:
   /// these are the one-but-last lead parameters (fallback)
   const T* lastLeadParameters;
   /// this is the propagation direction w.r.t the parameters
-  PropDirection propDirection;
+  NavigationDirection navigationDirection;
   /// for checking if navigation is radially towards the
   /// IP, this has consequences for entering cylinders
   int radialDirection;
@@ -390,14 +391,22 @@ public:
 
   float time;  ///< timing info
 
+  /// Debug output
+  /// the string where debug messages are stored (optionally)
+  bool        debug       = false;
+  std::string debugString = "";
+  /// buffer & formatting for consistent output
+  size_t debugPfxWidth = 30;
+  size_t debugMsgWidth = 50;
+
   /// Constructor of the Extrapolaton cell
   ///
   /// @param sParameters are the templated parameters
   /// @param pDir is the propagatio direction
   /// @param econfig is the extrapolation config as value
-  ExtrapolationCell(const T&      sParameters,
-                    PropDirection pDir    = alongMomentum,
-                    unsigned int  econfig = 1)
+  ExtrapolationCell(const T&            sParameters,
+                    NavigationDirection pDir    = forward,
+                    unsigned int        econfig = 1)
     : startParameters(std::unique_ptr<const T>(sParameters.clone()))
     , startVolume(nullptr)
     , startLayer(nullptr)
@@ -412,7 +421,7 @@ public:
     , lastBoundaryParameters(nullptr)
     , lastBoundarySurface(nullptr)
     , lastLeadParameters(&sParameters)
-    , propDirection(pDir)
+    , navigationDirection(pDir)
     , radialDirection(1)
     , nextGeometrySignature(Acts::Unsigned)
     , navigationStep(0)
@@ -576,7 +585,7 @@ public:
       // else the leadParamenters are used
       if (leadParameters->position().perp()
           > (leadParameters->position()
-             + propDirection * leadParameters->momentum().unit())
+             + navigationDirection * leadParameters->momentum().unit())
                 .perp())
         radialDirection = -1;
     }
@@ -592,13 +601,13 @@ public:
     // this was radially inwards moving and stays like this
     if (leadParameters->position().perp()
         > (leadParameters->position()
-           + propDirection * leadParameters->momentum().unit())
+           + navigationDirection * leadParameters->momentum().unit())
               .perp())
       return true;
     // radial direction changed
     return false;
   }
 };
-}  // end of namespace
+}  // namespace
 
 #include "Acts/Extrapolation/detail/ExtrapolationCell.ipp"

@@ -7,10 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <cmath>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
@@ -21,18 +26,21 @@ class AtlasStepper
 {
 
 public:
-  struct Cache
+  typedef detail::ConstrainedStep cstep;
+
+  struct State
   {
+
     // optimisation that init is not called twice
-    bool cache_ready = false;
+    bool state_ready = false;
     // configuration
-    double dir;
-    bool   useJacobian;
-    double step;
-    double maxPathLength;
-    bool   mcondition;
-    bool   needgradient;
-    bool   newfield;
+    NavigationDirection navDir;
+    bool                useJacobian;
+    double              step;
+    double              maxPathLength;
+    bool                mcondition;
+    bool                needgradient;
+    bool                newfield;
     // internal parameters to be used
     Vector3D field;
     double   pVector[64];
@@ -42,19 +50,24 @@ public:
     double                             jacobian[NGlobalPars * NGlobalPars];
 
     /// Lazily initialized cache for the magnetic field
-    /// It caches the current magnetic field cell and stays interpolates within
-    /// as long as this is valid. See step() code for details.
-    bool                    field_cache_ready = false;
-    concept::AnyFieldCell<> field_cache;
+    /// It caches the current magnetic field cell and stays (and interpolates)
+    ///  within as long as this is valid. See step() code for details.
+    bool                    fieldCacheReady = false;
+    concept::AnyFieldCell<> fieldCache;
 
     // accummulated path length cache
-    double accumulated_path = 0.;
+    double pathAccumulated = 0.;
 
     // adaptive step size of the runge-kutta integration
-    double step_size = std::numeric_limits<double>::max();
+    cstep stepSize = std::numeric_limits<double>::max();
 
-    // maximal step size of the runge-kutta integration
-    double max_step_size = std::numeric_limits<double>::max();
+    /// Debug output
+    /// the string where debug messages are stored (optionally)
+    bool        debug       = false;
+    std::string debugString = "";
+    /// buffer & formatting for consistent output
+    size_t debugPfxWidth = 30;
+    size_t debugMsgWidth = 50;
 
     Vector3D
     position() const
@@ -68,12 +81,58 @@ public:
       return Vector3D(pVector[3], pVector[4], pVector[5]);
     }
 
+    Vector3D
+    momentum() const
+    {
+      double p = 1. / std::abs(pVector[6]);
+      return p * direction();
+    }
+
+    /// Charge access
+    double
+    charge() const
+    {
+      return pVector[6] > 0. ? 1. : -1.;
+    }
+
+    /// Method to update momentum, direction and p
+    ///
+    /// @param uposition the updated position
+    /// @param udirection the updated direction
+    /// @param p the updated momentum value
+    void
+    update(const Vector3D& uposition, const Vector3D& udirection, double up)
+    {
+      // update the vector
+      pVector[0] = uposition[0];
+      pVector[1] = uposition[1];
+      pVector[2] = uposition[2];
+      pVector[3] = udirection[0];
+      pVector[4] = udirection[1];
+      pVector[5] = udirection[2];
+      pVector[6] = charge() / up;
+    }
+
+    /// Return a corrector
+    VoidCorrector
+    corrector() const
+    {
+      return VoidCorrector();
+    }
+
     /// Constructor
+    ///
+    /// @tparams Type of TrackParameters
+    ///
+    /// @param[in] pars Input parameters
+    /// @param[in] ndir The navigation direction w.r.t. parameters
+    /// @param[in] ssize the steps size limitation
     template <typename Parameters>
-    Cache(const Parameters& pars,
-          double            ssize = std::numeric_limits<double>::max())
-      : cache_ready(false)
-      , dir(alongMomentum)
+    State(const Parameters&   pars,
+          NavigationDirection ndir  = forward,
+          double              ssize = std::numeric_limits<double>::max())
+      : state_ready(false)
+      , navDir(ndir)
       , useJacobian(false)
       , step(0.)
       , maxPathLength(0.)
@@ -82,23 +141,20 @@ public:
       , newfield(true)
       , field(0., 0., 0.)
       , covariance(nullptr)
-      , step_size(ssize)
-      , max_step_size(ssize)
+      , stepSize(ssize)
     {
       update(pars);
     }
 
-    /// The cache update method
+    /// The state update method
     ///
     /// @param [in] pars The new track parameters at start
-    ///
-    /// @todo check to identify an reuse of start/cache
     template <typename Parameters>
     void
     update(const Parameters& pars)
     {
-      // cache is ready - noting to do
-      if (cache_ready) return;
+      // state is ready - noting to do
+      if (state_ready) return;
 
       const ActsVectorD<3> pos = pars.position();
       const auto           Vp  = pars.parameters();
@@ -239,13 +295,13 @@ public:
           pVector[30] = Bz3 * Vp[0];  // dZ/
         }
       }
-      // now declare the cache as ready
-      cache_ready = true;
+      // now declare the state as ready
+      state_ready = true;
     }
   };
 
   template <typename T, typename S = int>
-  using cache_type = Cache;
+  using state_type = State;
 
   template <typename T>
   using step_parameter_type = CurvilinearParameters;
@@ -268,21 +324,20 @@ public:
   using return_parameter_type = typename s<T, S>::type;
 
   static CurvilinearParameters
-  convert(Cache& cache)
+  convert(State& state)
   {
-    // the convert method invalidates the cache (in case it's reused)
-    cache.cache_ready = false;
+    // the convert method invalidates the state (in case it's reused)
+    state.state_ready = false;
     //
-    double         charge = cache.pVector[6] > 0. ? 1. : -1.;
-    Acts::Vector3D gp(cache.pVector[0], cache.pVector[1], cache.pVector[2]);
-    Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
-    mom /= std::abs(cache.pVector[6]);
+    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
+    Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
+    mom /= std::abs(state.pVector[6]);
 
     double P[45];
-    for (unsigned int i = 0; i < 45; ++i) P[i] = cache.pVector[i];
+    for (unsigned int i = 0; i < 45; ++i) P[i] = state.pVector[i];
 
     std::unique_ptr<const ActsSymMatrixD<NGlobalPars>> cov = nullptr;
-    if (cache.covariance) {
+    if (state.covariance) {
       double p = 1. / P[6];
       P[35] *= p;
       P[36] *= p;
@@ -363,77 +418,77 @@ public:
 
       // Jacobian production
       //
-      cache.jacobian[0] = Ax[0] * P[7] + Ax[1] * P[8];    // dL0/dL0
-      cache.jacobian[1] = Ax[0] * P[14] + Ax[1] * P[15];  // dL0/dL1
-      cache.jacobian[2] = Ax[0] * P[21] + Ax[1] * P[22];  // dL0/dPhi
-      cache.jacobian[3] = Ax[0] * P[28] + Ax[1] * P[29];  // dL0/dThe
-      cache.jacobian[4] = Ax[0] * P[35] + Ax[1] * P[36];  // dL0/dCM
+      state.jacobian[0] = Ax[0] * P[7] + Ax[1] * P[8];    // dL0/dL0
+      state.jacobian[1] = Ax[0] * P[14] + Ax[1] * P[15];  // dL0/dL1
+      state.jacobian[2] = Ax[0] * P[21] + Ax[1] * P[22];  // dL0/dPhi
+      state.jacobian[3] = Ax[0] * P[28] + Ax[1] * P[29];  // dL0/dThe
+      state.jacobian[4] = Ax[0] * P[35] + Ax[1] * P[36];  // dL0/dCM
 
-      cache.jacobian[5]
+      state.jacobian[5]
           = Ay[0] * P[7] + Ay[1] * P[8] + Ay[2] * P[9];  // dL1/dL0
-      cache.jacobian[6]
+      state.jacobian[6]
           = Ay[0] * P[14] + Ay[1] * P[15] + Ay[2] * P[16];  // dL1/dL1
-      cache.jacobian[7]
+      state.jacobian[7]
           = Ay[0] * P[21] + Ay[1] * P[22] + Ay[2] * P[23];  // dL1/dPhi
-      cache.jacobian[8]
+      state.jacobian[8]
           = Ay[0] * P[28] + Ay[1] * P[29] + Ay[2] * P[30];  // dL1/dThe
-      cache.jacobian[9]
+      state.jacobian[9]
           = Ay[0] * P[35] + Ay[1] * P[36] + Ay[2] * P[37];  // dL1/dCM
 
-      cache.jacobian[10] = P3 * P[11] - P4 * P[10];  // dPhi/dL0
-      cache.jacobian[11] = P3 * P[18] - P4 * P[17];  // dPhi/dL1
-      cache.jacobian[12] = P3 * P[25] - P4 * P[24];  // dPhi/dPhi
-      cache.jacobian[13] = P3 * P[32] - P4 * P[31];  // dPhi/dThe
-      cache.jacobian[14] = P3 * P[39] - P4 * P[38];  // dPhi/dCM
+      state.jacobian[10] = P3 * P[11] - P4 * P[10];  // dPhi/dL0
+      state.jacobian[11] = P3 * P[18] - P4 * P[17];  // dPhi/dL1
+      state.jacobian[12] = P3 * P[25] - P4 * P[24];  // dPhi/dPhi
+      state.jacobian[13] = P3 * P[32] - P4 * P[31];  // dPhi/dThe
+      state.jacobian[14] = P3 * P[39] - P4 * P[38];  // dPhi/dCM
 
-      cache.jacobian[15] = C * P[12];  // dThe/dL0
-      cache.jacobian[16] = C * P[19];  // dThe/dL1
-      cache.jacobian[17] = C * P[26];  // dThe/dPhi
-      cache.jacobian[18] = C * P[33];  // dThe/dThe
-      cache.jacobian[19] = C * P[40];  // dThe/dCM
+      state.jacobian[15] = C * P[12];  // dThe/dL0
+      state.jacobian[16] = C * P[19];  // dThe/dL1
+      state.jacobian[17] = C * P[26];  // dThe/dPhi
+      state.jacobian[18] = C * P[33];  // dThe/dThe
+      state.jacobian[19] = C * P[40];  // dThe/dCM
 
-      cache.jacobian[20] = 0.;     // dCM /dL0
-      cache.jacobian[21] = 0.;     // dCM /dL1
-      cache.jacobian[22] = 0.;     // dCM /dPhi
-      cache.jacobian[23] = 0.;     // dCM /dTheta
-      cache.jacobian[24] = P[41];  // dCM /dCM
+      state.jacobian[20] = 0.;     // dCM /dL0
+      state.jacobian[21] = 0.;     // dCM /dL1
+      state.jacobian[22] = 0.;     // dCM /dPhi
+      state.jacobian[23] = 0.;     // dCM /dTheta
+      state.jacobian[24] = P[41];  // dCM /dCM
 
       Eigen::
           Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
-              J(cache.jacobian);
+              J(state.jacobian);
 
       cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
-          J * (*cache.covariance) * J.transpose());
+          J * (*state.covariance) * J.transpose());
     }
 
-    return CurvilinearParameters(std::move(cov), gp, mom, charge);
+    return CurvilinearParameters(std::move(cov), gp, mom, state.charge());
   }
 
-  /// convert method into bound parameters
-  /// @param cache is the propagation cache to be converted
+  /// @brief convert method into bound parameters
+  ///
+  /// @param state is the propagation state to be converted
   /// @param s the target surface
   static BoundParameters
-  convert(Cache& cache, const Surface& s)
+  convert(State& state, const Surface& s)
   {
 
-    // the convert method invalidates the cache (in case it's reused)
-    cache.cache_ready = false;
+    // the convert method invalidates the state (in case it's reused)
+    state.state_ready = false;
 
-    double         charge = cache.pVector[6] > 0. ? 1. : -1.;
-    Acts::Vector3D gp(cache.pVector[0], cache.pVector[1], cache.pVector[2]);
-    Acts::Vector3D mom(cache.pVector[3], cache.pVector[4], cache.pVector[5]);
-    mom /= std::abs(cache.pVector[6]);
+    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
+    Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
+    mom /= std::abs(state.pVector[6]);
 
     std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
-    if (cache.covariance) {
+    if (state.covariance) {
 
-      double p = 1. / cache.pVector[6];
-      cache.pVector[35] *= p;
-      cache.pVector[36] *= p;
-      cache.pVector[37] *= p;
-      cache.pVector[38] *= p;
-      cache.pVector[39] *= p;
-      cache.pVector[40] *= p;
+      double p = 1. / state.pVector[6];
+      state.pVector[35] *= p;
+      state.pVector[36] *= p;
+      state.pVector[37] *= p;
+      state.pVector[38] *= p;
+      state.pVector[39] *= p;
+      state.pVector[40] *= p;
 
       const auto fFrame = s.referenceFrame(gp, mom);
 
@@ -442,8 +497,8 @@ public:
       double S[3]  = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
 
       // this is the projection of direction onto the local normal vector
-      double A = cache.pVector[3] * S[0] + cache.pVector[4] * S[1]
-          + cache.pVector[5] * S[2];
+      double A = state.pVector[3] * S[0] + state.pVector[4] * S[1]
+          + state.pVector[5] * S[2];
 
       if (A != 0.) A = 1. / A;
 
@@ -451,126 +506,126 @@ public:
       S[1] *= A;
       S[2] *= A;
 
-      double s0 = cache.pVector[7] * S[0] + cache.pVector[8] * S[1]
-          + cache.pVector[9] * S[2];
-      double s1 = cache.pVector[14] * S[0] + cache.pVector[15] * S[1]
-          + cache.pVector[16] * S[2];
-      double s2 = cache.pVector[21] * S[0] + cache.pVector[22] * S[1]
-          + cache.pVector[23] * S[2];
-      double s3 = cache.pVector[28] * S[0] + cache.pVector[29] * S[1]
-          + cache.pVector[30] * S[2];
-      double s4 = cache.pVector[35] * S[0] + cache.pVector[36] * S[1]
-          + cache.pVector[37] * S[2];
+      double s0 = state.pVector[7] * S[0] + state.pVector[8] * S[1]
+          + state.pVector[9] * S[2];
+      double s1 = state.pVector[14] * S[0] + state.pVector[15] * S[1]
+          + state.pVector[16] * S[2];
+      double s2 = state.pVector[21] * S[0] + state.pVector[22] * S[1]
+          + state.pVector[23] * S[2];
+      double s3 = state.pVector[28] * S[0] + state.pVector[29] * S[1]
+          + state.pVector[30] * S[2];
+      double s4 = state.pVector[35] * S[0] + state.pVector[36] * S[1]
+          + state.pVector[37] * S[2];
 
       // in case of line-type surfaces - we need to take into account that
       // the reference frame changes with variations of all local
       // parameters
       if (s.type() == Surface::Straw || s.type() == Surface::Perigee) {
         // vector from position to center
-        double x = cache.pVector[0] - s.center().x();
-        double y = cache.pVector[1] - s.center().y();
-        double z = cache.pVector[2] - s.center().z();
+        double x = state.pVector[0] - s.center().x();
+        double y = state.pVector[1] - s.center().y();
+        double z = state.pVector[2] - s.center().z();
 
         // this is the projection of the direction onto the local y axis
-        double d = cache.pVector[3] * Ay[0] + cache.pVector[4] * Ay[1]
-            + cache.pVector[5] * Ay[2];
+        double d = state.pVector[3] * Ay[0] + state.pVector[4] * Ay[1]
+            + state.pVector[5] * Ay[2];
 
         // this is cos(beta)
         double a       = (1. - d) * (1. + d);
         if (a != 0.) a = 1. / a;  // i.e. 1./(1-d^2)
 
         // that's the modified norm vector
-        double X = d * Ay[0] - cache.pVector[3];  //
-        double Y = d * Ay[1] - cache.pVector[4];  //
-        double Z = d * Ay[2] - cache.pVector[5];  //
+        double X = d * Ay[0] - state.pVector[3];  //
+        double Y = d * Ay[1] - state.pVector[4];  //
+        double Z = d * Ay[2] - state.pVector[5];  //
 
         // d0 to d1
-        double d0 = cache.pVector[10] * Ay[0] + cache.pVector[11] * Ay[1]
-            + cache.pVector[12] * Ay[2];
-        double d1 = cache.pVector[17] * Ay[0] + cache.pVector[18] * Ay[1]
-            + cache.pVector[19] * Ay[2];
-        double d2 = cache.pVector[24] * Ay[0] + cache.pVector[25] * Ay[1]
-            + cache.pVector[26] * Ay[2];
-        double d3 = cache.pVector[31] * Ay[0] + cache.pVector[32] * Ay[1]
-            + cache.pVector[33] * Ay[2];
-        double d4 = cache.pVector[38] * Ay[0] + cache.pVector[39] * Ay[1]
-            + cache.pVector[40] * Ay[2];
+        double d0 = state.pVector[10] * Ay[0] + state.pVector[11] * Ay[1]
+            + state.pVector[12] * Ay[2];
+        double d1 = state.pVector[17] * Ay[0] + state.pVector[18] * Ay[1]
+            + state.pVector[19] * Ay[2];
+        double d2 = state.pVector[24] * Ay[0] + state.pVector[25] * Ay[1]
+            + state.pVector[26] * Ay[2];
+        double d3 = state.pVector[31] * Ay[0] + state.pVector[32] * Ay[1]
+            + state.pVector[33] * Ay[2];
+        double d4 = state.pVector[38] * Ay[0] + state.pVector[39] * Ay[1]
+            + state.pVector[40] * Ay[2];
 
-        s0 = (((cache.pVector[7] * X + cache.pVector[8] * Y
-                + cache.pVector[9] * Z)
-               + x * (d0 * Ay[0] - cache.pVector[10]))
-              + (y * (d0 * Ay[1] - cache.pVector[11])
-                 + z * (d0 * Ay[2] - cache.pVector[12])))
+        s0 = (((state.pVector[7] * X + state.pVector[8] * Y
+                + state.pVector[9] * Z)
+               + x * (d0 * Ay[0] - state.pVector[10]))
+              + (y * (d0 * Ay[1] - state.pVector[11])
+                 + z * (d0 * Ay[2] - state.pVector[12])))
             * (-a);
 
-        s1 = (((cache.pVector[14] * X + cache.pVector[15] * Y
-                + cache.pVector[16] * Z)
-               + x * (d1 * Ay[0] - cache.pVector[17]))
-              + (y * (d1 * Ay[1] - cache.pVector[18])
-                 + z * (d1 * Ay[2] - cache.pVector[19])))
+        s1 = (((state.pVector[14] * X + state.pVector[15] * Y
+                + state.pVector[16] * Z)
+               + x * (d1 * Ay[0] - state.pVector[17]))
+              + (y * (d1 * Ay[1] - state.pVector[18])
+                 + z * (d1 * Ay[2] - state.pVector[19])))
             * (-a);
-        s2 = (((cache.pVector[21] * X + cache.pVector[22] * Y
-                + cache.pVector[23] * Z)
-               + x * (d2 * Ay[0] - cache.pVector[24]))
-              + (y * (d2 * Ay[1] - cache.pVector[25])
-                 + z * (d2 * Ay[2] - cache.pVector[26])))
+        s2 = (((state.pVector[21] * X + state.pVector[22] * Y
+                + state.pVector[23] * Z)
+               + x * (d2 * Ay[0] - state.pVector[24]))
+              + (y * (d2 * Ay[1] - state.pVector[25])
+                 + z * (d2 * Ay[2] - state.pVector[26])))
             * (-a);
-        s3 = (((cache.pVector[28] * X + cache.pVector[29] * Y
-                + cache.pVector[30] * Z)
-               + x * (d3 * Ay[0] - cache.pVector[31]))
-              + (y * (d3 * Ay[1] - cache.pVector[32])
-                 + z * (d3 * Ay[2] - cache.pVector[33])))
+        s3 = (((state.pVector[28] * X + state.pVector[29] * Y
+                + state.pVector[30] * Z)
+               + x * (d3 * Ay[0] - state.pVector[31]))
+              + (y * (d3 * Ay[1] - state.pVector[32])
+                 + z * (d3 * Ay[2] - state.pVector[33])))
             * (-a);
-        s4 = (((cache.pVector[35] * X + cache.pVector[36] * Y
-                + cache.pVector[37] * Z)
-               + x * (d4 * Ay[0] - cache.pVector[38]))
-              + (y * (d4 * Ay[1] - cache.pVector[39])
-                 + z * (d4 * Ay[2] - cache.pVector[40])))
+        s4 = (((state.pVector[35] * X + state.pVector[36] * Y
+                + state.pVector[37] * Z)
+               + x * (d4 * Ay[0] - state.pVector[38]))
+              + (y * (d4 * Ay[1] - state.pVector[39])
+                 + z * (d4 * Ay[2] - state.pVector[40])))
             * (-a);
       }
 
-      cache.pVector[7] -= (s0 * cache.pVector[3]);
-      cache.pVector[8] -= (s0 * cache.pVector[4]);
-      cache.pVector[9] -= (s0 * cache.pVector[5]);
-      cache.pVector[10] -= (s0 * cache.pVector[42]);
-      cache.pVector[11] -= (s0 * cache.pVector[43]);
-      cache.pVector[12] -= (s0 * cache.pVector[44]);
+      state.pVector[7] -= (s0 * state.pVector[3]);
+      state.pVector[8] -= (s0 * state.pVector[4]);
+      state.pVector[9] -= (s0 * state.pVector[5]);
+      state.pVector[10] -= (s0 * state.pVector[42]);
+      state.pVector[11] -= (s0 * state.pVector[43]);
+      state.pVector[12] -= (s0 * state.pVector[44]);
 
-      cache.pVector[14] -= (s1 * cache.pVector[3]);
-      cache.pVector[15] -= (s1 * cache.pVector[4]);
-      cache.pVector[16] -= (s1 * cache.pVector[5]);
-      cache.pVector[17] -= (s1 * cache.pVector[42]);
-      cache.pVector[18] -= (s1 * cache.pVector[43]);
-      cache.pVector[19] -= (s1 * cache.pVector[44]);
+      state.pVector[14] -= (s1 * state.pVector[3]);
+      state.pVector[15] -= (s1 * state.pVector[4]);
+      state.pVector[16] -= (s1 * state.pVector[5]);
+      state.pVector[17] -= (s1 * state.pVector[42]);
+      state.pVector[18] -= (s1 * state.pVector[43]);
+      state.pVector[19] -= (s1 * state.pVector[44]);
 
-      cache.pVector[21] -= (s2 * cache.pVector[3]);
-      cache.pVector[22] -= (s2 * cache.pVector[4]);
-      cache.pVector[23] -= (s2 * cache.pVector[5]);
-      cache.pVector[24] -= (s2 * cache.pVector[42]);
-      cache.pVector[25] -= (s2 * cache.pVector[43]);
-      cache.pVector[26] -= (s2 * cache.pVector[44]);
+      state.pVector[21] -= (s2 * state.pVector[3]);
+      state.pVector[22] -= (s2 * state.pVector[4]);
+      state.pVector[23] -= (s2 * state.pVector[5]);
+      state.pVector[24] -= (s2 * state.pVector[42]);
+      state.pVector[25] -= (s2 * state.pVector[43]);
+      state.pVector[26] -= (s2 * state.pVector[44]);
 
-      cache.pVector[28] -= (s3 * cache.pVector[3]);
-      cache.pVector[29] -= (s3 * cache.pVector[4]);
-      cache.pVector[30] -= (s3 * cache.pVector[5]);
-      cache.pVector[31] -= (s3 * cache.pVector[42]);
-      cache.pVector[32] -= (s3 * cache.pVector[43]);
-      cache.pVector[33] -= (s3 * cache.pVector[44]);
+      state.pVector[28] -= (s3 * state.pVector[3]);
+      state.pVector[29] -= (s3 * state.pVector[4]);
+      state.pVector[30] -= (s3 * state.pVector[5]);
+      state.pVector[31] -= (s3 * state.pVector[42]);
+      state.pVector[32] -= (s3 * state.pVector[43]);
+      state.pVector[33] -= (s3 * state.pVector[44]);
 
-      cache.pVector[35] -= (s4 * cache.pVector[3]);
-      cache.pVector[36] -= (s4 * cache.pVector[4]);
-      cache.pVector[37] -= (s4 * cache.pVector[5]);
-      cache.pVector[38] -= (s4 * cache.pVector[42]);
-      cache.pVector[39] -= (s4 * cache.pVector[43]);
-      cache.pVector[40] -= (s4 * cache.pVector[44]);
+      state.pVector[35] -= (s4 * state.pVector[3]);
+      state.pVector[36] -= (s4 * state.pVector[4]);
+      state.pVector[37] -= (s4 * state.pVector[5]);
+      state.pVector[38] -= (s4 * state.pVector[42]);
+      state.pVector[39] -= (s4 * state.pVector[43]);
+      state.pVector[40] -= (s4 * state.pVector[44]);
 
       double P3, P4,
-          C = cache.pVector[3] * cache.pVector[3]
-          + cache.pVector[4] * cache.pVector[4];
+          C = state.pVector[3] * state.pVector[3]
+          + state.pVector[4] * state.pVector[4];
       if (C > 1.e-20) {
         C  = 1. / C;
-        P3 = cache.pVector[3] * C;
-        P4 = cache.pVector[4] * C;
+        P3 = state.pVector[3] * C;
+        P4 = state.pVector[4] * C;
         C  = -sqrt(C);
       } else {
         C  = -1.e10;
@@ -584,9 +639,9 @@ public:
       if (s.type() == Surface::Disc) {
         // the vector from the disc surface to the p
         const auto& sfc  = s.center();
-        double      d[3] = {cache.pVector[0] - sfc(0),
-                       cache.pVector[1] - sfc(1),
-                       cache.pVector[2] - sfc(2)};
+        double      d[3] = {state.pVector[0] - sfc(0),
+                       state.pVector[1] - sfc(1),
+                       state.pVector[2] - sfc(2)};
         // this needs the transformation to polar coordinates
         double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
         double RS = d[0] * Ay[0] + d[1] * Ay[1] + d[2] * Ay[2];
@@ -602,58 +657,58 @@ public:
         MB[2] = (RC * Ay[2] - RS * Ax[2]) * Ri;
       }
 
-      cache.jacobian[0] = MA[0] * cache.pVector[7] + MA[1] * cache.pVector[8]
-          + MA[2] * cache.pVector[9];  // dL0/dL0
-      cache.jacobian[1] = MA[0] * cache.pVector[14] + MA[1] * cache.pVector[15]
-          + MA[2] * cache.pVector[16];  // dL0/dL1
-      cache.jacobian[2] = MA[0] * cache.pVector[21] + MA[1] * cache.pVector[22]
-          + MA[2] * cache.pVector[23];  // dL0/dPhi
-      cache.jacobian[3] = MA[0] * cache.pVector[28] + MA[1] * cache.pVector[29]
-          + MA[2] * cache.pVector[30];  // dL0/dThe
-      cache.jacobian[4] = MA[0] * cache.pVector[35] + MA[1] * cache.pVector[36]
-          + MA[2] * cache.pVector[37];  // dL0/dCM
+      state.jacobian[0] = MA[0] * state.pVector[7] + MA[1] * state.pVector[8]
+          + MA[2] * state.pVector[9];  // dL0/dL0
+      state.jacobian[1] = MA[0] * state.pVector[14] + MA[1] * state.pVector[15]
+          + MA[2] * state.pVector[16];  // dL0/dL1
+      state.jacobian[2] = MA[0] * state.pVector[21] + MA[1] * state.pVector[22]
+          + MA[2] * state.pVector[23];  // dL0/dPhi
+      state.jacobian[3] = MA[0] * state.pVector[28] + MA[1] * state.pVector[29]
+          + MA[2] * state.pVector[30];  // dL0/dThe
+      state.jacobian[4] = MA[0] * state.pVector[35] + MA[1] * state.pVector[36]
+          + MA[2] * state.pVector[37];  // dL0/dCM
 
-      cache.jacobian[5] = MB[0] * cache.pVector[7] + MB[1] * cache.pVector[8]
-          + MB[2] * cache.pVector[9];  // dL1/dL0
-      cache.jacobian[6] = MB[0] * cache.pVector[14] + MB[1] * cache.pVector[15]
-          + MB[2] * cache.pVector[16];  // dL1/dL1
-      cache.jacobian[7] = MB[0] * cache.pVector[21] + MB[1] * cache.pVector[22]
-          + MB[2] * cache.pVector[23];  // dL1/dPhi
-      cache.jacobian[8] = MB[0] * cache.pVector[28] + MB[1] * cache.pVector[29]
-          + MB[2] * cache.pVector[30];  // dL1/dThe
-      cache.jacobian[9] = MB[0] * cache.pVector[35] + MB[1] * cache.pVector[36]
-          + MB[2] * cache.pVector[37];  // dL1/dCM
+      state.jacobian[5] = MB[0] * state.pVector[7] + MB[1] * state.pVector[8]
+          + MB[2] * state.pVector[9];  // dL1/dL0
+      state.jacobian[6] = MB[0] * state.pVector[14] + MB[1] * state.pVector[15]
+          + MB[2] * state.pVector[16];  // dL1/dL1
+      state.jacobian[7] = MB[0] * state.pVector[21] + MB[1] * state.pVector[22]
+          + MB[2] * state.pVector[23];  // dL1/dPhi
+      state.jacobian[8] = MB[0] * state.pVector[28] + MB[1] * state.pVector[29]
+          + MB[2] * state.pVector[30];  // dL1/dThe
+      state.jacobian[9] = MB[0] * state.pVector[35] + MB[1] * state.pVector[36]
+          + MB[2] * state.pVector[37];  // dL1/dCM
 
-      cache.jacobian[10]
-          = P3 * cache.pVector[11] - P4 * cache.pVector[10];  // dPhi/dL0
-      cache.jacobian[11]
-          = P3 * cache.pVector[18] - P4 * cache.pVector[17];  // dPhi/dL1
-      cache.jacobian[12]
-          = P3 * cache.pVector[25] - P4 * cache.pVector[24];  // dPhi/dPhi
-      cache.jacobian[13]
-          = P3 * cache.pVector[32] - P4 * cache.pVector[31];  // dPhi/dThe
-      cache.jacobian[14]
-          = P3 * cache.pVector[39] - P4 * cache.pVector[38];  // dPhi/dCM
-      cache.jacobian[15] = C * cache.pVector[12];             // dThe/dL0
-      cache.jacobian[16] = C * cache.pVector[19];             // dThe/dL1
-      cache.jacobian[17] = C * cache.pVector[26];             // dThe/dPhi
-      cache.jacobian[18] = C * cache.pVector[33];             // dThe/dThe
-      cache.jacobian[19] = C * cache.pVector[40];             // dThe/dCM
-      cache.jacobian[20] = 0.;                                // dCM /dL0
-      cache.jacobian[21] = 0.;                                // dCM /dL1
-      cache.jacobian[22] = 0.;                                // dCM /dPhi
-      cache.jacobian[23] = 0.;                                // dCM /dTheta
-      cache.jacobian[24] = cache.pVector[41];                 // dCM /dCM
+      state.jacobian[10]
+          = P3 * state.pVector[11] - P4 * state.pVector[10];  // dPhi/dL0
+      state.jacobian[11]
+          = P3 * state.pVector[18] - P4 * state.pVector[17];  // dPhi/dL1
+      state.jacobian[12]
+          = P3 * state.pVector[25] - P4 * state.pVector[24];  // dPhi/dPhi
+      state.jacobian[13]
+          = P3 * state.pVector[32] - P4 * state.pVector[31];  // dPhi/dThe
+      state.jacobian[14]
+          = P3 * state.pVector[39] - P4 * state.pVector[38];  // dPhi/dCM
+      state.jacobian[15] = C * state.pVector[12];             // dThe/dL0
+      state.jacobian[16] = C * state.pVector[19];             // dThe/dL1
+      state.jacobian[17] = C * state.pVector[26];             // dThe/dPhi
+      state.jacobian[18] = C * state.pVector[33];             // dThe/dThe
+      state.jacobian[19] = C * state.pVector[40];             // dThe/dCM
+      state.jacobian[20] = 0.;                                // dCM /dL0
+      state.jacobian[21] = 0.;                                // dCM /dL1
+      state.jacobian[22] = 0.;                                // dCM /dPhi
+      state.jacobian[23] = 0.;                                // dCM /dTheta
+      state.jacobian[24] = state.pVector[41];                 // dCM /dCM
 
       Eigen::
           Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
-              J(cache.jacobian);
+              J(state.jacobian);
 
       cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
-          J * (*cache.covariance) * J.transpose());
+          J * (*state.covariance) * J.transpose());
     }
 
-    return BoundParameters(std::move(cov), gp, mom, charge, s);
+    return BoundParameters(std::move(cov), gp, mom, state.charge(), s);
   }
 
   AtlasStepper(BField bField = BField()) : m_bField(std::move(bField)){};
@@ -662,50 +717,52 @@ public:
   /// It checks first if the access is still within the Cell,
   /// and updates the cell if necessary, then it takes the field
   /// from the cell
-  /// @param [in,out] cache is the propagation cache associated with the track
+  /// @param [in,out] state is the stepper state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
   Vector3D
-  getField(Cache& cache, const Vector3D& pos) const
+  getField(State& state, const Vector3D& pos) const
   {
-    if (!cache.field_cache_ready || !cache.field_cache.isInside(pos)) {
-      cache.field_cache_ready = true;
-      cache.field_cache       = m_bField.getFieldCell(pos);
+    if (!state.fieldCacheReady || !state.fieldCache.isInside(pos)) {
+      state.fieldCacheReady = true;
+      state.fieldCache      = m_bField.getFieldCell(pos);
     }
     // get the field from the cell
-    cache.field = cache.field_cache.getField(pos);
-    return cache.field;
+    state.field = state.fieldCache.getField(pos);
+    return state.field;
   }
 
+  /// Perform the actual step on the state
+  ///
+  /// @param state is the provided stepper state (caller keeps thread locality)
   double
-  step(Cache& cache) const
+  step(State& state) const
   {
-
     // we use h for keeping the nominclature with the original atlas code
-    double& h   = cache.step_size;
-    bool    Jac = cache.useJacobian;
+    double h   = state.stepSize;
+    bool   Jac = state.useJacobian;
 
-    double* R  = &(cache.pVector[0]);  // Coordinates
-    double* A  = &(cache.pVector[3]);  // Directions
-    double* sA = &(cache.pVector[42]);
+    double* R  = &(state.pVector[0]);  // Coordinates
+    double* A  = &(state.pVector[3]);  // Directions
+    double* sA = &(state.pVector[42]);
     // Invert mometum/2.
-    double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / cache.pVector[6]);
+    double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.pVector[6]);
     //    double dltm = 0.0002 * .03;
-
     Vector3D f0, f;
 
     // if new field is required get it
-    if (cache.newfield) {
+    if (state.newfield) {
       const Vector3D pos(R[0], R[1], R[2]);
-      f0 = getField(cache, pos);
+      f0 = getField(state, pos);
     } else {
-      f0 = cache.field;
+      f0 = state.field;
     }
 
     bool Helix = false;
     // if (std::abs(S) < m_cfg.helixStep) Helix = true;
 
     while (h != 0.) {
+
       double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
 
       // First point
@@ -725,7 +782,7 @@ public:
       //
       if (!Helix) {
         const Vector3D pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
-        f = getField(cache, pos);
+        f = getField(state, pos);
       } else {
         f = f0;
       }
@@ -745,7 +802,7 @@ public:
       //
       if (!Helix) {
         const Vector3D pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
-        f = getField(cache, pos);
+        f = getField(state, pos);
       } else {
         f = f0;
       }
@@ -790,15 +847,15 @@ public:
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
-      cache.field    = f;
-      cache.newfield = false;
+      state.field    = f;
+      state.newfield = false;
 
       if (Jac) {
         // Jacobian calculation
         //
-        double* d2A  = &cache.pVector[24];
-        double* d3A  = &cache.pVector[31];
-        double* d4A  = &cache.pVector[38];
+        double* d2A  = &state.pVector[24];
+        double* d3A  = &state.pVector[31];
+        double* d4A  = &state.pVector[38];
         double  d2A0 = H0[2] * d2A[1] - H0[1] * d2A[2];
         double  d2B0 = H0[0] * d2A[2] - H0[2] * d2A[0];
         double  d2C0 = H0[1] * d2A[0] - H0[0] * d2A[1];
@@ -857,7 +914,7 @@ public:
         double  d4B6 = d4C5 * H2[0] - d4A5 * H2[2];
         double  d4C6 = d4A5 * H2[1] - d4B5 * H2[0];
 
-        double* dR = &cache.pVector[21];
+        double* dR = &state.pVector[21];
         dR[0] += (d2A2 + d2A3 + d2A4) * S3;
         dR[1] += (d2B2 + d2B3 + d2B4) * S3;
         dR[2] += (d2C2 + d2C3 + d2C4) * S3;
@@ -865,7 +922,7 @@ public:
         d2A[1] = ((d2B0 + 2. * d2B3) + (d2B5 + d2B6)) * (1. / 3.);
         d2A[2] = ((d2C0 + 2. * d2C3) + (d2C5 + d2C6)) * (1. / 3.);
 
-        dR = &cache.pVector[28];
+        dR = &state.pVector[28];
         dR[0] += (d3A2 + d3A3 + d3A4) * S3;
         dR[1] += (d3B2 + d3B3 + d3B4) * S3;
         dR[2] += (d3C2 + d3C3 + d3C4) * S3;
@@ -873,7 +930,7 @@ public:
         d3A[1] = ((d3B0 + 2. * d3B3) + (d3B5 + d3B6)) * (1. / 3.);
         d3A[2] = ((d3C0 + 2. * d3C3) + (d3C5 + d3C6)) * (1. / 3.);
 
-        dR = &cache.pVector[35];
+        dR = &state.pVector[35];
         dR[0] += (d4A2 + d4A3 + d4A4) * S3;
         dR[1] += (d4B2 + d4B3 + d4B4) * S3;
         dR[2] += (d4C2 + d4C3 + d4C4) * S3;
@@ -881,10 +938,12 @@ public:
         d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
-      cache.accumulated_path += h;
+      state.pathAccumulated += h;
       return h;
     }
-    cache.accumulated_path += h;
+
+    // that exit path should actually not happen
+    state.pathAccumulated += h;
     return h;
   }
 

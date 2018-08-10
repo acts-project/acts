@@ -19,31 +19,86 @@
 // leave blank line
 
 #include "Acts/Propagator/AbortList.hpp"
-#include "Acts/Propagator/detail/Extendable.hpp"
-#include "Acts/Propagator/detail/standard_abort_conditions.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/detail/Extendable.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
 
 namespace Acts {
 
+class Surface;
+
 namespace Test {
 
   // The path limit abort
-  typedef detail::path_limit_reached path_limit;
+  typedef detail::PathLimitReached path_limit;
+  // the constrained step class
+  typedef detail::ConstrainedStep cstep;
 
-  // This is a simple cache struct to mimic the
-  // Stepper cache in the propagation
-  struct Cache
+  /// This is a simple cache struct to mimic the
+  /// Navigator state
+  struct NavigatorState
+  {
+    /// Navigation cache: the start surface
+    const Surface* startSurface = nullptr;
+
+    /// Navigation cache: the current surface
+    const Surface* currentSurface = nullptr;
+
+    /// Navigation cache: the target surface
+    const Surface* targetSurface = nullptr;
+
+    /// The boolean is reached
+    bool targetReached = false;
+  };
+
+  /// This is a simple cache struct to mimic the
+  /// Propagator state
+  struct PropagatorState
   {
 
-    // accummulated path length cache
-    double accumulated_path = 0.;
+    // This is a simple cache struct to mimic the
+    // Stepper cache in the propagation
+    struct StepperState
+    {
+      // accummulated path length cache
+      double pathAccumulated = 0.;
 
-    // adaptive sep size of the runge-kutta integration
-    double step_size = std::numeric_limits<double>::max();
+      // adaptive sep size of the runge-kutta integration
+      cstep stepSize = std::numeric_limits<double>::max();
+    };
+
+    /// emulate the options template
+    struct Options
+    {
+
+      /// The path limit
+      double pathLimit = std::numeric_limits<double>::max();
+
+      /// The target tolerance
+      double targetTolerance = 1. * units::_um;
+
+      /// Debug output
+      /// the string where debug messages are stored (optionally)
+      bool        debug       = false;
+      std::string debugString = "";
+      /// buffer & formatting for consistent output
+      size_t debugPfxWidth = 30;
+      size_t debugMsgWidth = 50;
+    };
+
+    /// Give some options
+    Options options;
+
+    /// The stepper state
+    StepperState stepping;
+
+    /// The navigator state
+    NavigatorState navigation;
   };
 
   /// This is a simple result struct to mimic the
@@ -56,35 +111,31 @@ namespace Test {
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit)
   {
-    Cache  cache;
+    PropagatorState state;
+    state.options.pathLimit = 1. * units::_m;
     Result result;
 
     AbortList<path_limit> abort_list;
 
-    // Configure path limit with tolerance
-    auto& limit             = abort_list.get<path_limit>();
-    limit.signed_path_limit = 1. * units::_m;
-    limit.tolerance         = 1. * units::_um;
-
     // It should not abort yet
-    BOOST_CHECK(!abort_list(result, cache));
+    BOOST_CHECK(!abort_list(result, state));
     // The step size should be adapted to 1 meter now
-    BOOST_CHECK_EQUAL(cache.step_size, 1. * units::_m);
+    BOOST_CHECK_EQUAL(state.stepping.stepSize, 1. * units::_m);
     // Let's do a step of 90 cm now
-    cache.accumulated_path = 90. * units::_cm;
+    state.stepping.pathAccumulated = 90. * units::_cm;
     // Still no abort yet
-    BOOST_CHECK(!abort_list(result, cache));
+    BOOST_CHECK(!abort_list(result, state));
     // 10 cm are left
-    // The step size should be adapted to 1 meter now
-    BOOST_CHECK_EQUAL(cache.step_size, 10. * units::_cm);
+    // The step size should be adapted to 10 cm now
+    BOOST_CHECK_EQUAL(state.stepping.stepSize, 10. * units::_cm);
 
     // approach the
-    while (!abort_list(result, cache)) {
-      cache.accumulated_path += 0.5 * cache.step_size;
+    while (!abort_list(result, state)) {
+      state.stepping.pathAccumulated += 0.5 * state.stepping.stepSize;
     }
 
     // now we need to be smaller than the tolerance
-    BOOST_CHECK(cache.step_size < 1. * units::_um);
+    BOOST_CHECK(state.stepping.stepSize < 1. * units::_um);
   }
 
 }  // namespace Test

@@ -1,7 +1,3 @@
-add_executable (ExtendableTests ExtendableTests.cpp)
-target_link_libraries (ExtendableTests PRIVATE Acts::Core)
-add_test(NAME ExtendableUnitTests COMMAND ExtendableTests)
-
 add_executable (AbortListTests AbortListTests.cpp)
 target_link_libraries (AbortListTests PRIVATE Acts::Core)
 add_test(NAME AbortListUnitTest COMMAND AbortListTests)
@@ -9,6 +5,18 @@ add_test(NAME AbortListUnitTest COMMAND AbortListTests)
 add_executable (ActionListTests ActionListTests.cpp)
 target_link_libraries (ActionListTests PRIVATE Acts::Core)
 add_test(NAME ActionListUnitTests COMMAND ActionListTests)
+
+add_executable (IntersectionCorrectorTests IntersectionCorrectorTests.cpp)
+target_link_libraries (IntersectionCorrectorTests PRIVATE Acts::Core)
+add_test(NAME IntersectionCorrectorUnitTests COMMAND IntersectionCorrectorTests)
+
+add_executable (LoopProtectionTests LoopProtectionTests.cpp)
+target_link_libraries (LoopProtectionTests PRIVATE Acts::Core)
+add_test(NAME LoopProtectionUnitTests COMMAND LoopProtectionTests)
+
+add_executable (ConstrainedStepTests ConstrainedStepTests.cpp)
+target_link_libraries (ConstrainedStepTests PRIVATE Acts::Core)
+add_test(NAME ConstrainedStepUnitTest COMMAND ConstrainedStepTests)
 
 # these tests rely on the Legacy code
 if (ACTS_BUILD_LEGACY)

@@ -14,16 +14,19 @@
 #include <boost/test/data/test_case.hpp>
 
 #include <cmath>
+#include <iostream>
 
 #include <boost/test/data/test_case.hpp>
+
 #include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolation/PropagatorWrapper.hpp"
 #include "Acts/Extrapolation/RungeKuttaEngine.hpp"
-#include "Acts/Extrapolation/Wrapper.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -37,8 +40,6 @@ namespace tt    = boost::test_tools;
 
 namespace Acts {
 
-using namespace propagation;
-
 namespace IntegrationTest {
 
   typedef ConstantBField                BField_type;
@@ -47,13 +48,14 @@ namespace IntegrationTest {
   typedef Propagator<EigenStepper_type> EigenPropagator_type;
   typedef Propagator<AtlasStepper_type> AtlasPropagator_type;
   typedef RungeKuttaEngine<BField_type> PropagationEngine_type;
-
-  typedef Wrapper<std::shared_ptr<PropagationEngine_type>>
+  typedef PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>
       WrappedPropagator_type;
 
   // number of tests
-  const int  ntests = 100;
+  const int  ntests = 1;
+  const int  skip   = 0;
   const bool covtpr = true;
+  const bool debug  = false;
 
   // setup propagator with constant B-field
   const double         Bz = 2. * units::_T;
@@ -93,6 +95,8 @@ namespace IntegrationTest {
       charge,
       index)
   {
+    if (index < skip) return;
+
     double dcharge = -1 + 2 * charge;
     // constant field propagation atlas stepper
     auto aposition = constant_field_propagation(

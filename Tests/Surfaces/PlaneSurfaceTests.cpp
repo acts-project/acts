@@ -144,8 +144,8 @@ namespace Test {
     //
     /// intersectionEstimate
     Vector3D direction{0., 0., 1.};
-    auto     intersect
-        = PlaneSurfaceObject.intersectionEstimate(offSurface, direction, true);
+    auto     intersect = PlaneSurfaceObject.intersectionEstimate(
+        offSurface, direction, forward, true);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 4., true, 0};
     BOOST_TEST(intersect.valid);
     BOOST_TEST(intersect.position == expectedIntersect.position);
@@ -239,6 +239,6 @@ namespace Test {
 
   BOOST_AUTO_TEST_SUITE_END()
 
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

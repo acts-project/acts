@@ -10,6 +10,7 @@
 
 #include <algorithm>
 #include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 
@@ -130,7 +131,35 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
       envPhi = {dPhi, dPhi};
 
     } else {
-      throw std::domain_error("Not implemented for this surface type.");
+      // check for cylinder bounds
+      const CylinderBounds* cBounds
+          = dynamic_cast<const CylinderBounds*>(&(sf->bounds()));
+      if (cBounds) {
+
+        double r    = cBounds->r();
+        double z    = sf->center().z();
+        double hZ   = cBounds->halflengthZ();
+        double phi  = cBounds->averagePhi();
+        double hPhi = cBounds->halfPhiSector();
+
+        maxX = r;
+        minX = -r;
+
+        maxY = r;
+        minY = -r;
+
+        maxZ = z + hZ;
+        minZ = z - hZ;
+
+        maxR = r;
+        minR = r;
+
+        maxPhi = phi + hPhi;
+        minPhi = phi - hPhi;
+
+      } else
+        throw std::domain_error(
+            "Not implemented yet for the given bounds type.");
     }
   }
 }

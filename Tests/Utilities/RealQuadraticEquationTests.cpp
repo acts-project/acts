@@ -81,6 +81,6 @@ namespace Test {
   }
   BOOST_AUTO_TEST_SUITE_END()
 
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

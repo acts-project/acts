@@ -178,42 +178,6 @@ Acts::PlaneSurface::bounds() const
   return s_noBounds;
 }
 
-const Acts::Vector3D
-Acts::PlaneSurface::normal(const Acts::Vector3D&) const
-{
-  // fast access via tranform matrix (and not rotation())
-  auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
-}
-
-const Acts::Vector3D
-Acts::PlaneSurface::normal(const Acts::Vector2D&) const
-{
-  // fast access via tranform matrix (and not rotation())
-  auto tMatrix = transform().matrix();
-  return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
-}
-
-const Acts::Vector3D
-Acts::PlaneSurface::normal() const
-{
-  return normal(Vector2D(0, 0));
-}
-
-const Acts::Vector3D
-    Acts::PlaneSurface::binningPosition(Acts::BinningValue) const
-{
-  return center();
-}
-
-double
-Acts::PlaneSurface::pathCorrection(const Acts::Vector3D&,
-                                   const Acts::Vector3D& mom) const
-{
-  /// we can ignore the global position here
-  return 1. / std::abs(normal().dot(mom.unit()));
-}
-
 Acts::variant_data
 Acts::PlaneSurface::toVariantData() const
 {

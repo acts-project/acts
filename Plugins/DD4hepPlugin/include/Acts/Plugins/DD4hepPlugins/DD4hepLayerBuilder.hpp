@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 Acts project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -144,7 +144,7 @@ private:
   /// sensitive detector elements
   /// @param axes the orientation of the modules to the Acts frame
   void
-  collectSensitive(const dd4hep::DetElement&          detElement,
+  resolveSensitive(const dd4hep::DetElement&          detElement,
                    std::vector<const Acts::Surface*>& surfaces,
                    const std::string&                 axes = "XYZ") const;
 
@@ -180,4 +180,4 @@ DD4hepLayerBuilder::getConfiguration() const
   return m_cfg;
 }
 
-}  // end of namespace
+}  // namespace

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -132,36 +132,6 @@ Acts::TrackingVolume::trackingVolume(const Vector3D& gp) const
 
   // there is no lower sub structure
   return this;
-}
-
-const Acts::TrackingVolume*
-Acts::TrackingVolume::nextVolume(const Vector3D& gp,
-                                 const Vector3D& dir,
-                                 PropDirection   pDir) const
-{
-  // get the boundary surfaces & intersect them
-  const TrackingVolume* nVolume = 0;
-  // fix the direction once
-  bool     forceDir   = (pDir == alongMomentum || pDir == oppositeMomentum);
-  double   dirScalor  = (pDir == oppositeMomentum) ? -1. : 1.;
-  Vector3D cDir       = dirScalor * dir;
-  double   pathLength = 10e10;
-  // now loop through the and find the closest
-  auto bSurfaces = boundarySurfaces();
-  for (auto& bSurfIter : bSurfaces) {
-    // get the intersection soltuion
-    Intersection sfI = bSurfIter->surfaceRepresentation().intersectionEstimate(
-        gp, cDir, forceDir, true);
-    if (sfI.valid
-        && (sfI.pathLength * sfI.pathLength) < (pathLength * pathLength)) {
-      // assign the next Volume
-      PropDirection attachedDir
-          = sfI.pathLength > 0. ? alongMomentum : oppositeMomentum;
-      pathLength = sfI.pathLength;
-      nVolume    = bSurfIter->attachedVolume(gp, cDir, attachedDir);
-    }
-  }
-  return nVolume;
 }
 
 const Acts::DetachedVolumeVector*

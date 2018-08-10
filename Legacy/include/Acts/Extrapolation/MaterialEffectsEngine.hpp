@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -76,7 +76,7 @@ public:
   ExtrapolationCode
   handleMaterial(ExCellCharged&      ecCharged,
                  const Surface*      msurface   = nullptr,
-                 PropDirection       dir        = alongMomentum,
+                 NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Public neutral material effects interface
@@ -91,7 +91,7 @@ public:
   ExtrapolationCode
   handleMaterial(ExCellNeutral&      ecNeutral,
                  const Surface*      msurface   = nullptr,
-                 PropDirection       dir        = alongMomentum,
+                 NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Set configuration method
@@ -137,7 +137,7 @@ private:
   void
   updateTrackParameters(ExCellCharged&      eCell,
                         const Surface&      mSurface,
-                        PropDirection       dir,
+                        NavigationDirection dir,
                         MaterialUpdateStage matupstage,
                         const std::string&  surfaceType,
                         size_t              surfaceID) const;
@@ -153,4 +153,4 @@ MaterialEffectsEngine::getConfiguration() const
   return m_cfg;
 }
 
-}  // end of namespace
+}  // namespace

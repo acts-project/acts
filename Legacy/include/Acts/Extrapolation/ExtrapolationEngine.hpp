@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -157,7 +157,7 @@ private:
   ExtrapolationCode
   extrapolateT(ExtrapolationCell<T>& eCell,
                const Surface*        sf     = nullptr,
-               PropDirection         dir    = alongMomentum,
+               NavigationDirection   dir    = forward,
                const BoundaryCheck&  bcheck = true) const;
 
   /// Main extrapolation method, templated to chared/neutral
@@ -171,7 +171,7 @@ private:
   ExtrapolationCode
   initNavigation(ExtrapolationCell<T>& eCell,
                  const Surface*        sf  = nullptr,
-                 PropDirection         dir = alongMomentum) const;
+                 NavigationDirection   dir = forward) const;
 };
 
 /// Return the geometry type, it's the master
@@ -188,6 +188,6 @@ ExtrapolationEngine::getConfiguration() const
   return m_cfg;
 }
 
-}  // end of namespace
+}  // namespace
 
 #include "Acts/Extrapolation/detail/ExtrapolationEngine.ipp"

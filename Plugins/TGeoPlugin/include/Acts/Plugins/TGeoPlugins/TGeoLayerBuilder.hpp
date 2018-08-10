@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 Acts project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -37,11 +37,11 @@ public:
   {
   public:
     /// identify the layer by name
-    std::string layerName;
+    std::string layerName = "";
     /// identify the sensor by name
-    std::string sensorName;
+    std::string sensorName = "";
     // the local axis definition
-    std::string localAxes;
+    std::string localAxes = "xyz";
     // the envolpoe
     std::pair<double, double> envelope;
     /// define the number of bins in loc0
@@ -52,10 +52,10 @@ public:
     LayerConfig()
       : layerName("")
       , sensorName("")
-      , localAxes("xyz")
-      , envelope(std::pair<double, double>(0., 0.))
-      , binsLoc0(0)
-      , binsLoc1(0)
+      , localAxes("XZY")
+      , envelope(std::pair<double, double>(1., 1.))
+      , binsLoc0(100)
+      , binsLoc1(100)
     {
     }
   };
@@ -117,6 +117,10 @@ public:
   void
   setLogger(std::unique_ptr<const Logger> logger);
 
+  /// Return the created detector elements
+  const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
+  detectorElements() const;
+
 private:
   /// configruation object
   Config m_cfg;
@@ -136,7 +140,7 @@ private:
 
   /// Private helper function to parse the geometry tree
   void
-  collectSensitive(std::vector<const Surface*>& layerSurfaces,
+  resolveSensitive(std::vector<const Surface*>& layerSurfaces,
                    TGeoVolume*                  tgVolume,
                    TGeoNode*                    tgNode,
                    const TGeoMatrix&            ctGlobal,
@@ -150,6 +154,12 @@ private:
   // @param type is the indication which ones to build -1 | 0 | 1
   void
   buildLayers(LayerVector& layers, int type = 0);
+
+  // Private helper mehtod : match string with wildcards
+  // @param wc is the one with the potential wildcard
+  // @param test is the test string
+  bool
+  match(const char* wc, const char* test) const;
 };
 
 inline TGeoLayerBuilder::Config
@@ -158,9 +168,40 @@ TGeoLayerBuilder::getConfiguration() const
   return m_cfg;
 }
 
+inline const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
+TGeoLayerBuilder::detectorElements() const
+{
+  return m_elementStore;
+}
+
 inline const std::string&
 TGeoLayerBuilder::identification() const
 {
   return m_cfg.configurationName;
+}
+
+// The main function that checks if two given strings
+// match. The first string may contain wildcard characters
+inline bool
+TGeoLayerBuilder::match(const char* first, const char* second) const
+{
+  // If we reach at the end of both strings, we are done
+  if (*first == '\0' && *second == '\0') return true;
+
+  // Make sure that the characters after '*' are present
+  // in second string. This function assumes that the first
+  // string will not contain two consecutive '*'
+  if (*first == '*' && *(first + 1) != '\0' && *second == '\0') return false;
+
+  // If the first string contains '?', or current characters
+  // of both strings match
+  if (*first == '?' || *first == *second) return match(first + 1, second + 1);
+
+  // If there is *, then there are two possibilities
+  // a) We consider current character of second string
+  // b) We ignore current character of second string.
+  if (*first == '*')
+    return match(first + 1, second) || match(first, second + 1);
+  return false;
 }
 }

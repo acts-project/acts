@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -50,7 +50,7 @@ Acts::ExtrapolationEngine::extrapolate(ExCellCharged&       ecCharged,
                                        const BoundaryCheck& bcheck) const
 {
   return extrapolateT<TrackParameters>(
-      ecCharged, sf, ecCharged.propDirection, bcheck);
+      ecCharged, sf, ecCharged.navigationDirection, bcheck);
 }
 
 /** neutral extrapolation */
@@ -60,5 +60,5 @@ Acts::ExtrapolationEngine::extrapolate(ExCellNeutral&       ecNeutral,
                                        const BoundaryCheck& bcheck) const
 {
   return extrapolateT<NeutralParameters>(
-      ecNeutral, sf, ecNeutral.propDirection, bcheck);
+      ecNeutral, sf, ecNeutral.navigationDirection, bcheck);
 }

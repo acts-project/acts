@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -166,7 +166,7 @@ private:
   ExtrapolationCode
   extrapolateT(ExtrapolationCell<T>& eCell,
                const Surface*        sf     = 0,
-               PropDirection         dir    = alongMomentum,
+               NavigationDirection   dir    = forward,
                const BoundaryCheck&  bcheck = true) const;
 
   /// Init Navigation for static setup
@@ -182,7 +182,7 @@ private:
   ExtrapolationCode
   initNavigationT(ExtrapolationCell<T>& eCell,
                   const Surface*        sf     = 0,
-                  PropDirection         dir    = alongMomentum,
+                  NavigationDirection   dir    = forward,
                   const BoundaryCheck&  bcheck = true) const;
 
   /// Main static layer handling
@@ -192,15 +192,15 @@ private:
   /// @param dir is the additional direction prescription
   /// @param bcheck is the boudnary check directive
   /// @param collectSenstivie steers whether sensitive surfaces are searched
-  /// @param collectMaterial steers whether material has to be integrated
-  /// @param collectPassive steers whether all passive steps are being done
+  /// @param resolveMaterial steers whether material has to be integrated
+  /// @param resolvePassive steers whether all passive steps are being done
   ///
   /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   handleLayerT(ExtrapolationCell<T>& eCell,
                const Surface*        sf     = 0,
-               PropDirection         dir    = alongMomentum,
+               NavigationDirection   dir    = forward,
                const BoundaryCheck&  bcheck = true) const;
 
   /// Handle the failure - as configured
@@ -218,7 +218,7 @@ private:
   handleReturnT(ExtrapolationCode     eCode,
                 ExtrapolationCell<T>& eCell,
                 const Surface*        sf     = 0,
-                PropDirection         dir    = alongMomentum,
+                NavigationDirection   dir    = forward,
                 const BoundaryCheck&  bcheck = true) const;
 };
 
@@ -236,6 +236,6 @@ StaticEngine::getConfiguration() const
   return m_cfg;
 }
 
-}  // end of namespace
+}  // namespace
 
 #include "Acts/Extrapolation/detail/StaticEngine.ipp"

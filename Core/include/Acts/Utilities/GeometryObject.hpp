@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,6 +35,11 @@ public:
   ///
   /// @param geoID the geometry identifier of the object
   GeometryObject(const GeometryID& geoID) : m_geoID(geoID) {}
+
+  /// copy-constructor
+  ///
+  /// @param geoID the geometry identifier of the object
+  GeometryObject(const GeometryObject& geoObj) : m_geoID(geoObj.m_geoID) {}
 
   /// assignment operator
   ///

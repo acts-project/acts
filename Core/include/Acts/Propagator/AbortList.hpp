@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/detail/Extendable.hpp"
 #include "Acts/Propagator/detail/abort_condition_signature_check.hpp"
 #include "Acts/Propagator/detail/abort_list_implementation.hpp"
+#include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/boost_mpl_helper.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 
@@ -36,21 +37,24 @@ public:
   /// This is the call signature for the abort list, it broadcasts the call
   /// to the tuple() memembers of the list
   ///
-  /// @tparam input is the cache type from the propagator
+  /// @tparam propagator_state_t is the state type of the propagator
   /// @tparam result_t is the result type from a certain action
   ///
-  /// @param r[in] is the result object from a certin action
-  /// @param cache[in,out] is the cache object from the propagator
-  template <typename input, typename result_t>
+  /// @param result[in] is the result object from a certin action
+  /// @param propState[in,out] is the state object from the propagator
+  template <typename propagator_state_t, typename result_t>
   bool
-  operator()(const result_t& r, input& cache) const
+  operator()(const result_t& result, propagator_state_t& state) const
   {
     // clang-format off
-    static_assert(detail::all_of_v<detail::abort_condition_signature_check_v<conditions, input>...>,
+    static_assert(detail::all_of_v<detail::abort_condition_signature_check_v<
+                        conditions, 
+                        propagator_state_t>...>,
                   "not all abort conditions support the specified input");
     // clang-format on
 
-    return detail::abort_list_impl<conditions...>::check(tuple(), r, cache);
+    return detail::abort_list_impl<conditions...>::check(
+        tuple(), result, state);
   }
 };
 

@@ -26,6 +26,7 @@ namespace KF {
   {
   public:
     typedef ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars> JacobianMatrix;
+
     const BoundParameters*
     getPredictedState() const
     {
@@ -233,4 +234,4 @@ public:
   Updator        m_oUpdator;
 };
 
-}  // end of namespace Acts
+}  // namespace Acts

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -150,9 +150,11 @@ Acts::DiscLayer::buildApproachDescriptor()
             aSurfaces);
   } else {
     // create the new surfaces - positions first
-    Vector3D aspPosition(center() + 0.5 * thickness() * normal());
-    Vector3D asnPosition(center() - 0.5 * thickness() * normal());
-    auto     asnTransform
+    Vector3D aspPosition(center()
+                         + 0.5 * thickness() * Surface::normal(center()));
+    Vector3D asnPosition(center()
+                         - 0.5 * thickness() * Surface::normal(center()));
+    auto asnTransform
         = std::make_shared<const Transform3D>(Translation3D(asnPosition));
     auto aspTransform
         = std::make_shared<const Transform3D>(Translation3D(aspPosition));

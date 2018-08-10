@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <limits>
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -99,18 +100,8 @@ public:
   const Vector3D
   normal(const Vector2D& lpos) const override final;
 
-  /// Normal vector return
-  ///
-  /// @param lpos is the global position is ignored
-  /// return a Vector3D by value
-  const Vector3D
-  normal(const Vector3D& gpos) const override final;
-
-  /// Normal vector return
-  ///
-  /// @note No param, this overload resolves default parameter ambiguity
-  const Vector3D
-  normal() const;
+  /// Normal vector return without argument
+  using Surface::normal;
 
   /// The binning position is the position calcualted
   /// for a certain binning type
@@ -184,38 +175,39 @@ public:
   double
   pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
 
-  ///  fast straight line intersection schema - standard: provides closest
-  /// intersection and (signed) path length
-  ///  forceDir is to provide the closest forward solution
+  /// @brief Fast straight line intersection schema
   ///
-  ///  @param gpos is the start position of the intersection attempt
-  ///  @param gdir is the direction of the interesection attempt,
-  ///        @note has to be normalized
-  ///  @param forceDir is the directive whether to force only foward solution
-  ///  (w.r.t dir)
-  ///  @param bcheck is the boundary check directive
+  /// @param gpos The start position of the intersection attempt
+  /// @param gdir The direction of the interesection attempt,
+  ///       @note expected to be normalized
+  /// @param navDir The navigation direction with respect to the momentum
+  /// @param bcheck The boundary check directive
+  /// @param correct is a corrector function (e.g. for curvature correction)
   ///
-  ///  <b>mathematical motivation:</b>
+  /// <b>mathematical motivation:</b>
   ///
-  ///  the equation of the plane is given by: <br>
-  ///  @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
-  ///  where @f$ \vec n = (n_{x}, n_{y}, n_{z})@f$ denotes the normal vector of
-  /// the plane,
-  ///  @f$ \vec p = (p_{x}, p_{y}, p_{z})@f$ one specific point on the plane and
-  /// @f$ \vec x = (x,y,z) @f$ all possible points
-  ///  on the plane.<br>
-  ///  Given a line with:<br>
-  ///  @f$ \vec l(u) = \vec l_{1} + u \cdot \vec v @f$, <br>
-  ///  the solution for @f$ u @f$ can be written:
-  ///  @f$ u = \frac{\vec n (\vec p - \vec l_{1})}{\vec n \vec v}@f$ <br>
-  ///  If the denominator is 0 then the line lies:
-  ///  - either in the plane
-  ///  - perpendicular to the normal of the plane
+  /// the equation of the plane is given by: <br>
+  /// @f$ \vec n \cdot \vec x = \vec n \cdot \vec p,@f$ <br>
+  /// where @f$ \vec n = (n_{x}, n_{y}, n_{z})@f$ denotes the normal vector of
+  /// the plane,  @f$ \vec p = (p_{x}, p_{y}, p_{z})@f$ one specific point
+  /// on the plane and @f$ \vec x = (x,y,z) @f$ all possible points
+  /// on the plane.<br>
+  ///
+  /// Given a line with:<br>
+  /// @f$ \vec l(u) = \vec l_{1} + u \cdot \vec v @f$, <br>
+  /// the solution for @f$ u @f$ can be written:
+  /// @f$ u = \frac{\vec n (\vec p - \vec l_{1})}{\vec n \vec v}@f$ <br>
+  /// If the denominator is 0 then the line lies:
+  /// - either in the plane
+  /// - perpendicular to the normal of the plane
+  ///
+  /// @return the Intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
-                       bool                 forceDir = true,
-                       const BoundaryCheck& bcheck   = true) const override;
+                       NavigationDirection  navDir = forward,
+                       const BoundaryCheck& bcheck = false,
+                       CorrFnc correct = nullptr) const final override;
 
   /// Return properly formatted class name for screen output
   virtual std::string
@@ -231,25 +223,6 @@ protected:
   std::shared_ptr<const PlanarBounds> m_bounds;
 };
 
-inline Intersection
-PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
-                                   const Vector3D&      gdir,
-                                   bool                 forceDir,
-                                   const BoundaryCheck& bcheck) const
-{
-  double denom = gdir.dot(normal());
-  if (denom) {
-    double   u = (normal().dot((center() - gpos))) / (denom);
-    Vector3D intersectPoint(gpos + u * gdir);
-    // evaluate the intersection in terms of direction
-    bool isValid = forceDir ? (u > 0.) : true;
-    // evaluate (if necessary in terms of boundaries)
-    isValid
-        = bcheck ? (isValid && isOnSurface(intersectPoint, bcheck)) : isValid;
-    // return the result
-    return Intersection(intersectPoint, u, isValid);
-  }
-  return Intersection(gpos, std::numeric_limits<double>::max(), false);
-}
+#include "Acts/Surfaces/detail/PlaneSurface.ipp"
 
-}  // end of namespace
+}  // end of namespace Acts

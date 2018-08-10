@@ -1,16 +1,15 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Digitization/DigitizationCell.hpp"
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/ParticleDefinitions.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
@@ -31,22 +30,18 @@ public:
   /// @param [in] loc0 is the local position in the first coordinate
   /// @param [in] loc1 is the local position in the second coordinate
   /// @param [in] dCells is the vector of digitization cells
-  /// - optional truth information
-  /// @param [in] tVertices particle barcodes of simulated particles
   PlanarModuleCluster(const Surface&                mSurface,
                       const Identifier&             cIdentifier,
                       ActsSymMatrixD<2>             cov,
                       double                        loc0,
                       double                        loc1,
-                      std::vector<DigitizationCell> dCells,
-                      std::vector<ProcessVertex>    tVertices = {})
+                      std::vector<DigitizationCell> dCells)
     : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(mSurface,
                                                     cIdentifier,
                                                     std::move(cov),
                                                     loc0,
                                                     loc1)
     , m_digitizationCells(dCells)
-    , m_truthVertices(tVertices)
   {
   }
 
@@ -56,26 +51,13 @@ public:
   const std::vector<DigitizationCell>&
   digitizationCells() const;
 
-  /// access to the contributing truth vertices
-  ///
-  /// @return the vector of involved truth vertices
-  const std::vector<ProcessVertex>&
-  truthVertices() const;
-
 private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
-  std::vector<ProcessVertex>    m_truthVertices;      /// truth vertices
 };
 
 inline const std::vector<DigitizationCell>&
 PlanarModuleCluster::digitizationCells() const
 {
   return m_digitizationCells;
-}
-
-inline const std::vector<ProcessVertex>&
-PlanarModuleCluster::truthVertices() const
-{
-  return m_truthVertices;
 }
 }

@@ -73,5 +73,7 @@ public:
   {
     return true;
   }
+
+  using Surface::normal;
 };
 }  // end of ns

@@ -526,7 +526,7 @@ namespace Logging {
     /// pointer to destination output stream
     std::ostream* m_out;
   };
-}  // end of namespace Logging
+}  // namespace Logging
 
 /// @brief class for printing debug output
 ///
@@ -603,4 +603,4 @@ getDefaultLogger(const std::string&    name,
                  const Logging::Level& lvl,
                  std::ostream*         log_stream = &std::cout);
 
-}  // end of namespace Acts
+}  // namespace Acts

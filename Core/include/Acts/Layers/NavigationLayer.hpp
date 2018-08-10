@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -88,9 +89,9 @@ public:
 
   /// Accept layer according to the following colelction directives
   ///
-  /// @param collectSensitive is the prescription to find the sensitive surfaces
-  /// @param collectMaterial is the precription to find material surfaces
-  /// @param collectPassive is the prescription to find all passive surfaces
+  /// @param resolveSensitive is the prescription to find the sensitive surfaces
+  /// @param resolveMaterial is the precription to find material surfaces
+  /// @param resolvePassive is the prescription to find all passive surfaces
   ///
   /// @note navigation layers are never accepted
   ///
@@ -146,4 +147,10 @@ NavigationLayer::isOnLayer(const Vector3D&      gp,
   return m_surfaceRepresentation->isOnSurface(gp, bcheck);
 }
 
-}  // end of namespace
+inline bool
+NavigationLayer::resolve(bool, bool, bool) const
+{
+  return false;
+}
+
+}  // namespace Acts

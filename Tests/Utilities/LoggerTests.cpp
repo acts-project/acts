@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 Acts project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,7 +39,7 @@ namespace Test {
     {
       return std::string("'") + expected + "' != '" + found + "'";
     }
-  }  // end of namespace detail
+  }  // namespace detail
   /// @endcond
 
   /// @brief unit test for FATAL debug level
@@ -236,5 +236,5 @@ namespace Test {
       BOOST_TEST(line == lines.at(i), detail::failure_msg(line, lines.at(i)));
     }
   }
-}  // end of namespace Test
-}  // end of namespace Acts
+}  // namespace Test
+}  // namespace Acts

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -35,7 +35,7 @@ class StaticNavigationEngine : virtual public INavigationEngine
 {
 public:
   /// @struct Config
-  /// NEsted configuration struct for the StaticNavigationEngine
+  /// Nested configuration struct for the StaticNavigationEngine
   struct Config
   {
     /// the used propagation engine
@@ -74,8 +74,8 @@ public:
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
-  resolveBoundary(ExCellCharged& ecCell,
-                  PropDirection  dir = alongMomentum) const final;
+  resolveBoundary(ExCellCharged&      ecCell,
+                  NavigationDirection dir = forward) const final;
 
   /// Resolve the boundary situation - for neutral particles
   ///
@@ -84,8 +84,8 @@ public:
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
-  resolveBoundary(ExCellNeutral& enCell,
-                  PropDirection  dir = alongMomentum) const final;
+  resolveBoundary(ExCellNeutral&      enCell,
+                  NavigationDirection dir = forward) const final;
 
   /// Resolve the boundary situation - for charged particles
   ///
@@ -95,9 +95,9 @@ public:
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
-  resolvePosition(ExCellCharged& ecCell,
-                  PropDirection  dir    = alongMomentum,
-                  bool           noLoop = false) const final;
+  resolvePosition(ExCellCharged&      ecCell,
+                  NavigationDirection dir    = forward,
+                  bool                noLoop = false) const final;
 
   /// Resolve the boundary situation - for neutral particles
   ///
@@ -107,9 +107,9 @@ public:
   ///
   /// @return is a extrapolation code indication
   ExtrapolationCode
-  resolvePosition(ExCellNeutral& enCell,
-                  PropDirection  dir    = alongMomentum,
-                  bool           noLoop = false) const final;
+  resolvePosition(ExCellNeutral&      enCell,
+                  NavigationDirection dir    = forward,
+                  bool                noLoop = false) const final;
 
   /// Set configuration method
   ///
@@ -150,7 +150,7 @@ private:
   template <class T>
   ExtrapolationCode
   resolveBoundaryT(ExtrapolationCell<T>& eCell,
-                   PropDirection         dir = alongMomentum) const;
+                   NavigationDirection   dir = forward) const;
 
   /// Resolve position
   ///
@@ -163,7 +163,7 @@ private:
   template <class T>
   ExtrapolationCode
   resolvePositionT(ExtrapolationCell<T>& eCell,
-                   PropDirection         dir    = alongMomentum,
+                   NavigationDirection   dir    = forward,
                    bool                  noLoop = false) const;
 
   /// Deal with the boundary Surface - called by resolveBoundary
@@ -178,7 +178,7 @@ private:
   ExtrapolationCode
   handleBoundaryT(ExtrapolationCell<T>&                   eCell,
                   const BoundarySurfaceT<TrackingVolume>& bSurfaceTV,
-                  PropDirection                           dir = alongMomentum,
+                  NavigationDirection                     dir = forward,
                   bool stepout                                = false) const;
 };
 
@@ -188,6 +188,6 @@ StaticNavigationEngine::getConfiguration() const
   return m_cfg;
 }
 
-}  // end of namespace
+}  // namespace
 
 #include "Acts/Extrapolation/detail/StaticNavigationEngine.ipp"

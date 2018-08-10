@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 Acts project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -156,7 +156,7 @@ private:
   /// @param sMap is the map to be filled
   /// @param tVolume is current TrackingVolume
   void
-  collectMaterialSurfaces(std::map<GeometryID, SurfaceMaterialRecord>& sMap,
+  resolveMaterialSurfaces(std::map<GeometryID, SurfaceMaterialRecord>& sMap,
                           const TrackingVolume& tVolume) const;
 
   /// check and insert

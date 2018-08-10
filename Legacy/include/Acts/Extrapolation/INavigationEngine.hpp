@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -40,8 +40,8 @@ public:
   ///
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
-  resolveBoundary(ExCellCharged& ecCell,
-                  PropDirection  dir = alongMomentum) const = 0;
+  resolveBoundary(ExCellCharged&      ecCell,
+                  NavigationDirection dir = forward) const = 0;
 
   /// Resolve the boundary situation - for neutral particles
   ///
@@ -50,8 +50,8 @@ public:
   ///
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
-  resolveBoundary(ExCellNeutral& enCell,
-                  PropDirection  dir = alongMomentum) const = 0;
+  resolveBoundary(ExCellNeutral&      enCell,
+                  NavigationDirection dir = forward) const = 0;
 
   /// Resolve the boundary situation - for charged particles
   ///
@@ -62,9 +62,9 @@ public:
   ///
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
-  resolvePosition(ExCellCharged& ecCell,
-                  PropDirection  dir    = alongMomentum,
-                  bool           noLoop = false) const = 0;
+  resolvePosition(ExCellCharged&      ecCell,
+                  NavigationDirection dir    = forward,
+                  bool                noLoop = false) const = 0;
 
   /// Resolve the boundary situation - for neutral particles
   ///
@@ -75,13 +75,13 @@ public:
   ///
   /// @return is a extrapolation code indication
   virtual ExtrapolationCode
-  resolvePosition(ExCellNeutral& enCell,
-                  PropDirection  dir    = alongMomentum,
-                  bool           noLoop = false) const = 0;
+  resolvePosition(ExCellNeutral&      enCell,
+                  NavigationDirection dir    = forward,
+                  bool                noLoop = false) const = 0;
 
 protected:
   std::string m_sopPrefix;   ///< prefix for screen output
   std::string m_sopPostfix;  ///< prefix for screen output
 };
 
-}  // end of namespace
+}  // namespace

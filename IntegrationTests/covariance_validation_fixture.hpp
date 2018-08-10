@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <array>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -53,7 +54,7 @@ namespace IntegrationTest {
 
       // avoid stopping before the surface because of path length reached
       U var_options = options;
-      var_options.max_path_length *= 2;
+      var_options.pathLimit *= 2;
 
       // variation in x
       std::vector<ActsVectorD<5>> x_derivatives;

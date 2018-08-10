@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Detector/DetectorElementBase.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
@@ -60,6 +61,9 @@ public:
     Curvilinear = 6,
     Other       = 7
   };
+
+  /// Typedef of the surface intersection
+  typedef ObjectIntersection<Surface> SurfaceIntersection;
 
   /// Constructor with Transform3D as a shared object
   ///
@@ -160,6 +164,18 @@ public:
   virtual const Vector3D
   normal(const Vector3D& pos) const;
 
+  /// Return method for the normal vector of the surface
+  ///
+  /// It will return a normal vector at the center() position
+  ///
+  /// @param pos is the global position where the normal vector is constructed
+  /// @return normal vector by value
+  virtual const Vector3D
+  normal() const
+  {
+    return normal(center());
+  }
+
   /// Return method for SurfaceBounds
   /// @return SurfaceBounds by reference
   virtual const SurfaceBounds&
@@ -204,24 +220,18 @@ public:
 
   /// The templated Parameters onSurface method
   /// In order to avoid unneccessary geometrical operations, it checks on the
-  /// surface pointer first.
-  /// If that check fails, it calls the geometrical check isOnSurface
+  /// surface pointer first. If that check fails, it calls the geometrical
+  /// check isOnSurface
+  ///
+  /// @tparam parameters_t The parameters type
   ///
   /// @param parameters TrackParameters to be checked
   /// @param bcheck BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
-  template <class T>
+  template <typename parameters_t>
   bool
-  onSurface(const T&             parameters,
+  onSurface(const parameters_t&  parameters,
             const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
-
-  /// The insideBounds method for local positions
-  ///
-  /// @param lpos local position to check
-  /// @param bcheck  BoundaryCheck directive for this onSurface check
-  /// @return boolean indication if operation was successful
-  virtual bool
-  insideBounds(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const;
 
   /// The geometric onSurface method
   /// Geometrical check whether position is on Surface
@@ -231,6 +241,14 @@ public:
   /// @return boolean indication if operation was successful
   virtual bool
   isOnSurface(const Vector3D& gpos, const BoundaryCheck& bcheck = true) const;
+
+  /// The insideBounds method for local positions
+  ///
+  /// @param lpos local position to check
+  /// @param bcheck  BoundaryCheck directive for this onSurface check
+  /// @return boolean indication if operation was successful
+  virtual bool
+  insideBounds(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -330,54 +348,60 @@ public:
   pathCorrection(const Vector3D& gpos, const Vector3D& gmom) const = 0;
 
   /// Straight line intersection schema from parameters
-  /// Templated for charged and neutral
   ///
-  /// @todo include intersector
-  /// @param pars TrackParameters to start from
-  /// @param forceDir boolean indication whether to force the direction given by
-  /// the TrackParameters to hold
-  /// @param bcheck boundary check directive for this operation
-  /// @return Intersection class
-  template <class T>
-  Intersection
-  intersectionEstimate(const T&             pars,
-                       bool                 forceDir = false,
-                       const BoundaryCheck& bcheck   = false) const
+  /// Templated for :
+  /// @tparam parameters_t Type of track parameters
+  /// @tparam options_t Type of the navigation options
+  /// @tparam corrector_t is the type of the corrector struct foer the direction
+  ///
+  /// @param parameters The parameters to start from
+  /// @param options Options object that holds additional navigation info
+  /// @param correct Corrector struct that can be used to refine the solution
+  ///
+  /// @return SurfaceIntersection object (contains intersection & surface)
+  template <typename parameters_t,
+            typename options_t,
+            typename corrector_t = VoidCorrector>
+  SurfaceIntersection
+  intersectionEstimate(const parameters_t& parameters,
+                       const options_t&    options,
+                       const corrector_t&  correct = corrector_t()) const
   {
-    return intersectionEstimate(
-        pars.position(), pars.momentum().unit(), forceDir, bcheck);
+    // get the intersection with the surface
+    auto sIntersection = intersectionEstimate(parameters.position(),
+                                              parameters.direction(),
+                                              options.navDir,
+                                              options.boundaryCheck,
+                                              correct);
+    // return a surface intersection with result direction
+    return SurfaceIntersection(sIntersection, this);
   }
 
-  /// Straight line intersection schema from parameters
-  /// Templated for charged and neutral
-  /// @todo include intersector
+  /// Straight line intersection from position and momentum
   ///
   /// @param gpos global 3D position - considered to be on surface but not
-  ///         inside bounds (check is done)
-  /// @param gdir global 3D direction representation
-  ///        @note has to be normalized
-  /// @param forceDir boolean indication whether to force the direction given by
-  /// the TrackParameters to hold
+  ///        inside bounds (check is done)
+  /// @param 3D direction representation - expected to be normalized (no check
+  /// done)
+  /// @param navDir The navigation direction : if you want to find the closest,
+  ///        chose anyDirection and the closest will be chosen
   /// @param bcheck boundary check directive for this operation
+  /// @param corr is a correction function on position and momentum to do
+  ///        a more appropriate intersection
   ///
-  /// @return Intersection class
+  /// @return Intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gdir,
-                       bool                 forceDir = false,
-                       const BoundaryCheck& bcheck = false) const = 0;
-
-  /// Distance to intersection
-  template <class T>
-  double
-  distance(const T&             pars,
-           bool                 forceDir = false,
-           const BoundaryCheck& bcheck   = false) const;
+                       const Vector3D&      gidr,
+                       NavigationDirection  navDir = forward,
+                       const BoundaryCheck& bcheck = false,
+                       CorrFnc              corr = nullptr) const = 0;
+  /// clang-format on
 
   /// Returns 'true' if this surface is 'free'
   /// i.e. it does not belong to a detector element, a layer or a tracking
   /// volume
-  bool
+  virtual bool
   isFree() const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
@@ -396,8 +420,8 @@ public:
   toVariantData() const = 0;
 
 protected:
-  /// Transform3D definition that positions (translation, rotation) the surface
-  /// in global space
+  /// Transform3D definition that positions
+  /// (translation, rotation) the surface in global space
   std::shared_ptr<const Transform3D> m_transform;
 
   /// Pointer to the a DetectorElementBase
@@ -418,141 +442,9 @@ protected:
   std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
 };
 
-inline const RotationMatrix3D
-Surface::referenceFrame(const Vector3D&, const Vector3D&) const
-{
-  return transform().matrix().block<3, 3>(0, 0);
-}
-
-inline void Surface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
-                                          const Vector3D& gpos,
-                                          const Vector3D& dir,
-                                          const ActsVectorD<5>&) const
-{
-  // The trigonometry required to convert the direction to spherical
-  // coordinates and then compute the sines and cosines again can be
-  // surprisingly expensive from a performance point of view.
-  //
-  // Here, we can avoid it because the direction is by definition a unit
-  // vector, with the following coordinate conversions...
-  const double x = dir(0);  // == cos(phi) * sin(theta)
-  const double y = dir(1);  // == sin(phi) * sin(theta)
-  const double z = dir(2);  // == cos(theta)
-
-  // ...which we can invert to directly get the sines and cosines:
-  const double cos_theta     = z;
-  const double sin_theta     = sqrt(x * x + y * y);
-  const double inv_sin_theta = 1. / sin_theta;
-  const double cos_phi       = x * inv_sin_theta;
-  const double sin_phi       = y * inv_sin_theta;
-  // retrieve the reference frame
-  const auto rframe = referenceFrame(gpos, dir);
-  // the local error components - given by reference frame
-  jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
-  // the momentum components
-  jacobian(3, ePHI)   = (-sin_theta) * sin_phi;
-  jacobian(3, eTHETA) = cos_theta * cos_phi;
-  jacobian(4, ePHI)   = sin_theta * cos_phi;
-  jacobian(4, eTHETA) = cos_theta * sin_phi;
-  jacobian(5, eTHETA) = (-sin_theta);
-  jacobian(6, eQOP)   = 1;
-}
-
-inline const RotationMatrix3D
-    Surface::initJacobianToLocal(ActsMatrixD<5, 7>& jacobian,
-                                 const Vector3D& gpos,
-                                 const Vector3D& dir) const
-{
-  // Optimized trigonometry on the propagation direction
-  const double x = dir(0);  // == cos(phi) * sin(theta)
-  const double y = dir(1);  // == sin(phi) * sin(theta)
-  // component expressions
-  const double inv_sin_theta_2        = 1. / (x * x + y * y);
-  const double cos_phi_over_sin_theta = x * inv_sin_theta_2;
-  const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
-  const double inv_sin_theta          = sqrt(inv_sin_theta_2);
-  // The measurement frame of the surface
-  RotationMatrix3D rframeT = referenceFrame(gpos, dir).transpose();
-  // given by the refernece frame
-  jacobian.block<2, 3>(0, 0) = rframeT.block<2, 3>(0, 0);
-  // Directional and momentum elements for reference frame surface
-  jacobian(ePHI, 3)   = -sin_phi_over_sin_theta;
-  jacobian(ePHI, 4)   = cos_phi_over_sin_theta;
-  jacobian(eTHETA, 5) = -inv_sin_theta;
-  jacobian(eQOP, 6)   = 1;
-  // return the frame where this happened
-  return rframeT;
-}
-
-inline const ActsRowVectorD<5>
-Surface::derivativeFactors(const Vector3D&,
-                           const Vector3D&         dir,
-                           const RotationMatrix3D& rft,
-                           const ActsMatrixD<7, 5>& jac) const
-{
-  // Create the normal and scale it with the projection onto the direction
-  ActsRowVectorD<3> norm_vec = rft.template block<1, 3>(2, 0);
-  norm_vec /= (norm_vec * dir);
-  // calculate the s factors
-  return (norm_vec * jac.topLeftCorner<3, 5>());
-}
-
-template <class T>
-bool
-Surface::onSurface(const T& pars, const BoundaryCheck& bcheck) const
-{
-  // surface pointer comparison as a first fast check (w/o transform)
-  if ((&pars.referenceSurface() == this)) {
-    return (bcheck ? insideBounds(pars.localPosition(), bcheck) : true);
-  }
-  return isOnSurface(pars.position(), bcheck);
-}
-
-inline const DetectorElementBase*
-Surface::associatedDetectorElement() const
-{
-  return m_associatedDetElement;
-}
-
-inline const Identifier
-Surface::associatedIdentifier() const
-{
-  if (!m_associatedDetElement) return Identifier();  // in invalid state
-  if (m_associatedDetElementId.is_valid()) return m_associatedDetElementId;
-  return m_associatedDetElement->identify();
-}
-
-inline bool
-Surface::isFree() const
-{
-  return (!m_associatedDetElement && !m_associatedTrackingVolume);
-}
-
-inline const Layer*
-Surface::associatedLayer() const
-{
-  return (m_associatedLayer);
-}
-
-inline const SurfaceMaterial*
-Surface::associatedMaterial() const
-{
-  return m_associatedMaterial.get();
-}
-
-inline void
-Surface::setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial> material)
-{
-  m_associatedMaterial = material;
-}
-
-inline void
-Surface::associateLayer(const Layer& lay)
-{
-  m_associatedLayer = (&lay);
-}
+#include "Acts/Surfaces/detail/Surface.ipp"
 
 std::ostream&
 operator<<(std::ostream& sl, const Surface& sf);
 
-}  // end of namespace Acts
+}  // namespace Acts

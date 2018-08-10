@@ -348,6 +348,6 @@ namespace Test {
     BOOST_TEST(Config0.overlapsInZ(Config7));
   }
 
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

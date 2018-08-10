@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -117,9 +117,9 @@ public:
   ///
   /// @return is the attached volume at that position
   virtual const T*
-  attachedVolume(const Vector3D& gpos,
-                 const Vector3D& mom,
-                 PropDirection   dir) const;
+  attachedVolume(const Vector3D&     gpos,
+                 const Vector3D&     mom,
+                 NavigationDirection dir) const;
 
   /// templated onBoundary method
   ///
@@ -201,9 +201,9 @@ BoundarySurfaceT<T>::attachVolumeArray(
 
 template <class T>
 const T*
-BoundarySurfaceT<T>::attachedVolume(const Vector3D& pos,
-                                    const Vector3D& mom,
-                                    PropDirection   pdir) const
+BoundarySurfaceT<T>::attachedVolume(const Vector3D&     pos,
+                                    const Vector3D&     mom,
+                                    NavigationDirection pdir) const
 {
   const T* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
@@ -215,4 +215,4 @@ BoundarySurfaceT<T>::attachedVolume(const Vector3D& pos,
                                     : m_insideVolume;
   return attVolume;
 }
-}  // end of namespace Acts
+}  // namespace Acts

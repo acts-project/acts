@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 Acts project team
+// Copyright (C) 2017-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -63,8 +63,8 @@ namespace detail {
         solutions = 0;
       else {
         solutions = (discriminant == 0) ? 1 : 2;
-        double q  = -0.5
-            * (beta + (beta > 0 ? sqrt(discriminant) : -sqrt(discriminant)));
+        double q  = -0.5 * (beta + (beta > 0 ? std::sqrt(discriminant)
+                                            : -std::sqrt(discriminant)));
         first  = q / alpha;
         second = gamma / q;
       }

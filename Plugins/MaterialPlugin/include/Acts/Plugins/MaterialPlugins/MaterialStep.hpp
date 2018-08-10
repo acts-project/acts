@@ -125,7 +125,7 @@ private:
   uint64_t m_geoID;
 };
 
-}  /// end of namespace
+}  /// namespace
 
 #if !defined(__CLING__)
 inline const Acts::Vector3D

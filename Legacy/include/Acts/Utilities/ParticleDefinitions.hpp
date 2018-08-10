@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -271,7 +272,7 @@ public:
   }
   /// Return the outgoing particles
   const std::vector<ParticleProperties>&
-  outgoingParticles() const
+  out() const
   {
     return m_outgoing;
   }
@@ -307,4 +308,5 @@ ProcessVertex::addOutgoing(const ParticleProperties& pProperties)
 {
   m_outgoing.push_back(pProperties);
 }
-}
+
+}  // namespace Acts

@@ -166,68 +166,6 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
   return ((std::abs(loc3Dframe.perp() - r) > inttol) ? false : true);
 }
 
-Acts::Intersection
-Acts::ConeSurface::intersectionEstimate(const Vector3D&      gpos,
-                                        const Vector3D&      gdir,
-                                        bool                 forceDir,
-                                        const BoundaryCheck& bcheck) const
-{
-  // transform to a frame with the cone along z, with the tip at 0
-  Vector3D tpos1 = m_transform ? transform().inverse() * gpos : gpos;
-  Vector3D tdir  = m_transform ? transform().inverse().linear() * gdir : gdir;
-  // see the header for the formula derivation
-  double tan2Alpha = bounds().tanAlpha() * bounds().tanAlpha(),
-         A         = tdir.x() * tdir.x() + tdir.y() * tdir.y()
-      - tan2Alpha * tdir.z() * tdir.z(),
-         B = 2 * (tdir.x() * tpos1.x() + tdir.y() * tpos1.y()
-                  - tan2Alpha * tdir.z() * tpos1.z()),
-         C = tpos1.x() * tpos1.x() + tpos1.y() * tpos1.y()
-      - tan2Alpha * tpos1.z() * tpos1.z();
-  if (A == 0.) A += 1e-16;  // avoid div by zero
-
-  // use Andreas' quad solver, much more stable than what I wrote
-  detail::RealQuadraticEquation solns(A, B, C);
-
-  Vector3D solution(0., 0., 0.);
-  double   path    = 0.;
-  bool     isValid = false;
-  if (solns.solutions != 0) {
-    double         t1 = solns.first;
-    Acts::Vector3D soln1Loc(tpos1 + t1 * tdir);
-    isValid = forceDir ? (t1 > 0.) : true;
-    // there's only one solution
-    if (solns.solutions == 1) {
-      solution = soln1Loc;
-      path     = t1;
-    } else {
-      double   t2 = solns.second;
-      Vector3D soln2Loc(tpos1 + t2 * tdir);
-      // both solutions have the same sign
-      if (t1 * t2 > 0. || !forceDir) {
-        if (t1 * t1 < t2 * t2) {
-          solution = soln1Loc;
-          path     = t1;
-        } else {
-          solution = soln2Loc;
-          path     = t2;
-        }
-      } else {
-        if (t1 > 0.) {
-          solution = soln1Loc;
-          path     = t1;
-        } else {
-          solution = soln2Loc;
-          path     = t2;
-        }
-      }
-    }
-  }
-  if (m_transform) solution = transform() * solution;
-
-  isValid = bcheck ? (isValid && isOnSurface(solution, bcheck)) : isValid;
-  return Intersection(solution, path, isValid);
-}
-
 double
 Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
                                   const Vector3D& mom) const

@@ -119,6 +119,6 @@ namespace Test {
       BOOST_TEST(Btrue == BField.getField(-2 * pos));
     }
   }
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

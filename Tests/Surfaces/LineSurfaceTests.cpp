@@ -96,9 +96,7 @@ namespace Test {
                "bounds() equals construction bounds");
     //
     // globalToLocal()
-    Vector3D gpos{
-        0., 1., 0,
-    };
+    Vector3D       gpos{0., 1., 0.};
     const Vector3D mom{20., 0., 0.};  // needs more realistic parameters
     Vector2D       localPosition;
     BOOST_CHECK(line.globalToLocal(gpos, mom, localPosition));
@@ -106,13 +104,13 @@ namespace Test {
     BOOST_CHECK(expectedResult == localPosition);
     //
     // intersectionEstimate
-    const Vector3D direction{0., 1., 2.};
-    bool           forceDir = false;
-    BoundaryCheck  bcheck(false);
-    auto           intersection
-        = line.intersectionEstimate({0., 0., 0.}, direction, forceDir, bcheck);
+    const Vector3D      direction{0., 1., 2.};
+    NavigationDirection navDir = anyDirection;
+    BoundaryCheck       bcheck(false);
+    auto                intersection = line.intersectionEstimate(
+        {0., 0., 0.}, direction.unit(), navDir, bcheck);
     BOOST_CHECK(intersection.valid);
-    Vector3D expectedIntersection(0, -1. / 3., -2. / 3.);
+    Vector3D expectedIntersection(0, 1., 2.);
     BOOST_TEST(intersection.position
                == expectedIntersection);  // need more tests..
     //
@@ -201,6 +199,6 @@ namespace Test {
 
   BOOST_AUTO_TEST_SUITE_END()
 
-}  // end of namespace Test
+}  // namespace Test
 
-}  // end of namespace Acts
+}  // namespace Acts

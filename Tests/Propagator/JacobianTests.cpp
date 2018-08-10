@@ -141,17 +141,17 @@ namespace Test {
     auto            tfl = rkUtils.transformLocalToGlobal(true, pars, P);
     BOOST_CHECK(tfl);
     // b) ATLAS stepper
-    AtlasStepper_type::Cache asCache(pars);
+    AtlasStepper_type::State astepState(pars);
     // c) Eigen stepper
-    EigenStepper_type::Cache esCache(pars);
+    EigenStepper_type::State estepState(pars);
 
     // create the matrices
     auto rkMatrix = convertToMatrix(P);
-    auto asMatrix = convertToMatrix(asCache.pVector);
+    auto asMatrix = convertToMatrix(astepState.pVector);
 
     bool rkas = rkMatrix.isApprox(asMatrix);
-    bool rkes = rkMatrix.isApprox(esCache.jac_to_global);
-    bool ases = asMatrix.isApprox(esCache.jac_to_global);
+    bool rkes = rkMatrix.isApprox(estepState.jacToGlobal);
+    bool ases = asMatrix.isApprox(estepState.jacToGlobal);
     // cross comparison checks
     BOOST_CHECK(rkas);
     BOOST_CHECK(rkes);
@@ -164,7 +164,7 @@ namespace Test {
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     // Let's create a surface somewhere in space
     Vector3D     pos(341., 412., 93.);
@@ -172,7 +172,7 @@ namespace Test {
     const double q = 1;
 
     // Create curvilinear parameters
-    CurvilinearParameters curvilinear(std::move(cov_ptr), pos, mom, q);
+    CurvilinearParameters curvilinear(std::move(covPtr), pos, mom, q);
 
     // run the test
     testJacobianToGlobal(curvilinear);
@@ -188,12 +188,12 @@ namespace Test {
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     ActsVectorD<NGlobalPars> pars;
     pars << 182.34, -82., 0.134, 0.85, 1. / (100 * units::_GeV);
 
-    BoundParameters atCylinder(std::move(cov_ptr), std::move(pars), cSurface);
+    BoundParameters atCylinder(std::move(covPtr), std::move(pars), cSurface);
 
     // run the test
     testJacobianToGlobal(atCylinder);
@@ -211,12 +211,12 @@ namespace Test {
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     ActsVectorD<NGlobalPars> pars;
     pars << 192.34, 1.823, 0.734, 0.235, 1. / (100 * units::_GeV);
 
-    BoundParameters atDisc(std::move(cov_ptr), std::move(pars), dSurface);
+    BoundParameters atDisc(std::move(covPtr), std::move(pars), dSurface);
 
     // run the test
     testJacobianToGlobal(atDisc);
@@ -235,12 +235,12 @@ namespace Test {
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     ActsVectorD<NGlobalPars> pars;
     pars << 12.34, -8722., 2.134, 0.85, 1. / (100 * units::_GeV);
 
-    BoundParameters atPlane(std::move(cov_ptr), std::move(pars), pSurface);
+    BoundParameters atPlane(std::move(covPtr), std::move(pars), pSurface);
 
     // run the test
     testJacobianToGlobal(atPlane);
@@ -256,12 +256,12 @@ namespace Test {
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     ActsVectorD<NGlobalPars> pars;
     pars << -3.34, -822., -0.734, 0.85, 1. / (100 * units::_GeV);
 
-    BoundParameters perigee(std::move(cov_ptr), std::move(pars), pSurface);
+    BoundParameters perigee(std::move(covPtr), std::move(pars), pSurface);
 
     // run the test
     testJacobianToGlobal(perigee);
@@ -277,12 +277,12 @@ namespace Test {
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     ActsVectorD<NGlobalPars> pars;
     pars << -8.34, 812., 0.734, 0.25, 1. / (100 * units::_GeV);
 
-    BoundParameters atStraw(std::move(cov_ptr), std::move(pars), sSurface);
+    BoundParameters atStraw(std::move(covPtr), std::move(pars), sSurface);
 
     // run the test
     testJacobianToGlobal(atStraw);

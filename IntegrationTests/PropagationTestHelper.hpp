@@ -7,13 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "covariance_validation_fixture.hpp"
 
 namespace tt = boost::test_tools;
 
 namespace Acts {
 
-using namespace propagation;
 using units::Nat2SI;
 
 namespace IntegrationTest {
@@ -80,13 +81,15 @@ namespace IntegrationTest {
                              double                 charge,
                              int /*index*/,
                              double Bz,
-                             double disttol = 0.1 * units::_um)
+                             double disttol = 0.1 * units::_um,
+                             bool   debug   = false)
   {
 
     // setup propagation options
     typename Propagator_type::template Options<> options;
-    options.max_path_length = 5 * units::_m;
-    options.max_step_size   = 1 * units::_cm;
+    options.pathLimit   = 5 * units::_m;
+    options.maxStepSize = 1 * units::_cm;
+    options.debug       = debug;
 
     // define start parameters
     double                x  = 0;
@@ -113,7 +116,7 @@ namespace IntegrationTest {
     double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
 
     // calculate number of turns of helix
-    double turns = options.max_path_length / (2 * M_PI * r) * sin(theta);
+    double turns = options.pathLimit / (2 * M_PI * r) * sin(theta);
     // respect direction of curl
     turns = (q * Bz < 0) ? turns : -turns;
 
@@ -163,18 +166,28 @@ namespace IntegrationTest {
                   double                 plimit,
                   int /*index*/,
                   double disttol = 1. * units::_um,
-                  double momtol  = 10. * units::_keV)
+                  double momtol  = 10. * units::_keV,
+                  bool   debug   = false)
   {
 
     // setup propagation options
-    typename Propagator_type::template Options<> fwd_options;
-    fwd_options.max_path_length = plimit;
-    fwd_options.max_step_size   = 1 * units::_cm;
+    // Action list and abort list
+    typedef Acts::detail::DebugOutputActor DebugOutput;
+    typedef Acts::ActionList<DebugOutput>  ActionList;
+    typedef Acts::AbortList<>              AbortConditions;
 
-    typename Propagator_type::template Options<> back_options;
-    back_options.direction       = backward;
-    back_options.max_path_length = plimit;
-    back_options.max_step_size   = 1 * units::_cm;
+    typename Propagator_type::template Options<ActionList, AbortConditions>
+        fwdOptions;
+    fwdOptions.pathLimit   = plimit;
+    fwdOptions.maxStepSize = 1 * units::_cm;
+    fwdOptions.debug       = debug;
+
+    typename Propagator_type::template Options<ActionList, AbortConditions>
+        bwdOptions;
+    bwdOptions.direction   = backward;
+    bwdOptions.pathLimit   = -plimit;
+    bwdOptions.maxStepSize = 1 * units::_cm;
+    bwdOptions.debug       = debug;
 
     // define start parameters
     double                x  = 0;
@@ -189,18 +202,36 @@ namespace IntegrationTest {
     CurvilinearParameters start(nullptr, pos, mom, q);
 
     // do forward-backward propagation
-    const auto& tp1 = propagator.propagate(start, fwd_options).endParameters;
-    const auto& tp2 = propagator.propagate(*tp1, back_options).endParameters;
+    const auto& fwdResult = propagator.propagate(start, fwdOptions);
+    const auto& bwdResult
+        = propagator.propagate(*fwdResult.endParameters, bwdOptions);
+
+    const Vector3D& bwdPosition = bwdResult.endParameters->position();
+    const Vector3D& bwdMomentum = bwdResult.endParameters->momentum();
 
     // test propagation invariants
     // clang-format off
-    BOOST_TEST((x - tp2->position()(0)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((y - tp2->position()(1)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((z - tp2->position()(2)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((px - tp2->momentum()(0)) == 0., tt::tolerance(momtol));
-    BOOST_TEST((py - tp2->momentum()(1)) == 0., tt::tolerance(momtol));
-    BOOST_TEST((pz - tp2->momentum()(2)) == 0., tt::tolerance(momtol));
+    BOOST_TEST((x - bwdPosition(0)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((y - bwdPosition(1)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((z - bwdPosition(2)) == 0.,  tt::tolerance(disttol));
+    BOOST_TEST((px - bwdMomentum(0)) == 0., tt::tolerance(momtol));
+    BOOST_TEST((py - bwdMomentum(1)) == 0., tt::tolerance(momtol));
+    BOOST_TEST((pz - bwdMomentum(2)) == 0., tt::tolerance(momtol));
     // clang-format on
+
+    if (debug) {
+      auto fwdOutput = fwdResult.template get<DebugOutput::result_type>();
+      std::cout << ">>>>> Output for forward propagation " << std::endl;
+      std::cout << fwdOutput.debugString << std::endl;
+      std::cout << " - resulted at position : "
+                << fwdResult.endParameters->position() << std::endl;
+
+      auto bwdOutput = fwdResult.template get<DebugOutput::result_type>();
+      std::cout << ">>>>> Output for backward propagation " << std::endl;
+      std::cout << bwdOutput.debugString << std::endl;
+      std::cout << " - resulted at position : "
+                << bwdResult.endParameters->position() << std::endl;
+    }
   }
 
   // test propagation to cylinder
@@ -215,13 +246,15 @@ namespace IntegrationTest {
               double                 rand1,
               double                 rand2,
               double /*rand3*/,
-              bool covtransport = false)
+              bool covtransport = false,
+              bool debug        = false)
   {
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = plimit;
-    options.max_path_length = plimit;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
 
     // define start parameters
     double   x  = 0;
@@ -234,17 +267,17 @@ namespace IntegrationTest {
     Vector3D pos(x, y, z);
     Vector3D mom(px, py, pz);
 
-    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     if (covtransport) {
       ActsSymMatrixD<5> cov;
       // take some major correlations (off-diagonals)
       cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
           0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
           1. / (10 * units::_GeV);
-      cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+      covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     }
     // do propagation of the start parameters
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // The transform at the destination
     auto seTransform = createCylindricTransform(
@@ -253,7 +286,7 @@ namespace IntegrationTest {
         seTransform, plimit * units::_m, std::numeric_limits<double>::max());
 
     // Increase the path limit - to be safe hitting the surface
-    options.max_path_length *= 2;
+    options.pathLimit *= 2;
     const auto  result = propagator.propagate(start, endSurface, options);
     const auto& tp     = result.endParameters;
     // check for null pointer
@@ -275,13 +308,18 @@ namespace IntegrationTest {
              double                 rand2,
              double                 rand3,
              bool                   planar       = true,
-             bool                   covtransport = false)
+             bool                   covtransport = false,
+             bool                   debug        = false)
   {
+
+    typedef detail::DebugOutputActor DebugOutput;
+
     // setup propagation options
-    typename Propagator_type::template Options<> options;
+    typename Propagator_type::template Options<ActionList<DebugOutput>> options;
     // setup propagation options
-    options.max_step_size   = plimit;
-    options.max_path_length = plimit;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
 
     // define start parameters
     double   x  = 0;
@@ -294,17 +332,17 @@ namespace IntegrationTest {
     Vector3D pos(x, y, z);
     Vector3D mom(px, py, pz);
 
-    std::unique_ptr<const ActsSymMatrixD<5>> cov_ptr = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     if (covtransport) {
       ActsSymMatrixD<5> cov;
       // take some major correlations (off-diagonals)
       cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
           0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
           1. / (10 * units::_GeV);
-      cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+      covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     }
     // Create curvilinear start parameters
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     const auto            result_s = propagator.propagate(start, options);
     const auto&           tp_s     = result_s.endParameters;
 
@@ -319,11 +357,22 @@ namespace IntegrationTest {
 
     Surface_type endSurface(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
-    options.max_path_length *= 2;
+    options.pathLimit *= 2;
+    options.maxStepSize *= 0.9;
     const auto  result = propagator.propagate(start, endSurface, options);
     const auto& tp     = result.endParameters;
     // check the result for nullptr
     BOOST_CHECK(tp != nullptr);
+
+    // screen output in case you are running in debug mode
+    if (debug) {
+      const auto& debugOutput = result.template get<DebugOutput::result_type>();
+      std::cout << ">>> Debug output of this propagation " << std::endl;
+      std::cout << debugOutput.debugString << std::endl;
+      std::cout << ">>> Propagation status is : " << int(result.status)
+                << std::endl;
+    }
+
     // The position and path length
     return std::pair<Vector3D, double>(tp->position(), result.pathLength);
   }
@@ -337,14 +386,16 @@ namespace IntegrationTest {
                          double                 charge,
                          double                 plimit,
                          int /*index*/,
-                         double reltol = 1e-4)
+                         double reltol = 1e-4,
+                         bool   debug  = false)
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = plimit;
-    options.max_path_length = plimit;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
 
     // define start parameters
     double   x  = 0;
@@ -362,10 +413,10 @@ namespace IntegrationTest {
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     // do propagation of the start parameters
-    CurvilinearParameters start(std::move(cov_ptr), pos, mom, q);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     CurvilinearParameters start_wo_c(nullptr, pos, mom, q);
 
     const auto  result = propagator.propagate(start, options);
@@ -398,14 +449,16 @@ namespace IntegrationTest {
                    int /*index*/,
                    bool   startPlanar = true,
                    bool   destPlanar  = true,
-                   double reltol      = 1e-3)
+                   double reltol      = 1e-3,
+                   bool   debug       = false)
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
     typename Propagator_type::template Options<> options;
     // setup propagation options
-    options.max_step_size   = plimit;
-    options.max_path_length = plimit;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
 
     // define start parameters
     double            x  = 0;
@@ -428,7 +481,7 @@ namespace IntegrationTest {
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
         0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
-    auto cov_ptr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
     // create curvilinear start parameters
     CurvilinearParameters start_c(nullptr, pos, mom, q);
@@ -447,11 +500,11 @@ namespace IntegrationTest {
               tp_c->position(), 0.05 * rand1, 0.05 * rand2);
 
     StartSurface_type startSurface(ssTransform, nullptr);
-    BoundParameters   start(std::move(cov_ptr), pos, mom, q, startSurface);
+    BoundParameters   start(std::move(covPtr), pos, mom, q, startSurface);
     BoundParameters   start_wo_c(nullptr, pos, mom, q, startSurface);
 
     // increase the path limit - to be safe hitting the surface
-    options.max_path_length *= 2;
+    options.pathLimit *= 2;
 
     DestSurface_type endSurface(seTransform, nullptr);
     const auto       result = propagator.propagate(start, endSurface, options);

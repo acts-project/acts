@@ -7,8 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <cmath>
-#include "Acts/EventData/TransportJacobian.hpp"
+
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/Extrapolation/TransportJacobian.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -21,18 +22,18 @@ template <class T>
 bool
 Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
     ExtrapolationCell<T>& eCell,
-    PropagationCache&     pCache,
+    PropagationCache&     propState,
     const T&              parametersT,
     const Surface&        dSurface) const
 {
   EX_MSG_VERBOSE(
       eCell.navigationStep, "propagate", "<T> ", "propagateRungeKuttaT called");
 
-  eCell.maxStepSize = pCache.maxStepSize;
+  eCell.maxStepSize = propState.maxStepSize;
 
   // bail out if you can't transform into global frame
   if (!m_rkUtils.transformLocalToGlobal(
-          pCache.useJacobian, parametersT, pCache.pVector))
+          propState.useJacobian, parametersT, propState.pVector))
     return false;
 
   // get the surface transform
@@ -60,7 +61,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
       s[3] = -d;
     }
     // check for propagation failure
-    if (!propagateWithJacobian(eCell.navigationStep, pCache, 1, s))
+    if (!propagateWithJacobian(eCell.navigationStep, propState, 1, s))
       return false;
   } else if (sType == Surface::Straw || sType == Surface::Perigee) {
     // (ii) line-type surfaces
@@ -71,31 +72,32 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
                    sTransform(1, 2),   // orientation of the surface
                    sTransform(2, 2)};  // orientation of the surface
     // check for propagation failure
-    if (!propagateWithJacobian(eCell.navigationStep, pCache, 0, s))
+    if (!propagateWithJacobian(eCell.navigationStep, propState, 0, s))
       return false;
   } else if (sType == Surface::Cylinder) {
     // (iii) cylinder surface:
     // - cast to CylinderSurface for checking the cross point
     const CylinderSurface* cyl = static_cast<const CylinderSurface*>(&dSurface);
-    double r0[3] = {pCache.pVector[0], pCache.pVector[1], pCache.pVector[2]};
-    double s[9]  = {sTransform(0, 3),  // position of the surface
-                   sTransform(1, 3),   // position of the surface
-                   sTransform(2, 3),   // position of the surface
-                   sTransform(0, 2),   // orientation of the surface
-                   sTransform(1, 2),   // orientation of the surface
-                   sTransform(2, 2),   // orientation of the surface
+    double                 r0[3]
+        = {propState.pVector[0], propState.pVector[1], propState.pVector[2]};
+    double s[9] = {sTransform(0, 3),  // position of the surface
+                   sTransform(1, 3),  // position of the surface
+                   sTransform(2, 3),  // position of the surface
+                   sTransform(0, 2),  // orientation of the surface
+                   sTransform(1, 2),  // orientation of the surface
+                   sTransform(2, 2),  // orientation of the surface
                    cyl->bounds().r(),
-                   pCache.direction,
+                   propState.direction,
                    0.};
     // check for propagation failure
-    if (!propagateWithJacobian(eCell.navigationStep, pCache, 2, s))
+    if (!propagateWithJacobian(eCell.navigationStep, propState, 2, s))
       return false;
     // For cylinder we do test for next cross point
     if (cyl->bounds().halfPhiSector() < 3.1
-        && newCrossPoint(*cyl, r0, pCache.pVector)) {
+        && newCrossPoint(*cyl, r0, propState.pVector)) {
       s[8] = 0.;
       // check for propagation failure
-      if (!propagateWithJacobian(eCell.navigationStep, pCache, 2, s))
+      if (!propagateWithJacobian(eCell.navigationStep, propState, 2, s))
         return false;
     }
   } else if (sType == Surface::Cone) {
@@ -110,10 +112,10 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
                    sTransform(1, 2),
                    sTransform(2, 2),
                    k,
-                   pCache.direction,
+                   propState.direction,
                    0.};
     // check for propagation failure
-    if (!propagateWithJacobian(eCell.navigationStep, pCache, 3, s))
+    if (!propagateWithJacobian(eCell.navigationStep, propState, 3, s))
       return false;
   } else
     return false;  // there was no surface that did fit
@@ -123,57 +125,62 @@ Acts::RungeKuttaEngine<MagneticField>::propagateRungeKuttaT(
                  "<T> ",
                  "surface type determined and localToGlobal performed.");
 
-  eCell.nSteps = pCache.niter;
+  eCell.nSteps = propState.niter;
   // check if the direction solution was ok
-  if (pCache.direction != 0. && (pCache.direction * pCache.step) < 0.)
+  if (propState.direction != 0. && (propState.direction * propState.step) < 0.)
     return false;
 
   // Common transformation for all surfaces (angles and momentum)
-  if (pCache.useJacobian) {
-    double p = 1. / pCache.pVector[6];
-    pCache.pVector[35] *= p;
-    pCache.pVector[36] *= p;
-    pCache.pVector[37] *= p;
-    pCache.pVector[38] *= p;
-    pCache.pVector[39] *= p;
-    pCache.pVector[40] *= p;
+  if (propState.useJacobian) {
+    double p = 1. / propState.pVector[6];
+    propState.pVector[35] *= p;
+    propState.pVector[36] *= p;
+    propState.pVector[37] *= p;
+    propState.pVector[38] *= p;
+    propState.pVector[39] *= p;
+    propState.pVector[40] *= p;
   }
 
   // return curvilinear when the path limit is met
-  if (pCache.maxPathLimit) {
-    pCache.returnCurvilinear = true;
+  if (propState.maxPathLimit) {
+    propState.returnCurvilinear = true;
   }
   // use the jacobian for tranformation
-  bool uJ                          = pCache.useJacobian;
-  if (pCache.returnCurvilinear) uJ = false;
+  bool uJ                             = propState.useJacobian;
+  if (propState.returnCurvilinear) uJ = false;
 
   // create the return track parameters from Global to Local
-  m_rkUtils.transformGlobalToLocal(
-      &dSurface, uJ, pCache.pVector, pCache.parameters, pCache.jacobian);
+  m_rkUtils.transformGlobalToLocal(&dSurface,
+                                   uJ,
+                                   propState.pVector,
+                                   propState.parameters,
+                                   propState.jacobian);
 
-  if (pCache.boundaryCheck && !pCache.maxPathLimit) {
+  if (propState.boundaryCheck && !propState.maxPathLimit) {
     // create a local position and check for inside
-    Vector2D lPosition(pCache.parameters[0], pCache.parameters[1]);
-    if (!dSurface.insideBounds(lPosition, pCache.boundaryCheck)) {
+    Vector2D lPosition(propState.parameters[0], propState.parameters[1]);
+    if (!dSurface.insideBounds(lPosition, propState.boundaryCheck)) {
       return false;
     }
   }
 
   // Transformation to curvilinear presentation
-  if (pCache.returnCurvilinear)
-    m_rkUtils.transformGlobalToCurvilinear(
-        pCache.useJacobian, pCache.pVector, pCache.parameters, pCache.jacobian);
+  if (propState.returnCurvilinear)
+    m_rkUtils.transformGlobalToCurvilinear(propState.useJacobian,
+                                           propState.pVector,
+                                           propState.parameters,
+                                           propState.jacobian);
 
-  if (pCache.useJacobian) {
+  if (propState.useJacobian) {
     // create a new covariance matrix using the utils
-    pCache.covariance = m_rkUtils.newCovarianceMatrix(
-        pCache.jacobian, *parametersT.covariance());
-    auto& cov = (*pCache.covariance);
+    propState.covariance = m_rkUtils.newCovarianceMatrix(
+        propState.jacobian, *parametersT.covariance());
+    auto& cov = (*propState.covariance);
     // check for positive finite elements
     if (cov(0, 0) <= 0. || cov(1, 1) <= 0. || cov(2, 2) <= 0. || cov(3, 3) <= 0.
         || cov(4, 4) <= 0.) {
-      delete pCache.covariance;
-      pCache.covariance = nullptr;
+      delete propState.covariance;
+      propState.covariance = nullptr;
       return false;
     }
   }
@@ -189,7 +196,7 @@ Acts::ExtrapolationCode
 Acts::RungeKuttaEngine<MagneticField>::propagate(
     ExCellNeutral&                        eCell,
     const Surface&                        sf,
-    PropDirection                         pDir,
+    NavigationDirection                   pDir,
     std::vector<ExtrapolationMode::eMode> purpose,
     const BoundaryCheck&                  bcheck,
     bool                                  returnCurvilinear) const
@@ -215,7 +222,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
   }
 
   // create the PropagationCache
-  PropagationCache pCache;
+  PropagationCache propState;
 
   // get the start parameters
   const NeutralParameters*                 sParameters = eCell.leadParameters;
@@ -228,7 +235,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                    "neut",
                    "parameters are already on the surface, returning.");
     nParameters = buildNeutralParametersWithoutPropagation(*sParameters,
-                                                           pCache.jacobian);
+                                                           propState.jacobian);
     // record the parameters as a transport step nevertheless
     eCell.stepTransport(std::move(nParameters), &sf, purpose);
     // return success or in progress
@@ -236,38 +243,40 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                              : ExtrapolationCode::InProgress);
   }
   // specify the parameters for the propagation
-  pCache.maxPathLength = eCell.pathLimit < 0.
-      ? m_cfg.maxPathLength
+  propState.pathLimit = eCell.pathLimit < 0.
+      ? m_cfg.pathLimit
       : (eCell.pathLimit - eCell.pathLength);
-  pCache.direction         = double(pDir);
-  pCache.boundaryCheck     = bcheck;
-  pCache.returnCurvilinear = returnCurvilinear;
-  pCache.useJacobian       = eCell.leadParameters->covariance();
+  propState.direction         = double(pDir);
+  propState.boundaryCheck     = bcheck;
+  propState.returnCurvilinear = returnCurvilinear;
+  propState.useJacobian       = eCell.leadParameters->covariance();
   // neutral transport sets mconditions to false
-  pCache.mcondition = false;
+  propState.mcondition = false;
 
   // the result through propagation
   if (propagateRungeKuttaT<NeutralParameters>(
-          eCell, pCache, *sParameters, sf)) {
+          eCell, propState, *sParameters, sf)) {
     // create a new covariance matrix
     std::unique_ptr<const ActsSymMatrixD<5>> cov;
-    if (pCache.covariance) cov.reset(new ActsSymMatrixD<5>(*pCache.covariance));
+    if (propState.covariance)
+      cov.reset(new ActsSymMatrixD<5>(*propState.covariance));
 
     // create the new parameters
-    if (!pCache.returnCurvilinear) {
+    if (!propState.returnCurvilinear) {
       // new parameters bound to the surface
       ActsVectorD<5> pars;
-      pars << pCache.parameters[0], pCache.parameters[1], pCache.parameters[2],
-          pCache.parameters[3], pCache.parameters[4];
+      pars << propState.parameters[0], propState.parameters[1],
+          propState.parameters[2], propState.parameters[3],
+          propState.parameters[4];
       nParameters = std::make_unique<const NeutralBoundParameters>(
           std::move(cov), std::move(pars), sf);
     } else {
       // new curvilinear parameters
       Acts::Vector3D gp(
-          pCache.pVector[0], pCache.pVector[1], pCache.pVector[2]);
+          propState.pVector[0], propState.pVector[1], propState.pVector[2]);
       Acts::Vector3D mom(
-          pCache.pVector[3], pCache.pVector[4], pCache.pVector[5]);
-      mom /= std::abs(pCache.parameters[4]);
+          propState.pVector[3], propState.pVector[4], propState.pVector[5]);
+      mom /= std::abs(propState.parameters[4]);
       nParameters = std::make_unique<const NeutralCurvilinearParameters>(
           std::move(cov), gp, mom);
     }
@@ -287,13 +296,13 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
     // create the jacobian only when requested
     std::unique_ptr<const TransportJacobian> tJacobian = nullptr;
     if (eCell.configurationMode(ExtrapolationMode::CollectJacobians))
-      tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
+      tJacobian = std::make_unique<const TransportJacobian>(propState.jacobian);
     // now fill the transportStep
     // record the parameters as a step
     eCell.stepTransport(std::move(nParameters),
                         &sf,
                         purpose,
-                        pCache.step,
+                        propState.step,
                         std::move(tJacobian));
     // create the new curvilinear tparamers at the surface intersection -
     // -> if so, trigger the success
@@ -312,7 +321,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                    "propagate",
                    "neut",
                    "path length of "
-                       << pCache.step
+                       << propState.step
                        << " added to the extrapolation cell (limit = "
                        << eCell.pathLimit
                        << ")");
@@ -340,7 +349,7 @@ Acts::ExtrapolationCode
 Acts::RungeKuttaEngine<MagneticField>::propagate(
     ExCellCharged&                        eCell,
     const Surface&                        sf,
-    PropDirection                         pDir,
+    NavigationDirection                   pDir,
     std::vector<ExtrapolationMode::eMode> purpose,
     const BoundaryCheck&                  bcheck,
     bool                                  returnCurvilinear) const
@@ -370,7 +379,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
   const TrackParameters*                 sParameters = eCell.leadParameters;
 
   // build the propagation cache
-  PropagationCache pCache;
+  PropagationCache propState;
 
   // if the desination surface is the start surface -> bail out and build
   // parameters directly
@@ -380,8 +389,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
         "propagate",
         "char",
         "parameters are already on the surface, rebuild and return.");
-    pParameters
-        = buildTrackParametersWithoutPropagation(*sParameters, pCache.jacobian);
+    pParameters = buildTrackParametersWithoutPropagation(*sParameters,
+                                                         propState.jacobian);
     // record the parameters as a step
     eCell.stepTransport(std::move(pParameters), &sf, {purpose});
     // return success or in progress
@@ -390,37 +399,41 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
   }
 
   // and configure the propagation cache now
-  pCache.maxPathLength = eCell.pathLimit < 0.
-      ? m_cfg.maxPathLength
+  propState.pathLimit = eCell.pathLimit < 0.
+      ? m_cfg.pathLimit
       : (eCell.pathLimit - eCell.pathLength);
-  pCache.direction         = double(pDir);
-  pCache.boundaryCheck     = bcheck;
-  pCache.returnCurvilinear = returnCurvilinear;
-  pCache.useJacobian       = eCell.leadParameters->covariance();
-  pCache.mcondition        = true;
-  pCache.needgradient
-      = (pCache.useJacobian && m_cfg.usegradient) ? true : false;
+  propState.direction         = double(pDir);
+  propState.boundaryCheck     = bcheck;
+  propState.returnCurvilinear = returnCurvilinear;
+  propState.useJacobian       = eCell.leadParameters->covariance();
+  propState.mcondition        = true;
+  propState.needgradient
+      = (propState.useJacobian && m_cfg.usegradient) ? true : false;
 
   // propagate with templated helper function
-  if (propagateRungeKuttaT<TrackParameters>(eCell, pCache, *sParameters, sf)) {
+  if (propagateRungeKuttaT<TrackParameters>(
+          eCell, propState, *sParameters, sf)) {
 
     // create a new covariance matrix
     std::unique_ptr<const ActsSymMatrixD<5>> cov;
-    if (pCache.covariance) cov.reset(new ActsSymMatrixD<5>(*pCache.covariance));
+    if (propState.covariance)
+      cov.reset(new ActsSymMatrixD<5>(*propState.covariance));
     // create the parameter vector and stream the result in
     ActsVectorD<5> pars;
-    pars << pCache.parameters[0], pCache.parameters[1], pCache.parameters[2],
-        pCache.parameters[3], pCache.parameters[4];
+    pars << propState.parameters[0], propState.parameters[1],
+        propState.parameters[2], propState.parameters[3],
+        propState.parameters[4];
     // create the new parameters
-    if (!pCache.returnCurvilinear) {
+    if (!propState.returnCurvilinear) {
       // new parameters bound to the surface
       pParameters = std::make_unique<const BoundParameters>(
           std::move(cov), std::move(pars), sf);
     } else {
       // get the charge
-      double charge = pCache.parameters[4] > 0. ? 1. : -1.;
+      double charge = propState.parameters[4] > 0. ? 1. : -1.;
       // new curvilinear parameters
-      Vector3D gp(pCache.pVector[0], pCache.pVector[1], pCache.pVector[2]);
+      Vector3D gp(
+          propState.pVector[0], propState.pVector[1], propState.pVector[2]);
       pParameters = std::make_unique<const CurvilinearParameters>(
           std::move(cov),
           gp,
@@ -443,13 +456,13 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
     // create the jacobian only when requested
     std::unique_ptr<const TransportJacobian> tJacobian = nullptr;
     if (eCell.configurationMode(ExtrapolationMode::CollectJacobians))
-      tJacobian = std::make_unique<const TransportJacobian>(pCache.jacobian);
+      tJacobian = std::make_unique<const TransportJacobian>(propState.jacobian);
     // now fill the transportStep
     // record the parameters as a step
     eCell.stepTransport(std::move(pParameters),
                         &sf,
                         purpose,
-                        pCache.step,
+                        propState.step,
                         std::move(tJacobian));
     // check what to do with the path Length
     if (eCell.configurationMode(ExtrapolationMode::StopWithPathLimit)
@@ -466,7 +479,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
                    "propagate",
                    "char",
                    "path length of "
-                       << pCache.step
+                       << propState.step
                        << " added to the extrapolation cell (limit = "
                        << eCell.pathLimit
                        << ")");
@@ -488,7 +501,7 @@ template <class MagneticField>
 bool
 Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     int               navigationStep,
-    PropagationCache& pCache,
+    PropagationCache& propState,
     int               kind,
     double*           Su) const
 {
@@ -498,25 +511,27 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
                  "propagateWithJacobian called with  internal surface type "
                      << kind);
 
-  const double Smax   = pCache.maxPathLength;  // max. step allowed
-  double       Wwrong = 500.;                  // Max way with wrong direction
-  double*      R      = &(pCache.pVector[0]);  // Start coordinates
-  double*      A      = &(pCache.pVector[3]);  // Start directions
-  double*      SA     = &(pCache.pVector[42]);
-  SA[0] = SA[1] = SA[2] = 0.;
-  pCache.maxPathLimit   = false;
+  const double Smax   = propState.pathLimit;  // max. step allowed
+  double       Wwrong = 500.;                 // Max way with wrong direction
+  double*      R      = &(propState.pVector[0]);  // Start coordinates
+  double*      A      = &(propState.pVector[3]);  // Start directions
+  double*      SA     = &(propState.pVector[42]);
+  SA[0] = SA[1] = SA[2]  = 0.;
+  propState.maxPathLimit = false;
 
   // @todo the inverse momentum condition is hard-coded
-  if (pCache.mcondition && std::abs(pCache.pVector[6]) > 100000.) return false;
+  if (propState.mcondition && std::abs(propState.pVector[6]) > 100000.)
+    return false;
 
   // Step estimation until surface - this is the initial step estimation
   bool   Q;
-  double S, step = stepEstimatorWithCurvature(pCache, kind, Su, Q, true);
+  double S, step = stepEstimatorWithCurvature(propState, kind, Su, Q, true);
 
   if (!Q) return false;
 
   bool dir = true;
-  if (pCache.mcondition && pCache.direction && pCache.direction * step < 0.) {
+  if (propState.mcondition && propState.direction
+      && propState.direction * step < 0.) {
     step = -step;
     dir  = false;
   }
@@ -529,13 +544,13 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
 
   // Rkuta extrapolation
   //
-  pCache.newfield = true;
+  propState.newfield = true;
 
   // whie loop over the steps
   while (std::abs(step) > m_cfg.straightStep) {
 
     // maximum number of steps
-    if (++pCache.niter > 10000) {
+    if (++propState.niter > 10000) {
       //!< @todo make max number configurable
       EX_MSG_DEBUG(navigationStep,
                    "propagate",
@@ -547,17 +562,18 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     }
 
     // propagation in magnetic field  - with or without field ( or gradient )
-    if (pCache.mcondition) {
-      if (!pCache.needgradient)
-        pCache.step += (S = rungeKuttaStep(navigationStep, pCache, S, InS));
+    if (propState.mcondition) {
+      if (!propState.needgradient)
+        propState.step
+            += (S = rungeKuttaStep(navigationStep, propState, S, InS));
       else
-        pCache.step
-            += (S = rungeKuttaStepWithGradient(navigationStep, pCache, S, InS));
+        propState.step += (S = rungeKuttaStepWithGradient(
+                               navigationStep, propState, S, InS));
     } else {  // or within straight line
-      pCache.step += (S = straightLineStep(navigationStep, pCache, S));
+      propState.step += (S = straightLineStep(navigationStep, propState, S));
     }
 
-    step = stepEstimatorWithCurvature(pCache, kind, Su, Q);
+    step = stepEstimatorWithCurvature(propState, kind, Su, Q);
 
     if (!Q) {
       EX_MSG_DEBUG(navigationStep,
@@ -568,7 +584,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     }
 
     if (!dir) {
-      if (pCache.direction && pCache.direction * pCache.step < 0.)
+      if (propState.direction && propState.direction * propState.step < 0.)
         step = -step;
       else
         dir = true;
@@ -587,7 +603,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     else if (!iS && InS && aS * 2. < aStep)
       S *= 2.;  // @todo check: magic step increase
 
-    if (!dir && std::abs(pCache.step) > Wwrong) {
+    if (!dir && std::abs(propState.step) > Wwrong) {
       EX_MSG_DEBUG(navigationStep,
                    "propagate",
                    "<T> ",
@@ -601,11 +617,11 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
       return false;
     }
 
-    double dW = pCache.maxPathLength - std::abs(pCache.step);
+    double dW = propState.pathLimit - std::abs(propState.step);
     if (std::abs(S) > dW) {
-      S > 0. ? S = dW : S = -dW;
-      step                = S;
-      pCache.maxPathLimit = true;
+      S > 0. ? S = dW : S    = -dW;
+      step                   = S;
+      propState.maxPathLimit = true;
     }
 
     So = std::abs(S);
@@ -616,7 +632,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
       navigationStep, "propagate", "<T> ", "numerical integration is done.");
 
   // Output track parameteres
-  pCache.step += step;
+  propState.step += step;
 
   // last step to surface not needed, within tolerance
   if (std::abs(step) < m_cfg.straightStep) return true;
@@ -645,34 +661,35 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
 /////////////////////////////////////////////////////////////////////////////////
 template <class MagneticField>
 double
-Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
-                                                      PropagationCache& pCache,
-                                                      double            S,
-                                                      bool& InS) const
+Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(
+    int               navigationStep,
+    PropagationCache& propState,
+    double            S,
+    bool&             InS) const
 {
   EX_MSG_VERBOSE(navigationStep, "propagate", "<T> ", "rungeKuttaStep called");
 
-  bool Jac = pCache.useJacobian;
+  bool Jac = propState.useJacobian;
 
-  double* R  = &(pCache.pVector[0]);  // Coordinates
-  double* A  = &(pCache.pVector[3]);  // Directions
-  double* sA = &(pCache.pVector[42]);
+  double* R  = &(propState.pVector[0]);  // Coordinates
+  double* A  = &(propState.pVector[3]);  // Directions
+  double* sA = &(propState.pVector[42]);
   // invert momentum in right units
-  double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / pCache.pVector[6]);
+  double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / propState.pVector[6]);
   double dltm = m_cfg.dlt * .03;
 
   double f0[3], f[3];
 
   // if new field is required get it
-  if (pCache.newfield) {
+  if (propState.newfield) {
     Vector3D bField = m_cfg.fieldService->getField(Vector3D(R[0], R[1], R[2]));
     f0[0]           = bField.x();
     f0[1]           = bField.y();
     f0[2]           = bField.z();
   } else {
-    f0[0] = pCache.field[0];
-    f0[1] = pCache.field[1];
-    f0[2] = pCache.field[2];
+    f0[0] = propState.field[0];
+    f0[1] = propState.field[1];
+    f0[2] = propState.field[2];
   }
 
   bool Helix = std::abs(S) < m_cfg.helixStep;
@@ -772,18 +789,18 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     sA[1] = B6 * Sl;
     sA[2] = C6 * Sl;
 
-    pCache.field[0] = f[0];
-    pCache.field[1] = f[1];
-    pCache.field[2] = f[2];
-    pCache.newfield = false;
+    propState.field[0] = f[0];
+    propState.field[1] = f[1];
+    propState.field[2] = f[2];
+    propState.newfield = false;
 
     if (!Jac) return S;
 
     // Jacobian calculation
     //
-    double* d2A  = &pCache.pVector[24];
-    double* d3A  = &pCache.pVector[31];
-    double* d4A  = &pCache.pVector[38];
+    double* d2A  = &propState.pVector[24];
+    double* d3A  = &propState.pVector[31];
+    double* d4A  = &propState.pVector[38];
     double  d2A0 = H0[2] * d2A[1] - H0[1] * d2A[2];
     double  d2B0 = H0[0] * d2A[2] - H0[2] * d2A[0];
     double  d2C0 = H0[1] * d2A[0] - H0[0] * d2A[1];
@@ -842,7 +859,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     double  d4B6 = d4C5 * H2[0] - d4A5 * H2[2];
     double  d4C6 = d4A5 * H2[1] - d4B5 * H2[0];
 
-    double* dR = &pCache.pVector[21];
+    double* dR = &propState.pVector[21];
     dR[0] += (d2A2 + d2A3 + d2A4) * S3;
     dR[1] += (d2B2 + d2B3 + d2B4) * S3;
     dR[2] += (d2C2 + d2C3 + d2C4) * S3;
@@ -850,7 +867,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     d2A[1] = ((d2B0 + 2. * d2B3) + (d2B5 + d2B6)) * (1. / 3.);
     d2A[2] = ((d2C0 + 2. * d2C3) + (d2C5 + d2C6)) * (1. / 3.);
 
-    dR = &pCache.pVector[28];
+    dR = &propState.pVector[28];
     dR[0] += (d3A2 + d3A3 + d3A4) * S3;
     dR[1] += (d3B2 + d3B3 + d3B4) * S3;
     dR[2] += (d3C2 + d3C3 + d3C4) * S3;
@@ -858,7 +875,7 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStep(int navigationStep,
     d3A[1] = ((d3B0 + 2. * d3B3) + (d3B5 + d3B6)) * (1. / 3.);
     d3A[2] = ((d3C0 + 2. * d3C3) + (d3C5 + d3C6)) * (1. / 3.);
 
-    dR = &pCache.pVector[35];
+    dR = &propState.pVector[35];
     dR[0] += (d4A2 + d4A3 + d4A4) * S3;
     dR[1] += (d4B2 + d4B3 + d4B4) * S3;
     dR[2] += (d4C2 + d4C3 + d4C4) * S3;
@@ -887,7 +904,7 @@ template <class MagneticField>
 double
 Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
     int               navigationStep,
-    PropagationCache& pCache,
+    PropagationCache& propState,
     double            S,
     bool&             InS) const
 {
@@ -895,11 +912,11 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
       navigationStep, "propagate", "<T> ", "rungeKuttaStepWithGradient called");
 
   const double C33 = 1. / 3.;
-  double*      R   = &(pCache.pVector[0]);  // Coordinates
-  double*      A   = &(pCache.pVector[3]);  // Directions
-  double*      sA  = &(pCache.pVector[42]);
+  double*      R   = &(propState.pVector[0]);  // Coordinates
+  double*      A   = &(propState.pVector[3]);  // Directions
+  double*      sA  = &(propState.pVector[42]);
   // express the conversion factor with units
-  double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / pCache.pVector[6]);
+  double Pi   = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / propState.pVector[6]);
   double dltm = m_cfg.dlt * .03;
 
   double f0[3], f1[3], f2[3], g0[9], g1[9], g2[9], H0[12], H1[12], H2[12];
@@ -1037,8 +1054,8 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
     }
 
     for (int i = 7; i < 35; i += 7) {
-      double* dR  = &(pCache.pVector[i]);
-      double* dA  = &(pCache.pVector[i + 3]);
+      double* dR  = &(propState.pVector[i]);
+      double* dA  = &(propState.pVector[i + 3]);
       double  dH0 = H0[3] * dR[0] + H0[4] * dR[1] + H0[5] * dR[2];    // dHx/dp
       double  dH1 = H0[6] * dR[0] + H0[7] * dR[1] + H0[8] * dR[2];    // dHy/dp
       double  dH2 = H0[9] * dR[0] + H0[10] * dR[1] + H0[11] * dR[2];  // dHz/dp
@@ -1089,8 +1106,8 @@ Acts::RungeKuttaEngine<MagneticField>::rungeKuttaStepWithGradient(
       dA[2] = ((dC0 + 2. * dC3) + (dC5 + dC6)) * C33;
     }
 
-    double* dR = &(pCache.pVector[35]);
-    double* dA = &(pCache.pVector[38]);
+    double* dR = &(propState.pVector[35]);
+    double* dA = &(propState.pVector[38]);
 
     double dH0 = H0[3] * dR[0] + H0[4] * dR[1] + H0[5] * dR[2];    // dHx/dp
     double dH1 = H0[6] * dR[0] + H0[7] * dR[1] + H0[8] * dR[2];    // dHy/dp
@@ -1187,26 +1204,26 @@ template <class MagneticField>
 double
 Acts::RungeKuttaEngine<MagneticField>::straightLineStep(
     int               navigationStep,
-    PropagationCache& pCache,
+    PropagationCache& propState,
     double            S) const
 {
   EX_MSG_VERBOSE(
       navigationStep, "propagate", "<T> ", "straightLineStep called");
 
-  double* R  = &(pCache.pVector[0]);  // Start coordinates
-  double* A  = &(pCache.pVector[3]);  // Start directions
-  double* sA = &(pCache.pVector[42]);
+  double* R  = &(propState.pVector[0]);  // Start coordinates
+  double* A  = &(propState.pVector[3]);  // Start directions
+  double* sA = &(propState.pVector[42]);
 
   // Track parameters in last point
   R[0] += (A[0] * S);
   R[1] += (A[1] * S);
   R[2] += (A[2] * S);
-  if (!pCache.useJacobian) return S;
+  if (!propState.useJacobian) return S;
 
   // Derivatives of track parameters in last point
   for (int i = 7; i < 42; i += 7) {
-    double* dR = &(pCache.pVector[i]);
-    double* dA = &(pCache.pVector[i + 3]);
+    double* dR = &(propState.pVector[i]);
+    double* dA = &(propState.pVector[i + 3]);
     dR[0] += (dA[0] * S);
     dR[1] += (dA[1] * S);
     dR[2] += (dA[2] * S);
@@ -1269,34 +1286,41 @@ Acts::RungeKuttaEngine<MagneticField>::buildNeutralParametersWithoutPropagation(
 template <class MagneticField>
 double
 Acts::RungeKuttaEngine<MagneticField>::stepEstimatorWithCurvature(
-    PropagationCache& pCache,
+    PropagationCache& propState,
     int               kind,
     double*           Su,
     bool&             Q,
     bool              istep) const
 {
-  // Straight step estimation
+  // Straight line step estimation first
   double Step = m_rkUtils.stepEstimator(
-      kind, Su, pCache.pVector, Q, istep, pCache.maxStepSize);
+      kind, Su, propState.pVector, Q, istep, propState.maxStepSize);
 
+  // check to
   if (!Q) return 0.;
   double AStep = std::abs(Step);
-  if (kind || AStep < m_cfg.straightStep || !pCache.mcondition) return Step;
 
-  const double* SA = &(pCache.pVector[42]);  // Start direction
+  // the step is good : so returen
+  if (kind || AStep < m_cfg.straightStep || !propState.mcondition) return Step;
+
+  // Use start direction
+  const double* SA = &(propState.pVector[42]);
   double        S  = .5 * Step;
 
-  double Ax = pCache.pVector[3] + S * SA[0];
-  double Ay = pCache.pVector[4] + S * SA[1];
-  double Az = pCache.pVector[5] + S * SA[2];
+  // update the direction vector with half of the step times oringal direction
+  double Ax = propState.pVector[3] + S * SA[0];
+  double Ay = propState.pVector[4] + S * SA[1];
+  double Az = propState.pVector[5] + S * SA[2];
   double As = 1. / sqrt(Ax * Ax + Ay * Ay + Az * Az);
 
-  double PN[6] = {pCache.pVector[0],
-                  pCache.pVector[1],
-                  pCache.pVector[2],
-                  Ax * As,
-                  Ay * As,
-                  Az * As};
+  // new parameter build from position and updated direction
+  double PN[6] = {propState.pVector[0],  // current position
+                  propState.pVector[1],  // current position
+                  propState.pVector[2],  // current position
+                  Ax * As,               // normalized updated direction
+                  Ay * As,               // normalized updated direction
+                  Az * As};              // normalized updated direction
+  ///
   double StepN = m_rkUtils.stepEstimator(kind, Su, PN, Q);
   if (!Q) {
     Q = true;

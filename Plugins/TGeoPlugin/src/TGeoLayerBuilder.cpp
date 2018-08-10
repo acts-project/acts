@@ -71,6 +71,7 @@ Acts::TGeoLayerBuilder::positiveLayers() const
 void
 Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
 {
+
   // bail out if you have no gGeoManager
   if (!gGeoManager) return;
 
@@ -106,7 +107,7 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
     TGeoVolume* tvolume = gGeoManager->GetTopVolume();
     if (tvolume) {
       // recursively step down
-      collectSensitive(
+      resolveSensitive(
           layerSurfaces, tvolume, nullptr, TGeoIdentity(), layerCfg, type);
       // screen output
       ACTS_DEBUG(
@@ -130,7 +131,7 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
 }
 
 void
-Acts::TGeoLayerBuilder::collectSensitive(
+Acts::TGeoLayerBuilder::resolveSensitive(
     std::vector<const Acts::Surface*>& layerSurfaces,
     TGeoVolume*                        tgVolume,
     TGeoNode*                          tgNode,
@@ -149,11 +150,15 @@ Acts::TGeoLayerBuilder::collectSensitive(
   if (tgVolume) {
     std::string volumeName = tgVolume->GetName();
     /// some screen output indicating that the volume was found
-    ACTS_VERBOSE(offset << "[o] Volume : " << volumeName);
+    ACTS_VERBOSE(offset << "[o] Volume : " << volumeName
+                        << " - checking for volume name "
+                        << layerConfig.layerName);
+
     // once in the current branch, always in the current branch
     bool correctVolume = correctBranch;
-    if (correctVolume == false
-        && volumeName.find(layerConfig.layerName) != std::string::npos) {
+    if (!correctVolume
+        && (volumeName.find(layerConfig.layerName) != std::string::npos
+            || match(layerConfig.layerName.c_str(), volumeName.c_str()))) {
       correctVolume = true;
       ACTS_VERBOSE(offset << "    triggered current branch!");
     }
@@ -169,7 +174,7 @@ Acts::TGeoLayerBuilder::collectSensitive(
       // dynamic_cast to a node
       TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
       if (node)
-        collectSensitive(layerSurfaces,
+        resolveSensitive(layerSurfaces,
                          nullptr,
                          node,
                          tgTransform,
@@ -178,7 +183,9 @@ Acts::TGeoLayerBuilder::collectSensitive(
                          correctVolume,
                          offset + "  ");
     }
-  }
+  } else
+    ACTS_VERBOSE("No volume present.");
+
   /// if you have a node, get the volume and step down further
   if (tgNode) {
     // get the matrix of the current
@@ -189,9 +196,19 @@ Acts::TGeoLayerBuilder::collectSensitive(
     double z = translation[2];
     // get the name of the node
     std::string tNodeName = tgNode->GetName();
-    ACTS_VERBOSE(offset << "[>] Node : " << tNodeName);
-    if (correctBranch
-        && tNodeName.find(layerConfig.sensorName) != std::string::npos) {
+    ACTS_VERBOSE(offset << "[>] Node : " << tNodeName
+                        << " - checking for sensor name "
+                        << layerConfig.sensorName);
+    // find out the branch hit - single layer depth is supported by
+    // sensor==layer
+    bool branchHit
+        = correctBranch || (layerConfig.sensorName == layerConfig.layerName);
+    if (branchHit
+        && (tNodeName.find(layerConfig.sensorName) != std::string::npos
+            || match(layerConfig.sensorName.c_str(), tNodeName.c_str()))) {
+
+      ACTS_VERBOSE(offset << "Sensor name found in correct branch.");
+
       // set the visibility to kTrue
       if (m_cfg.setVisibility) tgNode->SetVisibility(kTRUE);
       // create the detector element - check on the type for the size
@@ -224,7 +241,7 @@ Acts::TGeoLayerBuilder::collectSensitive(
       // if it's not accepted, get the associated volume
       TGeoVolume* nodeVolume = tgNode->GetVolume();
       // step down one further
-      collectSensitive(layerSurfaces,
+      resolveSensitive(layerSurfaces,
                        nodeVolume,
                        nullptr,
                        nTransform,
@@ -233,5 +250,6 @@ Acts::TGeoLayerBuilder::collectSensitive(
                        correctBranch,
                        offset + "  ");
     }
-  }
+  } else
+    ACTS_VERBOSE("No node present.");
 }

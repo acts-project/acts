@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2017 Acts project team
+// Copyright (C) 2016-2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include <iostream>
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -67,7 +68,9 @@ public:
   GeometryID&
   operator=(const GeometryID& tddID)
   {
-    if (&tddID != this) m_value = tddID.m_value;
+    if (&tddID != this) {
+      m_value = tddID.m_value;
+    }
     return (*this);
   }
 
@@ -100,7 +103,10 @@ public:
     return (m_value == tddID.value());
   }
 
-  /// Add some stuff - a new
+  /// Add some stuff
+  ///
+  /// @param type_id which identifier do you wanna add
+  /// @param type_mask the mask that is supposed to be applied
   void
   add(geo_id_value type_id, geo_id_value type_mask)
   {
@@ -113,8 +119,12 @@ public:
   geo_id_value
   value(geo_id_value mask = 0) const;
 
+  /// return the split value as string for debugging
+  std::string
+  toString() const;
+
 private:
-  geo_id_value m_value;
+  geo_id_value m_value = 0;
 };
 
 inline geo_id_value
@@ -122,6 +132,25 @@ GeometryID::value(geo_id_value mask) const
 {
   if (mask) return ACTS_BIT_DECODE(m_value, mask);
   return m_value;
+}
+
+inline std::string
+GeometryID::toString() const
+{
+
+  geo_id_value volume_id    = value(volume_mask);
+  geo_id_value boundary_id  = value(boundary_mask);
+  geo_id_value layer_id     = value(layer_mask);
+  geo_id_value approach_id  = value(approach_mask);
+  geo_id_value sensitive_id = value(sensitive_mask);
+
+  std::stringstream dstream;
+  dstream << "[" << std::setw(5) << volume_id;
+  dstream << " | " << std::setw(5) << boundary_id;
+  dstream << " | " << std::setw(5) << layer_id;
+  dstream << " | " << std::setw(5) << approach_id;
+  dstream << " | " << std::setw(10) << sensitive_id << " ]";
+  return dstream.str();
 }
 
 /// Overload of operator< | <= | > | >=  for the usage in a map
