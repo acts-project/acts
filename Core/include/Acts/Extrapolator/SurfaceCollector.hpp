@@ -33,7 +33,7 @@ struct SurfaceCollector
 {
 
   /// The selector used for this surface
-  Selector this_selector;
+  Selector selector;
 
   /// Simple result struct to be returned
   /// It has all the SurfaceHit objects that
@@ -61,7 +61,7 @@ struct SurfaceCollector
     // a current surface has been assigned by the navigator
     //
     if (state.navigation.currentSurface
-        && this_selector(*state.navigation.currentSurface)) {
+        && selector(*state.navigation.currentSurface)) {
       // create for recording
       SurfaceHit surface_hit;
       surface_hit.surface   = state.navigation.currentSurface;

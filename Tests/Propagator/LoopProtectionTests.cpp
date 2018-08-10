@@ -90,9 +90,12 @@ namespace Test {
     bool navigationBreak = false;
   };
 
-  /// @brief mokup of the Options
+  /// @brief mockup of the Propagator Options
   struct Options
   {
+
+    /// Absolute maximum path length
+    double pathLimit      = std::numeric_limits<double>::max();
     bool   loopProtection = true;
     double loopFraction   = 0.5;
   };
@@ -134,54 +137,15 @@ namespace Test {
 
     Stepper pStepper;
 
+    auto initialLimit
+        = pState.targetAborters.get<PathLimitReached>().internalLimit;
+
     LoopProtection<PathLimitReached> lProtection;
     lProtection(pState, pStepper);
 
-    // pState.targetAborters.get<PathLimitReached>().internalLimit;
-
-    //    // we have a loop logger and a loop aborter
-    //    typedef detail::LoopLogger<> LoopLogger;
-    //    typedef typename LoopLogger::result_type LoopLoggerResult;
-    //    typedef detail::LoopAborter<> LoopAborter;
-    //
-    //    LoopLogger        loopLogger;
-    //    LoopLoggerResult  belowResult;
-    //    //LoopLoggerResult  aboveResult;
-    //    LoopAborter       loopAborter;
-    //
-    //    // should not yet be initialized
-    //    BOOST_TEST(belowResult.initialized == false);
-    //    // first call
-    //    loopLogger(below, belowResult);
-    //    // should be initialized
-    //    BOOST_TEST(belowResult.initialized  == true);
-    //    // should not abort yet
-    //    loopLogger(below, belowResult);
-    //    BOOST_TEST( loopAborter(belowResult, below) == false);
-    //    // now move the particle for less than pi
-    //    below.stepping.dir = Vector3D(cos(phi+halfPI),sin(phi+halfPI),0.);
-    //    // we have not yet met the loop criterium, should not abort yet
-    //    loopLogger(below, belowResult);
-    //    // test the current delta
-    //    BOOST_CHECK_CLOSE(belowResult.currentDelta,halfPI,0.001);
-    //    BOOST_TEST( loopAborter(belowResult, below) == false);
-    //    // now move the particle for less than pi
-    //    below.stepping.dir =
-    //    Vector3D(cos(phi+oneAndHalfPI),sin(phi+oneAndHalfPI),0.);
-    //    // loop detector should ring a bell
-    //    loopLogger(below, belowResult);
-    //    // test the current delta
-    //    BOOST_CHECK_CLOSE(belowResult.currentDelta,oneAndHalfPI,0.001);
-    //    BOOST_TEST( loopAborter(belowResult, below) == true);
-    //    // random test
-    //    // now move the particle for less than pi
-    //    below.stepping.dir = Vector3D(cos(phi+deltaPhi),sin(phi+deltaPhi),0.);
-    //    // loop detector should ring a bell
-    //    loopLogger(below, belowResult);
-    //    // test the current delta
-    //    BOOST_CHECK_CLOSE(belowResult.currentDelta,deltaPhi,0.001);
-    //    BOOST_TEST( loopAborter(belowResult, below) ==
-    //    deltaPhi*deltaPhi>M_PI*M_PI);
+    auto updatedLimit
+        = pState.targetAborters.get<PathLimitReached>().internalLimit;
+    BOOST_TEST(updatedLimit < initialLimit);
   }
 
 }  // namespace Test

@@ -378,16 +378,16 @@ public:
 
     // Type of track parameters produced by the propagation
     typedef typename stepper_t::template return_parameter_type<parameters_t>
-        return_parameter_type;
+        ReturnParameterType;
 
     // Type of the full propagation result, including output from actions
-    typedef action_list_t_result_t<return_parameter_type, action_list_t>
+    typedef action_list_t_result_t<ReturnParameterType, action_list_t>
         ResultType;
 
     // Type of provided options which consist action and abort list
     typedef Options<action_list_t, aborter_list_t> OptionsType;
 
-    static_assert(std::is_copy_constructible<return_parameter_type>::value,
+    static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                   "return track parameter type must be copy-constructible");
 
     // Initialize the propagation result object
@@ -401,7 +401,7 @@ public:
     typedef State<parameters_t, OptionsType, TargetAborters> StateType;
     StateType state(start, options, targetAborters);
 
-    // Apply the loop protection
+    // Apply the loop protection - it resets the internal path limit
     detail::LoopProtection<path_arborter_t> lProtection;
     lProtection(state, m_stepper);
 
@@ -410,7 +410,7 @@ public:
       result.status = Status::FAILURE;
     } else {
       /// Convert into the return type
-      result.endParameters = std::make_unique<const return_parameter_type>(
+      result.endParameters = std::make_unique<const ReturnParameterType>(
           m_stepper.convert(state.stepping));
       result.status = Status::SUCCESS;
     }
@@ -474,14 +474,14 @@ public:
     TargetAborters targetAborters;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, OptionsType, TargetAborters> State;
-    State state(start, options, targetAborters);
+    typedef State<parameters_t, OptionsType, TargetAborters> StateType;
+    StateType state(start, options, targetAborters);
 
     // Setting the start and the target surface
     state.navigation.startSurface  = &start.referenceSurface();
     state.navigation.targetSurface = &target;
 
-    // Apply the loop protection
+    // Apply the loop protection, it resets the interal path limit
     detail::LoopProtection<path_arborter_t> lProtection;
     lProtection(state, m_stepper);
 

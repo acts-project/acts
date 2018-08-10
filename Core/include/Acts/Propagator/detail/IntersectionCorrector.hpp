@@ -18,6 +18,11 @@ namespace Acts {
 
 namespace detail {
 
+  /// @brief a struct that allows you to evaluate the intersection
+  ///
+  /// It actually modifies the position/direction of the intersection
+  /// attempt to allow for a potential better estimate when being
+  /// in a magnetic field setup
   struct IntersectionCorrector
   {
 

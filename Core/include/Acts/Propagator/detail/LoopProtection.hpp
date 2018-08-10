@@ -21,16 +21,14 @@ namespace detail {
 
     /// @brief Call to dress the options with a loop protection
     ///
-    /// @tparam options_t Options type of the Propagation call
     /// @tparam state_t State type of the Propagation call
     /// @tparam stepper_t Stepper type of the Propagator setup
     ///
-    /// @param[in,out] options Options object provided for the call
     /// @param[in,out] state State object provided for the call
     /// @param[in] stepper Stepper used
-    template <typename state_t, typename steppter_t>
+    template <typename state_t, typename stepper_t>
     void
-    operator()(state_t& state, const steppter_t& stepper) const
+    operator()(state_t& state, const stepper_t& stepper) const
     {
       // Estimate the loop protection limit
       if (state.options.loopProtection) {

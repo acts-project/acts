@@ -22,7 +22,8 @@ namespace Acts {
 
 typedef detail::ConstrainedStep cstep;
 
-/// @breif struct for the
+/// @breif struct for the Navigation options that are forwarded to
+///        the geometry
 ///
 /// @tparam propagator_state_t Type of the object for navigation state
 /// @tparam object_t Type of the object for navigation to check against
@@ -510,7 +511,6 @@ struct Navigator
       });
       return;
     }
-
     // Fast Navigation initialization for target:
     if (state.navigation.targetSurface
         && state.navigation.targetSurface->associatedLayer()
@@ -727,13 +727,6 @@ struct Navigator
                 state.stepping, navOpts, navCorr);
         state.navigation.navBoundaryIter
             = state.navigation.navBoundaries.begin();
-        // bool skipPresent =
-        //  (state.navigation.navBoundaryIter ==
-        //  state.navigation.navBoundaries.begin());
-        // if (skipPresent) ++state.navigation.navBoundaryIter;
-        // }
-        // switch to new boundary
-        // ++state.navigation.navBoundaryIter;
       }
       // (re-)evaluate the distance to the boundary
       if (state.navigation.navBoundaryIter
@@ -921,9 +914,7 @@ struct Navigator
       // @todo: check if another fast association can be used
       if (!onLayer) {
         // - not so fast : inside volume
-        onLayer
-            = (onLayer || (layerVolume
-                           && layerVolume->inside(state.stepping.position())));
+        onLayer = layerVolume && layerVolume->inside(state.stepping.position());
         // - not so fast: on layer surface
         onLayer
             = (onLayer
@@ -1185,7 +1176,11 @@ struct Navigator
   }
 
   /// This method updates the constrained step size
+  ///
   /// @tparam propagator_state_t is the state type
+  ///
+  /// @param[in,out] state The state object for the step length
+  /// @param[in] step the step size
   template <typename propagator_state_t>
   void
   updateStep(propagator_state_t& state, double step) const

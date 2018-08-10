@@ -25,7 +25,7 @@ static ParticleMasses particleMasses;
 /// The mean ionization energy loss along a given path length. The mean energy
 /// loss should be used for reconstruction.
 /// The energy loss is calculated using the following paper
-/// http://http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
+/// http:://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
 /// Formula 32.5 is used to calculate the mean energy loss [reco mode]
 /// Sigma is calculated using the Landau width (FHWM) times the conversion
 /// factor 1. / (2. * &radic(2. * log2))
@@ -47,7 +47,7 @@ ionizationEnergyLossMean(double          p,
 /// The most probable ionization energy loss along a given path length. The
 /// meost probable energy loss should be used for simulation (fatras).
 /// The energy loss is calculated using the following paper
-/// http://http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
+/// http:://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
 /// Formula 32.11 is used to calculate the most probable energy loss [sim mode]
 /// Sigma is calculated using the Landau width (FHWM) times the conversion
 /// factor 1. / (2. * &radic(2. * log2))

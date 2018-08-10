@@ -22,7 +22,7 @@ namespace detail {
   /// the most probable energy loss is more suited for fast simulation
   ///
   /// The energy loss is calculated using the following paper
-  /// http://http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
+  /// http:://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
   ///
   /// Formula 32.5 is used to calculate the mean energy loss [reco mode]
   /// Formula 32.11 is used to calculate the most probable energy loss [sim
@@ -62,7 +62,7 @@ namespace detail {
       // Ionization - Bethe-Bloch
       // See ATL-SOFT-PUB-2008-003 equation (4)
       // 16 eV * Z**0.9
-      double I = constants::eionisation * std::pow(mat.material().Z(), 0.9);
+      double I = constants::eionisation * std::pow(mat.Z(), 0.9);
 
       // See (1) table 32.1
       // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]
@@ -132,7 +132,7 @@ namespace detail {
     ///
     /// @param p is the momentum
     /// @param lbeta is the Lorentz beta parameter
-    /// @param dInX0 is the passed thickness in d0
+    /// @param dInX0 is the passed thickness expressed in units of X0
     double
     operator()(double p,
                double lbeta,

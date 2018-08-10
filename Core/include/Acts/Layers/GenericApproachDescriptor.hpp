@@ -35,7 +35,7 @@ public:
   ///
   /// @param aSurfaces are the approach surfaces
   GenericApproachDescriptor(const std::vector<const T*>& aSurfaces)
-    : ApproachDescriptor(), m_surfaces(), m_surfacestepState(aSurfaces)
+    : ApproachDescriptor(), m_surfaces(), m_surfaceCache(aSurfaces)
   {
     // create the surface container with memory control
     for (const auto& sf : aSurfaces) {
@@ -48,12 +48,12 @@ public:
   ///
   /// @param aSurfaces are the approach surfaces
   GenericApproachDescriptor(std::vector<std::shared_ptr<const T>> aSurfaces)
-    : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfacestepState()
+    : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfaceCache()
   {
-    m_surfacestepState.reserve(m_surfaces.size());
+    m_surfaceCache.reserve(m_surfaces.size());
     // cache the surfaces
     for (const auto& sf : aSurfaces) {
-      m_surfacestepState.push_back(&(sf->surfaceRepresentation()));
+      m_surfaceCache.push_back(&(sf->surfaceRepresentation()));
     }
   }
 
@@ -97,7 +97,7 @@ private:
   /// We will need to mutate those surfaces in registerLayer, but the C++ type
   /// system has no const-correct way of expressing this constraint.
   ///
-  std::vector<const Surface*> m_surfacestepState;
+  std::vector<const Surface*> m_surfaceCache;
 };
 
 template <class T>
@@ -105,7 +105,7 @@ void
 GenericApproachDescriptor<T>::registerLayer(const Layer& lay)
 {
   // go through the surfaces
-  for (auto& sf : m_surfacestepState) {
+  for (auto& sf : m_surfaceCache) {
     auto mutableSf = const_cast<Surface*>(sf);
     mutableSf->associateLayer(lay);
   }
@@ -121,8 +121,8 @@ GenericApproachDescriptor<T>::approachSurface(const Vector3D&      gpos,
 {
   // the intersection estimates
   std::vector<ObjectIntersection<Surface>> sIntersections;
-  sIntersections.reserve(m_surfacestepState.size());
-  for (auto& sf : m_surfacestepState) {
+  sIntersections.reserve(m_surfaceCache.size());
+  for (auto& sf : m_surfaceCache) {
     // intersect
     auto intersection
         = sf->intersectionEstimate(gpos, gdir, navDir, bcheck, corrfnc);
@@ -143,14 +143,14 @@ template <class T>
 const std::vector<const Surface*>&
 GenericApproachDescriptor<T>::containedSurfaces() const
 {
-  return m_surfacestepState;
+  return m_surfaceCache;
 }
 
 template <class T>
 std::vector<const Surface*>&
 GenericApproachDescriptor<T>::containedSurfaces()
 {
-  return m_surfacestepState;
+  return m_surfaceCache;
 }
 
 }  // namespace Acts

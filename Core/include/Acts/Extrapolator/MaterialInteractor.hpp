@@ -151,8 +151,8 @@ struct MaterialInteractor
         double cThickness = thickness * pCorrection;
 
         // the momentum at current position
-        const double p     = std::abs(1. / state.stepping.qop);
-        const double m     = state.mass;
+        const double p     = state.stepping.p;
+        const double m     = state.options.mass;
         const double E     = std::sqrt(p * p + m * m);
         const double lbeta = p / E;
 
@@ -208,7 +208,7 @@ struct MaterialInteractor
             // record the deltaP
             mInteraction.deltaP = p - newP;
             // update the state/momentum
-            state.stepping.qop = std::copysign(1. / newP, state.stepping.qop);
+            state.stepping.p = std::copysign(newP, state.stepping.p);
           }
           // transfer this into energy loss straggling and appply to covariance:
           // do that even if you had not applied energy loss do to

@@ -138,15 +138,15 @@ struct MaterialCollector
         // if configured, record the individual material hits
         if (detailedCollection) {
           // create for recording
-          MaterialHit material_hit;
-          material_hit.surface   = state.navigation.currentSurface;
-          material_hit.position  = state.stepping.position();
-          material_hit.direction = state.stepping.direction();
+          MaterialHit mHit;
+          mHit.surface   = state.navigation.currentSurface;
+          mHit.position  = state.stepping.position();
+          mHit.direction = state.stepping.direction();
           // get the material & path length
-          material_hit.material   = mProperties->material();
-          material_hit.pathLength = pCorrection * mProperties->thickness();
+          mHit.material   = mProperties->material();
+          mHit.pathLength = pCorrection * mProperties->thickness();
           // save if in the result
-          result.collected.push_back(material_hit);
+          result.collected.push_back(mHit);
         }
       }
     }

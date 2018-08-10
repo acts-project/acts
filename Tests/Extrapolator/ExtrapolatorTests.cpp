@@ -48,15 +48,15 @@ namespace Test {
   auto tGeometry = testGeometry<PlaneSurface>(stepState);
 
   // get the navigator and provide the TrackingGeometry
-  Navigator                         navigator(tGeometry);
-  typedef ConstantBField            BField_type;
-  typedef EigenStepper<BField_type> EigenStepper_type;
-  typedef Propagator<EigenStepper_type, Navigator> EigenPropagator_type;
+  Navigator                        navigator(tGeometry);
+  typedef ConstantBField           BFieldType;
+  typedef EigenStepper<BFieldType> EigenStepperType;
+  typedef Propagator<EigenStepperType, Navigator> EigenPropagatorType;
 
-  const double         Bz = 0.;  // 2. * units::_T;
-  BField_type          bField(0, 0, Bz);
-  EigenStepper_type    estepper(bField);
-  EigenPropagator_type epropagator(std::move(estepper), std::move(navigator));
+  const double        Bz = 0.;  // 2. * units::_T;
+  BFieldType          bField(0, 0, Bz);
+  EigenStepperType    estepper(bField);
+  EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
   const int ntests    = 1;
   bool      debugMode = true;
@@ -120,11 +120,11 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-    typedef ActionList<> ActionList_type;
-    typedef AbortList<>  AbortConditions_type;
+    typedef ActionList<> ActionListType;
+    typedef AbortList<>  AbortConditionsType;
 
-    typename EigenPropagator_type::template Options<ActionList_type,
-                                                    AbortConditions_type>
+    typename EigenPropagatorType::template Options<ActionListType,
+                                                   AbortConditionsType>
         options;
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
@@ -184,11 +184,11 @@ namespace Test {
     typedef SurfaceCollector<PlaneSelector> PlaneCollector;
 
     // Action list and abort list
-    typedef ActionList<PlaneCollector> ActionList_type;
-    typedef AbortList<>                AbortConditions_type;
+    typedef ActionList<PlaneCollector> ActionListType;
+    typedef AbortList<>                AbortConditionsType;
 
-    typename EigenPropagator_type::template Options<ActionList_type,
-                                                    AbortConditions_type>
+    typename EigenPropagatorType::template Options<ActionListType,
+                                                   AbortConditionsType>
         options;
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
@@ -197,17 +197,18 @@ namespace Test {
     auto        collector_result = result.get<PlaneCollector::result_type>();
 
     // step through the surfaces and go step by step
-    typedef ActionList<> ActionList_empty;
-    typename EigenPropagator_type::template Options<ActionList_empty,
-                                                    AbortConditions_type>
-        options;
-    options.maxStepSize = 25. * units::_cm;
+    typedef ActionList<> ActionListEmpty;
+    typename EigenPropagatorType::template Options<ActionListEmpty,
+                                                   AbortConditionsType>
+        optionsEmpty;
+
+    optionsEmpty.maxStepSize = 25. * units::_cm;
     // try propagation from start to each surface
     for (const auto& colsf : collector_result.collected) {
       // get the surface
       const auto& csurface = colsf.surface;
       const auto& cresult
-          = epropagator.propagate(start, *csurface, options).endParameters;
+          = epropagator.propagate(start, *csurface, optionsEmpty).endParameters;
       bool worked = (cresult != nullptr);
       BOOST_TEST(worked);
     }
@@ -261,11 +262,11 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-    typedef ActionList<MaterialInteractor> ActionList_type;
-    typedef AbortList<>                    AbortConditions_type;
+    typedef ActionList<MaterialInteractor> ActionListType;
+    typedef AbortList<>                    AbortConditionsType;
 
-    typename EigenPropagator_type::template Options<ActionList_type,
-                                                    AbortConditions_type>
+    typename EigenPropagatorType::template Options<ActionListType,
+                                                   AbortConditionsType>
         options;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 25 * units::_cm;

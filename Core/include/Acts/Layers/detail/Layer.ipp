@@ -547,6 +547,6 @@ Layer::compatibleSurfaces(const NeutralParameters& pars,
                                endSurface);
 }
 
-// ----------- legacy method block: start ----------------------
+// ----------- legacy method block: end ----------------------
 
 }  // namespace Acts

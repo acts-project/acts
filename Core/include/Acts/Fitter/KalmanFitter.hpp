@@ -114,8 +114,8 @@ public:
     typedef std::result_of_t<Extrapolator(const Meas_t&,
                                           const TrackParameters&)>
                                                        ExResult;
-    typedef std::result_of_t<CacheGenerator(ExResult)> StepropState;
-    typedef std::list<StepropState>                    Cache;
+    typedef std::result_of_t<CacheGenerator(ExResult)> StepCache;
+    typedef std::list<StepCache>                       Cache;
 
     Cache c = forwardFilter(vMeasurements, std::move(pInitialPars));
     applySmoothing(c);
@@ -139,8 +139,8 @@ public:
     typedef std::result_of_t<Extrapolator(const Meas_t&,
                                           const TrackParameters&)>
                                                        ExResult;
-    typedef std::result_of_t<CacheGenerator(ExResult)> StepropState;
-    typedef std::list<StepropState>                    Cache;
+    typedef std::result_of_t<CacheGenerator(ExResult)> StepCache;
+    typedef std::list<StepCache>                       Cache;
 
     // create initial parameters if they are not provided
     if (not pInitialPars) {
@@ -162,7 +162,7 @@ public:
     const BoundParameters* pPredicted = nullptr;
     const TrackParameters* pUpdated   = pInitialPars.get();
     for (const Meas_t& m : vMeasurements) {
-      StepropState step = m_oCacheGenerator(m_oExtrapolator(m, *pUpdated));
+      StepCache step = m_oCacheGenerator(m_oExtrapolator(m, *pUpdated));
 
       pPredicted = step->getPredictedState();
       step->setCalibratedMeasurement(m_oCalibrator(m, *pPredicted));
@@ -176,11 +176,11 @@ public:
 
   /// Apply the smoothing
   ///
-  /// @tparam StepropState uses the list of steps caches
+  /// @tparam StepCache uses the list of steps caches
   /// @param cache is the list of step caches
-  template <typename StepropState>
+  template <typename StepCache>
   void
-  applySmoothing(std::list<StepropState>& cache) const
+  applySmoothing(std::list<StepCache>& cache) const
   {
     typedef ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars> GMatrix;
     // smoothing update matrix
