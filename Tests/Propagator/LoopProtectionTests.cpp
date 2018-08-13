@@ -232,3 +232,4 @@ typedef ConstantBField                BField;
   }  
   
 }  // namespace Test
+}  // namespace Acts
