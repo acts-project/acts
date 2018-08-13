@@ -18,7 +18,10 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAbortConditions.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -38,14 +41,15 @@ namespace Test {
   {
 
     /// Parameters
+    Vector3D pos = Vector3D(0., 0., 0.);
     Vector3D dir = Vector3D(0., 0., 1);
-    double   p   = 300. * units::_MeV;
+    double   p   = 100. * units::_MeV;
 
     /// Access method - position
     const Vector3D
     position() const
     {
-      return Vector3D(0., 0., 0.);
+      return pos;
     }
 
     /// Access method - direction
@@ -148,5 +152,83 @@ namespace Test {
     BOOST_TEST(updatedLimit < initialLimit);
   }
 
+typedef ConstantBField                BField;
+  typedef EigenStepper<BField>          EigenStepper;
+  typedef Propagator<EigenStepper>      EigenPropagator;
+  
+  const int ntests           = 100;  
+  const int skip             = 0;   
+  
+  // This test case checks that the propagator with loop LoopProtection
+  // stops where expected
+  void runTest(double                 pT,
+               double                 phi,
+               double                 theta,
+               int                    charge,
+               int                    index)
+
+  {
+    if (index < skip) return;    
+    
+    double dcharge = -1 + 2 * charge;
+    
+    const double    Bz = 2. * units::_T;
+    BField          bField(0, 0, Bz);
+    
+    EigenStepper    estepper(bField);
+    
+    EigenPropagator epropagator(std::move(estepper));
+    
+    // define start parameters
+    double                x  = 0;
+    double                y  = 0;
+    double                z  = 0;
+    double                px = pT * cos(phi);
+    double                py = pT * sin(phi);
+    double                pz = pT / tan(theta);
+    double                q  = dcharge;
+    Vector3D              pos(x, y, z);
+    Vector3D              mom(px, py, pz);
+    CurvilinearParameters start(nullptr, pos, mom, q);
+   
+    // Action list and abort list
+    typedef ActionList<> ActionList_type;
+    typedef AbortList<> AbortConditions_type;
+    
+    typename EigenPropagator::template Options<ActionList_type,
+                                               AbortConditions_type> options;
+    
+    const auto& result = epropagator.propagate(start, options);
+
+    BOOST_CHECK_CLOSE(px, -result.endParameters->momentum().x(), 1e-2);
+    BOOST_CHECK_CLOSE(py, -result.endParameters->momentum().y(), 1e-2);
+    BOOST_CHECK_CLOSE(pz,  result.endParameters->momentum().z(), 1e-2);
+    
+  }
+  
+  BOOST_DATA_TEST_CASE(
+      propagator_loop_protection_test,
+      bdata::random((bdata::seed = 20,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.5 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 21,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 22,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+          ^ bdata::random((bdata::seed = 23,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::xrange(ntests),
+      pT,
+      phi,
+      theta,
+      charge,
+      index)
+  {
+    runTest(pT, phi, theta, charge, index);      
+  }  
+  
 }  // namespace Test
-}  // namespace Acts
