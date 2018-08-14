@@ -152,33 +152,30 @@ namespace Test {
     BOOST_TEST(updatedLimit < initialLimit);
   }
 
-typedef ConstantBField                BField;
-  typedef EigenStepper<BField>          EigenStepper;
-  typedef Propagator<EigenStepper>      EigenPropagator;
-  
-  const int ntests           = 100;  
-  const int skip             = 0;   
-  
+  typedef ConstantBField           BField;
+  typedef EigenStepper<BField>     EigenStepper;
+  typedef Propagator<EigenStepper> EigenPropagator;
+
+  const int ntests = 100;
+  const int skip   = 0;
+
   // This test case checks that the propagator with loop LoopProtection
   // stops where expected
-  void runTest(double                 pT,
-               double                 phi,
-               double                 theta,
-               int                    charge,
-               int                    index)
+  void
+  runTest(double pT, double phi, double theta, int charge, int index)
 
   {
-    if (index < skip) return;    
-    
+    if (index < skip) return;
+
     double dcharge = -1 + 2 * charge;
-    
-    const double    Bz = 2. * units::_T;
-    BField          bField(0, 0, Bz);
-    
-    EigenStepper    estepper(bField);
-    
+
+    const double Bz = 2. * units::_T;
+    BField       bField(0, 0, Bz);
+
+    EigenStepper estepper(bField);
+
     EigenPropagator epropagator(std::move(estepper));
-    
+
     // define start parameters
     double                x  = 0;
     double                y  = 0;
@@ -190,22 +187,22 @@ typedef ConstantBField                BField;
     Vector3D              pos(x, y, z);
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
-   
+
     // Action list and abort list
     typedef ActionList<> ActionList_type;
-    typedef AbortList<> AbortConditions_type;
-    
+    typedef AbortList<>  AbortConditions_type;
+
     typename EigenPropagator::template Options<ActionList_type,
-                                               AbortConditions_type> options;
-    
+                                               AbortConditions_type>
+        options;
+
     const auto& result = epropagator.propagate(start, options);
 
     BOOST_CHECK_CLOSE(px, -result.endParameters->momentum().x(), 1e-2);
     BOOST_CHECK_CLOSE(py, -result.endParameters->momentum().y(), 1e-2);
-    BOOST_CHECK_CLOSE(pz,  result.endParameters->momentum().z(), 1e-2);
-    
+    BOOST_CHECK_CLOSE(pz, result.endParameters->momentum().z(), 1e-2);
   }
-  
+
   BOOST_DATA_TEST_CASE(
       propagator_loop_protection_test,
       bdata::random((bdata::seed = 20,
@@ -228,8 +225,8 @@ typedef ConstantBField                BField;
       charge,
       index)
   {
-    runTest(pT, phi, theta, charge, index);      
-  }  
-  
+    runTest(pT, phi, theta, charge, index);
+  }
+
 }  // namespace Test
 }  // namespace Acts

@@ -39,7 +39,7 @@ namespace detail {
         const double p
             = units::Nat2SI<units::MOMENTUM>(state.stepping.momentum().mag());
         const double B         = field.mag();
-        const double helixPath = 2*M_PI*p/B;
+        const double helixPath = 2 * M_PI * p / B;
         // now set the new loop limit
         auto& pathAborter
             = state.targetAborters.template get<path_arborter_t>();
