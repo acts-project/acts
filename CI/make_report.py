@@ -13,13 +13,17 @@ import os
 import html
 from fnmatch import fnmatch
 import json
+import sys
 
 
 from codereport import CodeReport, ReportItem
 
 def parse_clang_tidy_item(itemstr):
 
-    m = re.match(r"([/.\-\w]+):(\d+):(\d+): (.*?):(.*?)\n((?:.|\n)*)", itemstr)
+    m = re.match(r"([/.\-+\w]+):(\d+):(\d+): (.*?):(.*?)\n((?:.|\n)*)", itemstr)
+    if m is None:
+        print(itemstr)
+        sys.exit(1)
     # keyword / category
     mkey = re.match(r"(.*)\[(.*)\]$", m.group(5))
     if mkey is None:
@@ -45,14 +49,16 @@ def parse_clang_tidy_item(itemstr):
 def parse_clang_tidy_output(output):
 
     # cleanup
-    itemstr = re.sub(r"Enabled checks:\n(?:.|\n)+\n\n", "", output)
+    itemstr = output
+    itemstr = re.sub(r"Enabled checks:\n[\S\s]+?\n\n", "", itemstr)
     itemstr = re.sub(r"clang-tidy-\d\.\d.*\n?", "", itemstr)
+    itemstr = re.sub(r"clang-apply-.*", "", itemstr)
     itemstr = re.sub(r".*-header-filter.*", "", itemstr)
 
     items = []
     prevstart = 0
 
-    matches = list(re.finditer(r"([\w/.\-]+):(\d+):(\d+): warning:", itemstr))
+    matches = list(re.finditer(r"([\w/.\-+]+):(\d+):(\d+): (?:(?:warning)|(?:error)):", itemstr))
     for idx, m in enumerate(matches):
         # print(m)
         start, end = m.span()
