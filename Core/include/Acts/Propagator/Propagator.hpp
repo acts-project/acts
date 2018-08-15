@@ -402,8 +402,10 @@ public:
     StateType state(start, options, targetAborters);
 
     // Apply the loop protection - it resets the internal path limit
-    detail::LoopProtection<path_arborter_t> lProtection;
-    lProtection(state, m_stepper);
+    if (options.loopProtection) {
+      detail::LoopProtection<path_arborter_t> lProtection;
+      lProtection(state, m_stepper);
+    }
 
     // Perform the actual propagation & check its outcome
     if (propagate_(result, state) != Status::IN_PROGRESS) {
