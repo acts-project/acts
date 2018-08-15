@@ -52,8 +52,9 @@ clang_tidy:
     - mkdir report
     - mkdir build && cd build
     # contain LCG to only where needed
-    - /bin/sh -c "set +e && source ../CI/setup_lcg91.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on && cd .. && run-clang-tidy.py -p build -header-filter=.* -j$(nproc) 1> report/clang-tidy.log || true"
+    - /bin/sh -c "set +e && source ../CI/setup_lcg91.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on"
     - cd ..
+    - run-clang-tidy.py -p build -header-filter=.* -export-fixes report/clang-tidy-fixes.yml -j$(nproc) 1> report/clang-tidy.log || true
     - virtualenv civenv
     - source civenv/bin/activate
     - pip install -r CI/requirements.txt
