@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+"""
+This produces structured analysis results:
+It takes the JSON input produced by make_report.py
+and applies the limits specifiec in --limitfile.
+It then prints a summary and exits with 0 if all warning
+categories are below their limits, or 1 if any of the
+limits is exceeded.
+"""
+
 import argparse
 import yaml
 import os
@@ -123,11 +132,15 @@ def analysis(limitfile, results, verbose=False, md=False):
 
 
 def main():
-    p = argparse.ArgumentParser()
-    p.add_argument("--limitfile", required=True)
-    p.add_argument("--itemfile", required=True)
-    p.add_argument("--verbose", "-v", action="store_true")
-    p.add_argument("--markdown", "-md", action="store_true")
+    p = argparse.ArgumentParser(description=__doc__)
+    p.add_argument("--limitfile", required=True,
+                   help="The input limit file (yml)")
+    p.add_argument("--itemfile", required=True,
+                   help="The input item file containing the warnings (json)")
+    p.add_argument("--verbose", "-v", action="store_true",
+                   help="More output")
+    p.add_argument("--markdown", "-md", action="store_true",
+                   help="Produce MD output instead of terminal ooutput")
 
     args = p.parse_args()
 
