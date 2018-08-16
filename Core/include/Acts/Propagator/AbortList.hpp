@@ -17,6 +17,14 @@
 
 namespace Acts {
 
+/// @brief AbortList object to be used in the propagation
+///
+/// The abort list is a list of structs or classes that
+/// is called at each propagation step and can trigger the abort
+/// of the current propagation.
+///
+/// It can (optionally) depend on a result of an Actor from
+/// the actor list.
 template <typename... conditions>
 struct AbortList : private detail::Extendable<conditions...>
 {

@@ -17,6 +17,8 @@
 
 namespace Acts {
 
+/// @brief ActionList implementation to be used with the propagator
+///
 /// This is the ActionList struct that is used in the propagator
 /// to define a list of different actions that are eacch
 /// executed during the stepping procedure

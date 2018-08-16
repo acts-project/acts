@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-/// StraightLineStepper
+/// @brief straight line stepper based on Surface intersection
 ///
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
