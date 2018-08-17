@@ -22,10 +22,10 @@ namespace detail {
   /// the most probable energy loss is more suited for fast simulation
   ///
   /// The energy loss is calculated using the following paper
-  /// http:://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
+  /// http:://pdg.lbl.gov/2018/reviews/rpp2018-rev-passage-particles-matter.pdf
   ///
-  /// Formula 32.5 is used to calculate the mean energy loss [reco mode]
-  /// Formula 32.11 is used to calculate the most probable energy loss [sim
+  /// Formula 33.5 is used to calculate the mean energy loss [reco mode]
+  /// Formula 33.11 is used to calculate the most probable energy loss [sim
   /// mode]
   /// Sigma is calculated using the Landau width (FHWM) times the conversion
   /// factor 1. / (2. * &radic(2. * log2))
@@ -64,7 +64,7 @@ namespace detail {
       // 16 eV * Z**0.9
       double I = constants::eionisation * std::pow(mat.Z(), 0.9);
 
-      // See (1) table 32.1
+      // See (1) table 33.1
       // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]
       double kaz  = 0.5 * constants::ka_BetheBloch * mat.zOverAtimesRho();
       double eta2 = lbeta * lgamma;
@@ -72,11 +72,11 @@ namespace detail {
       // density effect, only valid for high energies
       // (lgamma > 10 -> p > 1 GeV for muons)
       double delta = 0.;
-      if (lgamma > 10.) {
-        // See (1) table 32.1
+      if (lbeta * lgamma > 10.) {
+        // See (1) table 33.1
         double eplasma
             = constants::eplasma * sqrt(1000. * mat.zOverAtimesRho());
-        // See (1) formula 32.6
+        // See (1) formula 33.6
         delta = 2. * std::log(eplasma / I) + std::log(eta2) - 1.;
       }
 
@@ -97,18 +97,19 @@ namespace detail {
             / (1. + 2. * lgamma * mfrac + mfrac * mfrac);
         // See ATL-SOFT-PUB-2008-003 equation (1)
         // or:
-        // http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
-        // PDG formula 32.5
-        dE = -kaz * 0.5 * (std::log(2. * constants::me * eta2 * tMax / (I * I))
-                           - (lbeta * lbeta)
-                           - delta * 0.5);
+        // http://pdg.lbl.gov/2018/reviews/rpp2018-rev-passage-particles-matter.pdf
+        // PDG formula 33.5
+        dE = -kaz * 0.5
+            * (0.5 * std::log(2. * constants::me * eta2 * tMax / (I * I))
+               - (lbeta * lbeta)
+               - delta * 0.5);
         dE *= path;
       } else {
         // Calculate the most probably value for simulation
         //
         // the landau sigmaL is path length dependent
-        //    PDG formula 32.11 for MOP value from
-        //    http://pdg.lbl.gov/2014/reviews/rpp2014-rev-passage-particles-matter.pdf
+        //    PDG formula 33.11 for MOP value from
+        //    http://pdg.lbl.gov/2018/reviews/rpp2018-rev-passage-particles-matter.pdf
         //
         dE = kazL * (std::log(2. * m * eta2 / I) + std::log(kazL / I) + 0.2
                      - (lbeta * lbeta)
