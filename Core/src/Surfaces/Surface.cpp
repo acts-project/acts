@@ -19,19 +19,16 @@ Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
   : GeometryObject()
   , m_transform(tform)
   , m_associatedDetElement(nullptr)
-  , m_associatedDetElementId()
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(nullptr)
 {
 }
 
-Acts::Surface::Surface(const DetectorElementBase& detelement,
-                       const Identifier&          id)
+Acts::Surface::Surface(const DetectorElementBase& detelement)
   : GeometryObject()
   , m_transform(nullptr)
   , m_associatedDetElement(&detelement)
-  , m_associatedDetElementId(id)
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(nullptr)
@@ -42,7 +39,6 @@ Acts::Surface::Surface(const Surface& other)
   : GeometryObject(other)
   , m_transform(other.m_transform)
   , m_associatedDetElement(nullptr)
-  , m_associatedDetElementId()
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(other.m_associatedMaterial)
@@ -54,7 +50,6 @@ Acts::Surface::Surface(const Surface& other, const Transform3D& shift)
   , m_transform(std::make_shared<const Transform3D>(
         Transform3D(shift * other.transform())))
   , m_associatedDetElement(nullptr)
-  , m_associatedDetElementId()
   , m_associatedLayer(other.m_associatedLayer)
   , m_associatedMaterial(other.m_associatedMaterial)
 {
@@ -75,8 +70,7 @@ Acts::Surface::operator=(const Surface& other)
     m_associatedMaterial = other.m_associatedMaterial;
     // assigning does invalidate the link to the detectore element
     // we want to have a unique association
-    m_associatedDetElement   = nullptr;
-    m_associatedDetElementId = Identifier();
+    m_associatedDetElement = nullptr;
   }
   return *this;
 }
@@ -96,22 +90,9 @@ Acts::Surface::operator==(const Surface& other) const
   return true;
 }
 
-const Acts::Vector3D
-Acts::Surface::normal(const Vector3D&) const
-{
-  return normal(s_origin2D);
-}
-
 bool
-Acts::Surface::isFree() const
-{
-  return (!m_associatedDetElement && !m_associatedTrackingVolume
-          && !m_associatedLayer);
-}
-
-bool
-Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
-                           const BoundaryCheck&  bcheck) const
+Acts::Surface::isOnSurface(const Vector3D&      gpos,
+                           const BoundaryCheck& bcheck) const
 {
   // create the local position
   Acts::Vector2D lpos;
@@ -163,21 +144,4 @@ bool
 Acts::Surface::operator!=(const Acts::Surface& sf) const
 {
   return !(operator==(sf));
-}
-
-const Acts::Transform3D&
-Acts::Surface::transform() const
-{
-  if (m_transform) return (*(m_transform.get()));
-  if (m_associatedDetElement && m_associatedDetElementId.is_valid())
-    return m_associatedDetElement->transform(m_associatedDetElementId);
-  if (m_associatedDetElement) return m_associatedDetElement->transform();
-  return s_idTransform;
-}
-
-bool
-Acts::Surface::insideBounds(const Acts::Vector2D&      locpos,
-                            const Acts::BoundaryCheck& bcheck) const
-{
-  return bounds().inside(locpos, bcheck);
 }

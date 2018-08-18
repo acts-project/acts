@@ -29,9 +29,9 @@ namespace Acts {
 /// @param [in] energyCut possible energy cut to be applied
 /// @return vector (the different clusters) of vector of digitization cells (the
 /// cells which belong to each cluster)
-template <typename Cell>
-std::vector<std::vector<Cell>>
-createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
+template <typename cell_t>
+std::vector<std::vector<cell_t>>
+createClusters(std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,
                size_t nBins0,
                bool   commonCorner = true,
                double energyCut    = 0.);
@@ -55,10 +55,10 @@ createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
 /// @param [in] commonCorner flag indicating if also cells sharing a common
 /// corner should be merged into one cluster
 /// @param [in] energyCut possible energy cut to be applied
-template <typename Cell>
+template <typename cell_t>
 void
-fillCluster(std::vector<std::vector<Cell>>& mergedCells,
-            std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
+fillCluster(std::vector<std::vector<cell_t>>& mergedCells,
+            std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,
             size_t index,
             size_t nBins0,
             bool   commonCorner = true,

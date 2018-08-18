@@ -92,8 +92,8 @@ public:
     mutableSurface->setAssociatedMaterial(material);
   }
 
-  void
-  assignIdentifier(const Identifier& identifier) override
+  virtual void
+  assignIdentifier(const Identifier& identifier) final
   {
     m_elementIdentifier = identifier;
   }
@@ -103,33 +103,22 @@ public:
 
   /// Identifier
   Identifier
-  identify() const override;
+  identify() const;
 
   /// Return local to global transform associated with this identifier
   ///
   /// @note this is called from the surface().transform() in the PROXY mode
-  ///
-  /// @param identifier is ignored for this simple detector element
   const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const override;
+  transform() const override;
 
-  /// Return the DigitizationModule
-  /// @return optionally the DigitizationModule
-  virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const final override;
-
-  /// Return surface associated with this identifier,
-  ///
-  /// @param identifier is ignored in this case
-  ///
-  /// @param identifier is ignored for this simple detector element
+  /// Return surface associated with this detector element
   const Surface&
-  surface(const Identifier& identifier = Identifier()) const override;
+  surface() const override;
 
   /// Returns the full list of all detection surfaces associated
   /// to this detector element
-  const std::vector<std::shared_ptr<const Surface>>&
-  surfaces() const override;
+  virtual const std::vector<std::shared_ptr<const Surface>>&
+  surfaces() const final;
 
   /// The maximal thickness of the detector element wrt normal axis
   double
@@ -161,19 +150,13 @@ DetectorElementStub::identify() const
 }
 
 inline const Transform3D&
-DetectorElementStub::transform(const Identifier&) const
+DetectorElementStub::transform() const
 {
   return *m_elementTransform;
 }
 
-inline std::shared_ptr<const DigitizationModule>
-DetectorElementStub::digitizationModule() const
-{
-  return DetectorElementBase::digitizationModule();
-}
-
 inline const Surface&
-DetectorElementStub::surface(const Identifier&) const
+DetectorElementStub::surface() const
 {
   return *m_elementSurface;
 }

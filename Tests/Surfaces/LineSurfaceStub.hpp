@@ -34,9 +34,8 @@ public:
   }
   //
   LineSurfaceStub(std::shared_ptr<const LineBounds> lbounds,
-                  const DetectorElementBase&        detelement,
-                  const Identifier&                 identifier = Identifier())
-    : GeometryObject(), LineSurface(lbounds, detelement, identifier)
+                  const DetectorElementBase&        detelement)
+    : GeometryObject(), LineSurface(lbounds, detelement)
   { /* nop */
   }
 

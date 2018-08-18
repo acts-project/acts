@@ -71,9 +71,8 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
 }
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                               const DetectorElementBase&        detelement,
-                               const Identifier&                 identifier)
-  : GeometryObject(), Surface(detelement, identifier), m_bounds(nullptr)
+                               const DetectorElementBase&        detelement)
+  : GeometryObject(), Surface(detelement), m_bounds(dbounds)
 {
   throw_assert(dbounds, "nullptr as DiscBounds");
 }

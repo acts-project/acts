@@ -78,7 +78,7 @@ namespace Test {
     std::shared_ptr<const Acts::PlanarBounds> p
         = std::make_shared<const RectangleBounds>(5., 10.);
     DetectorElementStub detElement{identifier, pTransform, p, 0.2, nullptr};
-    BOOST_TEST(Surface::Other == SurfaceStub(detElement, identifier).type());
+    BOOST_TEST(Surface::Other == SurfaceStub(detElement).type());
   }
 
   /// Unit test for testing Surface properties
@@ -97,12 +97,9 @@ namespace Test {
         = std::make_shared<const HomogeneousSurfaceMaterial>(properties);
     DetectorElementStub detElement{
         identifier, pTransform, pPlanarBound, 0.2, pMaterial};
-    SurfaceStub surface(detElement, identifier);
+    SurfaceStub surface(detElement);
     // associatedDetectorElement
     BOOST_TEST(surface.associatedDetectorElement() == &detElement);
-    // associatedIdentifier
-    bool identifierIsOk = surface.associatedIdentifier() == identifier;
-    BOOST_TEST(identifierIsOk, "Identifier should be same as in constructor");
     // test  associatelayer, associatedLayer
     surface.associateLayer(*pLayer);
     BOOST_TEST(surface.associatedLayer() == pLayer.get());
@@ -186,11 +183,10 @@ namespace Test {
     DetectorElementStub detElement3{
         identifier2, pTransform2, pPlanarBound, 0.3, pMaterial};
     //
-    SurfaceStub surface1(detElement1, identifier);
-    SurfaceStub surface2(detElement1, identifier);  // 1 and 2 are the same
-    SurfaceStub surface3(detElement2, identifier);  // 3 differs in thickness
-    SurfaceStub surface4(detElement3,
-                         identifier2);  // 4 has a different transform and id
+    SurfaceStub surface1(detElement1);
+    SurfaceStub surface2(detElement1);  // 1 and 2 are the same
+    SurfaceStub surface3(detElement2);  // 3 differs in thickness
+    SurfaceStub surface4(detElement3);  // 4 has a different transform and id
     //
     bool equalSurface = (surface1 == surface2);
     BOOST_TEST(equalSurface, "Equality between similar surfaces");

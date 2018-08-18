@@ -35,9 +35,8 @@ Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
 }
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                               const DetectorElementBase&        detelement,
-                               const Identifier&                 id)
-  : GeometryObject(), Surface(detelement, id), m_bounds(lbounds)
+                               const DetectorElementBase&        detelement)
+  : GeometryObject(), Surface(detelement), m_bounds(lbounds)
 {
   throw_assert(lbounds, "LineBounds must not be nullptr");
 }

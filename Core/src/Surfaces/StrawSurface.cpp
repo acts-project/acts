@@ -17,7 +17,6 @@
 #include <iostream>
 
 #include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
@@ -34,9 +33,8 @@ Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
 }
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const LineBounds> lbounds,
-                                 const DetectorElementBase&        detelement,
-                                 const Identifier&                 id)
-  : GeometryObject(), LineSurface(lbounds, detelement, id)
+                                 const DetectorElementBase&        detelement)
+  : GeometryObject(), LineSurface(lbounds, detelement)
 {
 }
 

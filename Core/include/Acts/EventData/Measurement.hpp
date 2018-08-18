@@ -30,23 +30,25 @@ class Surface;
 /// @note Identifier must be copy-constructible, move-constructible,
 /// copy-assignable and move-assignable.
 ///
+/// @tparam identifier_t
+///
 /// @test The behavior of this class is tested in the following unit test:
 ///       - \link Acts::Test::BOOST_AUTO_TEST_CASE(measurement_initialization)
 /// initialization\endlink
 ///
 /// @tparam Identifier identification object for this measurement
 /// @tparam params     parameter pack containing the measured parameters
-template <typename Identifier, ParID_t... params>
+template <typename identifier_t, ParID_t... params>
 class Measurement
 {
   // check type conditions
-  static_assert(std::is_copy_constructible<Identifier>::value,
+  static_assert(std::is_copy_constructible<identifier_t>::value,
                 "'Identifier' must be copy-constructible");
-  static_assert(std::is_move_constructible<Identifier>::value,
+  static_assert(std::is_move_constructible<identifier_t>::value,
                 "'Identifier' must be move-constructible");
-  static_assert(std::is_copy_assignable<Identifier>::value,
+  static_assert(std::is_copy_assignable<identifier_t>::value,
                 "'Identifier' must be copy-assignable");
-  static_assert(std::is_move_assignable<Identifier>::value,
+  static_assert(std::is_move_assignable<identifier_t>::value,
                 "'Identifier' must be move-assignable");
 
 private:
@@ -86,9 +88,9 @@ public:
   /// @param head,values consistent number of parameter values of the
   /// measurement
   template <typename... Tail>
-  Measurement(const Surface&    surface,
-              const Identifier& id,
-              CovMatrix_t       cov,
+  Measurement(const Surface&      surface,
+              const identifier_t& id,
+              CovMatrix_t         cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
@@ -111,7 +113,7 @@ public:
   }
 
   /// @brief copy constructor
-  Measurement(const Measurement<Identifier, params...>& copy)
+  Measurement(const Measurement<identifier_t, params...>& copy)
     : m_oParameters(copy.m_oParameters)
     , m_pSurface(copy.m_pSurface->isFree()
                      ? const_cast<const Surface*>(copy.m_pSurface->clone())
@@ -121,7 +123,7 @@ public:
   }
 
   /// @brief move constructor
-  Measurement(Measurement<Identifier, params...>&& rhs)
+  Measurement(Measurement<identifier_t, params...>&& rhs)
     : m_oParameters(std::move(rhs.m_oParameters))
     , m_pSurface(rhs.m_pSurface)
     , m_oIdentifier(std::move(rhs.m_oIdentifier))
@@ -130,8 +132,8 @@ public:
   }
 
   /// @brief copy assignment operator
-  Measurement<Identifier, params...>&
-  operator=(const Measurement<Identifier, params...>& rhs)
+  Measurement<identifier_t, params...>&
+  operator=(const Measurement<identifier_t, params...>& rhs)
   {
     m_oParameters = rhs.m_oParameters;
     m_pSurface    = rhs.m_pSurface;
@@ -141,8 +143,8 @@ public:
   }
 
   /// @brief move assignment operator
-  Measurement<Identifier, params...>&
-  operator=(Measurement<Identifier, params...>&& rhs)
+  Measurement<identifier_t, params...>&
+  operator=(Measurement<identifier_t, params...>&& rhs)
   {
     m_oParameters = std::move(rhs.m_oParameters);
     m_pSurface    = rhs.m_pSurface;
@@ -230,7 +232,7 @@ public:
   /// @brief access to global measurement identifier
   ///
   /// @return identifier object
-  Identifier
+  identifier_t
   identifier() const
   {
     return m_oIdentifier;
@@ -263,7 +265,7 @@ public:
   /// @return @c true if parameter sets and associated surfaces compare equal,
   /// otherwise @c false
   virtual bool
-  operator==(const Measurement<Identifier, params...>& rhs) const
+  operator==(const Measurement<identifier_t, params...>& rhs) const
   {
     return ((m_oParameters == rhs.m_oParameters)
             && (*m_pSurface == *rhs.m_pSurface)
@@ -276,7 +278,7 @@ public:
   ///
   /// @sa Measurement::operator==
   bool
-  operator!=(const Measurement<Identifier, params...>& rhs) const
+  operator!=(const Measurement<identifier_t, params...>& rhs) const
   {
     return !(*this == rhs);
   }
@@ -289,7 +291,7 @@ public:
   }
 
   friend std::ostream&
-  operator<<(std::ostream& out, const Measurement<Identifier, params...>& m)
+  operator<<(std::ostream& out, const Measurement<identifier_t, params...>& m)
   {
     m.print(out);
     return out;
@@ -317,15 +319,15 @@ protected:
 private:
   ParSet_t       m_oParameters;  ///< measured parameter set
   const Surface* m_pSurface;  ///< surface at which the measurement took place
-  Identifier     m_oIdentifier;  ///< identifier for this measurement
+  identifier_t   m_oIdentifier;  ///< identifier for this measurement
 };
 
 /**
  * @brief general type for any possible Measurement
  */
-template <typename Identifier>
+template <typename identifier_t>
 using FittableMeasurement =
-    typename detail::fittable_type_generator<Identifier>::type;
+    typename detail::fittable_type_generator<identifier_t>::type;
 
 struct SurfaceGetter : public boost::static_visitor<const Surface&>
 {

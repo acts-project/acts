@@ -25,9 +25,8 @@ public:
     : GeometryObject(), Surface(sf, transf)
   {
   }
-  SurfaceStub(const DetectorElementBase& detelement,
-              const Identifier&          id = Identifier())
-    : GeometryObject(), Surface(detelement, id)
+  SurfaceStub(const DetectorElementBase& detelement)
+    : GeometryObject(), Surface(detelement)
   {
   }
 

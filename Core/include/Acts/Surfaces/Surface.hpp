@@ -20,7 +20,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryObject.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
-#include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
@@ -50,7 +49,6 @@ public:
   ///
   /// This enumerator simplifies the persistency & calculations,
   /// by saving a dynamic_cast, e.g. for persistency
-  ///
   enum SurfaceType {
     Cone        = 0,
     Cylinder    = 1,
@@ -86,14 +84,12 @@ public:
   /// @param transf Additional transform applied after copying from the source
   Surface(const Surface& other, const Transform3D& transf);
 
-  /// Constructor fromt DetectorElementBase and (optional) Identifier
+  /// Constructor fromt DetectorElementBase: Element proxy
   ///
   /// @param detelement Detector element which is represented by this surface
-  /// @param id Optional identifier if more than one surface are associated to a
-  /// detector element
-  Surface(const DetectorElementBase& detelement,
-          const Identifier&          id = Identifier());
+  Surface(const DetectorElementBase& detelement);
 
+  /// Destructor
   virtual ~Surface();
 
   /// Assignment operator is not allowed
@@ -185,11 +181,6 @@ public:
   /// @return plain pointer to the DetectorElement, can be nullptr
   const DetectorElementBase*
   associatedDetectorElement() const;
-
-  /// Return method for the associated Identifier
-  /// @return Identifier by value, can be invalid
-  const Identifier
-  associatedIdentifier() const;
 
   /// Return method for the associated Layer in which the surface is embedded
   /// @return Layer by plain pointer, can be nullptr
@@ -426,9 +417,6 @@ protected:
 
   /// Pointer to the a DetectorElementBase
   const DetectorElementBase* m_associatedDetElement;
-
-  /// Associated Identifier to this
-  Identifier m_associatedDetElementId;
 
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated

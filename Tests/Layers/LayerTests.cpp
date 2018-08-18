@@ -137,8 +137,6 @@ namespace Test {
       // delete abstractVolumePtr;
       /// layerType()
       BOOST_TEST(layerStub.layerType() == LayerType::passive);
-      /// detectorElements() (needs a better test)
-      BOOST_TEST(layerStub.detectorElements().size() == 0u);
     }
 
     BOOST_AUTO_TEST_SUITE_END()

@@ -11,20 +11,25 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
+// This is the plugin mechanism to exchange the entire DetectorElementBase
 #ifdef ACTS_GEOMETRY_DETELEMENT_PLUGIN
 #include ACTS_GEOMETRY_DETELEMENT_PLUGIN
 #else
 
+// This is the plugin mechanism to extend the DetectorElementBase interface
+#ifdef ACTS_GEOMETRY_DETELEMENTBASE_EXTENSION
+#include ACTS_GEOMETRY_DETELEMENTBASE_EXTENSION
+#endif
+
 #include <memory>
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Identifier.hpp"
 
 namespace Acts {
 
 class Surface;
 class SurfaceBounds;
-class DigitizationModule;
 
 /// @class DetectorElementBase
 ///
@@ -47,51 +52,23 @@ public:
   /// virtual Destructor
   virtual ~DetectorElementBase() {}
 
-  /// Identifier
-  virtual Identifier
-  identify() const = 0;
-
-  /// Return local to global transform
-  /// (optionally associated with an identifier)
-  ///
-  /// @param identifier is an identifier in case more transform hare held
-  ///
-  /// @return is the requested transform of the DetectorElementBase
-  virtual const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const = 0;
+  /// Return the transform for the Element proxy mechanism
+  virtual const Acts::Transform3D&
+  transform() const = 0;
 
   /// Return surface association
   /// (optionally associated with an identifier)
-  ///
-  /// @param identifier is an identifier in case more surfaces hare held
-  ///
-  /// @return the surface associated with this detector element (and id)
   virtual const Surface&
-  surface(const Identifier& identifier = Identifier()) const = 0;
-
-  /// Return full list of associated surfaces
-  /// @return contained surfaces
-  virtual const std::vector<std::shared_ptr<const Surface>>&
-  surfaces() const = 0;
-
-  /// Return the DigitizationModule
-  /// @return optionally the DigitizationModule
-  virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const = 0;
+  surface() const = 0;
 
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   virtual double
   thickness() const = 0;
 
-  /// Set the identifier after construction (sometimes needed)
-  virtual void
-  assignIdentifier(const Identifier& identifier)
-      = 0;
-
   /// Fast access to bin members
   /// Bin members are elements that are in the same geometric binning cell,
-  /// such, e.g. backside modules in a doublet/triplet detector
+  /// such, e.g. backside modules in a multiplet detector
   ///
   /// @return vector of DetectorElementBase pointers
   const std::vector<const DetectorElementBase*>&
@@ -128,12 +105,6 @@ private:
   std::vector<const DetectorElementBase*> m_binmembers;
   std::vector<const DetectorElementBase*> m_neighbours;
 };
-
-inline std::shared_ptr<const DigitizationModule>
-DetectorElementBase::digitizationModule() const
-{
-  return nullptr;
-}
 
 inline const std::vector<const DetectorElementBase*>&
 DetectorElementBase::binmembers() const

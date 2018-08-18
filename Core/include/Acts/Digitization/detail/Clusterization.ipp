@@ -11,22 +11,23 @@
 #include <utility>
 #include <vector>
 
-template <typename Cell>
-std::vector<std::vector<Cell>>
-Acts::createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
-                     size_t nBins0,
-                     bool   commonCorner,
-                     double energyCut)
+template <typename cell_t>
+std::vector<std::vector<cell_t>>
+Acts::createClusters(
+    std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,
+    size_t nBins0,
+    bool   commonCorner,
+    double energyCut)
 {
   // the output
-  std::vector<std::vector<Cell>> mergedCells;
+  std::vector<std::vector<cell_t>> mergedCells;
   // now go through cells and label
   for (auto& cell : cellMap) {
     // check if the cell was already used
     if (!(cell.second.second)
         && (cell.second.first.depositedEnergy() >= energyCut)) {
       // create new cluster
-      mergedCells.push_back(std::vector<Cell>());
+      mergedCells.push_back(std::vector<cell_t>());
       // add current cell to current cluster
       mergedCells.back().push_back(cell.second.first);
       // set cell to be used already
@@ -40,10 +41,10 @@ Acts::createClusters(std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
   return mergedCells;
 }
 
-template <typename Cell>
+template <typename cell_t>
 void
-Acts::fillCluster(std::vector<std::vector<Cell>>& mergedCells,
-                  std::unordered_map<size_t, std::pair<Cell, bool>>& cellMap,
+Acts::fillCluster(std::vector<std::vector<cell_t>>& mergedCells,
+                  std::unordered_map<size_t, std::pair<cell_t, bool>>& cellMap,
                   size_t index,
                   size_t nBins0,
                   bool   commonCorner,

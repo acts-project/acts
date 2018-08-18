@@ -70,7 +70,7 @@ namespace Test {
     /// Construct with nullptr bounds
     Identifier          id;
     DetectorElementStub detElem;
-    BOOST_CHECK_THROW(DiscSurface nullBounds(nullptr, detElem, id),
+    BOOST_CHECK_THROW(DiscSurface nullBounds(nullptr, detElem),
                       AssertionFailureException);
   }
 

@@ -57,8 +57,7 @@ namespace Test {
     std::shared_ptr<const Acts::PlanarBounds> p
         = std::make_shared<const RectangleBounds>(1., 10.);
     DetectorElementStub detElement{id, pTransform, p, 1.0, nullptr};
-    BOOST_TEST(StrawSurface(pLineBounds, detElement, id).type()
-               == Surface::Straw);
+    BOOST_TEST(StrawSurface(pLineBounds, detElement).type() == Surface::Straw);
     //
     /// Copy constructor
     StrawSurface strawSurfaceObject(pTransform, radius, halfZ);

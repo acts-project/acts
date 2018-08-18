@@ -13,6 +13,7 @@
 #pragma once
 #include <iostream>
 #include "Acts/Detector/DetectorElementBase.hpp"
+#include "Acts/Utilities/Identifier.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -119,29 +120,20 @@ public:
 
   /// Identifier
   virtual Identifier
-  identify() const final override;
+  identify() const final;
 
   /// Return local to global transform associated with this identifier
   virtual const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const final override;
-
-  /// Set the identifier after construction (sometimes needed)
-  virtual void
-  assignIdentifier(const Identifier& identifier) final override;
+  transform() const final override;
 
   /// Return surface associated with this identifier, which should come from the
   virtual const Surface&
-  surface(const Identifier& identifier = Identifier()) const final override;
-
-  /// Returns the full list of all detection surfaces associated
-  /// to this detector element
-  virtual const std::vector<std::shared_ptr<const Surface>>&
-  surfaces() const final override;
+  surface() const final override;
 
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const override;
+  digitizationModule() const final;
 
   /// Returns the thickness of the module
   virtual double
@@ -164,8 +156,6 @@ private:
   double m_thickness;  //@todo implement thickness from TGeoMode
   /// Corresponding Surface
   std::shared_ptr<const Surface> m_surface;
-  /// possible contained surfaces
-  std::vector<std::shared_ptr<const Surface>> m_surfaces;
 };
 
 inline Identifier
@@ -174,28 +164,16 @@ TGeoDetectorElement::identify() const
   return m_identifier;
 }
 
-inline void
-TGeoDetectorElement::assignIdentifier(const Identifier& identifier)
-{
-  m_identifier = identifier;
-}
-
 inline const Transform3D&
-TGeoDetectorElement::transform(const Identifier&) const
+TGeoDetectorElement::transform() const
 {
   return (*m_transform);
 }
 
 inline const Surface&
-TGeoDetectorElement::surface(const Identifier&) const
+TGeoDetectorElement::surface() const
 {
   return (*m_surface);
-}
-
-inline const std::vector<std::shared_ptr<const Surface>>&
-TGeoDetectorElement::surfaces() const
-{
-  return (m_surfaces);
 }
 
 inline double

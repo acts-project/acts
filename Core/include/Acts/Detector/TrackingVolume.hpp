@@ -372,11 +372,6 @@ public:
   void
   setMotherVolume(const TrackingVolume* mvol);
 
-  /// @return a map of all contained detector elements and their corresponding
-  /// identifier
-  const std::map<Identifier, const DetectorElementBase*>&
-  detectorElements() const;
-
 protected:
   /// Default constructor
   TrackingVolume();
@@ -482,8 +477,10 @@ private:
   /// (b)  non-static setups
   /// detacathd
   const DetachedVolumeVector m_confinedDetachedVolumes;
+
   /// confined dense
   const TrackingVolumeVector m_confinedDenseVolumes;
+
   /// confined arbitrary
   const LayerVector m_confinedArbitraryLayers;
 
@@ -501,10 +498,6 @@ private:
 
   /// color code for displaying
   unsigned int m_colorCode;
-
-  /// map which collects all detector elements and connects them with their
-  /// Identfier
-  std::map<Identifier, const DetectorElementBase*> m_detectorElements;
 };
 
 inline const std::string&
@@ -583,12 +576,6 @@ inline void
 TrackingVolume::setMotherVolume(const TrackingVolume* mvol)
 {
   m_motherVolume = mvol;
-}
-
-inline const std::map<Identifier, const DetectorElementBase*>&
-TrackingVolume::detectorElements() const
-{
-  return m_detectorElements;
 }
 
 #include "detail/TrackingVolume.ipp"

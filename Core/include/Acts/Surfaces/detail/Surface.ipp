@@ -18,6 +18,33 @@ Surface::center() const
   return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
+inline const Acts::Vector3D
+Surface::normal(const Vector3D&) const
+{
+  return normal(s_origin2D);
+}
+
+inline bool
+Surface::isFree() const
+{
+  return (!m_associatedDetElement && !m_associatedTrackingVolume
+          && !m_associatedLayer);
+}
+
+inline const Transform3D&
+Surface::transform() const
+{
+  if (m_transform) return (*(m_transform.get()));
+  if (m_associatedDetElement) return m_associatedDetElement->transform();
+  return s_idTransform;
+}
+
+inline bool
+Surface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bcheck) const
+{
+  return bounds().inside(locpos, bcheck);
+}
+
 inline const RotationMatrix3D
 Surface::referenceFrame(const Vector3D&, const Vector3D&) const
 {
@@ -112,14 +139,6 @@ inline const DetectorElementBase*
 Surface::associatedDetectorElement() const
 {
   return m_associatedDetElement;
-}
-
-inline const Identifier
-Surface::associatedIdentifier() const
-{
-  if (!m_associatedDetElement) return Identifier();  // in invalid state
-  if (m_associatedDetElementId.is_valid()) return m_associatedDetElementId;
-  return m_associatedDetElement->identify();
 }
 
 inline const Layer*

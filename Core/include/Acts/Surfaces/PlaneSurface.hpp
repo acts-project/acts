@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
@@ -57,14 +56,12 @@ public:
   /// @param normal is thenormal vector of the plane surface
   PlaneSurface(const Vector3D& center, const Vector3D& normal);
 
-  /// Constructor from DetectorElementBase
+  /// Constructor from DetectorElementBase : Element proxy
   ///
   /// @param pbounds are the provided planar bounds (shared)
   /// @param detelement is the linked detector element to this surface
-  /// @param identifier is the identifier of associated to this surfacex
   PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const DetectorElementBase&          detelement,
-               const Identifier&                   identifier = Identifier());
+               const DetectorElementBase&          detelement);
 
   /// Constructor for Planes with (optional) shared bounds object
   ///

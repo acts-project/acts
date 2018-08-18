@@ -33,7 +33,6 @@ Acts::TrackingVolume::TrackingVolume()
   , m_geometryType(NumberOfGeometryTypes)
   , m_name("undefined")
   , m_colorCode(20)
-  , m_detectorElements()
 {
 }
 
@@ -56,7 +55,6 @@ Acts::TrackingVolume::TrackingVolume(
   , m_geometryType(NumberOfGeometryTypes)
   , m_name(volumeName)
   , m_colorCode(20)
-  , m_detectorElements()
 {
   createBoundarySurfaces();
   interlinkLayers();
@@ -86,7 +84,6 @@ Acts::TrackingVolume::TrackingVolume(
   , m_geometryType(NumberOfGeometryTypes)
   , m_name(volumeName)
   , m_colorCode(20)
-  , m_detectorElements()
 {
   createBoundarySurfaces();
   interlinkLayers();
@@ -418,9 +415,6 @@ Acts::TrackingVolume::closeGeometry(
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
         mutableLayerPtr->closeGeometry(layerID);
-        auto layerDetElements = layerPtr->detectorElements();
-        m_detectorElements.insert(layerDetElements.begin(),
-                                  layerDetElements.end());
       }
     }
   } else {
@@ -430,9 +424,6 @@ Acts::TrackingVolume::closeGeometry(
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->closeGeometry(volumeMap, vol);
-      // collect the detector elements for the contained volumes
-      auto detElements = mutableVolumesIter->detectorElements();
-      m_detectorElements.insert(detElements.begin(), detElements.end());
     }
   }
 

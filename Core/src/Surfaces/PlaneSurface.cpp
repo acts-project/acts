@@ -18,7 +18,6 @@
 
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
@@ -59,9 +58,8 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
 }
 
 Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-                                 const Acts::DetectorElementBase&    detelement,
-                                 const Identifier&                   identifier)
-  : Surface(detelement, identifier), m_bounds(pbounds)
+                                 const Acts::DetectorElementBase&    detelement)
+  : Surface(detelement), m_bounds(pbounds)
 {
   /// surfaces representing a detector element must have bounds
   throw_assert(pbounds, "PlaneBounds must not be nullptr");
