@@ -337,16 +337,14 @@ namespace Test {
     const auto& status = epropagator.propagate(start, options);
     const auto& result = status.endParameters;
 
-    if (result) {
-      // this test assumes state.options.loopFraction = 0.5
-      // maximum momentum allowed
-      double pmax = units::SI2Nat<units::MOMENTUM>(
-          options.pathLimit * bField.getField(pos).mag() / M_PI);
-      if (mom.mag() < pmax)
-        BOOST_CHECK(status.pathLength < options.pathLimit);
-      else
-        BOOST_CHECK_CLOSE(status.pathLength, options.pathLimit, 1e-3);
-    }
+    // this test assumes state.options.loopFraction = 0.5
+    // maximum momentum allowed
+    double pmax = units::SI2Nat<units::MOMENTUM>(
+        options.pathLimit * bField.getField(pos).mag() / M_PI);
+    if (mom.mag() < pmax)
+      BOOST_CHECK(status.pathLength < options.pathLimit);
+    else
+      BOOST_CHECK_CLOSE(status.pathLength, options.pathLimit, 1e-3);
   }
 
 }  // namespace Test
