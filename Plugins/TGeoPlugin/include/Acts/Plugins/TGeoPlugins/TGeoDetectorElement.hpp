@@ -120,7 +120,7 @@ public:
 
   /// Identifier
   virtual Identifier
-  identify() const final;
+  identify() const;
 
   /// Return local to global transform associated with this identifier
   virtual const Transform3D&
@@ -133,7 +133,7 @@ public:
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const final;
+  digitizationModule() const;
 
   /// Returns the thickness of the module
   virtual double
