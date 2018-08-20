@@ -53,7 +53,7 @@ namespace Test {
   typedef EigenStepper<BFieldType> EigenStepperType;
   typedef Propagator<EigenStepperType, Navigator> EigenPropagatorType;
 
-  const double        Bz = 0.;  // 2. * units::_T;
+  const double        Bz = 2. * units::_T;
   BFieldType          bField(0, 0, Bz);
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
@@ -276,6 +276,74 @@ namespace Test {
       // test that you actually lost some energy
       BOOST_TEST(result->momentum().mag() < start.momentum().mag());
     }
+  }
+
+  // This test case checks that no segmentation fault appears
+  // - this tests the loop protection
+  BOOST_DATA_TEST_CASE(
+      loop_protection_test,
+      bdata::random((bdata::seed = 20,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.1 * units::_GeV,
+                                                        0.5 * units::_GeV)))
+          ^ bdata::random((bdata::seed = 21,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 22,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+          ^ bdata::random((bdata::seed = 23,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::xrange(100),
+      pT,
+      phi,
+      theta,
+      charge,
+      index)
+  {
+    double dcharge = -1 + 2 * charge;
+    (void)index;
+
+    // define start parameters
+    double   x  = 0;
+    double   y  = 0;
+    double   z  = 0;
+    double   px = pT * cos(phi);
+    double   py = pT * sin(phi);
+    double   pz = pT / tan(theta);
+    double   q  = dcharge;
+    Vector3D pos(x, y, z);
+    Vector3D mom(px, py, pz);
+    /// a covariance matrix to transport
+    ActsSymMatrixD<5> cov;
+    // take some major correlations (off-diagonals)
+    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
+        1. / (10 * units::_GeV);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
+
+    // Action list and abort list
+    typedef ActionList<MaterialInteractor> ActionListType;
+    typedef AbortList<>                    AbortConditionsType;
+
+    typename EigenPropagatorType::template Options<ActionListType,
+                                                   AbortConditionsType>
+        options;
+    options.maxStepSize = 25. * units::_cm;
+    options.pathLimit   = 1500. * units::_mm;
+
+    const auto& status = epropagator.propagate(start, options);
+
+    // this test assumes state.options.loopFraction = 0.5
+    // maximum momentum allowed
+    double pmax = units::SI2Nat<units::MOMENTUM>(
+        options.pathLimit * bField.getField(pos).mag() / M_PI);
+    if (mom.mag() < pmax)
+      BOOST_CHECK(status.pathLength < options.pathLimit);
+    else
+      BOOST_CHECK_CLOSE(status.pathLength, options.pathLimit, 1e-3);
   }
 
 }  // namespace Test

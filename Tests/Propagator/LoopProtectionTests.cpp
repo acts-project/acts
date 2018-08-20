@@ -161,9 +161,27 @@ namespace Test {
 
   // This test case checks that the propagator with loop LoopProtection
   // stops where expected
-  void
-  runTest(double pT, double phi, double theta, int charge, int index)
-
+  BOOST_DATA_TEST_CASE(
+      propagator_loop_protection_test,
+      bdata::random((bdata::seed = 20,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(0.5 * units::_GeV,
+                                                        10. * units::_GeV)))
+          ^ bdata::random((bdata::seed = 21,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
+          ^ bdata::random((bdata::seed = 22,
+                           bdata::distribution
+                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+          ^ bdata::random((bdata::seed = 23,
+                           bdata::distribution
+                           = std::uniform_int_distribution<>(0, 1)))
+          ^ bdata::xrange(ntests),
+      pT,
+      phi,
+      theta,
+      charge,
+      index)
   {
     if (index < skip) return;
 
@@ -198,34 +216,10 @@ namespace Test {
 
     const auto& result = epropagator.propagate(start, options);
 
+    // this test assumes state.options.loopFraction = 0.5
     BOOST_CHECK_CLOSE(px, -result.endParameters->momentum().x(), 1e-2);
     BOOST_CHECK_CLOSE(py, -result.endParameters->momentum().y(), 1e-2);
     BOOST_CHECK_CLOSE(pz, result.endParameters->momentum().z(), 1e-2);
-  }
-
-  BOOST_DATA_TEST_CASE(
-      propagator_loop_protection_test,
-      bdata::random((bdata::seed = 20,
-                     bdata::distribution
-                     = std::uniform_real_distribution<>(0.5 * units::_GeV,
-                                                        10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 21,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((bdata::seed = 22,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
-          ^ bdata::random((bdata::seed = 23,
-                           bdata::distribution
-                           = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(ntests),
-      pT,
-      phi,
-      theta,
-      charge,
-      index)
-  {
-    runTest(pT, phi, theta, charge, index);
   }
 
 }  // namespace Test
