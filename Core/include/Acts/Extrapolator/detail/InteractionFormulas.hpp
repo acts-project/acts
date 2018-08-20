@@ -22,7 +22,7 @@ namespace detail {
   /// the most probable energy loss is more suited for fast simulation
   ///
   /// The energy loss is calculated using the following paper
-  /// http:://pdg.lbl.gov/2018/reviews/rpp2018-rev-passage-particles-matter.pdf
+  /// http://pdg.lbl.gov/2018/reviews/rpp2018-rev-passage-particles-matter.pdf
   ///
   /// Formula 33.5 is used to calculate the mean energy loss [reco mode]
   /// Formula 33.11 is used to calculate the most probable energy loss [sim
