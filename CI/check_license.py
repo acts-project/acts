@@ -8,9 +8,7 @@ import difflib
 from datetime import datetime
 from fnmatch import fnmatch
 
-EXCLUDE = [
-    "./Plugins/Json/include/Acts/Plugins/Json/lib/*"
-]
+EXCLUDE = ["./Plugins/Json/include/Acts/Plugins/Json/lib/*"]
 
 class bcolors:
     HEADER = '\033[95m'
