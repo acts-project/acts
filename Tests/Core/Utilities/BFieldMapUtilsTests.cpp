@@ -88,11 +88,11 @@ namespace Test {
     auto           value2_rz = mapper_rz.getField(pos2_rz);
     // calculate what the value should be at this point
     auto b0_rz
-        = bField_rz.at(localToGlobalBin_rz({0, 0}, {rPos.size(), zPos.size()}));
+        = bField_rz.at(localToGlobalBin_rz({{0, 0}}, {{rPos.size(), zPos.size()}}));
     auto b1_rz
-        = bField_rz.at(localToGlobalBin_rz({1, 1}, {rPos.size(), zPos.size()}));
+        = bField_rz.at(localToGlobalBin_rz({{1, 1}}, {{rPos.size(), zPos.size()}}));
     auto b2_rz
-        = bField_rz.at(localToGlobalBin_rz({2, 2}, {rPos.size(), zPos.size()}));
+        = bField_rz.at(localToGlobalBin_rz({{2, 2}}, {{rPos.size(), zPos.size()}}));
     Acts::Vector3D bField0_rz(b0_rz.x(), 0., b0_rz.y());
     Acts::Vector3D bField1_rz(b1_rz.x(), 0., b1_rz.y());
     Acts::Vector3D bField2_rz(0., b2_rz.x(), b2_rz.y());
@@ -114,11 +114,11 @@ namespace Test {
     auto           value2_xyz = mapper_xyz.getField(pos2_xyz);
     // calculate what the value should be at this point
     auto b0_xyz = bField_xyz.at(localToGlobalBin_xyz(
-        {0, 0, 0}, {xPos.size(), yPos.size(), zPos.size()}));
+        {{0, 0, 0}}, {{xPos.size(), yPos.size(), zPos.size()}}));
     auto b1_xyz = bField_xyz.at(localToGlobalBin_xyz(
-        {1, 1, 1}, {xPos.size(), yPos.size(), zPos.size()}));
+        {{1, 1, 1}}, {{xPos.size(), yPos.size(), zPos.size()}}));
     auto b2_xyz = bField_xyz.at(localToGlobalBin_xyz(
-        {2, 2, 2}, {xPos.size(), yPos.size(), zPos.size()}));
+        {{2, 2, 2}}, {{xPos.size(), yPos.size(), zPos.size()}}));
     // check the value
     BOOST_TEST(value0_xyz == b0_xyz);
     BOOST_TEST(value1_xyz == b1_xyz);

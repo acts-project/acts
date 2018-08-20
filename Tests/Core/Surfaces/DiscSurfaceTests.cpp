@@ -68,7 +68,6 @@ namespace Test {
     BOOST_CHECK_NO_THROW(DiscSurface(anotherDiscSurface, *pTransform));
 
     /// Construct with nullptr bounds
-    Identifier          id;
     DetectorElementStub detElem;
     BOOST_CHECK_THROW(DiscSurface nullBounds(nullptr, detElem),
                       AssertionFailureException);
