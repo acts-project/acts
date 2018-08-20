@@ -25,6 +25,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/VariantData.hpp"
+
+#include "../Utilities/TestHelper.hpp"
 #include "ParametersTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -123,7 +125,7 @@ namespace Test {
     // we should have a new updated position
     Vector3D lPosition3D(ux, uy, 0.);
     Vector3D uposition = rot * lPosition3D + center;
-    BOOST_CHECK_EQUAL(uposition, ataPlane_from_pars.position());
+    checkCloseVec3D(uposition, ataPlane_from_pars.position());
 
     double uphi   = 1.2;
     double utheta = 0.2;

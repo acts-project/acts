@@ -63,7 +63,8 @@ namespace Test {
       // construct with thickness:
       auto pCylinderLayerWithThickness = CylinderLayer::create(
           pTransform, pCylinder, std::move(pSurfaceArray), thickness);
-      BOOST_TEST(pCylinderLayerWithThickness->thickness() == thickness);
+      BOOST_CHECK_CLOSE_FRACTION(
+          pCylinderLayerWithThickness->thickness(), thickness, 1e-6);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor<Surface>(aSurfaces));
@@ -119,14 +120,15 @@ namespace Test {
 
       variant_map var_map = boost::get<variant_map>(var_data);
       variant_map pl      = var_map.get<variant_map>("payload");
-      BOOST_TEST(pl.get<double>("thickness") == 0.4);
+      BOOST_CHECK_EQUAL(pl.get<double>("thickness"), 0.4);
       Transform3D act = from_variant<Transform3D>(pl.at("transform"));
       BOOST_TEST(pTransform->isApprox(act));
 
       auto pCylinderLayer2 = std::dynamic_pointer_cast<CylinderLayer>(
           CylinderLayer::create(var_data));
 
-      BOOST_TEST(pCylinderLayer->thickness() == pCylinderLayer2->thickness());
+      BOOST_CHECK_EQUAL(pCylinderLayer->thickness(),
+                        pCylinderLayer2->thickness());
       BOOST_TEST(
           pCylinderLayer->transform().isApprox(pCylinderLayer2->transform()));
 
@@ -135,10 +137,11 @@ namespace Test {
       auto cvBoundsAct = dynamic_cast<const CylinderVolumeBounds*>(
           &(pCylinderLayer2->representingVolume()->volumeBounds()));
 
-      BOOST_TEST(cvBoundsExp->innerRadius() == cvBoundsAct->innerRadius());
-      BOOST_TEST(cvBoundsExp->outerRadius() == cvBoundsAct->outerRadius());
-      BOOST_TEST(cvBoundsExp->halfPhiSector() == cvBoundsAct->halfPhiSector());
-      BOOST_TEST(cvBoundsExp->halflengthZ() == cvBoundsAct->halflengthZ());
+      BOOST_CHECK_EQUAL(cvBoundsExp->innerRadius(), cvBoundsAct->innerRadius());
+      BOOST_CHECK_EQUAL(cvBoundsExp->outerRadius(), cvBoundsAct->outerRadius());
+      BOOST_CHECK_EQUAL(cvBoundsExp->halfPhiSector(),
+                        cvBoundsAct->halfPhiSector());
+      BOOST_CHECK_EQUAL(cvBoundsExp->halflengthZ(), cvBoundsAct->halflengthZ());
     }
 
     BOOST_AUTO_TEST_SUITE_END()

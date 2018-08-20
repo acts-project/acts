@@ -11,18 +11,24 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-// STL include(s)
+
+// libc/STL include(s)
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <string>
+#include "strings.h"
 
 // Acts include(s)
 #include "Definitions.hpp"
 
 #ifndef ACTS_BIT_CODING
 #define ACTS_BIT_CODING 1
-#define ACTS_BIT_SHIFT(mask) (__builtin_ffsl(mask) - 1)
+#if (__GNUC__ >= 4)
+#define ACTS_BIT_SHIFT(mask) __builtin_ctzl(mask)
+#else
+#define ACTS_BIT_SHIFT(mask) (ffsl(mask) - 1)
+#endif
 #define ACTS_BIT_ENCODE(value, mask) (value << ACTS_BIT_SHIFT(mask))
 #define ACTS_BIT_DECODE(code, mask) ((code & mask) >> ACTS_BIT_SHIFT(mask))
 #endif

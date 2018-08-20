@@ -24,10 +24,11 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
+#include "../Utilities/TestHelper.hpp"
+
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
-namespace utf    = boost::unit_test;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
+namespace utf = boost::unit_test;
 
 namespace Acts {
 
@@ -99,8 +100,8 @@ namespace Test {
     //
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
-    BOOST_TEST(coneSurfaceObject.binningPosition(BinningValue::binPhi)
-               == binningPosition);
+    checkCloseVec3D(coneSurfaceObject.binningPosition(BinningValue::binPhi),
+                    binningPosition);
     //
     /// Test referenceFrame
     Vector3D         globalPosition{2.0, 2.0, 2.0};
@@ -115,7 +116,7 @@ namespace Test {
     /// Test normal, given 3D position
     Vector3D origin{0., 0., 0.};
     Vector3D normal3D = {0., -1., 0.};
-    BOOST_TEST(coneSurfaceObject.normal(origin) == normal3D);
+    checkCloseVec3D(coneSurfaceObject.normal(origin), normal3D);
     //
     /// Test normal given 2D rphi position
     Vector2D positionPiBy2(1.0, M_PI / 2.);
@@ -126,7 +127,7 @@ namespace Test {
     //
     /// Test rotational symmetry axis
     Vector3D symmetryAxis{0., 0., 1.};
-    BOOST_TEST(coneSurfaceObject.rotSymmetryAxis() == symmetryAxis);
+    checkCloseVec3D(coneSurfaceObject.rotSymmetryAxis(), symmetryAxis);
     //
     /// Test bounds
     BOOST_TEST(coneSurfaceObject.bounds().type() == SurfaceBounds::Cone);
@@ -144,7 +145,7 @@ namespace Test {
     // std::cout<<localPosition<<std::endl;
     Vector2D expectedLocalPosition{1.0, M_PI / 2.0};
 
-    BOOST_TEST(localPosition == expectedLocalPosition, "Testing globalToLocal");
+    checkCloseVec2D(localPosition, expectedLocalPosition);
     //
     /// Test isOnSurface
     Vector3D offSurface{100, 1, 2};
@@ -157,14 +158,17 @@ namespace Test {
         offSurface, direction, forward, false);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 100., true, 0};
     BOOST_TEST(intersect.valid);
-    BOOST_TEST(intersect.position == expectedIntersect.position);
-    BOOST_TEST(intersect.pathLength == expectedIntersect.pathLength);
-    BOOST_TEST(intersect.distance == expectedIntersect.distance);
+    checkCloseVec3D(intersect.position, expectedIntersect.position);
+    BOOST_CHECK_CLOSE_FRACTION(
+        intersect.pathLength, expectedIntersect.pathLength, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(
+        intersect.distance, expectedIntersect.distance, 1e-6);
     //
     /// Test pathCorrection
-    BOOST_TEST(coneSurfaceObject.pathCorrection(offSurface, momentum)
-                   == 0.40218866453252877,
-               tt::tolerance(0.01));
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneSurfaceObject.pathCorrection(offSurface, momentum),
+        0.40218866453252877,
+        0.01);
     //
     /// Test name
     BOOST_TEST(coneSurfaceObject.name() == std::string("Acts::ConeSurface"));
@@ -200,7 +204,7 @@ namespace Test {
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a ConeSurface object to the existing one");
     /// Test assignment
-    ConeSurface assignedConeSurface(nullptr, NaN, NaN);
+    ConeSurface assignedConeSurface(nullptr, 0.1, true);
     assignedConeSurface = coneSurfaceObject;
     /// Test equality of assigned to original
     BOOST_TEST(assignedConeSurface == coneSurfaceObject);
@@ -220,17 +224,17 @@ namespace Test {
         = boost::get<variant_map>(var_cone).get<variant_map>("payload");
     const variant_map& bounds_pl
         = pl.get<variant_map>("bounds").get<variant_map>("payload");
-    BOOST_TEST(bounds_pl.get<double>("alpha") == alpha);
-    BOOST_TEST(bounds_pl.get<double>("zMin") == zMin);
-    BOOST_TEST(bounds_pl.get<double>("zMax") == zMax);
-    BOOST_TEST(bounds_pl.get<double>("halfPhi") == halfPhi);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("alpha"), alpha);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("zMin"), zMin);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("zMax"), zMax);
+    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfPhi"), halfPhi);
 
     ConeSurface cone2(var_cone);
     auto        conebounds = dynamic_cast<const ConeBounds*>(&cone2.bounds());
-    BOOST_TEST(conebounds->alpha() == alpha);
-    BOOST_TEST(conebounds->halfPhiSector() == halfPhi);
-    BOOST_TEST(conebounds->minZ() == zMin);
-    BOOST_TEST(conebounds->maxZ() == zMax);
+    BOOST_CHECK_EQUAL(conebounds->alpha(), alpha);
+    BOOST_CHECK_EQUAL(conebounds->halfPhiSector(), halfPhi);
+    BOOST_CHECK_EQUAL(conebounds->minZ(), zMin);
+    BOOST_CHECK_EQUAL(conebounds->maxZ(), zMax);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

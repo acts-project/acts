@@ -24,8 +24,6 @@
 //
 #include <limits>
 
-const double NaN = std::numeric_limits<double>::quiet_NaN();
-
 namespace Acts {
 
 namespace Test {
@@ -105,8 +103,7 @@ namespace Test {
     // operator == not implemented in this class
     //
     /// Test assignment
-    RadialBounds assignedRadialBoundsObject(
-        NaN, NaN);  // invalid object, in some sense
+    RadialBounds assignedRadialBoundsObject(10.1, 123.);
     assignedRadialBoundsObject = radialBoundsObject;
     BOOST_TEST(assignedRadialBoundsObject == radialBoundsObject);
   }

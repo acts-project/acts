@@ -27,8 +27,7 @@
 #include "DetectorElementStub.hpp"
 
 using boost::test_tools::output_test_stream;
-namespace utf    = boost::unit_test;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
+namespace utf = boost::unit_test;
 
 namespace Acts {
 
@@ -118,7 +117,7 @@ namespace Test {
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a StrawSurface object to the existing one");
     /// Test assignment
-    StrawSurface assignedStrawSurface(nullptr, NaN, NaN);
+    StrawSurface assignedStrawSurface(nullptr, 6.6, 33.33);
     assignedStrawSurface = strawSurfaceObject;
     /// Test equality of assigned to original
     BOOST_TEST(assignedStrawSurface == strawSurfaceObject);

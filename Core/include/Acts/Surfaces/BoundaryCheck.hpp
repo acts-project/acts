@@ -385,7 +385,9 @@ Acts::BoundaryCheck::computeClosestPointOnPolygon(
     // normal vector and position of the closest point along the normal
     auto n = ll1 - ll0;
     auto f = (n.transpose() * m_weight * n).value();
-    auto u = -((ll0 - point).transpose() * m_weight * n).value() / f;
+    auto u = std::isnormal(f)
+        ? -((ll0 - point).transpose() * m_weight * n).value() / f
+        : 0.5;  // ll0 and ll1 are so close it doesn't matter
     // u must be in [0, 1] to still be on the polygon segment
     return ll0 + std::min(std::max(u, 0.0), 1.0) * n;
   };

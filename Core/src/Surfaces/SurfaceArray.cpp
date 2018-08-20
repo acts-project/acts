@@ -310,3 +310,38 @@ Acts::SurfaceArray::SurfaceArray(
 
   p_gridLookup->fill(surfaces);
 }
+
+std::ostream&
+Acts::SurfaceArray::dump(std::ostream& sl) const
+{
+  sl << std::fixed << std::setprecision(4);
+  sl << "SurfaceArray:" << std::endl;
+  sl << " - no surfaces: " << m_surfaces.size() << std::endl;
+  sl << " - grid dim:    " << p_gridLookup->dimensions() << std::endl;
+
+  auto axes = p_gridLookup->getAxes();
+
+  for (size_t j = 0; j < axes.size(); ++j) {
+    detail::AxisBoundaryType bdt = axes.at(j)->getBoundaryType();
+    sl << " - axis " << (j + 1) << std::endl;
+    sl << "   - boundary type: ";
+    if (bdt == detail::AxisBoundaryType::Open) sl << "open";
+    if (bdt == detail::AxisBoundaryType::Bound) sl << "bound";
+    if (bdt == detail::AxisBoundaryType::Closed) sl << "closed";
+    sl << std::endl;
+    sl << "   - type: "
+       << (axes.at(j)->isEquidistant() ? "equidistant" : "variable")
+       << std::endl;
+    sl << "   - n bins: " << axes.at(j)->getNBins() << std::endl;
+    sl << "   - bin edges: [ ";
+    auto binEdges = axes.at(j)->getBinEdges();
+    for (size_t i = 0; i < binEdges.size(); ++i) {
+      if (i > 0) sl << ", ";
+      auto binEdge = binEdges.at(i);
+      // Do not display negative zeroes
+      sl << ((std::abs(binEdge) >= 5e-4) ? binEdge : 0.0);
+    }
+    sl << " ]" << std::endl;
+  }
+  return sl;
+}

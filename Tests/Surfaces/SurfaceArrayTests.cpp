@@ -319,8 +319,8 @@ namespace Test {
         = axes.get<variant_map>(0).get<variant_map>("payload");
     BOOST_TEST(phiAxis_pl.get<std::string>("axisboundarytype") == "closed");
     BOOST_TEST(phiAxis_pl.get<std::string>("axistype") == "equidistant");
-    BOOST_TEST(phiAxis_pl.get<double>("min") == -M_PI);
-    BOOST_TEST(phiAxis_pl.get<double>("max") == M_PI);
+    BOOST_CHECK_EQUAL(phiAxis_pl.get<double>("min"), -M_PI);
+    BOOST_CHECK_EQUAL(phiAxis_pl.get<double>("max"), M_PI);
     BOOST_TEST(phiAxis_pl.get<int>("nbins") == 30);
 
     const variant_map& zAxis_pl
@@ -331,7 +331,8 @@ namespace Test {
         = zAxis_pl.get<variant_vector>("bin_edges");
     BOOST_TEST(zAxis_bin_edges.size() == 6);
     for (size_t i = 0; i < zAxis_bin_edges.size(); i++) {
-      BOOST_TEST(zAxis_bin_edges.get<double>(i) == zAxis_bin_edges_exp.at(i));
+      BOOST_CHECK_EQUAL(zAxis_bin_edges.get<double>(i),
+                        zAxis_bin_edges_exp.at(i));
     }
 
     SurfaceArray sa2(data, transform, itransform);
@@ -384,8 +385,8 @@ namespace Test {
         = axes.get<variant_map>(0).get<variant_map>("payload");
     BOOST_TEST(zAxis_pl.get<std::string>("axisboundarytype") == "bound");
     BOOST_TEST(zAxis_pl.get<std::string>("axistype") == "equidistant");
-    BOOST_TEST(zAxis_pl.get<double>("min") == 0);
-    BOOST_TEST(zAxis_pl.get<double>("max") == 30);
+    BOOST_CHECK_EQUAL(zAxis_pl.get<double>("min"), 0);
+    BOOST_CHECK_EQUAL(zAxis_pl.get<double>("max"), 30);
     BOOST_TEST(zAxis_pl.get<int>("nbins") == 10);
 
     SurfaceArray sa2(data, transform, itransform);

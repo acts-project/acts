@@ -23,8 +23,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
-namespace utf    = boost::unit_test;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
+namespace utf = boost::unit_test;
 
 namespace Acts {
 
@@ -114,8 +113,7 @@ namespace Test {
     // operator == not implemented in this class
     //
     /// Test assignment
-    TrapezoidBounds assignedTrapezoidBoundsObject(
-        NaN, NaN, NaN);  // invalid object, in some sense
+    TrapezoidBounds assignedTrapezoidBoundsObject(10., 20., 14.2);
     assignedTrapezoidBoundsObject = trapezoidBoundsObject;
     BOOST_TEST(assignedTrapezoidBoundsObject == trapezoidBoundsObject);
   }

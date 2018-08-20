@@ -98,15 +98,16 @@ namespace Test {
     {
 
       SrfVec res;
-
+      // TODO: The test is extremely numerically unstable in the face of upward
+      //       rounding in this multiplication and division. Find out why.
       double phiStep = 2 * M_PI / n;
       for (size_t i = 0; i < n; ++i) {
-
-        double z = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
+        double z   = zbase + ((i % 2 == 0) ? 1 : -1) * 0.2;
+        double phi = std::fma(i, phiStep, shift);
 
         Transform3D trans;
         trans.setIdentity();
-        trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
+        trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
         trans.translate(Vector3D(r, 0, z));
 
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
@@ -132,15 +133,16 @@ namespace Test {
     {
 
       SrfVec res;
-
+      // TODO: The test is extremely numerically unstable in the face of upward
+      //       rounding in this multiplication and division. Find out why.
       double phiStep = 2 * M_PI / n;
       for (size_t i = 0; i < n; ++i) {
-
-        double z = zbase;
+        double z   = zbase;
+        double phi = std::fma(i, phiStep, shift);
 
         Transform3D trans;
         trans.setIdentity();
-        trans.rotate(Eigen::AngleAxisd(i * phiStep + shift, Vector3D(0, 0, 1)));
+        trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
         trans.translate(Vector3D(10, 0, z));
         trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
         trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
@@ -213,19 +215,17 @@ namespace Test {
     {
       double z0 = -(nZ - 1) * w;
       SrfVec res;
-
       std::vector<std::pair<const Surface*, const Surface*>> pairs;
-
+      // TODO: The test is extremely numerically unstable in the face of upward
+      //       rounding in this multiplication and division. Find out why.
+      double phiStep = 2 * M_PI / nPhi;
       for (int i = 0; i < nZ; i++) {
         double z = i * w * 2 + z0;
-
-        double phiStep = 2 * M_PI / nPhi;
         for (int j = 0; j < nPhi; ++j) {
-
+          double      phi = std::fma(j, phiStep, shift);
           Transform3D trans;
           trans.setIdentity();
-          trans.rotate(
-              Eigen::AngleAxisd(j * phiStep + shift, Vector3D(0, 0, 1)));
+          trans.rotate(Eigen::AngleAxisd(phi, Vector3D(0, 0, 1)));
           trans.translate(Vector3D(10, 0, z));
           trans.rotate(Eigen::AngleAxisd(incl, Vector3D(0, 0, 1)));
           trans.rotate(Eigen::AngleAxisd(M_PI / 2., Vector3D(0, 1, 0)));
@@ -322,11 +322,10 @@ namespace Test {
       auto axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
 
       BOOST_TEST(axis.nBins == 30);
-      BOOST_TEST(axis.max == M_PI);
-      BOOST_TEST(axis.min == -M_PI);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_TEST(((tr * Vector3D::UnitX()).phi()
-                  < std::numeric_limits<double>::epsilon()));
+      BOOST_CHECK_SMALL((tr * Vector3D::UnitX()).phi(), 1e-6);
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift = 0.;
@@ -337,12 +336,12 @@ namespace Test {
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_2.obj");
       BOOST_TEST(axis.nBins == 30);
-      BOOST_TEST(axis.max == M_PI);
-      BOOST_TEST(axis.min == -M_PI);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
       // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_TEST((tr * Vector3D::UnitX()).phi() == -0.5 * step,
-                 tt::tolerance(1e-3));
+      BOOST_CHECK_CLOSE_FRACTION(
+          (tr * Vector3D::UnitX()).phi(), -0.5 * step, 1e-3);
       // case 3: two modules sit asymmetrically around pi / -pi shifted up
       angleShift = step / -4.;
       surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
@@ -352,11 +351,11 @@ namespace Test {
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_3.obj");
       BOOST_TEST(axis.nBins == 30);
-      BOOST_TEST(axis.max == M_PI);
-      BOOST_TEST(axis.min == -M_PI);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_TEST((tr * Vector3D::UnitX()).phi() == step / -4.,
-                 tt::tolerance(1e-3));
+      BOOST_CHECK_CLOSE_FRACTION(
+          (tr * Vector3D::UnitX()).phi(), step / -4., 1e-3);
 
       // case 4: two modules sit asymmetrically around pi / -pi shifted down
       angleShift = step / 4.;
@@ -367,11 +366,11 @@ namespace Test {
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_4.obj");
       BOOST_TEST(axis.nBins == 30);
-      BOOST_TEST(axis.max == M_PI);
-      BOOST_TEST(axis.min == -M_PI);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_TEST((tr * Vector3D::UnitX()).phi() == step / 4.,
-                 tt::tolerance(1e-3));
+      BOOST_CHECK_CLOSE_FRACTION(
+          (tr * Vector3D::UnitX()).phi(), step / 4., 1e-3);
     }
 
     for (int i = -1; i <= 2; i += 2) {
@@ -385,11 +384,10 @@ namespace Test {
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_1.obj");
       BOOST_TEST(axis.nBins == 30);
-      BOOST_TEST(axis.max == M_PI);
-      BOOST_TEST(axis.min == -M_PI);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_TEST(((tr * Vector3D::UnitX()).phi()
-                  < std::numeric_limits<double>::epsilon()));
+      BOOST_CHECK_SMALL((tr * Vector3D::UnitX()).phi(), 1e-6);
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift = 0.;
@@ -400,12 +398,12 @@ namespace Test {
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_2.obj");
       BOOST_TEST(axis.nBins == 30);
-      BOOST_TEST(axis.max == M_PI);
-      BOOST_TEST(axis.min == -M_PI);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
       // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_TEST((tr * Vector3D::UnitX()).phi() == -0.5 * step,
-                 tt::tolerance(1e-3));
+      BOOST_CHECK_CLOSE_FRACTION(
+          (tr * Vector3D::UnitX()).phi(), -0.5 * step, 1e-3);
 
       // case 3: two modules sit asymmetrically around pi / -pi shifted up
       angleShift = step / -4.;
@@ -416,12 +414,12 @@ namespace Test {
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_3.obj");
       BOOST_TEST(axis.nBins == 30);
-      BOOST_TEST(axis.max == M_PI);
-      BOOST_TEST(axis.min == -M_PI);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
       // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_TEST((tr * Vector3D::UnitX()).phi() == step / -4.,
-                 tt::tolerance(1e-3));
+      BOOST_CHECK_CLOSE_FRACTION(
+          (tr * Vector3D::UnitX()).phi(), step / -4., 1e-3);
 
       // case 4: two modules sit asymmetrically around pi / -pi shifted down
       angleShift = step / 4.;
@@ -432,12 +430,12 @@ namespace Test {
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_4.obj");
       BOOST_TEST(axis.nBins == 30);
-      BOOST_TEST(axis.max == M_PI);
-      BOOST_TEST(axis.min == -M_PI);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
       // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_TEST((tr * Vector3D::UnitX()).phi() == step / 4.,
-                 tt::tolerance(1e-3));
+      BOOST_CHECK_CLOSE_FRACTION(
+          (tr * Vector3D::UnitX()).phi(), step / 4., 1e-3);
     }
 
     SrfVec surfaces;
@@ -469,8 +467,8 @@ namespace Test {
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_Z_1.obj");
     BOOST_TEST(axis.nBins == 1);
-    BOOST_TEST(axis.max == 3);
-    BOOST_TEST(axis.min == 0);
+    BOOST_CHECK_CLOSE_FRACTION(axis.max, 3, 1e-6);
+    BOOST_CHECK_CLOSE_FRACTION(axis.min, 0, 1e-6);
     BOOST_TEST(axis.bType == equidistant);
 
     // z rows with varying starting point
@@ -487,8 +485,8 @@ namespace Test {
            % i)
               .str());
       BOOST_TEST(axis.nBins == 10);
-      BOOST_TEST(axis.max == 30 + z0);
-      BOOST_TEST(axis.min == z0);
+      BOOST_CHECK_CLOSE_FRACTION(axis.max, 30 + z0, 1e-6);
+      BOOST_CHECK_CLOSE_FRACTION(axis.min, z0, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
     }
 
@@ -539,10 +537,9 @@ namespace Test {
     axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
 
     BOOST_TEST(axis.nBins == 3);
-    BOOST_TEST(axis.max == (Vector3D(20 + 2, 1, 0)).perp(),
-               tt::tolerance(1e-3));
+    BOOST_CHECK_CLOSE_FRACTION(axis.max, (Vector3D(20 + 2, 1, 0)).perp(), 1e-3);
     // BOOST_TEST(axis.min == 8, tt::tolerance(1e-3)); // fails for some reason
-    BOOST_CHECK(((axis.min - 8) < 1e-3));
+    BOOST_CHECK_SMALL((axis.min - 8), 1e-3);
     BOOST_TEST(axis.bType == equidistant);
   }
 
@@ -709,13 +706,18 @@ namespace Test {
       size_t              i         = 0;
       for (const auto& edge : axes.at(0)->getBinEdges()) {
         BOOST_TEST_INFO("phi edge index " << i);
-        BOOST_TEST(edge == phiEdgesExp.at(i), tt::tolerance(1e-3));
+        auto phiEdge = phiEdgesExp.at(i);
+        if (std::abs(phiEdge) > 1e-10) {
+          BOOST_CHECK_CLOSE_FRACTION(edge, phiEdge, 1e-3);
+        } else {
+          BOOST_CHECK_SMALL(edge, 10 * phiEdge);
+        }
         i++;
       }
       i = 0;
       for (const auto& edge : axes.at(1)->getBinEdges()) {
         BOOST_TEST_INFO("z edge index " << i);
-        BOOST_TEST(edge == zEdgesExp.at(i), tt::tolerance(1e-3));
+        BOOST_CHECK_CLOSE_FRACTION(edge, zEdgesExp.at(i), 1e-3);
         i++;
       }
 

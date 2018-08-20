@@ -26,8 +26,7 @@
 using Acts::detail::RealQuadraticEquation;
 
 // namespace bdata = boost::unit_test::data;
-namespace utf    = boost::unit_test;
-const double NaN = std::numeric_limits<double>::quiet_NaN();
+namespace utf = boost::unit_test;
 
 namespace Acts {
 
@@ -69,8 +68,7 @@ namespace Test {
     // operator == not implemented in this class
     //
     /// Test assignment (implicit)
-    RealQuadraticEquation assignedRealQuadraticEquationObject(
-        NaN, NaN, NaN);  // invalid object, in some sense
+    RealQuadraticEquation assignedRealQuadraticEquationObject(9., -3.5, 6.7);
     assignedRealQuadraticEquationObject = realQuadraticEquationObject;
     BOOST_TEST(assignedRealQuadraticEquationObject.first == 2.);
     BOOST_TEST(assignedRealQuadraticEquationObject.second == 1.);

@@ -22,9 +22,10 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 //
+#include "../Utilities/TestHelper.hpp"
+//
 #include <limits>
 
-const double NaN = std::numeric_limits<double>::quiet_NaN();
 /* Note on nomenclature:
   alpha = cone opening half angle
   z is the axis of symmetry
@@ -86,28 +87,32 @@ namespace Test {
     // std::cout << coneBoundsObject.distanceToBoundary(origin) << std::endl;
     //
     /// test for r
-    BOOST_TEST(coneBoundsObject.r(zMin) == zMin * std::tan(alpha));
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneBoundsObject.r(zMin), zMin * std::tan(alpha), 1e-6);
     //
     /// test for tanAlpha
-    BOOST_TEST(coneBoundsObject.tanAlpha() == std::tan(alpha));
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneBoundsObject.tanAlpha(), std::tan(alpha), 1e-6);
     //
     /// test for sinAlpha
-    BOOST_TEST(coneBoundsObject.sinAlpha() == std::sin(alpha));
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneBoundsObject.sinAlpha(), std::sin(alpha), 1e-6);
     //
     /// test for cosAlpha
-    BOOST_TEST(coneBoundsObject.cosAlpha() == std::cos(alpha));
+    BOOST_CHECK_CLOSE_FRACTION(
+        coneBoundsObject.cosAlpha(), std::cos(alpha), 1e-6);
     //
     /// test for alpha
-    BOOST_TEST(coneBoundsObject.alpha() == alpha);
+    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.alpha(), alpha, 1e-6);
     //
     /// test for minZ
-    BOOST_TEST(coneBoundsObject.minZ() == zMin);
+    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.minZ(), zMin, 1e-6);
     //
     /// test for maxZ
-    BOOST_TEST(coneBoundsObject.maxZ() == zMax);
+    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.maxZ(), zMax, 1e-6);
     //
     /// test for averagePhi
-    BOOST_TEST(coneBoundsObject.halfPhiSector() == halfPhi);
+    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.halfPhiSector(), halfPhi, 1e-6);
     //
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
@@ -123,7 +128,7 @@ namespace Test {
         averagePhi(0.);
     // const bool symmetric(false);
     ConeBounds originalConeBounds(alpha, zMin, zMax, halfPhi, averagePhi);
-    ConeBounds assignedConeBounds(NaN, zMin, zMax, halfPhi, averagePhi);
+    ConeBounds assignedConeBounds(0.1, 2.3, 4.5, 1.2, 2.1);
     assignedConeBounds = originalConeBounds;
     BOOST_TEST(assignedConeBounds == originalConeBounds);
   }
@@ -140,19 +145,19 @@ namespace Test {
     variant_map var_cone_map = boost::get<variant_map>(var_cone);
     BOOST_TEST(var_cone_map.get<std::string>("type") == "ConeBounds");
     variant_map pl = var_cone_map.get<variant_map>("payload");
-    BOOST_TEST(pl.get<double>("alpha") == alpha);
-    BOOST_TEST(pl.get<double>("zMin") == zMin);
-    BOOST_TEST(pl.get<double>("zMax") == zMax);
-    BOOST_TEST(pl.get<double>("avgPhi") == avgPhi);
-    BOOST_TEST(pl.get<double>("halfPhi") == halfPhi);
+    BOOST_CHECK_EQUAL(pl.get<double>("alpha"), alpha);
+    BOOST_CHECK_EQUAL(pl.get<double>("zMin"), zMin);
+    BOOST_CHECK_EQUAL(pl.get<double>("zMax"), zMax);
+    BOOST_CHECK_EQUAL(pl.get<double>("avgPhi"), avgPhi);
+    BOOST_CHECK_EQUAL(pl.get<double>("halfPhi"), halfPhi);
 
     ConeBounds cone2(var_cone);
 
-    BOOST_TEST(cone.alpha() == cone2.alpha());
-    BOOST_TEST(cone.minZ() == cone2.minZ());
-    BOOST_TEST(cone.maxZ() == cone2.maxZ());
-    BOOST_TEST(cone.averagePhi() == cone2.averagePhi());
-    BOOST_TEST(cone.halfPhiSector() == cone2.halfPhiSector());
+    BOOST_CHECK_EQUAL(cone.alpha(), cone2.alpha());
+    BOOST_CHECK_EQUAL(cone.minZ(), cone2.minZ());
+    BOOST_CHECK_EQUAL(cone.maxZ(), cone2.maxZ());
+    BOOST_CHECK_EQUAL(cone.averagePhi(), cone2.averagePhi());
+    BOOST_CHECK_EQUAL(cone.halfPhiSector(), cone2.halfPhiSector());
   }
 
   BOOST_AUTO_TEST_SUITE_END()
