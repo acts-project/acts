@@ -335,7 +335,6 @@ namespace Test {
     options.pathLimit   = 1500. * units::_mm;
 
     const auto& status = epropagator.propagate(start, options);
-    const auto& result = status.endParameters;
 
     // this test assumes state.options.loopFraction = 0.5
     // maximum momentum allowed
