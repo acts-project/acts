@@ -99,11 +99,10 @@ namespace detail {
         // or:
         // http://pdg.lbl.gov/2018/reviews/rpp2018-rev-passage-particles-matter.pdf
         // PDG formula 33.5
-        dE = -kaz * 2.0
+        dE = -kazL * 2.0
             * (0.5 * std::log(2. * constants::me * eta2 * tMax / (I * I))
                - (lbeta * lbeta)
                - delta * 0.5);
-        dE *= path;
       } else {
         // Calculate the most probably value for simulation
         //
