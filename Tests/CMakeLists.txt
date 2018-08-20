@@ -1,5 +1,5 @@
 add_subdirectory_if (Core ACTS_BUILD_TESTS)
 add_subdirectory_if (Examples ACTS_BUILD_EXAMPLES)
-add_subdirectory_if (Integration ACTS_BUILD_INTEGRATION_TESTS)
+add_subdirectory_if (Integration ACTS_BUILD_INTEGRATION_TESTS AND ACTS_BUILD_LEGACY)
 add_subdirectory_if (Legacy ACTS_BUILD_TESTS AND ACTS_BUILD_LEGACY)
 add_subdirectory_if (Plugins ACTS_BUILD_TESTS)
