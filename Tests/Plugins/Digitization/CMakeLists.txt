@@ -1,0 +1,5 @@
+add_executable (ClusterizationTests ClusterizationTests.cpp)
+target_include_directories (ClusterizationTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (ClusterizationTests PRIVATE Acts::Core Acts::DigitizationPlugin)
+add_test (NAME ClusterizationUnitTest COMMAND ClusterizationTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST ClusterizationUnitTest TARGETS ClusterizationTests)

@@ -6,13 +6,14 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # build options
 
-# all options must be defined here to keep the list directly visible and
+# a ll options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
 option (ACTS_BUILD_LEGACY "Build legacy package" ON)
 option (ACTS_BUILD_DOC "Build documentation" OFF)
 option (ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option (ACTS_BUILD_TESTS "Build unit tests" ON)
-option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
+option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" ON)
+option (ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugins" OFF)
 option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
 option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" OFF)
 option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
@@ -22,12 +23,16 @@ option (ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "Acts/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
 
 # handle inter-plugin dependencies
+# DD4hep depends on TGeo plugin
 if (ACTS_BUILD_DD4HEP_PLUGIN)
   set (ACTS_BUILD_TGEO_PLUGIN ON)
 endif()
+# TGeo depends on TGeo plugin
+if (ACTS_BUILD_TGEO_PLUGIN)
+  set (ACTS_BUILD_DIGITIZATION_PLUGIN ON)
+endif()
 
 # required packages
-
 find_package(Boost 1.62 REQUIRED COMPONENTS program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
 
@@ -63,15 +68,12 @@ add_subdirectory (Plugins)
 if(ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS)
   include(CTest) # must be included from the main CMakeLists.txt
 endif()
-add_subdirectory_if(Examples ACTS_BUILD_EXAMPLES)
-add_subdirectory_if(Tests ACTS_BUILD_TESTS)
-add_subdirectory_if(IntegrationTests ACTS_BUILD_INTEGRATION_TESTS AND ACTS_BUILD_LEGACY)
+add_subdirectory_if (Tests ACTS_BUILD_TESTS OR ACTS_BUILD_INTEGRATION_TESTS OR ACTS_BUILD_EXAMPLES)
 
 # documentation
 add_subdirectory_if (doc ACTS_BUILD_DOC)
 
 # setup script and cmake configuration files
-
 configure_file (${CMAKE_CURRENT_SOURCE_DIR}/setup.sh.in ${CMAKE_CURRENT_BINARY_DIR}/setup.sh)
 install (FILES ${CMAKE_CURRENT_BINARY_DIR}/setup.sh DESTINATION ${CMAKE_INSTALL_BINDIR})
 include (ActsCreateConfig)

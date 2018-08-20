@@ -17,11 +17,6 @@
 #include ACTS_GEOMETRY_DETELEMENT_PLUGIN
 #else
 
-// This is the plugin mechanism to extend the DetectorElementBase interface
-#ifdef ACTS_GEOMETRY_DETELEMENTBASE_EXTENSION
-#include ACTS_GEOMETRY_DETELEMENTBASE_EXTENSION
-#endif
-
 #include <memory>
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
@@ -78,8 +73,7 @@ public:
   /// Bin members are elements that are in the same geometric binning cell,
   /// such, e.g. backside modules in a doublet/triplet detector
   ///
-  /// @param binmembers are DetectorElementBase objects that are in the same
-  /// cell
+  /// @param binmembers DetectorElementBase objects in the same cell
   void
   registerBinmembers(std::vector<const DetectorElementBase*>& binmembers);
 
@@ -94,8 +88,7 @@ public:
 
   /// Reigster the neighbours
   /// Neighbours are elements that are in an neighbouring geometric binning
-  /// cell,
-  /// such, e.g. next in phi, next in eta modules
+  /// cell, such, e.g. next in phi, next in eta modules
   ///
   /// @param neighbours are DetectorElementBase objects that are neighbours
   void
