@@ -87,12 +87,12 @@ namespace Test {
     auto           value1_rz = mapper_rz.getField(pos1_rz);
     auto           value2_rz = mapper_rz.getField(pos2_rz);
     // calculate what the value should be at this point
-    auto b0_rz
-        = bField_rz.at(localToGlobalBin_rz({{0, 0}}, {{rPos.size(), zPos.size()}}));
-    auto b1_rz
-        = bField_rz.at(localToGlobalBin_rz({{1, 1}}, {{rPos.size(), zPos.size()}}));
-    auto b2_rz
-        = bField_rz.at(localToGlobalBin_rz({{2, 2}}, {{rPos.size(), zPos.size()}}));
+    auto b0_rz = bField_rz.at(
+        localToGlobalBin_rz({{0, 0}}, {{rPos.size(), zPos.size()}}));
+    auto b1_rz = bField_rz.at(
+        localToGlobalBin_rz({{1, 1}}, {{rPos.size(), zPos.size()}}));
+    auto b2_rz = bField_rz.at(
+        localToGlobalBin_rz({{2, 2}}, {{rPos.size(), zPos.size()}}));
     Acts::Vector3D bField0_rz(b0_rz.x(), 0., b0_rz.y());
     Acts::Vector3D bField1_rz(b1_rz.x(), 0., b1_rz.y());
     Acts::Vector3D bField2_rz(0., b2_rz.x(), b2_rz.y());
