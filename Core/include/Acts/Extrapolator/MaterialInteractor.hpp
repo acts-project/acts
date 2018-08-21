@@ -215,10 +215,8 @@ struct MaterialInteractor
           // the kineamtic limit to catch the cases of deltE < MOP/MPV
           if (state.stepping.covTransport) {
             // calculate the straggling
-            double sigmaP = eLoss.second;
-            sigmaP *= thickness * pCorrection;
-            const double sigmaDeltaE = thickness * pCorrection * sigmaP;
-            const double sigmaQoverP = sigmaDeltaE / std::pow(lbeta * p, 2);
+            const double sigmaQoverP
+                = thickness * pCorrection * eLoss.second / (lbeta * p * p);
             // save the material interaction
             mInteraction.sigmaQoP2 = sigmaQoverP * sigmaQoverP;
             // good in any case for positive direction
