@@ -69,7 +69,6 @@ struct VoidNavigator
 /// @tparam parameters_t Type of final track parameters
 /// @tparam result_list  Result pack for additional propagation
 ///                      quantities
-///
 template <typename parameters_t, typename... result_list>
 struct Result : private detail::Extendable<result_list...>
 {
@@ -197,6 +196,9 @@ public:
   };
 
   /// Constructor from implementation object
+  ///
+  /// @param stepper The stepper implementation is moved to a private member
+  /// @param navigator The navigator implentiation, moved to a private member
   explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
     : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
   {
@@ -204,6 +206,10 @@ public:
 
 private:
   /// @brief private Propagator state for navigation and debugging
+  ///
+  /// @tparam parameters_t Type of the track parameters
+  /// @tparam propagator_options_t Type of the Objections object
+  /// @tparam target_aborter_list_t Type of the aborter list
   ///
   /// This struct holds the common state information for propagating
   /// which is independent of the actual stepper implementation.
@@ -316,9 +322,8 @@ private:
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it only takes the stepping state
       double s = m_stepper.step(state.stepping);
-      // accumulate the path and the steps
+      // accumulate the path length
       result.pathLength += s;
-      ++result.steps;
       // Call the actions, can (& will likely) modify the state
       debugLog(state, [&] {
         std::stringstream dstream;
@@ -500,10 +505,10 @@ public:
   }
 
 private:
-  /// implementation of propagation algorithm
+  /// Implementation of propagation algorithm
   stepper_t m_stepper;
 
-  /// implementation of navigator
+  /// Implementation of navigator
   navigator_t m_navigator;
 
   /// The private propagation debug logging
@@ -511,6 +516,8 @@ private:
   /// It needs to be fed by a lambda function that returns a string,
   /// that guarantees that the lambda is only called in the
   /// options.debug == true case in order not to spend time when not needed.
+  ///
+  /// @tparam propagator_state_t Type of the nested propagator state object
   ///
   /// @param state the propagator state for the debug flag, prefix/length
   /// @param logAction is a callable function that returns a stremable object

@@ -9,6 +9,7 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <sstream>
 #include "Acts/Utilities/Definitions.hpp"

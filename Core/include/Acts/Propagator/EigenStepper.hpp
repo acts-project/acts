@@ -30,7 +30,8 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
   return r;
 }
 
-/// Runge-Kutta-Nystroem stepper for the following ODE:
+/// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
+/// for the following ODE:
 ///
 /// r = (x,y,z)    ... global position
 /// T = (Ax,Ay,Az) ... momentum direction (normalized)
