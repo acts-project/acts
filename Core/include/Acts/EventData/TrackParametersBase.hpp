@@ -20,7 +20,7 @@ namespace Acts {
 // forward declarations
 class Surface;
 
-/// @class ParametersBase
+/// @class TrackParametersBase
 ///
 /// @brief base class for track parameters
 ///

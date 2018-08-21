@@ -8,8 +8,9 @@
 
 #pragma once
 
-#ifdef ACTS_PLUGINS_IDENTIFIER
-#include ACTS_PLUGINS_IDENTIFIER
+/// Set the identifier PLUGIN
+#ifdef ACTS_CORE_IDENTIFIER_PLUGIN
+#include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
 typedef unsigned long long Identifier;
 #endif

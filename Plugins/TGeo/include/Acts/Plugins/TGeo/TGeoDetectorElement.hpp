@@ -15,16 +15,18 @@
 #include "Acts/Detector/DetectorElementBase.hpp"
 #include "TGeoManager.h"
 
-#ifdef ACTS_PLUGINS_IDENTIFIER
-#include ACTS_PLUGINS_IDENTIFIER
+/// Set the identifier PLUGIN
+#ifdef ACTS_CORE_IDENTIFIER_PLUGIN
+#include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
 typedef unsigned long long Identifier;
 #endif
-
+  
 namespace Acts {
 
 class DigitizationModule;
 class SurfaceMaterial;
+class SurfaceBounds;
 
 /// @class TGeoDetectorElement
 ///
@@ -125,7 +127,7 @@ public:
 
   /// Identifier
   virtual Identifier
-  identify() const;
+  identify() const ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER;
 
   /// Return local to global transform associated with this identifier
   virtual const Transform3D&
@@ -138,7 +140,7 @@ public:
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule
   virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const;
+  digitizationModule() const ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER;
 
   /// Returns the thickness of the module
   virtual double

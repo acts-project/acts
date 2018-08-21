@@ -19,10 +19,16 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "LineSurfaceStub.hpp"
 
+/// Set the identifier PLUGIN
+#ifdef ACTS_CORE_IDENTIFIER_PLUGIN
+#include ACTS_CORE_IDENTIFIER_PLUGIN
+#else
 typedef unsigned long long Identifier;
+#endif
 
 namespace Acts {
 
+class DigitizationModule;
 class PlanarBounds;
 class DiscBounds;
 class SurfaceMaterial;
@@ -102,7 +108,7 @@ public:
 
   /// Identifier
   Identifier
-  identify() const;
+  identify() const ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -122,6 +128,12 @@ public:
   /// The maximal thickness of the detector element wrt normal axis
   double
   thickness() const override;
+  
+  /// Return the DigitizationModule
+  /// @return optionally the DigitizationModule
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER
+  { return nullptr; }
 
 private:
   /// the element representation
