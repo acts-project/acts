@@ -128,6 +128,12 @@ public:
   /// The maximal thickness of the detector element wrt normal axis
   double
   thickness() const override;
+  
+  /// Return the DigitizationModule
+  /// @return optionally the DigitizationModule
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER
+  { return nullptr; }
 
   /// Return the DigitizationModule
   /// @return optionally the DigitizationModule

@@ -21,7 +21,7 @@
 #else
 typedef unsigned long long Identifier;
 #endif
-
+  
 namespace Acts {
 
 class DigitizationModule;
