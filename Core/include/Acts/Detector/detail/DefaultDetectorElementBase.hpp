@@ -28,22 +28,22 @@ class Surface;
 ///
 /// This is the default base class for all tracking detector elements
 /// with read-out relevant information. It provides the minimal interface
-/// for the Acts proxy mechanism for surfaces, i.e. surfaces in the 
+/// for the Acts proxy mechanism for surfaces, i.e. surfaces in the
 /// Tracking geometry representing actual detection devices
 ///
-/// The default base class can be exchanged at compile time with a 
-/// more extended version using the 
+/// The default base class can be exchanged at compile time with a
+/// more extended version using the
 ///
 /// ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT
 ///
-/// a possible interface extension can be done with 
+/// a possible interface extension can be done with
 ///
 /// ACTS_DETECTOR_ELEMENT_BASE_EXTENSION which has to
 /// define ACTS_DETECTOR_ELEMENT_PARENT
 ///
 #ifdef ACTS_DETECTOR_ELEMENT_BASE_EXTENSION
 class DetectorElementBase : public ACTS_DETECTOR_ELEMENT_PARENT
-#else 
+#else
 class DetectorElementBase
 #endif
 {
