@@ -30,7 +30,7 @@ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
   return r;
 }
 
-/// @brief Runge-Kutta-Nystroem stepper based on Egien implementation
+/// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
 /// for the following ODE:
 ///
 /// r = (x,y,z)    ... global position
