@@ -14,10 +14,11 @@ Core/include/Acts/Detector/DetectorElementBase.hpp// This file is part of the Ac
 
 /// This is the plugin mechanism to exchange the entire DetectorElementBase
 ///
-/// By defining ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT pre-compile time the detector element
-/// entire detector element can be exchanged with a file provided by the 
+/// By defining ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT pre-compile time the
+/// detector element
+/// entire detector element can be exchanged with a file provided by the
 /// client.
-/// 
+///
 /// The API has to be present though
 #ifdef ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT
 #include ACTS_DETECTOR_ELEMENT_BASE_REPLACEMENT
