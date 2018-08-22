@@ -26,6 +26,14 @@
 typedef unsigned long long Identifier;
 #endif
 
+#ifndef ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER
+#define ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER
+#endif
+
+#ifndef ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER
+#define ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER
+#endif
+
 namespace Acts {
 
 class DigitizationModule;
