@@ -58,7 +58,7 @@ clang_tidy:
     - virtualenv civenv
     - source civenv/bin/activate
     - pip install -r CI/requirements.txt
-    - CI/make_report.py clang-tidy report/clang-tidy.log report/clang-tidy.json -e "$PWD/Tests/*" -e "$PWD/Legacy/*" --filter "$PWD/*"
+    - CI/make_report.py clang-tidy report/clang-tidy.log report/clang-tidy.json -e "$PWD/Tests/*" -e "$PWD/Legacy/*" -e "$PWD/Plugins/JsonPlugin/include/Acts/Plugins/JsonPlugin/lib/*" --filter "$PWD/*"
     - 'codereport report/clang-tidy.json report --title="clang-tidy - commit: ${CI_COMMIT_SHA:0:8}" --prefix $PWD'
     - CI/static_analysis_results.py --limitfile .static_analysis_limits.yml --itemfile report/clang-tidy.json -v
   artifacts:
