@@ -23,13 +23,10 @@ option (ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "Acts/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
 
 # handle inter-plugin dependencies
-# DD4hep depends on TGeo plugin
+# DD4hep depends on TGeo and builds a digitization moduleplugin
 if (ACTS_BUILD_DD4HEP_PLUGIN)
   set (ACTS_BUILD_TGEO_PLUGIN ON)
-endif()
-# TGeo depends on TGeo plugin
-if (ACTS_BUILD_TGEO_PLUGIN)
-  set (ACTS_BUILD_DIGITIZATION_PLUGIN ON)
+  set (ACTS_BUILD_DIGITIZATION_PLUGIN ON)  
 endif()
 
 # required packages

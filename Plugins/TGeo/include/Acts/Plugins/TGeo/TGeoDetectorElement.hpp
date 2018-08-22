@@ -22,10 +22,12 @@
 typedef unsigned long long Identifier;
 #endif
 
+/// Define the specifier to none if not defined
 #ifndef ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER
 #define ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER
 #endif
 
+/// Define the specifier to none if not defined
 #ifndef ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER
 #define ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER
 #endif

@@ -10,7 +10,6 @@
 #include <boost/algorithm/string.hpp>
 #include <iostream>
 #include "Acts/Material/SurfaceMaterial.hpp"
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"

@@ -16,6 +16,8 @@
 
 namespace Acts {
 
+class DigitizationModule;
+
 /// @class DD4hepDetElement
 ///
 /// @brief DetectorElement class implementation for DD4hep geometry
