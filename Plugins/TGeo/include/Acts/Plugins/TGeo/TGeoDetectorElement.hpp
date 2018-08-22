@@ -137,7 +137,7 @@ public:
 
   /// Identifier
   virtual Identifier
-  identify() const ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER;
+  identifier() const ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER;
 
   /// Return local to global transform associated with this identifier
   virtual const Transform3D&
@@ -176,7 +176,7 @@ private:
 };
 
 inline Identifier
-TGeoDetectorElement::identify() const
+TGeoDetectorElement::identifier() const
 {
   return m_identifier;
 }

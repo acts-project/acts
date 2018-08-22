@@ -118,7 +118,7 @@ public:
 
   /// Identifier
   Identifier
-  identify() const ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER;
+  identifier() const ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -175,7 +175,7 @@ private:
 };
 
 inline Identifier
-DetectorElementStub::identify() const
+DetectorElementStub::identifier() const
 {
   return m_elementIdentifier;
 }
