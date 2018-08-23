@@ -52,7 +52,7 @@ public:
   ///
   /// @return always true
   bool
-  inside(const Vector2D&, const BoundaryCheck&) const final
+  inside(const Vector2D& /*lpos*/, const BoundaryCheck& /*bcheck*/) const final
   {
     return true;
   }

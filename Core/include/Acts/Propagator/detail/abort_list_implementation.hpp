@@ -44,7 +44,9 @@ namespace detail {
                 typename result_t,
                 typename propagator_state_t>
       static bool
-      check(const condition& c, const result_t&, propagator_state_t& state)
+      check(const condition& c,
+            const result_t& /*result*/,
+            propagator_state_t& state)
       {
         return c(state);
       }
@@ -108,7 +110,7 @@ namespace detail {
   {
     template <typename T, typename result_t, typename propagator_state_t>
     static bool
-    check(const T&, const result_t&, propagator_state_t&)
+    check(const T&, const result_t& /*result*/, propagator_state_t& /*state*/)
     {
       return false;
     }

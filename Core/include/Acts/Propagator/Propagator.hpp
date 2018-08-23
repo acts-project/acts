@@ -59,7 +59,7 @@ struct VoidNavigator
   /// Empty call, hopefully the compiler checks this
   template <typename propagator_state_t>
   void
-  operator()(propagator_state_t&) const
+  operator()(propagator_state_t& /*state*/) const
   {
   }
 };

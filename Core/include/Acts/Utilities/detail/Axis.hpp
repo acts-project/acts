@@ -255,7 +255,7 @@ namespace detail {
     /// @brief get bin width
     ///
     /// @return constant width for all bins
-    double getBinWidth(size_t = 0) const { return m_width; }
+    double getBinWidth(size_t /*bin*/ = 0) const { return m_width; }
 
     /// @brief get lower bound of bin
     ///

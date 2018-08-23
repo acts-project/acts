@@ -641,7 +641,7 @@ double
 Acts::RungeKuttaUtils::stepEstimatorToPlane(double*       S,
                                             const double* P,
                                             bool&         Q,
-                                            bool) const
+                                            bool /*unused*/) const
 {
   // straight line step estimation
 
@@ -665,7 +665,7 @@ double
 Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
                                                const double* P,
                                                bool&         Q,
-                                               bool) const
+                                               bool /*unused*/) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -783,7 +783,7 @@ double
 Acts::RungeKuttaUtils::stepEstimatorToCone(double*       S,
                                            const double* P,
                                            bool&         Q,
-                                           bool) const
+                                           bool /*unused*/) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction

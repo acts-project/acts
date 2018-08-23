@@ -206,14 +206,18 @@ struct VoidCorrector
   VoidCorrector() = default;
 
   // Void Corrector parameter constructor
-  VoidCorrector(const Vector3D&, const Vector3D&, double) {}
+  VoidCorrector(const Vector3D& /*unused*/,
+                const Vector3D& /*unused*/,
+                double /*unused*/)
+  {
+  }
 
   /// Boolean() operator - returns false for void modifier
   explicit operator bool() const { return false; }
 
   /// empty correction interface
   bool
-  operator()(Vector3D&, Vector3D&, double)
+  operator()(Vector3D& /*unused*/, Vector3D& /*unused*/, double /*unused*/)
   {
     return false;
   }

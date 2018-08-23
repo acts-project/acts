@@ -251,7 +251,7 @@ public:
   ///
   /// @note there's no material associated to the line surface
   double
-  pathCorrection(const Vector3D&, const Vector3D&) const override;
+  pathCorrection(const Vector3D& pos, const Vector3D& mom) const override;
 
   /// This method checks if the provided GlobalPosition is inside the assigned
   /// straw radius, but no check is done whether the GlobalPosition is

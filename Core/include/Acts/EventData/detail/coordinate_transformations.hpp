@@ -52,7 +52,7 @@ namespace detail {
     }
 
     static ParVector_t
-    global2curvilinear(const ActsVectorD<3>&,
+    global2curvilinear(const ActsVectorD<3>& /*pos*/,
                        const ActsVectorD<3>& mom,
                        double                charge)
     {

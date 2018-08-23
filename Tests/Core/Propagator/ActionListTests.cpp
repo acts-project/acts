@@ -107,7 +107,7 @@ namespace Test {
 
     template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&) const
+    operator()(propagator_state_t& /*unused*/) const
     {
     }
   };
@@ -127,14 +127,14 @@ namespace Test {
 
     template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&, result_type& r) const
+    operator()(propagator_state_t& /*unused*/, result_type& r) const
     {
       ++r.calls;
     }
 
     template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&) const
+    operator()(propagator_state_t& /*unused*/) const
     {
     }
   };

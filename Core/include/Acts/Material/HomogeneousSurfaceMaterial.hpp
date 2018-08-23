@@ -93,19 +93,19 @@ HomogeneousSurfaceMaterial::clone() const
 }
 
 inline const MaterialProperties*
-HomogeneousSurfaceMaterial::material(const Vector2D&) const
+HomogeneousSurfaceMaterial::material(const Vector2D& /*lp*/) const
 {
   return (&m_fullMaterial);
 }
 
 inline const MaterialProperties*
-HomogeneousSurfaceMaterial::material(const Vector3D&) const
+HomogeneousSurfaceMaterial::material(const Vector3D& /*gp*/) const
 {
   return (&m_fullMaterial);
 }
 
 inline const MaterialProperties*
-    HomogeneousSurfaceMaterial::material(size_t, size_t) const
+    HomogeneousSurfaceMaterial::material(size_t /*ib0*/, size_t /*ib1*/) const
 {
   return (&m_fullMaterial);
 }

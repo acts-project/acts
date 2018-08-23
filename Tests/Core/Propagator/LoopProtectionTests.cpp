@@ -81,7 +81,7 @@ namespace Test {
     ///                 updated)
     /// @param [in] pos is the field position
     Vector3D
-    getField(SteppingState&, const Vector3D&) const
+    getField(SteppingState& /*unused*/, const Vector3D& /*unused*/) const
     {
       // get the field from the cell
       return field;

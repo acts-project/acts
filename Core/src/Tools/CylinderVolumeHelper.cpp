@@ -452,7 +452,7 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     double&                             zMinClean,
     double&                             zMaxClean,
     BinningValue&                       bValue,
-    BinningType) const
+    BinningType /*unused*/) const
 {
   // some verbose output
 

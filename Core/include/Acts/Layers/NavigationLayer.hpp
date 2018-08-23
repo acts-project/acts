@@ -96,7 +96,9 @@ public:
   ///
   /// @return a boolean whether the layer is accepted for processing
   bool
-  resolve(bool, bool, bool) const final;
+  resolve(bool resolveSensitive,
+          bool resolveMaterial,
+          bool resolvePassive) const final;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
@@ -147,7 +149,9 @@ NavigationLayer::isOnLayer(const Vector3D&      gp,
 }
 
 inline bool
-NavigationLayer::resolve(bool, bool, bool) const
+NavigationLayer::resolve(bool /*resolveSensitive*/,
+                         bool /*resolveMaterial*/,
+                         bool /*reolvePassive*/) const
 {
   return false;
 }

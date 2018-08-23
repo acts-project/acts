@@ -11,14 +11,15 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Vector3D
-PlaneSurface::normal(const Vector2D&) const
+PlaneSurface::normal(const Vector2D& /*lpos*/) const
 {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform().matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline const Vector3D PlaneSurface::binningPosition(BinningValue) const
+inline const Vector3D
+    PlaneSurface::binningPosition(BinningValue /*bValue*/) const
 {
   return center();
 }

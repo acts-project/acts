@@ -200,7 +200,7 @@ protected:
   ///       different from Acts::local_parameter
   template <typename T>
   void
-  updateGlobalCoordinates(const T&)
+  updateGlobalCoordinates(const T& /*unused*/)
   {
     m_vMomentum = detail::coordinate_transformation::parameters2globalMomentum(
         getParameterSet().getParameters());
@@ -211,7 +211,7 @@ protected:
   /// @note This function is triggered when called with an argument of a type
   /// Acts::local_parameter
   void
-  updateGlobalCoordinates(const local_parameter&)
+  updateGlobalCoordinates(const local_parameter& /*unused*/)
   {
     m_vPosition = detail::coordinate_transformation::parameters2globalPosition(
         getParameterSet().getParameters(), this->referenceSurface());

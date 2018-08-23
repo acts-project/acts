@@ -129,7 +129,7 @@ namespace detail {
     /// boolean operator for abort condition using the result (ignored)
     template <typename propagator_state_t, typename result_t>
     bool
-    operator()(const result_t&, propagator_state_t& state) const
+    operator()(const result_t& /*result*/, propagator_state_t& state) const
     {
       return operator()(state);
     }
@@ -210,7 +210,7 @@ namespace detail {
     /// boolean operator for abort condition using the result (ignored)
     template <typename propagator_state_t, typename result_t>
     bool
-    operator()(const result_t&, propagator_state_t& state) const
+    operator()(const result_t& /*result*/, propagator_state_t& state) const
     {
       return operator()(state);
     }

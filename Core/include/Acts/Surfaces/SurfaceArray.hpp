@@ -402,7 +402,7 @@ public:
     /// @param pos is ignored
     /// @return reference to vector containing only @c element
     SurfaceVector&
-    lookup(const Vector3D&) override
+    lookup(const Vector3D& /*pos*/) override
     {
       return m_element;
     }
@@ -411,7 +411,7 @@ public:
     /// @param pos is ignored
     /// @return reference to vector containing only @c element
     const SurfaceVector&
-    lookup(const Vector3D&) const override
+    lookup(const Vector3D& /*pos*/) const override
     {
       return m_element;
     }
@@ -419,18 +419,21 @@ public:
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    SurfaceVector& lookup(size_t) override { return m_element; }
+    SurfaceVector& lookup(size_t /*bin*/) override { return m_element; }
 
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    const SurfaceVector& lookup(size_t) const override { return m_element; }
+    const SurfaceVector& lookup(size_t /*bin*/) const override
+    {
+      return m_element;
+    }
 
     /// @brief Lookup, always returns @c element
     /// @param pos is ignored
     /// @return reference to vector containing only @c element
     const SurfaceVector&
-    neighbors(const Vector3D&) const override
+    neighbors(const Vector3D& /*pos*/) const override
     {
       return m_element;
     }
@@ -446,7 +449,10 @@ public:
     /// @brief Gets the bin center, but always returns (0, 0, 0)
     /// @param bin is ignored
     /// @return (0, 0, 0)
-    Vector3D getBinCenter(size_t) const override { return Vector3D(0, 0, 0); }
+    Vector3D getBinCenter(size_t /*bin*/) const override
+    {
+      return Vector3D(0, 0, 0);
+    }
 
     /// @brief Returns an empty vector of @c AnyAxis
     /// @return empty vector
@@ -467,14 +473,14 @@ public:
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
     void
-    fill(const SurfaceVector&) override
+    fill(const SurfaceVector& /*surfaces*/) override
     {
     }
 
     /// @brief Comply with concept and provide completeBinning method
     /// @note Does nothing
     size_t
-    completeBinning(const SurfaceVector&) override
+    completeBinning(const SurfaceVector& /*surfaces*/) override
     {
       return 0;
     }
@@ -482,7 +488,7 @@ public:
     /// @brief Returns if the bin is valid (it is)
     /// @param bin is ignored
     /// @return always true
-    bool isValidBin(size_t) const override { return true; }
+    bool isValidBin(size_t /*bin*/) const override { return true; }
 
   private:
     SurfaceVector m_element;

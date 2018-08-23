@@ -119,7 +119,8 @@ Acts::ConeSurface::rotSymmetryAxis() const
 }
 
 const Acts::RotationMatrix3D
-Acts::ConeSurface::referenceFrame(const Vector3D& pos, const Vector3D&) const
+Acts::ConeSurface::referenceFrame(const Vector3D& pos,
+                                  const Vector3D& /*gmom*/) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
@@ -141,7 +142,7 @@ Acts::ConeSurface::referenceFrame(const Vector3D& pos, const Vector3D&) const
 
 void
 Acts::ConeSurface::localToGlobal(const Vector2D& lpos,
-                                 const Vector3D&,
+                                 const Vector3D& /*gmom*/,
                                  Vector3D& gpos) const
 {
   // create the position in the local 3d frame
@@ -156,7 +157,7 @@ Acts::ConeSurface::localToGlobal(const Vector2D& lpos,
 
 bool
 Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
-                                 const Vector3D&,
+                                 const Vector3D& /*gmom*/,
                                  Vector2D& lpos) const
 {
   Vector3D loc3Dframe = m_transform ? (transform().inverse() * gpos) : gpos;

@@ -212,7 +212,7 @@ public:
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
   Vector3D
-  getField(State&, const Vector3D&) const
+  getField(State& /*state*/, const Vector3D& /*pos*/) const
   {
     // get the field from the cell
     return Vector3D(0., 0., 0.);

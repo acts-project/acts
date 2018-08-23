@@ -35,7 +35,7 @@ namespace detail {
     {
       template <typename actor, typename result_t, typename propagator_state_t>
       static void
-      action(const actor& act, propagator_state_t& state, result_t&)
+      action(const actor& act, propagator_state_t& state, result_t& /*unused*/)
       {
         act(state);
       }
@@ -84,7 +84,9 @@ namespace detail {
   {
     template <typename T, typename result_t, typename propagator_state_t>
     static void
-    action(const T&, propagator_state_t&, result_t&)
+    action(const T& /*unused*/,
+           propagator_state_t& /*unused*/,
+           result_t& /*unused*/)
     {
     }
   };

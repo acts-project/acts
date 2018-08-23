@@ -99,19 +99,19 @@ private:
 }
 
 inline const Acts::MaterialProperties*
-Acts::SurfaceMaterialProxy::material(const Vector2D&) const
+Acts::SurfaceMaterialProxy::material(const Vector2D& /*lp*/) const
 {
   return (&m_materialProperties);
 }
 
 inline const Acts::MaterialProperties*
-Acts::SurfaceMaterialProxy::material(const Vector3D&) const
+Acts::SurfaceMaterialProxy::material(const Vector3D& /*gp*/) const
 {
   return (&m_materialProperties);
 }
 
 inline const Acts::MaterialProperties*
-    Acts::SurfaceMaterialProxy::material(size_t, size_t) const
+    Acts::SurfaceMaterialProxy::material(size_t /*ib0*/, size_t /*ib1*/) const
 {
   return (&m_materialProperties);
 }

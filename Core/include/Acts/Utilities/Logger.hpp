@@ -518,7 +518,7 @@ namespace Logging {
     /// @param [in] lvl   debug level of debug message
     /// @param [in] input text of debug message
     void
-    flush(const Level&, const std::ostringstream& input) final
+    flush(const Level& /*lvl*/, const std::ostringstream& input) final
     {
       (*m_out) << input.str() << std::endl;
     }

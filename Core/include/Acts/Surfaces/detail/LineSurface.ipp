@@ -69,7 +69,7 @@ LineSurface::name() const
 }
 
 inline const RotationMatrix3D
-LineSurface::referenceFrame(const Vector3D&, const Vector3D& mom) const
+LineSurface::referenceFrame(const Vector3D& /*pos*/, const Vector3D& mom) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
@@ -85,7 +85,8 @@ LineSurface::referenceFrame(const Vector3D&, const Vector3D& mom) const
 }
 
 inline double
-LineSurface::pathCorrection(const Vector3D&, const Vector3D&) const
+LineSurface::pathCorrection(const Vector3D& /*pos*/,
+                            const Vector3D& /*mom*/) const
 {
   return 1.;
 }

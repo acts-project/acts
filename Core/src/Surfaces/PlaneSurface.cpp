@@ -121,7 +121,7 @@ Acts::PlaneSurface::type() const
 
 void
 Acts::PlaneSurface::localToGlobal(const Vector2D& lpos,
-                                  const Vector3D&,
+                                  const Vector3D& /*gmom*/,
                                   Vector3D& gpos) const
 {
   Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
@@ -131,7 +131,7 @@ Acts::PlaneSurface::localToGlobal(const Vector2D& lpos,
 
 bool
 Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
-                                  const Vector3D&,
+                                  const Vector3D& /*gmom*/,
                                   Acts::Vector2D& lpos) const
 {
   /// the chance that there is no transform is almost 0, let's apply it

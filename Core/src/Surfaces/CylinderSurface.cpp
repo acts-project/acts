@@ -124,7 +124,7 @@ Acts::CylinderSurface::binningPosition(BinningValue bValue) const
 // return the measurement frame: it's the tangential plane
 const Acts::RotationMatrix3D
 Acts::CylinderSurface::referenceFrame(const Vector3D& gpos,
-                                      const Vector3D&) const
+                                      const Vector3D& /*gmom*/) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
@@ -150,7 +150,7 @@ Acts::CylinderSurface::type() const
 
 void
 Acts::CylinderSurface::localToGlobal(const Vector2D& lpos,
-                                     const Vector3D&,
+                                     const Vector3D& /*gmom*/,
                                      Vector3D& gpos) const
 {
   // create the position in the local 3d frame
@@ -166,7 +166,7 @@ Acts::CylinderSurface::localToGlobal(const Vector2D& lpos,
 
 bool
 Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
-                                     const Vector3D&,
+                                     const Vector3D& /*gmom*/,
                                      Vector2D& lpos) const
 {
   // get the transform & transform global position into cylinder frame

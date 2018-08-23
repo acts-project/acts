@@ -57,7 +57,7 @@ namespace detail {
     /// - this does not apply to the output collector
     template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&) const
+    operator()(propagator_state_t& /*state*/) const
     {
     }
   };

@@ -180,7 +180,7 @@ public:
   ActsExtension(
       const std::vector<std::pair<dd4hep::Material, double>>& materials);
   /// Copy constructor
-  ActsExtension(const ActsExtension&, const dd4hep::DetElement&);
+  ActsExtension(const ActsExtension& det, const dd4hep::DetElement& elem);
   /// Destructor
   ~ActsExtension() override = default;
   /// Set configuration method

@@ -95,12 +95,12 @@ public:
 };
 
 /// Binning offset - overloaded for some R-binning types
-inline Vector3D VolumeBounds::binningOffset(BinningValue) const
+inline Vector3D VolumeBounds::binningOffset(BinningValue /*bValue*/) const
 {  // standard offset is 0.,0.,0.
   return Vector3D(0., 0., 0.);
 }
 
-inline double VolumeBounds::binningBorder(BinningValue) const
+inline double VolumeBounds::binningBorder(BinningValue /*bValue*/) const
 {
   return 0.;
 }

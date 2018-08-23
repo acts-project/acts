@@ -1,5 +1,6 @@
 limits:
   "readability-inconsistent-declaration-parameter-name": 0
+  "readability-named-parameter": 0
   "modernize-use-using": 0
   "readability-braces-around-statements": 0
   "modernize-use-override": 0

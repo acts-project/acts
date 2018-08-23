@@ -126,7 +126,7 @@ Acts::DiscSurface::type() const
 
 void
 Acts::DiscSurface::localToGlobal(const Vector2D& lpos,
-                                 const Vector3D&,
+                                 const Vector3D& /*gmom*/,
                                  Vector3D& gpos) const
 {
   // create the position in the local 3d frame
@@ -139,7 +139,7 @@ Acts::DiscSurface::localToGlobal(const Vector2D& lpos,
 
 bool
 Acts::DiscSurface::globalToLocal(const Acts::Vector3D& gpos,
-                                 const Acts::Vector3D&,
+                                 const Acts::Vector3D& /*gmom*/,
                                  Acts::Vector2D& lpos) const
 {
   // transport it to the globalframe (very unlikely that this is not needed)
@@ -179,7 +179,8 @@ Acts::DiscSurface::localCartesianToGlobal(const Vector2D& lpos) const
 }
 
 const Acts::Vector2D
-Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos, double) const
+Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos,
+                                          double /*unused*/) const
 {
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
   return Vector2D(loc3Dframe.x(), loc3Dframe.y());

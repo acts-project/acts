@@ -70,7 +70,7 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
 bool
 Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
                                          const Acts::TrackingVolume* vol,
-                                         double) const
+                                         double /*unused*/) const
 {
   bool isAtBoundary = false;
   if (vol == nullptr) {
@@ -92,7 +92,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
                                          const TrackingVolume*  vol,
                                          const TrackingVolume*& nextVol,
                                          NavigationDirection    dir,
-                                         double) const
+                                         double /*unused*/) const
 {
   bool isAtBoundary = false;
   nextVol           = 0;

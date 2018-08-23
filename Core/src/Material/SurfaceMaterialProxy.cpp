@@ -39,7 +39,7 @@ Acts::SurfaceMaterialProxy::clone() const
 }
 
 Acts::SurfaceMaterialProxy&
-Acts::SurfaceMaterialProxy::operator*=(double)
+Acts::SurfaceMaterialProxy::operator*=(double /*scale*/)
 {
   return (*this);
 }
