@@ -222,7 +222,7 @@ public:
 
   /// boolean operator to check if this is
   /// vacuum has 0 zero size and will indicate false
-  operator bool() const { return m_store.size() != 0u; }
+  operator bool() const { return !m_store.empty(); }
 
   /// Assignment operator
   ///
@@ -242,7 +242,7 @@ public:
   float
   X0() const
   {
-    if (m_store.size() != 0u) {
+    if (!m_store.empty()) {
       return m_store[matX0];
     } else {
       return std::numeric_limits<float>::infinity();
@@ -254,7 +254,7 @@ public:
   float
   L0() const
   {
-    if (m_store.size() != 0u) {
+    if (!m_store.empty()) {
       return m_store[matL0];
     } else {
       return std::numeric_limits<float>::infinity();
@@ -265,7 +265,7 @@ public:
   float
   A() const
   {
-    if (m_store.size() != 0u) {
+    if (!m_store.empty()) {
       return m_store[matA];
     } else {
       return 0.;
@@ -276,7 +276,7 @@ public:
   float
   Z() const
   {
-    if (m_store.size() != 0u) {
+    if (!m_store.empty()) {
       return m_store[matZ];
     } else {
       return 0.;
@@ -286,7 +286,7 @@ public:
   float
   rho() const
   {
-    if (m_store.size() != 0u) {
+    if (!m_store.empty()) {
       return m_store[matrho];
     } else {
       return 0.;

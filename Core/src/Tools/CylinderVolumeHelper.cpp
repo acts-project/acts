@@ -82,7 +82,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
     }
   }
   // this is only needed if layers are provided
-  if (layers.size() != 0u) {
+  if (!layers.empty()) {
     // the raw data
     double rMinRaw = 0.;
     double rMaxRaw = 0.;
@@ -721,7 +721,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     }
     // create BinnedArraysand register then to the glue volume descriptor for
     // upstream glueing
-    if (glueVolumesNegativeFace.size() != 0u) {
+    if (!glueVolumesNegativeFace.empty()) {
       // create the outside volume array
       std::shared_ptr<const TrackingVolumeArray> glueVolumesNegativeFaceArray
           = m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(
@@ -730,7 +730,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
       glueDescr.registerGlueVolumes(negativeFaceXY,
                                     glueVolumesNegativeFaceArray);
     }
-    if (glueVolumesPositiveFace.size() != 0u) {
+    if (!glueVolumesPositiveFace.empty()) {
       // create the outside volume array
       std::shared_ptr<const TrackingVolumeArray> glueVolumesPositiveFaceArray
           = m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(
@@ -739,7 +739,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
       glueDescr.registerGlueVolumes(positiveFaceXY,
                                     glueVolumesPositiveFaceArray);
     }
-    if (glueVolumesInnerTube.size() != 0u) {
+    if (!glueVolumesInnerTube.empty()) {
       // create the outside volume array
       std::shared_ptr<const TrackingVolumeArray> glueVolumesInnerTubeArray
           = m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(
@@ -747,7 +747,7 @@ Acts::CylinderVolumeHelper::interGlueTrackingVolume(
       // register the glue voluems
       glueDescr.registerGlueVolumes(tubeInnerCover, glueVolumesInnerTubeArray);
     }
-    if (glueVolumesOuterTube.size() != 0u) {
+    if (!glueVolumesOuterTube.empty()) {
       // create the outside volume array
       std::shared_ptr<const TrackingVolumeArray> glueVolumesOuterTubeArray
           = m_cfg.trackingVolumeArrayCreator->trackingVolumeArray(

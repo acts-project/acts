@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
                       seedVec.end(),
                       std::inserter(diff, diff.begin()),
                       seedComparator());
-  BOOST_CHECK(diff.size() == 0);
+  BOOST_CHECK(diff.empty());
   for (auto sp : spVec) {
     delete sp;
   }

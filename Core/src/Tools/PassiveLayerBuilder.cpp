@@ -72,7 +72,7 @@ Acts::PassiveLayerBuilder::constructLayers()
       // assign the material to the layer surface
       std::shared_ptr<const SurfaceMaterial> material = nullptr;
       // create the material from jobOptions
-      if (m_cfg.centralLayerMaterial.size() != 0u) {
+      if (!m_cfg.centralLayerMaterial.empty()) {
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
             m_cfg.centralLayerMaterial.at(icl), 1.);
@@ -126,7 +126,7 @@ Acts::PassiveLayerBuilder::constructLayers()
       // assign the material to the layer surface
       std::shared_ptr<const SurfaceMaterial> material = nullptr;
       // create the material from jobOptions
-      if (m_cfg.posnegLayerMaterial.size() != 0u) {
+      if (!m_cfg.posnegLayerMaterial.empty()) {
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
             m_cfg.posnegLayerMaterial.at(ipnl), 1.);

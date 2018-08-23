@@ -103,7 +103,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
                                         << binsZ
                                         << ")");
   std::unique_ptr<SurfaceArray> sArray;
-  if (surfaces.size() > 0) {
+  if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
         surfaces, binsPhi, binsZ, protoLayer, nullptr);
 
@@ -186,7 +186,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
-  if (surfaces.size() > 0) {
+  if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
         surfaces, bTypePhi, bTypeZ, protoLayer, nullptr);
 
@@ -329,7 +329,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
   // create the surface array
   std::unique_ptr<SurfaceArray> sArray;
-  if (surfaces.size() > 0) {
+  if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
         surfaces, bTypeR, bTypePhi, protoLayer, transform);
 
@@ -408,7 +408,7 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
     for (const auto& srf : binContent) {
       accessibleSurfaces.insert(srf);
     }
-    if (binContent.size() == 0) {
+    if (binContent.empty()) {
       nEmptyBins++;
     }
     nBinsChecked++;
@@ -429,7 +429,7 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
     ACTS_VERBOSE(" -- All bins point to a surface");
   }
 
-  if (diff.size() != 0) {
+  if (!diff.empty()) {
     ACTS_ERROR(" -- Not all sensitive surfaces are accessible through binning. "
                "sensitive: "
                << sensitiveSurfaces.size()
@@ -454,5 +454,5 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
     ACTS_VERBOSE(" -- All sensitive surfaces are accessible through binning.");
   }
 
-  return nEmptyBins == 0 && diff.size() == 0;
+  return nEmptyBins == 0 && diff.empty();
 }

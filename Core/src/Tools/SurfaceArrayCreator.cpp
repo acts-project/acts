@@ -358,7 +358,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     ProtoLayer                         protoLayer,
     Transform3D&                       transform) const
 {
-  if (surfaces.size() == 0u) {
+  if (surfaces.empty()) {
     throw std::logic_error(
         "No surfaces handed over for creating arbitrary bin utility!");
   }
@@ -499,7 +499,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
     Transform3D&                       transform,
     size_t                             nBins) const
 {
-  if (surfaces.size() == 0u) {
+  if (surfaces.empty()) {
     throw std::logic_error(
         "No surfaces handed over for creating equidistant axis!");
   }

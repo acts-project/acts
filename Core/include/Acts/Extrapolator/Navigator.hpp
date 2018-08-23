@@ -435,7 +435,7 @@ struct Navigator
                 state.stepping, navOpts, navCorr);
 
         // the number of surface candidates
-        if (state.navigation.navSurfaces.size()) {
+        if (!state.navigation.navSurfaces.empty()) {
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << state.navigation.navSurfaces.size();
@@ -637,7 +637,7 @@ struct Navigator
 
     // if you came until here, and you might not have boundaries
     // per definition, this is free of the self call
-    if (!state.navigation.navBoundaries.size()) {
+    if (state.navigation.navBoundaries.empty()) {
       // create the navigaiton options - we could give the start surface here
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       // get the navigation boundaries
@@ -655,7 +655,7 @@ struct Navigator
         return dstream.str();
       });
       // set the iterator, but avoid stepping a zero step
-      if (state.navigation.navBoundaries.size()) {
+      if (!state.navigation.navBoundaries.empty()) {
         state.navigation.navBoundaryIter
             = state.navigation.navBoundaries.begin();
         auto step = state.navigation.navBoundaryIter->intersection.pathLength;
@@ -823,7 +823,7 @@ struct Navigator
             state.stepping, navOpts, navCorr);
 
     // the number of layer candidates
-    if (state.navigation.navLayers.size()) {
+    if (!state.navigation.navLayers.empty()) {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << state.navigation.navLayers.size();
@@ -1058,7 +1058,7 @@ struct Navigator
     state.navigation.navSurfaces
         = navLayer->compatibleSurfaces(state.stepping, navOpts, navCorr);
     // the number of layer candidates
-    if (state.navigation.navSurfaces.size()) {
+    if (!state.navigation.navSurfaces.empty()) {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << state.navigation.navSurfaces.size();
@@ -1099,7 +1099,7 @@ struct Navigator
   handleSurfaces(propagator_state_t& state, const corrector_t& navCorr) const
   {
     // no surfaces, do not return to stepper
-    if (!state.navigation.navSurfaces.size()) {
+    if (state.navigation.navSurfaces.empty()) {
       debugLog(state, [&] {
         return std::string("No surfaces present, resolve layer first.");
       });

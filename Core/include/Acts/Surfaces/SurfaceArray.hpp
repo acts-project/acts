@@ -199,7 +199,7 @@ public:
         }
         std::vector<const Surface*>& binContent = lookup(b);
         // only complete if we have an empty bin
-        if (binContent.size() > 0) {
+        if (!binContent.empty()) {
           continue;
         }
 

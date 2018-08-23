@@ -129,7 +129,7 @@ Acts::BinnedSurfaceMaterial::operator*=(double scale)
 const Acts::MaterialProperties*
 Acts::BinnedSurfaceMaterial::material(const Vector2D& lp) const
 {
-  if (m_fullMaterial.size() == 0u) {
+  if (m_fullMaterial.empty()) {
     return nullptr;
   }
   // the first bin
@@ -141,7 +141,7 @@ Acts::BinnedSurfaceMaterial::material(const Vector2D& lp) const
 const Acts::MaterialProperties*
 Acts::BinnedSurfaceMaterial::material(const Acts::Vector3D& gp) const
 {
-  if (m_fullMaterial.size() == 0u) {
+  if (m_fullMaterial.empty()) {
     return nullptr;
   }
   // the first bin

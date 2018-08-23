@@ -59,7 +59,7 @@ public:
     size_t
     getBin(double x) const
     {
-      if (binEdges.size() == 0) {
+      if (binEdges.empty()) {
         // equidistant
         double w = (max - min) / nBins;
         return std::floor((x - min) / w);

@@ -94,7 +94,7 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
 
   // let's extrapolate through the Acts detector and record all surfaces
   // that have a material proxy
-  if (materialSteps.size() != 0u) {
+  if (!materialSteps.empty()) {
     // get the number of materialsteps
     ACTS_VERBOSE(">> Retrieved " << materialSteps.size()
                                  << " materialSteps along the track at input.");

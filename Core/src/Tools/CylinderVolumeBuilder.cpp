@@ -295,7 +295,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       existingContainer.push_back(existingVolumeCp);
     }
     // update
-    existingVolumeCp = existingContainer.size() != 0u
+    existingVolumeCp = !existingContainer.empty()
         ? tvHelper->createContainerTrackingVolume(existingContainer)
         : existingVolumeCp;
 
