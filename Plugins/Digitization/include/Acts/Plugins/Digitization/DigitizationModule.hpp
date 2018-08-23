@@ -60,7 +60,7 @@ public:
                      bool                                analogue = false);
 
   /// Virtual Destructor
-  virtual ~DigitizationModule() {}
+  virtual ~DigitizationModule() = default;
 
   /// Return the internal test segmentation surfaces to test between entry
   /// and exit given by their cell id's - the boundaries are not given

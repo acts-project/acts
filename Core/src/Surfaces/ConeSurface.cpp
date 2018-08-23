@@ -81,9 +81,7 @@ Acts::ConeSurface::ConeSurface(const variant_data& vardata)
   }
 }
 
-Acts::ConeSurface::~ConeSurface()
-{
-}
+Acts::ConeSurface::~ConeSurface() = default;
 
 const Acts::Vector3D
 Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const

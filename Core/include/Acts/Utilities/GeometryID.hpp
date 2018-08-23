@@ -60,7 +60,7 @@ public:
   /// Copy constructor
   ///
   /// @param tddID is the geometry ID that will be copied
-  GeometryID(const GeometryID& tddID) : m_value(tddID.m_value) {}
+  GeometryID(const GeometryID& tddID) = default;
 
   /// Assignement operator
   ///

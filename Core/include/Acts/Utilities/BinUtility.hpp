@@ -155,7 +155,7 @@ public:
   }
 
   /// Virtual Destructor
-  ~BinUtility() {}
+  ~BinUtility() = default;
   /// Implizit Constructor
   BinUtility*
   clone() const

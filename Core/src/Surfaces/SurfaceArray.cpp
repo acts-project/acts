@@ -16,9 +16,7 @@
 #include "Acts/Utilities/VariantData.hpp"
 
 // implementation for pure virtual destructor of ISurfaceGridLookup
-Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup()
-{
-}
+Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
 
 Acts::variant_data
 Acts::SurfaceArray::toVariantData() const

@@ -31,9 +31,9 @@ class BinnedArray
 {
 public:
   /// Default Constructor - needed for inherited classes
-  BinnedArray() {}
+  BinnedArray() = default;
   /// Virtual Destructor
-  virtual ~BinnedArray() {}
+  virtual ~BinnedArray() = default;
   /// Returns the object in the associated bin according the local position
   ///
   /// @param lposition is the local position for the object retrieval

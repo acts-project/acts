@@ -64,9 +64,7 @@ Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds(
 {
 }
 
-Acts::TrapezoidVolumeBounds::~TrapezoidVolumeBounds()
-{
-}
+Acts::TrapezoidVolumeBounds::~TrapezoidVolumeBounds() = default;
 
 Acts::TrapezoidVolumeBounds&
 Acts::TrapezoidVolumeBounds::operator=(const TrapezoidVolumeBounds& trabo)

@@ -101,9 +101,7 @@ Acts::PlaneSurface::PlaneSurface(const variant_data& vardata)
   }
 }
 
-Acts::PlaneSurface::~PlaneSurface()
-{
-}
+Acts::PlaneSurface::~PlaneSurface() = default;
 
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const PlaneSurface& other)

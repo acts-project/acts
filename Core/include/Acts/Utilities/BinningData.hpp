@@ -222,7 +222,7 @@ public:
   }
 
   /// Destructor
-  ~BinningData() {}
+  ~BinningData() = default;
   /// Return the number of bins - including sub bins
   size_t
   bins() const

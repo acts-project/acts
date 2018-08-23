@@ -705,6 +705,4 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   m_surface = surface;
 }
 
-Acts::TGeoDetectorElement::~TGeoDetectorElement()
-{
-}
+Acts::TGeoDetectorElement::~TGeoDetectorElement() = default;

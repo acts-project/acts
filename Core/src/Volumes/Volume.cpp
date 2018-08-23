@@ -49,9 +49,7 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
   m_center = transform().translation();
 }
 
-Acts::Volume::~Volume()
-{
-}
+Acts::Volume::~Volume() = default;
 
 const Acts::Vector3D
 Acts::Volume::binningPosition(Acts::BinningValue bValue) const

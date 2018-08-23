@@ -36,9 +36,7 @@ Acts::RectangleBounds::RectangleBounds(const variant_data& vardata)
   m_halfY = payload.get<double>("halflengthY");
 }
 
-Acts::RectangleBounds::~RectangleBounds()
-{
-}
+Acts::RectangleBounds::~RectangleBounds() = default;
 
 Acts::RectangleBounds*
 Acts::RectangleBounds::clone() const

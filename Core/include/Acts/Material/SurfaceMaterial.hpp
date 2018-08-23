@@ -41,7 +41,7 @@ public:
   SurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
 
   /// Destructor
-  virtual ~SurfaceMaterial() {}
+  virtual ~SurfaceMaterial() = default;
 
   /// Pseudo-Constructor clone()
   virtual SurfaceMaterial*

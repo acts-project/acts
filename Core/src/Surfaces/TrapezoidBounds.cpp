@@ -44,9 +44,7 @@ Acts::TrapezoidBounds::TrapezoidBounds(const variant_data& vardata)
   m_boundingBox = RectangleBounds(m_maxHalfX, m_halfY);
 }
 
-Acts::TrapezoidBounds::~TrapezoidBounds()
-{
-}
+Acts::TrapezoidBounds::~TrapezoidBounds() = default;
 
 Acts::TrapezoidBounds*
 Acts::TrapezoidBounds::clone() const

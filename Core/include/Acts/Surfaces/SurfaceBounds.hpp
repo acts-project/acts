@@ -52,7 +52,7 @@ public:
     Other            = 12
   };
 
-  virtual ~SurfaceBounds() {}
+  virtual ~SurfaceBounds() = default;
 
   /// clone() method to make deep copy in Surface copy constructor and for
   /// assigment operator of the Surface class

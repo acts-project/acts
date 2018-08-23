@@ -63,9 +63,7 @@ Acts::ConeBounds::ConeBounds(const variant_data& vardata)
   m_halfPhi  = payload.get<double>("halfPhi");
 }
 
-Acts::ConeBounds::~ConeBounds()
-{
-}
+Acts::ConeBounds::~ConeBounds() = default;
 
 Acts::ConeBounds*
 Acts::ConeBounds::clone() const

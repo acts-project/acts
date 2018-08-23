@@ -246,7 +246,7 @@ public:
   std::string       wConditionScreen = "[left untouched]";
 
   /// constructor
-  WrappingConfig() {}
+  WrappingConfig() = default;
 
   /// configure the new Volume
   void

@@ -58,7 +58,7 @@ public:
   }
 
   /// A generic approach descriptor with n surfaces to test
-  ~GenericApproachDescriptor() override {}
+  ~GenericApproachDescriptor() override = default;
   /// register the Layer to the surfaces
   ///
   /// @param lay is the layer to be registerd

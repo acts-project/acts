@@ -49,9 +49,7 @@ Acts::NavigationLayer::create(const variant_data& vardata)
   return NavigationLayer::create(std::move(surface), thickness);
 }
 
-Acts::NavigationLayer::~NavigationLayer()
-{
-}
+Acts::NavigationLayer::~NavigationLayer() = default;
 
 Acts::variant_data
 Acts::NavigationLayer::toVariantData() const

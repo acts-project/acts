@@ -29,9 +29,7 @@ Acts::MaterialEffectsEngine::MaterialEffectsEngine(
 }
 
 // destructor
-Acts::MaterialEffectsEngine::~MaterialEffectsEngine()
-{
-}
+Acts::MaterialEffectsEngine::~MaterialEffectsEngine() = default;
 
 // configuration
 void

@@ -56,9 +56,7 @@ Acts::Surface::Surface(const Surface& other, const Transform3D& shift)
 {
 }
 
-Acts::Surface::~Surface()
-{
-}
+Acts::Surface::~Surface() = default;
 
 Acts::Surface&
 Acts::Surface::operator=(const Surface& other)

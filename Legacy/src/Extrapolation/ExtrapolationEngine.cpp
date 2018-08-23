@@ -22,9 +22,7 @@ Acts::ExtrapolationEngine::ExtrapolationEngine(
 }
 
 // destructor
-Acts::ExtrapolationEngine::~ExtrapolationEngine()
-{
-}
+Acts::ExtrapolationEngine::~ExtrapolationEngine() = default;
 
 // configuration
 void

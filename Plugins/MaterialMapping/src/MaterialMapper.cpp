@@ -40,9 +40,7 @@ Acts::MaterialMapper::MaterialMapper(const Config&                 cfg,
     ACTS_DEBUG("Extrapolation engine successfully retrieved!");
 }
 
-Acts::MaterialMapper::~MaterialMapper()
-{
-}
+Acts::MaterialMapper::~MaterialMapper() = default;
 
 void
 Acts::MaterialMapper::setLogger(std::unique_ptr<const Logger> newLogger)

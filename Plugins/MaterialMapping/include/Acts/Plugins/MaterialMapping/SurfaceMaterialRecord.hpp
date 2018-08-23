@@ -48,8 +48,8 @@ using MaterialRecord = std::vector<RecordVector>;
 class SurfaceMaterialRecord
 {
 public:
-  /// Default constructor - deleted
-  SurfaceMaterialRecord() {}
+  /// Default constructor - default
+  SurfaceMaterialRecord() = default;
 
   /// Constructor with BinUtility input
   /// @param surface is the according surface of this recrd

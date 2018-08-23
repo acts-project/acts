@@ -26,10 +26,8 @@ struct DigitizationCell
   {
   }
   // copy them
-  DigitizationCell(const DigitizationCell& dc)
-    : channel0(dc.channel0), channel1(dc.channel1), data(dc.data)
-  {
-  }
+  DigitizationCell(const DigitizationCell& dc) = default;
+
   /// To merge cells in case they are at the same position
   /// @param dc the cell to be added to the current cell
   /// @param analogueReadout flag indicating if we have analgue readout

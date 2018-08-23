@@ -25,8 +25,8 @@ namespace Acts {
 class InfiniteBounds : public SurfaceBounds
 {
 public:
-  InfiniteBounds() = default;
-  ~InfiniteBounds() override {}
+  InfiniteBounds()           = default;
+  ~InfiniteBounds() override = default;
 
   InfiniteBounds*
   clone() const final

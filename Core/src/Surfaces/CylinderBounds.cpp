@@ -63,9 +63,7 @@ Acts::CylinderBounds::CylinderBounds(const variant_data& vardata)
   m_halfZ   = payload.get<double>("halfZ");
 }
 
-Acts::CylinderBounds::~CylinderBounds()
-{
-}
+Acts::CylinderBounds::~CylinderBounds() = default;
 
 Acts::CylinderBounds*
 Acts::CylinderBounds::clone() const

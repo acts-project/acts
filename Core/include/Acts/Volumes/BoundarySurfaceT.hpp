@@ -136,7 +136,7 @@ public:
   surfaceRepresentation() const;
 
   /// Virtual Destructor
-  virtual ~BoundarySurfaceT() {}
+  virtual ~BoundarySurfaceT() = default;
 
 protected:
   /// Helper metho: attach a Volume to this BoundarySurfaceT

@@ -123,7 +123,7 @@ namespace Test {
 
     using result_type = this_result;
 
-    CallCounter() {}
+    CallCounter() = default;
 
     template <typename propagator_state_t>
     void

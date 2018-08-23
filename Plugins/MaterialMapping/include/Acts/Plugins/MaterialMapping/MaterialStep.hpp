@@ -56,7 +56,7 @@ public:
     Position(double x_, double y_, double z_) : x(x_), y(y_), z(z_) {}
 
     /// Copy Constructor
-    Position(const Position& pos) : x(pos.x), y(pos.y), z(pos.z) {}
+    Position(const Position& pos) = default;
 
 #if !defined(__CLING__)
     /// Constructor from Vector3D

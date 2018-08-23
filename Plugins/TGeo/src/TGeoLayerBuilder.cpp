@@ -21,9 +21,7 @@ Acts::TGeoLayerBuilder::TGeoLayerBuilder(
   setConfiguration(config);
 }
 
-Acts::TGeoLayerBuilder::~TGeoLayerBuilder()
-{
-}
+Acts::TGeoLayerBuilder::~TGeoLayerBuilder() = default;
 
 void
 Acts::TGeoLayerBuilder::setConfiguration(

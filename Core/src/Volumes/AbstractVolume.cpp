@@ -25,9 +25,7 @@ Acts::AbstractVolume::AbstractVolume(
   createBoundarySurfaces();
 }
 
-Acts::AbstractVolume::~AbstractVolume()
-{
-}
+Acts::AbstractVolume::~AbstractVolume() = default;
 
 const std::vector<Acts::BoundarySurfacePtr>&
 Acts::AbstractVolume::boundarySurfaces() const

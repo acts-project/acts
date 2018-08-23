@@ -50,7 +50,7 @@ namespace Test {
 
     using result_type = this_result;
 
-    PerpendicularMeasure() {}
+    PerpendicularMeasure() = default;
 
     template <typename propagator_state_t>
     void
@@ -85,7 +85,7 @@ namespace Test {
 
     using result_type = this_result;
 
-    SurfaceObserver() {}
+    SurfaceObserver() = default;
 
     template <typename propagator_state_t>
     void
@@ -140,7 +140,7 @@ namespace Test {
 
     using result_type = this_result;
 
-    PathScatterer() {}
+    PathScatterer() = default;
 
     template <typename propagator_state_t>
     void

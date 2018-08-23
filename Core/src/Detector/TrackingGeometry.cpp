@@ -27,9 +27,7 @@ Acts::TrackingGeometry::TrackingGeometry(
   highestVolume->closeGeometry(m_trackingVolumes, volumeID);
 }
 
-Acts::TrackingGeometry::~TrackingGeometry()
-{
-}
+Acts::TrackingGeometry::~TrackingGeometry() = default;
 
 const Acts::TrackingVolume*
 Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const

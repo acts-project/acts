@@ -52,9 +52,7 @@ Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(const variant_data& vardata)
   m_stereo   = payload.get<double>("stereo");
 }
 
-Acts::DiscTrapezoidalBounds::~DiscTrapezoidalBounds()
-{
-}
+Acts::DiscTrapezoidalBounds::~DiscTrapezoidalBounds() = default;
 
 Acts::DiscTrapezoidalBounds*
 Acts::DiscTrapezoidalBounds::clone() const

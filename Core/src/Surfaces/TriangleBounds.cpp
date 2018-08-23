@@ -52,9 +52,7 @@ Acts::TriangleBounds::TriangleBounds(const variant_data& vardata)
   m_boundingBox = RectangleBounds(mx, my);
 }
 
-Acts::TriangleBounds::~TriangleBounds()
-{
-}
+Acts::TriangleBounds::~TriangleBounds() = default;
 
 Acts::TriangleBounds*
 Acts::TriangleBounds::clone() const

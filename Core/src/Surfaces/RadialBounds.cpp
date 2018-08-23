@@ -51,9 +51,7 @@ Acts::RadialBounds::RadialBounds(const variant_data& vardata)
   m_halfPhi = payload.get<double>("halfPhi");
 }
 
-Acts::RadialBounds::~RadialBounds()
-{
-}
+Acts::RadialBounds::~RadialBounds() = default;
 
 Acts::RadialBounds*
 Acts::RadialBounds::clone() const

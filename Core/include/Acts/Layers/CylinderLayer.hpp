@@ -83,7 +83,7 @@ public:
   CylinderLayer() = delete;
 
   /// Destructor
-  ~CylinderLayer() override {}
+  ~CylinderLayer() override = default;
 
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation

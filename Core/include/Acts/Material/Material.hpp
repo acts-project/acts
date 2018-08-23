@@ -116,7 +116,7 @@ public:
   MaterialComposition() : std::vector<ElementFraction>() {}
 
   /// Destructor
-  ~MaterialComposition() {}
+  ~MaterialComposition() = default;
 
   /// Constructor from vector of pairs
   ///
@@ -215,13 +215,10 @@ public:
   /// Copy Constructor
   ///
   /// @param material copy constructor
-  Material(const Material& mat)
-    : m_store(mat.m_store), m_composition(mat.m_composition)
-  {
-  }
+  Material(const Material& mat) = default;
 
   /// Desctructor
-  ~Material() {}
+  ~Material() = default;
 
   /// boolean operator to check if this is
   /// vacuum has 0 zero size and will indicate false

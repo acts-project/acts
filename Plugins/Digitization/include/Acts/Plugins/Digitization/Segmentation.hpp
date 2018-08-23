@@ -37,7 +37,7 @@ class Segmentation
 {
 public:
   /// Virtual Destructor
-  virtual ~Segmentation() {}
+  virtual ~Segmentation() = default;
 
   /// Create the segmentation surfaces in X
   ///

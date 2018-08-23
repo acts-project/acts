@@ -56,9 +56,7 @@ Acts::DiamondBounds::DiamondBounds(const variant_data& vardata)
                         std::max(m_minY, m_maxY));
 }
 
-Acts::DiamondBounds::~DiamondBounds()
-{
-}
+Acts::DiamondBounds::~DiamondBounds() = default;
 
 Acts::DiamondBounds*
 Acts::DiamondBounds::clone() const

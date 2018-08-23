@@ -203,7 +203,7 @@ struct VoidCorrector
 {
 
   // Void Corrector default constructor
-  VoidCorrector() {}
+  VoidCorrector() = default;
 
   // Void Corrector parameter constructor
   VoidCorrector(const Vector3D&, const Vector3D&, double) {}

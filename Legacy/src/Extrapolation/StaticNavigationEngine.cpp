@@ -25,9 +25,7 @@ Acts::StaticNavigationEngine::StaticNavigationEngine(
 }
 
 // destructor
-Acts::StaticNavigationEngine::~StaticNavigationEngine()
-{
-}
+Acts::StaticNavigationEngine::~StaticNavigationEngine() = default;
 
 // configuration
 void

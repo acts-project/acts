@@ -69,7 +69,7 @@ public:
   MaterialProperties(const MaterialProperties& mprop);
 
   /// Destructor
-  virtual ~MaterialProperties() {}
+  virtual ~MaterialProperties() = default;
 
   /// Pseudo-Constructor clone()
   virtual MaterialProperties*

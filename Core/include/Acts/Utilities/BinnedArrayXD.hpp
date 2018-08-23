@@ -128,7 +128,7 @@ public:
       = delete;
 
   /// Destructor
-  ~BinnedArrayXD() override {}
+  ~BinnedArrayXD() override = default;
   /// Returns the object in the array from a local position
   ///
   /// @todo check if we can change to triple return at once

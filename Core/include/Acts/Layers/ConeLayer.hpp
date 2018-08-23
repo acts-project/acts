@@ -69,7 +69,7 @@ public:
       = delete;
 
   /// Destructor
-  ~ConeLayer() override {}
+  ~ConeLayer() override = default;
 
   /// Transforms the layer into a Surface representation for extrapolation
   const ConeSurface&

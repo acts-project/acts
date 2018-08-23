@@ -48,9 +48,7 @@ Acts::CartesianSegmentation::CartesianSegmentation(
   }
 }
 
-Acts::CartesianSegmentation::~CartesianSegmentation()
-{
-}
+Acts::CartesianSegmentation::~CartesianSegmentation() = default;
 
 void
 Acts::CartesianSegmentation::createSegmentationSurfaces(

@@ -124,7 +124,7 @@ namespace detail {
   struct SurfaceReached
   {
     /// Default Constructor
-    SurfaceReached() {}
+    SurfaceReached() = default;
 
     /// boolean operator for abort condition using the result (ignored)
     template <typename propagator_state_t, typename result_t>
@@ -205,7 +205,7 @@ namespace detail {
   struct EndOfWorldReached
   {
     /// Default Constructor
-    EndOfWorldReached() {}
+    EndOfWorldReached() = default;
 
     /// boolean operator for abort condition using the result (ignored)
     template <typename propagator_state_t, typename result_t>

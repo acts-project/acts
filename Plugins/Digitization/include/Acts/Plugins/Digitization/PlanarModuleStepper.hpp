@@ -31,7 +31,7 @@ public:
   struct Config
   {
     // standard constructor
-    Config() {}
+    Config() = default;
   };
 
   /// Constructor

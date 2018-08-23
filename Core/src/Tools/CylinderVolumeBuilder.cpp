@@ -28,9 +28,7 @@ Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
   setConfiguration(cvbConfig);
 }
 
-Acts::CylinderVolumeBuilder::~CylinderVolumeBuilder()
-{
-}
+Acts::CylinderVolumeBuilder::~CylinderVolumeBuilder() = default;
 
 void
 Acts::CylinderVolumeBuilder::setConfiguration(

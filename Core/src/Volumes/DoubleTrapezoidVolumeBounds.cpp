@@ -51,9 +51,7 @@ Acts::DoubleTrapezoidVolumeBounds::DoubleTrapezoidVolumeBounds(
 {
 }
 
-Acts::DoubleTrapezoidVolumeBounds::~DoubleTrapezoidVolumeBounds()
-{
-}
+Acts::DoubleTrapezoidVolumeBounds::~DoubleTrapezoidVolumeBounds() = default;
 
 Acts::DoubleTrapezoidVolumeBounds&
 Acts::DoubleTrapezoidVolumeBounds::

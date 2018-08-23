@@ -65,9 +65,7 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
 {
 }
 
-Acts::CylinderVolumeBounds::~CylinderVolumeBounds()
-{
-}
+Acts::CylinderVolumeBounds::~CylinderVolumeBounds() = default;
 
 Acts::CylinderVolumeBounds&
 Acts::CylinderVolumeBounds::operator=(const CylinderVolumeBounds& cylbo)

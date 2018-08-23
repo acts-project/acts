@@ -38,9 +38,7 @@ Acts::DD4hepLayerBuilder::DD4hepLayerBuilder(
   setConfiguration(config);
 }
 
-Acts::DD4hepLayerBuilder::~DD4hepLayerBuilder()
-{
-}
+Acts::DD4hepLayerBuilder::~DD4hepLayerBuilder() = default;
 
 void
 Acts::DD4hepLayerBuilder::setConfiguration(

@@ -37,9 +37,7 @@ Acts::LineBounds::LineBounds(const variant_data& vardata)
   m_halfZ  = payload.get<double>("halfZ");
 }
 
-Acts::LineBounds::~LineBounds()
-{
-}
+Acts::LineBounds::~LineBounds() = default;
 
 Acts::LineBounds*
 Acts::LineBounds::clone() const
