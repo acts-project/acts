@@ -1,7 +1,7 @@
 stages:
-  - check
   - build
   - test
+  - static_analysis
   - deploy
 
 before_script:
@@ -12,7 +12,7 @@ before_script:
 # pre-build checks
 
 format:
-  stage: check
+  stage: build
   image: gitlab-registry.cern.ch/acts/machines/check:latest
   before_script: []
   dependencies: []
@@ -24,7 +24,7 @@ format:
     when: on_failure
 
 license:
-  stage: check
+  stage: build
   image: python:alpine3.6
   before_script: []
   dependencies: []
@@ -34,12 +34,40 @@ license:
 
   
 include_guards:
-  stage: check
+  stage: build
   image: python:alpine3.6
   before_script: []
   dependencies: []
   script:
     - CI/check_include_guards.py . --fail-global
+
+clang_tidy:
+  stage: static_analysis
+  image: gitlab-registry.cern.ch/acts/machines/static_analysis/cc7-clang-tidy
+  tags:
+    - cvmfs
+  before_script: []
+  dependencies: []
+  script:
+    - mkdir report
+    - mkdir build && cd build
+    # contain LCG to only where needed
+    - /bin/sh -c "set +e && source ../CI/setup_lcg91.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on"
+    - cd ..
+    - run-clang-tidy.py -p build -header-filter=.* -export-fixes report/clang-tidy-fixes.yml -j$(nproc) 1> report/clang-tidy.log || true
+    - virtualenv civenv
+    - source civenv/bin/activate
+    - pip install -r CI/requirements.txt
+    - CI/make_report.py clang-tidy report/clang-tidy.log report/clang-tidy.json -e "$PWD/Tests/*" -e "$PWD/Legacy/*" -e "$PWD/Plugins/JsonPlugin/include/Acts/Plugins/JsonPlugin/lib/*" --filter "$PWD/*"
+    - 'codereport report/clang-tidy.json report --title="clang-tidy - commit: ${CI_COMMIT_SHA:0:8}" --prefix $PWD'
+    - CI/static_analysis_results.py --limitfile .static_analysis_limits.yml --itemfile report/clang-tidy.json -v
+  artifacts:
+    paths:
+      - report
+    when: always
+
+    
+
 
 # SLC6, LCG88 (legacy build)
 #

@@ -38,3 +38,5 @@ build*
 !.clang-format
 !.gitignore
 !.gitlab-ci.yml
+!.clang-tidy
+!.oclint

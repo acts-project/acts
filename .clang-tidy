@@ -1,0 +1,4 @@
+---
+Checks: '-*,readability-*,-readability-redundant-member-init,misc-*,-misc-unused-parameters,bugprone-*,performance-*,modernize-*,-modernize-use-auto,clang-analyzer-deadcode.*,clang-analyzer-*,-clang-analyzer-osx.*,-clang-analyzer-unix.*,cppcoreguidelines-*,-cppcoreguidelines-pro-type-vararg,-cppcoreguidelines-owning-memory,-cppcoreguidelines-pro-bounds-constant-array'
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: true
