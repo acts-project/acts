@@ -191,7 +191,9 @@ namespace Test {
     double beamPipeRadius
         = perp(state.navigation.navLayerIter->intersection.position);
     // step size has been updated
-    BOOST_TEST((state.stepping.stepSize == beamPipeRadius));
+    BOOST_CHECK_CLOSE_FRACTION(static_cast<double>(state.stepping.stepSize),
+                               beamPipeRadius,
+                               s_onSurfaceTolerance);
     if (debug) {
       std::cout << "<<< Test 1a >>> initialize at "
                 << toString(state.stepping.position()) << std::endl;
