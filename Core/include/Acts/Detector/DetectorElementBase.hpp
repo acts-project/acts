@@ -1,4 +1,4 @@
-Core/include/Acts/Detector/DetectorElementBase.hpp// This file is part of the Acts project.
+// This file is part of the Acts project.
 //
 // Copyright (C) 2016-2018 Acts project team
 //
