@@ -71,11 +71,11 @@ Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
 {
 }
 
-Acts::PlaneSurface::PlaneSurface(const variant_data& data_)
+Acts::PlaneSurface::PlaneSurface(const variant_data& vardata)
 {
   // we need to figure out which way the PS was constructed before
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   // std::string type = boost::get<std::string>(data["type"]);
   std::string type = data.get<std::string>("type");

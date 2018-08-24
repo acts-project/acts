@@ -204,9 +204,9 @@ public:
 
   /// Main Charged extrapolation method
   ///
-  /// @param ecCell is the charged extrapolation cell
+  /// @param eCell is the charged extrapolation cell
   /// @param sf is the destination surface
-  /// @param dir is the additional direction prescription
+  /// @param pDir is the additional direction prescription
   /// @param purpose sets the fill mode in to the ExtrapolationCache
   /// @param bcheck is the boundary check prescription
   /// @param returnCurvilinear is a boolean switch to not collapse onto the
@@ -218,9 +218,9 @@ public:
   ///  - InProgress (surface hit, when finalPropagation == false)
   ///  - Recovered (surface not hit, leadParameters stay untouched)
   ExtrapolationCode
-  propagate(ExCellCharged&                        ecCell,
+  propagate(ExCellCharged&                        eCell,
             const Surface&                        sf,
-            NavigationDirection                   dir = forward,
+            NavigationDirection                   pDir = forward,
             std::vector<ExtrapolationMode::eMode> purpose
             = {ExtrapolationMode::Destination},
             const BoundaryCheck& bcheck            = true,
@@ -228,9 +228,9 @@ public:
 
   /// Main Neutral extrapolation method
   ///
-  /// @param enCell is the neutral extrapolation cell
+  /// @param eCell is the neutral extrapolation cell
   /// @param sf is the destination surface
-  /// @param dir is the additional direction prescription
+  /// @param pDir is the additional direction prescription
   /// @param purpose sets the fill mode in to the ExtrapolationCache
   /// @param bcheck is the boundary check prescription
   /// @param returnCurvilinear is a boolean switch to not collapse onto the
@@ -242,9 +242,9 @@ public:
   ///  - InProgress (surface hit, when finalPropagation == false)
   ///  - Recovered (surface not hit, leadParameters stay untouched)
   ExtrapolationCode
-  propagate(ExCellNeutral&                        enCell,
+  propagate(ExCellNeutral&                        eCell,
             const Surface&                        sf,
-            NavigationDirection                   dir = forward,
+            NavigationDirection                   pDir = forward,
             std::vector<ExtrapolationMode::eMode> purpose
             = {ExtrapolationMode::Destination},
             const BoundaryCheck& bcheck            = true,
@@ -297,50 +297,50 @@ private:
   ///
   /// @param eCell the extrapolation cell that holds the configuration
   /// @param propState the progation chache
-  /// @param tParameters the parameters
-  /// @param sf the destination surace
+  /// @param parametersT the parameters
+  /// @param dSurface the destination surace
   template <class T>
   bool
   propagateRungeKuttaT(ExtrapolationCell<T>& eCell,
                        PropagationCache&     propState,
-                       const T&              tParameters,
-                       const Surface&        sf) const;
+                       const T&              parametersT,
+                       const Surface&        dSurface) const;
 
   /// Internal RungeKutta propagation method for propation with jacobian
   ///
   /// @param navigationStep the step parameter for screen output
   /// @param propState the progation chache
-  /// @param surfaceType an integer to indicate which surface type is presen
-  /// @param sVector a double array holding propagation information
+  /// @param kind an integer to indicate which surface type is presen
+  /// @param Su a double array holding propagation information
   bool
   propagateWithJacobian(int               navigationStep,
                         PropagationCache& propState,
-                        int               surfaceType,
-                        double*           sVector) const;
+                        int               kind,
+                        double*           Su) const;
 
   /// Propagation methods runge kutta step - returns the step length
   ///
   /// @param navigationStep the step parameter for screen output
   /// @param propState the progation chache
   /// @param S step size
-  /// @param inS flag whether the step was performed along the given direction
+  /// @param InS flag whether the step was performed along the given direction
   double
   rungeKuttaStep(int               navigationStep,
                  PropagationCache& propState,
                  double            S,
-                 bool&             inS) const;
+                 bool&             InS) const;
 
   /// Propagation methods runge kutta step - returns the step length
   ///
   /// @param navigationStep the step parameter for screen output
   /// @param propState the progation chache
   /// @param S step size
-  /// @param inS flag whether the step was performed along the given direction
+  /// @param InS flag whether the step was performed along the given direction
   double
   rungeKuttaStepWithGradient(int               navigationStep,
                              PropagationCache& propState,
                              double            S,
-                             bool&             inS) const;
+                             bool&             InS) const;
 
   /// Propagation methods straight line step
   ///

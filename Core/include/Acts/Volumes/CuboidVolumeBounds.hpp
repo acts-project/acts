@@ -54,24 +54,24 @@ public:
 
   /// Constructor - the box boundaries
   ///
-  /// @param hlengthx is the half length of the cube in x
-  /// @param hlengthy is the half length of the cube in y
-  /// @param hlengthz is the half length of the cube in z
-  CuboidVolumeBounds(double hlengthx, double hlengthy, double hlengthz);
+  /// @param halex is the half length of the cube in x
+  /// @param haley is the half length of the cube in y
+  /// @param halez is the half length of the cube in z
+  CuboidVolumeBounds(double halex, double haley, double halez);
 
   /// Copy Constructor
   ///
-  /// @param cubo is the source volume bounds to be copied
-  CuboidVolumeBounds(const CuboidVolumeBounds& cubo);
+  /// @param bobo is the source volume bounds to be copied
+  CuboidVolumeBounds(const CuboidVolumeBounds& bobo);
 
   /// Destructor
   ~CuboidVolumeBounds() override;
 
   /// Assignment operator
   ///
-  /// @param cubo is the source volume bounds to be assigned
+  /// @param bobo is the source volume bounds to be assigned
   CuboidVolumeBounds&
-  operator=(const CuboidVolumeBounds& cubo);
+  operator=(const CuboidVolumeBounds& bobo);
 
   /// Virtual constructor
   CuboidVolumeBounds*

@@ -97,16 +97,17 @@ public:
   // Step estimators to surface
   /////////////////////////////////////////////////////////////////////////////////
   ///
-  /// @param [in] stype The surface type
-  /// @param [in] s The surface orientation
-  /// @param [in] pdir The position and direction
-  /// @param [in,out] q Quality flag
+  /// @param [in] kind The surface type
+  /// @param [in] Su The surface orientation
+  /// @param [in] P The position and direction
+  /// @param [in,out] Q Quality flag
   /// @param [in] istep Indicator if it's the initial step (direction!)
+  /// @param [in] maxStep The max step size
   double
-  stepEstimator(int           stype,
-                double*       s,
-                const double* pdir,
-                bool&         q,
+  stepEstimator(int           kind,
+                double*       Su,
+                const double* P,
+                bool&         Q,
                 bool          istep = false,
                 double maxStep      = std::numeric_limits<double>::max()) const;
   double

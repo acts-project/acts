@@ -37,8 +37,8 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  LineBounds(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  LineBounds(const variant_data& vardata);
 
   ~LineBounds() override;
 

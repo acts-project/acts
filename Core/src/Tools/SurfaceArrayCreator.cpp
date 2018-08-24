@@ -27,11 +27,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
     size_t                             binsPhi,
     size_t                             binsZ,
-    boost::optional<ProtoLayer>        _protoLayer,
-    std::shared_ptr<const Transform3D> _transform) const
+    boost::optional<ProtoLayer>        protoLayerOpt,
+    std::shared_ptr<const Transform3D> transformOpt) const
 {
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -40,7 +40,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << " bins.");
 
   Transform3D transform
-      = _transform != nullptr ? *_transform : Transform3D::Identity();
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisPhi
       = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, binsPhi);
@@ -77,15 +77,15 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypePhi,
     BinningType                        bTypeZ,
-    boost::optional<ProtoLayer>        _protoLayer,
-    std::shared_ptr<const Transform3D> _transform) const
+    boost::optional<ProtoLayer>        protoLayerOpt,
+    std::shared_ptr<const Transform3D> transformOpt) const
 {
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
 
   double      R = 0.5 * (protoLayer.maxR - protoLayer.minR);
   Transform3D transform
-      = _transform != nullptr ? *_transform : Transform3D::Identity();
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisZ;
@@ -141,16 +141,16 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     size_t                             binsR,
     size_t                             binsPhi,
-    boost::optional<ProtoLayer>        _protoLayer,
-    std::shared_ptr<const Transform3D> _transform) const
+    boost::optional<ProtoLayer>        protoLayerOpt,
+    std::shared_ptr<const Transform3D> transformOpt) const
 {
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
   Transform3D transform
-      = _transform != nullptr ? *_transform : Transform3D::Identity();
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisR
       = createEquidistantAxis(surfaces, binR, protoLayer, transform, binsR);
@@ -197,16 +197,16 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     const std::vector<const Surface*>& surfaces,
     BinningType                        bTypeR,
     BinningType                        bTypePhi,
-    boost::optional<ProtoLayer>        _protoLayer,
-    std::shared_ptr<const Transform3D> _transform) const
+    boost::optional<ProtoLayer>        protoLayerOpt,
+    std::shared_ptr<const Transform3D> transformOpt) const
 {
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
   Transform3D transform
-      = _transform != nullptr ? *_transform : Transform3D::Identity();
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisR;

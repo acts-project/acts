@@ -62,10 +62,10 @@ Acts::LineSurface::operator=(const LineSurface& other)
   return *this;
 }
 
-Acts::LineSurface::LineSurface(const variant_data& data_) : GeometryObject()
+Acts::LineSurface::LineSurface(const variant_data& vardata) : GeometryObject()
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   // std::string type = boost::get<std::string>(data["type"]);
   std::string type = data.get<std::string>("type");

@@ -79,8 +79,9 @@ public:
   getConfiguration() const;
 
   /// set logging instance
+  /// @param newLogger the new logging instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 private:
   /// Configuration member

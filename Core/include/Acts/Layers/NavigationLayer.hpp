@@ -43,9 +43,9 @@ public:
   }
 
   /// Factory for shared Layer pointer, that accepts @c variant_data
-  /// @param data The data to build from
+  /// @param vardata The data to build from
   static LayerPtr
-  create(const variant_data& data);
+  create(const variant_data& vardata);
 
   /// Destructor
   ~NavigationLayer() override;
@@ -79,13 +79,12 @@ public:
   /// Geometric isOnLayer() method
   /// using isOnSurface() with Layer specific tolerance
   ///
-  /// @param gpos is the global position for the check
+  /// @param gp is the global position for the check
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
   bool
-  isOnLayer(const Vector3D&      gpos,
-            const BoundaryCheck& bcheck = true) const final;
+  isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck = true) const final;
 
   /// Accept layer according to the following colelction directives
   ///

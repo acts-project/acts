@@ -204,8 +204,9 @@ public:
   getConfiguration() const;
 
   /// set logging instance
+  /// @param newLogger the logger instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
   // associate surfaces contained by this layer to this layer
   void

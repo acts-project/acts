@@ -41,14 +41,14 @@ public:
   /// @param theta polar angle indicating of the particle direction
   /// @param phi azimuthal angle indicating of the particle direction
   /// @param materialSteps the collection material steps along the track
-  /// @param totX0 is the optional total budget in X0
-  /// @param totL0 is the optional total budget in L0
+  /// @param tX0 is the optional total budget in X0
+  /// @param tL0 is the optional total budget in L0
   MaterialTrack(const MaterialStep::Position& startPos,
                 double                        theta,
                 double                        phi,
                 std::vector<MaterialStep>     materialSteps,
-                double                        totX0 = 0.,
-                double                        totL0 = 0.);
+                double                        tX0 = 0.,
+                double                        tL0 = 0.);
 
   /// Copy constructor
   MaterialTrack(const MaterialTrack& mtrecord);

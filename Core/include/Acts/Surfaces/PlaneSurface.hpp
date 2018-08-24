@@ -46,8 +46,8 @@ public:
   /// Copy Constructor with shift
   ///
   /// @param psf is the source surface for the copy
-  /// @param htrans is the transformation that positions the surface in space
-  PlaneSurface(const PlaneSurface& other, const Transform3D& htrans);
+  /// @param transf is the transformation that positions the surface in space
+  PlaneSurface(const PlaneSurface& other, const Transform3D& transf);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -72,8 +72,8 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  PlaneSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  PlaneSurface(const variant_data& vardata);
 
   ~PlaneSurface() override;
 
@@ -122,12 +122,12 @@ public:
   /// within or without check of whether the local position is inside boundaries
   /// or not
   ///
-  /// @param gpos global position to be checked
+  /// @param glopo global position to be checked
   /// @param bcheck gboundary check directive
   ///
   /// @return is a boolean indicator if the position is on surface
   bool
-  isOnSurface(const Vector3D&      gpos,
+  isOnSurface(const Vector3D&      glopo,
               const BoundaryCheck& bcheck = true) const override;
 
   /// Local to global transformation
@@ -162,7 +162,7 @@ public:
 
   /// Method that calculates the correction due to incident angle
   ///
-  /// @param gpos global 3D position - considered to be on surface but not
+  /// @param pos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param mom global 3D momentum representation (optionally ignored)
   ///
@@ -170,7 +170,7 @@ public:
   ///
   /// @return a double representing the scaling factor
   double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
+  pathCorrection(const Vector3D& pos, const Vector3D& mom) const final;
 
   /// @brief Fast straight line intersection schema
   ///

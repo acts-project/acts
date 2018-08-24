@@ -86,7 +86,7 @@ protected:
   /// @param cbounds is the conical bound description
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the layer thickness along the normal axis
-  /// @param ad is the approach descriptor for navigation towards the layer
+  /// @param ade is the approach descriptor for navigation towards the layer
   /// @param laytyp is the layer type
   ///
   /// @todo chage od and ad to unique_ptr
@@ -94,7 +94,7 @@ protected:
             std::shared_ptr<const ConeBounds>   cbounds,
             std::unique_ptr<SurfaceArray>       surfaceArray,
             double                              thickness = 0.,
-            std::unique_ptr<ApproachDescriptor> ad        = nullptr,
+            std::unique_ptr<ApproachDescriptor> ade       = nullptr,
             LayerType                           laytyp    = Acts::active);
 
   /// Private copy constructor with shift, called by create(args*)

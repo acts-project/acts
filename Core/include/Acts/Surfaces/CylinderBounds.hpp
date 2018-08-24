@@ -61,9 +61,9 @@ public:
   /// Constructor - open cylinder
   ///
   /// @param radius is the radius of the cylinder
-  /// @param halfphi is the half opening angle
-  /// @param halez is the half length in z
-  CylinderBounds(double radius, double halfPhi, double haleZ);
+  /// @param halfPhi is the half opening angle
+  /// @param halfZ is the half length in z
+  CylinderBounds(double radius, double halfPhi, double halfZ);
 
   /// Constructor - open cylinder
   ///
@@ -78,8 +78,8 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  CylinderBounds(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  CylinderBounds(const variant_data& vardata);
 
   ~CylinderBounds() override;
 

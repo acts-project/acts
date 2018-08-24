@@ -566,21 +566,21 @@ to_variant(const ActsMatrixD<4, 4>& matrix)
 /// This is the unimplemented base template that is specialized
 /// for various types.
 /// @tparam T The type you want
-/// @param data The data
+/// @param vardata The data
 /// @return The converted data as type @c T
 template <typename T>
 inline T
-from_variant(const variant_data& data);
+from_variant(const variant_data& vardata);
 
 /// Function to produce a @c Transform3D from @c variant_data.
-/// @param data_ The input @c variant_data
+/// @param vardata The input @c variant_data
 /// @return The converted @c Transform3D
 template <>
 inline Transform3D
-from_variant<Transform3D>(const variant_data& data_)
+from_variant<Transform3D>(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Must be variant_map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Must be variant_map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   throw_assert(data.get<std::string>("type") == "Transform3D",
                "Must be type Transform3D");
 
@@ -601,14 +601,14 @@ from_variant<Transform3D>(const variant_data& data_)
 }
 
 /// Function to produce a @c Vector2D from @c variant_data.
-/// @param data_ The input @c variant_data
+/// @param vardata The input @c variant_data
 /// @return The converted @c Vector2D
 template <>
 inline Vector2D
-from_variant<Vector2D>(const variant_data& data_)
+from_variant<Vector2D>(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Must be variant_map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Must be variant_map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   throw_assert(data.get<std::string>("type") == "Vector2D",
                "Must be type Vector2D");
 

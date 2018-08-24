@@ -135,9 +135,9 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger is the logging instance to be set
+  /// @param newLogger is the logging instance to be set
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 protected:
   /// Configuration struct
@@ -173,7 +173,7 @@ private:
   ///
   /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
+  /// @param pDir is the additional direction prescription
   /// @param bcheck is the boudnary check directive @todo shift to cell after
   /// splitting
   ///
@@ -182,25 +182,22 @@ private:
   ExtrapolationCode
   initNavigationT(ExtrapolationCell<T>& eCell,
                   const Surface*        sf     = 0,
-                  NavigationDirection   dir    = forward,
+                  NavigationDirection   pDir   = forward,
                   const BoundaryCheck&  bcheck = true) const;
 
   /// Main static layer handling
   ///
   /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
+  /// @param pDir is the additional direction prescription
   /// @param bcheck is the boudnary check directive
-  /// @param collectSenstivie steers whether sensitive surfaces are searched
-  /// @param resolveMaterial steers whether material has to be integrated
-  /// @param resolvePassive steers whether all passive steps are being done
   ///
   /// @return is a extrapolation code indication
   template <class T>
   ExtrapolationCode
   handleLayerT(ExtrapolationCell<T>& eCell,
                const Surface*        sf     = 0,
-               NavigationDirection   dir    = forward,
+               NavigationDirection   pDir   = forward,
                const BoundaryCheck&  bcheck = true) const;
 
   /// Handle the failure - as configured
@@ -208,7 +205,7 @@ private:
   /// @param eCode is the extrapolation code at entry
   /// @param eCell ist he extrapolaiton cell
   /// @param sf is the (optional) destinaton surface
-  /// @param dir is the additional direction prescription
+  /// @param pDir is the additional direction prescription
   /// @param bcheck is the boudnary check directive @todo shift to cell after
   /// splitting
   ///
@@ -218,7 +215,7 @@ private:
   handleReturnT(ExtrapolationCode     eCode,
                 ExtrapolationCell<T>& eCell,
                 const Surface*        sf     = 0,
-                NavigationDirection   dir    = forward,
+                NavigationDirection   pDir   = forward,
                 const BoundaryCheck&  bcheck = true) const;
 };
 

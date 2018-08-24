@@ -40,12 +40,12 @@ Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other,
 {
 }
 
-Acts::PerigeeSurface::PerigeeSurface(const variant_data& data_)
+Acts::PerigeeSurface::PerigeeSurface(const variant_data& vardata)
   : GeometryObject(), LineSurface(nullptr, nullptr)
 {
 
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   // std::string type = boost::get<std::string>(data["type"]);
   std::string type = data.get<std::string>("type");

@@ -96,11 +96,11 @@ public:
   ///
   /// @param rinner is the inner radius of the cylinder
   /// @param router is the outer radius of the cylinder
-  /// @param halfPhiSector is the half opening angle
+  /// @param haphi is the half opening angle
   /// @param halez is the half length in z
   CylinderVolumeBounds(double rinner,
                        double router,
-                       double halfPhiSector,
+                       double haphi,
                        double halez);
 
   /// Copy Constructor
@@ -122,10 +122,10 @@ public:
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
-  /// @param gpos is a global position to be checked
+  /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
   bool
-  inside(const Vector3D& gpos, double tol = 0.) const override;
+  inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into boundarySurfaces
   /// @param transformPtr is the transform where the boundary surfaces are
@@ -179,7 +179,7 @@ private:
   /// templated dumpT method
   template <class T>
   T&
-  dumpT(T& t) const;
+  dumpT(T& tstream) const;
 
   /// This method returns the associated CylinderBounds
   /// of the inner CylinderSurfaces.

@@ -187,6 +187,6 @@ protected:
   ///
   /// @return modified output stream object
   virtual std::ostream&
-  print(std::ostream& out) const;
+  print(std::ostream& sl) const;
 };
 }  // namespace Acts

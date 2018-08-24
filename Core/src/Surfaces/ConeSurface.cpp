@@ -59,10 +59,10 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
   throw_assert(cbounds, "ConeBounds must not be nullptr");
 }
 
-Acts::ConeSurface::ConeSurface(const variant_data& data_)
+Acts::ConeSurface::ConeSurface(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   std::string type = data.get<std::string>("type");
   throw_assert(type == "ConeSurface", "Variant data type must be ConeSurface");

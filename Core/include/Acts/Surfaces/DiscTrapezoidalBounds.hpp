@@ -49,21 +49,21 @@ public:
   /// Rmin and R max
   /// @param minhalfx half length in X at min radius
   /// @param maxhalfx half length in X at maximum radius
-  /// @param rMin inner radius
-  /// @param rMax outer radius
+  /// @param maxR outer radius
+  /// @param minR inner radius
   /// @param avephi average phi value
   /// @param stereo optional stero angle applied
   DiscTrapezoidalBounds(double minhalfx,
                         double maxhalfx,
-                        double rMin,
-                        double rMax,
+                        double maxR,
+                        double minR,
                         double avephi = M_PI_2,
                         double stereo = 0.);
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  DiscTrapezoidalBounds(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  DiscTrapezoidalBounds(const variant_data& vardata);
 
   ~DiscTrapezoidalBounds() override;
 

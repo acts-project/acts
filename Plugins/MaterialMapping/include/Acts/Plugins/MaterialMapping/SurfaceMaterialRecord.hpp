@@ -80,10 +80,10 @@ public:
   /// this is still needed, because the extrapolation
   /// might hit a layer, but no material to access was there
   ///
-  /// @param position is where the extrapolation
+  /// @param mPosition is where the extrapolation
   ///    did hit this surface
   void
-  assignEmptyStep(const Vector3D& position);
+  assignEmptyStep(const Vector3D& mPosition);
 
   /// @return the surface pointer
   const Surface&

@@ -70,15 +70,15 @@ public:
   /// (can be nullptr)
   /// @param minhalfx The half length in x at minimal r
   /// @param maxhalfx The half length in x at maximal r
-  /// @param rmin The inner radius of the disc surface
-  /// @param rmax The outer radius of the disc surface
+  /// @param maxR The inner radius of the disc surface
+  /// @param minR The outer radius of the disc surface
   /// @param avephi The position in phi (default is 0.)
   /// @param stereo The optional stereo angle
   DiscSurface(std::shared_ptr<const Transform3D> htrans,
               double                             minhalfx,
               double                             maxhalfx,
-              double                             rmin,
-              double                             rmax,
+              double                             maxR,
+              double                             minR,
               double                             avephi = 0.,
               double                             stereo = 0.);
 
@@ -109,8 +109,8 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  DiscSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  DiscSurface(const variant_data& vardata);
 
   ~DiscSurface() override;
 
@@ -156,11 +156,11 @@ public:
   /// within or without check of whether the local position is inside boundaries
   /// or not
   ///
-  /// @param gpos The global position to be checked
+  /// @param glopo The global position to be checked
   /// @param bcheck The boundary check directive
   /// @return bollean that indicates if the position is on surface
   bool
-  isOnSurface(const Vector3D&      gpos,
+  isOnSurface(const Vector3D&      glopo,
               const BoundaryCheck& bcheck = true) const final;
 
   /// Local to global transformation
@@ -212,18 +212,18 @@ public:
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
   ///
-  /// @param lpolar is a local position in polar coordinates
+  /// @param locpol is a local position in polar coordinates
   /// @return values is local 2D position in cartesian coordinates
   const Vector2D
-  localPolarToLocalCartesian(const Vector2D& lpolar) const;
+  localPolarToLocalCartesian(const Vector2D& locpol) const;
 
   /// Special method for DiscSurface :  local<->global transformation when
   /// provided cartesian coordinates
   ///
-  /// @param lcart is local 2D position in cartesian coordinates
+  /// @param lpos is local 2D position in cartesian coordinates
   /// @return value is a global cartesian 3D position
   const Vector3D
-  localCartesianToGlobal(const Vector2D& lcart) const;
+  localCartesianToGlobal(const Vector2D& lpos) const;
 
   /// Special method for DiscSurface : global<->local from cartesian coordinates
   ///
@@ -238,11 +238,11 @@ public:
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac The jacobian to be initialized
+  /// @param jacobian The jacobian to be initialized
   /// @param gpos The global position of the parameters
   /// @param dir The direction at of the parameters
   /// @param pars The paranmeters vector
-  void initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
+  void initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
                             const Vector3D&       gpos,
                             const Vector3D&       dir,
                             const ActsVectorD<5>& pars) const final;
@@ -252,23 +252,22 @@ public:
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac The jacobian to be initialized
-  /// @param pos The global position of the parameters
+  /// @param jacobian The jacobian to be initialized
+  /// @param gpos The global position of the parameters
   /// @param dir The direction at of the parameters
-  /// @param pars The parameter vector
   ///
   /// @return the transposed reference frame (avoids recalculation)
-  const RotationMatrix3D initJacobianToLocal(ActsMatrixD<5, 7>& jac,
+  const RotationMatrix3D initJacobianToLocal(ActsMatrixD<5, 7>& jacobian,
                                              const Vector3D& gpos,
                                              const Vector3D& dir) const final;
 
   /// Path correction due to incident of the track
   ///
-  /// @param gpos The global position as a starting point
+  /// @param pos The global position as a starting point
   /// @param mom The global momentum at the starting point
   /// @return The correction factor due to incident
   double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
+  pathCorrection(const Vector3D& pos, const Vector3D& mom) const final;
 
   /// @brief Fast straight line intersection schema
   ///

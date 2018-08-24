@@ -68,14 +68,14 @@ public:
   /// get the compatible surfaces
   ///
   /// @param gpos is the global position to start the approach from
-  /// @param mom is the momentum vector
+  /// @param gdir is the momentum vector
   /// @param bcheck is the boundary check prescription
   /// @param corrfnc is an noption correction function
   ///
   /// @return : a boolean indicating if an actual intersection had been tried
   ObjectIntersection<Surface>
   approachSurface(const Vector3D&      gpos,
-                  const Vector3D&      mom,
+                  const Vector3D&      gdir,
                   NavigationDirection  navDir,
                   const BoundaryCheck& bcheck,
                   CorrFnc              corrfnc = nullptr) const override;

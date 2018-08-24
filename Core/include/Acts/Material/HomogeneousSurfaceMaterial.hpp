@@ -31,15 +31,15 @@ public:
 
   /// Explizit constructor
   ///
-  /// @param fullmat are the full material properties
+  /// @param full are the full material properties
   /// @param splitFactor is the split for pre/post update
-  HomogeneousSurfaceMaterial(const MaterialProperties& fullmat,
+  HomogeneousSurfaceMaterial(const MaterialProperties& full,
                              double                    splitFactor = 1.);
 
   /// Copy Constructor
   ///
-  /// @param hsm is the source material
-  HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& hsm);
+  /// @param lmp is the source material
+  HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& lmp);
 
   /// Destructor
   ~HomogeneousSurfaceMaterial() override;

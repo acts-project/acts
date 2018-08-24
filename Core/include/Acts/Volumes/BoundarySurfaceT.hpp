@@ -111,15 +111,15 @@ public:
   /// Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on
   /// the TrackParameters and the requested direction
   ///
-  /// @param gpos is the global position on surface
+  /// @param pos is the global position on surface
   /// @param mom is the direction on the surface
   /// @param dir is an aditional direction corrective
   ///
   /// @return is the attached volume at that position
   virtual const T*
-  attachedVolume(const Vector3D&     gpos,
+  attachedVolume(const Vector3D&     pos,
                  const Vector3D&     mom,
-                 NavigationDirection dir) const;
+                 NavigationDirection pdir) const;
 
   /// templated onBoundary method
   ///

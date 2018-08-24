@@ -83,5 +83,5 @@ GlueVolumesDescriptor::glueFaces() const
 }
 
 std::ostream&
-operator<<(std::ostream& sl, const GlueVolumesDescriptor& mprop);
+operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd);
 }

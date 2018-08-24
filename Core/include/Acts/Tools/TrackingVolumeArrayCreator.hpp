@@ -48,13 +48,13 @@ public:
 
   /// create a tracking volume array
   ///
-  /// @param vols is the vector of TrackingVolumes to be
-  /// @param bVal is the binning value
+  /// @param tVolumes is the vector of TrackingVolumes to be
+  /// @param bValue is the binning value
   ///
   /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray>
-  trackingVolumeArray(const TrackingVolumeVector& vols,
-                      BinningValue                bVal) const override;
+  trackingVolumeArray(const TrackingVolumeVector& tVolumes,
+                      BinningValue                bValue) const override;
 
   /// Set logging instance
   ///

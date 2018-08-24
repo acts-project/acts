@@ -55,10 +55,10 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
 }
 
 std::shared_ptr<Acts::Layer>
-Acts::DiscLayer::create(const variant_data& data_)
+Acts::DiscLayer::create(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   std::string        type = data.get<std::string>("type");
   throw_assert(type == "DiscLayer", "Type must be DiscLayer");
 

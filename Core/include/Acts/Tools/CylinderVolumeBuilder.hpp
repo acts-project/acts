@@ -562,9 +562,9 @@ public:
 
   /// set logging instance
   ///
-  /// @param [in] logger is the logging istance to be set
+  /// @param [in] newLogger is the logging istance to be set
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 private:
   /// Configuration struct

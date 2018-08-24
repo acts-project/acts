@@ -71,8 +71,8 @@ public:
              double avphi   = 0.);
 
   /// Constructor which accepts @c variant_data
-  /// @param data The data to build from
-  ConeBounds(const variant_data& data);
+  /// @param vardata The data to build from
+  ConeBounds(const variant_data& vardata);
 
   ~ConeBounds() override;
 

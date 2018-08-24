@@ -104,9 +104,9 @@ public:
   identification() const final;
 
   /// set the configuration object
-  /// @param cfg is the configuration struct
+  /// @param config is the configuration struct
   void
-  setConfiguration(const Config& cfg);
+  setConfiguration(const Config& config);
 
   /// get the configuration object
   Config

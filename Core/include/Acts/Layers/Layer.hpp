@@ -133,24 +133,23 @@ public:
 
   /// templated onLayer() method
   ///
-  /// @param parameters are the templated (charged/neutral) on layer check
+  /// @param pars are the templated (charged/neutral) on layer check
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
   template <typename parameters_t>
   bool
-  onLayer(const parameters_t&  parameters,
-          const BoundaryCheck& bcheck = true) const;
+  onLayer(const parameters_t& pars, const BoundaryCheck& bcheck = true) const;
 
   /// geometrical isOnLayer() method
   ///
   /// @note using isOnSurface() with Layer specific tolerance
-  /// @param pos is the gobal position to be checked
+  /// @param gp is the gobal position to be checked
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
   virtual bool
-  isOnLayer(const Vector3D& pos, const BoundaryCheck& bcheck = true) const;
+  isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck = true) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor*
@@ -303,7 +302,7 @@ public:
   /// get compatible surfaces starting from the parameters
   ///
   /// @param pars are the (charged) track parameters for the search
-  /// @param pdir is the propagation direction prescription
+  /// @param pDir is the propagation direction prescription
   /// @param bcheck is the boundary check directive
   /// @param resolveSensitive is the prescription to find the sensitive surfaces
   /// @param resolveMaterial is the prescription to find surfaces with material
@@ -318,7 +317,7 @@ public:
   template <typename parameters_t>
   std::vector<SurfaceIntersection>
   getCompatibleSurfaces(const parameters_t&  pars,
-                        NavigationDirection  pdir,
+                        NavigationDirection  pDir,
                         const BoundaryCheck& bcheck,
                         bool                 resolveSensitive,
                         bool                 resolveMaterial,
@@ -336,9 +335,9 @@ public:
   ///
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
-  /// @param gpos is the global position to start the approach from
-  /// @param dir is the direction from where to attempt the approach
-  /// @param pdir is the direction prescription
+  /// @param position is the global position to start the approach from
+  /// @param momentum is the direction from where to attempt the approach
+  /// @param nDir is the direction prescription
   /// @param bcheck is the boundary check directive
   /// @param resolveSensitive is the prescription to find the sensitive surfaces
   /// @param resolveMaterial is the precription to find material surfaces
@@ -346,9 +345,9 @@ public:
   /// @param ice is a (future) compatibility estimator t
   /// the straight line approach
   virtual const SurfaceIntersection
-  surfaceOnApproach(const Vector3D&      gpos,
-                    const Vector3D&      dir,
-                    NavigationDirection  pdir,
+  surfaceOnApproach(const Vector3D&      position,
+                    const Vector3D&      momentum,
+                    NavigationDirection  nDir,
                     const BoundaryCheck& bcheck,
                     bool                 resolveSensitive,
                     bool                 resolveMaterial,
@@ -363,24 +362,19 @@ public:
   /// @param cSurfaces are the retrun surface intersections
   /// @param surface is the parameter surface
   /// @todo how is this different from the start surface
-  /// @param gpos is the resolved global position
+  /// @param pos is the resolved global position
   /// @param dir is themomentum direction
-  /// @param pdir is the propagation direction prescription
+  /// @param navDir is the propagation direction prescription
   /// @param bcheck is the boundary check directive
   /// @param pathLimit is the maximal path length allowed to the surface
-  /// @param intersectionTest is a boolean idicating if intersection is done
-  /// @param startSurface is an (optional) start surface for the search:
-  /// excluded in return
-  /// @param endSurface is an (optional) end surface of search: excluded in
-  /// return
   ///
   /// @return boolean that indicates if a compatible surface exists at all
   void
   testCompatibleSurface(std::vector<SurfaceIntersection>& cSurfaces,
                         const Surface&                    surface,
-                        const Vector3D&                   gpos,
+                        const Vector3D&                   pos,
                         const Vector3D&                   dir,
-                        NavigationDirection               pdir,
+                        NavigationDirection               navDir,
                         const BoundaryCheck&              bcheck,
                         double                            pathLimit) const;
 
@@ -389,12 +383,12 @@ public:
 
   /// Fast navigation to next layer
   ///
-  /// @param pos is the start position for the search
-  /// @param dir is the direction for the search
+  /// @param gp is the start position for the search
+  /// @param mom is the direction for the search
   ///
   /// @return the pointer to the next layer
   const Layer*
-  nextLayer(const Vector3D& pos, const Vector3D& dir) const;
+  nextLayer(const Vector3D& gp, const Vector3D& mom) const;
 
   /// get the confining TrackingVolume
   ///
@@ -411,9 +405,9 @@ public:
   /// register Volume associated to the layer
   /// - if you want to do that by hand: should be shared or unique ptr
   ///
-  /// @param avol is the provided volume
+  /// @param theVol is the provided volume
   void
-  registerRepresentingVolume(const AbstractVolume* avol);
+  registerRepresentingVolume(const AbstractVolume* theVol);
 
   ///  return the abstract volume that represents the layer
   ///
@@ -430,12 +424,12 @@ protected:
   ///
   /// @param surfaceArray is the array of sensitive surfaces
   /// @param thickness is the normal thickness of the Layer
-  /// @param ad oapproach descriptor
-  /// @param ltype is the layer type if active or passive
+  /// @param ades oapproach descriptor
+  /// @param laytyp is the layer type if active or passive
   Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
         double                              thickness = 0.,
-        std::unique_ptr<ApproachDescriptor> ad        = nullptr,
-        LayerType                           ltype     = passive);
+        std::unique_ptr<ApproachDescriptor> ades      = nullptr,
+        LayerType                           laytyp    = passive);
 
   ///  private method to set enclosing TrackingVolume, called by friend class
   /// only
@@ -452,9 +446,9 @@ protected:
   ///  private method to set the enclosed detached TV,
   /// called by friend class only
   ///
-  /// @param dtvol is the detached tracking volume the layer is confined
+  /// @param tvol is the detached tracking volume the layer is confined
   void
-  encloseDetachedTrackingVolume(const DetachedTrackingVolume& dtvol);
+  encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol);
 
   /// the previous Layer according to BinGenUtils
   NextLayers m_nextLayers;

@@ -66,31 +66,31 @@ public:
 
   /// Public charged material effects interface
   ///
-  /// @param ecCharged is the charged extrapolaiton cell
-  /// @param msurface is the (optional) material surface
+  /// @param eCell is the charged extrapolaiton cell
+  /// @param surface is the (optional) material surface
   ///        - this is for curvilinear parameters
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
   ///
   /// @return extrapolation code to indicate progress
   ExtrapolationCode
-  handleMaterial(ExCellCharged&      ecCharged,
-                 const Surface*      msurface   = nullptr,
+  handleMaterial(ExCellCharged&      eCell,
+                 const Surface*      surface    = nullptr,
                  NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
   /// Public neutral material effects interface
   ///
-  /// @param ecNeutral is the neutral extrapolaiton cell
-  /// @param msurface is the (optional) material surface
+  /// @param eCell is the neutral extrapolaiton cell
+  /// @param surface is the (optional) material surface
   ///        - this is for curvilinear parameters
   /// @param dir is the additional direction prescription
   /// @param matupstage is the update stage (pre/full/post)
   ///
   /// @return extrapolation code to indicate progress
   ExtrapolationCode
-  handleMaterial(ExCellNeutral&      ecNeutral,
-                 const Surface*      msurface   = nullptr,
+  handleMaterial(ExCellNeutral&      eCell,
+                 const Surface*      surface    = nullptr,
                  NavigationDirection dir        = forward,
                  MaterialUpdateStage matupstage = fullUpdate) const final;
 
@@ -106,9 +106,9 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger the logging instance to be set
+  /// @param newLogger the logging instance to be set
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 protected:
   /// Configuration struct

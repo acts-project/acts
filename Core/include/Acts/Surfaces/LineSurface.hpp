@@ -72,8 +72,8 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  LineSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  LineSurface(const variant_data& vardata);
 
   ~LineSurface() override;
 
@@ -118,11 +118,11 @@ public:
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac is the jacobian to be initialized
-  /// @param pos is the global position of the parameters
+  /// @param jacobian is the jacobian to be initialized
+  /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
   /// @param pars is the paranmeters vector
-  void initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
+  void initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
                             const Vector3D&       gpos,
                             const Vector3D&       dir,
                             const ActsVectorD<5>& pars) const final;
@@ -131,14 +131,14 @@ public:
   /// the calculation is identical for all surfaces where the
   /// reference frame does not depend on the direction
   ///
-  /// @param gpos is the position of the paramters in global
+  /// @param pos is the position of the paramters in global
   /// @param dir is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
   /// @param jac is the transport jacobian
   ///
   /// @return a five-dim vector
   const ActsRowVectorD<5>
-  derivativeFactors(const Vector3D&         gpos,
+  derivativeFactors(const Vector3D&         pos,
                     const Vector3D&         dir,
                     const RotationMatrix3D& rft,
                     const ActsMatrixD<7, 5>& jac) const final;

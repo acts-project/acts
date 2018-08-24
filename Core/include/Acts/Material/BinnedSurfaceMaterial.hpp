@@ -59,15 +59,15 @@ public:
   /// @param fullProperties is the vector of properties as recorded
   /// @param splitFactor is the pre/post splitting directive
   /// @param entries is the (optional) number of mapping entries
-  BinnedSurfaceMaterial(const BinUtility&               binutility,
+  BinnedSurfaceMaterial(const BinUtility&               binUtility,
                         const MaterialPropertiesMatrix& fullProperties,
                         double                          splitFactor = 0.,
                         size_t                          entries     = 1);
 
   /// Copy Constructor
   ///
-  /// @param bsm is the source object to be copied
-  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm);
+  /// @param lmp is the source object to be copied
+  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& lmp);
 
   /// Destructor
   ~BinnedSurfaceMaterial() override;

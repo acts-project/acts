@@ -33,8 +33,8 @@ public:
 
   /// Constructor from GlobalPosition
   ///
-  /// @param gpos position where the perigee is centered
-  PerigeeSurface(const Vector3D& gpos);
+  /// @param gp position where the perigee is centered
+  PerigeeSurface(const Vector3D& gp);
 
   /// Constructor with a Transform - needed for tilt
   ///
@@ -49,13 +49,13 @@ public:
   /// Copy constructor with shift
   ///
   /// @param other is the source surface to be copied
-  /// @param transf is the transformed applied after copying
-  PerigeeSurface(const PerigeeSurface& other, const Transform3D& transf);
+  /// @param shift is the transformed applied after copying
+  PerigeeSurface(const PerigeeSurface& other, const Transform3D& shift);
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  PerigeeSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  PerigeeSurface(const variant_data& vardata);
 
   ~PerigeeSurface() override;
 

@@ -86,14 +86,14 @@ public:
   /// Copy constructor with shift
   ///
   /// @param other is the source cylinder for the copy
-  /// @param htrans is the additional transform applied after copying the
+  /// @param transf is the additional transform applied after copying the
   /// cylinder
-  CylinderSurface(const CylinderSurface& other, const Transform3D& htrans);
+  CylinderSurface(const CylinderSurface& other, const Transform3D& transf);
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  CylinderSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  CylinderSurface(const variant_data& vardata);
 
   /// Destructor
   ~CylinderSurface() override;
@@ -237,7 +237,7 @@ public:
   /// @return is the intersection object
   Intersection
   intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gidr,
+                       const Vector3D&      gdir,
                        NavigationDirection  navDir  = forward,
                        const BoundaryCheck& bcheck  = false,
                        CorrFnc              correct = nullptr) const final;

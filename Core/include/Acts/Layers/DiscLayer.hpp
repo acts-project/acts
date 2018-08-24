@@ -63,9 +63,9 @@ public:
   }
 
   /// Factory for shared Layer pointer, that accepts @c variant_data
-  /// @param data The data to build from
+  /// @param vardata The data to build from
   static MutableLayerPtr
-  create(const variant_data& data);
+  create(const variant_data& vardata);
 
   /// Default Constructor
   DiscLayer() = delete;
@@ -113,7 +113,7 @@ protected:
             std::shared_ptr<const DiscBounds>   dbounds,
             std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
             double                              thickness    = 0.,
-            std::unique_ptr<ApproachDescriptor> ad           = nullptr,
+            std::unique_ptr<ApproachDescriptor> ades         = nullptr,
             LayerType                           laytyp       = Acts::active);
 
   /// Copy constructor with shift

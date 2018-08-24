@@ -37,14 +37,14 @@ public:
 
   /// Constructor with halflength in x and y
   ///
-  /// @param halfX halflength in X
-  /// @param halfY halflength in Y
-  RectangleBounds(double halfX, double halfY);
+  /// @param halex halflength in X
+  /// @param haley halflength in Y
+  RectangleBounds(double halex, double haley);
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  RectangleBounds(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  RectangleBounds(const variant_data& vardata);
 
   ~RectangleBounds() override;
 

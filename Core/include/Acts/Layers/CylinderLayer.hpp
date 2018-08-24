@@ -66,10 +66,10 @@ public:
   }
 
   /// Factory for shared Layer pointer, that accepts @c variant_data
-  /// @param data The data to build from
+  /// @param vardata The data to build from
   /// @return The return object is a shared poiter to the layer.
   static MutableLayerPtr
-  create(const variant_data& data);
+  create(const variant_data& vardata);
 
   /// Copy constructor - deleted
   CylinderLayer(const CylinderLayer& cla) = delete;
@@ -117,10 +117,10 @@ protected:
   ///
   /// @return The return object is a shared poiter to the layer.
   CylinderLayer(std::shared_ptr<const Transform3D>    transform,
-                std::shared_ptr<const CylinderBounds> cbounds,
+                std::shared_ptr<const CylinderBounds> cBounds,
                 std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
                 double                                thickness    = 0.,
-                std::unique_ptr<ApproachDescriptor>   ad           = nullptr,
+                std::unique_ptr<ApproachDescriptor>   ades         = nullptr,
                 LayerType                             laytyp       = passive);
 
   /// Private copy constructor with shift, called by create(args*)

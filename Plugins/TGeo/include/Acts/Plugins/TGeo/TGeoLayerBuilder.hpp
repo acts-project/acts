@@ -79,9 +79,9 @@ public:
   };
 
   /// Constructor
-  /// @param cfg is the configuration struct
+  /// @param config is the configuration struct
   /// @param logger the local logging instance
-  TGeoLayerBuilder(const Config&                 cfg,
+  TGeoLayerBuilder(const Config&                 config,
                    std::unique_ptr<const Logger> logger
                    = getDefaultLogger("LayerArrayCreator", Logging::INFO));
 
@@ -105,9 +105,9 @@ public:
   identification() const final;
 
   /// set the configuration object
-  /// @param cfg is the configuration struct
+  /// @param config is the configuration struct
   void
-  setConfiguration(const Config& cfg);
+  setConfiguration(const Config& config);
 
   /// get the configuration object
   Config
@@ -115,7 +115,7 @@ public:
 
   /// set logging instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Return the created detector elements
   const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
@@ -143,10 +143,10 @@ private:
   resolveSensitive(std::vector<const Surface*>& layerSurfaces,
                    TGeoVolume*                  tgVolume,
                    TGeoNode*                    tgNode,
-                   const TGeoMatrix&            ctGlobal,
+                   const TGeoMatrix&            tgTransform,
                    const LayerConfig&           layerConfig,
                    int                          type,
-                   bool                         correctVolume = false,
+                   bool                         correctBranch = false,
                    const std::string&           offset        = "");
 
   // Private helper method : build layers
@@ -159,7 +159,7 @@ private:
   // @param wc is the one with the potential wildcard
   // @param test is the test string
   bool
-  match(const char* wc, const char* test) const;
+  match(const char* first, const char* second) const;
 };
 
 inline TGeoLayerBuilder::Config

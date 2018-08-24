@@ -84,7 +84,7 @@ public:
   /// @param geoID is the geoId value (optional)
   MaterialStep(const MaterialProperties& mat,
                const Position&           pos,
-               uint64_t                  geoId = 0);
+               uint64_t                  geoID = 0);
 
   /// Copy Constructor
   MaterialStep(const MaterialStep& mstep);

@@ -137,11 +137,11 @@ public:
 
   /// Return the associated Layer to the global position
   ///
-  /// @param gpos is the associated global position
+  /// @param gp is the associated global position
   ///
   /// @return plain pointer to layer object
   const Layer*
-  associatedLayer(const Vector3D& gpos) const;
+  associatedLayer(const Vector3D& gp) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///
@@ -194,7 +194,7 @@ public:
   /// returned)
   /// @param eLayer is the end layer for the search (@todo docu: check if
   /// returned)
-  /// @param parameters are the templated parameters for searching
+  /// @param pars are the templated parameters for searching
   /// @param pDir is an additional direction prescription
   /// @param bcheck is a boundary check directive
   /// @param resolveMaterial is the prescription how to deal with material
@@ -206,7 +206,7 @@ public:
   std::vector<LayerIntersection>
   layerCandidatesOrdered(const Layer*         sLayer,
                          const Layer*         eLayer,
-                         const parameters_t&  parameters,
+                         const parameters_t&  pars,
                          NavigationDirection  pDir             = forward,
                          const BoundaryCheck& bcheck           = true,
                          bool                 resolveSensitive = true,
@@ -221,33 +221,33 @@ public:
   /// Returns the boundary surfaces ordered in probability to hit them based
   /// on straight line intersection
   ///
-  /// @param parameters are the templated tracking parameters
+  /// @param pars are the templated tracking parameters
   /// @param pDir is the additional direction presciprion
   ///
   /// @return is the templated boundary intersection
   template <typename parameters_t>
   std::vector<BoundaryIntersection>
-  boundarySurfacesOrdered(const parameters_t& parameters,
+  boundarySurfacesOrdered(const parameters_t& pars,
                           NavigationDirection pDir        = forward,
                           bool                skipCurrent = false) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
-  /// @param gpos is the global position associated with that search
+  /// @param gp is the global position associated with that search
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume*
-  trackingVolume(const Vector3D& gpos) const;
+  trackingVolume(const Vector3D& gp) const;
 
   /// Return the dynamically created vector of detached sub volumes
   ///
-  /// @param pos is the glboal position associated with that search
+  /// @param gp is the glboal position associated with that search
   /// @param tol is the absolute tolerance for the search
   ///
   /// @return the list of associated detached tracking volumes, nullptr if it
   /// does not exist
   const DetachedVolumeVector*
-  detachedTrackingVolumes(const Vector3D& pos, double tol) const;
+  detachedTrackingVolumes(const Vector3D& gp, double tol) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists
@@ -302,21 +302,21 @@ public:
   ///
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbors are the TrackingVolumes to be glued
-  /// @param bsfNeighbors are the boudnary surface of the neighbors
+  /// @param bsfNeighbor are the boudnary surface of the neighbors
   void
   glueTrackingVolumes(BoundarySurfaceFace                  bsfMine,
                       std::shared_ptr<TrackingVolumeArray> neighbors,
-                      BoundarySurfaceFace                  bsfNeighbors);
+                      BoundarySurfaceFace                  bsfNeighbor);
 
   /// Provide a new BoundarySurface from the glueing
   ///
   ///
-  /// @param bsfMine is the boundary face indicater where to glue
-  /// @param bsSurface is the new boudnary surface
+  /// @param bsf is the boundary face indicater where to glue
+  /// @param bs is the new boudnary surface
   void
   updateBoundarySurface(
-      BoundarySurfaceFace                                     bsfMine,
-      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bsSurface);
+      BoundarySurfaceFace                                     bsf,
+      std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs);
 
   /// Register the outside glue volumes -
   /// ordering is in the TrackingVolume Frame:
@@ -339,10 +339,10 @@ public:
 
   /// Sign the volume - the geometry builder has to do that
   ///
-  /// @param signat is the volume signature
+  /// @param geosign is the volume signature
   /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature signat, GeometryType geotype = Static);
+  sign(GeometrySignature geosign, GeometryType geotype = Static);
 
   /// return the Signature
   GeometrySignature
@@ -380,37 +380,38 @@ protected:
   /// - vacuum filled volume either as a for other tracking volumes
   ///
   /// @param htrans is the global 3D transform to position the volume in space
-  /// @param volumeBounds is the description of the volume boundaries
-  /// @param containedVolumes are the static volumes that fill this volume
+  /// @param volbounds is the description of the volume boundaries
+  /// @param containedVolumeArray are the static volumes that fill this volume
   /// @param volumeName is a string identifier
   TrackingVolume(
       std::shared_ptr<const Transform3D>               htrans,
-      VolumeBoundsPtr                                  volumeBounds,
-      const std::shared_ptr<const TrackingVolumeArray> containedVolumes
+      VolumeBoundsPtr                                  volbounds,
+      const std::shared_ptr<const TrackingVolumeArray> containedVolumeArray
       = nullptr,
       const std::string& volumeName = "undefined");
 
   /// Constructor for a full equipped Tracking Volume
   ///
   /// @param htrans is the global 3D transform to position the volume in space
-  /// @param volumeBounds is the description of the volume boundaries
+  /// @param volbounds is the description of the volume boundaries
   /// @param matprop is are materials of the tracking volume
-  /// @param cLayerArray is the confined layer array (optional)
-  /// @param cLayerVector is the confined arbitrary layer vector
-  /// @param cVolumeArray is the confined volume array
-  /// @param cVolumeVector is the confined arbitrary volume vector
-  /// @param dVolumeVector is the confined arbeitrary detached volume vector
+  /// @param staticLayerArray is the confined layer array (optional)
+  /// @param arbitraryLayerVector is the confined arbitrary layer vector
+  /// @param containedVolumeARray is the confined volume array
+  /// @param denseVolumeVector is the confined arbitrary volume vector
+  /// @param detachedVolumeVector is the confined arbeitrary detached volume
+  /// vector
   /// @param volumeName is a string identifier
   TrackingVolume(std::shared_ptr<const Transform3D> htrans,
-                 VolumeBoundsPtr                    volumeBounds,
+                 VolumeBoundsPtr                    volbounds,
                  std::shared_ptr<const Material>    matprop,
-                 std::unique_ptr<const LayerArray>  cLayerArray  = nullptr,
-                 const LayerVector                  cLayerVector = {},
-                 std::shared_ptr<const TrackingVolumeArray> cVolumeArray
+                 std::unique_ptr<const LayerArray>  staticLayerArray = nullptr,
+                 const LayerVector                  arbitraryLayerVector = {},
+                 std::shared_ptr<const TrackingVolumeArray> containedVolumeArray
                  = nullptr,
-                 const TrackingVolumeVector cVolumeVector = {},
-                 const DetachedVolumeVector dVolumeVector = {},
-                 const std::string&         volumeName    = "undefined");
+                 const TrackingVolumeVector denseVolumeVector    = {},
+                 const DetachedVolumeVector detachedVolumeVector = {},
+                 const std::string&         volumeName           = "undefined");
 
   /// Copy Constructor with a shift
   ///

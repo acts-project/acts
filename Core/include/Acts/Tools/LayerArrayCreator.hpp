@@ -57,19 +57,19 @@ public:
 
   /// LayerArrayCreator interface method
   ///
-  /// @param layers are the layers to be moved into an array
+  /// @param layersInput are the layers to be moved into an array
   /// @param min is the minimum value for binning
   /// @param max is the maximum value for binning
-  /// @param btype is the binning type
-  /// @param bvalue is the value in which the binning should be done
+  /// @param bType is the binning type
+  /// @param bValue is the value in which the binning should be done
   ///
   /// @return unique pointer to a newly created LayerArray
   std::unique_ptr<const LayerArray>
-  layerArray(const LayerVector& layers,
+  layerArray(const LayerVector& layersInput,
              double             min,
              double             max,
-             BinningType        btype  = arbitrary,
-             BinningValue       bvalue = binX) const override;
+             BinningType        bType  = arbitrary,
+             BinningValue       bValue = binX) const override;
 
   /// set logging instance
   void
@@ -93,7 +93,7 @@ private:
   /// the NavigationLayer
   Surface*
   createNavigationSurface(const Layer& layer,
-                          BinningValue bvalue,
+                          BinningValue bValue,
                           double       offset) const;
 };
 

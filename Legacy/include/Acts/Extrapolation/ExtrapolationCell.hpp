@@ -492,15 +492,16 @@ public:
   ///        saving when transport + material are done successively.
   ///        If nullptr is provided, then the stepParameters.referenceSurface
   ///        is taken.
-  /// @param fillModes are the different indications of the step
+  /// @param stepModes are the different indications of the step
   /// @param pathLength is the path length of this step
-  /// @param tjac is the transport jacobian of the step
+  /// @param stepJacobian is the transport jacobian of the step
   void
   stepTransport(std::unique_ptr<const T>                 stepParameters,
                 const Surface*                           stepSurface = nullptr,
-                std::vector<ExtrapolationMode::eMode>    fillModes   = {},
+                std::vector<ExtrapolationMode::eMode>    stepModes   = {},
                 double                                   stepLength  = 0.,
-                std::unique_ptr<const TransportJacobian> tjac        = nullptr);
+                std::unique_ptr<const TransportJacobian> stepJacobian
+                = nullptr);
 
   /// Fill a step without transport
   /// -> desinged for material

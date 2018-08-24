@@ -50,13 +50,13 @@ public:
   ///
   /// @param htrans is the transform that places the cone in the global frame
   /// @param alpha is the opening angle of the cone
-  /// @param locZmin is the z range over which the cone spans
-  /// @param locZmax is the z range over which the cone spans
+  /// @param zmin is the z range over which the cone spans
+  /// @param zmax is the z range over which the cone spans
   /// @param halfPhi is the openen angle for cone ssectors
   ConeSurface(std::shared_ptr<const Transform3D> htrans,
               double                             alpha,
-              double                             locZmin,
-              double                             locZmax,
+              double                             zmin,
+              double                             zmax,
               double                             halfPhi = M_PI);
 
   /// Constructor from HepTransform and ConeBounds
@@ -74,13 +74,13 @@ public:
   /// Copy constructor - with shift
   ///
   /// @param other is the source cone surface
-  /// @param htrans is the additional transfrom applied after copying
-  ConeSurface(const ConeSurface& other, const Transform3D& htrans);
+  /// @param transf is the additional transfrom applied after copying
+  ConeSurface(const ConeSurface& other, const Transform3D& transf);
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  ConeSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  ConeSurface(const variant_data& vardata);
 
   ~ConeSurface() override;
 
@@ -111,20 +111,20 @@ public:
   ///  for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
-  /// @param gpos is the global position where the measurement frame is
+  /// @param pos is the global position where the measurement frame is
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
   /// @return matrix that indicates the measurement frame
   const RotationMatrix3D
-  referenceFrame(const Vector3D& gpos, const Vector3D& mom) const final;
+  referenceFrame(const Vector3D& pos, const Vector3D& mom) const final;
 
   /// Return method for surface normal information
   ///
-  /// @param lpos is the local position on the cone for which the normal vector
+  /// @param lp is the local position on the cone for which the normal vector
   /// is requested
   /// @return Vector3D normal vector in global frame
   const Vector3D
-  normal(const Vector2D& lpos) const final;
+  normal(const Vector2D& lp) const final;
 
   /// Return method for surface normal information
   ///
