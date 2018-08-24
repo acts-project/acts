@@ -134,3 +134,6 @@ DetectorElementBase::registerNeighbours(
 }
 
 }  // end of namespace Acts
+
+#undef BASE_EXTENSION
+
