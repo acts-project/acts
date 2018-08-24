@@ -93,12 +93,6 @@ Layer::registerRepresentingVolume(const AbstractVolume* theVol)
   m_representingVolume = theVol;
 }
 
-inline const std::map<Identifier, const DetectorElementBase*>&
-Layer::detectorElements() const
-{
-  return m_detectorElements;
-}
-
 template <typename parameters_t>
 bool
 Layer::onLayer(const parameters_t& pars, const BoundaryCheck& bcheck) const

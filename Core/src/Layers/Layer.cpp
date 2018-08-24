@@ -34,7 +34,6 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   , m_ssRepresentingSurface(1)
   , m_ssSensitiveSurfaces(0)
   , m_ssApproachSurfaces(0)
-  , m_detectorElements()
 
 {
   if (ades) {
@@ -98,9 +97,6 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
       ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
-      // fill the map of detector elements
-      m_detectorElements.emplace(sSurface->associatedIdentifier(),
-                                 sSurface->associatedDetectorElement());
       // if any of the sensitive surfaces has material
       if (sSurface->associatedMaterial()) m_ssSensitiveSurfaces = 2;
     }

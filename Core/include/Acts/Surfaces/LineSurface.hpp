@@ -52,15 +52,12 @@ public:
   LineSurface(std::shared_ptr<const Transform3D> htrans,
               std::shared_ptr<const LineBounds>  lbounds = nullptr);
 
-  /// Constructor from DetectorElementBase and Element identifier
+  /// Constructor from DetectorElementBase : Element proxy
   ///
-  /// @param lbounds are the bounds describing the straw dimensions, they must
-  /// not be nullptr
+  /// @param lbounds The bounds describing the straw dimensions
   /// @param detelement for which this surface is (at least) one representation
-  /// @param identifier is the identifier associated with this surface
   LineSurface(std::shared_ptr<const LineBounds> lbounds,
-              const DetectorElementBase&        detelement,
-              const Identifier&                 identifier = Identifier());
+              const DetectorElementBase&        detelement);
 
   /// Copy constructor
   ///

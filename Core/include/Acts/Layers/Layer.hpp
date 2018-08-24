@@ -425,11 +425,6 @@ public:
   LayerType
   layerType() const;
 
-  /// @return a map of all contained detector elements and their corresponding
-  /// identifier
-  const std::map<Identifier, const DetectorElementBase*>&
-  detectorElements() const;
-
 protected:
   /// Constructor with pointer to SurfaceArray (passing ownership)
   ///
@@ -475,7 +470,7 @@ protected:
   ///
   std::unique_ptr<const SurfaceArray> m_surfaceArray;
 
-  /// thickness of the Layer
+  /// Thickness of the Layer
   double m_layerThickness;
 
   /// descriptor for surface on approach
@@ -511,10 +506,6 @@ private:
   ///                as calculated by the TrackingGeometry
   void
   closeGeometry(const GeometryID& layerID);
-
-  /// map which collects all detector elements and connects them with their
-  /// Identfier
-  std::map<Identifier, const DetectorElementBase*> m_detectorElements;
 };
 
 /// Layers are constructedd with shared_ptr factories, hence the layer array is

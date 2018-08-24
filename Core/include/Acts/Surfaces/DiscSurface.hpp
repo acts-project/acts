@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
@@ -33,11 +32,11 @@ class DetectorElementBase;
 ///
 /// The surface transform positions the disc such, that the origin
 /// is at r=0, independent of the provided DiscBounds. The z-axis
-/// is the normal vector of the Disc, being perpendicular to the
+/// The normal vector of the Disc, being perpendicular to the
 /// radial direction.
 ///
-/// The disc surface is the only surface type for which the
-/// cavairance matrix is NOT given in the reference frame.
+/// The disc surface The only surface type for which the
+/// covariance matrix is NOT given in the reference frame.
 /// A conversion from polar to cartesian coordinates needs
 /// to happen to transfer the local coordinates onto the
 /// cartesian reference frame coordinates.
@@ -54,9 +53,9 @@ public:
   ///
   /// @param htrans is transform that places the disc in the global 3D space
   /// (can be nullptr)
-  /// @param rmin is the inner radius of the disc surface
-  /// @param rmax is the outer radius of the disc surface
-  /// @param hphisec is the opening angle of the disc surface and is optional
+  /// @param rmin The inner radius of the disc surface
+  /// @param rmax The outer radius of the disc surface
+  /// @param hphisec The opening angle of the disc surface and is optional
   ///        the default is a full disc
   DiscSurface(std::shared_ptr<const Transform3D> htrans,
               double                             rmin,
@@ -69,12 +68,12 @@ public:
   ///
   /// @param htrans is transform that places the disc in the global 3D space
   /// (can be nullptr)
-  /// @param minhalfx is the half length in x at minimal r
-  /// @param maxhalfx is the half length in x at maximal r
-  /// @param rmin is the inner radius of the disc surface
-  /// @param rmax is the outer radius of the disc surface
-  /// @param avephi is the position in phi (default is 0.)
-  /// @param stereo is the optional stereo angle
+  /// @param minhalfx The half length in x at minimal r
+  /// @param maxhalfx The half length in x at maximal r
+  /// @param rmin The inner radius of the disc surface
+  /// @param rmax The outer radius of the disc surface
+  /// @param avephi The position in phi (default is 0.)
+  /// @param stereo The optional stereo angle
   DiscSurface(std::shared_ptr<const Transform3D> htrans,
               double                             minhalfx,
               double                             maxhalfx,
@@ -85,34 +84,27 @@ public:
 
   /// Constructor for Discs from Transform3D and shared DiscBounds
   ///
-  /// @param htrans is the transform that positions the disc in the global 3D
-  /// frame
-  /// @param dbounds are the disc bounds describing the surface coverage
+  /// @param htrans The transform that positions the disc in global 3D
+  /// @param dbounds The disc bounds describing the surface coverage
   DiscSurface(std::shared_ptr<const Transform3D> htrans,
               std::shared_ptr<const DiscBounds>  dbounds = nullptr);
 
-  /// Constructor from detector element and identifier
-  /// @note the surface only acts as a proxy of the detector element
+  /// Constructor from DetectorElementBase : Element proxy
   ///
-  /// @param dbounds are the disc bounds associated to this surface, must not be
-  /// nullptr
-  /// @param detelement is the detector element that is represented by this
-  /// surface
-  /// @param identifier is the optional identifier in case one detector element
-  /// owns more than 1 surface
+  /// @param dbounds The disc bounds describing the surface coverage
+  /// @param detelement The detector element represented by this surface
   DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-              const DetectorElementBase&        detelement,
-              const Identifier&                 identifier = Identifier());
+              const DetectorElementBase&        detelement);
 
   /// Copy Constructor
   ///
-  /// @param other is the source surface for the copy
+  /// @param other The source surface for the copy
   DiscSurface(const DiscSurface& other);
 
   /// Copy Constructor with shift
   ///
-  /// @param other is the source sourface for the copy
-  /// @param transf is the additional transform applied to the surface
+  /// @param other The source sourface for the copy
+  /// @param transf The additional transform applied to the surface
   DiscSurface(const DiscSurface& other, const Transform3D& transf);
 
   /// Constructor which accepts @c variant_data
@@ -124,7 +116,7 @@ public:
 
   /// Assignement operator
   ///
-  /// @param other is the source sourface for the assignment
+  /// @param other The source sourface for the assignment
   DiscSurface&
   operator=(const DiscSurface& other);
 
@@ -140,7 +132,7 @@ public:
 
   /// Normal vector return
   ///
-  /// @param lpos is the local position is ignored
+  /// @param lpos The local position is ignored
   /// return a Vector3D by value
   const Vector3D
   normal(const Vector2D& lpos) const override final;
@@ -148,10 +140,10 @@ public:
   /// Normal vector return without argument
   using Surface::normal;
 
-  /// The binning position is the position calcualted
+  /// The binning position The position calcualted
   /// for a certain binning type
   ///
-  /// @param bValue is the binning type to be used
+  /// @param bValue The binning type to be used
   /// @return position that can beused for this binning
   virtual const Vector3D
   binningPosition(BinningValue bValue) const final;
@@ -164,8 +156,8 @@ public:
   /// within or without check of whether the local position is inside boundaries
   /// or not
   ///
-  /// @param gpos is the global position to be checked
-  /// @param bcheck is the boundary check directive
+  /// @param gpos The global position to be checked
+  /// @param bcheck The boundary check directive
   /// @return bollean that indicates if the position is on surface
   virtual bool
   isOnSurface(const Vector3D&      gpos,
@@ -236,7 +228,7 @@ public:
   /// Special method for DiscSurface : global<->local from cartesian coordinates
   ///
   /// @param gpos is a global cartesian 3D position
-  /// @param tol is the absoltue tolerance parameter
+  /// @param tol The absoltue tolerance parameter
   /// @return value is a local polar
   const Vector2D
   globalToLocalCartesian(const Vector3D& gpos, double tol = 0.) const;
@@ -246,10 +238,10 @@ public:
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac is the jacobian to be initialized
-  /// @param pos is the global position of the parameters
-  /// @param dir is the direction at of the parameters
-  /// @param pars is the paranmeters vector
+  /// @param jac The jacobian to be initialized
+  /// @param pos The global position of the parameters
+  /// @param dir The direction at of the parameters
+  /// @param pars The paranmeters vector
   virtual void
       initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
                            const Vector3D&       gpos,
@@ -261,10 +253,10 @@ public:
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac is the jacobian to be initialized
-  /// @param pos is the global position of the parameters
-  /// @param dir is the direction at of the parameters
-  /// @param pars is the parameter vector
+  /// @param jac The jacobian to be initialized
+  /// @param pos The global position of the parameters
+  /// @param dir The direction at of the parameters
+  /// @param pars The parameter vector
   ///
   /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D
@@ -274,9 +266,9 @@ public:
 
   /// Path correction due to incident of the track
   ///
-  /// @param gpos is the global position as a starting point
-  /// @param mom is the global momentum at the starting point
-  /// @return is the correction factor due to incident
+  /// @param gpos The global position as a starting point
+  /// @param mom The global momentum at the starting point
+  /// @return The correction factor due to incident
   double
   pathCorrection(const Vector3D& gpos,
                  const Vector3D& mom) const final override;
@@ -285,11 +277,11 @@ public:
   ///
   /// navDir=anyDirection is to provide the closest solution
   ///
-  /// @param gpos is the global position as a starting point
-  /// @param gdir is the global direction at the starting point
+  /// @param gpos The global position as a starting point
+  /// @param gdir The global direction at the starting point
   ///        @note expected to be normalized (no checking)
   /// @param navDir is a navigation direction
-  /// @param bcheck is the boundary check prescription
+  /// @param bcheck The boundary check prescription
   /// @param correct is a corrector function (e.g. for curvature correction)
   ///
   ///  <b>mathematical motivation:</b>
@@ -308,7 +300,7 @@ public:
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return is the surface intersection object
+  /// @return The surface intersection object
   virtual Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,

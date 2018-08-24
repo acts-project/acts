@@ -62,14 +62,12 @@ public:
                   double                             hphi,
                   double                             hlength);
 
-  /// Constructor from DetectorElementBase
+  /// Constructor from DetectorElementBase: Element proxy
   ///
   /// @param cbounds are the provided cylinder bounds (shared)
   /// @param detelement is the linked detector element to this surface
-  /// @param identifier is the identifier of associated to this surfacex
   CylinderSurface(std::shared_ptr<const CylinderBounds> cbounds,
-                  const DetectorElementBase&            detelement,
-                  const Identifier& identifier = Identifier());
+                  const DetectorElementBase&            detelement);
 
   /// Constructor from Transform3D and CylinderBounds
   ///

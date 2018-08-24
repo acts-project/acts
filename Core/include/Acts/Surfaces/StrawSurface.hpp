@@ -11,10 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Identifier.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
@@ -54,20 +54,19 @@ public:
   StrawSurface(std::shared_ptr<const Transform3D> htrans,
                std::shared_ptr<const LineBounds>  lbounds = nullptr);
 
-  /// Constructor from DetectorElementBase and Element identifier
+  /// Constructor from DetectorElementBase : Element proxy
   ///
   /// @param lbounds are the bounds describing the straw dimensions, they must
   /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
-  /// @param identifier
   StrawSurface(std::shared_ptr<const LineBounds> lbounds,
-               const DetectorElementBase&        detelement,
-               const Identifier&                 identifier = Identifier());
+               const DetectorElementBase&        detelement);
 
   /// Copy constructor
   ///
   /// @param slsf is the source surface for copying
   StrawSurface(const StrawSurface& other);
+
   /// Copy constructor with shift
   ///
   /// @param other is the source surface dor copying

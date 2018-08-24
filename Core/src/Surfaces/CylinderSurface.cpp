@@ -55,9 +55,8 @@ Acts::CylinderSurface::CylinderSurface(
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
-    const Acts::DetectorElementBase&      detelement,
-    const Identifier&                     identifier)
-  : Surface(detelement, identifier), m_bounds(cbounds)
+    const Acts::DetectorElementBase&      detelement)
+  : Surface(detelement), m_bounds(cbounds)
 {
   /// surfaces representing a detector element must have bounds
   assert(cbounds);
