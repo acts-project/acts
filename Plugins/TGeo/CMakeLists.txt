@@ -6,6 +6,7 @@ target_include_directories(TGeoPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_S
 target_include_directories(TGeoPlugin PUBLIC ${ROOT_INCLUDE_DIRS})
 target_link_libraries(TGeoPlugin PUBLIC Acts::Core)
 target_link_libraries(TGeoPlugin PUBLIC ROOT::Geom)
+target_link_libraries(TGeoPlugin PUBLIC IdentificationPlugin)
 
 install (TARGETS TGeoPlugin EXPORT ActsTGeoTargets
          LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

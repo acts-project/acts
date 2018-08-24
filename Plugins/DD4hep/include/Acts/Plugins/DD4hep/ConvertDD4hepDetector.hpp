@@ -57,16 +57,6 @@ sortDetElementsByID(std::vector<dd4hep::DetElement>& det)
 /// in r of the layers contained to build the volume envelope around
 /// @param [in] layerEnvelopeZ the tolerance added to the geometrical extension
 /// in z of the layers contained to build the volume envelope around
-/// @param buildDigitizationModules Flag indicating if the
-/// DigitizationModule (needed for Acts geometric digitization) will be
-/// build for every single sensitive DD4hep DetElement translating directly the
-/// DD4hep Segmentation.
-/// @attention Turning on this flag can be very time and memory consuming! If
-/// different modules are sharing the same segmentation (which will be the case
-/// most of the times) please use the
-/// ActsExtension(std::shared_ptr<const DigitizationModule>) constructor.
-/// More information on the usage can be found
-/// in the description of the ActsExtension class.
 /// @param [in] defaultLayerThickness In case no surfaces (to be contained by
 /// the layer) are handed over, the layer thickness will be set to this value
 /// @note Layers containing surfaces per default are not allowed to be
@@ -94,14 +84,13 @@ sortDetElementsByID(std::vector<dd4hep::DetElement>& det)
 std::unique_ptr<const TrackingGeometry>
 convertDD4hepDetector(
     dd4hep::DetElement worldDetElement,
-    Logging::Level     loggingLevel             = Logging::Level::INFO,
-    BinningType        bTypePhi                 = equidistant,
-    BinningType        bTypeR                   = equidistant,
-    BinningType        bTypeZ                   = equidistant,
-    double             layerEnvelopeR           = 1. * units::_mm,
-    double             layerEnvelopeZ           = 1. * units::_mm,
-    bool               buildDigitizationModules = false,
-    double             defaultLayerThickness    = 10e-10 * units::_mm,
+    Logging::Level     loggingLevel          = Logging::Level::INFO,
+    BinningType        bTypePhi              = equidistant,
+    BinningType        bTypeR                = equidistant,
+    BinningType        bTypeZ                = equidistant,
+    double             layerEnvelopeR        = 1. * units::_mm,
+    double             layerEnvelopeZ        = 1. * units::_mm,
+    double             defaultLayerThickness = 10e-10 * units::_mm,
     std::function<void(std::vector<dd4hep::DetElement>& detectors)>
         sortSubDetectors
     = sortDetElementsByID);
@@ -133,16 +122,6 @@ convertDD4hepDetector(
 /// in r of the layers contained to build the volume envelope around
 /// @param [in] layerEnvelopeZ the tolerance added to the geometrical extension
 /// in z of the layers contained to build the volume envelope around
-/// @param buildDigitizationModules Flag indicating if the
-/// DigitizationModule (needed for Acts geometric digitization) will be
-/// build for every single sensitive DD4hep DetElement translating directly the
-/// DD4hep Segmentation.
-/// @attention Turning on this flag can be very time and memory consuming! If
-/// different modules are sharing the same segmentation (which will be the case
-/// most of the times) please use the
-/// ActsExtension(std::shared_ptr<const DigitizationModule>) constructor.
-/// More information on the usage can be found
-/// in the description of the ActsExtension class.
 /// @param [in] defaultLayerThickness In case no surfaces (to be contained by
 /// the layer) are handed over, the layer thickness will be set to this value
 /// @note Layers containing surfaces per default are not allowed to be
@@ -163,8 +142,7 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
                      BinningType        bTypeZ         = equidistant,
                      double             layerEnvelopeR = 1. * units::_mm,
                      double             layerEnvelopeZ = 1. * units::_mm,
-                     bool               buildDigitizationModules = false,
-                     double defaultLayerThickness = 10e-10 * units::_mm);
+                     double defaultLayerThickness      = 10e-10 * units::_mm);
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder

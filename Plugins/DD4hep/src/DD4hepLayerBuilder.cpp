@@ -717,8 +717,6 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
 {
   // access the possible material
   std::shared_ptr<const Acts::SurfaceMaterial> material = nullptr;
-  // access the possibly shared DigitizationModule
-  std::shared_ptr<const DigitizationModule> digiModule = nullptr;
   // access the possible extension of the DetElement
   Acts::IActsExtension* detExtension = nullptr;
   try {
@@ -726,19 +724,12 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   } catch (std::runtime_error& e) {
   }
   if (detExtension) {
-    material   = detExtension->material();
-    digiModule = detExtension->digitizationModule();
+    material = detExtension->material();
   }
 
   // create the corresponding detector element
-  Acts::DD4hepDetElement* dd4hepDetElement
-      = new Acts::DD4hepDetElement(detElement,
-                                   axes,
-                                   units::_cm,
-                                   isDisc,
-                                   material,
-                                   m_cfg.buildDigitizationModules,
-                                   digiModule);
+  Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
+      detElement, axes, units::_cm, isDisc, material);
   // return the surface
   return (&(dd4hepDetElement->surface()));
 }

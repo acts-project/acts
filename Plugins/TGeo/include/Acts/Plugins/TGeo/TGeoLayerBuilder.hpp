@@ -149,13 +149,13 @@ private:
                    bool                         correctVolume = false,
                    const std::string&           offset        = "");
 
-  // Private helper mehtod : build layers
+  // Private helper method : build layers
   // @param layers is goint to be filled
   // @param type is the indication which ones to build -1 | 0 | 1
   void
   buildLayers(LayerVector& layers, int type = 0);
 
-  // Private helper mehtod : match string with wildcards
+  // Private helper method : match string with wildcards
   // @param wc is the one with the potential wildcard
   // @param test is the test string
   bool

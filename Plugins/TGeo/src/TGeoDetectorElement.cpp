@@ -30,7 +30,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     double                                       scalor,
     bool                                         isDisc,
     std::shared_ptr<const Acts::SurfaceMaterial> material)
-  : Acts::DetectorElementBase()
+  : Acts::IdentifiedDetectorElement()
   , m_detElement(tGeoDetElement)
   , m_identifier(identifier)
   , m_thickness(0.)
@@ -338,7 +338,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     double                                       scalor,
     bool                                         isDisc,
     std::shared_ptr<const Acts::SurfaceMaterial> material)
-  : Acts::DetectorElementBase()
+  : Acts::IdentifiedDetectorElement()
   , m_detElement(tGeoDetElement)
   , m_identifier(identifier)
   , m_thickness(0.)
@@ -629,10 +629,4 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 
 Acts::TGeoDetectorElement::~TGeoDetectorElement()
 {
-}
-
-std::shared_ptr<const Acts::DigitizationModule>
-Acts::TGeoDetectorElement::digitizationModule() const
-{
-  return nullptr;
 }

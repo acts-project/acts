@@ -30,7 +30,6 @@ convertDD4hepDetector(
     BinningType        bTypeZ,
     double             layerEnvelopeR,
     double             layerEnvelopeZ,
-    bool               buildDigitizationModules,
     double             defaultLayerThickness,
     std::function<void(std::vector<dd4hep::DetElement>& detectors)>
         sortSubDetectors)
@@ -63,7 +62,6 @@ convertDD4hepDetector(
                                            bTypeZ,
                                            layerEnvelopeR,
                                            layerEnvelopeZ,
-                                           buildDigitizationModules,
                                            defaultLayerThickness);
     if (volBuilder) {
       // distinguish beam pipe
@@ -105,7 +103,6 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
                      BinningType        bTypeZ,
                      double             layerEnvelopeR,
                      double             layerEnvelopeZ,
-                     bool               buildDigitizationModules,
                      double             defaultLayerThickness)
 {
   // create cylinder volume helper
@@ -241,16 +238,15 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
         lcConfig, Acts::getDefaultLogger("LayerCreator", loggingLevel));
     // configure DD4hepLayerBuilder
     Acts::DD4hepLayerBuilder::Config lbConfig;
-    lbConfig.configurationName        = subDetector.name();
-    lbConfig.layerCreator             = layerCreator;
-    lbConfig.negativeLayers           = negativeLayers;
-    lbConfig.centralLayers            = centralLayers;
-    lbConfig.positiveLayers           = positiveLayers;
-    lbConfig.bTypePhi                 = bTypePhi;
-    lbConfig.bTypeR                   = bTypeR;
-    lbConfig.bTypeZ                   = bTypeZ;
-    lbConfig.buildDigitizationModules = buildDigitizationModules;
-    lbConfig.defaultThickness         = defaultLayerThickness;
+    lbConfig.configurationName = subDetector.name();
+    lbConfig.layerCreator      = layerCreator;
+    lbConfig.negativeLayers    = negativeLayers;
+    lbConfig.centralLayers     = centralLayers;
+    lbConfig.positiveLayers    = positiveLayers;
+    lbConfig.bTypePhi          = bTypePhi;
+    lbConfig.bTypeR            = bTypeR;
+    lbConfig.bTypeZ            = bTypeZ;
+    lbConfig.defaultThickness  = defaultLayerThickness;
     auto dd4hepLayerBuilder = std::make_shared<const Acts::DD4hepLayerBuilder>(
         lbConfig, Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
 
@@ -364,13 +360,12 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
         lcConfig, Acts::getDefaultLogger("LayerCreator", loggingLevel));
     // configure DD4hepLayerBuilder
     Acts::DD4hepLayerBuilder::Config lbConfig;
-    lbConfig.configurationName        = subDetector.name();
-    lbConfig.layerCreator             = layerCreator;
-    lbConfig.centralLayers            = centralLayers;
-    lbConfig.bTypePhi                 = bTypePhi;
-    lbConfig.bTypeZ                   = bTypeZ;
-    lbConfig.buildDigitizationModules = buildDigitizationModules;
-    lbConfig.defaultThickness         = defaultLayerThickness;
+    lbConfig.configurationName = subDetector.name();
+    lbConfig.layerCreator      = layerCreator;
+    lbConfig.centralLayers     = centralLayers;
+    lbConfig.bTypePhi          = bTypePhi;
+    lbConfig.bTypeZ            = bTypeZ;
+    lbConfig.defaultThickness  = defaultLayerThickness;
     auto dd4hepLayerBuilder = std::make_shared<const Acts::DD4hepLayerBuilder>(
         lbConfig, Acts::getDefaultLogger("DD4hepLayerBuilder", loggingLevel));
 

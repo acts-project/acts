@@ -68,7 +68,6 @@ namespace Acts {
 ///
 /// @note see Acts::ActsExtension for implementation.
 
-class DigitizationModule;
 class SurfaceMaterial;
 
 /// @enum LayerMaterialPos The LayerMaterialPos enumeration is foreseen to
@@ -134,9 +133,6 @@ public:
   /// DetElement to automatically create the layer envelope
   virtual double
   envelopeZ() const = 0;
-  /// @return the Acts::DigitizationModule
-  virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const = 0;
   /// @returns The SurfaceMaterial
   virtual std::shared_ptr<const Acts::SurfaceMaterial>
   material() const = 0;

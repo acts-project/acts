@@ -62,13 +62,6 @@ public:
     /// @note if the current volume has no endcaps or no layers this parameter
     /// will not be set
     std::vector<dd4hep::DetElement> positiveLayers;
-    /// @param buildDigitizationModules Flag indicating if the
-    /// Acts::DigitizationModule (needed for Acts geometric digitization) will
-    /// be build for every single sensitive DD4hep DetElement translating
-    /// directly the DD4hep Segmentation.
-    /// @note For more information please see Acts::convertDD4hepDetector() &
-    /// Acts::ActsExtension.
-    bool buildDigitizationModules = false;
     /// In case no surfaces (to be contained by the layer) are handed over, the
     /// layer thickness will be set to this value
     /// @note Layers containing surfaces per default are not allowed to be

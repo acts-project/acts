@@ -16,8 +16,6 @@
 
 namespace Acts {
 
-class DigitizationModule;
-
 /// @class DD4hepDetElement
 ///
 /// @brief DetectorElement class implementation for DD4hep geometry
@@ -68,43 +66,19 @@ public:
   ///       should be translated to a disc surface. Per default it will be
   ///       translated into a cylindrical surface.
   /// @param material Possible material of detector element
-  /// @param digiModule Possibility to hand over Acrs::DigitizationModule as a
-  /// shared
-  /// pointer to allow many DD4hepDetElements to hold the same
-  /// Acts::DigitizationModule to reduce memory. In case it is not handed over
-  /// and the
-  /// underlying dd4hep::Geometry::DetElement object is declared sensitive and
-  /// has a readout segmentation, the Acts::DigitizaionModule will be created
-  /// for this DD4hepDetElement.
-  /// @param buildDigitizationModules Flag indicating if the
-  /// Acts::DigitizationModule (needed for Acts geometric digitization) will be
-  /// build for every single sensitive DD4hep DetElement translating directly
-  /// the DD4hep Segmentation.
-  /// @note For more information please see Acts::convertDD4hepDetector() &
-  /// Acts::ActsExtension.
   DD4hepDetElement(const dd4hep::DetElement                     detElement,
                    const std::string&                           axes   = "XYZ",
                    double                                       scalor = 1.,
                    bool                                         isDisc = false,
                    std::shared_ptr<const Acts::SurfaceMaterial> material
-                   = nullptr,
-                   bool buildDigitizationModules = false,
-                   std::shared_ptr<const DigitizationModule> digiModule
                    = nullptr);
   /// Desctructor
   virtual ~DD4hepDetElement() = default;
-
-  /// Return the DigitizationModule
-  /// @return optionally the DigitizationModule
-  virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const final override;
 
 private:
   /// DD4hep detector element
   dd4hep::DetElement m_detElement;
   /// DD4hep segmentation
   dd4hep::Segmentation m_segmentation;
-  /// The DigitizationModule
-  std::shared_ptr<const DigitizationModule> m_digiModule;
 };
 }

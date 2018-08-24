@@ -7,34 +7,17 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// TGeoDetectorElement.h, Acts project, TGeoDetector plugin
+// TGeoDetectorElement.hpp, Acts project, TGeoDetector plugin
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include <iostream>
-#include "Acts/Detector/DetectorElementBase.hpp"
+#include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
+#include "Acts/Plugins/Identification/Identifier.hpp"
 #include "TGeoManager.h"
-
-/// Set the identifier PLUGIN
-#ifdef ACTS_CORE_IDENTIFIER_PLUGIN
-#include ACTS_CORE_IDENTIFIER_PLUGIN
-#else
-typedef unsigned long long Identifier;
-#endif
-
-/// Define the specifier to none if not defined
-#ifndef ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER
-#define ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER
-#endif
-
-/// Define the specifier to none if not defined
-#ifndef ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER
-#define ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER
-#endif
 
 namespace Acts {
 
-class DigitizationModule;
 class SurfaceMaterial;
 class SurfaceBounds;
 
@@ -48,7 +31,7 @@ class SurfaceBounds;
 /// what
 /// if not used with DD4hep?
 ///
-class TGeoDetectorElement : public DetectorElementBase
+class TGeoDetectorElement : public IdentifiedDetectorElement
 {
 public:
   /// Constructor
@@ -137,7 +120,7 @@ public:
 
   /// Identifier
   virtual Identifier
-  identifier() const ACTS_DETECTOR_ELEMENT_IDENTIFY_SPECIFIER;
+  identifier() const final override;
 
   /// Return local to global transform associated with this identifier
   virtual const Transform3D&
@@ -146,11 +129,6 @@ public:
   /// Return surface associated with this identifier, which should come from the
   virtual const Surface&
   surface() const final override;
-
-  /// Return the DigitizationModule
-  /// @return optionally the DigitizationModule
-  virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const ACTS_DETECTOR_ELEMENT_DIGIMODULE_SPECIFIER;
 
   /// Returns the thickness of the module
   virtual double

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// DefaultDetectorElementBase.h, Acts project
+// DefaultDetectorElementBase.hpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -136,4 +136,3 @@ DetectorElementBase::registerNeighbours(
 }  // end of namespace Acts
 
 #undef BASE_EXTENSION
-
