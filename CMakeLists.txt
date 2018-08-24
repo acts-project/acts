@@ -13,20 +13,25 @@ option (ACTS_BUILD_DOC "Build documentation" OFF)
 option (ACTS_BUILD_EXAMPLES "Build examples" OFF)
 option (ACTS_BUILD_TESTS "Build unit tests" ON)
 option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" ON)
-option (ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugins" OFF)
-option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugins" OFF)
-option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugins" OFF)
-option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugins" OFF)
+option (ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
+option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugin" OFF)
+option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugin" OFF)
+option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
 option (ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
+option (ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "Acts/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
 
 # handle inter-plugin dependencies
-# DD4hep depends on TGeo and builds a digitization moduleplugin
+# DD4hepPlugin depends on TGeoPlugin
 if (ACTS_BUILD_DD4HEP_PLUGIN)
   set (ACTS_BUILD_TGEO_PLUGIN ON)
 endif()
+# TGeoPlugin depends on IdentificationPlugin
+if (ACTS_BUILD_TGEO_PLUGIN)
+  set (ACTS_BUILD_IDENTIFICATION_PLUGIN ON)
+endif(
 
 # required packages
 find_package(Boost 1.62 REQUIRED COMPONENTS program_options unit_test_framework)
