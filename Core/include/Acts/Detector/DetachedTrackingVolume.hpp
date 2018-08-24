@@ -52,8 +52,8 @@ public:
          LayerPtr           layer      = nullptr,
          LayerVector        multiLayer = {})
   {
-    return DetachedTrackingVolumePtr(
-        new DetachedTrackingVolume(name, vol, layer, multiLayer));
+    return DetachedTrackingVolumePtr(new DetachedTrackingVolume(
+        name, std::move(vol), std::move(layer), std::move(multiLayer)));
   }
 
   /// Destructor

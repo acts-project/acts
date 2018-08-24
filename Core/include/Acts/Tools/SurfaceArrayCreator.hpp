@@ -124,8 +124,9 @@ public:
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          size_t                             binsPhi,
                          size_t                             binsZ,
-                         boost::optional<ProtoLayer> protoLayer = boost::none,
-                         std::shared_ptr<const Transform3D> transformOpt
+                         boost::optional<ProtoLayer>        protoLayerOpt
+                         = boost::none,
+                         const std::shared_ptr<const Transform3D>& transformOpt
                          = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -149,7 +150,7 @@ public:
                          BinningType                 bTypeZ   = equidistant,
                          boost::optional<ProtoLayer> protoLayerOpt
                          = boost::none,
-                         std::shared_ptr<const Transform3D> transformOpt
+                         const std::shared_ptr<const Transform3D>& transformOpt
                          = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -171,7 +172,7 @@ public:
                      size_t                             binsR,
                      size_t                             binsPhi,
                      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
-                     std::shared_ptr<const Transform3D> transformOpt
+                     const std::shared_ptr<const Transform3D>& transformOpt
                      = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -197,7 +198,7 @@ public:
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
                      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
-                     std::shared_ptr<const Transform3D> transformOpt
+                     const std::shared_ptr<const Transform3D>& transformOpt
                      = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -215,12 +216,12 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
-                      double                             halflengthX,
-                      double                             halflengthY,
-                      size_t                             binsX,
-                      size_t                             binsY,
-                      std::shared_ptr<const Transform3D> transform
+  surfaceArrayOnPlane(const std::vector<const Surface*>&        surfaces,
+                      double                                    halflengthX,
+                      double                                    halflengthY,
+                      size_t                                    binsX,
+                      size_t                                    binsY,
+                      const std::shared_ptr<const Transform3D>& transform
                       = nullptr) const;
 
   static bool
@@ -281,7 +282,7 @@ private:
   std::vector<const Surface*>
   findKeySurfaces(
       const std::vector<const Surface*>& surfaces,
-      std::function<bool(const Surface*, const Surface*)> equal) const;
+      const std::function<bool(const Surface*, const Surface*)>& equal) const;
 
   size_t
   determineBinCount(const std::vector<const Surface*>& surfaces,

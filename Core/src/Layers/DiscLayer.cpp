@@ -23,8 +23,8 @@
 #include "Acts/Volumes/BoundarySurfaceFace.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
-Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
-                           std::shared_ptr<const DiscBounds>   dbounds,
+Acts::DiscLayer::DiscLayer(const std::shared_ptr<const Transform3D>& transform,
+                           const std::shared_ptr<const DiscBounds>&  dbounds,
                            std::unique_ptr<SurfaceArray>       surfaceArray,
                            double                              thickness,
                            std::unique_ptr<ApproachDescriptor> ades,

@@ -10,15 +10,17 @@
 // CartesianSegmentation.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
+#include <utility>
+
+#include "Acts/Plugin/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 Acts::CartesianSegmentation::CartesianSegmentation(
-    std::shared_ptr<const PlanarBounds> mBounds,
-    size_t                              numCellsX,
-    size_t                              numCellsY)
+    const std::shared_ptr<const PlanarBounds>& mBounds,
+    size_t                                     numCellsX,
+    size_t                                     numCellsY)
   : m_activeBounds(mBounds), m_binUtility(nullptr)
 {
   auto mutableBinUtility
@@ -38,7 +40,7 @@ Acts::CartesianSegmentation::CartesianSegmentation(
 Acts::CartesianSegmentation::CartesianSegmentation(
     std::shared_ptr<const BinUtility>   bUtility,
     std::shared_ptr<const PlanarBounds> mBounds)
-  : m_activeBounds(mBounds), m_binUtility(bUtility)
+  : m_activeBounds(std::move(mBounds)), m_binUtility(std::move(bUtility))
 {
   if (!m_activeBounds) {
     m_activeBounds = std::make_shared<const RectangleBounds>(

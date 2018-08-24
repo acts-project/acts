@@ -38,7 +38,8 @@ public:
   ///
   /// @param htrans is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
-  Volume(std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds);
+  Volume(const std::shared_ptr<const Transform3D>& htrans,
+         VolumeBoundsPtr                           volbounds);
 
   /// Copy Constructor - with optional shift
   ///

@@ -45,7 +45,7 @@ namespace Test {
   using SrfVec = std::vector<const Surface*>;
 
   void
-  draw_surfaces(SrfVec surfaces, std::string fname)
+  draw_surfaces(SrfVec surfaces, const std::string& fname)
   {
 
     std::ofstream os;

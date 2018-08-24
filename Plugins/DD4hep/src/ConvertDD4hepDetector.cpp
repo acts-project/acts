@@ -31,7 +31,7 @@ convertDD4hepDetector(
     double             layerEnvelopeR,
     double             layerEnvelopeZ,
     double             defaultLayerThickness,
-    std::function<void(std::vector<dd4hep::DetElement>& detectors)>
+    const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors)
 {
   // create local logger for conversion

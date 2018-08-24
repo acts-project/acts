@@ -52,9 +52,9 @@ namespace detail {
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  targetDebugLog(propagator_state_t&          state,
-                 std::string                  status,
-                 std::function<std::string()> logAction)
+  targetDebugLog(propagator_state_t&                 state,
+                 const std::string&                  status,
+                 const std::function<std::string()>& logAction)
   {
     if (state.options.debug) {
       std::stringstream dstream;

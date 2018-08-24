@@ -24,11 +24,11 @@
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Surface*>& surfaces,
-    size_t                             binsPhi,
-    size_t                             binsZ,
-    boost::optional<ProtoLayer>        protoLayerOpt,
-    std::shared_ptr<const Transform3D> transformOpt) const
+    const std::vector<const Surface*>&        surfaces,
+    size_t                                    binsPhi,
+    size_t                                    binsZ,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
   // check if we have proto layer, else build it
   ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
@@ -74,11 +74,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Surface*>& surfaces,
-    BinningType                        bTypePhi,
-    BinningType                        bTypeZ,
-    boost::optional<ProtoLayer>        protoLayerOpt,
-    std::shared_ptr<const Transform3D> transformOpt) const
+    const std::vector<const Surface*>&        surfaces,
+    BinningType                               bTypePhi,
+    BinningType                               bTypeZ,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
   // check if we have proto layer, else build it
   ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
@@ -138,11 +138,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Surface*>& surfaces,
-    size_t                             binsR,
-    size_t                             binsPhi,
-    boost::optional<ProtoLayer>        protoLayerOpt,
-    std::shared_ptr<const Transform3D> transformOpt) const
+    const std::vector<const Surface*>&        surfaces,
+    size_t                                    binsR,
+    size_t                                    binsPhi,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
   // check if we have proto layer, else build it
   ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
@@ -194,11 +194,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Surface*>& surfaces,
-    BinningType                        bTypeR,
-    BinningType                        bTypePhi,
-    boost::optional<ProtoLayer>        protoLayerOpt,
-    std::shared_ptr<const Transform3D> transformOpt) const
+    const std::vector<const Surface*>&        surfaces,
+    BinningType                               bTypeR,
+    BinningType                               bTypePhi,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
   // check if we have proto layer, else build it
   ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
@@ -308,7 +308,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     double /*halflengthY*/,
     size_t /*binsX*/,
     size_t /*binsY*/,
-    std::shared_ptr<const Transform3D> /*transform*/) const
+    const std::shared_ptr<const Transform3D>& /*transform*/) const
 {
   //!< @todo implement - take from ATLAS complex TRT builder
   return nullptr;
@@ -317,7 +317,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
 std::vector<const Acts::Surface*>
 Acts::SurfaceArrayCreator::findKeySurfaces(
     const std::vector<const Surface*>& surfaces,
-    std::function<bool(const Surface*, const Surface*)> equal) const
+    const std::function<bool(const Surface*, const Surface*)>& equal) const
 {
   std::vector<const Surface*> keys;
   for (const auto& srfA : surfaces) {

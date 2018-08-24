@@ -52,7 +52,7 @@ public:
 
   /// Constructor which takes a @c map_t and wraps it.
   /// @param src The source map, empty by default
-  variant_map(map_t src = {}) : m_map(src) {}
+  variant_map(map_t src = {}) : m_map(std::move(src)) {}
 
   /// Method to get the size of the map. Is forwarded to the
   /// contained map
@@ -66,7 +66,7 @@ public:
   /// Subscript operator to elements in the map
   /// @param key The key to access
   /// @return Value stored here. Note that this is @c variant_data.
-  variant_data& operator[](std::string key) { return m_map[key]; }
+  variant_data& operator[](const std::string& key) { return m_map[key]; }
 
   /// Method to count a key. Is forwarded
   /// @param key The key to count elements for
@@ -203,7 +203,7 @@ public:
 
   /// Constructor for the class accepting an input vector
   /// @param src The source vector to wrap
-  variant_vector(vector_t src = {}) : m_vector(src) {}
+  variant_vector(vector_t src = {}) : m_vector(std::move(src)) {}
 
   /// Method to get the current size of the wrapped vector
   /// @return The size

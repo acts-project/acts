@@ -12,6 +12,7 @@
 
 #include "Acts/Volumes/Volume.hpp"
 #include <iostream>
+#include <utility>
 #include "Acts/Volumes/VolumeBounds.hpp"
 
 Acts::Volume::Volume()
@@ -22,12 +23,12 @@ Acts::Volume::Volume()
 {
 }
 
-Acts::Volume::Volume(std::shared_ptr<const Transform3D>  htrans,
-                     std::shared_ptr<const VolumeBounds> volbounds)
+Acts::Volume::Volume(const std::shared_ptr<const Transform3D>& htrans,
+                     std::shared_ptr<const VolumeBounds>       volbounds)
   : GeometryObject()
   , m_transform(htrans)
   , m_center(s_origin)
-  , m_volumeBounds(volbounds)
+  , m_volumeBounds(std::move(volbounds))
 {
   if (htrans) {
     m_center = htrans->translation();

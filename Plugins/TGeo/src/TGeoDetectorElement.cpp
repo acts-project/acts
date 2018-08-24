@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include <boost/algorithm/string.hpp>
 #include <iostream>
+#include <utility>
+
 #include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -362,7 +364,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   }
   // set the asscoiated material (non const method)
   if (surface) {
-    surface->setAssociatedMaterial(material);
+    surface->setAssociatedMaterial(std::move(material));
   }
   // set the const member surface
   m_surface = surface;
@@ -697,7 +699,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   }
   // set the asscoiated material (non const method)
   if (surface) {
-    surface->setAssociatedMaterial(material);
+    surface->setAssociatedMaterial(std::move(material));
   }
   // set the const member surface
   m_surface = surface;

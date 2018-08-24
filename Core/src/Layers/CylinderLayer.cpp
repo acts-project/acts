@@ -23,12 +23,12 @@
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderLayer::CylinderLayer(
-    std::shared_ptr<const Transform3D>    transform,
-    std::shared_ptr<const CylinderBounds> cBounds,
-    std::unique_ptr<SurfaceArray>         surfaceArray,
-    double                                thickness,
-    std::unique_ptr<ApproachDescriptor>   ades,
-    LayerType                             laytyp)
+    const std::shared_ptr<const Transform3D>&    transform,
+    const std::shared_ptr<const CylinderBounds>& cBounds,
+    std::unique_ptr<SurfaceArray>                surfaceArray,
+    double                                       thickness,
+    std::unique_ptr<ApproachDescriptor>          ades,
+    LayerType                                    laytyp)
   : CylinderSurface(transform, cBounds)
   , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {

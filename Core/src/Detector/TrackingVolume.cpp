@@ -10,9 +10,11 @@
 // TrackingVolume.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Detector/TrackingVolume.hpp"
+#include <utility>
+
 #include "Acts/Detector/DetachedTrackingVolume.hpp"
 #include "Acts/Detector/GlueVolumesDescriptor.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -37,11 +39,11 @@ Acts::TrackingVolume::TrackingVolume()
 }
 
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D>               htrans,
-    VolumeBoundsPtr                                  volbounds,
-    const std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
-    const std::string&                               volumeName)
-  : Volume(htrans, volbounds)
+    std::shared_ptr<const Transform3D>                htrans,
+    VolumeBoundsPtr                                   volbounds,
+    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
+    const std::string&                                volumeName)
+  : Volume(std::move(htrans), std::move(volbounds))
   , m_material(std::make_shared<const Material>())
   , m_motherVolume(nullptr)
   , m_boundarySurfaces()
@@ -66,16 +68,16 @@ Acts::TrackingVolume::TrackingVolume(
     VolumeBoundsPtr                            volbounds,
     std::shared_ptr<const Material>            matprop,
     std::unique_ptr<const LayerArray>          staticLayerArray,
-    const LayerVector                          arbitraryLayerVector,
+    const LayerVector&                         arbitraryLayerVector,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
-    const TrackingVolumeVector                 denseVolumeVector,
-    const DetachedVolumeVector                 detachedVolumeVector,
+    const TrackingVolumeVector&                denseVolumeVector,
+    const DetachedVolumeVector&                detachedVolumeVector,
     const std::string&                         volumeName)
-  : Volume(htrans, volbounds)
-  , m_material(matprop)
+  : Volume(std::move(htrans), std::move(volbounds))
+  , m_material(std::move(matprop))
   , m_motherVolume(nullptr)
   , m_confinedLayers(std::move(staticLayerArray))
-  , m_confinedVolumes(containedVolumeArray)
+  , m_confinedVolumes(std::move(containedVolumeArray))
   , m_confinedDetachedVolumes(detachedVolumeVector)
   , m_confinedDenseVolumes(denseVolumeVector)
   , m_confinedArbitraryLayers(arbitraryLayerVector)
@@ -239,9 +241,9 @@ Acts::TrackingVolume::createBoundarySurfaces()
 
 void
 Acts::TrackingVolume::glueTrackingVolume(
-    BoundarySurfaceFace             bsfMine,
-    std::shared_ptr<TrackingVolume> neighbor,
-    BoundarySurfaceFace             bsfNeighbor)
+    BoundarySurfaceFace                    bsfMine,
+    const std::shared_ptr<TrackingVolume>& neighbor,
+    BoundarySurfaceFace                    bsfNeighbor)
 {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
@@ -272,9 +274,9 @@ Acts::TrackingVolume::glueTrackingVolume(
 
 void
 Acts::TrackingVolume::glueTrackingVolumes(
-    BoundarySurfaceFace                  bsfMine,
-    std::shared_ptr<TrackingVolumeArray> neighbors,
-    BoundarySurfaceFace                  bsfNeighbor)
+    BoundarySurfaceFace                         bsfMine,
+    const std::shared_ptr<TrackingVolumeArray>& neighbors,
+    BoundarySurfaceFace                         bsfNeighbor)
 {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
@@ -314,7 +316,7 @@ Acts::TrackingVolume::updateBoundarySurface(
     BoundarySurfaceFace                                     bsf,
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs)
 {
-  m_boundarySurfaces.at(bsf) = bs;
+  m_boundarySurfaces.at(bsf) = std::move(bs);
 }
 
 void

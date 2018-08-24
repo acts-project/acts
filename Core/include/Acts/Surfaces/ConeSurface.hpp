@@ -63,8 +63,8 @@ public:
   ///
   /// @param htrans is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
-  ConeSurface(std::shared_ptr<const Transform3D> htrans,
-              std::shared_ptr<const ConeBounds>  cbounds);
+  ConeSurface(std::shared_ptr<const Transform3D>       htrans,
+              const std::shared_ptr<const ConeBounds>& cbounds);
 
   /// Copy constructor
   ///

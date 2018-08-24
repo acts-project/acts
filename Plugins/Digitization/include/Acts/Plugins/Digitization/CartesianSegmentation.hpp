@@ -46,9 +46,9 @@ public:
   /// @param mBounds are the rectangle bounds of the sensitive volume
   /// @param numCellsX is the number of cells in X
   /// @param numCellsY is the number of cells in Y
-  CartesianSegmentation(std::shared_ptr<const PlanarBounds> mBounds,
-                        size_t                              numCellsX,
-                        size_t                              numCellsY = 1);
+  CartesianSegmentation(const std::shared_ptr<const PlanarBounds>& mBounds,
+                        size_t                                     numCellsX,
+                        size_t numCellsY = 1);
 
   /// @todo contructor from BinUtilities for more complex readouts
   ///

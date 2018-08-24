@@ -56,15 +56,16 @@ namespace Acts {
 /// e.g. we have the grid values r={0,1} with BFieldValues={2,3} on the r axis.
 /// If the flag is set to true the r-axis grid values will be set to {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-Acts::InterpolatedBFieldMap::FieldMapper<2, 2> fieldMapperRZ(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)> localToGlobalBin,
-    std::vector<double>         rPos,
-    std::vector<double>         zPos,
-    std::vector<Acts::Vector2D> bField,
-    double                      lengthUnit    = Acts::units::_mm,
-    double                      BFieldUnit    = Acts::units::_T,
-    bool                        firstQuadrant = false);
+Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
+fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+                                         std::array<size_t, 2> nBinsRZ)>&
+                                          localToGlobalBin,
+              std::vector<double>         rPos,
+              std::vector<double>         zPos,
+              std::vector<Acts::Vector2D> bField,
+              double                      lengthUnit    = Acts::units::_mm,
+              double                      BFieldUnit    = Acts::units::_T,
+              bool                        firstQuadrant = false);
 
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -116,15 +117,16 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> fieldMapperRZ(
 /// e.g. we have the grid values z={0,1} with BFieldValues={2,3} on the r axis.
 /// If the flag is set to true the z-axis grid values will be set to {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-Acts::InterpolatedBFieldMap::FieldMapper<3, 3> fieldMapperXYZ(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)> localToGlobalBin,
-    std::vector<double>         xPos,
-    std::vector<double>         yPos,
-    std::vector<double>         zPos,
-    std::vector<Acts::Vector3D> bField,
-    double                      lengthUnit  = Acts::units::_mm,
-    double                      BFieldUnit  = Acts::units::_T,
-    bool                        firstOctant = false);
+Acts::InterpolatedBFieldMap::FieldMapper<3, 3>
+fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                                          std::array<size_t, 3> nBinsXYZ)>&
+                                           localToGlobalBin,
+               std::vector<double>         xPos,
+               std::vector<double>         yPos,
+               std::vector<double>         zPos,
+               std::vector<Acts::Vector3D> bField,
+               double                      lengthUnit  = Acts::units::_mm,
+               double                      BFieldUnit  = Acts::units::_T,
+               bool                        firstOctant = false);
 
 }  // namespace Acts

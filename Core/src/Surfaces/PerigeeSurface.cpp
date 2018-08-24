@@ -15,6 +15,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp)
   : LineSurface(nullptr, nullptr)
@@ -25,7 +26,7 @@ Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp)
 
 Acts::PerigeeSurface::PerigeeSurface(
     std::shared_ptr<const Transform3D> tTransform)
-  : GeometryObject(), LineSurface(tTransform)
+  : GeometryObject(), LineSurface(std::move(tTransform))
 {
 }
 

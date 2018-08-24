@@ -10,6 +10,8 @@
 // DigitizationModule.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
+#include <utility>
+
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 
 Acts::DigitizationModule::DigitizationModule(
@@ -27,7 +29,7 @@ Acts::DigitizationModule::DigitizationModule(
   , m_tanLorentzAngle(tan(lorentzAngle))
   , m_energyThreshold(energyThreshold)
   , m_analogue(analogue)
-  , m_segmentation(moduleSegmentation)
+  , m_segmentation(std::move(moduleSegmentation))
   , m_boundarySurfaces()
   , m_segmentationSurfacesX()
   , m_segmentationSurfacesY()

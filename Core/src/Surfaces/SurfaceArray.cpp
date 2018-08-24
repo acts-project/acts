@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <utility>
+
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -91,11 +93,12 @@ Acts::SurfaceArray::surfaceGridLookupToVariantData(
   return data;
 }
 
-Acts::SurfaceArray::SurfaceArray(const variant_data&                      data_,
-                                 std::function<Vector2D(const Vector3D&)> g2l,
-                                 std::function<Vector3D(const Vector2D&)> l2g,
-                                 std::shared_ptr<const Transform3D> transform)
-  : p_gridLookup(nullptr), m_transform(transform)
+Acts::SurfaceArray::SurfaceArray(
+    const variant_data&                             data_,
+    const std::function<Vector2D(const Vector3D&)>& g2l,
+    const std::function<Vector3D(const Vector2D&)>& l2g,
+    std::shared_ptr<const Transform3D>              transform)
+  : p_gridLookup(nullptr), m_transform(std::move(transform))
 {
   const variant_map& data = boost::get<variant_map>(data_);
   throw_assert(data.get<std::string>("type") == "SurfaceArray",
@@ -219,7 +222,7 @@ Acts::SurfaceArray::SurfaceArray(
     std::function<std::array<double, 1>(const Vector3D&)> g2l,
     std::function<Vector3D(const std::array<double, 1>&)> l2g,
     std::shared_ptr<const Transform3D> transform)
-  : p_gridLookup(nullptr), m_transform(transform)
+  : p_gridLookup(nullptr), m_transform(std::move(transform))
 {
   const variant_map& data = boost::get<variant_map>(data_);
   throw_assert(data.get<std::string>("type") == "SurfaceArray",

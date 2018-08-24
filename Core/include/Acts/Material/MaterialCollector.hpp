@@ -176,8 +176,8 @@ private:
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  debugLog(propagator_state_t&          state,
-           std::function<std::string()> logAction) const
+  debugLog(propagator_state_t&                 state,
+           const std::function<std::string()>& logAction) const
   {
     if (state.options.debug) {
       std::stringstream dstream;

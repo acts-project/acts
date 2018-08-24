@@ -17,6 +17,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
@@ -37,7 +38,7 @@ Acts::CylinderSurface::CylinderSurface(
     double                             radius,
     double                             hlength)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const CylinderBounds>(radius, hlength))
 {
 }
@@ -48,7 +49,7 @@ Acts::CylinderSurface::CylinderSurface(
     double                             hphi,
     double                             hlength)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const CylinderBounds>(radius, hphi, hlength))
 {
 }
@@ -56,16 +57,16 @@ Acts::CylinderSurface::CylinderSurface(
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
     const Acts::DetectorElementBase&      detelement)
-  : Surface(detelement), m_bounds(cbounds)
+  : Surface(detelement), m_bounds(std::move(cbounds))
 {
   /// surfaces representing a detector element must have bounds
   assert(cbounds);
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<const Transform3D>    htrans,
-    std::shared_ptr<const CylinderBounds> cbounds)
-  : Surface(htrans), m_bounds(cbounds)
+    std::shared_ptr<const Transform3D>           htrans,
+    const std::shared_ptr<const CylinderBounds>& cbounds)
+  : Surface(std::move(htrans)), m_bounds(cbounds)
 {
   throw_assert(cbounds, "CylinderBounds must not be nullptr");
 }

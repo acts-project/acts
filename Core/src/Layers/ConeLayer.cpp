@@ -10,8 +10,10 @@
 // ConeLayer.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Layers/ConeLayer.hpp"
+#include <utility>
+
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Layers/ConeLayer.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -21,7 +23,7 @@ Acts::ConeLayer::ConeLayer(std::shared_ptr<const Transform3D>  transform,
                            double                              thickness,
                            std::unique_ptr<ApproachDescriptor> ade,
                            LayerType                           laytyp)
-  : ConeSurface(transform, cbounds)
+  : ConeSurface(std::move(transform), std::move(cbounds))
   , Layer(std::move(surfaceArray), thickness, std::move(ade), laytyp)
 {
 }

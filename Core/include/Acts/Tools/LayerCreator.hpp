@@ -186,13 +186,13 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  planeLayer(const std::vector<const Surface*>&  surfaces,
-             double                              envelopeXY,
-             double                              envelopeZ,
-             size_t                              binsX,
-             size_t                              binsY,
-             std::shared_ptr<const Transform3D>  transform = nullptr,
-             std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
+  planeLayer(const std::vector<const Surface*>&        surfaces,
+             double                                    envelopeXY,
+             double                                    envelopeZ,
+             size_t                                    binsX,
+             size_t                                    binsY,
+             const std::shared_ptr<const Transform3D>& transform = nullptr,
+             std::unique_ptr<ApproachDescriptor>       ad = nullptr) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct

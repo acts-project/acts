@@ -16,6 +16,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
@@ -36,7 +37,7 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             alpha,
                                bool                               symmetric)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric))
 {
 }
@@ -47,14 +48,14 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             zmax,
                                double                             halfPhi)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi))
 {
 }
 
-Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
-                               std::shared_ptr<const ConeBounds>  cbounds)
-  : GeometryObject(), Surface(htrans), m_bounds(cbounds)
+Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D>       htrans,
+                               const std::shared_ptr<const ConeBounds>& cbounds)
+  : GeometryObject(), Surface(std::move(htrans)), m_bounds(cbounds)
 {
   throw_assert(cbounds, "ConeBounds must not be nullptr");
 }

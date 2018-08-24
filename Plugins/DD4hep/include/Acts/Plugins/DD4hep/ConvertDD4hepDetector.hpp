@@ -91,7 +91,7 @@ convertDD4hepDetector(
     double             layerEnvelopeR        = 1. * units::_mm,
     double             layerEnvelopeZ        = 1. * units::_mm,
     double             defaultLayerThickness = 10e-10 * units::_mm,
-    std::function<void(std::vector<dd4hep::DetElement>& detectors)>
+    const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors
     = sortDetElementsByID);
 

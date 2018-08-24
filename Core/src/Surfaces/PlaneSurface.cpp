@@ -57,8 +57,9 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   Surface::m_transform = std::make_shared<const Transform3D>(transform);
 }
 
-Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-                                 const Acts::DetectorElementBase&    detelement)
+Acts::PlaneSurface::PlaneSurface(
+    const std::shared_ptr<const PlanarBounds>& pbounds,
+    const Acts::DetectorElementBase&           detelement)
   : Surface(detelement), m_bounds(pbounds)
 {
   /// surfaces representing a detector element must have bounds

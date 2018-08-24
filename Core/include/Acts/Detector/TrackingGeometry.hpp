@@ -49,7 +49,7 @@ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
-  TrackingGeometry(MutableTrackingVolumePtr highestVolume);
+  TrackingGeometry(const MutableTrackingVolumePtr& highestVolume);
 
   /// Destructor
   ~TrackingGeometry();

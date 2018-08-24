@@ -15,6 +15,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
@@ -23,19 +24,19 @@ Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             radius,
                                double                             halez)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const LineBounds>(radius, halez))
 {
 }
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                std::shared_ptr<const LineBounds>  lbounds)
-  : GeometryObject(), Surface(htrans), m_bounds(lbounds)
+  : GeometryObject(), Surface(std::move(htrans)), m_bounds(std::move(lbounds))
 {
 }
 
-Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                               const DetectorElementBase&        detelement)
+Acts::LineSurface::LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
+                               const DetectorElementBase& detelement)
   : GeometryObject(), Surface(detelement), m_bounds(lbounds)
 {
   throw_assert(lbounds, "LineBounds must not be nullptr");

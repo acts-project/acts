@@ -15,6 +15,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
@@ -41,7 +42,7 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             rmax,
                                double                             hphisec)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec))
 {
 }
@@ -54,7 +55,7 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             avephi,
                                double                             stereo)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const DiscTrapezoidalBounds>(minhalfx,
                                                            maxhalfx,
                                                            maxR,
@@ -66,12 +67,12 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                std::shared_ptr<const DiscBounds>  dbounds)
-  : GeometryObject(), Surface(htrans), m_bounds(dbounds)
+  : GeometryObject(), Surface(std::move(htrans)), m_bounds(std::move(dbounds))
 {
 }
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                               const DetectorElementBase&        detelement)
+Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
+                               const DetectorElementBase& detelement)
   : GeometryObject(), Surface(detelement), m_bounds(dbounds)
 {
   throw_assert(dbounds, "nullptr as DiscBounds");

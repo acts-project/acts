@@ -62,7 +62,9 @@ roundWithPrecision(double val, int precision)
 }
 
 inline std::string
-toString(const ActsMatrixXd& matrix, int precision = 4, std::string offset = "")
+toString(const ActsMatrixXd& matrix,
+         int                 precision = 4,
+         const std::string&  offset    = "")
 {
   std::ostringstream sout;
 
@@ -115,7 +117,7 @@ toString(const Acts::Translation3D& translation, int precision = 4)
 inline std::string
 toString(const Acts::Transform3D& transform,
          int                      precision = 4,
-         std::string              offset    = "")
+         const std::string&       offset    = "")
 {
   std::ostringstream sout;
   sout << "Translation : " << toString(transform.translation(), precision)
@@ -241,7 +243,8 @@ deltaR(const Acts::Vector3D& v1, const Acts::Vector3D& v2)
  * theSurface.transform().translation());
  */
 inline Acts::Transform3D
-getTransformFromRotTransl(Acts::RotationMatrix3D rot, Acts::Vector3D transl_vec)
+getTransformFromRotTransl(const Acts::RotationMatrix3D& rot,
+                          const Acts::Vector3D&         transl_vec)
 {
   Acts::Transform3D trans = Acts::Transform3D::Identity();
   trans                   = trans * rot;

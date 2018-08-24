@@ -75,8 +75,8 @@ public:
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param cbounds is a shared pointer to a cylindeer bounds object,
   /// it must exist (assert test)
-  CylinderSurface(std::shared_ptr<const Transform3D>    htrans,
-                  std::shared_ptr<const CylinderBounds> cbounds);
+  CylinderSurface(std::shared_ptr<const Transform3D>           htrans,
+                  const std::shared_ptr<const CylinderBounds>& cbounds);
 
   /// Copy constructor
   ///

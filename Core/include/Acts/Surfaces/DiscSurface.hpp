@@ -93,8 +93,8 @@ public:
   ///
   /// @param dbounds The disc bounds describing the surface coverage
   /// @param detelement The detector element represented by this surface
-  DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-              const DetectorElementBase&        detelement);
+  DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
+              const DetectorElementBase&               detelement);
 
   /// Copy Constructor
   ///

@@ -499,8 +499,8 @@ public:
                SurfaceVector                       surfaces,
                std::shared_ptr<const Transform3D>  transform = nullptr)
     : p_gridLookup(std::move(gridLookup))
-    , m_surfaces(surfaces)
-    , m_transform(transform)
+    , m_surfaces(std::move(surfaces))
+    , m_transform(std::move(transform))
   {
   }
 
@@ -516,8 +516,8 @@ public:
                SurfaceVector                      surfaces,
                std::shared_ptr<const Transform3D> transform = nullptr)
     : p_gridLookup(static_cast<ISurfaceGridLookup*>(gridLookup.release()))
-    , m_surfaces(surfaces)
-    , m_transform(transform)
+    , m_surfaces(std::move(surfaces))
+    , m_transform(std::move(transform))
   {
   }
 
@@ -539,10 +539,10 @@ public:
   /// @param transform Optional additional transform for this SurfaceArray
   /// @note the transform parameter is ONLY used for the serialization.
   ///       Apart from that, the SGL handles the transforms.
-  SurfaceArray(const variant_data&                      data_,
-               std::function<Vector2D(const Vector3D&)> g2l,
-               std::function<Vector3D(const Vector2D&)> l2g,
-               std::shared_ptr<const Transform3D>       transform = nullptr);
+  SurfaceArray(const variant_data&                             data_,
+               const std::function<Vector2D(const Vector3D&)>& g2l,
+               const std::function<Vector3D(const Vector2D&)>& l2g,
+               std::shared_ptr<const Transform3D> transform = nullptr);
 
   // This is here so that overload resolution can figure out
   // we need std::array<double, 1> as local parameters here.

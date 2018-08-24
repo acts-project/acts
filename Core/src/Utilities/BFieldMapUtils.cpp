@@ -11,15 +11,16 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)> localToGlobalBin,
-    std::vector<double>         rPos,
-    std::vector<double>         zPos,
-    std::vector<Acts::Vector2D> bField,
-    double                      lengthUnit,
-    double                      BFieldUnit,
-    bool                        firstQuadrant)
+Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
+Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+                                               std::array<size_t, 2> nBinsRZ)>&
+                                                localToGlobalBin,
+                    std::vector<double>         rPos,
+                    std::vector<double>         zPos,
+                    std::vector<Acts::Vector2D> bField,
+                    double                      lengthUnit,
+                    double                      BFieldUnit,
+                    bool                        firstQuadrant)
 {
   // [1] Create Grid
   // sort the values
@@ -109,9 +110,11 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
       transformPos, transformBField, std::move(grid));
 }
 
-Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)> localToGlobalBin,
+Acts::InterpolatedBFieldMap::FieldMapper<3, 3>
+Acts::fieldMapperXYZ(
+    const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                               std::array<size_t, 3> nBinsXYZ)>&
+                                localToGlobalBin,
     std::vector<double>         xPos,
     std::vector<double>         yPos,
     std::vector<double>         zPos,

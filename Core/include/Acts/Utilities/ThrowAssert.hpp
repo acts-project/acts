@@ -46,8 +46,8 @@ public:
   /// @param file The current file
   /// @param line The current line
   /// @param msg The message to print if assertion fails
-  AssertionFailureException(std::string        expression,
-                            std::string        file,
+  AssertionFailureException(const std::string& expression,
+                            const std::string& file,
                             int                line,
                             const std::string& msg)
   {

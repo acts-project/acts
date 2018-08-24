@@ -213,7 +213,8 @@ namespace Logging {
     ///
     /// @param [in] output function object called for flushing the internal
     ///        cache
-    explicit OutStream(OutputFunc output) : m_stream(), m_outputFunctor(output)
+    explicit OutStream(OutputFunc output)
+      : m_stream(), m_outputFunctor(std::move(output))
     {
     }
 

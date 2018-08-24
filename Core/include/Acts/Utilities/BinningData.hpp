@@ -127,7 +127,7 @@ public:
   /// @param sBinData is (optional) sub structure
   BinningData(BinningOption                      bOption,
               BinningValue                       bValue,
-              const std::vector<float>           bBoundaries,
+              const std::vector<float>&          bBoundaries,
               std::unique_ptr<const BinningData> sBinData = nullptr)
     : type(arbitrary)
     , option(bOption)

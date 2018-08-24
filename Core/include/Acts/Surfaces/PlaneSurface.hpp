@@ -60,8 +60,8 @@ public:
   ///
   /// @param pbounds are the provided planar bounds (shared)
   /// @param detelement is the linked detector element to this surface
-  PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const DetectorElementBase&          detelement);
+  PlaneSurface(const std::shared_ptr<const PlanarBounds>& pbounds,
+               const DetectorElementBase&                 detelement);
 
   /// Constructor for Planes with (optional) shared bounds object
   ///

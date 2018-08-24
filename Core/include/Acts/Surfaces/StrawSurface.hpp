@@ -59,8 +59,8 @@ public:
   /// @param lbounds are the bounds describing the straw dimensions, they must
   /// not be nullptr
   /// @param detelement for which this surface is (at least) one representation
-  StrawSurface(std::shared_ptr<const LineBounds> lbounds,
-               const DetectorElementBase&        detelement);
+  StrawSurface(const std::shared_ptr<const LineBounds>& lbounds,
+               const DetectorElementBase&               detelement);
 
   /// Copy constructor
   ///

@@ -67,7 +67,7 @@ struct NavigationOptions
                     const object_t*     sobject  = nullptr,
                     const object_t*     eobject  = nullptr)
     : navDir(ndir)
-    , boundaryCheck(bcheck)
+    , boundaryCheck(std::move(bcheck))
     , resolveSensitive(resolves)
     , resolveMaterial(resolvem)
     , resolvePassive(resolvep)
@@ -115,7 +115,7 @@ struct Navigator
   ///
   /// @param tGeometry The tracking geometry for the navigator
   Navigator(std::shared_ptr<const TrackingGeometry> tGeometry = nullptr)
-    : trackingGeometry(tGeometry)
+    : trackingGeometry(std::move(tGeometry))
   {
   }
 
@@ -1237,8 +1237,8 @@ private:
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  debugLog(propagator_state_t&          state,
-           std::function<std::string()> logAction) const
+  debugLog(propagator_state_t&                 state,
+           const std::function<std::string()>& logAction) const
   {
     if (state.options.debug) {
       std::string vName = "No Volume";

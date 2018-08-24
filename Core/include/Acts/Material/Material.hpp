@@ -200,12 +200,12 @@ public:
   /// @param iZ is the average atomic number
   /// @param iRho is the average density
   /// @param imc is the material composition
-  Material(float               iX0,
-           float               iL0,
-           float               iA,
-           float               iZ,
-           float               iRho,
-           MaterialComposition imc = {})
+  Material(float                      iX0,
+           float                      iL0,
+           float                      iA,
+           float                      iZ,
+           float                      iRho,
+           const MaterialComposition& imc = {})
     : m_store({iX0, iL0, iA, iZ, iRho}), m_composition(imc)
   {
     float zOaTr = (iA > 0 ? iZ / iA * iRho : 0.);

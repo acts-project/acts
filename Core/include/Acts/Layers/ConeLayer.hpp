@@ -49,8 +49,8 @@ public:
          std::unique_ptr<ApproachDescriptor> ad        = nullptr,
          LayerType                           laytyp    = Acts::active)
   {
-    return MutableLayerPtr(new ConeLayer(transform,
-                                         cbounds,
+    return MutableLayerPtr(new ConeLayer(std::move(transform),
+                                         std::move(cbounds),
                                          std::move(surfaceArray),
                                          thickness,
                                          std::move(ad),

@@ -10,6 +10,8 @@
 // GlueVolumesDescriptor.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
+#include <utility>
+
 #include "Acts/Detector/GlueVolumesDescriptor.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 
@@ -35,7 +37,8 @@ Acts::GlueVolumesDescriptor::registerGlueVolumes(
     m_glueFaces.push_back(bsf);
   }
   // simple assignment overwrites already existing entries
-  m_glueVolumes[bsf] = gvs;  //!< @todo change to addGlueVolumes principle
+  m_glueVolumes[bsf]
+      = std::move(gvs);  //!< @todo change to addGlueVolumes principle
 }
 
 std::shared_ptr<const Acts::TrackingVolumeArray>

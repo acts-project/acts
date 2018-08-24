@@ -44,8 +44,8 @@ public:
   ///
   /// @param bData is the provided binning data
   /// @param tForm is the (optional) transform
-  BinUtility(const BinningData&                 bData,
-             std::shared_ptr<const Transform3D> tForm = nullptr)
+  BinUtility(const BinningData&                        bData,
+             const std::shared_ptr<const Transform3D>& tForm = nullptr)
     : m_binningData()
     , m_transform(tForm)
     , m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr)
@@ -62,12 +62,12 @@ public:
   /// @param opt is the binning option : open, closed
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(size_t                             bins,
-             float                              min,
-             float                              max,
-             BinningOption                      opt   = open,
-             BinningValue                       value = binX,
-             std::shared_ptr<const Transform3D> tForm = nullptr)
+  BinUtility(size_t                                    bins,
+             float                                     min,
+             float                                     max,
+             BinningOption                             opt   = open,
+             BinningValue                              value = binX,
+             const std::shared_ptr<const Transform3D>& tForm = nullptr)
     : m_binningData()
     , m_transform(tForm)
     , m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr)
@@ -82,10 +82,10 @@ public:
   /// @param opt is the binning option : open, closed
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(std::vector<float>&                bValues,
-             BinningOption                      opt   = open,
-             BinningValue                       value = binPhi,
-             std::shared_ptr<const Transform3D> tForm = nullptr)
+  BinUtility(std::vector<float>&                       bValues,
+             BinningOption                             opt   = open,
+             BinningValue                              value = binPhi,
+             const std::shared_ptr<const Transform3D>& tForm = nullptr)
     : m_binningData()
     , m_transform(tForm)
     , m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr)

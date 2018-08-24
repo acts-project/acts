@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <utility>
+
 #include "Acts/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/DD4hepPlugins/DD4hepDetElement.hpp"
@@ -29,9 +31,9 @@ Acts::DD4hepDetElement::DD4hepDetElement(
                               axes,
                               scalor,
                               isDisc,
-                              material)
+                              std::move(material))
   , m_detElement(std::move(detElement))
-  , m_digiModule(digiModule)
+  , m_digiModule(std::move(digiModule))
 
 {
   // if wanted access the segmentation and create digitization module if not

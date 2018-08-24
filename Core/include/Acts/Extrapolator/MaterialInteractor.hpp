@@ -196,7 +196,7 @@ struct MaterialInteractor
         // apply the energy loss
         if (energyLoss) {
           // get the material
-          const Material mat = mProperties->material();
+          const Material& mat = mProperties->material();
           // calculate gamma
           const double lgamma = E / m;
           // energy loss and straggling - per unit length
@@ -274,8 +274,8 @@ private:
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  debugLog(propagator_state_t&          state,
-           std::function<std::string()> logAction) const
+  debugLog(propagator_state_t&                 state,
+           const std::function<std::string()>& logAction) const
   {
     if (state.options.debug) {
       std::stringstream dstream;

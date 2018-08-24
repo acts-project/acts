@@ -64,8 +64,8 @@ class seedComparator
 {
 public:
   bool
-  operator()(const Acts::Seeding::Seed<SpacePoint> s1,
-             const Acts::Seeding::Seed<SpacePoint> s2)
+  operator()(const Acts::Seeding::Seed<SpacePoint>& s1,
+             const Acts::Seeding::Seed<SpacePoint>& s2)
   {
     auto sp1It = s1.spacePoints().begin();
     auto sp2It = s2.spacePoints().begin();

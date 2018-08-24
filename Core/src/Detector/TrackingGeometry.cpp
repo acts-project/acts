@@ -17,7 +17,8 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-Acts::TrackingGeometry::TrackingGeometry(MutableTrackingVolumePtr highestVolume)
+Acts::TrackingGeometry::TrackingGeometry(
+    const MutableTrackingVolumePtr& highestVolume)
   : m_world(highestVolume)
   , m_beam(std::make_unique<const PerigeeSurface>(s_origin))
 {

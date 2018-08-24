@@ -361,7 +361,7 @@ Acts::LayerCreator::planeLayer(
     double /**envelopeZ*/,
     size_t /**binsX*/,
     size_t /**binsY*/,
-    std::shared_ptr<const Transform3D> /**transform*/,
+    const std::shared_ptr<const Transform3D>& /**transform*/,
     std::unique_ptr<ApproachDescriptor> /**ad*/) const
 {
   //@todo implement

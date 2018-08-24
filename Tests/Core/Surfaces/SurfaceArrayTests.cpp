@@ -108,11 +108,11 @@ namespace Test {
     }
 
     SrfVec
-    straightLineSurfaces(size_t      n        = 10.,
-                         double      step     = 3,
-                         Vector3D    origin   = {0, 0, 1.5},
-                         Transform3D pretrans = Transform3D::Identity(),
-                         Vector3D    dir      = {0, 0, 1})
+    straightLineSurfaces(size_t             n        = 10.,
+                         double             step     = 3,
+                         const Vector3D&    origin   = {0, 0, 1.5},
+                         const Transform3D& pretrans = Transform3D::Identity(),
+                         const Vector3D&    dir      = {0, 0, 1})
     {
       SrfVec res;
       for (size_t i = 0; i < n; ++i) {
@@ -153,7 +153,7 @@ namespace Test {
     }
 
     void
-    draw_surfaces(SrfVec surfaces, std::string fname)
+    draw_surfaces(SrfVec surfaces, const std::string& fname)
     {
 
       std::ofstream os;

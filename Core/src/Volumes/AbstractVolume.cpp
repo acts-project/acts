@@ -12,6 +12,7 @@
 
 #include "Acts/Volumes/AbstractVolume.hpp"
 #include <iostream>
+#include <utility>
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 #include "Acts/Volumes/VolumeBounds.hpp"
@@ -19,7 +20,7 @@
 Acts::AbstractVolume::AbstractVolume(
     std::shared_ptr<const Transform3D>  htrans,
     std::shared_ptr<const VolumeBounds> volbounds)
-  : Volume(htrans, volbounds)
+  : Volume(std::move(htrans), std::move(volbounds))
 {
   createBoundarySurfaces();
 }

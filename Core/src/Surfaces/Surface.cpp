@@ -14,10 +14,11 @@
 
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
   : GeometryObject()
-  , m_transform(tform)
+  , m_transform(std::move(tform))
   , m_associatedDetElement(nullptr)
   , m_associatedLayer(nullptr)
   , m_associatedTrackingVolume(nullptr)

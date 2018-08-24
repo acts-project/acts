@@ -244,13 +244,13 @@ private:
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   bool
-  interGlueTrackingVolume(MutableTrackingVolumePtr tVolume,
-                          bool                     rBinned,
-                          double                   rMin,
-                          double                   rGlueMin,
-                          double                   rMax,
-                          double                   zMin,
-                          double                   zMax) const;
+  interGlueTrackingVolume(const MutableTrackingVolumePtr& tVolume,
+                          bool                            rBinned,
+                          double                          rMin,
+                          double                          rGlueMin,
+                          double                          rMax,
+                          double                          zMin,
+                          double                          zMax) const;
 
   /// Private method - glue volume to the other
   ///
@@ -264,15 +264,15 @@ private:
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   void
-  glueTrackingVolumes(MutableTrackingVolumePtr tvolOne,
-                      BoundarySurfaceFace      faceOne,
-                      MutableTrackingVolumePtr tvolTwo,
-                      BoundarySurfaceFace      faceTwo,
-                      double                   rMin,
-                      double                   rGlueMin,
-                      double                   rMax,
-                      double                   zMin,
-                      double                   zMax) const;
+  glueTrackingVolumes(const MutableTrackingVolumePtr& tvolOne,
+                      BoundarySurfaceFace             faceOne,
+                      const MutableTrackingVolumePtr& tvolTwo,
+                      BoundarySurfaceFace             faceTwo,
+                      double                          rMin,
+                      double                          rGlueMin,
+                      double                          rMax,
+                      double                          zMin,
+                      double                          zMax) const;
 
   /// Private method - helper method not to duplicate code
   ///
@@ -280,9 +280,9 @@ private:
   /// @param bsf is the boundary surface to which faces are added
   /// @param vols are the voluems which are added
   void
-  addFaceVolumes(MutableTrackingVolumePtr tvol,
-                 BoundarySurfaceFace      glueFace,
-                 TrackingVolumeVector&    vols) const;
+  addFaceVolumes(const MutableTrackingVolumePtr& tvol,
+                 BoundarySurfaceFace             glueFace,
+                 TrackingVolumeVector&           vols) const;
 
   /// Private method - helper method to save some code
   ///
