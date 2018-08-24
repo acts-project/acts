@@ -169,7 +169,7 @@ public:
 
   /// @brief desctructor - charged/neutral
   /// checks if the surface is free and in such a case deletes it
-  virtual ~SingleBoundTrackParameters()
+  ~SingleBoundTrackParameters() override
   {
     if (m_pSurface && m_pSurface->isFree()) {
       delete m_pSurface;
@@ -218,7 +218,7 @@ public:
 
   /// @brief clone - charged/netural
   /// virtual constructor for type creation without casting
-  virtual SingleBoundTrackParameters<ChargePolicy>*
+  SingleBoundTrackParameters<ChargePolicy>*
   clone() const override
   {
     return new SingleBoundTrackParameters<ChargePolicy>(*this);
@@ -235,8 +235,8 @@ public:
   }
 
   /// @brief access method to the reference surface
-  virtual const Surface&
-  referenceSurface() const final override
+  const Surface&
+  referenceSurface() const final
   {
     return *m_pSurface;
   }
@@ -249,8 +249,8 @@ public:
   /// surface frame, for measurements with respect to a line this has to be
   /// constructed by the point of clostest approach to the line, for
   /// cylindrical surfaces this is (by convention) the tangential plane.
-  virtual RotationMatrix3D
-  referenceFrame() const final override
+  RotationMatrix3D
+  referenceFrame() const final
   {
     return std::move(
         m_pSurface->referenceFrame(this->position(), this->momentum()));

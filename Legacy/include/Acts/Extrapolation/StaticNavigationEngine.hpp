@@ -61,7 +61,7 @@ public:
                                             Logging::INFO));
 
   /// Destructor
-  ~StaticNavigationEngine();
+  ~StaticNavigationEngine() override;
 
   /// avoid method shaddowing
   using INavigationEngine::resolveBoundary;

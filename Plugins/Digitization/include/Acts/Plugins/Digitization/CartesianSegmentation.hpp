@@ -64,7 +64,7 @@ public:
                         std::shared_ptr<const PlanarBounds> rBounds = nullptr);
 
   /// Virtual Destructor
-  virtual ~CartesianSegmentation();
+  ~CartesianSegmentation() override;
 
   /// @copydoc Acts::Segmentation::createSegmentationSurfaces
   ///
@@ -76,19 +76,19 @@ public:
                              SurfacePtrVector& segmentationSurfacesY,
                              double            halfThickness,
                              int               readoutDirection = 1.,
-                             double lorentzAngle = 0.) const final override;
+                             double            lorentzAngle = 0.) const final;
 
   /// @copydoc Segmentation::cell
   DigitizationCell
-  cell(const Vector3D& position) const final override;
+  cell(const Vector3D& position) const final;
 
   /// @copydoc Segmentation::cell
   DigitizationCell
-  cell(const Vector2D& position) const final override;
+  cell(const Vector2D& position) const final;
 
   /// @copydoc Segmentation::cellPosition
   Vector2D
-  cellPosition(const DigitizationCell& cId) const final override;
+  cellPosition(const DigitizationCell& cId) const final;
 
   /// Fill the associated digitsation cell from this start and end position
   /// correct for lorentz effect if needed
@@ -99,17 +99,17 @@ public:
                    const Vector3D& end,
                    double          halfThickness,
                    int             readoutDirection = 1,
-                   double          lorentzAngle     = 0.) const final override;
+                   double          lorentzAngle     = 0.) const final;
 
   /// return the surface bounds by reference
   /// specialization for Rectangle Bounds
   const PlanarBounds&
-  moduleBounds() const final override;
+  moduleBounds() const final;
 
   /// return the bin utility that defines the
   /// readout segmentation
   const BinUtility&
-  binUtility() const final override;
+  binUtility() const final;
 
   /// return the pitch sizes as a pair
   std::pair<double, double>

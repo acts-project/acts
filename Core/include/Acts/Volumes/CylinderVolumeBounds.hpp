@@ -109,7 +109,7 @@ public:
   CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
   /// Destructor
-  virtual ~CylinderVolumeBounds();
+  ~CylinderVolumeBounds() override;
 
   /// Assignment operator
   CylinderVolumeBounds&
@@ -138,13 +138,13 @@ public:
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the type used for the binning
-  virtual Vector3D
+  Vector3D
   binningOffset(BinningValue bValue) const override;
 
   /// Binning borders in double
   ///
   /// @param bValue is the type used for the binning
-  virtual double
+  double
   binningBorder(BinningValue bValue) const override;
 
   /// This method returns the inner radius

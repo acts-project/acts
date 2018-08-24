@@ -65,7 +65,7 @@ public:
   CuboidVolumeBounds(const CuboidVolumeBounds& cubo);
 
   /// Destructor
-  virtual ~CuboidVolumeBounds();
+  ~CuboidVolumeBounds() override;
 
   /// Assignment operator
   ///

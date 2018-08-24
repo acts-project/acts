@@ -66,7 +66,7 @@ public:
   AbstractVolume() = delete;
 
   // Virtual Destructor
-  virtual ~AbstractVolume();
+  ~AbstractVolume() override;
 
   /// Assignment operator - deleted
   AbstractVolume&

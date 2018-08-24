@@ -81,26 +81,26 @@ public:
   DD4hepLayerBuilder(const Acts::DD4hepLayerBuilder::Config& config,
                      std::unique_ptr<const Logger>           logger);
   /// Destructor
-  ~DD4hepLayerBuilder();
+  ~DD4hepLayerBuilder() override;
 
   /// LayerBuilder interface method
   /// @return  the layers at negative side
-  virtual const LayerVector
+  const LayerVector
   negativeLayers() const final;
 
   /// LayerBuilder interface method
   /// @return the layers at the central sector
-  virtual const LayerVector
+  const LayerVector
   centralLayers() const final;
 
   /// LayerBuilder interface method
   /// @return  the layers at positive side
-  virtual const LayerVector
+  const LayerVector
   positiveLayers() const final;
 
   /// Name identification
   /// @return the string based identification of this configuration
-  virtual const std::string&
+  const std::string&
   identification() const final;
 
   /// set the configuration object

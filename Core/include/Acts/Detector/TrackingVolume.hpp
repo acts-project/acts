@@ -80,7 +80,7 @@ class TrackingVolume : public Volume
 
 public:
   /// Destructor
-  ~TrackingVolume();
+  ~TrackingVolume() override;
 
   /// Factory constructor for a conatiner TrackingVolume
   /// - by definition a Vacuum volume

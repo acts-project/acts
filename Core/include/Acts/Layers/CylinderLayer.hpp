@@ -83,7 +83,7 @@ public:
   CylinderLayer() = delete;
 
   /// Destructor
-  virtual ~CylinderLayer() {}
+  ~CylinderLayer() override {}
 
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation

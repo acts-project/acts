@@ -66,16 +66,16 @@ public:
   /// @param data the @c variant_data to build from
   EllipseBounds(const variant_data& data);
 
-  virtual ~EllipseBounds();
+  ~EllipseBounds() override;
 
-  virtual EllipseBounds*
-  clone() const final override;
+  EllipseBounds*
+  clone() const final;
 
-  virtual BoundsType
-  type() const final override;
+  BoundsType
+  type() const final;
 
-  virtual std::vector<TDD_real_t>
-  valueStore() const final override;
+  std::vector<TDD_real_t>
+  valueStore() const final;
 
   /// This method checks if the point given in the local coordinates is between
   /// two ellipsoids if only tol0 is given and additional in the phi sector is
@@ -84,28 +84,27 @@ public:
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  virtual bool
-  inside(const Vector2D&      lpos,
-         const BoundaryCheck& bcheck) const final override;
+  bool
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  virtual double
-  distanceToBoundary(const Vector2D& lpos) const final override;
+  double
+  distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Return the vertices - or, the points of the extremas
-  virtual std::vector<Vector2D>
-  vertices() const final override;
+  std::vector<Vector2D>
+  vertices() const final;
 
   // Bounding box representation
-  virtual const RectangleBounds&
+  const RectangleBounds&
   boundingBox() const final;
 
   /// Output Method for std::ostream
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   /// This method returns first inner radius
   double

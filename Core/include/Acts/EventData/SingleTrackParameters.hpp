@@ -52,21 +52,21 @@ public:
   using CovPtr_t = std::unique_ptr<const CovMatrix_t>;
 
   /// @brief default virtual destructor
-  virtual ~SingleTrackParameters() = default;
+  ~SingleTrackParameters() override = default;
 
   /// @brief virtual constructor
-  virtual SingleTrackParameters<ChargePolicy>*
+  SingleTrackParameters<ChargePolicy>*
   clone() const override = 0;
 
   /// @copydoc TrackParametersBase::position
-  virtual ActsVectorD<3>
+  ActsVectorD<3>
   position() const final
   {
     return m_vPosition;
   }
 
   /// @copydoc TrackParametersBase::momentum
-  virtual ActsVectorD<3>
+  ActsVectorD<3>
   momentum() const final
   {
     return m_vMomentum;
@@ -76,7 +76,7 @@ public:
   ///
   /// @return @c true of both objects have the same charge policy, parameter
   /// values, position and momentum, otherwise @c false
-  virtual bool
+  bool
   operator==(const TrackParametersBase& rhs) const override
   {
     auto casted = dynamic_cast<decltype(this)>(&rhs);
@@ -91,14 +91,14 @@ public:
   }
 
   /// @copydoc TrackParametersBase::charge
-  virtual double
+  double
   charge() const final
   {
     return m_oChargePolicy.getCharge();
   }
 
   /// @copydoc TrackParametersBase::getParameterSet
-  virtual const FullParameterSet&
+  const FullParameterSet&
   getParameterSet() const final
   {
     return m_oParameters;

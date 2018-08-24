@@ -42,11 +42,11 @@ public:
   HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& hsm);
 
   /// Destructor
-  virtual ~HomogeneousSurfaceMaterial();
+  ~HomogeneousSurfaceMaterial() override;
 
   /// Pseudo-Constructor clone(
   HomogeneousSurfaceMaterial*
-  clone() const final override;
+  clone() const final;
 
   /// Assignment operator
   HomogeneousSurfaceMaterial&
@@ -57,29 +57,29 @@ public:
   ///
   /// @param scale is the scale factor
   HomogeneousSurfaceMaterial&
-  operator*=(double scale) final override;
+  operator*=(double scale) final;
 
   /// @copydoc SurfaceMaterial::material(const Vector2D&)
   ///
   /// @note the input parameter is ignored
-  virtual const MaterialProperties*
-  material(const Vector2D& lp) const final override;
+  const MaterialProperties*
+  material(const Vector2D& lp) const final;
 
   /// @copydoc SurfaceMaterial::material(const Vector3D&)
   ///
   /// @note the input parameter is ignored
-  virtual const MaterialProperties*
-  material(const Vector3D& gp) const final override;
+  const MaterialProperties*
+  material(const Vector3D& gp) const final;
 
   /// @copydoc SurfaceMaterial::material(size_t, size_t)
   ///
   /// @note the input parameter is ignored
-  virtual const MaterialProperties*
-  material(size_t ib0, size_t ib1) const final override;
+  const MaterialProperties*
+  material(size_t ib0, size_t ib1) const final;
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& sl) const final override;
+  dump(std::ostream& sl) const final;
 
 private:
   /// The five different MaterialProperties

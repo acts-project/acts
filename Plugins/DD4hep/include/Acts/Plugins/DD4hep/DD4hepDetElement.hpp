@@ -73,7 +73,7 @@ public:
                    std::shared_ptr<const Acts::SurfaceMaterial> material
                    = nullptr);
   /// Desctructor
-  virtual ~DD4hepDetElement() = default;
+  ~DD4hepDetElement() override = default;
 
 private:
   /// DD4hep detector element

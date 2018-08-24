@@ -79,7 +79,7 @@ public:
       = delete;
 
   /// Destructor
-  virtual ~DiscLayer() {}
+  ~DiscLayer() override {}
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return This method returns a surface reference

@@ -86,7 +86,7 @@ public:
   /// @param bValue is the binning value schema
   ///
   /// @return vector 3D that can be used for the binning
-  virtual const Vector3D
+  const Vector3D
   binningPosition(BinningValue bValue) const override;
 
 protected:

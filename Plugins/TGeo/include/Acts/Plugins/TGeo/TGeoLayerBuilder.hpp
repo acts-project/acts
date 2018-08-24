@@ -86,7 +86,7 @@ public:
                    = getDefaultLogger("LayerArrayCreator", Logging::INFO));
 
   /// Destructor
-  ~TGeoLayerBuilder();
+  ~TGeoLayerBuilder() override;
 
   /// LayerBuilder interface method - returning the layers at negative side
   const LayerVector

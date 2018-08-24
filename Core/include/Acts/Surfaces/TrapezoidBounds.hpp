@@ -55,16 +55,16 @@ public:
   /// @param data the @c variant_data to build from
   TrapezoidBounds(const variant_data& data);
 
-  virtual ~TrapezoidBounds();
+  ~TrapezoidBounds() override;
 
-  virtual TrapezoidBounds*
-  clone() const final override;
+  TrapezoidBounds*
+  clone() const final;
 
-  virtual BoundsType
-  type() const final override;
+  BoundsType
+  type() const final;
 
-  virtual std::vector<TDD_real_t>
-  valueStore() const final override;
+  std::vector<TDD_real_t>
+  valueStore() const final;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
@@ -110,30 +110,29 @@ public:
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  virtual bool
-  inside(const Vector2D&      lpos,
-         const BoundaryCheck& bcheck) const final override;
+  bool
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  virtual double
-  distanceToBoundary(const Vector2D& lpos) const final override;
+  double
+  distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Return the vertices - or, the points of the extremas
-  virtual std::vector<Vector2D>
-  vertices() const final override;
+  std::vector<Vector2D>
+  vertices() const final;
 
   // Bounding box representation
-  virtual const RectangleBounds&
-  boundingBox() const final override;
+  const RectangleBounds&
+  boundingBox() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   ///  This method returns the minimal halflength in X
   /// (first coordinate of local surface frame)

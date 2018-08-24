@@ -71,7 +71,7 @@ public:
                                           Logging::INFO));
 
   /// Destructor
-  virtual ~CylinderVolumeHelper() = default;
+  ~CylinderVolumeHelper() override = default;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///

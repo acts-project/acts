@@ -69,7 +69,7 @@ public:
       = delete;
 
   /// Destructor
-  virtual ~ConeLayer() {}
+  ~ConeLayer() override {}
 
   /// Transforms the layer into a Surface representation for extrapolation
   const ConeSurface&

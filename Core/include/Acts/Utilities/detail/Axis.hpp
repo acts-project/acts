@@ -72,7 +72,7 @@ namespace detail {
     /// @brief returns whether the axis is equidistant
     ///
     /// @return bool is equidistant
-    virtual bool
+    bool
     isEquidistant() const override
     {
       return true;
@@ -81,7 +81,7 @@ namespace detail {
     /// @brief returns whether the axis is variable
     ///
     /// @return bool is variable
-    virtual bool
+    bool
     isVariable() const override
     {
       return false;
@@ -90,7 +90,7 @@ namespace detail {
     /// @brief returns the boundary type set in the template param
     ///
     /// @return @c AxisBoundaryType of this axis
-    virtual AxisBoundaryType
+    AxisBoundaryType
     getBoundaryType() const override
     {
       return bdt;
@@ -305,7 +305,7 @@ namespace detail {
     /// @brief get maximum of binning range
     ///
     /// @return maximum of binning range
-    virtual double
+    double
     getMax() const override
     {
       return m_max;
@@ -314,7 +314,7 @@ namespace detail {
     /// @brief get minimum of binning range
     ///
     /// @return minimum of binning range
-    virtual double
+    double
     getMin() const override
     {
       return m_min;
@@ -323,7 +323,7 @@ namespace detail {
     /// @brief get total number of bins
     ///
     /// @return total number of bins (excluding under-/overflow bins)
-    virtual size_t
+    size_t
     getNBins() const override
     {
       return m_bins;
@@ -344,7 +344,7 @@ namespace detail {
 
     /// @brief Return a vector of bin edges
     /// @return Vector which contains the bin edges
-    virtual std::vector<double>
+    std::vector<double>
     getBinEdges() const override
     {
       std::vector<double> binEdges;
@@ -388,7 +388,7 @@ namespace detail {
     /// @brief returns whether the axis is equidistante
     ///
     /// @return bool is equidistant
-    virtual bool
+    bool
     isEquidistant() const override
     {
       return false;
@@ -397,7 +397,7 @@ namespace detail {
     /// @brief returns whether the axis is variable
     ///
     /// @return bool is variable
-    virtual bool
+    bool
     isVariable() const override
     {
       return true;
@@ -406,7 +406,7 @@ namespace detail {
     /// @brief returns the boundary type set in the template param
     ///
     /// @return @c AxisBoundaryType of this axis
-    virtual AxisBoundaryType
+    AxisBoundaryType
     getBoundaryType() const override
     {
       return bdt;
@@ -631,7 +631,7 @@ namespace detail {
     /// @brief get maximum of binning range
     ///
     /// @return maximum of binning range
-    virtual double
+    double
     getMax() const override
     {
       return m_binEdges.back();
@@ -640,7 +640,7 @@ namespace detail {
     /// @brief get minimum of binning range
     ///
     /// @return minimum of binning range
-    virtual double
+    double
     getMin() const override
     {
       return m_binEdges.front();
@@ -649,7 +649,7 @@ namespace detail {
     /// @brief get total number of bins
     ///
     /// @return total number of bins (excluding under-/overflow bins)
-    virtual size_t
+    size_t
     getNBins() const override
     {
       return m_binEdges.size() - 1;
@@ -670,7 +670,7 @@ namespace detail {
 
     /// @brief Return a vector of bin edges
     /// @return Vector which contains the bin edges
-    virtual std::vector<double>
+    std::vector<double>
     getBinEdges() const override
     {
       return m_binEdges;

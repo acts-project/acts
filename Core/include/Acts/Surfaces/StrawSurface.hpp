@@ -78,7 +78,7 @@ public:
   /// @param data the @c variant_data to build from
   StrawSurface(const variant_data& data);
 
-  virtual ~StrawSurface();
+  ~StrawSurface() override;
 
   /// Assignment operator
   ///
@@ -89,20 +89,20 @@ public:
   /// Implicit constructor - shift can be provided
   ///
   /// @param shift is an optional shift to be applied
-  virtual StrawSurface*
-  clone(const Transform3D* shift = nullptr) const final override;
+  StrawSurface*
+  clone(const Transform3D* shift = nullptr) const final;
 
   /// Return the surface type
-  virtual SurfaceType
-  type() const final override;
+  SurfaceType
+  type() const final;
 
   /// Return properly formatted class name for screen output */
-  virtual std::string
-  name() const final override;
+  std::string
+  name() const final;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 
   /// Return a PolyhedronRepresentation for this object

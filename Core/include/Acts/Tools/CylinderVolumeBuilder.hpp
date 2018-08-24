@@ -534,7 +534,7 @@ public:
                                            Logging::INFO));
 
   /// Destructor
-  virtual ~CylinderVolumeBuilder();
+  ~CylinderVolumeBuilder() override;
 
   /// CylinderVolumeBuilder main call method
   ///

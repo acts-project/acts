@@ -94,7 +94,7 @@ public:
   DoubleTrapezoidVolumeBounds(const DoubleTrapezoidVolumeBounds& dtbo);
 
   /// Destructor
-  virtual ~DoubleTrapezoidVolumeBounds();
+  ~DoubleTrapezoidVolumeBounds() override;
 
   /// Assignment operator
   ///

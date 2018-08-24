@@ -78,7 +78,7 @@ public:
                       = getDefaultLogger("ExtrapolationEngine", Logging::INFO));
 
   /// Destructor
-  ~ExtrapolationEngine();
+  ~ExtrapolationEngine() override;
 
   using IExtrapolationEngine::extrapolate;
   /// Charged extrapolation - public interface

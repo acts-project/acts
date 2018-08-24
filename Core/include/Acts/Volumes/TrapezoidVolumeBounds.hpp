@@ -90,7 +90,7 @@ public:
   TrapezoidVolumeBounds(const TrapezoidVolumeBounds& bobo);
 
   /// Destructor
-  virtual ~TrapezoidVolumeBounds();
+  ~TrapezoidVolumeBounds() override;
 
   /// Assignment operator
   TrapezoidVolumeBounds&

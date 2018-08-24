@@ -70,11 +70,11 @@ public:
   BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm);
 
   /// Destructor
-  virtual ~BinnedSurfaceMaterial();
+  ~BinnedSurfaceMaterial() override;
 
   /// Pseudo-Constructor clone()
   BinnedSurfaceMaterial*
-  clone() const final override;
+  clone() const final;
 
   /// Assignment operator
   BinnedSurfaceMaterial&
@@ -84,7 +84,7 @@ public:
   ///
   /// @param scale is the scale factor for the full material
   BinnedSurfaceMaterial&
-  operator*=(double scale) final override;
+  operator*=(double scale) final;
 
   /// Return the BinUtility
   const BinUtility&
@@ -96,15 +96,15 @@ public:
 
   /// @copydoc SurfaceMaterial::material(const Vector2D&)
   const MaterialProperties*
-  material(const Vector2D& lp) const final override;
+  material(const Vector2D& lp) const final;
 
   /// @copydoc SurfaceMaterial::material(const Vector3D&)
   const MaterialProperties*
-  material(const Vector3D& gp) const final override;
+  material(const Vector3D& gp) const final;
 
   /// @copydoc SurfaceMaterial::material(size_t, size_t)
   const MaterialProperties*
-  material(size_t bin0, size_t bin1) const final override;
+  material(size_t bin0, size_t bin1) const final;
 
   /// access to the entries
   /// this is needed for averageing mapps
@@ -113,7 +113,7 @@ public:
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream&
-  dump(std::ostream& sl) const final override;
+  dump(std::ostream& sl) const final;
 
 private:
   /// The helper for the bin finding

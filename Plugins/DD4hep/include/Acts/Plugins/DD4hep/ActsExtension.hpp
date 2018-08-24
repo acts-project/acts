@@ -182,7 +182,7 @@ public:
   /// Copy constructor
   ActsExtension(const ActsExtension&, const dd4hep::DetElement&);
   /// Destructor
-  ~ActsExtension() = default;
+  ~ActsExtension() override = default;
   /// Set configuration method
   /// @param config is the new configuration struct
   void

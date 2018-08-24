@@ -87,7 +87,7 @@ public:
                = getDefaultLogger("StaticEngine", Logging::INFO));
 
   /// Destructor
-  ~StaticEngine();
+  ~StaticEngine() override;
 
   using IExtrapolationEngine::extrapolate;
 

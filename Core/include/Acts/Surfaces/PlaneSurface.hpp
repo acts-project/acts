@@ -75,7 +75,7 @@ public:
   /// @param data the @c variant_data to build from
   PlaneSurface(const variant_data& data);
 
-  virtual ~PlaneSurface();
+  ~PlaneSurface() override;
 
   /// Assignment operator
   ///
@@ -87,7 +87,7 @@ public:
   /// ownership of the shift transform is not given !!
   ///
   /// @param shift is a potential shift after cloning
-  virtual PlaneSurface*
+  PlaneSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
   /// Normal vector return
@@ -95,7 +95,7 @@ public:
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos) const override final;
+  normal(const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -106,15 +106,15 @@ public:
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  virtual const Vector3D
-  binningPosition(BinningValue bValue) const override final;
+  const Vector3D
+  binningPosition(BinningValue bValue) const final;
 
   /// Return the surface type
-  virtual SurfaceType
+  SurfaceType
   type() const override;
 
   /// Return method for bounds object of this surfrace
-  virtual const SurfaceBounds&
+  const SurfaceBounds&
   bounds() const override;
 
   /// Geometrical on surface test
@@ -126,7 +126,7 @@ public:
   /// @param bcheck gboundary check directive
   ///
   /// @return is a boolean indicator if the position is on surface
-  virtual bool
+  bool
   isOnSurface(const Vector3D&      gpos,
               const BoundaryCheck& bcheck = true) const override;
 
@@ -138,7 +138,7 @@ public:
   /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
-  virtual void
+  void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const override;
@@ -155,7 +155,7 @@ public:
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  virtual bool
+  bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const override;
@@ -199,20 +199,20 @@ public:
   /// - perpendicular to the normal of the plane
   ///
   /// @return the Intersection object
-  virtual Intersection
+  Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
-                       NavigationDirection  navDir = forward,
-                       const BoundaryCheck& bcheck = false,
-                       CorrFnc correct = nullptr) const final override;
+                       NavigationDirection  navDir  = forward,
+                       const BoundaryCheck& bcheck  = false,
+                       CorrFnc              correct = nullptr) const final;
 
   /// Return properly formatted class name for screen output
-  virtual std::string
+  std::string
   name() const override;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 
 protected:

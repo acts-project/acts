@@ -279,7 +279,7 @@ namespace Logging {
     explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {}
 
     /// virtual default destructor
-    virtual ~DefaultFilterPolicy() = default;
+    ~DefaultFilterPolicy() override = default;
 
     /// @brief decide whether a debug message should be processed
     ///

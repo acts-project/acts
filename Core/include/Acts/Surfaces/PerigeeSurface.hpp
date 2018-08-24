@@ -57,13 +57,13 @@ public:
   /// @param data the @c variant_data to build from
   PerigeeSurface(const variant_data& data);
 
-  virtual ~PerigeeSurface();
+  ~PerigeeSurface() override;
 
   /// Virtual constructor
   ///
   /// @param shift is the potential shift that is applied after cloning
-  virtual PerigeeSurface*
-  clone(const Transform3D* shift = nullptr) const final override;
+  PerigeeSurface*
+  clone(const Transform3D* shift = nullptr) const final;
 
   /// Assignment operator
   ///
@@ -72,22 +72,22 @@ public:
   operator=(const PerigeeSurface& other);
 
   /// Return the surface type
-  virtual SurfaceType
-  type() const final override;
+  SurfaceType
+  type() const final;
 
   /// Return properly formatted class name for screen output */
-  virtual std::string
-  name() const final override;
+  std::string
+  name() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 };
 

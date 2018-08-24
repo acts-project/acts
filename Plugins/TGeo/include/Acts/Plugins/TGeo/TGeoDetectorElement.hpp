@@ -116,23 +116,23 @@ public:
                       = nullptr);
 
   ///  Destructor
-  virtual ~TGeoDetectorElement();
+  ~TGeoDetectorElement() override;
 
   /// Identifier
-  virtual Identifier
-  identifier() const final override;
+  Identifier
+  identifier() const final;
 
   /// Return local to global transform associated with this identifier
-  virtual const Transform3D&
-  transform() const final override;
+  const Transform3D&
+  transform() const final;
 
   /// Return surface associated with this identifier, which should come from the
-  virtual const Surface&
-  surface() const final override;
+  const Surface&
+  surface() const final;
 
   /// Returns the thickness of the module
-  virtual double
-  thickness() const final override;
+  double
+  thickness() const final;
 
 private:
   /// DD4hep detector element, just linked - not owned

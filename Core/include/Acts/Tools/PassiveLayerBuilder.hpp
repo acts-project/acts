@@ -60,7 +60,7 @@ public:
                       = getDefaultLogger("PassiveLayerBuilder", Logging::INFO));
 
   /// Destructor
-  virtual ~PassiveLayerBuilder() = default;
+  ~PassiveLayerBuilder() override = default;
 
   /// LayerBuilder interface method
   /// @return  the layers at negative side

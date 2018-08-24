@@ -40,8 +40,8 @@ public:
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
-  toVariantData() const = 0;
+  variant_data
+  toVariantData() const override = 0;
 };
 
 }  // namespace

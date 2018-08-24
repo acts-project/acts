@@ -96,7 +96,7 @@ public:
   CylinderSurface(const variant_data& data);
 
   /// Destructor
-  virtual ~CylinderSurface();
+  ~CylinderSurface() override;
 
   /// Assignment operator
   ///
@@ -107,16 +107,16 @@ public:
   /// Implicit Constructor - optionally with a shift
   ///
   /// @param shift is an optional transform for a shift applied after coping
-  virtual CylinderSurface*
-  clone(const Transform3D* shift = nullptr) const final override;
+  CylinderSurface*
+  clone(const Transform3D* shift = nullptr) const final;
 
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param bValue is the type of global binning to be done
   ///
   /// @return is the global position to be used for binning
-  virtual const Vector3D
-  binningPosition(BinningValue bValue) const final override;
+  const Vector3D
+  binningPosition(BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   /// The measurement frame of a cylinder is the tangential plane at a given
@@ -125,12 +125,11 @@ public:
   /// @param gpos is the position where the measurement frame is defined
   /// @param mom is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
-  virtual const RotationMatrix3D
-  referenceFrame(const Vector3D& gpos,
-                 const Vector3D& mom) const final override;
+  const RotationMatrix3D
+  referenceFrame(const Vector3D& gpos, const Vector3D& mom) const final;
 
   /// Return the surface type
-  virtual SurfaceType
+  SurfaceType
   type() const override;
 
   /// Return method for surface normal information
@@ -139,8 +138,8 @@ public:
   ///
   /// @param lpos is the local postion for which the normal vector is requested
   /// @return normal vector at the local position
-  virtual const Vector3D
-  normal(const Vector2D& lpos) const final override;
+  const Vector3D
+  normal(const Vector2D& lpos) const final;
 
   /// Return method for surface normal information
   /// @note for a Cylinder a local position is always required for the normal
@@ -148,8 +147,8 @@ public:
   ///
   /// @param gpos is the global postion for which the normal vector is requested
   /// @return normal vector at the global position
-  virtual const Vector3D
-  normal(const Vector3D& gpos) const final override;
+  const Vector3D
+  normal(const Vector3D& gpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -161,18 +160,18 @@ public:
   rotSymmetryAxis() const;
 
   /// This method returns the CylinderBounds by reference
-  virtual const CylinderBounds&
-  bounds() const final override;
+  const CylinderBounds&
+  bounds() const final;
 
   /// Local to global transformation
   ///
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param gpos is the global position shich is filled
-  virtual void
+  void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       gpos) const final override;
+                Vector3D&       gpos) const final;
 
   /// Global to local transfomration
   ///
@@ -180,19 +179,19 @@ public:
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
   /// @return is a boolean indicating if the transformation succeeded
-  virtual bool
+  bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       lpos) const final override;
+                Vector2D&       lpos) const final;
 
   /// Check for position on surface
   ///
   /// @param gpos is the global position to be checked
   /// @param bcheck is the boundary check object
   /// @return is a boolean indicating if the position is on surface
-  virtual bool
+  bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const final override;
+              const BoundaryCheck& bcheck = true) const final;
 
   /// Fast straight line intersection schema - provides closest intersection
   ///  and (signed) path length
@@ -236,29 +235,28 @@ public:
   /// reinsertion into the line equation.
   ///
   /// @return is the intersection object
-  virtual Intersection
+  Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gidr,
-                       NavigationDirection  navDir = forward,
-                       const BoundaryCheck& bcheck = false,
-                       CorrFnc correct = nullptr) const final override;
+                       NavigationDirection  navDir  = forward,
+                       const BoundaryCheck& bcheck  = false,
+                       CorrFnc              correct = nullptr) const final;
 
   /// Path correction due to incident of the track
   ///
   /// @param gpos is the global position as a starting point
   /// @param mom is the global momentum at the starting point
   /// @return is the correction factor due to incident
-  virtual double
-  pathCorrection(const Vector3D& gpos,
-                 const Vector3D& mom) const final override;
+  double
+  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
 
   /// Return method for properly formatted output string
-  virtual std::string
+  std::string
   name() const override;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 
   /// Return a PolyhedronRepresentation for this object

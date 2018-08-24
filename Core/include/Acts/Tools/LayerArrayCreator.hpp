@@ -53,7 +53,7 @@ public:
   }
 
   /// Destructor
-  virtual ~LayerArrayCreator() = default;
+  ~LayerArrayCreator() override = default;
 
   /// LayerArrayCreator interface method
   ///

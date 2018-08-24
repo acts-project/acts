@@ -62,7 +62,7 @@ public:
                                            Logging::INFO));
 
   /// Destructor
-  ~MaterialEffectsEngine();
+  ~MaterialEffectsEngine() override;
 
   /// Public charged material effects interface
   ///

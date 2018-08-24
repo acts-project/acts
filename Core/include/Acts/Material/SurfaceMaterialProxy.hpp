@@ -41,16 +41,16 @@ public:
   SurfaceMaterialProxy(const SurfaceMaterialProxy& smproxy);
 
   /// Destructor
-  virtual ~SurfaceMaterialProxy() = default;
+  ~SurfaceMaterialProxy() override = default;
 
   /// Implicit constructor
   /// - uses the copy constructor
   SurfaceMaterialProxy*
-  clone() const final override;
+  clone() const final;
 
   /// Scale operator
-  virtual SurfaceMaterialProxy&
-  operator*=(double scale) final override;
+  SurfaceMaterialProxy&
+  operator*=(double scale) final;
 
   /// Return the BinUtility - can be nullptr
   const BinUtility*
@@ -62,8 +62,8 @@ public:
   /// @param lp is local positioning vector
   ///
   /// @return will return dummy material
-  virtual const MaterialProperties*
-  material(const Vector2D& lp) const final override;
+  const MaterialProperties*
+  material(const Vector2D& lp) const final;
 
   /// Return method for full material description of the Surface - from the
   /// global coordinates
@@ -71,8 +71,8 @@ public:
   /// @param gp is the global positioning vector
   ///
   /// @return will return dummy material
-  virtual const MaterialProperties*
-  material(const Vector3D& gp) const final override;
+  const MaterialProperties*
+  material(const Vector3D& gp) const final;
 
   /// Direct access via bins to the MaterialProperties
   ///
@@ -80,12 +80,12 @@ public:
   /// @param ib1 indicates the seconf bin
   ///
   /// @return will return dummy material
-  virtual const MaterialProperties*
-  material(size_t ib0, size_t ib1) const final override;
+  const MaterialProperties*
+  material(size_t ib0, size_t ib1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
 private:
   /// two dimensional BinUtility determining

@@ -44,7 +44,7 @@ public:
   }
 
   /// Destructor
-  virtual ~TrackingVolumeArrayCreator() = default;
+  ~TrackingVolumeArrayCreator() override = default;
 
   /// create a tracking volume array
   ///
@@ -54,7 +54,7 @@ public:
   /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray>
   trackingVolumeArray(const TrackingVolumeVector& vols,
-                      BinningValue                bVal) const;
+                      BinningValue                bVal) const override;
 
   /// Set logging instance
   ///

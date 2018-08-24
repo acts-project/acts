@@ -65,7 +65,7 @@ public:
       = delete;
 
   /// Destructor
-  virtual ~PlaneLayer() {}
+  ~PlaneLayer() override {}
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return returns a reference to a PlaneSurface

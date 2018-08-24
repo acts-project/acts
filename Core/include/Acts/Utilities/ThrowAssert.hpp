@@ -64,8 +64,8 @@ public:
   }
 
   /// The assertion message
-  virtual const char*
-  what() const throw()
+  const char*
+  what() const throw() override
   {
     return report.c_str();
   }

@@ -35,7 +35,7 @@ public:
       m_values[i] = i;
     }
   }
-  virtual ~SurfaceBoundsStub() { /*nop*/}
+  ~SurfaceBoundsStub() override { /*nop*/}
   SurfaceBounds*
   clone() const final
   {
@@ -47,7 +47,7 @@ public:
     return SurfaceBounds::Other;
   }
   std::vector<TDD_real_t>
-  valueStore() const
+  valueStore() const override
   {
     return m_values;
   }
@@ -69,7 +69,7 @@ public:
   }
 
   variant_data
-  toVariantData() const
+  toVariantData() const override
   {
     return variant_data();
   }

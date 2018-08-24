@@ -128,7 +128,7 @@ public:
       = delete;
 
   /// Destructor
-  ~BinnedArrayXD() {}
+  ~BinnedArrayXD() override {}
   /// Returns the object in the array from a local position
   ///
   /// @todo check if we can change to triple return at once
@@ -138,8 +138,7 @@ public:
   ///
   /// @return is the object in that bin
   T
-  object(const Vector2D& lposition,
-         std::array<size_t, 3>& bins) const override final
+  object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final
   {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
@@ -166,8 +165,7 @@ public:
   ///
   /// @return is the object in that bin
   T
-  object(const Vector3D& position,
-         std::array<size_t, 3>& bins) const override final
+  object(const Vector3D& position, std::array<size_t, 3>& bins) const final
   {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
