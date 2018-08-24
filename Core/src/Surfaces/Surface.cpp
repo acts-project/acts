@@ -99,8 +99,8 @@ Acts::Surface::operator==(const Surface& other) const
 }
 
 bool
-Acts::Surface::isOnSurface(const Vector3D&      gpos,
-                           const BoundaryCheck& bcheck) const
+Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
+                           const BoundaryCheck&  bcheck) const
 {
   // create the local position
   Acts::Vector2D lpos;

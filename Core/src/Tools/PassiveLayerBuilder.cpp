@@ -52,7 +52,7 @@ Acts::PassiveLayerBuilder::constructLayers()
 
   // the central layers
   size_t numcLayers = m_cfg.centralLayerRadii.size();
-  if (numcLayers) {
+  if (numcLayers != 0u) {
     ACTS_DEBUG("Configured to build " << numcLayers
                                       << " passive central layers.");
     m_cLayers.reserve(numcLayers);
@@ -72,7 +72,7 @@ Acts::PassiveLayerBuilder::constructLayers()
       // assign the material to the layer surface
       std::shared_ptr<const SurfaceMaterial> material = nullptr;
       // create the material from jobOptions
-      if (m_cfg.centralLayerMaterial.size()) {
+      if (m_cfg.centralLayerMaterial.size() != 0u) {
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
             m_cfg.centralLayerMaterial.at(icl), 1.);
@@ -87,7 +87,7 @@ Acts::PassiveLayerBuilder::constructLayers()
 
   // pos/neg layers
   size_t numpnLayers = m_cfg.posnegLayerPositionZ.size();
-  if (numpnLayers) {
+  if (numpnLayers != 0u) {
     ACTS_DEBUG("Configured to build 2 * "
                << numpnLayers
                << " passive positive/negative side layers.");
@@ -126,7 +126,7 @@ Acts::PassiveLayerBuilder::constructLayers()
       // assign the material to the layer surface
       std::shared_ptr<const SurfaceMaterial> material = nullptr;
       // create the material from jobOptions
-      if (m_cfg.posnegLayerMaterial.size()) {
+      if (m_cfg.posnegLayerMaterial.size() != 0u) {
         // create homogeneous material
         material = std::make_shared<const HomogeneousSurfaceMaterial>(
             m_cfg.posnegLayerMaterial.at(ipnl), 1.);

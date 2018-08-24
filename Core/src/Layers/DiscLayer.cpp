@@ -35,7 +35,7 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
   // create the representing volume
   const RadialBounds* rBounds
       = dynamic_cast<const RadialBounds*>(dbounds.get());
-  if (rBounds) {
+  if (rBounds != nullptr) {
     // @todo make a trapezoidal volume when you have DiscTrapezoidalBounds
     CylinderVolumeBounds* cvBounds = new CylinderVolumeBounds(
         rBounds->rMin(), rBounds->rMax(), 0.5 * thickness);
@@ -87,7 +87,7 @@ Acts::DiscLayer::create(const variant_data& data_)
   std::unique_ptr<SurfaceArray> sArray = nullptr;
 
   // only attempt to reover surface array if present
-  if (payload.count("surfacearray")) {
+  if (payload.count("surfacearray") != 0u) {
 
     // get surface array transform
     const Transform3D& sa_trf = from_variant<Transform3D>(
@@ -139,7 +139,7 @@ Acts::DiscLayer::buildApproachDescriptor()
   // delete it
   m_approachDescriptor = nullptr;
   // take the boundary surfaces of the representving volume if they exist
-  if (m_representingVolume) {
+  if (m_representingVolume != nullptr) {
     // get the boundary surfaces
     const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
         bSurfaces
@@ -174,7 +174,7 @@ Acts::DiscLayer::buildApproachDescriptor()
   }
   // @todo check if we can give the layer at curface creation
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
-    if (sfPtr) {
+    if (sfPtr != nullptr) {
       auto& mutableSf = *(const_cast<Surface*>(sfPtr));
       mutableSf.associateLayer(*this);
     }

@@ -122,12 +122,12 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
   auto solve = [&solution, &path, &pnormal, &pcenter, &navDir](
       const Vector3D& lpos, const Vector3D& ldir) -> bool {
     double denom = ldir.dot(pnormal);
-    if (denom) {
+    if (denom != 0.0) {
       path     = (pnormal.dot((pcenter - lpos))) / (denom);
       solution = (lpos + path * ldir);
     }
     // is valid if it goes into the right direction
-    return (!navDir || path * navDir >= 0.);
+    return ((navDir == 0) || path * navDir >= 0.);
   };
   // solve first
   bool valid = solve(gpos, gdir);

@@ -371,7 +371,7 @@ Acts::LayerCreator::planeLayer(
 void
 Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 {
-  if (layer.surfaceArray()) {
+  if (layer.surfaceArray() != nullptr) {
     auto surfaces = layer.surfaceArray()->surfaces();
 
     for (auto& surface : surfaces) {

@@ -262,7 +262,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
   propState.direction         = double(pDir);
   propState.boundaryCheck     = bcheck;
   propState.returnCurvilinear = returnCurvilinear;
-  propState.useJacobian       = eCell.leadParameters->covariance();
+  propState.useJacobian       = (eCell.leadParameters->covariance() != nullptr);
   // neutral transport sets mconditions to false
   propState.mcondition = false;
 
@@ -271,7 +271,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
           eCell, propState, *sParameters, sf)) {
     // create a new covariance matrix
     std::unique_ptr<const ActsSymMatrixD<5>> cov;
-    if (propState.covariance) {
+    if (propState.covariance != nullptr) {
       cov.reset(new ActsSymMatrixD<5>(*propState.covariance));
     }
 
@@ -421,7 +421,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
   propState.direction         = double(pDir);
   propState.boundaryCheck     = bcheck;
   propState.returnCurvilinear = returnCurvilinear;
-  propState.useJacobian       = eCell.leadParameters->covariance();
+  propState.useJacobian       = (eCell.leadParameters->covariance() != nullptr);
   propState.mcondition        = true;
   propState.needgradient
       = (propState.useJacobian && m_cfg.usegradient) ? true : false;
@@ -432,7 +432,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagate(
 
     // create a new covariance matrix
     std::unique_ptr<const ActsSymMatrixD<5>> cov;
-    if (propState.covariance) {
+    if (propState.covariance != nullptr) {
       cov.reset(new ActsSymMatrixD<5>(*propState.covariance));
     }
     // create the parameter vector and stream the result in
@@ -551,7 +551,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
   }
 
   bool dir = true;
-  if (propState.mcondition && propState.direction
+  if (propState.mcondition && (propState.direction != 0.0)
       && propState.direction * step < 0.) {
     step = -step;
     dir  = false;
@@ -606,7 +606,8 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     }
 
     if (!dir) {
-      if (propState.direction && propState.direction * propState.step < 0.) {
+      if ((propState.direction != 0.0)
+          && propState.direction * propState.step < 0.) {
         step = -step;
       } else {
         dir = true;
@@ -623,7 +624,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     double aStep = std::abs(step);
     if (aS > aStep) {
       S = step;
-    } else if (!iS && InS && aS * 2. < aStep) {
+    } else if ((iS == 0) && InS && aS * 2. < aStep) {
       S *= 2.;  // @todo check: magic step increase
     }
 
@@ -636,7 +637,7 @@ Acts::RungeKuttaEngine<MagneticField>::propagateWithJacobian(
     }
 
     if (iS > 10 || (iS > 3 && std::abs(S) >= So)) {
-      if (!kind) {
+      if (kind == 0) {
         break;
       }
       EX_MSG_DEBUG(navigationStep, "propagate", "<T> ", "Abort triggered.");
@@ -1286,7 +1287,7 @@ Acts::RungeKuttaEngine<MagneticField>::buildTrackParametersWithoutPropagation(
       = jacobian[19]                                              = 0.;
 
   SingleTrackParameters<ChargedPolicy>::CovPtr_t cov = nullptr;
-  if (tParameters.covariance()) {
+  if (tParameters.covariance() != nullptr) {
     // @todo check
     // fix - how to copy a covariance ?
   }
@@ -1310,7 +1311,7 @@ Acts::RungeKuttaEngine<MagneticField>::buildNeutralParametersWithoutPropagation(
       = jacobian[19]                                              = 0.;
 
   SingleTrackParameters<NeutralPolicy>::CovPtr_t cov = nullptr;
-  if (nParameters.covariance()) {
+  if (nParameters.covariance() != nullptr) {
     // @todo check
     // fix - how to copy a covariance ?
   }

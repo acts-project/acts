@@ -76,7 +76,7 @@ ConeSurface::intersectionEstimate(const Vector3D&      gpos,
         Vector3D soln2Loc(point1 + t2 * direction);
         // both solutions have the same sign - or you don't care
         // then take the closer one
-        if (t1 * t2 > 0. || !navDir) {
+        if (t1 * t2 > 0. || (navDir == 0)) {
           if (t1 * t1 < t2 * t2) {
             solution = soln1Loc;
             path     = t1;

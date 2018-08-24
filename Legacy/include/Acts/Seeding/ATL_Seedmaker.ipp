@@ -232,7 +232,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::find3Sp()
   m_zminU = m_zmin;
   m_zmaxU = m_zmax;
 
-  if (!m_state || m_nlist) {
+  if ((m_state == 0) || m_nlist) {
     i_seede   = l_seeds.begin();
     m_state   = 1;
     m_nlist   = 0;
@@ -428,22 +428,22 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   if (!m_SP) {
     m_SP = new Acts::Seeding::SPForSeed<SpacePoint>*[m_maxsizeSP];
   }
-  if (!m_R) {
+  if (m_R == nullptr) {
     m_R = new float[m_maxsizeSP];
   }
-  if (!m_Tz) {
+  if (m_Tz == nullptr) {
     m_Tz = new float[m_maxsizeSP];
   }
-  if (!m_Er) {
+  if (m_Er == nullptr) {
     m_Er = new float[m_maxsizeSP];
   }
-  if (!m_U) {
+  if (m_U == nullptr) {
     m_U = new float[m_maxsizeSP];
   }
-  if (!m_V) {
+  if (m_V == nullptr) {
     m_V = new float[m_maxsizeSP];
   }
-  if (!m_Zo) {
+  if (m_Zo == nullptr) {
     m_Zo = new float[m_maxsizeSP];
   }
   if (!m_OneSeeds) {
@@ -516,7 +516,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
     r  = r_Sorted[i].begin();
     re = r_Sorted[i].end();
 
-    if (!ir0) {
+    if (ir0 == 0) {
       ir0 = i;
     }
     // if not 1st event
@@ -761,7 +761,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
       }
     }
   breakb:
-    if (!Nb || Nb == m_maxsizeSP) {
+    if ((Nb == 0) || Nb == m_maxsizeSP) {
       continue;
     }
     int Nt = Nb;
@@ -808,7 +808,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
     }
 
   breakt:
-    if (!(Nt - Nb)) {
+    if ((Nt - Nb) == 0) {
       continue;
     }
     float covr0 = (*r0)->covr();

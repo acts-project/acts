@@ -40,7 +40,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,
                                               double* P) const
 {
   const Acts::TrackParameters* pTp = &Tp;
-  if (!pTp) {
+  if (pTp == nullptr) {
     return false;
   }
 
@@ -67,7 +67,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,
                                               double* P) const
 {
   const Acts::NeutralParameters* pTp = &Tp;
-  if (!pTp) {
+  if (pTp == nullptr) {
     return false;
   }
 
@@ -822,7 +822,7 @@ Acts::RungeKuttaUtils::stepEstimatorToCone(double*       S,
         --n;
         Smax = Smin;
       }
-      if (!n) {
+      if (n == 0) {
         Q = false;
         return 0.;
       }
@@ -1185,7 +1185,7 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool                 useJac,
                                               const double*        p,
                                               double*              P) const
 {
-  if (!su) {
+  if (su == nullptr) {
     return false;
   }
 

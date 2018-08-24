@@ -58,11 +58,11 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
     // and solve the qaudratic equation - todo, validity check
     detail::RealQuadraticEquation qe(a, b, c);
     // check how many solution you have
-    if (!qe.solutions) {
+    if (qe.solutions == 0) {
       return false;
     }
     // chose the solution
-    path = (!navDir || qe.first * qe.second > 0.)
+    path = ((navDir == 0) || qe.first * qe.second > 0.)
         ? (qe.first * qe.first < qe.second * qe.second ? qe.first : qe.second)
         : (navDir * qe.first >= 0. ? qe.first : qe.second);
     // return the solution

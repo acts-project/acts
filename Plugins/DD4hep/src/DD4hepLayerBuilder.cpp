@@ -83,9 +83,9 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
         pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
-      } else if (geoShape) {
+      } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (!tube)
+        if (tube == nullptr)
           ACTS_ERROR(
               "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
@@ -310,9 +310,9 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
         pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
-      } else if (geoShape) {
+      } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (!tube)
+        if (tube == nullptr)
           ACTS_ERROR(
               "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
 
@@ -519,9 +519,9 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
         pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
-      } else if (geoShape) {
+      } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (!tube)
+        if (tube == nullptr)
           ACTS_ERROR(
               "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
@@ -743,7 +743,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
     detExtension = detElement.extension<Acts::IActsExtension>();
   } catch (std::runtime_error& e) {
   }
-  if (detExtension) {
+  if (detExtension != nullptr) {
     material = detExtension->material();
   }
 

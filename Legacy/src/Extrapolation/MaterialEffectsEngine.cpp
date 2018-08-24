@@ -61,15 +61,16 @@ Acts::MaterialEffectsEngine::handleMaterial(
 {
   // parameters are the lead parameters
   // by definition the material surface is the one the parametrs are on
-  const Surface& mSurface
-      = surface ? (*surface) : eCell.leadParameters->referenceSurface();
+  const Surface& mSurface = surface != nullptr
+      ? (*surface)
+      : eCell.leadParameters->referenceSurface();
   size_t approachID  = mSurface.geoID().value(GeometryID::approach_mask);
   size_t sensitiveID = mSurface.geoID().value(GeometryID::sensitive_mask);
   // approach of sensitive
-  std::string surfaceType = sensitiveID ? "sensitive" : "surface";
-  size_t      surfaceID   = sensitiveID ? sensitiveID : approachID;
+  std::string surfaceType = sensitiveID != 0u ? "sensitive" : "surface";
+  size_t      surfaceID   = sensitiveID != 0u ? sensitiveID : approachID;
   // go on if you have material associated
-  if (mSurface.associatedMaterial()) {
+  if (mSurface.associatedMaterial() != nullptr) {
     // screen output
     EX_MSG_DEBUG(
         ++eCell.navigationStep,
@@ -89,7 +90,7 @@ Acts::MaterialEffectsEngine::handleMaterial(
         = mSurface.associatedMaterial()->material(
             eCell.leadParameters->position());
     // and let's check if there's acutally something to do
-    if (materialProperties) {
+    if (materialProperties != nullptr) {
       // thickness in X0
       double thicknessInX0 = materialProperties->thicknessInX0();
       EX_MSG_VERBOSE(eCell.navigationStep,
@@ -119,15 +120,16 @@ Acts::MaterialEffectsEngine::handleMaterial(
 
   // parameters are the lead parameters
   // by definition the material surface is the one the parametrs are on
-  const Surface& mSurface
-      = surface ? (*surface) : eCell.leadParameters->referenceSurface();
+  const Surface& mSurface = surface != nullptr
+      ? (*surface)
+      : eCell.leadParameters->referenceSurface();
   size_t approachID  = mSurface.geoID().value(GeometryID::approach_mask);
   size_t sensitiveID = mSurface.geoID().value(GeometryID::sensitive_mask);
   // approach of sensitive
-  std::string surfaceType = sensitiveID ? "sensitive" : "surface";
-  size_t      surfaceID   = sensitiveID ? sensitiveID : approachID;
+  std::string surfaceType = sensitiveID != 0u ? "sensitive" : "surface";
+  size_t      surfaceID   = sensitiveID != 0u ? sensitiveID : approachID;
   // go on if you have material to deal with
-  if (mSurface.associatedMaterial()) {
+  if (mSurface.associatedMaterial() != nullptr) {
     EX_MSG_DEBUG(
         ++eCell.navigationStep,
         surfaceType,
@@ -152,7 +154,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     size_t             surfaceID) const
 {
   // return if you have nothing to do
-  if (!mSurface.associatedMaterial()) {
+  if (mSurface.associatedMaterial() == nullptr) {
     return;
   }
   // parameters are the lead parameters
@@ -180,13 +182,13 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       = (m_cfg.eLossCorrection || m_cfg.mscCorrection
          || eCell.configurationMode(ExtrapolationMode::CollectMaterial));
   // and let's check if there's acutally something to do
-  if (materialProperties && corrConfig) {
+  if ((materialProperties != nullptr) && corrConfig) {
     // and add them
     int sign = int(eCell.materialUpdateMode);
     // a simple cross-check if the parameters are the initial ones
     ActsVectorD<NGlobalPars> uParameters = mParameters.parameters();
     std::unique_ptr<ActsSymMatrixD<NGlobalPars>> mutableUCovariance
-        = mParameters.covariance()
+        = mParameters.covariance() != nullptr
         ? std::make_unique<ActsSymMatrixD<NGlobalPars>>(
               *mParameters.covariance())
         : nullptr;
@@ -250,7 +252,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
 
     // question is if those are curvilinear or bound
     std::unique_ptr<const TrackParameters> stepParameters = nullptr;
-    if (cParameters) {
+    if (cParameters != nullptr) {
       // create curvilinear parameters
       Vector3D position = mParameters.position();
       Vector3D momentum = pScalor * mParameters.momentum();

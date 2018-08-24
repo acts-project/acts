@@ -72,7 +72,7 @@ Acts::ConeSurface::ConeSurface(const variant_data& data_)
 
   m_bounds = std::make_shared<const ConeBounds>(var_bounds);
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -197,7 +197,7 @@ Acts::ConeSurface::name() const
 Acts::ConeSurface*
 Acts::ConeSurface::clone(const Acts::Transform3D* shift) const
 {
-  if (shift) {
+  if (shift != nullptr) {
     new ConeSurface(*this, *shift);
   }
   return new ConeSurface(*this);
@@ -222,7 +222,7 @@ Acts::ConeSurface::normal(const Acts::Vector3D& gpos) const
   // get it into the cylinder frame if needed
   // @todo respect opening angle
   Vector3D pos3D = gpos;
-  if (m_transform || m_associatedDetElement) {
+  if (m_transform || (m_associatedDetElement != nullptr)) {
     pos3D     = transform().inverse() * gpos;
     pos3D.z() = 0;
   }

@@ -35,7 +35,7 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
     // it for thickness
     double                     thickness = 0;
     const DetectorElementBase* element   = sf->associatedDetectorElement();
-    if (element) {
+    if (element != nullptr) {
       thickness = element->thickness();
     }
 
@@ -45,19 +45,19 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
 
     const CylinderSurface* cylSurface
         = dynamic_cast<const CylinderSurface*>(sf);
-    if (pBounds) {
+    if (pBounds != nullptr) {
 
       // get the vertices
       std::vector<Vector2D> vertices  = pBounds->vertices();
       size_t                nVertices = vertices.size();
       // loop over the two sides of the module
       // we only need to run once if no element i.e. no thickness
-      for (int side = 0; side < (element ? 2 : 1); ++side) {
+      for (int side = 0; side < (element != nullptr ? 2 : 1); ++side) {
         // loop over the vertex combinations
         for (size_t iv = 0; iv < nVertices; ++iv) {
-          size_t ivp = iv ? iv - 1 : nVertices - 1;
+          size_t ivp = iv != 0u ? iv - 1 : nVertices - 1;
           // thickness
-          double locz = side ? 0.5 * thickness : -0.5 * thickness;
+          double locz = side != 0 ? 0.5 * thickness : -0.5 * thickness;
           // p1 & p2 vectors
           Vector3D p2(sf->transform() * Vector3D(vertices.at(iv).x(),
                                                  vertices.at(iv).y(),
@@ -82,7 +82,7 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
           minPhi = std::min(minPhi, p2.phi());
         }
       }
-    } else if (cylSurface) {
+    } else if (cylSurface != nullptr) {
       // this is an explicit cast and if right now.
       // It should work with all PolyhedronRepresentations
       // @TODO: Remove the cast and if as soon as ::polyhedronRepresentation()
@@ -136,7 +136,7 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
       // check for cylinder bounds
       const CylinderBounds* cBounds
           = dynamic_cast<const CylinderBounds*>(&(sf->bounds()));
-      if (cBounds) {
+      if (cBounds != nullptr) {
 
         double r    = cBounds->r();
         double z    = sf->center().z();

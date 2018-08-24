@@ -35,7 +35,7 @@ Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
 {
   const TrackingVolume* searchVolume  = m_world.get();
   const TrackingVolume* currentVolume = nullptr;
-  while (currentVolume != searchVolume && searchVolume) {
+  while (currentVolume != searchVolume && (searchVolume != nullptr)) {
     currentVolume = searchVolume;
     searchVolume  = searchVolume->trackingVolume(gp);
   }
@@ -47,7 +47,7 @@ Acts::TrackingGeometry::lowestDetachedTrackingVolumes(const Vector3D& gp) const
 {
   double                tol           = 0.001;
   const TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
-  if (currentVolume) {
+  if (currentVolume != nullptr) {
     return currentVolume->detachedTrackingVolumes(gp, tol);
   }
   return nullptr;
@@ -58,7 +58,7 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
 {
   const TrackingVolume* searchVolume  = m_world.get();
   const TrackingVolume* currentVolume = nullptr;
-  while (currentVolume != searchVolume && searchVolume) {
+  while (currentVolume != searchVolume && (searchVolume != nullptr)) {
     currentVolume = searchVolume;
     if ((searchVolume->confinedDetachedVolumes()).empty()) {
       searchVolume = searchVolume->trackingVolume(gp);
@@ -74,7 +74,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
                                          double) const
 {
   bool isAtBoundary = false;
-  if (!vol) {
+  if (vol == nullptr) {
     return isAtBoundary;
   }
   for (auto& bSurface : vol->boundarySurfaces()) {
@@ -97,7 +97,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
 {
   bool isAtBoundary = false;
   nextVol           = 0;
-  if (!vol) {
+  if (vol == nullptr) {
     return isAtBoundary;
   }
   for (auto& bSurface : vol->boundarySurfaces()) {
@@ -106,7 +106,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
       isAtBoundary = true;
       const TrackingVolume* attachedVol
           = bSurface->attachedVolume(gp, mom, dir);
-      if (!nextVol && attachedVol) {
+      if ((nextVol == nullptr) && (attachedVol != nullptr)) {
         nextVol = attachedVol;
       }
     }

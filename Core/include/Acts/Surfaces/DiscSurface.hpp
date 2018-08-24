@@ -242,10 +242,10 @@ public:
   /// @param gpos The global position of the parameters
   /// @param dir The direction at of the parameters
   /// @param pars The paranmeters vector
-      void initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
-                           const Vector3D&       gpos,
-                           const Vector3D&       dir,
-                           const ActsVectorD<5>& pars) const final;
+  void initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
+                            const Vector3D&       gpos,
+                            const Vector3D&       dir,
+                            const ActsVectorD<5>& pars) const final;
 
   /// Initialize the jacobian from global to local
   /// the surface knows best, hence the calculation is done here.

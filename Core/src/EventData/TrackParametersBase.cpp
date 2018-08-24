@@ -23,7 +23,7 @@ TrackParametersBase::print(std::ostream& sl) const
   sl << " * TrackParameters:" << std::endl;
   sl << parameters() << std::endl;
   sl << " * charge: " << charge() << std::endl;
-  if (covariance()) {
+  if (covariance() != nullptr) {
     sl << " * covariance matrix = " << *covariance() << std::endl;
   } else {
     sl << " * covariance matrix = " << covariance() << std::endl;

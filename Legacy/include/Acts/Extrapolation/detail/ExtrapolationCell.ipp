@@ -28,8 +28,9 @@ Acts::ExtrapolationCell<T>::stepTransport(
   leadParameters = stepParameters.get();
   // current step surface, take the explicit ones when provided
   // to maintain step logic for curvilinear parameters
-  const Surface* sSurface
-      = stepSurface ? stepSurface : &(stepParameters->referenceSurface());
+  const Surface* sSurface = stepSurface != nullptr
+      ? stepSurface
+      : &(stepParameters->referenceSurface());
   // create a configuration for this step holding all modes
   ExtrapolationConfig stepConfig = ExtrapolationConfig(stepModes);
   // check if we have the destination
@@ -56,7 +57,7 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     const MaterialProperties* mprop)
 {
   // fast exit
-  if (!mprop) {
+  if (mprop == nullptr) {
     return;
   }
   // if this is on a new surface,
@@ -104,7 +105,7 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     cstep.parameters = std::move(stepParameters);
   }
   // add material to the global counters
-  if (mprop) {
+  if (mprop != nullptr) {
     // the overal material
     materialX0 += stepFactor * mprop->thicknessInX0();
     materialL0 += stepFactor * mprop->thicknessInL0();

@@ -97,7 +97,7 @@ Acts::DiscSurface::DiscSurface(const variant_data& data_) : GeometryObject()
       = factory.discBounds(boundsType, var_bounds);
   m_bounds = bounds;
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -154,7 +154,7 @@ Acts::DiscSurface::localPolarToLocalCartesian(const Vector2D& locpol) const
 {
   const DiscTrapezoidalBounds* dtbo
       = dynamic_cast<const Acts::DiscTrapezoidalBounds*>(&(bounds()));
-  if (dtbo) {
+  if (dtbo != nullptr) {
     double rMedium = dtbo->rCenter();
     double phi     = dtbo->averagePhi();
 
@@ -209,7 +209,7 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
 Acts::DiscSurface*
 Acts::DiscSurface::clone(const Transform3D* shift) const
 {
-  if (shift) {
+  if (shift != nullptr) {
     return new DiscSurface(*this, *shift);
   }
   return new DiscSurface(*this);

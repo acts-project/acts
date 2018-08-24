@@ -69,7 +69,7 @@ Acts::StrawSurface::StrawSurface(const variant_data& data_)
 
   m_bounds = std::make_shared<const LineBounds>(bounds);
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -94,7 +94,7 @@ Acts::StrawSurface::operator=(const StrawSurface& other)
 Acts::StrawSurface*
 Acts::StrawSurface::clone(const Transform3D* shift) const
 {
-  if (shift) {
+  if (shift != nullptr) {
     new StrawSurface(*this, *shift);
   }
   return new StrawSurface(*this);

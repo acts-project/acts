@@ -19,7 +19,7 @@ LineSurface::localToGlobal(const Vector2D& lpos,
   Vector3D radiusAxisGlobal(lineDirection().cross(mom));
   Vector3D locZinGlobal(0., 0., lpos[eLOC_Z]);
   // apply a transform if needed
-  if (m_transform || m_associatedDetElement) {
+  if (m_transform || (m_associatedDetElement != nullptr)) {
     locZinGlobal = transform() * locZinGlobal;
   }
   // transform zPosition into global coordinates and
@@ -33,7 +33,7 @@ LineSurface::globalToLocal(const Vector3D& gpos,
                            Vector2D&       lpos) const
 {
   // apply the transform when needed
-  Vector3D loc3Dframe = (m_transform || m_associatedDetElement)
+  Vector3D loc3Dframe = (m_transform || (m_associatedDetElement != nullptr))
       ? (transform().inverse()) * gpos
       : gpos;
   // construct localPosition with sign*candidate.perp() and z.()
@@ -53,7 +53,7 @@ LineSurface::isOnSurface(const Vector3D&      gpos,
     return true;
   }
   // check whether this is a boundless surface
-  if (!m_bounds && !Surface::m_associatedDetElement) {
+  if (!m_bounds && (Surface::m_associatedDetElement == nullptr)) {
     return true;
   }
   // get the standard bounds

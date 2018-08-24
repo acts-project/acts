@@ -51,7 +51,7 @@ Acts::AbstractVolume::createBoundarySurfaces()
         = (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
         ? nullptr
         : this;
-    AbstractVolume* outer = (inner) ? nullptr : this;
+    AbstractVolume* outer = (inner) != nullptr ? nullptr : this;
     // create the boundary surface
     BoundarySurfacePtr bSurface
         = std::make_shared<const BoundarySurfaceT<AbstractVolume>>(

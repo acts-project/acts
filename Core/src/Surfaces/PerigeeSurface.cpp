@@ -54,7 +54,7 @@ Acts::PerigeeSurface::PerigeeSurface(const variant_data& data_)
 
   variant_map payload = data.get<variant_map>("payload");
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -78,7 +78,7 @@ Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 Acts::PerigeeSurface*
 Acts::PerigeeSurface::clone(const Transform3D* shift) const
 {
-  if (shift) {
+  if (shift != nullptr) {
     return new PerigeeSurface(*this, *shift);
   }
   return new PerigeeSurface(*this);

@@ -84,7 +84,7 @@ Acts::CylinderSurface::CylinderSurface(const variant_data& data_)
 
   m_bounds = std::make_shared<const CylinderBounds>(var_bounds);
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -203,7 +203,7 @@ Acts::CylinderSurface::name() const
 Acts::CylinderSurface*
 Acts::CylinderSurface::clone(const Acts::Transform3D* shift) const
 {
-  if (shift) {
+  if (shift != nullptr) {
     return new CylinderSurface(*this, *shift);
   }
   return new CylinderSurface(*this);
@@ -221,8 +221,8 @@ const Acts::Vector3D
 Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
-  Vector3D pos3D          = gpos;
-  bool     needsTransform = (m_transform || m_associatedDetElement);
+  Vector3D pos3D      = gpos;
+  bool needsTransform = (m_transform || (m_associatedDetElement != nullptr));
   if (needsTransform) {
     pos3D = transform().inverse() * gpos;
   }

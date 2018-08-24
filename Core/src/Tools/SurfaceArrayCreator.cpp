@@ -358,7 +358,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     ProtoLayer                         protoLayer,
     Transform3D&                       transform) const
 {
-  if (!surfaces.size()) {
+  if (surfaces.size() == 0u) {
     throw std::logic_error(
         "No surfaces handed over for creating arbitrary bin utility!");
   }
@@ -409,7 +409,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     const Acts::Surface*      backSurface = keys.back();
     const Acts::PlanarBounds* backBounds
         = dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (!backBounds)
+    if (backBounds == nullptr)
       ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
                  "other bounds yet! ");
     // get the global vertices
@@ -499,7 +499,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
     Transform3D&                       transform,
     size_t                             nBins) const
 {
-  if (!surfaces.size()) {
+  if (surfaces.size() == 0u) {
     throw std::logic_error(
         "No surfaces handed over for creating equidistant axis!");
   }

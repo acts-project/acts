@@ -92,7 +92,7 @@ Acts::PlaneSurface::PlaneSurface(const variant_data& data_)
 
   m_bounds = pbounds;
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -167,7 +167,7 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
 Acts::PlaneSurface*
 Acts::PlaneSurface::clone(const Transform3D* shift) const
 {
-  if (shift) {
+  if (shift != nullptr) {
     return new PlaneSurface(*this, *shift);
   }
   return new PlaneSurface(*this);
@@ -193,7 +193,7 @@ Acts::PlaneSurface::toVariantData() const
 
   if (m_transform) {
     payload["transform"] = to_variant(*m_transform);
-  } else if (m_associatedDetElement) {
+  } else if (m_associatedDetElement != nullptr) {
     payload["transform"] = to_variant(m_associatedDetElement->transform());
   }
 

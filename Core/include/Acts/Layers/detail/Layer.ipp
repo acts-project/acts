@@ -68,7 +68,7 @@ inline const Layer*
 Layer::nextLayer(const Vector3D& gp, const Vector3D& mom) const
 {
   // no binutility -> no chance to find out the direction
-  if (!m_nextLayerUtility) {
+  if (m_nextLayerUtility == nullptr) {
     return nullptr;
   }
   return (m_nextLayerUtility->nextDirection(gp, mom) < 0) ? m_nextLayers.first
@@ -86,8 +86,9 @@ Layer::resolve(bool resolveSensitive,
   if (resolveSensitive && m_surfaceArray) {
     return true;
   }
-  if (resolveMaterial && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
-                          || surfaceRepresentation().associatedMaterial())) {
+  if (resolveMaterial
+      && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
+          || (surfaceRepresentation().associatedMaterial() != nullptr))) {
     return true;
   }
   return false;
@@ -485,7 +486,7 @@ Layer::surfaceOnApproach(const Vector3D&      position,
   bool resolvePS = resolveSensitive || resolvePassive;
   bool resolveMS = resolveMaterial
       && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
-          || surfaceRepresentation().associatedMaterial());
+          || (surfaceRepresentation().associatedMaterial() != nullptr));
   // now of course this only counts when you have an approach descriptor
   if (m_approachDescriptor && (resolvePS || resolveMS)) {
     // test if you are on an approach surface already, if so - provide
@@ -524,7 +525,7 @@ Layer::surfaceOnApproach(const Vector3D&      position,
 inline bool
 Layer::isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck) const
 {
-  if (m_representingVolume) {
+  if (m_representingVolume != nullptr) {
     return m_representingVolume->inside(gp);
   }
   return (surfaceRepresentation()).isOnSurface(gp, bcheck);

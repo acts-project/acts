@@ -80,7 +80,7 @@ Acts::LineSurface::LineSurface(const variant_data& data_) : GeometryObject()
 
   m_bounds = std::make_shared<const LineBounds>(bounds);
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));

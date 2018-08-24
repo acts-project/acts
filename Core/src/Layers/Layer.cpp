@@ -71,7 +71,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
   assignGeoID(layerID);
 
   // also find out how the sub structure is defined
-  if (surfaceRepresentation().associatedMaterial()) {
+  if (surfaceRepresentation().associatedMaterial() != nullptr) {
     m_ssRepresentingSurface = 2;
   }
 
@@ -87,7 +87,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
       auto mutableASurface = const_cast<Surface*>(aSurface);
       mutableASurface->assignGeoID(asurfaceID);
       // if any of the approach surfaces has material
-      if (aSurface->associatedMaterial()) {
+      if (aSurface->associatedMaterial() != nullptr) {
         m_ssApproachSurfaces = 2;
       }
     }
@@ -104,7 +104,7 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
       // if any of the sensitive surfaces has material
-      if (sSurface->associatedMaterial()) {
+      if (sSurface->associatedMaterial() != nullptr) {
         m_ssSensitiveSurfaces = 2;
       }
     }

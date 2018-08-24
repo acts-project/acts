@@ -100,7 +100,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     const CylinderVolumeBounds* ocvBounds
         = dynamic_cast<const CylinderVolumeBounds*>(externalBounds.get());
     // the cast to CylinderVolumeBounds needs to be successful
-    if (ocvBounds) {
+    if (ocvBounds != nullptr) {
       // get values from the out bounds
       wConfig.externalVolumeConfig.present = true;
       wConfig.externalVolumeConfig.rMin    = ocvBounds->innerRadius();
@@ -297,7 +297,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       existingContainer.push_back(existingVolumeCp);
     }
     // update
-    existingVolumeCp = existingContainer.size()
+    existingVolumeCp = existingContainer.size() != 0u
         ? tvHelper->createContainerTrackingVolume(existingContainer)
         : existingVolumeCp;
 
@@ -352,7 +352,7 @@ Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
       // check if it is a cylinder layer
       const CylinderLayer* cLayer
           = dynamic_cast<const CylinderLayer*>(layer.get());
-      if (cLayer) {
+      if (cLayer != nullptr) {
         // now we have access to all the information
         double rMinC
             = cLayer->surfaceRepresentation().bounds().r() - 0.5 * thickness;
@@ -368,7 +368,7 @@ Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
       // proceed further if it is a Disc layer
       const RadialBounds* dBounds = dynamic_cast<const RadialBounds*>(
           &(layer->surfaceRepresentation().bounds()));
-      if (dBounds) {
+      if (dBounds != nullptr) {
         // now we have access to all the information
         double rMinD = dBounds->rMin();
         double rMaxD = dBounds->rMax();

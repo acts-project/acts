@@ -227,7 +227,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
         = (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
         ? nullptr
         : this;
-    TrackingVolume* outer = (inner) ? nullptr : this;
+    TrackingVolume* outer = (inner) != nullptr ? nullptr : this;
     // create the boundary surface
     m_boundarySurfaces.push_back(
         std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
@@ -258,7 +258,7 @@ Acts::TrackingVolume::glueTrackingVolume(
       = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
   // the easy case :
   // - no glue volume descriptors on either side
-  if (!m_glueVolumeDescriptor
+  if ((m_glueVolumeDescriptor == nullptr)
       || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
     auto mutableBSurfaceMine
@@ -294,7 +294,7 @@ Acts::TrackingVolume::glueTrackingVolumes(
       = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
   // the easy case :
   // - no glue volume descriptors on either side
-  if (!m_glueVolumeDescriptor
+  if ((m_glueVolumeDescriptor == nullptr)
       || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
     auto mutableBSurfaceMine
@@ -327,7 +327,7 @@ Acts::TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd)
 Acts::GlueVolumesDescriptor&
 Acts::TrackingVolume::glueVolumesDescriptor()
 {
-  if (!m_glueVolumeDescriptor) {
+  if (m_glueVolumeDescriptor == nullptr) {
     m_glueVolumeDescriptor = new GlueVolumesDescriptor;
   }
   return (*m_glueVolumeDescriptor);

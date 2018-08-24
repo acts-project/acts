@@ -107,7 +107,7 @@ public:
   checkMode(ExtrapolationMode::eMode em) const
   {
     // check if the bit is set or not
-    return (value & (1 << int(em)));
+    return (value & (1 << int(em))) != 0u;
   }
 
   /// int operator
