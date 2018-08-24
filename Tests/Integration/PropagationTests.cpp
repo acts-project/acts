@@ -95,7 +95,9 @@ namespace IntegrationTest {
       charge,
       index)
   {
-    if (index < skip) return;
+    if (index < skip) {
+      return;
+    }
 
     double dcharge = -1 + 2 * charge;
     // constant field propagation atlas stepper

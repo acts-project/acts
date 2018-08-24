@@ -136,7 +136,9 @@ DiscSurface::intersectionEstimate(const Vector3D&      gpos,
     // copy as the corrector may change them
     Vector3D lposc = gpos;
     Vector3D ldirc = gdir;
-    if (correct(lposc, ldirc, path)) valid = solve(lposc, ldirc);
+    if (correct(lposc, ldirc, path)) {
+      valid = solve(lposc, ldirc);
+    }
   }
   // evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface

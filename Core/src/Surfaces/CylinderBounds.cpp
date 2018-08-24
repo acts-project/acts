@@ -42,7 +42,9 @@ Acts::CylinderBounds::CylinderBounds(double radius,
   , m_halfZ(std::abs(halfZ))
   , m_closed(false)
 {
-  if (halfPhi == M_PI) m_closed = true;
+  if (halfPhi == M_PI) {
+    m_closed = true;
+  }
 }
 
 Acts::CylinderBounds::CylinderBounds(const variant_data& data_)

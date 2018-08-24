@@ -19,7 +19,9 @@ Acts::GlueVolumesDescriptor::GlueVolumesDescriptor(
   : m_glueVolumes(gvs)
 {
   // fill the available faces
-  for (auto& gvIter : m_glueVolumes) m_glueFaces.push_back(gvIter.first);
+  for (auto& gvIter : m_glueVolumes) {
+    m_glueFaces.push_back(gvIter.first);
+  }
 }
 
 void
@@ -29,7 +31,9 @@ Acts::GlueVolumesDescriptor::registerGlueVolumes(
 {
   // register the face
   auto searchIter = m_glueVolumes.find(bsf);
-  if (searchIter == m_glueVolumes.end()) m_glueFaces.push_back(bsf);
+  if (searchIter == m_glueVolumes.end()) {
+    m_glueFaces.push_back(bsf);
+  }
   // simple assignment overwrites already existing entries
   m_glueVolumes[bsf] = gvs;  //!< @todo change to addGlueVolumes principle
 }
@@ -39,7 +43,9 @@ Acts::GlueVolumesDescriptor::glueVolumes(Acts::BoundarySurfaceFace bsf) const
 {
   // searching for the glue volumes according
   auto searchIter = m_glueVolumes.find(bsf);
-  if (searchIter != m_glueVolumes.end()) return searchIter->second;
+  if (searchIter != m_glueVolumes.end()) {
+    return searchIter->second;
+  }
   return nullptr;
 }
 
@@ -59,9 +65,10 @@ Acts::GlueVolumesDescriptor::screenOutput() const
     sl << "        -----> Processing Face: " << int(gFace) << " - has ";
     sl << glueVolumesVector.size()
        << " TrackingVolumes marked as 'GlueVolumes' " << std::endl;
-    for (auto& glueVolume : glueVolumesVector)
+    for (auto& glueVolume : glueVolumesVector) {
       sl << "             - TrackingVolume: " << glueVolume->volumeName()
          << std::endl;
+    }
   }
   return sl.str();
 }

@@ -72,7 +72,9 @@ Acts::CylinderVolumeBounds::~CylinderVolumeBounds()
 Acts::CylinderVolumeBounds&
 Acts::CylinderVolumeBounds::operator=(const CylinderVolumeBounds& cylbo)
 {
-  if (this != &cylbo) m_valueStore = cylbo.m_valueStore;
+  if (this != &cylbo) {
+    m_valueStore = cylbo.m_valueStore;
+  }
   return *this;
 }
 
@@ -106,9 +108,10 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
   rSurfaces.push_back(new CylinderSurface(transformPtr, outerCylinderBounds()));
 
   // innermost Cylinder
-  if (innerRadius() > s_numericalStable)
+  if (innerRadius() > s_numericalStable) {
     rSurfaces.push_back(
         new CylinderSurface(transformPtr, innerCylinderBounds()));
+  }
 
   // the cylinder is sectoral
   if (std::abs(halfPhiSector() - M_PI) > s_numericalStable) {

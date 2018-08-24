@@ -68,7 +68,9 @@ inline const Layer*
 Layer::nextLayer(const Vector3D& gp, const Vector3D& mom) const
 {
   // no binutility -> no chance to find out the direction
-  if (!m_nextLayerUtility) return nullptr;
+  if (!m_nextLayerUtility) {
+    return nullptr;
+  }
   return (m_nextLayerUtility->nextDirection(gp, mom) < 0) ? m_nextLayers.first
                                                           : m_nextLayers.second;
 }
@@ -78,11 +80,16 @@ Layer::resolve(bool resolveSensitive,
                bool resolveMaterial,
                bool resolvePassive) const
 {
-  if (resolvePassive) return true;
-  if (resolveSensitive && m_surfaceArray) return true;
-  if (resolveMaterial && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
-                          || surfaceRepresentation().associatedMaterial()))
+  if (resolvePassive) {
     return true;
+  }
+  if (resolveSensitive && m_surfaceArray) {
+    return true;
+  }
+  if (resolveMaterial && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
+                          || surfaceRepresentation().associatedMaterial())) {
+    return true;
+  }
   return false;
 }
 
@@ -112,8 +119,9 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
   std::map<const Surface*, bool> accepted;
 
   // fast exit - there is nothing to
-  if (!m_surfaceArray || !m_approachDescriptor || !options.navDir)
+  if (!m_surfaceArray || !m_approachDescriptor || !options.navDir) {
     return sIntersections;
+  }
 
   // reserve a few bins
   sIntersections.reserve(20);
@@ -132,10 +140,11 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
     // indicates wrong direction or faulty setup
     // -> do not return compatible surfaces since they may lead you on a wrong
     // navigation path
-    if (endInter)
+    if (endInter) {
       maxPath = endInter.intersection.pathLength;
-    else
+    } else {
       return sIntersections;
+    }
 
   } else {
     // compatibleSurfaces() should only be called when on the layer,
@@ -151,11 +160,17 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
   auto acceptSurface = [&options, &accepted](const Surface& sf,
                                              bool sensitive = false) -> bool {
     // check for duplicates
-    if (accepted.find(&sf) != accepted.end()) return false;
+    if (accepted.find(&sf) != accepted.end()) {
+      return false;
+    }
     // surface is sensitive and you're asked to resolve
-    if (sensitive && options.resolveSensitive) return true;
+    if (sensitive && options.resolveSensitive) {
+      return true;
+    }
     // next option: it's a material surface and you want to have it
-    if (options.resolveMaterial && sf.associatedMaterial()) return true;
+    if (options.resolveMaterial && sf.associatedMaterial()) {
+      return true;
+    }
     // last option: resovle all
     return options.resolvePassive;
   };
@@ -164,9 +179,13 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
   // [&sIntersections, &options, &parameters,&corrfnc
   auto processSurface = [&](const Surface& sf, bool sensitive = false) {
     // veto if it's start or end surface
-    if (options.startObject == &sf || options.endObject == &sf) return;
+    if (options.startObject == &sf || options.endObject == &sf) {
+      return;
+    }
     // veto if it doesn't fit the prescription
-    if (!acceptSurface(sf, sensitive)) return;
+    if (!acceptSurface(sf, sensitive)) {
+      return;
+    }
     // the surface intersection
     SurfaceIntersection sfi
         = sf.intersectionEstimate(parameters, options, corrfnc);
@@ -221,10 +240,11 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
   processSurface(*layerSurface);
 
   // sort according to the path length
-  if (options.navDir == forward)
+  if (options.navDir == forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
-  else
+  } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
+  }
 
   return sIntersections;
 }
@@ -260,7 +280,9 @@ Layer::surfaceOnApproach(const parameters_t& parameters,
     // let's find the most suitable approach surface
     SurfaceIntersection aSurface
         = m_approachDescriptor->approachSurface(parameters, options, corrfnc);
-    if (aSurface.intersection.valid) return (aSurface);
+    if (aSurface.intersection.valid) {
+      return (aSurface);
+    }
   }
 
   const Surface& rSurface = surfaceRepresentation();
@@ -295,7 +317,9 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
   cSurfaces.reserve(20);
 
   // fast exit - there is nothing to do nothing to do
-  if (!m_surfaceArray || !m_approachDescriptor) return cSurfaces;
+  if (!m_surfaceArray || !m_approachDescriptor) {
+    return cSurfaces;
+  }
 
   // the test boudnary check is defined by the search type
   BoundaryCheck tCheck = searchType % 2 ? BoundaryCheck(false) : bcheck;
@@ -317,10 +341,11 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
     // indicates wrong direction or faulty setup
     // -> do not return compatible surfaces since they may lead you on a wrong
     // navigation path
-    if (endInter.valid && endInter.pathLength > 0.)
+    if (endInter.valid && endInter.pathLength > 0.) {
       pathLimit = endInter.pathLength;
-    else
+    } else {
       return cSurfaces;
+    }
   }
 
   // (A) approach descriptor section
@@ -337,11 +362,14 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the collect
     for (auto& aSurface : approachSurfaces) {
-      if (aSurface == startSurface || aSurface == endSurface) continue;
+      if (aSurface == startSurface || aSurface == endSurface) {
+        continue;
+      }
       // we fill passive always, rest is only for material
-      if (resolvePassive || aSurface->associatedMaterial())
+      if (resolvePassive || aSurface->associatedMaterial()) {
         testCompatibleSurface(
             cSurfaces, *aSurface, pos, dir, pDir, tCheck, pathLimit);
+      }
     }
   }
 
@@ -388,9 +416,10 @@ Layer::getCompatibleSurfaces(const parameters_t&  pars,
                    crit);
     }
     // sensitive surfaces and test them
-    for (auto& ctSurface : ctestSurfaces)
+    for (auto& ctSurface : ctestSurfaces) {
       testCompatibleSurface(
           cSurfaces, *ctSurface, pos, dir, pDir, tCheck, pathLimit);
+    }
 
   }  // end of sensitive surfaces to exist
 
@@ -473,7 +502,9 @@ Layer::surfaceOnApproach(const Vector3D&      position,
     // let's find the approach surface
     SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
         position, momentum, iDir, bcheck);
-    if (aSurface.intersection.valid) return (aSurface);
+    if (aSurface.intersection.valid) {
+      return (aSurface);
+    }
   }
   // allow to stay if you are on the surface
   if (nDir == anyDirection
@@ -493,7 +524,9 @@ Layer::surfaceOnApproach(const Vector3D&      position,
 inline bool
 Layer::isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck) const
 {
-  if (m_representingVolume) return m_representingVolume->inside(gp);
+  if (m_representingVolume) {
+    return m_representingVolume->inside(gp);
+  }
   return (surfaceRepresentation()).isOnSurface(gp, bcheck);
 }
 

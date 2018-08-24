@@ -231,16 +231,21 @@ CylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
 inline Vector3D
 CylinderVolumeBounds::binningOffset(BinningValue bValue) const
 {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::binR || bValue == Acts::binRPhi)
+  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     return Vector3D(mediumRadius(), 0., 0.);
+  }
   return VolumeBounds::binningOffset(bValue);
 }
 
 inline double
 CylinderVolumeBounds::binningBorder(BinningValue bValue) const
 {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::binR) return 0.5 * deltaRadius();
-  if (bValue == Acts::binZ) return halflengthZ();
+  if (bValue == Acts::binR) {
+    return 0.5 * deltaRadius();
+  }
+  if (bValue == Acts::binZ) {
+    return halflengthZ();
+  }
   return VolumeBounds::binningBorder(bValue);
 }
 

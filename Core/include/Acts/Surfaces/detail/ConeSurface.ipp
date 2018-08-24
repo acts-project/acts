@@ -51,7 +51,9 @@ ConeSurface::intersectionEstimate(const Vector3D&      gpos,
                     - tan2Alpha * direction.z() * point1.z()),
            C = point1.x() * point1.x() + point1.y() * point1.y()
         - tan2Alpha * point1.z() * point1.z();
-    if (A == 0.) A += 1e-16;  // avoid division by zero
+    if (A == 0.) {
+      A += 1e-16;  // avoid division by zero
+    }
 
     // use Andreas' quad solver, much more stable than what I wrote
     detail::RealQuadraticEquation solns(A, B, C);
@@ -103,14 +105,18 @@ ConeSurface::intersectionEstimate(const Vector3D&      gpos,
       direction = initialdir;
       if (correct(point1, direction, path)) {
         correctionDone = true;
-      } else
+      } else {
         break;
-    } else
+      }
+    } else {
       break;
+    }
   } while (true);
 
   // transform back if needed
-  if (m_transform) solution = transform() * solution;
+  if (m_transform) {
+    solution = transform() * solution;
+  }
   // check validity
   valid = bcheck ? (valid && isOnSurface(solution, bcheck)) : valid;
   // set the result navigation direction

@@ -98,7 +98,9 @@ namespace Test {
   {
     double dcharge = -1 + 2 * charge;
 
-    if (index < skip) return;
+    if (index < skip) {
+      return;
+    }
 
     // define start parameters
     double                x  = 0;
@@ -252,11 +254,12 @@ namespace Test {
     const TrackParameters*              sParameters = &start;
     std::vector<const TrackParameters*> stepParameters;
     for (auto& fwdSteps : fwdMaterial.collected) {
-      if (debugModeFwdStep)
+      if (debugModeFwdStep) {
         std::cout << ">>> Forward step : "
                   << sParameters->referenceSurface().geoID().toString()
                   << " --> " << fwdSteps.surface->geoID().toString()
                   << std::endl;
+      }
 
       // make a forward step
       const auto& fwdStep
@@ -282,10 +285,11 @@ namespace Test {
     // final destination surface
     const Surface& dSurface = fwdResult.endParameters->referenceSurface();
 
-    if (debugModeFwdStep)
+    if (debugModeFwdStep) {
       std::cout << ">>> Forward step : "
                 << sParameters->referenceSurface().geoID().toString() << " --> "
                 << dSurface.geoID().toString() << std::endl;
+    }
 
     const auto& fwdStepFinal
         = prop.propagate(*sParameters, dSurface, fwdStepOptions);
@@ -340,11 +344,12 @@ namespace Test {
     // move forward step by step through the surfaces
     sParameters = fwdResult.endParameters.template get();
     for (auto& bwdSteps : bwdMaterial.collected) {
-      if (debugModeBwdStep)
+      if (debugModeBwdStep) {
         std::cout << ">>> Backward step : "
                   << sParameters->referenceSurface().geoID().toString()
                   << " --> " << bwdSteps.surface->geoID().toString()
                   << std::endl;
+      }
       // make a forward step
       const auto& bwdStep
           = prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions);
@@ -369,10 +374,11 @@ namespace Test {
     // final destination surface
     const Surface& dbSurface = start.referenceSurface();
 
-    if (debugModeBwdStep)
+    if (debugModeBwdStep) {
       std::cout << ">>> Backward step : "
                 << sParameters->referenceSurface().geoID().toString() << " --> "
                 << dSurface.geoID().toString() << std::endl;
+    }
 
     const auto& bwdStepFinal
         = prop.propagate(*sParameters, dbSurface, bwdStepOptions);

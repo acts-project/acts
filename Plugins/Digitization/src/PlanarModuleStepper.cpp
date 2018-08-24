@@ -107,10 +107,11 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
                    << bIntersection.position.z());
     }
     // fast break in case of readout/counter surface hit
-    if (attempts == 2 && boundaryIntersections.size() == attempts)
+    if (attempts == 2 && boundaryIntersections.size() == attempts) {
       break;
-    else if (attempts > 2 && boundaryIntersections.size() == 3)
+    } else if (attempts > 2 && boundaryIntersections.size() == 3) {
       break;
+    }
   }
   // post-process if we have more than 2 intersections
   // only first or last can be wrong after resorting
@@ -120,14 +121,16 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
     std::sort(boundaryIntersections.begin(), boundaryIntersections.end());
     if (boundaryIntersections[0].pathLength
             * boundaryIntersections[1].pathLength
-        < 0.)
+        < 0.) {
       boundaryIntersections.pop_back();
-    else
+    } else {
       boundaryIntersections.erase(boundaryIntersections.begin());
+    }
   }
   // if for some reason the intersection does not work
-  if (!boundaryIntersections.size())
+  if (!boundaryIntersections.size()) {
     return std::vector<Acts::DigitizationStep>();
+  }
   // return
   return cellSteps(dmodule,
                    boundaryIntersections[0].position,

@@ -158,8 +158,9 @@ public:
   ParameterSet(const ParSet_t& copy)
     : m_vValues(copy.m_vValues), m_pCovariance(nullptr)
   {
-    if (copy.m_pCovariance)
+    if (copy.m_pCovariance) {
       m_pCovariance = std::make_unique<const CovMatrix_t>(*copy.m_pCovariance);
+    }
   }
 
   /**
@@ -364,8 +365,9 @@ public:
     if (m_pCovariance) {
       size_t index = getIndex<parameter>();
       return sqrt((*m_pCovariance)(index, index));
-    } else
+    } else {
       return -1;
+    }
   }
 
   /**
@@ -392,18 +394,24 @@ public:
   operator==(const ParSet_t& rhs) const
   {
     // shortcut comparison with myself
-    if (&rhs == this) return true;
+    if (&rhs == this) {
+      return true;
+    }
 
     // parameter values
-    if (m_vValues != rhs.m_vValues) return false;
+    if (m_vValues != rhs.m_vValues) {
+      return false;
+    }
     // both have covariance matrices set
     if ((m_pCovariance && rhs.m_pCovariance)
-        && (*m_pCovariance != *rhs.m_pCovariance))
+        && (*m_pCovariance != *rhs.m_pCovariance)) {
       return false;
+    }
     // only one has a covariance matrix set
     if ((m_pCovariance && !rhs.m_pCovariance)
-        || (!m_pCovariance && rhs.m_pCovariance))
+        || (!m_pCovariance && rhs.m_pCovariance)) {
       return false;
+    }
 
     return true;
   }

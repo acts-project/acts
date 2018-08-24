@@ -91,10 +91,14 @@ namespace IntegrationTest {
       std::vector<ActsVectorD<5>> theta_derivatives;
       theta_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
-        StartParameters tp              = startPars;
-        const double    current_theta   = tp.template get<Acts::eTHETA>();
-        if (current_theta + h > M_PI) h = M_PI - current_theta;
-        if (current_theta + h < 0) h    = -current_theta;
+        StartParameters tp            = startPars;
+        const double    current_theta = tp.template get<Acts::eTHETA>();
+        if (current_theta + h > M_PI) {
+          h = M_PI - current_theta;
+        }
+        if (current_theta + h < 0) {
+          h = -current_theta;
+        }
         tp.template set<Acts::eTHETA>(tp.template get<Acts::eTHETA>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         theta_derivatives.push_back((r.endParameters->parameters() - nominal)

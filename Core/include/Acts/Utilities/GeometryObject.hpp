@@ -47,7 +47,9 @@ public:
   GeometryObject&
   operator=(const GeometryObject& geoID)
   {
-    if (&geoID != this) m_geoID = geoID.m_geoID;
+    if (&geoID != this) {
+      m_geoID = geoID.m_geoID;
+    }
     return *this;
   }
 

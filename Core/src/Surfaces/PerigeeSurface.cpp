@@ -78,7 +78,9 @@ Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 Acts::PerigeeSurface*
 Acts::PerigeeSurface::clone(const Transform3D* shift) const
 {
-  if (shift) return new PerigeeSurface(*this, *shift);
+  if (shift) {
+    return new PerigeeSurface(*this, *shift);
+  }
   return new PerigeeSurface(*this);
 }
 

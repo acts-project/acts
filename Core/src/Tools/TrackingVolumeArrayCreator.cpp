@@ -47,7 +47,9 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
     // get the center value according to the bin
     double value = tVolume->binningPositionValue(bValue);
     // for the first one take low and high boundary
-    if (!boundaries.size()) boundaries.push_back(value - binningBorder);
+    if (!boundaries.size()) {
+      boundaries.push_back(value - binningBorder);
+    }
     // always take the high boundary
     boundaries.push_back(value + binningBorder);
     // record the volume to be ordered

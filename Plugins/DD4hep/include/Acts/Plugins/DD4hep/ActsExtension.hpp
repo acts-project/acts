@@ -258,7 +258,9 @@ ActsExtension::isLayer() const
 inline bool
 ActsExtension::hasSupportMaterial() const
 {
-  if ((m_cfg.materialBins1 > 0) || (m_cfg.materialBins2 > 0)) return true;
+  if ((m_cfg.materialBins1 > 0) || (m_cfg.materialBins2 > 0)) {
+    return true;
+  }
   return false;
 }
 

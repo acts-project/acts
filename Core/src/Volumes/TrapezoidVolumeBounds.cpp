@@ -71,7 +71,9 @@ Acts::TrapezoidVolumeBounds::~TrapezoidVolumeBounds()
 Acts::TrapezoidVolumeBounds&
 Acts::TrapezoidVolumeBounds::operator=(const TrapezoidVolumeBounds& trabo)
 {
-  if (this != &trabo) m_valueStore = trabo.m_valueStore;
+  if (this != &trabo) {
+    m_valueStore = trabo.m_valueStore;
+  }
   return *this;
 }
 
@@ -215,8 +217,12 @@ Acts::TrapezoidVolumeBounds::faceZXRectangleBoundsTop() const
 bool
 Acts::TrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
-  if (std::abs(pos.z()) > m_valueStore.at(bv_halfZ) + tol) return false;
-  if (std::abs(pos.y()) > m_valueStore.at(bv_halfY) + tol) return false;
+  if (std::abs(pos.z()) > m_valueStore.at(bv_halfZ) + tol) {
+    return false;
+  }
+  if (std::abs(pos.y()) > m_valueStore.at(bv_halfY) + tol) {
+    return false;
+  }
   TrapezoidBounds* faceXYBounds = faceXYTrapezoidBounds();
   Vector2D         locp(pos.x(), pos.y());
   bool inside(faceXYBounds->inside(locp, BoundaryCheck(true, true, tol, tol)));

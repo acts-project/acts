@@ -197,7 +197,9 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
                                const BoundaryCheck& bcheck) const
 {
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
-  if (std::abs(loc3Dframe.z()) > (s_onSurfaceTolerance)) return false;
+  if (std::abs(loc3Dframe.z()) > (s_onSurfaceTolerance)) {
+    return false;
+  }
   return (bcheck
               ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()),
                                 bcheck)
@@ -207,14 +209,18 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
 Acts::DiscSurface*
 Acts::DiscSurface::clone(const Transform3D* shift) const
 {
-  if (shift) return new DiscSurface(*this, *shift);
+  if (shift) {
+    return new DiscSurface(*this, *shift);
+  }
   return new DiscSurface(*this);
 }
 
 const Acts::SurfaceBounds&
 Acts::DiscSurface::bounds() const
 {
-  if (m_bounds) return (*(m_bounds.get()));
+  if (m_bounds) {
+    return (*(m_bounds.get()));
+  }
   return s_noBounds;
 }
 

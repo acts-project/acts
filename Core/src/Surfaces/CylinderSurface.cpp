@@ -160,7 +160,9 @@ Acts::CylinderSurface::localToGlobal(const Vector2D& lpos,
   gpos       = Vector3D(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
   // transform it to the globalframe: CylinderSurfaces are allowed to have 0
   // if pointer transform exists -> port into frame
-  if (Surface::m_transform) gpos = transform() * gpos;
+  if (Surface::m_transform) {
+    gpos = transform() * gpos;
+  }
 }
 
 bool
@@ -172,9 +174,11 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
   // @todo clean up intolerance parameters
   // transform it to the globalframe: CylinderSurfaces are allowed to have 0
   // pointer transform
-  double radius             = 0.;
-  double inttol             = bounds().r() * 0.0001;
-  if (inttol < 0.01) inttol = 0.01;
+  double radius = 0.;
+  double inttol = bounds().r() * 0.0001;
+  if (inttol < 0.01) {
+    inttol = 0.01;
+  }
   // do the transformation or not
   if (Surface::m_transform) {
     const Transform3D& surfaceTrans = transform();
@@ -199,7 +203,9 @@ Acts::CylinderSurface::name() const
 Acts::CylinderSurface*
 Acts::CylinderSurface::clone(const Acts::Transform3D* shift) const
 {
-  if (shift) return new CylinderSurface(*this, *shift);
+  if (shift) {
+    return new CylinderSurface(*this, *shift);
+  }
   return new CylinderSurface(*this);
 }
 

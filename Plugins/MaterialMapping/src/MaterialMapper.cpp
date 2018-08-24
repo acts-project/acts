@@ -351,8 +351,9 @@ Acts::MaterialMapper::resolveMaterialSurfaces(
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.")
   // check the boundary surfaces
-  for (auto& bSurface : tVolume.boundarySurfaces())
+  for (auto& bSurface : tVolume.boundarySurfaces()) {
     checkAndInsert(sMap, bSurface->surfaceRepresentation());
+  }
 
   // check the confined layers
   if (tVolume.confinedLayers()) {
@@ -364,14 +365,20 @@ Acts::MaterialMapper::resolveMaterialSurfaces(
         // get the approach surfaces if present
         if (cLayer->approachDescriptor()) {
           for (auto& aSurface :
-               cLayer->approachDescriptor()->containedSurfaces())
-            if (aSurface) checkAndInsert(sMap, *aSurface);
+               cLayer->approachDescriptor()->containedSurfaces()) {
+            if (aSurface) {
+              checkAndInsert(sMap, *aSurface);
+            }
+          }
         }
         // get the sensitive surface is present
         if (cLayer->surfaceArray()) {
           // sensitive surface loop
-          for (auto& sSurface : cLayer->surfaceArray()->surfaces())
-            if (sSurface) checkAndInsert(sMap, *sSurface);
+          for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
+            if (sSurface) {
+              checkAndInsert(sMap, *sSurface);
+            }
+          }
         }
       }
     }

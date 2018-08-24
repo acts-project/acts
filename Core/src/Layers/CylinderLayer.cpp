@@ -42,9 +42,13 @@ Acts::CylinderLayer::CylinderLayer(
   // associate the layer to the surface
   CylinderSurface::associateLayer(*this);
   // an approach descriptor is automatically created if there's a surface array
-  if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && m_surfaceArray) {
+    buildApproachDescriptor();
+  }
   // register the layer to the approach descriptor surfaces
-  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
+  if (m_approachDescriptor) {
+    approachDescriptor()->registerLayer(*this);
+  }
 }
 
 std::shared_ptr<Acts::Layer>
@@ -62,12 +66,13 @@ Acts::CylinderLayer::create(const variant_data& data_)
 
   LayerType   laytyp;
   std::string laytyp_str = payload.get<std::string>("layer_type");
-  if (laytyp_str == "active")
+  if (laytyp_str == "active") {
     laytyp = active;
-  else if (laytyp_str == "passive")
+  } else if (laytyp_str == "passive") {
     laytyp = passive;
-  else /*laytyp_str == "navigation"*/
+  } else { /*laytyp_str == "navigation"*/
     laytyp = navigation;
+  }
 
   double thickness = payload.get<double>("thickness");
 
@@ -144,8 +149,9 @@ Acts::CylinderLayer::buildApproachDescriptor()
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>
         aSurfaces;
-    if (bSurfaces.size() > size_t(tubeOuterCover))
+    if (bSurfaces.size() > size_t(tubeOuterCover)) {
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover));
+    }
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor = std::
@@ -206,12 +212,13 @@ Acts::CylinderLayer::toVariantData() const
   payload["thickness"] = thickness();
 
   std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
-  if (layerType() == active)
+  if (layerType() == active) {
     payload["layer_type"] = "active"s;
-  else if (layerType() == passive)
+  } else if (layerType() == passive) {
     payload["layer_type"] = "passive"s;
-  else /*layerType() == navigation*/
+  } else { /*layerType() == navigation*/
     payload["layer_type"] = "navigation"s;
+  }
 
   std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
 

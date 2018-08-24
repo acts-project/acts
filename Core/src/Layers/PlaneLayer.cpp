@@ -30,9 +30,13 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D>   transform,
   // register the layer to the surface
   Acts::PlaneSurface::associateLayer(*this);
   // deal with the approach descriptor
-  if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && m_surfaceArray) {
+    buildApproachDescriptor();
+  }
   // register the layer to the approach descriptor
-  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
+  if (m_approachDescriptor) {
+    approachDescriptor()->registerLayer(*this);
+  }
 }
 
 const Acts::PlaneSurface&

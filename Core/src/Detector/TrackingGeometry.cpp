@@ -47,7 +47,9 @@ Acts::TrackingGeometry::lowestDetachedTrackingVolumes(const Vector3D& gp) const
 {
   double                tol           = 0.001;
   const TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
-  if (currentVolume) return currentVolume->detachedTrackingVolumes(gp, tol);
+  if (currentVolume) {
+    return currentVolume->detachedTrackingVolumes(gp, tol);
+  }
   return nullptr;
 }
 
@@ -58,8 +60,9 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
   const TrackingVolume* currentVolume = nullptr;
   while (currentVolume != searchVolume && searchVolume) {
     currentVolume = searchVolume;
-    if ((searchVolume->confinedDetachedVolumes()).empty())
+    if ((searchVolume->confinedDetachedVolumes()).empty()) {
       searchVolume = searchVolume->trackingVolume(gp);
+    }
   }
   return currentVolume;
 }
@@ -71,10 +74,14 @@ Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
                                          double) const
 {
   bool isAtBoundary = false;
-  if (!vol) return isAtBoundary;
+  if (!vol) {
+    return isAtBoundary;
+  }
   for (auto& bSurface : vol->boundarySurfaces()) {
     const Surface& surf = bSurface->surfaceRepresentation();
-    if (surf.isOnSurface(gp, true)) isAtBoundary = true;
+    if (surf.isOnSurface(gp, true)) {
+      isAtBoundary = true;
+    }
   }
   return isAtBoundary;
 }
@@ -90,14 +97,18 @@ Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
 {
   bool isAtBoundary = false;
   nextVol           = 0;
-  if (!vol) return isAtBoundary;
+  if (!vol) {
+    return isAtBoundary;
+  }
   for (auto& bSurface : vol->boundarySurfaces()) {
     const Surface& surf = bSurface->surfaceRepresentation();
     if (surf.isOnSurface(gp, true)) {
       isAtBoundary = true;
       const TrackingVolume* attachedVol
           = bSurface->attachedVolume(gp, mom, dir);
-      if (!nextVol && attachedVol) nextVol = attachedVol;
+      if (!nextVol && attachedVol) {
+        nextVol = attachedVol;
+      }
     }
   }
   return isAtBoundary;
@@ -121,7 +132,9 @@ Acts::TrackingGeometry::trackingVolume(const std::string& name) const
 {
   auto sVol = m_trackingVolumes.begin();
   sVol      = m_trackingVolumes.find(name);
-  if (sVol != m_trackingVolumes.end()) return (sVol->second);
+  if (sVol != m_trackingVolumes.end()) {
+    return (sVol->second);
+  }
   return nullptr;
 }
 

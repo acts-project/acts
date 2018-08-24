@@ -152,7 +152,9 @@ namespace detail {
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
       std::set<size_t> result;
-      if (idx <= 0 || idx >= (getNBins() + 1)) return result;
+      if (idx <= 0 || idx >= (getNBins() + 1)) {
+        return result;
+      }
       constexpr int min   = 1;
       const int     max   = getNBins();
       const int     itmin = std::max(min, int(idx - sizes.first));
@@ -179,7 +181,9 @@ namespace detail {
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
       std::set<size_t> result;
-      if (idx <= 0 || idx >= (getNBins() + 1)) return result;
+      if (idx <= 0 || idx >= (getNBins() + 1)) {
+        return result;
+      }
       const int itmin = idx - sizes.first;
       const int itmax = idx + sizes.second;
       for (int i = itmin; i <= itmax; i++) {
@@ -464,7 +468,9 @@ namespace detail {
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
       std::set<size_t> result;
-      if (idx <= 0 || idx >= (getNBins() + 1)) return result;
+      if (idx <= 0 || idx >= (getNBins() + 1)) {
+        return result;
+      }
       constexpr int min   = 1;
       const int     max   = getNBins();
       const int     itmin = std::max(min, int(idx - sizes.first));
@@ -491,7 +497,9 @@ namespace detail {
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
       std::set<size_t> result;
-      if (idx <= 0 || idx >= (getNBins() + 1)) return result;
+      if (idx <= 0 || idx >= (getNBins() + 1)) {
+        return result;
+      }
       const int itmin = idx - sizes.first;
       const int itmax = idx + sizes.second;
       for (int i = itmin; i <= itmax; i++) {

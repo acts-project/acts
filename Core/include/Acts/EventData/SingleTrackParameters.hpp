@@ -80,7 +80,9 @@ public:
   operator==(const TrackParametersBase& rhs) const override
   {
     auto casted = dynamic_cast<decltype(this)>(&rhs);
-    if (!casted) return false;
+    if (!casted) {
+      return false;
+    }
 
     return (m_oChargePolicy == casted->m_oChargePolicy
             && m_oParameters == casted->m_oParameters

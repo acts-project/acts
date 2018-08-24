@@ -130,7 +130,9 @@ private:
 inline geo_id_value
 GeometryID::value(geo_id_value mask) const
 {
-  if (mask) return ACTS_BIT_DECODE(m_value, mask);
+  if (mask) {
+    return ACTS_BIT_DECODE(m_value, mask);
+  }
   return m_value;
 }
 

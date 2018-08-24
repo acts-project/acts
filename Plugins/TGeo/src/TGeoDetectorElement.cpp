@@ -97,12 +97,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   } else {
     if (boost::iequals(axes, "XYZ")) {
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signX = -1;
-      if (islower(axes.at(1))) signY = -1;
-      if (islower(axes.at(2))) signZ = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signX = -1;
+      }
+      if (islower(axes.at(1))) {
+        signY = -1;
+      }
+      if (islower(axes.at(2))) {
+        signZ = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -134,12 +140,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "XZY")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signX = -1;
-      if (islower(axes.at(1))) signZ = -1;
-      if (islower(axes.at(2))) signY = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signX = -1;
+      }
+      if (islower(axes.at(1))) {
+        signZ = -1;
+      }
+      if (islower(axes.at(2))) {
+        signY = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -173,12 +185,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "YZX")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signY = -1;
-      if (islower(axes.at(1))) signZ = -1;
-      if (islower(axes.at(2))) signX = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signY = -1;
+      }
+      if (islower(axes.at(1))) {
+        signZ = -1;
+      }
+      if (islower(axes.at(2))) {
+        signX = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -211,12 +229,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "YXZ")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signY = -1;
-      if (islower(axes.at(1))) signX = -1;
-      if (islower(axes.at(2))) signZ = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signY = -1;
+      }
+      if (islower(axes.at(1))) {
+        signX = -1;
+      }
+      if (islower(axes.at(2))) {
+        signZ = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -248,12 +272,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "ZYX")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signZ = -1;
-      if (islower(axes.at(1))) signY = -1;
-      if (islower(axes.at(2))) signX = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signZ = -1;
+      }
+      if (islower(axes.at(1))) {
+        signY = -1;
+      }
+      if (islower(axes.at(2))) {
+        signX = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -287,12 +317,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       // default is "ZXY"
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signZ = -1;
-      if (islower(axes.at(1))) signX = -1;
-      if (islower(axes.at(2))) signY = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signZ = -1;
+      }
+      if (islower(axes.at(1))) {
+        signX = -1;
+      }
+      if (islower(axes.at(2))) {
+        signY = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -325,7 +361,9 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     }
   }
   // set the asscoiated material (non const method)
-  if (surface) surface->setAssociatedMaterial(material);
+  if (surface) {
+    surface->setAssociatedMaterial(material);
+  }
   // set the const member surface
   m_surface = surface;
 }
@@ -394,12 +432,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   } else {
     if (boost::iequals(axes, "XYZ")) {
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signX = -1;
-      if (islower(axes.at(1))) signY = -1;
-      if (islower(axes.at(2))) signZ = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signX = -1;
+      }
+      if (islower(axes.at(1))) {
+        signY = -1;
+      }
+      if (islower(axes.at(2))) {
+        signZ = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -431,12 +475,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "XZY")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signX = -1;
-      if (islower(axes.at(1))) signZ = -1;
-      if (islower(axes.at(2))) signY = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signX = -1;
+      }
+      if (islower(axes.at(1))) {
+        signZ = -1;
+      }
+      if (islower(axes.at(2))) {
+        signY = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -470,12 +520,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "YZX")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signY = -1;
-      if (islower(axes.at(1))) signZ = -1;
-      if (islower(axes.at(2))) signX = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signY = -1;
+      }
+      if (islower(axes.at(1))) {
+        signZ = -1;
+      }
+      if (islower(axes.at(2))) {
+        signX = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -508,12 +564,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "YXZ")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signY = -1;
-      if (islower(axes.at(1))) signX = -1;
-      if (islower(axes.at(2))) signZ = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signY = -1;
+      }
+      if (islower(axes.at(1))) {
+        signX = -1;
+      }
+      if (islower(axes.at(2))) {
+        signZ = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -545,12 +607,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "ZYX")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signZ = -1;
-      if (islower(axes.at(1))) signY = -1;
-      if (islower(axes.at(2))) signX = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signZ = -1;
+      }
+      if (islower(axes.at(1))) {
+        signY = -1;
+      }
+      if (islower(axes.at(2))) {
+        signX = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -584,12 +652,18 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       // default is "ZXY"
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signZ = -1;
-      if (islower(axes.at(1))) signX = -1;
-      if (islower(axes.at(2))) signY = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0))) {
+        signZ = -1;
+      }
+      if (islower(axes.at(1))) {
+        signX = -1;
+      }
+      if (islower(axes.at(2))) {
+        signY = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
@@ -622,7 +696,9 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     }
   }
   // set the asscoiated material (non const method)
-  if (surface) surface->setAssociatedMaterial(material);
+  if (surface) {
+    surface->setAssociatedMaterial(material);
+  }
   // set the const member surface
   m_surface = surface;
 }

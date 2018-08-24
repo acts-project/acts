@@ -85,8 +85,9 @@ public:
   T&
   get(const std::string& key)
   {
-    if (!m_map.count(key))
+    if (!m_map.count(key)) {
       throw std::out_of_range("variant_map key " + key + " not found");
+    }
     return boost::get<T>(m_map.at(key));
   }
 
@@ -98,8 +99,9 @@ public:
   const T&
   get(const std::string& key) const
   {
-    if (!m_map.count(key))
+    if (!m_map.count(key)) {
       throw std::out_of_range("variant_map key " + key + " not found");
+    }
     return boost::get<T>(m_map.at(key));
   }
 
@@ -389,7 +391,9 @@ public:
   operator()(const variant_map& map)
   {
     m_json_str << "{";
-    if (m_pretty) m_json_str << std::endl;
+    if (m_pretty) {
+      m_json_str << std::endl;
+    }
 
     size_t i = 0;
     m_depth += 1;
@@ -400,13 +404,17 @@ public:
 
       if (i < map.size() - 1) {
         m_json_str << ", ";
-        if (m_pretty) m_json_str << std::endl;
+        if (m_pretty) {
+          m_json_str << std::endl;
+        }
       }
       ++i;
     }
     m_depth -= 1;
 
-    if (m_pretty) m_json_str << std::endl;
+    if (m_pretty) {
+      m_json_str << std::endl;
+    }
     indent();
     m_json_str << "}";
   }
@@ -417,7 +425,9 @@ public:
   operator()(const variant_vector& vec)
   {
     m_json_str << "[";
-    if (m_pretty) m_json_str << std::endl;
+    if (m_pretty) {
+      m_json_str << std::endl;
+    }
     size_t i = 0;
     m_depth += 1;
     for (const auto& entry : vec) {
@@ -425,13 +435,17 @@ public:
       boost::apply_visitor(*this, entry);
       if (i < vec.size() - 1) {
         m_json_str << ", ";
-        if (m_pretty) m_json_str << std::endl;
+        if (m_pretty) {
+          m_json_str << std::endl;
+        }
       }
       ++i;
     }
 
     m_depth -= 1;
-    if (m_pretty) m_json_str << std::endl;
+    if (m_pretty) {
+      m_json_str << std::endl;
+    }
     indent();
     m_json_str << "]";
   }

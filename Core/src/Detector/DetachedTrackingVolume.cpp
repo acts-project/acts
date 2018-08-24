@@ -67,9 +67,9 @@ Acts::DetachedTrackingVolume::geometryType() const
 void
 Acts::DetachedTrackingVolume::setBaseTransform(const Acts::Transform3D* transf)
 {
-  if (transf)
+  if (transf) {
     m_baseTransform = transf;
-  else {
+  } else {
     delete m_baseTransform;
     m_baseTransform
         = new Acts::Transform3D(this->trackingVolume()->transform());

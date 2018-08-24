@@ -90,16 +90,18 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisZ;
 
-  if (bTypePhi == equidistant)
+  if (bTypePhi == equidistant) {
     pAxisPhi
         = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
-  else
+  } else {
     pAxisPhi = createVariableAxis(surfaces, binPhi, protoLayer, transform);
+  }
 
-  if (bTypeZ == equidistant)
+  if (bTypeZ == equidistant) {
     pAxisZ = createEquidistantAxis(surfaces, binZ, protoLayer, transform);
-  else
+  } else {
     pAxisZ = createVariableAxis(surfaces, binZ, protoLayer, transform);
+  }
 
   Transform3D itransform = transform.inverse();
   auto globalToLocal     = [transform](const Vector3D& pos) {
@@ -209,10 +211,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisR;
 
-  if (bTypeR == equidistant)
+  if (bTypeR == equidistant) {
     pAxisR = createEquidistantAxis(surfaces, binR, protoLayer, transform);
-  else
+  } else {
     pAxisR = createVariableAxis(surfaces, binR, protoLayer, transform);
+  }
 
   // if we have more than one R ring, we need to figure out
   // the number of phi bins.
@@ -253,11 +256,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   } else {
     // use regular determination
-    if (bTypePhi == equidistant)
+    if (bTypePhi == equidistant) {
       pAxisPhi
           = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
-    else
+    } else {
       pAxisPhi = createVariableAxis(surfaces, binPhi, protoLayer, transform);
+    }
   }
 
   double Z = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
@@ -354,9 +358,10 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     ProtoLayer                         protoLayer,
     Transform3D&                       transform) const
 {
-  if (!surfaces.size())
+  if (!surfaces.size()) {
     throw std::logic_error(
         "No surfaces handed over for creating arbitrary bin utility!");
+  }
   // BinningOption is open for z and r, in case of phi binning reset later
   // the vector with the binning Values (boundaries for each bin)
 
@@ -494,9 +499,10 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
     Transform3D&                       transform,
     size_t                             nBins) const
 {
-  if (!surfaces.size())
+  if (!surfaces.size()) {
     throw std::logic_error(
         "No surfaces handed over for creating equidistant axis!");
+  }
   // check the binning type first
 
   double minimum = 0.;

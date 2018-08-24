@@ -171,7 +171,9 @@ public:
   /// checks if the surface is free and in such a case deletes it
   virtual ~SingleBoundTrackParameters()
   {
-    if (m_pSurface && m_pSurface->isFree()) delete m_pSurface;
+    if (m_pSurface && m_pSurface->isFree()) {
+      delete m_pSurface;
+    }
   }
 
   /// @brief copy assignment operator - charged/neutral
@@ -183,7 +185,9 @@ public:
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
 
-      if (m_pSurface->isFree()) delete m_pSurface;
+      if (m_pSurface->isFree()) {
+        delete m_pSurface;
+      }
 
       m_pSurface
           = rhs.m_pSurface->isFree() ? rhs.m_pSurface->clone() : rhs.m_pSurface;
@@ -201,7 +205,9 @@ public:
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(std::move(rhs));
 
-      if (m_pSurface->isFree()) delete m_pSurface;
+      if (m_pSurface->isFree()) {
+        delete m_pSurface;
+      }
 
       m_pSurface     = rhs.m_pSurface;
       rhs.m_pSurface = 0;

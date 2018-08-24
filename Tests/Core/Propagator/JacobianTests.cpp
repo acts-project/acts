@@ -114,11 +114,12 @@ namespace Test {
   {
     // initialize to zero
     ActsMatrixD<7, 5> jMatrix = ActsMatrixD<7, 5>::Zero();
-    for (size_t j = 0; j < 5; ++j)
+    for (size_t j = 0; j < 5; ++j) {
       for (size_t i = 0; i < 7; ++i) {
         size_t ijc = 7 + j * 7 + i;
         jMatrix(i, j) = P[ijc];
       }
+    }
     return jMatrix;
   }
 

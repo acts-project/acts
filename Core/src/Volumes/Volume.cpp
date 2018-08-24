@@ -29,7 +29,9 @@ Acts::Volume::Volume(std::shared_ptr<const Transform3D>  htrans,
   , m_center(s_origin)
   , m_volumeBounds(volbounds)
 {
-  if (htrans) m_center = htrans->translation();
+  if (htrans) {
+    m_center = htrans->translation();
+  }
 }
 
 Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
@@ -39,8 +41,9 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
   , m_volumeBounds(vol.m_volumeBounds)
 {
   // applyt he shift if it exists
-  if (shift)
+  if (shift) {
     m_transform = std::make_shared<const Transform3D>(transform() * (*shift));
+  }
   // now set the center
   m_center = transform().translation();
 }
@@ -83,7 +86,9 @@ Acts::Volume::clone() const
 bool
 Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const
 {
-  if (!m_transform) return (volumeBounds()).inside(gpos, tol);
+  if (!m_transform) {
+    return (volumeBounds()).inside(gpos, tol);
+  }
   Acts::Vector3D posInVolFrame((transform().inverse()) * gpos);
   return (volumeBounds()).inside(posInVolFrame, tol);
 }

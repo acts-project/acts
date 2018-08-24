@@ -96,9 +96,15 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
 template <class SpacePoint>
 Acts::Seeding::ATL_Seedmaker<SpacePoint>::~ATL_Seedmaker()
 {
-  if (r_index) delete[] r_index;
-  if (r_map) delete[] r_map;
-  if (r_Sorted) delete[] r_Sorted;
+  if (r_index) {
+    delete[] r_index;
+  }
+  if (r_map) {
+    delete[] r_map;
+  }
+  if (r_Sorted) {
+    delete[] r_Sorted;
+  }
 
   // Delete seeds
   //
@@ -111,16 +117,34 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::~ATL_Seedmaker()
   for (; i_spforseed != l_spforseed.end(); ++i_spforseed) {
     delete *i_spforseed;
   }
-  if (m_seedOutput) delete m_seedOutput;
+  if (m_seedOutput) {
+    delete m_seedOutput;
+  }
 
-  if (m_SP) delete[] m_SP;
-  if (m_R) delete[] m_R;
-  if (m_Tz) delete[] m_Tz;
-  if (m_Er) delete[] m_Er;
-  if (m_U) delete[] m_U;
-  if (m_V) delete[] m_V;
-  if (m_Zo) delete[] m_Zo;
-  if (m_OneSeeds) delete[] m_OneSeeds;
+  if (m_SP) {
+    delete[] m_SP;
+  }
+  if (m_R) {
+    delete[] m_R;
+  }
+  if (m_Tz) {
+    delete[] m_Tz;
+  }
+  if (m_Er) {
+    delete[] m_Er;
+  }
+  if (m_U) {
+    delete[] m_U;
+  }
+  if (m_V) {
+    delete[] m_V;
+  }
+  if (m_Zo) {
+    delete[] m_Zo;
+  }
+  if (m_OneSeeds) {
+    delete[] m_OneSeeds;
+  }
 }
 
 ///////////////////////////////////////////////////////////////////
@@ -176,15 +200,21 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
   for (; sp != spEnd; ++sp) {
 
     Acts::Seeding::SPForSeed<SpacePoint>* sps = newSpacePoint((*sp));
-    if (!sps) continue;
-    int ir             = int(sps->radius() * irstep);
-    if (ir > irmax) ir = irmax;
+    if (!sps) {
+      continue;
+    }
+    int ir = int(sps->radius() * irstep);
+    if (ir > irmax) {
+      ir = irmax;
+    }
     r_Sorted[ir].push_back(sps);
     // if there is exactly one SP in current bin, add bin nr in r_index (for
     // deletion later)
     // TODO overly complicated
     ++r_map[ir];
-    if (r_map[ir] == 1) r_index[m_nr++] = ir;
+    if (r_map[ir] == 1) {
+      r_index[m_nr++] = ir;
+    }
   }
 
   fillLists();
@@ -223,7 +253,9 @@ template <class SpacePoint>
 void
 Acts::Seeding::ATL_Seedmaker<SpacePoint>::findNext()
 {
-  if (m_endlist) return;
+  if (m_endlist) {
+    return;
+  }
 
   i_seede = l_seeds.begin();
 
@@ -243,14 +275,22 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
 {
   m_ptmin = fabs(m_ptmin);
 
-  if (m_ptmin < 100.) m_ptmin = 100.;
+  if (m_ptmin < 100.) {
+    m_ptmin = 100.;
+  }
 
-  if (m_diversss < m_diver) m_diversss    = m_diver;
-  if (m_divermax < m_diversss) m_divermax = m_diversss;
+  if (m_diversss < m_diver) {
+    m_diversss = m_diver;
+  }
+  if (m_divermax < m_diversss) {
+    m_divermax = m_diversss;
+  }
 
-  if (fabs(m_etamin) < .1) m_etamin = -m_etamax;
-  m_dzdrmax0                        = 1. / tan(2. * atan(exp(-m_etamax)));
-  m_dzdrmin0                        = 1. / tan(2. * atan(exp(-m_etamin)));
+  if (fabs(m_etamin) < .1) {
+    m_etamin = -m_etamax;
+  }
+  m_dzdrmax0 = 1. / tan(2. * atan(exp(-m_etamax)));
+  m_dzdrmin0 = 1. / tan(2. * atan(exp(-m_etamin)));
 
   // scattering factor. depends on error, forward direction and distance between
   // SP
@@ -280,16 +320,21 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   const float sFmax   = float(NFmax) / pi2;
   const float m_sFmin = 100. / 60.;
   // make phi-slices for 400MeV tracks, unless ptMin is even smaller
-  float ptm              = 400.;
-  if (m_ptmin < ptm) ptm = m_ptmin;
+  float ptm = 400.;
+  if (m_ptmin < ptm) {
+    ptm = m_ptmin;
+  }
 
   m_sF = ptm / 60.;
-  if (m_sF > sFmax)
+  if (m_sF > sFmax) {
     m_sF = sFmax;
-  else if (m_sF < m_sFmin)
-    m_sF                        = m_sFmin;
-  m_fNmax                       = int(pi2 * m_sF);
-  if (m_fNmax >= NFmax) m_fNmax = NFmax - 1;
+  } else if (m_sF < m_sFmin) {
+    m_sF = m_sFmin;
+  }
+  m_fNmax = int(pi2 * m_sF);
+  if (m_fNmax >= NFmax) {
+    m_fNmax = NFmax - 1;
+  }
 
   // Build radius-azimuthal-Z sorted containers
   //
@@ -303,10 +348,14 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   //
   for (int f = 0; f <= m_fNmax; ++f) {
 
-    int fb               = f - 1;
-    if (fb < 0) fb       = m_fNmax;
-    int ft               = f + 1;
-    if (ft > m_fNmax) ft = 0;
+    int fb = f - 1;
+    if (fb < 0) {
+      fb = m_fNmax;
+    }
+    int ft = f + 1;
+    if (ft > m_fNmax) {
+      ft = 0;
+    }
 
     // For each azimuthal region loop through all Z regions
     //
@@ -376,17 +425,34 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
     }
   }
 
-  if (!m_SP) m_SP = new Acts::Seeding::SPForSeed<SpacePoint>*[m_maxsizeSP];
-  if (!m_R) m_R   = new float[m_maxsizeSP];
-  if (!m_Tz) m_Tz = new float[m_maxsizeSP];
-  if (!m_Er) m_Er = new float[m_maxsizeSP];
-  if (!m_U) m_U   = new float[m_maxsizeSP];
-  if (!m_V) m_V   = new float[m_maxsizeSP];
-  if (!m_Zo) m_Zo = new float[m_maxsizeSP];
-  if (!m_OneSeeds)
+  if (!m_SP) {
+    m_SP = new Acts::Seeding::SPForSeed<SpacePoint>*[m_maxsizeSP];
+  }
+  if (!m_R) {
+    m_R = new float[m_maxsizeSP];
+  }
+  if (!m_Tz) {
+    m_Tz = new float[m_maxsizeSP];
+  }
+  if (!m_Er) {
+    m_Er = new float[m_maxsizeSP];
+  }
+  if (!m_U) {
+    m_U = new float[m_maxsizeSP];
+  }
+  if (!m_V) {
+    m_V = new float[m_maxsizeSP];
+  }
+  if (!m_Zo) {
+    m_Zo = new float[m_maxsizeSP];
+  }
+  if (!m_OneSeeds) {
     m_OneSeeds = new Acts::Seeding::InternalSeed<SpacePoint>[m_maxOneSize];
+  }
 
-  if (!m_seedOutput) m_seedOutput = new Acts::Seeding::Seed<SpacePoint>();
+  if (!m_seedOutput) {
+    m_seedOutput = new Acts::Seeding::Seed<SpacePoint>();
+  }
 
   i_seed  = l_seeds.begin();
   i_seede = l_seeds.end();
@@ -443,21 +509,28 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
   }
   for (int i = r_first; i != r_size; ++i) {
 
-    if (!r_map[i]) continue;
+    if (!r_map[i]) {
+      continue;
+    }
 
     r  = r_Sorted[i].begin();
     re = r_Sorted[i].end();
 
-    if (!ir0) ir0 = i;
+    if (!ir0) {
+      ir0 = i;
+    }
     // if not 1st event
     if (m_iteration) {
       //
       if (!(*r)->spacepoint->clusterList().second) {
-        if (i < 20) ibl = true;
-      } else if (ibl)
+        if (i < 20) {
+          ibl = true;
+        }
+      } else if (ibl) {
         break;
-      else if (i > 175)
+      } else if (i > 175) {
         break;
+      }
     }
 
     for (; r != re; ++r) {
@@ -465,7 +538,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
       // Azimuthal (Phi) angle sort
       // bin nr "f" is phi * phi-slices
       float F = (*r)->phi();
-      if (F < 0.) F += pi2;
+      if (F < 0.) {
+        F += pi2;
+      }
 
       int                    f = int(F * m_sF);
       f<0 ? f = m_fNmax : f> m_fNmax ? f = 0 : f = f;
@@ -497,7 +572,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
       // rfz_map,
       // if 1st entry record non-empty bin in "rfz_index"
       rfz_Sorted[n].push_back(*r);
-      if (!rfz_map[n]++) rfz_index[m_nrfz++] = n;
+      if (!rfz_map[n]++) {
+        rfz_index[m_nrfz++] = n;
+      }
     }
   }
   m_state = 0;
@@ -530,7 +607,9 @@ void
 Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp()
 {
   // if less than 3 sp in total
-  if (m_nsaz < 3) return;
+  if (m_nsaz < 3) {
+    return;
+  }
   m_seeds.clear();
 
   // indices for the z-regions array in weird order.
@@ -546,18 +625,24 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp()
 
     // For each azimuthal region loop through all Z regions
     // first for barrel, then left EC, then right EC
-    int z             = 0;
-    if (!m_endlist) z = m_zMin;
+    int z = 0;
+    if (!m_endlist) {
+      z = m_zMin;
+    }
     for (; z != 11; ++z) {
 
       int a = f * 11 + ZI[z];
-      if (!rfz_map[a]) continue;
+      if (!rfz_map[a]) {
+        continue;
+      }
       int NB = 0, NT = 0;
       for (int i = 0; i != rfz_b[a]; ++i) {
 
         int an = rfz_ib[a][i];
         // if bin has no entry: continue
-        if (!rfz_map[an]) continue;
+        if (!rfz_map[an]) {
+          continue;
+        }
         // assign begin-pointer and end-pointer of current bin to rb and rbe
         rb[NB]    = rfz_Sorted[an].begin();
         rbe[NB++] = rfz_Sorted[an].end();
@@ -566,7 +651,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp()
 
         int an = rfz_it[a][i];
         // if bin has no entry: continue
-        if (!rfz_map[an]) continue;
+        if (!rfz_map[an]) {
+          continue;
+        }
         // assign begin-pointer and end-pointer of current bin to rt and rte
         rt[NT]    = rfz_Sorted[an].begin();
         rte[NT++] = rfz_Sorted[an].end();
@@ -647,25 +734,36 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
         // because it has no more sp with lower radii
         // OR break because processing PPP and encountered SCT SP
         if (dR < m_drmin
-            || (m_iteration && (*r)->spacepoint->clusterList().second))
+            || (m_iteration && (*r)->spacepoint->clusterList().second)) {
           break;
-        if ((*r)->surface() == sur0) continue;
+        }
+        if ((*r)->surface() == sur0) {
+          continue;
+        }
         // forward direction of SP duplet
         float Tz  = (Z - (*r)->z()) / dR;
         float aTz = fabs(Tz);
         // why also exclude seeds with small pseudorapidity??
-        if (aTz < m_dzdrmin || aTz > m_dzdrmax) continue;
+        if (aTz < m_dzdrmin || aTz > m_dzdrmax) {
+          continue;
+        }
 
         // Comparison with vertices Z coordinates
         // continue if duplet origin not within collision region on z axis
         float Zo = Z - R * Tz;
-        if (!isZCompatible(Zo)) continue;
+        if (!isZCompatible(Zo)) {
+          continue;
+        }
         m_SP[Nb] = (*r);
-        if (++Nb == m_maxsizeSP) goto breakb;
+        if (++Nb == m_maxsizeSP) {
+          goto breakb;
+        }
       }
     }
   breakb:
-    if (!Nb || Nb == m_maxsizeSP) continue;
+    if (!Nb || Nb == m_maxsizeSP) {
+      continue;
+    }
     int Nt = Nb;
 
     // Top links production
@@ -681,26 +779,38 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
           rt[i] = r;
           continue;
         }
-        if (dR > m_drmax) break;
+        if (dR > m_drmax) {
+          break;
+        }
         //  TODO: is check if in same surface necessary?
-        if ((*r)->surface() == sur0) continue;
+        if ((*r)->surface() == sur0) {
+          continue;
+        }
 
         float Tz  = ((*r)->z() - Z) / dR;
         float aTz = fabs(Tz);
 
-        if (aTz < m_dzdrmin || aTz > m_dzdrmax) continue;
+        if (aTz < m_dzdrmin || aTz > m_dzdrmax) {
+          continue;
+        }
 
         // Comparison with vertices Z coordinates
         //
         float Zo = Z - R * Tz;
-        if (!isZCompatible(Zo)) continue;
+        if (!isZCompatible(Zo)) {
+          continue;
+        }
         m_SP[Nt] = (*r);
-        if (++Nt == m_maxsizeSP) goto breakt;
+        if (++Nt == m_maxsizeSP) {
+          goto breakt;
+        }
       }
     }
 
   breakt:
-    if (!(Nt - Nb)) continue;
+    if (!(Nt - Nb)) {
+      continue;
+    }
     float covr0 = (*r0)->covr();
     float covz0 = (*r0)->covz();
     float ax    = X / R;
@@ -723,9 +833,11 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
       // 1/(r*r) = 1/dx*dx+dy*dy = 1/(distance between the two points)^2
       float r2 = 1. / (x * x + y * y);
       // 1/r
-      float dr       = sqrt(r2);
-      float tz       = dz * dr;
-      if (i < Nb) tz = -tz;
+      float dr = sqrt(r2);
+      float tz = dz * dr;
+      if (i < Nb) {
+        tz = -tz;
+      }
 
       m_Tz[i] = tz;
       m_Zo[i] = Z - R * tz;
@@ -754,25 +866,33 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
       // CSA  = curvature^2/(pT^2 * sin^2(theta)) * scatteringFactor
       float CSA = Tzb2 * COFK;
       // ICSA =          (1/(pT^2 * sin^2(theta)) * scatteringFactor
-      float ICSA                                          = Tzb2 * ipt2C;
-      float imax                                          = imaxp;
-      if (m_SP[b]->spacepoint->clusterList().second) imax = imaxs;
+      float ICSA = Tzb2 * ipt2C;
+      float imax = imaxp;
+      if (m_SP[b]->spacepoint->clusterList().second) {
+        imax = imaxs;
+      }
 
       for (int t = Nb; t != Nt; ++t) {
 
         float dT = ((Tzb - m_Tz[t]) * (Tzb - m_Tz[t]) - m_R[t] * Rb2z
                     - (Erb + m_Er[t]))
             - (m_R[t] * Rb2r) * ((Tzb + m_Tz[t]) * (Tzb + m_Tz[t]));
-        if (dT > ICSA) continue;
+        if (dT > ICSA) {
+          continue;
+        }
 
         float dU = m_U[t] - Ub;
-        if (dU == 0.) continue;
+        if (dU == 0.) {
+          continue;
+        }
         float A  = (m_V[t] - Vb) / dU;
         float S2 = 1. + A * A;
         float B  = Vb - A * Ub;
         float B2 = B * B;
         // B2/S2=1/helixradius^2
-        if (B2 > ipt2K * S2 || dT * S2 > B2 * CSA) continue;
+        if (B2 > ipt2K * S2 || dT * S2 > B2 * CSA) {
+          continue;
+        }
 
         float Im = fabs((A - B * R) * R);
 
@@ -834,7 +954,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(
         reverse_iterator l
         = m_mapOneSeeds.rbegin();
 
-    if ((*l).first <= q) return;
+    if ((*l).first <= q) {
+      return;
+    }
 
     Acts::Seeding::InternalSeed<SpacePoint>* s = (*l).second;
     s->set(p1, p2, p3, z);
@@ -891,31 +1013,41 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
     float     Rma = 0.;
     bool      in  = false;
 
-    if (!pixb)
+    if (!pixb) {
       u -= 400.;
-    else if (pixt)
+    } else if (pixt) {
       u -= 200.;
+    }
 
     for (j = jn; j != ie; ++j) {
-      if (j == i) continue;
+      if (j == i) {
+        continue;
+      }
       if ((*j).first < Ci1) {
         jn = j;
         ++jn;
         continue;
       }
-      if ((*j).first > Ci2) break;
-      if ((*j).second->surface() == Sui) continue;
+      if ((*j).first > Ci2) {
+        break;
+      }
+      if ((*j).second->surface() == Sui) {
+        continue;
+      }
       // Compared seeds should have at least deltaRMin distance
       float Rj = (*j).second->radius();
-      if (fabs(Rj - Ri) < m_drmin) continue;
+      if (fabs(Rj - Ri) < m_drmin) {
+        continue;
+      }
 
       if (in) {
-        if (Rj > Rma)
+        if (Rj > Rma) {
           Rma = Rj;
-        else if (Rj < Rmi)
+        } else if (Rj < Rmi) {
           Rmi = Rj;
-        else
+        } else {
           continue;
+        }
         // add 200 to quality if 2 compatible seeds with high deltaR of their
         // spT have been found
         // (i.e. potential track spans 5 surfaces)
@@ -931,17 +1063,23 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
       }
     }
     // if quality is below threshold, discard seed
-    if (u > m_umax) continue;
+    if (u > m_umax) {
+      continue;
+    }
     // if mixed seed and no compatible seed was found, discard seed
     if (pixb != pixt) {
-      if (u > 0. || (u > ub && u > u0 && u > (*i).second->quality())) continue;
+      if (u > 0. || (u > ub && u > u0 && u > (*i).second->quality())) {
+        continue;
+      }
     }
     // if sct seed and at least 1 comp seed was found, accept even seeds with
     // larger impact params + cot theta penalty
     // m_diversss < Impact parameters + penalty for cot(theta) difference <
     // m_divermax
     // (if m_diversss set smaller than m_divermax, else m_diversss=m_divermax)
-    if (!pixb && Im > m_diversss && u > Im - 500.) continue;
+    if (!pixb && Im > m_diversss && u > Im - 500.) {
+      continue;
+    }
 
     newOneSeed(SPb, SP0, (*i).second, Zob, u);
   }
@@ -962,7 +1100,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillSeeds()
       = m_mapOneSeeds.begin(),
       l = m_mapOneSeeds.begin(), le = m_mapOneSeeds.end();
 
-  if (l == le) return;
+  if (l == le) {
+    return;
+  }
 
   Acts::Seeding::InternalSeed<SpacePoint>* s;
 
@@ -970,8 +1110,12 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillSeeds()
 
     float w = (*l).first;
     s       = (*l).second;
-    if (l != lf && s->spacepoint0()->radius() < 43. && w > -200.) continue;
-    if (!s->setQuality(w)) continue;
+    if (l != lf && s->spacepoint0()->radius() < 43. && w > -200.) {
+      continue;
+    }
+    if (!s->setQuality(w)) {
+      continue;
+    }
 
     if (i_seede != l_seeds.end()) {
       s  = (*i_seede++);
@@ -982,12 +1126,13 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillSeeds()
       i_seede = l_seeds.end();
     }
 
-    if (s->spacepoint0()->spacepoint->clusterList().second)
+    if (s->spacepoint0()->spacepoint->clusterList().second) {
       w -= 3000.;
-    else if (s->spacepoint1()->spacepoint->clusterList().second)
+    } else if (s->spacepoint1()->spacepoint->clusterList().second) {
       w -= 2000.;
-    else if (s->spacepoint2()->spacepoint->clusterList().second)
+    } else if (s->spacepoint2()->spacepoint->clusterList().second) {
       w -= 1000.;
+    }
 
     m_seeds.insert(std::make_pair(w, s));
     ++m_fillOneSeeds;

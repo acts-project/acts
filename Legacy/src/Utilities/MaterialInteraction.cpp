@@ -117,7 +117,9 @@ std::pair<double, double>
 radiationEnergyLoss(double p, const Material& mat, ParticleType particle)
 {
   double sigma = 0.;
-  if (!(mat)) return std::pair<double, double>(0., 0.);
+  if (!(mat)) {
+    return std::pair<double, double>(0., 0.);
+  }
 
   // preparation of kinetic constants
   double m     = particleMasses.mass[particle];
@@ -157,7 +159,9 @@ radiationEnergyLoss(double p, const Material& mat, ParticleType particle)
 double
 sigmaMS(double dInX0, double p, double beta)
 {
-  if (dInX0 == 0. || p == 0. || beta == 0.) return 0.;
+  if (dInX0 == 0. || p == 0. || beta == 0.) {
+    return 0.;
+  }
 
   // Highland formula - projected sigma_s
   // ATL-SOFT-PUB-2008-003 equation (15)

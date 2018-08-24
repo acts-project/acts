@@ -183,7 +183,9 @@ namespace Test {
       charge,
       index)
   {
-    if (index < skip) return;
+    if (index < skip) {
+      return;
+    }
 
     double dcharge = -1 + 2 * charge;
 

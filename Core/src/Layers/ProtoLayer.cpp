@@ -35,7 +35,9 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
     // it for thickness
     double                     thickness = 0;
     const DetectorElementBase* element   = sf->associatedDetectorElement();
-    if (element) thickness               = element->thickness();
+    if (element) {
+      thickness = element->thickness();
+    }
 
     // check the shape
     const PlanarBounds* pBounds
@@ -157,9 +159,10 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
         maxPhi = phi + hPhi;
         minPhi = phi - hPhi;
 
-      } else
+      } else {
         throw std::domain_error(
             "Not implemented yet for the given bounds type.");
+      }
     }
   }
 }
@@ -176,7 +179,9 @@ ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
   Vector2D p1O  = (O - p1);
 
   // don't do division if L is very small
-  if (L < 1e-7) return std::numeric_limits<double>::max();
+  if (L < 1e-7) {
+    return std::numeric_limits<double>::max();
+  }
   double f = p1p2.dot(p1O) / L;
 
   // clamp to [0, |p1p2|]

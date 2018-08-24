@@ -40,9 +40,10 @@ Acts::CartesianSegmentation::CartesianSegmentation(
     std::shared_ptr<const PlanarBounds> mBounds)
   : m_activeBounds(mBounds), m_binUtility(bUtility)
 {
-  if (!m_activeBounds)
+  if (!m_activeBounds) {
     m_activeBounds = std::make_shared<const RectangleBounds>(
         m_binUtility->max(0), m_binUtility->max(1));
+  }
 }
 
 Acts::CartesianSegmentation::~CartesianSegmentation()
@@ -217,12 +218,13 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
     auto binTransform = std::make_shared<const Transform3D>(
         getTransformFromRotTransl(yBinRotationMatrix, binSurfaceCenter));
     // these are the boundaries
-    if (ibiny == 0 || ibiny == m_binUtility->bins(1))
+    if (ibiny == 0 || ibiny == m_binUtility->bins(1)) {
       boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
-    else  // these are the bin boundaries
+    } else {  // these are the bin boundaries
       segmentationSurfacesY.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
+    }
   }
 }
 

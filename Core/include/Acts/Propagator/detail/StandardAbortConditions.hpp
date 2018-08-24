@@ -106,13 +106,14 @@ namespace detail {
         });
         // reaching the target means navigaiton break
         state.navigation.targetReached = true;
-      } else
+      } else {
         targetDebugLog(state, "o", [&] {
           std::stringstream dstream;
           dstream << "Target stepSize (path limit) updated to ";
           dstream << state.stepping.stepSize.toString();
           return dstream.str();
         });
+      }
       // path limit check
       return limitReached;
     }
@@ -142,7 +143,9 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (state.navigation.targetReached) return true;
+      if (state.navigation.targetReached) {
+        return true;
+      }
 
       // check if the cache filled the currentSurface
       if (state.navigation.currentSurface
@@ -221,7 +224,9 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (state.navigation.currentVolume) return false;
+      if (state.navigation.currentVolume) {
+        return false;
+      }
       state.navigation.targetReached = true;
       return true;
     }

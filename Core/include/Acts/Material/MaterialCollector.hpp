@@ -63,7 +63,9 @@ struct MaterialCollector
   operator()(propagator_state_t& state, result_type& result) const
   {
     // if we are on target, everything should have been done
-    if (state.navigation.targetReached) return;
+    if (state.navigation.targetReached) {
+      return;
+    }
 
     if (state.navigation.currentSurface) {
       debugLog(state, [&] {

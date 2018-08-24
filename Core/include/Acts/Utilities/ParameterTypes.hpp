@@ -128,10 +128,11 @@ struct cyclic_parameter
   static U
   getValue(const U& input)
   {
-    if (min <= input && input < max)
+    if (min <= input && input < max) {
       return input;
-    else
+    } else {
       return input - (max - min) * std::floor((input - min) / (max - min));
+    }
   }
 
   template <typename U>

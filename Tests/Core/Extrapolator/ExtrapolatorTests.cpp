@@ -340,10 +340,11 @@ namespace Test {
     // maximum momentum allowed
     double pmax = units::SI2Nat<units::MOMENTUM>(
         options.pathLimit * bField.getField(pos).mag() / M_PI);
-    if (mom.mag() < pmax)
+    if (mom.mag() < pmax) {
       BOOST_CHECK(status.pathLength < options.pathLimit);
-    else
+    } else {
       BOOST_CHECK_CLOSE(status.pathLength, options.pathLimit, 1e-3);
+    }
   }
 
 }  // namespace Test

@@ -61,9 +61,13 @@ struct Intersection
   bool
   operator<(const Intersection& si) const
   {
-    if (!valid) return false;
+    if (!valid) {
+      return false;
+    }
     // now check the pathLenght
-    if (si.valid) return (pathLength < si.pathLength);
+    if (si.valid) {
+      return (pathLength < si.pathLength);
+    }
     // the current path length wins
     return true;
   }
@@ -74,9 +78,13 @@ struct Intersection
   bool
   operator>(const Intersection& si) const
   {
-    if (!valid) return false;
+    if (!valid) {
+      return false;
+    }
     // now check the pathLenght
-    if (si.valid) return (pathLength > si.pathLength);
+    if (si.valid) {
+      return (pathLength > si.pathLength);
+    }
     // the current path length wins
     return true;
   }

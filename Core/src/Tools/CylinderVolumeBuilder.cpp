@@ -305,9 +305,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // check what to do with the existing
     if (wConfig.wCondition == Attaching || wConfig.wCondition == CentralWrapping
         || wConfig.wCondition == CentralInserting) {
-      if (nEndcap) totalContainer.push_back(nEndcap);
+      if (nEndcap) {
+        totalContainer.push_back(nEndcap);
+      }
       totalContainer.push_back(existingVolumeCp);
-      if (pEndcap) totalContainer.push_back(pEndcap);
+      if (pEndcap) {
+        totalContainer.push_back(pEndcap);
+      }
     } else if (wConfig.wCondition == Inserting && volume) {
       totalContainer.push_back(volume);
       totalContainer.push_back(existingVolumeCp);

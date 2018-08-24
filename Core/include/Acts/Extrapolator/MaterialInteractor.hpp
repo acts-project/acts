@@ -87,10 +87,14 @@ struct MaterialInteractor
   {
 
     // if we are on target, everything should have been done
-    if (state.navigation.targetReached) return;
+    if (state.navigation.targetReached) {
+      return;
+    }
 
     // if switched off, then return - alows run-time configuration
-    if (!multipleScattering && !energyLoss) return;
+    if (!multipleScattering && !energyLoss) {
+      return;
+    }
 
     // a current surface has been assigned by the navigator
     if (state.navigation.currentSurface
@@ -139,8 +143,9 @@ struct MaterialInteractor
 
         // to integrate process noise, we need to transport
         // the covariance to the current position in space
-        if (state.stepping.covTransport)
+        if (state.stepping.covTransport) {
           state.stepping.covarianceTransport(true);
+        }
 
         // get the material thickness - and correct it with incidence
         double thickness = mProperties->thickness();
@@ -220,15 +225,16 @@ struct MaterialInteractor
             // save the material interaction
             mInteraction.sigmaQoP2 = sigmaQoverP * sigmaQoverP;
             // good in any case for positive direction
-            if (state.stepping.navDir == forward)
+            if (state.stepping.navDir == forward) {
               state.stepping.cov(eQOP, eQOP)
                   += state.stepping.navDir * sigmaQoverP * sigmaQoverP;
-            else {
+            } else {
               // check that covariance entry doesn't become neagive
               double sEqop = state.stepping.cov(eQOP, eQOP);
-              if (sEqop > sigmaQoverP * sigmaQoverP)
+              if (sEqop > sigmaQoverP * sigmaQoverP) {
                 state.stepping.cov(eQOP, eQOP)
                     += state.stepping.navDir * sigmaQoverP * sigmaQoverP;
+              }
             }
           }
         }

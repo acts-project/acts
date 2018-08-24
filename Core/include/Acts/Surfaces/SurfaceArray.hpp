@@ -194,10 +194,14 @@ public:
       const Surface* minSrf;
 
       for (size_t b = 0; b < nBins; ++b) {
-        if (!isValidBin(b)) continue;
+        if (!isValidBin(b)) {
+          continue;
+        }
         std::vector<const Surface*>& binContent = lookup(b);
         // only complete if we have an empty bin
-        if (binContent.size() > 0) continue;
+        if (binContent.size() > 0) {
+          continue;
+        }
 
         Vector3D binCtr = getBinCenter(b);
         minPath         = std::numeric_limits<double>::max();
@@ -317,7 +321,9 @@ public:
       std::array<size_t, DIM> nBins   = m_grid.getNBins();
       for (size_t i = 0; i < indices.size(); ++i) {
         size_t idx = indices.at(i);
-        if (idx <= 0 || idx >= nBins.at(i) + 1) return false;
+        if (idx <= 0 || idx >= nBins.at(i) + 1) {
+          return false;
+        }
       }
 
       return true;
@@ -329,7 +335,9 @@ public:
     {
       // calculate neighbors for every bin and store in map
       for (size_t i = 0; i < m_grid.size(); i++) {
-        if (!isValidBin(i)) continue;
+        if (!isValidBin(i)) {
+          continue;
+        }
         typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
         std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
         std::vector<const Surface*>& neighbors = m_neighborMap.at(i);

@@ -45,9 +45,13 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
   // associate the layer to the layer surface itself
   DiscSurface::associateLayer(*this);
   // build an approach descriptor if none provided
-  if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && m_surfaceArray) {
+    buildApproachDescriptor();
+  }
   // register the layer to the approach descriptor
-  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
+  if (m_approachDescriptor) {
+    approachDescriptor()->registerLayer(*this);
+  }
 }
 
 std::shared_ptr<Acts::Layer>
@@ -65,12 +69,13 @@ Acts::DiscLayer::create(const variant_data& data_)
 
   LayerType   laytyp;
   std::string laytyp_str = payload.get<std::string>("layer_type");
-  if (laytyp_str == "active")
+  if (laytyp_str == "active") {
     laytyp = active;
-  else if (laytyp_str == "passive")
+  } else if (laytyp_str == "passive") {
     laytyp = passive;
-  else /*laytyp_str == "navigation"*/
+  } else { /*laytyp_str == "navigation"*/
     laytyp = navigation;
+  }
 
   double thickness = payload.get<double>("thickness");
   double minR      = payload.get<double>("minR");
@@ -197,12 +202,13 @@ Acts::DiscLayer::toVariantData() const
   payload["maxR"]      = cvBounds->outerRadius();
   payload["thickness"] = thickness();
 
-  if (layerType() == active)
+  if (layerType() == active) {
     payload["layer_type"] = "active"s;
-  else if (layerType() == passive)
+  } else if (layerType() == passive) {
     payload["layer_type"] = "passive"s;
-  else /*layerType() == navigation*/
+  } else { /*layerType() == navigation*/
     payload["layer_type"] = "navigation"s;
+  }
 
   if (m_surfaceArray) {
     payload["surfacearray"]           = m_surfaceArray->toVariantData();

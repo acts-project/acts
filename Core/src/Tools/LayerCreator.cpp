@@ -402,11 +402,15 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
   for (size_t b = 0; b < size; ++b) {
     std::vector<const Surface*> binContent = sArray.at(b);
     // we don't check under/overflow bins
-    if (!sArray.isValidBin(b)) continue;
+    if (!sArray.isValidBin(b)) {
+      continue;
+    }
     for (const auto& srf : binContent) {
       accessibleSurfaces.insert(srf);
     }
-    if (binContent.size() == 0) nEmptyBins++;
+    if (binContent.size() == 0) {
+      nEmptyBins++;
+    }
     nBinsChecked++;
   }
 

@@ -243,15 +243,17 @@ public:
       return std::abs(dPhi) < M_PI / 180.;
     }
 
-    if (bValue == Acts::binZ)
+    if (bValue == Acts::binZ) {
       return (
           std::abs(a->binningPosition(binR).z() - b->binningPosition(binR).z())
           < Acts::units::_um);
+    }
 
-    if (bValue == Acts::binR)
+    if (bValue == Acts::binR) {
       return (std::abs(a->binningPosition(binR).perp()
                        - b->binningPosition(binR).perp())
               < Acts::units::_um);
+    }
 
     return false;
   }

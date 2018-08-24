@@ -104,7 +104,9 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
       ACTS_WARNING("[!] Problem with given dimensions - return nullptr and "
                    "delete provided objects");
       // delete if newly created bounds
-      if (volBounds == nullptr) delete cylinderBounds;
+      if (volBounds == nullptr) {
+        delete cylinderBounds;
+      }
       return tVolume;
     }
     // get the zMin/Max
@@ -226,10 +228,12 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   if (materialLayers > 1) {
     double step = cylinder ? (max - min) / (materialLayers - 1)
                            : (max - min) / (materialLayers - 1);
-    for (unsigned int il = 0; il < materialLayers; ++il)
+    for (unsigned int il = 0; il < materialLayers; ++il) {
       layerPositions.push_back(min + il * step);
-  } else
+    }
+  } else {
     layerPositions.push_back(0.5 * (min + max));
+  }
 
   // now call the main method
   return createGapTrackingVolume(matprop,
@@ -330,7 +334,9 @@ Acts::CylinderVolumeHelper::createContainerTrackingVolume(
     ACTS_VERBOSE("     with bounds : " << (*firstVolume)->volumeBounds());
     // put the name together
     volumeName += (*firstVolume)->volumeName();
-    if (ivol + 1 < volumes.size()) volumeName += " | ";
+    if (ivol + 1 < volumes.size()) {
+      volumeName += " | ";
+    }
   }
   // close the volume name
   volumeName += " }";
@@ -570,9 +576,9 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     if (zFromTransform - cylinderVolumeBounds->halflengthZ() <= layerZmin
         && zFromTransform + cylinderVolumeBounds->halflengthZ() >= layerZmax
         && cylinderVolumeBounds->innerRadius() <= layerRmin
-        && cylinderVolumeBounds->outerRadius() >= layerRmax)
+        && cylinderVolumeBounds->outerRadius() >= layerRmax) {
       return true;
-    else {
+    } else {
       ACTS_WARNING(
           "Provided layers are not contained by volume ! Bailing out. ");
       ACTS_WARNING("- zFromTransform: " << zFromTransform);

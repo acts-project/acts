@@ -94,7 +94,9 @@ Acts::StrawSurface::operator=(const StrawSurface& other)
 Acts::StrawSurface*
 Acts::StrawSurface::clone(const Transform3D* shift) const
 {
-  if (shift) new StrawSurface(*this, *shift);
+  if (shift) {
+    new StrawSurface(*this, *shift);
+  }
   return new StrawSurface(*this);
 }
 

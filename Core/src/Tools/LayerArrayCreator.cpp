@@ -198,7 +198,9 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
   // case R
   case binR: {
     // binning in R and cylinder surface means something different
-    if (layerSurface.type() == Surface::Cylinder) break;
+    if (layerSurface.type() == Surface::Cylinder) {
+      break;
+    }
     translation = Vector3D(offset, 0., 0.);
   } break;
   // do nothing for the default

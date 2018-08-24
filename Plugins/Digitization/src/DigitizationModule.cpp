@@ -50,19 +50,25 @@ Acts::DigitizationModule::segmentationSurfaces(
   auto startbinX = entryCids.channel0;
   auto endbinX   = exitCids.channel0;
   // swap if needed
-  if (startbinX > endbinX) std::swap(startbinX, endbinX);
+  if (startbinX > endbinX) {
+    std::swap(startbinX, endbinX);
+  }
   // now cash in the rest
-  for (; startbinX <= endbinX; ++startbinX)
+  for (; startbinX <= endbinX; ++startbinX) {
     sSurfaces.push_back(m_segmentationSurfacesX[startbinX]);
+  }
 
   // start bin, end bin
   auto startbinY = entryCids.channel1;
   auto endbinY   = exitCids.channel1;
   // swap if needed
-  if (startbinY > endbinY) std::swap(startbinY, endbinY);
+  if (startbinY > endbinY) {
+    std::swap(startbinY, endbinY);
+  }
   // now cash in the rest
-  for (; startbinY <= endbinY; ++startbinY)
+  for (; startbinY <= endbinY; ++startbinY) {
     sSurfaces.push_back(m_segmentationSurfacesY[startbinY]);
+  }
 
   // return what you have
   return sSurfaces;
@@ -81,22 +87,32 @@ Acts::DigitizationModule::stepSurfaces(const Vector3D& start,
   // go along x - first with the naive binning (i.e. w.o lorentz angle)
   size_t sCellX = startCell.channel0;
   size_t eCellX = endCell.channel0;
-  if (sCellX > eCellX) std::swap(sCellX, eCellX);
+  if (sCellX > eCellX) {
+    std::swap(sCellX, eCellX);
+  }
   // now take the boundaries as well
-  if (sCellX > 0) --sCellX;
+  if (sCellX > 0) {
+    --sCellX;
+  }
   ++eCellX;  // @TODO check : safe because we can assume to have eCell+1
   // the surfaces along Y are easy, just the bin surfaces
   size_t sCellY = startCell.channel1;
   size_t eCellY = endCell.channel1;
-  if (sCellY > eCellY) std::swap(sCellY, eCellY);
+  if (sCellY > eCellY) {
+    std::swap(sCellY, eCellY);
+  }
   // reserve - be safe
   stepSurfaces.reserve((eCellY - sCellY) + (eCellX - sCellX) + 2);
   // now fill the x surfaces
-  for (; sCellX <= eCellX && sCellX < m_segmentationSurfacesX.size(); ++sCellX)
+  for (; sCellX <= eCellX && sCellX < m_segmentationSurfacesX.size();
+       ++sCellX) {
     stepSurfaces.push_back(m_segmentationSurfacesX[sCellX]);
+  }
   // end fill the y surfaces
-  for (; sCellY <= eCellY && sCellY < m_segmentationSurfacesY.size(); ++sCellY)
+  for (; sCellY <= eCellY && sCellY < m_segmentationSurfacesY.size();
+       ++sCellY) {
     stepSurfaces.push_back(m_segmentationSurfacesY[sCellY]);
+  }
   // return the lot
   return stepSurfaces;
 }

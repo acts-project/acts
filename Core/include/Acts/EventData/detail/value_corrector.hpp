@@ -55,8 +55,9 @@ namespace detail {
     calculate(R& values, unsigned int pos)
     {
       using parameter_type = typename par_type<first>::type;
-      if (parameter_type::may_modify_value)
+      if (parameter_type::may_modify_value) {
         values(pos) = parameter_type::getValue(values(pos));
+      }
       value_corrector_impl<R, others...>::calculate(values, pos + 1);
     }
   };
@@ -68,8 +69,9 @@ namespace detail {
     calculate(R& values, unsigned int pos)
     {
       using parameter_type = typename par_type<last>::type;
-      if (parameter_type::may_modify_value)
+      if (parameter_type::may_modify_value) {
         values(pos) = parameter_type::getValue(values(pos));
+      }
     }
   };
   /// @endcond

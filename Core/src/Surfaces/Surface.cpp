@@ -79,13 +79,21 @@ bool
 Acts::Surface::operator==(const Surface& other) const
 {
   // (a) fast exit for pointer comparison
-  if (&other == this) return true;
+  if (&other == this) {
+    return true;
+  }
   // (b) fast exit for type
-  if (other.type() != type()) return false;
+  if (other.type() != type()) {
+    return false;
+  }
   // (c) fast exit for bounds
-  if (other.bounds() != bounds()) return false;
+  if (other.bounds() != bounds()) {
+    return false;
+  }
   // (d) comapre transform
-  if (!other.transform().isApprox(transform(), 10e-9)) return false;
+  if (!other.transform().isApprox(transform(), 10e-9)) {
+    return false;
+  }
   // we should be good
   return true;
 }
@@ -100,7 +108,9 @@ Acts::Surface::isOnSurface(const Vector3D&      gpos,
   bool g2L = globalToLocal(gpos, Acts::Vector3D::UnitX(), lpos);
   if (g2L) {
     // no boundary check, then return true
-    if (!bcheck) return true;
+    if (!bcheck) {
+      return true;
+    }
     // return what ever the bounds tell you
     return bounds().inside(lpos, bcheck);
   }

@@ -91,7 +91,9 @@ namespace Test {
     BOOST_TEST(g.getUpperRightBinEdge({{4}}) == Point({{4.}}));
 
     // initialize grid
-    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
+    for (size_t bin = 0; bin < g.size(); ++bin) {
+      g.at(bin) = bin;
+    }
 
     // consistency of access
     const auto& point     = Point({{0.7}});
@@ -263,7 +265,9 @@ namespace Test {
     BOOST_TEST(g.getUpperRightBinEdge({{4, 2}}) == Point({{4., 2.}}));
 
     // initialize grid
-    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
+    for (size_t bin = 0; bin < g.size(); ++bin) {
+      g.at(bin) = bin;
+    }
 
     // consistency of access
     const auto& point     = Point({{0.7, 1.3}});
@@ -417,7 +421,9 @@ namespace Test {
     BOOST_TEST(g.getUpperRightBinEdge({{2, 2, 1}}) == Point({{2., 2., 1.}}));
 
     // initialize grid
-    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
+    for (size_t bin = 0; bin < g.size(); ++bin) {
+      g.at(bin) = bin;
+    }
 
     // consistency of access
     const auto& point     = Point({{0.7, 2.3, 1.3}});
@@ -484,7 +490,9 @@ namespace Test {
     BOOST_TEST(g.getUpperRightBinEdge({{2}}) == Point({{4.}}));
 
     // initialize grid
-    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
+    for (size_t bin = 0; bin < g.size(); ++bin) {
+      g.at(bin) = bin;
+    }
 
     // consistency of access
     const auto& point     = Point({{0.7}});
@@ -607,7 +615,9 @@ namespace Test {
     BOOST_TEST(g.getUpperRightBinEdge({{2, 2}}) == Point({{3., 4.}}));
 
     // initialize grid
-    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
+    for (size_t bin = 0; bin < g.size(); ++bin) {
+      g.at(bin) = bin;
+    }
 
     // consistency of access
     const auto& point     = Point({{0.7, 1.3}});
@@ -737,7 +747,9 @@ namespace Test {
     BOOST_TEST(g.getUpperRightBinEdge({{1, 2, 3}}) == Point({{1., 3., 3.3}}));
 
     // initialize grid
-    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
+    for (size_t bin = 0; bin < g.size(); ++bin) {
+      g.at(bin) = bin;
+    }
 
     // consistency of access
     const auto& point     = Point({{0.7, 1.3, 3.7}});
@@ -895,7 +907,9 @@ namespace Test {
     BOOST_TEST(g.getUpperRightBinEdge({{4, 2}}) == Point({{1., 3.}}));
 
     // initialize grid
-    for (size_t bin = 0; bin < g.size(); ++bin) g.at(bin) = bin;
+    for (size_t bin = 0; bin < g.size(); ++bin) {
+      g.at(bin) = bin;
+    }
 
     // consistency of access
     const auto& point     = Point({{1.3, 3.7}});

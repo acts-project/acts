@@ -78,8 +78,9 @@ public:
         m_objectGrid[bins[2]][bins[1]][bins[0]] = tap.first;
         /// fill the unique m_arrayObjects
         if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(), tap.first)
-            == m_arrayObjects.end())
+            == m_arrayObjects.end()) {
           m_arrayObjects.push_back(tap.first);
+        }
       }
     }
   }
@@ -101,16 +102,19 @@ public:
     /// reserve the right amount of data
     m_arrayObjects.reserve(objects);
     /// loop over the object & position for ordering
-    for (auto& o2 : m_objectGrid)
-      for (auto& o1 : o2)
+    for (auto& o2 : m_objectGrid) {
+      for (auto& o1 : o2) {
         for (auto& o0 : o1) {
           if (o0) {
             /// fill the unique m_arrayObjects
             if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(), o0)
-                == m_arrayObjects.end())
+                == m_arrayObjects.end()) {
               m_arrayObjects.push_back(o0);
+            }
           }
         }
+      }
+    }
   }
 
   /// Copy constructor
@@ -230,16 +234,19 @@ public:
         = m_binUtility->binningData()[0].neighbourRange(binTriple[0]);
 
     // do the loop
-    for (auto b2 : bin2values)
-      for (auto b1 : bin1values)
+    for (auto b2 : bin2values) {
+      for (auto b1 : bin1values) {
         for (auto b0 : bin0values) {
           // get the object
           T object = m_objectGrid[b2][b1][b0];
           if (object && object != bObject
               && std::find(rvector.begin(), rvector.end(), object)
-                  == rvector.end())
+                  == rvector.end()) {
             rvector.push_back(object);
+          }
         }
+      }
+    }
     // return the ones you found
     return rvector;
   }

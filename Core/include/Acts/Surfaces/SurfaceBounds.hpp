@@ -105,7 +105,9 @@ public:
 inline bool
 operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs)
 {
-  if (&lhs == &rhs) return true;
+  if (&lhs == &rhs) {
+    return true;
+  }
   return (lhs.type() == rhs.type()) && (lhs.valueStore() == rhs.valueStore());
 }
 

@@ -79,7 +79,9 @@ main(int argc, char* argv[])
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
   std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
-  if (withCov) covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  if (withCov) {
+    covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  }
   CurvilinearParameters pars(std::move(covPtr), pos, mom, +1);
 
   ExtrapolationCell<TrackParameters> exCell(pars);

@@ -88,9 +88,10 @@ const Acts::Vector3D
 Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const
 {
   // special binning type for R-type methods
-  if (bValue == Acts::binR || bValue == Acts::binRPhi)
+  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     return Vector3D(
         center().x() + bounds().r(center().z()), center().y(), center().z());
+  }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
   return center();
@@ -149,7 +150,9 @@ Acts::ConeSurface::localToGlobal(const Vector2D& lpos,
   double   phi = lpos[Acts::eLOC_RPHI] / r;
   Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
   // transport it to the globalframe
-  if (m_transform) gpos = transform() * loc3Dframe;
+  if (m_transform) {
+    gpos = transform() * loc3Dframe;
+  }
 }
 
 bool
@@ -177,7 +180,9 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
   Vector3D normalC(cos(phi) * bounds().cosAlpha(),
                    sin(phi) * bounds().cosAlpha(),
                    sgn * bounds().sinAlpha());
-  if (m_transform) normalC = transform() * normalC;
+  if (m_transform) {
+    normalC = transform() * normalC;
+  }
   // back in global frame
   double cAlpha = normalC.dot(mom.unit());
   return std::abs(1. / cAlpha);
@@ -192,7 +197,9 @@ Acts::ConeSurface::name() const
 Acts::ConeSurface*
 Acts::ConeSurface::clone(const Acts::Transform3D* shift) const
 {
-  if (shift) new ConeSurface(*this, *shift);
+  if (shift) {
+    new ConeSurface(*this, *shift);
+  }
   return new ConeSurface(*this);
 }
 

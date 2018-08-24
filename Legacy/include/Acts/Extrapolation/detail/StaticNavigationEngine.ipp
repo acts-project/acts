@@ -116,11 +116,14 @@ Acts::StaticNavigationEngine::resolveBoundaryT(
   for (auto& bSurfaceTV : eCell.leadVolume->boundarySurfaces()) {
     // we tried this one already, no point to do it again
     if (bSurfacesTried.size()
-        && bSurfacesTried.find(bSurfaceTV.get()) != bSurfacesTried.end())
+        && bSurfacesTried.find(bSurfaceTV.get()) != bSurfacesTried.end()) {
       continue;
+    }
     // skip if it's the last boundary surface
     const Surface& bSurface = bSurfaceTV->surfaceRepresentation();
-    if (&bSurface == eCell.lastBoundarySurface) continue;
+    if (&bSurface == eCell.lastBoundarySurface) {
+      continue;
+    }
     // screen output
     EX_MSG_VERBOSE(eCell.navigationStep,
                    "navigation",
@@ -308,8 +311,9 @@ Acts::StaticNavigationEngine::handleBoundaryT(
     if (eCell.leadVolume == nextVolume) {
       // the start parameters where on the boundary already give a relaxed
       // return code
-      if (&bSurface == eCell.lastBoundarySurface)
+      if (&bSurface == eCell.lastBoundarySurface) {
         return ExtrapolationCode::Unset;
+      }
       // give some screen output as of why this happens
       EX_MSG_VERBOSE(eCell.navigationStep,
                      "navigation",
@@ -391,10 +395,13 @@ Acts::StaticNavigationEngine::resolvePositionT(
 
   // noLoop= True is used when we have exit from leadVolume
 
-  if (!eCell.leadVolume)
+  if (!eCell.leadVolume) {
     eCell.leadVolume = m_cfg.trackingGeometry->lowestStaticTrackingVolume(
         eCell.leadParameters->position());
-  if (!eCell.leadVolume) return ExtrapolationCode::FailureNavigation;
+  }
+  if (!eCell.leadVolume) {
+    return ExtrapolationCode::FailureNavigation;
+  }
   const TrackingVolume* nextVol = 0;
   if (m_cfg.trackingGeometry->atVolumeBoundary(
           eCell.leadParameters->position(),
@@ -409,8 +416,9 @@ Acts::StaticNavigationEngine::resolvePositionT(
     if (nextVol) {
       eCell.leadVolume = nextVol;
       return ExtrapolationCode::InProgress;
-    } else
+    } else {
       return ExtrapolationCode::FailureNavigation;
+    }
   }
 
   return ExtrapolationCode::InProgress;

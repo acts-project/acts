@@ -200,10 +200,14 @@ struct Navigator
   {
 
     // void behavior in case no tracking geometry is present
-    if (!trackingGeometry) return;
+    if (!trackingGeometry) {
+      return;
+    }
 
     // turn the navigator into void when you are intructed to do nothing
-    if (!resolveSensitive && !resolveMaterial && !resolvePassive) return;
+    if (!resolveSensitive && !resolveMaterial && !resolvePassive) {
+      return;
+    }
 
     debugLog(state, [&] { return std::string("Entering navigator."); });
 
@@ -216,7 +220,9 @@ struct Navigator
     // - If so & the target exists or was hit - it simply returns
     // - If a target exists and was not yet hit, it checks for it
     // -> return is always to the stepper
-    if (navigationBreak(state)) return;
+    if (navigationBreak(state)) {
+      return;
+    }
 
     // get a  navigation corrector associated to the stepper
     auto navCorr = state.stepping.corrector();
@@ -295,8 +301,9 @@ struct Navigator
   {
     if (state.navigation.navigationBreak) {
       // target exists and reached, or no target exists
-      if (state.navigation.targetReached || !state.navigation.targetSurface)
+      if (state.navigation.targetReached || !state.navigation.targetSurface) {
         return true;
+      }
       // the only advance could have been to the target
       if (state.navigation.targetSurface->isOnSurface(state.stepping.position(),
                                                       true)) {
@@ -339,7 +346,9 @@ struct Navigator
   {
 
     // No initialisation necessary
-    if (state.navigation.currentVolume) return false;
+    if (state.navigation.currentVolume) {
+      return false;
+    }
 
     debugLog(state, [&] { return std::string("Initializing start volume."); });
 
@@ -454,13 +463,14 @@ struct Navigator
           });
           state.navigation.currentSurface
               = state.navigation.navLayerIter->representation;
-          if (state.navigation.currentSurface)
+          if (state.navigation.currentSurface) {
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Current surface set to approach surface ";
               dstream << state.navigation.currentSurface->geoID().toString();
               return dstream.str();
             });
+          }
           // no returning to the stepper at this stage
           return false;
         }
@@ -639,8 +649,9 @@ struct Navigator
         std::stringstream dstream;
         dstream << state.navigation.navBoundaries.size();
         dstream << " boundary candidates found at path(s): ";
-        for (auto& bc : state.navigation.navBoundaries)
+        for (auto& bc : state.navigation.navBoundaries) {
           dstream << bc.intersection.pathLength << "  ";
+        }
         return dstream.str();
       });
       // set the iterator, but avoid stepping a zero step
@@ -697,13 +708,14 @@ struct Navigator
         }
         // store the boundary for eventual actors to work on it
         state.navigation.currentSurface = boundarySurface;
-        if (state.navigation.currentSurface)
+        if (state.navigation.currentSurface) {
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Current surface set to boundary surface ";
             dstream << state.navigation.currentSurface->geoID().toString();
             return dstream.str();
           });
+        }
         // resolve the new layer situation
         if (resolveLayers(state, navCorr)) {
           // positive layer resolving :
@@ -816,8 +828,9 @@ struct Navigator
         std::stringstream dstream;
         dstream << state.navigation.navLayers.size();
         dstream << " layer candidates found at path(s): ";
-        for (auto& lc : state.navigation.navLayers)
+        for (auto& lc : state.navigation.navLayers) {
           dstream << lc.intersection.pathLength << "  ";
+        }
         return dstream.str();
       });
       // set the iterator
@@ -845,7 +858,9 @@ struct Navigator
         state.navigation.navLayerIter->representation
             = state.navigation.startSurface;
         // if you found surfaces return to the stepper
-        if (resolveSurfaces(state, navCorr)) return true;
+        if (resolveSurfaces(state, navCorr)) {
+          return true;
+        }
         // increase the iterator
         ++state.navigation.navLayerIter;
         return false;
@@ -939,16 +954,19 @@ struct Navigator
               = state.navigation.startSurface;
         } else {
           state.navigation.currentSurface = layerSurface;
-          if (state.navigation.currentSurface)
+          if (state.navigation.currentSurface) {
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Current surface set to layer surface ";
               dstream << state.navigation.currentSurface->geoID().toString();
               return dstream.str();
             });
+          }
         }
         // if you found surfaces return to the stepper
-        if (resolveSurfaces(state, navCorr)) return true;
+        if (resolveSurfaces(state, navCorr)) {
+          return true;
+        }
         // increase the iterator
         ++state.navigation.navLayerIter;
       }
@@ -1104,13 +1122,14 @@ struct Navigator
         // the surface will only appear due to correct
         // collect(Property) flag
         state.navigation.currentSurface = surface;
-        if (state.navigation.currentSurface)
+        if (state.navigation.currentSurface) {
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Current surface set to resolved surface ";
             dstream << state.navigation.currentSurface->geoID().toString();
             return dstream.str();
           });
+        }
         // break if the surface is the target surface
         if (surface == state.navigation.targetSurface) {
           debugLog(state, [&] {
@@ -1223,8 +1242,9 @@ private:
   {
     if (state.options.debug) {
       std::string vName = "No Volume";
-      if (state.navigation.currentVolume)
+      if (state.navigation.currentVolume) {
         vName = state.navigation.currentVolume->volumeName();
+      }
       std::stringstream dstream;
       dstream << ">>>" << std::setw(state.options.debugPfxWidth) << vName
               << " | ";

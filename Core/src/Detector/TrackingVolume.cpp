@@ -98,12 +98,18 @@ const Acts::Layer*
 Acts::TrackingVolume::associatedLayer(const Vector3D& gp) const
 {
   // confined static layers - highest hierarchy
-  if (m_confinedLayers) return (m_confinedLayers->object(gp).get());
+  if (m_confinedLayers) {
+    return (m_confinedLayers->object(gp).get());
+  }
 
   // confined arbitrary
-  if (!m_confinedArbitraryLayers.empty())
-    for (auto& layer : m_confinedArbitraryLayers)
-      if (layer->isOnLayer(gp)) return layer.get();
+  if (!m_confinedArbitraryLayers.empty()) {
+    for (auto& layer : m_confinedArbitraryLayers) {
+      if (layer->isOnLayer(gp)) {
+        return layer.get();
+      }
+    }
+  }
 
   // return the null pointer
   return nullptr;
@@ -113,19 +119,30 @@ const Acts::TrackingVolume*
 Acts::TrackingVolume::trackingVolume(const Vector3D& gp) const
 {
   // confined static volumes - highest hierarchy
-  if (m_confinedVolumes) return (m_confinedVolumes->object(gp).get());
+  if (m_confinedVolumes) {
+    return (m_confinedVolumes->object(gp).get());
+  }
 
   // if no static volumes are there, detached is next hierarchy
-  if (!m_confinedDetachedVolumes.empty())
-    for (auto& detachedVolume : m_confinedDetachedVolumes)
-      if (detachedVolume->trackingVolume()->inside(gp, 0.001))
-        return detachedVolume->trackingVolume();
+  if (!m_confinedDetachedVolumes.empty()) {
+    for (auto& detachedVolume : m_confinedDetachedVolumes) {
+      if (detachedVolume->trackingVolume()->inside(gp, 0.001)) {
+        {
+          return detachedVolume->trackingVolume();
+        }
+      }
+    }
+  }
 
   // if no static volumes or detached volumes are there, search for dense
   // volumes
-  if (!m_confinedDenseVolumes.empty())
-    for (auto& denseVolume : m_confinedDenseVolumes)
-      if (denseVolume->inside(gp, 0.001)) return denseVolume.get();
+  if (!m_confinedDenseVolumes.empty()) {
+    for (auto& denseVolume : m_confinedDenseVolumes) {
+      if (denseVolume->inside(gp, 0.001)) {
+        return denseVolume.get();
+      }
+    }
+  }
 
   // there is no lower sub structure
   return this;
@@ -138,10 +155,13 @@ Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
   // create a new vector
   DetachedVolumeVector* currVols = new DetachedVolumeVector;
   // get the volumes were the position is inside
-  if (!m_confinedDetachedVolumes.empty())
-    for (auto& detachedVolume : m_confinedDetachedVolumes)
-      if (detachedVolume->trackingVolume()->inside(gp, tol))
+  if (!m_confinedDetachedVolumes.empty()) {
+    for (auto& detachedVolume : m_confinedDetachedVolumes) {
+      if (detachedVolume->trackingVolume()->inside(gp, tol)) {
         currVols->push_back(detachedVolume);
+      }
+    }
+  }
   // return the volumes that are inside
   return currVols;
 }
@@ -150,32 +170,37 @@ void
 Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
 {
   // never overwrite what is already signed, that's a crime
-  if (m_geometrySignature == Unsigned) m_geometrySignature = geosign;
-  m_geometryType                                           = geotype;
+  if (m_geometrySignature == Unsigned) {
+    m_geometrySignature = geosign;
+  }
+  m_geometryType = geotype;
 
   // confined static volumes
-  if (m_confinedVolumes)
+  if (m_confinedVolumes) {
     for (auto& volumesIter : (m_confinedVolumes->arrayObjects())) {
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
+  }
 
   // same procedure for the detached volumes
-  if (!m_confinedDetachedVolumes.empty())
+  if (!m_confinedDetachedVolumes.empty()) {
     for (auto& volumesIter : m_confinedDetachedVolumes) {
       auto mutableVolumesIter
           = std::const_pointer_cast<DetachedTrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
+  }
 
   // finally for confined dense volumes
-  if (!m_confinedDenseVolumes.empty())
+  if (!m_confinedDenseVolumes.empty()) {
     for (auto& volumesIter : m_confinedDenseVolumes) {
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
+  }
 }
 
 const std::
@@ -302,8 +327,9 @@ Acts::TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd)
 Acts::GlueVolumesDescriptor&
 Acts::TrackingVolume::glueVolumesDescriptor()
 {
-  if (!m_glueVolumeDescriptor)
+  if (!m_glueVolumeDescriptor) {
     m_glueVolumeDescriptor = new GlueVolumesDescriptor;
+  }
   return (*m_glueVolumeDescriptor);
 }
 
@@ -318,7 +344,7 @@ Acts::TrackingVolume::synchronizeLayers(double envelope) const
     // msgstream << MSG::VERBOSE << "  ---> working on " <<
     // m_confinedLayers->arrayObjects().size() << " (material+navigation)
     // layers." << endreq;
-    for (auto& clayIter : m_confinedLayers->arrayObjects())
+    for (auto& clayIter : m_confinedLayers->arrayObjects()) {
       if (clayIter) {
         // @todo implement syncrhonize layer
         //  if (clayIter->surfaceRepresentation().type() == Surface::Cylinder &&
@@ -327,8 +353,9 @@ Acts::TrackingVolume::synchronizeLayers(double envelope) const
         //  else
         //      clayIter->resizeLayer(volumeBounds(),envelope);
       }  // else
-    // msgstream << MSG::WARNING << "  ---> found 0 pointer to layer, indicates
-    // problem." << endreq;
+      // msgstream << MSG::WARNING << "  ---> found 0 pointer to layer,
+      // indicates problem." << endreq;
+    }
   }
 
   // case b : container volume -> step down
@@ -336,8 +363,9 @@ Acts::TrackingVolume::synchronizeLayers(double envelope) const
     // msgstream << MSG::VERBOSE << "  ---> no confined layers, working on " <<
     // m_confinedVolumes->arrayObjects().size() << " confined volumes." <<
     // endreq;
-    for (auto& cVolumesIter : m_confinedVolumes->arrayObjects())
+    for (auto& cVolumesIter : m_confinedVolumes->arrayObjects()) {
       cVolumesIter->synchronizeLayers(envelope);
+    }
   }
 }
 

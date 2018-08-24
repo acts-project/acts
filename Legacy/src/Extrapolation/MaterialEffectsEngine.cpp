@@ -152,7 +152,9 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     size_t             surfaceID) const
 {
   // return if you have nothing to do
-  if (!mSurface.associatedMaterial()) return;
+  if (!mSurface.associatedMaterial()) {
+    return;
+  }
   // parameters are the lead parameters
   auto& mParameters = (*eCell.leadParameters);
 
@@ -222,8 +224,9 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
       double sigmaDeltaE = thickness * pathCorrection * sigmaP;
       double sigmaQoverP = sigmaDeltaE / std::pow(beta * p, 2);
       // update the covariance if needed
-      if (mutableUCovariance)
+      if (mutableUCovariance) {
         (*mutableUCovariance)(eQOP, eQOP) += sign * sigmaQoverP * sigmaQoverP;
+      }
     }
     // (B) - update the covariance if needed
     if (mutableUCovariance && m_cfg.mscCorrection) {

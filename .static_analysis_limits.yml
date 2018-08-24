@@ -1,5 +1,6 @@
 limits:
   "modernize-use-using": 0
+  "readability-braces-around-statements": 0
 
 ignore:
   - cppcoreguidelines-pro-type-vararg

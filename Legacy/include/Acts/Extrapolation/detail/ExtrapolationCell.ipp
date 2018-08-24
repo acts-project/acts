@@ -56,7 +56,9 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     const MaterialProperties* mprop)
 {
   // fast exit
-  if (!mprop) return;
+  if (!mprop) {
+    return;
+  }
   // if this is on a new surface,
   // so create a new extrapolation step
   if (extrapolationSteps.size()) {
@@ -92,7 +94,9 @@ Acts::ExtrapolationCell<T>::stepMaterial(
   // if there's new stepParameters then change the lead
   if (stepParameters) {
     // store the old parameters if present
-    if (cstep.parameters) cstep.preparameters = std::move(cstep.parameters);
+    if (cstep.parameters) {
+      cstep.preparameters = std::move(cstep.parameters);
+    }
     // bookkeeping
     lastLeadParameters = leadParameters;
     leadParameters     = stepParameters.get();

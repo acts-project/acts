@@ -58,11 +58,13 @@ namespace Test {
       for (auto lay : iVolume->confinedLayers()->arrayObjects()) {
         BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
         // check the approach surfaces
-        for (auto asf : lay->approachDescriptor()->containedSurfaces())
+        for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
           BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
+        }
         // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->surfaces())
+        for (auto ssf : lay->surfaceArray()->surfaces()) {
           BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
+        }
       }
     }
   }
@@ -87,11 +89,13 @@ namespace Test {
       for (auto lay : oVolume->confinedLayers()->arrayObjects()) {
         BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
         // check the approach surfaces
-        for (auto asf : lay->approachDescriptor()->containedSurfaces())
+        for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
           BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
+        }
         // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->surfaces())
+        for (auto ssf : lay->surfaceArray()->surfaces()) {
           BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
+        }
       }
     }
   }
@@ -124,11 +128,13 @@ namespace Test {
       for (auto lay : cVol->confinedLayers()->arrayObjects()) {
         BOOST_CHECK_EQUAL(0ul, lay->geoID().value());
         // check the approach surfaces
-        for (auto asf : lay->approachDescriptor()->containedSurfaces())
+        for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
           BOOST_CHECK_EQUAL(0ul, asf->geoID().value());
+        }
         // check the layer surface array
-        for (auto ssf : lay->surfaceArray()->surfaces())
+        for (auto ssf : lay->surfaceArray()->surfaces()) {
           BOOST_CHECK_EQUAL(0ul, ssf->geoID().value());
+        }
       }
     }
   }

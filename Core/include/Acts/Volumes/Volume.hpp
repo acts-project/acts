@@ -98,7 +98,9 @@ protected:
 inline const Transform3D&
 Volume::transform() const
 {
-  if (m_transform) return (*(m_transform.get()));
+  if (m_transform) {
+    return (*(m_transform.get()));
+  }
   return Acts::s_idTransform;
 }
 

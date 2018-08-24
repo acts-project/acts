@@ -134,7 +134,9 @@ Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
   if (m_halfPhi < M_PI) {
     double df = std::abs(dF) - m_halfPhi;
     sf        = r * std::sin(df);
-    if (df > 0.) r *= std::cos(df);
+    if (df > 0.) {
+      r *= std::cos(df);
+    }
   } else {
     sf = -1.e+10;
   }
@@ -152,8 +154,12 @@ Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
     if (sr1 >= 0.) {
       return sr1;
     }
-    if (sf < sr0) sf = sr0;
-    if (sf < sr1) sf = sr1;
+    if (sf < sr0) {
+      sf = sr0;
+    }
+    if (sf < sr1) {
+      sf = sr1;
+    }
     return sf;
   }
 

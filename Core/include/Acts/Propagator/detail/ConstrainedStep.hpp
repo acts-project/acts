@@ -46,8 +46,9 @@ namespace detail {
     void
     update(const double& value, Type type)
     {
-      if (type != aborter || (direction * values[type] > direction * value))
+      if (type != aborter || (direction * values[type] > direction * value)) {
         values[type] = value;
+      }
     }
 
     /// release a certain constraint value
@@ -91,8 +92,9 @@ namespace detail {
     /// depending on the direction
     operator double() const
     {
-      if (direction == forward)
+      if (direction == forward) {
         return (*std::min_element(values.begin(), values.end()));
+      }
       return (*std::max_element(values.begin(), values.end()));
     }
 

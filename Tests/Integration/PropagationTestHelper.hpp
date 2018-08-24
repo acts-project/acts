@@ -122,8 +122,12 @@ namespace IntegrationTest {
 
     // calculate expected final momentum direction in phi in [-pi,pi]
     double exp_phi = std::fmod(phi + turns * 2 * M_PI, 2 * M_PI);
-    if (exp_phi < -M_PI) exp_phi += 2 * M_PI;
-    if (exp_phi > M_PI) exp_phi -= 2 * M_PI;
+    if (exp_phi < -M_PI) {
+      exp_phi += 2 * M_PI;
+    }
+    if (exp_phi > M_PI) {
+      exp_phi -= 2 * M_PI;
+    }
 
     // calculate expected position
     double exp_z = z + pz / pT * 2 * M_PI * r * std::abs(turns);

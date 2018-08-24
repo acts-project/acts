@@ -112,8 +112,9 @@ public:
     m_functionPtr = &searchEquidistantWithBoundary;
     // fill the boundary vector for fast access to center & boundaries
     m_boundaries.reserve(m_bins + 1);
-    for (size_t ib = 0; ib < m_bins + 1; ++ib)
+    for (size_t ib = 0; ib < m_bins + 1; ++ib) {
       m_boundaries.push_back(min + ib * step);
+    }
     // the binning data has sub structure - multiplicative or additive
     checkSubStructure();
   }
@@ -179,11 +180,12 @@ public:
         : nullptr;
     // set the pointer depending on the type
     // set the correct function pointer
-    if (type == equidistant)
+    if (type == equidistant) {
       m_functionPtr = &searchEquidistantWithBoundary;
-    else
+    } else {
       m_functionPtr = m_bins < 50 ? &searchInVectorWithBoundary
                                   : &binarySearchWithBoundary;
+    }
   }
 
   /// Assignment operator
@@ -209,11 +211,12 @@ public:
       m_totalBins       = bdata.m_totalBins;
       m_totalBoundaries = bdata.m_totalBoundaries;
       // set the correct function pointer
-      if (type == equidistant)
+      if (type == equidistant) {
         m_functionPtr = &searchEquidistantWithBoundary;
-      else
+      } else {
         m_functionPtr = m_bins < 50 ? &searchInVectorWithBoundary
                                     : &binarySearchWithBoundary;
+      }
     }
     return (*this);
   }
@@ -256,7 +259,9 @@ public:
   const std::vector<float>&
   boundaries() const
   {
-    if (subBinningData) return m_totalBoundaries;
+    if (subBinningData) {
+      return m_totalBoundaries;
+    }
     return m_boundaries;
   }
 
@@ -270,9 +275,12 @@ public:
   {
     // ordered after occurence
     if (binvalue == binR || binvalue == binRPhi || binvalue == binX
-        || binvalue == binH)
+        || binvalue == binH) {
       return lposition[0];
-    if (binvalue == binPhi) return lposition[1];
+    }
+    if (binvalue == binPhi) {
+      return lposition[1];
+    }
     return lposition[1];
   }
 
@@ -285,10 +293,18 @@ public:
   value(const Vector3D& position) const
   {
     // ordered after occurence
-    if (binvalue == binR || binvalue == binH) return (position.perp());
-    if (binvalue == binRPhi) return (position.perp() * position.phi());
-    if (binvalue == binEta) return (position.eta());
-    if (binvalue < 3) return (position[binvalue]);
+    if (binvalue == binR || binvalue == binH) {
+      return (position.perp());
+    }
+    if (binvalue == binRPhi) {
+      return (position.perp() * position.phi());
+    }
+    if (binvalue == binEta) {
+      return (position.eta());
+    }
+    if (binvalue < 3) {
+      return (position[binvalue]);
+    }
     // phi gauging
     return position.phi();
   }
@@ -316,7 +332,9 @@ public:
   inside(const Vector3D& position) const
   {
     // closed one is always inside
-    if (option == closed) return true;
+    if (option == closed) {
+      return true;
+    }
     // all other options
     // @todo remove hard-coded tolerance parameters
     float val = value(position);
@@ -332,7 +350,9 @@ public:
   inside(const Vector2D& lposition) const
   {
     // closed one is always inside
-    if (option == closed) return true;
+    if (option == closed) {
+      return true;
+    }
     // all other options
     // @todo remove hard-coded tolerance parameters
     float val = value(lposition);
@@ -347,7 +367,9 @@ public:
   size_t
   searchLocal(const Vector2D& lposition) const
   {
-    if (zdim) return 0;
+    if (zdim) {
+      return 0;
+    }
     return search(value(lposition));
   }
 
@@ -359,7 +381,9 @@ public:
   size_t
   searchGlobal(const Vector3D& position) const
   {
-    if (zdim) return 0;
+    if (zdim) {
+      return 0;
+    }
     return search(value(position));
   }
 
@@ -371,7 +395,9 @@ public:
   size_t
   search(float value) const
   {
-    if (zdim) return 0;
+    if (zdim) {
+      return 0;
+    }
     assert(m_functionPtr != nullptr);
     return (!subBinningData) ? (*m_functionPtr)(value, *this)
                              : searchWithSubStructure(value);
@@ -412,7 +438,9 @@ public:
   int
   nextDirection(const Vector3D& position, const Vector3D& dir) const
   {
-    if (zdim) return 0;
+    if (zdim) {
+      return 0;
+    }
     float    val     = value(position);
     Vector3D probe   = position + dir.normalized();
     float    nextval = value(probe);
@@ -429,7 +457,9 @@ public:
   float
   centerValue(size_t bin) const
   {
-    if (zdim) return 0.5 * (min + max);
+    if (zdim) {
+      return 0.5 * (min + max);
+    }
     float bmin = m_boundaries[bin];
     float bmax = bin < m_boundaries.size() ? m_boundaries[bin + 1] : max;
     return 0.5 * (bmin + bmax);
@@ -449,9 +479,13 @@ public:
     bool dsucc = decrement(low);
     bool isucc = increment(high);
     // both worked -> triple range
-    if (dsucc && isucc) return {low, bin, high};
+    if (dsucc && isucc) {
+      return {low, bin, high};
+    }
     // one worked -> double range
-    if (dsucc || isucc) return {low, high};
+    if (dsucc || isucc) {
+      return {low, high};
+    }
     // none worked -> single bin
     return {bin};
   }
@@ -491,8 +525,9 @@ private:
                                      subBinBoundaries.begin(),
                                      subBinBoundaries.end());
             ++mbvalue;
-          } else
+          } else {
             m_totalBoundaries.push_back(*mbvalue);
+          }
         }
       } else {  // (B) multiplicative sub structure
         // every bin is just repaced by the sub binning structure
@@ -505,8 +540,9 @@ private:
         m_totalBoundaries.push_back(min);
         for (size_t ib = 0; ib < m_bins; ++ib) {
           float offset = ib * step;
-          for (size_t isb = 1; isb < subBinBoundaries.size(); ++isb)
+          for (size_t isb = 1; isb < subBinBoundaries.size(); ++isb) {
             m_totalBoundaries.push_back(offset + subBinBoundaries[isb]);
+          }
         }
       }
       // sort the total boundary vector
@@ -525,8 +561,12 @@ private:
     int bin = ((value - bData.min) / bData.step);
     // special treatment of the 0 bin for closed
     if (bData.option == closed) {
-      if (value < bData.min) return (bData.m_bins - 1);
-      if (value > bData.max) return 0;
+      if (value < bData.min) {
+        return (bData.m_bins - 1);
+      }
+      if (value > bData.max) {
+        return 0;
+      }
     }
     // if outside boundary : return boundary for open, opposite bin for closed
     bin = bin < 0 ? ((bData.option == open) ? 0 : (bData.m_bins - 1)) : bin;
@@ -545,13 +585,17 @@ private:
       return (bData.option == closed) ? (bData.m_bins - 1) : 0;
     }
     // higher boundary
-    if (value >= bData.max)
+    if (value >= bData.max) {
       return (bData.option == closed) ? 0 : (bData.m_bins - 1);
+    }
     // search
     auto   vIter = bData.m_boundaries.begin();
     size_t bin   = 0;
-    for (; vIter != bData.m_boundaries.end(); ++vIter, ++bin)
-      if ((*vIter) > value) break;
+    for (; vIter != bData.m_boundaries.end(); ++vIter, ++bin) {
+      if ((*vIter) > value) {
+        break;
+      }
+    }
     return (bin - 1);
   }
 
@@ -561,21 +605,27 @@ private:
   binarySearchWithBoundary(float value, const BinningData& bData)
   {
     // Binary search in an array of n values to locate value
-    if (value <= bData.m_boundaries[0])
+    if (value <= bData.m_boundaries[0]) {
       return (bData.option == closed) ? (bData.m_bins - 1) : 0;
+    }
     size_t nabove, nbelow, middle;
     // overflow
     nabove = bData.m_boundaries.size();
-    if (value >= bData.max) return (bData.option == closed) ? 0 : nabove - 2;
+    if (value >= bData.max) {
+      return (bData.option == closed) ? 0 : nabove - 2;
+    }
     // binary search
     nbelow = 0;
     while (nabove - nbelow > 1) {
       middle = (nabove + nbelow) / 2;
-      if (value == bData.m_boundaries[middle - 1]) return middle - 1;
-      if (value < bData.m_boundaries[middle - 1])
+      if (value == bData.m_boundaries[middle - 1]) {
+        return middle - 1;
+      }
+      if (value < bData.m_boundaries[middle - 1]) {
         nabove = middle;
-      else
+      } else {
         nbelow = middle;
+      }
     }
     return nbelow - 1;
   }
