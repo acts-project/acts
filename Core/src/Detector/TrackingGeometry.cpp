@@ -95,7 +95,7 @@ Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
                                          double /*unused*/) const
 {
   bool isAtBoundary = false;
-  nextVol           = 0;
+  nextVol           = nullptr;
   if (vol == nullptr) {
     return isAtBoundary;
   }

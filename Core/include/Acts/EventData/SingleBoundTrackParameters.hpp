@@ -164,7 +164,7 @@ public:
     : SingleTrackParameters<ChargePolicy>(std::move(copy))
     , m_pSurface(copy.m_pSurface)
   {
-    copy.m_pSurface = 0;
+    copy.m_pSurface = nullptr;
   }
 
   /// @brief desctructor - charged/neutral
@@ -210,7 +210,7 @@ public:
       }
 
       m_pSurface     = rhs.m_pSurface;
-      rhs.m_pSurface = 0;
+      rhs.m_pSurface = nullptr;
     }
 
     return *this;

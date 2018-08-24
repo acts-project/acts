@@ -109,7 +109,7 @@ public:
   {
     if (m_pSurface && m_pSurface->isFree()) {
       delete m_pSurface;
-      m_pSurface = 0;
+      m_pSurface = nullptr;
     }
   }
 

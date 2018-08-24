@@ -140,7 +140,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
   if (m_confinedLayers) {
     // cache the longest path length to avoid punch-through to the other side
     Intersection   sLayerIntersection(Vector3D(0., 0., 0), 0., true, 0.);
-    const Surface* sLayerSurface   = 0;
+    const Surface* sLayerSurface   = nullptr;
     double         validPathLength = 0.;
     // - get compatible layers back from the LayerArray simply because of the
     // binning
