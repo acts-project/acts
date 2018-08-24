@@ -54,12 +54,12 @@ public:
     /// surface array helper
     std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
     /// cylinder module z tolerance : it counts at same z, if ...
-    double cylinderZtolerance;
+    double cylinderZtolerance{10.};
     /// cylinder module phi tolerance : it counts at same phi, if ...
-    double cylinderPhiTolerance;
+    double cylinderPhiTolerance{0.1};
 
     // standard constructor
-    Config() : cylinderZtolerance(10.), cylinderPhiTolerance(0.1) {}
+    Config() = default;
   };
 
   /// Constructor

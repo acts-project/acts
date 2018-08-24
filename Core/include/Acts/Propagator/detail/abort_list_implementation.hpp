@@ -110,7 +110,9 @@ namespace detail {
   {
     template <typename T, typename result_t, typename propagator_state_t>
     static bool
-    check(const T&, const result_t& /*result*/, propagator_state_t& /*state*/)
+    check(const T& /*unused*/,
+          const result_t& /*result*/,
+          propagator_state_t& /*state*/)
     {
       return false;
     }

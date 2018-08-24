@@ -94,7 +94,7 @@ public:
 
     /// Constructor from a new map
     Cache(std::map<GeometryID, SurfaceMaterialRecord> smr)
-      : surfaceMaterialRecords(std::move(smr)), materialTrackCounter(0)
+      : surfaceMaterialRecords(std::move(smr))
     {
     }
   };

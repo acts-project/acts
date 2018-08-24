@@ -17,31 +17,18 @@
 #include <utility>
 
 Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
-  : GeometryObject()
-  , m_transform(std::move(tform))
-  , m_associatedDetElement(nullptr)
-  , m_associatedLayer(nullptr)
-  , m_associatedTrackingVolume(nullptr)
-  , m_associatedMaterial(nullptr)
+  : GeometryObject(), m_transform(std::move(tform))
 {
 }
 
 Acts::Surface::Surface(const DetectorElementBase& detelement)
-  : GeometryObject()
-  , m_transform(nullptr)
-  , m_associatedDetElement(&detelement)
-  , m_associatedLayer(nullptr)
-  , m_associatedTrackingVolume(nullptr)
-  , m_associatedMaterial(nullptr)
+  : GeometryObject(), m_transform(nullptr), m_associatedDetElement(&detelement)
 {
 }
 
 Acts::Surface::Surface(const Surface& other)
   : GeometryObject(other)
   , m_transform(other.m_transform)
-  , m_associatedDetElement(nullptr)
-  , m_associatedLayer(nullptr)
-  , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(other.m_associatedMaterial)
 {
 }
@@ -50,7 +37,6 @@ Acts::Surface::Surface(const Surface& other, const Transform3D& shift)
   : GeometryObject()
   , m_transform(std::make_shared<const Transform3D>(
         Transform3D(shift * other.transform())))
-  , m_associatedDetElement(nullptr)
   , m_associatedLayer(other.m_associatedLayer)
   , m_associatedMaterial(other.m_associatedMaterial)
 {

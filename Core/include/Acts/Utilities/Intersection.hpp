@@ -24,10 +24,10 @@ using CorrFnc = std::function<bool(Vector3D&, Vector3D&, double&)>;
 ///  intersection struct used for position
 struct Intersection
 {
-  Vector3D position;    ///< position of the intersection
-  double   pathLength;  ///< path length to the intersection (if valid)
-  double   distance;    ///< remaining distance (if not valid)
-  bool     valid;       ///< validiaty boolean
+  Vector3D position;      ///< position of the intersection
+  double   pathLength;    ///< path length to the intersection (if valid)
+  double   distance{0.};  ///< remaining distance (if not valid)
+  bool     valid{false};  ///< validiaty boolean
 
   /// Constructor with arguments
   ///
@@ -47,8 +47,6 @@ struct Intersection
   Intersection()
     : position(Vector3D(0., 0., 0.))
     , pathLength(std::numeric_limits<double>::infinity())
-    , distance(0.)
-    , valid(false)
   {
   }
 
@@ -95,15 +93,13 @@ template <typename object_t>
 class ObjectIntersection
 {
 public:
-  Intersection        intersection;  ///< the intersection iself
-  const object_t*     object;        ///< the object that was intersected
-  NavigationDirection pDirection;    ///< the direction in which it was taken
+  Intersection        intersection{};   ///< the intersection iself
+  const object_t*     object{nullptr};  ///< the object that was intersected
+  NavigationDirection pDirection{
+      anyDirection};  ///< the direction in which it was taken
 
   /// Default constructor
-  ObjectIntersection()
-    : intersection(), object(nullptr), pDirection(anyDirection)
-  {
-  }
+  ObjectIntersection() = default;
 
   /// Object intersection
   ///

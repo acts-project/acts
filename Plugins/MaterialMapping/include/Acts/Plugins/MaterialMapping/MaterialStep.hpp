@@ -43,14 +43,14 @@ public:
   struct Position
   {
     /// X Coordinate of the material step
-    double x;
+    double x{0};
     /// Y Coordinate of the material step
-    double y;
+    double y{0};
     /// Z Coordinate of the material step
-    double z;
+    double z{0};
 
     /// Default constructor creating a position at the origin
-    Position() : x(0.), y(0.), z(0.) {}
+    Position() = default;
 
     /// Constructor to set the three coordinates
     Position(double x_, double y_, double z_) : x(x_), y(y_), z(z_) {}
@@ -122,7 +122,7 @@ private:
   MaterialProperties m_material;
 
   /// the geometry id
-  uint64_t m_geoID;
+  uint64_t m_geoID{0};
 };
 
 }  /// namespace

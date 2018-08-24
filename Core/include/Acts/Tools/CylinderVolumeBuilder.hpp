@@ -49,19 +49,17 @@ enum WrappingCondition {
 /// VolumeConfig struct to understand the layer config
 struct VolumeConfig
 {
-  bool        present;   ///< layers are present
-  bool        wrapping;  ///< in what way they are binned
-  double      rMin;      ///< min parameter r
-  double      rMax;      ///< max parameter r
-  double      zMin;      ///< min parameter z
-  double      zMax;      ///< max parameter z
-  LayerVector layers;    ///< the layers you have
+  bool        present{false};   ///< layers are present
+  bool        wrapping{false};  ///< in what way they are binned
+  double      rMin;             ///< min parameter r
+  double      rMax;             ///< max parameter r
+  double      zMin;             ///< min parameter z
+  double      zMax;             ///< max parameter z
+  LayerVector layers;           ///< the layers you have
 
   /// Default constructor
   VolumeConfig()
-    : present(false)
-    , wrapping(false)
-    , rMin(std::numeric_limits<double>::max())
+    : rMin(std::numeric_limits<double>::max())
     , rMax(std::numeric_limits<double>::lowest())
     , zMin(std::numeric_limits<double>::max())
     , zMax(std::numeric_limits<double>::lowest())

@@ -417,15 +417,15 @@ protected:
   std::shared_ptr<const Transform3D> m_transform;
 
   /// Pointer to the a DetectorElementBase
-  const DetectorElementBase* m_associatedDetElement;
+  const DetectorElementBase* m_associatedDetElement{nullptr};
 
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
-  const Layer* m_associatedLayer;
+  const Layer* m_associatedLayer{nullptr};
 
   /// The assoicated TrackingVolume - tracking volume in case the surface is a
   /// boundary surface, nullptr if not
-  const TrackingVolume* m_associatedTrackingVolume;
+  const TrackingVolume* m_associatedTrackingVolume{nullptr};
 
   /// Possibility to attach a material descrption
   std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;

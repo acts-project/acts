@@ -33,7 +33,7 @@ class SurfaceMaterial
 {
 public:
   /// Constructor
-  SurfaceMaterial() : m_splitFactor(1.) {}
+  SurfaceMaterial() = default;
 
   /// Constructor
   ///
@@ -88,7 +88,7 @@ public:
   dump(std::ostream& sl) const = 0;
 
 protected:
-  double m_splitFactor;  //!< the split factor in favour of oppositePre
+  double m_splitFactor{1.};  //!< the split factor in favour of oppositePre
 };
 
 /// inline return methods for the pre/post factors

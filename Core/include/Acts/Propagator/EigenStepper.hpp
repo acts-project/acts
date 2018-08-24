@@ -85,8 +85,6 @@ public:
       , p(par.momentum().norm())
       , q(par.charge())
       , navDir(ndir)
-      , covTransport(false)
-      , pathAccumulated(0.)
       , stepSize(ndir * std::abs(ssize))
     {
       // remember the start parameters

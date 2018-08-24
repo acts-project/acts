@@ -466,7 +466,7 @@ private:
   std::shared_ptr<const Material> m_material;
 
   /// Remember the mother volume
-  const TrackingVolume* m_motherVolume;
+  const TrackingVolume* m_motherVolume{nullptr};
 
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
@@ -489,19 +489,19 @@ private:
   const LayerVector m_confinedArbitraryLayers;
 
   /// Volumes to glue Volumes from the outside
-  GlueVolumesDescriptor* m_glueVolumeDescriptor;
+  GlueVolumesDescriptor* m_glueVolumeDescriptor{nullptr};
 
   /// The Signature done by the GeometryBuilder
-  GeometrySignature m_geometrySignature;
+  GeometrySignature m_geometrySignature{Unsigned};
 
   /// The gometry type for the navigation schema
-  GeometryType m_geometryType;
+  GeometryType m_geometryType{NumberOfGeometryTypes};
 
   //// Volume name for debug reasons & screen output
   std::string m_name;
 
   /// color code for displaying
-  unsigned int m_colorCode;
+  unsigned int m_colorCode{20};
 };
 
 inline const std::string&

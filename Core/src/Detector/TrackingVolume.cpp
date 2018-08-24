@@ -23,18 +23,13 @@
 Acts::TrackingVolume::TrackingVolume()
   : Volume()
   , m_material(std::make_shared<const Material>())
-  , m_motherVolume()
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
   , m_confinedVolumes(nullptr)
   , m_confinedDetachedVolumes()
   , m_confinedDenseVolumes()
   , m_confinedArbitraryLayers()
-  , m_glueVolumeDescriptor(nullptr)
-  , m_geometrySignature(Unsigned)
-  , m_geometryType(NumberOfGeometryTypes)
   , m_name("undefined")
-  , m_colorCode(20)
 {
 }
 
@@ -45,18 +40,13 @@ Acts::TrackingVolume::TrackingVolume(
     const std::string&                                volumeName)
   : Volume(std::move(htrans), std::move(volbounds))
   , m_material(std::make_shared<const Material>())
-  , m_motherVolume(nullptr)
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
   , m_confinedVolumes(containedVolumeArray)
   , m_confinedDetachedVolumes()
   , m_confinedDenseVolumes()
   , m_confinedArbitraryLayers()
-  , m_glueVolumeDescriptor(nullptr)
-  , m_geometrySignature(Unsigned)
-  , m_geometryType(NumberOfGeometryTypes)
   , m_name(volumeName)
-  , m_colorCode(20)
 {
   createBoundarySurfaces();
   interlinkLayers();
@@ -75,17 +65,12 @@ Acts::TrackingVolume::TrackingVolume(
     const std::string&                         volumeName)
   : Volume(std::move(htrans), std::move(volbounds))
   , m_material(std::move(matprop))
-  , m_motherVolume(nullptr)
   , m_confinedLayers(std::move(staticLayerArray))
   , m_confinedVolumes(std::move(containedVolumeArray))
   , m_confinedDetachedVolumes(detachedVolumeVector)
   , m_confinedDenseVolumes(denseVolumeVector)
   , m_confinedArbitraryLayers(arbitraryLayerVector)
-  , m_glueVolumeDescriptor(nullptr)
-  , m_geometrySignature(Unsigned)
-  , m_geometryType(NumberOfGeometryTypes)
   , m_name(volumeName)
-  , m_colorCode(20)
 {
   createBoundarySurfaces();
   interlinkLayers();

@@ -41,7 +41,7 @@ public:
 
   /// default constructor
   ///
-  GeometryID() : m_value(0) {}
+  GeometryID() = default;
 
   /// constructor from a ready-made value
   ///

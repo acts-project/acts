@@ -138,8 +138,8 @@ private:
   TrackingVolumePtr     m_trkVolume;
   LayerPtr              m_layerRepresentation;
   std::vector<LayerPtr> m_multilayerRepresentation;
-  const Transform3D*    m_baseTransform;
-  std::vector<std::pair<const Volume*, float>>* m_constituents;
+  const Transform3D*    m_baseTransform{nullptr};
+  std::vector<std::pair<const Volume*, float>>* m_constituents{nullptr};
 };
 
 inline const TrackingVolume*

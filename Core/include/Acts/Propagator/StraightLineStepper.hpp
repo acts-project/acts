@@ -62,7 +62,6 @@ public:
       , p(par.momentum().norm())
       , q(par.charge())
       , navDir(ndir)
-      , pathAccumulated(0.)
       , stepSize(ssize)
     {
     }

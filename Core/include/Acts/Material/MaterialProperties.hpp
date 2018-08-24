@@ -160,9 +160,9 @@ public:
   zOverAtimesRho() const;
 
 protected:
-  Material m_material;  //!< the material
-  float    m_dInX0;     //!< thickness in units of radiation length
-  float    m_dInL0;     //!< thickness in units of nuclear interaction length
+  Material m_material;   //!< the material
+  float    m_dInX0{0.};  //!< thickness in units of radiation length
+  float    m_dInL0{0.};  //!< thickness in units of nuclear interaction length
 };
 
 inline const Material&

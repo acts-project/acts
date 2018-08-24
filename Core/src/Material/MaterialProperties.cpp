@@ -13,8 +13,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include <climits>
 
-Acts::MaterialProperties::MaterialProperties()
-  : m_material(), m_dInX0(0.), m_dInL0(0.)
+Acts::MaterialProperties::MaterialProperties() : m_material()
 {
 }
 

@@ -45,17 +45,15 @@ public:
     // the envolpoe
     std::pair<double, double> envelope;
     /// define the number of bins in loc0
-    size_t binsLoc0;
+    size_t binsLoc0{100};
     /// define the number of bins in loc1
-    size_t binsLoc1;
+    size_t binsLoc1{100};
 
     LayerConfig()
       : layerName("")
       , sensorName("")
       , localAxes("XZY")
       , envelope(std::pair<double, double>(1., 1.))
-      , binsLoc0(100)
-      , binsLoc1(100)
     {
     }
   };

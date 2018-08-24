@@ -6,6 +6,7 @@ limits:
   "readability-braces-around-statements": 0
   "modernize-use-override": 0
   "readability-implicit-bool-cast": 0
+  "modernize-use-default-member-init": 0
   "performance-unnecessary-value-param": 0
   "modernize-use-equals-default": 0
 
