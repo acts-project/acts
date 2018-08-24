@@ -36,7 +36,7 @@ class DetectorElementBase;
 /// radial direction.
 ///
 /// The disc surface The only surface type for which the
-/// cavairance matrix is NOT given in the reference frame.
+/// covariance matrix is NOT given in the reference frame.
 /// A conversion from polar to cartesian coordinates needs
 /// to happen to transfer the local coordinates onto the
 /// cartesian reference frame coordinates.

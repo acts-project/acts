@@ -6,7 +6,7 @@ list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
 # build options
 
-# a ll options must be defined here to keep the list directly visible and
+# all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
 option (ACTS_BUILD_LEGACY "Build legacy package" ON)
 option (ACTS_BUILD_DOC "Build documentation" OFF)
