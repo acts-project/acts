@@ -37,13 +37,13 @@ class DetachedTrackingVolume;
 class ApproachDescriptor;
 
 // Simple surface intersection
-typedef ObjectIntersection<Surface> SurfaceIntersection;
+using SurfaceIntersection = ObjectIntersection<Surface>;
 
 // master typedef
 class Layer;
-typedef std::shared_ptr<const Layer> LayerPtr;
-typedef std::shared_ptr<Layer>       MutableLayerPtr;
-typedef std::pair<const Layer*, const Layer*> NextLayers;
+using LayerPtr        = std::shared_ptr<const Layer>;
+using MutableLayerPtr = std::shared_ptr<Layer>;
+using NextLayers      = std::pair<const Layer*, const Layer*>;
 
 /// @enum LayerType
 ///
@@ -510,7 +510,7 @@ private:
 
 /// Layers are constructedd with shared_ptr factories, hence the layer array is
 /// describes as:
-typedef BinnedArray<LayerPtr> LayerArray;
+using LayerArray = BinnedArray<LayerPtr>;
 
 }  // namespace
 

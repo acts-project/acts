@@ -61,9 +61,9 @@ main(int argc, char* argv[])
                            << Bz
                            << "T B-field");
 
-  typedef ConstantBField            BField_type;
-  typedef EigenStepper<BField_type> Stepper_type;
-  typedef Propagator<Stepper_type>  Propagator_type;
+  using BField_type     = ConstantBField;
+  using Stepper_type    = EigenStepper<BField_type>;
+  using Propagator_type = Propagator<Stepper_type>;
 
   BField_type     bField(0, 0, Bz * units::_T);
   Stepper_type    atlas_stepper(std::move(bField));

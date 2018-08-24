@@ -47,7 +47,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   GeometryObjectSorterT<std::shared_ptr<const Layer>> layerSorter(bValue);
   std::sort(layers.begin(), layers.end(), layerSorter);
   // useful typedef
-  typedef std::pair<std::shared_ptr<const Layer>, Vector3D> LayerOrderPosition;
+  using LayerOrderPosition = std::pair<std::shared_ptr<const Layer>, Vector3D>;
   // needed for all cases
   std::shared_ptr<const Layer>      layer      = nullptr;
   std::unique_ptr<const BinUtility> binUtility = nullptr;

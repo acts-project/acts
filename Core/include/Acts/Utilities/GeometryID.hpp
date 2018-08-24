@@ -15,7 +15,7 @@
 #include <iostream>
 #include "Acts/Utilities/Helpers.hpp"
 
-typedef uint64_t geo_id_value;
+using geo_id_value = uint64_t;
 
 namespace Acts {
 

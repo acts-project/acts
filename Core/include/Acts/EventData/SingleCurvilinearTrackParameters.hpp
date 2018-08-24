@@ -26,8 +26,8 @@ class SingleCurvilinearTrackParameters
     : public SingleTrackParameters<ChargePolicy>
 {
 public:
-  typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t
-      CovPtr_t;  ///< type of covariance matrix
+  /// type of covariance matrix
+  using CovPtr_t = typename SingleTrackParameters<ChargePolicy>::CovPtr_t;
 
   /// @brief constructor for curvilienear representation
   /// This is the constructor from global parameters, enabled only

@@ -13,7 +13,7 @@
 #include "Acts/EventData/SingleTrackParameters.hpp"
 
 namespace Acts {
-typedef SingleTrackParameters<ChargedPolicy>            TrackParameters;
-typedef SingleCurvilinearTrackParameters<ChargedPolicy> CurvilinearParameters;
-typedef SingleBoundTrackParameters<ChargedPolicy>       BoundParameters;
+using TrackParameters       = SingleTrackParameters<ChargedPolicy>;
+using CurvilinearParameters = SingleCurvilinearTrackParameters<ChargedPolicy>;
+using BoundParameters       = SingleBoundTrackParameters<ChargedPolicy>;
 }  // namespace Acts

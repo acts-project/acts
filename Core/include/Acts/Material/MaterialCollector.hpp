@@ -47,7 +47,7 @@ struct MaterialCollector
     double                   materialInL0 = 0.;
   };
 
-  typedef this_result result_type;
+  using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the state has a current surface,

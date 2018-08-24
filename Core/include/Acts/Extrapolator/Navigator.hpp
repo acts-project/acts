@@ -20,7 +20,7 @@
 
 namespace Acts {
 
-typedef detail::ConstrainedStep cstep;
+using cstep = detail::ConstrainedStep;
 
 /// @breif struct for the Navigation options that are forwarded to
 ///        the geometry
@@ -78,14 +78,14 @@ struct NavigationOptions
   }
 };
 
-typedef std::vector<SurfaceIntersection> NavigationSurfaces;
-typedef NavigationSurfaces::iterator     NavigationSurfaceIter;
+using NavigationSurfaces    = std::vector<SurfaceIntersection>;
+using NavigationSurfaceIter = NavigationSurfaces::iterator;
 
-typedef std::vector<LayerIntersection> NavigationLayers;
-typedef NavigationLayers::iterator     NavigationLayerIter;
+using NavigationLayers    = std::vector<LayerIntersection>;
+using NavigationLayerIter = NavigationLayers::iterator;
 
-typedef std::vector<BoundaryIntersection> NavigationBoundaries;
-typedef NavigationBoundaries::iterator    NavigationBoundaryIter;
+using NavigationBoundaries   = std::vector<BoundaryIntersection>;
+using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
 /// Navigator struct
 ///
@@ -187,7 +187,7 @@ struct Navigator
   };
 
   /// Unique typedef to publish to the Propagator
-  typedef State state_type;
+  using state_type = State;
 
   /// Navigation action for the ActionList of the Propagator
   ///

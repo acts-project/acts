@@ -33,10 +33,12 @@ class TrackParametersBase
 {
 public:
   // public typedef's
-  typedef ActsVector<ParValue_t, Acts::NGlobalPars>
-      ParVector_t;  ///< vector type for stored track parameters
-  typedef ActsSymMatrix<ParValue_t, Acts::NGlobalPars>
-      CovMatrix_t;  ///< type of covariance matrix
+
+  /// vector type for stored track parameters
+  using ParVector_t = ActsVector<ParValue_t, Acts::NGlobalPars>;
+
+  /// type of covariance matrix
+  using CovMatrix_t = ActsSymMatrix<ParValue_t, Acts::NGlobalPars>;
 
   /// @brief virtual default destructor to allow for inheritance
   virtual ~TrackParametersBase() = default;

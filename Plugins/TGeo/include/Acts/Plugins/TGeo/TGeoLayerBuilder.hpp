@@ -25,7 +25,7 @@ namespace Acts {
 class TGeoDetectorElement;
 class Surface;
 
-typedef std::pair<TGeoNode*, std::shared_ptr<const Transform3D>> NodeTransform;
+using NodeTransform = std::pair<TGeoNode*, std::shared_ptr<const Transform3D>>;
 
 /// @class TGeoLayerBuilder
 /// works on the gGeoManager, as this is filled from GDML

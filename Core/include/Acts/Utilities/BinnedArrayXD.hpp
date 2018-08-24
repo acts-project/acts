@@ -33,7 +33,7 @@ template <class T>
 class BinnedArrayXD : public BinnedArray<T>
 {
   /// typedef the object and position for readability
-  typedef std::pair<T, Vector3D> TAP;
+  using TAP = std::pair<T, Vector3D>;
 
 public:
   /// Constructor for single object

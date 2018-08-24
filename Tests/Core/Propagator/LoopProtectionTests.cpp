@@ -152,9 +152,9 @@ namespace Test {
     BOOST_TEST(updatedLimit < initialLimit);
   }
 
-  typedef ConstantBField           BField;
-  typedef EigenStepper<BField>     EigenStepper;
-  typedef Propagator<EigenStepper> EigenPropagator;
+  using BField          = ConstantBField;
+  using EigenStepper    = EigenStepper<BField>;
+  using EigenPropagator = Propagator<EigenStepper>;
 
   const int ntests = 100;
   const int skip   = 0;
@@ -207,8 +207,8 @@ namespace Test {
     CurvilinearParameters start(nullptr, pos, mom, q);
 
     // Action list and abort list
-    typedef ActionList<> ActionList_type;
-    typedef AbortList<>  AbortConditions_type;
+    using ActionList_type      = ActionList<>;
+    using AbortConditions_type = AbortList<>;
 
     typename EigenPropagator::template Options<ActionList_type,
                                                AbortConditions_type>

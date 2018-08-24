@@ -23,8 +23,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(grid_test_1d_equidistant)
   {
-    typedef std::array<double, 1> Point;
-    typedef std::array<size_t, 1> indices;
+    using Point   = std::array<double, 1>;
+    using indices = std::array<size_t, 1>;
     EquidistantAxis a(0.0, 4.0, 4u);
     Grid<double, EquidistantAxis> g(std::make_tuple(std::move(a)));
 
@@ -104,8 +104,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_equidistant)
   {
-    typedef std::array<double, 2> Point;
-    typedef std::array<size_t, 2> indices;
+    using Point   = std::array<double, 2>;
+    using indices = std::array<size_t, 2>;
     EquidistantAxis a(0.0, 4.0, 4u);
     EquidistantAxis b(0.0, 3.0, 3u);
     Grid<double, EquidistantAxis, EquidistantAxis> g(
@@ -276,8 +276,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(grid_test_3d_equidistant)
   {
-    typedef std::array<double, 3> Point;
-    typedef std::array<size_t, 3> indices;
+    using Point   = std::array<double, 3>;
+    using indices = std::array<size_t, 3>;
     EquidistantAxis a(0.0, 2.0, 2u);
     EquidistantAxis b(0.0, 3.0, 3u);
     EquidistantAxis c(0.0, 2.0, 2u);
@@ -430,8 +430,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(grid_test_1d_variable)
   {
-    typedef std::array<double, 1> Point;
-    typedef std::array<size_t, 1> indices;
+    using Point   = std::array<double, 1>;
+    using indices = std::array<size_t, 1>;
     VariableAxis a({0.0, 1.0, 4.0});
     Grid<double, VariableAxis> g(std::make_tuple(std::move(a)));
 
@@ -497,8 +497,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_variable)
   {
-    typedef std::array<double, 2> Point;
-    typedef std::array<size_t, 2> indices;
+    using Point   = std::array<double, 2>;
+    using indices = std::array<size_t, 2>;
     VariableAxis a({0.0, 0.5, 3.0});
     VariableAxis b({0.0, 1.0, 4.0});
     Grid<double, VariableAxis, VariableAxis> g(
@@ -620,8 +620,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(grid_test_3d_variable)
   {
-    typedef std::array<double, 3> Point;
-    typedef std::array<size_t, 3> indices;
+    using Point   = std::array<double, 3>;
+    using indices = std::array<size_t, 3>;
     VariableAxis a({0.0, 1.0});
     VariableAxis b({0.0, 0.5, 3.0});
     VariableAxis c({0.0, 0.5, 3.0, 3.3});
@@ -750,8 +750,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(grid_test_2d_mixed)
   {
-    typedef std::array<double, 2> Point;
-    typedef std::array<size_t, 2> indices;
+    using Point   = std::array<double, 2>;
+    using indices = std::array<size_t, 2>;
     EquidistantAxis a(0.0, 1.0, 4u);
     VariableAxis    b({0.0, 0.5, 3.0});
     Grid<double, EquidistantAxis, VariableAxis> g(
@@ -795,7 +795,7 @@ namespace Test {
     BOOST_TEST(g.getGlobalBinIndex(Point({{12, 11}})) == 23u);
 
     // global bin index -> local bin indices
-    typedef std::array<size_t, 2> indices;
+    using indices = std::array<size_t, 2>;
     BOOST_TEST(g.getLocalBinIndices(0) == indices({{0, 0}}));
     BOOST_TEST(g.getLocalBinIndices(1) == indices({{0, 1}}));
     BOOST_TEST(g.getLocalBinIndices(2) == indices({{0, 2}}));
@@ -914,7 +914,7 @@ namespace Test {
         std::make_tuple(std::move(a), std::move(b)));
 
     // initialize the grid
-    typedef std::array<double, 2> Point;
+    using Point = std::array<double, 2>;
     g.at(Point({{0, 0}}))     = 0.;
     g.at(Point({{1.5, 0}}))   = 1.;
     g.at(Point({{3, 0}}))     = 2.;
@@ -944,7 +944,7 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(grid_interpolation)
   {
-    typedef std::array<double, 3> Point;
+    using Point = std::array<double, 3>;
     EquidistantAxis a(1.0, 3.0, 2u);
     EquidistantAxis b(1.0, 5.0, 2u);
     EquidistantAxis c(1.0, 7.0, 2u);
@@ -997,12 +997,12 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(neighborhood)
   {
-    typedef std::set<size_t> bins_t;
-    typedef std::array<double, 1> point_t;
-    typedef EquidistantAxis EAxis;
-    typedef Grid<double, EAxis> Grid1_t;
-    typedef Grid<double, EAxis, EAxis> Grid2_t;
-    typedef Grid<double, EAxis, EAxis, EAxis> Grid3_t;
+    using bins_t  = std::set<size_t>;
+    using point_t = std::array<double, 1>;
+    using EAxis   = EquidistantAxis;
+    using Grid1_t = Grid<double, EAxis>;
+    using Grid2_t = Grid<double, EAxis, EAxis>;
+    using Grid3_t = Grid<double, EAxis, EAxis, EAxis>;
 
     EAxis   a(0.0, 1.0, 10u);
     EAxis   b(0.0, 1.0, 10u);
@@ -1050,8 +1050,8 @@ namespace Test {
     BOOST_TEST((g3.neighborHoodIndices({{11, 10, 9}}, 1) == bins_t({1556, 1557, 1558, 1568, 1569, 1570, 1580, 1581, 1582, 1700, 1701, 1702, 1712, 1713, 1714, 1724, 1725, 1726})));
     // clang-format on
 
-    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Closed> EAxisClosed;
-    typedef Grid<double, EAxisClosed>                             Grid1Closed_t;
+    using EAxisClosed   = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+    using Grid1Closed_t = Grid<double, EAxisClosed>;
     EAxisClosed d(0.0, 1.0, 10u);
 
     Grid1Closed_t g1Cl(std::make_tuple(std::move(d)));
@@ -1064,7 +1064,7 @@ namespace Test {
     BOOST_TEST((g1Cl.neighborHoodIndices({{5}}, 1)
                 == bins_t({4, 5, 6})));  // overflow, makes no sense
 
-    typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Closed_t;
+    using Grid2Closed_t = Grid<double, EAxisClosed, EAxisClosed>;
     // typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed>
     // Grid3Closed_t;
     EAxisClosed   e(0.0, 1.0, 5u);
@@ -1113,12 +1113,12 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(closestPoints)
   {
-    typedef std::array<double, 3> Point;
-    typedef std::set<size_t> bins_t;
-    typedef EquidistantAxis  EAxis;
-    typedef Grid<double, EAxis> Grid1_t;
-    typedef Grid<double, EAxis, EAxis> Grid2_t;
-    typedef Grid<double, EAxis, EAxis, EAxis> Grid3_t;
+    using Point   = std::array<double, 3>;
+    using bins_t  = std::set<size_t>;
+    using EAxis   = EquidistantAxis;
+    using Grid1_t = Grid<double, EAxis>;
+    using Grid2_t = Grid<double, EAxis, EAxis>;
+    using Grid3_t = Grid<double, EAxis, EAxis, EAxis>;
 
     EAxis   a(0.0, 1.0, 10u);
     EAxis   b(0.0, 1.0, 5u);
@@ -1140,10 +1140,10 @@ namespace Test {
     BOOST_TEST((g3.closestPointsIndices(Point({{0.23, 0.13, 0.61}})) == bins_t({112, 113, 117, 118, 147, 148, 152, 153})));
     BOOST_TEST((g3.closestPointsIndices(Point({{0.52, 0.35, 0.71}})) == bins_t({223, 224, 228, 229, 258, 259, 263, 264})));
 
-    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Closed>  EAxisClosed;
-    typedef Grid<double, EAxisClosed> Grid1Cl_t;
-    typedef Grid<double, EAxisClosed, EAxisClosed> Grid2Cl_t;
-    //typedef Grid<double, EAxisClosed, EAxisClosed, EAxisClosed> Grid3Cl_t;
+    using EAxisClosed = Axis<AxisType::Equidistant, AxisBoundaryType::Closed>;
+    using Grid1Cl_t = Grid<double, EAxisClosed>;
+    using Grid2Cl_t = Grid<double, EAxisClosed, EAxisClosed>;
+    //using Grid3Cl_t = Grid<double, EAxisClosed, EAxisClosed, EAxisClosed>;
     EAxisClosed   aCl(0.0, 1.0, 10u);
     EAxisClosed   bCl(0.0, 1.0, 5u);
     EAxisClosed   cCl(0.0, 1.0, 3u);
@@ -1163,10 +1163,10 @@ namespace Test {
 
     // @TODO: 3D checks would also be nice
 
-    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Bound>  EAxisOpen;
-    typedef Grid<double, EAxisOpen> Grid1Op_t;
-    typedef Grid<double, EAxisOpen, EAxisOpen> Grid2Op_t;
-    //typedef Grid<double, EAxisOpen, EAxisOpen, EAxisOpen> Grid3Op_t;
+    using EAxisOpen = Axis<AxisType::Equidistant, AxisBoundaryType::Bound>;
+    using Grid1Op_t = Grid<double, EAxisOpen>;
+    using Grid2Op_t = Grid<double, EAxisOpen, EAxisOpen>;
+    //using Grid3Op_t = Grid<double, EAxisOpen, EAxisOpen, EAxisOpen>;
 
     EAxisOpen  aOp(0.0, 1.0, 10u);
     EAxisOpen  bOp(0.0, 1.0, 5u);

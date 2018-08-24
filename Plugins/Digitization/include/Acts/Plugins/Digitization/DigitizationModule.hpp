@@ -15,8 +15,8 @@
 namespace Acts {
 
 class Surface;
-typedef std::shared_ptr<const Surface> SurfacePtr;
-typedef std::vector<SurfacePtr>        SurfacePtrVector;
+using SurfacePtr       = std::shared_ptr<const Surface>;
+using SurfacePtrVector = std::vector<SurfacePtr>;
 
 /// @class DigitizationModule
 ///

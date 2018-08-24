@@ -30,7 +30,7 @@ namespace detail {
       std::string debugString = "";
     };
 
-    typedef this_result result_type;
+    using result_type = this_result;
 
     /// Debug output action for the ActionList of the Propagator
     ///

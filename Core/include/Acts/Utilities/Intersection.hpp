@@ -17,7 +17,7 @@
 namespace Acts {
 
 /// A function typedef for the intersection correction
-typedef std::function<bool(Vector3D&, Vector3D&, double&)> CorrFnc;
+using CorrFnc = std::function<bool(Vector3D&, Vector3D&, double&)>;
 
 ///  @struct Intersection
 ///

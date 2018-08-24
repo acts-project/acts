@@ -28,8 +28,8 @@ template <class ChargePolicy>
 class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy>
 {
 public:
-  typedef typename SingleTrackParameters<ChargePolicy>::ParVector_t ParVector_t;
-  typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t    CovPtr_t;
+  using ParVector_t = typename SingleTrackParameters<ChargePolicy>::ParVector_t;
+  using CovPtr_t    = typename SingleTrackParameters<ChargePolicy>::CovPtr_t;
 
   /// @brief Constructor of track parameters bound to a surface
   /// This is the constructor from global parameters, enabled only

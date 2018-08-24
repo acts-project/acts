@@ -206,7 +206,7 @@ namespace Logging {
   class OutStream final
   {
     /// function type for output flushing
-    typedef std::function<void(const std::ostringstream&)> OutputFunc;
+    using OutputFunc = std::function<void(const std::ostringstream&)>;
 
   public:
     /// @brief construct stream object

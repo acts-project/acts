@@ -23,12 +23,12 @@ namespace Acts {
 class TrackingVolume;
 class Surface;
 
-typedef std::vector<LayerPtr> LayerVector;
+using LayerVector = std::vector<LayerPtr>;
 
 // master typedefs
 class DetachedTrackingVolume;
-typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
-typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
+using DetachedTrackingVolumePtr = std::shared_ptr<const DetachedTrackingVolume>;
+using TrackingVolumePtr         = std::shared_ptr<const TrackingVolume>;
 
 /// @class DetachedTrackingVolume
 ///

@@ -30,7 +30,7 @@ private:
                 "same action type specified several times");
 
   // clang-format off
-  typedef detail::type_collector_t<detail::result_type_extractor, actions...> results;
+  using results = detail::type_collector_t<detail::result_type_extractor, actions...>;
   // clang-format on
 
   using detail::Extendable<actions...>::tuple;
@@ -61,7 +61,7 @@ public:
                   "not all actions support the method signature");
     // clang-format on
 
-    typedef detail::action_list_impl<actions...> impl;
+    using impl = detail::action_list_impl<actions...>;
     impl::action(tuple(), state, result);
   }
 };

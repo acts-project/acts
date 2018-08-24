@@ -22,7 +22,7 @@ namespace Acts {
 class Layer;
 class TrackingVolume;
 
-typedef std::pair<TrackingVolumePtr, Vector3D> TrackingVolumeOrderPosition;
+using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3D>;
 
 ///@class TrackingVolumeArrayCreator
 ///

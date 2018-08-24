@@ -31,20 +31,20 @@ class GlueVolumesDescriptor;
 class VolumeBounds;
 class Material;
 
-typedef std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>
-    TrackingVolumeBoundaryPtr;
+using TrackingVolumeBoundaryPtr
+    = std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
 
 // master typedefs
-typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
-typedef std::shared_ptr<TrackingVolume>               MutableTrackingVolumePtr;
-typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
+using TrackingVolumePtr         = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr  = std::shared_ptr<TrackingVolume>;
+using DetachedTrackingVolumePtr = std::shared_ptr<const DetachedTrackingVolume>;
 
 // possible contained
-typedef BinnedArray<TrackingVolumePtr>         TrackingVolumeArray;
-typedef std::vector<TrackingVolumePtr>         TrackingVolumeVector;
-typedef BinnedArray<LayerPtr>                  LayerArray;
-typedef std::vector<LayerPtr>                  LayerVector;
-typedef std::vector<DetachedTrackingVolumePtr> DetachedVolumeVector;
+using TrackingVolumeArray  = BinnedArray<TrackingVolumePtr>;
+using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
+using LayerArray           = BinnedArray<LayerPtr>;
+using LayerVector          = std::vector<LayerPtr>;
+using DetachedVolumeVector = std::vector<DetachedTrackingVolumePtr>;
 
 // full intersection with Layer
 using LayerIntersection = FullIntersection<Layer, Surface>;

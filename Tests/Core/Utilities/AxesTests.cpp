@@ -202,7 +202,7 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(neighborhood)
   {
-    typedef std::set<size_t> bins_t;
+    using bins_t = std::set<size_t>;
     Axis<AxisType::Equidistant, AxisBoundaryType::Open> a1(0.0, 1.0, 10u);
 
     BOOST_TEST(a1.neighborHoodIndices(0, 1) == bins_t({0, 1}));

@@ -17,8 +17,8 @@ namespace Acts {
 class SurfaceBounds;
 class Surface;
 class BinUtility;
-typedef std::shared_ptr<const Surface> SurfacePtr;
-typedef std::vector<SurfacePtr>        SurfacePtrVector;
+using SurfacePtr       = std::shared_ptr<const Surface>;
+using SurfacePtrVector = std::vector<SurfacePtr>;
 
 /// @brief Segmentation Base class
 ///

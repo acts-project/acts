@@ -59,10 +59,9 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
       zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  typedef Acts::detail::Grid<Acts::Vector2D,
-                             Acts::detail::EquidistantAxis,
-                             Acts::detail::EquidistantAxis>
-         Grid_t;
+  using Grid_t = Acts::detail::Grid<Acts::Vector2D,
+                                    Acts::detail::EquidistantAxis,
+                                    Acts::detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
   // [2] Set the bField values
 
@@ -176,11 +175,10 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
   Acts::detail::EquidistantAxis zAxis(
       zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
-  typedef Acts::detail::Grid<Acts::Vector3D,
-                             Acts::detail::EquidistantAxis,
-                             Acts::detail::EquidistantAxis,
-                             Acts::detail::EquidistantAxis>
-         Grid_t;
+  using Grid_t = Acts::detail::Grid<Acts::Vector3D,
+                                    Acts::detail::EquidistantAxis,
+                                    Acts::detail::EquidistantAxis,
+                                    Acts::detail::EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 

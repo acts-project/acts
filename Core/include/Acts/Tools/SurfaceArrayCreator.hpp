@@ -30,11 +30,11 @@ namespace Test {
 using SurfaceMatcher
     = std::function<bool(BinningValue, const Surface*, const Surface*)>;
 
-typedef std::vector<const Surface*> SurfaceVector;
-typedef std::vector<SurfaceVector>  SurfaceMatrix;
+using SurfaceVector = std::vector<const Surface*>;
+using SurfaceMatrix = std::vector<SurfaceVector>;
 
-typedef std::vector<Vector3D> V3Vector;
-typedef std::vector<V3Vector> V3Matrix;
+using V3Vector = std::vector<Vector3D>;
+using V3Matrix = std::vector<V3Vector>;
 
 /// @class SurfaceArrayCreator
 ///

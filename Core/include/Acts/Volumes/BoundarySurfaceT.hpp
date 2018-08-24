@@ -41,8 +41,8 @@ class BoundarySurfaceT
   /// delcare the TrackingVolume as friend
   friend T;
 
-  typedef std::shared_ptr<const T> VolumePtr;
-  typedef BinnedArray<VolumePtr>   VolumeArray;
+  using VolumePtr   = std::shared_ptr<const T>;
+  using VolumeArray = BinnedArray<VolumePtr>;
 
 public:
   /// Default Constructor

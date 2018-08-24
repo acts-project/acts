@@ -36,9 +36,9 @@ namespace Acts {
 
 namespace Test {
 
-  typedef ConstantBField            BField_type;
-  typedef EigenStepper<BField_type> EigenStepper_type;
-  typedef AtlasStepper<BField_type> AtlasStepper_type;
+  using BField_type       = ConstantBField;
+  using EigenStepper_type = EigenStepper<BField_type>;
+  using AtlasStepper_type = AtlasStepper<BField_type>;
 
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly

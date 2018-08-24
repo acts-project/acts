@@ -67,7 +67,7 @@ struct MaterialInteractor
     std::vector<MaterialInteraction> materialInteractions;
   };
 
-  typedef this_result result_type;
+  using result_type = this_result;
 
   /// @brief Interaction with detector material for the ActionList
   /// of the Propagator

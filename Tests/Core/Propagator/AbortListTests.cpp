@@ -35,9 +35,9 @@ class Surface;
 namespace Test {
 
   // The path limit abort
-  typedef detail::PathLimitReached path_limit;
+  using path_limit = detail::PathLimitReached;
   // the constrained step class
-  typedef detail::ConstrainedStep cstep;
+  using cstep = detail::ConstrainedStep;
 
   /// This is a simple cache struct to mimic the
   /// Navigator state

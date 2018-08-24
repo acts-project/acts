@@ -42,22 +42,21 @@ namespace detail {
     template <ParID_t first, typename... others>
     struct add_prepended<Measurement<ID, first>, container<others...>>
     {
-      typedef container<
+      using type = container<
           typename add_prepended<Measurement<ID, first>, others>::type...,
-          others...>
-          type;
+          others...>;
     };
 
     template <ParID_t first, ParID_t... others>
     struct add_prepended<Measurement<ID, first>, Measurement<ID, others...>>
     {
-      typedef Measurement<ID, first, others...> type;
+      using type = Measurement<ID, first, others...>;
     };
 
     template <ParID_t... first>
     struct add_prepended<Measurement<ID, first...>, boost::mpl::na>
     {
-      typedef Measurement<ID, first...> type;
+      using type = Measurement<ID, first...>;
     };
 
     template <typename T, typename C>
@@ -66,7 +65,7 @@ namespace detail {
     template <typename T, typename... others>
     struct add_to_container<T, container<others...>>
     {
-      typedef container<T, others...> type;
+      using type = container<T, others...>;
     };
 
     template <typename T>
@@ -76,22 +75,20 @@ namespace detail {
     struct generator_impl<container<Measurement<ID, first>,
                                     Measurement<ID, others...>>>
     {
-      typedef container<Measurement<ID, first>,
-                        Measurement<ID, others...>,
-                        Measurement<ID, first, others...>>
-          type;
+      using type = container<Measurement<ID, first>,
+                             Measurement<ID, others...>,
+                             Measurement<ID, first, others...>>;
     };
 
     template <ParID_t first, typename next, typename... others>
     struct generator_impl<container<Measurement<ID, first>, next, others...>>
     {
-      typedef typename generator_impl<container<next, others...>>::type
-          others_combined;
-      typedef
-          typename add_prepended<Measurement<ID, first>, others_combined>::type
-              prepended;
-      typedef typename add_to_container<Measurement<ID, first>, prepended>::type
-          type;
+      using others_combined =
+          typename generator_impl<container<next, others...>>::type;
+      using prepended =
+          typename add_prepended<Measurement<ID, first>, others_combined>::type;
+      using type =
+          typename add_to_container<Measurement<ID, first>, prepended>::type;
     };
 
     template <ParID_t v, typename C>
@@ -100,22 +97,22 @@ namespace detail {
     template <ParID_t v, ParID_t... others>
     struct add_to_value_container<v, std::integer_sequence<ParID_t, others...>>
     {
-      typedef std::integer_sequence<ParID_t, others..., v> type;
+      using type = std::integer_sequence<ParID_t, others..., v>;
     };
 
     template <typename T, unsigned int N>
     struct tparam_generator
     {
-      typedef
+      using type =
           typename add_to_value_container<static_cast<ParID_t>(N),
                                           typename tparam_generator<T, N - 1>::
-                                              type>::type type;
+                                              type>::type;
     };
 
     template <typename T>
     struct tparam_generator<T, 0>
     {
-      typedef std::integer_sequence<T, static_cast<T>(0)> type;
+      using type = std::integer_sequence<T, static_cast<T>(0)>;
     };
 
     template <typename T>
@@ -124,7 +121,7 @@ namespace detail {
     template <ParID_t... values>
     struct converter<std::integer_sequence<ParID_t, values...>>
     {
-      typedef container<Measurement<ID, values>...> type;
+      using type = container<Measurement<ID, values>...>;
     };
 
     template <typename... types>
@@ -133,28 +130,28 @@ namespace detail {
     template <typename first, typename... rest>
     struct to_boost_vector<first, rest...>
     {
-      typedef typename boost::mpl::
-          push_front<typename to_boost_vector<rest...>::type, first>::type type;
+      using type = typename boost::mpl::
+          push_front<typename to_boost_vector<rest...>::type, first>::type;
     };
 
     template <typename last>
     struct to_boost_vector<last>
     {
-      typedef boost::mpl::vector<last> type;
+      using type = boost::mpl::vector<last>;
     };
 
     template <typename... MeasTypes>
     struct converter<container<MeasTypes...>>
     {
-      typedef typename boost::make_variant_over<
-          typename to_boost_vector<MeasTypes...>::type>::type type;
+      using type = typename boost::make_variant_over<
+          typename to_boost_vector<MeasTypes...>::type>::type;
     };
 
-    typedef typename tparam_generator<ParID_t, Acts::NGlobalPars - 1>::type
-                                                     par_list;
-    typedef typename converter<par_list>::type       meas_list;
-    typedef typename generator_impl<meas_list>::type permutations;
-    typedef typename converter<permutations>::type   type;
+    using par_list =
+        typename tparam_generator<ParID_t, Acts::NGlobalPars - 1>::type;
+    using meas_list    = typename converter<par_list>::type;
+    using permutations = typename generator_impl<meas_list>::type;
+    using type         = typename converter<permutations>::type;
   };
   /// @endcond
 }  // namespace details

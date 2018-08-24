@@ -26,7 +26,7 @@ class AtlasStepper
 {
 
 public:
-  typedef detail::ConstrainedStep cstep;
+  using cstep = detail::ConstrainedStep;
 
   struct State
   {
@@ -310,14 +310,14 @@ public:
   template <typename T, typename S>
   struct s
   {
-    typedef BoundParameters type;
+    using type = BoundParameters;
   };
 
   // Unless S is int, then it maps to CurvilinearParameters ...
   template <typename T>
   struct s<T, int>
   {
-    typedef CurvilinearParameters type;
+    using type = CurvilinearParameters;
   };
 
   template <typename T, typename S = int>

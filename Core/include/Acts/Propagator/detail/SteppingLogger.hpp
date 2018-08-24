@@ -43,7 +43,7 @@ namespace detail {
       std::vector<Step> steps;
     };
 
-    typedef this_result result_type;
+    using result_type = this_result;
 
     /// SteppingLogger action for the ActionList of the Propagator
     ///

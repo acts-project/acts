@@ -46,7 +46,7 @@ namespace Test {
 
   // Global definitions
   // The path limit abort
-  typedef detail::PathLimitReached path_limit;
+  using path_limit = detail::PathLimitReached;
 
   std::vector<std::unique_ptr<const Surface>> stepState;
   auto tGeometry = testGeometry<ModuleSurface>(stepState);
@@ -55,11 +55,11 @@ namespace Test {
   Navigator navigatorES(tGeometry);
   Navigator navigatorSL(tGeometry);
 
-  typedef ConstantBField                BField;
-  typedef detail::IntersectionCorrector StepCorrector;
-  typedef EigenStepper<BField, StepCorrector>        EigenStepper;
-  typedef Propagator<EigenStepper, Navigator>        EigenPropagator;
-  typedef Propagator<StraightLineStepper, Navigator> StraightLinePropagator;
+  using BField                 = ConstantBField;
+  using StepCorrector          = detail::IntersectionCorrector;
+  using EigenStepper           = EigenStepper<BField, StepCorrector>;
+  using EigenPropagator        = Propagator<EigenStepper, Navigator>;
+  using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   const double    Bz = 2. * units::_T;
   BField          bField(0, 0, Bz);
@@ -112,11 +112,11 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
 
-    typedef detail::DebugOutputActor DebugOutput;
+    using DebugOutput = detail::DebugOutputActor;
 
     // Action list and abort list
-    typedef ActionList<MaterialCollector, DebugOutput> ActionList_type;
-    typedef AbortList<> AbortConditions_type;
+    using ActionList_type      = ActionList<MaterialCollector, DebugOutput>;
+    using AbortConditions_type = AbortList<>;
 
     typename Propagator_type::template Options<ActionList_type,
                                                AbortConditions_type>

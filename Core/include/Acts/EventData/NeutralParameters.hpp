@@ -13,8 +13,8 @@
 #include "Acts/EventData/SingleTrackParameters.hpp"
 
 namespace Acts {
-typedef SingleTrackParameters<NeutralPolicy> NeutralParameters;
-typedef SingleCurvilinearTrackParameters<NeutralPolicy>
-                                                  NeutralCurvilinearParameters;
-typedef SingleBoundTrackParameters<NeutralPolicy> NeutralBoundParameters;
+using NeutralParameters = SingleTrackParameters<NeutralPolicy>;
+using NeutralCurvilinearParameters
+    = SingleCurvilinearTrackParameters<NeutralPolicy>;
+using NeutralBoundParameters = SingleBoundTrackParameters<NeutralPolicy>;
 }  // namespace Acts

@@ -20,8 +20,8 @@
 namespace Acts {
 
 class TrackingVolume;
-typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
-typedef BinnedArray<TrackingVolumePtr>        TrackingVolumeArray;
+using TrackingVolumePtr   = std::shared_ptr<const TrackingVolume>;
+using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
 
 ///  @class GlueVolumesDescriptor
 ///

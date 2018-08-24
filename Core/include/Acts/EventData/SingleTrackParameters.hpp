@@ -41,12 +41,15 @@ class SingleTrackParameters : public TrackParametersBase
 
 public:
   // public typedef's
-  typedef typename TrackParametersBase::ParVector_t
-      ParVector_t;  ///< vector type for stored track parameters
-  typedef typename TrackParametersBase::CovMatrix_t
-      CovMatrix_t;  ///< type of covariance matrix
-  typedef std::unique_ptr<const CovMatrix_t>
-      CovPtr_t;  ///< type for unique pointer to covariance matrix
+
+  /// vector type for stored track parameters
+  using ParVector_t = typename TrackParametersBase::ParVector_t;
+
+  /// type of covariance matrix
+  using CovMatrix_t = typename TrackParametersBase::CovMatrix_t;
+
+  /// type for unique pointer to covariance matrix
+  using CovPtr_t = std::unique_ptr<const CovMatrix_t>;
 
   /// @brief default virtual destructor
   virtual ~SingleTrackParameters() = default;

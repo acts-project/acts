@@ -35,7 +35,7 @@ namespace Test {
 }
 class Surface;
 class Layer;
-typedef std::shared_ptr<Layer> MutableLayerPtr;
+using MutableLayerPtr = std::shared_ptr<Layer>;
 
 /// @class LayerCreator
 ///

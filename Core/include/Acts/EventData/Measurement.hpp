@@ -53,17 +53,18 @@ class Measurement
 
 private:
   // private typedef's
-  typedef ParameterSet<params...>
-      ParSet_t;  ///< type of the underlying ParameterSet object
+
+  /// type of the underlying ParameterSet object
+  using ParSet_t = ParameterSet<params...>;
 
 public:
   /// type of the vector containing the parameter values
-  typedef typename ParSet_t::ParVector_t ParVector_t;
+  using ParVector_t = typename ParSet_t::ParVector_t;
   /// type of the covariance matrix of the measurement
-  typedef typename ParSet_t::CovMatrix_t CovMatrix_t;
+  using CovMatrix_t = typename ParSet_t::CovMatrix_t;
   /// matrix type for projecting full parameter vector onto local parameter
   /// space
-  typedef typename ParSet_t::Projection_t Projection_t;
+  using Projection_t = typename ParSet_t::Projection_t;
 
   /// @brief standard constructor
   ///

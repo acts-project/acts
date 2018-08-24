@@ -25,7 +25,7 @@ namespace Acts {
 class GainMatrixUpdator
 {
 private:
-  typedef std::unique_ptr<const BoundParameters> return_type;
+  using return_type = std::unique_ptr<const BoundParameters>;
 
 public:
   template <typename Meas_t>

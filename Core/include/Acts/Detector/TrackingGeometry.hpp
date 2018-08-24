@@ -26,10 +26,10 @@ class Surface;
 class PerigeeSurface;
 class Layer;
 
-typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
-typedef std::shared_ptr<TrackingVolume>               MutableTrackingVolumePtr;
-typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
-typedef std::vector<DetachedTrackingVolumePtr>        DetachedVolumeVector;
+using TrackingVolumePtr         = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr  = std::shared_ptr<TrackingVolume>;
+using DetachedTrackingVolumePtr = std::shared_ptr<const DetachedTrackingVolume>;
+using DetachedVolumeVector      = std::vector<DetachedTrackingVolumePtr>;
 
 ///  @class TrackingGeometry
 ///

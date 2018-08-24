@@ -21,9 +21,9 @@ namespace Acts {
 
 class Surface;
 
-typedef std::pair<MaterialProperties, size_t> RecordBin;
-typedef std::vector<RecordBin>    RecordVector;
-typedef std::vector<RecordVector> MaterialRecord;
+using RecordBin      = std::pair<MaterialProperties, size_t>;
+using RecordVector   = std::vector<RecordBin>;
+using MaterialRecord = std::vector<RecordVector>;
 
 /// @class SurfaceMaterialRecord
 ///

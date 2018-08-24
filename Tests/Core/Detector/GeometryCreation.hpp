@@ -99,7 +99,7 @@ constructContainerVolume(TrackingVolumePtr  iVolume,
                          const std::string& name)
 {
   ///  create the volume array
-  typedef std::pair<TrackingVolumePtr, Vector3D> VAP;
+  using VAP                = std::pair<TrackingVolumePtr, Vector3D>;
   std::vector<VAP> volumes = {{iVolume, iVolume->binningPosition(binR)},
                               {oVolume, oVolume->binningPosition(binR)}};
   ///  the bounds for the container

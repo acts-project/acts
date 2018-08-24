@@ -104,6 +104,6 @@ SurfaceMaterial::factor(NavigationDirection pDir,
 std::ostream&
 operator<<(std::ostream& sl, const SurfaceMaterial& sm);
 
-typedef std::pair<GeometryID, SurfaceMaterial*> IndexedSurfaceMaterial;
+using IndexedSurfaceMaterial = std::pair<GeometryID, SurfaceMaterial*>;
 
 }  // namespace

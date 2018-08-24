@@ -36,7 +36,7 @@ namespace Acts {
 
 namespace Test {
 
-  typedef detail::ConstrainedStep cstep;
+  using cstep = detail::ConstrainedStep;
 
   /// An observer that measures the perpendicular distance
   struct PerpendicularMeasure
@@ -48,7 +48,7 @@ namespace Test {
       double distance = std::numeric_limits<double>::max();
     };
 
-    typedef this_result result_type;
+    using result_type = this_result;
 
     PerpendicularMeasure() {}
 
@@ -83,7 +83,7 @@ namespace Test {
       double surface_passed_r = std::numeric_limits<double>::max();
     };
 
-    typedef this_result result_type;
+    using result_type = this_result;
 
     SurfaceObserver() {}
 
@@ -138,7 +138,7 @@ namespace Test {
       bool scattered = false;
     };
 
-    typedef this_result result_type;
+    using result_type = this_result;
 
     PathScatterer() {}
 
@@ -167,11 +167,11 @@ namespace Test {
 
   // Global definitions
   // The path limit abort
-  typedef detail::PathLimitReached path_limit;
+  using path_limit = detail::PathLimitReached;
 
-  typedef ConstantBField                BField_type;
-  typedef EigenStepper<BField_type>     EigenStepper_type;
-  typedef Propagator<EigenStepper_type> EigenPropagator_type;
+  using BField_type          = ConstantBField;
+  using EigenStepper_type    = EigenStepper<BField_type>;
+  using EigenPropagator_type = Propagator<EigenStepper_type>;
 
   const double         Bz = 2. * units::_T;
   BField_type          bField(0, 0, Bz);
@@ -192,8 +192,8 @@ namespace Test {
     null_options_type null_options;
     // todo write null options test
 
-    typedef ActionList<PerpendicularMeasure> ActionList_type;
-    typedef AbortList<>                      AbortConditions_type;
+    using ActionList_type      = ActionList<PerpendicularMeasure>;
+    using AbortConditions_type = AbortList<>;
 
     typedef typename Propagator<EigenStepper_type>::
         template Options<ActionList_type, AbortConditions_type>
@@ -227,9 +227,9 @@ namespace Test {
     double dcharge = -1 + 2 * charge;
     (void)index;
 
-    typedef SurfaceObserver<CylinderSurface> CylinderObserver;
-    typedef ActionList<CylinderObserver>     ActionList_type;
-    typedef AbortList<>                      AbortConditions_type;
+    using CylinderObserver     = SurfaceObserver<CylinderSurface>;
+    using ActionList_type      = ActionList<CylinderObserver>;
+    using AbortConditions_type = AbortList<>;
 
     // setup propagation options
     typename EigenPropagator_type::template Options<ActionList_type,
@@ -242,7 +242,7 @@ namespace Test {
     // set the surface to be passed by
     options.actionList.get<CylinderObserver>().surface = &mSurface;
 
-    typedef typename CylinderObserver::result_type so_result;
+    using so_result = typename CylinderObserver::result_type;
 
     // define start parameters
     double                x  = 0;

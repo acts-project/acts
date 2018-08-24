@@ -61,7 +61,7 @@ public:
   };
 
   /// Typedef of the surface intersection
-  typedef ObjectIntersection<Surface> SurfaceIntersection;
+  using SurfaceIntersection = ObjectIntersection<Surface>;
 
   /// Constructor with Transform3D as a shared object
   ///

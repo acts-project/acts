@@ -17,8 +17,8 @@
 
 namespace Acts {
 
-typedef ExtrapolationCell<TrackParameters>   ExCellCharged;
-typedef ExtrapolationCell<NeutralParameters> ExCellNeutral;
+using ExCellCharged = ExtrapolationCell<TrackParameters>;
+using ExCellNeutral = ExtrapolationCell<NeutralParameters>;
 
 /// @class IPropagationEngine
 ///

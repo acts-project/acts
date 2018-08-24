@@ -45,8 +45,8 @@ namespace detail {
   template <AxisType type, AxisBoundaryType bdt = AxisBoundaryType::Open>
   class Axis;
 
-  typedef Axis<AxisType::Equidistant> EquidistantAxis;
-  typedef Axis<AxisType::Variable>    VariableAxis;
+  using EquidistantAxis = Axis<AxisType::Equidistant>;
+  using VariableAxis    = Axis<AxisType::Variable>;
 
   /// @brief calculate bin indices for an equidistant binning
   ///

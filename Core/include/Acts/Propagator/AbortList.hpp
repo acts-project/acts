@@ -33,13 +33,13 @@ private:
                 "same abort conditions type specified several times");
 
   // clang-format off
-  typedef detail::type_collector_t<detail::action_type_extractor, conditions...> actions;
+  using actions = detail::type_collector_t<detail::action_type_extractor, conditions...>;
   // clang-format on
 
   using detail::Extendable<conditions...>::tuple;
 
 public:
-  typedef detail::boost_set_as_tparams_t<ActionList, actions> action_list_type;
+  using action_list_type = detail::boost_set_as_tparams_t<ActionList, actions>;
   using detail::Extendable<conditions...>::get;
 
   /// This is the call signature for the abort list, it broadcasts the call

@@ -50,7 +50,7 @@ struct VoidNavigator
   };
 
   /// Unique typedef to publish to the Propagator
-  typedef State state_type;
+  using state_type = State;
 
   /// Navigation call
   ///
@@ -137,10 +137,10 @@ class Propagator final
 {
 public:
   /// Type of state object used by the propagation implementation
-  typedef typename stepper_t::template state_type<TrackParameters> StepperState;
+  using StepperState = typename stepper_t::template state_type<TrackParameters>;
 
   /// Typedef the navigator state
-  typedef typename navigator_t::state_type NavigatorState;
+  using NavigatorState = typename navigator_t::state_type;
 
   /// @brief Options for propagate() call
   ///
@@ -271,7 +271,7 @@ private:
     using this_result_type = Result<parameters_t, args...>;
 
     /// @brief Propagation result type derived from a given action list
-    typedef typename action_list_t::template result_type<this_result_type> type;
+    using type = typename action_list_t::template result_type<this_result_type>;
   };
 
   /// @brief Short-hand type definition for propagation result derived from
@@ -382,15 +382,15 @@ public:
   {
 
     // Type of track parameters produced by the propagation
-    typedef typename stepper_t::template return_parameter_type<parameters_t>
-        ReturnParameterType;
+    using ReturnParameterType =
+        typename stepper_t::template return_parameter_type<parameters_t>;
 
     // Type of the full propagation result, including output from actions
-    typedef action_list_t_result_t<ReturnParameterType, action_list_t>
-        ResultType;
+    using ResultType
+        = action_list_t_result_t<ReturnParameterType, action_list_t>;
 
     // Type of provided options which consist action and abort list
-    typedef Options<action_list_t, aborter_list_t> OptionsType;
+    using OptionsType = Options<action_list_t, aborter_list_t>;
 
     static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                   "return track parameter type must be copy-constructible");
@@ -399,11 +399,11 @@ public:
     ResultType result(Status::IN_PROGRESS);
 
     // Internal Abort list - only with path limit as no target surface given
-    typedef AbortList<path_arborter_t> TargetAborters;
-    TargetAborters                     targetAborters;
+    using TargetAborters = AbortList<path_arborter_t>;
+    TargetAborters targetAborters;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, OptionsType, TargetAborters> StateType;
+    using StateType = State<parameters_t, OptionsType, TargetAborters>;
     StateType state(start, options, targetAborters);
 
     // Apply the loop protection - it resets the internal path limit
@@ -459,16 +459,16 @@ public:
   {
 
     // Type of track parameters produced at the end of the propagation
-    typedef typename stepper_t::template return_parameter_type<parameters_t,
-                                                               surface_t>
-        return_parameter_type;
+    using return_parameter_type =
+        typename stepper_t::template return_parameter_type<parameters_t,
+                                                           surface_t>;
 
     // Type of provided options
-    typedef Options<action_list_t, aborter_list_t> OptionsType;
+    using OptionsType = Options<action_list_t, aborter_list_t>;
 
     // Type of the full propagation result, including output from actions
-    typedef action_list_t_result_t<return_parameter_type, action_list_t>
-        ResultType;
+    using ResultType
+        = action_list_t_result_t<return_parameter_type, action_list_t>;
 
     // Initialize the propagation result object
     ResultType result(Status::IN_PROGRESS);
@@ -477,11 +477,11 @@ public:
                   "return track parameter type must be copy-constructible");
 
     // Internal Abort list for target and path surface
-    typedef AbortList<target_aborter_t, path_arborter_t> TargetAborters;
+    using TargetAborters = AbortList<target_aborter_t, path_arborter_t>;
     TargetAborters targetAborters;
 
     // Initialize the internal propagator state
-    typedef State<parameters_t, OptionsType, TargetAborters> StateType;
+    using StateType = State<parameters_t, OptionsType, TargetAborters>;
     StateType state(start, options, targetAborters);
 
     // Setting the start and the target surface

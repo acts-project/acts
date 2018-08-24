@@ -128,7 +128,7 @@ private:
     using this_result_type = PropagatorWrapperResult<Parameters, args...>;
 
     /// @brief Propagation result type derived from a given action list
-    typedef typename Actions::template result_type<this_result_type> type;
+    using type = typename Actions::template result_type<this_result_type>;
   };
 
   /// @brief Short-hand type definition for propagation result derived from
@@ -305,7 +305,7 @@ private:
              const Options<Actions, Aborters>& options) const
   {
     // Type of the full propagation result, including output from actions
-    typedef action_list_result_t<Parameters, Actions> result_type;
+    using result_type = action_list_result_t<Parameters, Actions>;
     result_type r(Status::IN_PROGRESS);
 
     // Call the wrapped propagator with the ExtrapolationCell

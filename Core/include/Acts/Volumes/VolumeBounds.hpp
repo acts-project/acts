@@ -23,7 +23,7 @@ class Surface;
 class Volume;
 
 class VolumeBounds;
-typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
+using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class VolumeBounds
 ///

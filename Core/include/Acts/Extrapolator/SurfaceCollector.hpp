@@ -43,7 +43,7 @@ struct SurfaceCollector
     std::vector<SurfaceHit> collected;
   };
 
-  typedef this_result result_type;
+  using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the propagator state has a current surface,

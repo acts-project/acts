@@ -18,8 +18,8 @@
 namespace Acts {
 
 class Layer;
-typedef std::shared_ptr<const Layer> LayerPtr;
-typedef std::vector<LayerPtr>        LayerVector;
+using LayerPtr    = std::shared_ptr<const Layer>;
+using LayerVector = std::vector<LayerPtr>;
 
 /// @class ILayerBuilder
 ///
