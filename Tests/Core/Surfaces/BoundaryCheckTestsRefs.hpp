@@ -21,6 +21,8 @@ struct {
   double ymax = 1;
 } rectDimensions;
 
+(void)rectDimensions;
+
 std::vector<Vector2D> rectTestPoints = {
     {-3.00, -2.00}, {-3.00, -1.60}, {-3.00, -1.20}, {-3.00, -0.80}, {-3.00, -0.40},
     {-3.00, 0.00}, {-3.00, 0.40}, {-3.00, 0.80}, {-3.00, 1.20}, {-3.00, 1.60},
@@ -123,6 +125,7 @@ struct {
   double ymax = 4;
 } rectShiftedDimensions;
 
+(void)rectShiftedDimensions;
 
 std::vector<Vector2D> rectShiftedTestPoints = {
     {0.00, 1.50}, {0.00, 1.80}, {0.00, 2.10}, {0.00, 2.40}, {0.00, 2.70}, 

@@ -16,6 +16,9 @@ namespace Acts {
 /// @brief pair of ints for definition of a cell
 struct DigitizationCell
 {
+
+  virtual ~DigitizationCell() = default;
+
   // identification and data
   size_t channel0 = 0;
   size_t channel1 = 1;
