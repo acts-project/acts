@@ -26,7 +26,6 @@ set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "Acts/Utilities/detail/DefaultParameterDe
 # DD4hep depends on TGeo and builds a digitization moduleplugin
 if (ACTS_BUILD_DD4HEP_PLUGIN)
   set (ACTS_BUILD_TGEO_PLUGIN ON)
-  set (ACTS_BUILD_DIGITIZATION_PLUGIN ON)  
 endif()
 
 # required packages
