@@ -31,7 +31,7 @@ endif()
 # TGeoPlugin depends on IdentificationPlugin
 if (ACTS_BUILD_TGEO_PLUGIN)
   set (ACTS_BUILD_IDENTIFICATION_PLUGIN ON)
-endif(
+endif()
 
 # required packages
 find_package(Boost 1.62 REQUIRED COMPONENTS program_options unit_test_framework)
