@@ -25,6 +25,9 @@ class Material;
 
 namespace Acts {
 
+/// forwared declaration of DigitzationModule is enough
+class DigitizationModule;
+
 /// @class IActsExtension
 ///
 /// @brief Interface for Extension of the DD4hep \a DetElement needed for
@@ -43,12 +46,11 @@ namespace Acts {
 /// and to hand over needed parameters.
 ///
 /// Every DD4hep \a DetElement containing sensitive DD4hep \a DetElements has to
-/// be
-/// declared as a layer. However the layer does not need to be the direct mother
+/// be declared as a layer. 
+/// However, the layer does not need to be the direct mother
 /// of these sensitive DD4hep \a DetElements - they can also be nested in other
 /// DD4hep \a DetElement substructures. Moreover every DD4hep \a DetElement
-/// layer
-/// which should carry material should also be declared as a layer and the
+/// layer which should carry material should also be declared as layer and the
 /// specific parameters needed for material mapping should be handed over.
 /// In case the sensitive modules/components contained by a layer have a
 /// different orientation in respect to the local tracking frame of Acts, the
@@ -133,9 +135,13 @@ public:
   /// DetElement to automatically create the layer envelope
   virtual double
   envelopeZ() const = 0;
-  /// @returns The SurfaceMaterial
+  /// @return The SurfaceMaterial
   virtual std::shared_ptr<const Acts::SurfaceMaterial>
   material() const = 0;
+  /// @return the shared pointer to the digitization module
+  std::shared_ptr<const DigitizationModule>
+  digitzationModule() const final;
+  
 
 protected:
   /// Protected constructor

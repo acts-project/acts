@@ -16,17 +16,6 @@
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
 
-/// A possible interface extension can be done with
-///
-/// ACTS_DETECTOR_ELEMENT_BASE_EXTENSION which has to
-/// define the ACTS_DETECTOR_ELEMENT_PARENT class
-#ifdef ACTS_DETECTOR_ELEMENT_BASE_EXTENSION
-#include ACTS_DETECTOR_ELEMENT_BASE_EXTENSION
-#define BASE_EXTENSION : public ACTS_DETECTOR_ELEMENT_PARENT
-#else
-#define BASE_EXTENSION
-#endif
-
 namespace Acts {
 
 class Surface;
@@ -38,7 +27,7 @@ class Surface;
 /// for the Acts proxy mechanism for surfaces, i.e. surfaces in the
 /// Tracking geometry representing actual detection devices
 ///
-class DetectorElementBase BASE_EXTENSION
+class DetectorElementBase
 {
 public:
   /// Constructor
@@ -136,5 +125,3 @@ DetectorElementBase::registerNeighbours(
 }
 
 }  // end of namespace Acts
-
-#undef BASE_EXTENSION
