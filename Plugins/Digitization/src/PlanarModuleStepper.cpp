@@ -17,9 +17,9 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 Acts::PlanarModuleStepper::PlanarModuleStepper(
-    const Config&                 pmsConfig,
+    const Config& /*pmsConfig*/,  // this is currently unused
     std::unique_ptr<const Logger> mlogger)
-  : m_cfg(pmsConfig), m_logger(std::move(mlogger))
+  : m_logger(std::move(mlogger))
 {
 }
 
