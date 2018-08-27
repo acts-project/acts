@@ -17,13 +17,26 @@
 
 namespace Acts {
 
+class DigitizationModule;
+
 /// @brief The identified detector element
+///
+/// It adds the Identifier defnition and a forward
+/// declaration of the DigitizationModule to the detector
+/// elements
+///
+/// The identifier can be overwritten with by the use of
+/// the ACTS_CORE_IDENTIFIER_PLUGIN
 class IdentifiedDetectorElement : public DetectorElementBase
 {
 public:
-  /// Identifier
+  /// Retrieve the Identifier
   virtual Identifier
   identifier() const = 0;
+
+  /// Retrieve the DigitizationModule
+  virtual const std::shared_ptr<const DigitizationModule>
+  digitizationModule() const = 0;
 };
 
 }  // end of namespace Acts

@@ -25,17 +25,19 @@
 #include "TGeoTube.h"
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
-    const Identifier&                            identifier,
-    TGeoNode*                                    tGeoDetElement,
-    const TGeoMatrix*                            mGlobal,
-    const std::string&                           axes,
-    double                                       scalor,
-    bool                                         isDisc,
-    std::shared_ptr<const Acts::SurfaceMaterial> material)
+    const Identifier&                               identifier,
+    TGeoNode*                                       tGeoDetElement,
+    const TGeoMatrix*                               mGlobal,
+    const std::string&                              axes,
+    double                                          scalor,
+    bool                                            isDisc,
+    std::shared_ptr<const Acts::SurfaceMaterial>    material,
+    std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
   : Acts::IdentifiedDetectorElement()
   , m_detElement(tGeoDetElement)
   , m_identifier(identifier)
   , m_thickness(0.)
+  , m_digitizationModule(digitizationModule)
 {
 
   // create temporary local non const surface (to allow setting the material)
@@ -371,17 +373,19 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 }
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
-    const Identifier&                            identifier,
-    const TGeoMatrix&                            transform,
-    TGeoNode*                                    tGeoDetElement,
-    const std::string&                           axes,
-    double                                       scalor,
-    bool                                         isDisc,
-    std::shared_ptr<const Acts::SurfaceMaterial> material)
+    const Identifier&                               identifier,
+    const TGeoMatrix&                               transform,
+    TGeoNode*                                       tGeoDetElement,
+    const std::string&                              axes,
+    double                                          scalor,
+    bool                                            isDisc,
+    std::shared_ptr<const Acts::SurfaceMaterial>    material,
+    std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
   : Acts::IdentifiedDetectorElement()
   , m_detElement(tGeoDetElement)
   , m_identifier(identifier)
   , m_thickness(0.)
+  , m_digitizationModule(digitizationModule)
 {
   // create temporary local non const surface (to allow setting the material)
   std::shared_ptr<Surface> surface = nullptr;

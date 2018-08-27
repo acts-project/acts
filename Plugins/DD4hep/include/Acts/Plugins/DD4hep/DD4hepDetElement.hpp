@@ -16,6 +16,9 @@
 
 namespace Acts {
 
+/// Forward declaration of Digitization module is enough
+class DigitizationModule;
+
 /// @class DD4hepDetElement
 ///
 /// @brief DetectorElement class implementation for DD4hep geometry
@@ -66,12 +69,14 @@ public:
   ///       should be translated to a disc surface. Per default it will be
   ///       translated into a cylindrical surface.
   /// @param material Possible material of detector element
-  DD4hepDetElement(const dd4hep::DetElement                     detElement,
-                   const std::string&                           axes   = "XYZ",
-                   double                                       scalor = 1.,
-                   bool                                         isDisc = false,
-                   std::shared_ptr<const Acts::SurfaceMaterial> material
-                   = nullptr);
+  DD4hepDetElement(
+      const dd4hep::DetElement                        detElement,
+      const std::string&                              axes     = "XYZ",
+      double                                          scalor   = 1.,
+      bool                                            isDisc   = false,
+      std::shared_ptr<const Acts::SurfaceMaterial>    material = nullptr,
+      std::shared_ptr<const Acts::DigitizationModule> digitzationModule
+      = nullptr);
   /// Desctructor
   ~DD4hepDetElement() override = default;
 

@@ -155,8 +155,9 @@ public:
     /// be set for a layer. A tolerance added to the geometrical expansion of
     /// the contained geometrical objects in z
     double envelopeZ{0};
-    /// The "geometric" digitization module can be optionally added to the layer,
-    /// this then allows only one digitzation description shared amonst the 
+    /// The "geometric" digitization module can be optionally added to the
+    /// layer,
+    /// this then allows only one digitzation description shared amonst the
     /// layer modules.
     /// If you want to have different digitization along the layer, you need
     /// to use register them individually
@@ -164,7 +165,6 @@ public:
 
     // default configuration
     Config() = default;
-
   };
   /// Constructor
   ActsExtension(const Config& cfg);
@@ -225,7 +225,7 @@ public:
   /// @copydoc IActsExtension::digitizationModule
   std::shared_ptr<const DigitizationModule>
   digitzationModule() const final;
-  
+
 private:
   /// The configuration object
   Config m_cfg;

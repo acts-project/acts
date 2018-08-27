@@ -21,29 +21,38 @@ Acts::ActsExtension::ActsExtension(const Config& cfg)
   setConfiguration(cfg);
 }
 
-Acts::ActsExtension::ActsExtension(
-    const std::vector<std::pair<dd4hep::Material, double>>& materials)
-  : Acts::IActsExtension(), m_material(nullptr)
-{
-  Acts::MaterialProperties matprop;
-  for (auto& mat : materials) {
-    matprop.add(
-        MaterialProperties(mat.first.radLength() * units::_cm,
-                           mat.first.intLength() * units::_cm,
-                           mat.first.A(),
-                           mat.first.Z(),
-                           mat.first.density() / pow(Acts::units::_cm, 3),
-                           mat.second * units::_mm));
-  }
-
-  //  Create homogenous surface material with averaged material properties
-  m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
-}
-
 Acts::ActsExtension::ActsExtension(const ActsExtension& det,
                                    const dd4hep::DetElement& /*elem*/)
   : Acts::IActsExtension(), m_cfg(det.m_cfg), m_material(det.m_material)
 {
+}
+
+Acts::ActsExtension::ActsExtension(
+    std::shared_ptr<const DigitizationModule> digiModule)
+  : Acts::IActsExtension()
+  , m_material(nullptr)
+  , m_digitizationModule(digiModule)
+{
+}
+
+Acts::ActsExtension::ActsExtension(
+    const std::vector<std::pair<dd4hep::Material, double>>& materials,
+    std::shared_ptr<const DigitizationModule> digiModule)
+  : Acts::IActsExtension()
+  , m_material(nullptr)
+  , m_digitizationModule(digiModule)
+{
+  Acts::MaterialProperties matprop;
+  for (auto& mat : materials) {
+    matprop.add(MaterialProperties(mat.first.radLength(),
+                                   mat.first.intLength(),
+                                   mat.first.A(),
+                                   mat.first.Z(),
+                                   mat.first.density(),
+                                   mat.second));
+  }
+  //  Create homogenous surface material with averaged material properties
+  m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
 }
 
 void

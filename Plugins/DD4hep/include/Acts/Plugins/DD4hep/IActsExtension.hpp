@@ -46,7 +46,7 @@ class DigitizationModule;
 /// and to hand over needed parameters.
 ///
 /// Every DD4hep \a DetElement containing sensitive DD4hep \a DetElements has to
-/// be declared as a layer. 
+/// be declared as a layer.
 /// However, the layer does not need to be the direct mother
 /// of these sensitive DD4hep \a DetElements - they can also be nested in other
 /// DD4hep \a DetElement substructures. Moreover every DD4hep \a DetElement
@@ -139,9 +139,8 @@ public:
   virtual std::shared_ptr<const Acts::SurfaceMaterial>
   material() const = 0;
   /// @return the shared pointer to the digitization module
-  std::shared_ptr<const DigitizationModule>
-  digitzationModule() const final;
-  
+  virtual std::shared_ptr<const DigitizationModule>
+  digitizationModule() const = 0;
 
 protected:
   /// Protected constructor
