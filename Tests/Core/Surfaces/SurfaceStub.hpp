@@ -30,7 +30,7 @@ public:
   {
   }
 
-  virtual ~SurfaceStub() { /*nop */}
+  ~SurfaceStub() override { /*nop */}
 
   /// Implicit constructor
   Surface*
@@ -133,7 +133,7 @@ public:
   }
 
   /// Conform to base class signature
-  virtual variant_data
+  variant_data
   toVariantData() const override
   {
     using namespace std::string_literals;

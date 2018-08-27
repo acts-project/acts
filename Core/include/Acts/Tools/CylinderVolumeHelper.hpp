@@ -71,7 +71,7 @@ public:
                                           Logging::INFO));
 
   /// Destructor
-  virtual ~CylinderVolumeHelper() = default;
+  ~CylinderVolumeHelper() override = default;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
@@ -84,7 +84,7 @@ public:
   /// @param transform (optional) placement of this TrackingVolume - ownership
   /// given
   /// @param volumeName  volume name to be given
-  /// @param btype (optional) BinningType - arbitrary(default) or equidistant
+  /// @param bType (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
@@ -93,35 +93,41 @@ public:
                        VolumeBoundsPtr                    volBounds,
                        std::shared_ptr<const Transform3D> transform = nullptr,
                        const std::string& volumeName = "UndefinedVolume",
-                       BinningType        btype = arbitrary) const override;
+                       BinningType        bType = arbitrary) const override;
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
+  /// @note this TrackingVolume is restricted to Translation only
   ///
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
   /// @param matprop dense material properties for this TrackingVolume
-  /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
-  /// this TrackingVolume is restricted to Translation only
+  /// @param rMin minimum radius
+  /// @param rMax maximum radius
+  /// @param zMin minimum z
+  /// @param zMax maximum z
   /// @param volumeName  volume name to be given
-  /// @param btype (optional) BinningType - arbitrary(default) or equidistant
+  /// @param bType (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
   createTrackingVolume(const LayerVector&              layers,
                        std::shared_ptr<const Material> matprop,
-                       double                          loc0Min,
-                       double                          loc0Max,
-                       double                          loc1Min,
-                       double                          loc1Max,
+                       double                          rMin,
+                       double                          rMax,
+                       double                          zMin,
+                       double                          zMax,
                        const std::string& volumeName = "UndefinedVolume",
-                       BinningType        btype = arbitrary) const override;
+                       BinningType        bType = arbitrary) const override;
 
   /// Create a gap volume from dimensions and
+  /// @note this TrackingVolume is restricted to Translation only
   ///
   /// @param matprop dense material properties for this TrackingVolume
-  /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
-  /// this TrackingVolume is restricted to Translation only
+  /// @param rMin minimum radius
+  /// @param rMax maximum radius
+  /// @param zMin minimum z
+  /// @param zMax maximum z
   /// @param materialLayers number of material layers (aequidistant binning)
   /// @param cylinder type of layers
   /// @param volumeName  volume name to be given
@@ -129,10 +135,10 @@ public:
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<const Material> matprop,
-                          double                          loc0Min,
-                          double                          loc0Max,
-                          double                          loc1Min,
-                          double                          loc1Max,
+                          double                          rMin,
+                          double                          rMax,
+                          double                          zMin,
+                          double                          zMax,
                           unsigned int                    materialLayers,
                           bool                            cylinder = true,
                           const std::string&              volumeName
@@ -141,23 +147,26 @@ public:
   /// Create a gap volume from dimensions and
   ///
   /// @param matprop dense material properties for this TrackingVolume
-  /// @param loc0Min, loc0Max, loc1Min, loc1Max local position in space,
+  /// @param rMin minimum radius
+  /// @param rMax maximum radius
+  /// @param zMin minimum z
+  /// @param zMax maximum z
   /// @param layerPositions custom layer positions
   /// @param cylinder type of layers
   /// @param volumeName  : volume name to be given
-  /// @param btype (optional) BinningType - arbitrary(default) or equidistant
+  /// @param bType (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
   createGapTrackingVolume(std::shared_ptr<const Material> matprop,
-                          double                          loc0Min,
-                          double                          loc0Max,
-                          double                          loc1Min,
-                          double                          loc1Max,
+                          double                          rMin,
+                          double                          rMax,
+                          double                          zMin,
+                          double                          zMax,
                           const std::vector<double>&      layerPositions,
                           bool                            cylinder = true,
                           const std::string& volumeName = "UndefinedVolume",
-                          BinningType        btype = arbitrary) const override;
+                          BinningType        bType = arbitrary) const override;
 
   /// Create a container volumes from sub volumes, input volumes are ordered in
   /// R or Z by convention
@@ -172,9 +181,9 @@ public:
 
   /// Set configuration method
   ///
-  /// @param cvbConfig is the configurtion struct assigned
+  /// @param cvhConfig is the configurtion struct assigned
   void
-  setConfiguration(const Config& cvbConfig);
+  setConfiguration(const Config& cvhConfig);
 
   /// Get configuration method
   Config
@@ -182,9 +191,9 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger is the logger isntance to be set
+  /// @param newLogger is the logger isntance to be set
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 protected:
   /// Configuration object
@@ -205,7 +214,7 @@ private:
   /// of layers, these are checked against the layer positions/dimensions.
   ///
   /// @param layers the layers for which the dimensions are checked
-  /// @param cylBounds the cylinder volume bounds needed for wrapping
+  /// @param cylinderVolumeBounds the cylinder volume bounds needed for wrapping
   /// @param transform a transformation of the layers, volume
   /// @param rMinClean the smallest radius given by layers
   /// @param rMaxClean the maximal radius given by layers
@@ -214,8 +223,8 @@ private:
   /// @param bValue the binning value in which the binning works
   /// @param bType is the type of binning: equidistant, arbitrary
   bool
-  estimateAndCheckDimension(const LayerVector&                  layers,
-                            const CylinderVolumeBounds*&        cylBounds,
+  estimateAndCheckDimension(const LayerVector&           layers,
+                            const CylinderVolumeBounds*& cylinderVolumeBounds,
                             std::shared_ptr<const Transform3D>& transform,
                             double&                             rMinClean,
                             double&                             rMaxClean,
@@ -235,19 +244,19 @@ private:
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   bool
-  interGlueTrackingVolume(MutableTrackingVolumePtr tVolume,
-                          bool                     rBinned,
-                          double                   rMin,
-                          double                   rGlueMin,
-                          double                   rMax,
-                          double                   zMin,
-                          double                   zMax) const;
+  interGlueTrackingVolume(const MutableTrackingVolumePtr& tVolume,
+                          bool                            rBinned,
+                          double                          rMin,
+                          double                          rGlueMin,
+                          double                          rMax,
+                          double                          zMin,
+                          double                          zMax) const;
 
   /// Private method - glue volume to the other
   ///
-  /// @param volumeOne is the first volume in the glue process
+  /// @param tvolOne is the first volume in the glue process
   /// @param faceOne is the first boundary face of the glue process
-  /// @param volumeTwo is the second volume in the glue process
+  /// @param tvolTwo is the second volume in the glue process
   /// @param faceTwo is the second boundary face of the glue process
   /// @param rMin the minimum radius of the volume
   /// @param rGlueMin the minimum glue radius (@todo check and document)
@@ -255,15 +264,15 @@ private:
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   void
-  glueTrackingVolumes(MutableTrackingVolumePtr volumeOne,
-                      BoundarySurfaceFace      faceOne,
-                      MutableTrackingVolumePtr volumeTwo,
-                      BoundarySurfaceFace      faceTwo,
-                      double                   rMin,
-                      double                   rGlueMin,
-                      double                   rMax,
-                      double                   zMin,
-                      double                   zMax) const;
+  glueTrackingVolumes(const MutableTrackingVolumePtr& tvolOne,
+                      BoundarySurfaceFace             faceOne,
+                      const MutableTrackingVolumePtr& tvolTwo,
+                      BoundarySurfaceFace             faceTwo,
+                      double                          rMin,
+                      double                          rGlueMin,
+                      double                          rMax,
+                      double                          zMin,
+                      double                          zMax) const;
 
   /// Private method - helper method not to duplicate code
   ///
@@ -271,15 +280,15 @@ private:
   /// @param bsf is the boundary surface to which faces are added
   /// @param vols are the voluems which are added
   void
-  addFaceVolumes(MutableTrackingVolumePtr tVolume,
-                 BoundarySurfaceFace      bsf,
-                 TrackingVolumeVector&    vols) const;
+  addFaceVolumes(const MutableTrackingVolumePtr& tvol,
+                 BoundarySurfaceFace             glueFace,
+                 TrackingVolumeVector&           vols) const;
 
   /// Private method - helper method to save some code
   ///
   /// @param z is the z position of the layer (@todo use Transform)
   /// @param r is the radius of the layer
-  /// @param halflength is the half lengthz in z of the cylinder
+  /// @param halflengthZ is the half lengthz in z of the cylinder
   /// @param thickness is the thickness of the cylinder
   /// @param binsPhi are the bins for the material in phi
   /// @param binsZ are the bins for the material in z
@@ -288,7 +297,7 @@ private:
   LayerPtr
   createCylinderLayer(double z,
                       double r,
-                      double halflength,
+                      double halflengthZ,
                       double thickness,
                       int    binsPhi,
                       int    binsZ) const;

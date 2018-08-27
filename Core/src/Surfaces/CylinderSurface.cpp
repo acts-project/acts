@@ -17,6 +17,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
@@ -37,7 +38,7 @@ Acts::CylinderSurface::CylinderSurface(
     double                             radius,
     double                             hlength)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const CylinderBounds>(radius, hlength))
 {
 }
@@ -48,7 +49,7 @@ Acts::CylinderSurface::CylinderSurface(
     double                             hphi,
     double                             hlength)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const CylinderBounds>(radius, hphi, hlength))
 {
 }
@@ -56,24 +57,24 @@ Acts::CylinderSurface::CylinderSurface(
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
     const Acts::DetectorElementBase&      detelement)
-  : Surface(detelement), m_bounds(cbounds)
+  : Surface(detelement), m_bounds(std::move(cbounds))
 {
   /// surfaces representing a detector element must have bounds
   assert(cbounds);
 }
 
 Acts::CylinderSurface::CylinderSurface(
-    std::shared_ptr<const Transform3D>    htrans,
-    std::shared_ptr<const CylinderBounds> cbounds)
-  : Surface(htrans), m_bounds(cbounds)
+    std::shared_ptr<const Transform3D>           htrans,
+    const std::shared_ptr<const CylinderBounds>& cbounds)
+  : Surface(std::move(htrans)), m_bounds(cbounds)
 {
   throw_assert(cbounds, "CylinderBounds must not be nullptr");
 }
 
-Acts::CylinderSurface::CylinderSurface(const variant_data& data_)
+Acts::CylinderSurface::CylinderSurface(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   std::string type = data.get<std::string>("type");
   throw_assert(type == "CylinderSurface",
@@ -84,7 +85,7 @@ Acts::CylinderSurface::CylinderSurface(const variant_data& data_)
 
   m_bounds = std::make_shared<const CylinderBounds>(var_bounds);
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -92,9 +93,7 @@ Acts::CylinderSurface::CylinderSurface(const variant_data& data_)
   }
 }
 
-Acts::CylinderSurface::~CylinderSurface()
-{
-}
+Acts::CylinderSurface::~CylinderSurface() = default;
 
 Acts::CylinderSurface&
 Acts::CylinderSurface::operator=(const CylinderSurface& other)
@@ -125,7 +124,7 @@ Acts::CylinderSurface::binningPosition(BinningValue bValue) const
 // return the measurement frame: it's the tangential plane
 const Acts::RotationMatrix3D
 Acts::CylinderSurface::referenceFrame(const Vector3D& gpos,
-                                      const Vector3D&) const
+                                      const Vector3D& /*gmom*/) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
@@ -151,7 +150,7 @@ Acts::CylinderSurface::type() const
 
 void
 Acts::CylinderSurface::localToGlobal(const Vector2D& lpos,
-                                     const Vector3D&,
+                                     const Vector3D& /*gmom*/,
                                      Vector3D& gpos) const
 {
   // create the position in the local 3d frame
@@ -160,21 +159,25 @@ Acts::CylinderSurface::localToGlobal(const Vector2D& lpos,
   gpos       = Vector3D(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
   // transform it to the globalframe: CylinderSurfaces are allowed to have 0
   // if pointer transform exists -> port into frame
-  if (Surface::m_transform) gpos = transform() * gpos;
+  if (Surface::m_transform) {
+    gpos = transform() * gpos;
+  }
 }
 
 bool
 Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
-                                     const Vector3D&,
+                                     const Vector3D& /*gmom*/,
                                      Vector2D& lpos) const
 {
   // get the transform & transform global position into cylinder frame
   // @todo clean up intolerance parameters
   // transform it to the globalframe: CylinderSurfaces are allowed to have 0
   // pointer transform
-  double radius             = 0.;
-  double inttol             = bounds().r() * 0.0001;
-  if (inttol < 0.01) inttol = 0.01;
+  double radius = 0.;
+  double inttol = bounds().r() * 0.0001;
+  if (inttol < 0.01) {
+    inttol = 0.01;
+  }
   // do the transformation or not
   if (Surface::m_transform) {
     const Transform3D& surfaceTrans = transform();
@@ -199,7 +202,9 @@ Acts::CylinderSurface::name() const
 Acts::CylinderSurface*
 Acts::CylinderSurface::clone(const Acts::Transform3D* shift) const
 {
-  if (shift) return new CylinderSurface(*this, *shift);
+  if (shift != nullptr) {
+    return new CylinderSurface(*this, *shift);
+  }
   return new CylinderSurface(*this);
 }
 
@@ -215,8 +220,8 @@ const Acts::Vector3D
 Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
 {
   // get it into the cylinder frame if needed
-  Vector3D pos3D          = gpos;
-  bool     needsTransform = (m_transform || m_associatedDetElement);
+  Vector3D pos3D      = gpos;
+  bool needsTransform = (m_transform || (m_associatedDetElement != nullptr));
   if (needsTransform) {
     pos3D = transform().inverse() * gpos;
   }

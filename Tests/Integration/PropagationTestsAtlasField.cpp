@@ -124,13 +124,13 @@ namespace IntegrationTest {
 
   double Bz = 2. * units::_T;
 
-  typedef InterpolatedBFieldMap               BField_type;
-  typedef SharedBField<InterpolatedBFieldMap> SharedField_type;
-  typedef EigenStepper<SharedField_type>      EigenStepper_type;
-  typedef AtlasStepper<SharedField_type>      AtlasStepper_type;
-  typedef Propagator<EigenStepper_type>       EigenPropagator_type;
-  typedef Propagator<AtlasStepper_type>       AtlasPropagator_type;
-  typedef RungeKuttaEngine<BField_type>       PropagationEngine_type;
+  using BField_type            = InterpolatedBFieldMap;
+  using SharedField_type       = SharedBField<InterpolatedBFieldMap>;
+  using EigenStepper_type      = EigenStepper<SharedField_type>;
+  using AtlasStepper_type      = AtlasStepper<SharedField_type>;
+  using EigenPropagator_type   = Propagator<EigenStepper_type>;
+  using AtlasPropagator_type   = Propagator<AtlasStepper_type>;
+  using PropagationEngine_type = RungeKuttaEngine<BField_type>;
   typedef PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>
       WrappedPropagator_type;
 

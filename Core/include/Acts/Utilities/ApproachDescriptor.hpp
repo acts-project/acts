@@ -35,10 +35,10 @@ class ApproachDescriptor
 {
 public:
   /// Default constructor
-  ApproachDescriptor() {}
+  ApproachDescriptor() = default;
 
   /// Virtual destructor
-  virtual ~ApproachDescriptor() {}
+  virtual ~ApproachDescriptor() = default;
 
   /// @brief Register Layer
   /// this gives the approach surfaces the link to the layer
@@ -56,13 +56,14 @@ public:
   ///
   /// @param parameters The actual parameters object
   /// @param options are the steering options for the search
+  /// @param corrfnc The actual Corrector object
   template <typename parameters_t,
             typename options_t,
             typename corrector_t = VoidCorrector>
   ObjectIntersection<Surface>
   approachSurface(const parameters_t& parameters,
                   const options_t&    options,
-                  const corrector_t&  correct = corrector_t()) const;
+                  const corrector_t&  corrfnc = corrector_t()) const;
 
   /// @brief Get the surface on approach
   ///

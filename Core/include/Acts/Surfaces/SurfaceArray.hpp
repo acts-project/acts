@@ -168,7 +168,7 @@ public:
     /// all bins around a given one.
     ///
     /// @param surfaces Input surface pointers
-    virtual void
+    void
     fill(const SurfaceVector& surfaces) override
     {
       for (const auto& srf : surfaces) {
@@ -185,7 +185,7 @@ public:
     ///
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
-    virtual size_t
+    size_t
     completeBinning(const SurfaceVector& surfaces) override
     {
       size_t         binCompleted = 0;
@@ -194,10 +194,14 @@ public:
       const Surface* minSrf;
 
       for (size_t b = 0; b < nBins; ++b) {
-        if (!isValidBin(b)) continue;
+        if (!isValidBin(b)) {
+          continue;
+        }
         std::vector<const Surface*>& binContent = lookup(b);
         // only complete if we have an empty bin
-        if (binContent.size() > 0) continue;
+        if (!binContent.empty()) {
+          continue;
+        }
 
         Vector3D binCtr = getBinCenter(b);
         minPath         = std::numeric_limits<double>::max();
@@ -222,7 +226,7 @@ public:
     /// @brief Performs lookup at @c pos and returns bin content as reference
     /// @param pos Lookup position
     /// @return @c SurfaceVector at given bin
-    virtual SurfaceVector&
+    SurfaceVector&
     lookup(const Vector3D& pos) override
     {
       return m_grid.at(m_globalToLocal(pos));
@@ -232,7 +236,7 @@ public:
     /// reference
     /// @param pos Lookup position
     /// @return @c SurfaceVector at given bin
-    virtual const SurfaceVector&
+    const SurfaceVector&
     lookup(const Vector3D& pos) const override
     {
       return m_grid.at(m_globalToLocal(pos));
@@ -242,7 +246,7 @@ public:
     /// reference
     /// @param bin Global lookup bin
     /// @return @c SurfaceVector at given bin
-    virtual SurfaceVector&
+    SurfaceVector&
     lookup(size_t bin) override
     {
       return m_grid.at(bin);
@@ -252,7 +256,7 @@ public:
     /// reference
     /// @param bin Global lookup bin
     /// @return @c SurfaceVector at given bin
-    virtual const SurfaceVector&
+    const SurfaceVector&
     lookup(size_t bin) const override
     {
       return m_grid.at(bin);
@@ -262,7 +266,7 @@ public:
     ///
     /// @param pos Lookup position
     /// @return @c SurfaceVector at given bin. Copy of all bins selected
-    virtual const SurfaceVector&
+    const SurfaceVector&
     neighbors(const Vector3D& pos) const override
     {
       auto loc = m_globalToLocal(pos);
@@ -272,7 +276,7 @@ public:
     /// @brief Returns the total size of the grid (including under/overflow
     /// bins)
     /// @return Size of the grid data structure
-    virtual size_t
+    size_t
     size() const override
     {
       return m_grid.size();
@@ -281,7 +285,7 @@ public:
     /// @brief Gets the center position of bin @c bin in global coordinates
     /// @param bin the global bin index
     /// @return The bin center
-    virtual Vector3D
+    Vector3D
     getBinCenter(size_t bin) const override
     {
       return getBinCenterImpl(bin);
@@ -290,7 +294,7 @@ public:
     /// @brief Returns copies of the axes used in the grid as @c AnyAxis
     /// @return The axes
     /// @note This returns copies. Use for introspection and querying.
-    virtual std::vector<const IAxis*>
+    std::vector<const IAxis*>
     getAxes() const override
     {
       auto arr = m_grid.getAxes();
@@ -299,7 +303,7 @@ public:
 
     /// @brief Get the number of dimensions of the grid.
     /// @return number of dimensions
-    virtual size_t
+    size_t
     dimensions() const override
     {
       return DIM;
@@ -310,14 +314,16 @@ public:
     /// @return bool if the bin is valid
     /// @note Valid means that the index points to a bin which is not a under
     ///       or overflow bin or out of range in any axis.
-    virtual bool
+    bool
     isValidBin(size_t bin) const override
     {
       std::array<size_t, DIM> indices = m_grid.getLocalBinIndices(bin);
       std::array<size_t, DIM> nBins   = m_grid.getNBins();
       for (size_t i = 0; i < indices.size(); ++i) {
         size_t idx = indices.at(i);
-        if (idx <= 0 || idx >= nBins.at(i) + 1) return false;
+        if (idx <= 0 || idx >= nBins.at(i) + 1) {
+          return false;
+        }
       }
 
       return true;
@@ -329,7 +335,9 @@ public:
     {
       // calculate neighbors for every bin and store in map
       for (size_t i = 0; i < m_grid.size(); i++) {
-        if (!isValidBin(i)) continue;
+        if (!isValidBin(i)) {
+          continue;
+        }
         typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
         std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
         std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
@@ -393,8 +401,8 @@ public:
     /// @brief Lookup, always returns @c element
     /// @param pos is ignored
     /// @return reference to vector containing only @c element
-    virtual SurfaceVector&
-    lookup(const Vector3D&) override
+    SurfaceVector&
+    lookup(const Vector3D& /*pos*/) override
     {
       return m_element;
     }
@@ -402,8 +410,8 @@ public:
     /// @brief Lookup, always returns @c element
     /// @param pos is ignored
     /// @return reference to vector containing only @c element
-    virtual const SurfaceVector&
-    lookup(const Vector3D&) const override
+    const SurfaceVector&
+    lookup(const Vector3D& /*pos*/) const override
     {
       return m_element;
     }
@@ -411,12 +419,12 @@ public:
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    virtual SurfaceVector& lookup(size_t) override { return m_element; }
+    SurfaceVector& lookup(size_t /*bin*/) override { return m_element; }
 
     /// @brief Lookup, always returns @c element
     /// @param bin is ignored
     /// @return reference to vector containing only @c element
-    virtual const SurfaceVector& lookup(size_t) const override
+    const SurfaceVector& lookup(size_t /*bin*/) const override
     {
       return m_element;
     }
@@ -424,15 +432,15 @@ public:
     /// @brief Lookup, always returns @c element
     /// @param pos is ignored
     /// @return reference to vector containing only @c element
-    virtual const SurfaceVector&
-    neighbors(const Vector3D&) const override
+    const SurfaceVector&
+    neighbors(const Vector3D& /*pos*/) const override
     {
       return m_element;
     }
 
     /// @brief returns 1
     /// @return 1
-    virtual size_t
+    size_t
     size() const override
     {
       return 1;
@@ -441,14 +449,14 @@ public:
     /// @brief Gets the bin center, but always returns (0, 0, 0)
     /// @param bin is ignored
     /// @return (0, 0, 0)
-    virtual Vector3D getBinCenter(size_t) const override
+    Vector3D getBinCenter(size_t /*bin*/) const override
     {
       return Vector3D(0, 0, 0);
     }
 
     /// @brief Returns an empty vector of @c AnyAxis
     /// @return empty vector
-    virtual std::vector<const IAxis*>
+    std::vector<const IAxis*>
     getAxes() const override
     {
       return {};
@@ -456,7 +464,7 @@ public:
 
     /// @brief Get the number of dimensions
     /// @return always 0
-    virtual size_t
+    size_t
     dimensions() const override
     {
       return 0;
@@ -464,15 +472,15 @@ public:
 
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
-    virtual void
-    fill(const SurfaceVector&) override
+    void
+    fill(const SurfaceVector& /*surfaces*/) override
     {
     }
 
     /// @brief Comply with concept and provide completeBinning method
     /// @note Does nothing
-    virtual size_t
-    completeBinning(const SurfaceVector&) override
+    size_t
+    completeBinning(const SurfaceVector& /*surfaces*/) override
     {
       return 0;
     }
@@ -480,7 +488,7 @@ public:
     /// @brief Returns if the bin is valid (it is)
     /// @param bin is ignored
     /// @return always true
-    virtual bool isValidBin(size_t) const override { return true; }
+    bool isValidBin(size_t /*bin*/) const override { return true; }
 
   private:
     SurfaceVector m_element;
@@ -497,8 +505,8 @@ public:
                SurfaceVector                       surfaces,
                std::shared_ptr<const Transform3D>  transform = nullptr)
     : p_gridLookup(std::move(gridLookup))
-    , m_surfaces(surfaces)
-    , m_transform(transform)
+    , m_surfaces(std::move(surfaces))
+    , m_transform(std::move(transform))
   {
   }
 
@@ -514,8 +522,8 @@ public:
                SurfaceVector                      surfaces,
                std::shared_ptr<const Transform3D> transform = nullptr)
     : p_gridLookup(static_cast<ISurfaceGridLookup*>(gridLookup.release()))
-    , m_surfaces(surfaces)
-    , m_transform(transform)
+    , m_surfaces(std::move(surfaces))
+    , m_transform(std::move(transform))
   {
   }
 
@@ -537,10 +545,10 @@ public:
   /// @param transform Optional additional transform for this SurfaceArray
   /// @note the transform parameter is ONLY used for the serialization.
   ///       Apart from that, the SGL handles the transforms.
-  SurfaceArray(const variant_data&                      data_,
-               std::function<Vector2D(const Vector3D&)> g2l,
-               std::function<Vector3D(const Vector2D&)> l2g,
-               std::shared_ptr<const Transform3D>       transform = nullptr);
+  SurfaceArray(const variant_data&                             data_,
+               const std::function<Vector2D(const Vector3D&)>& g2l,
+               const std::function<Vector3D(const Vector2D&)>& l2g,
+               std::shared_ptr<const Transform3D> transform = nullptr);
 
   // This is here so that overload resolution can figure out
   // we need std::array<double, 1> as local parameters here.

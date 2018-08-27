@@ -177,7 +177,7 @@ public:
   /// @param transform is an optional transform to be performed
   GeometryObjectSorterT(BinningValue                       bValue,
                         std::shared_ptr<const Transform3D> transform = nullptr)
-    : m_objectSorter(bValue), m_transform(transform)
+    : m_objectSorter(bValue), m_transform(std::move(transform))
   {
   }
 

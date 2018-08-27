@@ -94,7 +94,7 @@ public:
 
     /// Constructor from a new map
     Cache(std::map<GeometryID, SurfaceMaterialRecord> smr)
-      : surfaceMaterialRecords(std::move(smr)), materialTrackCounter(0)
+      : surfaceMaterialRecords(std::move(smr))
     {
     }
   };
@@ -102,9 +102,9 @@ public:
   /// @brief default constructor
   ///
   /// @param cfg the internal configuration object
-  /// @param logger the logging instance
+  /// @param log the logging instance
   MaterialMapper(const Config&                 cfg,
-                 std::unique_ptr<const Logger> logger
+                 std::unique_ptr<const Logger> log
                  = getDefaultLogger("MaterialMapper", Logging::INFO));
 
   /// @brief destructor
@@ -121,12 +121,13 @@ public:
   /// maps the material for the given direction(eta,phi) onto the layers of the
   /// given tracking geometry
   ///
-  /// @param matTrackRec the MaterialTrack to be mapped
+  /// @param materialTrack the MaterialTrack to be mapped
   ///
   /// @return is the mapped material track, i.e. it is collapsed
   ///      onto the available
   MaterialTrack
-  mapMaterialTrack(Cache& mappingCache, const MaterialTrack& matTrackRec) const;
+  mapMaterialTrack(Cache&               mappingCache,
+                   const MaterialTrack& materialTrack) const;
 
   /// finds the TrackingGeometry steps associated to the material steps
   ///
@@ -146,9 +147,9 @@ public:
 
   /// set logging instance
   ///
-  /// @param logger is the unique logger instance
+  /// @param newLogger is the unique logger instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 private:
   /// finds all surfaces with SurfaceMaterialProxy of a volume

@@ -17,17 +17,17 @@
 namespace Acts {
 
 /// A function typedef for the intersection correction
-typedef std::function<bool(Vector3D&, Vector3D&, double&)> CorrFnc;
+using CorrFnc = std::function<bool(Vector3D&, Vector3D&, double&)>;
 
 ///  @struct Intersection
 ///
 ///  intersection struct used for position
 struct Intersection
 {
-  Vector3D position;    ///< position of the intersection
-  double   pathLength;  ///< path length to the intersection (if valid)
-  double   distance;    ///< remaining distance (if not valid)
-  bool     valid;       ///< validiaty boolean
+  Vector3D position;      ///< position of the intersection
+  double   pathLength;    ///< path length to the intersection (if valid)
+  double   distance{0.};  ///< remaining distance (if not valid)
+  bool     valid{false};  ///< validiaty boolean
 
   /// Constructor with arguments
   ///
@@ -47,8 +47,6 @@ struct Intersection
   Intersection()
     : position(Vector3D(0., 0., 0.))
     , pathLength(std::numeric_limits<double>::infinity())
-    , distance(0.)
-    , valid(false)
   {
   }
 
@@ -61,9 +59,13 @@ struct Intersection
   bool
   operator<(const Intersection& si) const
   {
-    if (!valid) return false;
+    if (!valid) {
+      return false;
+    }
     // now check the pathLenght
-    if (si.valid) return (pathLength < si.pathLength);
+    if (si.valid) {
+      return (pathLength < si.pathLength);
+    }
     // the current path length wins
     return true;
   }
@@ -74,9 +76,13 @@ struct Intersection
   bool
   operator>(const Intersection& si) const
   {
-    if (!valid) return false;
+    if (!valid) {
+      return false;
+    }
     // now check the pathLenght
-    if (si.valid) return (pathLength > si.pathLength);
+    if (si.valid) {
+      return (pathLength > si.pathLength);
+    }
     // the current path length wins
     return true;
   }
@@ -87,15 +93,13 @@ template <typename object_t>
 class ObjectIntersection
 {
 public:
-  Intersection        intersection;  ///< the intersection iself
-  const object_t*     object;        ///< the object that was intersected
-  NavigationDirection pDirection;    ///< the direction in which it was taken
+  Intersection        intersection{};   ///< the intersection iself
+  const object_t*     object{nullptr};  ///< the object that was intersected
+  NavigationDirection pDirection{
+      anyDirection};  ///< the direction in which it was taken
 
   /// Default constructor
-  ObjectIntersection()
-    : intersection(), object(nullptr), pDirection(anyDirection)
-  {
-  }
+  ObjectIntersection() = default;
 
   /// Object intersection
   ///
@@ -195,17 +199,21 @@ struct VoidCorrector
 {
 
   // Void Corrector default constructor
-  VoidCorrector() {}
+  VoidCorrector() = default;
 
   // Void Corrector parameter constructor
-  VoidCorrector(const Vector3D&, const Vector3D&, double) {}
+  VoidCorrector(const Vector3D& /*unused*/,
+                const Vector3D& /*unused*/,
+                double /*unused*/)
+  {
+  }
 
   /// Boolean() operator - returns false for void modifier
   explicit operator bool() const { return false; }
 
   /// empty correction interface
   bool
-  operator()(Vector3D&, Vector3D&, double)
+  operator()(Vector3D& /*unused*/, Vector3D& /*unused*/, double /*unused*/)
   {
     return false;
   }

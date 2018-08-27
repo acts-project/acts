@@ -23,7 +23,7 @@ class Surface;
 class Volume;
 
 class VolumeBounds;
-typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
+using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class VolumeBounds
 ///
@@ -43,9 +43,9 @@ class VolumeBounds
 {
 public:
   /// Default Constructor*/
-  VolumeBounds() {}
+  VolumeBounds() = default;
   /// Destructor
-  virtual ~VolumeBounds() {}
+  virtual ~VolumeBounds() = default;
   ///  clone() method to make deep copy in Volume copy constructor and for
   /// assigment operator  of the Surface class.
   virtual VolumeBounds*
@@ -95,12 +95,12 @@ public:
 };
 
 /// Binning offset - overloaded for some R-binning types
-inline Vector3D VolumeBounds::binningOffset(BinningValue) const
+inline Vector3D VolumeBounds::binningOffset(BinningValue /*bValue*/) const
 {  // standard offset is 0.,0.,0.
   return Vector3D(0., 0., 0.);
 }
 
-inline double VolumeBounds::binningBorder(BinningValue) const
+inline double VolumeBounds::binningBorder(BinningValue /*bValue*/) const
 {
   return 0.;
 }

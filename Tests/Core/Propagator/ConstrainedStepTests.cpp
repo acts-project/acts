@@ -32,7 +32,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(ConstrainedStepTest)
   {
 
-    typedef detail::ConstrainedStep cstep;
+    using cstep = detail::ConstrainedStep;
 
     // forward stepping test
     cstep stepSize_p = 0.25;

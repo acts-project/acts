@@ -23,10 +23,10 @@ Acts::RectangleBounds::RectangleBounds(double halex, double haley)
 {
 }
 
-Acts::RectangleBounds::RectangleBounds(const variant_data& data_)
+Acts::RectangleBounds::RectangleBounds(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   std::string        type = data.get<std::string>("type");
   throw_assert(type == "RectangleBounds", "Type must be RectangleBounds");
 
@@ -36,9 +36,7 @@ Acts::RectangleBounds::RectangleBounds(const variant_data& data_)
   m_halfY = payload.get<double>("halflengthY");
 }
 
-Acts::RectangleBounds::~RectangleBounds()
-{
-}
+Acts::RectangleBounds::~RectangleBounds() = default;
 
 Acts::RectangleBounds*
 Acts::RectangleBounds::clone() const

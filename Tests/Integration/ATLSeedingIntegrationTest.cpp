@@ -48,7 +48,7 @@ runSeeding(std::vector<SpacePoint*> spVec)
   const Acts::Seeding::Seed<SpacePoint>*       seed     = seedMaker.next();
   int                                          numSeeds = 0;
   std::vector<Acts::Seeding::Seed<SpacePoint>> seedVec;
-  while (seed != 0) {
+  while (seed != nullptr) {
     numSeeds++;
     auto spIter = seed->spacePoints().begin();
     spIter++;
@@ -64,8 +64,8 @@ class seedComparator
 {
 public:
   bool
-  operator()(const Acts::Seeding::Seed<SpacePoint> s1,
-             const Acts::Seeding::Seed<SpacePoint> s2)
+  operator()(const Acts::Seeding::Seed<SpacePoint>& s1,
+             const Acts::Seeding::Seed<SpacePoint>& s2)
   {
     auto sp1It = s1.spacePoints().begin();
     auto sp2It = s2.spacePoints().begin();
@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(number_of_seeds_correct_)
                       seedVec.end(),
                       std::inserter(diff, diff.begin()),
                       seedComparator());
-  BOOST_CHECK(diff.size() == 0);
+  BOOST_CHECK(diff.empty());
   for (auto sp : spVec) {
     delete sp;
   }

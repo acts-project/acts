@@ -56,8 +56,8 @@ public:
   ///
   /// @param lbounds The bounds describing the straw dimensions
   /// @param detelement for which this surface is (at least) one representation
-  LineSurface(std::shared_ptr<const LineBounds> lbounds,
-              const DetectorElementBase&        detelement);
+  LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
+              const DetectorElementBase&               detelement);
 
   /// Copy constructor
   ///
@@ -72,10 +72,10 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  LineSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  LineSurface(const variant_data& vardata);
 
-  virtual ~LineSurface();
+  ~LineSurface() override;
 
   /// Assignment operator
   ///
@@ -88,7 +88,7 @@ public:
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos) const override final;
+  normal(const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -98,8 +98,8 @@ public:
   ///
   /// @param bValue is the binning type to be used
   /// @return position that can beused for this binning
-  virtual const Vector3D
-  binningPosition(BinningValue bValue) const final override;
+  const Vector3D
+  binningPosition(BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
@@ -110,40 +110,38 @@ public:
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
   /// @return is a rotation matrix that indicates the measurement frame
-  virtual const RotationMatrix3D
-  referenceFrame(const Vector3D& gpos,
-                 const Vector3D& mom) const final override;
+  const RotationMatrix3D
+  referenceFrame(const Vector3D& gpos, const Vector3D& mom) const final;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac is the jacobian to be initialized
-  /// @param pos is the global position of the parameters
+  /// @param jacobian is the jacobian to be initialized
+  /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
   /// @param pars is the paranmeters vector
-  virtual void
-      initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
-                           const Vector3D&       gpos,
-                           const Vector3D&       dir,
-                           const ActsVectorD<5>& pars) const final override;
+  void initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
+                            const Vector3D&       gpos,
+                            const Vector3D&       dir,
+                            const ActsVectorD<5>& pars) const final;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
   /// reference frame does not depend on the direction
   ///
-  /// @param gpos is the position of the paramters in global
+  /// @param pos is the position of the paramters in global
   /// @param dir is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
   /// @param jac is the transport jacobian
   ///
   /// @return a five-dim vector
-  virtual const ActsRowVectorD<5>
-  derivativeFactors(const Vector3D&         gpos,
+  const ActsRowVectorD<5>
+  derivativeFactors(const Vector3D&         pos,
                     const Vector3D&         dir,
                     const RotationMatrix3D& rft,
-                    const ActsMatrixD<7, 5>& jac) const final override;
+                    const ActsMatrixD<7, 5>& jac) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -152,10 +150,10 @@ public:
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (used to sign the closest approach)
   /// @param gpos is the global position shich is filled
-  virtual void
+  void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       gpos) const final override;
+                Vector3D&       gpos) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
@@ -192,10 +190,10 @@ public:
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  virtual bool
+  bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       lpos) const final override;
+                Vector2D&       lpos) const final;
 
   /// Special method for LineSurface
   /// provides the Line direction from cache: speedup
@@ -239,12 +237,12 @@ public:
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
   ///
   /// @return is the intersection object
-  virtual Intersection
+  Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
-                       NavigationDirection  navDir = forward,
-                       const BoundaryCheck& bcheck = false,
-                       CorrFnc correct = nullptr) const final override;
+                       NavigationDirection  navDir  = forward,
+                       const BoundaryCheck& bcheck  = false,
+                       CorrFnc              correct = nullptr) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
@@ -252,8 +250,8 @@ public:
   /// input parameters are ignored
   ///
   /// @note there's no material associated to the line surface
-  virtual double
-  pathCorrection(const Vector3D&, const Vector3D&) const override;
+  double
+  pathCorrection(const Vector3D& pos, const Vector3D& mom) const override;
 
   /// This method checks if the provided GlobalPosition is inside the assigned
   /// straw radius, but no check is done whether the GlobalPosition is
@@ -263,21 +261,21 @@ public:
   /// @param gpos is the global position to be checked
   /// @param bcheck is the boundary check directive
   /// @return bollean that indicates if the position is on surface
-  virtual bool
+  bool
   isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const final override;
+              const BoundaryCheck& bcheck = true) const final;
 
   /// This method returns the bounds of the Surface by reference */
-  virtual const SurfaceBounds&
-  bounds() const final override;
+  const SurfaceBounds&
+  bounds() const final;
 
   /// Return properly formatted class name for screen output */
-  virtual std::string
+  std::string
   name() const override;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 
 protected:

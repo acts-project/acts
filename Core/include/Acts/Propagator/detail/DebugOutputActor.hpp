@@ -30,7 +30,7 @@ namespace detail {
       std::string debugString = "";
     };
 
-    typedef this_result result_type;
+    using result_type = this_result;
 
     /// Debug output action for the ActionList of the Propagator
     ///
@@ -57,7 +57,7 @@ namespace detail {
     /// - this does not apply to the output collector
     template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&) const
+    operator()(propagator_state_t& /*state*/) const
     {
     }
   };

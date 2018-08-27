@@ -33,8 +33,8 @@ public:
 
   /// Constructor from GlobalPosition
   ///
-  /// @param gpos position where the perigee is centered
-  PerigeeSurface(const Vector3D& gpos);
+  /// @param gp position where the perigee is centered
+  PerigeeSurface(const Vector3D& gp);
 
   /// Constructor with a Transform - needed for tilt
   ///
@@ -49,21 +49,21 @@ public:
   /// Copy constructor with shift
   ///
   /// @param other is the source surface to be copied
-  /// @param transf is the transformed applied after copying
-  PerigeeSurface(const PerigeeSurface& other, const Transform3D& transf);
+  /// @param shift is the transformed applied after copying
+  PerigeeSurface(const PerigeeSurface& other, const Transform3D& shift);
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  PerigeeSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  PerigeeSurface(const variant_data& vardata);
 
-  virtual ~PerigeeSurface();
+  ~PerigeeSurface() override;
 
   /// Virtual constructor
   ///
   /// @param shift is the potential shift that is applied after cloning
-  virtual PerigeeSurface*
-  clone(const Transform3D* shift = nullptr) const final override;
+  PerigeeSurface*
+  clone(const Transform3D* shift = nullptr) const final;
 
   /// Assignment operator
   ///
@@ -72,22 +72,22 @@ public:
   operator=(const PerigeeSurface& other);
 
   /// Return the surface type
-  virtual SurfaceType
-  type() const final override;
+  SurfaceType
+  type() const final;
 
   /// Return properly formatted class name for screen output */
-  virtual std::string
-  name() const final override;
+  std::string
+  name() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 };
 

@@ -37,19 +37,19 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  LineBounds(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  LineBounds(const variant_data& vardata);
 
-  virtual ~LineBounds();
+  ~LineBounds() override;
 
-  virtual LineBounds*
-  clone() const final override;
+  LineBounds*
+  clone() const final;
 
-  virtual BoundsType
-  type() const final override;
+  BoundsType
+  type() const final;
 
-  virtual std::vector<TDD_real_t>
-  valueStore() const final override;
+  std::vector<TDD_real_t>
+  valueStore() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -59,17 +59,16 @@ public:
   /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
-  virtual bool
-  inside(const Vector2D&      lpos,
-         const BoundaryCheck& bcheck) const final override;
+  bool
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   ///
   /// @return is a signed distance parameter
-  virtual double
-  distanceToBoundary(const Vector2D& lpos) const final override;
+  double
+  distanceToBoundary(const Vector2D& lpos) const final;
 
   /// This method returns the radius
   virtual double
@@ -82,12 +81,12 @@ public:
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 
 private:

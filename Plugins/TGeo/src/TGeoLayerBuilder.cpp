@@ -21,9 +21,7 @@ Acts::TGeoLayerBuilder::TGeoLayerBuilder(
   setConfiguration(config);
 }
 
-Acts::TGeoLayerBuilder::~TGeoLayerBuilder()
-{
-}
+Acts::TGeoLayerBuilder::~TGeoLayerBuilder() = default;
 
 void
 Acts::TGeoLayerBuilder::setConfiguration(
@@ -73,7 +71,9 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
 {
 
   // bail out if you have no gGeoManager
-  if (!gGeoManager) return;
+  if (gGeoManager == nullptr) {
+    return;
+  }
 
   // Prepare which ones to build
   std::vector<LayerConfig> layerConfigs;
@@ -105,7 +105,7 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
     // we have to step down from the top volume each time to collect the logical
     // tree
     TGeoVolume* tvolume = gGeoManager->GetTopVolume();
-    if (tvolume) {
+    if (tvolume != nullptr) {
       // recursively step down
       resolveSensitive(
           layerSurfaces, tvolume, nullptr, TGeoIdentity(), layerCfg, type);
@@ -113,7 +113,7 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
       ACTS_DEBUG(
           "- number of senstive sensors found : " << layerSurfaces.size());
       // create the layer  - either way
-      if (!type) {
+      if (type == 0) {
         ProtoLayer pl(layerSurfaces);
         pl.envR = {layerCfg.envelope.first, layerCfg.envelope.second};
         pl.envZ = {layerCfg.envelope.second, layerCfg.envelope.second};
@@ -142,12 +142,12 @@ Acts::TGeoLayerBuilder::resolveSensitive(
     const std::string&                 offset)
 {
   /// some screen output for disk debugging
-  if (type) {
+  if (type != 0) {
     const Double_t* ctranslation = tgTransform.GetTranslation();
     ACTS_VERBOSE(offset << "current z translation is : " << ctranslation[2]);
   }
 
-  if (tgVolume) {
+  if (tgVolume != nullptr) {
     std::string volumeName = tgVolume->GetName();
     /// some screen output indicating that the volume was found
     ACTS_VERBOSE(offset << "[o] Volume : " << volumeName
@@ -173,7 +173,7 @@ Acts::TGeoLayerBuilder::resolveSensitive(
     while (TObject* obj = iObj()) {
       // dynamic_cast to a node
       TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
-      if (node)
+      if (node != nullptr) {
         resolveSensitive(layerSurfaces,
                          nullptr,
                          node,
@@ -182,12 +182,14 @@ Acts::TGeoLayerBuilder::resolveSensitive(
                          type,
                          correctVolume,
                          offset + "  ");
+      }
     }
-  } else
+  } else {
     ACTS_VERBOSE("No volume present.");
+  }
 
   /// if you have a node, get the volume and step down further
-  if (tgNode) {
+  if (tgNode != nullptr) {
     // get the matrix of the current
     const TGeoMatrix* tgMatrix = tgNode->GetMatrix();
     /// get the translation of the parent
@@ -210,9 +212,11 @@ Acts::TGeoLayerBuilder::resolveSensitive(
       ACTS_VERBOSE(offset << "Sensor name found in correct branch.");
 
       // set the visibility to kTrue
-      if (m_cfg.setVisibility) tgNode->SetVisibility(kTRUE);
+      if (m_cfg.setVisibility) {
+        tgNode->SetVisibility(kTRUE);
+      }
       // create the detector element - check on the type for the size
-      if (!type || type * z > 0.) {
+      if ((type == 0) || type * z > 0.) {
         //  senstive volume found, collect it
         ACTS_VERBOSE(offset << "[>>] accepted !");
         // create the element
@@ -231,9 +235,13 @@ Acts::TGeoLayerBuilder::resolveSensitive(
       // is not yet the senstive one
       ACTS_VERBOSE(offset << "[<<] not accepted, stepping down.");
       // set the visibility to kFALSE
-      if (m_cfg.setVisibility) tgNode->SetVisibility(kFALSE);
+      if (m_cfg.setVisibility) {
+        tgNode->SetVisibility(kFALSE);
+      }
       // screen output for disk debugging
-      if (type) ACTS_VERBOSE(offset << "  node translation in z = " << z);
+      if (type != 0) {
+        ACTS_VERBOSE(offset << "  node translation in z = " << z);
+      }
       // build the matrix
       TGeoHMatrix nTransform = tgTransform * (*tgMatrix);
       std::string suffix     = "_transform";
@@ -250,6 +258,7 @@ Acts::TGeoLayerBuilder::resolveSensitive(
                        correctBranch,
                        offset + "  ");
     }
-  } else
+  } else {
     ACTS_VERBOSE("No node present.");
+  }
 }

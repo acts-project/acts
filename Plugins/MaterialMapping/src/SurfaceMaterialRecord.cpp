@@ -25,8 +25,9 @@ Acts::SurfaceMaterialRecord::SurfaceMaterialRecord(const Surface&    surface,
     // create the vector for the push_back
     RecordVector mappedVector;
     mappedVector.reserve(m_binUtility->bins(0));
-    for (size_t ibin0 = 0; ibin0 < m_binUtility->bins(0); ++ibin0)
+    for (size_t ibin0 = 0; ibin0 < m_binUtility->bins(0); ++ibin0) {
       mappedVector.push_back(RecordBin(MaterialProperties(), 0));
+    }
     m_mappedMaterial.push_back(mappedVector);
   }
 }

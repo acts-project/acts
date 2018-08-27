@@ -171,8 +171,9 @@ namespace Seeding {
 
     if (pixb != pixt) {
       if (m_q > m_s0->quality() && m_q > m_s1->quality()
-          && m_q > m_s2->quality())
+          && m_q > m_s2->quality()) {
         return false;
+      }
     }
 
     m_s0->setQuality(m_q);
@@ -204,8 +205,9 @@ namespace Seeding {
       m_s2->setQuality(q);
       return true;
     }
-    if (q < m_s0->quality() || q < m_s1->quality() || q < m_s2->quality())
+    if (q < m_s0->quality() || q < m_s1->quality() || q < m_s2->quality()) {
       return true;
+    }
     return false;
   }
 

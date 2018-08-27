@@ -28,8 +28,8 @@ namespace detail {
       static bool
       check(const condition& c, const result_t& r, propagator_state_t& state)
       {
-        typedef action_type_t<condition>   action_type;
-        typedef result_type_t<action_type> result_type;
+        using action_type = action_type_t<condition>;
+        using result_type = result_type_t<action_type>;
 
         return c(r.template get<result_type>(), state);
       }
@@ -44,7 +44,9 @@ namespace detail {
                 typename result_t,
                 typename propagator_state_t>
       static bool
-      check(const condition& c, const result_t&, propagator_state_t& state)
+      check(const condition& c,
+            const result_t& /*result*/,
+            propagator_state_t& state)
       {
         return c(state);
       }
@@ -69,7 +71,7 @@ namespace detail {
 
       // get the right helper for calling the abort condition
       constexpr bool has_result = condition_uses_result_type<first>::value;
-      typedef condition_caller<has_result> caller_type;
+      using caller_type         = condition_caller<has_result>;
 
       // get the cache abort condition
       const auto& this_condition = std::get<first>(conditions_tuple);
@@ -108,7 +110,9 @@ namespace detail {
   {
     template <typename T, typename result_t, typename propagator_state_t>
     static bool
-    check(const T&, const result_t&, propagator_state_t&)
+    check(const T& /*unused*/,
+          const result_t& /*result*/,
+          propagator_state_t& /*state*/)
     {
       return false;
     }

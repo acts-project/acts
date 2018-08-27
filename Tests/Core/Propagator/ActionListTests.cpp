@@ -37,7 +37,7 @@ namespace Acts {
 namespace Test {
 
   // the constrained step class
-  typedef detail::ConstrainedStep cstep;
+  using cstep = detail::ConstrainedStep;
 
   /// This is a simple cache struct to mimic the
   /// Propagator cache
@@ -94,7 +94,7 @@ namespace Test {
       double distance = std::numeric_limits<double>::max();
     };
 
-    typedef this_result result_type;
+    using result_type = this_result;
 
     DistanceObserver(double ptg = 0.) : path_to_go(ptg) {}
 
@@ -107,7 +107,7 @@ namespace Test {
 
     template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&) const
+    operator()(propagator_state_t& /*unused*/) const
     {
     }
   };
@@ -121,20 +121,20 @@ namespace Test {
       size_t calls = 0;
     };
 
-    typedef this_result result_type;
+    using result_type = this_result;
 
-    CallCounter() {}
+    CallCounter() = default;
 
     template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&, result_type& r) const
+    operator()(propagator_state_t& /*unused*/, result_type& r) const
     {
       ++r.calls;
     }
 
     template <typename propagator_state_t>
     void
-    operator()(propagator_state_t&) const
+    operator()(propagator_state_t& /*unused*/) const
     {
     }
   };
@@ -147,8 +147,8 @@ namespace Test {
     PropagatorState state;
 
     // Type of track parameters produced at the end of the propagation
-    typedef typename DistanceObserver::result_type distance_result;
-    detail::Extendable<distance_result>            result;
+    using distance_result = typename DistanceObserver::result_type;
+    detail::Extendable<distance_result> result;
 
     ActionList<DistanceObserver> action_list;
     action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
@@ -172,8 +172,8 @@ namespace Test {
     PropagatorState state;
 
     // Type of track parameters produced at the end of the propagation
-    typedef typename DistanceObserver::result_type distance_result;
-    typedef typename CallCounter::result_type      caller_result;
+    using distance_result = typename DistanceObserver::result_type;
+    using caller_result   = typename CallCounter::result_type;
     ActionList<DistanceObserver, CallCounter> action_list;
     action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
 

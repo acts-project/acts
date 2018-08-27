@@ -21,9 +21,9 @@ namespace Acts {
 
 class Surface;
 
-typedef std::pair<MaterialProperties, size_t> RecordBin;
-typedef std::vector<RecordBin>    RecordVector;
-typedef std::vector<RecordVector> MaterialRecord;
+using RecordBin      = std::pair<MaterialProperties, size_t>;
+using RecordVector   = std::vector<RecordBin>;
+using MaterialRecord = std::vector<RecordVector>;
 
 /// @class SurfaceMaterialRecord
 ///
@@ -48,8 +48,8 @@ typedef std::vector<RecordVector> MaterialRecord;
 class SurfaceMaterialRecord
 {
 public:
-  /// Default constructor - deleted
-  SurfaceMaterialRecord() {}
+  /// Default constructor - default
+  SurfaceMaterialRecord() = default;
 
   /// Constructor with BinUtility input
   /// @param surface is the according surface of this recrd
@@ -80,10 +80,10 @@ public:
   /// this is still needed, because the extrapolation
   /// might hit a layer, but no material to access was there
   ///
-  /// @param position is where the extrapolation
+  /// @param mPosition is where the extrapolation
   ///    did hit this surface
   void
-  assignEmptyStep(const Vector3D& position);
+  assignEmptyStep(const Vector3D& mPosition);
 
   /// @return the surface pointer
   const Surface&

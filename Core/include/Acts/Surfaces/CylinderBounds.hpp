@@ -61,9 +61,9 @@ public:
   /// Constructor - open cylinder
   ///
   /// @param radius is the radius of the cylinder
-  /// @param halfphi is the half opening angle
-  /// @param halez is the half length in z
-  CylinderBounds(double radius, double halfPhi, double haleZ);
+  /// @param halfPhi is the half opening angle
+  /// @param halfZ is the half length in z
+  CylinderBounds(double radius, double halfPhi, double halfZ);
 
   /// Constructor - open cylinder
   ///
@@ -78,19 +78,19 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  CylinderBounds(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  CylinderBounds(const variant_data& vardata);
 
-  virtual ~CylinderBounds();
+  ~CylinderBounds() override;
 
-  virtual CylinderBounds*
-  clone() const final override;
+  CylinderBounds*
+  clone() const final;
 
-  virtual BoundsType
-  type() const final override;
+  BoundsType
+  type() const final;
 
-  virtual std::vector<TDD_real_t>
-  valueStore() const final override;
+  std::vector<TDD_real_t>
+  valueStore() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -100,8 +100,7 @@ public:
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
   bool
-  inside(const Vector2D&      lpos,
-         const BoundaryCheck& bcheck) const final override;
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Specialized method for CylinderBounds that checks if a global position
   /// is within the the cylinder cover
@@ -116,12 +115,12 @@ public:
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  virtual double
-  distanceToBoundary(const Vector2D& lpos) const final override;
+  double
+  distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Output Method for std::ostream
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   /// This method returns the radius
   double

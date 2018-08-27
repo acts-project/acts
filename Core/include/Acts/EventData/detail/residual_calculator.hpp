@@ -34,7 +34,7 @@ namespace detail {
   template <ParID_t... params>
   struct residual_calculator
   {
-    typedef ActsVector<ParValue_t, sizeof...(params)> ParVector_t;
+    using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
 
     static ParVector_t
     result(const ParVector_t& test, const ParVector_t& ref)
@@ -52,8 +52,8 @@ namespace detail {
     static void
     calculate(R& result, const R& test, const R& ref, unsigned int pos)
     {
-      typedef typename par_type<first>::type parameter_type;
-      result(pos) = parameter_type::getDifference(test(pos), ref(pos));
+      using parameter_type = typename par_type<first>::type;
+      result(pos)          = parameter_type::getDifference(test(pos), ref(pos));
       residual_calculator_impl<R, others...>::calculate(
           result, test, ref, pos + 1);
     }
@@ -65,8 +65,8 @@ namespace detail {
     static void
     calculate(R& result, const R& test, const R& ref, unsigned int pos)
     {
-      typedef typename par_type<last>::type parameter_type;
-      result(pos) = parameter_type::getDifference(test(pos), ref(pos));
+      using parameter_type = typename par_type<last>::type;
+      result(pos)          = parameter_type::getDifference(test(pos), ref(pos));
     }
   };
   /// @endcond

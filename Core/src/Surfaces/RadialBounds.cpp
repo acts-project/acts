@@ -35,11 +35,11 @@ Acts::RadialBounds::RadialBounds(double minrad,
 {
 }
 
-Acts::RadialBounds::RadialBounds(const variant_data& data_)
+Acts::RadialBounds::RadialBounds(const variant_data& vardata)
 {
 
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   std::string        type = data.get<std::string>("type");
   throw_assert(type == "RadialBounds", "Type must be RadialBounds");
 
@@ -51,9 +51,7 @@ Acts::RadialBounds::RadialBounds(const variant_data& data_)
   m_halfPhi = payload.get<double>("halfPhi");
 }
 
-Acts::RadialBounds::~RadialBounds()
-{
-}
+Acts::RadialBounds::~RadialBounds() = default;
 
 Acts::RadialBounds*
 Acts::RadialBounds::clone() const

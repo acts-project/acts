@@ -32,7 +32,7 @@ public:
   }
 
   /// Destructor
-  virtual ~LayerStub() {}
+  ~LayerStub() override {}
 
   /// Assignment is deleted in the Layer baseclass
   LayerStub&
@@ -41,13 +41,13 @@ public:
 
   /// surfaceRepresentation is pure virtual in baseclass
   const Surface&
-  surfaceRepresentation() const
+  surfaceRepresentation() const override
   {
     return (*this);
   }
 
   Surface&
-  surfaceRepresentation()
+  surfaceRepresentation() override
   {
     return (*this);
   }

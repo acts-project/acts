@@ -22,7 +22,7 @@ namespace Acts {
 class Layer;
 class TrackingVolume;
 
-typedef std::pair<TrackingVolumePtr, Vector3D> TrackingVolumeOrderPosition;
+using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3D>;
 
 ///@class TrackingVolumeArrayCreator
 ///
@@ -44,17 +44,17 @@ public:
   }
 
   /// Destructor
-  virtual ~TrackingVolumeArrayCreator() = default;
+  ~TrackingVolumeArrayCreator() override = default;
 
   /// create a tracking volume array
   ///
-  /// @param vols is the vector of TrackingVolumes to be
-  /// @param bVal is the binning value
+  /// @param tVolumes is the vector of TrackingVolumes to be
+  /// @param bValue is the binning value
   ///
   /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray>
-  trackingVolumeArray(const TrackingVolumeVector& vols,
-                      BinningValue                bVal) const;
+  trackingVolumeArray(const TrackingVolumeVector& tVolumes,
+                      BinningValue                bValue) const override;
 
   /// Set logging instance
   ///

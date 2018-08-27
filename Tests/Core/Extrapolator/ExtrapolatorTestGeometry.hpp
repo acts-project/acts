@@ -46,8 +46,8 @@ namespace Test {
     }
 
     // causes pointer assignment
-    virtual bool
-    isFree() const override final
+    bool
+    isFree() const final
     {
       return false;
     }
@@ -76,8 +76,8 @@ namespace Test {
     for (size_t zBin = 0; zBin < size_t(nZbins); ++zBin) {
       // prepare z and r
       double moduleZ = zStart + zBin * zStep;
-      double moduleR
-          = (zBin % 2) ? radius - 0.5 * zStagger : radius + 0.5 * zStagger;
+      double moduleR = (zBin % 2) != 0u ? radius - 0.5 * zStagger
+                                        : radius + 0.5 * zStagger;
       for (size_t phiBin = 0; phiBin < size_t(nPhiBins); ++phiBin) {
         // calculate the current phi value
         double modulePhi = minPhi + phiBin * phiStep;

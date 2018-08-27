@@ -26,7 +26,7 @@ class AtlasStepper
 {
 
 public:
-  typedef detail::ConstrainedStep cstep;
+  using cstep = detail::ConstrainedStep;
 
   struct State
   {
@@ -154,7 +154,9 @@ public:
     update(const Parameters& pars)
     {
       // state is ready - noting to do
-      if (state_ready) return;
+      if (state_ready) {
+        return;
+      }
 
       const ActsVectorD<3> pos = pars.position();
       const auto           Vp  = pars.parameters();
@@ -310,14 +312,14 @@ public:
   template <typename T, typename S>
   struct s
   {
-    typedef BoundParameters type;
+    using type = BoundParameters;
   };
 
   // Unless S is int, then it maps to CurvilinearParameters ...
   template <typename T>
   struct s<T, int>
   {
-    typedef CurvilinearParameters type;
+    using type = CurvilinearParameters;
   };
 
   template <typename T, typename S = int>
@@ -334,7 +336,9 @@ public:
     mom /= std::abs(state.pVector[6]);
 
     double P[45];
-    for (unsigned int i = 0; i < 45; ++i) P[i] = state.pVector[i];
+    for (unsigned int i = 0; i < 45; ++i) {
+      P[i] = state.pVector[i];
+    }
 
     std::unique_ptr<const ActsSymMatrixD<NGlobalPars>> cov = nullptr;
     if (state.covariance) {
@@ -361,8 +365,10 @@ public:
       double Ay[3] = {-Ax[1] * P[5], Ax[0] * P[5], An};
       double S[3]  = {P[3], P[4], P[5]};
 
-      double A       = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
-      if (A != 0.) A = 1. / A;
+      double A = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
+      if (A != 0.) {
+        A = 1. / A;
+      }
       S[0] *= A;
       S[1] *= A;
       S[2] *= A;
@@ -500,7 +506,9 @@ public:
       double A = state.pVector[3] * S[0] + state.pVector[4] * S[1]
           + state.pVector[5] * S[2];
 
-      if (A != 0.) A = 1. / A;
+      if (A != 0.) {
+        A = 1. / A;
+      }
 
       S[0] *= A;
       S[1] *= A;
@@ -531,8 +539,10 @@ public:
             + state.pVector[5] * Ay[2];
 
         // this is cos(beta)
-        double a       = (1. - d) * (1. + d);
-        if (a != 0.) a = 1. / a;  // i.e. 1./(1-d^2)
+        double a = (1. - d) * (1. + d);
+        if (a != 0.) {
+          a = 1. / a;  // i.e. 1./(1-d^2)
+        }
 
         // that's the modified norm vector
         double X = d * Ay[0] - state.pVector[3];  //

@@ -15,7 +15,7 @@
 #include <iostream>
 #include "Acts/Utilities/Helpers.hpp"
 
-typedef uint64_t geo_id_value;
+using geo_id_value = uint64_t;
 
 namespace Acts {
 
@@ -41,7 +41,7 @@ public:
 
   /// default constructor
   ///
-  GeometryID() : m_value(0) {}
+  GeometryID() = default;
 
   /// constructor from a ready-made value
   ///
@@ -60,7 +60,7 @@ public:
   /// Copy constructor
   ///
   /// @param tddID is the geometry ID that will be copied
-  GeometryID(const GeometryID& tddID) : m_value(tddID.m_value) {}
+  GeometryID(const GeometryID& tddID) = default;
 
   /// Assignement operator
   ///
@@ -130,7 +130,9 @@ private:
 inline geo_id_value
 GeometryID::value(geo_id_value mask) const
 {
-  if (mask) return ACTS_BIT_DECODE(m_value, mask);
+  if (mask != 0u) {
+    return ACTS_BIT_DECODE(m_value, mask);
+  }
   return m_value;
 }
 
@@ -165,5 +167,5 @@ operator>=(const GeometryID& one, const GeometryID& two);
 
 /// Overload of << operator for std::ostream for debug output
 std::ostream&
-operator<<(std::ostream& sl, const GeometryID& tddID);
+operator<<(std::ostream& sl, const GeometryID& tid);
 }

@@ -46,8 +46,8 @@ public:
   /// Copy Constructor with shift
   ///
   /// @param psf is the source surface for the copy
-  /// @param htrans is the transformation that positions the surface in space
-  PlaneSurface(const PlaneSurface& other, const Transform3D& htrans);
+  /// @param transf is the transformation that positions the surface in space
+  PlaneSurface(const PlaneSurface& other, const Transform3D& transf);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -60,8 +60,8 @@ public:
   ///
   /// @param pbounds are the provided planar bounds (shared)
   /// @param detelement is the linked detector element to this surface
-  PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-               const DetectorElementBase&          detelement);
+  PlaneSurface(const std::shared_ptr<const PlanarBounds>& pbounds,
+               const DetectorElementBase&                 detelement);
 
   /// Constructor for Planes with (optional) shared bounds object
   ///
@@ -72,10 +72,10 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  PlaneSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  PlaneSurface(const variant_data& vardata);
 
-  virtual ~PlaneSurface();
+  ~PlaneSurface() override;
 
   /// Assignment operator
   ///
@@ -87,7 +87,7 @@ public:
   /// ownership of the shift transform is not given !!
   ///
   /// @param shift is a potential shift after cloning
-  virtual PlaneSurface*
+  PlaneSurface*
   clone(const Transform3D* shift = nullptr) const override;
 
   /// Normal vector return
@@ -95,7 +95,7 @@ public:
   /// @param lpos is the local position is ignored
   /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos) const override final;
+  normal(const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -106,15 +106,15 @@ public:
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  virtual const Vector3D
-  binningPosition(BinningValue bValue) const override final;
+  const Vector3D
+  binningPosition(BinningValue bValue) const final;
 
   /// Return the surface type
-  virtual SurfaceType
+  SurfaceType
   type() const override;
 
   /// Return method for bounds object of this surfrace
-  virtual const SurfaceBounds&
+  const SurfaceBounds&
   bounds() const override;
 
   /// Geometrical on surface test
@@ -122,12 +122,12 @@ public:
   /// within or without check of whether the local position is inside boundaries
   /// or not
   ///
-  /// @param gpos global position to be checked
+  /// @param glopo global position to be checked
   /// @param bcheck gboundary check directive
   ///
   /// @return is a boolean indicator if the position is on surface
-  virtual bool
-  isOnSurface(const Vector3D&      gpos,
+  bool
+  isOnSurface(const Vector3D&      glopo,
               const BoundaryCheck& bcheck = true) const override;
 
   /// Local to global transformation
@@ -138,7 +138,7 @@ public:
   /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
-  virtual void
+  void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const override;
@@ -155,14 +155,14 @@ public:
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  virtual bool
+  bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
-  /// @param gpos global 3D position - considered to be on surface but not
+  /// @param pos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param mom global 3D momentum representation (optionally ignored)
   ///
@@ -170,7 +170,7 @@ public:
   ///
   /// @return a double representing the scaling factor
   double
-  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
+  pathCorrection(const Vector3D& pos, const Vector3D& mom) const final;
 
   /// @brief Fast straight line intersection schema
   ///
@@ -199,20 +199,20 @@ public:
   /// - perpendicular to the normal of the plane
   ///
   /// @return the Intersection object
-  virtual Intersection
+  Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
-                       NavigationDirection  navDir = forward,
-                       const BoundaryCheck& bcheck = false,
-                       CorrFnc correct = nullptr) const final override;
+                       NavigationDirection  navDir  = forward,
+                       const BoundaryCheck& bcheck  = false,
+                       CorrFnc              correct = nullptr) const final;
 
   /// Return properly formatted class name for screen output
-  virtual std::string
+  std::string
   name() const override;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 
 protected:

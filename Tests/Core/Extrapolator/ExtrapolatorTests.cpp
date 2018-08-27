@@ -42,16 +42,16 @@ namespace Test {
 
   // Global definitions
   // The path limit abort
-  typedef detail::PathLimitReached path_limit;
+  using path_limit = detail::PathLimitReached;
 
   std::vector<std::unique_ptr<const Surface>> stepState;
   auto tGeometry = testGeometry<PlaneSurface>(stepState);
 
   // get the navigator and provide the TrackingGeometry
-  Navigator                        navigator(tGeometry);
-  typedef ConstantBField           BFieldType;
-  typedef EigenStepper<BFieldType> EigenStepperType;
-  typedef Propagator<EigenStepperType, Navigator> EigenPropagatorType;
+  Navigator navigator(tGeometry);
+  using BFieldType          = ConstantBField;
+  using EigenStepperType    = EigenStepper<BFieldType>;
+  using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
 
   const double        Bz = 2. * units::_T;
   BFieldType          bField(0, 0, Bz);
@@ -120,8 +120,8 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-    typedef ActionList<> ActionListType;
-    typedef AbortList<>  AbortConditionsType;
+    using ActionListType      = ActionList<>;
+    using AbortConditionsType = AbortList<>;
 
     typename EigenPropagatorType::template Options<ActionListType,
                                                    AbortConditionsType>
@@ -181,11 +181,11 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // A PlaneSelector for the SurfaceCollector
-    typedef SurfaceCollector<PlaneSelector> PlaneCollector;
+    using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
     // Action list and abort list
-    typedef ActionList<PlaneCollector> ActionListType;
-    typedef AbortList<>                AbortConditionsType;
+    using ActionListType      = ActionList<PlaneCollector>;
+    using AbortConditionsType = AbortList<>;
 
     typename EigenPropagatorType::template Options<ActionListType,
                                                    AbortConditionsType>
@@ -197,7 +197,7 @@ namespace Test {
     auto        collector_result = result.get<PlaneCollector::result_type>();
 
     // step through the surfaces and go step by step
-    typedef ActionList<> ActionListEmpty;
+    using ActionListEmpty = ActionList<>;
     typename EigenPropagatorType::template Options<ActionListEmpty,
                                                    AbortConditionsType>
         optionsEmpty;
@@ -262,8 +262,8 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-    typedef ActionList<MaterialInteractor> ActionListType;
-    typedef AbortList<>                    AbortConditionsType;
+    using ActionListType      = ActionList<MaterialInteractor>;
+    using AbortConditionsType = AbortList<>;
 
     typename EigenPropagatorType::template Options<ActionListType,
                                                    AbortConditionsType>
@@ -325,8 +325,8 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-    typedef ActionList<MaterialInteractor> ActionListType;
-    typedef AbortList<>                    AbortConditionsType;
+    using ActionListType      = ActionList<MaterialInteractor>;
+    using AbortConditionsType = AbortList<>;
 
     typename EigenPropagatorType::template Options<ActionListType,
                                                    AbortConditionsType>
@@ -340,10 +340,11 @@ namespace Test {
     // maximum momentum allowed
     double pmax = units::SI2Nat<units::MOMENTUM>(
         options.pathLimit * bField.getField(pos).mag() / M_PI);
-    if (mom.mag() < pmax)
+    if (mom.mag() < pmax) {
       BOOST_CHECK(status.pathLength < options.pathLimit);
-    else
+    } else {
       BOOST_CHECK_CLOSE(status.pathLength, options.pathLimit, 1e-3);
+    }
   }
 
 }  // namespace Test

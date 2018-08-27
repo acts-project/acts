@@ -78,7 +78,7 @@ public:
                       = getDefaultLogger("ExtrapolationEngine", Logging::INFO));
 
   /// Destructor
-  ~ExtrapolationEngine();
+  ~ExtrapolationEngine() override;
 
   using IExtrapolationEngine::extrapolate;
   /// Charged extrapolation - public interface
@@ -125,9 +125,9 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger is the logging instance
+  /// @param newLogger is the logging instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 protected:
   /// ExtrapolationEngine config object

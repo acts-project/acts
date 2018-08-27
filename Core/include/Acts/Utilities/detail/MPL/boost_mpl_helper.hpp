@@ -27,7 +27,7 @@ namespace detail {
     template <typename... args>
     struct tuple2boost_set<std::tuple<args...>>
     {
-      typedef typename bm::set<args...>::type type;
+      using type = typename bm::set<args...>::type;
     };
 
     template <typename T, typename R>
@@ -36,34 +36,34 @@ namespace detail {
     template <typename... args, typename next>
     struct fold2tuple<std::tuple<args...>, next>
     {
-      typedef std::tuple<next, args...> type;
+      using type = std::tuple<next, args...>;
     };
 
     template <typename S>
     struct boost_set2tuple
     {
-      typedef typename bm::fold<S, std::tuple<>, fold2tuple<bp::_1, bp::_2>>::type type;
+      using type = typename bm::fold<S, std::tuple<>, fold2tuple<bp::_1, bp::_2>>::type;
     };
 
     template <typename s, typename v>
     struct boost_set_merger
     {
-      typedef typename bm::fold<v, s, bm::insert<bp::_1, bp::_2>>::type                       unique_types;
-      typedef typename bm::fold<unique_types, std::tuple<>, fold2tuple<bp::_1, bp::_2>>::type flat_types;
-      typedef typename tuple2boost_set<flat_types>::type                                      type;
+      using unique_types = typename bm::fold<v, s, bm::insert<bp::_1, bp::_2>>::type;
+      using flat_types = typename bm::fold<unique_types, std::tuple<>, fold2tuple<bp::_1, bp::_2>>::type;
+      using type = typename tuple2boost_set<flat_types>::type;
     };
 
     template <template <typename...> class R, typename S>
     struct boost_set_as_tparams
     {
-      typedef typename boost_set2tuple<S>::type                as_tuple;
-      typedef typename boost_set_as_tparams<R, as_tuple>::type type;
+      using as_tuple = typename boost_set2tuple<S>::type;
+      using type = typename boost_set_as_tparams<R, as_tuple>::type;
     };
 
     template <template <typename...> class R, typename... args>
     struct boost_set_as_tparams<R, std::tuple<args...>>
     {
-      typedef R<args...> type;
+      using type = R<args...>;
     };
     // clang-format on
   }  // end of anonymous namespace

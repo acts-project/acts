@@ -13,8 +13,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include <climits>
 
-Acts::MaterialProperties::MaterialProperties()
-  : m_material(), m_dInX0(0.), m_dInL0(0.)
+Acts::MaterialProperties::MaterialProperties() : m_material()
 {
 }
 
@@ -42,9 +41,7 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
 
 Acts::MaterialProperties::MaterialProperties(
     const Acts::MaterialProperties& mprop)
-  : m_material(mprop.m_material), m_dInX0(mprop.m_dInX0), m_dInL0(mprop.m_dInL0)
-{
-}
+    = default;
 
 Acts::MaterialProperties*
 Acts::MaterialProperties::clone() const

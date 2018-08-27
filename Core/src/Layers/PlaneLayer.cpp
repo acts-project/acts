@@ -11,9 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
-#include "Acts/Layers/PlaneLayer.hpp"
+#include <utility>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Layers/PlaneLayer.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -23,16 +25,20 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D>   transform,
                              double                               thickness,
                              std::unique_ptr<ApproachDescriptor>  ades,
                              LayerType                            laytyp)
-  : PlaneSurface(transform, pbounds)
+  : PlaneSurface(std::move(transform), pbounds)
   , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {
   // @todo create representing volume
   // register the layer to the surface
   Acts::PlaneSurface::associateLayer(*this);
   // deal with the approach descriptor
-  if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && m_surfaceArray) {
+    buildApproachDescriptor();
+  }
   // register the layer to the approach descriptor
-  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
+  if (m_approachDescriptor) {
+    approachDescriptor()->registerLayer(*this);
+  }
 }
 
 const Acts::PlaneSurface&

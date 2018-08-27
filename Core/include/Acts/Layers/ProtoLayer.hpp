@@ -53,7 +53,7 @@ public:
   ProtoLayer(std::vector<const Surface*> surfaces);
 
   // normal empty constructor
-  ProtoLayer(){};
+  ProtoLayer() = default;
 
   std::ostream&
   dump(std::ostream& sl) const;

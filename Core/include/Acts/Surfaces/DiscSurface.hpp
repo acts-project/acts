@@ -70,15 +70,15 @@ public:
   /// (can be nullptr)
   /// @param minhalfx The half length in x at minimal r
   /// @param maxhalfx The half length in x at maximal r
-  /// @param rmin The inner radius of the disc surface
-  /// @param rmax The outer radius of the disc surface
+  /// @param maxR The inner radius of the disc surface
+  /// @param minR The outer radius of the disc surface
   /// @param avephi The position in phi (default is 0.)
   /// @param stereo The optional stereo angle
   DiscSurface(std::shared_ptr<const Transform3D> htrans,
               double                             minhalfx,
               double                             maxhalfx,
-              double                             rmin,
-              double                             rmax,
+              double                             maxR,
+              double                             minR,
               double                             avephi = 0.,
               double                             stereo = 0.);
 
@@ -93,8 +93,8 @@ public:
   ///
   /// @param dbounds The disc bounds describing the surface coverage
   /// @param detelement The detector element represented by this surface
-  DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-              const DetectorElementBase&        detelement);
+  DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
+              const DetectorElementBase&               detelement);
 
   /// Copy Constructor
   ///
@@ -109,10 +109,10 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  DiscSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  DiscSurface(const variant_data& vardata);
 
-  virtual ~DiscSurface();
+  ~DiscSurface() override;
 
   /// Assignement operator
   ///
@@ -123,11 +123,11 @@ public:
   /// Virtual constructor - shift can be given optionally
   ///
   /// @param shift the otional transform applied after cloning
-  virtual DiscSurface*
-  clone(const Transform3D* shift = nullptr) const final override;
+  DiscSurface*
+  clone(const Transform3D* shift = nullptr) const final;
 
   /// Return the surface type
-  virtual SurfaceType
+  SurfaceType
   type() const override;
 
   /// Normal vector return
@@ -135,7 +135,7 @@ public:
   /// @param lpos The local position is ignored
   /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos) const override final;
+  normal(const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -145,23 +145,23 @@ public:
   ///
   /// @param bValue The binning type to be used
   /// @return position that can beused for this binning
-  virtual const Vector3D
+  const Vector3D
   binningPosition(BinningValue bValue) const final;
 
   /// This method returns the bounds by reference
   const SurfaceBounds&
-  bounds() const final override;
+  bounds() const final;
 
   /// This method returns true if the GlobalPosition is on the Surface for both,
   /// within or without check of whether the local position is inside boundaries
   /// or not
   ///
-  /// @param gpos The global position to be checked
+  /// @param glopo The global position to be checked
   /// @param bcheck The boundary check directive
   /// @return bollean that indicates if the position is on surface
-  virtual bool
-  isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const final override;
+  bool
+  isOnSurface(const Vector3D&      glopo,
+              const BoundaryCheck& bcheck = true) const final;
 
   /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global
@@ -173,10 +173,10 @@ public:
   /// symmetry)
   ///
   /// @note the momentum is ignored for Disc surfaces in this calculateion
-  virtual void
+  void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       gpos) const final override;
+                Vector3D&       gpos) const final;
 
   /// Global to local transformation
   /// @note the momentum is ignored for Disc surfaces in this calculateion
@@ -188,10 +188,10 @@ public:
   /// symmetry)
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  virtual bool
+  bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       lpos) const final override;
+                Vector2D&       lpos) const final;
 
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
@@ -212,18 +212,18 @@ public:
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
   ///
-  /// @param lpolar is a local position in polar coordinates
+  /// @param locpol is a local position in polar coordinates
   /// @return values is local 2D position in cartesian coordinates
   const Vector2D
-  localPolarToLocalCartesian(const Vector2D& lpolar) const;
+  localPolarToLocalCartesian(const Vector2D& locpol) const;
 
   /// Special method for DiscSurface :  local<->global transformation when
   /// provided cartesian coordinates
   ///
-  /// @param lcart is local 2D position in cartesian coordinates
+  /// @param lpos is local 2D position in cartesian coordinates
   /// @return value is a global cartesian 3D position
   const Vector3D
-  localCartesianToGlobal(const Vector2D& lcart) const;
+  localCartesianToGlobal(const Vector2D& lpos) const;
 
   /// Special method for DiscSurface : global<->local from cartesian coordinates
   ///
@@ -238,40 +238,36 @@ public:
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac The jacobian to be initialized
-  /// @param pos The global position of the parameters
+  /// @param jacobian The jacobian to be initialized
+  /// @param gpos The global position of the parameters
   /// @param dir The direction at of the parameters
   /// @param pars The paranmeters vector
-  virtual void
-      initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
-                           const Vector3D&       gpos,
-                           const Vector3D&       dir,
-                           const ActsVectorD<5>& pars) const final override;
+  void initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
+                            const Vector3D&       gpos,
+                            const Vector3D&       dir,
+                            const ActsVectorD<5>& pars) const final;
 
   /// Initialize the jacobian from global to local
   /// the surface knows best, hence the calculation is done here.
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac The jacobian to be initialized
-  /// @param pos The global position of the parameters
+  /// @param jacobian The jacobian to be initialized
+  /// @param gpos The global position of the parameters
   /// @param dir The direction at of the parameters
-  /// @param pars The parameter vector
   ///
   /// @return the transposed reference frame (avoids recalculation)
-  virtual const RotationMatrix3D
-      initJacobianToLocal(ActsMatrixD<5, 7>& jac,
-                          const Vector3D& gpos,
-                          const Vector3D& dir) const final override;
+  const RotationMatrix3D initJacobianToLocal(ActsMatrixD<5, 7>& jacobian,
+                                             const Vector3D& gpos,
+                                             const Vector3D& dir) const final;
 
   /// Path correction due to incident of the track
   ///
-  /// @param gpos The global position as a starting point
+  /// @param pos The global position as a starting point
   /// @param mom The global momentum at the starting point
   /// @return The correction factor due to incident
   double
-  pathCorrection(const Vector3D& gpos,
-                 const Vector3D& mom) const final override;
+  pathCorrection(const Vector3D& pos, const Vector3D& mom) const final;
 
   /// @brief Fast straight line intersection schema
   ///
@@ -300,16 +296,16 @@ public:
   /// - either in the plane
   /// - perpendicular to the normal of the plane
   ///
-  /// @return The surface intersection object
-  virtual Intersection
+  /// @return is the surface intersection object
+  Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gdir,
-                       NavigationDirection  navDir = forward,
-                       const BoundaryCheck& bcheck = false,
-                       CorrFnc correct = nullptr) const final override;
+                       NavigationDirection  navDir  = forward,
+                       const BoundaryCheck& bcheck  = false,
+                       CorrFnc              correct = nullptr) const final;
 
   /// Return properly formatted class name for screen output
-  virtual std::string
+  std::string
   name() const override;
 
   /// Return a PolyhedronRepresentation for this object
@@ -320,7 +316,7 @@ public:
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 
 protected:

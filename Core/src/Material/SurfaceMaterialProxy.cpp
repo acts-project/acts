@@ -27,8 +27,9 @@ Acts::SurfaceMaterialProxy::SurfaceMaterialProxy(
     const SurfaceMaterialProxy& smproxy)
   : SurfaceMaterial(), m_binUtility(nullptr)
 {
-  if (smproxy.m_binUtility)
+  if (smproxy.m_binUtility) {
     m_binUtility = std::make_unique<const BinUtility>(*smproxy.m_binUtility);
+  }
 }
 
 Acts::SurfaceMaterialProxy*
@@ -38,7 +39,7 @@ Acts::SurfaceMaterialProxy::clone() const
 }
 
 Acts::SurfaceMaterialProxy&
-Acts::SurfaceMaterialProxy::operator*=(double)
+Acts::SurfaceMaterialProxy::operator*=(double /*scale*/)
 {
   return (*this);
 }
@@ -47,10 +48,11 @@ std::ostream&
 Acts::SurfaceMaterialProxy::dump(std::ostream& sl) const
 {
   sl << "Acts::SurfaceMaterialProxy : " << std::endl;
-  if (m_binUtility)
+  if (m_binUtility) {
     sl << "   - Number of Material bins [0,1] : " << m_binUtility->bins(0)
        << " / " << m_binUtility->bins(1) << std::endl;
-  else
+  } else {
     sl << "   - Homogeneous Material" << std::endl;
+  }
   return sl;
 }

@@ -18,7 +18,7 @@
 namespace Acts {
 
 class VolumeBounds;
-typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
+using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class Volume
 ///
@@ -37,8 +37,9 @@ public:
   /// Explicit constructor with shared arguments
   ///
   /// @param htrans is the transform to position the volume in 3D space
-  /// @param volBounds is the volume boundary definitions
-  Volume(std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volBounds);
+  /// @param volbounds is the volume boundary definitions
+  Volume(const std::shared_ptr<const Transform3D>& htrans,
+         VolumeBoundsPtr                           volbounds);
 
   /// Copy Constructor - with optional shift
   ///
@@ -86,7 +87,7 @@ public:
   /// @param bValue is the binning value schema
   ///
   /// @return vector 3D that can be used for the binning
-  virtual const Vector3D
+  const Vector3D
   binningPosition(BinningValue bValue) const override;
 
 protected:
@@ -98,7 +99,9 @@ protected:
 inline const Transform3D&
 Volume::transform() const
 {
-  if (m_transform) return (*(m_transform.get()));
+  if (m_transform) {
+    return (*(m_transform.get()));
+  }
   return Acts::s_idTransform;
 }
 

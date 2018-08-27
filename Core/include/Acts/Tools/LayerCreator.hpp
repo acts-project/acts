@@ -35,7 +35,7 @@ namespace Test {
 }
 class Surface;
 class Layer;
-typedef std::shared_ptr<Layer> MutableLayerPtr;
+using MutableLayerPtr = std::shared_ptr<Layer>;
 
 /// @class LayerCreator
 ///
@@ -54,12 +54,12 @@ public:
     /// surface array helper
     std::shared_ptr<const SurfaceArrayCreator> surfaceArrayCreator = nullptr;
     /// cylinder module z tolerance : it counts at same z, if ...
-    double cylinderZtolerance;
+    double cylinderZtolerance{10.};
     /// cylinder module phi tolerance : it counts at same phi, if ...
-    double cylinderPhiTolerance;
+    double cylinderPhiTolerance{0.1};
 
     // standard constructor
-    Config() : cylinderZtolerance(10.), cylinderPhiTolerance(0.1) {}
+    Config() = default;
   };
 
   /// Constructor
@@ -186,13 +186,13 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  planeLayer(const std::vector<const Surface*>&  surfaces,
-             double                              envelopeXY,
-             double                              envelopeZ,
-             size_t                              binsX,
-             size_t                              binsY,
-             std::shared_ptr<const Transform3D>  transform = nullptr,
-             std::unique_ptr<ApproachDescriptor> ad        = nullptr) const;
+  planeLayer(const std::vector<const Surface*>&        surfaces,
+             double                                    envelopeXY,
+             double                                    envelopeZ,
+             size_t                                    binsX,
+             size_t                                    binsY,
+             const std::shared_ptr<const Transform3D>& transform = nullptr,
+             std::unique_ptr<ApproachDescriptor>       ad = nullptr) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct
@@ -204,8 +204,9 @@ public:
   getConfiguration() const;
 
   /// set logging instance
+  /// @param newLogger the logger instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
   // associate surfaces contained by this layer to this layer
   void

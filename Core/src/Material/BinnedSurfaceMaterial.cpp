@@ -80,7 +80,9 @@ Acts::BinnedSurfaceMaterial::clearMaterial()
 {
   // clear the full material
   for (auto& matMatrixIter : m_fullMaterial) {
-    for (auto& matIter : matMatrixIter) delete matIter;
+    for (auto& matIter : matMatrixIter) {
+      delete matIter;
+    }
   }
   m_fullMaterial.clear();
 }
@@ -95,8 +97,9 @@ Acts::BinnedSurfaceMaterial::fillMaterial(
     Acts::MaterialPropertiesVector matVector;
     matVector.reserve(m_binUtility.max(0) + 1);
     // reassign
-    for (auto& matIter : matMatrixIter)
-      matVector.push_back(matIter ? matIter->clone() : nullptr);
+    for (auto& matIter : matMatrixIter) {
+      matVector.push_back(matIter != nullptr ? matIter->clone() : nullptr);
+    }
     m_fullMaterial.push_back(matVector);
   }
 }
@@ -110,7 +113,7 @@ Acts::BinnedSurfaceMaterial::operator*=(double scale)
     unsigned int imat0 = 0;
     // the vector iterator
     for (auto& matIter : matMatrixIter) {
-      if (matIter) {
+      if (matIter != nullptr) {
         Acts::MaterialProperties* mprop = matIter->clone();
         (*mprop) *= scale;
         delete matIter;
@@ -126,20 +129,24 @@ Acts::BinnedSurfaceMaterial::operator*=(double scale)
 const Acts::MaterialProperties*
 Acts::BinnedSurfaceMaterial::material(const Vector2D& lp) const
 {
-  if (!m_fullMaterial.size()) return nullptr;
+  if (m_fullMaterial.empty()) {
+    return nullptr;
+  }
   // the first bin
   size_t ibin0 = m_binUtility.bin(lp, 0);
-  size_t ibin1 = m_binUtility.max(1) ? m_binUtility.bin(lp, 1) : 0;
+  size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, 1) : 0;
   return m_fullMaterial[ibin1][ibin0];
 }
 
 const Acts::MaterialProperties*
 Acts::BinnedSurfaceMaterial::material(const Acts::Vector3D& gp) const
 {
-  if (!m_fullMaterial.size()) return nullptr;
+  if (m_fullMaterial.empty()) {
+    return nullptr;
+  }
   // the first bin
   size_t ibin0 = m_binUtility.bin(gp, 0);
-  size_t ibin1 = m_binUtility.max(1) ? m_binUtility.bin(gp, 1) : 0;
+  size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(gp, 1) : 0;
   return m_fullMaterial[ibin1][ibin0];
 }
 
@@ -156,11 +163,12 @@ Acts::BinnedSurfaceMaterial::dump(std::ostream& sl) const
     unsigned int imat0 = 0;
     // the vector iterator
     for (auto& matIter : matMatrixIter) {
-      if (matIter)
+      if (matIter != nullptr) {
         sl << " Bin [" << imat1 << "][" << imat0 << "] - " << (*matIter)
            << std::endl;
-      else
+      } else {
         sl << " Bin [" << imat1 << "][" << imat0 << "] -  empty " << std::endl;
+      }
       ++imat0;
     }
     ++imat1;

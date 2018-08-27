@@ -17,7 +17,8 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-Acts::TrackingGeometry::TrackingGeometry(MutableTrackingVolumePtr highestVolume)
+Acts::TrackingGeometry::TrackingGeometry(
+    const MutableTrackingVolumePtr& highestVolume)
   : m_world(highestVolume)
   , m_beam(std::make_unique<const PerigeeSurface>(s_origin))
 {
@@ -26,16 +27,14 @@ Acts::TrackingGeometry::TrackingGeometry(MutableTrackingVolumePtr highestVolume)
   highestVolume->closeGeometry(m_trackingVolumes, volumeID);
 }
 
-Acts::TrackingGeometry::~TrackingGeometry()
-{
-}
+Acts::TrackingGeometry::~TrackingGeometry() = default;
 
 const Acts::TrackingVolume*
 Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
 {
   const TrackingVolume* searchVolume  = m_world.get();
   const TrackingVolume* currentVolume = nullptr;
-  while (currentVolume != searchVolume && searchVolume) {
+  while (currentVolume != searchVolume && (searchVolume != nullptr)) {
     currentVolume = searchVolume;
     searchVolume  = searchVolume->trackingVolume(gp);
   }
@@ -47,7 +46,9 @@ Acts::TrackingGeometry::lowestDetachedTrackingVolumes(const Vector3D& gp) const
 {
   double                tol           = 0.001;
   const TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
-  if (currentVolume) return currentVolume->detachedTrackingVolumes(gp, tol);
+  if (currentVolume != nullptr) {
+    return currentVolume->detachedTrackingVolumes(gp, tol);
+  }
   return nullptr;
 }
 
@@ -56,10 +57,11 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
 {
   const TrackingVolume* searchVolume  = m_world.get();
   const TrackingVolume* currentVolume = nullptr;
-  while (currentVolume != searchVolume && searchVolume) {
+  while (currentVolume != searchVolume && (searchVolume != nullptr)) {
     currentVolume = searchVolume;
-    if ((searchVolume->confinedDetachedVolumes()).empty())
+    if ((searchVolume->confinedDetachedVolumes()).empty()) {
       searchVolume = searchVolume->trackingVolume(gp);
+    }
   }
   return currentVolume;
 }
@@ -68,13 +70,17 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
 bool
 Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
                                          const Acts::TrackingVolume* vol,
-                                         double) const
+                                         double /*unused*/) const
 {
   bool isAtBoundary = false;
-  if (!vol) return isAtBoundary;
+  if (vol == nullptr) {
+    return isAtBoundary;
+  }
   for (auto& bSurface : vol->boundarySurfaces()) {
     const Surface& surf = bSurface->surfaceRepresentation();
-    if (surf.isOnSurface(gp, true)) isAtBoundary = true;
+    if (surf.isOnSurface(gp, true)) {
+      isAtBoundary = true;
+    }
   }
   return isAtBoundary;
 }
@@ -86,18 +92,22 @@ Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
                                          const TrackingVolume*  vol,
                                          const TrackingVolume*& nextVol,
                                          NavigationDirection    dir,
-                                         double) const
+                                         double /*unused*/) const
 {
   bool isAtBoundary = false;
-  nextVol           = 0;
-  if (!vol) return isAtBoundary;
+  nextVol           = nullptr;
+  if (vol == nullptr) {
+    return isAtBoundary;
+  }
   for (auto& bSurface : vol->boundarySurfaces()) {
     const Surface& surf = bSurface->surfaceRepresentation();
     if (surf.isOnSurface(gp, true)) {
       isAtBoundary = true;
       const TrackingVolume* attachedVol
           = bSurface->attachedVolume(gp, mom, dir);
-      if (!nextVol && attachedVol) nextVol = attachedVol;
+      if ((nextVol == nullptr) && (attachedVol != nullptr)) {
+        nextVol = attachedVol;
+      }
     }
   }
   return isAtBoundary;
@@ -121,7 +131,9 @@ Acts::TrackingGeometry::trackingVolume(const std::string& name) const
 {
   auto sVol = m_trackingVolumes.begin();
   sVol      = m_trackingVolumes.find(name);
-  if (sVol != m_trackingVolumes.end()) return (sVol->second);
+  if (sVol != m_trackingVolumes.end()) {
+    return (sVol->second);
+  }
   return nullptr;
 }
 

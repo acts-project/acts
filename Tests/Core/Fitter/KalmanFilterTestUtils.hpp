@@ -32,7 +32,7 @@
 
 // shorthands
 using namespace Acts;
-typedef FittableMeasurement<long int> FitMeas_t;
+using FitMeas_t = FittableMeasurement<long int>;
 template <ParID_t... pars>
 using Meas_t = Measurement<long int, pars...>;
 

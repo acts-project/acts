@@ -350,9 +350,10 @@ namespace Test {
                                            float(-M_PI + 3 * phiStep),
                                            float(-M_PI + 4 * phiStep),
                                            float(-M_PI + 5 * phiStep)};
-    for (size_t ib = 0; ib < phiData_eq.boundaries().size(); ++ib)
+    for (size_t ib = 0; ib < phiData_eq.boundaries().size(); ++ib) {
       BOOST_CHECK_CLOSE(
           phiData_eq.boundaries()[ib], phiBoundaries_eq[ib], 10e-5);
+    }
   }
 
   // test bin center values
@@ -391,8 +392,9 @@ namespace Test {
     // open values
     std::vector<float> center
         = {0.5, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5, 9.5};
-    for (size_t ib = 0; ib < center.size(); ++ib)
+    for (size_t ib = 0; ib < center.size(); ++ib) {
       BOOST_CHECK_EQUAL(xData_eq.center(ib), center[ib]);
+    }
 
     // running into rounding errors here
     float              phiStep       = M_PI * 2. / 5.;
@@ -402,8 +404,9 @@ namespace Test {
                                         float(-M_PI + 3.5 * phiStep),
                                         float(-M_PI + 4.5 * phiStep)};
 
-    for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib)
+    for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib) {
       BOOST_TEST((std::abs(phiData_eq.center(ib) - phiCenters_eq[ib]) < 1e-3));
+    }
   }
 
   // special test for phi binning
@@ -423,9 +426,10 @@ namespace Test {
            float(-M_PI + 4 * phiStep) + deltaPhi,
            float(-M_PI + 5 * phiStep) + deltaPhi};
     // this is the boundary test
-    for (size_t ib = 0; ib < phiData_mod.boundaries().size(); ++ib)
+    for (size_t ib = 0; ib < phiData_mod.boundaries().size(); ++ib) {
       BOOST_CHECK_CLOSE(
           phiData_mod.boundaries()[ib], phiBoundaries_mod[ib], 10e-5);
+    }
 
     // now test the bin jump 0/maxbin
 

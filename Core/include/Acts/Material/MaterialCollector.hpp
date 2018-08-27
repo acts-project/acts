@@ -47,7 +47,7 @@ struct MaterialCollector
     double                   materialInL0 = 0.;
   };
 
-  typedef this_result result_type;
+  using result_type = this_result;
 
   /// Collector action for the ActionList of the Propagator
   /// It checks if the state has a current surface,
@@ -63,7 +63,9 @@ struct MaterialCollector
   operator()(propagator_state_t& state, result_type& result) const
   {
     // if we are on target, everything should have been done
-    if (state.navigation.targetReached) return;
+    if (state.navigation.targetReached) {
+      return;
+    }
 
     if (state.navigation.currentSurface) {
       debugLog(state, [&] {
@@ -156,7 +158,7 @@ struct MaterialCollector
   /// - this does not apply to the surface collector
   template <typename propagator_state_t>
   void
-  operator()(propagator_state_t&) const
+  operator()(propagator_state_t& /*state*/) const
   {
   }
 
@@ -174,8 +176,8 @@ private:
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  debugLog(propagator_state_t&          state,
-           std::function<std::string()> logAction) const
+  debugLog(propagator_state_t&                 state,
+           const std::function<std::string()>& logAction) const
   {
     if (state.options.debug) {
       std::stringstream dstream;

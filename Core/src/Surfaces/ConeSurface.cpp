@@ -16,6 +16,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
@@ -36,7 +37,7 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             alpha,
                                bool                               symmetric)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const ConeBounds>(alpha, symmetric))
 {
 }
@@ -47,22 +48,22 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             zmax,
                                double                             halfPhi)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const ConeBounds>(alpha, zmin, zmax, halfPhi))
 {
 }
 
-Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
-                               std::shared_ptr<const ConeBounds>  cbounds)
-  : GeometryObject(), Surface(htrans), m_bounds(cbounds)
+Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D>       htrans,
+                               const std::shared_ptr<const ConeBounds>& cbounds)
+  : GeometryObject(), Surface(std::move(htrans)), m_bounds(cbounds)
 {
   throw_assert(cbounds, "ConeBounds must not be nullptr");
 }
 
-Acts::ConeSurface::ConeSurface(const variant_data& data_)
+Acts::ConeSurface::ConeSurface(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   std::string type = data.get<std::string>("type");
   throw_assert(type == "ConeSurface", "Variant data type must be ConeSurface");
@@ -72,7 +73,7 @@ Acts::ConeSurface::ConeSurface(const variant_data& data_)
 
   m_bounds = std::make_shared<const ConeBounds>(var_bounds);
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -80,17 +81,16 @@ Acts::ConeSurface::ConeSurface(const variant_data& data_)
   }
 }
 
-Acts::ConeSurface::~ConeSurface()
-{
-}
+Acts::ConeSurface::~ConeSurface() = default;
 
 const Acts::Vector3D
 Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const
 {
   // special binning type for R-type methods
-  if (bValue == Acts::binR || bValue == Acts::binRPhi)
+  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     return Vector3D(
         center().x() + bounds().r(center().z()), center().y(), center().z());
+  }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
   return center();
@@ -119,7 +119,8 @@ Acts::ConeSurface::rotSymmetryAxis() const
 }
 
 const Acts::RotationMatrix3D
-Acts::ConeSurface::referenceFrame(const Vector3D& pos, const Vector3D&) const
+Acts::ConeSurface::referenceFrame(const Vector3D& pos,
+                                  const Vector3D& /*gmom*/) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
@@ -141,7 +142,7 @@ Acts::ConeSurface::referenceFrame(const Vector3D& pos, const Vector3D&) const
 
 void
 Acts::ConeSurface::localToGlobal(const Vector2D& lpos,
-                                 const Vector3D&,
+                                 const Vector3D& /*gmom*/,
                                  Vector3D& gpos) const
 {
   // create the position in the local 3d frame
@@ -149,12 +150,14 @@ Acts::ConeSurface::localToGlobal(const Vector2D& lpos,
   double   phi = lpos[Acts::eLOC_RPHI] / r;
   Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
   // transport it to the globalframe
-  if (m_transform) gpos = transform() * loc3Dframe;
+  if (m_transform) {
+    gpos = transform() * loc3Dframe;
+  }
 }
 
 bool
 Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
-                                 const Vector3D&,
+                                 const Vector3D& /*gmom*/,
                                  Vector2D& lpos) const
 {
   Vector3D loc3Dframe = m_transform ? (transform().inverse() * gpos) : gpos;
@@ -177,7 +180,9 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
   Vector3D normalC(cos(phi) * bounds().cosAlpha(),
                    sin(phi) * bounds().cosAlpha(),
                    sgn * bounds().sinAlpha());
-  if (m_transform) normalC = transform() * normalC;
+  if (m_transform) {
+    normalC = transform() * normalC;
+  }
   // back in global frame
   double cAlpha = normalC.dot(mom.unit());
   return std::abs(1. / cAlpha);
@@ -192,7 +197,9 @@ Acts::ConeSurface::name() const
 Acts::ConeSurface*
 Acts::ConeSurface::clone(const Acts::Transform3D* shift) const
 {
-  if (shift) new ConeSurface(*this, *shift);
+  if (shift != nullptr) {
+    new ConeSurface(*this, *shift);
+  }
   return new ConeSurface(*this);
 }
 
@@ -215,7 +222,7 @@ Acts::ConeSurface::normal(const Acts::Vector3D& gpos) const
   // get it into the cylinder frame if needed
   // @todo respect opening angle
   Vector3D pos3D = gpos;
-  if (m_transform || m_associatedDetElement) {
+  if (m_transform || (m_associatedDetElement != nullptr)) {
     pos3D     = transform().inverse() * gpos;
     pos3D.z() = 0;
   }

@@ -46,8 +46,8 @@ public:
   /// @param file The current file
   /// @param line The current line
   /// @param msg The message to print if assertion fails
-  AssertionFailureException(std::string        expression,
-                            std::string        file,
+  AssertionFailureException(const std::string& expression,
+                            const std::string& file,
                             int                line,
                             const std::string& msg)
   {
@@ -64,8 +64,8 @@ public:
   }
 
   /// The assertion message
-  virtual const char*
-  what() const throw()
+  const char*
+  what() const throw() override
   {
     return report.c_str();
   }

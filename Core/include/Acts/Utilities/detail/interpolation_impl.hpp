@@ -129,8 +129,9 @@ namespace detail {
       const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
 
       std::array<T, (N >> 1)> newFields;
-      for (size_t i     = 0; i < N / 2; ++i)
+      for (size_t i = 0; i < N / 2; ++i) {
         newFields.at(i) = (1 - f) * fields.at(2 * i) + f * fields.at(2 * i + 1);
+      }
 
       return interpolate_impl<T, Point1, Point2, Point3, D - 1, (N >> 1)>::run(
           pos, lowerLeft, upperRight, newFields);

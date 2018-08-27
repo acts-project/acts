@@ -32,9 +32,9 @@
 #include "Acts/Utilities/Units.hpp"
 
 #ifdef TRKDETDESCR_USEFLOATPRECISON
-typedef float TDD_real_t;
+using TDD_real_t = float;
 #else
-typedef double TDD_real_t;
+using TDD_real_t = double;
 #endif
 
 #define TDD_max_bound_value 10e10
@@ -119,13 +119,13 @@ using ActsRowVectorX = Eigen::Matrix<T, 1, Eigen::Dynamic>;
 using ActsRowVectorXd = ActsRowVectorX<double>;
 using ActsRowVectorXf = ActsRowVectorX<float>;
 
-typedef Eigen::Quaternion<double> Rotation3D;
-typedef Eigen::Translation<double, 3> Translation3D;
-typedef Eigen::AngleAxisd AngleAxis3D;
-typedef Eigen::Affine3d   Transform3D;
-typedef Eigen::Matrix<double, 3, 1> Vector3D;
-typedef Eigen::Matrix<double, 2, 1> Vector2D;
-typedef Eigen::Matrix<double, 3, 3> RotationMatrix3D;
+using Rotation3D       = Eigen::Quaternion<double>;
+using Translation3D    = Eigen::Translation<double, 3>;
+using AngleAxis3D      = Eigen::AngleAxisd;
+using Transform3D      = Eigen::Affine3d;
+using Vector3D         = Eigen::Matrix<double, 3, 1>;
+using Vector2D         = Eigen::Matrix<double, 2, 1>;
+using RotationMatrix3D = Eigen::Matrix<double, 3, 3>;
 
 /// axis defintion elment for code readability
 /// - please use these for access to the member variables if needed, e.g.

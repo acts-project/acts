@@ -86,7 +86,7 @@ class IActsExtension
 {
 public:
   /// Virtual destructor
-  virtual ~IActsExtension() {}
+  virtual ~IActsExtension() = default;
   /// Indicates if the DD4hep::DetElement is the beampipe
   virtual bool
   isBeampipe() const = 0;
@@ -139,6 +139,6 @@ public:
 
 protected:
   /// Protected constructor
-  IActsExtension() {}
+  IActsExtension() = default;
 };
 }

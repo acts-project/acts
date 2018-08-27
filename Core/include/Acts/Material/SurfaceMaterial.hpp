@@ -33,7 +33,7 @@ class SurfaceMaterial
 {
 public:
   /// Constructor
-  SurfaceMaterial() : m_splitFactor(1.) {}
+  SurfaceMaterial() = default;
 
   /// Constructor
   ///
@@ -41,7 +41,7 @@ public:
   SurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
 
   /// Destructor
-  virtual ~SurfaceMaterial() {}
+  virtual ~SurfaceMaterial() = default;
 
   /// Pseudo-Constructor clone()
   virtual SurfaceMaterial*
@@ -88,7 +88,7 @@ public:
   dump(std::ostream& sl) const = 0;
 
 protected:
-  double m_splitFactor;  //!< the split factor in favour of oppositePre
+  double m_splitFactor{1.};  //!< the split factor in favour of oppositePre
 };
 
 /// inline return methods for the pre/post factors
@@ -96,7 +96,9 @@ inline double
 SurfaceMaterial::factor(NavigationDirection pDir,
                         MaterialUpdateStage mStage) const
 {
-  if (mStage == Acts::fullUpdate) return 1.;
+  if (mStage == Acts::fullUpdate) {
+    return 1.;
+  }
   return (pDir * mStage > 0 ? m_splitFactor : 1. - m_splitFactor);
 }
 
@@ -104,6 +106,6 @@ SurfaceMaterial::factor(NavigationDirection pDir,
 std::ostream&
 operator<<(std::ostream& sl, const SurfaceMaterial& sm);
 
-typedef std::pair<GeometryID, SurfaceMaterial*> IndexedSurfaceMaterial;
+using IndexedSurfaceMaterial = std::pair<GeometryID, SurfaceMaterial*>;
 
 }  // namespace

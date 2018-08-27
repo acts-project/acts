@@ -45,10 +45,10 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(boost_set_merger_test)
   {
-    typedef typename bm::set<float, int, char, bool>::type first;
-    typedef typename bm::vector<long, int>::type               second;
-    typedef typename detail::boost_set_merger_t<first, second> found;
-    typedef typename bm::set<float, int, char, bool, long>::type expected;
+    using first    = typename bm::set<float, int, char, bool>::type;
+    using second   = typename bm::vector<long, int>::type;
+    using found    = typename detail::boost_set_merger_t<first, second>;
+    using expected = typename bm::set<float, int, char, bool, long>::type;
 
     static_assert(std::is_same<found, expected>::value,
                   "merging sequence into bm::set failed");
@@ -61,9 +61,9 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(unpack_boost_set_as_template_test)
   {
-    typedef bm::set<float, int, char>::type   boost_set;
-    typedef variadic_struct<float, int, char> expected;
-    typedef detail::boost_set_as_tparams_t<variadic_struct, boost_set> found;
+    using boost_set = bm::set<float, int, char>::type;
+    using expected  = variadic_struct<float, int, char>;
+    using found = detail::boost_set_as_tparams_t<variadic_struct, boost_set>;
 
     static_assert(std::is_same<found, expected>::value,
                   "using boost::mpl::set for variadic templates failed");
@@ -72,8 +72,8 @@ namespace Test {
   namespace {
     struct traits1
     {
-      typedef int  result_type;
-      typedef char action_type;
+      using result_type = int;
+      using action_type = char;
     };
 
     template <bool>
@@ -82,14 +82,14 @@ namespace Test {
     template <>
     struct traits2<false>
     {
-      typedef bool  result_type;
-      typedef float action_type;
+      using result_type = bool;
+      using action_type = float;
     };
 
     template <>
     struct traits2<true>
     {
-      typedef float action_type;
+      using action_type = float;
     };
   }
 
@@ -107,8 +107,8 @@ namespace Test {
                                      traits2<false>>
         found_actions;
 
-    typedef typename bm::set<int, bool>::type   expected_results;
-    typedef typename bm::set<char, float>::type expected_actions;
+    using expected_results = typename bm::set<int, bool>::type;
+    using expected_actions = typename bm::set<char, float>::type;
 
     static_assert(std::is_same<found_results, expected_results>::value,
                   "collecting result types failed");

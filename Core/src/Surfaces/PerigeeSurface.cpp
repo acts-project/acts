@@ -15,6 +15,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp)
   : LineSurface(nullptr, nullptr)
@@ -25,7 +26,7 @@ Acts::PerigeeSurface::PerigeeSurface(const Vector3D& gp)
 
 Acts::PerigeeSurface::PerigeeSurface(
     std::shared_ptr<const Transform3D> tTransform)
-  : GeometryObject(), LineSurface(tTransform)
+  : GeometryObject(), LineSurface(std::move(tTransform))
 {
 }
 
@@ -40,12 +41,12 @@ Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other,
 {
 }
 
-Acts::PerigeeSurface::PerigeeSurface(const variant_data& data_)
+Acts::PerigeeSurface::PerigeeSurface(const variant_data& vardata)
   : GeometryObject(), LineSurface(nullptr, nullptr)
 {
 
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   // std::string type = boost::get<std::string>(data["type"]);
   std::string type = data.get<std::string>("type");
@@ -54,7 +55,7 @@ Acts::PerigeeSurface::PerigeeSurface(const variant_data& data_)
 
   variant_map payload = data.get<variant_map>("payload");
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -62,9 +63,7 @@ Acts::PerigeeSurface::PerigeeSurface(const variant_data& data_)
   }
 }
 
-Acts::PerigeeSurface::~PerigeeSurface()
-{
-}
+Acts::PerigeeSurface::~PerigeeSurface() = default;
 
 Acts::PerigeeSurface&
 Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
@@ -78,7 +77,9 @@ Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 Acts::PerigeeSurface*
 Acts::PerigeeSurface::clone(const Transform3D* shift) const
 {
-  if (shift) return new PerigeeSurface(*this, *shift);
+  if (shift != nullptr) {
+    return new PerigeeSurface(*this, *shift);
+  }
   return new PerigeeSurface(*this);
 }
 

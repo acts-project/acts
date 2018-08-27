@@ -40,7 +40,9 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,
                                               double* P) const
 {
   const Acts::TrackParameters* pTp = &Tp;
-  if (!pTp) return false;
+  if (pTp == nullptr) {
+    return false;
+  }
 
   const ActsVectorD<NGlobalPars> Vp = Tp.parameters();
   double                         p[5];
@@ -65,7 +67,9 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool useJac,
                                               double* P) const
 {
   const Acts::NeutralParameters* pTp = &Tp;
-  if (!pTp) return false;
+  if (pTp == nullptr) {
+    return false;
+  }
 
   const ActsVectorD<NGlobalPars> Vp = Tp.parameters();
   double                         p[5];
@@ -104,20 +108,23 @@ Acts::RungeKuttaUtils::transformGlobalToLocal(const Acts::Surface* su,
 
   unsigned int ty = su->type();
 
-  if (ty == Acts::Surface::Plane)
+  if (ty == Acts::Surface::Plane) {
     transformGlobalToPlane(su, useJac, P, par, Jac);
-  else if (ty == Acts::Surface::Straw)
+  } else if (ty == Acts::Surface::Straw) {
     transformGlobalToLine(su, useJac, P, par, Jac);
-  else if (ty == Acts::Surface::Cylinder)
+  } else if (ty == Acts::Surface::Cylinder) {
     transformGlobalToCylinder(su, useJac, P, par, Jac);
-  else if (ty == Acts::Surface::Perigee)
+  } else if (ty == Acts::Surface::Perigee) {
     transformGlobalToLine(su, useJac, P, par, Jac);
-  else if (ty == Acts::Surface::Disc)
+  } else if (ty == Acts::Surface::Disc) {
     transformGlobalToDisc(su, useJac, P, par, Jac);
-  else
+  } else {
     transformGlobalToCone(su, useJac, P, par, Jac);
+  }
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   double P3, P4, C = P[3] * P[3] + P[4] * P[4];
   if (C > 1.e-20) {
@@ -165,14 +172,18 @@ Acts::RungeKuttaUtils::transformGlobalToPlane(const Acts::Surface* su,
   par[0] = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
   par[1] = d[0] * Ay[0] + d[1] * Ay[1] + d[2] * Ay[2];
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   // Condition trajectory on surface
   //
   double S[3] = {T(0, 2), T(1, 2), T(2, 2)};
 
-  double A       = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
-  if (A != 0.) A = 1. / A;
+  double A = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
+  if (A != 0.) {
+    A = 1. / A;
+  }
   S[0] *= A;
   S[1] *= A;
   S[2] *= A;
@@ -257,14 +268,18 @@ Acts::RungeKuttaUtils::transformGlobalToDisc(const Acts::Surface* su,
   par[0]    = sqrt(R2);
   par[1]    = atan2(RS, RC);
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   // Condition trajectory on surface
   //
   double S[3] = {T(0, 2), T(1, 2), T(2, 2)};
 
-  double A       = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
-  if (A != 0.) A = 1. / A;
+  double A = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
+  if (A != 0.) {
+    A = 1. / A;
+  }
   S[0] *= A;
   S[1] *= A;
   S[2] *= A;
@@ -356,7 +371,9 @@ Acts::RungeKuttaUtils::transformGlobalToCylinder(const Acts::Surface* su,
   par[0]    = atan2(RS, RC) * R;
   par[1]    = x * Az[0] + y * Az[1] + z * Az[2];
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   // Condition trajectory on surface
   //
@@ -368,8 +385,10 @@ Acts::RungeKuttaUtils::transformGlobalToCylinder(const Acts::Surface* su,
   y -= (B * Az[1]);
   double az = P[5] - Az[2] * C;
   z -= (B * Az[2]);
-  double A       = (ax * x + ay * y + az * z);
-  if (A != 0.) A = 1. / A;
+  double A = (ax * x + ay * y + az * z);
+  if (A != 0.) {
+    A = 1. / A;
+  }
   x *= A;
   y *= A;
   z *= A;
@@ -459,14 +478,18 @@ Acts::RungeKuttaUtils::transformGlobalToLine(const Acts::Surface* su,
   par[0]   = x * Bx + y * By + z * Bz;
   par[1]   = x * A[0] + y * A[1] + z * A[2];
   // return here if you have no jacobian transport to do
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   // Condition trajectory on surface
   //
   // this is the projection of the direction onto the y axis of ref frame
-  double d       = P[3] * A[0] + P[4] * A[1] + P[5] * A[2];
-  double a       = (1. - d) * (1. + d);
-  if (a != 0.) a = 1. / a;
+  double d = P[3] * A[0] + P[4] * A[1] + P[5] * A[2];
+  double a = (1. - d) * (1. + d);
+  if (a != 0.) {
+    a = 1. / a;
+  }
 
   double X = d * A[0] - P[3];
   double Y = d * A[1] - P[4];
@@ -570,7 +593,9 @@ Acts::RungeKuttaUtils::transformGlobalToCone(const Acts::Surface* su,
   par[1]    = x * Az[0] + y * Az[1] + z * Az[2];
   par[0]    = atan2(RS, RC) * (par[1] * tA);
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   Jac[0] = 0.;  // dL0/dL0
   Jac[1] = 0.;  // dL0/dL1
@@ -596,14 +621,15 @@ Acts::RungeKuttaUtils::stepEstimator(int           kind,
                                      double        maxStep) const
 {
   double s = maxStep;
-  if (kind == 1)
+  if (kind == 1) {
     s = stepEstimatorToPlane(Su, P, Q, istep);
-  else if (kind == 0)
+  } else if (kind == 0) {
     s = stepEstimatorToStraw(Su, P, Q, istep);
-  else if (kind == 2)
+  } else if (kind == 2) {
     s = stepEstimatorToCylinder(Su, P, Q, istep);
-  else if (kind == 3)
+  } else if (kind == 3) {
     s = stepEstimatorToCone(Su, P, Q, istep);
+  }
   return (s > maxStep ? maxStep : s);
 }
 
@@ -615,7 +641,7 @@ double
 Acts::RungeKuttaUtils::stepEstimatorToPlane(double*       S,
                                             const double* P,
                                             bool&         Q,
-                                            bool) const
+                                            bool /*unused*/) const
 {
   // straight line step estimation
 
@@ -639,7 +665,7 @@ double
 Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
                                                const double* P,
                                                bool&         Q,
-                                               bool) const
+                                               bool /*unused*/) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -687,22 +713,32 @@ Acts::RungeKuttaUtils::stepEstimatorToCylinder(double*       S,
   double inside = Smin * Smax;
 
   if (S[8] != 0.) {
-    if (inside > 0. || S[8] > 0.) return Smin;
+    if (inside > 0. || S[8] > 0.) {
+      return Smin;
+    }
     if (S[7] >= 0.) {
-      if (Smin >= 0.) return Smin;
+      if (Smin >= 0.) {
+        return Smin;
+      }
       return Smax;
     }
-    if (Smin <= 0.) return Smin;
+    if (Smin <= 0.) {
+      return Smin;
+    }
     return Smax;
   }
 
   if (inside < 0.) {
     S[8] = -1.;
     if (S[7] >= 0.) {
-      if (Smin >= 0.) return Smin;
+      if (Smin >= 0.) {
+        return Smin;
+      }
       return Smax;
     }
-    if (Smin <= 0.) return Smin;
+    if (Smin <= 0.) {
+      return Smin;
+    }
     return Smax;
   }
 
@@ -747,7 +783,7 @@ double
 Acts::RungeKuttaUtils::stepEstimatorToCone(double*       S,
                                            const double* P,
                                            bool&         Q,
-                                           bool) const
+                                           bool /*unused*/) const
 {
   const double* r = &P[0];  // Start coordinate
   const double* a = &P[3];  // Start direction
@@ -786,7 +822,7 @@ Acts::RungeKuttaUtils::stepEstimatorToCone(double*       S,
         --n;
         Smax = Smin;
       }
-      if (!n) {
+      if (n == 0) {
         Q = false;
         return 0.;
       }
@@ -808,22 +844,32 @@ Acts::RungeKuttaUtils::stepEstimatorToCone(double*       S,
   double inside = Smin * Smax;
 
   if (S[8] != 0.) {
-    if (inside > 0. || S[8] > 0.) return Smin;
+    if (inside > 0. || S[8] > 0.) {
+      return Smin;
+    }
     if (S[7] >= 0.) {
-      if (Smin >= 0.) return Smin;
+      if (Smin >= 0.) {
+        return Smin;
+      }
       return Smax;
     }
-    if (Smin <= 0.) return Smin;
+    if (Smin <= 0.) {
+      return Smin;
+    }
     return Smax;
   }
 
   if (inside < 0.) {
     S[8] = -1.;
     if (S[7] >= 0.) {
-      if (Smin >= 0.) return Smin;
+      if (Smin >= 0.) {
+        return Smin;
+      }
       return Smax;
     }
-    if (Smin <= 0.) return Smin;
+    if (Smin <= 0.) {
+      return Smin;
+    }
     return Smax;
   }
 
@@ -963,7 +1009,9 @@ Acts::RungeKuttaUtils::transformPlaneToGlobal(bool                 useJac,
   P[1] = p[0] * Ax[1] + p[1] * Ay[1] + T(1, 3);  // Y
   P[2] = p[0] * Ax[2] + p[1] * Ay[2] + T(2, 3);  // Z
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   //    /dL1   |     /dL2     |   /dPhi   |  /dThe    |
   P[7]  = Ax[0];
@@ -1002,7 +1050,9 @@ Acts::RungeKuttaUtils::transformDiscToGlobal(bool                 useJac,
   P[1]      = p[0] * d1 + T(1, 3);  // Y
   P[2]      = p[0] * d2 + T(2, 3);  // Z
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   //  /dL1  |              /dL2               |   /dPhi |  /dThe  |
   P[7]  = d0;
@@ -1043,7 +1093,9 @@ Acts::RungeKuttaUtils::transformCylinderToGlobal(bool                 useJac,
   P[1] = R * (Cf * Ax[1] + Sf * Ay[1]) + p[1] * Az[1] + T(1, 3);  // Y
   P[2] = R * (Cf * Ax[2] + Sf * Ay[2]) + p[1] * Az[2] + T(2, 3);  // Z
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   //           /dL1        |    /dL2      |   /dPhi   |   /dThe   |
   P[7]  = Cf * Ay[0] - Sf * Ax[0];
@@ -1088,7 +1140,9 @@ Acts::RungeKuttaUtils::transformLineToGlobal(bool                 useJac,
   P[1] = p[1] * A[1] + By * p[0] + T(1, 3);  // Y
   P[2] = p[1] * A[2] + Bz * p[0] + T(2, 3);  // Z
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   double Bx2 = -A[2] * P[25];
   double Bx3 = A[1] * P[33] - A[2] * P[32];
@@ -1131,7 +1185,9 @@ Acts::RungeKuttaUtils::transformLocalToGlobal(bool                 useJac,
                                               const double*        p,
                                               double*              P) const
 {
-  if (!su) return false;
+  if (su == nullptr) {
+    return false;
+  }
 
   double Sf, Cf, Ce, Se;
   sincos(p[2], &Sf, &Cf);
@@ -1212,7 +1268,9 @@ Acts::RungeKuttaUtils::transformGlobalToCurvilinear(bool    useJac,
   par[0] = 0.;
   par[1] = 0.;
 
-  if (!useJac) return;
+  if (!useJac) {
+    return;
+  }
 
   double An = sqrt(P[3] * P[3] + P[4] * P[4]);
   double Ax[3];
@@ -1229,8 +1287,10 @@ Acts::RungeKuttaUtils::transformGlobalToCurvilinear(bool    useJac,
   double Ay[3] = {-Ax[1] * P[5], Ax[0] * P[5], An};
   double S[3]  = {P[3], P[4], P[5]};
 
-  double A       = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
-  if (A != 0.) A = 1. / A;
+  double A = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
+  if (A != 0.) {
+    A = 1. / A;
+  }
   S[0] *= A;
   S[1] *= A;
   S[2] *= A;
@@ -1473,8 +1533,10 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToPlane(double* P,
   double* Ay = &P[16];
   double* S  = &P[19];
 
-  double A       = At[0] * S[0] + At[1] * S[1] + At[2] * S[2];
-  if (A != 0.) A = 1. / A;
+  double A = At[0] * S[0] + At[1] * S[1] + At[2] * S[2];
+  if (A != 0.) {
+    A = 1. / A;
+  }
   S[0] *= A;
   S[1] *= A;
   S[2] *= A;
@@ -1516,8 +1578,10 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToDisc(double* P,
 
   // Condition trajectory on surface
   //
-  double A       = At[0] * S[0] + At[1] * S[1] + At[2] * S[2];
-  if (A != 0.) A = 1. / A;
+  double A = At[0] * S[0] + At[1] * S[1] + At[2] * S[2];
+  if (A != 0.) {
+    A = 1. / A;
+  }
   S[0] *= A;
   S[1] *= A;
   S[2] *= A;
@@ -1581,12 +1645,14 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToCylinder(double* P,
 
   // Condition trajectory on surface
   //
-  double C       = At[0] * Az[0] + At[1] * Az[1] + At[2] * Az[2];
-  double ax      = At[0] - Az[0] * C;
-  double ay      = At[1] - Az[1] * C;
-  double az      = At[2] - Az[2] * C;
-  double A       = (ax * x + ay * y + az * z);
-  if (A != 0.) A = 1. / A;
+  double C  = At[0] * Az[0] + At[1] * Az[1] + At[2] * Az[2];
+  double ax = At[0] - Az[0] * C;
+  double ay = At[1] - Az[1] * C;
+  double az = At[2] - Az[2] * C;
+  double A  = (ax * x + ay * y + az * z);
+  if (A != 0.) {
+    A = 1. / A;
+  }
 
   double s1 = (Au[0] * x + Au[1] * y) * A;
   double s2 = (Av[0] * x + Av[1] * y + Av[2] * z) * A;
@@ -1639,9 +1705,11 @@ Acts::RungeKuttaUtils::jacobianTransformCurvilinearToLine(double* P,
 
   // Condition trajectory on surface
   //
-  double d       = At[0] * A[0] + At[1] * A[1] + At[2] * A[2];
-  double a       = (1. - d) * (1. + d);
-  if (a != 0.) a = 1. / a;
+  double d = At[0] * A[0] + At[1] * A[1] + At[2] * A[2];
+  double a = (1. - d) * (1. + d);
+  if (a != 0.) {
+    a = 1. / a;
+  }
   double X = d * A[0] - At[0], Y = d * A[1] - At[1], Z = d * A[2] - At[2];
 
   double s1 = (Au[0] * X + Au[1] * Y) * a;

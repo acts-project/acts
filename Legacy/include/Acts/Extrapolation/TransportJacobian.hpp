@@ -48,12 +48,12 @@ class TransportJacobian : public ActsMatrixD<5, 5>
 public:
   /// Constructor
   ///
-  /// @param tdata is the double array for containing the jacobian entries
-  TransportJacobian(const double* tdata);
+  /// @param J is the double array for containing the jacobian entries
+  TransportJacobian(const double* J);
   /// Constructor
   ///
-  /// @param tdata is the matrix containing the jacobian entries
-  TransportJacobian(const ActsMatrixD<5, 5>& tdata);
+  /// @param J is the matrix containing the jacobian entries
+  TransportJacobian(const ActsMatrixD<5, 5>& J);
 
   /// Destructor
   virtual ~TransportJacobian(){};
@@ -61,6 +61,6 @@ public:
 
 /// Overload of << operator for std::ostream
 std::ostream&
-operator<<(std::ostream& sl, const TransportJacobian& jac);
+operator<<(std::ostream& sl, const TransportJacobian& J);
 
 }  // namespace

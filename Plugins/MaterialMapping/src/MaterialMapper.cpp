@@ -40,9 +40,7 @@ Acts::MaterialMapper::MaterialMapper(const Config&                 cfg,
     ACTS_DEBUG("Extrapolation engine successfully retrieved!");
 }
 
-Acts::MaterialMapper::~MaterialMapper()
-{
-}
+Acts::MaterialMapper::~MaterialMapper() = default;
 
 void
 Acts::MaterialMapper::setLogger(std::unique_ptr<const Logger> newLogger)
@@ -96,7 +94,7 @@ Acts::MaterialMapper::mapMaterialTrack(Cache&               mappingCache,
 
   // let's extrapolate through the Acts detector and record all surfaces
   // that have a material proxy
-  if (materialSteps.size()) {
+  if (!materialSteps.empty()) {
     // get the number of materialsteps
     ACTS_VERBOSE(">> Retrieved " << materialSteps.size()
                                  << " materialSteps along the track at input.");
@@ -262,7 +260,7 @@ Acts::MaterialMapper::createSurfaceMaterial(Cache& mappingCache) const
         MaterialProperties* binMaterial = nullptr;
         // get what you have
         size_t mappingHits = mMaterial[i1][i0].second;
-        if (mappingHits) {
+        if (mappingHits != 0u) {
           // the statistical scalor
           double statScalor = 1. / double(mappingHits);
           // very verbose screen output
@@ -351,27 +349,34 @@ Acts::MaterialMapper::resolveMaterialSurfaces(
   ACTS_VERBOSE("Checking volume '" << tVolume.volumeName()
                                    << "' for material surfaces.")
   // check the boundary surfaces
-  for (auto& bSurface : tVolume.boundarySurfaces())
+  for (auto& bSurface : tVolume.boundarySurfaces()) {
     checkAndInsert(sMap, bSurface->surfaceRepresentation());
+  }
 
   // check the confined layers
-  if (tVolume.confinedLayers()) {
+  if (tVolume.confinedLayers() != nullptr) {
     for (auto& cLayer : tVolume.confinedLayers()->arrayObjects()) {
       // take only layers that are not navigation layers
       if (cLayer->layerType() != navigation) {
         // check the representing surface
         checkAndInsert(sMap, cLayer->surfaceRepresentation());
         // get the approach surfaces if present
-        if (cLayer->approachDescriptor()) {
+        if (cLayer->approachDescriptor() != nullptr) {
           for (auto& aSurface :
-               cLayer->approachDescriptor()->containedSurfaces())
-            if (aSurface) checkAndInsert(sMap, *aSurface);
+               cLayer->approachDescriptor()->containedSurfaces()) {
+            if (aSurface != nullptr) {
+              checkAndInsert(sMap, *aSurface);
+            }
+          }
         }
         // get the sensitive surface is present
-        if (cLayer->surfaceArray()) {
+        if (cLayer->surfaceArray() != nullptr) {
           // sensitive surface loop
-          for (auto& sSurface : cLayer->surfaceArray()->surfaces())
-            if (sSurface) checkAndInsert(sMap, *sSurface);
+          for (auto& sSurface : cLayer->surfaceArray()->surfaces()) {
+            if (sSurface != nullptr) {
+              checkAndInsert(sMap, *sSurface);
+            }
+          }
         }
       }
     }
@@ -393,11 +398,11 @@ Acts::MaterialMapper::checkAndInsert(
 {
 
   // check if the surface has a proxy
-  if (surface.associatedMaterial()) {
+  if (surface.associatedMaterial() != nullptr) {
     // we need a dynamic_cast to a surface material proxy
     auto smp = dynamic_cast<const SurfaceMaterialProxy*>(
         surface.associatedMaterial());
-    if (smp) {
+    if (smp != nullptr) {
       // get the geo id
       auto   geoID    = surface.geoID();
       size_t volumeID = geoID.value(GeometryID::volume_mask);

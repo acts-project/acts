@@ -18,8 +18,8 @@
 namespace Acts {
 
 class Layer;
-typedef std::shared_ptr<const Layer> LayerPtr;
-typedef std::vector<LayerPtr>        LayerVector;
+using LayerPtr    = std::shared_ptr<const Layer>;
+using LayerVector = std::vector<LayerPtr>;
 
 /// @class ILayerBuilder
 ///
@@ -31,7 +31,7 @@ class ILayerBuilder
 {
 public:
   /// Virtual destructor
-  virtual ~ILayerBuilder() {}
+  virtual ~ILayerBuilder() = default;
   /// LayerBuilder interface method
   /// @return  the layers at negative side
   virtual const LayerVector

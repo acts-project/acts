@@ -49,19 +49,17 @@ enum WrappingCondition {
 /// VolumeConfig struct to understand the layer config
 struct VolumeConfig
 {
-  bool        present;   ///< layers are present
-  bool        wrapping;  ///< in what way they are binned
-  double      rMin;      ///< min parameter r
-  double      rMax;      ///< max parameter r
-  double      zMin;      ///< min parameter z
-  double      zMax;      ///< max parameter z
-  LayerVector layers;    ///< the layers you have
+  bool        present{false};   ///< layers are present
+  bool        wrapping{false};  ///< in what way they are binned
+  double      rMin;             ///< min parameter r
+  double      rMax;             ///< max parameter r
+  double      zMin;             ///< min parameter z
+  double      zMax;             ///< max parameter z
+  LayerVector layers;           ///< the layers you have
 
   /// Default constructor
   VolumeConfig()
-    : present(false)
-    , wrapping(false)
-    , rMin(std::numeric_limits<double>::max())
+    : rMin(std::numeric_limits<double>::max())
     , rMax(std::numeric_limits<double>::lowest())
     , zMin(std::numeric_limits<double>::max())
     , zMax(std::numeric_limits<double>::lowest())
@@ -133,10 +131,11 @@ struct VolumeConfig
   void
   attachZ(const VolumeConfig& lConfig)
   {
-    if (lConfig.zMin >= zMax)
+    if (lConfig.zMin >= zMax) {
       zMax = lConfig.zMin;
-    else
+    } else {
       zMin = lConfig.zMax;
+    }
   }
 
   /// Overlap check radially
@@ -146,7 +145,9 @@ struct VolumeConfig
   bool
   overlapsInR(const VolumeConfig& vConfig) const
   {
-    if (!present) return false;
+    if (!present) {
+      return false;
+    }
     return std::max(rMin, vConfig.rMin) <= std::min(rMax, vConfig.rMax);
   }
 
@@ -157,7 +158,9 @@ struct VolumeConfig
   bool
   overlapsInZ(const VolumeConfig& vConfig) const
   {
-    if (!present) return false;
+    if (!present) {
+      return false;
+    }
     return std::max(zMin, vConfig.zMin) <= std::min(zMax, vConfig.zMax);
   }
 
@@ -168,7 +171,9 @@ struct VolumeConfig
   bool
   wraps(const VolumeConfig& vConfig) const
   {
-    if ((zMax <= vConfig.zMin) || (zMin >= vConfig.zMax)) return true;
+    if ((zMax <= vConfig.zMin) || (zMin >= vConfig.zMax)) {
+      return true;
+    }
     return containsInR(vConfig);
   }
 
@@ -239,7 +244,7 @@ public:
   std::string       wConditionScreen = "[left untouched]";
 
   /// constructor
-  WrappingConfig() {}
+  WrappingConfig() = default;
 
   /// configure the new Volume
   void
@@ -268,12 +273,16 @@ public:
       wConditionScreen += "[p]";
     }
     // adapt the external one
-    if (externalVolumeConfig) containerVolumeConfig.adapt(externalVolumeConfig);
+    if (externalVolumeConfig) {
+      containerVolumeConfig.adapt(externalVolumeConfig);
+    }
     // attach the volume configs
-    if (nVolumeConfig && cVolumeConfig)
+    if (nVolumeConfig && cVolumeConfig) {
       nVolumeConfig.midPointAttachZ(cVolumeConfig);
-    if (cVolumeConfig && pVolumeConfig)
+    }
+    if (cVolumeConfig && pVolumeConfig) {
       cVolumeConfig.midPointAttachZ(pVolumeConfig);
+    }
     // adapt r afterwards
     // - easy if no exisitng volume
     // - possible if no central volume
@@ -401,10 +410,11 @@ public:
           fGapVolumeConfig.zMax = existingVolumeConfig.zMin;
         } else {
           // adapt lower z boundary
-          if (nVolumeConfig)
+          if (nVolumeConfig) {
             nVolumeConfig.zMin = existingVolumeConfig.zMin;
-          else if (cVolumeConfig)
+          } else if (cVolumeConfig) {
             cVolumeConfig.zMin = existingVolumeConfig.zMin;
+          }
         }
         // - at the positive sector
         if (existingVolumeConfig.zMax < referenceVolume.zMax) {
@@ -414,10 +424,11 @@ public:
           sGapVolumeConfig.zMax = referenceVolume.zMax;
         } else {
           // adapt higher z boundary
-          if (pVolumeConfig)
+          if (pVolumeConfig) {
             pVolumeConfig.zMax = existingVolumeConfig.zMax;
-          else if (cVolumeConfig)
+          } else if (cVolumeConfig) {
             cVolumeConfig.zMax = existingVolumeConfig.zMax;
+          }
         }
       }
     }
@@ -430,28 +441,34 @@ public:
   {
     // for screen output
     std::stringstream sl;
-    if (containerVolumeConfig)
+    if (containerVolumeConfig) {
       sl << "New contaienr built with       configuration: "
          << containerVolumeConfig.toString() << '\n';
+    }
     // go throug the new new ones first
-    if (nVolumeConfig)
+    if (nVolumeConfig) {
       sl << " - n: Negative Endcap, current configuration: "
          << nVolumeConfig.toString() << '\n';
-    if (cVolumeConfig)
+    }
+    if (cVolumeConfig) {
       sl << " - c: Barrel, current          configuration: "
          << cVolumeConfig.toString() << '\n';
-    if (pVolumeConfig)
+    }
+    if (pVolumeConfig) {
       sl << " - p: Negative Endcap, current configuration: "
          << pVolumeConfig.toString() << '\n';
+    }
     if (existingVolumeConfig) {
       sl << "Existing volume with           configuration: "
          << existingVolumeConfig.toString() << '\n';
-      if (fGapVolumeConfig)
+      if (fGapVolumeConfig) {
         sl << " - g1: First gap volume,       configuration : "
            << fGapVolumeConfig.toString() << '\n';
-      if (sGapVolumeConfig)
+      }
+      if (sGapVolumeConfig) {
         sl << " - g2: Second gap volume,      configuration : "
            << sGapVolumeConfig.toString() << '\n';
+      }
       if (wCondition != Undefined) {
         sl << "WrappingCondition = " << wCondition << '\n';
       }
@@ -515,7 +532,7 @@ public:
                                            Logging::INFO));
 
   /// Destructor
-  virtual ~CylinderVolumeBuilder();
+  ~CylinderVolumeBuilder() override;
 
   /// CylinderVolumeBuilder main call method
   ///
@@ -543,9 +560,9 @@ public:
 
   /// set logging instance
   ///
-  /// @param [in] logger is the logging istance to be set
+  /// @param [in] newLogger is the logging istance to be set
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 private:
   /// Configuration struct

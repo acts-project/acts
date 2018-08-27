@@ -98,8 +98,9 @@ public:
       const auto& gridCoordinates = m_transformPos(position);
       for (unsigned int i = 0; i < DIM_POS; ++i) {
         if (gridCoordinates[i] < m_lowerLeft.at(i)
-            || gridCoordinates[i] >= m_upperRight.at(i))
+            || gridCoordinates[i] >= m_upperRight.at(i)) {
           return false;
+        }
       }
       return true;
     }

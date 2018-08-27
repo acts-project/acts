@@ -49,9 +49,7 @@ Acts::CuboidVolumeBounds::CuboidVolumeBounds(const CuboidVolumeBounds& bobo)
 {
 }
 
-Acts::CuboidVolumeBounds::~CuboidVolumeBounds()
-{
-}
+Acts::CuboidVolumeBounds::~CuboidVolumeBounds() = default;
 
 Acts::CuboidVolumeBounds&
 Acts::CuboidVolumeBounds::operator=(const CuboidVolumeBounds& bobo)

@@ -25,7 +25,7 @@ namespace Acts {
 class TGeoDetectorElement;
 class Surface;
 
-typedef std::pair<TGeoNode*, std::shared_ptr<const Transform3D>> NodeTransform;
+using NodeTransform = std::pair<TGeoNode*, std::shared_ptr<const Transform3D>>;
 
 /// @class TGeoLayerBuilder
 /// works on the gGeoManager, as this is filled from GDML
@@ -45,17 +45,15 @@ public:
     // the envolpoe
     std::pair<double, double> envelope;
     /// define the number of bins in loc0
-    size_t binsLoc0;
+    size_t binsLoc0{100};
     /// define the number of bins in loc1
-    size_t binsLoc1;
+    size_t binsLoc1{100};
 
     LayerConfig()
       : layerName("")
       , sensorName("")
       , localAxes("XZY")
       , envelope(std::pair<double, double>(1., 1.))
-      , binsLoc0(100)
-      , binsLoc1(100)
     {
     }
   };
@@ -79,14 +77,14 @@ public:
   };
 
   /// Constructor
-  /// @param cfg is the configuration struct
+  /// @param config is the configuration struct
   /// @param logger the local logging instance
-  TGeoLayerBuilder(const Config&                 cfg,
+  TGeoLayerBuilder(const Config&                 config,
                    std::unique_ptr<const Logger> logger
                    = getDefaultLogger("LayerArrayCreator", Logging::INFO));
 
   /// Destructor
-  ~TGeoLayerBuilder();
+  ~TGeoLayerBuilder() override;
 
   /// LayerBuilder interface method - returning the layers at negative side
   const LayerVector
@@ -105,9 +103,9 @@ public:
   identification() const final;
 
   /// set the configuration object
-  /// @param cfg is the configuration struct
+  /// @param config is the configuration struct
   void
-  setConfiguration(const Config& cfg);
+  setConfiguration(const Config& config);
 
   /// get the configuration object
   Config
@@ -115,7 +113,7 @@ public:
 
   /// set logging instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
   /// Return the created detector elements
   const std::vector<std::shared_ptr<const TGeoDetectorElement>>&
@@ -143,10 +141,10 @@ private:
   resolveSensitive(std::vector<const Surface*>& layerSurfaces,
                    TGeoVolume*                  tgVolume,
                    TGeoNode*                    tgNode,
-                   const TGeoMatrix&            ctGlobal,
+                   const TGeoMatrix&            tgTransform,
                    const LayerConfig&           layerConfig,
                    int                          type,
-                   bool                         correctVolume = false,
+                   bool                         correctBranch = false,
                    const std::string&           offset        = "");
 
   // Private helper method : build layers
@@ -159,7 +157,7 @@ private:
   // @param wc is the one with the potential wildcard
   // @param test is the test string
   bool
-  match(const char* wc, const char* test) const;
+  match(const char* first, const char* second) const;
 };
 
 inline TGeoLayerBuilder::Config
@@ -186,22 +184,29 @@ inline bool
 TGeoLayerBuilder::match(const char* first, const char* second) const
 {
   // If we reach at the end of both strings, we are done
-  if (*first == '\0' && *second == '\0') return true;
+  if (*first == '\0' && *second == '\0') {
+    return true;
+  }
 
   // Make sure that the characters after '*' are present
   // in second string. This function assumes that the first
   // string will not contain two consecutive '*'
-  if (*first == '*' && *(first + 1) != '\0' && *second == '\0') return false;
+  if (*first == '*' && *(first + 1) != '\0' && *second == '\0') {
+    return false;
+  }
 
   // If the first string contains '?', or current characters
   // of both strings match
-  if (*first == '?' || *first == *second) return match(first + 1, second + 1);
+  if (*first == '?' || *first == *second) {
+    return match(first + 1, second + 1);
+  }
 
   // If there is *, then there are two possibilities
   // a) We consider current character of second string
   // b) We ignore current character of second string.
-  if (*first == '*')
+  if (*first == '*') {
     return match(first + 1, second) || match(first, second + 1);
+  }
   return false;
 }
 }

@@ -39,7 +39,7 @@ namespace detail {
   template <ParID_t... params>
   struct value_corrector
   {
-    typedef ActsVector<ParValue_t, sizeof...(params)> ParVector_t;
+    using ParVector_t = ActsVector<ParValue_t, sizeof...(params)>;
 
     static void
     result(ParVector_t& values)
@@ -54,9 +54,10 @@ namespace detail {
     static void
     calculate(R& values, unsigned int pos)
     {
-      typedef typename par_type<first>::type parameter_type;
-      if (parameter_type::may_modify_value)
+      using parameter_type = typename par_type<first>::type;
+      if (parameter_type::may_modify_value) {
         values(pos) = parameter_type::getValue(values(pos));
+      }
       value_corrector_impl<R, others...>::calculate(values, pos + 1);
     }
   };
@@ -67,9 +68,10 @@ namespace detail {
     static void
     calculate(R& values, unsigned int pos)
     {
-      typedef typename par_type<last>::type parameter_type;
-      if (parameter_type::may_modify_value)
+      using parameter_type = typename par_type<last>::type;
+      if (parameter_type::may_modify_value) {
         values(pos) = parameter_type::getValue(values(pos));
+      }
     }
   };
   /// @endcond

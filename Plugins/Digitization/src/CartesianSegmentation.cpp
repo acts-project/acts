@@ -10,15 +10,17 @@
 // CartesianSegmentation.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
+#include <utility>
+
+#include "Acts/Plugin/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 Acts::CartesianSegmentation::CartesianSegmentation(
-    std::shared_ptr<const PlanarBounds> mBounds,
-    size_t                              numCellsX,
-    size_t                              numCellsY)
+    const std::shared_ptr<const PlanarBounds>& mBounds,
+    size_t                                     numCellsX,
+    size_t                                     numCellsY)
   : m_activeBounds(mBounds), m_binUtility(nullptr)
 {
   auto mutableBinUtility
@@ -38,16 +40,15 @@ Acts::CartesianSegmentation::CartesianSegmentation(
 Acts::CartesianSegmentation::CartesianSegmentation(
     std::shared_ptr<const BinUtility>   bUtility,
     std::shared_ptr<const PlanarBounds> mBounds)
-  : m_activeBounds(mBounds), m_binUtility(bUtility)
+  : m_activeBounds(std::move(mBounds)), m_binUtility(std::move(bUtility))
 {
-  if (!m_activeBounds)
+  if (!m_activeBounds) {
     m_activeBounds = std::make_shared<const RectangleBounds>(
         m_binUtility->max(0), m_binUtility->max(1));
+  }
 }
 
-Acts::CartesianSegmentation::~CartesianSegmentation()
-{
-}
+Acts::CartesianSegmentation::~CartesianSegmentation() = default;
 
 void
 Acts::CartesianSegmentation::createSegmentationSurfaces(
@@ -152,14 +153,14 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
     double cPosX
         = -m_activeBounds->boundingBox().halflengthX() + ibinx * pitchX;
     // (i) this is the low/high boundary --- ( ibin == 0/m_binUtility->bins(0) )
-    if (!ibinx || ibinx == m_binUtility->bins(0)) {
+    if ((ibinx == 0u) || ibinx == m_binUtility->bins(0)) {
       // check if it a straight boundary or not: always straight for no lorentz
       // angle,
       // and either the first boundary or the last dependening on lorentz &
       // readout
       bool boundaryStraight
           = (lorentzAngle == 0.
-             || (!ibinx && readoutDirection * lorentzAngle > 0.)
+             || ((ibinx == 0u) && readoutDirection * lorentzAngle > 0.)
              || (ibinx == m_binUtility->bins(0)
                  && readoutDirection * lorentzAngle < 0));
       // set the low boundary parameters : position & rotation
@@ -217,12 +218,13 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
     auto binTransform = std::make_shared<const Transform3D>(
         getTransformFromRotTransl(yBinRotationMatrix, binSurfaceCenter));
     // these are the boundaries
-    if (ibiny == 0 || ibiny == m_binUtility->bins(1))
+    if (ibiny == 0 || ibiny == m_binUtility->bins(1)) {
       boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
-    else  // these are the bin boundaries
+    } else {  // these are the bin boundaries
       segmentationSurfacesY.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(binTransform, yBinBounds)));
+    }
   }
 }
 

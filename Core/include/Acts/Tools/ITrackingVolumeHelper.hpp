@@ -26,13 +26,13 @@ class TrackingVolume;
 class VolumeBounds;
 class Material;
 
-typedef std::shared_ptr<const Layer>          LayerPtr;
-typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
-typedef std::shared_ptr<TrackingVolume>       MutableTrackingVolumePtr;
-typedef std::shared_ptr<const VolumeBounds>   VolumeBoundsPtr;
+using LayerPtr                 = std::shared_ptr<const Layer>;
+using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
+using VolumeBoundsPtr          = std::shared_ptr<const VolumeBounds>;
 
-typedef std::vector<LayerPtr>          LayerVector;
-typedef std::vector<TrackingVolumePtr> TrackingVolumeVector;
+using LayerVector          = std::vector<LayerPtr>;
+using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
 
 ///  @class ITrackingVolumeHelper
 ///

@@ -95,7 +95,7 @@ public:
   ///
   /// @return always @c true
   bool
-  operator==(const NeutralPolicy&) const
+  operator==(const NeutralPolicy& /*other*/) const
   {
     return true;
   }

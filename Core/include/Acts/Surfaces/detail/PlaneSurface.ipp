@@ -11,14 +11,15 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Vector3D
-PlaneSurface::normal(const Vector2D&) const
+PlaneSurface::normal(const Vector2D& /*lpos*/) const
 {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform().matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
-inline const Vector3D PlaneSurface::binningPosition(BinningValue) const
+inline const Vector3D
+    PlaneSurface::binningPosition(BinningValue /*bValue*/) const
 {
   return center();
 }
@@ -48,12 +49,12 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
   auto solve = [&solution, &path, &pnormal, &pcenter, &navDir](
       const Vector3D& lpos, const Vector3D& ldir) -> bool {
     double denom = ldir.dot(pnormal);
-    if (denom) {
+    if (denom != 0.0) {
       path     = (pnormal.dot((pcenter - lpos))) / (denom);
       solution = (lpos + path * ldir);
     }
     // is valid if it goes into the right direction
-    return (!navDir || path * navDir >= 0.);
+    return ((navDir == 0) || path * navDir >= 0.);
   };
   // solve first
   bool valid = solve(gpos, gdir);
@@ -62,7 +63,9 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
     // copy as the corrector may change them
     Vector3D lposc = gpos;
     Vector3D ldirc = gdir;
-    if (correct(lposc, ldirc, path)) valid = solve(lposc, ldirc);
+    if (correct(lposc, ldirc, path)) {
+      valid = solve(lposc, ldirc);
+    }
   }
   // evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface

@@ -51,18 +51,18 @@ private:
   template <typename T, typename S>
   struct s
   {
-    typedef BoundParameters type;
+    using type = BoundParameters;
   };
 
   // ...unless type S is int, in which case it maps to Curvilinear parameters
   template <typename T>
   struct s<T, int>
   {
-    typedef CurvilinearParameters type;
+    using type = CurvilinearParameters;
   };
 
 public:
-  typedef detail::ConstrainedStep cstep;
+  using cstep = detail::ConstrainedStep;
 
   /// @brief State for track parameter propagation
   ///
@@ -85,8 +85,6 @@ public:
       , p(par.momentum().norm())
       , q(par.charge())
       , navDir(ndir)
-      , covTransport(false)
-      , pathAccumulated(0.)
       , stepSize(ndir * std::abs(ssize))
     {
       // remember the start parameters

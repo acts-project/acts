@@ -59,22 +59,22 @@ public:
   /// @param fullProperties is the vector of properties as recorded
   /// @param splitFactor is the pre/post splitting directive
   /// @param entries is the (optional) number of mapping entries
-  BinnedSurfaceMaterial(const BinUtility&               binutility,
+  BinnedSurfaceMaterial(const BinUtility&               binUtility,
                         const MaterialPropertiesMatrix& fullProperties,
                         double                          splitFactor = 0.,
                         size_t                          entries     = 1);
 
   /// Copy Constructor
   ///
-  /// @param bsm is the source object to be copied
-  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm);
+  /// @param lmp is the source object to be copied
+  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& lmp);
 
   /// Destructor
-  virtual ~BinnedSurfaceMaterial();
+  ~BinnedSurfaceMaterial() override;
 
   /// Pseudo-Constructor clone()
   BinnedSurfaceMaterial*
-  clone() const final override;
+  clone() const final;
 
   /// Assignment operator
   BinnedSurfaceMaterial&
@@ -84,7 +84,7 @@ public:
   ///
   /// @param scale is the scale factor for the full material
   BinnedSurfaceMaterial&
-  operator*=(double scale) final override;
+  operator*=(double scale) final;
 
   /// Return the BinUtility
   const BinUtility&
@@ -96,15 +96,15 @@ public:
 
   /// @copydoc SurfaceMaterial::material(const Vector2D&)
   const MaterialProperties*
-  material(const Vector2D& lp) const final override;
+  material(const Vector2D& lp) const final;
 
   /// @copydoc SurfaceMaterial::material(const Vector3D&)
   const MaterialProperties*
-  material(const Vector3D& gp) const final override;
+  material(const Vector3D& gp) const final;
 
   /// @copydoc SurfaceMaterial::material(size_t, size_t)
   const MaterialProperties*
-  material(size_t bin0, size_t bin1) const final override;
+  material(size_t bin0, size_t bin1) const final;
 
   /// access to the entries
   /// this is needed for averageing mapps
@@ -113,7 +113,7 @@ public:
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream&
-  dump(std::ostream& sl) const final override;
+  dump(std::ostream& sl) const final;
 
 private:
   /// The helper for the bin finding

@@ -40,15 +40,15 @@ namespace detail {
 
   public:
     /// type of values stored
-    typedef T value_type;
+    using value_type = T;
     /// reference type to values stored
-    typedef value_type& reference;
+    using reference = value_type&;
     /// constant reference type to values stored
-    typedef const value_type& const_reference;
+    using const_reference = const value_type&;
     /// type for points in d-dimensional grid space
-    typedef std::array<double, DIM> point_t;
+    using point_t = std::array<double, DIM>;
     /// index type using local bin indices along each axis
-    typedef std::array<size_t, DIM> index_t;
+    using index_t = std::array<size_t, DIM>;
 
     /// @brief default constructor
     ///

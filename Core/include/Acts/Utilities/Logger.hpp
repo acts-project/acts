@@ -206,14 +206,15 @@ namespace Logging {
   class OutStream final
   {
     /// function type for output flushing
-    typedef std::function<void(const std::ostringstream&)> OutputFunc;
+    using OutputFunc = std::function<void(const std::ostringstream&)>;
 
   public:
     /// @brief construct stream object
     ///
     /// @param [in] output function object called for flushing the internal
     ///        cache
-    explicit OutStream(OutputFunc output) : m_stream(), m_outputFunctor(output)
+    explicit OutStream(OutputFunc output)
+      : m_stream(), m_outputFunctor(std::move(output))
     {
     }
 
@@ -279,7 +280,7 @@ namespace Logging {
     explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {}
 
     /// virtual default destructor
-    virtual ~DefaultFilterPolicy() = default;
+    ~DefaultFilterPolicy() override = default;
 
     /// @brief decide whether a debug message should be processed
     ///
@@ -517,7 +518,7 @@ namespace Logging {
     /// @param [in] lvl   debug level of debug message
     /// @param [in] input text of debug message
     void
-    flush(const Level&, const std::ostringstream& input) final
+    flush(const Level& /*lvl*/, const std::ostringstream& input) final
     {
       (*m_out) << input.str() << std::endl;
     }

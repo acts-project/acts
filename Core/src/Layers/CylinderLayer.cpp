@@ -23,12 +23,12 @@
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 Acts::CylinderLayer::CylinderLayer(
-    std::shared_ptr<const Transform3D>    transform,
-    std::shared_ptr<const CylinderBounds> cBounds,
-    std::unique_ptr<SurfaceArray>         surfaceArray,
-    double                                thickness,
-    std::unique_ptr<ApproachDescriptor>   ades,
-    LayerType                             laytyp)
+    const std::shared_ptr<const Transform3D>&    transform,
+    const std::shared_ptr<const CylinderBounds>& cBounds,
+    std::unique_ptr<SurfaceArray>                surfaceArray,
+    double                                       thickness,
+    std::unique_ptr<ApproachDescriptor>          ades,
+    LayerType                                    laytyp)
   : CylinderSurface(transform, cBounds)
   , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {
@@ -42,16 +42,20 @@ Acts::CylinderLayer::CylinderLayer(
   // associate the layer to the surface
   CylinderSurface::associateLayer(*this);
   // an approach descriptor is automatically created if there's a surface array
-  if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && m_surfaceArray) {
+    buildApproachDescriptor();
+  }
   // register the layer to the approach descriptor surfaces
-  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
+  if (m_approachDescriptor) {
+    approachDescriptor()->registerLayer(*this);
+  }
 }
 
 std::shared_ptr<Acts::Layer>
-Acts::CylinderLayer::create(const variant_data& data_)
+Acts::CylinderLayer::create(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   std::string        type = data.get<std::string>("type");
   throw_assert(type == "CylinderLayer", "Type must be CylinderLayer");
 
@@ -62,12 +66,13 @@ Acts::CylinderLayer::create(const variant_data& data_)
 
   LayerType   laytyp;
   std::string laytyp_str = payload.get<std::string>("layer_type");
-  if (laytyp_str == "active")
+  if (laytyp_str == "active") {
     laytyp = active;
-  else if (laytyp_str == "passive")
+  } else if (laytyp_str == "passive") {
     laytyp = passive;
-  else /*laytyp_str == "navigation"*/
+  } else { /*laytyp_str == "navigation"*/
     laytyp = navigation;
+  }
 
   double thickness = payload.get<double>("thickness");
 
@@ -80,7 +85,7 @@ Acts::CylinderLayer::create(const variant_data& data_)
   std::unique_ptr<SurfaceArray> sArray = nullptr;
 
   // only attempt to reover surface array if present
-  if (payload.count("surfacearray")) {
+  if (payload.count("surfacearray") != 0u) {
 
     // get surface array transform
     const Transform3D& sa_trf = from_variant<Transform3D>(
@@ -136,7 +141,7 @@ Acts::CylinderLayer::buildApproachDescriptor()
   m_approachDescriptor = nullptr;
   // delete the surfaces
   // take the boundary surfaces of the representving volume if they exist
-  if (m_representingVolume) {
+  if (m_representingVolume != nullptr) {
     // get the boundary surfaces
     const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
         bSurfaces
@@ -144,8 +149,9 @@ Acts::CylinderLayer::buildApproachDescriptor()
     // fill in the surfaces into the vector
     std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>
         aSurfaces;
-    if (bSurfaces.size() > size_t(tubeOuterCover))
+    if (bSurfaces.size() > size_t(tubeOuterCover)) {
       aSurfaces.push_back(bSurfaces.at(tubeInnerCover));
+    }
     aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor = std::
@@ -166,7 +172,7 @@ Acts::CylinderLayer::buildApproachDescriptor()
         = std::make_unique<const GenericApproachDescriptor<Surface>>(aSurfaces);
   }
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
-    if (sfPtr) {
+    if (sfPtr != nullptr) {
       auto& mutableSf = *(const_cast<Surface*>(sfPtr));
       mutableSf.associateLayer(*this);
     }
@@ -206,12 +212,13 @@ Acts::CylinderLayer::toVariantData() const
   payload["thickness"] = thickness();
 
   std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
-  if (layerType() == active)
+  if (layerType() == active) {
     payload["layer_type"] = "active"s;
-  else if (layerType() == passive)
+  } else if (layerType() == passive) {
     payload["layer_type"] = "passive"s;
-  else /*layerType() == navigation*/
+  } else { /*layerType() == navigation*/
     payload["layer_type"] = "navigation"s;
+  }
 
   std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;
 

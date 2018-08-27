@@ -25,23 +25,23 @@ namespace Acts {
 class InfiniteBounds : public SurfaceBounds
 {
 public:
-  InfiniteBounds() = default;
-  ~InfiniteBounds() {}
+  InfiniteBounds()           = default;
+  ~InfiniteBounds() override = default;
 
-  virtual InfiniteBounds*
-  clone() const final override
+  InfiniteBounds*
+  clone() const final
   {
     return new InfiniteBounds();
   }
 
-  virtual SurfaceBounds::BoundsType
-  type() const final override
+  SurfaceBounds::BoundsType
+  type() const final
   {
     return SurfaceBounds::Boundless;
   }
 
-  virtual std::vector<TDD_real_t>
-  valueStore() const final override
+  std::vector<TDD_real_t>
+  valueStore() const final
   {
     return {};
   }
@@ -51,8 +51,8 @@ public:
   /// ignores input parameters
   ///
   /// @return always true
-  virtual bool
-  inside(const Vector2D&, const BoundaryCheck&) const final override
+  bool
+  inside(const Vector2D& /*lpos*/, const BoundaryCheck& /*bcheck*/) const final
   {
     return true;
   }
@@ -60,15 +60,15 @@ public:
   /// Minimal distance calculation
   /// ignores input parameter
   /// @return always 0. (should be -NaN)
-  virtual double
-  distanceToBoundary(const Vector2D& /*pos*/) const final override
+  double
+  distanceToBoundary(const Vector2D& /*pos*/) const final
   {
     return 0;
   }
 
   /// Output Method for std::ostream
-  virtual std::ostream&
-  dump(std::ostream& os) const final override
+  std::ostream&
+  dump(std::ostream& os) const final
   {
     os << "Acts::InfiniteBounds ... boundless surface" << std::endl;
     return os;

@@ -62,19 +62,19 @@ public:
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  RadialBounds(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  RadialBounds(const variant_data& vardata);
 
-  virtual ~RadialBounds();
+  ~RadialBounds() override;
 
-  virtual RadialBounds*
-  clone() const final override;
+  RadialBounds*
+  clone() const final;
 
-  virtual SurfaceBounds::BoundsType
-  type() const final override;
+  SurfaceBounds::BoundsType
+  type() const final;
 
-  virtual std::vector<TDD_real_t>
-  valueStore() const final override;
+  std::vector<TDD_real_t>
+  valueStore() const final;
 
   /// For disc surfaces the local position in (r,phi) is checked
   ///
@@ -82,23 +82,22 @@ public:
   /// @param bcheck boundary check directive
   ///
   /// @return is a boolean indicating the operation success
-  virtual bool
-  inside(const Vector2D&      lpos,
-         const BoundaryCheck& bcheck) const final override;
+  bool
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary calculation
   ///
   /// @param lpos local 2D position in surface coordinate frame
   ///
   /// @return distance to boundary ( > 0 if outside and <=0 if inside)
-  virtual double
-  distanceToBoundary(const Vector2D& lpos) const final override;
+  double
+  distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Outstream operator
   ///
   /// @param sl is the ostream to be dumped into
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   /// Return method for inner Radius
   double

@@ -15,6 +15,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
@@ -23,19 +24,19 @@ Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             radius,
                                double                             halez)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const LineBounds>(radius, halez))
 {
 }
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                std::shared_ptr<const LineBounds>  lbounds)
-  : GeometryObject(), Surface(htrans), m_bounds(lbounds)
+  : GeometryObject(), Surface(std::move(htrans)), m_bounds(std::move(lbounds))
 {
 }
 
-Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
-                               const DetectorElementBase&        detelement)
+Acts::LineSurface::LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
+                               const DetectorElementBase& detelement)
   : GeometryObject(), Surface(detelement), m_bounds(lbounds)
 {
   throw_assert(lbounds, "LineBounds must not be nullptr");
@@ -62,10 +63,10 @@ Acts::LineSurface::operator=(const LineSurface& other)
   return *this;
 }
 
-Acts::LineSurface::LineSurface(const variant_data& data_) : GeometryObject()
+Acts::LineSurface::LineSurface(const variant_data& vardata) : GeometryObject()
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   // std::string type = boost::get<std::string>(data["type"]);
   std::string type = data.get<std::string>("type");
@@ -80,7 +81,7 @@ Acts::LineSurface::LineSurface(const variant_data& data_) : GeometryObject()
 
   m_bounds = std::make_shared<const LineBounds>(bounds);
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -88,9 +89,7 @@ Acts::LineSurface::LineSurface(const variant_data& data_) : GeometryObject()
   }
 }
 
-Acts::LineSurface::~LineSurface()
-{
-}
+Acts::LineSurface::~LineSurface() = default;
 
 Acts::variant_data
 Acts::LineSurface::toVariantData() const

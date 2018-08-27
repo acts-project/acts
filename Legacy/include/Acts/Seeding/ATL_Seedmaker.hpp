@@ -273,10 +273,11 @@ namespace Seeding {
   inline bool
   ATL_Seedmaker<SpacePoint>::isZCompatible(float& Zv)
   {
-    if (Zv < m_zminU || Zv > m_zmaxU)
+    if (Zv < m_zminU || Zv > m_zmaxU) {
       return false;
-    else
+    } else {
       return true;
+    }
   }
 
   ///////////////////////////////////////////////////////////////////
@@ -297,7 +298,9 @@ namespace Seeding {
       float z = (fabs(r[2]) + m_zmax);
       float x = r[0] * m_dzdrmin;
       float y = r[1] * m_dzdrmin;
-      if ((z * z) < (x * x + y * y)) return 0;
+      if ((z * z) < (x * x + y * y)) {
+        return 0;
+      }
     }
 
     if (i_spforseed != l_spforseed.end()) {

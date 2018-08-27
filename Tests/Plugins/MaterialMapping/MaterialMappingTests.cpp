@@ -31,15 +31,17 @@ namespace Test {
     /// These are our detector positions, they are in r
     std::vector<double>   assignPos = {30., 50.5, 75., 100.5, 300.5};
     std::vector<Vector3D> detPositions;
-    for (auto& ap : assignPos)
+    for (auto& ap : assignPos) {
       detPositions.push_back(Vector3D(s2 * ap, s2 * ap, 0.));
+    }
     /// quick check on length
     BOOST_CHECK_EQUAL(5ul, detPositions.size());
     /// now create the assigned steps
     std::vector<AssignedMaterialSteps> assignedStepsVector;
-    for (size_t ias = 0; ias < detPositions.size(); ++ias)
+    for (size_t ias = 0; ias < detPositions.size(); ++ias) {
       assignedStepsVector.push_back(
           AssignedMaterialSteps(assignID[ias], detPositions[ias]));
+    }
 
     ///
     /// (b) material
@@ -52,7 +54,9 @@ namespace Test {
     /// fill them - we ignore 61 to 90 (there's no material there)
     for (size_t is = 20; is < 351; ++is) {
       // continue if you are in the material free region of our detector
-      if (is > 60 && is < 91) continue;
+      if (is > 60 && is < 91) {
+        continue;
+      }
       // otherwise create
       materialSteps.push_back(
           MaterialStep(materialPerStep, Vector3D(s2 * is, s2 * is, 0.)));

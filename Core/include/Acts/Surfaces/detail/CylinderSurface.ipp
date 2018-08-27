@@ -58,9 +58,11 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
     // and solve the qaudratic equation - todo, validity check
     detail::RealQuadraticEquation qe(a, b, c);
     // check how many solution you have
-    if (!qe.solutions) return false;
+    if (qe.solutions == 0) {
+      return false;
+    }
     // chose the solution
-    path = (!navDir || qe.first * qe.second > 0.)
+    path = ((navDir == 0) || qe.first * qe.second > 0.)
         ? (qe.first * qe.first < qe.second * qe.second ? qe.first : qe.second)
         : (navDir * qe.first >= 0. ? qe.first : qe.second);
     // return the solution
@@ -73,7 +75,9 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
   double R     = bounds().r();
   bool   valid = solve(R);
   // if configured, correct and solve again
-  if (correct && correct(lpos, ldir, path)) valid = solve(R);
+  if (correct && correct(lpos, ldir, path)) {
+    valid = solve(R);
+  }
   // update for inside if requested :
   // @todo fix this : fast inside bounds check needed
   valid = bcheck ? (valid && isOnSurface(solution, bcheck)) : valid;

@@ -60,7 +60,7 @@ public:
                       = getDefaultLogger("PassiveLayerBuilder", Logging::INFO));
 
   /// Destructor
-  virtual ~PassiveLayerBuilder() = default;
+  ~PassiveLayerBuilder() override = default;
 
   /// LayerBuilder interface method
   /// @return  the layers at negative side
@@ -98,9 +98,9 @@ public:
 
   /// Set logging instance
   ///
-  /// @param logger is the logging instance to be set
+  /// @param newLogger the logger instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 protected:
   Config m_cfg;  //!< configuration

@@ -49,51 +49,50 @@ public:
   /// Rmin and R max
   /// @param minhalfx half length in X at min radius
   /// @param maxhalfx half length in X at maximum radius
-  /// @param rMin inner radius
-  /// @param rMax outer radius
+  /// @param maxR outer radius
+  /// @param minR inner radius
   /// @param avephi average phi value
   /// @param stereo optional stero angle applied
   DiscTrapezoidalBounds(double minhalfx,
                         double maxhalfx,
-                        double rMin,
-                        double rMax,
+                        double maxR,
+                        double minR,
                         double avephi = M_PI_2,
                         double stereo = 0.);
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  DiscTrapezoidalBounds(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  DiscTrapezoidalBounds(const variant_data& vardata);
 
-  virtual ~DiscTrapezoidalBounds();
+  ~DiscTrapezoidalBounds() override;
 
-  virtual DiscTrapezoidalBounds*
-  clone() const final override;
+  DiscTrapezoidalBounds*
+  clone() const final;
 
-  virtual SurfaceBounds::BoundsType
-  type() const final override;
+  SurfaceBounds::BoundsType
+  type() const final;
 
-  virtual std::vector<TDD_real_t>
-  valueStore() const final override;
+  std::vector<TDD_real_t>
+  valueStore() const final;
 
   ///  This method cheks if the radius given in the LocalPosition is inside
   ///  [rMin,rMax]
   /// if only tol0 is given and additional in the phi sector is tol1 is given
   /// @param lpos is the local position to be checked (in polar coordinates)
   /// @param bcheck is the boundary check directive
-  virtual bool
-  inside(const Vector2D&      lpos,
-         const BoundaryCheck& bcheck = true) const final override;
+  bool
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const final;
 
   /// Minimal distance to boundary
   /// @param lpos is the local position to be checked (in polar coordinates)
   /// @return is the minimal distance ( > 0 if outside and <=0 if inside)
-  virtual double
-  distanceToBoundary(const Vector2D& lpos) const final override;
+  double
+  distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Output Method for std::ostream
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   /// This method returns inner radius
   double

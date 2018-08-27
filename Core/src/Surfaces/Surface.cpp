@@ -14,33 +14,21 @@
 
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
-  : GeometryObject()
-  , m_transform(tform)
-  , m_associatedDetElement(nullptr)
-  , m_associatedLayer(nullptr)
-  , m_associatedTrackingVolume(nullptr)
-  , m_associatedMaterial(nullptr)
+  : GeometryObject(), m_transform(std::move(tform))
 {
 }
 
 Acts::Surface::Surface(const DetectorElementBase& detelement)
-  : GeometryObject()
-  , m_transform(nullptr)
-  , m_associatedDetElement(&detelement)
-  , m_associatedLayer(nullptr)
-  , m_associatedTrackingVolume(nullptr)
-  , m_associatedMaterial(nullptr)
+  : GeometryObject(), m_transform(nullptr), m_associatedDetElement(&detelement)
 {
 }
 
 Acts::Surface::Surface(const Surface& other)
   : GeometryObject(other)
   , m_transform(other.m_transform)
-  , m_associatedDetElement(nullptr)
-  , m_associatedLayer(nullptr)
-  , m_associatedTrackingVolume(nullptr)
   , m_associatedMaterial(other.m_associatedMaterial)
 {
 }
@@ -49,15 +37,12 @@ Acts::Surface::Surface(const Surface& other, const Transform3D& shift)
   : GeometryObject()
   , m_transform(std::make_shared<const Transform3D>(
         Transform3D(shift * other.transform())))
-  , m_associatedDetElement(nullptr)
   , m_associatedLayer(other.m_associatedLayer)
   , m_associatedMaterial(other.m_associatedMaterial)
 {
 }
 
-Acts::Surface::~Surface()
-{
-}
+Acts::Surface::~Surface() = default;
 
 Acts::Surface&
 Acts::Surface::operator=(const Surface& other)
@@ -79,20 +64,28 @@ bool
 Acts::Surface::operator==(const Surface& other) const
 {
   // (a) fast exit for pointer comparison
-  if (&other == this) return true;
+  if (&other == this) {
+    return true;
+  }
   // (b) fast exit for type
-  if (other.type() != type()) return false;
+  if (other.type() != type()) {
+    return false;
+  }
   // (c) fast exit for bounds
-  if (other.bounds() != bounds()) return false;
+  if (other.bounds() != bounds()) {
+    return false;
+  }
   // (d) comapre transform
-  if (!other.transform().isApprox(transform(), 10e-9)) return false;
+  if (!other.transform().isApprox(transform(), 10e-9)) {
+    return false;
+  }
   // we should be good
   return true;
 }
 
 bool
-Acts::Surface::isOnSurface(const Vector3D&      gpos,
-                           const BoundaryCheck& bcheck) const
+Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
+                           const BoundaryCheck&  bcheck) const
 {
   // create the local position
   Acts::Vector2D lpos;
@@ -100,7 +93,9 @@ Acts::Surface::isOnSurface(const Vector3D&      gpos,
   bool g2L = globalToLocal(gpos, Acts::Vector3D::UnitX(), lpos);
   if (g2L) {
     // no boundary check, then return true
-    if (!bcheck) return true;
+    if (!bcheck) {
+      return true;
+    }
     // return what ever the bounds tell you
     return bounds().inside(lpos, bcheck);
   }

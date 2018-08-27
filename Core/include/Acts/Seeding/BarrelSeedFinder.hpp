@@ -51,7 +51,9 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
         Vector3D d12     = p2.position() - p1.position();
         double   theta12 = d12.theta();
 
-        if (cfg.maxDeltaTheta < std::abs(theta12 - theta01)) continue;
+        if (cfg.maxDeltaTheta < std::abs(theta12 - theta01)) {
+          continue;
+        }
 
         double kappa = detail::calcCircleCurvature(d01, d12);
         // initial direction correction due to curvature, use

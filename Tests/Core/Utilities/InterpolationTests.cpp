@@ -21,8 +21,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(interpolation_1d)
   {
-    typedef std::array<double, 1u> Point;
-    typedef std::array<double, 2u> Values;
+    using Point  = std::array<double, 1u>;
+    using Values = std::array<double, 2u>;
 
     Point  low  = {{1.}};
     Point  high = {{2.}};
@@ -46,8 +46,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(interpolation_2d)
   {
-    typedef std::array<double, 2u> Point;
-    typedef std::array<double, 4u> Values;
+    using Point  = std::array<double, 2u>;
+    using Values = std::array<double, 4u>;
 
     Point  low  = {{1., 1.}};
     Point  high = {{2., 3.}};
@@ -99,8 +99,8 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(interpolation_3d)
   {
-    typedef std::array<double, 3u> Point;
-    typedef std::array<double, 8u> Values;
+    using Point  = std::array<double, 3u>;
+    using Values = std::array<double, 8u>;
 
     Point  low  = {{1., 1., 1.}};
     Point  high = {{2., 3., 4.}};
@@ -154,10 +154,10 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(interpolation_mixed_point_values)
   {
-    typedef ActsVectorD<1> Point1;
-    typedef std::array<double, 1u> Point2;
-    typedef std::vector<double> Point3;
-    typedef std::array<double, 2u> Values;
+    using Point1 = ActsVectorD<1>;
+    using Point2 = std::array<double, 1u>;
+    using Point3 = std::vector<double>;
+    using Values = std::array<double, 2u>;
 
     Point2 low  = {{1.}};
     Point3 high = {2.};

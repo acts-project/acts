@@ -31,7 +31,7 @@ convertDD4hepDetector(
     double             layerEnvelopeR,
     double             layerEnvelopeZ,
     double             defaultLayerThickness,
-    std::function<void(std::vector<dd4hep::DetElement>& detectors)>
+    const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors)
 {
   // create local logger for conversion
@@ -78,12 +78,15 @@ convertDD4hepDetector(
         }
         // set the beam pipe
         beamPipeVolumeBuilder = volBuilder;
-      } else
+      } else {
         volumeBuilders.push_back(volBuilder);
+      }
     }
   }
   // Finally add the beam pipe
-  if (beamPipeVolumeBuilder) volumeBuilders.push_back(beamPipeVolumeBuilder);
+  if (beamPipeVolumeBuilder) {
+    volumeBuilders.push_back(beamPipeVolumeBuilder);
+  }
   // create cylinder volume helper
   auto volumeHelper = cylinderVolumeHelper_dd4hep();
   // hand over the collected volume builders
@@ -153,16 +156,17 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
       TGeoShape* geoShape
           = volumeDetElement.placement().ptr()->GetVolume()->GetShape();
       // check if it has a shape (the other case should not happen)
-      if (geoShape) {
+      if (geoShape != nullptr) {
         zPos = volumeDetElement.placement()
                    .ptr()
                    ->GetMatrix()
                    ->GetTranslation()[2]
             * units::_cm;
-      } else
+      } else {
         throw std::logic_error(std::string("Volume of DetElement: ")
                                + volumeDetElement.name()
                                + std::string(" has no shape!"));
+      }
       // check if it has a volume extension telling if it is a barrel or an
       // endcap
       IActsExtension* volumeExtension = nullptr;
@@ -181,32 +185,35 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
             std::string("[V] Subvolume : '") + volumeDetElement.name()
             + std::string("' is a disc volume -> handling as an endcap"));
         if (zPos < 0.) {
-          if (nEndCap)
+          if (nEndCap) {
             throw std::logic_error(
                 "[V] Negative Endcap was already given for this "
                 "hierachy! Please create a new "
                 "DD4hep_SubDetectorAssembly for the next "
                 "hierarchy.");
+          }
           nEndCap = true;
           ACTS_VERBOSE("[V]       ->is negative endcap");
           collectLayers_dd4hep(volumeDetElement, negativeLayers);
         } else {
-          if (pEndCap)
+          if (pEndCap) {
             throw std::logic_error(
                 "[V] Positive Endcap was already given for this "
                 "hierachy! Please create a new "
                 "DD4hep_SubDetectorAssembly for the next "
                 "hierarchy.");
+          }
           pEndCap = true;
           ACTS_VERBOSE("[V]       ->is positive endcap");
           collectLayers_dd4hep(volumeDetElement, positiveLayers);
         }
       } else if (volumeExtension->isBarrel()) {
-        if (barrel)
+        if (barrel) {
           throw std::logic_error("[V] Barrel was already given for this "
                                  "hierachy! Please create a new "
                                  "DD4hep_SubDetectorAssembly for the next "
                                  "hierarchy.");
+        }
         barrel = true;
         ACTS_VERBOSE("[V] Subvolume : "
                      << volumeDetElement.name()
@@ -221,11 +228,12 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
                   "check your detector construction."));
       }
     }
-    if ((pEndCap && !nEndCap) || (!pEndCap && nEndCap))
+    if ((pEndCap && !nEndCap) || (!pEndCap && nEndCap)) {
       throw std::logic_error("Only one Endcap is given for the current "
                              "hierarchy! Endcaps should always occur in "
                              "pairs. Please check your detector "
                              "construction.");
+    }
 
     // configure SurfaceArrayCreator
     auto surfaceArrayCreator
@@ -278,7 +286,7 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
             Acts::getDefaultLogger("CylinderVolumeBuilder", loggingLevel));
     return cylinderVolumeBuilder;
 
-  } else if (subDetExtension && subDetExtension->isBeampipe()) {
+  } else if ((subDetExtension != nullptr) && subDetExtension->isBeampipe()) {
     ACTS_VERBOSE("[D] Subdetector : "
                  << subDetector.name()
                  << " is the beampipe - building beam pipe.");
@@ -286,9 +294,10 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
     TGeoShape* geoShape
         = subDetector.placement().ptr()->GetVolume()->GetShape();
     TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-    if (!tube)
+    if (tube == nullptr) {
       throw std::logic_error(
           "Beampipe has wrong shape - needs to be TGeoTubeSeg!");
+    }
     // get the dimension of TGeo and convert lengths
     double rMin  = tube->GetRmin() * units::_cm + layerEnvelopeR;
     double rMax  = tube->GetRmax() * units::_cm - layerEnvelopeR;
@@ -341,7 +350,7 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
                                    loggingLevel));
     return beamPipeVolumeBuilder;
 
-  } else if (subDetExtension && subDetExtension->isBarrel()) {
+  } else if ((subDetExtension != nullptr) && subDetExtension->isBarrel()) {
     ACTS_VERBOSE("[D] Subdetector: "
                  << subDetector.name()
                  << " is a Barrel volume - building barrel.");
@@ -375,10 +384,11 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
     TGeoShape* geoShape
         = subDetector.placement().ptr()->GetVolume()->GetShape();
     // this should not happen
-    if (!geoShape)
+    if (geoShape == nullptr) {
       throw std::logic_error(std::string("Volume of DetElement: ")
                              + subDetector.name()
                              + std::string(" has no a shape!"));
+    }
 
     // get the possible material
     /// @todo volume material currently not used
@@ -451,7 +461,7 @@ collectCompounds_dd4hep(dd4hep::DetElement&              detElement,
       detExtension = childDetElement.extension<Acts::IActsExtension>();
     } catch (std::runtime_error& e) {
     }
-    if (detExtension
+    if ((detExtension != nullptr)
         && (detExtension->isBarrel() || detExtension->isEndcap())) {
       compounds.push_back(childDetElement);
       continue;
@@ -476,7 +486,7 @@ collectSubDetectors_dd4hep(dd4hep::DetElement&              detElement,
         continue;
       }
     }
-    if (detExtension
+    if ((detExtension != nullptr)
         && (detExtension->isBarrel() || detExtension->isBeampipe())) {
       subdetectors.push_back(childDetElement);
       continue;
@@ -497,7 +507,7 @@ collectLayers_dd4hep(dd4hep::DetElement&              detElement,
       detExtension = childDetElement.extension<Acts::IActsExtension>();
     } catch (std::runtime_error& e) {
     }
-    if (detExtension && detExtension->isLayer()) {
+    if ((detExtension != nullptr) && detExtension->isLayer()) {
       layers.push_back(childDetElement);
       continue;
     }

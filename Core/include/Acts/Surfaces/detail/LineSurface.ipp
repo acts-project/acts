@@ -19,8 +19,9 @@ LineSurface::localToGlobal(const Vector2D& lpos,
   Vector3D radiusAxisGlobal(lineDirection().cross(mom));
   Vector3D locZinGlobal(0., 0., lpos[eLOC_Z]);
   // apply a transform if needed
-  if (m_transform || m_associatedDetElement)
+  if (m_transform || (m_associatedDetElement != nullptr)) {
     locZinGlobal = transform() * locZinGlobal;
+  }
   // transform zPosition into global coordinates and
   // add eLOC_R * radiusAxis
   gpos = Vector3D(locZinGlobal + lpos[eLOC_R] * radiusAxisGlobal.normalized());
@@ -32,7 +33,7 @@ LineSurface::globalToLocal(const Vector3D& gpos,
                            Vector2D&       lpos) const
 {
   // apply the transform when needed
-  Vector3D loc3Dframe = (m_transform || m_associatedDetElement)
+  Vector3D loc3Dframe = (m_transform || (m_associatedDetElement != nullptr))
       ? (transform().inverse()) * gpos
       : gpos;
   // construct localPosition with sign*candidate.perp() and z.()
@@ -48,9 +49,13 @@ inline bool
 LineSurface::isOnSurface(const Vector3D&      gpos,
                          const BoundaryCheck& bcheck) const
 {
-  if (!bcheck) return true;
+  if (!bcheck) {
+    return true;
+  }
   // check whether this is a boundless surface
-  if (!m_bounds && !Surface::m_associatedDetElement) return true;
+  if (!m_bounds && (Surface::m_associatedDetElement == nullptr)) {
+    return true;
+  }
   // get the standard bounds
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
   Vector2D locCand(loc3Dframe.perp(), loc3Dframe.z());
@@ -64,7 +69,7 @@ LineSurface::name() const
 }
 
 inline const RotationMatrix3D
-LineSurface::referenceFrame(const Vector3D&, const Vector3D& mom) const
+LineSurface::referenceFrame(const Vector3D& /*pos*/, const Vector3D& mom) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
@@ -80,7 +85,8 @@ LineSurface::referenceFrame(const Vector3D&, const Vector3D& mom) const
 }
 
 inline double
-LineSurface::pathCorrection(const Vector3D&, const Vector3D&) const
+LineSurface::pathCorrection(const Vector3D& /*pos*/,
+                            const Vector3D& /*mom*/) const
 {
   return 1.;
 }
@@ -101,7 +107,9 @@ LineSurface::normal(const Vector2D& /*lpos*/) const
 inline const SurfaceBounds&
 LineSurface::bounds() const
 {
-  if (m_bounds) return (*m_bounds.get());
+  if (m_bounds) {
+    return (*m_bounds.get());
+  }
   return s_noBounds;
 }
 
@@ -142,8 +150,9 @@ LineSurface::intersectionEstimate(const Vector3D&      gpos,
         result = (ma + u * ea);
         // if you have specified a navigation direction, valid mean path > 0.
         valid = (navDir * u >= 0);
-      } else
+      } else {
         valid = false;
+      }
     }
     // it just needs to be a insideBounds() check
     valid = bcheck ? (valid && isOnSurface(result, bcheck)) : valid;

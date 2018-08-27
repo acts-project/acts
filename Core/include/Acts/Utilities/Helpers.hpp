@@ -55,12 +55,16 @@ namespace Acts {
 inline double
 roundWithPrecision(double val, int precision)
 {
-  if (val < 0 && std::abs(val) * std::pow(10, precision) < 1.) return -val;
+  if (val < 0 && std::abs(val) * std::pow(10, precision) < 1.) {
+    return -val;
+  }
   return val;
 }
 
 inline std::string
-toString(const ActsMatrixXd& matrix, int precision = 4, std::string offset = "")
+toString(const ActsMatrixXd& matrix,
+         int                 precision = 4,
+         const std::string&  offset    = "")
 {
   std::ostringstream sout;
 
@@ -70,19 +74,24 @@ toString(const ActsMatrixXd& matrix, int precision = 4, std::string offset = "")
     for (int i = 0; i < matrix.rows(); ++i) {
       double val = roundWithPrecision(matrix(i, 0), precision);
       sout << val;
-      if (i != matrix.rows() - 1) sout << ", ";
+      if (i != matrix.rows() - 1) {
+        sout << ", ";
+      }
     }
     sout << ")";
   } else {
     for (int i = 0; i < matrix.rows(); ++i) {
       for (int j = 0; j < matrix.cols(); ++j) {
-        if (j == 0) sout << "(";
+        if (j == 0) {
+          sout << "(";
+        }
         double val = roundWithPrecision(matrix(i, j), precision);
         sout << val;
-        if (j == matrix.cols() - 1)
+        if (j == matrix.cols() - 1) {
           sout << ")";
-        else
+        } else {
           sout << ", ";
+        }
       }
       if (i
           != matrix.rows()
@@ -108,7 +117,7 @@ toString(const Acts::Translation3D& translation, int precision = 4)
 inline std::string
 toString(const Acts::Transform3D& transform,
          int                      precision = 4,
-         std::string              offset    = "")
+         const std::string&       offset    = "")
 {
   std::ostringstream sout;
   sout << "Translation : " << toString(transform.translation(), precision)
@@ -125,8 +134,12 @@ angle(const Acts::Vector3D& v1, const Acts::Vector3D& v2)
 {
   double dp = v1.dot(v2);
   dp /= v1.mag() * v2.mag();
-  if (dp > 1) dp  = 1;
-  if (dp < -1) dp = -1;
+  if (dp > 1) {
+    dp = 1;
+  }
+  if (dp < -1) {
+    dp = -1;
+  }
   return acos(dp);
 }
 
@@ -230,7 +243,8 @@ deltaR(const Acts::Vector3D& v1, const Acts::Vector3D& v2)
  * theSurface.transform().translation());
  */
 inline Acts::Transform3D
-getTransformFromRotTransl(Acts::RotationMatrix3D rot, Acts::Vector3D transl_vec)
+getTransformFromRotTransl(const Acts::RotationMatrix3D& rot,
+                          const Acts::Vector3D&         transl_vec)
 {
   Acts::Transform3D trans = Acts::Transform3D::Identity();
   trans                   = trans * rot;
@@ -269,12 +283,24 @@ getAngleAxisFromRotation(Acts::RotationMatrix3D& rotation,
     rotationAxis  = Acts::Vector3D(0, 0, 1);
   } else {
     double x = 0, y = 0, z = 0;
-    if (xx > cosa) x = sqrt((xx - cosa) / cosa1);
-    if (yy > cosa) y = sqrt((yy - cosa) / cosa1);
-    if (zz > cosa) z = sqrt((zz - cosa) / cosa1);
-    if (rotation(2, 1) < rotation(1, 2)) x = -x;
-    if (rotation(0, 2) < rotation(2, 0)) y = -y;
-    if (rotation(1, 0) < rotation(0, 1)) z = -z;
+    if (xx > cosa) {
+      x = sqrt((xx - cosa) / cosa1);
+    }
+    if (yy > cosa) {
+      y = sqrt((yy - cosa) / cosa1);
+    }
+    if (zz > cosa) {
+      z = sqrt((zz - cosa) / cosa1);
+    }
+    if (rotation(2, 1) < rotation(1, 2)) {
+      x = -x;
+    }
+    if (rotation(0, 2) < rotation(2, 0)) {
+      y = -y;
+    }
+    if (rotation(1, 0) < rotation(0, 1)) {
+      z = -z;
+    }
     rotationAngle = (cosa < -1.) ? acos(-1.) : acos(cosa);
     rotationAxis  = Acts::Vector3D(x, y, z);
   }

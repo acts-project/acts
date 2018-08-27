@@ -15,6 +15,7 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <utility>
 
 #include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"
@@ -41,7 +42,7 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             rmax,
                                double                             hphisec)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec))
 {
 }
@@ -54,7 +55,7 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             avephi,
                                double                             stereo)
   : GeometryObject()
-  , Surface(htrans)
+  , Surface(std::move(htrans))
   , m_bounds(std::make_shared<const DiscTrapezoidalBounds>(minhalfx,
                                                            maxhalfx,
                                                            maxR,
@@ -66,22 +67,22 @@ Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
 
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                std::shared_ptr<const DiscBounds>  dbounds)
-  : GeometryObject(), Surface(htrans), m_bounds(dbounds)
+  : GeometryObject(), Surface(std::move(htrans)), m_bounds(std::move(dbounds))
 {
 }
 
-Acts::DiscSurface::DiscSurface(std::shared_ptr<const DiscBounds> dbounds,
-                               const DetectorElementBase&        detelement)
+Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
+                               const DetectorElementBase& detelement)
   : GeometryObject(), Surface(detelement), m_bounds(dbounds)
 {
   throw_assert(dbounds, "nullptr as DiscBounds");
 }
 
-Acts::DiscSurface::DiscSurface(const variant_data& data_) : GeometryObject()
+Acts::DiscSurface::DiscSurface(const variant_data& vardata) : GeometryObject()
 {
 
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   // std::string type = boost::get<std::string>(data["type"]);
   std::string type = data.get<std::string>("type");
@@ -97,7 +98,7 @@ Acts::DiscSurface::DiscSurface(const variant_data& data_) : GeometryObject()
       = factory.discBounds(boundsType, var_bounds);
   m_bounds = bounds;
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -105,9 +106,7 @@ Acts::DiscSurface::DiscSurface(const variant_data& data_) : GeometryObject()
   }
 }
 
-Acts::DiscSurface::~DiscSurface()
-{
-}
+Acts::DiscSurface::~DiscSurface() = default;
 
 Acts::DiscSurface&
 Acts::DiscSurface::operator=(const DiscSurface& other)
@@ -127,7 +126,7 @@ Acts::DiscSurface::type() const
 
 void
 Acts::DiscSurface::localToGlobal(const Vector2D& lpos,
-                                 const Vector3D&,
+                                 const Vector3D& /*gmom*/,
                                  Vector3D& gpos) const
 {
   // create the position in the local 3d frame
@@ -140,7 +139,7 @@ Acts::DiscSurface::localToGlobal(const Vector2D& lpos,
 
 bool
 Acts::DiscSurface::globalToLocal(const Acts::Vector3D& gpos,
-                                 const Acts::Vector3D&,
+                                 const Acts::Vector3D& /*gmom*/,
                                  Acts::Vector2D& lpos) const
 {
   // transport it to the globalframe (very unlikely that this is not needed)
@@ -154,7 +153,7 @@ Acts::DiscSurface::localPolarToLocalCartesian(const Vector2D& locpol) const
 {
   const DiscTrapezoidalBounds* dtbo
       = dynamic_cast<const Acts::DiscTrapezoidalBounds*>(&(bounds()));
-  if (dtbo) {
+  if (dtbo != nullptr) {
     double rMedium = dtbo->rCenter();
     double phi     = dtbo->averagePhi();
 
@@ -180,7 +179,8 @@ Acts::DiscSurface::localCartesianToGlobal(const Vector2D& lpos) const
 }
 
 const Acts::Vector2D
-Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos, double) const
+Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos,
+                                          double /*unused*/) const
 {
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
   return Vector2D(loc3Dframe.x(), loc3Dframe.y());
@@ -197,7 +197,9 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
                                const BoundaryCheck& bcheck) const
 {
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
-  if (std::abs(loc3Dframe.z()) > (s_onSurfaceTolerance)) return false;
+  if (std::abs(loc3Dframe.z()) > (s_onSurfaceTolerance)) {
+    return false;
+  }
   return (bcheck
               ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()),
                                 bcheck)
@@ -207,14 +209,18 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
 Acts::DiscSurface*
 Acts::DiscSurface::clone(const Transform3D* shift) const
 {
-  if (shift) return new DiscSurface(*this, *shift);
+  if (shift != nullptr) {
+    return new DiscSurface(*this, *shift);
+  }
   return new DiscSurface(*this);
 }
 
 const Acts::SurfaceBounds&
 Acts::DiscSurface::bounds() const
 {
-  if (m_bounds) return (*(m_bounds.get()));
+  if (m_bounds) {
+    return (*(m_bounds.get()));
+  }
   return s_noBounds;
 }
 

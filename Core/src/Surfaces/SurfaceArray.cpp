@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <utility>
+
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -14,9 +16,7 @@
 #include "Acts/Utilities/VariantData.hpp"
 
 // implementation for pure virtual destructor of ISurfaceGridLookup
-Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup()
-{
-}
+Acts::SurfaceArray::ISurfaceGridLookup::~ISurfaceGridLookup() = default;
 
 Acts::variant_data
 Acts::SurfaceArray::toVariantData() const
@@ -91,11 +91,12 @@ Acts::SurfaceArray::surfaceGridLookupToVariantData(
   return data;
 }
 
-Acts::SurfaceArray::SurfaceArray(const variant_data&                      data_,
-                                 std::function<Vector2D(const Vector3D&)> g2l,
-                                 std::function<Vector3D(const Vector2D&)> l2g,
-                                 std::shared_ptr<const Transform3D> transform)
-  : p_gridLookup(nullptr), m_transform(transform)
+Acts::SurfaceArray::SurfaceArray(
+    const variant_data&                             data_,
+    const std::function<Vector2D(const Vector3D&)>& g2l,
+    const std::function<Vector3D(const Vector2D&)>& l2g,
+    std::shared_ptr<const Transform3D>              transform)
+  : p_gridLookup(nullptr), m_transform(std::move(transform))
 {
   const variant_map& data = boost::get<variant_map>(data_);
   throw_assert(data.get<std::string>("type") == "SurfaceArray",
@@ -219,7 +220,7 @@ Acts::SurfaceArray::SurfaceArray(
     std::function<std::array<double, 1>(const Vector3D&)> g2l,
     std::function<Vector3D(const std::array<double, 1>&)> l2g,
     std::shared_ptr<const Transform3D> transform)
-  : p_gridLookup(nullptr), m_transform(transform)
+  : p_gridLookup(nullptr), m_transform(std::move(transform))
 {
   const variant_map& data = boost::get<variant_map>(data_);
   throw_assert(data.get<std::string>("type") == "SurfaceArray",
@@ -325,9 +326,15 @@ Acts::SurfaceArray::dump(std::ostream& sl) const
     detail::AxisBoundaryType bdt = axes.at(j)->getBoundaryType();
     sl << " - axis " << (j + 1) << std::endl;
     sl << "   - boundary type: ";
-    if (bdt == detail::AxisBoundaryType::Open) sl << "open";
-    if (bdt == detail::AxisBoundaryType::Bound) sl << "bound";
-    if (bdt == detail::AxisBoundaryType::Closed) sl << "closed";
+    if (bdt == detail::AxisBoundaryType::Open) {
+      sl << "open";
+    }
+    if (bdt == detail::AxisBoundaryType::Bound) {
+      sl << "bound";
+    }
+    if (bdt == detail::AxisBoundaryType::Closed) {
+      sl << "closed";
+    }
     sl << std::endl;
     sl << "   - type: "
        << (axes.at(j)->isEquidistant() ? "equidistant" : "variable")
@@ -336,7 +343,9 @@ Acts::SurfaceArray::dump(std::ostream& sl) const
     sl << "   - bin edges: [ ";
     auto binEdges = axes.at(j)->getBinEdges();
     for (size_t i = 0; i < binEdges.size(); ++i) {
-      if (i > 0) sl << ", ";
+      if (i > 0) {
+        sl << ", ";
+      }
       auto binEdge = binEdges.at(i);
       // Do not display negative zeroes
       sl << ((std::abs(binEdge) >= 5e-4) ? binEdge : 0.0);

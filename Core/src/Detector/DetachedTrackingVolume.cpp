@@ -11,6 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 // Geometry module
+#include <utility>
+
 #include "Acts/Detector/DetachedTrackingVolume.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Layers/Layer.hpp"
@@ -31,9 +33,9 @@ Acts::DetachedTrackingVolume::DetachedTrackingVolume(
     std::shared_ptr<const Acts::Layer>              layer,
     std::vector<std::shared_ptr<const Acts::Layer>> multiLayer)
   : m_name(name)
-  , m_trkVolume(volume)
-  , m_layerRepresentation(layer)
-  , m_multilayerRepresentation(multiLayer)
+  , m_trkVolume(std::move(volume))
+  , m_layerRepresentation(std::move(layer))
+  , m_multilayerRepresentation(std::move(multiLayer))
   , m_baseTransform(nullptr)
   , m_constituents(nullptr)
 {
@@ -67,9 +69,9 @@ Acts::DetachedTrackingVolume::geometryType() const
 void
 Acts::DetachedTrackingVolume::setBaseTransform(const Acts::Transform3D* transf)
 {
-  if (transf)
+  if (transf != nullptr) {
     m_baseTransform = transf;
-  else {
+  } else {
     delete m_baseTransform;
     m_baseTransform
         = new Acts::Transform3D(this->trackingVolume()->transform());

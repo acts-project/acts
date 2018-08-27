@@ -59,9 +59,9 @@ namespace detail {
       : first(0.), second(0.)
     {
       double discriminant = beta * beta - 4 * alpha * gamma;
-      if (discriminant < 0)
+      if (discriminant < 0) {
         solutions = 0;
-      else {
+      } else {
         solutions = (discriminant == 0) ? 1 : 2;
         double q  = -0.5 * (beta + (beta > 0 ? std::sqrt(discriminant)
                                             : -std::sqrt(discriminant)));

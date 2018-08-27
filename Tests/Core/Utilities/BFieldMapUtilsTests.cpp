@@ -32,7 +32,9 @@ namespace Test {
 
     // create b field in rz
     std::vector<Acts::Vector2D> bField_rz;
-    for (int i = 0; i < 9; i++) bField_rz.push_back(Acts::Vector2D(i, i));
+    for (int i = 0; i < 9; i++) {
+      bField_rz.push_back(Acts::Vector2D(i, i));
+    }
 
     auto localToGlobalBin_rz
         = [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
@@ -55,7 +57,9 @@ namespace Test {
 
     // create b field in xyz
     std::vector<Acts::Vector3D> bField_xyz;
-    for (int i = 0; i < 27; i++) bField_xyz.push_back(Acts::Vector3D(i, i, i));
+    for (int i = 0; i < 27; i++) {
+      bField_xyz.push_back(Acts::Vector3D(i, i, i));
+    }
 
     auto localToGlobalBin_xyz
         = [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
@@ -148,7 +152,9 @@ namespace Test {
     std::vector<double> zPos = {0., 1., 2.};
     // the bfield values in rz
     std::vector<Acts::Vector2D> bField_rz;
-    for (int i = 0; i < 9; i++) bField_rz.push_back(Acts::Vector2D(i, i));
+    for (int i = 0; i < 9; i++) {
+      bField_rz.push_back(Acts::Vector2D(i, i));
+    }
     // the field mapper in rz
     auto mapper_rz = Acts::fieldMapperRZ(
         [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
@@ -177,7 +183,9 @@ namespace Test {
 
     // the bfield values in xyz
     std::vector<Acts::Vector3D> bField_xyz;
-    for (int i = 0; i < 27; i++) bField_xyz.push_back(Acts::Vector3D(i, i, i));
+    for (int i = 0; i < 27; i++) {
+      bField_xyz.push_back(Acts::Vector3D(i, i, i));
+    }
     // the field mapper in xyz
     auto mapper_xyz = Acts::fieldMapperXYZ(
         [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {

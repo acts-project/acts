@@ -43,18 +43,18 @@ public:
   }
 
   /// Factory for shared Layer pointer, that accepts @c variant_data
-  /// @param data The data to build from
+  /// @param vardata The data to build from
   static LayerPtr
-  create(const variant_data& data);
+  create(const variant_data& vardata);
 
   /// Destructor
-  virtual ~NavigationLayer();
+  ~NavigationLayer() override;
 
   /// The binning position method
   ///  - as default the center is given, but may be overloaded
   /// @return The return vector can be used for binning in a TrackingVolume
-  virtual const Vector3D
-  binningPosition(BinningValue bValue) const final override;
+  const Vector3D
+  binningPosition(BinningValue bValue) const final;
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
@@ -70,22 +70,21 @@ public:
   /// Transforms the layer into a Surface representation for extrapolation
   /// In general, extrapolation to a surface should be avoided
   const Surface&
-  surfaceRepresentation() const final override;
+  surfaceRepresentation() const final;
 
   // Non-const version
   Surface&
-  surfaceRepresentation() final override;
+  surfaceRepresentation() final;
 
   /// Geometric isOnLayer() method
   /// using isOnSurface() with Layer specific tolerance
   ///
-  /// @param gpos is the global position for the check
+  /// @param gp is the global position for the check
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
   bool
-  isOnLayer(const Vector3D&      gpos,
-            const BoundaryCheck& bcheck = true) const final override;
+  isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck = true) const final;
 
   /// Accept layer according to the following colelction directives
   ///
@@ -97,7 +96,9 @@ public:
   ///
   /// @return a boolean whether the layer is accepted for processing
   bool
-  resolve(bool, bool, bool) const final override;
+  resolve(bool resolveSensitive,
+          bool resolveMaterial,
+          bool resolvePassive) const final;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
@@ -148,7 +149,9 @@ NavigationLayer::isOnLayer(const Vector3D&      gp,
 }
 
 inline bool
-NavigationLayer::resolve(bool, bool, bool) const
+NavigationLayer::resolve(bool /*resolveSensitive*/,
+                         bool /*resolveMaterial*/,
+                         bool /*reolvePassive*/) const
 {
   return false;
 }

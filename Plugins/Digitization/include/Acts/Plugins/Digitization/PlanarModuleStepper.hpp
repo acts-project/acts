@@ -31,15 +31,15 @@ public:
   struct Config
   {
     // standard constructor
-    Config() {}
+    Config() = default;
   };
 
   /// Constructor
   ///
   /// @param pmsConfig is the configuration
-  /// @param logger is the logging istance
+  /// @param mlogger is the logging istance
   PlanarModuleStepper(const Config&                 pmsConfig,
-                      std::unique_ptr<const Logger> logger
+                      std::unique_ptr<const Logger> mlogger
                       = getDefaultLogger("PlanarModuleStepper", Logging::INFO));
 
   /// Destructor
@@ -48,26 +48,26 @@ public:
   /// Calculate the steps caused by this track - full simulation interface
   ///
   /// @param dmodule is the digitization module
-  /// @param startPosition is the starting position of the stepping
-  /// @param endPosition is the end postion of the stepping
+  /// @param startPoint is the starting position of the stepping
+  /// @param endPoint is the end postion of the stepping
   ///
   /// @return is the vector of digitization steps
   std::vector<DigitizationStep>
   cellSteps(const DigitizationModule& dmodule,
-            const Vector3D&           startPosition,
-            const Vector3D&           endPosition) const;
+            const Vector3D&           startPoint,
+            const Vector3D&           endPoint) const;
 
   /// Calculate the steps caused by this track - fast simulation interface
   ///
   /// @param dmodule is the digitization module
-  /// @param intersection is the 2d intersection at the module surface
-  /// @param direction is the track direction at the instersection
+  /// @param moduleIntersection is the 2d intersection at the module surface
+  /// @param trackDirection is the track direction at the instersection
   ///
   /// @return is the vector of digitization steps
   std::vector<DigitizationStep>
   cellSteps(const DigitizationModule& dmodule,
-            const Vector2D&           intersection,
-            const Vector3D&           direction) const;
+            const Vector2D&           moduleIntersection,
+            const Vector3D&           trackDirection) const;
 
   /// Set logging instance
   ///

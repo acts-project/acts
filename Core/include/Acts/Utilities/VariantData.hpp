@@ -52,7 +52,7 @@ public:
 
   /// Constructor which takes a @c map_t and wraps it.
   /// @param src The source map, empty by default
-  variant_map(map_t src = {}) : m_map(src) {}
+  variant_map(map_t src = {}) : m_map(std::move(src)) {}
 
   /// Method to get the size of the map. Is forwarded to the
   /// contained map
@@ -66,7 +66,7 @@ public:
   /// Subscript operator to elements in the map
   /// @param key The key to access
   /// @return Value stored here. Note that this is @c variant_data.
-  variant_data& operator[](std::string key) { return m_map[key]; }
+  variant_data& operator[](const std::string& key) { return m_map[key]; }
 
   /// Method to count a key. Is forwarded
   /// @param key The key to count elements for
@@ -85,8 +85,9 @@ public:
   T&
   get(const std::string& key)
   {
-    if (!m_map.count(key))
+    if (!m_map.count(key)) {
       throw std::out_of_range("variant_map key " + key + " not found");
+    }
     return boost::get<T>(m_map.at(key));
   }
 
@@ -98,8 +99,9 @@ public:
   const T&
   get(const std::string& key) const
   {
-    if (!m_map.count(key))
+    if (!m_map.count(key)) {
       throw std::out_of_range("variant_map key " + key + " not found");
+    }
     return boost::get<T>(m_map.at(key));
   }
 
@@ -201,7 +203,7 @@ public:
 
   /// Constructor for the class accepting an input vector
   /// @param src The source vector to wrap
-  variant_vector(vector_t src = {}) : m_vector(src) {}
+  variant_vector(vector_t src = {}) : m_vector(std::move(src)) {}
 
   /// Method to get the current size of the wrapped vector
   /// @return The size
@@ -389,7 +391,9 @@ public:
   operator()(const variant_map& map)
   {
     m_json_str << "{";
-    if (m_pretty) m_json_str << std::endl;
+    if (m_pretty) {
+      m_json_str << std::endl;
+    }
 
     size_t i = 0;
     m_depth += 1;
@@ -400,13 +404,17 @@ public:
 
       if (i < map.size() - 1) {
         m_json_str << ", ";
-        if (m_pretty) m_json_str << std::endl;
+        if (m_pretty) {
+          m_json_str << std::endl;
+        }
       }
       ++i;
     }
     m_depth -= 1;
 
-    if (m_pretty) m_json_str << std::endl;
+    if (m_pretty) {
+      m_json_str << std::endl;
+    }
     indent();
     m_json_str << "}";
   }
@@ -417,7 +425,9 @@ public:
   operator()(const variant_vector& vec)
   {
     m_json_str << "[";
-    if (m_pretty) m_json_str << std::endl;
+    if (m_pretty) {
+      m_json_str << std::endl;
+    }
     size_t i = 0;
     m_depth += 1;
     for (const auto& entry : vec) {
@@ -425,13 +435,17 @@ public:
       boost::apply_visitor(*this, entry);
       if (i < vec.size() - 1) {
         m_json_str << ", ";
-        if (m_pretty) m_json_str << std::endl;
+        if (m_pretty) {
+          m_json_str << std::endl;
+        }
       }
       ++i;
     }
 
     m_depth -= 1;
-    if (m_pretty) m_json_str << std::endl;
+    if (m_pretty) {
+      m_json_str << std::endl;
+    }
     indent();
     m_json_str << "]";
   }
@@ -552,21 +566,21 @@ to_variant(const ActsMatrixD<4, 4>& matrix)
 /// This is the unimplemented base template that is specialized
 /// for various types.
 /// @tparam T The type you want
-/// @param data The data
+/// @param vardata The data
 /// @return The converted data as type @c T
 template <typename T>
 inline T
-from_variant(const variant_data& data);
+from_variant(const variant_data& vardata);
 
 /// Function to produce a @c Transform3D from @c variant_data.
-/// @param data_ The input @c variant_data
+/// @param vardata The input @c variant_data
 /// @return The converted @c Transform3D
 template <>
 inline Transform3D
-from_variant<Transform3D>(const variant_data& data_)
+from_variant<Transform3D>(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Must be variant_map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Must be variant_map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   throw_assert(data.get<std::string>("type") == "Transform3D",
                "Must be type Transform3D");
 
@@ -587,14 +601,14 @@ from_variant<Transform3D>(const variant_data& data_)
 }
 
 /// Function to produce a @c Vector2D from @c variant_data.
-/// @param data_ The input @c variant_data
+/// @param vardata The input @c variant_data
 /// @return The converted @c Vector2D
 template <>
 inline Vector2D
-from_variant<Vector2D>(const variant_data& data_)
+from_variant<Vector2D>(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Must be variant_map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Must be variant_map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   throw_assert(data.get<std::string>("type") == "Vector2D",
                "Must be type Vector2D");
 

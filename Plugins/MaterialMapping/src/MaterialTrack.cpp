@@ -10,6 +10,8 @@
 // MaterialTrack.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
+#include <utility>
+
 #include "Acts/Plugins/MaterialMapping/MaterialTrack.hpp"
 
 Acts::MaterialTrack::MaterialTrack(const MaterialStep::Position& startPos,
@@ -23,19 +25,11 @@ Acts::MaterialTrack::MaterialTrack(const MaterialStep::Position& startPos,
   , m_phi(phi)
   , m_tX0(tX0)
   , m_tL0(tL0)
-  , m_materialSteps(materialSteps)
+  , m_materialSteps(std::move(materialSteps))
 {
 }
 
-Acts::MaterialTrack::MaterialTrack(const MaterialTrack& mtrecord)
-  : m_startPosition(mtrecord.m_startPosition)
-  , m_theta(mtrecord.m_theta)
-  , m_phi(mtrecord.m_phi)
-  , m_tX0(mtrecord.m_tX0)
-  , m_tL0(mtrecord.m_tL0)
-  , m_materialSteps(mtrecord.m_materialSteps)
-{
-}
+Acts::MaterialTrack::MaterialTrack(const MaterialTrack& mtrecord) = default;
 
 Acts::MaterialTrack&
 Acts::MaterialTrack::operator=(const MaterialTrack& mtrecord)

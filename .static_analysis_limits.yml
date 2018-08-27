@@ -1,10 +1,15 @@
 limits:
-  "*": 10000 # total limit
-  #"readability-*": 0 # no readability failures
-  #"cppcoreguidelines-*": 50 
-  #"cppcoreguidelines-pro-bounds-pointer-arithmetic": 0
-  #"performance-*": 20
-  #"modernize-*": 1000
+  "readability-inconsistent-declaration-parameter-name": 0
+  "readability-named-parameter": 0
+  "readability-container-size-empty": 0
+  "modernize-use-using": 0
+  "readability-braces-around-statements": 0
+  "modernize-use-override": 0
+  "readability-implicit-bool-cast": 0
+  "modernize-use-default-member-init": 0
+  "performance-unnecessary-value-param": 0
+  "modernize-use-equals-default": 0
+  "modernize-use-nullptr": 0
 
 ignore:
   - cppcoreguidelines-pro-type-vararg

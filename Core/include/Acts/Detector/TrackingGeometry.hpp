@@ -26,10 +26,10 @@ class Surface;
 class PerigeeSurface;
 class Layer;
 
-typedef std::shared_ptr<const TrackingVolume>         TrackingVolumePtr;
-typedef std::shared_ptr<TrackingVolume>               MutableTrackingVolumePtr;
-typedef std::shared_ptr<const DetachedTrackingVolume> DetachedTrackingVolumePtr;
-typedef std::vector<DetachedTrackingVolumePtr>        DetachedVolumeVector;
+using TrackingVolumePtr         = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr  = std::shared_ptr<TrackingVolume>;
+using DetachedTrackingVolumePtr = std::shared_ptr<const DetachedTrackingVolume>;
+using DetachedVolumeVector      = std::vector<DetachedTrackingVolumePtr>;
 
 ///  @class TrackingGeometry
 ///
@@ -49,7 +49,7 @@ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
-  TrackingGeometry(MutableTrackingVolumePtr highestVolume);
+  TrackingGeometry(const MutableTrackingVolumePtr& highestVolume);
 
   /// Destructor
   ~TrackingGeometry();
@@ -61,27 +61,27 @@ public:
 
   /// return the lowest tracking Volume
   ///
-  /// @param gpos is the global position fo the call
+  /// @param gp is the global position fo the call
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
-  lowestTrackingVolume(const Vector3D& gpos) const;
+  lowestTrackingVolume(const Vector3D& gp) const;
 
   /// return the vector of lowest detached tracking Volume(->overlaps)
   ///
-  /// @param gpos is the global position fo the call
+  /// @param gp is the global position fo the call
   ///
   /// @return plain pointer to the the lowest DetachedTrackingVolume
   const DetachedVolumeVector*
-  lowestDetachedTrackingVolumes(const Vector3D& gpos) const;
+  lowestDetachedTrackingVolumes(const Vector3D& gp) const;
 
   /// return the lowest static volume
   ///
-  /// @param gpos is the global position fo the call
+  /// @param gp is the global position fo the call
   ///
   /// @return plain pointer to the the lowest static tracking volume
   const TrackingVolume*
-  lowestStaticTrackingVolume(const Vector3D& gpos) const;
+  lowestStaticTrackingVolume(const Vector3D& gp) const;
 
   /// return the lowest tracking Volume
   ///
@@ -93,15 +93,15 @@ public:
 
   /// Forward the associated Layer information
   ///
-  /// @param gpos is the global position fo the call
+  /// @param gp is the global position fo the call
   ///
   /// @return plain pointer to assocaiated layer
   const Layer*
-  associatedLayer(const Vector3D& gpos) const;
+  associatedLayer(const Vector3D& gp) const;
 
   /// check position at volume boundary
   ///
-  /// @param gpos is the global position fo the call
+  /// @param gp is the global position fo the call
   /// @param vol is the volume to be cheked
   /// @param tol is the tolerance parameter
   ///
@@ -109,7 +109,7 @@ public:
   ///
   /// @return boolean indicating if this is at a volume boundary
   bool
-  atVolumeBoundary(const Vector3D&       gpos,
+  atVolumeBoundary(const Vector3D&       gp,
                    const TrackingVolume* vol,
                    double                tol) const;
 
@@ -126,7 +126,7 @@ public:
   ///
   /// @return boolean indicating if this is at a volume boundary
   bool
-  atVolumeBoundary(const Vector3D&        gpos,
+  atVolumeBoundary(const Vector3D&        gp,
                    const Vector3D&        mom,
                    const TrackingVolume*  vol,
                    const TrackingVolume*& nextVol,
@@ -151,10 +151,10 @@ public:
 private:
   /// Geometry Builder busineess: the geometry builder has to sign
   ///
-  /// @param signat is the volume signature
+  /// @param geosit is the volume signature
   /// @param geotype is the volume navigation type
   void
-  sign(GeometrySignature signat, GeometryType geotype = Static);
+  sign(GeometrySignature geosit, GeometryType geotype = Static);
 
   /// The known world - and the beamline
   TrackingVolumePtr                     m_world;

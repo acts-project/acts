@@ -57,8 +57,9 @@ Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   Surface::m_transform = std::make_shared<const Transform3D>(transform);
 }
 
-Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const PlanarBounds> pbounds,
-                                 const Acts::DetectorElementBase&    detelement)
+Acts::PlaneSurface::PlaneSurface(
+    const std::shared_ptr<const PlanarBounds>& pbounds,
+    const Acts::DetectorElementBase&           detelement)
   : Surface(detelement), m_bounds(pbounds)
 {
   /// surfaces representing a detector element must have bounds
@@ -71,11 +72,11 @@ Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
 {
 }
 
-Acts::PlaneSurface::PlaneSurface(const variant_data& data_)
+Acts::PlaneSurface::PlaneSurface(const variant_data& vardata)
 {
   // we need to figure out which way the PS was constructed before
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   // std::string type = boost::get<std::string>(data["type"]);
   std::string type = data.get<std::string>("type");
@@ -92,7 +93,7 @@ Acts::PlaneSurface::PlaneSurface(const variant_data& data_)
 
   m_bounds = pbounds;
 
-  if (payload.count("transform")) {
+  if (payload.count("transform") != 0u) {
     // we have a transform
     auto trf = std::make_shared<const Transform3D>(
         from_variant<Transform3D>(payload.get<variant_map>("transform")));
@@ -100,9 +101,7 @@ Acts::PlaneSurface::PlaneSurface(const variant_data& data_)
   }
 }
 
-Acts::PlaneSurface::~PlaneSurface()
-{
-}
+Acts::PlaneSurface::~PlaneSurface() = default;
 
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const PlaneSurface& other)
@@ -122,7 +121,7 @@ Acts::PlaneSurface::type() const
 
 void
 Acts::PlaneSurface::localToGlobal(const Vector2D& lpos,
-                                  const Vector3D&,
+                                  const Vector3D& /*gmom*/,
                                   Vector3D& gpos) const
 {
   Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
@@ -132,7 +131,7 @@ Acts::PlaneSurface::localToGlobal(const Vector2D& lpos,
 
 bool
 Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
-                                  const Vector3D&,
+                                  const Vector3D& /*gmom*/,
                                   Acts::Vector2D& lpos) const
 {
   /// the chance that there is no transform is almost 0, let's apply it
@@ -156,7 +155,9 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
 {
   /// the chance that there is no transform is almost 0, let's apply it
   Vector3D loc3Dframe = (transform().inverse()) * glopo;
-  if (std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) return false;
+  if (std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) {
+    return false;
+  }
   return (
       bcheck ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bcheck)
              : true);
@@ -165,14 +166,18 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
 Acts::PlaneSurface*
 Acts::PlaneSurface::clone(const Transform3D* shift) const
 {
-  if (shift) return new PlaneSurface(*this, *shift);
+  if (shift != nullptr) {
+    return new PlaneSurface(*this, *shift);
+  }
   return new PlaneSurface(*this);
 }
 
 const Acts::SurfaceBounds&
 Acts::PlaneSurface::bounds() const
 {
-  if (m_bounds) return (*m_bounds.get());
+  if (m_bounds) {
+    return (*m_bounds.get());
+  }
   return s_noBounds;
 }
 
@@ -187,7 +192,7 @@ Acts::PlaneSurface::toVariantData() const
 
   if (m_transform) {
     payload["transform"] = to_variant(*m_transform);
-  } else if (m_associatedDetElement) {
+  } else if (m_associatedDetElement != nullptr) {
     payload["transform"] = to_variant(m_associatedDetElement->transform());
   }
 

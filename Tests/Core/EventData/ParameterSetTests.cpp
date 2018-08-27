@@ -637,7 +637,7 @@ namespace Test {
     BOOST_CHECK((ParSet<eLOC_0, eLOC_1, ePHI, eQOP>::getParID<3>() == eQOP));
 
     // check consistency
-    typedef FullParameterSet FullSet;
+    using FullSet = FullParameterSet;
     BOOST_CHECK((FullSet::getIndex<FullSet::getParID<0>()>() == 0));
     BOOST_CHECK((FullSet::getIndex<FullSet::getParID<1>()>() == 1));
     BOOST_CHECK((FullSet::getIndex<FullSet::getParID<2>()>() == 2));

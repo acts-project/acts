@@ -12,6 +12,7 @@
 
 #include "Acts/Volumes/AbstractVolume.hpp"
 #include <iostream>
+#include <utility>
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 #include "Acts/Volumes/VolumeBounds.hpp"
@@ -19,14 +20,12 @@
 Acts::AbstractVolume::AbstractVolume(
     std::shared_ptr<const Transform3D>  htrans,
     std::shared_ptr<const VolumeBounds> volbounds)
-  : Volume(htrans, volbounds)
+  : Volume(std::move(htrans), std::move(volbounds))
 {
   createBoundarySurfaces();
 }
 
-Acts::AbstractVolume::~AbstractVolume()
-{
-}
+Acts::AbstractVolume::~AbstractVolume() = default;
 
 const std::vector<Acts::BoundarySurfacePtr>&
 Acts::AbstractVolume::boundarySurfaces() const
@@ -51,7 +50,7 @@ Acts::AbstractVolume::createBoundarySurfaces()
         = (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
         ? nullptr
         : this;
-    AbstractVolume* outer = (inner) ? nullptr : this;
+    AbstractVolume* outer = (inner) != nullptr ? nullptr : this;
     // create the boundary surface
     BoundarySurfacePtr bSurface
         = std::make_shared<const BoundarySurfaceT<AbstractVolume>>(

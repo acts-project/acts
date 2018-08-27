@@ -47,7 +47,9 @@ namespace detail {
     operator()(Vector3D& pos, Vector3D& dir, double& path)
     {
       // approximation with straight line
-      if (path * path < straightLineStep * straightLineStep) return false;
+      if (path * path < straightLineStep * straightLineStep) {
+        return false;
+      }
       // no correction at start positions
       if (pathLength == 0. || pos.isApprox(startPos)
           || dir.isApprox(startDir)) {

@@ -20,8 +20,8 @@
 namespace Acts {
 
 class TrackingVolume;
-typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
-typedef BinnedArray<TrackingVolumePtr>        TrackingVolumeArray;
+using TrackingVolumePtr   = std::shared_ptr<const TrackingVolume>;
+using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
 
 ///  @class GlueVolumesDescriptor
 ///
@@ -34,7 +34,7 @@ class GlueVolumesDescriptor
 {
 public:
   /// Constructor
-  GlueVolumesDescriptor() {}
+  GlueVolumesDescriptor() = default;
   /// Constructor - with arguments
   ///
   /// @param gvs are the glue volume arrays mapped to the volume faces
@@ -43,7 +43,7 @@ public:
                      std::shared_ptr<const TrackingVolumeArray>>& gvs);
 
   /// Desctructor
-  ~GlueVolumesDescriptor() {}
+  ~GlueVolumesDescriptor() = default;
   /// Register the volumes
   ///
   /// @param bsf is the boundary surface face where the volume array is attached
@@ -83,5 +83,5 @@ GlueVolumesDescriptor::glueFaces() const
 }
 
 std::ostream&
-operator<<(std::ostream& sl, const GlueVolumesDescriptor& mprop);
+operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd);
 }

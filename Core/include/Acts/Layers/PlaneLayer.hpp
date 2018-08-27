@@ -45,7 +45,7 @@ public:
          std::unique_ptr<ApproachDescriptor> ad           = nullptr,
          LayerType                           laytyp       = Acts::active)
   {
-    return MutableLayerPtr(new PlaneLayer(transform,
+    return MutableLayerPtr(new PlaneLayer(std::move(transform),
                                           pbounds,
                                           std::move(surfaceArray),
                                           thickness,
@@ -65,7 +65,7 @@ public:
       = delete;
 
   /// Destructor
-  virtual ~PlaneLayer() {}
+  ~PlaneLayer() override = default;
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return returns a reference to a PlaneSurface
@@ -88,7 +88,7 @@ protected:
   /// @param pbounds the planar bounds that define the layer dimensions
   /// @param surfaceArray is the surface array that holds the sensitive surfaces
   /// @param thickness is the thickness of the layer (normal direction to plane)
-  /// @param ad is the approach descriptor for describing the approach surface
+  /// @param ades is the approach descriptor for describing the approach surface
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
@@ -96,7 +96,7 @@ protected:
              std::shared_ptr<const PlanarBounds>& pbounds,
              std::unique_ptr<SurfaceArray>        surfaceArray = nullptr,
              double                               thickness    = 0.,
-             std::unique_ptr<ApproachDescriptor>  ad           = nullptr,
+             std::unique_ptr<ApproachDescriptor>  ades         = nullptr,
              LayerType                            laytyp       = Acts::active);
 
   /// Private constructor for a PlaneLayer, is called by create(arge*

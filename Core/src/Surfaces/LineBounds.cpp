@@ -21,11 +21,11 @@ Acts::LineBounds::LineBounds(double radius, double halez)
 {
 }
 
-Acts::LineBounds::LineBounds(const variant_data& data_)
+Acts::LineBounds::LineBounds(const variant_data& vardata)
 {
 
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  variant_map data = boost::get<variant_map>(vardata);
   throw_assert(data.count("type"), "Variant data must have type.");
   // std::string type = boost::get<std::string>(data["type"]);
   std::string type = data.get<std::string>("type");
@@ -37,9 +37,7 @@ Acts::LineBounds::LineBounds(const variant_data& data_)
   m_halfZ  = payload.get<double>("halfZ");
 }
 
-Acts::LineBounds::~LineBounds()
-{
-}
+Acts::LineBounds::~LineBounds() = default;
 
 Acts::LineBounds*
 Acts::LineBounds::clone() const

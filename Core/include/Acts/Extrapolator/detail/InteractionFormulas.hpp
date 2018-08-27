@@ -139,7 +139,9 @@ namespace detail {
                double dInX0,
                bool   electron = false) const
     {
-      if (dInX0 == 0. || p == 0. || lbeta == 0.) return 0.;
+      if (dInX0 == 0. || p == 0. || lbeta == 0.) {
+        return 0.;
+      }
       // Highland formula - projected sigma_s
       // ATL-SOFT-PUB-2008-003 equation (15)
       if (!electron) {

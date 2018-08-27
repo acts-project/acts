@@ -114,7 +114,7 @@ public:
   }
 
   ///  Destructor
-  ~DetectorElementStub() { /*nop */}
+  ~DetectorElementStub() override { /*nop */}
 
   /// Identifier
   Identifier

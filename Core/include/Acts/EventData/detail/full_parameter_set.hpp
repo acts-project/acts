@@ -37,22 +37,22 @@ namespace detail {
     template <ParID_t v, ParID_t... others>
     struct add_to_value_container<v, std::integer_sequence<ParID_t, others...>>
     {
-      typedef std::integer_sequence<ParID_t, others..., v> type;
+      using type = std::integer_sequence<ParID_t, others..., v>;
     };
 
     template <typename T, unsigned int N>
     struct tparam_generator
     {
-      typedef
+      using type =
           typename add_to_value_container<static_cast<T>(N),
                                           typename tparam_generator<T, N - 1>::
-                                              type>::type type;
+                                              type>::type;
     };
 
     template <typename T>
     struct tparam_generator<T, 0>
     {
-      typedef std::integer_sequence<T, static_cast<T>(0)> type;
+      using type = std::integer_sequence<T, static_cast<T>(0)>;
     };
 
     template <typename T>
@@ -61,12 +61,11 @@ namespace detail {
     template <ParID_t... values>
     struct converter<std::integer_sequence<ParID_t, values...>>
     {
-      typedef ParameterSet<values...> type;
+      using type = ParameterSet<values...>;
     };
 
-    typedef typename converter<
-        typename tparam_generator<ParID_t, Acts::NGlobalPars - 1>::type>::type
-        type;
+    using type = typename converter<
+        typename tparam_generator<ParID_t, Acts::NGlobalPars - 1>::type>::type;
   };
 }  // namespace detail
 /// @endcond

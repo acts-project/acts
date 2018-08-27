@@ -64,37 +64,39 @@ public:
 
   /// Constructor - the trapezoid boundaries (symmetric trapezoid)
   ///
-  /// @param minhlengthx is the half length in x at minimal y
-  /// @param maxhlengthx is the half length in x at maximal y
-  /// @param hlenghty is the half length in y
-  /// @param hlengthz is the half length in z
-  TrapezoidVolumeBounds(double minhlengthx,
-                        double maxhlengthx,
-                        double hlenghty,
-                        double hlengthz);
+  /// @param minhalex is the half length in x at minimal y
+  /// @param maxhalex is the half length in x at maximal y
+  /// @param haley is the half length in y
+  /// @param halez is the half length in z
+  TrapezoidVolumeBounds(double minhalex,
+                        double maxhalex,
+                        double haley,
+                        double halez);
 
   /// Constructor - the trapezoid boundaries (arbitrary trapezoid)
   ///
-  /// @param minhlengthx is the half length in x at minimal y
-  /// @param hlenghty is the half length in y
-  /// @param hlengthz is the half length in z
+  /// @param minhalex is the half length in x at minimal y
+  /// @param haley is the half length in y
+  /// @param halez is the half length in z
   /// @param alpha is the openeing angle at -x,-y
   /// @param beta is the openeing angle at +x,-y
-  TrapezoidVolumeBounds(double minhlengthx,
-                        double hlenghty,
-                        double hlengthz,
+  TrapezoidVolumeBounds(double minhalex,
+                        double haley,
+                        double halez,
                         double alpha,
                         double beta);
 
   /// Copy Constructor
-  TrapezoidVolumeBounds(const TrapezoidVolumeBounds& bobo);
+  /// @param trabo The object to be copied
+  TrapezoidVolumeBounds(const TrapezoidVolumeBounds& trabo);
 
   /// Destructor
-  virtual ~TrapezoidVolumeBounds();
+  ~TrapezoidVolumeBounds() override;
 
   /// Assignment operator
+  /// @param trabo The object to be assigned
   TrapezoidVolumeBounds&
-  operator=(const TrapezoidVolumeBounds& bobo);
+  operator=(const TrapezoidVolumeBounds& trabo);
 
   /// Virtual constructor
   TrapezoidVolumeBounds*
@@ -103,12 +105,12 @@ public:
   /// This method checks if position in the 3D volume frame
   /// is inside the cylinder
   ///
-  /// @param gpos is the global position to be checked
+  /// @param pos is the global position to be checked
   /// @param tol is the tolerance applied
   ///
   /// @return boolean indicator if position is inside
   bool
-  inside(const Vector3D& gpos, double tol = 0.) const override;
+  inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into Surfaces
   ///

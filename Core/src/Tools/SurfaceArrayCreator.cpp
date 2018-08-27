@@ -24,14 +24,14 @@
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Surface*>& surfaces,
-    size_t                             binsPhi,
-    size_t                             binsZ,
-    boost::optional<ProtoLayer>        _protoLayer,
-    std::shared_ptr<const Transform3D> _transform) const
+    const std::vector<const Surface*>&        surfaces,
+    size_t                                    binsPhi,
+    size_t                                    binsZ,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -40,7 +40,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << " bins.");
 
   Transform3D transform
-      = _transform != nullptr ? *_transform : Transform3D::Identity();
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisPhi
       = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, binsPhi);
@@ -74,32 +74,34 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Surface*>& surfaces,
-    BinningType                        bTypePhi,
-    BinningType                        bTypeZ,
-    boost::optional<ProtoLayer>        _protoLayer,
-    std::shared_ptr<const Transform3D> _transform) const
+    const std::vector<const Surface*>&        surfaces,
+    BinningType                               bTypePhi,
+    BinningType                               bTypeZ,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
 
   double      R = 0.5 * (protoLayer.maxR - protoLayer.minR);
   Transform3D transform
-      = _transform != nullptr ? *_transform : Transform3D::Identity();
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisZ;
 
-  if (bTypePhi == equidistant)
+  if (bTypePhi == equidistant) {
     pAxisPhi
         = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
-  else
+  } else {
     pAxisPhi = createVariableAxis(surfaces, binPhi, protoLayer, transform);
+  }
 
-  if (bTypeZ == equidistant)
+  if (bTypeZ == equidistant) {
     pAxisZ = createEquidistantAxis(surfaces, binZ, protoLayer, transform);
-  else
+  } else {
     pAxisZ = createVariableAxis(surfaces, binZ, protoLayer, transform);
+  }
 
   Transform3D itransform = transform.inverse();
   auto globalToLocal     = [transform](const Vector3D& pos) {
@@ -136,19 +138,19 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Surface*>& surfaces,
-    size_t                             binsR,
-    size_t                             binsPhi,
-    boost::optional<ProtoLayer>        _protoLayer,
-    std::shared_ptr<const Transform3D> _transform) const
+    const std::vector<const Surface*>&        surfaces,
+    size_t                                    binsR,
+    size_t                                    binsPhi,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
   Transform3D transform
-      = _transform != nullptr ? *_transform : Transform3D::Identity();
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisR
       = createEquidistantAxis(surfaces, binR, protoLayer, transform, binsR);
@@ -192,27 +194,28 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Surface*>& surfaces,
-    BinningType                        bTypeR,
-    BinningType                        bTypePhi,
-    boost::optional<ProtoLayer>        _protoLayer,
-    std::shared_ptr<const Transform3D> _transform) const
+    const std::vector<const Surface*>&        surfaces,
+    BinningType                               bTypeR,
+    BinningType                               bTypePhi,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
   Transform3D transform
-      = _transform != nullptr ? *_transform : Transform3D::Identity();
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisPhi;
   ProtoAxis pAxisR;
 
-  if (bTypeR == equidistant)
+  if (bTypeR == equidistant) {
     pAxisR = createEquidistantAxis(surfaces, binR, protoLayer, transform);
-  else
+  } else {
     pAxisR = createVariableAxis(surfaces, binR, protoLayer, transform);
+  }
 
   // if we have more than one R ring, we need to figure out
   // the number of phi bins.
@@ -253,11 +256,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
   } else {
     // use regular determination
-    if (bTypePhi == equidistant)
+    if (bTypePhi == equidistant) {
       pAxisPhi
           = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
-    else
+    } else {
       pAxisPhi = createVariableAxis(surfaces, binPhi, protoLayer, transform);
+    }
   }
 
   double Z = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
@@ -304,7 +308,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     double /*halflengthY*/,
     size_t /*binsX*/,
     size_t /*binsY*/,
-    std::shared_ptr<const Transform3D> /*transform*/) const
+    const std::shared_ptr<const Transform3D>& /*transform*/) const
 {
   //!< @todo implement - take from ATLAS complex TRT builder
   return nullptr;
@@ -313,7 +317,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
 std::vector<const Acts::Surface*>
 Acts::SurfaceArrayCreator::findKeySurfaces(
     const std::vector<const Surface*>& surfaces,
-    std::function<bool(const Surface*, const Surface*)> equal) const
+    const std::function<bool(const Surface*, const Surface*)>& equal) const
 {
   std::vector<const Surface*> keys;
   for (const auto& srfA : surfaces) {
@@ -354,9 +358,10 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     ProtoLayer                         protoLayer,
     Transform3D&                       transform) const
 {
-  if (!surfaces.size())
+  if (surfaces.empty()) {
     throw std::logic_error(
         "No surfaces handed over for creating arbitrary bin utility!");
+  }
   // BinningOption is open for z and r, in case of phi binning reset later
   // the vector with the binning Values (boundaries for each bin)
 
@@ -404,7 +409,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     const Acts::Surface*      backSurface = keys.back();
     const Acts::PlanarBounds* backBounds
         = dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (!backBounds)
+    if (backBounds == nullptr)
       ACTS_ERROR("Given SurfaceBounds are not planar - not implemented for "
                  "other bounds yet! ");
     // get the global vertices
@@ -494,9 +499,10 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
     Transform3D&                       transform,
     size_t                             nBins) const
 {
-  if (!surfaces.size())
+  if (surfaces.empty()) {
     throw std::logic_error(
         "No surfaces handed over for creating equidistant axis!");
+  }
   // check the binning type first
 
   double minimum = 0.;

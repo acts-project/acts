@@ -116,7 +116,7 @@ public:
   MaterialComposition() : std::vector<ElementFraction>() {}
 
   /// Destructor
-  ~MaterialComposition() {}
+  ~MaterialComposition() = default;
 
   /// Constructor from vector of pairs
   ///
@@ -125,7 +125,9 @@ public:
       const std::vector<std::pair<unsigned char, unsigned char>>& efracs)
   {
     reserve(efracs.size());
-    for (auto& efracIt : efracs) push_back(efracIt);
+    for (auto& efracIt : efracs) {
+      push_back(efracIt);
+    }
     std::sort(begin(), end());
   }
 
@@ -155,9 +157,13 @@ public:
   bool
   operator==(const std::vector<ElementFraction>& mc) const
   {
-    if (mc.size() != size()) return false;
+    if (mc.size() != size()) {
+      return false;
+    }
     for (size_t ef = 0; ef < mc.size(); ++ef) {
-      if (!(mc[ef] == (*this)[ef])) return false;
+      if (!(mc[ef] == (*this)[ef])) {
+        return false;
+      }
     }
     return true;
   }
@@ -194,12 +200,12 @@ public:
   /// @param iZ is the average atomic number
   /// @param iRho is the average density
   /// @param imc is the material composition
-  Material(float               iX0,
-           float               iL0,
-           float               iA,
-           float               iZ,
-           float               iRho,
-           MaterialComposition imc = {})
+  Material(float                      iX0,
+           float                      iL0,
+           float                      iA,
+           float                      iZ,
+           float                      iRho,
+           const MaterialComposition& imc = {})
     : m_store({iX0, iL0, iA, iZ, iRho}), m_composition(imc)
   {
     float zOaTr = (iA > 0 ? iZ / iA * iRho : 0.);
@@ -209,17 +215,14 @@ public:
   /// Copy Constructor
   ///
   /// @param material copy constructor
-  Material(const Material& mat)
-    : m_store(mat.m_store), m_composition(mat.m_composition)
-  {
-  }
+  Material(const Material& mat) = default;
 
   /// Desctructor
-  ~Material() {}
+  ~Material() = default;
 
   /// boolean operator to check if this is
   /// vacuum has 0 zero size and will indicate false
-  operator bool() const { return m_store.size(); }
+  operator bool() const { return !m_store.empty(); }
 
   /// Assignment operator
   ///
@@ -239,10 +242,11 @@ public:
   float
   X0() const
   {
-    if (m_store.size())
+    if (!m_store.empty()) {
       return m_store[matX0];
-    else
+    } else {
       return std::numeric_limits<float>::infinity();
+    }
   }
 
   /// access to l0
@@ -250,46 +254,52 @@ public:
   float
   L0() const
   {
-    if (m_store.size())
+    if (!m_store.empty()) {
       return m_store[matL0];
-    else
+    } else {
       return std::numeric_limits<float>::infinity();
+    }
   }
 
   /// access to A
   float
   A() const
   {
-    if (m_store.size())
+    if (!m_store.empty()) {
       return m_store[matA];
-    else
+    } else {
       return 0.;
+    }
   }
 
   /// access to Z
   float
   Z() const
   {
-    if (m_store.size())
+    if (!m_store.empty()) {
       return m_store[matZ];
-    else
+    } else {
       return 0.;
+    }
   }
   /// access to rho
   float
   rho() const
   {
-    if (m_store.size())
+    if (!m_store.empty()) {
       return m_store[matrho];
-    else
+    } else {
       return 0.;
+    }
   }
 
   /// access to z/A*tho
   float
   zOverAtimesRho() const
   {
-    if (m_store.size() > 4) return m_store[matZ_AR];
+    if (m_store.size() > 4) {
+      return m_store[matZ_AR];
+    }
     return 0.;
   }
 
@@ -300,7 +310,9 @@ public:
     std::ostringstream sout;
     sout << std::setiosflags(std::ios::fixed) << std::setprecision(4);
     sout << " | ";
-    for (auto& mat : m_store) sout << mat << " | ";
+    for (auto& mat : m_store) {
+      sout << mat << " | ";
+    }
     return sout.str();
   }
 

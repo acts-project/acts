@@ -41,7 +41,9 @@ BOOST_DATA_TEST_CASE(
     plimit,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
 
@@ -103,7 +105,9 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
   // just make sure we can reach it
@@ -191,7 +195,9 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
   // to a plane with the atlas stepper
@@ -277,7 +283,9 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
   // to a disc with the  atlas stepper
@@ -363,12 +371,16 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
 
   // to a line with the atlas stepper
-  if (debug) std::cout << "[ >>>> Testing Atlas Propagator <<<< ]" << std::endl;
+  if (debug) {
+    std::cout << "[ >>>> Testing Atlas Propagator <<<< ]" << std::endl;
+  }
   auto a_at_line
       = to_surface<AtlasPropagator_type, StrawSurface>(apropagator,
                                                        pT,
@@ -383,7 +395,9 @@ BOOST_DATA_TEST_CASE(
                                                        covtpr,
                                                        debug);
   // to a line with the eigen stepper
-  if (debug) std::cout << "[ >>>> Testing Eigen Propagator <<<< ]" << std::endl;
+  if (debug) {
+    std::cout << "[ >>>> Testing Eigen Propagator <<<< ]" << std::endl;
+  }
   auto e_at_line
       = to_surface<EigenPropagator_type, StrawSurface>(epropagator,
                                                        pT,
@@ -398,8 +412,9 @@ BOOST_DATA_TEST_CASE(
                                                        covtpr,
                                                        debug);
   // to a line with the runge kutta engine
-  if (debug)
+  if (debug) {
     std::cout << "[ >>>> Testing Legacy Propagator <<<< ]" << std::endl;
+  }
   auto w_at_line = to_surface<WrappedPropagator_type, StrawSurface>(
       wpropagator,
       pT,
@@ -446,7 +461,9 @@ BOOST_DATA_TEST_CASE(
     plimit,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
   // covariance check for eigen stepper
@@ -499,7 +516,9 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
   // covariance check for atlas stepper
@@ -590,7 +609,9 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
   // covariance check for atlas stepper
@@ -674,7 +695,9 @@ BOOST_DATA_TEST_CASE(
     rand3,
     index)
 {
-  if (index < skip) return;
+  if (index < skip) {
+    return;
+  }
 
   double dcharge = -1 + 2 * charge;
 

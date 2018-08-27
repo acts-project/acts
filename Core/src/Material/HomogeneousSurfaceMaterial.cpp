@@ -26,9 +26,7 @@ Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
 {
 }
 
-Acts::HomogeneousSurfaceMaterial::~HomogeneousSurfaceMaterial()
-{
-}
+Acts::HomogeneousSurfaceMaterial::~HomogeneousSurfaceMaterial() = default;
 
 Acts::HomogeneousSurfaceMaterial&
 Acts::HomogeneousSurfaceMaterial::

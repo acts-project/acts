@@ -50,21 +50,21 @@ public:
   ///
   /// @param htrans is the transform that places the cone in the global frame
   /// @param alpha is the opening angle of the cone
-  /// @param locZmin is the z range over which the cone spans
-  /// @param locZmax is the z range over which the cone spans
+  /// @param zmin is the z range over which the cone spans
+  /// @param zmax is the z range over which the cone spans
   /// @param halfPhi is the openen angle for cone ssectors
   ConeSurface(std::shared_ptr<const Transform3D> htrans,
               double                             alpha,
-              double                             locZmin,
-              double                             locZmax,
+              double                             zmin,
+              double                             zmax,
               double                             halfPhi = M_PI);
 
   /// Constructor from HepTransform and ConeBounds
   ///
   /// @param htrans is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
-  ConeSurface(std::shared_ptr<const Transform3D> htrans,
-              std::shared_ptr<const ConeBounds>  cbounds);
+  ConeSurface(std::shared_ptr<const Transform3D>       htrans,
+              const std::shared_ptr<const ConeBounds>& cbounds);
 
   /// Copy constructor
   ///
@@ -74,15 +74,15 @@ public:
   /// Copy constructor - with shift
   ///
   /// @param other is the source cone surface
-  /// @param htrans is the additional transfrom applied after copying
-  ConeSurface(const ConeSurface& other, const Transform3D& htrans);
+  /// @param transf is the additional transfrom applied after copying
+  ConeSurface(const ConeSurface& other, const Transform3D& transf);
 
   /// Constructor which accepts @c variant_data
   ///
-  /// @param data the @c variant_data to build from
-  ConeSurface(const variant_data& data);
+  /// @param vardata the @c variant_data to build from
+  ConeSurface(const variant_data& vardata);
 
-  virtual ~ConeSurface();
+  ~ConeSurface() override;
 
   /// Assignment operator
   ///
@@ -93,38 +93,38 @@ public:
   /// Implicit Constructor
   ///
   /// @param shift is the optional shift applied after cloning
-  virtual ConeSurface*
-  clone(const Transform3D* shift = nullptr) const final override;
+  ConeSurface*
+  clone(const Transform3D* shift = nullptr) const final;
 
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param bValue defines the type of binning applied in the global frame
   /// @return The return type is a vector for positioning in the global frame
-  virtual const Vector3D
-  binningPosition(BinningValue bValue) const final override;
+  const Vector3D
+  binningPosition(BinningValue bValue) const final;
 
   /// Return the surface type
-  virtual SurfaceType
+  SurfaceType
   type() const override;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///  for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
-  /// @param gpos is the global position where the measurement frame is
+  /// @param pos is the global position where the measurement frame is
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
   /// @return matrix that indicates the measurement frame
   const RotationMatrix3D
-  referenceFrame(const Vector3D& gpos, const Vector3D& mom) const final;
+  referenceFrame(const Vector3D& pos, const Vector3D& mom) const final;
 
   /// Return method for surface normal information
   ///
-  /// @param lpos is the local position on the cone for which the normal vector
+  /// @param lp is the local position on the cone for which the normal vector
   /// is requested
   /// @return Vector3D normal vector in global frame
   const Vector3D
-  normal(const Vector2D& lpos) const final;
+  normal(const Vector2D& lp) const final;
 
   /// Return method for surface normal information
   ///
@@ -144,18 +144,18 @@ public:
   rotSymmetryAxis() const;
 
   /// This method returns the ConeBounds by reference
-  virtual const ConeBounds&
-  bounds() const final override;
+  const ConeBounds&
+  bounds() const final;
 
   /// Local to global transformation
   ///
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param gpos is the global position shich is filled
-  virtual void
+  void
   localToGlobal(const Vector2D& lpos,
                 const Vector3D& mom,
-                Vector3D&       gpos) const final override;
+                Vector3D&       gpos) const final;
 
   /// Global to local transfomration
   ///
@@ -163,10 +163,10 @@ public:
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
   /// @return is a boolean indicating if the transformation succeeded
-  virtual bool
+  bool
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
-                Vector2D&       lpos) const final override;
+                Vector2D&       lpos) const final;
 
   /// @brief Straight line intersection schema - provides closest intersection
   /// and (signed) path length
@@ -210,29 +210,28 @@ public:
   ///   to be unit length.
   ///
   /// @return is the Intersection object
-  virtual Intersection
+  Intersection
   intersectionEstimate(const Vector3D&      gpos,
                        const Vector3D&      gmom,
                        NavigationDirection  navDir,
-                       const BoundaryCheck& bcheck = false,
-                       CorrFnc correct = nullptr) const final override;
+                       const BoundaryCheck& bcheck  = false,
+                       CorrFnc              correct = nullptr) const final;
 
   /// the pathCorrection for derived classes with thickness
   ///
   /// @param gpos is the global potion at the correction point
   /// @param mom is the momentum at the correction point
   /// @return is the path correction due to incident angle
-  virtual double
-  pathCorrection(const Vector3D& gpos,
-                 const Vector3D& mom) const final override;
+  double
+  pathCorrection(const Vector3D& gpos, const Vector3D& mom) const final;
 
   /// Return properly formatted class name for screen output
-  virtual std::string
+  std::string
   name() const override;
 
   /// Produce a @c variant_data representation of this object
   /// @return The representation
-  virtual variant_data
+  variant_data
   toVariantData() const override;
 
 protected:

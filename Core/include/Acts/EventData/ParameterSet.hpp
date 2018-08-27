@@ -29,7 +29,7 @@
 namespace Acts {
 /// @cond
 // forward type declaration for full parameter set
-typedef typename detail::full_parset::type FullParameterSet;
+using FullParameterSet = typename detail::full_parset::type;
 /// @endcond
 
 /**
@@ -81,8 +81,8 @@ class ParameterSet
 {
 private:
   // local typedefs and constants
-  typedef ParameterSet<params...> ParSet_t;  ///< type of this parameter set
-  static constexpr unsigned int   NPars
+  using ParSet_t = ParameterSet<params...>;  ///< type of this parameter set
+  static constexpr unsigned int NPars
       = sizeof...(params);  ///< number of parameters stored in this class
 
   // static assert to check that the template parameters are consistent
@@ -102,15 +102,15 @@ private:
 
 public:
   // public typedefs
-  typedef ActsMatrix<ParValue_t, NPars, Acts::NGlobalPars>
-      Projection_t;  ///< matrix type for projecting full parameter vector onto
-                     /// local parameter space
-  typedef ActsVector<ParValue_t, NPars>
-      ParVector_t;  ///< vector type for stored parameters
-  typedef ActsSymMatrix<ParValue_t, NPars>
-      CovMatrix_t;  ///< type of covariance matrix
-  typedef std::unique_ptr<const CovMatrix_t>
-      CovPtr_t;  ///< type for unique pointer to covariance matrix
+  /// matrix type for projecting full parameter vector onto local parameter
+  /// space
+  using Projection_t = ActsMatrix<ParValue_t, NPars, Acts::NGlobalPars>;
+  /// vector type for stored parameters
+  using ParVector_t = ActsVector<ParValue_t, NPars>;
+  /// type of covariance matrix
+  using CovMatrix_t = ActsSymMatrix<ParValue_t, NPars>;
+  /// type for unique pointer to covariance matrix
+  using CovPtr_t = std::unique_ptr<const CovMatrix_t>;
 
   /**
    * @brief initialize values of stored parameters and their covariance matrix
@@ -158,8 +158,9 @@ public:
   ParameterSet(const ParSet_t& copy)
     : m_vValues(copy.m_vValues), m_pCovariance(nullptr)
   {
-    if (copy.m_pCovariance)
+    if (copy.m_pCovariance) {
       m_pCovariance = std::make_unique<const CovMatrix_t>(*copy.m_pCovariance);
+    }
   }
 
   /**
@@ -294,7 +295,7 @@ public:
   void
   setParameter(ParValue_t value)
   {
-    typedef typename par_type<parameter>::type parameter_type;
+    using parameter_type             = typename par_type<parameter>::type;
     m_vValues(getIndex<parameter>()) = parameter_type::getValue(value);
   }
 
@@ -364,8 +365,9 @@ public:
     if (m_pCovariance) {
       size_t index = getIndex<parameter>();
       return sqrt((*m_pCovariance)(index, index));
-    } else
+    } else {
       return -1;
+    }
   }
 
   /**
@@ -392,18 +394,24 @@ public:
   operator==(const ParSet_t& rhs) const
   {
     // shortcut comparison with myself
-    if (&rhs == this) return true;
+    if (&rhs == this) {
+      return true;
+    }
 
     // parameter values
-    if (m_vValues != rhs.m_vValues) return false;
+    if (m_vValues != rhs.m_vValues) {
+      return false;
+    }
     // both have covariance matrices set
     if ((m_pCovariance && rhs.m_pCovariance)
-        && (*m_pCovariance != *rhs.m_pCovariance))
+        && (*m_pCovariance != *rhs.m_pCovariance)) {
       return false;
+    }
     // only one has a covariance matrix set
     if ((m_pCovariance && !rhs.m_pCovariance)
-        || (!m_pCovariance && rhs.m_pCovariance))
+        || (!m_pCovariance && rhs.m_pCovariance)) {
       return false;
+    }
 
     return true;
   }

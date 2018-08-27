@@ -74,7 +74,9 @@ public:
   ExtrapolationConfig(const std::vector<ExtrapolationMode::eMode>& eModes)
     : value(0)
   {
-    for (auto& em : eModes) addMode(em);
+    for (auto& em : eModes) {
+      addMode(em);
+    }
   }
 
   /// Copy Constructor
@@ -105,7 +107,7 @@ public:
   checkMode(ExtrapolationMode::eMode em) const
   {
     // check if the bit is set or not
-    return (value & (1 << int(em)));
+    return (value & (1 << int(em))) != 0u;
   }
 
   /// int operator
@@ -292,7 +294,9 @@ public:
     , time(0.)
   {
     // fill the position if you can
-    if (parameters) position = parameters->position();
+    if (parameters) {
+      position = parameters->position();
+    }
   }
 };
 
@@ -464,8 +468,9 @@ public:
   configurationMode(ExtrapolationMode::eMode em) const
   {
     if (em == ExtrapolationMode::CollectMaterial
-        && particleType > Acts::nonInteracting)
+        && particleType > Acts::nonInteracting) {
       return true;
+    }
     // check if the bit is set or not
     return extrapolationConfiguration.checkMode(em);
   }
@@ -487,15 +492,16 @@ public:
   ///        saving when transport + material are done successively.
   ///        If nullptr is provided, then the stepParameters.referenceSurface
   ///        is taken.
-  /// @param fillModes are the different indications of the step
+  /// @param stepModes are the different indications of the step
   /// @param pathLength is the path length of this step
-  /// @param tjac is the transport jacobian of the step
+  /// @param stepJacobian is the transport jacobian of the step
   void
   stepTransport(std::unique_ptr<const T>                 stepParameters,
                 const Surface*                           stepSurface = nullptr,
-                std::vector<ExtrapolationMode::eMode>    fillModes   = {},
+                std::vector<ExtrapolationMode::eMode>    stepModes   = {},
                 double                                   stepLength  = 0.,
-                std::unique_ptr<const TransportJacobian> tjac        = nullptr);
+                std::unique_ptr<const TransportJacobian> stepJacobian
+                = nullptr);
 
   /// Fill a step without transport
   /// -> desinged for material
@@ -544,8 +550,9 @@ public:
   {
     bool reached = configurationMode(Acts::ExtrapolationMode::StopWithPathLimit)
         && reachedLimit(pathLength, pathLimit, tolerance);
-    if (reached && checkout)
+    if (reached && checkout) {
       endParameters = std::move(extrapolationSteps.back().parameters);
+    }
     return reached;
   }
 
@@ -578,16 +585,17 @@ public:
   setRadialDirection()
   {
     // in FATRAS extrapolation mode force radial direction to be outwards (+1)
-    if (configurationMode(ExtrapolationMode::FATRAS))
+    if (configurationMode(ExtrapolationMode::FATRAS)) {
       radialDirection = 1;
-    else {
+    } else {
       // if the endSurface is given, it is used to evaluate the radial direction
       // else the leadParamenters are used
       if (leadParameters->position().perp()
           > (leadParameters->position()
              + navigationDirection * leadParameters->momentum().unit())
-                .perp())
+                .perp()) {
         radialDirection = -1;
+      }
     }
   }
 
@@ -597,13 +605,16 @@ public:
   checkRadialCompatibility() const
   {
     // this checks the radial compatibility - not needed for outwards moving
-    if (radialDirection > 0) return true;
+    if (radialDirection > 0) {
+      return true;
+    }
     // this was radially inwards moving and stays like this
     if (leadParameters->position().perp()
         > (leadParameters->position()
            + navigationDirection * leadParameters->momentum().unit())
-              .perp())
+              .perp()) {
       return true;
+    }
     // radial direction changed
     return false;
   }

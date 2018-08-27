@@ -52,7 +52,7 @@ public:
     Other            = 12
   };
 
-  virtual ~SurfaceBounds() {}
+  virtual ~SurfaceBounds() = default;
 
   /// clone() method to make deep copy in Surface copy constructor and for
   /// assigment operator of the Surface class
@@ -105,7 +105,9 @@ public:
 inline bool
 operator==(const SurfaceBounds& lhs, const SurfaceBounds& rhs)
 {
-  if (&lhs == &rhs) return true;
+  if (&lhs == &rhs) {
+    return true;
+  }
   return (lhs.type() == rhs.type()) && (lhs.valueStore() == rhs.valueStore());
 }
 

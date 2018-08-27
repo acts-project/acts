@@ -30,11 +30,11 @@ namespace Test {
 using SurfaceMatcher
     = std::function<bool(BinningValue, const Surface*, const Surface*)>;
 
-typedef std::vector<const Surface*> SurfaceVector;
-typedef std::vector<SurfaceVector>  SurfaceMatrix;
+using SurfaceVector = std::vector<const Surface*>;
+using SurfaceMatrix = std::vector<SurfaceVector>;
 
-typedef std::vector<Vector3D> V3Vector;
-typedef std::vector<V3Vector> V3Matrix;
+using V3Vector = std::vector<Vector3D>;
+using V3Matrix = std::vector<V3Vector>;
 
 /// @class SurfaceArrayCreator
 ///
@@ -59,7 +59,7 @@ public:
     size_t
     getBin(double x) const
     {
-      if (binEdges.size() == 0) {
+      if (binEdges.empty()) {
         // equidistant
         double w = (max - min) / nBins;
         return std::floor((x - min) / w);
@@ -114,7 +114,7 @@ public:
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param protoLayer The proto layer containing the layer size
+  /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
   /// @param transform is the (optional) additional transform applied
@@ -124,8 +124,9 @@ public:
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
                          size_t                             binsPhi,
                          size_t                             binsZ,
-                         boost::optional<ProtoLayer> protoLayer = boost::none,
-                         std::shared_ptr<const Transform3D> transform
+                         boost::optional<ProtoLayer>        protoLayerOpt
+                         = boost::none,
+                         const std::shared_ptr<const Transform3D>& transformOpt
                          = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -137,7 +138,7 @@ public:
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param protoLayer The proto layer containing the layer size
+  /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
   /// @param bTypeZ the binning type in z direction (equidistant/aribtrary)
   /// @param transform is the (optional) additional transform applied
@@ -145,10 +146,11 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
   surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         BinningType                 bTypePhi   = equidistant,
-                         BinningType                 bTypeZ     = equidistant,
-                         boost::optional<ProtoLayer> protoLayer = boost::none,
-                         std::shared_ptr<const Transform3D> transform
+                         BinningType                 bTypePhi = equidistant,
+                         BinningType                 bTypeZ   = equidistant,
+                         boost::optional<ProtoLayer> protoLayerOpt
+                         = boost::none,
+                         const std::shared_ptr<const Transform3D>& transformOpt
                          = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -159,18 +161,18 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param protoLayer The proto layer containing the layer size
+  /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
-  /// @param transform is the (optional) additional transform applied
+  /// @param transformOpt is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      size_t                             binsR,
                      size_t                             binsPhi,
-                     boost::optional<ProtoLayer> protoLayer = boost::none,
-                     std::shared_ptr<const Transform3D> transform
+                     boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+                     const std::shared_ptr<const Transform3D>& transformOpt
                      = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -182,10 +184,10 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param protoLayer The proto layer containing the layer size
+  /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
-  /// @param transform is the (optional) additional transform applied
+  /// @param transformOpt is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
   /// @note If there is more than on R-Ring, number of phi bins
@@ -195,8 +197,8 @@ public:
   surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
                      BinningType                        bTypeR,
                      BinningType                        bTypePhi,
-                     boost::optional<ProtoLayer> protoLayer = boost::none,
-                     std::shared_ptr<const Transform3D> transform
+                     boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+                     const std::shared_ptr<const Transform3D>& transformOpt
                      = nullptr) const;
 
   /// SurfaceArrayCreator interface method
@@ -214,12 +216,12 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
-                      double                             halflengthX,
-                      double                             halflengthY,
-                      size_t                             binsX,
-                      size_t                             binsY,
-                      std::shared_ptr<const Transform3D> transform
+  surfaceArrayOnPlane(const std::vector<const Surface*>&        surfaces,
+                      double                                    halflengthX,
+                      double                                    halflengthY,
+                      size_t                                    binsX,
+                      size_t                                    binsY,
+                      const std::shared_ptr<const Transform3D>& transform
                       = nullptr) const;
 
   static bool
@@ -243,15 +245,17 @@ public:
       return std::abs(dPhi) < M_PI / 180.;
     }
 
-    if (bValue == Acts::binZ)
+    if (bValue == Acts::binZ) {
       return (
           std::abs(a->binningPosition(binR).z() - b->binningPosition(binR).z())
           < Acts::units::_um);
+    }
 
-    if (bValue == Acts::binR)
+    if (bValue == Acts::binR) {
       return (std::abs(a->binningPosition(binR).perp()
                        - b->binningPosition(binR).perp())
               < Acts::units::_um);
+    }
 
     return false;
   }
@@ -278,7 +282,7 @@ private:
   std::vector<const Surface*>
   findKeySurfaces(
       const std::vector<const Surface*>& surfaces,
-      std::function<bool(const Surface*, const Surface*)> equal) const;
+      const std::function<bool(const Surface*, const Surface*)>& equal) const;
 
   size_t
   determineBinCount(const std::vector<const Surface*>& surfaces,
@@ -299,6 +303,7 @@ private:
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
+  /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
   /// @return Instance of @c ProtoAxis containing determined properties
   /// @note This only creates the @c ProtoAxis, this needs to be turned

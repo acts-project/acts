@@ -43,28 +43,28 @@ public:
   /// Constructor for all same-size pixels or strips
   /// (in cas numCellsY is set to 1)
   ///
-  /// @param rBounds are the rectangle bounds of the sensitive volume
+  /// @param mBounds are the rectangle bounds of the sensitive volume
   /// @param numCellsX is the number of cells in X
   /// @param numCellsY is the number of cells in Y
-  CartesianSegmentation(std::shared_ptr<const PlanarBounds> rBounds,
-                        size_t                              numCellsX,
-                        size_t                              numCellsY = 1);
+  CartesianSegmentation(const std::shared_ptr<const PlanarBounds>& mBounds,
+                        size_t                                     numCellsX,
+                        size_t numCellsY = 1);
 
   /// @todo contructor from BinUtilities for more complex readouts
   ///
   /// @param bUtility is the bin Utility,
   //  it will define the RectangleBounds if none are provided
-  /// @param rBounds are the rectangle bounds if provided for memory
+  /// @param mBounds are the rectangle bounds if provided for memory
   /// optimisation
   ///
   /// @note if both RectangleBounds and BinUtility are provided, no check is
   /// done
   /// for consitency
   CartesianSegmentation(std::shared_ptr<const BinUtility>   bUtility,
-                        std::shared_ptr<const PlanarBounds> rBounds = nullptr);
+                        std::shared_ptr<const PlanarBounds> mBounds = nullptr);
 
   /// Virtual Destructor
-  virtual ~CartesianSegmentation();
+  ~CartesianSegmentation() override;
 
   /// @copydoc Acts::Segmentation::createSegmentationSurfaces
   ///
@@ -76,40 +76,40 @@ public:
                              SurfacePtrVector& segmentationSurfacesY,
                              double            halfThickness,
                              int               readoutDirection = 1.,
-                             double lorentzAngle = 0.) const final override;
+                             double            lorentzAngle = 0.) const final;
 
   /// @copydoc Segmentation::cell
   DigitizationCell
-  cell(const Vector3D& position) const final override;
+  cell(const Vector3D& position) const final;
 
   /// @copydoc Segmentation::cell
   DigitizationCell
-  cell(const Vector2D& position) const final override;
+  cell(const Vector2D& position) const final;
 
   /// @copydoc Segmentation::cellPosition
   Vector2D
-  cellPosition(const DigitizationCell& cId) const final override;
+  cellPosition(const DigitizationCell& dCell) const final;
 
   /// Fill the associated digitsation cell from this start and end position
   /// correct for lorentz effect if needed
   ///
   /// @copydoc Segmentation::digitizationStep
   DigitizationStep
-  digitizationStep(const Vector3D& start,
-                   const Vector3D& end,
+  digitizationStep(const Vector3D& startStep,
+                   const Vector3D& endStep,
                    double          halfThickness,
                    int             readoutDirection = 1,
-                   double          lorentzAngle     = 0.) const final override;
+                   double          lorentzAngle     = 0.) const final;
 
   /// return the surface bounds by reference
   /// specialization for Rectangle Bounds
   const PlanarBounds&
-  moduleBounds() const final override;
+  moduleBounds() const final;
 
   /// return the bin utility that defines the
   /// readout segmentation
   const BinUtility&
-  binUtility() const final override;
+  binUtility() const final;
 
   /// return the pitch sizes as a pair
   std::pair<double, double>

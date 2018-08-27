@@ -21,13 +21,13 @@ namespace Acts {
 class TrackingVolume;
 
 /// A std::shared_ptr to a tracking volume
-typedef std::shared_ptr<const TrackingVolume> TrackingVolumePtr;
-typedef std::shared_ptr<TrackingVolume>       MutableTrackingVolumePtr;
+using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 /// A BinnedArray of a std::shared_tr to a TrackingVolume
-typedef BinnedArray<TrackingVolumePtr> TrackingVolumeArray;
+using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
 /// A std::vector of a std::shared_ptr to a TrackingVolume
-typedef std::vector<TrackingVolumePtr> TrackingVolumeVector;
+using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
 
 /// @class ITrackingVolumeArrayCreator
 ///

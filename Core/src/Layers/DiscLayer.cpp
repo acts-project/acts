@@ -23,8 +23,8 @@
 #include "Acts/Volumes/BoundarySurfaceFace.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
-Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
-                           std::shared_ptr<const DiscBounds>   dbounds,
+Acts::DiscLayer::DiscLayer(const std::shared_ptr<const Transform3D>& transform,
+                           const std::shared_ptr<const DiscBounds>&  dbounds,
                            std::unique_ptr<SurfaceArray>       surfaceArray,
                            double                              thickness,
                            std::unique_ptr<ApproachDescriptor> ades,
@@ -35,7 +35,7 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
   // create the representing volume
   const RadialBounds* rBounds
       = dynamic_cast<const RadialBounds*>(dbounds.get());
-  if (rBounds) {
+  if (rBounds != nullptr) {
     // @todo make a trapezoidal volume when you have DiscTrapezoidalBounds
     CylinderVolumeBounds* cvBounds = new CylinderVolumeBounds(
         rBounds->rMin(), rBounds->rMax(), 0.5 * thickness);
@@ -45,16 +45,20 @@ Acts::DiscLayer::DiscLayer(std::shared_ptr<const Transform3D>  transform,
   // associate the layer to the layer surface itself
   DiscSurface::associateLayer(*this);
   // build an approach descriptor if none provided
-  if (!m_approachDescriptor && m_surfaceArray) buildApproachDescriptor();
+  if (!m_approachDescriptor && m_surfaceArray) {
+    buildApproachDescriptor();
+  }
   // register the layer to the approach descriptor
-  if (m_approachDescriptor) approachDescriptor()->registerLayer(*this);
+  if (m_approachDescriptor) {
+    approachDescriptor()->registerLayer(*this);
+  }
 }
 
 std::shared_ptr<Acts::Layer>
-Acts::DiscLayer::create(const variant_data& data_)
+Acts::DiscLayer::create(const variant_data& vardata)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   std::string        type = data.get<std::string>("type");
   throw_assert(type == "DiscLayer", "Type must be DiscLayer");
 
@@ -65,12 +69,13 @@ Acts::DiscLayer::create(const variant_data& data_)
 
   LayerType   laytyp;
   std::string laytyp_str = payload.get<std::string>("layer_type");
-  if (laytyp_str == "active")
+  if (laytyp_str == "active") {
     laytyp = active;
-  else if (laytyp_str == "passive")
+  } else if (laytyp_str == "passive") {
     laytyp = passive;
-  else /*laytyp_str == "navigation"*/
+  } else { /*laytyp_str == "navigation"*/
     laytyp = navigation;
+  }
 
   double thickness = payload.get<double>("thickness");
   double minR      = payload.get<double>("minR");
@@ -82,7 +87,7 @@ Acts::DiscLayer::create(const variant_data& data_)
   std::unique_ptr<SurfaceArray> sArray = nullptr;
 
   // only attempt to reover surface array if present
-  if (payload.count("surfacearray")) {
+  if (payload.count("surfacearray") != 0u) {
 
     // get surface array transform
     const Transform3D& sa_trf = from_variant<Transform3D>(
@@ -134,7 +139,7 @@ Acts::DiscLayer::buildApproachDescriptor()
   // delete it
   m_approachDescriptor = nullptr;
   // take the boundary surfaces of the representving volume if they exist
-  if (m_representingVolume) {
+  if (m_representingVolume != nullptr) {
     // get the boundary surfaces
     const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
         bSurfaces
@@ -169,7 +174,7 @@ Acts::DiscLayer::buildApproachDescriptor()
   }
   // @todo check if we can give the layer at curface creation
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
-    if (sfPtr) {
+    if (sfPtr != nullptr) {
       auto& mutableSf = *(const_cast<Surface*>(sfPtr));
       mutableSf.associateLayer(*this);
     }
@@ -197,12 +202,13 @@ Acts::DiscLayer::toVariantData() const
   payload["maxR"]      = cvBounds->outerRadius();
   payload["thickness"] = thickness();
 
-  if (layerType() == active)
+  if (layerType() == active) {
     payload["layer_type"] = "active"s;
-  else if (layerType() == passive)
+  } else if (layerType() == passive) {
     payload["layer_type"] = "passive"s;
-  else /*layerType() == navigation*/
+  } else { /*layerType() == navigation*/
     payload["layer_type"] = "navigation"s;
+  }
 
   if (m_surfaceArray) {
     payload["surfacearray"]           = m_surfaceArray->toVariantData();

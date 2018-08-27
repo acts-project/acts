@@ -44,7 +44,7 @@ main(int argc, char* argv[])
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
 
-    if (vm.count("help")) {
+    if (vm.count("help") != 0u) {
       std::cout << desc << std::endl;
       return 0;
     }
@@ -61,9 +61,9 @@ main(int argc, char* argv[])
                            << Bz
                            << "T B-field");
 
-  typedef ConstantBField            BField_type;
-  typedef EigenStepper<BField_type> Stepper_type;
-  typedef Propagator<Stepper_type>  Propagator_type;
+  using BField_type     = ConstantBField;
+  using Stepper_type    = EigenStepper<BField_type>;
+  using Propagator_type = Propagator<Stepper_type>;
 
   BField_type     bField(0, 0, Bz * units::_T);
   Stepper_type    atlas_stepper(std::move(bField));
@@ -79,7 +79,9 @@ main(int argc, char* argv[])
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
 
   std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
-  if (withCov) covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  if (withCov) {
+    covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+  }
   CurvilinearParameters pars(std::move(covPtr), pos, mom, +1);
 
   double totalPathLength = 0;

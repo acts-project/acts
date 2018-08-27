@@ -50,12 +50,12 @@ public:
   ///
   /// @return The return object is a shared poiter to the layer.
   static MutableLayerPtr
-  create(std::shared_ptr<const Transform3D>    transform,
-         std::shared_ptr<const CylinderBounds> cbounds,
-         std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
-         double                                thickness    = 0.,
-         std::unique_ptr<ApproachDescriptor>   ad           = nullptr,
-         LayerType                             laytyp       = passive)
+  create(const std::shared_ptr<const Transform3D>&    transform,
+         const std::shared_ptr<const CylinderBounds>& cbounds,
+         std::unique_ptr<SurfaceArray>                surfaceArray = nullptr,
+         double                                       thickness    = 0.,
+         std::unique_ptr<ApproachDescriptor>          ad           = nullptr,
+         LayerType                                    laytyp       = passive)
   {
     return MutableLayerPtr(new CylinderLayer(transform,
                                              cbounds,
@@ -66,10 +66,10 @@ public:
   }
 
   /// Factory for shared Layer pointer, that accepts @c variant_data
-  /// @param data The data to build from
+  /// @param vardata The data to build from
   /// @return The return object is a shared poiter to the layer.
   static MutableLayerPtr
-  create(const variant_data& data);
+  create(const variant_data& vardata);
 
   /// Copy constructor - deleted
   CylinderLayer(const CylinderLayer& cla) = delete;
@@ -83,7 +83,7 @@ public:
   CylinderLayer() = delete;
 
   /// Destructor
-  virtual ~CylinderLayer() {}
+  ~CylinderLayer() override = default;
 
   /// Transforms the layer into a Surface representation
   /// This is for positioning and extrapolation
@@ -116,12 +116,12 @@ protected:
   /// @todo change ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  CylinderLayer(std::shared_ptr<const Transform3D>    transform,
-                std::shared_ptr<const CylinderBounds> cbounds,
-                std::unique_ptr<SurfaceArray>         surfaceArray = nullptr,
-                double                                thickness    = 0.,
-                std::unique_ptr<ApproachDescriptor>   ad           = nullptr,
-                LayerType                             laytyp       = passive);
+  CylinderLayer(const std::shared_ptr<const Transform3D>&    transform,
+                const std::shared_ptr<const CylinderBounds>& cBounds,
+                std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
+                double                              thickness    = 0.,
+                std::unique_ptr<ApproachDescriptor> ades         = nullptr,
+                LayerType                           laytyp       = passive);
 
   /// Private copy constructor with shift, called by create(args*)
   ///

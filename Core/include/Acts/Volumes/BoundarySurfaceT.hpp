@@ -41,8 +41,8 @@ class BoundarySurfaceT
   /// delcare the TrackingVolume as friend
   friend T;
 
-  typedef std::shared_ptr<const T> VolumePtr;
-  typedef BinnedArray<VolumePtr>   VolumeArray;
+  using VolumePtr   = std::shared_ptr<const T>;
+  using VolumeArray = BinnedArray<VolumePtr>;
 
 public:
   /// Default Constructor
@@ -111,15 +111,15 @@ public:
   /// Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on
   /// the TrackParameters and the requested direction
   ///
-  /// @param gpos is the global position on surface
+  /// @param pos is the global position on surface
   /// @param mom is the direction on the surface
   /// @param dir is an aditional direction corrective
   ///
   /// @return is the attached volume at that position
   virtual const T*
-  attachedVolume(const Vector3D&     gpos,
+  attachedVolume(const Vector3D&     pos,
                  const Vector3D&     mom,
-                 NavigationDirection dir) const;
+                 NavigationDirection pdir) const;
 
   /// templated onBoundary method
   ///
@@ -136,7 +136,7 @@ public:
   surfaceRepresentation() const;
 
   /// Virtual Destructor
-  virtual ~BoundarySurfaceT() {}
+  virtual ~BoundarySurfaceT() = default;
 
 protected:
   /// Helper metho: attach a Volume to this BoundarySurfaceT
@@ -181,10 +181,11 @@ template <class T>
 void
 BoundarySurfaceT<T>::attachVolume(VolumePtr volume, BoundaryOrientation inout)
 {
-  if (inout == insideVolume)
+  if (inout == insideVolume) {
     m_insideVolume = volume.get();
-  else
+  } else {
     m_outsideVolume = volume.get();
+  }
 }
 
 template <class T>
@@ -193,10 +194,11 @@ BoundarySurfaceT<T>::attachVolumeArray(
     const std::shared_ptr<const VolumeArray> volumes,
     BoundaryOrientation                      inout)
 {
-  if (inout == insideVolume)
+  if (inout == insideVolume) {
     m_insideVolumeArray = volumes;
-  else
+  } else {
     m_outsideVolumeArray = volumes;
+  }
 }
 
 template <class T>
@@ -207,12 +209,13 @@ BoundarySurfaceT<T>::attachedVolume(const Vector3D&     pos,
 {
   const T* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(pos)).dot(pdir * mom) > 0.)
+  if ((surfaceRepresentation().normal(pos)).dot(pdir * mom) > 0.) {
     attVolume = m_outsideVolumeArray ? m_outsideVolumeArray->object(pos).get()
                                      : m_outsideVolume;
-  else
+  } else {
     attVolume = m_insideVolumeArray ? m_insideVolumeArray->object(pos).get()
                                     : m_insideVolume;
+  }
   return attVolume;
 }
 }  // namespace Acts

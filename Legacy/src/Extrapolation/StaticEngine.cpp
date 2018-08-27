@@ -24,9 +24,7 @@ Acts::StaticEngine::StaticEngine(const Acts::StaticEngine::Config& seConfig,
 }
 
 // destructor
-Acts::StaticEngine::~StaticEngine()
-{
-}
+Acts::StaticEngine::~StaticEngine() = default;
 
 // configuration
 void

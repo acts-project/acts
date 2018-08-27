@@ -42,14 +42,14 @@ namespace Acts {
 
 namespace IntegrationTest {
 
-  typedef ConstantBField                BField_type;
-  typedef EigenStepper<BField_type>     EigenStepper_type;
-  typedef AtlasStepper<BField_type>     AtlasStepper_type;
-  typedef Propagator<EigenStepper_type> EigenPropagator_type;
-  typedef Propagator<AtlasStepper_type> AtlasPropagator_type;
-  typedef RungeKuttaEngine<BField_type> PropagationEngine_type;
-  typedef PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>
-      WrappedPropagator_type;
+  using BField_type            = ConstantBField;
+  using EigenStepper_type      = EigenStepper<BField_type>;
+  using AtlasStepper_type      = AtlasStepper<BField_type>;
+  using EigenPropagator_type   = Propagator<EigenStepper_type>;
+  using AtlasPropagator_type   = Propagator<AtlasStepper_type>;
+  using PropagationEngine_type = RungeKuttaEngine<BField_type>;
+  using WrappedPropagator_type
+      = PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>;
 
   // number of tests
   const int  ntests = 1;
@@ -95,7 +95,9 @@ namespace IntegrationTest {
       charge,
       index)
   {
-    if (index < skip) return;
+    if (index < skip) {
+      return;
+    }
 
     double dcharge = -1 + 2 * charge;
     // constant field propagation atlas stepper

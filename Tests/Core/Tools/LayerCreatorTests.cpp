@@ -45,7 +45,7 @@ namespace Test {
   using SrfVec = std::vector<const Surface*>;
 
   void
-  draw_surfaces(SrfVec surfaces, std::string fname)
+  draw_surfaces(SrfVec surfaces, const std::string& fname)
   {
 
     std::ofstream os;
@@ -108,7 +108,9 @@ namespace Test {
       size_t nBins  = sArray->size();
       bool   result = true;
       for (size_t i = 0; i < nBins; ++i) {
-        if (!sArray->isValidBin(i)) continue;
+        if (!sArray->isValidBin(i)) {
+          continue;
+        }
         SrfVec binContent = sArray->at(i);
         BOOST_TEST_INFO("Bin: " << i);
         BOOST_TEST(binContent.size() == n);

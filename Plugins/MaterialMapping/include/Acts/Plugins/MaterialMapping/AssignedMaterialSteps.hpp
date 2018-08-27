@@ -27,10 +27,12 @@ struct AssignedMaterialSteps
   std::vector<MaterialStep> assignedSteps;  ///< this is step information
 
   // simple constructor
-  AssignedMaterialSteps(GeometryID      geoID    = GeometryID(),
-                        const Vector3D& position = Vector3D(0., 0., 0),
-                        const std::vector<MaterialStep>& steps = {})
-    : assignedGeoID(geoID), assignedPosition(position), assignedSteps(steps)
+  AssignedMaterialSteps(GeometryID geoID                = GeometryID(),
+                        Vector3D   position             = Vector3D(0., 0., 0),
+                        std::vector<MaterialStep> steps = {})
+    : assignedGeoID(std::move(geoID))
+    , assignedPosition(std::move(position))
+    , assignedSteps(std::move(steps))
   {
   }
 };

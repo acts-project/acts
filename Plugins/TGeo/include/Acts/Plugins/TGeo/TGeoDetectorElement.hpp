@@ -37,7 +37,7 @@ public:
   /// Constructor
   /// @param identifier is the detector identifier
   /// @param tGeoDetElement is the TGeoNode which should be represented
-  /// @param mtoglobal to global is the (optional) transform applied to the
+  /// @param mGlobal to global is the (optional) transform applied to the
   /// TGeoNode
   /// @param axes is the axis orientation with respect to the tracking frame
   ///        it is a string of the three characters x, y and z (standing for the
@@ -65,10 +65,10 @@ public:
   /// @param material Possible material of detector element
   TGeoDetectorElement(const Identifier&  identifier,
                       TGeoNode*          tGeoDetElement,
-                      const TGeoMatrix*  mtoglobal = nullptr,
-                      const std::string& axes      = "XYZ",
-                      double             scalor    = 1.,
-                      bool               isDisc    = false,
+                      const TGeoMatrix*  mGlobal = nullptr,
+                      const std::string& axes    = "XYZ",
+                      double             scalor  = 1.,
+                      bool               isDisc  = false,
                       std::shared_ptr<const Acts::SurfaceMaterial> material
                       = nullptr);
 
@@ -116,23 +116,23 @@ public:
                       = nullptr);
 
   ///  Destructor
-  virtual ~TGeoDetectorElement();
+  ~TGeoDetectorElement() override;
 
   /// Identifier
-  virtual Identifier
-  identifier() const final override;
+  Identifier
+  identifier() const final;
 
   /// Return local to global transform associated with this identifier
-  virtual const Transform3D&
-  transform() const final override;
+  const Transform3D&
+  transform() const final;
 
   /// Return surface associated with this identifier, which should come from the
-  virtual const Surface&
-  surface() const final override;
+  const Surface&
+  surface() const final;
 
   /// Returns the thickness of the module
-  virtual double
-  thickness() const final override;
+  double
+  thickness() const final;
 
 private:
   /// DD4hep detector element, just linked - not owned

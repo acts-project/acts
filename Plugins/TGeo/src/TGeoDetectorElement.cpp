@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include <boost/algorithm/string.hpp>
 #include <iostream>
+#include <utility>
+
 #include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
@@ -43,7 +45,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   const Double_t*   rotation      = nullptr;
   const Double_t*   translation   = nullptr;
 
-  if (mGlobal) {
+  if (mGlobal != nullptr) {
     // the new combined translation
     TGeoHMatrix nTransform = (*mGlobal) * (*nodeTransform);
     std::string nName      = tGeoDetElement->GetName();
@@ -73,7 +75,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   // check if it's a tube segment
   TGeoTubeSeg* tube
       = dynamic_cast<TGeoTubeSeg*>(m_detElement->GetVolume()->GetShape());
-  if (tube) {
+  if (tube != nullptr) {
     m_transform  = std::make_shared<const Transform3D>(colX, colY, colZ, colT);
     double rMin  = tube->GetRmin() * scalor;
     double rMax  = tube->GetRmax() * scalor;
@@ -97,18 +99,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   } else {
     if (boost::iequals(axes, "XYZ")) {
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signX = -1;
-      if (islower(axes.at(1))) signY = -1;
-      if (islower(axes.at(2))) signZ = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signX = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signY = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signZ = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colX, colY, colZ, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with x/y
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDx1(),
@@ -134,18 +142,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "XZY")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signX = -1;
-      if (islower(axes.at(1))) signZ = -1;
-      if (islower(axes.at(2))) signY = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signX = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signZ = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signY = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colX, colZ, colY, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with x/z
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDx1(),
@@ -173,18 +187,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "YZX")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signY = -1;
-      if (islower(axes.at(1))) signZ = -1;
-      if (islower(axes.at(2))) signX = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signY = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signZ = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signX = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colY, colZ, colX, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with y/z
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDy1(),
@@ -211,18 +231,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "YXZ")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signY = -1;
-      if (islower(axes.at(1))) signX = -1;
-      if (islower(axes.at(2))) signZ = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signY = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signX = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signZ = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colY, colX, colZ, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with y/x
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDy1(),
@@ -248,18 +274,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "ZYX")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signZ = -1;
-      if (islower(axes.at(1))) signY = -1;
-      if (islower(axes.at(2))) signX = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signZ = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signY = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signX = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colZ, colY, colX, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with z/y
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDz(),
@@ -287,18 +319,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       // default is "ZXY"
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signZ = -1;
-      if (islower(axes.at(1))) signX = -1;
-      if (islower(axes.at(2))) signY = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signZ = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signX = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signY = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colZ, colX, colY, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with z/x
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDz(),
@@ -325,7 +363,9 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     }
   }
   // set the asscoiated material (non const method)
-  if (surface) surface->setAssociatedMaterial(material);
+  if (surface) {
+    surface->setAssociatedMaterial(std::move(material));
+  }
   // set the const member surface
   m_surface = surface;
 }
@@ -370,7 +410,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   // check if it's a tube segment
   TGeoTubeSeg* tube
       = dynamic_cast<TGeoTubeSeg*>(m_detElement->GetVolume()->GetShape());
-  if (tube) {
+  if (tube != nullptr) {
     m_transform  = std::make_shared<const Transform3D>(colX, colY, colZ, colT);
     double rMin  = tube->GetRmin() * scalor;
     double rMax  = tube->GetRmax() * scalor;
@@ -394,18 +434,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   } else {
     if (boost::iequals(axes, "XYZ")) {
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signX = -1;
-      if (islower(axes.at(1))) signY = -1;
-      if (islower(axes.at(2))) signZ = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signX = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signY = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signZ = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colX, colY, colZ, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with x/y
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDx1(),
@@ -431,18 +477,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "XZY")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signX = -1;
-      if (islower(axes.at(1))) signZ = -1;
-      if (islower(axes.at(2))) signY = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signX = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signZ = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signY = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colX, colZ, colY, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with x/z
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDx1(),
@@ -470,18 +522,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "YZX")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signY = -1;
-      if (islower(axes.at(1))) signZ = -1;
-      if (islower(axes.at(2))) signX = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signY = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signZ = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signX = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colY, colZ, colX, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with y/z
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDy1(),
@@ -508,18 +566,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "YXZ")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signY = -1;
-      if (islower(axes.at(1))) signX = -1;
-      if (islower(axes.at(2))) signZ = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signY = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signX = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signZ = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colY, colX, colZ, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with y/x
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDy1(),
@@ -545,18 +609,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     } else if (boost::iequals(axes, "ZYX")) {
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signZ = -1;
-      if (islower(axes.at(1))) signY = -1;
-      if (islower(axes.at(2))) signX = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signZ = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signY = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signX = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colZ, colY, colX, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with z/y
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDz(),
@@ -584,18 +654,24 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       // default is "ZXY"
       // next possibility
       // get the sign of the axes
-      int signX                      = 1;
-      int signY                      = 1;
-      int signZ                      = 1;
-      if (islower(axes.at(0))) signZ = -1;
-      if (islower(axes.at(1))) signX = -1;
-      if (islower(axes.at(2))) signY = -1;
+      int signX = 1;
+      int signY = 1;
+      int signZ = 1;
+      if (islower(axes.at(0)) != 0) {
+        signZ = -1;
+      }
+      if (islower(axes.at(1)) != 0) {
+        signX = -1;
+      }
+      if (islower(axes.at(2)) != 0) {
+        signY = -1;
+      }
       // the transformation matrix
       colX *= signX;
       colY *= signY;
       colZ *= signZ;
       m_transform = std::make_shared<const Transform3D>(colZ, colX, colY, colT);
-      if (trapezoid) {
+      if (trapezoid != nullptr) {
         // bounds with z/x
         auto trapezoidBounds = std::make_shared<const TrapezoidBounds>(
             scalor * trapezoid->GetDz(),
@@ -622,11 +698,11 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     }
   }
   // set the asscoiated material (non const method)
-  if (surface) surface->setAssociatedMaterial(material);
+  if (surface) {
+    surface->setAssociatedMaterial(std::move(material));
+  }
   // set the const member surface
   m_surface = surface;
 }
 
-Acts::TGeoDetectorElement::~TGeoDetectorElement()
-{
-}
+Acts::TGeoDetectorElement::~TGeoDetectorElement() = default;

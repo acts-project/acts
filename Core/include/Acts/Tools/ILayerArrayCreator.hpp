@@ -20,11 +20,11 @@ namespace Acts {
 
 class Layer;
 /// A std::shared_ptr to a Layer
-typedef std::shared_ptr<const Layer> LayerPtr;
+using LayerPtr = std::shared_ptr<const Layer>;
 /// A BinnedArray to a std::shared_ptr of a layer
-typedef BinnedArray<LayerPtr> LayerArray;
+using LayerArray = BinnedArray<LayerPtr>;
 /// A vector of std::shared_ptr to layers
-typedef std::vector<LayerPtr> LayerVector;
+using LayerVector = std::vector<LayerPtr>;
 
 /// @class ILayerArrayCreator
 ///

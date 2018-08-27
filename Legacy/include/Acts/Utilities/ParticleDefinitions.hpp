@@ -17,9 +17,9 @@
 #include "Acts/Utilities/Units.hpp"
 
 // barcodes
-typedef unsigned long barcode_type;
-typedef int           process_type;
-typedef int           pdg_type;
+using barcode_type = unsigned long;
+using process_type = int;
+using pdg_type     = int;
 
 // define the particle hypotheses
 #define PARTICLETYPES 11

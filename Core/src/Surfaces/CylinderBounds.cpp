@@ -42,14 +42,16 @@ Acts::CylinderBounds::CylinderBounds(double radius,
   , m_halfZ(std::abs(halfZ))
   , m_closed(false)
 {
-  if (halfPhi == M_PI) m_closed = true;
+  if (halfPhi == M_PI) {
+    m_closed = true;
+  }
 }
 
-Acts::CylinderBounds::CylinderBounds(const variant_data& data_)
+Acts::CylinderBounds::CylinderBounds(const variant_data& vardata)
   : m_radius(0), m_avgPhi(0), m_halfPhi(0), m_halfZ(0)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   std::string        type = data.get<std::string>("type");
   throw_assert(type == "CylinderBounds", "Type must be CylinderBounds");
 
@@ -61,9 +63,7 @@ Acts::CylinderBounds::CylinderBounds(const variant_data& data_)
   m_halfZ   = payload.get<double>("halfZ");
 }
 
-Acts::CylinderBounds::~CylinderBounds()
-{
-}
+Acts::CylinderBounds::~CylinderBounds() = default;
 
 Acts::CylinderBounds*
 Acts::CylinderBounds::clone() const

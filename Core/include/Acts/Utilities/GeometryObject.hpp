@@ -39,7 +39,7 @@ public:
   /// copy-constructor
   ///
   /// @param geoID the geometry identifier of the object
-  GeometryObject(const GeometryObject& geoObj) : m_geoID(geoObj.m_geoID) {}
+  GeometryObject(const GeometryObject& geoObj) = default;
 
   /// assignment operator
   ///
@@ -47,7 +47,9 @@ public:
   GeometryObject&
   operator=(const GeometryObject& geoID)
   {
-    if (&geoID != this) m_geoID = geoID.m_geoID;
+    if (&geoID != this) {
+      m_geoID = geoID.m_geoID;
+    }
     return *this;
   }
 

@@ -32,18 +32,18 @@ private:
   template <typename T, typename S>
   struct s
   {
-    typedef BoundParameters type;
+    using type = BoundParameters;
   };
 
   // ...unless type S is int, in which case it maps to Curvilinear parameters
   template <typename T>
   struct s<T, int>
   {
-    typedef CurvilinearParameters type;
+    using type = CurvilinearParameters;
   };
 
 public:
-  typedef detail::ConstrainedStep cstep;
+  using cstep = detail::ConstrainedStep;
 
   /// State for track parameter propagation
   ///
@@ -62,7 +62,6 @@ public:
       , p(par.momentum().norm())
       , q(par.charge())
       , navDir(ndir)
-      , pathAccumulated(0.)
       , stepSize(ssize)
     {
     }
@@ -212,7 +211,7 @@ public:
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
   Vector3D
-  getField(State&, const Vector3D&) const
+  getField(State& /*state*/, const Vector3D& /*pos*/) const
   {
     // get the field from the cell
     return Vector3D(0., 0., 0.);

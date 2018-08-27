@@ -10,9 +10,11 @@
 // TrackingVolume.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Detector/TrackingVolume.hpp"
+#include <utility>
+
 #include "Acts/Detector/DetachedTrackingVolume.hpp"
 #include "Acts/Detector/GlueVolumesDescriptor.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
@@ -21,40 +23,30 @@
 Acts::TrackingVolume::TrackingVolume()
   : Volume()
   , m_material(std::make_shared<const Material>())
-  , m_motherVolume()
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
   , m_confinedVolumes(nullptr)
   , m_confinedDetachedVolumes()
   , m_confinedDenseVolumes()
   , m_confinedArbitraryLayers()
-  , m_glueVolumeDescriptor(nullptr)
-  , m_geometrySignature(Unsigned)
-  , m_geometryType(NumberOfGeometryTypes)
   , m_name("undefined")
-  , m_colorCode(20)
 {
 }
 
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D>               htrans,
-    VolumeBoundsPtr                                  volbounds,
-    const std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
-    const std::string&                               volumeName)
-  : Volume(htrans, volbounds)
+    std::shared_ptr<const Transform3D>                htrans,
+    VolumeBoundsPtr                                   volbounds,
+    const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
+    const std::string&                                volumeName)
+  : Volume(std::move(htrans), std::move(volbounds))
   , m_material(std::make_shared<const Material>())
-  , m_motherVolume(nullptr)
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
   , m_confinedVolumes(containedVolumeArray)
   , m_confinedDetachedVolumes()
   , m_confinedDenseVolumes()
   , m_confinedArbitraryLayers()
-  , m_glueVolumeDescriptor(nullptr)
-  , m_geometrySignature(Unsigned)
-  , m_geometryType(NumberOfGeometryTypes)
   , m_name(volumeName)
-  , m_colorCode(20)
 {
   createBoundarySurfaces();
   interlinkLayers();
@@ -66,24 +58,19 @@ Acts::TrackingVolume::TrackingVolume(
     VolumeBoundsPtr                            volbounds,
     std::shared_ptr<const Material>            matprop,
     std::unique_ptr<const LayerArray>          staticLayerArray,
-    const LayerVector                          arbitraryLayerVector,
+    const LayerVector&                         arbitraryLayerVector,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
-    const TrackingVolumeVector                 denseVolumeVector,
-    const DetachedVolumeVector                 detachedVolumeVector,
+    const TrackingVolumeVector&                denseVolumeVector,
+    const DetachedVolumeVector&                detachedVolumeVector,
     const std::string&                         volumeName)
-  : Volume(htrans, volbounds)
-  , m_material(matprop)
-  , m_motherVolume(nullptr)
+  : Volume(std::move(htrans), std::move(volbounds))
+  , m_material(std::move(matprop))
   , m_confinedLayers(std::move(staticLayerArray))
-  , m_confinedVolumes(containedVolumeArray)
+  , m_confinedVolumes(std::move(containedVolumeArray))
   , m_confinedDetachedVolumes(detachedVolumeVector)
   , m_confinedDenseVolumes(denseVolumeVector)
   , m_confinedArbitraryLayers(arbitraryLayerVector)
-  , m_glueVolumeDescriptor(nullptr)
-  , m_geometrySignature(Unsigned)
-  , m_geometryType(NumberOfGeometryTypes)
   , m_name(volumeName)
-  , m_colorCode(20)
 {
   createBoundarySurfaces();
   interlinkLayers();
@@ -98,12 +85,18 @@ const Acts::Layer*
 Acts::TrackingVolume::associatedLayer(const Vector3D& gp) const
 {
   // confined static layers - highest hierarchy
-  if (m_confinedLayers) return (m_confinedLayers->object(gp).get());
+  if (m_confinedLayers) {
+    return (m_confinedLayers->object(gp).get());
+  }
 
   // confined arbitrary
-  if (!m_confinedArbitraryLayers.empty())
-    for (auto& layer : m_confinedArbitraryLayers)
-      if (layer->isOnLayer(gp)) return layer.get();
+  if (!m_confinedArbitraryLayers.empty()) {
+    for (auto& layer : m_confinedArbitraryLayers) {
+      if (layer->isOnLayer(gp)) {
+        return layer.get();
+      }
+    }
+  }
 
   // return the null pointer
   return nullptr;
@@ -113,19 +106,30 @@ const Acts::TrackingVolume*
 Acts::TrackingVolume::trackingVolume(const Vector3D& gp) const
 {
   // confined static volumes - highest hierarchy
-  if (m_confinedVolumes) return (m_confinedVolumes->object(gp).get());
+  if (m_confinedVolumes) {
+    return (m_confinedVolumes->object(gp).get());
+  }
 
   // if no static volumes are there, detached is next hierarchy
-  if (!m_confinedDetachedVolumes.empty())
-    for (auto& detachedVolume : m_confinedDetachedVolumes)
-      if (detachedVolume->trackingVolume()->inside(gp, 0.001))
-        return detachedVolume->trackingVolume();
+  if (!m_confinedDetachedVolumes.empty()) {
+    for (auto& detachedVolume : m_confinedDetachedVolumes) {
+      if (detachedVolume->trackingVolume()->inside(gp, 0.001)) {
+        {
+          return detachedVolume->trackingVolume();
+        }
+      }
+    }
+  }
 
   // if no static volumes or detached volumes are there, search for dense
   // volumes
-  if (!m_confinedDenseVolumes.empty())
-    for (auto& denseVolume : m_confinedDenseVolumes)
-      if (denseVolume->inside(gp, 0.001)) return denseVolume.get();
+  if (!m_confinedDenseVolumes.empty()) {
+    for (auto& denseVolume : m_confinedDenseVolumes) {
+      if (denseVolume->inside(gp, 0.001)) {
+        return denseVolume.get();
+      }
+    }
+  }
 
   // there is no lower sub structure
   return this;
@@ -138,10 +142,13 @@ Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
   // create a new vector
   DetachedVolumeVector* currVols = new DetachedVolumeVector;
   // get the volumes were the position is inside
-  if (!m_confinedDetachedVolumes.empty())
-    for (auto& detachedVolume : m_confinedDetachedVolumes)
-      if (detachedVolume->trackingVolume()->inside(gp, tol))
+  if (!m_confinedDetachedVolumes.empty()) {
+    for (auto& detachedVolume : m_confinedDetachedVolumes) {
+      if (detachedVolume->trackingVolume()->inside(gp, tol)) {
         currVols->push_back(detachedVolume);
+      }
+    }
+  }
   // return the volumes that are inside
   return currVols;
 }
@@ -150,32 +157,37 @@ void
 Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
 {
   // never overwrite what is already signed, that's a crime
-  if (m_geometrySignature == Unsigned) m_geometrySignature = geosign;
-  m_geometryType                                           = geotype;
+  if (m_geometrySignature == Unsigned) {
+    m_geometrySignature = geosign;
+  }
+  m_geometryType = geotype;
 
   // confined static volumes
-  if (m_confinedVolumes)
+  if (m_confinedVolumes) {
     for (auto& volumesIter : (m_confinedVolumes->arrayObjects())) {
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
+  }
 
   // same procedure for the detached volumes
-  if (!m_confinedDetachedVolumes.empty())
+  if (!m_confinedDetachedVolumes.empty()) {
     for (auto& volumesIter : m_confinedDetachedVolumes) {
       auto mutableVolumesIter
           = std::const_pointer_cast<DetachedTrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
+  }
 
   // finally for confined dense volumes
-  if (!m_confinedDenseVolumes.empty())
+  if (!m_confinedDenseVolumes.empty()) {
     for (auto& volumesIter : m_confinedDenseVolumes) {
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
+  }
 }
 
 const std::
@@ -202,7 +214,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
         = (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
         ? nullptr
         : this;
-    TrackingVolume* outer = (inner) ? nullptr : this;
+    TrackingVolume* outer = (inner) != nullptr ? nullptr : this;
     // create the boundary surface
     m_boundarySurfaces.push_back(
         std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
@@ -214,9 +226,9 @@ Acts::TrackingVolume::createBoundarySurfaces()
 
 void
 Acts::TrackingVolume::glueTrackingVolume(
-    BoundarySurfaceFace             bsfMine,
-    std::shared_ptr<TrackingVolume> neighbor,
-    BoundarySurfaceFace             bsfNeighbor)
+    BoundarySurfaceFace                    bsfMine,
+    const std::shared_ptr<TrackingVolume>& neighbor,
+    BoundarySurfaceFace                    bsfNeighbor)
 {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
@@ -233,7 +245,7 @@ Acts::TrackingVolume::glueTrackingVolume(
       = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
   // the easy case :
   // - no glue volume descriptors on either side
-  if (!m_glueVolumeDescriptor
+  if ((m_glueVolumeDescriptor == nullptr)
       || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
     auto mutableBSurfaceMine
@@ -247,9 +259,9 @@ Acts::TrackingVolume::glueTrackingVolume(
 
 void
 Acts::TrackingVolume::glueTrackingVolumes(
-    BoundarySurfaceFace                  bsfMine,
-    std::shared_ptr<TrackingVolumeArray> neighbors,
-    BoundarySurfaceFace                  bsfNeighbor)
+    BoundarySurfaceFace                         bsfMine,
+    const std::shared_ptr<TrackingVolumeArray>& neighbors,
+    BoundarySurfaceFace                         bsfNeighbor)
 {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
@@ -269,7 +281,7 @@ Acts::TrackingVolume::glueTrackingVolumes(
       = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
   // the easy case :
   // - no glue volume descriptors on either side
-  if (!m_glueVolumeDescriptor
+  if ((m_glueVolumeDescriptor == nullptr)
       || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
     auto mutableBSurfaceMine
@@ -289,7 +301,7 @@ Acts::TrackingVolume::updateBoundarySurface(
     BoundarySurfaceFace                                     bsf,
     std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs)
 {
-  m_boundarySurfaces.at(bsf) = bs;
+  m_boundarySurfaces.at(bsf) = std::move(bs);
 }
 
 void
@@ -302,8 +314,9 @@ Acts::TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd)
 Acts::GlueVolumesDescriptor&
 Acts::TrackingVolume::glueVolumesDescriptor()
 {
-  if (!m_glueVolumeDescriptor)
+  if (m_glueVolumeDescriptor == nullptr) {
     m_glueVolumeDescriptor = new GlueVolumesDescriptor;
+  }
   return (*m_glueVolumeDescriptor);
 }
 
@@ -318,7 +331,7 @@ Acts::TrackingVolume::synchronizeLayers(double envelope) const
     // msgstream << MSG::VERBOSE << "  ---> working on " <<
     // m_confinedLayers->arrayObjects().size() << " (material+navigation)
     // layers." << endreq;
-    for (auto& clayIter : m_confinedLayers->arrayObjects())
+    for (auto& clayIter : m_confinedLayers->arrayObjects()) {
       if (clayIter) {
         // @todo implement syncrhonize layer
         //  if (clayIter->surfaceRepresentation().type() == Surface::Cylinder &&
@@ -327,8 +340,9 @@ Acts::TrackingVolume::synchronizeLayers(double envelope) const
         //  else
         //      clayIter->resizeLayer(volumeBounds(),envelope);
       }  // else
-    // msgstream << MSG::WARNING << "  ---> found 0 pointer to layer, indicates
-    // problem." << endreq;
+      // msgstream << MSG::WARNING << "  ---> found 0 pointer to layer,
+      // indicates problem." << endreq;
+    }
   }
 
   // case b : container volume -> step down
@@ -336,8 +350,9 @@ Acts::TrackingVolume::synchronizeLayers(double envelope) const
     // msgstream << MSG::VERBOSE << "  ---> no confined layers, working on " <<
     // m_confinedVolumes->arrayObjects().size() << " confined volumes." <<
     // endreq;
-    for (auto& cVolumesIter : m_confinedVolumes->arrayObjects())
+    for (auto& cVolumesIter : m_confinedVolumes->arrayObjects()) {
       cVolumesIter->synchronizeLayers(envelope);
+    }
   }
 }
 

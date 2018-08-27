@@ -19,7 +19,7 @@ Surface::center() const
 }
 
 inline const Acts::Vector3D
-Surface::normal(const Vector3D&) const
+Surface::normal(const Vector3D& /*unused*/) const
 {
   return normal(s_origin2D);
 }
@@ -27,15 +27,20 @@ Surface::normal(const Vector3D&) const
 inline bool
 Surface::isFree() const
 {
-  return (!m_associatedDetElement && !m_associatedTrackingVolume
-          && !m_associatedLayer);
+  return ((m_associatedDetElement == nullptr)
+          && (m_associatedTrackingVolume == nullptr)
+          && (m_associatedLayer == nullptr));
 }
 
 inline const Transform3D&
 Surface::transform() const
 {
-  if (m_transform) return (*(m_transform.get()));
-  if (m_associatedDetElement) return m_associatedDetElement->transform();
+  if (m_transform != nullptr) {
+    return (*(m_transform.get()));
+  }
+  if (m_associatedDetElement != nullptr) {
+    return m_associatedDetElement->transform();
+  }
   return s_idTransform;
 }
 
@@ -46,7 +51,8 @@ Surface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bcheck) const
 }
 
 inline const RotationMatrix3D
-Surface::referenceFrame(const Vector3D&, const Vector3D&) const
+Surface::referenceFrame(const Vector3D& /*unused*/,
+                        const Vector3D& /*unused*/) const
 {
   return transform().matrix().block<3, 3>(0, 0);
 }
@@ -54,7 +60,7 @@ Surface::referenceFrame(const Vector3D&, const Vector3D&) const
 inline void Surface::initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
                                           const Vector3D& gpos,
                                           const Vector3D& dir,
-                                          const ActsVectorD<5>&) const
+                                          const ActsVectorD<5>& /*pars*/) const
 {
   // The trigonometry required to convert the direction to spherical
   // coordinates and then compute the sines and cosines again can be
@@ -112,7 +118,7 @@ inline const RotationMatrix3D
 }
 
 inline const ActsRowVectorD<5>
-Surface::derivativeFactors(const Vector3D&,
+Surface::derivativeFactors(const Vector3D& /*gpos*/,
                            const Vector3D&         dir,
                            const RotationMatrix3D& rft,
                            const ActsMatrixD<7, 5>& jac) const
@@ -156,7 +162,7 @@ Surface::associatedMaterial() const
 inline void
 Surface::setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial> material)
 {
-  m_associatedMaterial = material;
+  m_associatedMaterial = std::move(material);
 }
 
 inline void

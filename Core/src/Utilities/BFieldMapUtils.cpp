@@ -11,15 +11,16 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)> localToGlobalBin,
-    std::vector<double>         rPos,
-    std::vector<double>         zPos,
-    std::vector<Acts::Vector2D> bField,
-    double                      lengthUnit,
-    double                      BFieldUnit,
-    bool                        firstQuadrant)
+Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
+Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+                                               std::array<size_t, 2> nBinsRZ)>&
+                                                localToGlobalBin,
+                    std::vector<double>         rPos,
+                    std::vector<double>         zPos,
+                    std::vector<Acts::Vector2D> bField,
+                    double                      lengthUnit,
+                    double                      BFieldUnit,
+                    bool                        firstQuadrant)
 {
   // [1] Create Grid
   // sort the values
@@ -59,10 +60,9 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
       zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  typedef Acts::detail::Grid<Acts::Vector2D,
-                             Acts::detail::EquidistantAxis,
-                             Acts::detail::EquidistantAxis>
-         Grid_t;
+  using Grid_t = Acts::detail::Grid<Acts::Vector2D,
+                                    Acts::detail::EquidistantAxis,
+                                    Acts::detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
   // [2] Set the bField values
 
@@ -110,9 +110,11 @@ Acts::InterpolatedBFieldMap::FieldMapper<2, 2> Acts::fieldMapperRZ(
       transformPos, transformBField, std::move(grid));
 }
 
-Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)> localToGlobalBin,
+Acts::InterpolatedBFieldMap::FieldMapper<3, 3>
+Acts::fieldMapperXYZ(
+    const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                               std::array<size_t, 3> nBinsXYZ)>&
+                                localToGlobalBin,
     std::vector<double>         xPos,
     std::vector<double>         yPos,
     std::vector<double>         zPos,
@@ -176,11 +178,10 @@ Acts::InterpolatedBFieldMap::FieldMapper<3, 3> Acts::fieldMapperXYZ(
   Acts::detail::EquidistantAxis zAxis(
       zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
-  typedef Acts::detail::Grid<Acts::Vector3D,
-                             Acts::detail::EquidistantAxis,
-                             Acts::detail::EquidistantAxis,
-                             Acts::detail::EquidistantAxis>
-         Grid_t;
+  using Grid_t = Acts::detail::Grid<Acts::Vector3D,
+                                    Acts::detail::EquidistantAxis,
+                                    Acts::detail::EquidistantAxis,
+                                    Acts::detail::EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 

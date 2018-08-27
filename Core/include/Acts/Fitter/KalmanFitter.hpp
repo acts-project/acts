@@ -25,7 +25,7 @@ namespace KF {
   struct Step
   {
   public:
-    typedef ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars> JacobianMatrix;
+    using JacobianMatrix = ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars>;
 
     const BoundParameters*
     getPredictedState() const
@@ -110,12 +110,12 @@ public:
   fit(const MeasurementContainer&            vMeasurements,
       std::unique_ptr<const BoundParameters> pInitialPars = nullptr) const
   {
-    typedef typename MeasurementContainer::value_type Meas_t;
+    using Meas_t = typename MeasurementContainer::value_type;
     typedef std::result_of_t<Extrapolator(const Meas_t&,
                                           const TrackParameters&)>
                                                        ExResult;
     typedef std::result_of_t<CacheGenerator(ExResult)> StepCache;
-    typedef std::list<StepCache>                       Cache;
+    using Cache = std::list<StepCache>;
 
     Cache c = forwardFilter(vMeasurements, std::move(pInitialPars));
     applySmoothing(c);
@@ -135,12 +135,12 @@ public:
                 std::unique_ptr<const BoundParameters> pInitialPars) const
   {
     // typedef to actual measurement type
-    typedef typename MeasurementContainer::value_type Meas_t;
+    using Meas_t = typename MeasurementContainer::value_type;
     typedef std::result_of_t<Extrapolator(const Meas_t&,
                                           const TrackParameters&)>
                                                        ExResult;
     typedef std::result_of_t<CacheGenerator(ExResult)> StepCache;
-    typedef std::list<StepCache>                       Cache;
+    using Cache = std::list<StepCache>;
 
     // create initial parameters if they are not provided
     if (not pInitialPars) {
@@ -182,7 +182,7 @@ public:
   void
   applySmoothing(std::list<StepCache>& cache) const
   {
-    typedef ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars> GMatrix;
+    using GMatrix = ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars>;
     // smoothing update matrix
     GMatrix G;
     // smoothed parameter vector and covariance matrix

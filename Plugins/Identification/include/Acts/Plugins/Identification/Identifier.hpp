@@ -16,5 +16,5 @@
 #ifdef ACTS_CORE_IDENTIFIER_PLUGIN
 #include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
-typedef unsigned long long Identifier;
+using Identifier = unsigned long long;
 #endif

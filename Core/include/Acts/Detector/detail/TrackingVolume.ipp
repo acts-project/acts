@@ -92,15 +92,18 @@ TrackingVolume::compatibleBoundaries(const parameters_t& parameters,
     const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
     const auto& bSurfaceRep = bSurface->surfaceRepresentation();
     // exclude the on boundary object
-    if (excludeObject && excludeObject == &bSurfaceRep) continue;
+    if (excludeObject && excludeObject == &bSurfaceRep) {
+      continue;
+    }
     // intersect the surface
     SurfaceIntersection bsIntersection
         = bSurfaceRep.intersectionEstimate(parameters, options, corrfnc);
     // check if the intersection is valid, but exlude the on-surface case
     // when requested -- move to intersectionestimate
-    if (bsIntersection)
+    if (bsIntersection) {
       bIntersections.push_back(BoundaryIntersection(
           bsIntersection.intersection, bSurface, &bSurfaceRep, options.navDir));
+    }
   }
   // and now sort to get the closest - need custom sort here to respect sign
   // sort them accordingly to the path length
@@ -137,7 +140,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
   if (m_confinedLayers) {
     // cache the longest path length to avoid punch-through to the other side
     Intersection   sLayerIntersection(Vector3D(0., 0., 0), 0., true, 0.);
-    const Surface* sLayerSurface   = 0;
+    const Surface* sLayerSurface   = nullptr;
     double         validPathLength = 0.;
     // - get compatible layers back from the LayerArray simply because of the
     // binning
@@ -201,9 +204,10 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
     // punch-through
     if (sLayer && sLayerIntersection.valid
         && sLayerIntersection.pathLength < validPathLength
-        && sLayer->resolve(resolveSensitive, resolveMaterial, resolvePassive))
+        && sLayer->resolve(resolveSensitive, resolveMaterial, resolvePassive)) {
       lIntersections.push_back(
           LayerIntersection(sLayerIntersection, sLayer, sLayerSurface, pDir));
+    }
 
     // sort them accordingly to the path length
     std::sort(lIntersections.begin(), lIntersections.end());
@@ -235,12 +239,13 @@ TrackingVolume::boundarySurfacesOrdered(const parameters_t& pars,
     // when requested
     if (bsIntersection.valid
         && (!skipCurrent
-            || std::abs(bsIntersection.pathLength) < s_onSurfaceTolerance))
+            || std::abs(bsIntersection.pathLength) < s_onSurfaceTolerance)) {
       bIntersections.push_back(
           BoundaryIntersection(bsIntersection,
                                bSurface,
                                &(bSurface->surfaceRepresentation()),
                                pDir));
+    }
   }
   // and now sort to get the closest
   std::sort(bIntersections.begin(), bIntersections.end());

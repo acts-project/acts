@@ -38,9 +38,7 @@ Acts::DD4hepLayerBuilder::DD4hepLayerBuilder(
   setConfiguration(config);
 }
 
-Acts::DD4hepLayerBuilder::~DD4hepLayerBuilder()
-{
-}
+Acts::DD4hepLayerBuilder::~DD4hepLayerBuilder() = default;
 
 void
 Acts::DD4hepLayerBuilder::setConfiguration(
@@ -83,9 +81,9 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
         pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
-      } else if (geoShape) {
+      } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (!tube)
+        if (tube == nullptr)
           ACTS_ERROR(
               "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
@@ -99,7 +97,9 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
             = (transform->translation()
                + transform->rotation().col(2) * tube->GetDz() * units::_cm)
                   .z();
-        if (zMin > zMax) std::swap(zMin, zMax);
+        if (zMin > zMax) {
+          std::swap(zMin, zMax);
+        }
 
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
@@ -120,12 +120,13 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
           pl.envZ = {std::abs(zMin - pl.minZ), std::abs(zMax - pl.maxZ)};
           pl.envR = {std::abs(rMin - pl.minR), std::abs(rMax - pl.maxR)};
         }
-      } else
+      } else {
         throw std::logic_error(
             std::string("Layer DetElement: ") + detElement.name()
             + std::string(" has neither a shape nor tolerances for envelopes "
                           "added to it¥s extension. Please check your detector "
                           "constructor!"));
+      }
 
       // if the layer should carry material it will be marked by assigning a
       // SurfaceMaterialProxy
@@ -172,7 +173,9 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         Vector3D outerPos = transform->translation()
             + transform->rotation().col(2) * layerThickness * 0.5;
 
-        if (innerPos.z() > outerPos.z()) std::swap(innerPos, outerPos);
+        if (innerPos.z() > outerPos.z()) {
+          std::swap(innerPos, outerPos);
+        }
 
         Acts::DiscSurface* innerBoundary
             = new Acts::DiscSurface(std::make_shared<const Transform3D>(
@@ -190,14 +193,17 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
             = new Acts::DiscSurface(transform, pl.minR, pl.maxR);
 
         // set material surface
-        if (layerPos == Acts::LayerMaterialPos::inner)
+        if (layerPos == Acts::LayerMaterialPos::inner) {
           innerBoundary->setAssociatedMaterial(materialProxy);
+        }
 
-        if (layerPos == Acts::LayerMaterialPos::outer)
+        if (layerPos == Acts::LayerMaterialPos::outer) {
           outerBoundary->setAssociatedMaterial(materialProxy);
+        }
 
-        if (layerPos == Acts::LayerMaterialPos::central)
+        if (layerPos == Acts::LayerMaterialPos::central) {
           centralSurface->setAssociatedMaterial(materialProxy);
+        }
 
         // collect approach surfaces
         aSurfaces.push_back(innerBoundary);
@@ -302,9 +308,9 @@ Acts::DD4hepLayerBuilder::centralLayers() const
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
         pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
-      } else if (geoShape) {
+      } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (!tube)
+        if (tube == nullptr)
           ACTS_ERROR(
               "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
 
@@ -331,12 +337,13 @@ Acts::DD4hepLayerBuilder::centralLayers() const
           pl.envZ = {std::abs(-dz - pl.minZ), std::abs(dz - pl.maxZ)};
           pl.envR = {std::abs(rMin - pl.minR), std::abs(rMax - pl.maxR)};
         }
-      } else
+      } else {
         throw std::logic_error(
             std::string("Layer DetElement: ") + detElement.name()
             + std::string(" has neither a shape nor tolerances for envelopes "
                           "added to it¥s extension. Please check your detector "
                           "constructor!"));
+      }
 
       double halfZ = (pl.minZ - pl.maxZ) * 0.5;
 
@@ -391,14 +398,17 @@ Acts::DD4hepLayerBuilder::centralLayers() const
 
         // check if the material should be set to the inner or outer boundary
         // and set it in case
-        if (layerPos == Acts::LayerMaterialPos::inner)
+        if (layerPos == Acts::LayerMaterialPos::inner) {
           innerBoundary->setAssociatedMaterial(materialProxy);
+        }
 
-        if (layerPos == Acts::LayerMaterialPos::outer)
+        if (layerPos == Acts::LayerMaterialPos::outer) {
           outerBoundary->setAssociatedMaterial(materialProxy);
+        }
 
-        if (layerPos == Acts::LayerMaterialPos::central)
+        if (layerPos == Acts::LayerMaterialPos::central) {
           centralSurface->setAssociatedMaterial(materialProxy);
+        }
 
         // collect the surfaces
         aSurfaces.push_back(innerBoundary);
@@ -507,9 +517,9 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
         pl.envZ = {detExtension->envelopeZ(), detExtension->envelopeZ()};
-      } else if (geoShape) {
+      } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (!tube)
+        if (tube == nullptr)
           ACTS_ERROR(
               "[L] Disc layer has wrong shape - needs to be TGeoTubeSeg!");
         // extract the boundaries
@@ -523,7 +533,9 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
             = (transform->translation()
                + transform->rotation().col(2) * tube->GetDz() * units::_cm)
                   .z();
-        if (zMin > zMax) std::swap(zMin, zMax);
+        if (zMin > zMax) {
+          std::swap(zMin, zMax);
+        }
 
         // check if layer has surfaces
         if (layerSurfaces.empty()) {
@@ -544,12 +556,13 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
           pl.envZ = {std::abs(zMin - pl.minZ), std::abs(zMax - pl.maxZ)};
           pl.envR = {std::abs(rMin - pl.minR), std::abs(rMax - pl.maxR)};
         }
-      } else
+      } else {
         throw std::logic_error(
             std::string("Layer DetElement: ") + detElement.name()
             + std::string(" has neither a shape nor tolerances for envelopes "
                           "added to it¥s extension. Please check your detector "
                           "constructor!"));
+      }
 
       // if the layer should carry material it will be marked by assigning a
       // SurfaceMaterialProxy
@@ -596,7 +609,9 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         Vector3D outerPos = transform->translation()
             + transform->rotation().col(2) * layerThickness * 0.5;
 
-        if (innerPos.z() > outerPos.z()) std::swap(innerPos, outerPos);
+        if (innerPos.z() > outerPos.z()) {
+          std::swap(innerPos, outerPos);
+        }
 
         Acts::DiscSurface* innerBoundary
             = new Acts::DiscSurface(std::make_shared<const Transform3D>(
@@ -614,14 +629,17 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
             = new Acts::DiscSurface(transform, pl.minR, pl.maxR);
 
         // set material surface
-        if (layerPos == Acts::LayerMaterialPos::inner)
+        if (layerPos == Acts::LayerMaterialPos::inner) {
           innerBoundary->setAssociatedMaterial(materialProxy);
+        }
 
-        if (layerPos == Acts::LayerMaterialPos::outer)
+        if (layerPos == Acts::LayerMaterialPos::outer) {
           outerBoundary->setAssociatedMaterial(materialProxy);
+        }
 
-        if (layerPos == Acts::LayerMaterialPos::central)
+        if (layerPos == Acts::LayerMaterialPos::central) {
           centralSurface->setAssociatedMaterial(materialProxy);
+        }
         // collect approach surfaces
         aSurfaces.push_back(innerBoundary);
         aSurfaces.push_back(centralSurface);
@@ -723,7 +741,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
     detExtension = detElement.extension<Acts::IActsExtension>();
   } catch (std::runtime_error& e) {
   }
-  if (detExtension) {
+  if (detExtension != nullptr) {
     material = detExtension->material();
   }
 

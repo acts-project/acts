@@ -42,7 +42,9 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
     m_ssApproachSurfaces = 1;  // indicates existence
   }
   // indicates existence of sensitive surfaces
-  if (m_surfaceArray) m_ssSensitiveSurfaces = 1;
+  if (m_surfaceArray) {
+    m_ssSensitiveSurfaces = 1;
+  }
 }
 
 Acts::Layer::~Layer()
@@ -69,7 +71,9 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
   assignGeoID(layerID);
 
   // also find out how the sub structure is defined
-  if (surfaceRepresentation().associatedMaterial()) m_ssRepresentingSurface = 2;
+  if (surfaceRepresentation().associatedMaterial() != nullptr) {
+    m_ssRepresentingSurface = 2;
+  }
 
   // loop over the approach surfaces
   if (m_approachDescriptor) {
@@ -83,7 +87,9 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
       auto mutableASurface = const_cast<Surface*>(aSurface);
       mutableASurface->assignGeoID(asurfaceID);
       // if any of the approach surfaces has material
-      if (aSurface->associatedMaterial()) m_ssApproachSurfaces = 2;
+      if (aSurface->associatedMaterial() != nullptr) {
+        m_ssApproachSurfaces = 2;
+      }
     }
   }
   // check if you have sensitive surfaces
@@ -98,7 +104,9 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
       // if any of the sensitive surfaces has material
-      if (sSurface->associatedMaterial()) m_ssSensitiveSurfaces = 2;
+      if (sSurface->associatedMaterial() != nullptr) {
+        m_ssSensitiveSurfaces = 2;
+      }
     }
   }
 }

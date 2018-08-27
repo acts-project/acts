@@ -71,42 +71,41 @@ public:
              double avphi   = 0.);
 
   /// Constructor which accepts @c variant_data
-  /// @param data The data to build from
-  ConeBounds(const variant_data& data);
+  /// @param vardata The data to build from
+  ConeBounds(const variant_data& vardata);
 
-  virtual ~ConeBounds();
+  ~ConeBounds() override;
 
-  virtual ConeBounds*
-  clone() const final override;
+  ConeBounds*
+  clone() const final;
 
-  virtual BoundsType
-  type() const final override;
+  BoundsType
+  type() const final;
 
-  virtual std::vector<TDD_real_t>
-  valueStore() const final override;
+  std::vector<TDD_real_t>
+  valueStore() const final;
 
   /// inside method for local position
   ///
   /// @param lpos is the local position to be checked
   /// @param bcheck is the boundary check directive
   /// @return is a boolean indicating if the position is inside
-  virtual bool
-  inside(const Vector2D&      lpos,
-         const BoundaryCheck& bcheck = true) const final override;
+  bool
+  inside(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  virtual double
-  distanceToBoundary(const Vector2D& lpos) const final override;
+  double
+  distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostrea into which the dump is done
   /// @return is the input obect
-  virtual std::ostream&
-  dump(std::ostream& sl) const final override;
+  std::ostream&
+  dump(std::ostream& sl) const final;
 
   /// Return the radius at a specific z values
   ///

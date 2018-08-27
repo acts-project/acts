@@ -15,8 +15,8 @@
 namespace Acts {
 
 class Surface;
-typedef std::shared_ptr<const Surface> SurfacePtr;
-typedef std::vector<SurfacePtr>        SurfacePtrVector;
+using SurfacePtr       = std::shared_ptr<const Surface>;
+using SurfacePtrVector = std::vector<SurfacePtr>;
 
 /// @class DigitizationModule
 ///
@@ -60,7 +60,7 @@ public:
                      bool                                analogue = false);
 
   /// Virtual Destructor
-  virtual ~DigitizationModule() {}
+  virtual ~DigitizationModule() = default;
 
   /// Return the internal test segmentation surfaces to test between entry
   /// and exit given by their cell id's - the boundaries are not given

@@ -46,7 +46,7 @@ namespace Test {
 
   // Global definitions
   // The path limit abort
-  typedef detail::PathLimitReached path_limit;
+  using path_limit = detail::PathLimitReached;
 
   std::vector<std::unique_ptr<const Surface>> stepState;
   auto tGeometry = testGeometry<ModuleSurface>(stepState);
@@ -55,11 +55,11 @@ namespace Test {
   Navigator navigatorES(tGeometry);
   Navigator navigatorSL(tGeometry);
 
-  typedef ConstantBField                BField;
-  typedef detail::IntersectionCorrector StepCorrector;
-  typedef EigenStepper<BField, StepCorrector>        EigenStepper;
-  typedef Propagator<EigenStepper, Navigator>        EigenPropagator;
-  typedef Propagator<StraightLineStepper, Navigator> StraightLinePropagator;
+  using BField                 = ConstantBField;
+  using StepCorrector          = detail::IntersectionCorrector;
+  using EigenStepper           = EigenStepper<BField, StepCorrector>;
+  using EigenPropagator        = Propagator<EigenStepper, Navigator>;
+  using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   const double    Bz = 2. * units::_T;
   BField          bField(0, 0, Bz);
@@ -98,7 +98,9 @@ namespace Test {
   {
     double dcharge = -1 + 2 * charge;
 
-    if (index < skip) return;
+    if (index < skip) {
+      return;
+    }
 
     // define start parameters
     double                x  = 0;
@@ -112,11 +114,11 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
 
-    typedef detail::DebugOutputActor DebugOutput;
+    using DebugOutput = detail::DebugOutputActor;
 
     // Action list and abort list
-    typedef ActionList<MaterialCollector, DebugOutput> ActionList_type;
-    typedef AbortList<> AbortConditions_type;
+    using ActionList_type      = ActionList<MaterialCollector, DebugOutput>;
+    using AbortConditions_type = AbortList<>;
 
     typename Propagator_type::template Options<ActionList_type,
                                                AbortConditions_type>
@@ -252,11 +254,12 @@ namespace Test {
     const TrackParameters*              sParameters = &start;
     std::vector<const TrackParameters*> stepParameters;
     for (auto& fwdSteps : fwdMaterial.collected) {
-      if (debugModeFwdStep)
+      if (debugModeFwdStep) {
         std::cout << ">>> Forward step : "
                   << sParameters->referenceSurface().geoID().toString()
                   << " --> " << fwdSteps.surface->geoID().toString()
                   << std::endl;
+      }
 
       // make a forward step
       const auto& fwdStep
@@ -282,10 +285,11 @@ namespace Test {
     // final destination surface
     const Surface& dSurface = fwdResult.endParameters->referenceSurface();
 
-    if (debugModeFwdStep)
+    if (debugModeFwdStep) {
       std::cout << ">>> Forward step : "
                 << sParameters->referenceSurface().geoID().toString() << " --> "
                 << dSurface.geoID().toString() << std::endl;
+    }
 
     const auto& fwdStepFinal
         = prop.propagate(*sParameters, dSurface, fwdStepOptions);
@@ -340,11 +344,12 @@ namespace Test {
     // move forward step by step through the surfaces
     sParameters = fwdResult.endParameters.template get();
     for (auto& bwdSteps : bwdMaterial.collected) {
-      if (debugModeBwdStep)
+      if (debugModeBwdStep) {
         std::cout << ">>> Backward step : "
                   << sParameters->referenceSurface().geoID().toString()
                   << " --> " << bwdSteps.surface->geoID().toString()
                   << std::endl;
+      }
       // make a forward step
       const auto& bwdStep
           = prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions);
@@ -369,10 +374,11 @@ namespace Test {
     // final destination surface
     const Surface& dbSurface = start.referenceSurface();
 
-    if (debugModeBwdStep)
+    if (debugModeBwdStep) {
       std::cout << ">>> Backward step : "
                 << sParameters->referenceSurface().geoID().toString() << " --> "
                 << dSurface.geoID().toString() << std::endl;
+    }
 
     const auto& bwdStepFinal
         = prop.propagate(*sParameters, dbSurface, bwdStepOptions);

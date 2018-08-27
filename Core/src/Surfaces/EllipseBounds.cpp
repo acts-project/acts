@@ -36,11 +36,11 @@ Acts::EllipseBounds::EllipseBounds(double minRadius0,
 {
 }
 
-Acts::EllipseBounds::EllipseBounds(const variant_data& data_)
+Acts::EllipseBounds::EllipseBounds(const variant_data& vardata)
   : m_boundingBox(0, 0)
 {
-  throw_assert(data_.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(data_);
+  throw_assert(vardata.which() == 4, "Variant data must be map");
+  const variant_map& data = boost::get<variant_map>(vardata);
   std::string        type = data.get<std::string>("type");
   throw_assert(type == "EllipseBounds", "Type must be EllipseBounds");
 
@@ -57,9 +57,7 @@ Acts::EllipseBounds::EllipseBounds(const variant_data& data_)
       = RectangleBounds(std::max(m_rMinX, m_rMaxX), std::max(m_rMinY, m_rMaxY));
 }
 
-Acts::EllipseBounds::~EllipseBounds()
-{
-}
+Acts::EllipseBounds::~EllipseBounds() = default;
 
 Acts::EllipseBounds*
 Acts::EllipseBounds::clone() const
@@ -134,7 +132,9 @@ Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
   if (m_halfPhi < M_PI) {
     double df = std::abs(dF) - m_halfPhi;
     sf        = r * std::sin(df);
-    if (df > 0.) r *= std::cos(df);
+    if (df > 0.) {
+      r *= std::cos(df);
+    }
   } else {
     sf = -1.e+10;
   }
@@ -152,8 +152,12 @@ Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
     if (sr1 >= 0.) {
       return sr1;
     }
-    if (sf < sr0) sf = sr0;
-    if (sf < sr1) sf = sr1;
+    if (sf < sr0) {
+      sf = sr0;
+    }
+    if (sf < sr1) {
+      sf = sr1;
+    }
     return sf;
   }
 

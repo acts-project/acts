@@ -123,7 +123,7 @@ namespace Test {
         BOOST_CHECK_EQUAL(++bsurface_id, bs_bsf_id);
       }
       // testing the layer and it's approach surfaces
-      if (vol.confinedLayers()) {
+      if (vol.confinedLayers() != nullptr) {
         // layers start are counted from 1 - n
         geo_id_value layer_id = 0;
         for (auto lay : vol.confinedLayers()->arrayObjects()) {
@@ -133,7 +133,7 @@ namespace Test {
           BOOST_CHECK_EQUAL(++layer_id, lay_lay_id);
           BOOST_CHECK_EQUAL(geoid, lay_vol_id);
           // test the layer approach surfaces
-          if (lay->approachDescriptor()) {
+          if (lay->approachDescriptor() != nullptr) {
             // approach surfacesare counted from 1 - n
             geo_id_value asurface_id = 0;
             for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
@@ -152,7 +152,7 @@ namespace Test {
             }
           }
           // test the sensitive surfaces
-          if (lay->surfaceArray()) {
+          if (lay->surfaceArray() != nullptr) {
             // sensitive surfaces are counted from 1 - n
             geo_id_value ssurface_id = 0;
             for (auto ssf : lay->surfaceArray()->surfaces()) {

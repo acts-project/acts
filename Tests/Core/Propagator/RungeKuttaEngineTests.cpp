@@ -184,8 +184,9 @@ namespace Test {
       // and the numbers are
       BOOST_CHECK_CLOSE(gpc.x(), 989.876, 0.001);
       BOOST_CHECK_CLOSE(gpc.y(), 141.935, 0.001);
-    } else
+    } else {
       BOOST_TEST_MESSAGE("Propagations failed !");
+    }
   }
 
   BOOST_AUTO_TEST_SUITE_END()

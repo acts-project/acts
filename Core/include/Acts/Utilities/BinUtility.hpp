@@ -44,8 +44,8 @@ public:
   ///
   /// @param bData is the provided binning data
   /// @param tForm is the (optional) transform
-  BinUtility(const BinningData&                 bData,
-             std::shared_ptr<const Transform3D> tForm = nullptr)
+  BinUtility(const BinningData&                        bData,
+             const std::shared_ptr<const Transform3D>& tForm = nullptr)
     : m_binningData()
     , m_transform(tForm)
     , m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr)
@@ -62,12 +62,12 @@ public:
   /// @param opt is the binning option : open, closed
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(size_t                             bins,
-             float                              min,
-             float                              max,
-             BinningOption                      opt   = open,
-             BinningValue                       value = binX,
-             std::shared_ptr<const Transform3D> tForm = nullptr)
+  BinUtility(size_t                                    bins,
+             float                                     min,
+             float                                     max,
+             BinningOption                             opt   = open,
+             BinningValue                              value = binX,
+             const std::shared_ptr<const Transform3D>& tForm = nullptr)
     : m_binningData()
     , m_transform(tForm)
     , m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr)
@@ -82,10 +82,10 @@ public:
   /// @param opt is the binning option : open, closed
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(std::vector<float>&                bValues,
-             BinningOption                      opt   = open,
-             BinningValue                       value = binPhi,
-             std::shared_ptr<const Transform3D> tForm = nullptr)
+  BinUtility(std::vector<float>&                       bValues,
+             BinningOption                             opt   = open,
+             BinningValue                              value = binPhi,
+             const std::shared_ptr<const Transform3D>& tForm = nullptr)
     : m_binningData()
     , m_transform(tForm)
     , m_itransform(tForm ? new Transform3D(tForm->inverse()) : nullptr)
@@ -147,14 +147,15 @@ public:
     // only this BU has transform, just keep it.
     //}
 
-    if (m_binningData.size() + bData.size() > 3)
+    if (m_binningData.size() + bData.size() > 3) {
       throw "BinUtility does not support dim > 3";
+    }
     m_binningData.insert(m_binningData.end(), bData.begin(), bData.end());
     return (*this);
   }
 
   /// Virtual Destructor
-  ~BinUtility() {}
+  ~BinUtility() = default;
   /// Implizit Constructor
   BinUtility*
   clone() const
@@ -209,7 +210,9 @@ public:
   size_t
   bin(const Vector3D& position, size_t ba = 0) const
   {
-    if (ba >= m_binningData.size()) return 0;
+    if (ba >= m_binningData.size()) {
+      return 0;
+    }
     size_t bEval = m_itransform
         ? m_binningData[ba].searchGlobal((*m_itransform) * position)
         : m_binningData[ba].searchGlobal(position);
@@ -229,15 +232,20 @@ public:
   std::vector<size_t>
   neighbourRange(const Vector3D& position, size_t ba = 0) const
   {
-    if (ba >= m_binningData.size()) return {0};
+    if (ba >= m_binningData.size()) {
+      return {0};
+    }
     std::vector<size_t> neighbourRange;
     size_t              cbin = bin(position, ba);
     size_t              pbin = cbin;
     size_t              nbin = cbin;
-    if (m_binningData[ba].decrement(pbin)) neighbourRange.push_back(pbin);
+    if (m_binningData[ba].decrement(pbin)) {
+      neighbourRange.push_back(pbin);
+    }
     neighbourRange.push_back(cbin);
-    if (m_binningData[ba].increment(nbin) && nbin != pbin)
+    if (m_binningData[ba].increment(nbin) && nbin != pbin) {
       neighbourRange.push_back(nbin);
+    }
     return neighbourRange;
   }
 
@@ -255,7 +263,9 @@ public:
                 const Vector3D& direction,
                 size_t          ba = 0) const
   {
-    if (ba >= m_binningData.size()) return 0;
+    if (ba >= m_binningData.size()) {
+      return 0;
+    }
     return m_binningData[ba].nextDirection(position, direction);
   }
 
@@ -273,7 +283,9 @@ public:
   size_t
   bin(const Vector2D& lposition, size_t ba = 0) const
   {
-    if (ba >= m_binningData.size()) return 0;
+    if (ba >= m_binningData.size()) {
+      return 0;
+    }
     return m_binningData[ba].searchLocal(lposition);
   }
   /// Check if bin is inside from Vector2D - optional transform applied
@@ -287,8 +299,11 @@ public:
     const Vector3D& bPosition
         = m_itransform ? Vector3D((*m_itransform) * position) : position;
     // loop and break
-    for (auto& bData : m_binningData)
-      if (!(bData.inside(bPosition))) return false;
+    for (auto& bData : m_binningData) {
+      if (!(bData.inside(bPosition))) {
+        return false;
+      }
+    }
     // survived all the checks
     return true;
   }
@@ -302,8 +317,11 @@ public:
   {
     return true;
     std::vector<BinningData>::const_iterator bdIter = m_binningData.begin();
-    for (; bdIter != m_binningData.end(); ++bdIter)
-      if (!(*bdIter).inside(lposition)) return false;
+    for (; bdIter != m_binningData.end(); ++bdIter) {
+      if (!(*bdIter).inside(lposition)) {
+        return false;
+      }
+    }
     return true;
   }
 
@@ -323,7 +341,9 @@ public:
   size_t
   max(size_t ba = 0) const
   {
-    if (ba >= m_binningData.size()) return 0;
+    if (ba >= m_binningData.size()) {
+      return 0;
+    }
     return (m_binningData[ba].bins() - 1);
   }
 
@@ -335,7 +355,9 @@ public:
   size_t
   bins(size_t ba) const
   {
-    if (ba >= m_binningData.size()) return 1;
+    if (ba >= m_binningData.size()) {
+      return 1;
+    }
     return (m_binningData[ba].bins());
   }
 
@@ -356,7 +378,9 @@ public:
   BinningValue
   binningValue(size_t ba = 0) const
   {
-    if (ba >= m_binningData.size()) throw "dimension out of bounds";
+    if (ba >= m_binningData.size()) {
+      throw "dimension out of bounds";
+    }
     return (m_binningData[ba].binvalue);
   }
 
@@ -394,12 +418,14 @@ public:
       sl << " - bins       : " << (*bdIter).bins() << std::endl;
       sl << " - min/max    : " << (*bdIter).min << " / " << (*bdIter).max
          << std::endl;
-      if ((*bdIter).type == equidistant)
+      if ((*bdIter).type == equidistant) {
         sl << " - step       : " << (*bdIter).step << std::endl;
+      }
       sl << " - boundaries : | ";
       std::vector<float>::const_iterator bIter = (*bdIter).boundaries().begin();
-      for (; bIter != (*bdIter).boundaries().end(); ++bIter)
+      for (; bIter != (*bdIter).boundaries().end(); ++bIter) {
         sl << (*bIter) << " | ";
+      }
       sl << std::endl;
     }
     return sl;

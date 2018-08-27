@@ -52,9 +52,9 @@ namespace detail {
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
   void
-  targetDebugLog(propagator_state_t&          state,
-                 std::string                  status,
-                 std::function<std::string()> logAction)
+  targetDebugLog(propagator_state_t&                 state,
+                 const std::string&                  status,
+                 const std::function<std::string()>& logAction)
   {
     if (state.options.debug) {
       std::stringstream dstream;
@@ -106,13 +106,14 @@ namespace detail {
         });
         // reaching the target means navigaiton break
         state.navigation.targetReached = true;
-      } else
+      } else {
         targetDebugLog(state, "o", [&] {
           std::stringstream dstream;
           dstream << "Target stepSize (path limit) updated to ";
           dstream << state.stepping.stepSize.toString();
           return dstream.str();
         });
+      }
       // path limit check
       return limitReached;
     }
@@ -123,12 +124,12 @@ namespace detail {
   struct SurfaceReached
   {
     /// Default Constructor
-    SurfaceReached() {}
+    SurfaceReached() = default;
 
     /// boolean operator for abort condition using the result (ignored)
     template <typename propagator_state_t, typename result_t>
     bool
-    operator()(const result_t&, propagator_state_t& state) const
+    operator()(const result_t& /*result*/, propagator_state_t& state) const
     {
       return operator()(state);
     }
@@ -142,7 +143,9 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (state.navigation.targetReached) return true;
+      if (state.navigation.targetReached) {
+        return true;
+      }
 
       // check if the cache filled the currentSurface
       if (state.navigation.currentSurface
@@ -202,12 +205,12 @@ namespace detail {
   struct EndOfWorldReached
   {
     /// Default Constructor
-    EndOfWorldReached() {}
+    EndOfWorldReached() = default;
 
     /// boolean operator for abort condition using the result (ignored)
     template <typename propagator_state_t, typename result_t>
     bool
-    operator()(const result_t&, propagator_state_t& state) const
+    operator()(const result_t& /*result*/, propagator_state_t& state) const
     {
       return operator()(state);
     }
@@ -221,7 +224,9 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (state.navigation.currentVolume) return false;
+      if (state.navigation.currentVolume) {
+        return false;
+      }
       state.navigation.targetReached = true;
       return true;
     }

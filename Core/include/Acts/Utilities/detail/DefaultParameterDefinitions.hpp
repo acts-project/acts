@@ -32,8 +32,8 @@ enum ParDef : unsigned int {
   NGlobalPars
 };
 
-typedef ParDef ParID_t;
-typedef double ParValue_t;
+using ParID_t    = ParDef;
+using ParValue_t = double;
 
 template <ParID_t>
 struct par_type;
@@ -44,13 +44,13 @@ using par_type_t = typename par_type<par>::type;
 template <>
 struct par_type<ParDef::eLOC_0>
 {
-  typedef local_parameter type;
+  using type = local_parameter;
 };
 
 template <>
 struct par_type<ParDef::eLOC_1>
 {
-  typedef local_parameter type;
+  using type = local_parameter;
 };
 
 template <>
@@ -66,7 +66,7 @@ struct par_type<ParDef::ePHI>
   {
     return M_PI;
   }
-  typedef cyclic_parameter<double, pMin, pMax> type;
+  using type = cyclic_parameter<double, pMin, pMax>;
 };
 
 template <>
@@ -82,12 +82,12 @@ struct par_type<ParDef::eTHETA>
   {
     return M_PI;
   }
-  typedef bound_parameter<double, pMin, pMax> type;
+  using type = bound_parameter<double, pMin, pMax>;
 };
 
 template <>
 struct par_type<ParDef::eQOP>
 {
-  typedef unbound_parameter type;
+  using type = unbound_parameter;
 };
 }  // namespace Acts

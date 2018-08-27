@@ -96,11 +96,11 @@ public:
   ///
   /// @param rinner is the inner radius of the cylinder
   /// @param router is the outer radius of the cylinder
-  /// @param halfPhiSector is the half opening angle
+  /// @param haphi is the half opening angle
   /// @param halez is the half length in z
   CylinderVolumeBounds(double rinner,
                        double router,
-                       double halfPhiSector,
+                       double haphi,
                        double halez);
 
   /// Copy Constructor
@@ -109,7 +109,7 @@ public:
   CylinderVolumeBounds(const CylinderVolumeBounds& cylbo);
 
   /// Destructor
-  virtual ~CylinderVolumeBounds();
+  ~CylinderVolumeBounds() override;
 
   /// Assignment operator
   CylinderVolumeBounds&
@@ -122,10 +122,10 @@ public:
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
-  /// @param gpos is a global position to be checked
+  /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
   bool
-  inside(const Vector3D& gpos, double tol = 0.) const override;
+  inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into boundarySurfaces
   /// @param transformPtr is the transform where the boundary surfaces are
@@ -138,13 +138,13 @@ public:
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the type used for the binning
-  virtual Vector3D
+  Vector3D
   binningOffset(BinningValue bValue) const override;
 
   /// Binning borders in double
   ///
   /// @param bValue is the type used for the binning
-  virtual double
+  double
   binningBorder(BinningValue bValue) const override;
 
   /// This method returns the inner radius
@@ -179,7 +179,7 @@ private:
   /// templated dumpT method
   template <class T>
   T&
-  dumpT(T& t) const;
+  dumpT(T& tstream) const;
 
   /// This method returns the associated CylinderBounds
   /// of the inner CylinderSurfaces.
@@ -231,16 +231,21 @@ CylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
 inline Vector3D
 CylinderVolumeBounds::binningOffset(BinningValue bValue) const
 {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::binR || bValue == Acts::binRPhi)
+  if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     return Vector3D(mediumRadius(), 0., 0.);
+  }
   return VolumeBounds::binningOffset(bValue);
 }
 
 inline double
 CylinderVolumeBounds::binningBorder(BinningValue bValue) const
 {  // the medium radius is taken for r-type binning
-  if (bValue == Acts::binR) return 0.5 * deltaRadius();
-  if (bValue == Acts::binZ) return halflengthZ();
+  if (bValue == Acts::binR) {
+    return 0.5 * deltaRadius();
+  }
+  if (bValue == Acts::binZ) {
+    return halflengthZ();
+  }
   return VolumeBounds::binningBorder(bValue);
 }
 

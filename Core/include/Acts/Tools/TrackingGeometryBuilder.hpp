@@ -60,11 +60,11 @@ public:
                                              Logging::INFO));
 
   /// Destructor
-  virtual ~TrackingGeometryBuilder() = default;
+  ~TrackingGeometryBuilder() override = default;
 
   /// TrackingGeometry Interface method
   /// @return a unique pointer to a TrackingGeometry
-  virtual std::unique_ptr<const TrackingGeometry>
+  std::unique_ptr<const TrackingGeometry>
   trackingGeometry() const final;
 
   /// Set configuration method
@@ -79,8 +79,9 @@ public:
   getConfiguration() const;
 
   /// set logging instance
+  /// @param newLogger the new logging instance
   void
-  setLogger(std::unique_ptr<const Logger> logger);
+  setLogger(std::unique_ptr<const Logger> newLogger);
 
 private:
   /// Configuration member

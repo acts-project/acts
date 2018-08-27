@@ -87,30 +87,30 @@ public:
   struct Config
   {
     /// Indicating that the DD4hep::DetElement is the beampipe
-    bool isBeampipe;
+    bool isBeampipe{false};
     /// Indicating that the DD4hep::DetElement is a barrel
-    bool isBarrel;
+    bool isBarrel{true};
     /// Indicating that the DD4hep::DetElement is an endcap
-    bool isEndcap;
+    bool isEndcap{false};
     /// Indicating that the DD4hep::DetElement is a layer
-    bool isLayer;
+    bool isLayer{false};
     /// This extension is needed to allow material mapping on a layer
     /// The number of bins indicate the granularity of the material map of one
     /// layer in the first direction which is phi for both, cylinder and disc
     /// layers.
     /// @note this extension should be set for a layer
-    size_t materialBins1;
+    size_t materialBins1{0};
     /// This extension is needed to allow material mapping on a layer
     /// The number of bins indicate the granularity of the material map of one
     /// layer in the first direction which is r in case of a disc layer and z in
     /// case of a cylinder layer.
     /// @note this extension should be set for a layer
-    size_t materialBins2;
+    size_t materialBins2{0};
     /// This extension is needed to allow material mapping
     /// States if the material should be mapped on the inner, the center or the
     /// outer surface of the layer
     /// @note this extension should be set for a layer
-    LayerMaterialPos layerMaterialPosition;
+    LayerMaterialPos layerMaterialPosition{LayerMaterialPos::inner};
     /// Orientation of the modules contained by a layer in respect to the
     /// tracking frame. A different orientation can occur because in TGeo (which
     /// is the underlying geometry model of %DD4hep) all shapes are 3D volumes
@@ -133,7 +133,7 @@ public:
     /// @note if the modules have a different orientation in respect to the
     /// tracking frame the axes should be set for the layer containing these
     /// modules
-    std::string axes;
+    std::string axes{"XYZ"};
     /// In case the Layers of the TrackingGeometry holding the sensitive
     /// modules should be build automatically by the TrackingGeometry tools,
     /// e.g. if Layers are only helper structs holding the detector modules
@@ -142,7 +142,7 @@ public:
     /// surrounding Layers, these two tolerances (evelopeR & envelopeZ) should
     /// be set for a layer. A tolerance added to the geometrical expansion of
     /// the contained geometrical objects in r
-    double envelopeR;
+    double envelopeR{0};
     /// In case the Layers of the TrackingGeometry holding the sensitive
     /// modules should be build automatically by the TrackingGeometry tools,
     /// e.g. if Layers are only helper structs holding the detector modules
@@ -151,21 +151,10 @@ public:
     /// surrounding Layers, these two tolerances (evelopeR & envelopeZ) should
     /// be set for a layer. A tolerance added to the geometrical expansion of
     /// the contained geometrical objects in z
-    double envelopeZ;
+    double envelopeZ{0};
 
     // default configuration
-    Config()
-      : isBeampipe(false)
-      , isEndcap(false)
-      , isLayer(false)
-      , materialBins1(0)
-      , materialBins2(0)
-      , layerMaterialPosition(LayerMaterialPos::inner)
-      , axes("XYZ")
-      , envelopeR(0.)
-      , envelopeZ(0.)
-    {
-    }
+    Config() = default;
   };
   /// Constructor
   ActsExtension(const Config& cfg);
@@ -180,9 +169,9 @@ public:
   ActsExtension(
       const std::vector<std::pair<dd4hep::Material, double>>& materials);
   /// Copy constructor
-  ActsExtension(const ActsExtension&, const dd4hep::DetElement&);
+  ActsExtension(const ActsExtension& det, const dd4hep::DetElement& elem);
   /// Destructor
-  ~ActsExtension() = default;
+  ~ActsExtension() override = default;
   /// Set configuration method
   /// @param config is the new configuration struct
   void
@@ -258,7 +247,9 @@ ActsExtension::isLayer() const
 inline bool
 ActsExtension::hasSupportMaterial() const
 {
-  if ((m_cfg.materialBins1 > 0) || (m_cfg.materialBins2 > 0)) return true;
+  if ((m_cfg.materialBins1 > 0) || (m_cfg.materialBins2 > 0)) {
+    return true;
+  }
   return false;
 }
 

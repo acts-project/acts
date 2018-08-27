@@ -122,8 +122,12 @@ namespace IntegrationTest {
 
     // calculate expected final momentum direction in phi in [-pi,pi]
     double exp_phi = std::fmod(phi + turns * 2 * M_PI, 2 * M_PI);
-    if (exp_phi < -M_PI) exp_phi += 2 * M_PI;
-    if (exp_phi > M_PI) exp_phi -= 2 * M_PI;
+    if (exp_phi < -M_PI) {
+      exp_phi += 2 * M_PI;
+    }
+    if (exp_phi > M_PI) {
+      exp_phi -= 2 * M_PI;
+    }
 
     // calculate expected position
     double exp_z = z + pz / pT * 2 * M_PI * r * std::abs(turns);
@@ -172,9 +176,9 @@ namespace IntegrationTest {
 
     // setup propagation options
     // Action list and abort list
-    typedef Acts::detail::DebugOutputActor DebugOutput;
-    typedef Acts::ActionList<DebugOutput>  ActionList;
-    typedef Acts::AbortList<>              AbortConditions;
+    using DebugOutput     = Acts::detail::DebugOutputActor;
+    using ActionList      = Acts::ActionList<DebugOutput>;
+    using AbortConditions = Acts::AbortList<>;
 
     typename Propagator_type::template Options<ActionList, AbortConditions>
         fwdOptions;
@@ -312,7 +316,7 @@ namespace IntegrationTest {
              bool                   debug        = false)
   {
 
-    typedef detail::DebugOutputActor DebugOutput;
+    using DebugOutput = detail::DebugOutputActor;
 
     // setup propagation options
     typename Propagator_type::template Options<ActionList<DebugOutput>> options;

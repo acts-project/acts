@@ -26,10 +26,8 @@ struct DigitizationCell
   {
   }
   // copy them
-  DigitizationCell(const DigitizationCell& dc)
-    : channel0(dc.channel0), channel1(dc.channel1), data(dc.data)
-  {
-  }
+  DigitizationCell(const DigitizationCell& dc) = default;
+
   /// To merge cells in case they are at the same position
   /// @param dc the cell to be added to the current cell
   /// @param analogueReadout flag indicating if we have analgue readout
@@ -60,9 +58,9 @@ struct DigitizationCell
 /// @brief DigitizationStep for further handling
 struct DigitizationStep
 {
-  double stepLength;   /// this is the path length within the cell
-  double driftLength;  /// this is the path length of the setp center to the
-                       /// readout surface
+  double stepLength{0.};   /// this is the path length within the cell
+  double driftLength{0.};  /// this is the path length of the setp center to the
+                           /// readout surface
   DigitizationCell stepCell;      /// this is the cell identifier of the segment
   Vector3D         stepEntry;     /// this is the Entry point into the segment
   Vector3D         stepExit;      /// this is the Exit point from the segment
@@ -72,9 +70,7 @@ struct DigitizationStep
 
   /// Standard constructor
   DigitizationStep()
-    : stepLength(0.)
-    , driftLength(0.)
-    , stepCell(0, 0)
+    : stepCell(0, 0)
     , stepEntry(0., 0., 0.)
     , stepExit(0., 0., 0.)
     , stepReadoutProjected(0., 0.)
@@ -91,13 +87,13 @@ struct DigitizationStep
   /// @param exitP is the exit position from the cell
   /// @param projectedPosition is the position on the readout surface
   /// @param cellPosition is the nominal position of the cell
-  DigitizationStep(double           sl,
-                   double           dl,
-                   DigitizationCell dc,
-                   const Vector3D&  entryP,
-                   const Vector3D&  exitP,
-                   const Vector2D&  projectedPosition,
-                   const Vector2D&  cellPosition)
+  DigitizationStep(double                  sl,
+                   double                  dl,
+                   const DigitizationCell& dc,
+                   const Vector3D&         entryP,
+                   const Vector3D&         exitP,
+                   const Vector2D&         projectedPosition,
+                   const Vector2D&         cellPosition)
     : stepLength(sl)
     , driftLength(dl)
     , stepCell(dc)

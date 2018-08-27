@@ -75,32 +75,32 @@ public:
   /// Constructor - the double trapezoid boundaries (
   /// symmetric trapezoid/diamond
   ///
-  /// @param minhlenghtx half length in x at minimum y
-  /// @param medhlengthx half length in x aty = 0
-  /// @param maxhlengthx half length in x at maximum x
-  /// @param hlenghty1 first half length in y (to negative)
-  /// @param hlenghty2 second half length in y (to positive)
-  /// @param hlengthz half length in z
-  DoubleTrapezoidVolumeBounds(double minhlenghtx,
-                              double medhlengthx,
-                              double maxhlengthx,
-                              double hlenghty1,
-                              double hlenghty2,
-                              double hlengthz);
+  /// @param minhalex half length in x at minimum y
+  /// @param medhalex half length in x aty = 0
+  /// @param maxhalex half length in x at maximum x
+  /// @param haley1 first half length in y (to negative)
+  /// @param haley2 second half length in y (to positive)
+  /// @param halez half length in z
+  DoubleTrapezoidVolumeBounds(double minhalex,
+                              double medhalex,
+                              double maxhalex,
+                              double haley1,
+                              double haley2,
+                              double halez);
 
   /// Copy Constructor
   ///
-  /// @param dtbo is the source bounds
-  DoubleTrapezoidVolumeBounds(const DoubleTrapezoidVolumeBounds& dtbo);
+  /// @param trabo is the source bounds
+  DoubleTrapezoidVolumeBounds(const DoubleTrapezoidVolumeBounds& trabo);
 
   /// Destructor
-  virtual ~DoubleTrapezoidVolumeBounds();
+  ~DoubleTrapezoidVolumeBounds() override;
 
   /// Assignment operator
   ///
-  /// @param dtbo is the source bounds
+  /// @param trabo is the source bounds
   DoubleTrapezoidVolumeBounds&
-  operator=(const DoubleTrapezoidVolumeBounds& dtbo);
+  operator=(const DoubleTrapezoidVolumeBounds& trabo);
 
   /// Virtual constructor
   DoubleTrapezoidVolumeBounds*
@@ -109,10 +109,10 @@ public:
   /// This method checks if position in the 3D volume frame
   /// is inside the cylinder
   ///
-  /// @param gpos is the global position to be checked for inside
+  /// @param pos is the global position to be checked for inside
   /// @param tol is the tolerance parametere
   bool
-  inside(const Vector3D& gpos, double tol = 0.) const override;
+  inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// decompose into boundary surfaces
   ///

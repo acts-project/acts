@@ -210,15 +210,23 @@ namespace Seeding {
     m_q        = 100000.;
 
     if (!sp->clusterList().second) {
-      m_covr                    = sp->covr * 9.;
-      m_covz                    = sp->covz * 9.;
-      if (m_covr < 0.06) m_covr = 0.06;
-      if (m_covz < 0.06) m_covz = 0.06;
+      m_covr = sp->covr * 9.;
+      m_covz = sp->covz * 9.;
+      if (m_covr < 0.06) {
+        m_covr = 0.06;
+      }
+      if (m_covz < 0.06) {
+        m_covz = 0.06;
+      }
     } else {
-      m_covr                   = sp->covr * 8.;
-      m_covz                   = sp->covz * 8.;
-      if (m_covr < 0.1) m_covr = 0.1;
-      if (m_covz < 0.1) m_covz = 0.1;
+      m_covr = sp->covr * 8.;
+      m_covz = sp->covz * 8.;
+      if (m_covr < 0.1) {
+        m_covr = 0.1;
+      }
+      if (m_covz < 0.1) {
+        m_covz = 0.1;
+      }
     }
   }
 
@@ -243,15 +251,23 @@ namespace Seeding {
     m_r        = sqrt(m_x * m_x + m_y * m_y);
     m_q        = 100000.;
     if (!sp->clusterList().second) {
-      m_covr                    = sp->covr * 9. * sc[0];
-      m_covz                    = sp->covz * 9. * sc[1];
-      if (m_covr < 0.06) m_covr = 0.06;
-      if (m_covz < 0.06) m_covz = 0.06;
+      m_covr = sp->covr * 9. * sc[0];
+      m_covz = sp->covz * 9. * sc[1];
+      if (m_covr < 0.06) {
+        m_covr = 0.06;
+      }
+      if (m_covz < 0.06) {
+        m_covz = 0.06;
+      }
     } else {
-      m_covr                   = sp->covr * 8. * sc[2];
-      m_covz                   = sp->covz * 8. * sc[3];
-      if (m_covr < 0.1) m_covr = 0.1;
-      if (m_covz < 0.1) m_covz = 0.1;
+      m_covr = sp->covr * 8. * sc[2];
+      m_covz = sp->covz * 8. * sc[3];
+      if (m_covr < 0.1) {
+        m_covr = 0.1;
+      }
+      if (m_covz < 0.1) {
+        m_covz = 0.1;
+      }
     }
 
     // old code:
@@ -290,7 +306,9 @@ namespace Seeding {
   inline void
   SPForSeed<SpacePoint>::setQuality(float q)
   {
-    if (q <= m_q) m_q = q;
+    if (q <= m_q) {
+      m_q = q;
+    }
   }
 
 }  // end of Seeding namespace

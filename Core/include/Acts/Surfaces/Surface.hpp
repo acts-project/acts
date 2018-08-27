@@ -61,13 +61,13 @@ public:
   };
 
   /// Typedef of the surface intersection
-  typedef ObjectIntersection<Surface> SurfaceIntersection;
+  using SurfaceIntersection = ObjectIntersection<Surface>;
 
   /// Constructor with Transform3D as a shared object
   ///
-  /// @param htrans Transform3D positions the surface in 3D global space
+  /// @param tform Transform3D positions the surface in 3D global space
   /// @note also acts as default constructor
-  Surface(std::shared_ptr<const Transform3D> htrans = nullptr);
+  Surface(std::shared_ptr<const Transform3D> tform = nullptr);
 
   /// Copy constructor
   /// @note copy construction invalidates the association
@@ -81,8 +81,8 @@ public:
   /// to detector element and identifier
   ///
   /// @param other Source surface for copy
-  /// @param transf Additional transform applied after copying from the source
-  Surface(const Surface& other, const Transform3D& transf);
+  /// @param shift Additional transform applied after copying from the source
+  Surface(const Surface& other, const Transform3D& shift);
 
   /// Constructor fromt DetectorElementBase: Element proxy
   ///
@@ -113,9 +113,9 @@ public:
 
   /// Comparison (non-equality) operator
   ///
-  /// @param other Source surface for the comparison
+  /// @param sf Source surface for the comparison
   virtual bool
-  operator!=(const Surface& other) const;
+  operator!=(const Surface& sf) const;
 
   /// Implicit constructor
   /// uses the copy constructor a new position can optionally be given
@@ -216,12 +216,12 @@ public:
   ///
   /// @tparam parameters_t The parameters type
   ///
-  /// @param parameters TrackParameters to be checked
+  /// @param pars TrackParameters to be checked
   /// @param bcheck BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
   template <typename parameters_t>
   bool
-  onSurface(const parameters_t&  parameters,
+  onSurface(const parameters_t&  pars,
             const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// The geometric onSurface method
@@ -235,11 +235,12 @@ public:
 
   /// The insideBounds method for local positions
   ///
-  /// @param lpos local position to check
+  /// @param locpos local position to check
   /// @param bcheck  BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
   virtual bool
-  insideBounds(const Vector2D& lpos, const BoundaryCheck& bcheck = true) const;
+  insideBounds(const Vector2D&      locpos,
+               const BoundaryCheck& bcheck = true) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
@@ -289,11 +290,11 @@ public:
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac is the jacobian to be initialized
-  /// @param pos is the global position of the parameters
+  /// @param jacobian is the jacobian to be initialized
+  /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
   /// @param pars is the parameter vector
-  virtual void initJacobianToGlobal(ActsMatrixD<7, 5>& jac,
+  virtual void initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
                                     const Vector3D&       gpos,
                                     const Vector3D&       dir,
                                     const ActsVectorD<5>& pars) const;
@@ -303,15 +304,15 @@ public:
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
-  /// @param jac is the jacobian to be initialized
-  /// @param pos is the global position of the parameters
+  /// @param jacobian is the jacobian to be initialized
+  /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
-  /// @param pars is the parameter vector
   ///
   /// @return the transposed reference frame (avoids recalculation)
-  virtual const RotationMatrix3D initJacobianToLocal(ActsMatrixD<5, 7>& jac,
-                                                     const Vector3D& gpos,
-                                                     const Vector3D& dir) const;
+  virtual const RotationMatrix3D
+      initJacobianToLocal(ActsMatrixD<5, 7>& jacobian,
+                          const Vector3D& gpos,
+                          const Vector3D& dir) const;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
@@ -416,15 +417,15 @@ protected:
   std::shared_ptr<const Transform3D> m_transform;
 
   /// Pointer to the a DetectorElementBase
-  const DetectorElementBase* m_associatedDetElement;
+  const DetectorElementBase* m_associatedDetElement{nullptr};
 
   /// The associated layer Layer - layer in which the Surface is be embedded,
   /// nullptr if not associated
-  const Layer* m_associatedLayer;
+  const Layer* m_associatedLayer{nullptr};
 
   /// The assoicated TrackingVolume - tracking volume in case the surface is a
   /// boundary surface, nullptr if not
-  const TrackingVolume* m_associatedTrackingVolume;
+  const TrackingVolume* m_associatedTrackingVolume{nullptr};
 
   /// Possibility to attach a material descrption
   std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;

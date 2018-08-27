@@ -19,11 +19,11 @@
 namespace Acts {
 
 class AbstractVolume;
-typedef std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>
-    BoundarySurfacePtr;
+using BoundarySurfacePtr
+    = std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>;
 
 class VolumeBounds;
-typedef std::shared_ptr<const VolumeBounds> VolumeBoundsPtr;
+using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 /// @class AbstractVolume
 ///
@@ -66,7 +66,7 @@ public:
   AbstractVolume() = delete;
 
   // Virtual Destructor
-  virtual ~AbstractVolume();
+  ~AbstractVolume() override;
 
   /// Assignment operator - deleted
   AbstractVolume&

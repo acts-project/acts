@@ -157,8 +157,9 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
     // - SuccessX  -> return (via handleReturnT)
     // - FailureX  -> return (via handleReturnT that might evoke a fallback)
     // - InProgess -> continue layer-to-layer loop
-    if (!eCode.inProgress())
+    if (!eCode.inProgress()) {
       return handleReturnT<T>(eCode, eCell, sf, pDir, bcheck);
+    }
   }
 
   // ----- [3] now resolve the boundary situation, call includes information

@@ -113,7 +113,9 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
   if (!eCell.startVolume) {
     // get the start volume
     auto ecVol = m_cfg.navigationEngine->resolvePosition(eCell, dir, true);
-    if (!ecVol.isSuccessOrRecovered() && !ecVol.inProgress()) return ecVol;
+    if (!ecVol.isSuccessOrRecovered() && !ecVol.inProgress()) {
+      return ecVol;
+    }
     // the volume is found and assigned as start volume
     eCell.startVolume = eCell.leadVolume;
   } else {
@@ -121,7 +123,9 @@ Acts::ExtrapolationEngine::initNavigation(Acts::ExtrapolationCell<T>& eCell,
     eCell.leadVolume = eCell.startVolume;
   }
   // bail out of the start volume can not be resolved
-  if (!eCell.startVolume) return ExtrapolationCode::FailureNavigation;
+  if (!eCell.startVolume) {
+    return ExtrapolationCode::FailureNavigation;
+  }
   // screen output
   EX_MSG_VERBOSE(
       eCell.navigationStep,

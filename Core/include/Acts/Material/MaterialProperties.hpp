@@ -37,14 +37,14 @@ public:
 
   /// Constructor - for averaged material
   ///
-  /// @param X0 is the radiation length in mm
-  /// @param L0 is the nuclear interaction length in mm
+  /// @param Xo is the radiation length in mm
+  /// @param Lo is the nuclear interaction length in mm
   /// @param averageA is the average atomic weight
   /// @param averageZ is the average atomic number
   /// @param averageRho is the average density in g/mm3
   /// @param thickness is the thickness of the material
-  MaterialProperties(float X0,
-                     float L0,
+  MaterialProperties(float Xo,
+                     float Lo,
                      float averageA,
                      float averageZ,
                      float averageRho,
@@ -52,9 +52,9 @@ public:
 
   /// Constructor - for full Material class
   ///
-  /// @param mat is the material
+  /// @param material is the material
   /// @param thickness is the thickness of the material
-  MaterialProperties(const Material& mat, float thickness);
+  MaterialProperties(const Material& material, float thickness);
 
   /// Constructor - for different layers of Material
   ///
@@ -69,7 +69,7 @@ public:
   MaterialProperties(const MaterialProperties& mprop);
 
   /// Destructor
-  virtual ~MaterialProperties() {}
+  virtual ~MaterialProperties() = default;
 
   /// Pseudo-Constructor clone()
   virtual MaterialProperties*
@@ -160,9 +160,9 @@ public:
   zOverAtimesRho() const;
 
 protected:
-  Material m_material;  //!< the material
-  float    m_dInX0;     //!< thickness in units of radiation length
-  float    m_dInL0;     //!< thickness in units of nuclear interaction length
+  Material m_material;   //!< the material
+  float    m_dInX0{0.};  //!< thickness in units of radiation length
+  float    m_dInL0{0.};  //!< thickness in units of nuclear interaction length
 };
 
 inline const Material&
@@ -231,7 +231,7 @@ std::ostream&
 operator<<(std::ostream& sl, const MaterialProperties& mprop);
 
 // Useful typedefs
-typedef std::vector<MaterialProperties*>      MaterialPropertiesVector;
-typedef std::vector<MaterialPropertiesVector> MaterialPropertiesMatrix;
+using MaterialPropertiesVector = std::vector<MaterialProperties*>;
+using MaterialPropertiesMatrix = std::vector<MaterialPropertiesVector>;
 
 }  // namespace

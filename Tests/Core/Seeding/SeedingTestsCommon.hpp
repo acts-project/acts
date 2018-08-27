@@ -35,8 +35,9 @@ template <typename Identifier>
 void
 print(const std::vector<Acts::Seeding::SpacePoint<Identifier>>& points)
 {
-  for (const auto& point : points)
+  for (const auto& point : points) {
     std::cout << point.identifier() << ' ' << point << '\n';
+  }
 }
 
 template <typename Identifier>
@@ -50,5 +51,7 @@ template <typename Identifier, size_t N>
 void
 print(const std::vector<Acts::Seeding::TrackSeed<Identifier, N>>& seeds)
 {
-  for (const auto& seed : seeds) std::cout << seed << '\n';
+  for (const auto& seed : seeds) {
+    std::cout << seed << '\n';
+  }
 }

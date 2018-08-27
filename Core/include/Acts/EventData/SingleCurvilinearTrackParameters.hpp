@@ -26,8 +26,8 @@ class SingleCurvilinearTrackParameters
     : public SingleTrackParameters<ChargePolicy>
 {
 public:
-  typedef typename SingleTrackParameters<ChargePolicy>::CovPtr_t
-      CovPtr_t;  ///< type of covariance matrix
+  /// type of covariance matrix
+  using CovPtr_t = typename SingleTrackParameters<ChargePolicy>::CovPtr_t;
 
   /// @brief constructor for curvilienear representation
   /// This is the constructor from global parameters, enabled only
@@ -96,7 +96,7 @@ public:
   }
 
   /// @brief desctructor
-  virtual ~SingleCurvilinearTrackParameters() = default;
+  ~SingleCurvilinearTrackParameters() override = default;
 
   /// @brief copy assignment operator - charged/netural
   /// virtual constructor for type creation without casting
@@ -126,7 +126,7 @@ public:
 
   /// @brief clone - charged/netural
   /// virtual constructor for type creation without casting
-  virtual SingleTrackParameters<ChargePolicy>*
+  SingleTrackParameters<ChargePolicy>*
   clone() const override
   {
     return new SingleCurvilinearTrackParameters<ChargePolicy>(*this);
@@ -180,8 +180,8 @@ public:
   }
 
   /// @brief access to the reference surface
-  virtual const Surface&
-  referenceSurface() const final override
+  const Surface&
+  referenceSurface() const final
   {
     return m_upSurface;
   }
@@ -192,8 +192,8 @@ public:
   ///
   /// For a curvilinear track parameterisation this is identical to the
   /// rotation matrix of the intrinsic planar surface.
-  virtual RotationMatrix3D
-  referenceFrame() const final override
+  RotationMatrix3D
+  referenceFrame() const final
   {
     return m_upSurface.transform().linear();
   }

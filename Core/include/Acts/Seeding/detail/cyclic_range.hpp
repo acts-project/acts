@@ -107,7 +107,9 @@ namespace detail {
           = std::lower_bound(values.begin(), values.end(), phi0, compValPhi);
       auto it1 = std::upper_bound(it0, values.end(), phi1, compPhiVal);
       // special value for empty range
-      if (it0 == it1) return {values, 0, 0};
+      if (it0 == it1) {
+        return {values, 0, 0};
+      }
       return {values,
               Index(std::distance(values.begin(), it0)),
               Index(std::distance(it0, it1))};
@@ -116,8 +118,9 @@ namespace detail {
     auto it1 = std::upper_bound(values.begin(), values.end(), phi1, compPhiVal);
     auto it0 = std::lower_bound(it1, values.end(), phi0, compValPhi);
     // wrap-around can be reduced to linear part
-    if (it0 == values.end())
+    if (it0 == values.end()) {
       return {values, 0, Index(std::distance(values.begin(), it1))};
+    }
     // full wrap-around w/ elements before and after end
     return {values,
             Index(std::distance(values.begin(), it0)),
