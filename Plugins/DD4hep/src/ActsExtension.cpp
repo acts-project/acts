@@ -41,7 +41,7 @@ Acts::ActsExtension::ActsExtension(
 }
 
 Acts::ActsExtension::ActsExtension(const ActsExtension& det,
-                                   const dd4hep::DetElement&)
+                                   const dd4hep::DetElement& /*elem*/)
   : Acts::IActsExtension(), m_cfg(det.m_cfg), m_material(det.m_material)
 {
 }

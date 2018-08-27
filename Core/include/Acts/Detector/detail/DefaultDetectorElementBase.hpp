@@ -42,10 +42,10 @@ class DetectorElementBase BASE_EXTENSION
 {
 public:
   /// Constructor
-  DetectorElementBase() {}
+  DetectorElementBase() = default;
 
   /// virtual Destructor
-  virtual ~DetectorElementBase() {}
+  virtual ~DetectorElementBase() = default;
 
   /// Return the transform for the Element proxy mechanism
   virtual const Transform3D&
@@ -116,8 +116,9 @@ DetectorElementBase::registerBinmembers(
   for (auto& bmember : binmembers) {
     // only fill if it's not yet registered
     if (find(m_binmembers.begin(), m_binmembers.end(), bmember)
-        == m_binmembers.end())
+        == m_binmembers.end()) {
       m_binmembers.push_back(bmember);
+    }
   }
 }
 
@@ -128,8 +129,9 @@ DetectorElementBase::registerNeighbours(
   for (auto& neighbour : neighbours) {
     // only fill if it's not yet registered
     if (find(m_neighbours.begin(), m_neighbours.end(), neighbour)
-        == m_neighbours.end())
+        == m_neighbours.end()) {
       m_neighbours.push_back(neighbour);
+    }
   }
 }
 

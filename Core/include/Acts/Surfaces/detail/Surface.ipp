@@ -19,7 +19,7 @@ Surface::center() const
 }
 
 inline const Acts::Vector3D
-Surface::normal(const Vector3D&) const
+Surface::normal(const Vector3D& /*unused*/) const
 {
   return normal(s_origin2D);
 }
@@ -27,15 +27,20 @@ Surface::normal(const Vector3D&) const
 inline bool
 Surface::isFree() const
 {
-  return (!m_associatedDetElement && !m_associatedTrackingVolume
-          && !m_associatedLayer);
+  return ((m_associatedDetElement == nullptr)
+          && (m_associatedTrackingVolume == nullptr)
+          && (m_associatedLayer == nullptr));
 }
 
 inline const Transform3D&
 Surface::transform() const
 {
-  if (m_transform) return (*(m_transform.get()));
-  if (m_associatedDetElement) return m_associatedDetElement->transform();
+  if (m_transform != nullptr) {
+    return (*(m_transform.get()));
+  }
+  if (m_associatedDetElement != nullptr) {
+    return m_associatedDetElement->transform();
+  }
   return s_idTransform;
 }
 
