@@ -1,4 +1,4 @@
-// This file is part of the Acts project.ACTFWDD4hepPlugin
+// This file is part of the Acts project.
 //
 // Copyright (C) 2016-2018 Acts project team
 //
