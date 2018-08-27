@@ -542,8 +542,12 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
         F += pi2;
       }
 
-      int                    f = int(F * m_sF);
-      f<0 ? f = m_fNmax : f> m_fNmax ? f = 0 : f = f;
+      int f = int(F * m_sF);
+      if (f < 0) {
+        f = m_fNmax;
+      } else if (f > m_fNmax) {
+        f = 0;
+      }
 
       int   z;
       float Z = (*r)->z();
