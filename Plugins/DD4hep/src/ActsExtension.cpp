@@ -44,12 +44,13 @@ Acts::ActsExtension::ActsExtension(
 {
   Acts::MaterialProperties matprop;
   for (auto& mat : materials) {
-    matprop.add(MaterialProperties(mat.first.radLength(),
-                                   mat.first.intLength(),
-                                   mat.first.A(),
-                                   mat.first.Z(),
-                                   mat.first.density(),
-                                   mat.second));
+    matprop.add(
+        MaterialProperties(mat.first.radLength() * units::_cm,
+                           mat.first.intLength() * units::_cm,
+                           mat.first.A(),
+                           mat.first.Z(),
+                           mat.first.density() / pow(Acts::units::_cm, 3),
+                           mat.second * units::_mm));
   }
   //  Create homogenous surface material with averaged material properties
   m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
