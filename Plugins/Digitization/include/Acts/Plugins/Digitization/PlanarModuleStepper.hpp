@@ -87,7 +87,7 @@ private:
   }
 
   /// the config class
-  Config m_cfg;
+  // Config m_cfg; // currently unused
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;

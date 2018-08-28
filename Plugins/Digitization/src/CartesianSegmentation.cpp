@@ -12,7 +12,7 @@
 
 #include <utility>
 
-#include "Acts/Plugin/Digitization/CartesianSegmentation.hpp"
+#include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
