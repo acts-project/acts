@@ -31,7 +31,7 @@ Acts::ActsExtension::ActsExtension(
     std::shared_ptr<const DigitizationModule> digiModule)
   : Acts::IActsExtension()
   , m_material(nullptr)
-  , m_digitizationModule(digiModule)
+  , m_digitizationModule(std::move(digiModule))
 {
 }
 
@@ -40,7 +40,7 @@ Acts::ActsExtension::ActsExtension(
     std::shared_ptr<const DigitizationModule> digiModule)
   : Acts::IActsExtension()
   , m_material(nullptr)
-  , m_digitizationModule(digiModule)
+  , m_digitizationModule(std::move(digiModule))
 {
   Acts::MaterialProperties matprop;
   for (auto& mat : materials) {

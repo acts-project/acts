@@ -26,8 +26,8 @@ Acts::DD4hepDetElement::DD4hepDetElement(
                               axes,
                               scalor,
                               isDisc,
-                              material,
-                              digitizationModule)
+                              std::move(material),
+                              std::move(digitizationModule))
   , m_detElement(std::move(detElement))
 {
 }
