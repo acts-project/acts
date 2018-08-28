@@ -262,11 +262,11 @@
 /// paramters for material mapping.
 /// Please find further information in Acts::ActsExtension.
 ///
-/// <B>DD4hepDetElement</B>
+/// <B>DD4hepDetectorElement</B>
 ///
 /// In Acts the surfaces describing the sensitive modules of a detector are directly
 /// linked to these of the initial geometry input. In the case of \a %DD4hep the
-/// Acts::DD4hepDetElement was introduced which is the direct link of Acts to \a %DD4hep.
+/// Acts::DD4hepDetectorElement was introduced which is the direct link of Acts to \a %DD4hep.
 /// In the case for tracking relevant paramters in the \a %DD4hep geometry description
 /// are changed (e.g. alignment) it will be automatically changed in Acts.
 ///

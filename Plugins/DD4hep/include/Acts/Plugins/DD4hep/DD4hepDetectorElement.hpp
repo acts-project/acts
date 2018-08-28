@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// DD4hepDetElement.h, Acts project, DD4hepDetector plugin
+// DD4hepDetectorElement.h, Acts project, DD4hepDetector plugin
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -19,15 +19,16 @@ namespace Acts {
 /// Forward declaration of Digitization module is enough
 class DigitizationModule;
 
-/// @class DD4hepDetElement
+/// @class DD4hepDetectorElement
 ///
 /// @brief DetectorElement class implementation for DD4hep geometry
 ///
 /// DetectorElement plugin for DD4hep detector elements. DD4hep is based on TGeo
-/// shapes, therefore the DD4hepDetElement inherits from TGeoDetectorElement.
+/// shapes, therefore the DD4hepDetectorElement inherits from
+/// TGeoDetectorElement.
 /// The
 /// full geometrical information is provided by the TGeoDetectorElement. The
-/// DD4hepDetElement extends the TGeoDetectorElement by containing a
+/// DD4hepDetectorElement extends the TGeoDetectorElement by containing a
 /// segmentation
 /// for the readout.
 
@@ -37,7 +38,7 @@ class DigitizationModule;
 /// if not used with DD4hep?
 /// @todo segmentation
 
-class DD4hepDetElement : public TGeoDetectorElement
+class DD4hepDetectorElement : public TGeoDetectorElement
 {
 public:
   /// Constructor
@@ -69,15 +70,15 @@ public:
   ///       should be translated to a disc surface. Per default it will be
   ///       translated into a cylindrical surface.
   /// @param material Possible material of detector element
-  DD4hepDetElement(const dd4hep::DetElement                  detElement,
-                   const std::string&                        axes     = "XYZ",
-                   double                                    scalor   = 1.,
-                   bool                                      isDisc   = false,
-                   std::shared_ptr<const SurfaceMaterial>    material = nullptr,
-                   std::shared_ptr<const DigitizationModule> digitizationModule
-                   = nullptr);
+  DD4hepDetectorElement(
+      const dd4hep::DetElement                  detElement,
+      const std::string&                        axes               = "XYZ",
+      double                                    scalor             = 1.,
+      bool                                      isDisc             = false,
+      std::shared_ptr<const SurfaceMaterial>    material           = nullptr,
+      std::shared_ptr<const DigitizationModule> digitizationModule = nullptr);
   /// Desctructor
-  ~DD4hepDetElement() override = default;
+  ~DD4hepDetectorElement() override = default;
 
 private:
   /// DD4hep detector element

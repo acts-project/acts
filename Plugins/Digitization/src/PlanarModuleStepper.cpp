@@ -17,7 +17,6 @@
 #include "Acts/Utilities/Intersection.hpp"
 
 Acts::PlanarModuleStepper::PlanarModuleStepper(
-    const Config& /*pmsConfig*/,  // this is currently unused
     std::unique_ptr<const Logger> mlogger)
   : m_logger(std::move(mlogger))
 {
@@ -66,7 +65,7 @@ Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
   // reserve the right amount
   cSteps.reserve(stepIntersections.size());
   for (auto& sIntersection : stepIntersections) {
-    // create the new cStep
+    // create the new digitization step
     cSteps.push_back(
         dmodule.digitizationStep(lastPosition, sIntersection.position));
     lastPosition = sIntersection.position;
