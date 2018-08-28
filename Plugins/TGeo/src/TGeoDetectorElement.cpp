@@ -37,7 +37,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   , m_detElement(tGeoDetElement)
   , m_identifier(identifier)
   , m_thickness(0.)
-  , m_digitizationModule(digitizationModule)
+  , m_digitizationModule(std::move(digitizationModule))
 {
 
   // create temporary local non const surface (to allow setting the material)
@@ -385,7 +385,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   , m_detElement(tGeoDetElement)
   , m_identifier(identifier)
   , m_thickness(0.)
-  , m_digitizationModule(digitizationModule)
+  , m_digitizationModule(std::move(digitizationModule))
 {
   // create temporary local non const surface (to allow setting the material)
   std::shared_ptr<Surface> surface = nullptr;

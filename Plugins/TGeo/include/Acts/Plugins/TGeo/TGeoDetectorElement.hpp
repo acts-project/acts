@@ -145,7 +145,7 @@ public:
 
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const Acts::DigitizationModule>
-  digitizationModule() const final override;
+  digitizationModule() const final;
 
 private:
   /// DD4hep detector element, just linked - not owned
