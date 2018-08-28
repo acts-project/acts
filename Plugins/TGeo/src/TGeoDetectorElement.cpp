@@ -36,7 +36,6 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   : Acts::IdentifiedDetectorElement()
   , m_detElement(tGeoDetElement)
   , m_identifier(identifier)
-  , m_thickness(0.)
   , m_digitizationModule(std::move(digitizationModule))
 {
 
