@@ -19,9 +19,16 @@ set(_supported_components)
 
 # add an optional directory and register its name as a component
 function(add_component_if path)
-  get_filename_component(_name "${path}" NAME)
+  set(_active ${ARGV1})
+  set(_explicit_name ${ARGV2})
+  get_filename_component(_dirname "${path}" NAME)
+  if("${_explicit_name}" STREQUAL "")
+    set(_name ${_dirname})
+  else()
+    set(_name ${_explicit_name})
+  endif()
   file(RELATIVE_PATH _rel ${PROJECT_SOURCE_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/${path}")
-  if(${ARGN})
+  if(${_active})
     add_subdirectory(${path})
     list(APPEND _supported_components "${_name}")
     set(_supported_components "${_supported_components}" PARENT_SCOPE)
@@ -33,7 +40,12 @@ endfunction()
 
 # add a directory and register its name as a component
 macro(add_component path)
-  add_component_if(${path} TRUE)
+  set(_explicit_name ${ARGV1})
+  if("${_explicit_name}" STREQUAL "")
+    add_component_if(${path} TRUE)
+  else()
+    add_component_if(${path} TRUE ${_explicit_name})
+  endif()
 endmacro()
 
 # propagate the list of components to the parent scope

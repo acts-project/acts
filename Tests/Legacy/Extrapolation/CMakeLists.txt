@@ -1,6 +1,6 @@
 add_executable (ExtrapolationCellTests ExtrapolationCellTests.cpp)
 target_include_directories (ExtrapolationCellTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (ExtrapolationCellTests PRIVATE Acts::Core Acts::Legacy)
+target_link_libraries (ExtrapolationCellTests PRIVATE ActsCore ActsLegacy)
 add_test (NAME ExtrapolationCellUnitTest COMMAND ExtrapolationCellTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST ExtrapolationCellUnitTest TARGETS ExtrapolationCellTests)
 

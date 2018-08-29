@@ -1,5 +1,5 @@
 add_executable (CylinderVolumeBoundsTests CylinderVolumeBoundsTests.cpp)
 target_include_directories (CylinderVolumeBoundsTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (CylinderVolumeBoundsTests PRIVATE Acts::Core)
+target_link_libraries (CylinderVolumeBoundsTests PRIVATE ActsCore)
 add_test(NAME CylinderVolumeBoundsUnitTest COMMAND CylinderVolumeBoundsTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST CylinderVolumeBoundsUnitTest TARGETS CylinderVolumeBoundsTests)
