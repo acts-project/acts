@@ -9,8 +9,8 @@
 #pragma once
 #include <algorithm>
 
-#include "Acts/Utilities/detail/periodic.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 namespace Acts {
 namespace detail {

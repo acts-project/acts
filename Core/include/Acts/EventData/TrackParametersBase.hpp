@@ -14,8 +14,8 @@
 // Acts includes
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
-#include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 // forward declarations

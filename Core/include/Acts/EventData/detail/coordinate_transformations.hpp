@@ -72,7 +72,8 @@ namespace detail {
       ActsVectorD<2> localPosition;
       s.globalToLocal(pos, mom, localPosition);
       ParVector_t result;
-      result << localPosition(0), localPosition(1), LA::phi(mom), LA::theta(mom),
+      result << localPosition(0), localPosition(1), LA::phi(mom),
+          LA::theta(mom),
           ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm();
       return result;
     }

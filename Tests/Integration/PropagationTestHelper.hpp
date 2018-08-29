@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "covariance_validation_fixture.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "covariance_validation_fixture.hpp"
 
 namespace tt = boost::test_tools;
 

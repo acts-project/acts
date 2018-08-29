@@ -16,9 +16,9 @@
 #include <iomanip>
 #include <iostream>
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 Acts::CylinderBounds::CylinderBounds(double radius, double halfZ)
   : CylinderBounds(radius, 0, M_PI, halfZ)

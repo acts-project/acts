@@ -56,62 +56,60 @@ namespace Acts {
 
 namespace LinearAlgebra {
 
-namespace detail {
-// helper to figure out if a type has a member called phi
-BOOST_TTI_HAS_MEMBER_FUNCTION(phi)
-template <typename T>
-using has_phi_method = has_member_function_phi<T, 
-                                               double, 
-                                               boost::mpl::vector<>, 
-                                               boost::function_types::const_qualified>;
-}
+  namespace detail {
+    // helper to figure out if a type has a member called phi
+    BOOST_TTI_HAS_MEMBER_FUNCTION(phi)
+    template <typename T>
+    using has_phi_method
+        = has_member_function_phi<T,
+                                  double,
+                                  boost::mpl::vector<>,
+                                  boost::function_types::const_qualified>;
+  }
 
-// default call on Eigen types, calculate radius
-template <typename Derived>
-double phi(const Eigen::MatrixBase<Derived>& v)
-{
-  if (v.rows() < 2) return 0.;
-  return std::atan2(v[1], v[0]);
-}
+  // default call on Eigen types, calculate radius
+  template <typename Derived>
+  double
+  phi(const Eigen::MatrixBase<Derived>& v)
+  {
+    if (v.rows() < 2) return 0.;
+    return std::atan2(v[1], v[0]);
+  }
 
-// if called-upon type has phi method, call that
-template <typename T,
-         std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
-double phi(const T& v) {
-  return v.phi();
-}
+  // if called-upon type has phi method, call that
+  template <typename T,
+            std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
+  double
+  phi(const T& v)
+  {
+    return v.phi();
+  }
 
-template <typename Derived>
-double
-perp(const Eigen::MatrixBase<Derived>& v)
-{
-  if (v.rows() < 2) return 0.;
-  return std::sqrt(v[0] * v[0] + v[1] * v[1]);
-}
+  template <typename Derived>
+  double
+  perp(const Eigen::MatrixBase<Derived>& v)
+  {
+    if (v.rows() < 2) return 0.;
+    return std::sqrt(v[0] * v[0] + v[1] * v[1]);
+  }
 
+  template <typename Derived>
+  double
+  theta(const Eigen::MatrixBase<Derived>& v)
+  {
+    if (v.rows() < 3) return 0.;
+    return std::atan2(std::sqrt(v[0] * v[0] + v[1] * v[1]), v[2]);
+  }
 
-template <typename Derived>
-double
-theta(const Eigen::MatrixBase<Derived>& v)
-{
-  if (v.rows() < 3) return 0.;
-  return std::atan2(
-      std::sqrt(v[0] * v[0] + v[1] * v[1]), v[2]);
-}
-  
-
-template <typename Derived>
-double
-eta(const Eigen::MatrixBase<Derived>& v)
-{
-  return -std::log(std::tan(theta(v) * .5));  // TODO: slow
-}
-
-
+  template <typename Derived>
+  double
+  eta(const Eigen::MatrixBase<Derived>& v)
+  {
+    return -std::log(std::tan(theta(v) * .5));  // TODO: slow
+  }
 }
 
 namespace LA = LinearAlgebra;
-
 
 inline double
 roundWithPrecision(double val, int precision)

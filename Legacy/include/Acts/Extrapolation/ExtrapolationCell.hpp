@@ -592,8 +592,8 @@ public:
       // else the leadParamenters are used
       if (LA::perp(leadParameters->position())
           > LA::perp(leadParameters->position()
-             + navigationDirection * leadParameters->momentum().normalized())
-         )  {
+                     + navigationDirection
+                         * leadParameters->momentum().normalized())) {
         radialDirection = -1;
       }
     }
@@ -611,8 +611,8 @@ public:
     // this was radially inwards moving and stays like this
     if (LA::perp(leadParameters->position())
         > LA::perp(leadParameters->position()
-           + navigationDirection * leadParameters->momentum().normalized())
-       ) {
+                   + navigationDirection
+                       * leadParameters->momentum().normalized())) {
       return true;
     }
     // radial direction changed

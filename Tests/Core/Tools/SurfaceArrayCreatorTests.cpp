@@ -45,7 +45,7 @@ namespace Test {
 #define CHECK_ROTATION_ANGLE(t, a, tolerance)                                  \
   {                                                                            \
     Vector3D v = (*t) * Vector3D(1, 0, 0);                                     \
-    BOOST_CHECK_SMALL(LA::phi(v) - (a), tolerance);                               \
+    BOOST_CHECK_SMALL(LA::phi(v) - (a), tolerance);                            \
   }
 
   using SrfVec = std::vector<const Surface*>;
@@ -537,7 +537,8 @@ namespace Test {
     axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
 
     BOOST_TEST(axis.nBins == 3);
-    BOOST_CHECK_CLOSE_FRACTION(axis.max, LA::perp(Vector3D(20 + 2, 1, 0)), 1e-3);
+    BOOST_CHECK_CLOSE_FRACTION(
+        axis.max, LA::perp(Vector3D(20 + 2, 1, 0)), 1e-3);
     // BOOST_TEST(axis.min == 8, tt::tolerance(1e-3)); // fails for some reason
     BOOST_CHECK_SMALL((axis.min - 8), 1e-3);
     BOOST_TEST(axis.bType == equidistant);

@@ -16,9 +16,9 @@
 #include <iomanip>
 #include <iostream>
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 Acts::EllipseBounds::EllipseBounds(double minRadius0,
                                    double minRadius1,

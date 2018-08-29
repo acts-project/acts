@@ -399,8 +399,8 @@ Acts::SurfaceArrayCreator::createVariableAxis(
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
-      double edge
-          = 0.5 * (previous + LA::phi(surface->binningPosition(binPhi))) + angle;
+      double edge = 0.5 * (previous + LA::phi(surface->binningPosition(binPhi)))
+          + angle;
       bValues.push_back(edge);
       previous = LA::phi(surface->binningPosition(binPhi));
     }
@@ -415,13 +415,12 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // get the global vertices
     std::vector<Acts::Vector3D> backVertices
         = makeGlobalVertices(*backSurface, backBounds->vertices());
-    double maxBValue = LA::phi(*std::max_element(backVertices.begin(),
-                                        backVertices.end(),
-                                        [](const Acts::Vector3D& a,
-                                           const Acts::Vector3D& b) {
-                                          return LA::phi(a) < LA::phi(b);
-                                        })
-                              );
+    double maxBValue = LA::phi(
+        *std::max_element(backVertices.begin(),
+                          backVertices.end(),
+                          [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
+                            return LA::phi(a) < LA::phi(b);
+                          }));
 
     bValues.push_back(maxBValue);
 

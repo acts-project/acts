@@ -11,9 +11,9 @@
 #define BOOST_TEST_MODULE Mapped magnetic field tests
 #include <boost/test/included/unit_test.hpp>
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 namespace tt = boost::test_tools;
 
