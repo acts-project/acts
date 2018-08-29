@@ -8,11 +8,6 @@
 
 #pragma once
 
-// API addons
-#ifndef EIGEN_MATRIXBASE_PLUGIN
-#define EIGEN_MATRIXBASE_PLUGIN "Acts/Utilities/detail/MatrixBasePlugin.hpp"
-#endif
-
 // for GNU: ignore this specific warning, otherwise just include Eigen/Dense
 #if defined(__GNUC__) && !defined(__clang__) && !defined(__INTEL_COMPILER)
 #pragma GCC diagnostic push
