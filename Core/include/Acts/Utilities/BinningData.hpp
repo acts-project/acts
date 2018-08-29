@@ -301,7 +301,7 @@ public:
       return (LA::perp(position) * LA::phi(position));
     }
     if (binvalue == binEta) {
-      return (position.eta());
+      return (LA::eta(position));
     }
     if (binvalue < 3) {
       return (position[binvalue]);

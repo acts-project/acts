@@ -14,26 +14,9 @@
 
 // ------- Methods for 3D vector type objects ---------------------- //
 
-/** perp method - perpendicular length */
-
-/** perp2 method - perpendicular length squared */
 
 
 
-/** phi method */
 
-/** theta method */
-inline Scalar
-theta() const
-{
-  if (this->rows() < 3) return 0.;
-  return std::atan2(
-      std::sqrt((*this)[0] * (*this)[0] + (*this)[1] * (*this)[1]), (*this)[2]);
-}
 
-/** pseudorapidity  method */
-inline Scalar
-eta() const
-{
-  return -std::log(std::tan(this->theta() * .5));  // TODO: slow
-}
+

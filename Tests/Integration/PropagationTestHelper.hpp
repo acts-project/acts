@@ -111,7 +111,7 @@ namespace IntegrationTest {
     // clang-format off
     BOOST_TEST((pT - LA::perp(tp->momentum())) == 0., tt::tolerance(1 * units::_keV));
     BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((theta - tp->momentum().theta()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((theta - LA::theta(tp->momentum())) == 0., tt::tolerance(1e-4));
     // clang-format on
 
     double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));

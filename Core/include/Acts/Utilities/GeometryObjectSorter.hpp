@@ -61,7 +61,7 @@ public:
     }
     // compare on eta
     case binEta: {
-      return (one.eta() < two.eta());
+      return (LA::eta(one) < LA::eta(two));
     }
     // default for the moment
     default: {
@@ -96,7 +96,7 @@ public:
     , m_reference(reference)
     , m_refR(LA::perp(reference))
     , m_refPhi(LA::phi(reference))
-    , m_refEta(reference.eta())
+    , m_refEta(LA::eta(reference))
   {
   }
 
@@ -144,8 +144,8 @@ public:
     }
     // compare on eta
     case binEta: {
-      double diffOneEta = one.eta() - m_refEta;
-      double diffTwoEta = two.eta() - m_refEta;
+      double diffOneEta = LA::eta(one) - m_refEta;
+      double diffTwoEta = LA::eta(two) - m_refEta;
       return (diffOneEta * diffOneEta < diffTwoEta * diffTwoEta);
     }
     // default for the moment

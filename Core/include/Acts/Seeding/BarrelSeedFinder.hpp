@@ -44,12 +44,12 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
   for (const auto& p0 : barrel0.points) {
     for (const auto& p1 : barrel1.rangeDeltaPhi(LA::phi(p0), cfg.rangePhi1)) {
       Vector3D d01     = p1.position() - p0.position();
-      double   theta01 = d01.theta();
+      double   theta01 = LA::theta(d01);
       // Acts::Vector3D at2
       //     = detail::calcLineCircleIntersection(p0, d01, barrel2.radius);
       for (const auto& p2 : barrel2.rangeDeltaPhi(LA::phi(p1), cfg.rangePhi2)) {
         Vector3D d12     = p2.position() - p1.position();
-        double   theta12 = d12.theta();
+        double   theta12 = LA::theta(d12);
 
         if (cfg.maxDeltaTheta < std::abs(theta12 - theta01)) {
           continue;

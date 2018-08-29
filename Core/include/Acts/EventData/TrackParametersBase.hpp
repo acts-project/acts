@@ -135,7 +135,7 @@ public:
   double
   eta() const
   {
-    return momentum().eta();
+    return LA::eta(momentum());
   }
 
   /// @brief retrieve electric charge

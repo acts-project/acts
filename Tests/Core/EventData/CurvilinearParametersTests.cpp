@@ -35,7 +35,7 @@ namespace Test {
 
     /// check local coordinates
     const auto   fphi   = LA::phi(mom);
-    const auto   ftheta = mom.theta();
+    const auto   ftheta = LA::theta(mom);
     const double oOp    = 1. / mom.norm();
 
     // check parameters

@@ -274,7 +274,7 @@ public:
         Vector2D loc{0., 0.};
         surface.globalToLocal(pos, dir, loc);
         ActsVectorD<5> pars;
-        pars << loc[eLOC_0], loc[eLOC_1], LA::phi(dir), dir.theta(), q / p;
+        pars << loc[eLOC_0], loc[eLOC_1], LA::phi(dir), LA::theta(dir), q / p;
         surface.initJacobianToGlobal(jacToGlobal, pos, dir, pars);
       }
       // store in the global jacobian

@@ -90,6 +90,24 @@ perp(const Eigen::MatrixBase<Derived>& v)
 }
 
 
+template <typename Derived>
+double
+theta(const Eigen::MatrixBase<Derived>& v)
+{
+  if (v.rows() < 3) return 0.;
+  return std::atan2(
+      std::sqrt(v[0] * v[0] + v[1] * v[1]), v[2]);
+}
+  
+
+template <typename Derived>
+double
+eta(const Eigen::MatrixBase<Derived>& v)
+{
+  return -std::log(std::tan(theta(v) * .5));  // TODO: slow
+}
+
+
 }
 
 namespace LA = LinearAlgebra;
@@ -276,7 +294,7 @@ deltaPhi(const Acts::Vector3D& v1, const Acts::Vector3D& v2)
 inline double
 deltaR(const Acts::Vector3D& v1, const Acts::Vector3D& v2)
 {
-  double a = v1.eta() - v2.eta();
+  double a = LA::eta(v1) - LA::eta(v2);
   double b = deltaPhi(v1, v2);
   return sqrt(a * a + b * b);
 }
