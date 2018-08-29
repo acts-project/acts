@@ -15,7 +15,7 @@
 #include "Acts/Material/SurfaceMaterialProxy.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
-#include "Acts/Plugins/TGeoPlugins/TGeoPrimitivesHelpers.hpp"
+#include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"

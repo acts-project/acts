@@ -12,7 +12,7 @@
 
 #include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
-#include "Acts/Plugins/TGeoPlugins/TGeoPrimitivesHelpers.hpp"
+#include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"

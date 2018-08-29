@@ -37,8 +37,8 @@ namespace detail {
             = stepper.getField(state.stepping, state.stepping.position());
         // Momentum in SI units and B field
         const double p
-            = units::Nat2SI<units::MOMENTUM>(state.stepping.momentum().mag());
-        const double B         = field.mag();
+            = units::Nat2SI<units::MOMENTUM>(state.stepping.momentum().norm());
+        const double B         = field.norm();
         const double helixPath = 2 * M_PI * p / B;
         // now set the new loop limit
         auto& pathAborter

@@ -166,5 +166,5 @@ inline double
 DiscSurface::pathCorrection(const Vector3D& pos, const Vector3D& mom) const
 {
   /// we can ignore the global position here
-  return 1. / std::abs(Surface::normal(pos).dot(mom.unit()));
+  return 1. / std::abs(Surface::normal(pos).dot(mom.normalized()));
 }

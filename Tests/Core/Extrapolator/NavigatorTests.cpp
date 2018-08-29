@@ -159,7 +159,7 @@ namespace Test {
 
     // the stepper cache
     state.stepping.pos = position;
-    state.stepping.dir = momentum.unit();
+    state.stepping.dir = momentum.normalized();
 
     auto navCorr = state.stepping.corrector();
 
@@ -414,7 +414,7 @@ namespace Test {
     state                         = PropagatorState();
     state.stepping.navDir         = backward;
     state.stepping.stepSize       = cstep(-100 * units::_cm);
-    state.stepping.dir            = momentum.unit();
+    state.stepping.dir            = momentum.normalized();
     state.stepping.pos            = eposition;
     state.options.debug           = debug;
     state.navigation.startSurface = esurface;
@@ -541,7 +541,7 @@ namespace Test {
     // re-initialize/update the stepping state
     state              = PropagatorState();
     state.stepping.pos = onBeamPipe;
-    state.stepping.dir = momentum.unit();
+    state.stepping.dir = momentum.normalized();
     // initialize : should not return to stepper
     BOOST_TEST(navigator.initialize(state, navCorr) == false);
     // step size has been updated
@@ -606,7 +606,7 @@ namespace Test {
     momentum      = Vector3D(1., 1., 100.);
     // set the stepping parameters
     state.stepping.pos = onBoundary;
-    state.stepping.dir = momentum.unit();
+    state.stepping.dir = momentum.normalized();
     // initialize : should not return to stepper
     BOOST_TEST(!navigator.initialize(state, navCorr) == true);
     // no surfaces to handle : do not return

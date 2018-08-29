@@ -107,7 +107,7 @@ namespace Test {
     NavigationDirection navDir = anyDirection;
     BoundaryCheck       bcheck(false);
     auto                intersection = line.intersectionEstimate(
-        {0., 0., 0.}, direction.unit(), navDir, bcheck);
+        {0., 0., 0.}, direction.normalized(), navDir, bcheck);
     BOOST_CHECK(intersection.valid);
     Vector3D expectedIntersection(0, 1., 2.);
     checkCloseVec3D(intersection.position,

@@ -135,7 +135,7 @@ TrackingVolume::layerCandidatesOrdered(const Layer*         sLayer,
   std::vector<LayerIntersection> lIntersections;
   // assign the direction
   const Vector3D& dir
-      = (pDir == forward) ? gm.unit() : Vector3D(-1 * gm.unit());
+      = (pDir == forward) ? gm.normalized() : Vector3D(-1 * gm.normalized());
   // the confinedLayers
   if (m_confinedLayers) {
     // cache the longest path length to avoid punch-through to the other side

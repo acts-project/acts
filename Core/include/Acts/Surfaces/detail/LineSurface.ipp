@@ -74,7 +74,7 @@ LineSurface::referenceFrame(const Vector3D& /*pos*/, const Vector3D& mom) const
   RotationMatrix3D mFrame;
   // construct the measurement frame
   const Vector3D& measY = lineDirection();
-  Vector3D        measX(measY.cross(mom).unit());
+  Vector3D        measX(measY.cross(mom).normalized());
   Vector3D        measDepth(measX.cross(measY));
   // assign the columnes
   mFrame.col(0) = measX;
