@@ -446,7 +446,7 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
                                << ", r="
                                << ctr.perp()
                                << ", phi="
-                               << ctr.phi()
+                               << LA::phi(ctr)
                                << ")");
     }
 

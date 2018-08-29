@@ -18,6 +18,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 
@@ -297,7 +298,7 @@ public:
       return (position.perp());
     }
     if (binvalue == binRPhi) {
-      return (position.perp() * position.phi());
+      return (position.perp() * LA::phi(position));
     }
     if (binvalue == binEta) {
       return (position.eta());
@@ -306,7 +307,7 @@ public:
       return (position[binvalue]);
     }
     // phi gauging
-    return position.phi();
+    return LA::phi(position);
   }
 
   /// Get the center value of a bin

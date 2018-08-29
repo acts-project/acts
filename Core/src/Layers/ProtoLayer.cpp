@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 
@@ -78,8 +79,8 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
           maxR = std::max(maxR, p2.perp());
           minR = std::min(minR, radialDistance(p1, p2));
 
-          maxPhi = std::max(maxPhi, p2.phi());
-          minPhi = std::min(minPhi, p2.phi());
+          maxPhi = std::max(maxPhi, LA::phi(p2));
+          minPhi = std::min(minPhi, LA::phi(p2));
         }
       }
     } else if (cylSurface != nullptr) {
@@ -103,8 +104,8 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
 
         maxR = std::max(maxR, vtx.perp());
 
-        maxPhi = std::max(maxPhi, vtx.phi());
-        minPhi = std::min(minPhi, vtx.phi());
+        maxPhi = std::max(maxPhi, LA::phi(vtx));
+        minPhi = std::min(minPhi, LA::phi(vtx));
       }
 
       // trace all face connections to possibly catch min-r approach

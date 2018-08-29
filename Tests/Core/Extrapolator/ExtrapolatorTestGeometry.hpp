@@ -198,7 +198,7 @@ namespace Test {
 
       for (auto& mCenter : moduleCenters) {
         // create the association transform
-        double modulePhi = mCenter.phi();
+        double modulePhi = LA::phi(mCenter);
         // the local z axis is the normal vector
         Vector3D moduleLocalZ(cos(modulePhi + pModuleTiltPhi[ilp]),
                               sin(modulePhi + pModuleTiltPhi[ilp]),

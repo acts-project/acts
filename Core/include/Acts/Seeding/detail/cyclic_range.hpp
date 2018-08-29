@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include "Acts/Utilities/detail/periodic.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 namespace detail {
@@ -98,8 +99,8 @@ namespace detail {
     phi0 = Acts::detail::radian_sym(phi0);
     phi1 = Acts::detail::radian_sym(phi1);
 
-    auto compValPhi = [](const auto& a, double b) { return (a.phi() < b); };
-    auto compPhiVal = [](double a, const auto& b) { return (a < b.phi()); };
+    auto compValPhi = [](const auto& a, double b) { return (LA::phi(a) < b); };
+    auto compPhiVal = [](double a, const auto& b) { return (a < LA::phi(b)); };
 
     // linear boundaries that do not allow wrap-around
     if (phi0 <= phi1) {

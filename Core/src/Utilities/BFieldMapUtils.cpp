@@ -10,6 +10,7 @@
 #include <iostream>
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
 Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
@@ -101,7 +102,7 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   auto transformBField = [](const Acts::Vector2D& field,
                             const Acts::Vector3D& pos) {
     return Acts::Vector3D(
-        field.x() * cos(pos.phi()), field.x() * sin(pos.phi()), field.y());
+        field.x() * cos(LA::phi(pos)), field.x() * sin(LA::phi(pos)), field.y());
   };
 
   // [5] Create the mapper & BField Service

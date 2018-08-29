@@ -34,7 +34,7 @@ namespace Test {
     NeutralCurvilinearParameters curvilinear_neut(nullptr, pos, mom);
 
     /// check local coordinates
-    const auto   fphi   = mom.phi();
+    const auto   fphi   = LA::phi(mom);
     const auto   ftheta = mom.theta();
     const double oOp    = 1. / mom.norm();
 

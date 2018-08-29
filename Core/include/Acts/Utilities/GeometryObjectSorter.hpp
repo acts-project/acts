@@ -57,7 +57,7 @@ public:
     }
     // compare on phi
     case binPhi: {
-      return (one.phi() < two.phi());
+      return (LA::phi(one) < LA::phi(two));
     }
     // compare on eta
     case binEta: {
@@ -95,7 +95,7 @@ public:
     : m_binningValue(bValue)
     , m_reference(reference)
     , m_refR(reference.perp())
-    , m_refPhi(reference.phi())
+    , m_refPhi(LA::phi(reference))
     , m_refEta(reference.eta())
   {
   }
@@ -138,8 +138,8 @@ public:
     }
     // compare on phi /// @todo add cyclic value
     case binPhi: {
-      double diffOnePhi = one.phi() - m_refPhi;
-      double diffTwoPhi = two.phi() - m_refPhi;
+      double diffOnePhi = LA::phi(one) - m_refPhi;
+      double diffTwoPhi = LA::phi(two) - m_refPhi;
       return (diffOnePhi * diffOnePhi < diffTwoPhi * diffTwoPhi);
     }
     // compare on eta

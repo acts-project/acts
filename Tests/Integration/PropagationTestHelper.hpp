@@ -10,6 +10,7 @@
 
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "covariance_validation_fixture.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace tt = boost::test_tools;
 
@@ -152,7 +153,7 @@ namespace IntegrationTest {
     double exp_y = yc + r * sin(phi0 + turns * 2 * M_PI);
 
     // clang-format off
-    BOOST_TEST((exp_phi - tp->momentum().phi()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((exp_phi - LA::phi(tp->momentum())) == 0., tt::tolerance(1e-4));
     BOOST_TEST((exp_x - tp->position()(0)) == 0., tt::tolerance(disttol));
     BOOST_TEST((exp_y - tp->position()(1)) == 0., tt::tolerance(disttol));
     BOOST_TEST((exp_z - tp->position()(2)) == 0., tt::tolerance(disttol));

@@ -62,7 +62,7 @@ namespace Seeding {
     double
     phi() const
     {
-      return m_position.phi();
+      return LA::phi(m_position);
     }
     const Identifier&
     identifier() const

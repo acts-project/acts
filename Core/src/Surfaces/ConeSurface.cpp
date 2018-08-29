@@ -175,7 +175,7 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
 {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   Vector3D posLocal = m_transform ? transform().inverse() * gpos : gpos;
-  double   phi      = posLocal.phi();
+  double   phi      = LA::phi(posLocal);
   double   sgn      = posLocal.z() > 0. ? -1. : +1.;
   Vector3D normalC(cos(phi) * bounds().cosAlpha(),
                    sin(phi) * bounds().cosAlpha(),

@@ -49,12 +49,6 @@ perp(const MatrixBase<Derived>& vec)
 }
 
 /** phi method */
-inline Scalar
-phi() const
-{
-  if (this->rows() < 2) return 0.;
-  return std::atan2((*this)[1], (*this)[0]);
-}
 
 /** theta method */
 inline Scalar

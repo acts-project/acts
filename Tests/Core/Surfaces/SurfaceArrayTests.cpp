@@ -201,7 +201,7 @@ namespace Test {
 
     double angleShift = 2 * M_PI / 30. / 2.;
     auto transform    = [angleShift](const Vector3D& pos) {
-      return Vector2D(pos.phi() + angleShift, pos.z());
+      return Vector2D(LA::phi(pos) + angleShift, pos.z());
     };
     double R        = 10;
     auto itransform = [angleShift, R](const Vector2D& loc) {
@@ -283,7 +283,7 @@ namespace Test {
 
     double angleShift = 2 * M_PI / 30. / 2.;
     auto transform    = [angleShift](const Vector3D& pos) {
-      return Vector2D(pos.phi() + angleShift, pos.z());
+      return Vector2D(LA::phi(pos) + angleShift, pos.z());
     };
     double R        = 10;
     auto itransform = [angleShift, R](const Vector2D& loc) {

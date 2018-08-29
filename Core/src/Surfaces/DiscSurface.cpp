@@ -144,7 +144,7 @@ Acts::DiscSurface::globalToLocal(const Acts::Vector3D& gpos,
 {
   // transport it to the globalframe (very unlikely that this is not needed)
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
-  lpos                = Acts::Vector2D(loc3Dframe.perp(), loc3Dframe.phi());
+  lpos                = Acts::Vector2D(loc3Dframe.perp(), LA::phi(loc3Dframe));
   return ((std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
 }
 
@@ -201,7 +201,7 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
     return false;
   }
   return (bcheck
-              ? bounds().inside(Vector2D(loc3Dframe.perp(), loc3Dframe.phi()),
+              ? bounds().inside(Vector2D(loc3Dframe.perp(), LA::phi(loc3Dframe)),
                                 bcheck)
               : true);
 }

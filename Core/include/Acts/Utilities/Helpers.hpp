@@ -52,6 +52,31 @@ namespace Acts {
 
  */
 
+namespace LinearAlgebra {
+
+template <class T>
+double phi(const T& v) {
+  return v.phi();
+}
+
+inline
+double phi(const Acts::Vector2D& v)
+{
+  return std::atan2(v[1], v[0]);
+}
+
+inline
+double phi(const Acts::Vector3D& v) 
+{
+  return std::atan2(v[1], v[0]);
+}
+
+}
+}
+
+namespace LA = LinearAlgebra;
+
+
 inline double
 roundWithPrecision(double val, int precision)
 {
@@ -191,7 +216,7 @@ setRThetaPhi(Acts::Vector3D& v, double r, double theta, double phi)
 inline void
 setTheta(Acts::Vector3D& v, double theta)
 {
-  setThetaPhi(v, theta, v.phi());
+  setThetaPhi(v, theta, LA::phi(v));
 }
 
 /** scales the vector in the xy plane without changing the z coordinate nor the
@@ -222,7 +247,7 @@ setMag(Acts::Vector3D& v, double mag)
 inline double
 deltaPhi(const Acts::Vector3D& v1, const Acts::Vector3D& v2)
 {
-  double dphi = v2.phi() - v1.phi();
+  double dphi = LA::phi(v2) - LA::phi(v1);
   if (dphi > M_PI) {
     dphi -= M_PI * 2;
   } else if (dphi <= -M_PI) {

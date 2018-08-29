@@ -42,12 +42,12 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
                               TrackSeeds3<Identifier>&             seeds)
 {
   for (const auto& p0 : barrel0.points) {
-    for (const auto& p1 : barrel1.rangeDeltaPhi(p0.phi(), cfg.rangePhi1)) {
+    for (const auto& p1 : barrel1.rangeDeltaPhi(LA::phi(p0), cfg.rangePhi1)) {
       Vector3D d01     = p1.position() - p0.position();
       double   theta01 = d01.theta();
       // Acts::Vector3D at2
       //     = detail::calcLineCircleIntersection(p0, d01, barrel2.radius);
-      for (const auto& p2 : barrel2.rangeDeltaPhi(p1.phi(), cfg.rangePhi2)) {
+      for (const auto& p2 : barrel2.rangeDeltaPhi(LA::phi(p1), cfg.rangePhi2)) {
         Vector3D d12     = p2.position() - p1.position();
         double   theta12 = d12.theta();
 
@@ -59,7 +59,7 @@ Acts::Seeding::findHelixSeeds(const HelixSeedConfig&               cfg,
         // initial direction correction due to curvature, use
         //   chord = 2 * radius * sin(propagation angle / 2)
         // and assume sin(x) = x
-        double phi01 = d01.phi() - d01.head<2>().norm() * kappa / 2;
+        double phi01 = LA::phi(d01) - d01.head<2>().norm() * kappa / 2;
         // track parameters defined at the first space point
         seeds.emplace_back(phi01, theta01, kappa, p0, p1, p2);
       }

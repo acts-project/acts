@@ -84,7 +84,7 @@ namespace Seeding {
   {
     os << "pos=[" << seed.position().x() << ',' << seed.position().y() << ','
        << seed.position().z() << ']';
-    os << " phi=" << seed.phi() << " theta=" << seed.theta();
+    os << " phi=" << LA::phi(seed) << " theta=" << seed.theta();
     os << " curvature=" << seed.curvature();
     return os;
   }
