@@ -26,20 +26,11 @@ class DigitizationModule;
 class PlanarModuleStepper
 {
 public:
-  ///  @struct Config
-  ///  Configuration for the planar module stepper
-  struct Config
-  {
-    // standard constructor
-    Config() = default;
-  };
-
   /// Constructor
   ///
   /// @param pmsConfig is the configuration
   /// @param mlogger is the logging istance
-  PlanarModuleStepper(const Config&                 pmsConfig,
-                      std::unique_ptr<const Logger> mlogger
+  PlanarModuleStepper(std::unique_ptr<const Logger> mlogger
                       = getDefaultLogger("PlanarModuleStepper", Logging::INFO));
 
   /// Destructor
@@ -85,9 +76,6 @@ private:
   {
     return *m_logger;
   }
-
-  /// the config class
-  // Config m_cfg; // currently unused
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;

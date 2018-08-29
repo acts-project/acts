@@ -20,6 +20,7 @@ namespace Acts {
 
 class SurfaceMaterial;
 class SurfaceBounds;
+class DigitizationModule;
 
 /// @class TGeoDetectorElement
 ///
@@ -63,14 +64,18 @@ public:
   ///       should be translated to a disc surface. Per default it will be
   ///       translated into a cylindrical surface.
   /// @param material Possible material of detector element
-  TGeoDetectorElement(const Identifier&  identifier,
-                      TGeoNode*          tGeoDetElement,
-                      const TGeoMatrix*  mGlobal = nullptr,
-                      const std::string& axes    = "XYZ",
-                      double             scalor  = 1.,
-                      bool               isDisc  = false,
-                      std::shared_ptr<const Acts::SurfaceMaterial> material
-                      = nullptr);
+  /// @param digitizationModule Shared pointer to the geometric digitization
+  /// description
+  TGeoDetectorElement(
+      const Identifier&                               identifier,
+      TGeoNode*                                       tGeoDetElement,
+      const TGeoMatrix*                               mGlobal  = nullptr,
+      const std::string&                              axes     = "XYZ",
+      double                                          scalor   = 1.,
+      bool                                            isDisc   = false,
+      std::shared_ptr<const Acts::SurfaceMaterial>    material = nullptr,
+      std::shared_ptr<const Acts::DigitizationModule> digitizationModule
+      = nullptr);
 
   /// Alternative Constructor
   /// when the localToGlobal transform is already known for the detector element
@@ -106,14 +111,18 @@ public:
   ///       should be translated to a disc surface. Per default it will be
   ///       translated into a cylindrical surface.
   /// @param material Possible material of detector element
-  TGeoDetectorElement(const Identifier&  identifier,
-                      const TGeoMatrix&  transform,
-                      TGeoNode*          tGeoDetElement,
-                      const std::string& axes   = "XYZ",
-                      double             scalor = 1.,
-                      bool               isDisc = false,
-                      std::shared_ptr<const Acts::SurfaceMaterial> material
-                      = nullptr);
+  /// @param digitizationModule Shared pointer to the geometric digitization
+  /// description
+  TGeoDetectorElement(
+      const Identifier&                               identifier,
+      const TGeoMatrix&                               transform,
+      TGeoNode*                                       tGeoDetElement,
+      const std::string&                              axes     = "XYZ",
+      double                                          scalor   = 1.,
+      bool                                            isDisc   = false,
+      std::shared_ptr<const Acts::SurfaceMaterial>    material = nullptr,
+      std::shared_ptr<const Acts::DigitizationModule> digitizationModule
+      = nullptr);
 
   ///  Destructor
   ~TGeoDetectorElement() override;
@@ -134,23 +143,29 @@ public:
   double
   thickness() const final;
 
+  /// Retrieve the DigitizationModule
+  const std::shared_ptr<const Acts::DigitizationModule>
+  digitizationModule() const final;
+
 private:
   /// DD4hep detector element, just linked - not owned
-  TGeoNode* m_detElement;
+  TGeoNode* m_detElement{nullptr};
   /// Transformation of the detector element
-  std::shared_ptr<const Acts::Transform3D> m_transform;
+  std::shared_ptr<const Acts::Transform3D> m_transform{nullptr};
   /// Center position of the detector element
-  std::shared_ptr<const Vector3D> m_center;
+  std::shared_ptr<const Vector3D> m_center{nullptr};
   /// Normal vector to the detector element
-  std::shared_ptr<const Vector3D> m_normal;
+  std::shared_ptr<const Vector3D> m_normal{nullptr};
   /// Identifier of the detector element
   Identifier m_identifier;
   /// Boundaries of the detector element
-  std::shared_ptr<const SurfaceBounds> m_bounds;
+  std::shared_ptr<const SurfaceBounds> m_bounds{nullptr};
   ///  Thickness of this detector element
-  double m_thickness;  //@todo implement thickness from TGeoMode
+  double m_thickness{0.};  //@todo implement thickness from TGeoMode
   /// Corresponding Surface
-  std::shared_ptr<const Surface> m_surface;
+  std::shared_ptr<const Surface> m_surface{nullptr};
+  /// The Digitization module
+  std::shared_ptr<const Acts::DigitizationModule> m_digitizationModule{nullptr};
 };
 
 inline Identifier
@@ -175,5 +190,11 @@ inline double
 TGeoDetectorElement::thickness() const
 {
   return m_thickness;
+}
+
+inline const std::shared_ptr<const Acts::DigitizationModule>
+TGeoDetectorElement::digitizationModule() const
+{
+  return m_digitizationModule;
 }
 }

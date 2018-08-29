@@ -13,7 +13,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Layers/ProtoLayer.hpp"
 #include "Acts/Material/SurfaceMaterialProxy.hpp"
-#include "Acts/Plugins/DD4hep/DD4hepDetElement.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -744,10 +744,13 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
   if (detExtension != nullptr) {
     material = detExtension->material();
   }
-
+  // Get the digitiztion module and provide it to the detector element
+  auto digiModule = detExtension->digitizationModule();
   // create the corresponding detector element
-  Acts::DD4hepDetElement* dd4hepDetElement = new Acts::DD4hepDetElement(
-      detElement, axes, units::_cm, isDisc, material);
+  Acts::DD4hepDetectorElement* dd4hepDetElement
+      = new Acts::DD4hepDetectorElement(
+          detElement, axes, units::_cm, isDisc, material, digiModule);
+
   // return the surface
   return (&(dd4hepDetElement->surface()));
 }

@@ -22,6 +22,9 @@
 
 namespace Acts {
 
+/// forwared declaration of DigitzationModule is enough
+class DigitizationModule;
+
 /// @class ActsExtension
 ///
 /// @brief Extension of the \a %DD4hep \a DetElement needed for translation
@@ -166,8 +169,13 @@ public:
   /// In case several sensitive modules have the same segmentation the
   /// @param materials A vector of dd4hep::Material and their corresponding
   /// thickness in mm
+  /// @param digiModule The digitization descripton
   ActsExtension(
-      const std::vector<std::pair<dd4hep::Material, double>>& materials);
+      const std::vector<std::pair<dd4hep::Material, double>>& materials,
+      std::shared_ptr<const DigitizationModule> digiModule);
+  /// Constructor withpossible segmentation for digitization.
+  /// @param digiModule The digitization descripton
+  ActsExtension(std::shared_ptr<const DigitizationModule> digiModule);
   /// Copy constructor
   ActsExtension(const ActsExtension& det, const dd4hep::DetElement& elem);
   /// Destructor
@@ -212,12 +220,22 @@ public:
   /// @copydoc IActsExtension::material()
   std::shared_ptr<const Acts::SurfaceMaterial>
   material() const final;
+  /// @copydoc IActsExtension::digitizationModule
+  std::shared_ptr<const DigitizationModule>
+  digitizationModule() const final;
 
 private:
   /// The configuration object
   Config m_cfg;
   // The Acts SurfaceMaterial
   std::shared_ptr<const Acts::SurfaceMaterial> m_material;
+  /// The "geometric" digitization module can be optionally added to the
+  /// layer,
+  /// this then allows only one digitzation description shared amonst the
+  /// layer modules.
+  /// If you want to have different digitization along the layer, you need
+  /// to use register them individually
+  std::shared_ptr<const DigitizationModule> m_digitizationModule{nullptr};
 };
 
 inline bool
@@ -295,5 +313,11 @@ inline std::shared_ptr<const Acts::SurfaceMaterial>
 Acts::ActsExtension::material() const
 {
   return m_material;
+}
+
+inline std::shared_ptr<const DigitizationModule>
+Acts::ActsExtension::digitizationModule() const
+{
+  return m_digitizationModule;
 }
 }
