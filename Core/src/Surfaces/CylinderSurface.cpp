@@ -184,10 +184,10 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
     Transform3D        inverseTrans(surfaceTrans.inverse());
     Vector3D           loc3Dframe(inverseTrans * gpos);
     lpos   = Vector2D(bounds().r() * LA::phi(loc3Dframe), loc3Dframe.z());
-    radius = loc3Dframe.perp();
+    radius = LA::perp(loc3Dframe);
   } else {
     lpos   = Vector2D(bounds().r() * LA::phi(gpos), gpos.z());
-    radius = gpos.perp();
+    radius = LA::perp(gpos);
   }
   // return true or false
   return ((std::abs(radius - bounds().r()) > inttol) ? false : true);

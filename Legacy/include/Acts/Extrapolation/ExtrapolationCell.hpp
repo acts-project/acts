@@ -590,10 +590,10 @@ public:
     } else {
       // if the endSurface is given, it is used to evaluate the radial direction
       // else the leadParamenters are used
-      if (leadParameters->position().perp()
-          > (leadParameters->position()
+      if (LA::perp(leadParameters->position())
+          > LA::perp(leadParameters->position()
              + navigationDirection * leadParameters->momentum().normalized())
-                .perp()) {
+         )  {
         radialDirection = -1;
       }
     }
@@ -609,10 +609,10 @@ public:
       return true;
     }
     // this was radially inwards moving and stays like this
-    if (leadParameters->position().perp()
-        > (leadParameters->position()
+    if (LA::perp(leadParameters->position())
+        > LA::perp(leadParameters->position()
            + navigationDirection * leadParameters->momentum().normalized())
-              .perp()) {
+       ) {
       return true;
     }
     // radial direction changed

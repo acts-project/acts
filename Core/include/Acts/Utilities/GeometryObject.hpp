@@ -115,7 +115,7 @@ GeometryObject::binningPositionValue(BinningValue bValue) const
   } break;
   // case
   case Acts::binR: {
-    return binningPosition(bValue).perp();
+    return LA::perp(binningPosition(bValue));
   } break;
   // do nothing for the default
   default:

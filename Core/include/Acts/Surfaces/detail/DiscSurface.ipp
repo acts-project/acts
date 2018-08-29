@@ -86,7 +86,7 @@ inline const RotationMatrix3D
   RotationMatrix3D rframeT = referenceFrame(gpos, dir).transpose();
   // calculate the transformation to local coorinates
   const Vector3D pos_loc = transform().inverse() * gpos;
-  const double   lr      = pos_loc.perp();
+  const double   lr      = LA::perp(pos_loc);
   const double   lphi    = LA::phi(pos_loc);
   const double   lcphi   = cos(lphi);
   const double   lsphi   = sin(lphi);

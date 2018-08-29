@@ -76,7 +76,7 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
           maxZ = std::max(maxZ, p2.z());
           minZ = std::min(minZ, p2.z());
 
-          maxR = std::max(maxR, p2.perp());
+          maxR = std::max(maxR, LA::perp(p2));
           minR = std::min(minR, radialDistance(p1, p2));
 
           maxPhi = std::max(maxPhi, LA::phi(p2));
@@ -102,7 +102,7 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
         maxZ = std::max(maxZ, vtx.z());
         minZ = std::min(minZ, vtx.z());
 
-        maxR = std::max(maxR, vtx.perp());
+        maxR = std::max(maxR, LA::perp(vtx));
 
         maxPhi = std::max(maxPhi, LA::phi(vtx));
         minPhi = std::min(minPhi, LA::phi(vtx));
@@ -126,7 +126,7 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
       envR              = {env, env};
 
       // evaluate impact of r shift on phi
-      double cylPosR = cylSurface->center().perp();
+      double cylPosR = LA::perp(cylSurface->center());
       double dPhi    = std::atan((cylBoundsR + env) / cylPosR)
           - std::atan(cylBoundsR / cylPosR);
 

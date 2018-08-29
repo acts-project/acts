@@ -252,8 +252,8 @@ public:
     }
 
     if (bValue == Acts::binR) {
-      return (std::abs(a->binningPosition(binR).perp()
-                       - b->binningPosition(binR).perp())
+      return (std::abs(LA::perp(a->binningPosition(binR))
+                       - LA::perp(b->binningPosition(binR)))
               < Acts::units::_um);
     }
 

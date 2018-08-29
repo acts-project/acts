@@ -164,7 +164,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
-    return Vector2D(loc.perp(), LA::phi(loc));
+    return Vector2D(LA::perp(loc), LA::phi(loc));
   };
   auto localToGlobal = [itransform, Z](const Vector2D& loc) {
     return itransform
@@ -225,7 +225,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfaces) {
       Vector3D bpos = srf->binningPosition(binR);
-      size_t   bin  = pAxisR.getBin(bpos.perp());
+      size_t   bin  = pAxisR.getBin(LA::perp(bpos));
       phiModules.at(bin).push_back(srf);
     }
 
@@ -271,7 +271,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
-    return Vector2D(loc.perp(), LA::phi(loc));
+    return Vector2D(LA::perp(loc), LA::phi(loc));
   };
   auto localToGlobal = [itransform, Z](const Vector2D& loc) {
     return itransform
@@ -453,15 +453,15 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     std::stable_sort(keys.begin(),
                      keys.end(),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->binningPosition(binR).perp()
-                               < b->binningPosition(binR).perp());
+                       return (LA::perp(a->binningPosition(binR))
+                               < LA::perp(b->binningPosition(binR)));
                      });
 
     bValues.push_back(protoLayer.minR);
     bValues.push_back(protoLayer.maxR);
 
     // the r-center position of the previous surface
-    double previous = keys.front()->binningPosition(binR).perp();
+    double previous = LA::perp(keys.front()->binningPosition(binR));
 
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
@@ -469,8 +469,8 @@ Acts::SurfaceArrayCreator::createVariableAxis(
       // positions in the binning direction of the current and previous
       // surface
       bValues.push_back(
-          0.5 * (previous + (*surface)->binningPosition(binR).perp()));
-      previous = (*surface)->binningPosition(binR).perp();
+          0.5 * (previous + LA::perp((*surface)->binningPosition(binR))));
+      previous = LA::perp((*surface)->binningPosition(binR));
     }
   }
   std::sort(bValues.begin(), bValues.end());

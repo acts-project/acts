@@ -56,7 +56,7 @@ namespace Test {
     void
     operator()(propagator_state_t& state, result_type& result) const
     {
-      result.distance = state.stepping.position().perp();
+      result.distance = LA::perp(state.stepping.position());
     }
 
     template <typename propagator_state_t>
@@ -105,7 +105,7 @@ namespace Test {
         // return true if you fall below tolerance
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
-          result.surface_passed_r = state.stepping.position().perp();
+          result.surface_passed_r = LA::perp(state.stepping.position());
           // release the step size, will be re-adjusted
           state.stepping.stepSize.release(cstep::actor);
         }

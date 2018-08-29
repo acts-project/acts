@@ -53,7 +53,7 @@ public:
     }
     // compare on r
     case binR: {
-      return (one.perp() < two.perp());
+      return (LA::perp(one) < LA::perp(two));
     }
     // compare on phi
     case binPhi: {
@@ -94,7 +94,7 @@ public:
   DistanceSorterT(BinningValue bValue, Vector3D reference)
     : m_binningValue(bValue)
     , m_reference(reference)
-    , m_refR(reference.perp())
+    , m_refR(LA::perp(reference))
     , m_refPhi(LA::phi(reference))
     , m_refEta(reference.eta())
   {
@@ -132,8 +132,8 @@ public:
     }
     // compare on r
     case binR: {
-      double diffOneR = one.perp() - m_refR;
-      double diffTwoR = two.perp() - m_refR;
+      double diffOneR = LA::perp(one) - m_refR;
+      double diffTwoR = LA::perp(two) - m_refR;
       return (diffOneR * diffOneR < diffTwoR * diffTwoR);
     }
     // compare on phi /// @todo add cyclic value

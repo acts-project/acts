@@ -295,10 +295,10 @@ public:
   {
     // ordered after occurence
     if (binvalue == binR || binvalue == binH) {
-      return (position.perp());
+      return (LA::perp(position));
     }
     if (binvalue == binRPhi) {
-      return (position.perp() * LA::phi(position));
+      return (LA::perp(position) * LA::phi(position));
     }
     if (binvalue == binEta) {
       return (position.eta());

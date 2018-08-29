@@ -15,38 +15,10 @@
 // ------- Methods for 3D vector type objects ---------------------- //
 
 /** perp method - perpendicular length */
-inline Scalar
-perp() const
-{
-  if (this->rows() < 2) return 0.;
-  return std::sqrt((*this)[0] * (*this)[0] + (*this)[1] * (*this)[1]);
-}
 
 /** perp2 method - perpendicular length squared */
-inline Scalar
-perp2() const
-{
-  if (this->rows() < 2) return 0.;
-  return ((*this)[0] * (*this)[0] + (*this)[1] * (*this)[1]);
-}
 
-inline Scalar
-perp2(const MatrixBase<Derived>& vec)
-{
-  if (this->rows() < 2) return 0.;
-  Scalar tot = vec.squaredNorm();
-  if (tot > 0) {
-    Scalar s = this->dot(vec);
-    return this->squaredNorm() - s * s / tot;
-  }
-  return this->squaredNorm();
-}
 
-inline Scalar
-perp(const MatrixBase<Derived>& vec)
-{
-  return std::sqrt(this->perp2(vec));
-}
 
 /** phi method */
 

@@ -120,7 +120,7 @@ Acts::EllipseBounds::inside(const Acts::Vector2D&      lpos,
 double
 Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
 {
-  double r = lpos.perp();
+  double r = LA::perp(lpos);
   if (r == 0) {
     return std::min(rMinX(), rMinY());
   }

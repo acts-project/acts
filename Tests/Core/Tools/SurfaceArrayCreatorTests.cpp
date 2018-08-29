@@ -517,7 +517,7 @@ namespace Test {
     ProtoLayer pl  = ProtoLayer(surfaces);
     auto axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
     BOOST_TEST(axis.nBins == 1);
-    BOOST_CHECK_SMALL(axis.max - (Vector3D(17, 1, 0)).perp(), 1e-3);
+    BOOST_CHECK_SMALL(axis.max - LA::perp(Vector3D(17, 1, 0)), 1e-3);
     BOOST_CHECK_SMALL(axis.min - 13, 1e-3);
     BOOST_TEST(axis.bType == equidistant);
 
@@ -537,7 +537,7 @@ namespace Test {
     axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
 
     BOOST_TEST(axis.nBins == 3);
-    BOOST_CHECK_CLOSE_FRACTION(axis.max, (Vector3D(20 + 2, 1, 0)).perp(), 1e-3);
+    BOOST_CHECK_CLOSE_FRACTION(axis.max, LA::perp(Vector3D(20 + 2, 1, 0)), 1e-3);
     // BOOST_TEST(axis.min == 8, tt::tolerance(1e-3)); // fails for some reason
     BOOST_CHECK_SMALL((axis.min - 8), 1e-3);
     BOOST_TEST(axis.bType == equidistant);

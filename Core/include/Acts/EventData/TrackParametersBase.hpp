@@ -15,6 +15,7 @@
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 // forward declarations
@@ -127,7 +128,7 @@ public:
   double
   pT() const
   {
-    return momentum().perp();
+    return LA::perp(momentum());
   }
 
   /// @brief convenience method to retrieve pseudorapidity

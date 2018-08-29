@@ -109,7 +109,7 @@ namespace IntegrationTest {
 
     // test propagation invariants
     // clang-format off
-    BOOST_TEST((pT - tp->momentum().perp()) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((pT - LA::perp(tp->momentum())) == 0., tt::tolerance(1 * units::_keV));
     BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
     BOOST_TEST((theta - tp->momentum().theta()) == 0., tt::tolerance(1e-4));
     // clang-format on

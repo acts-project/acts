@@ -166,7 +166,7 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
   // now decide on the quility of the transformation
   double inttol = r * 0.0001;
   inttol        = (inttol < 0.01) ? 0.01 : 0.01;  // ?
-  return ((std::abs(loc3Dframe.perp() - r) > inttol) ? false : true);
+  return ((std::abs(LA::perp(loc3Dframe) - r) > inttol) ? false : true);
 }
 
 double

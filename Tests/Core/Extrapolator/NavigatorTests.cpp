@@ -187,7 +187,7 @@ namespace Test {
         (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
     // cache the beam pipe radius
     double beamPipeRadius
-        = state.navigation.navLayerIter->intersection.position.perp();
+        = LA::perp(state.navigation.navLayerIter->intersection.position);
     // step size has been updated
     BOOST_TEST((state.stepping.stepSize == beamPipeRadius));
     if (debug) {
