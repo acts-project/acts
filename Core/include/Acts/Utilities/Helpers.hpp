@@ -22,6 +22,8 @@
 // Acts include(s)
 #include "Definitions.hpp"
 
+#include <boost/tti/has_member_function.hpp>
+
 #ifndef ACTS_BIT_CODING
 #define ACTS_BIT_CODING 1
 #if (__GNUC__ >= 4)
@@ -54,24 +56,40 @@ namespace Acts {
 
 namespace LinearAlgebra {
 
-template <class T>
+namespace detail {
+// helper to figure out if a type has a member called phi
+BOOST_TTI_HAS_MEMBER_FUNCTION(phi)
+template <typename T>
+using has_phi_method = has_member_function_phi<T, 
+                                               double, 
+                                               boost::mpl::vector<>, 
+                                               boost::function_types::const_qualified>;
+}
+
+// default call on Eigen types, calculate radius
+template <typename Derived>
+double phi(const Eigen::MatrixBase<Derived>& v)
+{
+  if (v.rows() < 2) return 0.;
+  return std::atan2(v[1], v[0]);
+}
+
+// if called-upon type has phi method, call that
+template <typename T,
+         std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
 double phi(const T& v) {
   return v.phi();
 }
 
-inline
-double phi(const Acts::Vector2D& v)
+template <typename Derived>
+double
+perp(const Eigen::MatrixBase<Derived>& v)
 {
-  return std::atan2(v[1], v[0]);
+  if (v.rows() < 2) return 0.;
+  return std::sqrt(v[0] * v[0] + v[1] * v[1]);
 }
 
-inline
-double phi(const Acts::Vector3D& v) 
-{
-  return std::atan2(v[1], v[0]);
-}
 
-}
 }
 
 namespace LA = LinearAlgebra;
@@ -187,7 +205,7 @@ distance(const Acts::Vector3D& p1, const Acts::Vector3D& p2)
 inline void
 setPhi(Acts::Vector3D& v, double phi)
 {
-  double xy = v.perp();
+  double xy = LA::perp(v);
   v[0]      = xy * cos(phi);
   v[1]      = xy * sin(phi);
 }
@@ -224,7 +242,7 @@ setTheta(Acts::Vector3D& v, double theta)
 inline void
 setPerp(Acts::Vector3D& v, double perp)
 {
-  double p = v.perp();
+  double p = LA::perp(v);
   if (p != 0.0) {
     double scale = perp / p;
     v[0] *= scale;
