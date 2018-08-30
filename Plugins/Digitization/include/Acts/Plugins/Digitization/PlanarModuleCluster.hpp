@@ -12,7 +12,7 @@
 #ifdef ACTS_CORE_IDENTIFIER_PLUGIN
 #include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
-using unsigned long long Identifier;
+using Identifier = unsigned long long;
 #endif
 
 #include "Acts/EventData/Measurement.hpp"
