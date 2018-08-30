@@ -327,17 +327,18 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
 
     // Fast skipping if a perpendicular projection should be used
     double resultPerpProj;
-    if (m_cfg.usePerpProj)
-    {
-		resultPerpProj = calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
-        if(resultPerpProj         <= 0.) {
-      Acts::DoubleHitSpacePoint sp;
-      sp.clusterFront = cp.first;
-      sp.clusterBack  = cp.second;
-      sp.spacePoint   = ends1.first + resultPerpProj * spaPoPa.q;
-      spacePoints.push_back(std::move(sp));
-      continue;
-    }}
+    if (m_cfg.usePerpProj) {
+      resultPerpProj
+          = calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r);
+      if (resultPerpProj <= 0.) {
+        Acts::DoubleHitSpacePoint sp;
+        sp.clusterFront = cp.first;
+        sp.clusterBack  = cp.second;
+        sp.spacePoint   = ends1.first + resultPerpProj * spaPoPa.q;
+        spacePoints.push_back(std::move(sp));
+        continue;
+      }
+    }
 
     spaPoPa.s  = ends1.first + ends1.second - 2 * m_cfg.vertex;
     spaPoPa.t  = ends2.first + ends2.second - 2 * m_cfg.vertex;
