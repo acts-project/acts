@@ -10,10 +10,10 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "Acts/Tools/DoubleHitSpacePointBuilder.hpp"
+#include "Acts/Plugins/Digitization/DoubleHitSpacePointBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "DetectorElementStub.hpp"
@@ -57,7 +57,7 @@ namespace Test {
         new CartesianSegmentation(buX, recBounds));
 
     // Build translation
-    const Identifier id(0);
+    const int id(0);
 
     double           rotation = 0.026;
     RotationMatrix3D rotationPos;
@@ -76,7 +76,7 @@ namespace Test {
         id,
         std::make_shared<const Transform3D>(t3d),
         std::make_shared<const DigitizationModule>(digMod));
-    PlaneSurface      pSur(recBounds, detElem, detElem.identify());
+    PlaneSurface      pSur(recBounds, detElem);
     ActsSymMatrixD<2> cov;
     cov << 0., 0., 0., 0.;
     Vector2D local = {0.1, -0.1};
@@ -84,16 +84,17 @@ namespace Test {
     // Build PlanarModuleCluster
     PlanarModuleCluster* pmc
         = new PlanarModuleCluster(pSur,
-                                  Identifier(0),
+                                  0,
                                   cov,
                                   local[0],
                                   local[1],
-                                  {DigitizationCell(0, 0, 1.)});
+                                  {DigitizationCell(0, 0, 1.)},
+                                  &digMod);
 
     std::cout << "Create second hit" << std::endl;
 
     // Build second PlanarModuleCluster
-    const Identifier id2(1);
+    const int id2(1);
 
     double           rotation2 = -0.026;
     RotationMatrix3D rotationNeg;
@@ -110,15 +111,16 @@ namespace Test {
         id2,
         std::make_shared<const Transform3D>(t3d2),
         std::make_shared<const DigitizationModule>(digMod));
-    PlaneSurface pSur2(recBounds, detElem2, detElem2.identify());
+    PlaneSurface pSur2(recBounds, detElem2);
 
     PlanarModuleCluster* pmc2
         = new PlanarModuleCluster(pSur2,
-                                  Identifier(1),
+                                  1,
                                   cov,
                                   local[0],
                                   local[1],
-                                  {DigitizationCell(0, 0, 1.)});
+                                  {DigitizationCell(0, 0, 1.)},
+                                  &digMod);
 
     std::cout << "Store both hits" << std::endl;
 
@@ -145,7 +147,7 @@ namespace Test {
     std::cout << "Create third hit" << std::endl;
 
     // Build third PlanarModuleCluster
-    const Identifier id3(2);
+    const int id3(2);
     Transform3D      t3d3 = getTransformFromRotTransl(
         rotationNeg, Vector3D(0., 10. * units::_m, 10.005 * units::_m));
 
@@ -153,15 +155,16 @@ namespace Test {
         id3,
         std::make_shared<const Transform3D>(t3d3),
         std::make_shared<const DigitizationModule>(digMod));
-    PlaneSurface pSur3(recBounds, detElem3, detElem3.identify());
+    PlaneSurface pSur3(recBounds, detElem3);
 
     PlanarModuleCluster* pmc3
         = new PlanarModuleCluster(pSur3,
-                                  Identifier(2),
+                                  2,
                                   cov,
                                   local[0],
                                   local[1],
-                                  {DigitizationCell(0, 0, 1.)});
+                                  {DigitizationCell(0, 0, 1.)},
+                                  &digMod);
 
     std::cout << "Try to store hits" << std::endl;
 

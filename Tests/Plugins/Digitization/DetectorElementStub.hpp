@@ -12,9 +12,8 @@
 
 #pragma once
 
-// Algebra and Identifier
+// Algebra
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Identifier.hpp"
 // Geometry module
 #include "Acts/Detector/DetectorElementBase.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -37,7 +36,7 @@ class DetectorElementStub : public DetectorElementBase
 public:
   DetectorElementStub() : DetectorElementBase() {}
 
-  DetectorElementStub(const Identifier                          id,
+  DetectorElementStub(const int                          id,
                       std::shared_ptr<const Transform3D>        transform,
                       std::shared_ptr<const DigitizationModule> digMod)
     : DetectorElementBase()
@@ -55,7 +54,7 @@ public:
   /// @param pBounds is the planar bounds for the planar detector element
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
-  DetectorElementStub(const Identifier                       identifier,
+  DetectorElementStub(const int                       identifier,
                       std::shared_ptr<const Transform3D>     transform,
                       std::shared_ptr<const PlanarBounds>    pBounds,
                       double                                 thickness,
@@ -74,18 +73,18 @@ public:
     mutableSurface->setAssociatedMaterial(material);
   }
 
-  void
-  assignIdentifier(const Identifier& identifier) override
-  {
-    m_elementIdentifier = identifier;
-  }
+  //~ void
+  //~ assignIdentifier(const int& identifier) override
+  //~ {
+    //~ m_elementIdentifier = identifier;
+  //~ }
 
   ///  Destructor
   ~DetectorElementStub() { /*nop */}
 
   /// Identifier
-  Identifier
-  identify() const override;
+  int
+  identify() const;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -93,12 +92,12 @@ public:
   ///
   /// @param identifier is ignored for this simple detector element
   const Transform3D&
-  transform(const Identifier& identifier = Identifier()) const override;
+  transform() const override;
 
-  /// Return the DigitizationModule
-  /// @return optionally the DigitizationModule
-  virtual std::shared_ptr<const DigitizationModule>
-  digitizationModule() const final override;
+  //~ /// Return the DigitizationModule
+  //~ /// @return optionally the DigitizationModule
+  //~ virtual std::shared_ptr<const DigitizationModule>
+  //~ digitizationModule() const final override;
 
   /// Return surface associated with this identifier,
   ///
@@ -106,12 +105,12 @@ public:
   ///
   /// @param identifier is ignored for this simple detector element
   const Surface&
-  surface(const Identifier& identifier = Identifier()) const override;
+  surface() const override;
 
-  /// Returns the full list of all detection surfaces associated
-  /// to this detector element
-  const std::vector<std::shared_ptr<const Surface>>&
-  surfaces() const override;
+  //~ /// Returns the full list of all detection surfaces associated
+  //~ /// to this detector element
+  //~ const std::vector<std::shared_ptr<const Surface>>&
+  //~ surfaces() const override;
 
   /// The maximal thickness of the detector element wrt normal axis
   double
@@ -120,7 +119,7 @@ public:
 private:
   /// the element representation
   /// identifier
-  Identifier m_elementIdentifier;
+  int m_elementIdentifier;
   /// the transform for positioning in 3D space
   std::shared_ptr<const Transform3D> m_elementTransform;
   /// the surface represented by it
@@ -138,35 +137,35 @@ private:
   std::shared_ptr<const LineBounds>   m_elementLineBounds;
 };
 
-inline Identifier
+inline int
 DetectorElementStub::identify() const
 {
   return m_elementIdentifier;
 }
 
 inline const Transform3D&
-DetectorElementStub::transform(const Identifier&) const
+DetectorElementStub::transform() const
 {
   return *m_elementTransform;
 }
 
-inline std::shared_ptr<const DigitizationModule>
-DetectorElementStub::digitizationModule() const
-{
-  return m_digMod;
-}
+//~ inline std::shared_ptr<const DigitizationModule>
+//~ DetectorElementStub::digitizationModule() const
+//~ {
+  //~ return m_digMod;
+//~ }
 
 inline const Surface&
-DetectorElementStub::surface(const Identifier&) const
+DetectorElementStub::surface() const
 {
   return *m_elementSurface;
 }
 
-inline const std::vector<std::shared_ptr<const Surface>>&
-DetectorElementStub::surfaces() const
-{
-  return m_elementSurfaces;
-}
+//~ inline const std::vector<std::shared_ptr<const Surface>>&
+//~ DetectorElementStub::surfaces() const
+//~ {
+  //~ return m_elementSurfaces;
+//~ }
 
 inline double
 DetectorElementStub::thickness() const

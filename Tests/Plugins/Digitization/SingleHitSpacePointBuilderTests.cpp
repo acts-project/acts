@@ -10,10 +10,10 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "Acts/Tools/SingleHitSpacePointBuilder.hpp"
+#include "Acts/Plugins/Digitization/SingleHitSpacePointBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "DetectorElementStub.hpp"
@@ -55,7 +55,7 @@ namespace Test {
         new CartesianSegmentation(buX, recBounds));
 
     // Build translation
-    const Identifier id(0);
+    const int id(0);
 
     double           rotation = 0.026;
     RotationMatrix3D rotationPos;
@@ -74,7 +74,7 @@ namespace Test {
         id,
         std::make_shared<const Transform3D>(t3d),
         std::make_shared<const DigitizationModule>(digMod));
-    PlaneSurface      pSur(recBounds, detElem, detElem.identify());
+    PlaneSurface      pSur(recBounds, detElem);
     ActsSymMatrixD<2> cov;
     cov << 0., 0., 0., 0.;
     Vector2D local = {0.1, -0.1};
@@ -82,7 +82,7 @@ namespace Test {
     // Build PlanarModuleCluster
     PlanarModuleCluster* pmc
         = new PlanarModuleCluster(pSur,
-                                  Identifier(0),
+                                  0,
                                   cov,
                                   local[0],
                                   local[1],

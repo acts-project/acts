@@ -17,6 +17,7 @@ typedef unsigned long long Identifier;
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Plugins/Digitization/DigitizationCell.hpp"
+#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
@@ -41,13 +42,14 @@ public:
                       ActsSymMatrixD<2>             cov,
                       double                        loc0,
                       double                        loc1,
-                      std::vector<DigitizationCell> dCells)
+                      std::vector<DigitizationCell> dCells,
+                      const DigitizationModule* dModule = nullptr)
     : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(mSurface,
                                                     cIdentifier,
                                                     std::move(cov),
                                                     loc0,
                                                     loc1)
-    , m_digitizationCells(dCells)
+    , m_digitizationCells(dCells), m_digitizationModule(dModule)
   {
   }
 
@@ -56,14 +58,27 @@ public:
   /// @return the vector to the digitization cells
   const std::vector<DigitizationCell>&
   digitizationCells() const;
+  
+  /// access to the digitization module
+  ///
+  /// @return the pointer to the digitization module
+  const DigitizationModule*
+  digitizationModule() const;
 
 private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
+  const DigitizationModule* m_digitizationModule; /// the digitization module
 };
 
 inline const std::vector<DigitizationCell>&
 PlanarModuleCluster::digitizationCells() const
 {
   return m_digitizationCells;
+}
+
+inline const DigitizationModule*
+PlanarModuleCluster::digitizationModule() const
+{
+  return m_digitizationModule;
 }
 }

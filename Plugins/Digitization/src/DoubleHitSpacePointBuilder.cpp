@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Tools/DoubleHitSpacePointBuilder.hpp"
+#include "Acts/Plugins/Digitization/DoubleHitSpacePointBuilder.hpp"
 #include <cmath>
 #include <limits>
 
@@ -127,9 +127,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::endsOfStrip(
   const Acts::Vector2D local = localCoords(cluster);
 
   // Receive the binning
-  auto& sur     = cluster.referenceSurface();
   auto  segment = dynamic_cast<const Acts::CartesianSegmentation*>(
-      &(sur.associatedDetectorElement()->digitizationModule()->segmentation()));
+      &(cluster.digitizationModule()->segmentation()));
   auto& binData     = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
   auto& boundariesY = binData[1].boundaries();
@@ -157,8 +156,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::endsOfStrip(
 
   // Calculate the global coordinates of the top and bottom end of the strip
   Acts::Vector3D topGlobal, bottomGlobal, mom;  // mom is a dummy variable
-  sur.localToGlobal(topLocal, mom, topGlobal);
-  sur.localToGlobal(bottomLocal, mom, bottomGlobal);
+  const auto* sur = &cluster.referenceSurface();
+  sur->localToGlobal(topLocal, mom, topGlobal);
+  sur->localToGlobal(bottomLocal, mom, bottomGlobal);
 
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
