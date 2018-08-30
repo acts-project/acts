@@ -72,7 +72,9 @@ namespace LinearAlgebra {
   double
   phi(const Eigen::MatrixBase<Derived>& v)
   {
-    if (v.rows() < 2) return 0.;
+    if (v.rows() < 2) {
+      return 0.;
+    }
     return std::atan2(v[1], v[0]);
   }
 
@@ -89,7 +91,9 @@ namespace LinearAlgebra {
   double
   perp(const Eigen::MatrixBase<Derived>& v)
   {
-    if (v.rows() < 2) return 0.;
+    if (v.rows() < 2) {
+      return 0.;
+    }
     return std::sqrt(v[0] * v[0] + v[1] * v[1]);
   }
 
@@ -97,7 +101,9 @@ namespace LinearAlgebra {
   double
   theta(const Eigen::MatrixBase<Derived>& v)
   {
-    if (v.rows() < 3) return 0.;
+    if (v.rows() < 3) {
+      return 0.;
+    }
     return std::atan2(std::sqrt(v[0] * v[0] + v[1] * v[1]), v[2]);
   }
 
