@@ -18,6 +18,5 @@ install (FILES "${PROJECT_BINARY_DIR}/ActsConfigVersion.cmake" "${PROJECT_BINARY
 
 foreach (_comp ${_supported_components})
   install (EXPORT Acts${_comp}Targets 
-           #NAMESPACE Acts:: 
            DESTINATION "${CMAKE_INSTALL_DATAROOTDIR}/cmake/Acts")
 endforeach ()
