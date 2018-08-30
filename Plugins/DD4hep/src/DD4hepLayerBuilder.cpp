@@ -178,19 +178,17 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
           std::swap(innerPos, outerPos);
         }
 
-        Acts::DiscSurface* innerBoundary
-            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
-                                        TGeoPrimitivesHelpers::makeTransform(
-                                            transform->rotation(), innerPos)),
-                                    pl.minR,
-                                    pl.maxR);
+        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
+            std::make_shared<const Transform3D>(Translation3D(innerPos)
+                                                * transform->rotation()),
+            pl.minR,
+            pl.maxR);
 
-        Acts::DiscSurface* outerBoundary
-            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
-                                        TGeoPrimitivesHelpers::makeTransform(
-                                            transform->rotation(), outerPos)),
-                                    pl.minR,
-                                    pl.maxR);
+        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
+            std::make_shared<const Transform3D>(Translation3D(outerPos)
+                                                * transform->rotation()),
+            pl.minR,
+            pl.maxR);
 
         Acts::DiscSurface* centralSurface
             = new Acts::DiscSurface(transform, pl.minR, pl.maxR);
@@ -616,19 +614,17 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
           std::swap(innerPos, outerPos);
         }
 
-        Acts::DiscSurface* innerBoundary
-            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
-                                        TGeoPrimitivesHelpers::makeTransform(
-                                            transform->rotation(), innerPos)),
-                                    pl.minR,
-                                    pl.maxR);
+        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
+            std::make_shared<const Transform3D>(Translation3D(innerPos)
+                                                * transform->rotation()),
+            pl.minR,
+            pl.maxR);
 
-        Acts::DiscSurface* outerBoundary
-            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
-                                        TGeoPrimitivesHelpers::makeTransform(
-                                            transform->rotation(), outerPos)),
-                                    pl.minR,
-                                    pl.maxR);
+        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
+            std::make_shared<const Transform3D>(Translation3D(outerPos)
+                                                * transform->rotation()),
+            pl.minR,
+            pl.maxR);
 
         Acts::DiscSurface* centralSurface
             = new Acts::DiscSurface(transform, pl.minR, pl.maxR);

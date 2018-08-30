@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 
 const double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
 
