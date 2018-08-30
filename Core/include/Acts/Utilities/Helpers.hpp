@@ -190,17 +190,4 @@ toString(const Acts::Transform3D& transform,
   return sout.str();
 }
 
-/*
- * the analogous to CLHEP HepGeom::Transform3D trans (localRot,
- * theSurface.transform().translation());
- */
-inline Acts::Transform3D
-getTransformFromRotTransl(const Acts::RotationMatrix3D& rot,
-                          const Acts::Vector3D&         transl_vec)
-{
-  Acts::Transform3D trans = Acts::Transform3D::Identity();
-  trans                   = trans * rot;
-  trans.translation()     = transl_vec;
-  return trans;
-}
 }  // end of Acts namespace

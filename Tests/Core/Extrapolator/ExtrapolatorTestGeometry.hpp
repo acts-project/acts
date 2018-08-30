@@ -215,8 +215,9 @@ namespace Test {
         moduleRotation.col(1) = moduleLocalY;
         moduleRotation.col(2) = moduleLocalZ;
         // get the moduleTransform
-        std::shared_ptr<Transform3D> mModuleTransform(new Transform3D(
-            getTransformFromRotTransl(moduleRotation, mCenter)));
+        std::shared_ptr<Transform3D> mModuleTransform
+            = std::make_shared<Transform3D>(Translation3D(mCenter)
+                                            * moduleRotation);
 
         Plane_type* mSurface = new Plane_type(mModuleTransform, mBounds);
         // let's assign the material
