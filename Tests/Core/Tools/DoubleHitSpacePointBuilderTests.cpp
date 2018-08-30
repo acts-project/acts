@@ -11,9 +11,9 @@
 
 #include <boost/test/data/test_case.hpp>
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/Plugins/Digitization/DoubleHitSpacePointBuilder.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Plugins/Digitization/DoubleHitSpacePointBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace bdata = boost::unit_test::data;

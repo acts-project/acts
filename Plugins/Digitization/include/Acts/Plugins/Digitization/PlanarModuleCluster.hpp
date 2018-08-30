@@ -43,13 +43,14 @@ public:
                       double                        loc0,
                       double                        loc1,
                       std::vector<DigitizationCell> dCells,
-                      const DigitizationModule* dModule = nullptr)
+                      const DigitizationModule*     dModule = nullptr)
     : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(mSurface,
                                                     cIdentifier,
                                                     std::move(cov),
                                                     loc0,
                                                     loc1)
-    , m_digitizationCells(dCells), m_digitizationModule(dModule)
+    , m_digitizationCells(dCells)
+    , m_digitizationModule(dModule)
   {
   }
 
@@ -58,7 +59,7 @@ public:
   /// @return the vector to the digitization cells
   const std::vector<DigitizationCell>&
   digitizationCells() const;
-  
+
   /// access to the digitization module
   ///
   /// @return the pointer to the digitization module
@@ -67,7 +68,7 @@ public:
 
 private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
-  const DigitizationModule* m_digitizationModule; /// the digitization module
+  const DigitizationModule* m_digitizationModule;  /// the digitization module
 };
 
 inline const std::vector<DigitizationCell>&

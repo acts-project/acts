@@ -26,7 +26,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClusters(
     const Acts::Vector3D& pos2) const
 {
   // Check if measurements are close enough to each other
-  if ((pos1 - pos2).norm() > m_cfg.diffDist) return -1.;
+  if ((pos1 - pos2).norm() > m_cfg.diffDist) {
+    return -1.;
+  }
 
   // Calculate the angles of the vectors
   double phi1, theta1, phi2, theta2;
@@ -37,11 +39,15 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClusters(
 
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
-  if (diffTheta2 > m_cfg.diffTheta2) return -1.;
+  if (diffTheta2 > m_cfg.diffTheta2) {
+    return -1.;
+  }
 
   // Calculate the squared difference between the phi angles
   double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
-  if (diffPhi2 > m_cfg.diffPhi2) return -1.;
+  if (diffPhi2 > m_cfg.diffPhi2) {
+    return -1.;
+  }
 
   // Return the squared distance between both vector
   return diffTheta2 + diffPhi2;
@@ -127,7 +133,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::endsOfStrip(
   const Acts::Vector2D local = localCoords(cluster);
 
   // Receive the binning
-  auto  segment = dynamic_cast<const Acts::CartesianSegmentation*>(
+  auto segment = dynamic_cast<const Acts::CartesianSegmentation*>(
       &(cluster.digitizationModule()->segmentation()));
   auto& binData     = segment->binUtility().binningData();
   auto& boundariesX = binData[0].boundaries();
@@ -156,7 +162,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::endsOfStrip(
 
   // Calculate the global coordinates of the top and bottom end of the strip
   Acts::Vector3D topGlobal, bottomGlobal, mom;  // mom is a dummy variable
-  const auto* sur = &cluster.referenceSurface();
+  const auto*    sur = &cluster.referenceSurface();
   sur->localToGlobal(topLocal, mom, topGlobal);
   sur->localToGlobal(bottomLocal, mom, bottomGlobal);
 
@@ -200,19 +206,25 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
 {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
-  if (m_cfg.stripLengthGapTolerance <= 0.) return false;
+  if (m_cfg.stripLengthGapTolerance <= 0.) {
+    return false;
+  }
   spaPoPa.qmag = spaPoPa.q.mag();
   // Increase the limits. This allows a check if the point is just slightly
   // outside the SDE
   spaPoPa.limitExtended
       = spaPoPa.limit + m_cfg.stripLengthGapTolerance / spaPoPa.qmag;
   // Check if m is just slightly outside
-  if (fabs(spaPoPa.m) > spaPoPa.limitExtended) return false;
+  if (fabs(spaPoPa.m) > spaPoPa.limitExtended) {
+    return false;
+  }
   // Calculate n if not performed previously
   if (spaPoPa.n == 0.)
     spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) / spaPoPa.r.dot(spaPoPa.qs);
   // Check if n is just slightly outside
-  if (fabs(spaPoPa.n) > spaPoPa.limitExtended) return false;
+  if (fabs(spaPoPa.n) > spaPoPa.limitExtended) {
+    return false;
+  }
 
   /// The following code considers an overshoot of m and n in the same direction
   /// of their SDE. The term "overshoot" represents the amount of m or n outside

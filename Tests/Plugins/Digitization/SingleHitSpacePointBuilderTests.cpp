@@ -80,13 +80,8 @@ namespace Test {
     Vector2D local = {0.1, -0.1};
 
     // Build PlanarModuleCluster
-    PlanarModuleCluster* pmc
-        = new PlanarModuleCluster(pSur,
-                                  0,
-                                  cov,
-                                  local[0],
-                                  local[1],
-                                  {DigitizationCell(0, 0, 1.)});
+    PlanarModuleCluster* pmc = new PlanarModuleCluster(
+        pSur, 0, cov, local[0], local[1], {DigitizationCell(0, 0, 1.)});
 
     std::cout << "Hit created" << std::endl;
 

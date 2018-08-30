@@ -59,7 +59,7 @@ class SpacePointBuilder<SingleHitSpacePoint>
 {
 public:
   /// Default constructor
-  SpacePointBuilder<SingleHitSpacePoint>();
+  SpacePointBuilder<SingleHitSpacePoint>() = default;
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// and stores the results

@@ -36,7 +36,7 @@ class DetectorElementStub : public DetectorElementBase
 public:
   DetectorElementStub() : DetectorElementBase() {}
 
-  DetectorElementStub(const int                          id,
+  DetectorElementStub(const int                                 id,
                       std::shared_ptr<const Transform3D>        transform,
                       std::shared_ptr<const DigitizationModule> digMod)
     : DetectorElementBase()
@@ -54,7 +54,7 @@ public:
   /// @param pBounds is the planar bounds for the planar detector element
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
-  DetectorElementStub(const int                       identifier,
+  DetectorElementStub(const int                              identifier,
                       std::shared_ptr<const Transform3D>     transform,
                       std::shared_ptr<const PlanarBounds>    pBounds,
                       double                                 thickness,
@@ -76,7 +76,7 @@ public:
   //~ void
   //~ assignIdentifier(const int& identifier) override
   //~ {
-    //~ m_elementIdentifier = identifier;
+  //~ m_elementIdentifier = identifier;
   //~ }
 
   ///  Destructor
@@ -152,7 +152,7 @@ DetectorElementStub::transform() const
 //~ inline std::shared_ptr<const DigitizationModule>
 //~ DetectorElementStub::digitizationModule() const
 //~ {
-  //~ return m_digMod;
+//~ return m_digMod;
 //~ }
 
 inline const Surface&
@@ -164,7 +164,7 @@ DetectorElementStub::surface() const
 //~ inline const std::vector<std::shared_ptr<const Surface>>&
 //~ DetectorElementStub::surfaces() const
 //~ {
-  //~ return m_elementSurfaces;
+//~ return m_elementSurfaces;
 //~ }
 
 inline double

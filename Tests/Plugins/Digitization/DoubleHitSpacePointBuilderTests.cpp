@@ -147,8 +147,8 @@ namespace Test {
     std::cout << "Create third hit" << std::endl;
 
     // Build third PlanarModuleCluster
-    const int id3(2);
-    Transform3D      t3d3 = getTransformFromRotTransl(
+    const int   id3(2);
+    Transform3D t3d3 = getTransformFromRotTransl(
         rotationNeg, Vector3D(0., 10. * units::_m, 10.005 * units::_m));
 
     DetectorElementStub detElem3(

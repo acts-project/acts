@@ -8,10 +8,6 @@
 
 #include "Acts/Plugins/Digitization/SingleHitSpacePointBuilder.hpp"
 
-Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::SpacePointBuilder()
-{
-}
-
 Acts::Vector2D
 Acts::SpacePointBuilder<Acts::SingleHitSpacePoint>::localCoords(
     const Acts::PlanarModuleCluster& cluster) const

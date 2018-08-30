@@ -2063,11 +2063,11 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
       literal_null,    ///< the `null` literal
       value_string,    ///< a string -- use get_string() for actual value
       value_unsigned,  ///< an unsigned integer -- use get_number_unsigned() for
-                       ///actual value
+                       /// actual value
       value_integer,   ///< a signed integer -- use get_number_integer() for
-                       ///actual value
+                       /// actual value
       value_float,   ///< an floating point number -- use get_number_float() for
-                     ///actual value
+                     /// actual value
       begin_array,   ///< the character for array begin `[`
       begin_object,  ///< the character for object begin `{`
       end_array,     ///< the character for array end `]`
@@ -2077,7 +2077,7 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
       parse_error,      ///< indicating a parse error
       end_of_input,     ///< indicating the end of the input buffer
       literal_or_value  ///< a literal or the begin of a value (only for
-                        ///diagnostics)
+                        /// diagnostics)
     };
 
     /// return name of values of type token_type (only used for errors)
@@ -8441,8 +8441,9 @@ private:
         object = nullptr;  // silence warning, see #821
         if (JSON_UNLIKELY(t == value_t::null)) {
           JSON_THROW(
-              other_error::create(500, "961c151d2e87f2686a955a9be24d316f1362bf2"
-                                       "1 3.0.1"));  // LCOV_EXCL_LINE
+              other_error::create(500,
+                                  "961c151d2e87f2686a955a9be24d316f1362bf2"
+                                  "1 3.0.1"));  // LCOV_EXCL_LINE
         }
         break;
       }
