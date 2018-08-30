@@ -61,8 +61,8 @@ include (ActsComponentsHelpers) # handle components via add_..._if commands
 
 # core library and plugins
 
-add_component (Core)
-add_component_if(Legacy ACTS_BUILD_LEGACY)
+add_component (Core Core)
+add_component_if (Legacy Legacy ACTS_BUILD_LEGACY)
 add_subdirectory (Plugins)
 
 # examples and tests
