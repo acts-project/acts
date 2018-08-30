@@ -194,9 +194,10 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calcPerpProj(
   double         denom = q.dot(q) - qr * qr;
 
   // Check for numerical stability
-  if (fabs(denom) > 10e-7)
+  if (fabs(denom) > 10e-7) {
     // Return lambda0
     return (ac.dot(r) * qr - ac.dot(q) * r.dot(r)) / denom;
+  }
   // lambda0 is in the interval [-1,0]. This return serves as error check.
   return 1.;
 }
@@ -221,8 +222,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
     return false;
   }
   // Calculate n if not performed previously
-  if (spaPoPa.n == 0.)
+  if (spaPoPa.n == 0.) {
     spaPoPa.n = -spaPoPa.t.dot(spaPoPa.qs) / spaPoPa.r.dot(spaPoPa.qs);
+  }
   // Check if n is just slightly outside
   if (fabs(spaPoPa.n) > spaPoPa.limitExtended) {
     return false;
@@ -347,8 +349,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
     spaPoPa.m  = -spaPoPa.s.dot(spaPoPa.rt) / spaPoPa.q.dot(spaPoPa.rt);
 
     // Set the limit for the parameter
-    if (spaPoPa.limit == 1. && m_cfg.stripLengthTolerance != 0.)
+    if (spaPoPa.limit == 1. && m_cfg.stripLengthTolerance != 0.) {
       spaPoPa.limit = 1. + m_cfg.stripLengthTolerance;
+    }
 
     // Check if m and n can be resolved in the interval (-1, 1)
     if (fabs(spaPoPa.m) <= spaPoPa.limit
