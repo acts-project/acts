@@ -12,7 +12,7 @@
 #ifdef ACTS_CORE_IDENTIFIER_PLUGIN
 #include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
-typedef unsigned long long Identifier;
+using unsigned long long Identifier;
 #endif
 
 #include "Acts/EventData/Measurement.hpp"
@@ -49,7 +49,7 @@ public:
                                                     std::move(cov),
                                                     loc0,
                                                     loc1)
-    , m_digitizationCells(dCells)
+    , m_digitizationCells(std::move(dCells))
     , m_digitizationModule(dModule)
   {
   }

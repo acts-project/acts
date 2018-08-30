@@ -16,7 +16,7 @@
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::SpacePointBuilder(
     Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::
         DoubleHitSpacePointConfig cfg)
-  : m_cfg(cfg)
+  : m_cfg(std::move(cfg))
 {
 }
 
@@ -86,7 +86,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
     const
 {
   // Return if no clusters are given in a vector
-  if (clustersFront.empty() || clustersBack.empty()) return;
+  if (clustersFront.empty() || clustersBack.empty()) {
+    return;
+  }
 
   // Declare helper variables
   double       currentDiff;
@@ -326,9 +328,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
     // Fast skipping if a perpendicular projection should be used
     double resultPerpProj;
     if (m_cfg.usePerpProj
-        && (resultPerpProj
-            = calcPerpProj(ends1.first, ends2.first, spaPoPa.q, spaPoPa.r)
-                <= 0.)) {
+        && ((bool)(resultPerpProj = calcPerpProj(
+                       ends1.first, ends2.first, spaPoPa.q, spaPoPa.r))
+            <= 0.)) {
       Acts::DoubleHitSpacePoint sp;
       sp.clusterFront = cp.first;
       sp.clusterBack  = cp.second;
