@@ -1210,7 +1210,7 @@ struct Navigator
   ///
   /// @param[in,out] state The state object for the step length
   /// @param[in] step the step size
-  /// @param[in] release flat steers if the step is released first
+  /// @param[in] release flag steers if the step is released first
   template <typename propagator_state_t>
   void
   updateStep(propagator_state_t& state, double step, bool release = false) const
