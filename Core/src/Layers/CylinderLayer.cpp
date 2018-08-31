@@ -22,6 +22,8 @@
 #include "Acts/Volumes/BoundarySurfaceFace.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
+using Acts::VectorHelpers::phi;
+
 Acts::CylinderLayer::CylinderLayer(
     const std::shared_ptr<const Transform3D>&    transform,
     const std::shared_ptr<const CylinderBounds>& cBounds,
@@ -98,7 +100,7 @@ Acts::CylinderLayer::create(const variant_data& vardata)
     auto g2l      = [sa_trf, avgPhi](const Vector3D& pos) -> Vector2D {
       // @TODO: Check if - is right here, might be the other way round
       Vector3D loc = sa_trf * pos;
-      return Vector2D(LA::phi(loc) - avgPhi, loc.z());
+      return Vector2D(phi(loc) - avgPhi, loc.z());
     };
     auto l2g = [sa_itrf, R, avgPhi](const Vector2D& loc) -> Vector3D {
       return sa_itrf * Vector3D(R * std::cos(loc[0] + avgPhi),

@@ -22,6 +22,9 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
@@ -183,11 +186,11 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
     const Transform3D& surfaceTrans = transform();
     Transform3D        inverseTrans(surfaceTrans.inverse());
     Vector3D           loc3Dframe(inverseTrans * gpos);
-    lpos   = Vector2D(bounds().r() * LA::phi(loc3Dframe), loc3Dframe.z());
-    radius = LA::perp(loc3Dframe);
+    lpos   = Vector2D(bounds().r() * phi(loc3Dframe), loc3Dframe.z());
+    radius = perp(loc3Dframe);
   } else {
-    lpos   = Vector2D(bounds().r() * LA::phi(gpos), gpos.z());
-    radius = LA::perp(gpos);
+    lpos   = Vector2D(bounds().r() * phi(gpos), gpos.z());
+    radius = perp(gpos);
   }
   // return true or false
   return ((std::abs(radius - bounds().r()) > inttol) ? false : true);

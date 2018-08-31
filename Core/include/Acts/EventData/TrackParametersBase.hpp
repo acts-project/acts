@@ -128,14 +128,14 @@ public:
   double
   pT() const
   {
-    return LA::perp(momentum());
+    return VectorHelpers::perp(momentum());
   }
 
   /// @brief convenience method to retrieve pseudorapidity
   double
   eta() const
   {
-    return LA::eta(momentum());
+    return VectorHelpers::eta(momentum());
   }
 
   /// @brief retrieve electric charge

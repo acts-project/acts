@@ -15,6 +15,9 @@
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 namespace Acts {
 
 ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
@@ -76,11 +79,11 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
           maxZ = std::max(maxZ, p2.z());
           minZ = std::min(minZ, p2.z());
 
-          maxR = std::max(maxR, LA::perp(p2));
+          maxR = std::max(maxR, perp(p2));
           minR = std::min(minR, radialDistance(p1, p2));
 
-          maxPhi = std::max(maxPhi, LA::phi(p2));
-          minPhi = std::min(minPhi, LA::phi(p2));
+          maxPhi = std::max(maxPhi, phi(p2));
+          minPhi = std::min(minPhi, phi(p2));
         }
       }
     } else if (cylSurface != nullptr) {
@@ -102,10 +105,10 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
         maxZ = std::max(maxZ, vtx.z());
         minZ = std::min(minZ, vtx.z());
 
-        maxR = std::max(maxR, LA::perp(vtx));
+        maxR = std::max(maxR, perp(vtx));
 
-        maxPhi = std::max(maxPhi, LA::phi(vtx));
-        minPhi = std::min(minPhi, LA::phi(vtx));
+        maxPhi = std::max(maxPhi, phi(vtx));
+        minPhi = std::min(minPhi, phi(vtx));
       }
 
       // trace all face connections to possibly catch min-r approach
@@ -126,7 +129,7 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
       envR              = {env, env};
 
       // evaluate impact of r shift on phi
-      double cylPosR = LA::perp(cylSurface->center());
+      double cylPosR = perp(cylSurface->center());
       double dPhi    = std::atan((cylBoundsR + env) / cylPosR)
           - std::atan(cylBoundsR / cylPosR);
 

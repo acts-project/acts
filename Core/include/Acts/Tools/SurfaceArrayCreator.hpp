@@ -227,6 +227,7 @@ public:
   static bool
   isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)
   {
+    using Acts::VectorHelpers::perp;
 
     if (bValue == Acts::binPhi) {
       // Take the two binning positions
@@ -252,8 +253,8 @@ public:
     }
 
     if (bValue == Acts::binR) {
-      return (std::abs(LA::perp(a->binningPosition(binR))
-                       - LA::perp(b->binningPosition(binR)))
+      return (std::abs(perp(a->binningPosition(binR))
+                       - perp(b->binningPosition(binR)))
               < Acts::units::_um);
     }
 

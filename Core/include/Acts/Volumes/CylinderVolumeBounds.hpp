@@ -219,10 +219,11 @@ CylinderVolumeBounds::clone() const
 inline bool
 CylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
-  double ros = LA::perp(pos);
-  bool   insidePhi
-      = cos(LA::phi(pos)) >= cos(m_valueStore[bv_halfPhiSector]) - tol;
-  bool insideR = insidePhi ? ((ros >= m_valueStore[bv_innerRadius] - tol)
+  using VectorHelpers::perp;
+  using VectorHelpers::phi;
+  double ros       = perp(pos);
+  bool   insidePhi = cos(phi(pos)) >= cos(m_valueStore[bv_halfPhiSector]) - tol;
+  bool   insideR   = insidePhi ? ((ros >= m_valueStore[bv_innerRadius] - tol)
                               && (ros <= m_valueStore[bv_outerRadius] + tol))
                            : false;
   bool insideZ

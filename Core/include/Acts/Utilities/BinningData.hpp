@@ -293,21 +293,24 @@ public:
   float
   value(const Vector3D& position) const
   {
+    using VectorHelpers::phi;
+    using VectorHelpers::perp;
+    using VectorHelpers::eta;
     // ordered after occurence
     if (binvalue == binR || binvalue == binH) {
-      return (LA::perp(position));
+      return (perp(position));
     }
     if (binvalue == binRPhi) {
-      return (LA::perp(position) * LA::phi(position));
+      return (perp(position) * phi(position));
     }
     if (binvalue == binEta) {
-      return (LA::eta(position));
+      return (eta(position));
     }
     if (binvalue < 3) {
       return (position[binvalue]);
     }
     // phi gauging
-    return LA::phi(position);
+    return phi(position);
   }
 
   /// Get the center value of a bin

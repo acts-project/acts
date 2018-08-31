@@ -12,6 +12,9 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
 Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                                std::array<size_t, 2> nBinsRZ)>&
@@ -94,16 +97,15 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
   auto transformPos = [](const Acts::Vector3D& pos) {
-    return Acts::Vector2D(LA::perp(pos), pos.z());
+    return Acts::Vector2D(perp(pos), pos.z());
   };
 
   // [4] Create the transformation for the bfield
   // map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField
       = [](const Acts::Vector2D& field, const Acts::Vector3D& pos) {
-          return Acts::Vector3D(field.x() * cos(LA::phi(pos)),
-                                field.x() * sin(LA::phi(pos)),
-                                field.y());
+          return Acts::Vector3D(
+              field.x() * cos(phi(pos)), field.x() * sin(phi(pos)), field.y());
         };
 
   // [5] Create the mapper & BField Service

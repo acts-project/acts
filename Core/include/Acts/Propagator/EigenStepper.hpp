@@ -248,6 +248,8 @@ public:
     const ActsMatrixD<5, 5>
     covarianceTransport(const S& surface, bool reinitialize = false)
     {
+      using VectorHelpers::phi;
+      using VectorHelpers::theta;
       // Initialize the transport final frame jacobian
       ActsMatrixD<5, 7> jacToLocal = ActsMatrixD<5, 7>::Zero();
       // initalize the jacobian to local, returns the transposed ref frame
@@ -274,7 +276,7 @@ public:
         Vector2D loc{0., 0.};
         surface.globalToLocal(pos, dir, loc);
         ActsVectorD<5> pars;
-        pars << loc[eLOC_0], loc[eLOC_1], LA::phi(dir), LA::theta(dir), q / p;
+        pars << loc[eLOC_0], loc[eLOC_1], phi(dir), theta(dir), q / p;
         surface.initJacobianToGlobal(jacToGlobal, pos, dir, pars);
       }
       // store in the global jacobian

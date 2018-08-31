@@ -70,7 +70,7 @@ namespace Test {
 
     // map (x,y,z) -> (r,z)
     auto transformPos = [](const Vector3D& pos) {
-      return ActsVectorD<2>(LA::perp(pos), pos.z());
+      return ActsVectorD<2>(VectorHelpers::perp(pos), pos.z());
     };
     // map (Bx,By,Bz) -> (Bx,By,Bz)
     auto transformBField

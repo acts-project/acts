@@ -169,7 +169,8 @@ struct MaterialInteractor
           double tInX0 = mProperties->thicknessInX0();
           // retrieve the scattering contribution
           double sigmaScat = scattering(p, lbeta, tInX0 * pCorrection);
-          double sinTheta  = std::sin(LA::theta(state.stepping.direction()));
+          double sinTheta
+              = std::sin(VectorHelpers::theta(state.stepping.direction()));
           double sigmaDeltaPhiSq
               = sigmaScat * sigmaScat / (sinTheta * sinTheta);
           double sigmaDeltaThetaSq = sigmaScat * sigmaScat;

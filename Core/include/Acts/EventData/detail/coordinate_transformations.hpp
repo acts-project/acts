@@ -56,8 +56,10 @@ namespace detail {
                        const ActsVectorD<3>& mom,
                        double                charge)
     {
+      using VectorHelpers::phi;
+      using VectorHelpers::theta;
       ParVector_t parameters;
-      parameters << 0, 0, LA::phi(mom), LA::theta(mom),
+      parameters << 0, 0, phi(mom), theta(mom),
           ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm();
 
       return parameters;
@@ -69,11 +71,12 @@ namespace detail {
                       double                charge,
                       const Surface&        s)
     {
+      using VectorHelpers::phi;
+      using VectorHelpers::theta;
       ActsVectorD<2> localPosition;
       s.globalToLocal(pos, mom, localPosition);
       ParVector_t result;
-      result << localPosition(0), localPosition(1), LA::phi(mom),
-          LA::theta(mom),
+      result << localPosition(0), localPosition(1), phi(mom), theta(mom),
           ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm();
       return result;
     }

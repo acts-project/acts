@@ -23,6 +23,9 @@
 #include "Acts/Volumes/BoundarySurfaceFace.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 Acts::DiscLayer::DiscLayer(const std::shared_ptr<const Transform3D>& transform,
                            const std::shared_ptr<const DiscBounds>&  dbounds,
                            std::unique_ptr<SurfaceArray>       surfaceArray,
@@ -98,7 +101,7 @@ Acts::DiscLayer::create(const variant_data& vardata)
     auto g2l = [sa_trf](const Vector3D& pos) -> Vector2D {
       // @TODO: Check if - is right here, might be the other way round
       Vector3D loc = sa_trf * pos;
-      return Vector2D(LA::perp(loc), LA::phi(loc));
+      return Vector2D(perp(loc), phi(loc));
     };
     auto l2g = [sa_itrf, R](const Vector2D& loc) -> Vector3D {
       return sa_itrf

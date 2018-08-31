@@ -22,6 +22,9 @@
 #include <fstream>
 #include <random>
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
 
@@ -45,7 +48,7 @@ namespace Test {
 #define CHECK_ROTATION_ANGLE(t, a, tolerance)                                  \
   {                                                                            \
     Vector3D v = (*t) * Vector3D(1, 0, 0);                                     \
-    BOOST_CHECK_SMALL(LA::phi(v) - (a), tolerance);                            \
+    BOOST_CHECK_SMALL(phi(v) - (a), tolerance);                                \
   }
 
   using SrfVec = std::vector<const Surface*>;
@@ -325,7 +328,7 @@ namespace Test {
       BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
       BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_SMALL(LA::phi(tr * Vector3D::UnitX()), 1e-6);
+      BOOST_CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift = 0.;
@@ -341,7 +344,7 @@ namespace Test {
       BOOST_TEST(axis.bType == equidistant);
       // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
       BOOST_CHECK_CLOSE_FRACTION(
-          LA::phi(tr * Vector3D::UnitX()), -0.5 * step, 1e-3);
+          phi(tr * Vector3D::UnitX()), -0.5 * step, 1e-3);
       // case 3: two modules sit asymmetrically around pi / -pi shifted up
       angleShift = step / -4.;
       surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
@@ -354,8 +357,7 @@ namespace Test {
       BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
       BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_CLOSE_FRACTION(
-          LA::phi(tr * Vector3D::UnitX()), step / -4., 1e-3);
+      BOOST_CHECK_CLOSE_FRACTION(phi(tr * Vector3D::UnitX()), step / -4., 1e-3);
 
       // case 4: two modules sit asymmetrically around pi / -pi shifted down
       angleShift = step / 4.;
@@ -369,8 +371,7 @@ namespace Test {
       BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
       BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_CLOSE_FRACTION(
-          LA::phi(tr * Vector3D::UnitX()), step / 4., 1e-3);
+      BOOST_CHECK_CLOSE_FRACTION(phi(tr * Vector3D::UnitX()), step / 4., 1e-3);
     }
 
     for (int i = -1; i <= 2; i += 2) {
@@ -387,7 +388,7 @@ namespace Test {
       BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
       BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_SMALL(LA::phi(tr * Vector3D::UnitX()), 1e-6);
+      BOOST_CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift = 0.;
@@ -403,7 +404,7 @@ namespace Test {
       BOOST_TEST(axis.bType == equidistant);
       // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
       BOOST_CHECK_CLOSE_FRACTION(
-          LA::phi(tr * Vector3D::UnitX()), -0.5 * step, 1e-3);
+          phi(tr * Vector3D::UnitX()), -0.5 * step, 1e-3);
 
       // case 3: two modules sit asymmetrically around pi / -pi shifted up
       angleShift = step / -4.;
@@ -418,8 +419,7 @@ namespace Test {
       BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
       // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_CHECK_CLOSE_FRACTION(
-          LA::phi(tr * Vector3D::UnitX()), step / -4., 1e-3);
+      BOOST_CHECK_CLOSE_FRACTION(phi(tr * Vector3D::UnitX()), step / -4., 1e-3);
 
       // case 4: two modules sit asymmetrically around pi / -pi shifted down
       angleShift = step / 4.;
@@ -434,8 +434,7 @@ namespace Test {
       BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
       // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_CHECK_CLOSE_FRACTION(
-          LA::phi(tr * Vector3D::UnitX()), step / 4., 1e-3);
+      BOOST_CHECK_CLOSE_FRACTION(phi(tr * Vector3D::UnitX()), step / 4., 1e-3);
     }
 
     SrfVec surfaces;
@@ -450,8 +449,8 @@ namespace Test {
     auto axis = createEquidistantAxis(surfaces, BinningValue::binPhi, pl, tr);
     BOOST_TEST(axis.nBins == 1);
 
-    BOOST_CHECK_SMALL(axis.max - LA::phi(Vector3D(8, 1, 0)), 1e-3);
-    BOOST_CHECK_SMALL(axis.min - LA::phi(Vector3D(8, -1, 0)), 1e-3);
+    BOOST_CHECK_SMALL(axis.max - phi(Vector3D(8, 1, 0)), 1e-3);
+    BOOST_CHECK_SMALL(axis.min - phi(Vector3D(8, -1, 0)), 1e-3);
     BOOST_TEST(axis.bType == equidistant);
   }
 
@@ -517,7 +516,7 @@ namespace Test {
     ProtoLayer pl  = ProtoLayer(surfaces);
     auto axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
     BOOST_TEST(axis.nBins == 1);
-    BOOST_CHECK_SMALL(axis.max - LA::perp(Vector3D(17, 1, 0)), 1e-3);
+    BOOST_CHECK_SMALL(axis.max - perp(Vector3D(17, 1, 0)), 1e-3);
     BOOST_CHECK_SMALL(axis.min - 13, 1e-3);
     BOOST_TEST(axis.bType == equidistant);
 
@@ -537,8 +536,7 @@ namespace Test {
     axis = createEquidistantAxis(surfaces, BinningValue::binR, pl, trf);
 
     BOOST_TEST(axis.nBins == 3);
-    BOOST_CHECK_CLOSE_FRACTION(
-        axis.max, LA::perp(Vector3D(20 + 2, 1, 0)), 1e-3);
+    BOOST_CHECK_CLOSE_FRACTION(axis.max, perp(Vector3D(20 + 2, 1, 0)), 1e-3);
     // BOOST_TEST(axis.min == 8, tt::tolerance(1e-3)); // fails for some reason
     BOOST_CHECK_SMALL((axis.min - 8), 1e-3);
     BOOST_TEST(axis.bType == equidistant);
@@ -584,7 +582,7 @@ namespace Test {
 
     double R           = 10.;
     auto globalToLocal = [](const Vector3D& pos) {
-      return Vector2D(LA::phi(pos) + 2 * M_PI / 30 / 2, pos.z());
+      return Vector2D(phi(pos) + 2 * M_PI / 30 / 2, pos.z());
     };
     auto localToGlobal = [R](const Vector2D& loc) {
       double phi = loc[0] - 2 * M_PI / 30 / 2;
@@ -631,7 +629,7 @@ namespace Test {
 
     auto globalToLocal = [tr](const Vector3D& pos) {
       Vector3D rot = tr * pos;
-      return Vector2D(LA::phi(rot), rot.z());
+      return Vector2D(phi(rot), rot.z());
     };
     auto localToGlobal = [R, itr](const Vector2D& loc) {
       return itr * Vector3D(R * std::cos(loc[0]), R * std::sin(loc[0]), loc[1]);
@@ -678,7 +676,7 @@ namespace Test {
 
       auto globalToLocalVar = [tr](const Vector3D& pos) {
         Vector3D rot = tr * pos;
-        return Vector2D(LA::phi(rot), rot.z());
+        return Vector2D(phi(rot), rot.z());
       };
       auto localToGlobalVar = [R, itr](const Vector2D& loc) {
         return itr

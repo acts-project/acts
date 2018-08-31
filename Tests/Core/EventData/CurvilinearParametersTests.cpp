@@ -16,6 +16,8 @@
 #include "ParametersTestHelper.hpp"
 
 namespace Acts {
+using VectorHelpers::phi;
+using VectorHelpers::theta;
 namespace Test {
 
   /// @brief Unit test for Curvilinear parameters
@@ -34,8 +36,8 @@ namespace Test {
     NeutralCurvilinearParameters curvilinear_neut(nullptr, pos, mom);
 
     /// check local coordinates
-    const auto   fphi   = LA::phi(mom);
-    const auto   ftheta = LA::theta(mom);
+    const auto   fphi   = phi(mom);
+    const auto   ftheta = theta(mom);
     const double oOp    = 1. / mom.norm();
 
     // check parameters

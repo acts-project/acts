@@ -22,6 +22,9 @@
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 Acts::ConeSurface::ConeSurface(const ConeSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
@@ -166,7 +169,7 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
   // now decide on the quility of the transformation
   double inttol = r * 0.0001;
   inttol        = (inttol < 0.01) ? 0.01 : 0.01;  // ?
-  return ((std::abs(LA::perp(loc3Dframe) - r) > inttol) ? false : true);
+  return ((std::abs(perp(loc3Dframe) - r) > inttol) ? false : true);
 }
 
 double
@@ -175,7 +178,7 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
 {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   Vector3D posLocal = m_transform ? transform().inverse() * gpos : gpos;
-  double   phi      = LA::phi(posLocal);
+  double   phi      = VectorHelpers::phi(posLocal);
   double   sgn      = posLocal.z() > 0. ? -1. : +1.;
   Vector3D normalC(cos(phi) * bounds().cosAlpha(),
                    sin(phi) * bounds().cosAlpha(),

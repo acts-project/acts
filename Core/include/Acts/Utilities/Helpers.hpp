@@ -54,7 +54,7 @@ namespace Acts {
 
  */
 
-namespace LinearAlgebra {
+namespace VectorHelpers {
 
   namespace detail {
     // helper to figure out if a type has a member called phi
@@ -114,8 +114,6 @@ namespace LinearAlgebra {
     return std::atanh(v[2] / v.norm());
   }
 }
-
-namespace LA = LinearAlgebra;
 
 namespace detail {
 

@@ -99,6 +99,7 @@ GeometryObject::assignGeoID(const GeometryID& geoID)
 inline double
 GeometryObject::binningPositionValue(BinningValue bValue) const
 {
+  using VectorHelpers::perp;
   // now switch
   switch (bValue) {
   // case x
@@ -115,7 +116,7 @@ GeometryObject::binningPositionValue(BinningValue bValue) const
   } break;
   // case
   case Acts::binR: {
-    return LA::perp(binningPosition(bValue));
+    return perp(binningPosition(bValue));
   } break;
   // do nothing for the default
   default:

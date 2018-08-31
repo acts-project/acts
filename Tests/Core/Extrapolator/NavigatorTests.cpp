@@ -33,6 +33,8 @@ namespace tt    = boost::test_tools;
 
 namespace Acts {
 
+using VectorHelpers::perp;
+
 namespace Test {
 
   /// This is a simple cache struct to mimic the
@@ -187,7 +189,7 @@ namespace Test {
         (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
     // cache the beam pipe radius
     double beamPipeRadius
-        = LA::perp(state.navigation.navLayerIter->intersection.position);
+        = perp(state.navigation.navLayerIter->intersection.position);
     // step size has been updated
     BOOST_TEST((state.stepping.stepSize == beamPipeRadius));
     if (debug) {
