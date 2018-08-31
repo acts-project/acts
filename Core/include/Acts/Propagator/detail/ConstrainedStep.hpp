@@ -38,17 +38,20 @@ namespace detail {
     /// The Navigation direction
     NavigationDirection direction = forward;
 
-    /// update the step size of a certain type
-    /// - for accuracy and navigation that can go either way
-    /// - for aborters it can only get (direction)*smaller
+    /// Update the step size of a certain type
+    ///
+    /// Only navigation and target abortion step size
+    /// updates may change the sign due to overstepping
+    ///
     /// @param value is the new value to be updated
     /// @param type is the constraint type
     void
-    update(const double& value, Type type)
+    update(const double& value, Type type, bool releaseStep = false)
     {
-      if (type != aborter || (direction * values[type] > direction * value)) {
-        values[type] = value;
-      }
+      if (releaseStep) release(type);
+      // The check the current value and set it if appropriate
+      double cValue = values[type];
+      values[type]  = cValue * cValue < value * value ? cValue : value;
     }
 
     /// release a certain constraint value

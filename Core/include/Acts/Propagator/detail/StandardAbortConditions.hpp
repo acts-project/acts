@@ -160,7 +160,6 @@ namespace detail {
         return true;
       }
       // calculate the distance to the surface
-      // @todo: add corrector
       const double tolerance = state.options.targetTolerance;
       const auto   iestimate
           = state.navigation.targetSurface->intersectionEstimate(

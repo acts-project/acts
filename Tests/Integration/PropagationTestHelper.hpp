@@ -365,7 +365,12 @@ namespace IntegrationTest {
     Surface_type endSurface(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
-    options.maxStepSize *= 0.9;
+
+    if (debug) {
+      std::cout << ">>> Path limit for this propgation is set to: "
+                << options.pathLimit << std::endl;
+    }
+
     const auto  result = propagator.propagate(start, endSurface, options);
     const auto& tp     = result.endParameters;
     // check the result for nullptr
