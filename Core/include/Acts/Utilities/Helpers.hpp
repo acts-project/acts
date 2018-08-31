@@ -111,7 +111,7 @@ namespace LinearAlgebra {
   double
   eta(const Eigen::MatrixBase<Derived>& v)
   {
-    return -std::log(std::tan(theta(v) * .5));  // TODO: slow
+    return std::atanh(v[2] / v.norm());
   }
 }
 
