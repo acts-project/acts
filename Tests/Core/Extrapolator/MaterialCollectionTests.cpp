@@ -425,7 +425,7 @@ namespace Test {
       charge,
       index)
   {
-    // runTest(epropagator, pT, phi, theta, charge, index);
+    runTest(epropagator, pT, phi, theta, charge, index);
     runTest(slpropagator, pT, phi, theta, charge, index);
   }
 
