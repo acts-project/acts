@@ -66,10 +66,12 @@ Acts::PlaneLayer::buildApproachDescriptor()
   const Vector3D&    lCenter    = PlaneSurface::center();
   const Vector3D&    lVector    = Surface::normal(center());
   // create new surfaces
-  const Transform3D* apnTransform = new Transform3D(getTransformFromRotTransl(
-      lRotation, (lCenter - 0.5 * Layer::m_layerThickness * lVector)));
-  const Transform3D* appTransform = new Transform3D(getTransformFromRotTransl(
-      lRotation, (lCenter + 0.5 * Layer::m_layerThickness * lVector)));
+  const Transform3D* apnTransform = new Transform3D(
+      Translation3D(lCenter - 0.5 * Layer::m_layerThickness * lVector)
+      * lRotation);
+  const Transform3D* appTransform = new Transform3D(
+      Translation3D(lCenter + 0.5 * Layer::m_layerThickness * lVector)
+      * lRotation);
   // create the new surfaces
   aSurfaces.push_back(
       new Acts::PlaneSurface(std::shared_ptr<const Transform3D>(apnTransform),

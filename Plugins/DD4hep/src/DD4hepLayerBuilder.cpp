@@ -15,6 +15,7 @@
 #include "Acts/Material/SurfaceMaterialProxy.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
+#include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -177,17 +178,17 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
           std::swap(innerPos, outerPos);
         }
 
-        Acts::DiscSurface* innerBoundary
-            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
-                                        transform->rotation(), innerPos),
-                                    pl.minR,
-                                    pl.maxR);
+        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
+            std::make_shared<const Transform3D>(Translation3D(innerPos)
+                                                * transform->rotation()),
+            pl.minR,
+            pl.maxR);
 
-        Acts::DiscSurface* outerBoundary
-            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
-                                        transform->rotation(), outerPos),
-                                    pl.minR,
-                                    pl.maxR);
+        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
+            std::make_shared<const Transform3D>(Translation3D(outerPos)
+                                                * transform->rotation()),
+            pl.minR,
+            pl.maxR);
 
         Acts::DiscSurface* centralSurface
             = new Acts::DiscSurface(transform, pl.minR, pl.maxR);
@@ -613,17 +614,17 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
           std::swap(innerPos, outerPos);
         }
 
-        Acts::DiscSurface* innerBoundary
-            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
-                                        transform->rotation(), innerPos),
-                                    pl.minR,
-                                    pl.maxR);
+        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
+            std::make_shared<const Transform3D>(Translation3D(innerPos)
+                                                * transform->rotation()),
+            pl.minR,
+            pl.maxR);
 
-        Acts::DiscSurface* outerBoundary
-            = new Acts::DiscSurface(std::make_shared<const Transform3D>(
-                                        transform->rotation(), outerPos),
-                                    pl.minR,
-                                    pl.maxR);
+        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
+            std::make_shared<const Transform3D>(Translation3D(outerPos)
+                                                * transform->rotation()),
+            pl.minR,
+            pl.maxR);
 
         Acts::DiscSurface* centralSurface
             = new Acts::DiscSurface(transform, pl.minR, pl.maxR);
@@ -762,11 +763,12 @@ Acts::DD4hepLayerBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const
   const Double_t* rotation    = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
   auto            transform   = std::make_shared<const Transform3D>(
-      Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
-      Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
-      Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
-      Acts::Vector3D(translation[0] * units::_cm,
-                     translation[1] * units::_cm,
-                     translation[2] * units::_cm));
+      TGeoPrimitivesHelpers::makeTransform(
+          Acts::Vector3D(rotation[0], rotation[3], rotation[6]),
+          Acts::Vector3D(rotation[1], rotation[4], rotation[7]),
+          Acts::Vector3D(rotation[2], rotation[5], rotation[8]),
+          Acts::Vector3D(translation[0] * units::_cm,
+                         translation[1] * units::_cm,
+                         translation[2] * units::_cm)));
   return (transform);
 }

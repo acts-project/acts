@@ -36,6 +36,9 @@ public:
   bool
   operator()(T one, T two) const
   {
+    using Acts::VectorHelpers::perp;
+    using Acts::VectorHelpers::phi;
+    using Acts::VectorHelpers::eta;
     // switch the binning value
     // - binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
     switch (m_binningValue) {
@@ -53,19 +56,19 @@ public:
     }
     // compare on r
     case binR: {
-      return (one.perp() < two.perp());
+      return (perp(one) < perp(two));
     }
     // compare on phi
     case binPhi: {
-      return (one.phi() < two.phi());
+      return (phi(one) < phi(two));
     }
     // compare on eta
     case binEta: {
-      return (one.eta() < two.eta());
+      return (eta(one) < eta(two));
     }
     // default for the moment
     default: {
-      return (one.mag() < two.mag());
+      return (one.norm() < two.norm());
     }
     }
   }
@@ -94,9 +97,9 @@ public:
   DistanceSorterT(BinningValue bValue, Vector3D reference)
     : m_binningValue(bValue)
     , m_reference(reference)
-    , m_refR(reference.perp())
-    , m_refPhi(reference.phi())
-    , m_refEta(reference.eta())
+    , m_refR(VectorHelpers::perp(reference))
+    , m_refPhi(VectorHelpers::phi(reference))
+    , m_refEta(VectorHelpers::eta(reference))
   {
   }
 
@@ -109,6 +112,9 @@ public:
   bool
   operator()(T one, T two) const
   {
+    using Acts::VectorHelpers::perp;
+    using Acts::VectorHelpers::phi;
+    using Acts::VectorHelpers::eta;
     // switch the binning value
     // - binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
     switch (m_binningValue) {
@@ -132,20 +138,20 @@ public:
     }
     // compare on r
     case binR: {
-      double diffOneR = one.perp() - m_refR;
-      double diffTwoR = two.perp() - m_refR;
+      double diffOneR = perp(one) - m_refR;
+      double diffTwoR = perp(two) - m_refR;
       return (diffOneR * diffOneR < diffTwoR * diffTwoR);
     }
     // compare on phi /// @todo add cyclic value
     case binPhi: {
-      double diffOnePhi = one.phi() - m_refPhi;
-      double diffTwoPhi = two.phi() - m_refPhi;
+      double diffOnePhi = phi(one) - m_refPhi;
+      double diffTwoPhi = phi(two) - m_refPhi;
       return (diffOnePhi * diffOnePhi < diffTwoPhi * diffTwoPhi);
     }
     // compare on eta
     case binEta: {
-      double diffOneEta = one.eta() - m_refEta;
-      double diffTwoEta = two.eta() - m_refEta;
+      double diffOneEta = eta(one) - m_refEta;
+      double diffTwoEta = eta(two) - m_refEta;
       return (diffOneEta * diffOneEta < diffTwoEta * diffTwoEta);
     }
     // default for the moment

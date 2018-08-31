@@ -13,6 +13,7 @@
 #pragma once
 #include <cmath>
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Volumes/VolumeBounds.hpp"
 
 namespace Acts {
@@ -218,9 +219,11 @@ CylinderVolumeBounds::clone() const
 inline bool
 CylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
 {
-  double ros     = pos.perp();
-  bool insidePhi = cos(pos.phi()) >= cos(m_valueStore[bv_halfPhiSector]) - tol;
-  bool insideR   = insidePhi ? ((ros >= m_valueStore[bv_innerRadius] - tol)
+  using VectorHelpers::perp;
+  using VectorHelpers::phi;
+  double ros       = perp(pos);
+  bool   insidePhi = cos(phi(pos)) >= cos(m_valueStore[bv_halfPhiSector]) - tol;
+  bool   insideR   = insidePhi ? ((ros >= m_valueStore[bv_innerRadius] - tol)
                               && (ros <= m_valueStore[bv_outerRadius] + tol))
                            : false;
   bool insideZ

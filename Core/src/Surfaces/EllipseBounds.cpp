@@ -16,8 +16,12 @@
 #include <iomanip>
 #include <iostream>
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
 
 Acts::EllipseBounds::EllipseBounds(double minRadius0,
                                    double minRadius1,
@@ -97,7 +101,7 @@ Acts::EllipseBounds::inside(const Acts::Vector2D&      lpos,
 {
   double tol0    = bcheck.m_tolerance[0];
   double tol1    = bcheck.m_tolerance[1];
-  double phi     = detail::radian_sym(lpos.phi() - averagePhi());
+  double phi     = detail::radian_sym(VectorHelpers::phi(lpos) - averagePhi());
   double phiHalf = halfPhiSector() + tol1;
 
   bool insidePhi   = (-phiHalf <= phi) && (phi < phiHalf);
@@ -119,14 +123,14 @@ Acts::EllipseBounds::inside(const Acts::Vector2D&      lpos,
 double
 Acts::EllipseBounds::distanceToBoundary(const Vector2D& lpos) const
 {
-  double r = lpos.perp();
+  double r = perp(lpos);
   if (r == 0) {
     return std::min(rMinX(), rMinY());
   }
 
   double sn = lpos[eLOC_X] / r;
   double cs = lpos[eLOC_Y] / r;
-  double dF = detail::radian_sym(lpos.phi() - m_avgPhi);
+  double dF = detail::radian_sym(phi(lpos) - m_avgPhi);
   double sf = 0.;
 
   if (m_halfPhi < M_PI) {

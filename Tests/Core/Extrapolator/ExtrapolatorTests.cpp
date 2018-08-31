@@ -274,7 +274,7 @@ namespace Test {
     const auto& result = epropagator.propagate(start, options).endParameters;
     if (result) {
       // test that you actually lost some energy
-      BOOST_TEST(result->momentum().mag() < start.momentum().mag());
+      BOOST_TEST(result->momentum().norm() < start.momentum().norm());
     }
   }
 
@@ -339,8 +339,8 @@ namespace Test {
     // this test assumes state.options.loopFraction = 0.5
     // maximum momentum allowed
     double pmax = units::SI2Nat<units::MOMENTUM>(
-        options.pathLimit * bField.getField(pos).mag() / M_PI);
-    if (mom.mag() < pmax) {
+        options.pathLimit * bField.getField(pos).norm() / M_PI);
+    if (mom.norm() < pmax) {
       BOOST_CHECK(status.pathLength < options.pathLimit);
     } else {
       BOOST_CHECK_CLOSE(status.pathLength, options.pathLimit, 1e-3);

@@ -16,8 +16,12 @@
 #include <iomanip>
 #include <iostream>
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
+
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
 
 Acts::CylinderBounds::CylinderBounds(double radius, double halfZ)
   : CylinderBounds(radius, 0, M_PI, halfZ)
@@ -132,14 +136,14 @@ Acts::CylinderBounds::inside3D(const Vector3D&      pos,
   double addToleranceZ = checkAbsolute ? bcheck.m_tolerance[1] : 0.;
   // check if the position compatible with the radius
   if ((s_onSurfaceTolerance + addToleranceR)
-      <= std::abs(pos.perp() - m_radius)) {
+      <= std::abs(perp(pos) - m_radius)) {
     return false;
   } else if (checkAbsolute && m_closed) {
     return ((s_onSurfaceTolerance + addToleranceZ + m_halfZ)
             >= std::abs(pos.z()));
   }
   // detailed, but slower check
-  Vector2D lpos(detail::radian_sym(pos.phi() - m_avgPhi), pos.z());
+  Vector2D lpos(detail::radian_sym(phi(pos) - m_avgPhi), pos.z());
   return bcheck.transformed(jacobian())
       .isInside(
           lpos, Vector2D(-m_halfPhi, -m_halfZ), Vector2D(m_halfPhi, m_halfZ));

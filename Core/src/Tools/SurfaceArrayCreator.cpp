@@ -22,6 +22,9 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
     const std::vector<const Surface*>&        surfaces,
@@ -53,7 +56,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
-    return Vector2D(loc.phi(), loc.z());
+    return Vector2D(phi(loc), loc.z());
   };
   auto localToGlobal = [itransform, R](const Vector2D& loc) {
     return itransform
@@ -106,7 +109,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   Transform3D itransform = transform.inverse();
   auto globalToLocal     = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
-    return Vector2D(loc.phi(), loc.z());
+    return Vector2D(phi(loc), loc.z());
   };
   auto localToGlobal = [itransform, R](const Vector2D& loc) {
     return itransform
@@ -164,7 +167,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
-    return Vector2D(loc.perp(), loc.phi());
+    return Vector2D(perp(loc), phi(loc));
   };
   auto localToGlobal = [itransform, Z](const Vector2D& loc) {
     return itransform
@@ -225,7 +228,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfaces) {
       Vector3D bpos = srf->binningPosition(binR);
-      size_t   bin  = pAxisR.getBin(bpos.perp());
+      size_t   bin  = pAxisR.getBin(perp(bpos));
       phiModules.at(bin).push_back(srf);
     }
 
@@ -271,7 +274,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   // transform lambda captures the transform matrix
   auto globalToLocal = [transform](const Vector3D& pos) {
     Vector3D loc = transform * pos;
-    return Vector2D(loc.perp(), loc.phi());
+    return Vector2D(perp(loc), phi(loc));
   };
   auto localToGlobal = [itransform, Z](const Vector2D& loc) {
     return itransform
@@ -378,12 +381,12 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     std::stable_sort(keys.begin(),
                      keys.end(),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->binningPosition(binPhi).phi()
-                               < b->binningPosition(binPhi).phi());
+                       return (phi(a->binningPosition(binPhi))
+                               < phi(b->binningPosition(binPhi)));
                      });
 
-    double maxPhi = 0.5 * (keys.at(0)->binningPosition(binPhi).phi()
-                           + keys.at(1)->binningPosition(binPhi).phi());
+    double maxPhi = 0.5 * (phi(keys.at(0)->binningPosition(binPhi))
+                           + phi(keys.at(1)->binningPosition(binPhi)));
 
     // create rotation, so that maxPhi is +pi
     double angle = -(M_PI + maxPhi);
@@ -392,7 +395,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // iterate over all key surfaces, and use their mean position as bValues,
     // but
     // rotate using transform from before
-    double previous = keys.at(0)->binningPosition(binPhi).phi();
+    double previous = phi(keys.at(0)->binningPosition(binPhi));
     // go through key surfaces
     for (size_t i = 1; i < keys.size(); i++) {
       const Surface* surface = keys.at(i);
@@ -400,9 +403,9 @@ Acts::SurfaceArrayCreator::createVariableAxis(
       // positions in the binning direction of the current and previous
       // surface
       double edge
-          = 0.5 * (previous + surface->binningPosition(binPhi).phi()) + angle;
+          = 0.5 * (previous + phi(surface->binningPosition(binPhi))) + angle;
       bValues.push_back(edge);
-      previous = surface->binningPosition(binPhi).phi();
+      previous = phi(surface->binningPosition(binPhi));
     }
 
     // get the bounds of the last surfaces
@@ -415,13 +418,12 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // get the global vertices
     std::vector<Acts::Vector3D> backVertices
         = makeGlobalVertices(*backSurface, backBounds->vertices());
-    double maxBValue = std::max_element(backVertices.begin(),
-                                        backVertices.end(),
-                                        [](const Acts::Vector3D& a,
-                                           const Acts::Vector3D& b) {
-                                          return a.phi() < b.phi();
-                                        })
-                           ->phi();
+    double maxBValue = phi(
+        *std::max_element(backVertices.begin(),
+                          backVertices.end(),
+                          [](const Acts::Vector3D& a, const Acts::Vector3D& b) {
+                            return phi(a) < phi(b);
+                          }));
 
     bValues.push_back(maxBValue);
 
@@ -453,24 +455,24 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     std::stable_sort(keys.begin(),
                      keys.end(),
                      [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->binningPosition(binR).perp()
-                               < b->binningPosition(binR).perp());
+                       return (perp(a->binningPosition(binR))
+                               < perp(b->binningPosition(binR)));
                      });
 
     bValues.push_back(protoLayer.minR);
     bValues.push_back(protoLayer.maxR);
 
     // the r-center position of the previous surface
-    double previous = keys.front()->binningPosition(binR).perp();
+    double previous = perp(keys.front()->binningPosition(binR));
 
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
-      bValues.push_back(
-          0.5 * (previous + (*surface)->binningPosition(binR).perp()));
-      previous = (*surface)->binningPosition(binR).perp();
+      bValues.push_back(0.5
+                        * (previous + perp((*surface)->binningPosition(binR))));
+      previous = perp((*surface)->binningPosition(binR));
     }
   }
   std::sort(bValues.begin(), bValues.end());
@@ -538,8 +540,8 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
           surfaces.begin(),
           surfaces.end(),
           [](const Acts::Surface* a, const Acts::Surface* b) {
-            return a->binningPosition(binR).phi()
-                < b->binningPosition(binR).phi();
+            return phi(a->binningPosition(binR))
+                < phi(b->binningPosition(binR));
           });
 
       // get the key surfaces at the different phi positions
@@ -560,7 +562,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
         // rotate to max phi module plus one half step
         // this should make sure that phi wrapping at +- pi
         // never falls on a module center
-        double max   = maxElem->binningPosition(binR).phi();
+        double max   = phi(maxElem->binningPosition(binR));
         double angle = M_PI - (max + 0.5 * step);
 
         // replace given transform ref

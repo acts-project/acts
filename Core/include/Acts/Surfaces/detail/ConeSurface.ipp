@@ -23,7 +23,7 @@ ConeSurface::intersectionEstimate(const Vector3D&      gpos,
 
   // create the points
   Vector3D point1     = gpos;
-  Vector3D initialdir = gmom.unit();
+  Vector3D initialdir = gmom.normalized();
   Vector3D direction  = initialdir;
 
   // what you need at the and

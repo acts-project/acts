@@ -22,6 +22,9 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+using Acts::VectorHelpers::perp;
+using Acts::VectorHelpers::phi;
+
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
                                  std::unique_ptr<const Logger>     logger)
   : m_cfg(), m_logger(std::move(logger))
@@ -444,9 +447,9 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
       ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y() << ", z="
                                << ctr.z()
                                << ", r="
-                               << ctr.perp()
+                               << perp(ctr)
                                << ", phi="
-                               << ctr.phi()
+                               << phi(ctr)
                                << ")");
     }
 

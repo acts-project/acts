@@ -12,9 +12,12 @@
 
 #include <boost/test/data/test_case.hpp>
 #include "Acts/Utilities/BFieldMapUtils.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
 namespace bdata = boost::unit_test::data;
+
+using Acts::VectorHelpers::perp;
 
 namespace Acts {
 
@@ -102,11 +105,11 @@ namespace Test {
     Acts::Vector3D bField2_rz(0., b2_rz.x(), b2_rz.y());
     // check the value
     // in rz case field is phi symmetric (check radius)
-    BOOST_CHECK_CLOSE(value0_rz.perp(), bField0_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(bField0_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), bField0_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(value1_rz.perp(), bField1_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value1_rz), perp(bField1_rz), 10e-10);
     BOOST_CHECK_CLOSE(value1_rz.z(), bField1_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(value2_rz.perp(), bField2_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value2_rz), perp(bField2_rz), 10e-10);
     BOOST_CHECK_CLOSE(value2_rz.z(), bField2_rz.z(), 10e-10);
 
     // check if filled value is expected value in rz
@@ -233,13 +236,13 @@ namespace Test {
     auto value4_xyz = mapper_xyz.getField(pos4);
 
     // check z- and phi-symmetry
-    BOOST_CHECK_CLOSE(value0_rz.perp(), value1_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value1_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), value1_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.perp(), value2_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value2_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), value2_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.perp(), value3_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value3_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), value3_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.perp(), value4_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value4_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), value4_rz.z(), 10e-10);
 
     // checkx-,y-,z-symmetry - need to check close (because of interpolation
@@ -381,13 +384,13 @@ namespace Test {
     auto value4_rz = mapper_rz.getField(pos4);
 
     // check z- and phi-symmetry
-    BOOST_CHECK_CLOSE(value0_rz.perp(), value1_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value1_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), value1_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.perp(), value2_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value2_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), value2_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.perp(), value3_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value3_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), value3_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.perp(), value4_rz.perp(), 10e-10);
+    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value4_rz), 10e-10);
     BOOST_CHECK_CLOSE(value0_rz.z(), value4_rz.z(), 10e-10);
 
     auto value0_xyz = mapper_xyz.getField(pos0);

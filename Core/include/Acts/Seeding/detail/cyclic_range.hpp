@@ -9,6 +9,7 @@
 #pragma once
 #include <algorithm>
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 namespace Acts {
@@ -95,11 +96,12 @@ namespace detail {
   CyclicRange<Container, Index>
   makeRangePhi(const Container& values, double phi0, double phi1)
   {
+    using VectorHelpers::phi;
     phi0 = Acts::detail::radian_sym(phi0);
     phi1 = Acts::detail::radian_sym(phi1);
 
-    auto compValPhi = [](const auto& a, double b) { return (a.phi() < b); };
-    auto compPhiVal = [](double a, const auto& b) { return (a < b.phi()); };
+    auto compValPhi = [](const auto& a, double b) { return (phi(a) < b); };
+    auto compPhiVal = [](double a, const auto& b) { return (a < phi(b)); };
 
     // linear boundaries that do not allow wrap-around
     if (phi0 <= phi1) {

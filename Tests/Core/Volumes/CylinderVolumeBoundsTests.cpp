@@ -50,7 +50,8 @@ namespace Test {
     // create the cylinder bounds
     CylinderVolumeBounds cylBounds(1., 2., 3.);
     // create the transformation matrix
-    auto mutableTransformPtr = std::make_shared<Transform3D>(pos);
+    auto mutableTransformPtr
+        = std::make_shared<Transform3D>(Translation3D(pos));
     (*mutableTransformPtr) *= rotZ;
     (*mutableTransformPtr) *= rotY;
     (*mutableTransformPtr) *= rotX;
@@ -62,10 +63,10 @@ namespace Test {
     // Test
 
     // check if difference is halfZ - sign and direction independent
-    BOOST_TEST((pos - boundarySurfaces.at(0)->center()).mag()
+    BOOST_TEST((pos - boundarySurfaces.at(0)->center()).norm()
                    == cylBounds.halflengthZ(),
                tt::tolerance(10e-12));
-    BOOST_TEST((pos - boundarySurfaces.at(1)->center()).mag()
+    BOOST_TEST((pos - boundarySurfaces.at(1)->center()).norm()
                    == cylBounds.halflengthZ(),
                tt::tolerance(10e-12));
     // transform to local

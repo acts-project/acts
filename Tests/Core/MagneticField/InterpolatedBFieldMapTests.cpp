@@ -11,10 +11,13 @@
 #define BOOST_TEST_MODULE Mapped magnetic field tests
 #include <boost/test/included/unit_test.hpp>
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 namespace tt = boost::test_tools;
+
+using Acts::VectorHelpers::perp;
 
 namespace Acts {
 
@@ -37,7 +40,7 @@ namespace Test {
 
     // map (x,y,z) -> (r,z)
     auto transformPos = [](const Vector3D& pos) {
-      return ActsVectorD<2>(pos.perp(), pos.z());
+      return ActsVectorD<2>(perp(pos), pos.z());
     };
 
     // map (Bx,By,Bz) -> (Bx,By,Bz)
@@ -76,27 +79,21 @@ namespace Test {
     Vector3D pos;
     pos << -3, 2.5, 1.7;
     auto c = b.getFieldCell(pos);
-    BOOST_TEST(
-        b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(b.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
     BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(
-        c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
 
     pos << 0, 1.5, -2.5;
     c = b.getFieldCell(pos);
-    BOOST_TEST(
-        b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(b.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
     BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(
-        c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
 
     pos << 2, 3, -4;
     c = b.getFieldCell(pos);
-    BOOST_TEST(
-        b.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(b.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
     BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(
-        c.getField(pos).isApprox(BField::value({{pos.perp(), pos.z()}})));
+    BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
 
     // some field cell tests
     BOOST_TEST(c.isInside((pos << 3, 2, -3.7).finished()));

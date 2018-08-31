@@ -14,6 +14,7 @@
 // Acts includes
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -127,14 +128,14 @@ public:
   double
   pT() const
   {
-    return momentum().perp();
+    return VectorHelpers::perp(momentum());
   }
 
   /// @brief convenience method to retrieve pseudorapidity
   double
   eta() const
   {
-    return momentum().eta();
+    return VectorHelpers::eta(momentum());
   }
 
   /// @brief retrieve electric charge

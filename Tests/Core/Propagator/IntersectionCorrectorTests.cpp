@@ -35,22 +35,22 @@ namespace Test {
   {
     // construct the surface
     Vector3D     pcenter(-4., 4., 0.);
-    Vector3D     pnormal = Vector3D(-1., 4., 0.).unit();
+    Vector3D     pnormal = Vector3D(-1., 4., 0.).normalized();
     PlaneSurface plane(pcenter, pnormal);
 
     // The current position - origin
     Vector3D position(0., 0., 0.);
-    Vector3D originalDirection = Vector3D(4., 7., 0.).unit();
+    Vector3D originalDirection = Vector3D(4., 7., 0.).normalized();
     Vector3D direction         = originalDirection;
 
     // The two tracks
     // (n)
     Vector3D p0n(-7., 7., 0.);
-    Vector3D d0n   = Vector3D(8., 4., 0.).unit();
+    Vector3D d0n   = Vector3D(8., 4., 0.).normalized();
     double   pathn = 10.5;
     // (p)
     Vector3D p0p(-1.5, -12., 0.);
-    Vector3D d0p   = Vector3D(-2., 9., 0.).unit();
+    Vector3D d0p   = Vector3D(-2., 9., 0.).normalized();
     double   pathp = 13.;
 
     auto intersect = [&position, &direction, &plane]() -> Intersection {

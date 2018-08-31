@@ -13,6 +13,10 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
 
 namespace Acts {
 
@@ -75,11 +79,11 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
           maxZ = std::max(maxZ, p2.z());
           minZ = std::min(minZ, p2.z());
 
-          maxR = std::max(maxR, p2.perp());
+          maxR = std::max(maxR, perp(p2));
           minR = std::min(minR, radialDistance(p1, p2));
 
-          maxPhi = std::max(maxPhi, p2.phi());
-          minPhi = std::min(minPhi, p2.phi());
+          maxPhi = std::max(maxPhi, phi(p2));
+          minPhi = std::min(minPhi, phi(p2));
         }
       }
     } else if (cylSurface != nullptr) {
@@ -101,10 +105,10 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
         maxZ = std::max(maxZ, vtx.z());
         minZ = std::min(minZ, vtx.z());
 
-        maxR = std::max(maxR, vtx.perp());
+        maxR = std::max(maxR, perp(vtx));
 
-        maxPhi = std::max(maxPhi, vtx.phi());
-        minPhi = std::min(minPhi, vtx.phi());
+        maxPhi = std::max(maxPhi, phi(vtx));
+        minPhi = std::min(minPhi, phi(vtx));
       }
 
       // trace all face connections to possibly catch min-r approach
@@ -125,7 +129,7 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
       envR              = {env, env};
 
       // evaluate impact of r shift on phi
-      double cylPosR = cylSurface->center().perp();
+      double cylPosR = perp(cylSurface->center());
       double dPhi    = std::atan((cylBoundsR + env) / cylPosR)
           - std::atan(cylBoundsR / cylPosR);
 
@@ -187,7 +191,7 @@ ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
   // clamp to [0, |p1p2|]
   f = std::min(L, std::max(0., f));
 
-  Vector2D closest = f * p1p2.unit() + p1;
+  Vector2D closest = f * p1p2.normalized() + p1;
   double   dist    = (closest - O).norm();
 
   return dist;

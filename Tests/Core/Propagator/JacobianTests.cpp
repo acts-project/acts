@@ -206,7 +206,7 @@ namespace Test {
 
     // the disc transform and surface
     auto dTransform = createPlanarTransform(
-        {10., -5., 0.}, Vector3D(0.23, 0.07, 1.).unit(), 0.004, 0.03);
+        {10., -5., 0.}, Vector3D(0.23, 0.07, 1.).normalized(), 0.004, 0.03);
     DiscSurface dSurface(dTransform, 200., 1000.);
 
     ActsSymMatrixD<NGlobalPars> cov;

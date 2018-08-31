@@ -32,12 +32,13 @@ LineSurface::globalToLocal(const Vector3D& gpos,
                            const Vector3D& mom,
                            Vector2D&       lpos) const
 {
+  using VectorHelpers::perp;
   // apply the transform when needed
   Vector3D loc3Dframe = (m_transform || (m_associatedDetElement != nullptr))
       ? (transform().inverse()) * gpos
       : gpos;
-  // construct localPosition with sign*candidate.perp() and z.()
-  lpos = Vector2D(loc3Dframe.perp(), loc3Dframe.z());
+  // construct localPosition with sign*perp(candidate) and z.()
+  lpos = Vector2D(perp(loc3Dframe), loc3Dframe.z());
   Vector3D decVec(gpos - center());
   // assign the right sign
   double sign = ((lineDirection().cross(mom)).dot(decVec) < 0.) ? -1. : 1.;
@@ -49,6 +50,7 @@ inline bool
 LineSurface::isOnSurface(const Vector3D&      gpos,
                          const BoundaryCheck& bcheck) const
 {
+  using VectorHelpers::perp;
   if (!bcheck) {
     return true;
   }
@@ -58,7 +60,7 @@ LineSurface::isOnSurface(const Vector3D&      gpos,
   }
   // get the standard bounds
   Vector3D loc3Dframe = (transform().inverse()) * gpos;
-  Vector2D locCand(loc3Dframe.perp(), loc3Dframe.z());
+  Vector2D locCand(perp(loc3Dframe), loc3Dframe.z());
   return bounds().inside(locCand, bcheck);
 }
 
@@ -74,7 +76,7 @@ LineSurface::referenceFrame(const Vector3D& /*pos*/, const Vector3D& mom) const
   RotationMatrix3D mFrame;
   // construct the measurement frame
   const Vector3D& measY = lineDirection();
-  Vector3D        measX(measY.cross(mom).unit());
+  Vector3D        measX(measY.cross(mom).normalized());
   Vector3D        measDepth(measX.cross(measY));
   // assign the columnes
   mFrame.col(0) = measX;

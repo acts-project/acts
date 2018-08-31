@@ -195,7 +195,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
     double          thicknessInX0 = materialProperties->thicknessInX0();
     double          thickness     = materialProperties->thickness();
     // calculate energy loss and multiple scattering
-    const double p    = mParameters.momentum().mag();
+    const double p    = mParameters.momentum().norm();
     const double m    = m_particleMasses.mass.at(eCell.particleType);
     const double E    = sqrt(p * p + m * m);
     const double beta = p / E;

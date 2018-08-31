@@ -584,16 +584,17 @@ public:
   void
   setRadialDirection()
   {
+    using VectorHelpers::perp;
     // in FATRAS extrapolation mode force radial direction to be outwards (+1)
     if (configurationMode(ExtrapolationMode::FATRAS)) {
       radialDirection = 1;
     } else {
       // if the endSurface is given, it is used to evaluate the radial direction
       // else the leadParamenters are used
-      if (leadParameters->position().perp()
-          > (leadParameters->position()
-             + navigationDirection * leadParameters->momentum().unit())
-                .perp()) {
+      if (perp(leadParameters->position())
+          > perp(leadParameters->position()
+                 + navigationDirection
+                     * leadParameters->momentum().normalized())) {
         radialDirection = -1;
       }
     }
@@ -604,15 +605,16 @@ public:
   bool
   checkRadialCompatibility() const
   {
+    using VectorHelpers::perp;
     // this checks the radial compatibility - not needed for outwards moving
     if (radialDirection > 0) {
       return true;
     }
     // this was radially inwards moving and stays like this
-    if (leadParameters->position().perp()
-        > (leadParameters->position()
-           + navigationDirection * leadParameters->momentum().unit())
-              .perp()) {
+    if (perp(leadParameters->position())
+        > perp(leadParameters->position()
+               + navigationDirection
+                   * leadParameters->momentum().normalized())) {
       return true;
     }
     // radial direction changed

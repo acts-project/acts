@@ -82,9 +82,11 @@ namespace Seeding {
   std::ostream&
   operator<<(std::ostream& os, const TrackSeed<Identifier, N>& seed)
   {
+    using VectorHelpers::phi;
+    using VectorHelpers::theta;
     os << "pos=[" << seed.position().x() << ',' << seed.position().y() << ','
        << seed.position().z() << ']';
-    os << " phi=" << seed.phi() << " theta=" << seed.theta();
+    os << " phi=" << phi(seed) << " theta=" << theta(seed);
     os << " curvature=" << seed.curvature();
     return os;
   }

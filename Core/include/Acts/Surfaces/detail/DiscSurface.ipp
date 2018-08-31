@@ -74,6 +74,8 @@ inline const RotationMatrix3D
                                      const Vector3D& gpos,
                                      const Vector3D& dir) const
 {
+  using VectorHelpers::phi;
+  using VectorHelpers::perp;
   // Optimized trigonometry on the propagation direction
   const double x = dir(0);  // == cos(phi) * sin(theta)
   const double y = dir(1);  // == sin(phi) * sin(theta)
@@ -86,8 +88,8 @@ inline const RotationMatrix3D
   RotationMatrix3D rframeT = referenceFrame(gpos, dir).transpose();
   // calculate the transformation to local coorinates
   const Vector3D pos_loc = transform().inverse() * gpos;
-  const double   lr      = pos_loc.perp();
-  const double   lphi    = pos_loc.phi();
+  const double   lr      = perp(pos_loc);
+  const double   lphi    = phi(pos_loc);
   const double   lcphi   = cos(lphi);
   const double   lsphi   = sin(lphi);
   // rotate into the polar coorindates
@@ -166,5 +168,5 @@ inline double
 DiscSurface::pathCorrection(const Vector3D& pos, const Vector3D& mom) const
 {
   /// we can ignore the global position here
-  return 1. / std::abs(Surface::normal(pos).dot(mom.unit()));
+  return 1. / std::abs(Surface::normal(pos).dot(mom.normalized()));
 }

@@ -22,6 +22,9 @@
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 Acts::ConeSurface::ConeSurface(const ConeSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
@@ -127,9 +130,9 @@ Acts::ConeSurface::referenceFrame(const Vector3D& pos,
   // measured Y is the local z axis
   Vector3D measY = rotSymmetryAxis();
   // measured z is the position transverse normalized
-  Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).unit();
+  Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).normalized();
   // measured X is what comoes out of it
-  Acts::Vector3D measX(measY.cross(measDepth).unit());
+  Acts::Vector3D measX(measY.cross(measDepth).normalized());
   // the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
@@ -166,7 +169,7 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
   // now decide on the quility of the transformation
   double inttol = r * 0.0001;
   inttol        = (inttol < 0.01) ? 0.01 : 0.01;  // ?
-  return ((std::abs(loc3Dframe.perp() - r) > inttol) ? false : true);
+  return ((std::abs(perp(loc3Dframe) - r) > inttol) ? false : true);
 }
 
 double
@@ -175,7 +178,7 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
 {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   Vector3D posLocal = m_transform ? transform().inverse() * gpos : gpos;
-  double   phi      = posLocal.phi();
+  double   phi      = VectorHelpers::phi(posLocal);
   double   sgn      = posLocal.z() > 0. ? -1. : +1.;
   Vector3D normalC(cos(phi) * bounds().cosAlpha(),
                    sin(phi) * bounds().cosAlpha(),
@@ -184,7 +187,7 @@ Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
     normalC = transform() * normalC;
   }
   // back in global frame
-  double cAlpha = normalC.dot(mom.unit());
+  double cAlpha = normalC.dot(mom.normalized());
   return std::abs(1. / cAlpha);
 }
 
@@ -226,7 +229,7 @@ Acts::ConeSurface::normal(const Acts::Vector3D& gpos) const
     pos3D     = transform().inverse() * gpos;
     pos3D.z() = 0;
   }
-  return pos3D.unit();
+  return pos3D.normalized();
 }
 
 const Acts::ConeBounds&

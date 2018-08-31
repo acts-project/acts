@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "covariance_validation_fixture.hpp"
 
 namespace tt = boost::test_tools;
@@ -85,6 +86,8 @@ namespace IntegrationTest {
                              bool   debug   = false)
   {
 
+    namespace VH = VectorHelpers;
+
     // setup propagation options
     typename Propagator_type::template Options<> options;
     options.pathLimit   = 5 * units::_m;
@@ -108,9 +111,9 @@ namespace IntegrationTest {
 
     // test propagation invariants
     // clang-format off
-    BOOST_TEST((pT - tp->momentum().perp()) == 0., tt::tolerance(1 * units::_keV));
+    BOOST_TEST((pT - VH::perp(tp->momentum())) == 0., tt::tolerance(1 * units::_keV));
     BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((theta - tp->momentum().theta()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((theta - VH::theta(tp->momentum())) == 0., tt::tolerance(1e-4));
     // clang-format on
 
     double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
@@ -152,7 +155,7 @@ namespace IntegrationTest {
     double exp_y = yc + r * sin(phi0 + turns * 2 * M_PI);
 
     // clang-format off
-    BOOST_TEST((exp_phi - tp->momentum().phi()) == 0., tt::tolerance(1e-4));
+    BOOST_TEST((exp_phi - VH::phi(tp->momentum())) == 0., tt::tolerance(1e-4));
     BOOST_TEST((exp_x - tp->position()(0)) == 0., tt::tolerance(disttol));
     BOOST_TEST((exp_y - tp->position()(1)) == 0., tt::tolerance(disttol));
     BOOST_TEST((exp_z - tp->position()(2)) == 0., tt::tolerance(disttol));
@@ -351,13 +354,13 @@ namespace IntegrationTest {
     const auto&           tp_s     = result_s.endParameters;
 
     // The transform at the destination
-    auto seTransform = planar ? createPlanarTransform(tp_s->position(),
-                                                      tp_s->momentum().unit(),
-                                                      0.1 * rand3,
-                                                      0.1 * rand1)
-                              : createCylindricTransform(tp_s->position(),
-                                                         0.05 * rand1,
-                                                         0.05 * rand2);
+    auto seTransform = planar
+        ? createPlanarTransform(tp_s->position(),
+                                tp_s->momentum().normalized(),
+                                0.1 * rand3,
+                                0.1 * rand1)
+        : createCylindricTransform(
+              tp_s->position(), 0.05 * rand1, 0.05 * rand2);
 
     Surface_type endSurface(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
@@ -493,11 +496,11 @@ namespace IntegrationTest {
     const auto&           tp_c     = result_c.endParameters;
 
     auto ssTransform = startPlanar
-        ? createPlanarTransform(pos, mom.unit(), 0.1 * rand1, 0.1 * rand2)
+        ? createPlanarTransform(pos, mom.normalized(), 0.1 * rand1, 0.1 * rand2)
         : createCylindricTransform(pos, 0.05 * rand1, 0.05 * rand2);
     auto seTransform = destPlanar
         ? createPlanarTransform(tp_c->position(),
-                                tp_c->momentum().unit(),
+                                tp_c->momentum().normalized(),
                                 0.1 * rand3,
                                 0.1 * rand1)
         : createCylindricTransform(

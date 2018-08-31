@@ -22,6 +22,9 @@
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
+using Acts::VectorHelpers::phi;
+using Acts::VectorHelpers::perp;
+
 Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
@@ -133,7 +136,7 @@ Acts::CylinderSurface::referenceFrame(const Vector3D& gpos,
   // measured z is the position normalized transverse (in local)
   Vector3D measDepth = normal(gpos);
   // measured X is what comoes out of it
-  Vector3D measX(measY.cross(measDepth).unit());
+  Vector3D measX(measY.cross(measDepth).normalized());
   // assign the columnes
   mFrame.col(0) = measX;
   mFrame.col(1) = measY;
@@ -183,11 +186,11 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
     const Transform3D& surfaceTrans = transform();
     Transform3D        inverseTrans(surfaceTrans.inverse());
     Vector3D           loc3Dframe(inverseTrans * gpos);
-    lpos   = Vector2D(bounds().r() * loc3Dframe.phi(), loc3Dframe.z());
-    radius = loc3Dframe.perp();
+    lpos   = Vector2D(bounds().r() * phi(loc3Dframe), loc3Dframe.z());
+    radius = perp(loc3Dframe);
   } else {
-    lpos   = Vector2D(bounds().r() * gpos.phi(), gpos.z());
-    radius = gpos.perp();
+    lpos   = Vector2D(bounds().r() * phi(gpos), gpos.z());
+    radius = perp(gpos);
   }
   // return true or false
   return ((std::abs(radius - bounds().r()) > inttol) ? false : true);
@@ -228,7 +231,8 @@ Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
   // set the z coordinate to 0
   pos3D.z() = 0.;
   // normalize and rotate back into global if needed
-  return needsTransform ? transform().linear() * pos3D.unit() : pos3D.unit();
+  return needsTransform ? transform().linear() * pos3D.normalized()
+                        : pos3D.normalized();
 }
 
 double
@@ -236,7 +240,7 @@ Acts::CylinderSurface::pathCorrection(const Acts::Vector3D& gpos,
                                       const Acts::Vector3D& mom) const
 {
   Vector3D normalT  = normal(gpos);
-  double   cosAlpha = normalT.dot(mom.unit());
+  double   cosAlpha = normalT.dot(mom.normalized());
   return std::fabs(1. / cosAlpha);
 }
 

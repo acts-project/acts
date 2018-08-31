@@ -172,7 +172,7 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
           = boundaryStraight ? xBinRotationMatrix : lorentzPlaneRotationMatrix;
       // build the rotation from it
       auto boundaryXTransform = std::make_shared<const Transform3D>(
-          getTransformFromRotTransl(boundaryXRotation, boundaryXPosition));
+          Translation3D(boundaryXPosition) * boundaryXRotation);
       // the correct bounds for this
       std::shared_ptr<const PlanarBounds> boundaryXBounds
           = boundaryStraight ? xBinBounds : lorentzPlaneBounds;
@@ -184,9 +184,8 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
       // shift by the lorentz angle
       Vector3D lorentzPlanePosition(
           cPosX - readoutDirection * lorentzPlaneShiftX, 0., 0.);
-      auto lorentzPlaneTransform
-          = std::make_shared<const Transform3D>(getTransformFromRotTransl(
-              lorentzPlaneRotationMatrix, lorentzPlanePosition));
+      auto lorentzPlaneTransform = std::make_shared<const Transform3D>(
+          Translation3D(lorentzPlanePosition) * lorentzPlaneRotationMatrix);
       // lorentz plane surfaces
       segmentationSurfacesX.push_back(std::shared_ptr<const PlaneSurface>(
           new PlaneSurface(lorentzPlaneTransform, lorentzPlaneBounds)));
@@ -216,7 +215,7 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
     Vector3D binSurfaceCenter(0., binPosY, 0.);
     // the binning transform
     auto binTransform = std::make_shared<const Transform3D>(
-        getTransformFromRotTransl(yBinRotationMatrix, binSurfaceCenter));
+        Translation3D(binSurfaceCenter) * yBinRotationMatrix);
     // these are the boundaries
     if (ibiny == 0 || ibiny == m_binUtility->bins(1)) {
       boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
@@ -263,7 +262,7 @@ Acts::CartesianSegmentation::digitizationStep(const Vector3D& startStep,
   Acts::DigitizationCell dCell      = cell(stepCenterProjected);
   Vector2D               cellCenter = cellPosition(dCell);
   // we are ready to return what we have
-  return DigitizationStep((endStep - startStep).mag(),
+  return DigitizationStep((endStep - startStep).norm(),
                           driftLength,
                           dCell,
                           startStep,

@@ -17,6 +17,7 @@
 #include <vector>
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 
 namespace Acts {
@@ -292,21 +293,24 @@ public:
   float
   value(const Vector3D& position) const
   {
+    using VectorHelpers::phi;
+    using VectorHelpers::perp;
+    using VectorHelpers::eta;
     // ordered after occurence
     if (binvalue == binR || binvalue == binH) {
-      return (position.perp());
+      return (perp(position));
     }
     if (binvalue == binRPhi) {
-      return (position.perp() * position.phi());
+      return (perp(position) * phi(position));
     }
     if (binvalue == binEta) {
-      return (position.eta());
+      return (eta(position));
     }
     if (binvalue < 3) {
       return (position[binvalue]);
     }
     // phi gauging
-    return position.phi();
+    return phi(position);
   }
 
   /// Get the center value of a bin

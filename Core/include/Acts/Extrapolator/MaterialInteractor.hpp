@@ -16,6 +16,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 
@@ -168,7 +169,8 @@ struct MaterialInteractor
           double tInX0 = mProperties->thicknessInX0();
           // retrieve the scattering contribution
           double sigmaScat = scattering(p, lbeta, tInX0 * pCorrection);
-          double sinTheta  = std::sin(state.stepping.direction().theta());
+          double sinTheta
+              = std::sin(VectorHelpers::theta(state.stepping.direction()));
           double sigmaDeltaPhiSq
               = sigmaScat * sigmaScat / (sinTheta * sinTheta);
           double sigmaDeltaThetaSq = sigmaScat * sigmaScat;

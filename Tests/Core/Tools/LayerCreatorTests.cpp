@@ -39,7 +39,7 @@ namespace Test {
 #define CHECK_ROTATION_ANGLE(t, a, tolerance)                                  \
   {                                                                            \
     Vector3D v = (*t) * Vector3D(1, 0, 0);                                     \
-    BOOST_CHECK_SMALL(v.phi() - (a), tolerance);                               \
+    BOOST_CHECK_SMALL(VectorHelpers::phi(v) - (a), tolerance);                 \
   }
 
   using SrfVec = std::vector<const Surface*>;

@@ -16,6 +16,8 @@
 #include "ParametersTestHelper.hpp"
 
 namespace Acts {
+using VectorHelpers::phi;
+using VectorHelpers::theta;
 namespace Test {
 
   /// @brief Unit test for Curvilinear parameters
@@ -34,9 +36,9 @@ namespace Test {
     NeutralCurvilinearParameters curvilinear_neut(nullptr, pos, mom);
 
     /// check local coordinates
-    const auto   fphi   = mom.phi();
-    const auto   ftheta = mom.theta();
-    const double oOp    = 1. / mom.mag();
+    const auto   fphi   = phi(mom);
+    const auto   ftheta = theta(mom);
+    const double oOp    = 1. / mom.norm();
 
     // check parameters
     consistencyCheck(
@@ -108,7 +110,7 @@ namespace Test {
                                         cos(utheta));
     BOOST_CHECK(umomentum.isApprox(curvilinear_pos_copy.momentum()));
     // the updated momentum should be the col(2) of the transform
-    BOOST_CHECK(umomentum.unit().isApprox(
+    BOOST_CHECK(umomentum.normalized().isApprox(
         curvilinear_pos_copy.referenceSurface().transform().rotation().col(2)));
   }
 }  // namespace Test
