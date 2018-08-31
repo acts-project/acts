@@ -48,7 +48,9 @@ namespace detail {
     void
     update(const double& value, Type type, bool releaseStep = false)
     {
-      if (releaseStep) release(type);
+      if (releaseStep) {
+        release(type);
+      }
       // The check the current value and set it if appropriate
       double cValue = values[type];
       values[type]  = cValue * cValue < value * value ? cValue : value;
