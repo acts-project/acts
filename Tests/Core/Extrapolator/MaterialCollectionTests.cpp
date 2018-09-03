@@ -70,8 +70,8 @@ namespace Test {
   StraightLinePropagator slpropagator(std::move(slstepper),
                                       std::move(navigatorSL));
 
-  const int ntests           = 10;  // test with 0.4 lower boundary - 952;
-  const int skip             = 0;   // test with 0.4 lower boundary - 951;
+  const int ntests           = 100;
+  const int skip             = 0;
   bool      debugModeFwd     = false;
   bool      debugModeBwd     = false;
   bool      debugModeFwdStep = false;

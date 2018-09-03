@@ -53,8 +53,12 @@ namespace Test {
     // now we update the actor to smaller
     stepSize_p.update(0.05, cstep::actor);
     BOOST_CHECK(stepSize_p == 0.05);
-    // we increase the actor and accuracy is smaller again
-    stepSize_p.update(0.15, cstep::actor);
+    // we increase the actor, but do not release the step size
+    stepSize_p.update(0.15, cstep::actor, false);
+    BOOST_CHECK(stepSize_p == 0.05);
+    // we increase the actor, but now DO release the step size
+    // it falls back to the accuracy
+    stepSize_p.update(0.15, cstep::actor, true);
     BOOST_CHECK(stepSize_p == 0.1);
 
     // now set two and update them
@@ -86,8 +90,11 @@ namespace Test {
     // now we update the actor to smaller
     stepSize_n.update(-0.05, cstep::actor);
     BOOST_CHECK(stepSize_n == -0.05);
-    // we increase the actor and accuracy is smaller again
-    stepSize_n.update(-0.15, cstep::actor);
+    // we increase the actor and accuracy is smaller again, without reset
+    stepSize_n.update(-0.15, cstep::actor, false);
+    BOOST_CHECK(stepSize_n == -0.05);
+    // we increase the actor and accuracy is smaller again, with reset
+    stepSize_n.update(-0.15, cstep::actor, true);
     BOOST_CHECK(stepSize_n == -0.1);
 
     // now set two and update them

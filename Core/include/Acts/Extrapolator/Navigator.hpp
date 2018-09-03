@@ -448,9 +448,11 @@ struct Navigator
           // set the iterator
           state.navigation.navSurfaceIter
               = state.navigation.navSurfaces.begin();
-          // update the navigation step size before you return
+          // Update the navigation step size before you return
+          // That's a new navigation stream, thus release the former step
           updateStep(state,
-                     state.navigation.navSurfaceIter->intersection.pathLength);
+                     state.navigation.navSurfaceIter->intersection.pathLength,
+                     true);
           return true;
         }
         return false;
@@ -665,9 +667,11 @@ struct Navigator
             return std::string("Starting from boundary surface.");
           });
         } else {
-          // update the navigation step size before you return
+          // Update the navigation step size before you return
+          // That's a new navigation stream, release the prior navigation
           updateStep(state,
-                     state.navigation.navBoundaryIter->intersection.pathLength);
+                     state.navigation.navBoundaryIter->intersection.pathLength,
+                     true);
           return true;
         }
       } else {
@@ -767,8 +771,9 @@ struct Navigator
             lastBoundary = boundarySurface;
             continue;
           } else {
-            // update the navigation step size
-            updateStep(state, boundaryIntersect.intersection.pathLength);
+            // Update the navigation step size
+            // This is a new navigation stream, release the former first
+            updateStep(state, boundaryIntersect.intersection.pathLength, true);
             return true;
           }
         } else {
@@ -843,7 +848,8 @@ struct Navigator
                  [&] { return std::string("Stepping towards first layer."); });
         // update the navigation step size before you return
         updateStep(state,
-                   state.navigation.navLayerIter->intersection.pathLength);
+                   state.navigation.navLayerIter->intersection.pathLength,
+                   true);
         return true;
       } else {
         debugLog(state, [&] {
@@ -882,6 +888,7 @@ struct Navigator
     });
     // the step size will be set to the aborter step size
     double abortStep = state.stepping.stepSize.value(cstep::aborter);
+    // Do not release the aborter step size here
     updateStep(state, abortStep);
     state.navigation.navigationBreak = true;
     return true;
@@ -995,8 +1002,8 @@ struct Navigator
           });
           ++state.navigation.navLayerIter;
         } else {
-          // update the navigation step size
-          updateStep(state, layerIntersect.intersection.pathLength);
+          // update the navigation step size, release the former first
+          updateStep(state, layerIntersect.intersection.pathLength, true);
           return true;
         }
       }
@@ -1009,7 +1016,7 @@ struct Navigator
         return std::string(
             "Done in final volume, release stepSize & proceed to target.");
       });
-      // the step size will be set to the aborter step size
+      // the step size will be set to the aborter step size, do not release
       double abortStep = state.stepping.stepSize.value(cstep::aborter);
       updateStep(state, abortStep);
       state.navigation.navigationBreak = true;
@@ -1071,8 +1078,10 @@ struct Navigator
       // set the iterator
       state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
       // update the navigation step size before you return to the stepper
+      // This is a new navigation stream, release the former step size first
       updateStep(state,
-                 state.navigation.navSurfaceIter->intersection.pathLength);
+                 state.navigation.navSurfaceIter->intersection.pathLength,
+                 true);
       return true;
     }
     state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
@@ -1174,7 +1183,8 @@ struct Navigator
           ++state.navigation.navSurfaceIter;
           continue;
         } else {
-          updateStep(state, surfaceDistance);
+          /// Releae the former step size
+          updateStep(state, surfaceDistance, true);
           return true;
         }
       }
@@ -1200,23 +1210,25 @@ struct Navigator
   ///
   /// @param[in,out] state The state object for the step length
   /// @param[in] step the step size
+  /// @param[in] release flag steers if the step is released first
   template <typename propagator_state_t>
   void
-  updateStep(propagator_state_t& state, double step) const
+  updateStep(propagator_state_t& state, double step, bool release = false) const
   {
     /// If we have an initial step and are configured to modify it
     if (state.stepping.pathAccumulated == 0. && initialStepFactor != 1.) {
       debugLog(state, [&] {
-        return std::string("Initial step modification detected.");
+        return std::string("Initial navigation step modifiction applied.");
       });
       step *= initialStepFactor;
     }
 
     //  update the step
-    state.stepping.stepSize.update(step, cstep::actor);
+    state.stepping.stepSize.update(step, cstep::actor, release);
     debugLog(state, [&] {
       std::stringstream dstream;
-      dstream << "Navigation stepSize updated to ";
+      std::string       releaseFlag = release ? "released and " : "";
+      dstream << "Navigation stepSize " << releaseFlag << "updated to ";
       dstream << state.stepping.stepSize.toString();
       return dstream.str();
     });

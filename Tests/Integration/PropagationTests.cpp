@@ -52,7 +52,7 @@ namespace IntegrationTest {
       = PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>;
 
   // number of tests
-  const int  ntests = 1;
+  const int  ntests = 100;
   const int  skip   = 0;
   const bool covtpr = true;
   const bool debug  = false;

@@ -332,6 +332,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK(e_at_disc.first.isApprox(a_at_disc.first, 1 * units::_um));
   BOOST_CHECK(e_at_disc.first.isApprox(w_at_disc.first, 1 * units::_um));
 }
+
 /// test consistency of propagators to a line
 BOOST_DATA_TEST_CASE(
     propagation_to_line_,
@@ -432,6 +433,7 @@ BOOST_DATA_TEST_CASE(
   BOOST_CHECK(e_at_line.first.isApprox(a_at_line.first, 1 * units::_um));
   BOOST_CHECK(e_at_line.first.isApprox(w_at_line.first, 1 * units::_um));
 }
+
 /// test correct covariance transport for curvilinear parameters
 /// this test only works within the
 /// s_curvilinearProjTolerance (in: Definitions.hpp)
