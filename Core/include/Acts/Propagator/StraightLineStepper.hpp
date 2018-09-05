@@ -114,11 +114,51 @@ public:
       p   = up;
     }
 
+    /// Method for on-demand transport of the covariance
+    /// to a new curvilinear frame at current  position,
+    /// or direction of the state - for the moment a dummy method
+    ///
+    /// @param reinitialize is a flag to steer whether the
+    ///        state should be reinitialized at the new
+    ///        position
+    ///
+    /// @return the full transport jacobian
+    const ActsMatrixD<5, 5>
+    covarianceTransport(bool /*reinitialize = false*/)
+    {
+      return ActsMatrixD<5, 5>::Identity();
+    }
+
+    /// Method for on-demand transport of the covariance
+    /// to a new curvilinear frame at current  position,
+    /// or direction of the state - for the moment a dummy method
+    ///
+    /// @tparam S the Surfac type
+    ///
+    /// @param surface is the surface to which the covariance is
+    ///        forwarded to
+    /// @param reinitialize is a flag to steer whether the
+    ///        state should be reinitialized at the new
+    ///        position
+    /// @note no check is done if the position is actually on the surface
+    ///
+    /// @return the full transport jacobian
+    template <typename S>
+    const ActsMatrixD<5, 5>
+    covarianceTransport(const S& /*surface*/, bool /*reinitialize = false*/)
+    {
+      return ActsMatrixD<5, 5>::Identity();
+    }
+
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
 
     /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
+
+    /// Boolean to indiciate if you need covariance transport
+    bool              covTransport = false;
+    ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
 
     /// Momentum
     double p = 0.;

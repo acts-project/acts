@@ -26,8 +26,8 @@ namespace Acts {
 class HomogeneousSurfaceMaterial : public SurfaceMaterial
 {
 public:
-  /// Default Constructor - deleted
-  HomogeneousSurfaceMaterial() = delete;
+  /// Default Constructor - defaulted
+  HomogeneousSurfaceMaterial() = default;
 
   /// Explizit constructor
   ///
@@ -38,19 +38,30 @@ public:
 
   /// Copy Constructor
   ///
-  /// @param lmp is the source material
-  HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& lmp);
+  /// @param hsm is the source material
+  HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& hsm) = default;
+
+  /// Copy Move Constructor
+  ///
+  /// @param hsm is the source material
+  HomogeneousSurfaceMaterial(HomogeneousSurfaceMaterial&& hsm) = default;
 
   /// Destructor
-  ~HomogeneousSurfaceMaterial() override;
-
-  /// Pseudo-Constructor clone(
-  HomogeneousSurfaceMaterial*
-  clone() const final;
+  ~HomogeneousSurfaceMaterial() override = default;
 
   /// Assignment operator
+  ///
+  /// @param hsm is the source material
   HomogeneousSurfaceMaterial&
-  operator=(const HomogeneousSurfaceMaterial& lmp);
+  operator=(const HomogeneousSurfaceMaterial& hsm)
+      = default;
+
+  /// Assignment Move operator
+  ///
+  /// @param hsm is the source material
+  HomogeneousSurfaceMaterial&
+  operator=(HomogeneousSurfaceMaterial&& hsm)
+      = default;
 
   /// Scale operator
   /// - it is effectively a thickness scaling
@@ -59,23 +70,35 @@ public:
   HomogeneousSurfaceMaterial&
   operator*=(double scale) final;
 
-  /// @copydoc SurfaceMaterial::material(const Vector2D&)
+  /// Equality operator
   ///
-  /// @note the input parameter is ignored
-  const MaterialProperties*
-  material(const Vector2D& lp) const final;
+  /// @param hsm is the source material
+  bool
+  operator==(const HomogeneousSurfaceMaterial& hsm) const;
 
-  /// @copydoc SurfaceMaterial::material(const Vector3D&)
+  /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
   ///
   /// @note the input parameter is ignored
-  const MaterialProperties*
-  material(const Vector3D& gp) const final;
+  const MaterialProperties&
+  materialProperties(const Vector2D& lp) const final;
 
-  /// @copydoc SurfaceMaterial::material(size_t, size_t)
+  /// @copydoc SurfaceMaterial::materialProperties(const Vector3D&)
   ///
   /// @note the input parameter is ignored
-  const MaterialProperties*
-  material(size_t ib0, size_t ib1) const final;
+  const MaterialProperties&
+  materialProperties(const Vector3D& gp) const final;
+
+  /// @copydoc SurfaceMaterial::materialProperties(size_t, size_t)
+  ///
+  /// @note the input parameter is ignored
+  const MaterialProperties&
+  materialProperties(size_t ib0, size_t ib1) const final;
+
+  /// The inherited methods - for materialProperties access
+  using SurfaceMaterial::materialProperties;
+
+  /// The interited methods - for scale access
+  using SurfaceMaterial::factor;
 
   /// Output Method for std::ostream
   std::ostream&
@@ -83,31 +106,33 @@ public:
 
 private:
   /// The five different MaterialProperties
-  MaterialProperties m_fullMaterial;
+  MaterialProperties m_fullMaterial = MaterialProperties();
 };
 
-inline HomogeneousSurfaceMaterial*
-HomogeneousSurfaceMaterial::clone() const
+inline const MaterialProperties&
+HomogeneousSurfaceMaterial::materialProperties(const Vector2D& /*lp*/) const
 {
-  return new HomogeneousSurfaceMaterial(*this);
+  return (m_fullMaterial);
 }
 
-inline const MaterialProperties*
-HomogeneousSurfaceMaterial::material(const Vector2D& /*lp*/) const
+inline const MaterialProperties&
+HomogeneousSurfaceMaterial::materialProperties(const Vector3D& /*gp*/) const
 {
-  return (&m_fullMaterial);
+  return (m_fullMaterial);
 }
 
-inline const MaterialProperties*
-HomogeneousSurfaceMaterial::material(const Vector3D& /*gp*/) const
+inline const MaterialProperties&
+    HomogeneousSurfaceMaterial::materialProperties(size_t /*ib0*/,
+                                                   size_t /*ib1*/) const
 {
-  return (&m_fullMaterial);
+  return (m_fullMaterial);
 }
 
-inline const MaterialProperties*
-    HomogeneousSurfaceMaterial::material(size_t /*ib0*/, size_t /*ib1*/) const
+inline bool
+HomogeneousSurfaceMaterial::
+operator==(const HomogeneousSurfaceMaterial& hsm) const
 {
-  return (&m_fullMaterial);
+  return (m_fullMaterial == hsm.m_fullMaterial);
 }
 
 }  // namespace

@@ -288,6 +288,7 @@ public:
 
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
+
     /// Global start particle position
     Vector3D startPos = Vector3D(0, 0, 0);
 

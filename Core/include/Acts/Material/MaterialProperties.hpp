@@ -33,7 +33,7 @@ class MaterialProperties
 {
 public:
   /// Default Constructor
-  MaterialProperties();
+  MaterialProperties() = default;
 
   /// Constructor - for averaged material
   ///
@@ -66,26 +66,47 @@ public:
   /// Copy Constructor
   ///
   /// @param mprop is the source material properties to be copied
-  MaterialProperties(const MaterialProperties& mprop);
+  MaterialProperties(const MaterialProperties& mprop) = default;
+
+  /// Copy Move Constructor
+  ///
+  /// @param mprop is the source material properties to be copied
+  MaterialProperties(MaterialProperties&& mprop) = default;
 
   /// Destructor
   virtual ~MaterialProperties() = default;
-
-  /// Pseudo-Constructor clone()
-  virtual MaterialProperties*
-  clone() const;
 
   /// Assignment Operator
   ///
   /// @param mprop is the source material properties object
   MaterialProperties&
-  operator=(const MaterialProperties& mprop);
+  operator=(const MaterialProperties& mprop)
+      = default;
+
+  /// Assignment Move Operator
+  ///
+  /// @param mprop is the source material properties object
+  MaterialProperties&
+  operator=(MaterialProperties&& mprop)
+      = default;
 
   /// Scale operator - scales the material thickness
   ///
-  /// @param sclae is the material scaling parameter
+  /// @param scale is the material scaling parameter
   MaterialProperties&
   operator*=(float scale);
+
+  /// Comparison operator
+  ///
+  /// @param mprop is the source material properties object
+  bool
+  operator==(const MaterialProperties& mprop) const;
+
+  /// Comparison operator
+  ///
+  /// @param mprop is the source material properties object
+  bool
+  operator!=(const MaterialProperties& mprop) const;
 
   /// Add material properties
   ///
@@ -160,8 +181,8 @@ public:
   zOverAtimesRho() const;
 
 protected:
-  Material m_material;   //!< the material
-  float    m_dInX0{0.};  //!< thickness in units of radiation length
+  Material m_material = Material();  //!< the material
+  float    m_dInX0{0.};              //!< thickness in units of radiation length
   float    m_dInL0{0.};  //!< thickness in units of nuclear interaction length
 };
 
@@ -219,11 +240,23 @@ MaterialProperties::averageZ() const
   return m_material.Z();
 }
 
-// Return method for @f$ Z @f$
 inline float
 MaterialProperties::averageRho() const
 {
   return m_material.rho();
+}
+
+inline bool
+MaterialProperties::operator==(const MaterialProperties& mp) const
+{
+  return (m_material == mp.m_material && m_dInX0 == mp.m_dInX0
+          && m_dInL0 == mp.m_dInL0);
+}
+
+inline bool
+MaterialProperties::operator!=(const MaterialProperties& mp) const
+{
+  return (!operator==(mp));
 }
 
 // Overload of << operator for std::ostream for debug output
@@ -231,7 +264,7 @@ std::ostream&
 operator<<(std::ostream& sl, const MaterialProperties& mprop);
 
 // Useful typedefs
-using MaterialPropertiesVector = std::vector<MaterialProperties*>;
+using MaterialPropertiesVector = std::vector<MaterialProperties>;
 using MaterialPropertiesMatrix = std::vector<MaterialPropertiesVector>;
 
 }  // namespace

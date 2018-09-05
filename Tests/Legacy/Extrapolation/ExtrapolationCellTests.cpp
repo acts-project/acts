@@ -138,7 +138,7 @@ namespace Test {
                      sParameters.position(),
                      sParameters.referenceSurface(),
                      1.,
-                     &siliconProperties);
+                     siliconProperties);
 
     // first round of checks - size of extrapolation steps
     BOOST_CHECK_EQUAL(1ul, ecc.extrapolationSteps.size());
@@ -189,7 +189,7 @@ namespace Test {
                      plane,
                      pMatParametersPtr->referenceSurface(),
                      1.,
-                     &siliconProperties);
+                     siliconProperties);
 
     // third round of checks
     // there should be three steps
@@ -243,7 +243,7 @@ namespace Test {
                      destination,
                      dMatParametersPtr->referenceSurface(),
                      1.,
-                     &siliconProperties);
+                     siliconProperties);
 
     // it's the final step:
     // - no new extrapolation step is created, the size stays at 4

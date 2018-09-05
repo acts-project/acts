@@ -7,9 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///  Boost include(s)
-#define BOOST_TEST_MODULE MaterialProperties Tests
+#define BOOST_TEST_MODULE SurfaceMaterial Tests
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 
@@ -36,19 +37,6 @@ namespace Test {
     MaterialProperties bMovedAssigned = std::move(bMoved);
     /// Check if they are equal
     BOOST_CHECK_EQUAL(a, bMovedAssigned);
-  }
-
-  // Test the Scaling
-  BOOST_AUTO_TEST_CASE(MaterialProperties_scale_test)
-  {
-    // construct the material properties from argumnets
-    MaterialProperties mat(1., 2., 3., 4., 5., 0.1);
-    MaterialProperties halfMat(1., 2., 3., 4., 5., 0.05);
-    MaterialProperties halfScaled = mat;
-    halfScaled *= 0.5;
-
-    BOOST_TEST(mat != halfMat);
-    BOOST_TEST(halfMat == halfScaled);
   }
 
   BOOST_AUTO_TEST_CASE(MaterialProperties_adding_test)

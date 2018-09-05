@@ -24,7 +24,6 @@
 #include "Acts/Extrapolator/SurfaceCollector.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialCollector.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -58,8 +57,8 @@ namespace Test {
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
-  const int ntests    = 1;
-  bool      debugMode = true;
+  const int ntests    = 10;
+  bool      debugMode = false;
 
   // A plane selector for the SurfaceCollector
   struct PlaneSelector

@@ -29,7 +29,7 @@ class SurfaceMaterialProxy : public SurfaceMaterial
 {
 public:
   /// Constructor without BinUtility - homogenous material
-  SurfaceMaterialProxy();
+  SurfaceMaterialProxy() = default;
 
   /// Constructor with BinUtility - multidimensional material
   ///
@@ -38,22 +38,24 @@ public:
   SurfaceMaterialProxy(const BinUtility& binUtility);
 
   /// Copy constuctor
-  SurfaceMaterialProxy(const SurfaceMaterialProxy& smproxy);
+  SurfaceMaterialProxy(const SurfaceMaterialProxy& smproxy) = default;
+
+  /// Copy move constuctor
+  SurfaceMaterialProxy(SurfaceMaterialProxy&& smproxy) = default;
 
   /// Destructor
   ~SurfaceMaterialProxy() override = default;
 
-  /// Implicit constructor
-  /// - uses the copy constructor
-  SurfaceMaterialProxy*
-  clone() const final;
+  /// Assignment operator
+
+  /// Assigment move operator
 
   /// Scale operator
   SurfaceMaterialProxy&
   operator*=(double scale) final;
 
-  /// Return the BinUtility - can be nullptr
-  const BinUtility*
+  /// Return the BinUtility
+  const BinUtility&
   binUtility() const;
 
   /// Return method for full material description of the Surface - from local
@@ -62,8 +64,8 @@ public:
   /// @param lp is local positioning vector
   ///
   /// @return will return dummy material
-  const MaterialProperties*
-  material(const Vector2D& lp) const final;
+  const MaterialProperties&
+  materialProperties(const Vector2D& lp) const final;
 
   /// Return method for full material description of the Surface - from the
   /// global coordinates
@@ -71,8 +73,8 @@ public:
   /// @param gp is the global positioning vector
   ///
   /// @return will return dummy material
-  const MaterialProperties*
-  material(const Vector3D& gp) const final;
+  const MaterialProperties&
+  materialProperties(const Vector3D& gp) const final;
 
   /// Direct access via bins to the MaterialProperties
   ///
@@ -80,8 +82,8 @@ public:
   /// @param ib1 indicates the seconf bin
   ///
   /// @return will return dummy material
-  const MaterialProperties*
-  material(size_t ib0, size_t ib1) const final;
+  const MaterialProperties&
+  materialProperties(size_t ib0, size_t ib1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream&
@@ -91,33 +93,34 @@ private:
   /// two dimensional BinUtility determining
   /// the granularity and binning of the
   /// material on the surface/layer
-  std::unique_ptr<const BinUtility> m_binUtility;
+  BinUtility m_binUtility;
 
   /// Dummy material properties
   MaterialProperties m_materialProperties;
 };
 }
 
-inline const Acts::MaterialProperties*
-Acts::SurfaceMaterialProxy::material(const Vector2D& /*lp*/) const
+inline const Acts::MaterialProperties&
+Acts::SurfaceMaterialProxy::materialProperties(const Vector2D& /*lp*/) const
 {
-  return (&m_materialProperties);
+  return (m_materialProperties);
 }
 
-inline const Acts::MaterialProperties*
-Acts::SurfaceMaterialProxy::material(const Vector3D& /*gp*/) const
+inline const Acts::MaterialProperties&
+Acts::SurfaceMaterialProxy::materialProperties(const Vector3D& /*gp*/) const
 {
-  return (&m_materialProperties);
+  return (m_materialProperties);
 }
 
-inline const Acts::MaterialProperties*
-    Acts::SurfaceMaterialProxy::material(size_t /*ib0*/, size_t /*ib1*/) const
+inline const Acts::MaterialProperties&
+    Acts::SurfaceMaterialProxy::materialProperties(size_t /*ib0*/,
+                                                   size_t /*ib1*/) const
 {
-  return (&m_materialProperties);
+  return (m_materialProperties);
 }
 
-inline const Acts::BinUtility*
+inline const Acts::BinUtility&
 Acts::SurfaceMaterialProxy::binUtility() const
 {
-  return m_binUtility.get();
+  return m_binUtility;
 }

@@ -64,21 +64,28 @@ public:
                         double                          splitFactor = 0.,
                         size_t                          entries     = 1);
 
+  /// Copy Move Constructor
+  ///
+  /// @param lmp is the source object to be copied
+  BinnedSurfaceMaterial(BinnedSurfaceMaterial&& lmp) = default;
+
   /// Copy Constructor
   ///
   /// @param lmp is the source object to be copied
-  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& lmp);
+  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& lmp) = default;
 
-  /// Destructor
-  ~BinnedSurfaceMaterial() override;
-
-  /// Pseudo-Constructor clone()
-  BinnedSurfaceMaterial*
-  clone() const final;
+  /// Assignment Move operator
+  BinnedSurfaceMaterial&
+  operator=(BinnedSurfaceMaterial&& lmp)
+      = default;
 
   /// Assignment operator
   BinnedSurfaceMaterial&
-  operator=(const BinnedSurfaceMaterial& lmp);
+  operator=(const BinnedSurfaceMaterial& lmp)
+      = default;
+
+  /// Destructor
+  ~BinnedSurfaceMaterial() override = default;
 
   /// Scale operator
   ///
@@ -94,20 +101,20 @@ public:
   const MaterialPropertiesMatrix&
   fullMaterial() const;
 
-  /// @copydoc SurfaceMaterial::material(const Vector2D&)
-  const MaterialProperties*
-  material(const Vector2D& lp) const final;
+  /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
+  const MaterialProperties&
+  materialProperties(const Vector2D& lp) const final;
 
-  /// @copydoc SurfaceMaterial::material(const Vector3D&)
-  const MaterialProperties*
-  material(const Vector3D& gp) const final;
+  /// @copydoc SurfaceMaterial::materialProperties(const Vector3D&)
+  const MaterialProperties&
+  materialProperties(const Vector3D& gp) const final;
 
-  /// @copydoc SurfaceMaterial::material(size_t, size_t)
-  const MaterialProperties*
-  material(size_t bin0, size_t bin1) const final;
+  /// @copydoc SurfaceMaterial::materialProperties(size_t, size_t)
+  const MaterialProperties&
+  materialProperties(size_t bin0, size_t bin1) const final;
 
-  /// access to the entries
-  /// this is needed for averageing mapps
+  /// @brief Access to the entries
+  /// this is needed for averageing maps
   size_t
   entries() const;
 
@@ -124,14 +131,6 @@ private:
 
   /// The number of entries used
   size_t m_entries;
-
-  /// helper method - to clear the material
-  void
-  clearMaterial();
-
-  /// helper method - to refill the material
-  void
-  fillMaterial(const MaterialPropertiesMatrix& matMatrix);
 };
 
 inline const BinUtility&
@@ -146,8 +145,8 @@ BinnedSurfaceMaterial::fullMaterial() const
   return m_fullMaterial;
 }
 
-inline const MaterialProperties*
-BinnedSurfaceMaterial::material(size_t bin0, size_t bin1) const
+inline const MaterialProperties&
+BinnedSurfaceMaterial::materialProperties(size_t bin0, size_t bin1) const
 {
   return m_fullMaterial[bin1][bin0];
 }

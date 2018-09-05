@@ -36,114 +36,29 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
 {
 }
 
-Acts::BinnedSurfaceMaterial::~BinnedSurfaceMaterial()
-{
-  clearMaterial();
-}
-
-Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinnedSurfaceMaterial& lmp)
-  : SurfaceMaterial(lmp)
-  , m_binUtility(lmp.m_binUtility)
-  , m_entries(lmp.m_entries)
-{
-  // clear the material
-  clearMaterial();
-  // and fill the material
-  fillMaterial(lmp.m_fullMaterial);
-}
-
-Acts::BinnedSurfaceMaterial&
-Acts::BinnedSurfaceMaterial::operator=(const BinnedSurfaceMaterial& lmp)
-{
-  if (this != &lmp) {
-    // reassign
-    SurfaceMaterial::operator=(lmp);
-    m_binUtility             = lmp.binUtility();
-    m_entries                = lmp.m_entries;
-    // clear
-    clearMaterial();
-    // reassign the material
-    fillMaterial(lmp.m_fullMaterial);
-  }
-  return (*this);
-}
-
-Acts::BinnedSurfaceMaterial*
-Acts::BinnedSurfaceMaterial::clone() const
-{
-  return new BinnedSurfaceMaterial(*this);
-}
-
-void
-Acts::BinnedSurfaceMaterial::clearMaterial()
-{
-  // clear the full material
-  for (auto& matMatrixIter : m_fullMaterial) {
-    for (auto& matIter : matMatrixIter) {
-      delete matIter;
-    }
-  }
-  m_fullMaterial.clear();
-}
-
-void
-Acts::BinnedSurfaceMaterial::fillMaterial(
-    const Acts::MaterialPropertiesMatrix& matMatrix)
-{
-  m_fullMaterial.reserve(m_binUtility.max(1) + 1);
-  for (auto& matMatrixIter : matMatrix) {
-    // the vector to be copied
-    Acts::MaterialPropertiesVector matVector;
-    matVector.reserve(m_binUtility.max(0) + 1);
-    // reassign
-    for (auto& matIter : matMatrixIter) {
-      matVector.push_back(matIter != nullptr ? matIter->clone() : nullptr);
-    }
-    m_fullMaterial.push_back(matVector);
-  }
-}
-
 Acts::BinnedSurfaceMaterial&
 Acts::BinnedSurfaceMaterial::operator*=(double scale)
 {
-  // scale the full material
-  unsigned int imat1 = 0;
   for (auto& matMatrixIter : m_fullMaterial) {
-    unsigned int imat0 = 0;
-    // the vector iterator
     for (auto& matIter : matMatrixIter) {
-      if (matIter != nullptr) {
-        Acts::MaterialProperties* mprop = matIter->clone();
-        (*mprop) *= scale;
-        delete matIter;
-        m_fullMaterial[imat1][imat0] = mprop;
-      }
-      ++imat0;
+      (matIter) *= scale;
     }
-    ++imat1;
   }
   return (*this);
 }
 
-const Acts::MaterialProperties*
-Acts::BinnedSurfaceMaterial::material(const Vector2D& lp) const
+const Acts::MaterialProperties&
+Acts::BinnedSurfaceMaterial::materialProperties(const Vector2D& lp) const
 {
-  if (m_fullMaterial.empty()) {
-    return nullptr;
-  }
   // the first bin
   size_t ibin0 = m_binUtility.bin(lp, 0);
   size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(lp, 1) : 0;
   return m_fullMaterial[ibin1][ibin0];
 }
 
-const Acts::MaterialProperties*
-Acts::BinnedSurfaceMaterial::material(const Acts::Vector3D& gp) const
+const Acts::MaterialProperties&
+Acts::BinnedSurfaceMaterial::materialProperties(const Acts::Vector3D& gp) const
 {
-  if (m_fullMaterial.empty()) {
-    return nullptr;
-  }
   // the first bin
   size_t ibin0 = m_binUtility.bin(gp, 0);
   size_t ibin1 = m_binUtility.max(1) != 0u ? m_binUtility.bin(gp, 1) : 0;
@@ -163,12 +78,7 @@ Acts::BinnedSurfaceMaterial::dump(std::ostream& sl) const
     unsigned int imat0 = 0;
     // the vector iterator
     for (auto& matIter : matMatrixIter) {
-      if (matIter != nullptr) {
-        sl << " Bin [" << imat1 << "][" << imat0 << "] - " << (*matIter)
-           << std::endl;
-      } else {
-        sl << " Bin [" << imat1 << "][" << imat0 << "] -  empty " << std::endl;
-      }
+      sl << " Bin [" << imat1 << "][" << imat0 << "] - " << (matIter);
       ++imat0;
     }
     ++imat1;

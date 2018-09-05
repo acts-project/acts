@@ -25,7 +25,6 @@
 #include "Acts/Extrapolator/SurfaceCollector.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/MaterialCollector.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -70,7 +69,7 @@ namespace Test {
   StraightLinePropagator slpropagator(std::move(slstepper),
                                       std::move(navigatorSL));
 
-  const int ntests           = 100;
+  const int ntests           = 1000;
   const int skip             = 0;
   bool      debugModeFwd     = false;
   bool      debugModeBwd     = false;
@@ -117,7 +116,7 @@ namespace Test {
     using DebugOutput = detail::DebugOutputActor;
 
     // Action list and abort list
-    using ActionList_type      = ActionList<MaterialCollector, DebugOutput>;
+    using ActionList_type      = ActionList<MaterialInteractor, DebugOutput>;
     using AbortConditions_type = AbortList<>;
 
     using Options = PropagatorOptions<ActionList_type, AbortConditions_type>;
@@ -128,14 +127,16 @@ namespace Test {
     fwdOptions.debug       = debugModeFwd;
 
     // get the material collector and configure it
-    auto& fwdMaterialCollector
-        = fwdOptions.actionList.template get<MaterialCollector>();
-    fwdMaterialCollector.detailedCollection = true;
+    auto& fwdMaterialInteractor
+        = fwdOptions.actionList.template get<MaterialInteractor>();
+    fwdMaterialInteractor.recordInteractions = true;
+    fwdMaterialInteractor.energyLoss         = false;
+    fwdMaterialInteractor.multipleScattering = false;
 
     // forward material test
     const auto& fwdResult = prop.propagate(start, fwdOptions);
     auto&       fwdMaterial
-        = fwdResult.template get<MaterialCollector::result_type>();
+        = fwdResult.template get<MaterialInteractor::result_type>();
 
     double fwdStepMaterialInX0 = 0.;
     double fwdStepMaterialInL0 = 0.;
@@ -143,10 +144,9 @@ namespace Test {
     BOOST_TEST(fwdMaterial.materialInX0 != 0.);
     BOOST_TEST(fwdMaterial.materialInL0 != 0.);
     // check that the sum of all steps is the total material
-    for (auto& materialHit : fwdMaterial.collected) {
-      auto material = materialHit.material;
-      fwdStepMaterialInX0 += materialHit.pathLength / material.X0();
-      fwdStepMaterialInL0 += materialHit.pathLength / material.L0();
+    for (auto& mInteraction : fwdMaterial.materialInteractions) {
+      fwdStepMaterialInX0 += mInteraction.materialProperties.thicknessInX0();
+      fwdStepMaterialInL0 += mInteraction.materialProperties.thicknessInL0();
     }
     BOOST_CHECK_CLOSE(fwdMaterial.materialInX0, fwdStepMaterialInX0, 1e-3);
     BOOST_CHECK_CLOSE(fwdMaterial.materialInL0, fwdStepMaterialInL0, 1e-3);
@@ -159,7 +159,7 @@ namespace Test {
       std::cout << fwdOutput.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
-      for (auto& fwdStepsC : fwdMaterial.collected) {
+      for (auto& fwdStepsC : fwdMaterial.materialInteractions) {
         std::cout << "--> Surface with "
                   << fwdStepsC.surface->geoID().toString() << std::endl;
       }
@@ -173,15 +173,17 @@ namespace Test {
     bwdOptions.debug       = debugModeBwd;
 
     // get the material collector and configure it
-    auto& bwdMaterialCollector
-        = bwdOptions.actionList.template get<MaterialCollector>();
-    bwdMaterialCollector.detailedCollection = true;
+    auto& bwdMaterialInteractor
+        = bwdOptions.actionList.template get<MaterialInteractor>();
+    bwdMaterialInteractor.recordInteractions = true;
+    bwdMaterialInteractor.energyLoss         = false;
+    bwdMaterialInteractor.multipleScattering = false;
 
     const auto& startSurface = start.referenceSurface();
     const auto& bwdResult    = prop.propagate(
         *fwdResult.endParameters.template get(), startSurface, bwdOptions);
     auto& bwdMaterial
-        = bwdResult.template get<MaterialCollector::result_type>();
+        = bwdResult.template get<MaterialInteractor::result_type>();
 
     double bwdStepMaterialInX0 = 0.;
     double bwdStepMaterialInL0 = 0.;
@@ -190,10 +192,9 @@ namespace Test {
     BOOST_TEST(bwdMaterial.materialInX0 != 0.);
     BOOST_TEST(bwdMaterial.materialInL0 != 0.);
     // check that the sum of all steps is the total material
-    for (auto& materialHit : bwdMaterial.collected) {
-      auto material = materialHit.material;
-      bwdStepMaterialInX0 += materialHit.pathLength / material.X0();
-      bwdStepMaterialInL0 += materialHit.pathLength / material.L0();
+    for (auto& mInteraction : bwdMaterial.materialInteractions) {
+      bwdStepMaterialInX0 += mInteraction.materialProperties.thicknessInX0();
+      bwdStepMaterialInL0 += mInteraction.materialProperties.thicknessInL0();
     }
 
     BOOST_CHECK_CLOSE(bwdMaterial.materialInX0, bwdStepMaterialInX0, 1e-3);
@@ -207,14 +208,15 @@ namespace Test {
       std::cout << bwd_output.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
-      for (auto& bwdStepsC : bwdMaterial.collected) {
+      for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
         std::cout << "--> Surface with "
                   << bwdStepsC.surface->geoID().toString() << std::endl;
       }
     }
 
     // forward-backward compatibility test
-    BOOST_TEST(bwdMaterial.collected.size() == fwdMaterial.collected.size());
+    BOOST_TEST(bwdMaterial.materialInteractions.size()
+               == fwdMaterial.materialInteractions.size());
 
     BOOST_CHECK_CLOSE(bwdMaterial.materialInX0, fwdMaterial.materialInX0, 1e-3);
     BOOST_CHECK_CLOSE(bwdMaterial.materialInL0, bwdMaterial.materialInL0, 1e-3);
@@ -228,9 +230,11 @@ namespace Test {
     fwdStepOptions.debug       = debugModeFwdStep;
 
     // get the material collector and configure it
-    auto& fwdStepMaterialCollector
-        = fwdStepOptions.actionList.template get<MaterialCollector>();
-    fwdStepMaterialCollector.detailedCollection = true;
+    auto& fwdStepMaterialInteractor
+        = fwdStepOptions.actionList.template get<MaterialInteractor>();
+    fwdStepMaterialInteractor.recordInteractions = true;
+    fwdStepMaterialInteractor.energyLoss         = false;
+    fwdStepMaterialInteractor.multipleScattering = false;
 
     double fwdStepStepMaterialInX0 = 0.;
     double fwdStepStepMaterialInL0 = 0.;
@@ -239,7 +243,7 @@ namespace Test {
       // check if the surfaces are free
       std::cout << ">>> Forward steps to be processed sequentially ..."
                 << std::endl;
-      for (auto& fwdStepsC : fwdMaterial.collected) {
+      for (auto& fwdStepsC : fwdMaterial.materialInteractions) {
         std::cout << "--> Surface with "
                   << fwdStepsC.surface->geoID().toString() << std::endl;
       }
@@ -248,7 +252,7 @@ namespace Test {
     // move forward step by step through the surfaces
     const TrackParameters*              sParameters = &start;
     std::vector<const TrackParameters*> stepParameters;
-    for (auto& fwdSteps : fwdMaterial.collected) {
+    for (auto& fwdSteps : fwdMaterial.materialInteractions) {
       if (debugModeFwdStep) {
         std::cout << ">>> Forward step : "
                   << sParameters->referenceSurface().geoID().toString()
@@ -267,7 +271,7 @@ namespace Test {
       }
 
       auto& fwdStepMaterial
-          = fwdStep.template get<MaterialCollector::result_type>();
+          = fwdStep.template get<MaterialInteractor::result_type>();
       fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
       fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
@@ -290,7 +294,7 @@ namespace Test {
         = prop.propagate(*sParameters, dSurface, fwdStepOptions);
 
     auto& fwdStepMaterial
-        = fwdStepFinal.template get<MaterialCollector::result_type>();
+        = fwdStepFinal.template get<MaterialInteractor::result_type>();
     fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
@@ -317,9 +321,11 @@ namespace Test {
     bwdStepOptions.debug       = debugModeBwdStep;
 
     // get the material collector and configure it
-    auto& bwdStepMaterialCollector
-        = bwdStepOptions.actionList.template get<MaterialCollector>();
-    bwdStepMaterialCollector.detailedCollection = true;
+    auto& bwdStepMaterialInteractor
+        = bwdStepOptions.actionList.template get<MaterialInteractor>();
+    bwdStepMaterialInteractor.recordInteractions = true;
+    bwdStepMaterialInteractor.multipleScattering = false;
+    bwdStepMaterialInteractor.energyLoss         = false;
 
     double bwdStepStepMaterialInX0 = 0.;
     double bwdStepStepMaterialInL0 = 0.;
@@ -328,7 +334,7 @@ namespace Test {
       // check if the surfaces are free
       std::cout << ">>> Backeard steps to be processed sequentially ..."
                 << std::endl;
-      for (auto& bwdStepsC : bwdMaterial.collected) {
+      for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
         std::cout << "--> Surface with "
                   << bwdStepsC.surface->geoID().toString() << std::endl;
       }
@@ -336,7 +342,7 @@ namespace Test {
 
     // move forward step by step through the surfaces
     sParameters = fwdResult.endParameters.template get();
-    for (auto& bwdSteps : bwdMaterial.collected) {
+    for (auto& bwdSteps : bwdMaterial.materialInteractions) {
       if (debugModeBwdStep) {
         std::cout << ">>> Backward step : "
                   << sParameters->referenceSurface().geoID().toString()
@@ -354,7 +360,7 @@ namespace Test {
       }
 
       auto& bwdStepMaterial
-          = bwdStep.template get<MaterialCollector::result_type>();
+          = bwdStep.template get<MaterialInteractor::result_type>();
       bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
       bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
@@ -377,7 +383,7 @@ namespace Test {
         = prop.propagate(*sParameters, dbSurface, bwdStepOptions);
 
     auto& bwdStepMaterial
-        = bwdStepFinal.template get<MaterialCollector::result_type>();
+        = bwdStepFinal.template get<MaterialInteractor::result_type>();
     bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 

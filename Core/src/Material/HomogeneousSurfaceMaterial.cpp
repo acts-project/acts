@@ -20,26 +20,6 @@ Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
 {
 }
 
-Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
-    const Acts::HomogeneousSurfaceMaterial& lmp)
-  : SurfaceMaterial(lmp.m_splitFactor), m_fullMaterial(lmp.m_fullMaterial)
-{
-}
-
-Acts::HomogeneousSurfaceMaterial::~HomogeneousSurfaceMaterial() = default;
-
-Acts::HomogeneousSurfaceMaterial&
-Acts::HomogeneousSurfaceMaterial::
-operator=(const HomogeneousSurfaceMaterial& lmp)
-{
-  if (this != &lmp) {
-    // now refill evertything
-    m_fullMaterial                       = lmp.m_fullMaterial;
-    Acts::SurfaceMaterial::m_splitFactor = lmp.m_splitFactor;
-  }
-  return (*this);
-}
-
 Acts::HomogeneousSurfaceMaterial&
 Acts::HomogeneousSurfaceMaterial::operator*=(double scale)
 {

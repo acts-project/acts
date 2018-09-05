@@ -28,14 +28,20 @@ struct MaterialInteraction
   /// The material surface
   const Surface* surface = nullptr;
 
-  /// The passsed materials
-  /// it is the material and the actual (corrected) path length
-  std::pair<Material, double> passedMaterial;
-
   double sigmaPhi2   = 0.;  ///< applied material effect: sigma(phi)^2
   double sigmaTheta2 = 0.;  ///< applied material effect: sigma(theta)^2
   double deltaP      = 0.;  ///< applied material effect: dela(p)
   double sigmaQoP2   = 0.;  ///< applied material effect: sigma(qop)^2
+
+  /// The position information of the material hit
+  Vector3D position = Vector3D(0., 0., 0);
+  /// The direction information of the material hit
+  Vector3D direction = Vector3D(0., 0., 0);
+  /// The calculated path & applied path correction factor
+  double pathCorrection = 1.;
+  /// The (passsed) material properties
+  /// it is the material and the actual (corrected) path length
+  MaterialProperties materialProperties = MaterialProperties();
 };
 
 /// The Material interactor struct
@@ -47,24 +53,30 @@ struct MaterialInteractor
 {
 
   // Configuration for this MaterialInteractor
+
   /// multiple scattering switch on/off
   bool multipleScattering = true;
-  /// the scattering struct
+  /// The scattering formula struct
   detail::HighlandScattering scattering;
 
-  /// energy loss switch on/off
+  /// Energy loss switch on/off
   bool energyLoss = true;
-  /// the energy loss struct
+  /// The energy loss formula struct
   detail::IonisationLoss ionisationloss;
 
-  /// record material in detail
-  bool recordDetailed = false;
+  /// Record material in detail
+  bool recordInteractions = false;
 
   /// Simple result struct to be returned
   /// It mainly acts as an internal state state which is
   /// created for every propagation/extrapolation step
   struct this_result
   {
+    // The accumulated materialInX0
+    double materialInX0 = 0.;
+    /// The accumulated materialInL0
+    double materialInL0 = 0.;
+    /// This one is only filled when  is switched on
     std::vector<MaterialInteraction> materialInteractions;
   };
 
@@ -87,168 +99,175 @@ struct MaterialInteractor
   operator()(propagator_state_t& state, result_type& result) const
   {
 
-    // if we are on target, everything should have been done
+    // If we are on target, everything should have been done
     if (state.navigation.targetReached) {
       return;
     }
 
-    // if switched off, then return - alows run-time configuration
-    if (!multipleScattering && !energyLoss) {
+    // If switched off, then return - alows run-time configuration
+    if (!multipleScattering && !energyLoss && !recordInteractions) {
       return;
     }
 
-    // a current surface has been assigned by the navigator
+    // A current surface has been assigned by the navigator
+    // check for material properties
     if (state.navigation.currentSurface
         && state.navigation.currentSurface->associatedMaterial()) {
 
-      // get the surface material and the corresponding material properties
-      auto sMaterial   = state.navigation.currentSurface->associatedMaterial();
-      auto mProperties = sMaterial->material(state.stepping.position());
-      if (mProperties) {
-        // pre - full - post update test, i.e.
-        // check if you have a factor for pre/post/full update to do
-        double prepofu = 1.;
+      // A current surface has been already assigned by the navigator
+      // check for material
+      if (state.navigation.currentSurface
+          && state.navigation.currentSurface->associatedMaterial()) {
+        // Let's set the pre/full/post update stage
+        MaterialUpdateStage mStage = fullUpdate;
+        // We are at the start surface
         if (state.navigation.startSurface == state.navigation.currentSurface) {
           debugLog(state, [&] {
             return std::string("Update on start surface: post-update mode.");
           });
-          prepofu
-              = state.navigation.currentSurface->associatedMaterial()->factor(
-                  state.stepping.navDir, postUpdate);
+          mStage = postUpdate;
+          // Or is it the target surface ?
         } else if (state.navigation.targetSurface
                    == state.navigation.currentSurface) {
           debugLog(state, [&] {
             return std::string("Update on target surface: pre-update mode");
           });
-          prepofu
-              = state.navigation.currentSurface->associatedMaterial()->factor(
-                  state.stepping.navDir, preUpdate);
+          mStage = preUpdate;
         } else {
           debugLog(state, [&] {
             return std::string("Update while pass through: full mode.");
           });
         }
 
-        // create the material interaction class, in case we record afterwards
-        MaterialInteraction mInteraction;
-        mInteraction.surface = state.navigation.currentSurface;
-
-        // the pre/post factor has been applied
-        // now check if there's still something to do
-        if (prepofu == 0.) {
+        // Get the material propertices and continue if you found some
+        auto sMaterial = state.navigation.currentSurface->associatedMaterial();
+        MaterialProperties mProperties = sMaterial->materialProperties(
+            state.stepping.position(), state.stepping.navDir, mStage);
+        // Material properties (non-zero) have been found for htis configuration
+        if (mProperties) {
+          // more debugging output to the screen
           debugLog(state, [&] {
-            return std::string("Pre/Post factor set material to zero.");
+            return std::string("Material properties found for this surface.");
           });
-          return;
-        }
 
-        // to integrate process noise, we need to transport
-        // the covariance to the current position in space
-        if (state.stepping.covTransport) {
-          state.stepping.covarianceTransport(true);
-        }
+          // Create the material interaction class, in case we record afterwards
+          MaterialInteraction mInteraction;
+          mInteraction.surface = state.navigation.currentSurface;
 
-        // get the material thickness - and correct it with incidence
-        double thickness = mProperties->thickness();
-        // get the path correction due to the incident angle
-        double pCorrection = state.navigation.currentSurface->pathCorrection(
-            state.stepping.position(), state.stepping.direction());
-        // the corrected thickness
-        double cThickness = thickness * pCorrection;
-
-        // the momentum at current position
-        const double p     = state.stepping.p;
-        const double m     = state.options.mass;
-        const double E     = std::sqrt(p * p + m * m);
-        const double lbeta = p / E;
-
-        // apply the multiple scattering
-        // - only when you do covariance transport
-        if (multipleScattering && state.stepping.covTransport) {
-          // thickness in X0 from without path correction
-          double tInX0 = mProperties->thicknessInX0();
-          // retrieve the scattering contribution
-          double sigmaScat = scattering(p, lbeta, tInX0 * pCorrection);
-          double sinTheta
-              = std::sin(VectorHelpers::theta(state.stepping.direction()));
-          double sigmaDeltaPhiSq
-              = sigmaScat * sigmaScat / (sinTheta * sinTheta);
-          double sigmaDeltaThetaSq = sigmaScat * sigmaScat;
-          // record the material interaction
-          mInteraction.sigmaPhi2   = sigmaDeltaPhiSq;
-          mInteraction.sigmaTheta2 = sigmaDeltaThetaSq;
-          // good in any case for positive direction
-          if (state.stepping.navDir == forward) {
-            // just add the multiple scattering component
-            state.stepping.cov(ePHI, ePHI)
-                += state.stepping.navDir * sigmaDeltaPhiSq;
-            state.stepping.cov(eTHETA, eTHETA)
-                += state.stepping.navDir * sigmaDeltaThetaSq;
-          } else {
-            // we check if the covariance stays positive
-            double sEphi   = state.stepping.cov(ePHI, ePHI);
-            double sEtheta = state.stepping.cov(eTHETA, eTHETA);
-            if (sEphi > sigmaDeltaPhiSq && sEtheta > sigmaDeltaThetaSq) {
-              // noise removal is not applied if covariance would fall below 0
-              state.stepping.cov(ePHI, ePHI) -= sigmaDeltaPhiSq;
-              state.stepping.cov(eTHETA, eTHETA) -= sigmaDeltaThetaSq;
-            }
-          }
-        }
-        // apply the energy loss
-        if (energyLoss) {
-          // get the material
-          const Material& mat = mProperties->material();
-          // calculate gamma
-          const double lgamma = E / m;
-          // energy loss and straggling - per unit length
-          std::pair<double, double> eLoss
-              = ionisationloss(m, lbeta, lgamma, mat, 1. * units::_mm);
-          // apply the energy loss
-          const double dEdl = state.stepping.navDir * eLoss.first;
-          const double dE   = thickness * pCorrection * dEdl;
-          // check for energy conservation, and only apply momentum change
-          // when kinematically allowed
-          if (E + dE > m) {
-            // calcuate the new momentum
-            const double newP = std::sqrt((E + dE) * (E + dE) - m * m);
-            // record the deltaP
-            mInteraction.deltaP = p - newP;
-            // update the state/momentum
-            state.stepping.p = std::copysign(newP, state.stepping.p);
-          }
-          // transfer this into energy loss straggling and appply to covariance:
-          // do that even if you had not applied energy loss do to
-          // the kineamtic limit to catch the cases of deltE < MOP/MPV
+          // To integrate process noise, we need to transport
+          // the covariance to the current position in space
+          // the 'true' indicates re-initializaiton of the further transport
           if (state.stepping.covTransport) {
-            // calculate the straggling
-            const double sigmaQoverP
-                = thickness * pCorrection * eLoss.second / (lbeta * p * p);
-            // save the material interaction
-            mInteraction.sigmaQoP2 = sigmaQoverP * sigmaQoverP;
-            // good in any case for positive direction
+            state.stepping.covarianceTransport(true);
+          }
+
+          // Calculate the path correction
+          double pCorrection = state.navigation.currentSurface->pathCorrection(
+              state.stepping.position(), state.stepping.direction());
+
+          // Scale the material properties
+          mProperties *= pCorrection;
+
+          // The momentum at current position
+          const double p     = state.stepping.p;
+          const double m     = state.options.mass;
+          const double E     = std::sqrt(p * p + m * m);
+          const double lbeta = p / E;
+
+          // Apply the multiple scattering
+          // - only when you do covariance transport
+          if (multipleScattering && state.stepping.covTransport) {
+            // Thickness in X0 from without path correction
+            double tInX0 = mProperties.thicknessInX0();
+            // Retrieve the scattering contribution
+            double sigmaScat = scattering(p, lbeta, tInX0);
+            double sinTheta
+                = std::sin(VectorHelpers::theta(state.stepping.direction()));
+            double sigmaDeltaPhiSq
+                = sigmaScat * sigmaScat / (sinTheta * sinTheta);
+            double sigmaDeltaThetaSq = sigmaScat * sigmaScat;
+            // Record the material interaction
+            mInteraction.sigmaPhi2   = sigmaDeltaPhiSq;
+            mInteraction.sigmaTheta2 = sigmaDeltaThetaSq;
+            // Good in any case for positive direction
             if (state.stepping.navDir == forward) {
-              state.stepping.cov(eQOP, eQOP)
-                  += state.stepping.navDir * sigmaQoverP * sigmaQoverP;
+              // Just add the multiple scattering component
+              state.stepping.cov(ePHI, ePHI)
+                  += state.stepping.navDir * sigmaDeltaPhiSq;
+              state.stepping.cov(eTHETA, eTHETA)
+                  += state.stepping.navDir * sigmaDeltaThetaSq;
             } else {
-              // check that covariance entry doesn't become neagive
-              double sEqop = state.stepping.cov(eQOP, eQOP);
-              if (sEqop > sigmaQoverP * sigmaQoverP) {
-                state.stepping.cov(eQOP, eQOP)
-                    += state.stepping.navDir * sigmaQoverP * sigmaQoverP;
+              // We check if the covariance stays positive
+              double sEphi   = state.stepping.cov(ePHI, ePHI);
+              double sEtheta = state.stepping.cov(eTHETA, eTHETA);
+              if (sEphi > sigmaDeltaPhiSq && sEtheta > sigmaDeltaThetaSq) {
+                // Noise removal is not applied if covariance would fall below 0
+                state.stepping.cov(ePHI, ePHI) -= sigmaDeltaPhiSq;
+                state.stepping.cov(eTHETA, eTHETA) -= sigmaDeltaThetaSq;
               }
             }
           }
-        }
-        // record if configured to do so
-        if (recordDetailed) {
-          // retrieves the material again (not optimal),
-          // though this is not time critical
-          const Material matr = mProperties->material();
-          mInteraction.passedMaterial
-              = std::pair<Material, double>(matr, cThickness);
-          // record the material
-          result.materialInteractions.push_back(mInteraction);
+
+          // Apply the Energy loss
+          if (energyLoss) {
+            // Get the material
+            const Material& mat = mProperties.material();
+            // Calculate gamma
+            const double lgamma = E / m;
+            // Energy loss and straggling - per unit length
+            std::pair<double, double> eLoss
+                = ionisationloss(m, lbeta, lgamma, mat, 1. * units::_mm);
+            // Apply the energy loss
+            const double dEdl = state.stepping.navDir * eLoss.first;
+            const double dE   = mProperties.thickness() * dEdl;
+            // Check for energy conservation, and only apply momentum change
+            // when kinematically allowed
+            if (E + dE > m) {
+              // Calcuate the new momentum
+              const double newP = std::sqrt((E + dE) * (E + dE) - m * m);
+              // Record the deltaP
+              mInteraction.deltaP = p - newP;
+              // Update the state/momentum
+              state.stepping.p = std::copysign(newP, state.stepping.p);
+            }
+            // Transfer this into energy loss straggling and appply to
+            // covariance:
+            // do that even if you had not applied energy loss do to
+            // the kineamtic limit to catch the cases of deltE < MOP/MPV
+            if (state.stepping.covTransport) {
+              // Calculate the straggling
+              const double sigmaQoverP
+                  = mProperties.thickness() * eLoss.second / (lbeta * p * p);
+              // Save the material interaction
+              mInteraction.sigmaQoP2 = sigmaQoverP * sigmaQoverP;
+
+              // Good in any case for positive direction
+              if (state.stepping.navDir == forward) {
+                state.stepping.cov(eQOP, eQOP)
+                    += state.stepping.navDir * sigmaQoverP * sigmaQoverP;
+              } else {
+                // Check that covariance entry doesn't become neagive
+                double sEqop = state.stepping.cov(eQOP, eQOP);
+                if (sEqop > sigmaQoverP * sigmaQoverP) {
+                  state.stepping.cov(eQOP, eQOP)
+                      += state.stepping.navDir * sigmaQoverP * sigmaQoverP;
+                }
+              }
+            }
+          }
+
+          // This doesn't cost anything - do it regardless
+          result.materialInX0 += mProperties.thicknessInX0();
+          result.materialInL0 += mProperties.thicknessInL0();
+
+          // Record the material interaction if configured to do so
+          if (recordInteractions) {
+            mInteraction.position           = state.stepping.position();
+            mInteraction.direction          = state.stepping.direction();
+            mInteraction.materialProperties = mProperties;
+            mInteraction.pathCorrection     = pCorrection;
+            result.materialInteractions.push_back(std::move(mInteraction));
+          }
         }
       }
     }
@@ -289,4 +308,5 @@ private:
     }
   }
 };
-}
+
+}  // end of namespace Acts

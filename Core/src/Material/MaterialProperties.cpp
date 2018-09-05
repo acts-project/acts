@@ -13,10 +13,6 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include <climits>
 
-Acts::MaterialProperties::MaterialProperties() : m_material()
-{
-}
-
 Acts::MaterialProperties::MaterialProperties(float Xo,
                                              float Lo,
                                              float averageA,
@@ -37,27 +33,6 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
   , m_dInL0(material.L0() * material.L0() > 10e-10 ? thickness / material.L0()
                                                    : 0.)
 {
-}
-
-Acts::MaterialProperties::MaterialProperties(
-    const Acts::MaterialProperties& mprop)
-    = default;
-
-Acts::MaterialProperties*
-Acts::MaterialProperties::clone() const
-{
-  return new Acts::MaterialProperties(*this);
-}
-
-Acts::MaterialProperties&
-Acts::MaterialProperties::operator=(const Acts::MaterialProperties& mprop)
-{
-  if (this != &mprop) {
-    m_material = mprop.m_material;
-    m_dInX0    = mprop.m_dInX0;
-    m_dInL0    = mprop.m_dInL0;
-  }
-  return (*this);
 }
 
 Acts::MaterialProperties&
@@ -108,17 +83,22 @@ Acts::MaterialProperties::add(const Acts::MaterialProperties& mprop)
 std::ostream&
 Acts::operator<<(std::ostream& sl, const MaterialProperties& mprop)
 {
-  sl << "Acts::MaterialProperties: " << std::endl;
-  sl << "   - thickness/X0                          = " << mprop.thicknessInX0()
-     << std::endl;
-  sl << "   - thickness                       [mm]  = " << mprop.thickness()
-     << std::endl;
-  sl << "   - radiation length X0             [mm]  = " << mprop.averageX0()
-     << std::endl;
-  sl << "   - nuclear interaction length L0   [mm]  = " << mprop.averageL0()
-     << std::endl;
-  sl << "   - average material Z/A*rho [gram/mm^3]  = "
-     << mprop.zOverAtimesRho() << std::endl;
+  if (mprop) {
+    sl << "Acts::MaterialProperties: " << std::endl;
+    sl << "   - thickness/X0                          = "
+       << mprop.thicknessInX0() << std::endl;
+    sl << "   - thickness                       [mm]  = " << mprop.thickness()
+       << std::endl;
+    sl << "   - radiation length X0             [mm]  = " << mprop.averageX0()
+       << std::endl;
+    sl << "   - nuclear interaction length L0   [mm]  = " << mprop.averageL0()
+       << std::endl;
+    sl << "   - average material Z/A*rho [gram/mm^3]  = "
+       << mprop.zOverAtimesRho() << '\n';
+  } else {
+    sl << "Vaccum" << std::endl;
+  }
+
   /*  interface not finalized
   if (mprop.material().composition){
       sl << "   - material composition from " <<
