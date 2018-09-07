@@ -47,18 +47,18 @@ namespace Test {
     MaterialProperties d(0., 0., 0., 0., 0., 1.);
 
     // The average of twice the same material a should be a again
-    a.add(a);
+    a.average(a);
     BOOST_CHECK_EQUAL(a, a);
     // Adding material with 0 thickness should not change anything
-    a.add(c);
+    a.average(c);
     BOOST_CHECK_EQUAL(a, a);
     // Adding material with not material paramters (vacuum) should not change
     // anything
-    a.add(d);
+    a.average(d);
     BOOST_CHECK_EQUAL(a, a);
     // Adding material to no material paramters (vacuum) should give the added
     // material
-    d.add(a);
+    d.average(a);
     BOOST_CHECK_EQUAL(d, a);
   }
 }

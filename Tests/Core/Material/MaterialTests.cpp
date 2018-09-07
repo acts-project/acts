@@ -51,6 +51,8 @@ namespace Test {
     BOOST_CHECK_CLOSE(silicon.rho(),
                       0.002329 * au::_g / (au::_mm * au::_mm * au::_mm),
                       0.001);
+    BOOST_CHECK_CLOSE(
+        silicon.zOverAtimesRho(), 14. / 28.0855 * 0.002329, 0.0001);
 
     Material copiedSilicon(silicon);
     BOOST_TEST(silicon == copiedSilicon);

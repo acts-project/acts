@@ -30,7 +30,7 @@ public:
   /// Default Constructor - deleted
   BinnedSurfaceMaterial() = delete;
 
-  /// Explizit constructor with only full MaterialProperties,
+  /// Explicit constructor with only full MaterialProperties,
   /// for one-dimensional binning.
   ///
   /// The split factors:
@@ -47,7 +47,7 @@ public:
                         double                          splitFactor = 0.,
                         size_t                          entries     = 1);
 
-  /// Explizit constructor with only full MaterialProperties,
+  /// Explicit constructor with only full MaterialProperties,
   /// for two-dimensional binning.
   ///
   /// The split factors:

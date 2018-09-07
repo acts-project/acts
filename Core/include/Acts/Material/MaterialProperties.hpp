@@ -7,20 +7,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// MaterialProperties.h, Acts project
+// MaterialProperties.hpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-// Geometry module
-#include "Acts/Material/Material.hpp"
-// STD/STL
+
 #include <iostream>
+#include "Acts/Material/Material.hpp"
 
 namespace Acts {
 
 /// @class MaterialProperties
 ///
 /// Material with information associated to a thickness of material
+/// This class is targeted for surface based material description.
+/// A volume based material description is to be described by the
+/// Material class.
 ///
 /// the units are :
 ///  - thickness [mm] (only used for layer description)
@@ -58,10 +60,10 @@ public:
 
   /// Constructor - for different layers of Material
   ///
-  /// @param matLayers is the vector of pairs of material and associated
-  /// thickness
-  MaterialProperties(
-      const std::vector<std::pair<const Material, float>>& matLayers);
+  /// @param matLayers The vector of pairs of material and thickness
+  /// @param unitThickness Boolean to set compound is set to unit thickness
+  MaterialProperties(const std::vector<const MaterialProperties>& matLayers,
+                     bool unitThickness = true);
 
   /// Copy Constructor
   ///
@@ -108,7 +110,22 @@ public:
   bool
   operator!=(const MaterialProperties& mprop) const;
 
-  /// Add material properties
+  /// Scale to unit thickness
+  ///
+  /// A helper method to allows to scale a material property
+  /// for unphysical/blended material to a unit thickness of 1.
+  /// This is safe for energy loss and multiple scattering
+  /// application in the material integration
+  ///
+  /// Scaling to unit thickness changes:
+  /// - X0,L0,rho of the material
+  ///
+  /// Leaves intact:
+  /// - tInX0, tInL0, A, Z
+  void
+  scaleToUnitThickness();
+
+  /// Average material properties
   ///
   /// This method creates an averaged material properties out of the new and
   /// the present material properties according to the following formulas:
@@ -131,9 +148,9 @@ public:
   /// t...thickness, \f$x_0\f$...radiation length, \f$\Lambda_0\f$...interaction
   /// length, \f$\rho\f$...density, A...mass number, Z...atomic number
   ///
-  /// @param mprop are the material properties to be added
+  /// @param mprop are the material properties to be added in averaging
   void
-  add(const MaterialProperties& mprop);
+  average(const MaterialProperties& mprop);
 
   /// Boolean operator
   /// false indicates it's vacuum

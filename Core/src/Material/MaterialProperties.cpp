@@ -35,6 +35,43 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
 {
 }
 
+Acts::MaterialProperties::MaterialProperties(
+    const std::vector<const MaterialProperties>& matLayers,
+    bool                                         unitThickness)
+  : m_material(), m_dInX0(0.), m_dInL0(0.)
+{
+  double rho    = 0.;
+  double A      = 0.;
+  double Z      = 0.;
+  double X0     = 0.;
+  double L0     = 0.;
+  double totalT = 0.;
+
+  for (auto& mat : matLayers) {
+    // thickness in X0 and L0 are strictly additive
+    m_dInX0 += mat.thicknessInX0();
+    m_dInL0 += mat.thicknessInL0();
+    double t = mat.thickness();
+    double r = mat.averageRho();
+    totalT += t;
+    // density scales with thickness
+    rho += r * t;
+    // A/Z scale with thickness * density
+    A += mat.averageA() * r * t;
+    Z += mat.averageZ() * r * t;
+  }
+  // Now create the average
+  X0 = m_dInX0 / totalT;
+  L0 = m_dInL0 / totalT;
+  A /= rho;
+  Z /= rho;
+  rho /= totalT;
+
+  // set the material
+  m_material = Material(X0, L0, A, Z, rho);
+  if (unitThickness) scaleToUnitThickness();
+}
+
 Acts::MaterialProperties&
 Acts::MaterialProperties::operator*=(float scale)
 {
@@ -45,7 +82,20 @@ Acts::MaterialProperties::operator*=(float scale)
 }
 
 void
-Acts::MaterialProperties::add(const Acts::MaterialProperties& mprop)
+Acts::MaterialProperties::scaleToUnitThickness()
+{
+  // And 'condense to unit thickness' if configured
+  double t   = thickness();
+  double X0  = m_material.X0() / t;
+  double L0  = m_material.L0() / t;
+  double A   = m_material.A();
+  double Z   = m_material.Z();
+  double rho = m_material.rho() * t;
+  m_material = Material(X0, L0, A, Z, rho);
+}
+
+void
+Acts::MaterialProperties::average(const MaterialProperties& mprop)
 {
   if (!(*this)) {
     m_material = mprop.m_material;

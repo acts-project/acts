@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// HomogeneousSurfaceMaterial.h, Acts project
+// GridSurfaceMaterial.h, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -18,63 +18,62 @@
 
 namespace Acts {
 
-/// @class HomogeneousSurfaceMaterial
+/// @class GridSurfaceMaterial
 ///
 /// It extends the SurfaceMaterial base class and describes a simple homogeneous
 /// material descriptions
 
-class HomogeneousSurfaceMaterial : public SurfaceMaterial
+class GridSurfaceMaterial : public SurfaceMaterial
 {
 public:
   /// Default Constructor - defaulted
-  HomogeneousSurfaceMaterial() = default;
+  GridSurfaceMaterial() = default;
 
-  /// Explizit constructor
+  /// Explicit constructor
   ///
   /// @param full are the full material properties
   /// @param splitFactor is the split for pre/post update
-  HomogeneousSurfaceMaterial(const MaterialProperties& full,
-                             double                    splitFactor = 1.);
+  GridSurfaceMaterial(const MaterialProperties& full, double splitFactor = 1.);
 
   /// Copy Constructor
   ///
   /// @param hsm is the source material
-  HomogeneousSurfaceMaterial(const HomogeneousSurfaceMaterial& hsm) = default;
+  GridSurfaceMaterial(const GridSurfaceMaterial& hsm) = default;
 
   /// Copy Move Constructor
   ///
   /// @param hsm is the source material
-  HomogeneousSurfaceMaterial(HomogeneousSurfaceMaterial&& hsm) = default;
+  GridSurfaceMaterial(GridSurfaceMaterial&& hsm) = default;
 
   /// Destructor
-  ~HomogeneousSurfaceMaterial() override = default;
+  ~GridSurfaceMaterial() override = default;
 
   /// Assignment operator
   ///
   /// @param hsm is the source material
-  HomogeneousSurfaceMaterial&
-  operator=(const HomogeneousSurfaceMaterial& hsm)
+  GridSurfaceMaterial&
+  operator=(const GridSurfaceMaterial& hsm)
       = default;
 
   /// Assignment Move operator
   ///
   /// @param hsm is the source material
-  HomogeneousSurfaceMaterial&
-  operator=(HomogeneousSurfaceMaterial&& hsm)
+  GridSurfaceMaterial&
+  operator=(GridSurfaceMaterial&& hsm)
       = default;
 
   /// Scale operator
   /// - it is effectively a thickness scaling
   ///
   /// @param scale is the scale factor
-  HomogeneousSurfaceMaterial&
+  GridSurfaceMaterial&
   operator*=(double scale) final;
 
   /// Equality operator
   ///
   /// @param hsm is the source material
   bool
-  operator==(const HomogeneousSurfaceMaterial& hsm) const;
+  operator==(const GridSurfaceMaterial& hsm) const;
 
   /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
   ///
@@ -115,27 +114,26 @@ private:
 };
 
 inline const MaterialProperties&
-HomogeneousSurfaceMaterial::materialProperties(const Vector2D& /*lp*/) const
+GridSurfaceMaterial::materialProperties(const Vector2D& /*lp*/) const
 {
   return (m_fullMaterial);
 }
 
 inline const MaterialProperties&
-HomogeneousSurfaceMaterial::materialProperties(const Vector3D& /*gp*/) const
+GridSurfaceMaterial::materialProperties(const Vector3D& /*gp*/) const
 {
   return (m_fullMaterial);
 }
 
 inline const MaterialProperties&
-    HomogeneousSurfaceMaterial::materialProperties(size_t /*ib0*/,
-                                                   size_t /*ib1*/) const
+    GridSurfaceMaterial::materialProperties(size_t /*ib0*/,
+                                            size_t /*ib1*/) const
 {
   return (m_fullMaterial);
 }
 
 inline bool
-HomogeneousSurfaceMaterial::
-operator==(const HomogeneousSurfaceMaterial& hsm) const
+GridSurfaceMaterial::operator==(const GridSurfaceMaterial& hsm) const
 {
   return (m_fullMaterial == hsm.m_fullMaterial);
 }

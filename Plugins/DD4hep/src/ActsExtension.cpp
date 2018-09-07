@@ -44,7 +44,7 @@ Acts::ActsExtension::ActsExtension(
 {
   Acts::MaterialProperties matprop;
   for (auto& mat : materials) {
-    matprop.add(
+    matprop.average(
         MaterialProperties(mat.first.radLength() * units::_cm,
                            mat.first.intLength() * units::_cm,
                            mat.first.A(),

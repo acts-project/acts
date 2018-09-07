@@ -70,8 +70,7 @@ public:
            MaterialComposition imc = {})
     : m_store({iX0, iL0, iA, iZ, iRho}), m_composition(imc)
   {
-    float zOaTr = (iA > 0 ? iZ / iA * iRho : 0.);
-    m_store.resize(6);
+    float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
     m_store.push_back(zOaTr);
   }
 
@@ -101,6 +100,18 @@ public:
 
   /// @brief Desctructor
   ~Material() = default;
+
+  /// @brief Equality operator
+  ///
+  /// @param mat is the source material
+  bool
+  operator==(const Material& mat) const;
+
+  /// @brief Inequality operator
+  ///
+  /// @param mat is the source material
+  bool
+  operator!=(const Material& mat) const;
 
   /// @brief Boolean operator to check if this is
   /// vacuum has 0 zero size and will indicate false
@@ -192,4 +203,16 @@ private:
   /// optional composition parameter
   MaterialComposition m_composition = MaterialComposition();
 };
+
+inline bool
+Material::operator==(const Material& mat) const
+{
+  return (m_store == mat.m_store && m_composition == mat.m_composition);
+}
+
+inline bool
+Material::operator!=(const Material& mat) const
+{
+  return !operator==(mat);
+}
 }
