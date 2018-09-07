@@ -55,9 +55,7 @@ namespace Test {
     MaterialProperties b(2., 4., 6., 8., 10., 2.);
     MaterialProperties c(4., 8., 12., 16., 20., 3.);
 
-    std::vector<const MaterialProperties> compound = {{
-        a, b, c,
-    }};
+    std::vector<MaterialProperties> compound = {{a, b, c}};
 
     /// Thickness is scaled to unit here
     MaterialProperties abc(compound, true);

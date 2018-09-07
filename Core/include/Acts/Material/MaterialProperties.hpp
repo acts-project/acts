@@ -62,7 +62,7 @@ public:
   ///
   /// @param matLayers The vector of pairs of material and thickness
   /// @param unitThickness Boolean to set compound is set to unit thickness
-  MaterialProperties(const std::vector<const MaterialProperties>& matLayers,
+  MaterialProperties(const std::vector<MaterialProperties>& matLayers,
                      bool unitThickness = true);
 
   /// Copy Constructor

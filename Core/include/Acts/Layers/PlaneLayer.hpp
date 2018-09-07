@@ -19,6 +19,7 @@
 namespace Acts {
 
 class ApproachDescriptor;
+
 /// @class PlaneLayer
 ///
 /// Class to describe a planar detector layer for tracking,

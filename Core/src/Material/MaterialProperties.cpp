@@ -36,8 +36,8 @@ Acts::MaterialProperties::MaterialProperties(const Material& material,
 }
 
 Acts::MaterialProperties::MaterialProperties(
-    const std::vector<const MaterialProperties>& matLayers,
-    bool                                         unitThickness)
+    const std::vector<MaterialProperties>& matLayers,
+    bool                                   unitThickness)
   : m_material(), m_dInX0(0.), m_dInL0(0.)
 {
   double rho    = 0.;

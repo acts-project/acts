@@ -27,8 +27,6 @@
 namespace Acts {
 
 class Surface;
-class SurfaceMaterial;
-class MaterialProperties;
 class BinUtility;
 class Volume;
 class VolumeBounds;
@@ -61,9 +59,8 @@ enum LayerType { navigation = -1, passive = 0, active = 1 };
 ///
 /// A SurfaceArray of Surfaces holding the actual detector elements or
 /// subSurfaces.
-/// - SurfaceMaterial for Surface-based materialUpdates
-/// - a pointer to the TrackingVolume (can only be set by such)
-/// - an active/passive code :
+/// A pointer to the TrackingVolume (can only be set by such)
+/// An active/passive code :
 /// 0      - activ
 /// 1      - passive
 /// [....] - other

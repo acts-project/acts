@@ -37,7 +37,6 @@ namespace Acts {
 ///  Z - nuclear number
 ///  rho - density
 ///  Z/A*rho
-
 class Material
 {
 public:
@@ -76,12 +75,12 @@ public:
 
   /// @brief Copy Constructor
   ///
-  /// @param material copy constructor
+  /// @param mat copy constructor
   Material(const Material& mat) = default;
 
   /// @brief Copy Move constructor
   ///
-  /// @param material copy constructor
+  /// @param  mat copy constructor
   Material(Material&& mat) = default;
 
   /// @brief Assignment operator

@@ -98,6 +98,6 @@ public:
   }
 
 private:
-  std::vector<ElementFraction> m_elements;
+  std::vector<ElementFraction> m_elements = {};
 };
 }

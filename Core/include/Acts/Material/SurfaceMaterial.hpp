@@ -169,6 +169,4 @@ SurfaceMaterial::materialProperties(const Vector3D&     gp,
   return plainMatProp;
 }
 
-using IndexedSurfaceMaterial = std::pair<GeometryID, SurfaceMaterial*>;
-
 }  // namespace

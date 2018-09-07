@@ -29,7 +29,7 @@ public:
   /// Default Constructor - defaulted
   HomogeneousSurfaceMaterial() = default;
 
-  /// Explizit constructor
+  /// Explicit constructor
   ///
   /// @param full are the full material properties
   /// @param splitFactor is the split for pre/post update
