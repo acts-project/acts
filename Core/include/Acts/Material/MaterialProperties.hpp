@@ -37,6 +37,10 @@ public:
   /// Default Constructor
   MaterialProperties() = default;
 
+  /// Constructor - for empty material (vacuum step)
+  /// @param thickness is the thickness of the material
+  MaterialProperties(float thickness);
+
   /// Constructor - for averaged material
   ///
   /// @param Xo is the radiation length in mm
@@ -125,33 +129,6 @@ public:
   void
   scaleToUnitThickness();
 
-  /// Average material properties
-  ///
-  /// This method creates an averaged material properties out of the new and
-  /// the present material properties according to the following formulas:
-  ///
-  /// \f[
-  ///	\frac{t}{x_0} = \sum_{i=1}^n \frac{t_i}{x_i}
-  /// \f]
-  /// \f[
-  ///	\frac{t}{\Lambda_0} = \sum_{i=1}^n \frac{t_i}{\Lambda_i}
-  /// \f]
-  /// \f[
-  ///	\rho = \frac{\sum_{i=1}^n t_i \rho_i}{\sum_{i=1}^n t_i}
-  /// \f]
-  /// \f[
-  ///	A = \frac{\sum_{i=1}^n \rho_i A_i}{\sum_{i=1}^n \rho_i}
-  /// \f]
-  /// \f[
-  ///	Z = \frac{\sum_{i=1}^n \rho_i Z_i}{\sum_{i=1}^n \rho_i}
-  /// \f]
-  /// t...thickness, \f$x_0\f$...radiation length, \f$\Lambda_0\f$...interaction
-  /// length, \f$\rho\f$...density, A...mass number, Z...atomic number
-  ///
-  /// @param mprop are the material properties to be added in averaging
-  void
-  average(const MaterialProperties& mprop);
-
   /// Boolean operator
   /// false indicates it's vacuum
   operator bool() const { return bool(m_material); }
@@ -198,9 +175,10 @@ public:
   zOverAtimesRho() const;
 
 protected:
-  Material m_material = Material();  //!< the material
-  float    m_dInX0{0.};              //!< thickness in units of radiation length
-  float    m_dInL0{0.};  //!< thickness in units of nuclear interaction length
+  Material m_material{};     //!< the material description
+  float    m_thickness{0.};  //!< the thickness of material
+  float    m_dInX0{0.};      //!< thickness in units of radiation length
+  float    m_dInL0{0.};      //!< thickness in units of nucl. interaction length
 };
 
 inline const Material&
@@ -224,7 +202,7 @@ MaterialProperties::thicknessInL0() const
 inline float
 MaterialProperties::thickness() const
 {
-  return m_dInX0 * m_material.X0();
+  return m_thickness;
 }
 
 inline float

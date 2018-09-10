@@ -113,31 +113,18 @@ namespace Test {
 
     BOOST_TEST(mat != halfMat);
     BOOST_TEST(halfMat == halfScaled);
+
+    // this means half the scattering
+    BOOST_CHECK_CLOSE(
+        mat.thicknessInX0(), 2. * halfMat.thicknessInX0(), 0.0001);
+    BOOST_CHECK_CLOSE(
+        mat.thicknessInL0(), 2. * halfMat.thicknessInL0(), 0.0001);
+
+    // and half the energy loss, given
+    BOOST_CHECK_CLOSE(mat.thickness() * mat.averageRho(),
+                      2. * halfMat.thickness() * halfMat.averageRho(),
+                      0.0001);
   }
 
-  /// Test the averaging
-  BOOST_AUTO_TEST_CASE(MaterialProperties_averaging_test)
-  {
-
-    MaterialProperties a(1., 2., 3., 4., 5., 1.);
-    MaterialProperties b(2., 4., 6., 8., 10., 1.);
-    MaterialProperties c(1., 2., 3., 4., 5., 0.);
-    MaterialProperties d(0., 0., 0., 0., 0., 1.);
-
-    // The average of twice the same material a should be a again
-    a.average(a);
-    BOOST_CHECK_EQUAL(a, a);
-    // Adding material with 0 thickness should not change anything
-    a.average(c);
-    BOOST_CHECK_EQUAL(a, a);
-    // Adding material with not material paramters (vacuum) should not change
-    // anything -> not true
-    a.average(d);
-    BOOST_CHECK_EQUAL(a, a);
-    // Adding material to no material paramters (vacuum) should give the added
-    // material
-    d.average(a);
-    BOOST_CHECK_EQUAL(d, a);
-  }
-}
-}
+}  // namespace Test
+}  // namespace Acts

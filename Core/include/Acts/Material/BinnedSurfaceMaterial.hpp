@@ -44,8 +44,7 @@ public:
   /// @param entries is the (optional) number of mapping entries
   BinnedSurfaceMaterial(const BinUtility&               binUtility,
                         const MaterialPropertiesVector& fullProperties,
-                        double                          splitFactor = 0.,
-                        size_t                          entries     = 1);
+                        double                          splitFactor = 0.);
 
   /// Explicit constructor with only full MaterialProperties,
   /// for two-dimensional binning.
@@ -61,8 +60,7 @@ public:
   /// @param entries is the (optional) number of mapping entries
   BinnedSurfaceMaterial(const BinUtility&               binUtility,
                         const MaterialPropertiesMatrix& fullProperties,
-                        double                          splitFactor = 0.,
-                        size_t                          entries     = 1);
+                        double                          splitFactor = 0.);
 
   /// Copy Move Constructor
   ///
@@ -113,11 +111,6 @@ public:
   const MaterialProperties&
   materialProperties(size_t bin0, size_t bin1) const final;
 
-  /// @brief Access to the entries
-  /// this is needed for averageing maps
-  size_t
-  entries() const;
-
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream&
   dump(std::ostream& sl) const final;
@@ -129,8 +122,6 @@ private:
   /// The five different MaterialProperties
   MaterialPropertiesMatrix m_fullMaterial;
 
-  /// The number of entries used
-  size_t m_entries;
 };
 
 inline const BinUtility&
@@ -151,9 +142,4 @@ BinnedSurfaceMaterial::materialProperties(size_t bin0, size_t bin1) const
   return m_fullMaterial[bin1][bin0];
 }
 
-inline size_t
-BinnedSurfaceMaterial::entries() const
-{
-  return m_entries;
-}
 }
