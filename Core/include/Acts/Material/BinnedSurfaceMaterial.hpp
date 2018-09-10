@@ -121,7 +121,6 @@ private:
 
   /// The five different MaterialProperties
   MaterialPropertiesMatrix m_fullMaterial;
-
 };
 
 inline const BinUtility&
@@ -141,5 +140,4 @@ BinnedSurfaceMaterial::materialProperties(size_t bin0, size_t bin1) const
 {
   return m_fullMaterial[bin1][bin0];
 }
-
 }
