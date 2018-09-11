@@ -9,6 +9,7 @@
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include <list>
 #include <stdexcept>
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
@@ -327,7 +328,8 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
     bplConfig.centralLayerRadii   = std::vector<double>(1, 0.5 * (rMax + rMin));
     bplConfig.centralLayerHalflengthZ = std::vector<double>(1, halfZ);
     bplConfig.centralLayerThickness = std::vector<double>(1, fabs(rMax - rMin));
-    bplConfig.centralLayerMaterial  = {bpMaterial};
+    bplConfig.centralLayerMaterial
+        = {std::make_shared<const HomogeneousSurfaceMaterial>(bpMaterial)};
     auto beamPipeBuilder = std::make_shared<const Acts::PassiveLayerBuilder>(
         bplConfig, Acts::getDefaultLogger(subDetector.name(), loggingLevel));
 

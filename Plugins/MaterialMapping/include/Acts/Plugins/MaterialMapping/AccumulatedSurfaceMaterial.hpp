@@ -95,6 +95,14 @@ public:
   void
   assign(const Vector3D& gp, const MaterialProperties& mp);
 
+  /// Assign a material properites object
+  ///
+  /// @param gp local position for the bin assignment
+  /// @param mps Vector of recorded material properties to be assigned
+  void
+  assign(const Vector3D& gp,
+         const std::vector<std::pair<MaterialProperties, Vector3D>>&);
+
   /// Average the information accumulated during one event
   /// using the event weights
   void

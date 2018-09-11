@@ -59,6 +59,24 @@ Acts::AccumulatedSurfaceMaterial::assign(const Vector3D&           gp,
   }
 }
 
+// Assign a vector of material properites object
+void
+Acts::AccumulatedSurfaceMaterial::assign(
+    const Vector3D& gp,
+    const std::vector<std::pair<MaterialProperties, Vector3D>>& mps)
+{
+  if (m_binUtility.dimensions() == 0) {
+    for (auto mp : mps) {
+      m_accumulatedMaterial[0][0] += mp.first;
+    }
+  } else {
+    std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
+    for (auto mp : mps) {
+      m_accumulatedMaterial[bTriple[1]][bTriple[0]] += mp.first;
+    }
+  }
+}
+
 // Average the information accumulated during one event
 void
 Acts::AccumulatedSurfaceMaterial::eventAverage()

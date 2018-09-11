@@ -65,54 +65,35 @@ namespace Test {
     abc += c;
     abc.eventAverage();
 
-    // Copy before averaging
-    AccumulatedMaterialProperties abcCopy(abc);
-
     // Now get back the total average - without unit thickness
-    auto averageAbc = abc.totalAverage(false);
-
-    // Now get back the total average - with unit thickness
-    auto averageAbcUnit = abcCopy.totalAverage(true);
+    auto averageAbc = abc.totalAverage();
 
     // Both should have one event
     BOOST_CHECK_EQUAL(averageAbc.second, 1);
-    BOOST_CHECK_EQUAL(averageAbcUnit.second, 1);
+    auto mpAbc = averageAbc.first;
 
-    auto mpAbc     = averageAbc.first;
-    auto mpAbcUnit = averageAbcUnit.first;
-
-    // The material properties are different
-    BOOST_CHECK(mpAbc != mpAbcUnit);
-
-    // Both should have the same amount of material
-    BOOST_CHECK_CLOSE(mpAbc.thicknessInX0(), mpAbcUnit.thicknessInX0(), 0.0001);
-    BOOST_CHECK_CLOSE(mpAbc.thicknessInL0(), mpAbcUnit.thicknessInL0(), 0.0001);
-
+    // Thickness must be one for mapping
+    // Thickness in X0 is additive
+    BOOST_CHECK_CLOSE(mpAbc.thickness(), 1., 0.0001);
     // A/Z should be 0.5 roughly for both
     BOOST_CHECK_CLOSE(mpAbc.averageZ() / mpAbc.averageA(), 0.5, 0.0001);
-    BOOST_CHECK_CLOSE(mpAbcUnit.averageZ() / mpAbcUnit.averageA(), 0.5, 0.0001);
-
-    // Some value checks
     // Thickness in X0 is additive
-    BOOST_CHECK_CLOSE(mpAbcUnit.thicknessInX0(),
+    BOOST_CHECK_CLOSE(mpAbc.thicknessInX0(),
                       a.thicknessInX0() + b.thicknessInX0() + c.thicknessInX0(),
                       0.0001);
-
-    BOOST_CHECK_CLOSE(mpAbcUnit.thickness() / mpAbcUnit.averageX0(),
-                      mpAbcUnit.thicknessInX0(),
-                      0.0001);
-
-    BOOST_CHECK_CLOSE(mpAbcUnit.thicknessInL0(),
+    // Consistency check : X0
+    BOOST_CHECK_CLOSE(
+        mpAbc.thickness() / mpAbc.averageX0(), mpAbc.thicknessInX0(), 0.0001);
+    // Consistency check : L0
+    BOOST_CHECK_CLOSE(mpAbc.thicknessInL0(),
                       a.thicknessInL0() + b.thicknessInL0() + c.thicknessInL0(),
                       0.0001);
-
     // The density scales with the thickness then
-    BOOST_CHECK_CLOSE(mpAbc.averageRho(),
-                      (a.thickness() * a.averageRho()
-                       + b.thickness() * b.averageRho()
-                       + c.thickness() * c.averageRho())
-                          / (a.thickness() + b.thickness() + c.thickness()),
-                      0.0001);
+    double rhoTmapped = mpAbc.averageRho() * mpAbc.thickness();
+    double rhoTadded
+        = (a.thickness() * a.averageRho() + b.thickness() * b.averageRho()
+           + c.thickness() * c.averageRho());
+    BOOST_CHECK_CLOSE(rhoTmapped, rhoTadded, 0.0001);
   }
 
   /// Test the total averaging behavior
@@ -130,7 +111,7 @@ namespace Test {
     aa.eventAverage();
     aa += a;
     aa.eventAverage();
-    auto averageAA = aa.totalAverage(true);
+    auto averageAA = aa.totalAverage();
 
     BOOST_CHECK_EQUAL(a, averageAA.first);
     BOOST_CHECK_EQUAL(2, averageAA.second);
@@ -147,7 +128,7 @@ namespace Test {
     av.eventAverage();
     av += v;
     av.eventAverage();
-    auto averageAV = av.totalAverage(true);
+    auto averageAV = av.totalAverage();
     auto matAV     = averageAV.first;
 
     BOOST_CHECK_EQUAL(halfA.thicknessInX0(), matAV.thicknessInX0());
@@ -167,7 +148,7 @@ namespace Test {
     aa3.eventAverage();
     aa3 += a3;
     aa3.eventAverage();
-    auto averageAA3 = aa3.totalAverage(true);
+    auto averageAA3 = aa3.totalAverage();
     auto matAA3     = averageAA3.first;
 
     BOOST_CHECK_EQUAL(doubleA.thicknessInX0(), matAA3.thicknessInX0());
@@ -187,7 +168,7 @@ namespace Test {
     aa3v.eventAverage();
     aa3v += v;
     aa3v.eventAverage();
-    auto averageAA3V = aa3v.totalAverage(true);
+    auto averageAA3V = aa3v.totalAverage();
     auto matAA3V     = averageAA3V.first;
 
     BOOST_CHECK_CLOSE(4. / 3., matAA3V.thicknessInX0(), 0.00001);
@@ -201,7 +182,7 @@ namespace Test {
     a4v.eventAverage();
     a4v += v;
     a4v.eventAverage();
-    auto averageA4V = a4v.totalAverage(true);
+    auto averageA4V = a4v.totalAverage();
     auto matA4V     = averageA4V.first;
 
     BOOST_CHECK_CLOSE(doubleA.thicknessInX0(), matA4V.thicknessInX0(), 0.00001);

@@ -63,7 +63,7 @@ namespace Test {
     // get the single matrix
     auto accMat0D     = material0D.accumulatedMaterial();
     auto accMatProp0D = accMat0D[0][0];
-    auto matProp0D    = accMatProp0D.totalAverage(true);
+    auto matProp0D    = accMatProp0D.totalAverage();
 
     BOOST_TEST(matProp0D.second == 2);
     BOOST_TEST(matProp0D.first.thicknessInX0() == two.thicknessInX0());
@@ -105,10 +105,10 @@ namespace Test {
     // get the single matrix
     auto accMat2D = material2D.accumulatedMaterial();
     // the accumulated properties
-    auto accMatProp00 = accMat2D[0][0].totalAverage(true);
-    auto accMatProp01 = accMat2D[0][1].totalAverage(true);
-    auto accMatProp10 = accMat2D[1][0].totalAverage(true);
-    auto accMatProp11 = accMat2D[1][1].totalAverage(true);
+    auto accMatProp00 = accMat2D[0][0].totalAverage();
+    auto accMatProp01 = accMat2D[0][1].totalAverage();
+    auto accMatProp10 = accMat2D[1][0].totalAverage();
+    auto accMatProp11 = accMat2D[1][1].totalAverage();
 
     BOOST_TEST(accMatProp00.second == 1);
     BOOST_TEST(accMatProp01.second == 2);

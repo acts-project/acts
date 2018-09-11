@@ -7,83 +7,132 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///  Boost include(s)
-#define BOOST_TEST_MODULE MaterialMapper Tests
+#define BOOST_TEST_MODULE SurfaceMaterialMapper Tests
 #include <boost/test/included/unit_test.hpp>
-#include <climits>
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Plugins/MaterialMapping/AssignedMaterialSteps.hpp"
-#include "Acts/Plugins/MaterialMapping/MaterialMapper.hpp"
-#include "Acts/Plugins/MaterialMapping/MaterialStep.hpp"
+#include "Acts/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Plugins/MaterialMapping/SurfaceMaterialMapper.hpp"
+#include "Acts/Tools/CylinderVolumeBuilder.hpp"
+#include "Acts/Tools/CylinderVolumeHelper.hpp"
+#include "Acts/Tools/LayerArrayCreator.hpp"
+#include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Tools/PassiveLayerBuilder.hpp"
+#include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 namespace Acts {
 
+/// @brief create a small tracking geometry to map some dummy material on
+std::shared_ptr<const TrackingGeometry>
+trackingGeometry()
+{
+
+  BinUtility zbinned(8, -40, 40, open, binZ);
+  auto       matProxy = std::make_shared<const SurfaceMaterialProxy>(zbinned);
+
+  Logging::Level surfaceLLevel = Logging::INFO;
+  Logging::Level layerLLevel   = Logging::INFO;
+  Logging::Level volumeLLevel  = Logging::INFO;
+
+  // configure surface array creator
+  auto surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>(
+      getDefaultLogger("SurfaceArrayCreator", surfaceLLevel));
+  // configure the layer creator that uses the surface array creator
+  LayerCreator::Config lcConfig;
+  lcConfig.surfaceArrayCreator = surfaceArrayCreator;
+  auto layerCreator            = std::make_shared<const LayerCreator>(
+      lcConfig, getDefaultLogger("LayerCreator", layerLLevel));
+  // configure the layer array creator
+  auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(
+      getDefaultLogger("LayerArrayCreator", layerLLevel));
+
+  // tracking volume array creator
+  auto tVolumeArrayCreator = std::make_shared<const TrackingVolumeArrayCreator>(
+      getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
+  // configure the cylinder volume helper
+  CylinderVolumeHelper::Config cvhConfig;
+  cvhConfig.layerArrayCreator          = layerArrayCreator;
+  cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
+  auto cylinderVolumeHelper = std::make_shared<const CylinderVolumeHelper>(
+      cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
+
+  PassiveLayerBuilder::Config layerBuilderConfig;
+  layerBuilderConfig.layerIdentification     = "CentralBarrel";
+  layerBuilderConfig.centralLayerRadii       = {10., 20., 30.};
+  layerBuilderConfig.centralLayerHalflengthZ = {40., 40., 40.};
+  layerBuilderConfig.centralLayerThickness   = {1., 1., 1.};
+  layerBuilderConfig.centralLayerMaterial    = {matProxy, matProxy, matProxy};
+  auto layerBuilder = std::make_shared<const PassiveLayerBuilder>(
+      layerBuilderConfig,
+      getDefaultLogger("CentralBarrelBuilder", layerLLevel));
+  // create the volume for the beam pipe
+  CylinderVolumeBuilder::Config cvbConfig;
+  cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
+  cvbConfig.volumeName           = "BeamPipe";
+  cvbConfig.layerBuilder         = layerBuilder;
+  cvbConfig.layerEnvelopeR       = {1. * units::_mm, 1. * units::_mm};
+  cvbConfig.buildToRadiusZero    = true;
+  cvbConfig.volumeSignature      = 0;
+  auto centralVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
+      cvbConfig, getDefaultLogger("CentralVolumeBuilder", volumeLLevel));
+
+  // create the bounds and the volume
+  auto centralVolumeBounds
+      = std::make_shared<const CylinderVolumeBounds>(0., 40., 110.);
+
+  auto centralVolume
+      = centralVolumeBuilder->trackingVolume(nullptr, centralVolumeBounds);
+
+  return std::make_shared<const TrackingGeometry>(centralVolume);
+}
+
+std::shared_ptr<const TrackingGeometry> tGeometry = trackingGeometry();
+
 namespace Test {
 
-  BOOST_AUTO_TEST_CASE(MaterialStepAssignment_test)
+  /// Test the filling and conversion
+  BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests)
   {
 
-    double s2 = 1. / sqrt(2.);
-    /// (a) detector
-    ///
-    /// our detector is 2-dimensional only here
-    /// we create a simple 4 surface detector
-    std::vector<size_t> assignID = {1, 2, 3, 4, 5};
-    /// These are our detector positions, they are in r
-    std::vector<double>   assignPos = {30., 50.5, 75., 100.5, 300.5};
-    std::vector<Vector3D> detPositions;
-    for (auto& ap : assignPos) {
-      detPositions.push_back(Vector3D(s2 * ap, s2 * ap, 0.));
-    }
-    /// quick check on length
-    BOOST_CHECK_EQUAL(5ul, detPositions.size());
-    /// now create the assigned steps
-    std::vector<AssignedMaterialSteps> assignedStepsVector;
-    for (size_t ias = 0; ias < detPositions.size(); ++ias) {
-      assignedStepsVector.push_back(
-          AssignedMaterialSteps(assignID[ias], detPositions[ias]));
-    }
+    /// We need a Navigator, Stepper to build a Propagator
+    Navigator                                     navigator(tGeometry);
+    StraightLineStepper                           stepper;
+    SurfaceMaterialMapper::StraightLinePropagator propagator(
+        std::move(stepper), std::move(navigator));
 
-    ///
-    /// (b) material
-    /// now these are the mapped material values,
-    /// they go from 20 t0 350 in steps of 1
-    std::vector<MaterialStep> materialSteps;
-    materialSteps.reserve(350);
-    /// and always have the same material
-    MaterialProperties materialPerStep(100., 33., 12., 6., 0.0232, 1.);
-    /// fill them - we ignore 61 to 90 (there's no material there)
-    for (size_t is = 20; is < 351; ++is) {
-      // continue if you are in the material free region of our detector
-      if (is > 60 && is < 91) {
-        continue;
-      }
-      // otherwise create
-      materialSteps.push_back(
-          MaterialStep(materialPerStep, Vector3D(s2 * is, s2 * is, 0.)));
-    }
-    /// quick check on length
-    BOOST_CHECK_EQUAL(301ul, materialSteps.size());
+    /// The config object
+    SurfaceMaterialMapper::Config smmConfig;
+    SurfaceMaterialMapper         smMapper(smmConfig, std::move(propagator));
 
-    /// create material mapping
-    MaterialMapper::Config mapperConf;
-    mapperConf.extrapolationEngine = nullptr;
-    auto materialMapper            = std::make_shared<const MaterialMapper>(
-        mapperConf, Acts::getDefaultLogger("MaterialMapper", Logging::VERBOSE));
+    /// Now create the mapper state
+    auto mState = smMapper.createState(*tGeometry);
 
-    /// now call the assignment function
-    materialMapper->assignSteps(materialSteps, assignedStepsVector);
+    /// Test if this is not null
+    BOOST_TEST(mState.accumulatedMaterial.size() == 3);
 
-    /// the first one should have
-    // 20 to 40
-    BOOST_CHECK_EQUAL(21ul, assignedStepsVector[0].assignedSteps.size());
-    /// 41 to 60
-    BOOST_CHECK_EQUAL(20ul, assignedStepsVector[1].assignedSteps.size());
-    /// None
-    BOOST_CHECK_EQUAL(0ul, assignedStepsVector[2].assignedSteps.size());
-    /// 91 to 200
-    BOOST_CHECK_EQUAL(110ul, assignedStepsVector[3].assignedSteps.size());
-    /// 201 to 350
-    BOOST_CHECK_EQUAL(150ul, assignedStepsVector[4].assignedSteps.size());
+    // material properties
+    MaterialProperties a(1., 1., 1., 1., 1., 1.);
+    // and vacuum
+    MaterialProperties v(1.);
+
+    // we shoot under an angle of
+    double cotan_theta_03_13_24 = 1.25 / 3.;
+    // path scaled material
+    MaterialProperties a_theta_03_13_24(a);
+    a *= 1. / sin(atan2(3, 1.25));
+    RecordedMaterialProperties m03{a, Vector3D(1., 0., cotan_theta_03_13_24)};
+    RecordedMaterialProperties m13{a,
+                                   Vector3D(2., 0., 2 * cotan_theta_03_13_24)};
+    RecordedMaterialProperties m24{a,
+                                   Vector3D(2., 0., 2 * cotan_theta_03_13_24)};
+    std::vector<RecordedMaterialProperties> rmps = {m03, m13, m24};
+
+    RecordedMaterialTrack rmt(
+        Vector3D(0., 0., 0.), m03.second.normalized(), rmps);
+
+    smMapper.mapMaterialTrack(mState, rmt);
   }
 
 }  // namespace Test

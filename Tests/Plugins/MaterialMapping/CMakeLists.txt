@@ -10,3 +10,9 @@ target_link_libraries(AccumulatedSurfaceMaterialTests PRIVATE ActsCore ActsMater
 add_test (NAME AccumulatedSurfaceMaterialUnitTest COMMAND AccumulatedSurfaceMaterialTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST AccumulatedSurfaceMaterialUnitTest TARGETS AccumulatedSurfaceMaterialTests)
 
+add_executable (SurfaceMaterialMapperTests SurfaceMaterialMapperTests.cpp)
+target_include_directories (SurfaceMaterialMapperTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries(SurfaceMaterialMapperTests PRIVATE ActsCore ActsMaterialMappingPlugin)
+add_test (NAME SurfaceMaterialMapperUnitTest COMMAND SurfaceMaterialMapperTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST SurfaceMaterialMapperUnitTest TARGETS SurfaceMaterialMapperTests)
+

@@ -38,28 +38,5 @@ namespace Test {
     /// Check if they are equal
     BOOST_CHECK_EQUAL(a, bMovedAssigned);
   }
-
-  BOOST_AUTO_TEST_CASE(MaterialProperties_adding_test)
-  {
-
-    MaterialProperties a(1., 2., 3., 4., 5., 6.);
-    MaterialProperties c(1., 2., 3., 4., 5., 0.);
-    MaterialProperties d(0., 0., 0., 0., 0., 1.);
-
-    // The average of twice the same material a should be a again
-    a.average(a);
-    BOOST_CHECK_EQUAL(a, a);
-    // Adding material with 0 thickness should not change anything
-    a.average(c);
-    BOOST_CHECK_EQUAL(a, a);
-    // Adding material with not material paramters (vacuum) should not change
-    // anything
-    a.average(d);
-    BOOST_CHECK_EQUAL(a, a);
-    // Adding material to no material paramters (vacuum) should give the added
-    // material
-    d.average(a);
-    BOOST_CHECK_EQUAL(d, a);
-  }
 }
 }

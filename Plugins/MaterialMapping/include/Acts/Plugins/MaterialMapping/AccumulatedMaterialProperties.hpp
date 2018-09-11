@@ -27,6 +27,8 @@ namespace Acts {
 ///   during an event
 /// - the total store colles accumulated material properties
 ///   of the run
+///
+/// The averaging is always done to unit thickness
 class AccumulatedMaterialProperties
 {
 
@@ -75,8 +77,11 @@ public:
 
   /// Average the information accumulated during one event
   /// using the event weights
+  ///
+  /// @param pathCorrection is the incident angle correction
+  /// to project back to normal incident
   void
-  eventAverage();
+  eventAverage(double pathCorrection = 1.);
 
   /// Average the information accumulated during the entire
   /// mapping process
@@ -88,22 +93,22 @@ public:
   /// The latter can be used when parallelising the mapping
   /// to several jobs
   ///
-  /// @param unitThickness sets the material to unit thickness
   std::pair<MaterialProperties, unsigned int>
-  totalAverage(bool unitThickness = true);
+  totalAverage();
 
 private:
-  double m_eventA{0.};     //!< event: accumulate the contribution to A
-  double m_eventZ{0.};     //!< event: accumulate the contribution to Z
-  double m_eventRho{0.};   //!< event: accumulate the contribution to rho
-  double m_eventPath{0.};  //!< event: the event path for normalisation
+  double m_eventPathInX0{0.};  //!< event: accumulate the thickness in X0
+  double m_eventPathInL0{0.};  //!< event: accumulate the thickness in L0
+  double m_eventA{0.};         //!< event: accumulate the contribution to A
+  double m_eventZ{0.};         //!< event: accumulate the contribution to Z
+  double m_eventRho{0.};       //!< event: accumulate the contribution to rho
+  double m_eventPath{0.};      //!< event: the event path for normalisation
 
   double m_totalPathInX0{0.};  //!< total: accumulate the thickness in X0
   double m_totalPathInL0{0.};  //!< total: accumulate the thickness in L0
   double m_totalA{0.};         //!< total: accumulate the contribution to A
   double m_totalZ{0.};         //!< total: accumulate the contribution to Z
   double m_totalRho{0.};       //!< total: accumulate the contribution to rho
-  double m_totalPath{0.};      //!< total: the event path for normalisation
 
   unsigned int m_totalEvents{0};  //!< the number of events
 };
@@ -111,9 +116,8 @@ private:
 inline void
 AccumulatedMaterialProperties::operator+=(const MaterialProperties& amp)
 {
-  m_totalPathInX0 += amp.thicknessInX0();
-  m_totalPathInL0 += amp.thicknessInL0();
-
+  m_eventPathInX0 += amp.thicknessInX0();
+  m_eventPathInL0 += amp.thicknessInL0();
   double t = amp.thickness();
   double r = amp.averageRho();
   m_eventPath += t;
@@ -124,27 +128,31 @@ AccumulatedMaterialProperties::operator+=(const MaterialProperties& amp)
 }
 
 inline void
-AccumulatedMaterialProperties::eventAverage()
+AccumulatedMaterialProperties::eventAverage(double pathCorrection)
 {
   // Always count a hit if a path length is registered
   if (m_eventPath > 0.) {
-    m_totalPath += m_eventPath;
     ++m_totalEvents;
   }
+
   // Average the event quantities
   if (m_eventPath > 0. && m_eventRho > 0.) {
+    m_totalPathInX0 += pathCorrection * m_eventPathInX0;
+    m_totalPathInL0 += pathCorrection * m_eventPathInL0;
     m_totalA += (m_eventA / m_eventRho);
     m_totalZ += (m_eventZ / m_eventRho);
-    m_totalRho += (m_eventRho / m_eventPath);
+    m_totalRho += (m_eventRho);
   }
-  m_eventA    = 0.;
-  m_eventZ    = 0.;
-  m_eventRho  = 0.;
-  m_eventPath = 0.;
+  m_eventPathInX0 = 0.;
+  m_eventPathInL0 = 0.;
+  m_eventA        = 0.;
+  m_eventZ        = 0.;
+  m_eventRho      = 0.;
+  m_eventPath     = 0.;
 }
 
 inline std::pair<MaterialProperties, unsigned int>
-AccumulatedMaterialProperties::totalAverage(bool unitThickness)
+AccumulatedMaterialProperties::totalAverage()
 {
   if (m_totalEvents && m_totalPathInX0 > 0.) {
     double eventScalor = 1. / m_totalEvents;
@@ -153,16 +161,11 @@ AccumulatedMaterialProperties::totalAverage(bool unitThickness)
     m_totalRho *= eventScalor;
     m_totalA *= eventScalor;
     m_totalZ *= eventScalor;
-    m_totalPath *= eventScalor;
-    // create the material
-    double X0 = m_totalPath / m_totalPathInX0;
-    double L0 = m_totalPath / m_totalPathInL0;
-
-    // create the material properties
-    MaterialProperties averageMat(
-        X0, L0, m_totalA, m_totalZ, m_totalRho, m_totalPath);
-    if (unitThickness) averageMat.scaleToUnitThickness();
-
+    // Create the material
+    double X0 = 1. / m_totalPathInX0;
+    double L0 = 1. / m_totalPathInL0;
+    // Create the material properties - fixed to unit path length
+    MaterialProperties averageMat(X0, L0, m_totalA, m_totalZ, m_totalRho, 1.);
     return std::pair<MaterialProperties, unsigned int>(std::move(averageMat),
                                                        m_totalEvents);
   }

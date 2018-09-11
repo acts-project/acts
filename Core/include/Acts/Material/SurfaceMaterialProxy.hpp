@@ -38,19 +38,37 @@ public:
   SurfaceMaterialProxy(const BinUtility& binUtility);
 
   /// Copy constuctor
+  ///
+  /// @param smproxy The source proxy
   SurfaceMaterialProxy(const SurfaceMaterialProxy& smproxy) = default;
 
   /// Copy move constuctor
+  ///
+  /// @param smproxy The source proxy
   SurfaceMaterialProxy(SurfaceMaterialProxy&& smproxy) = default;
 
   /// Destructor
+  ///
+  /// @param smproxy The source proxy
   ~SurfaceMaterialProxy() override = default;
 
   /// Assignment operator
+  ///
+  /// @param smproxy The source proxy
+  SurfaceMaterialProxy&
+  operator=(const SurfaceMaterialProxy& smproxy)
+      = default;
 
   /// Assigment move operator
+  ///
+  /// @param smproxy The source proxy
+  SurfaceMaterialProxy&
+  operator=(SurfaceMaterialProxy&& smproxy)
+      = default;
 
   /// Scale operator
+  ///
+  /// @param
   SurfaceMaterialProxy&
   operator*=(double scale) final;
 
