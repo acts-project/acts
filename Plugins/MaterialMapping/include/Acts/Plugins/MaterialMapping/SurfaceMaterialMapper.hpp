@@ -49,7 +49,7 @@ struct MaterialSurface
 ///     with SurfaceMaterialProxy a local store is initialized
 ///     the identification is done hereby through the Surface::GeometryID
 ///
-///  2) A Cache is generated that is used to keep the filling thread local,\
+///  2) A Cache is generated that is used to keep the filling thread local,
 ///     the filling is protected with std::mutex
 ///
 ///  3) A number of N material tracks is read in, each track has :
