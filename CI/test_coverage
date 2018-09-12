@@ -15,6 +15,7 @@ if [ ! -f CMakeCache.txt ]; then
 fi
 
 set -x
+mkdir -p coverage
 $PYTHON ../cmake/gcovr -r . -e '../Tests/' --html --html-details -o coverage/index.html
 $PYTHON ../cmake/gcovr -r . -e '../Tests/' --branches
 
