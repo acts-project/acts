@@ -149,7 +149,8 @@ unit_tests_slc6_lcg91:
   # replace script to also calculate code coverage
   script:
     - cmake --build build -- test
-    - cmake --build build -- coverage
+    - cd build
+    - ../CI/test_coverage
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
     paths:
