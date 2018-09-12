@@ -14,22 +14,22 @@
 #include "Acts/Material/MaterialProperties.hpp"
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinUtility&               binUtility,
-    const MaterialPropertiesVector& fullProperties,
-    double                          splitFactor)
+    const BinUtility&        binUtility,
+    MaterialPropertiesVector fullProperties,
+    double                   splitFactor)
   : SurfaceMaterial(splitFactor), m_binUtility(binUtility)
 {
   // fill the material with deep copy
-  m_fullMaterial.push_back(fullProperties);
+  m_fullMaterial.push_back(std::move(fullProperties));
 }
 
 Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
-    const BinUtility&               binUtility,
-    const MaterialPropertiesMatrix& fullProperties,
-    double                          splitFactor)
+    const BinUtility&        binUtility,
+    MaterialPropertiesMatrix fullProperties,
+    double                   splitFactor)
   : Acts::SurfaceMaterial(splitFactor)
   , m_binUtility(binUtility)
-  , m_fullMaterial(fullProperties)
+  , m_fullMaterial(std::move(fullProperties))
 {
 }
 

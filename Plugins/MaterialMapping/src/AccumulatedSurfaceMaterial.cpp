@@ -11,6 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Plugins/MaterialMapping/AccumulatedSurfaceMaterial.hpp"
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 
 // Default Constructor - for homogeneous material
 Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(double splitFactor)
@@ -34,45 +36,50 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
 
 // Assign a material properites object
 void
-Acts::AccumulatedSurfaceMaterial::assign(const Vector2D&           lp,
-                                         const MaterialProperties& mp)
+Acts::AccumulatedSurfaceMaterial::accumulate(const Vector2D&           lp,
+                                             const MaterialProperties& mp,
+                                             double pathCorrection)
 {
   if (m_binUtility.dimensions() == 0) {
-    m_accumulatedMaterial[0][0] += mp;
+    m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
   } else {
     size_t bin0 = m_binUtility.bin(lp, 0);
     size_t bin1 = m_binUtility.bin(lp, 1);
-    m_accumulatedMaterial[bin1][bin0] += mp;
+    m_accumulatedMaterial[bin1][bin0].accumulate(mp, pathCorrection);
   }
 }
 
 // Assign a material properites object
 void
-Acts::AccumulatedSurfaceMaterial::assign(const Vector3D&           gp,
-                                         const MaterialProperties& mp)
+Acts::AccumulatedSurfaceMaterial::accumulate(const Vector3D&           gp,
+                                             const MaterialProperties& mp,
+                                             double pathCorrection)
 {
   if (m_binUtility.dimensions() == 0) {
-    m_accumulatedMaterial[0][0] += mp;
+    m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
   } else {
     std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
-    m_accumulatedMaterial[bTriple[1]][bTriple[0]] += mp;
+    m_accumulatedMaterial[bTriple[1]][bTriple[0]].accumulate(mp,
+                                                             pathCorrection);
   }
 }
 
 // Assign a vector of material properites object
 void
-Acts::AccumulatedSurfaceMaterial::assign(
+Acts::AccumulatedSurfaceMaterial::accumulate(
     const Vector3D& gp,
-    const std::vector<std::pair<MaterialProperties, Vector3D>>& mps)
+    const std::vector<std::pair<MaterialProperties, Vector3D>>& mps,
+    double pathCorrection)
 {
   if (m_binUtility.dimensions() == 0) {
     for (auto mp : mps) {
-      m_accumulatedMaterial[0][0] += mp.first;
+      m_accumulatedMaterial[0][0].accumulate(mp.first, pathCorrection);
     }
   } else {
     std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
     for (auto mp : mps) {
-      m_accumulatedMaterial[bTriple[1]][bTriple[0]] += mp.first;
+      m_accumulatedMaterial[bTriple[1]][bTriple[0]].accumulate(mp.first,
+                                                               pathCorrection);
     }
   }
 }
@@ -86,4 +93,27 @@ Acts::AccumulatedSurfaceMaterial::eventAverage()
       mat.eventAverage();
     }
   }
+}
+
+/// Total average creates SurfaceMaterial
+std::unique_ptr<const Acts::SurfaceMaterial>
+Acts::AccumulatedSurfaceMaterial::totalAverage()
+{
+  if (m_binUtility.bins() == 1) {
+    // Return HomogeneousSurfaceMaterial
+    return std::make_unique<HomogeneousSurfaceMaterial>(
+        m_accumulatedMaterial[0][0].totalAverage().first, m_splitFactor);
+  }
+  // Create the properties matrix
+  MaterialPropertiesMatrix mpMatrix(
+      m_binUtility.bins(1),
+      MaterialPropertiesVector(m_binUtility.bins(0), MaterialProperties()));
+  // Loop over and fill
+  for (size_t ib1 = 0; ib1 < m_binUtility.bins(1); ++ib1) {
+    for (size_t ib0      = 0; ib0 < m_binUtility.bins(0); ++ib0)
+      mpMatrix[ib1][ib0] = m_accumulatedMaterial[ib1][ib0].totalAverage().first;
+  }
+  // Now return the BinnedSurfaceMaterial
+  return std::make_unique<const BinnedSurfaceMaterial>(
+      m_binUtility, std::move(mpMatrix), m_splitFactor);
 }

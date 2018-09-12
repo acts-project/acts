@@ -86,27 +86,36 @@ public:
   /// @param lp local position for the bin assignment
   /// @param mp material properties to be assigned
   void
-  assign(const Vector2D& lp, const MaterialProperties& mp);
+  accumulate(const Vector2D&           lp,
+             const MaterialProperties& mp,
+             double                    pathCorrection = 1.);
 
   /// Assign a material properites object
   ///
   /// @param gp local position for the bin assignment
   /// @param mp material properties to be assigned
   void
-  assign(const Vector3D& gp, const MaterialProperties& mp);
+  accumulate(const Vector3D&           gp,
+             const MaterialProperties& mp,
+             double                    pathCorrection = 1.);
 
   /// Assign a material properites object
   ///
   /// @param gp local position for the bin assignment
   /// @param mps Vector of recorded material properties to be assigned
   void
-  assign(const Vector3D& gp,
-         const std::vector<std::pair<MaterialProperties, Vector3D>>&);
+  accumulate(const Vector3D& gp,
+             const std::vector<std::pair<MaterialProperties, Vector3D>>&,
+             double pathCorrection = 1.);
 
   /// Average the information accumulated during one event
   /// using the event weights
   void
   eventAverage();
+
+  /// Total average creates SurfaceMaterial
+  std::unique_ptr<const SurfaceMaterial>
+  totalAverage();
 
   /// Access to the accumulated material
   const AccumulatedMatrix&

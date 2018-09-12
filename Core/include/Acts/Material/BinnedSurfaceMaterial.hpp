@@ -38,13 +38,12 @@ public:
   ///    - 0. : alongPre
   ///  ===> 1 Dimensional array
   ///
-  /// @param binUtility defines the binning structure on the surface
-  /// @param fullProperties is the vector of properties as recorded
+  /// @param binUtility defines the binning structure on the surface (copied)
+  /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
-  /// @param entries is the (optional) number of mapping entries
-  BinnedSurfaceMaterial(const BinUtility&               binUtility,
-                        const MaterialPropertiesVector& fullProperties,
-                        double                          splitFactor = 0.);
+  BinnedSurfaceMaterial(const BinUtility&        binUtility,
+                        MaterialPropertiesVector fullProperties,
+                        double                   splitFactor = 0.);
 
   /// Explicit constructor with only full MaterialProperties,
   /// for two-dimensional binning.
@@ -54,13 +53,12 @@ public:
   ///    - 0. : alongPre
   ///  ===> 1 Dimensional array
   ///
-  /// @param binUtility defines the binning structure on the surface
-  /// @param fullProperties is the vector of properties as recorded
+  /// @param binUtility defines the binning structure on the surface (copied)
+  /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
-  /// @param entries is the (optional) number of mapping entries
-  BinnedSurfaceMaterial(const BinUtility&               binUtility,
-                        const MaterialPropertiesMatrix& fullProperties,
-                        double                          splitFactor = 0.);
+  BinnedSurfaceMaterial(const BinUtility&        binUtility,
+                        MaterialPropertiesMatrix fullProperties,
+                        double                   splitFactor = 0.);
 
   /// Copy Move Constructor
   ///

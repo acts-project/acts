@@ -72,16 +72,14 @@ public:
   /// also used in order to count for holes in material structures
   ///
   /// @param amp the source Accumulated properties
+  /// @param pathCorreciton is the correction to nominal incident
   void
-  operator+=(const MaterialProperties& amp);
+  accumulate(const MaterialProperties& amp, double pathCorrection = 1.);
 
   /// Average the information accumulated during one event
   /// using the event weights
-  ///
-  /// @param pathCorrection is the incident angle correction
-  /// to project back to normal incident
   void
-  eventAverage(double pathCorrection = 1.);
+  eventAverage();
 
   /// Average the information accumulated during the entire
   /// mapping process
@@ -103,6 +101,7 @@ private:
   double m_eventZ{0.};         //!< event: accumulate the contribution to Z
   double m_eventRho{0.};       //!< event: accumulate the contribution to rho
   double m_eventPath{0.};      //!< event: the event path for normalisation
+  double m_eventPathCorrection{0.};  //!< event: remember the path correction
 
   double m_totalPathInX0{0.};  //!< total: accumulate the thickness in X0
   double m_totalPathInL0{0.};  //!< total: accumulate the thickness in L0
@@ -114,7 +113,8 @@ private:
 };
 
 inline void
-AccumulatedMaterialProperties::operator+=(const MaterialProperties& amp)
+AccumulatedMaterialProperties::accumulate(const MaterialProperties& amp,
+                                          double pathCorrection)
 {
   m_eventPathInX0 += amp.thicknessInX0();
   m_eventPathInL0 += amp.thicknessInL0();
@@ -125,10 +125,12 @@ AccumulatedMaterialProperties::operator+=(const MaterialProperties& amp)
 
   m_eventA += amp.averageA() * r * t;
   m_eventZ += amp.averageZ() * r * t;
+
+  m_eventPathCorrection += pathCorrection * t;
 }
 
 inline void
-AccumulatedMaterialProperties::eventAverage(double pathCorrection)
+AccumulatedMaterialProperties::eventAverage()
 {
   // Always count a hit if a path length is registered
   if (m_eventPath > 0.) {
@@ -137,18 +139,20 @@ AccumulatedMaterialProperties::eventAverage(double pathCorrection)
 
   // Average the event quantities
   if (m_eventPath > 0. && m_eventRho > 0.) {
-    m_totalPathInX0 += pathCorrection * m_eventPathInX0;
-    m_totalPathInL0 += pathCorrection * m_eventPathInL0;
+    m_eventPathCorrection /= m_eventPath;
+    m_totalPathInX0 += m_eventPathInX0 / m_eventPathCorrection;
+    m_totalPathInL0 += m_eventPathInL0 / m_eventPathCorrection;
     m_totalA += (m_eventA / m_eventRho);
     m_totalZ += (m_eventZ / m_eventRho);
     m_totalRho += (m_eventRho);
   }
-  m_eventPathInX0 = 0.;
-  m_eventPathInL0 = 0.;
-  m_eventA        = 0.;
-  m_eventZ        = 0.;
-  m_eventRho      = 0.;
-  m_eventPath     = 0.;
+  m_eventPathInX0       = 0.;
+  m_eventPathInL0       = 0.;
+  m_eventA              = 0.;
+  m_eventZ              = 0.;
+  m_eventRho            = 0.;
+  m_eventPath           = 0.;
+  m_eventPathCorrection = 0.;
 }
 
 inline std::pair<MaterialProperties, unsigned int>

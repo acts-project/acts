@@ -103,7 +103,7 @@ public:
   struct State
   {
     std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
-    std::map<GeometryID, std::shared_ptr<const SurfaceMaterial>>
+    std::map<GeometryID, std::unique_ptr<const SurfaceMaterial>>
         surfaceMaterial;
   };
 
@@ -132,15 +132,25 @@ public:
   State
   createState(const TrackingGeometry& tGeometry) const;
 
+  /// @brief Method to finalize the maps
+  ///
+  /// It calls the final run everaging and then transforms
+  /// the AccumulatedSurface material class to a surface material
+  /// class type
+  ///
+  /// @param mState
+  void
+  finalizeMaps(State& mState) const;
+
   /// Process/map a single track
   ///
-  /// @param mstate The current state map
-  /// @param mtrack The material track to be mapped
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
   ///
   /// @note the RecordedMaterialProperties of the track are assumed
   /// to be ordered from the starting position along the starting direction
   void
-  mapMaterialTrack(State& mState, const RecordedMaterialTrack& mtrack) const;
+  mapMaterialTrack(State& mState, const RecordedMaterialTrack& mTrack) const;
 
 private:
   /// @brief finds all surfaces with SurfaceMaterialProxy of a volume

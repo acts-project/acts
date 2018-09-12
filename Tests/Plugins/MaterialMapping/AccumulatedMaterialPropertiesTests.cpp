@@ -60,9 +60,9 @@ namespace Test {
 
     // Collect per event
     AccumulatedMaterialProperties abc;
-    abc += a;
-    abc += b;
-    abc += c;
+    abc.accumulate(a);
+    abc.accumulate(b);
+    abc.accumulate(c);
     abc.eventAverage();
 
     // Now get back the total average - without unit thickness
@@ -107,9 +107,9 @@ namespace Test {
 
     // Test is the average of a and a is a
     AccumulatedMaterialProperties aa;
-    aa += a;
+    aa.accumulate(a);
     aa.eventAverage();
-    aa += a;
+    aa.accumulate(a);
     aa.eventAverage();
     auto averageAA = aa.totalAverage();
 
@@ -124,9 +124,9 @@ namespace Test {
     halfA.scaleToUnitThickness();
 
     AccumulatedMaterialProperties av;
-    av += a;
+    av.accumulate(a);
     av.eventAverage();
-    av += v;
+    av.accumulate(v);
     av.eventAverage();
     auto averageAV = av.totalAverage();
     auto matAV     = averageAV.first;
@@ -144,9 +144,9 @@ namespace Test {
     doubleA *= 2.;
 
     AccumulatedMaterialProperties aa3;
-    aa3 += a;
+    aa3.accumulate(a);
     aa3.eventAverage();
-    aa3 += a3;
+    aa3.accumulate(a3);
     aa3.eventAverage();
     auto averageAA3 = aa3.totalAverage();
     auto matAA3     = averageAA3.first;
@@ -162,11 +162,11 @@ namespace Test {
     /// average a + 3a + v
 
     AccumulatedMaterialProperties aa3v;
-    aa3v += a;
+    aa3v.accumulate(a);
     aa3v.eventAverage();
-    aa3v += a3;
+    aa3v.accumulate(a3);
     aa3v.eventAverage();
-    aa3v += v;
+    aa3v.accumulate(v);
     aa3v.eventAverage();
     auto averageAA3V = aa3v.totalAverage();
     auto matAA3V     = averageAA3V.first;
@@ -177,10 +177,10 @@ namespace Test {
     /// Test:
     /// average 4a + v
     AccumulatedMaterialProperties a4v;
-    a4v += a;
-    a4v += a3;
+    a4v.accumulate(a);
+    a4v.accumulate(a3);
     a4v.eventAverage();
-    a4v += v;
+    a4v.accumulate(v);
     a4v.eventAverage();
     auto averageA4V = a4v.totalAverage();
     auto matA4V     = averageA4V.first;

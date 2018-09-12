@@ -54,11 +54,11 @@ namespace Test {
 
     AccumulatedSurfaceMaterial material0D{};
     // assign 2 one steps
-    material0D.assign(Vector2D{0., 0.}, one);
-    material0D.assign(Vector2D{0., 0.}, one);
+    material0D.accumulate(Vector2D{0., 0.}, one);
+    material0D.accumulate(Vector2D{0., 0.}, one);
     material0D.eventAverage();
     // assign 1 double step
-    material0D.assign(Vector3D(0., 0., 0.), two);
+    material0D.accumulate(Vector3D(0., 0., 0.), two);
     material0D.eventAverage();
     // get the single matrix
     auto accMat0D     = material0D.accumulatedMaterial();
@@ -85,22 +85,22 @@ namespace Test {
 
     // assign in the different bins
     // event 0
-    material2D.assign(Vector2D{-0.5, -0.5}, one);
-    material2D.assign(Vector2D{0.5, -0.5}, two);
-    material2D.assign(Vector2D{-0.5, 0.5}, three);
-    material2D.assign(Vector2D{0.5, 0.5}, four);
+    material2D.accumulate(Vector2D{-0.5, -0.5}, one);
+    material2D.accumulate(Vector2D{0.5, -0.5}, two);
+    material2D.accumulate(Vector2D{-0.5, 0.5}, three);
+    material2D.accumulate(Vector2D{0.5, 0.5}, four);
     material2D.eventAverage();
     // event 1
-    material2D.assign(Vector2D{0.5, -0.5}, two);
-    material2D.assign(Vector2D{-0.5, 0.5}, three);
-    material2D.assign(Vector2D{0.5, 0.5}, four);
+    material2D.accumulate(Vector2D{0.5, -0.5}, two);
+    material2D.accumulate(Vector2D{-0.5, 0.5}, three);
+    material2D.accumulate(Vector2D{0.5, 0.5}, four);
     material2D.eventAverage();
     // event 2
-    material2D.assign(Vector2D{-0.5, 0.5}, three);
-    material2D.assign(Vector2D{0.5, 0.5}, four);
+    material2D.accumulate(Vector2D{-0.5, 0.5}, three);
+    material2D.accumulate(Vector2D{0.5, 0.5}, four);
     material2D.eventAverage();
     // event 2
-    material2D.assign(Vector2D{0.5, 0.5}, four);
+    material2D.accumulate(Vector2D{0.5, 0.5}, four);
     material2D.eventAverage();
     // get the single matrix
     auto accMat2D = material2D.accumulatedMaterial();

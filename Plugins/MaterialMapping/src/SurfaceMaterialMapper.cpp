@@ -119,13 +119,23 @@ Acts::SurfaceMaterialMapper::checkAndInsert(State&         mState,
 }
 
 void
+Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const
+{
+  // iterate over the map to call the total average
+  for (auto& accMaterial : mState.accumulatedMaterial) {
+    mState.surfaceMaterial[accMaterial.first]
+        = accMaterial.second.totalAverage();
+  }
+}
+
+void
 Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State&                       mState,
-    const RecordedMaterialTrack& mtrack) const
+    const RecordedMaterialTrack& mTrack) const
 {
   // Neutral curvilinear parameters
   NeutralCurvilinearParameters start(
-      nullptr, mtrack.position(), mtrack.direction());
+      nullptr, mTrack.position(), mTrack.direction());
 
   // Prepare Action list and abort list
   using DebugOutput              = detail::DebugOutputActor;
@@ -143,31 +153,31 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   auto        mappingSurfaces = mcResult.collected;
 
   // Retrieve the recorded material
-  const auto& rMaterial = mtrack.recordedMaterialProperties();
+  const auto& rMaterial = mTrack.recordedMaterialProperties();
 
-  ACTS_INFO("Retrieved " << rMaterial.size()
-                         << " recorded material properties to map.")
+  ACTS_VERBOSE("Retrieved " << rMaterial.size()
+                            << " recorded material properties to map.")
 
-  ACTS_INFO("Found     " << mappingSurfaces.size()
-                         << " mapping surfaces for this track.");
+  ACTS_VERBOSE("Found     " << mappingSurfaces.size()
+                            << " mapping surfaces for this track.");
 
   // Prepare the assignment store
   std::vector<AssignedMaterialProperties> assignedMaterial;
   assignedMaterial.reserve(mappingSurfaces.size());
   for (auto& mSurface : mappingSurfaces) {
     Intersection msIntersection = mSurface.surface->intersectionEstimate(
-        mtrack.position(), mtrack.direction(), forward, true);
+        mTrack.position(), mTrack.direction(), forward, true);
     if (msIntersection) {
       double pathCorrection = mSurface.surface->pathCorrection(
-          msIntersection.position, mtrack.direction());
+          msIntersection.position, mTrack.direction());
       AssignedMaterialProperties amp(
           mSurface.surface->geoID(), msIntersection.position, pathCorrection);
       assignedMaterial.push_back(std::move(amp));
     }
   }
 
-  ACTS_INFO("Prepared  " << assignedMaterial.size()
-                         << " assignment stores for this event.");
+  ACTS_VERBOSE("Prepared  " << assignedMaterial.size()
+                            << " assignment stores for this event.");
 
   if (assignedMaterial.size()) {
     // Match the recorded material to the assigment stores
@@ -191,12 +201,13 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
       auto aSurfaceMaterial = mState.accumulatedMaterial.find(aprop.geoID);
       // you have assigned material
       if (aprop.assignedProperties.size()) {
-        aSurfaceMaterial->second.assign(aprop.assignedPosition,
-                                        aprop.assignedProperties);
+        aSurfaceMaterial->second.accumulate(aprop.assignedPosition,
+                                            aprop.assignedProperties,
+                                            1. / aprop.pathCorrection);
       } else {
         // assign a single vacuum step to regulate the (correct) averaging
-        aSurfaceMaterial->second.assign(aprop.assignedPosition,
-                                        MaterialProperties{1.});
+        aSurfaceMaterial->second.accumulate(aprop.assignedPosition,
+                                            MaterialProperties{1.});
       }
       // now average over the event
       aSurfaceMaterial->second.eventAverage();

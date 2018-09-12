@@ -129,10 +129,19 @@ namespace Test {
                                    Vector3D(2., 0., 2 * cotan_theta_03_13_24)};
     std::vector<RecordedMaterialProperties> rmps = {m03, m13, m24};
 
-    RecordedMaterialTrack rmt(
+    RecordedMaterialTrack rmt031324(
         Vector3D(0., 0., 0.), m03.second.normalized(), rmps);
 
-    smMapper.mapMaterialTrack(mState, rmt);
+    smMapper.mapMaterialTrack(mState, rmt031324);
+
+    RecordedMaterialProperties m02{a, Vector3D(1., 0., -cotan_theta_03_13_24)};
+    RecordedMaterialProperties m21{a,
+                                   Vector3D(2., 0., -2 * cotan_theta_03_13_24)};
+
+    RecordedMaterialTrack rmt02xx21(
+        Vector3D(0., 0., 0.), m02.second.normalized(), rmps);
+
+    smMapper.mapMaterialTrack(mState, rmt02xx21);
   }
 
 }  // namespace Test
