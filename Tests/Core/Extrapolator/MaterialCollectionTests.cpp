@@ -69,7 +69,7 @@ namespace Test {
   StraightLinePropagator slpropagator(std::move(slstepper),
                                       std::move(navigatorSL));
 
-  const int ntests           = 1000;
+  const int ntests           = 500;
   const int skip             = 0;
   bool      debugModeFwd     = false;
   bool      debugModeBwd     = false;
