@@ -12,3 +12,8 @@ add_executable (LayerCreatorTests LayerCreatorTests.cpp)
 target_link_libraries (LayerCreatorTests PRIVATE ActsCore)
 add_test (NAME LayerCreatorUnitTest COMMAND LayerCreatorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST LayerCreatorUnitTest TARGETS LayerCreatorTests)
+
+add_executable (SimpleGeometryTests SimpleGeometryTests.cpp)
+target_link_libraries (SimpleGeometryTests PRIVATE ActsCore)
+add_test (NAME SimpleGeometryUnitTest COMMAND SimpleGeometryTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST SimpleGeometryUnitTest TARGETS SimpleGeometryTests)
