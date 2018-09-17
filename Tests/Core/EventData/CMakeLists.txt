@@ -21,3 +21,10 @@ target_include_directories (BoundParametersTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (BoundParametersTests PRIVATE ActsCore)
 add_test (NAME BoundParametersUnitTests COMMAND BoundParametersTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST BoundParametersUnitTests TARGETS BoundParametersTests)
+
+add_executable (TrackStateTests TrackStateTests.cpp)
+target_include_directories (TrackStateTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (TrackStateTests PRIVATE ActsCore)
+add_test (NAME TrackStateUnitTests COMMAND TrackStateTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST TrackStateUnitTests TARGETS TrackStateTests)
+
