@@ -22,7 +22,8 @@ namespace Acts {
 
 namespace Test {
 
-  /// @brief Unit test for Curvilinear parameters
+  /// @brief Unit test for a three layer detector parameters
+  /// Testing the Tool chain in the geometry building process
   ///
   BOOST_AUTO_TEST_CASE(SimpleGeometryTest)
   {
