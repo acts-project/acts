@@ -22,10 +22,11 @@ namespace Acts {
 
 /// @class AccumulatedSurfaceMaterial
 ///
-/// It extends the SurfaceMaterial base class and is an array pf
-/// MaterialProperties. This is not memory optimised as every bin
-/// holds one material property object.
-
+/// This class is used by the SurfaceMaterialMapper in order to 
+/// accumulate/collect material information during the mapping process.
+///
+/// It performs event- and run-average when called, and returns
+/// a new SurfaceMaterial object as a unique_ptr after finalisation     
 class AccumulatedSurfaceMaterial
 {
 public:
