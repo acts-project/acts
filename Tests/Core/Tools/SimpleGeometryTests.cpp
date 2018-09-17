@@ -10,9 +10,6 @@
 
 #include <boost/test/included/unit_test.hpp>
 #include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Detector/TrackingVolume.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/SurfaceMaterialProxy.hpp"
 #include "Acts/Tools/CylinderVolumeBuilder.hpp"
 #include "Acts/Tools/CylinderVolumeHelper.hpp"
 #include "Acts/Tools/LayerArrayCreator.hpp"
@@ -20,7 +17,6 @@
 #include "Acts/Tools/PassiveLayerBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 namespace Acts {
 
