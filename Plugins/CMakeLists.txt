@@ -1,4 +1,4 @@
-add_component_if (Identification IdentificationPlugin ACTS_BUILD_TGEO_PLUGIN)
+add_component_if (Identification IdentificationPlugin ACTS_BUILD_IDENTIFICATION_PLUGIN)
 add_component_if (DD4hep DD4hepPlugin ACTS_BUILD_DD4HEP_PLUGIN)
 add_component_if (Digitization DigitizationPlugin ACTS_BUILD_DIGITIZATION_PLUGIN)
 add_component_if (MaterialMapping MaterialMappingPlugin ${ACTS_BUILD_MATERIAL_PLUGIN} AND ${ACTS_BUILD_LEGACY})
