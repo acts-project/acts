@@ -22,11 +22,11 @@ namespace Acts {
 
 /// @class AccumulatedSurfaceMaterial
 ///
-/// This class is used by the SurfaceMaterialMapper in order to 
+/// This class is used by the SurfaceMaterialMapper in order to
 /// accumulate/collect material information during the mapping process.
 ///
 /// It performs event- and run-average when called, and returns
-/// a new SurfaceMaterial object as a unique_ptr after finalisation     
+/// a new SurfaceMaterial object as a unique_ptr after finalisation
 class AccumulatedSurfaceMaterial
 {
 public:
