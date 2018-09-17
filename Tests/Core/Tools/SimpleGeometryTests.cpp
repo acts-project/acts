@@ -60,7 +60,6 @@ namespace Test {
     bplConfig.centralLayerRadii       = std::vector<double>(1, 3.);
     bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 40.);
     bplConfig.centralLayerThickness   = std::vector<double>(1, 0.8);
-    bplConfig.centralLayerMaterial    = {};
     auto beamPipeBuilder = std::make_shared<const PassiveLayerBuilder>(
         bplConfig, getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
     // create the volume for the beam pipe
@@ -79,7 +78,6 @@ namespace Test {
     layerBuilderConfig.centralLayerRadii       = {10., 20., 30.};
     layerBuilderConfig.centralLayerHalflengthZ = {40., 40., 40.};
     layerBuilderConfig.centralLayerThickness   = {1., 1., 1.};
-    layerBuilderConfig.centralLayerMaterial    = {};
     auto layerBuilder = std::make_shared<const PassiveLayerBuilder>(
         layerBuilderConfig,
         getDefaultLogger("CentralBarrelBuilder", layerLLevel));
