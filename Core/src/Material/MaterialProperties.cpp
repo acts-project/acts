@@ -74,7 +74,9 @@ Acts::MaterialProperties::MaterialProperties(
   rho /= m_thickness;
   // set the material
   m_material = Material(X0, L0, A, Z, rho);
-  if (unitThickness) scaleToUnitThickness();
+  if (unitThickness) {
+    scaleToUnitThickness();
+  }
 }
 
 Acts::MaterialProperties&

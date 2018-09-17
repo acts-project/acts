@@ -147,7 +147,9 @@ SurfaceMaterial::materialProperties(const Vector2D&     lp,
   // Scale if you have material to scale
   if (plainMatProp) {
     double scaleFactor = factor(pDir, mStage);
-    if (scaleFactor == 0.) return MaterialProperties();
+    if (scaleFactor == 0.) {
+      return MaterialProperties();
+    }
     plainMatProp *= scaleFactor;
   }
   return plainMatProp;
@@ -163,7 +165,9 @@ SurfaceMaterial::materialProperties(const Vector3D&     gp,
   // Scale if you have material to scale
   if (plainMatProp) {
     double scaleFactor = factor(pDir, mStage);
-    if (scaleFactor == 0.) return MaterialProperties();
+    if (scaleFactor == 0.) {
+      return MaterialProperties();
+    }
     plainMatProp *= scaleFactor;
   }
   return plainMatProp;

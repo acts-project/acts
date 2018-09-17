@@ -158,7 +158,7 @@ AccumulatedMaterialProperties::eventAverage()
 inline std::pair<MaterialProperties, unsigned int>
 AccumulatedMaterialProperties::totalAverage()
 {
-  if (m_totalEvents && m_totalPathInX0 > 0.) {
+  if (m_totalEvents > 0 && m_totalPathInX0 > 0.) {
     double eventScalor = 1. / m_totalEvents;
     m_totalPathInX0 *= eventScalor;
     m_totalPathInL0 *= eventScalor;

@@ -179,7 +179,7 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   ACTS_VERBOSE("Prepared  " << assignedMaterial.size()
                             << " assignment stores for this event.");
 
-  if (assignedMaterial.size()) {
+  if (assignedMaterial.empty()) {
     // Match the recorded material to the assigment stores
     auto aStore = assignedMaterial.begin();
     // This assumes ordered recorded material
@@ -200,7 +200,7 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
       /// get the according map
       auto aSurfaceMaterial = mState.accumulatedMaterial.find(aprop.geoID);
       // you have assigned material
-      if (aprop.assignedProperties.size()) {
+      if (aprop.assignedProperties.empty()) {
         aSurfaceMaterial->second.accumulate(aprop.assignedPosition,
                                             aprop.assignedProperties,
                                             1. / aprop.pathCorrection);

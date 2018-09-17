@@ -67,7 +67,7 @@ public:
            float               iZ,
            float               iRho,
            MaterialComposition imc = {})
-    : m_store({iX0, iL0, iA, iZ, iRho}), m_composition(imc)
+    : m_store({iX0, iL0, iA, iZ, iRho}), m_composition(std::move(imc))
   {
     float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
     m_store.push_back(zOaTr);
@@ -123,9 +123,8 @@ public:
   {
     if (!m_store.empty()) {
       return m_store[matX0];
-    } else {
-      return std::numeric_limits<float>::infinity();
     }
+    return std::numeric_limits<float>::infinity();
   }
 
   /// @brief Access to L0
@@ -135,9 +134,8 @@ public:
   {
     if (!m_store.empty()) {
       return m_store[matL0];
-    } else {
-      return std::numeric_limits<float>::infinity();
     }
+    return std::numeric_limits<float>::infinity();
   }
 
   /// @brief Access to A
@@ -146,9 +144,8 @@ public:
   {
     if (!m_store.empty()) {
       return m_store[matA];
-    } else {
-      return 0.;
     }
+    return 0.;
   }
 
   /// @brief Access to Z
@@ -157,9 +154,8 @@ public:
   {
     if (!m_store.empty()) {
       return m_store[matZ];
-    } else {
-      return 0.;
     }
+    return 0.;
   }
   /// @brief Access to rho
   float

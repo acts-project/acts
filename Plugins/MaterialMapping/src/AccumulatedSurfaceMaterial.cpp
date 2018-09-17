@@ -110,8 +110,9 @@ Acts::AccumulatedSurfaceMaterial::totalAverage()
       MaterialPropertiesVector(m_binUtility.bins(0), MaterialProperties()));
   // Loop over and fill
   for (size_t ib1 = 0; ib1 < m_binUtility.bins(1); ++ib1) {
-    for (size_t ib0      = 0; ib0 < m_binUtility.bins(0); ++ib0)
+    for (size_t ib0 = 0; ib0 < m_binUtility.bins(0); ++ib0) {
       mpMatrix[ib1][ib0] = m_accumulatedMaterial[ib1][ib0].totalAverage().first;
+    }
   }
   // Now return the BinnedSurfaceMaterial
   return std::make_unique<const BinnedSurfaceMaterial>(

@@ -81,7 +81,7 @@ public:
     /// @param pos The position of the assignment/intersection
     /// @param pc The pathCorrection to be applied (inverse)
     AssignedMaterialProperties(GeometryID gid, Vector3D pos, double pc)
-      : geoID(gid), assignedPosition(pos), pathCorrection(pc)
+      : geoID(gid), assignedPosition(std::move(pos)), pathCorrection(pc)
     {
     }
   };
@@ -117,12 +117,9 @@ public:
   /// @param log The logger
   SurfaceMaterialMapper(const Config&                 cfg,
                         StraightLinePropagator        propagator,
-                        std::unique_ptr<const Logger> log
+                        std::unique_ptr<const Logger> slogger
                         = getDefaultLogger("SurfaceMaterialMapper",
                                            Logging::INFO));
-
-  /// Default destructor
-  ~SurfaceMaterialMapper() = default;
 
   /// @brief helper method that creates the cache for the mapping
   ///

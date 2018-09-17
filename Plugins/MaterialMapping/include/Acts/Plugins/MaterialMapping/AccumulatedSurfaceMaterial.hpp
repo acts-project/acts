@@ -104,9 +104,10 @@ public:
   ///
   /// @param gp local position for the bin assignment
   /// @param mps Vector of recorded material properties to be assigned
+  /// @param pathCorrection The geometric path correction due to incident
   void
   accumulate(const Vector3D& gp,
-             const std::vector<std::pair<MaterialProperties, Vector3D>>&,
+             const std::vector<std::pair<MaterialProperties, Vector3D>>& mps,
              double pathCorrection = 1.);
 
   /// Average the information accumulated during one event

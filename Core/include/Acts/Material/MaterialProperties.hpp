@@ -242,16 +242,16 @@ MaterialProperties::averageRho() const
 }
 
 inline bool
-MaterialProperties::operator==(const MaterialProperties& mp) const
+MaterialProperties::operator==(const MaterialProperties& mprop) const
 {
-  return (m_material == mp.m_material && m_dInX0 == mp.m_dInX0
-          && m_dInL0 == mp.m_dInL0);
+  return (m_material == mprop.m_material && m_dInX0 == mprop.m_dInX0
+          && m_dInL0 == mprop.m_dInL0);
 }
 
 inline bool
-MaterialProperties::operator!=(const MaterialProperties& mp) const
+MaterialProperties::operator!=(const MaterialProperties& mprop) const
 {
-  return (!operator==(mp));
+  return (!operator==(mprop));
 }
 
 // Overload of << operator for std::ostream for debug output
