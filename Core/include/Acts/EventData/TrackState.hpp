@@ -10,7 +10,6 @@
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/detail/trackstate_type_generator.hpp"
-#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -29,22 +28,6 @@ template <typename identifier_t, typename parameters_t, ParID_t... params>
 class TrackState
 {
 public:
-  /// The predicted state if needed
-  std::unique_ptr<const parameters_t> predicted = nullptr;
-
-  /// The updated state if needed
-  std::unique_ptr<const parameters_t> updated = nullptr;
-
-  /// The smoothed state if needed
-  std::unique_ptr<const parameters_t> smoothed = nullptr;
-
-  /// The measurement_t at this TrackState
-  std::unique_ptr<const Measurement<identifier_t, params...>> measurement
-      = nullptr;
-
-  /// Material Properties associated to this TrackState
-  MaterialProperties material{};
-
   /// Constructor from measurement
   ///
   /// @tparam measurement_t Type of the measurement
@@ -59,8 +42,8 @@ public:
   /// @tparam parameters_t Type of the predicted parameters
   /// @param parameters object as unitue ptr
   TrackState(std::unique_ptr<const parameters_t> parameters)
-    : predicted(std::move(parameters))
-    , m_surface(&(predicted->referenceSurface()))
+    : m_predicted(std::move(parameters))
+    , m_surface(&(m_predicted->referenceSurface()))
   {
   }
 
@@ -79,6 +62,20 @@ public:
 private:
   /// The surface of this TrackState
   const Surface* m_surface = nullptr;
+
+  /// The predicted state if needed
+  std::unique_ptr<const parameters_t> m_predicted = nullptr;
+
+  /// The updated state if needed
+  std::unique_ptr<const parameters_t> m_updated = nullptr;
+
+  /// The smoothed state if needed
+  std::unique_ptr<const parameters_t> m_smoothed = nullptr;
+
+  /// The measurement_t at this TrackState
+  std::unique_ptr<const Measurement<identifier_t, params...>> m_measurement
+      = nullptr;
+
 };
 
 /// @brief track state for measurements
