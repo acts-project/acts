@@ -32,6 +32,13 @@ public:
 
   ~SurfaceStub() override { /*nop */}
 
+  /// Conditional Implicit constructor
+  Surface*
+  conditionalClone() const final
+  {
+    return nullptr;
+  }
+
   /// Implicit constructor
   Surface*
   clone(const Transform3D* /*shift = nullptr*/) const final

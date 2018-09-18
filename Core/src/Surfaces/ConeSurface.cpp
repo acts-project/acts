@@ -198,6 +198,15 @@ Acts::ConeSurface::name() const
 }
 
 Acts::ConeSurface*
+Acts::ConeSurface::conditionalClone() const
+{
+  if (isFree()) {
+    new ConeSurface(*this);
+  }
+  return const_cast<ConeSurface*>(this);
+}
+
+Acts::ConeSurface*
 Acts::ConeSurface::clone(const Acts::Transform3D* shift) const
 {
   if (shift != nullptr) {

@@ -98,8 +98,7 @@ public:
     : m_oParameters(std::make_unique<const CovMatrix_t>(std::move(cov)),
                     head,
                     values...)
-    , m_pSurface(surface.isFree() ? const_cast<const Surface*>(surface.clone())
-                                  : &surface)
+    , m_pSurface(surface.conditionalClone())
     , m_oIdentifier(id)
   {
   }
@@ -121,9 +120,7 @@ public:
   /// @param copy is the source for the copy
   Measurement(const Measurement<identifier_t, params...>& copy)
     : m_oParameters(copy.m_oParameters)
-    , m_pSurface(copy.m_pSurface->isFree()
-                     ? const_cast<const Surface*>(copy.m_pSurface->clone())
-                     : copy.m_pSurface)
+    , m_pSurface(copy.m_pSurface->conditionalClone())
     , m_oIdentifier(copy.m_oIdentifier)
   {
   }

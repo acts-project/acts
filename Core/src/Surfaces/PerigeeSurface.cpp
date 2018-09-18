@@ -83,6 +83,15 @@ Acts::PerigeeSurface::clone(const Transform3D* shift) const
   return new PerigeeSurface(*this);
 }
 
+Acts::PerigeeSurface*
+Acts::PerigeeSurface::conditionalClone() const
+{
+  if (isFree()) {
+    new PerigeeSurface(*this);
+  }
+  return const_cast<PerigeeSurface*>(this);
+}
+
 Acts::Surface::SurfaceType
 Acts::PerigeeSurface::type() const
 {

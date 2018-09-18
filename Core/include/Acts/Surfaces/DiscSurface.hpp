@@ -120,6 +120,14 @@ public:
   DiscSurface&
   operator=(const DiscSurface& other);
 
+  /// Conditional Implicit constructor
+  /// uses the copy constructor (if needed)
+  ///
+  /// Checks if a surface is free and either clones or returns
+  /// the pointer to itself
+  DiscSurface*
+  conditionalClone() const final;
+
   /// Virtual constructor - shift can be given optionally
   ///
   /// @param shift the otional transform applied after cloning

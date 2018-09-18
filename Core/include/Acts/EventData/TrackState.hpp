@@ -24,6 +24,7 @@ class Surface;
 /// @tparam identifier_t Type of the identifier
 /// @tparam parameters_t Type of the parameters on the surface
 /// @tparam params Type list of the measurement type
+///
 template <typename identifier_t, typename parameters_t, ParID_t... params>
 class TrackState
 {
@@ -31,26 +32,99 @@ public:
   /// Constructor from measurement
   ///
   /// @tparam measurement_t Type of the measurement
-  /// @param measurement the object
-  TrackState(const Measurement<identifier_t, params...>& measurement)
-    : m_surface(&measurement.referenceSurface())
+  /// @param m The measurement object
+  TrackState(const Measurement<identifier_t, params...>& m)
+    : m_surface(m.referenceSurface().conditionalClone())
   {
   }
 
   /// Constructor from parameters
   ///
   /// @tparam parameters_t Type of the predicted parameters
-  /// @param parameters object as unitue ptr
-  TrackState(std::unique_ptr<const parameters_t> parameters)
-    : m_predicted(std::move(parameters))
-    , m_surface(&(m_predicted->referenceSurface()))
+  /// @param p The parameters object as unitue ptr
+  TrackState(std::unique_ptr<const parameters_t> p)
+    : m_predicted(std::move(p))
+    , m_surface(m_predicted->referenceSurface().conditionalClone())
   {
   }
 
   /// Constructor from surface
   ///
   /// @tparam parameters_t Type of the predicted parameters
-  TrackState(const Surface& surface) : m_surface(&(surface)) {}
+  /// @param s The Surface for the track state
+  TrackState(const Surface& s) : m_surface(s.conditionalClone()) {}
+
+  /// Virtual destructor
+  virtual ~TrackState()
+  {
+    if (m_surface->isFree()) {
+      delete m_surface;
+    }
+  }
+
+  /// Copy constructor
+  ///
+  /// @param rhs is the source TrackState
+  TrackState(const TrackState& rhs)
+  {
+    if (m_surface->isFree()) delete m_surface;
+    m_surface   = rhs.m_surface->conditionalClone();
+    m_predicted = rhs.m_predicted
+        ? std::unique_ptr<const parameters_t>(rhs.m_predicted->clone())
+        : nullptr;
+    m_updated = rhs.m_updated
+        ? std::unique_ptr<const parameters_t>(rhs.m_updated->clone())
+        : nullptr;
+    m_smoothed = rhs.m_smoothed
+        ? std::unique_ptr<const parameters_t>(rhs.m_smoothed->clone())
+        : nullptr;
+  }
+
+  /// Copy move constructor
+  ///
+  /// @param rhs is the source TrackState
+  TrackState(TrackState&& rhs)
+  {
+    if (m_surface->isFree()) delete m_surface;
+    m_surface   = rhs.m_surface;
+    m_predicted = std::move(rhs.m_predicted);
+    m_updated   = std::move(rhs.m_updated);
+    m_smoothed  = std::move(rhs.m_smoothed);
+  }
+
+  /// Assignment operator
+  ///
+  /// @param rhs is the source TrackState
+  TrackState&
+  operator=(const TrackState& rhs)
+  {
+    if (&rhs != this) {
+      m_surface   = rhs.m_surface->isFree() ? rhs.m_surface->clone() : nullptr;
+      m_predicted = rhs.m_predicted
+          ? std::unique_ptr<const parameters_t>(rhs.m_predicted->clone())
+          : nullptr;
+      m_updated = rhs.m_updated
+          ? std::unique_ptr<const parameters_t>(rhs.m_updated->clone())
+          : nullptr;
+      m_smoothed = rhs.m_smoothed
+          ? std::unique_ptr<const parameters_t>(rhs.m_smoothed->clone())
+          : nullptr;
+    }
+    return (*this);
+  }
+
+  /// Assignment move operator
+  ///
+  /// @param rhs is the source TrackState
+  TrackState&
+  operator=(TrackState&& rhs)
+  {
+    m_surface   = rhs.m_surface;
+    m_predicted = std::move(rhs.m_predicted);
+    m_updated   = std::move(rhs.m_updated);
+    m_smoothed  = std::move(rhs.m_smoothed);
+    return (*this);
+  }
 
   /// @brief return method for the surface
   const Surface&
@@ -75,7 +149,6 @@ private:
   /// The measurement_t at this TrackState
   std::unique_ptr<const Measurement<identifier_t, params...>> m_measurement
       = nullptr;
-
 };
 
 /// @brief track state for measurements
