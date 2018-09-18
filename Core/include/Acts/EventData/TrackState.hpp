@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <boost/optional.hpp>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/detail/trackstate_type_generator.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
@@ -25,16 +26,27 @@ class Surface;
 /// @tparam parameters_t Type of the parameters on the surface
 /// @tparam params Type list of the measurement type
 ///
+/// @note the Surface is only stored as a pointer, i.e. it is
+/// assumed the surface lives longer than the TrackState
 template <typename identifier_t, typename parameters_t, ParID_t... params>
 class TrackState
 {
 public:
+  /// Constructor from measurement (move)
+  ///
+  /// @tparam measurement_t Type of the measurement
+  /// @param m The measurement object
+  TrackState(Measurement<identifier_t, params...>&& m)
+    : m_surface(&m.referenceSurface()), m_measurement(std::move(m))
+  {
+  }
+
   /// Constructor from measurement
   ///
   /// @tparam measurement_t Type of the measurement
   /// @param m The measurement object
   TrackState(const Measurement<identifier_t, params...>& m)
-    : m_surface(m.referenceSurface().conditionalClone())
+    : m_surface(&m.referenceSurface()), m_measurement(m)
   {
   }
 
@@ -43,8 +55,7 @@ public:
   /// @tparam parameters_t Type of the predicted parameters
   /// @param p The parameters object as unitue ptr
   TrackState(std::unique_ptr<const parameters_t> p)
-    : m_predicted(std::move(p))
-    , m_surface(m_predicted->referenceSurface().conditionalClone())
+    : m_surface(&(p->referenceSurface())), m_predicted(std::move(p))
   {
   }
 
@@ -52,23 +63,17 @@ public:
   ///
   /// @tparam parameters_t Type of the predicted parameters
   /// @param s The Surface for the track state
-  TrackState(const Surface& s) : m_surface(s.conditionalClone()) {}
+  TrackState(const Surface* s) : m_surface(s) {}
 
   /// Virtual destructor
-  virtual ~TrackState()
-  {
-    if (m_surface->isFree()) {
-      delete m_surface;
-    }
-  }
+  virtual ~TrackState() = default;
 
   /// Copy constructor
   ///
   /// @param rhs is the source TrackState
   TrackState(const TrackState& rhs)
   {
-    if (m_surface->isFree()) delete m_surface;
-    m_surface   = rhs.m_surface->conditionalClone();
+    m_surface   = rhs.m_surface;
     m_predicted = rhs.m_predicted
         ? std::unique_ptr<const parameters_t>(rhs.m_predicted->clone())
         : nullptr;
@@ -85,7 +90,6 @@ public:
   /// @param rhs is the source TrackState
   TrackState(TrackState&& rhs)
   {
-    if (m_surface->isFree()) delete m_surface;
     m_surface   = rhs.m_surface;
     m_predicted = std::move(rhs.m_predicted);
     m_updated   = std::move(rhs.m_updated);
@@ -99,7 +103,6 @@ public:
   operator=(const TrackState& rhs)
   {
     if (&rhs != this) {
-      m_surface   = rhs.m_surface->isFree() ? rhs.m_surface->clone() : nullptr;
       m_predicted = rhs.m_predicted
           ? std::unique_ptr<const parameters_t>(rhs.m_predicted->clone())
           : nullptr;
@@ -137,6 +140,12 @@ private:
   /// The surface of this TrackState
   const Surface* m_surface = nullptr;
 
+  /// The optional measurement
+  boost::optional<Measurement<identifier_t, params...>> m_measurement;
+
+  /// The optional calibrabed measurement
+  boost::optional<Measurement<identifier_t, params...>> m_calibrated;
+
   /// The predicted state if needed
   std::unique_ptr<const parameters_t> m_predicted = nullptr;
 
@@ -145,10 +154,6 @@ private:
 
   /// The smoothed state if needed
   std::unique_ptr<const parameters_t> m_smoothed = nullptr;
-
-  /// The measurement_t at this TrackState
-  std::unique_ptr<const Measurement<identifier_t, params...>> m_measurement
-      = nullptr;
 };
 
 /// @brief track state for measurements

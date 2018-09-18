@@ -25,10 +25,10 @@ namespace Test {
   using MeasurementType = Measurement<Identifier, params...>;
 
   template <ParID_t... params>
-  using MeasuredStateType
+  using MeasuredState
       = MeasuredTrackState<Identifier, TrackParameters, params...>;
-  using ParametricStateType = ParametricTrackState<Identifier, TrackParameters>;
-  using VariantStateType    = VariantTrackState<Identifier, TrackParameters>;
+  using ParametricState = ParametricTrackState<Identifier, TrackParameters>;
+  using VariantState    = VariantTrackState<Identifier, TrackParameters>;
   ///
   /// @brief Unit test for creation of Measurement object
   ///
@@ -48,10 +48,9 @@ namespace Test {
         plane, 0, std::move(cov2D), 0.02, 0.03);
 
     // The 1D track state from the measurement
-    VariantStateType mts1D = MeasuredStateType<ParDef::eLOC_0>(m1D);
+    VariantState mts1D = MeasuredState<ParDef::eLOC_0>(m1D);
     // The 2D track state from the measurement
-    VariantStateType mts2D
-        = MeasuredStateType<ParDef::eLOC_0, ParDef::eLOC_1>(m2D);
+    VariantState mts2D = MeasuredState<ParDef::eLOC_0, ParDef::eLOC_1>(m2D);
 
     // Construct the parameter
     std::array<double, 5> pars_array = {{-0.1234, 9.8765, 0.45, 0.888, 0.001}};
@@ -63,10 +62,15 @@ namespace Test {
     auto ataPlane
         = std::make_unique<const BoundParameters>(nullptr, pars, plane);
     // The parametric track state from the parameters
-    VariantStateType pts = ParametricStateType(std::move(ataPlane));
+    VariantState pts = ParametricState(std::move(ataPlane));
 
     // The parametric track state from the surface only
-    VariantStateType sts = ParametricStateType(plane);
+    VariantState sts = ParametricState(&plane);
+
+    std::vector<VariantState> trackStates
+        = {std::move(m1D), std::move(m2D), std::move(pts), std::move(sts)};
+
+    BOOST_CHECK(trackStates.size() == 4);
   }
 
 }  // namespace Test

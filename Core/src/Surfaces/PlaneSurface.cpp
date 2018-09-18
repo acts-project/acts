@@ -107,7 +107,7 @@ Acts::PlaneSurface*
 Acts::PlaneSurface::conditionalClone() const
 {
   if (isFree()) {
-    new PlaneSurface(*this);
+    return new PlaneSurface(*this);
   }
   return const_cast<PlaneSurface*>(this);
 }

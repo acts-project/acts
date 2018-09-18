@@ -210,7 +210,7 @@ Acts::ConeSurface*
 Acts::ConeSurface::clone(const Acts::Transform3D* shift) const
 {
   if (shift != nullptr) {
-    new ConeSurface(*this, *shift);
+    return new ConeSurface(*this, *shift);
   }
   return new ConeSurface(*this);
 }

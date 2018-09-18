@@ -87,7 +87,7 @@ Acts::PerigeeSurface*
 Acts::PerigeeSurface::conditionalClone() const
 {
   if (isFree()) {
-    new PerigeeSurface(*this);
+    return new PerigeeSurface(*this);
   }
   return const_cast<PerigeeSurface*>(this);
 }

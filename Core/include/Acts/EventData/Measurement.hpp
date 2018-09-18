@@ -340,28 +340,4 @@ private:
   identifier_t   m_oIdentifier;  ///< identifier for this measurement
 };
 
-/// @ brief visitor pattern to extract the surface
-///
-struct SurfaceGetter : public boost::static_visitor<const Surface&>
-{
-public:
-  /// @brief call operator for surface extraction using the boost visitor
-  /// pattern
-  /// @tparam measurement_t Type of the measurement (templated)
-  /// @param m The measurement for which the surface will be extracted
-  template <typename measurement_t>
-  const Surface&
-  operator()(const measurement_t& m) const
-  {
-    return m.referenceSurface();
-  }
-};
-
-template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
-const Surface&
-getSurface(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& m)
-{
-  static const SurfaceGetter sg = SurfaceGetter();
-  return boost::apply_visitor(sg, m);
-}
 }  // namespace Acts

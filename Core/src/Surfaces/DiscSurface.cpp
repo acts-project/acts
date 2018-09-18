@@ -125,7 +125,7 @@ Acts::DiscSurface*
 Acts::DiscSurface::conditionalClone() const
 {
   if (isFree()) {
-    new DiscSurface(*this);
+    return new DiscSurface(*this);
   }
   return const_cast<DiscSurface*>(this);
 }

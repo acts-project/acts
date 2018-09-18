@@ -95,7 +95,7 @@ Acts::StrawSurface*
 Acts::StrawSurface::clone(const Transform3D* shift) const
 {
   if (shift != nullptr) {
-    new StrawSurface(*this, *shift);
+    return new StrawSurface(*this, *shift);
   }
   return new StrawSurface(*this);
 }
@@ -104,7 +104,7 @@ Acts::StrawSurface*
 Acts::StrawSurface::conditionalClone() const
 {
   if (isFree()) {
-    new StrawSurface(*this);
+    return new StrawSurface(*this);
   }
   return const_cast<StrawSurface*>(this);
 }

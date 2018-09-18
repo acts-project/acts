@@ -112,7 +112,7 @@ Acts::CylinderSurface*
 Acts::CylinderSurface::conditionalClone() const
 {
   if (isFree()) {
-    new CylinderSurface(*this);
+    return new CylinderSurface(*this);
   }
   return const_cast<CylinderSurface*>(this);
 }
