@@ -124,9 +124,9 @@ public:
   /// uses the copy constructor (if needed)
   ///
   /// Checks if a surface is free and either clones or returns
-  /// the pointer to itself
-  DiscSurface*
-  conditionalClone() const final;
+  /// the pointer to itself - the return object ist a const pointer
+  const DiscSurface*
+  cloneIfFree() const final;
 
   /// Virtual constructor - shift can be given optionally
   ///

@@ -197,13 +197,13 @@ Acts::ConeSurface::name() const
   return "Acts::ConeSurface";
 }
 
-Acts::ConeSurface*
-Acts::ConeSurface::conditionalClone() const
+const Acts::ConeSurface*
+Acts::ConeSurface::cloneIfFree() const
 {
   if (isFree()) {
-    new ConeSurface(*this);
+    return new ConeSurface(*this);
   }
-  return const_cast<ConeSurface*>(this);
+  return (this);
 }
 
 Acts::ConeSurface*

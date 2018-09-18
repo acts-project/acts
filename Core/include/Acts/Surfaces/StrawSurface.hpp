@@ -84,9 +84,9 @@ public:
   /// uses the copy constructor (if needed)
   ///
   /// Checks if a surface is free and either clones or returns
-  /// the pointer to itself
-  StrawSurface*
-  conditionalClone() const final;
+  /// the pointer to itself - the return object ist a const pointer
+  const StrawSurface*
+  cloneIfFree() const final;
 
   /// Assignment operator
   ///

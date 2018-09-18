@@ -94,9 +94,9 @@ public:
   /// uses the copy constructor (if needed)
   ///
   /// Checks if a surface is free and either clones or returns
-  /// the pointer to itself
-  ConeSurface*
-  conditionalClone() const final;
+  /// the pointer to itself - the return object ist a const pointer
+  const ConeSurface*
+  cloneIfFree() const final;
 
   /// Implicit Constructor
   ///

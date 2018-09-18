@@ -54,7 +54,7 @@ public:
               surface),
           detail::coordinate_transformation::parameters2globalMomentum(
               parValues))
-    , m_pSurface(surface.conditionalClone())
+    , m_pSurface(surface.cloneIfFree())
   {
   }
 
@@ -86,7 +86,7 @@ public:
                                                                surface),
           position,
           momentum)
-    , m_pSurface(surface.conditionalClone())
+    , m_pSurface(surface.cloneIfFree())
   {
   }
 
@@ -113,7 +113,7 @@ public:
               surface),
           detail::coordinate_transformation::parameters2globalMomentum(
               parValues))
-    , m_pSurface(surface.conditionalClone())
+    , m_pSurface(surface.cloneIfFree())
   {
   }
 
@@ -144,7 +144,7 @@ public:
                                                                surface),
           position,
           momentum)
-    , m_pSurface(surface.conditionalClone())
+    , m_pSurface(surface.cloneIfFree())
   {
   }
 
@@ -153,7 +153,7 @@ public:
   SingleBoundTrackParameters(
       const SingleBoundTrackParameters<ChargePolicy>& copy)
     : SingleTrackParameters<ChargePolicy>(copy)
-    , m_pSurface(copy.m_pSurface->conditionalClone())
+    , m_pSurface(copy.m_pSurface->cloneIfFree())
   {
   }
 
@@ -187,7 +187,7 @@ public:
       if (m_pSurface->isFree()) {
         delete m_pSurface;
       }
-      m_pSurface = rhs.m_pSurface->conditionalClone();
+      m_pSurface = rhs.m_pSurface->cloneIfFree();
     }
 
     return *this;

@@ -33,8 +33,8 @@ public:
   ~SurfaceStub() override { /*nop */}
 
   /// Conditional Implicit constructor
-  Surface*
-  conditionalClone() const final
+  const Surface*
+  cloneIfFree() const final
   {
     return nullptr;
   }
