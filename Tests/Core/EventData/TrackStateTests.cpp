@@ -14,14 +14,21 @@
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 namespace Test {
 
-  using Measurement1D = Measurement<unsigned long int, ParDef::eLOC_0>;
-  using Measurement2D
-      = Measurement<unsigned long int, ParDef::eLOC_0, ParDef::eLOC_1>;
+  using Identifier = unsigned long int;
 
+  template <ParID_t... params>
+  using MeasurementType = Measurement<Identifier, params...>;
+
+  template <ParID_t... params>
+  using MeasuredStateType
+      = MeasuredTrackState<Identifier, TrackParameters, params...>;
+  using ParametricStateType = ParametricTrackState<Identifier, TrackParameters>;
+  using VariantStateType    = VariantTrackState<Identifier, TrackParameters>;
   ///
   /// @brief Unit test for creation of Measurement object
   ///
@@ -33,23 +40,18 @@ namespace Test {
     // Construct the 1D measurement
     ActsSymMatrixD<1> cov1D;
     cov1D << 0.04;
-    Measurement1D m1D(plane, 0, std::move(cov1D), 0.02);
+    MeasurementType<ParDef::eLOC_0> m1D(plane, 0, std::move(cov1D), 0.02);
     // Construct the 2D measurement
     ActsSymMatrixD<2> cov2D;
     cov2D << 0.04, 0., 0.09, 0.;
-    Measurement2D m2D(plane, 0, std::move(cov2D), 0.02, 0.03);
+    MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2D(
+        plane, 0, std::move(cov2D), 0.02, 0.03);
 
     // The 1D track state from the measurement
-    TrackState<TrackParameters, Measurement1D> mts1D(m1D);
-    BOOST_CHECK(mts1D.predicted == nullptr);
-    BOOST_CHECK(mts1D.updated == nullptr);
-    BOOST_CHECK(mts1D.smoothed == nullptr);
-
+    VariantStateType mts1D = MeasuredStateType<ParDef::eLOC_0>(m1D);
     // The 2D track state from the measurement
-    TrackState<TrackParameters, Measurement2D> mts2D(m2D);
-    BOOST_CHECK(mts2D.predicted == nullptr);
-    BOOST_CHECK(mts2D.updated == nullptr);
-    BOOST_CHECK(mts2D.smoothed == nullptr);
+    VariantStateType mts2D
+        = MeasuredStateType<ParDef::eLOC_0, ParDef::eLOC_1>(m2D);
 
     // Construct the parameter
     std::array<double, 5> pars_array = {{-0.1234, 9.8765, 0.45, 0.888, 0.001}};
@@ -58,22 +60,13 @@ namespace Test {
         pars_array[4];
 
     // constructor from parameter vector
-    auto ataPlane1D
+    auto ataPlane
         = std::make_unique<const BoundParameters>(nullptr, pars, plane);
-    auto ataPlane2D
-        = std::make_unique<const BoundParameters>(nullptr, pars, plane);
+    // The parametric track state from the parameters
+    VariantStateType pts = ParametricStateType(std::move(ataPlane));
 
-    // The 1D track state from the measurement
-    TrackState<TrackParameters, Measurement1D> pts1D(std::move(ataPlane1D));
-    BOOST_CHECK(pts1D.predicted != nullptr);
-    BOOST_CHECK(pts1D.updated == nullptr);
-    BOOST_CHECK(pts1D.smoothed == nullptr);
-
-    // The 2D track state from the measurement
-    TrackState<TrackParameters, Measurement2D> pts2D(std::move(ataPlane2D));
-    BOOST_CHECK(pts2D.predicted != nullptr);
-    BOOST_CHECK(pts2D.updated == nullptr);
-    BOOST_CHECK(pts2D.smoothed == nullptr);
+    // The parametric track state from the surface only
+    VariantStateType sts = ParametricStateType(plane);
   }
 
 }  // namespace Test

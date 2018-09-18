@@ -26,8 +26,11 @@
 
 namespace Acts {
 namespace Test {
+
+  using Identifier = unsigned long int;
+
   template <ParID_t... params>
-  using Measurement_t = Measurement<unsigned long int, params...>;
+  using Measurement_t = Measurement<Identifier, params...>;
 
   BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {
@@ -35,7 +38,7 @@ namespace Test {
     CylinderSurface   cylinder(nullptr, 3, 10);
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
-    FittableMeasurement<unsigned long int> m
+    FittableMeasurement<Identifier> m
         = Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(
             cylinder, 0, std::move(cov), -0.1, 0.45);
 

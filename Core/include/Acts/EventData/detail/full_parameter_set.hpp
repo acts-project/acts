@@ -7,11 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// STL include(s)
+
 #include <type_traits>
 #include <utility>
 
-// Acts include(s)
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {

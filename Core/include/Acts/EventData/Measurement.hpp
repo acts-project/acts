@@ -114,6 +114,11 @@ public:
   }
 
   /// @brief copy constructor
+  ///
+  /// @tparam identifier_t The identifier type
+  /// @tparam params...The local parameter pack
+  ///
+  /// @param copy is the source for the copy
   Measurement(const Measurement<identifier_t, params...>& copy)
     : m_oParameters(copy.m_oParameters)
     , m_pSurface(copy.m_pSurface->isFree()
@@ -124,6 +129,11 @@ public:
   }
 
   /// @brief move constructor
+  ///
+  /// @tparam identifier_t The identifier type
+  /// @tparam params...The local parameter pack
+  ///
+  /// @param rhs is the source for the move
   Measurement(Measurement<identifier_t, params...>&& rhs)
     : m_oParameters(std::move(rhs.m_oParameters))
     , m_pSurface(rhs.m_pSurface)
@@ -133,6 +143,11 @@ public:
   }
 
   /// @brief copy assignment operator
+  ///
+  /// @tparam identifier_t The identifier type
+  /// @tparam params...The local parameter pack
+  ///
+  /// @param rhs is the source for the assignment
   Measurement<identifier_t, params...>&
   operator=(const Measurement<identifier_t, params...>& rhs)
   {
@@ -144,6 +159,11 @@ public:
   }
 
   /// @brief move assignment operator
+  ///
+  /// @tparam identifier_t The identifier type
+  /// @tparam params...The local parameter pack
+  ///
+  /// @param rhs is the source for the move assignment
   Measurement<identifier_t, params...>&
   operator=(Measurement<identifier_t, params...>&& rhs)
   {
@@ -323,19 +343,18 @@ private:
   identifier_t   m_oIdentifier;  ///< identifier for this measurement
 };
 
-/**
- * @brief general type for any possible Measurement
- */
-template <typename identifier_t>
-using FittableMeasurement =
-    typename detail::fittable_type_generator<identifier_t>::type;
-
+/// @ brief visitor pattern to extract the surface
+///
 struct SurfaceGetter : public boost::static_visitor<const Surface&>
 {
 public:
-  template <typename Meas_t>
+  /// @brief call operator for surface extraction using the boost visitor
+  /// pattern
+  /// @tparam measurement_t Type of the measurement (templated)
+  /// @param m The measurement for which the surface will be extracted
+  template <typename measurement_t>
   const Surface&
-  operator()(const Meas_t& m) const
+  operator()(const measurement_t& m) const
   {
     return m.referenceSurface();
   }

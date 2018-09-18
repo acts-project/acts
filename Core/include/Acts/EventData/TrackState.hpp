@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/detail/trackstate_type_generator.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 
@@ -19,15 +22,13 @@ class Surface;
 /// @brief Templated class to hold the track information
 /// on a surface along the trajectory
 ///
+/// @tparam identifier_t Type of the identifier
 /// @tparam parameters_t Type of the parameters on the surface
-/// @tparam states_t Type of the state object
-template <typename parameters_t, typename measurement_t>
+/// @tparam params Type list of the measurement type
+template <typename identifier_t, typename parameters_t, ParID_t... params>
 class TrackState
 {
 public:
-  /// The surface of this TrackState
-  const Surface* surface = nullptr;
-
   /// The predicted state if needed
   std::unique_ptr<const parameters_t> predicted = nullptr;
 
@@ -38,7 +39,8 @@ public:
   std::unique_ptr<const parameters_t> smoothed = nullptr;
 
   /// The measurement_t at this TrackState
-  std::unique_ptr<const measurement_t> measurement = nullptr;
+  std::unique_ptr<const Measurement<identifier_t, params...>> measurement
+      = nullptr;
 
   /// Material Properties associated to this TrackState
   MaterialProperties material{};
@@ -47,8 +49,8 @@ public:
   ///
   /// @tparam measurement_t Type of the measurement
   /// @param measurement the object
-  TrackState(const measurement_t& measurement)
-    : surface(&measurement.referenceSurface())
+  TrackState(const Measurement<identifier_t, params...>& measurement)
+    : m_surface(&measurement.referenceSurface())
   {
   }
 
@@ -57,9 +59,42 @@ public:
   /// @tparam parameters_t Type of the predicted parameters
   /// @param parameters object as unitue ptr
   TrackState(std::unique_ptr<const parameters_t> parameters)
-    : surface(&(parameters->referenceSurface()))
-    , predicted(std::move(parameters))
+    : predicted(std::move(parameters))
+    , m_surface(&(predicted->referenceSurface()))
   {
   }
+
+  /// Constructor from surface
+  ///
+  /// @tparam parameters_t Type of the predicted parameters
+  TrackState(const Surface& surface) : m_surface(&(surface)) {}
+
+  /// @brief return method for the surface
+  const Surface&
+  referenceSurface() const
+  {
+    return (*m_surface);
+  }
+
+private:
+  /// The surface of this TrackState
+  const Surface* m_surface = nullptr;
 };
+
+/// @brief track state for measurements
+template <typename identifier_t, typename parameters_t, ParID_t... params>
+using MeasuredTrackState = TrackState<identifier_t, parameters_t, params...>;
+
+/// @brief track state for parametric description
+///
+/// @todo: investigate if we can move that to dim=0 description (Eigen allows)
+template <typename identifier_t, typename parameters_t>
+using ParametricTrackState
+    = TrackState<identifier_t, parameters_t, ParDef::eLOC_0>;
+
+/// @brief general type for any possible Measurement
+template <typename identifier_t, typename parameters_t>
+using VariantTrackState =
+    typename detail::trackstate_type_generator<identifier_t,
+                                               parameters_t>::type;
 }
