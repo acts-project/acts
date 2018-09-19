@@ -9,8 +9,8 @@
 #define BOOST_TEST_MODULE KalmanFitter Tests
 #include <boost/test/included/unit_test.hpp>
 
-#include "DetectorBuild.hpp"
 #include "Acts/Detector/TrackingGeometry.hpp"
+#include "DetectorBuild.hpp"
 
 #include <vector>
 
@@ -22,9 +22,9 @@ namespace Test {
   ///
   BOOST_AUTO_TEST_CASE(kalman_fitter_initialization)
   {
-	  std::shared_ptr<TrackingGeometry> detector = buildGeometry();
-	  
-	BOOST_TEST(true);
+    std::shared_ptr<TrackingGeometry> detector = buildGeometry();
+
+    BOOST_TEST(true);
   }
 
 }  // namespace Test

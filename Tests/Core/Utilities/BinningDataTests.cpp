@@ -59,7 +59,7 @@ namespace Test {
   BinningData yData_arb(open, binY, values);
   // | -M_PI |  -2 |  -1 |  1 |  2 |  M_PI |
   std::vector<double> phiValues = {-M_PI, -2., -1., 1., 2., M_PI};
-  BinningData        phiData_arb(closed, binPhi, phiValues);
+  BinningData         phiData_arb(closed, binPhi, phiValues);
 
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50

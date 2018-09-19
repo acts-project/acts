@@ -43,9 +43,9 @@ public:
   BinningType   type;      ///< binning type: equidistant, arbitrary
   BinningOption option;    ///< binning option: open, closed
   BinningValue  binvalue;  ///< binning value: binX, binY, binZ, binR ...
-  double         min;       ///< minimum value
-  double         max;       ///< maximum value
-  double         step;      ///< binning step
+  double        min;       ///< minimum value
+  double        max;       ///< maximum value
+  double        step;      ///< binning step
   bool          zdim;      ///< zero dimensional binning : direct access
 
   /// sub structure: describe some sub binning
@@ -90,8 +90,8 @@ public:
   BinningData(BinningOption                      bOption,
               BinningValue                       bValue,
               size_t                             bBins,
-              double                              bMin,
-              double                              bMax,
+              double                             bMin,
+              double                             bMax,
               std::unique_ptr<const BinningData> sBinData     = nullptr,
               bool                               sBinAdditive = false)
     : type(equidistant)
@@ -128,7 +128,7 @@ public:
   /// @param sBinData is (optional) sub structure
   BinningData(BinningOption                      bOption,
               BinningValue                       bValue,
-              const std::vector<double>&          bBoundaries,
+              const std::vector<double>&         bBoundaries,
               std::unique_ptr<const BinningData> sBinData = nullptr)
     : type(arbitrary)
     , option(bOption)
@@ -324,7 +324,8 @@ public:
   {
     const std::vector<double>& bvals = boundaries();
     // take the center between bin boundaries
-    double value = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
+    double value
+        = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
     return value;
   }
 
@@ -446,9 +447,9 @@ public:
     if (zdim) {
       return 0;
     }
-    double    val     = value(position);
+    double   val     = value(position);
     Vector3D probe   = position + dir.normalized();
-    double    nextval = value(probe);
+    double   nextval = value(probe);
     return (nextval > val) ? 1 : -1;
   }
 
@@ -496,9 +497,9 @@ public:
   }
 
 private:
-  size_t             m_bins;        ///< number of bins
+  size_t              m_bins;        ///< number of bins
   std::vector<double> m_boundaries;  ///< vector of holding the bin boundaries
-  size_t             m_totalBins;   ///< including potential substructure
+  size_t              m_totalBins;   ///< including potential substructure
   std::vector<double> m_totalBoundaries;  ///< including potential substructure
 
   size_t (*m_functionPtr)(double, const BinningData&);  /// function pointer

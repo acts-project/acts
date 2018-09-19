@@ -82,7 +82,7 @@ public:
   /// @param opt is the binning option : open, closed
   /// @param value is the binninb value : binX, binY, binZ, etc.
   /// @param tForm is the (optional) transform
-  BinUtility(std::vector<double>&                       bValues,
+  BinUtility(std::vector<double>&                      bValues,
              BinningOption                             opt   = open,
              BinningValue                              value = binPhi,
              const std::shared_ptr<const Transform3D>& tForm = nullptr)
@@ -422,7 +422,8 @@ public:
         sl << " - step       : " << (*bdIter).step << std::endl;
       }
       sl << " - boundaries : | ";
-      std::vector<double>::const_iterator bIter = (*bdIter).boundaries().begin();
+      std::vector<double>::const_iterator bIter
+          = (*bdIter).boundaries().begin();
       for (; bIter != (*bdIter).boundaries().end(); ++bIter) {
         sl << (*bIter) << " | ";
       }
