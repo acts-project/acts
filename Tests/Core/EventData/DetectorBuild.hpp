@@ -18,11 +18,13 @@
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "Acts/Tools/LayerArrayCreator.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/BinnedArrayXD.hpp"
 #include <vector>
 
 namespace Acts {
 namespace Test {
-  
+
 std::shared_ptr<TrackingGeometry>
 buildGeometry()
 {
@@ -70,12 +72,12 @@ buildGeometry()
 		layers[i] = PlaneLayer::create(std::make_shared<const Transform3D>(trafo), rBounds, std::move(surArray), 1. * units::_mm);
 	}
 	
-	Transform3D trafoVol(Transform3D::Identity() * rotation);
-	trafoVol.translation() = Vector3D(-1.5 * units::_m, 0., 0.);
+	Transform3D trafoVol1(Transform3D::Identity() * rotation); // TODO: is rotation and the cube volume a duplication?
+	trafoVol1.translation() = Vector3D(-1.5 * units::_m, 0., 0.); 
 	
-	auto boundsVol = std::make_shared<const Acts::CuboidVolumeBounds>(1.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
+	auto boundsVol = std::make_shared<const CuboidVolumeBounds>(1.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 	
-	LayerArrayCreator layArrCreator(getDefaultLogger("LayerArrayCreator", Acts::Logging::VERBOSE));
+	LayerArrayCreator layArrCreator(getDefaultLogger("LayerArrayCreator", Logging::VERBOSE));
 	LayerVector layVec;
 	layVec.push_back(layers[0]);
 	layVec.push_back(layers[1]);
@@ -86,10 +88,11 @@ buildGeometry()
                 BinningType::arbitrary,
                 BinningValue::binX));
 
-	auto trackVolume1 = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVol), boundsVol, nullptr, std::move(layArr1), layVec, {}, {}, "Volume 1");
+	auto trackVolume1 = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVol1), boundsVol, nullptr, std::move(layArr1), layVec, {}, {}, "Volume 1");
 	trackVolume1->sign(GeometrySignature::Global);
 
-	trafoVol.translation() = Vector3D(1.5 * units::_m, 0., 0.);
+	Transform3D trafoVol2(Transform3D::Identity() * rotation);
+	trafoVol2.translation() = Vector3D(1.5 * units::_m, 0., 0.);
 	
 	layVec.clear();
 	for(i = 2; i < 6; i++)
@@ -101,11 +104,42 @@ buildGeometry()
                 BinningType::arbitrary,
                 BinningValue::binX));
 	
-	auto trackVolume2 = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVol), boundsVol, nullptr, std::move(layArr2), layVec, {}, {}, "Volume 2");
+	auto trackVolume2 = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVol2), boundsVol, nullptr, std::move(layArr2), layVec, {}, {}, "Volume 2");
 	trackVolume2->sign(GeometrySignature::Global);
 	
+    trackVolume1->glueTrackingVolume(BoundarySurfaceFace::positiveFaceYZ,
+            trackVolume2,
+            BoundarySurfaceFace::negativeFaceXY);
+            
+    trackVolume2->glueTrackingVolume(BoundarySurfaceFace::negativeFaceYZ,
+            trackVolume1,
+            BoundarySurfaceFace::positiveFaceXY);
+
+	Transform3D trafoWorld;
+	trafoWorld.translation() = Vector3D(0., 0., 0.);
 	
-	return nullptr;
+	auto worldVol = std::make_shared<const CuboidVolumeBounds>(3. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
+	
+	std::vector<std::pair<TrackingVolumePtr, Vector3D>> tapVec;
+	
+    tapVec.push_back(std::make_pair(trackVolume1, Vector3D(-1.5 * units::_m, 0., 0.)));
+    tapVec.push_back(std::make_pair(trackVolume2, Vector3D(1.5 * units::_m, 0., 0.)));
+                
+    std::vector<double> binBoundaries = {-3. * units::_m, 0., 3. * units::_m};
+
+    BinningData binData(
+            BinningOption::open, BinningValue::binX, binBoundaries);
+    std::unique_ptr<const BinUtility> bu(new BinUtility(binData));
+
+	std::shared_ptr<const TrackingVolumeArray> trVolArr(
+            new BinnedArrayXD<TrackingVolumePtr>(tapVec, std::move(bu)));
+
+	MutableTrackingVolumePtr mtvpWorld(TrackingVolume::create(
+                std::make_shared<const Transform3D>(trafoWorld), worldVol, trVolArr, "World"));
+
+    mtvpWorld->sign(GeometrySignature::Global);
+
+	return std::shared_ptr<TrackingGeometry>(new Acts::TrackingGeometry(mtvpWorld));
 }
 
 }  // namespace Test
