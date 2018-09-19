@@ -15,20 +15,20 @@
 
 namespace Acts {
 // forward declaration
-template <typename identifier_t, ParID_t... params>
-class Measurement;
+template <typename identifier_t, typename parameters_t, ParID_t... params>
+class TrackState;
 
 /// @cond detail
 namespace detail {
   ///
   /// @brief generate boost::variant type for all possible Measurement's
   ///
-  template <typename identifier_t>
-  struct fittable_type_generator;
+  template <typename identifier_t, typename parameters_t>
+  struct trackstate_type_generator;
 
   /// @cond
-  template <typename identifier_t>
-  struct fittable_type_generator
+  template <typename identifier_t, typename parameters_t>
+  struct trackstate_type_generator
   {
     template <typename... T>
     struct container
@@ -39,25 +39,27 @@ namespace detail {
     struct add_prepended;
 
     template <ParID_t first, typename... others>
-    struct add_prepended<Measurement<identifier_t, first>, container<others...>>
+    struct add_prepended<TrackState<identifier_t, parameters_t, first>,
+                         container<others...>>
     {
-      using type
-          = container<typename add_prepended<Measurement<identifier_t, first>,
-                                             others>::type...,
-                      others...>;
+      using type = container<
+          typename add_prepended<TrackState<identifier_t, parameters_t, first>,
+                                 others>::type...,
+          others...>;
     };
 
     template <ParID_t first, ParID_t... others>
-    struct add_prepended<Measurement<identifier_t, first>,
-                         Measurement<identifier_t, others...>>
+    struct add_prepended<TrackState<identifier_t, parameters_t, first>,
+                         TrackState<identifier_t, parameters_t, others...>>
     {
-      using type = Measurement<identifier_t, first, others...>;
+      using type = TrackState<identifier_t, parameters_t, first, others...>;
     };
 
     template <ParID_t... first>
-    struct add_prepended<Measurement<identifier_t, first...>, boost::mpl::na>
+    struct add_prepended<TrackState<identifier_t, parameters_t, first...>,
+                         boost::mpl::na>
     {
-      using type = Measurement<identifier_t, first...>;
+      using type = TrackState<identifier_t, parameters_t, first...>;
     };
 
     template <typename T, typename C>
@@ -73,24 +75,34 @@ namespace detail {
     struct generator_impl;
 
     template <ParID_t first, ParID_t... others>
-    struct generator_impl<container<Measurement<identifier_t, first>,
-                                    Measurement<identifier_t, others...>>>
+    struct generator_impl<container<TrackState<identifier_t,
+                                               parameters_t,
+                                               first>,
+                                    TrackState<identifier_t,
+                                               parameters_t,
+                                               others...>>>
     {
-      using type = container<Measurement<identifier_t, first>,
-                             Measurement<identifier_t, others...>,
-                             Measurement<identifier_t, first, others...>>;
+      using type
+          = container<TrackState<identifier_t, parameters_t, first>,
+                      TrackState<identifier_t, parameters_t, others...>,
+                      TrackState<identifier_t, parameters_t, first, others...>>;
     };
 
     template <ParID_t first, typename next, typename... others>
-    struct generator_impl<container<Measurement<identifier_t, first>,
+    struct generator_impl<container<TrackState<identifier_t,
+                                               parameters_t,
+                                               first>,
                                     next,
                                     others...>>
     {
       using others_combined =
           typename generator_impl<container<next, others...>>::type;
-      using prepended = typename add_prepended<Measurement<identifier_t, first>,
-                                               others_combined>::type;
-      using type = typename add_to_container<Measurement<identifier_t, first>,
+      using prepended =
+          typename add_prepended<TrackState<identifier_t, parameters_t, first>,
+                                 others_combined>::type;
+      using type = typename add_to_container<TrackState<identifier_t,
+                                                        parameters_t,
+                                                        first>,
                                              prepended>::type;
     };
 
@@ -124,7 +136,7 @@ namespace detail {
     template <ParID_t... values>
     struct converter<std::integer_sequence<ParID_t, values...>>
     {
-      using type = container<Measurement<identifier_t, values>...>;
+      using type = container<TrackState<identifier_t, parameters_t, values>...>;
     };
 
     template <typename... types>

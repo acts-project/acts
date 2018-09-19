@@ -90,6 +90,14 @@ public:
   ConeSurface&
   operator=(const ConeSurface& other);
 
+  /// Conditional Implicit constructor
+  /// uses the copy constructor (if needed)
+  ///
+  /// Checks if a surface is free and either clones or returns
+  /// the pointer to itself - the return object ist a const pointer
+  const ConeSurface*
+  cloneIfFree() const final;
+
   /// Implicit Constructor
   ///
   /// @param shift is the optional shift applied after cloning

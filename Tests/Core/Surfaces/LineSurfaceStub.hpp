@@ -73,6 +73,13 @@ public:
     return true;
   }
 
+  /// Conditional Implicit constructor
+  const Surface*
+  cloneIfFree() const final
+  {
+    return nullptr;
+  }
+
   using Surface::normal;
 };
 }  // end of ns

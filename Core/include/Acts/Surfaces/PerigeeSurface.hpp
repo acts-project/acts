@@ -59,6 +59,14 @@ public:
 
   ~PerigeeSurface() override;
 
+  /// Conditional Implicit constructor
+  /// uses the copy constructor (if needed)
+  ///
+  /// Checks if a surface is free and either clones or returns
+  /// the pointer to itself - the return object ist a const pointer
+  const PerigeeSurface*
+  cloneIfFree() const final;
+
   /// Virtual constructor
   ///
   /// @param shift is the potential shift that is applied after cloning

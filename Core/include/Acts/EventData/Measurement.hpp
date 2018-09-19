@@ -98,8 +98,7 @@ public:
     : m_oParameters(std::make_unique<const CovMatrix_t>(std::move(cov)),
                     head,
                     values...)
-    , m_pSurface(surface.isFree() ? const_cast<const Surface*>(surface.clone())
-                                  : &surface)
+    , m_pSurface(surface.cloneIfFree())
     , m_oIdentifier(id)
   {
   }
@@ -114,25 +113,38 @@ public:
   }
 
   /// @brief copy constructor
+  ///
+  /// @tparam identifier_t The identifier type
+  /// @tparam params...The local parameter pack
+  ///
+  /// @param copy is the source for the copy
   Measurement(const Measurement<identifier_t, params...>& copy)
     : m_oParameters(copy.m_oParameters)
-    , m_pSurface(copy.m_pSurface->isFree()
-                     ? const_cast<const Surface*>(copy.m_pSurface->clone())
-                     : copy.m_pSurface)
+    , m_pSurface(copy.m_pSurface->cloneIfFree())
     , m_oIdentifier(copy.m_oIdentifier)
   {
   }
 
   /// @brief move constructor
+  ///
+  /// @tparam identifier_t The identifier type
+  /// @tparam params...The local parameter pack
+  ///
+  /// @param rhs is the source for the move
   Measurement(Measurement<identifier_t, params...>&& rhs)
     : m_oParameters(std::move(rhs.m_oParameters))
     , m_pSurface(rhs.m_pSurface)
     , m_oIdentifier(std::move(rhs.m_oIdentifier))
   {
-    rhs.m_pSurface = 0;
+    rhs.m_pSurface = nullptr;
   }
 
   /// @brief copy assignment operator
+  ///
+  /// @tparam identifier_t The identifier type
+  /// @tparam params...The local parameter pack
+  ///
+  /// @param rhs is the source for the assignment
   Measurement<identifier_t, params...>&
   operator=(const Measurement<identifier_t, params...>& rhs)
   {
@@ -144,6 +156,11 @@ public:
   }
 
   /// @brief move assignment operator
+  ///
+  /// @tparam identifier_t The identifier type
+  /// @tparam params...The local parameter pack
+  ///
+  /// @param rhs is the source for the move assignment
   Measurement<identifier_t, params...>&
   operator=(Measurement<identifier_t, params...>&& rhs)
   {
@@ -323,29 +340,9 @@ private:
   identifier_t   m_oIdentifier;  ///< identifier for this measurement
 };
 
-/**
- * @brief general type for any possible Measurement
- */
+/// @brief FittableMeasurement boost_variant type
 template <typename identifier_t>
 using FittableMeasurement =
     typename detail::fittable_type_generator<identifier_t>::type;
 
-struct SurfaceGetter : public boost::static_visitor<const Surface&>
-{
-public:
-  template <typename Meas_t>
-  const Surface&
-  operator()(const Meas_t& m) const
-  {
-    return m.referenceSurface();
-  }
-};
-
-template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
-const Surface&
-getSurface(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& m)
-{
-  static const SurfaceGetter sg = SurfaceGetter();
-  return boost::apply_visitor(sg, m);
-}
 }  // namespace Acts

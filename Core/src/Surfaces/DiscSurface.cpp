@@ -121,6 +121,15 @@ Acts::DiscSurface::operator=(const DiscSurface& other)
   return *this;
 }
 
+const Acts::DiscSurface*
+Acts::DiscSurface::cloneIfFree() const
+{
+  if (isFree()) {
+    return new DiscSurface(*this);
+  }
+  return (this);
+}
+
 Acts::Surface::SurfaceType
 Acts::DiscSurface::type() const
 {

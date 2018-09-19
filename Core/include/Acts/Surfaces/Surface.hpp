@@ -117,6 +117,14 @@ public:
   virtual bool
   operator!=(const Surface& sf) const;
 
+  /// Conditional Implicit constructor
+  /// uses the copy constructor (if needed)
+  ///
+  /// Checks if a surface is free and either clones or returns
+  /// the pointer to itself. The return object is const.
+  virtual const Surface*
+  cloneIfFree() const = 0;
+
   /// Implicit constructor
   /// uses the copy constructor a new position can optionally be given
   ///

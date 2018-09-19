@@ -7,14 +7,14 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// STL include(s)
+
 #include <list>
 #include <memory>
 #include <type_traits>
 
-// ATS include(s)
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/surface_getter.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -150,12 +150,12 @@ public:
       ActsVectorD<5> parValues;
       parValues << 0, 0, 0, 0, 0.001;
       std::cout << *std::begin(vMeasurements) << std::endl;
-      getSurface(*std::begin(vMeasurements));
+      detail::getSurface(*std::begin(vMeasurements));
       pInitialPars = std::make_unique<const BoundParameters>(
           std::make_unique<const ActsSymMatrixD<Acts::NGlobalPars>>(
               std::move(cov)),
           parValues,
-          getSurface(*std::begin(vMeasurements)));
+          detail::getSurface(*std::begin(vMeasurements)));
     }
 
     Cache                  c;

@@ -103,6 +103,15 @@ Acts::PlaneSurface::PlaneSurface(const variant_data& vardata)
 
 Acts::PlaneSurface::~PlaneSurface() = default;
 
+const Acts::PlaneSurface*
+Acts::PlaneSurface::cloneIfFree() const
+{
+  if (isFree()) {
+    return new PlaneSurface(*this);
+  }
+  return (this);
+}
+
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const PlaneSurface& other)
 {
