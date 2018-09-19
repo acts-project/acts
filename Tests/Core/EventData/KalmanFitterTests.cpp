@@ -11,7 +11,9 @@
 
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "DetectorBuild.hpp"
-
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include <vector>
 
 namespace Acts {
@@ -24,6 +26,38 @@ namespace Test {
   {
     std::shared_ptr<TrackingGeometry> detector = buildGeometry();
 
+	std::vector<FittableMeasurement<int>> measurements;
+	
+	ActsSymMatrixD<2> cov2D;
+	cov2D << 1. * units::_mm, 0., 0., 1. * units::_mm;
+	
+	Vector3D pos(-2. * units::_m, 0., 0.);
+	Surface const* sur = detector->lowestTrackingVolume(pos)->associatedLayer(pos)->surfaceArray()->at(pos)[0];
+	measurements.push_back(Measurement<int, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.));
+	
+	pos = {-1. * units::_m, 0., 0.};
+	sur = detector->lowestTrackingVolume(pos)->associatedLayer(pos)->surfaceArray()->at(pos)[0];
+	measurements.push_back(Measurement<int, eLOC_0, eLOC_1>(*sur, 1, cov2D, 0., 0.));
+	
+	ActsSymMatrixD<1> cov1D;
+	cov1D << 1. * units::_mm;
+	
+	pos = {1. * units::_m - 1. * units::_mm, 0., 0.};
+	sur = detector->lowestTrackingVolume(pos)->associatedLayer(pos)->surfaceArray()->at(pos)[0];
+	measurements.push_back(Measurement<int, eLOC_0>(*sur, 2, cov1D, 0.));
+	
+	pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
+	sur = detector->lowestTrackingVolume(pos)->associatedLayer(pos)->surfaceArray()->at(pos)[0];
+	measurements.push_back(Measurement<int, eLOC_1>(*sur, 3, cov1D, 0.));
+	
+	pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
+	sur = detector->lowestTrackingVolume(pos)->associatedLayer(pos)->surfaceArray()->at(pos)[0];
+	measurements.push_back(Measurement<int, eLOC_0>(*sur, 4, cov1D, 0.));
+	
+	pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
+	sur = detector->lowestTrackingVolume(pos)->associatedLayer(pos)->surfaceArray()->at(pos)[0];
+	measurements.push_back(Measurement<int, eLOC_1>(*sur, 5, cov1D, 0.));
+	
     BOOST_TEST(true);
   }
 

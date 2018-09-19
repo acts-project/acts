@@ -41,17 +41,17 @@ namespace Test {
     // Set translation vectors
     double                eps = 1. * units::_mm;
     std::vector<Vector3D> translations;
-    translations.push_back({-2., 0., 0.});
-    translations.push_back({-1., 0., 0.});
-    translations.push_back({1. - eps, 0., 0.});
-    translations.push_back({1. + eps, 0., 0.});
-    translations.push_back({2. - eps, 0., 0.});
-    translations.push_back({2. + eps, 0., 0.});
+    translations.push_back({-2. * units::_m, 0., 0.});
+    translations.push_back({-1. * units::_m, 0., 0.});
+    translations.push_back({1. * units::_m - eps, 0., 0.});
+    translations.push_back({1. * units::_m + eps, 0., 0.});
+    translations.push_back({2. * units::_m - eps, 0., 0.});
+    translations.push_back({2. * units::_m + eps, 0., 0.});
 
     // Boundaries of the surface
     std::shared_ptr<const RectangleBounds> rBounds(
         new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
-
+	
     // Construct surfaces
     std::array<PlaneSurface*, 6> surfaces;
     unsigned int i;
@@ -106,8 +106,8 @@ namespace Test {
                                  {},
                                  {},
                                  "Volume 1");
-    trackVolume1->sign(GeometrySignature::Global);
-
+    trackVolume1->sign(GeometrySignature::Global);	
+	
     // Build volume for surfaces with positive x-values
     Transform3D trafoVol2(Transform3D::Identity() * rotation);
     trafoVol2.translation() = Vector3D(1.5 * units::_m, 0., 0.);
