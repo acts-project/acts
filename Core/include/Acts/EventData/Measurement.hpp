@@ -340,4 +340,9 @@ private:
   identifier_t   m_oIdentifier;  ///< identifier for this measurement
 };
 
+/// @brief FittableMeasurement boost_variant type
+template <typename identifier_t>
+using FittableMeasurement =
+    typename detail::fittable_type_generator<identifier_t>::type;
+
 }  // namespace Acts
