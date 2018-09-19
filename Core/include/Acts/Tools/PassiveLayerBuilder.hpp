@@ -13,6 +13,7 @@
 #pragma once
 
 #include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -23,8 +24,6 @@ namespace Acts {
 /// The PassiveLayerBuilder is able to build cylinder & disc layers with given
 /// dimensions and material. The specifications of the the layers have to be
 /// given by the configuration struct.
-
-class MaterialProperties;
 
 class PassiveLayerBuilder : public ILayerBuilder
 {
