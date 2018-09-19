@@ -116,7 +116,7 @@ public:
   /// Bool() operator for validity checking
   explicit operator bool() const { return intersection.valid; }
 
-  /// smaller operator for ordering & sorting
+  /// @brief smaller operator for ordering & sorting
   ///
   /// @param oi is the source intersection for comparison
   bool
@@ -125,7 +125,7 @@ public:
     return (intersection < oi.intersection);
   }
 
-  /// greater operator for ordering & sorting
+  /// @brief greater operator for ordering & sorting
   ///
   /// @param oi is the source intersection for comparison
   bool
@@ -172,7 +172,7 @@ public:
   /// Bool() operator for validity checking
   explicit operator bool() const { return intersection.valid; }
 
-  /// Smaller operator for ordering & sorting
+  /// @brief smaller operator for ordering & sorting
   ///
   /// @param fi is the full intersection to be tested
   bool
@@ -181,13 +181,30 @@ public:
     return (intersection < fi.intersection);
   }
 
-  /// Greater operator for ordering & sorting
+  /// @brief greater operator for ordering & sorting
   ///
   /// @param fi is the full intersection to be tested
   bool
   operator>(const FullIntersection<object_t, representation_t>& fi) const
   {
     return (intersection > fi.intersection);
+  }
+};
+
+struct SameSurfaceIntersection
+{
+  /// @brief comparison operator
+  ///
+  /// This is a struct to pick out intersection with identical surfaces
+  ///
+  /// @tparam intersection_t Type of the intersection object
+  /// @param i1 First intersection to test
+  /// @param i2 Second intersection to test
+  template <typename intersection_t>
+  bool
+  operator()(const intersection_t& i1, const intersection_t& i2) const
+  {
+    return (i1.object == i2.object);
   }
 };
 

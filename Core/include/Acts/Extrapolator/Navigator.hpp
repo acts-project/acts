@@ -186,6 +186,16 @@ struct Navigator
     bool targetReached = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
+
+    /// NavigationSurfaces provided by the user - with Layer association
+    std::map<const Layer*, NavigationSurfaces> userSurfacesOnLayer{};
+
+    /// NavigationSurfaces provided by the user - without Layer association
+    std::vector<SurfaceIntersection> userSurfacesFree = {};
+
+    /// All surfaces handled by the Navigator during navigation
+    bool                        rememberSurfaces  = false;
+    std::vector<const Surface*> processedSurfaces = {};
   };
 
   /// Unique typedef to publish to the Propagator
@@ -311,6 +321,11 @@ struct Navigator
                                                       true)) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
+        // remember that we processed this surface
+        if (state.navigation.rememberSurfaces) {
+          state.navigation.processedSurfaces.push_back(
+              state.navigation.targetSurface);
+        }
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Current surface set to target surface ";
@@ -346,7 +361,6 @@ struct Navigator
   bool
   initialize(propagator_state_t& state, const corrector_t& navCorr) const
   {
-
     // No initialisation necessary
     if (state.navigation.currentVolume) {
       return false;
@@ -360,6 +374,11 @@ struct Navigator
     // an extrapolation process
     state.navigation.currentSurface = state.navigation.startSurface;
     if (state.navigation.currentSurface) {
+      // remember that we processed this surface
+      if (state.navigation.rememberSurfaces) {
+        state.navigation.processedSurfaces.push_back(
+            state.navigation.startSurface);
+      }
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Current surface set to start surface ";
@@ -468,6 +487,11 @@ struct Navigator
           state.navigation.currentSurface
               = state.navigation.navLayerIter->representation;
           if (state.navigation.currentSurface) {
+            // remember that you processed this surface
+            if (state.navigation.rememberSurfaces) {
+              state.navigation.processedSurfaces.push_back(
+                  state.navigation.currentSurface);
+            }
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Current surface set to approach surface ";
@@ -715,6 +739,11 @@ struct Navigator
         // store the boundary for eventual actors to work on it
         state.navigation.currentSurface = boundarySurface;
         if (state.navigation.currentSurface) {
+          // remember that you processed this surface
+          if (state.navigation.rememberSurfaces) {
+            state.navigation.processedSurfaces.push_back(
+                state.navigation.currentSurface);
+          }
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Current surface set to boundary surface ";
@@ -966,6 +995,11 @@ struct Navigator
         } else {
           state.navigation.currentSurface = layerSurface;
           if (state.navigation.currentSurface) {
+            // remember that you processed this surface
+            if (state.navigation.rememberSurfaces) {
+              state.navigation.processedSurfaces.push_back(
+                  state.navigation.currentSurface);
+            }
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Current surface set to approach surface\n";
@@ -1144,6 +1178,11 @@ struct Navigator
         // collect(Property) flag
         state.navigation.currentSurface = surface;
         if (state.navigation.currentSurface) {
+          // remember that you processed this surface
+          if (state.navigation.rememberSurfaces) {
+            state.navigation.processedSurfaces.push_back(
+                state.navigation.currentSurface);
+          }
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Current surface set to resolved surface ";

@@ -8,13 +8,15 @@
 
 // Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
+#include <algorithm>
 #include <boost/test/included/unit_test.hpp>
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
 namespace Test {
 
-  /// test of the geometry ID creation and consistency of the ranges
+  /// test of the intersection class
   BOOST_AUTO_TEST_CASE(IntersectionTest)
   {
 
@@ -139,6 +141,55 @@ namespace Test {
     BOOST_CHECK_EQUAL(ztfsnIntersections[1].pathLength, -1.);
     BOOST_CHECK_EQUAL(ztfsnIntersections[2].pathLength, -2.);
     BOOST_CHECK_EQUAL(ztfsnIntersections[3].pathLength, -3.);
+  }
+
+  /// test of the object intersection class
+  BOOST_AUTO_TEST_CASE(ObjectIntersectionTest)
+  {
+
+    PlaneSurface psf6(Vector3D(6., 0., 0.), Vector3D(1., 0., 0.));
+    PlaneSurface psf7(Vector3D(7., 0., 0.), Vector3D(1., 0., 0.));
+    PlaneSurface psf8(Vector3D(8., 0., 0.), Vector3D(1., 0., 0.));
+    PlaneSurface psf9(Vector3D(9., 0., 0.), Vector3D(1., 0., 0.));
+    PlaneSurface psf10(Vector3D(10., 0., 0.), Vector3D(1., 0., 0.));
+
+    using PlaneIntersection = ObjectIntersection<PlaneSurface>;
+
+    PlaneIntersection int6(Intersection(Vector3D(6., 0., 0.), 6., true), &psf6);
+    PlaneIntersection int7(Intersection(Vector3D(7., 0., 0.), 7., true), &psf7);
+    PlaneIntersection int8(Intersection(Vector3D(8., 0., 0.), 8., true), &psf8);
+    PlaneIntersection int9a(Intersection(Vector3D(9., 0., 0.), 9., true),
+                            &psf9);
+    PlaneIntersection int9b(
+        Intersection(Vector3D(9., 1., 0.), std::sqrt(9. * 9. + 1.), true),
+        &psf9);
+    PlaneIntersection int10(Intersection(Vector3D(10., 0., 0.), 10., true),
+                            &psf10);
+
+    std::vector<PlaneIntersection> firstSet  = {int6, int7, int9b, int10};
+    std::vector<PlaneIntersection> secondSet = {int8, int9a, int9b, int10};
+    // result of the standard union set
+    std::vector<PlaneIntersection> unionSetStd = {};
+    // result of the custominzed union set
+    std::vector<PlaneIntersection> unionSetCst = {};
+
+    // This should give 6 different intersections
+    std::set_union(firstSet.begin(),
+                   firstSet.end(),
+                   secondSet.begin(),
+                   secondSet.end(),
+                   std::back_inserter(unionSetStd));
+    BOOST_TEST(unionSetStd.size() == 6);
+
+    // This should give 5 different inteseciton attempts (for each surface 1)
+    SameSurfaceIntersection onSameSurface;
+    std::set_union(firstSet.begin(),
+                   firstSet.end(),
+                   secondSet.begin(),
+                   secondSet.end(),
+                   std::back_inserter(unionSetCst),
+                   onSameSurface);
+    BOOST_TEST(unionSetCst.size() == 5);
   }
 
 }  // namespace Test
