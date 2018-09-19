@@ -201,12 +201,9 @@ namespace Test {
     // its a pretty bare bones test, and only asserts that the
     // method is called on the expected number of surfaces
     size_t nSurfaces = 0;
-    tGeometry.visitSurfaces([&nSurfaces](const auto*) {
-        nSurfaces++;
-    });
+    tGeometry.visitSurfaces([&nSurfaces](const auto*) { nSurfaces++; });
 
     BOOST_TEST(nSurfaces == 9);
-
   }
 
 }  //  end of namespace Test
