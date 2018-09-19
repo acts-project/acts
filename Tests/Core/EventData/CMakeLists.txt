@@ -28,3 +28,9 @@ target_link_libraries (TrackStateTests PRIVATE ActsCore)
 add_test (NAME TrackStateUnitTests COMMAND TrackStateTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST TrackStateUnitTests TARGETS TrackStateTests)
 
+add_executable (KalmanFitterTests KalmanFitterTests.cpp)
+target_include_directories (KalmanFitterTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (KalmanFitterTests PRIVATE ActsCore)
+add_test (NAME KalmanFitterUnitTests COMMAND KalmanFitterTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanFitterUnitTests TARGETS KalmanFitterTests)
+
