@@ -147,6 +147,13 @@ public:
   ///         (could be a null pointer)
   const Surface*
   getBeamline() const;
+  
+  
+  /// @brief Visit all sensitive surfaces
+  /// 
+  /// @param visitor The callable. Will be called for each sensitive surface that is found
+  void
+  visitSurfaces(const std::function<void(const Acts::Surface*)>& visitor) const;
 
 private:
   /// Geometry Builder busineess: the geometry builder has to sign

@@ -156,3 +156,10 @@ Acts::TrackingGeometry::getBeamline() const
 {
   return m_beam.get();
 }
+
+void
+Acts::TrackingGeometry::visitSurfaces(const std::function<void(const Acts::Surface*)>& visitor) const
+{
+  highestTrackingVolume()->visitSurfaces(visitor);
+}
+
