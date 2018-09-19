@@ -17,6 +17,7 @@
 #include "Acts/Tools/PassiveLayerBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 
@@ -57,10 +58,11 @@ namespace Test {
 
     // ----------------- build a beam pipe -----------------------------------
     PassiveLayerBuilder::Config bplConfig;
-    bplConfig.layerIdentification     = "BeamPipe";
-    bplConfig.centralLayerRadii       = std::vector<double>(1, 3.);
-    bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 40.);
-    bplConfig.centralLayerThickness   = std::vector<double>(1, 0.8);
+    bplConfig.layerIdentification = "BeamPipe";
+    bplConfig.centralLayerRadii   = std::vector<double>(1, 3. * units::_mm);
+    bplConfig.centralLayerHalflengthZ
+        = std::vector<double>(1, 40. * units::_mm);
+    bplConfig.centralLayerThickness = std::vector<double>(1, 0.8 * units::_mm);
     auto beamPipeBuilder = std::make_shared<const PassiveLayerBuilder>(
         bplConfig, getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
     // create the volume for the beam pipe
@@ -75,17 +77,20 @@ namespace Test {
         bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
 
     PassiveLayerBuilder::Config layerBuilderConfig;
-    layerBuilderConfig.layerIdentification     = "CentralBarrel";
-    layerBuilderConfig.centralLayerRadii       = {10., 20., 30.};
-    layerBuilderConfig.centralLayerHalflengthZ = {40., 40., 40.};
-    layerBuilderConfig.centralLayerThickness   = {1., 1., 1.};
+    layerBuilderConfig.layerIdentification = "CentralBarrel";
+    layerBuilderConfig.centralLayerRadii
+        = {10. * units::_mm, 20. * units::_mm, 30. * units::_mm};
+    layerBuilderConfig.centralLayerHalflengthZ
+        = {40. * units::_mm, 40. * units::_mm, 40. * units::_mm};
+    layerBuilderConfig.centralLayerThickness
+        = {1. * units::_mm, 1. * units::_mm, 1. * units::_mm};
     auto layerBuilder = std::make_shared<const PassiveLayerBuilder>(
         layerBuilderConfig,
         getDefaultLogger("CentralBarrelBuilder", layerLLevel));
-    // create the volume for the beam pipe
+    // create the volume for the central barrel
     CylinderVolumeBuilder::Config cvbConfig;
     cvbConfig.trackingVolumeHelper = cylinderVolumeHelper;
-    cvbConfig.volumeName           = "BeamPipe";
+    cvbConfig.volumeName           = "CentralBarrel";
     cvbConfig.layerBuilder         = layerBuilder;
     cvbConfig.layerEnvelopeR       = {1. * units::_mm, 1. * units::_mm};
     cvbConfig.buildToRadiusZero    = false;

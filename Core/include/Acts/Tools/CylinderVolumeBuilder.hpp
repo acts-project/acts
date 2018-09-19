@@ -513,10 +513,10 @@ public:
     bool buildToRadiusZero = false;
     /// needed to build layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
-    /// the envelope covering the potential layers rMin, rMax
+    /// the additional envelope in R to create rMin, rMax
     std::pair<double, double> layerEnvelopeR
         = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
-    /// the envelope covering the potential layers inner/outer
+    /// the additional envelope in Z to create zMin, zMax
     double layerEnvelopeZ = 10. * Acts::units::_mm;
     /// the volume signature
     int volumeSignature = -1;
