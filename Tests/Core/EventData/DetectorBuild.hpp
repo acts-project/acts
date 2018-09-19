@@ -61,6 +61,7 @@ buildGeometry()
 		surfaces[i] = new PlaneSurface(std::make_shared<const Transform3D>(trafo), rBounds);
 	}
     
+    // Construct layers
 	std::array<LayerPtr, 6> layers;
 	for(i = 0; i < 6; i++)
 	{
@@ -72,6 +73,7 @@ buildGeometry()
 		layers[i] = PlaneLayer::create(std::make_shared<const Transform3D>(trafo), rBounds, std::move(surArray), 1. * units::_mm);
 	}
 	
+	// Build volume for surfaces with negative x-values
 	Transform3D trafoVol1(Transform3D::Identity() * rotation); // TODO: is rotation and the cube volume a duplication?
 	trafoVol1.translation() = Vector3D(-1.5 * units::_m, 0., 0.); 
 	
@@ -91,6 +93,7 @@ buildGeometry()
 	auto trackVolume1 = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVol1), boundsVol, nullptr, std::move(layArr1), layVec, {}, {}, "Volume 1");
 	trackVolume1->sign(GeometrySignature::Global);
 
+	// Build volume for surfaces with positive x-values
 	Transform3D trafoVol2(Transform3D::Identity() * rotation);
 	trafoVol2.translation() = Vector3D(1.5 * units::_m, 0., 0.);
 	
@@ -107,6 +110,7 @@ buildGeometry()
 	auto trackVolume2 = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVol2), boundsVol, nullptr, std::move(layArr2), layVec, {}, {}, "Volume 2");
 	trackVolume2->sign(GeometrySignature::Global);
 	
+	// Glue volumes
     trackVolume1->glueTrackingVolume(BoundarySurfaceFace::positiveFaceYZ,
             trackVolume2,
             BoundarySurfaceFace::negativeFaceXY);
@@ -115,6 +119,7 @@ buildGeometry()
             trackVolume1,
             BoundarySurfaceFace::positiveFaceXY);
 
+	// Build world volume
 	Transform3D trafoWorld;
 	trafoWorld.translation() = Vector3D(0., 0., 0.);
 	
@@ -139,6 +144,7 @@ buildGeometry()
 
     mtvpWorld->sign(GeometrySignature::Global);
 
+	// Build and return tracking geometry
 	return std::shared_ptr<TrackingGeometry>(new Acts::TrackingGeometry(mtvpWorld));
 }
 
