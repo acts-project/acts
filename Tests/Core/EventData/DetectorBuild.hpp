@@ -15,6 +15,9 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/Volumes/CuboidVolumeBounds.hpp"
+#include "Acts/Tools/LayerArrayCreator.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
 #include <vector>
 
 namespace Acts {
@@ -34,7 +37,7 @@ buildGeometry()
     rotation.col(2) = zPos;
     
     // Set translation vectors
-    double eps = 2. * units::_mm;
+    double eps = 1. * units::_mm;
     std::vector<Vector3D> translations;
     translations.push_back({-2., 0., 0.});
     translations.push_back({-1., 0., 0.});
@@ -64,9 +67,42 @@ buildGeometry()
 		
 		std::unique_ptr<SurfaceArray> surArray(new SurfaceArray(surfaces[i]));
 		
-		layers[i] = PlaneLayer::create(std::make_shared<const Transform3D>(trafo), rBounds, std::move(surArray), 0.5 * units::_mm);
+		layers[i] = PlaneLayer::create(std::make_shared<const Transform3D>(trafo), rBounds, std::move(surArray), 1. * units::_mm);
 	}
 	
+	Transform3D trafoVol(Transform3D::Identity() * rotation);
+	trafoVol.translation() = Vector3D(-1.5 * units::_m, 0., 0.);
+	
+	auto boundsVol = std::make_shared<const Acts::CuboidVolumeBounds>(1.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
+	
+	LayerArrayCreator layArrCreator(getDefaultLogger("LayerArrayCreator", Acts::Logging::VERBOSE));
+	LayerVector layVec;
+	layVec.push_back(layers[0]);
+	layVec.push_back(layers[1]);
+    std::unique_ptr<const LayerArray> layArr1(
+            layArrCreator.layerArray(layVec,
+                -2. * units::_m - 1. * units::_mm,
+                -1. * units::_m + 1. * units::_mm,
+                BinningType::arbitrary,
+                BinningValue::binX));
+
+	auto trackVolume1 = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVol), boundsVol, nullptr, std::move(layArr1), layVec, {}, {}, "Volume 1");
+	trackVolume1->sign(GeometrySignature::Global);
+
+	trafoVol.translation() = Vector3D(1.5 * units::_m, 0., 0.);
+	
+	layVec.clear();
+	for(i = 2; i < 6; i++)
+		layVec.push_back(layers[i]);
+	std::unique_ptr<const LayerArray> layArr2(
+				layArrCreator.layerArray(layVec,
+                1. * units::_m - 1. * units::_mm,
+                2. * units::_m + 1. * units::_mm,
+                BinningType::arbitrary,
+                BinningValue::binX));
+	
+	auto trackVolume2 = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVol), boundsVol, nullptr, std::move(layArr2), layVec, {}, {}, "Volume 2");
+	trackVolume2->sign(GeometrySignature::Global);
 	
 	
 	return nullptr;
