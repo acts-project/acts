@@ -80,6 +80,9 @@ struct NavigationOptions
   }
 };
 
+using Surfaces    = std::vector<const Surface*>;
+using SurfaceIter = std::vector<const Surface*>::iterator;
+
 using NavigationSurfaces    = std::vector<SurfaceIntersection>;
 using NavigationSurfaceIter = NavigationSurfaces::iterator;
 
@@ -188,14 +191,13 @@ struct Navigator
     bool navigationBreak = false;
 
     /// NavigationSurfaces provided by the user - with Layer association
-    std::map<const Layer*, NavigationSurfaces> userSurfacesOnLayer{};
-
-    /// NavigationSurfaces provided by the user - without Layer association
-    std::vector<SurfaceIntersection> userSurfacesFree = {};
-
+    std::map<const Layer*, Surfaces> userSurfacesOnLayer{};
+    /// NavigationSurfaces provided by the user - not associated
+    Surfaces userSurfacesFree = {};
     /// All surfaces handled by the Navigator during navigation
-    bool                        rememberSurfaces  = false;
-    std::vector<const Surface*> processedSurfaces = {};
+    bool rememberSurfaces = false;
+    /// The memory of the navigator
+    Surfaces processedSurfaces = {};
   };
 
   /// Unique typedef to publish to the Propagator
