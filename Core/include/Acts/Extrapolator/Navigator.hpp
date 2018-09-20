@@ -92,6 +92,28 @@ using NavigationLayerIter = NavigationLayers::iterator;
 using NavigationBoundaries   = std::vector<BoundaryIntersection>;
 using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
+struct VoidSequencer
+{
+  /// @brief void result struct
+  struct state_type
+  {
+  };
+
+  /// Navigation sequencer, this allows to steer bouncing for
+  /// e.g. Kalman filtering or any other global navigation steering
+  ///
+  /// @tparam propagator_state_t is the type of Propagator state
+  ///
+  /// @param[in,out] state is the mutable stepper state object
+  /// @param[in,out] result is the mutable result object
+  template <typename propagator_state_t>
+  bool
+  operator()(propagator_state_t& /*state*/) const
+  {
+    return false;
+  }
+};
+
 /// Navigator struct
 ///
 /// This is an Actor to be added to the ActorList in order to navigate
@@ -113,21 +135,33 @@ using NavigationBoundaryIter = NavigationBoundaries::iterator;
 /// step size to the path length found out by straight line intersection. If
 /// the isOnSurface call fails, it also  re-computes the step size, to make
 /// sure we end up at the desired surface.
-struct Navigator
+///
+/// @tparam sequencer_t Type Struct that allows to do global navigation
+///         steering, in default, a void call is done.
+template <typename sequencer_t = VoidSequencer>
+class Navigator
 {
+
+public:
+  /// Typedef the sequencer state
+  using SequencerState = typename sequencer_t::state_type;
 
   /// Constructor with shared tracking geometry
   ///
   /// @param tGeometry The tracking geometry for the navigator
-  Navigator(std::shared_ptr<const TrackingGeometry> tGeometry = nullptr)
-    : trackingGeometry(std::move(tGeometry))
+  Navigator(std::shared_ptr<const TrackingGeometry> tGeometry  = nullptr,
+            sequencer_t                             tSequencer = sequencer_t())
+    : trackingGeometry(std::move(tGeometry)), sequencer(std::move(tSequencer))
   {
   }
 
   /// Tracking Geometry for this Navigator
   std::shared_ptr<const TrackingGeometry> trackingGeometry;
 
-  /// the tolerance used to defined "reached"
+  /// The sequencer (default is void sequencer)
+  sequencer_t sequencer;
+
+  /// The tolerance used to defined "reached"
   double tolerance = s_onSurfaceTolerance;
 
   /// Change initial step (avoids overstepping, when no correction done)
@@ -154,6 +188,7 @@ struct Navigator
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
+
     /// the current surface iterator of the navigation state
     NavigationSurfaceIter navSurfaceIter = navSurfaces.end();
 
@@ -194,10 +229,17 @@ struct Navigator
     std::map<const Layer*, Surfaces> userSurfacesOnLayer{};
     /// NavigationSurfaces provided by the user - not associated
     Surfaces userSurfacesFree = {};
+
     /// All surfaces handled by the Navigator during navigation
-    bool rememberSurfaces = false;
-    /// The memory of the navigator
-    Surfaces processedSurfaces = {};
+    bool rememberStates = false;
+
+    /// The memory of the navigator - these surfaces are ordered
+    NavigationSurfaces processedSurfaces = {};
+    /// The navigator is on memory lane, i.e. no direct navigation
+    bool reverseMode = false;
+
+    /// The sequencer state
+    SequencerState sequence;
   };
 
   /// Unique typedef to publish to the Propagator
@@ -221,6 +263,11 @@ struct Navigator
     // turn the navigator into void when you are intructed to do nothing
     if (!resolveSensitive && !resolveMaterial && !resolvePassive) {
       return;
+    }
+
+    // Call the sequencer prior to the navigation
+    if (sequencer(state)) {
+      debugLog(state, [&] { return std::string("Sequencer action applied."); });
     }
 
     debugLog(state, [&] { return std::string("Entering navigator."); });
@@ -286,14 +333,17 @@ struct Navigator
       return;
     }
     // -------------------------------------------------
-    // neither surfaces, layers nor boundaries triggered a return
+    // Neither surfaces, layers nor boundaries triggered a return
     // navigation broken - switch navigator off
     state.navigation.navigationBreak = true;
     debugLog(state, [&] {
       return std::string("Navigation break - no valid actions left.");
     });
-    // release the navigation step size
-    state.stepping.stepSize.release(cstep::actor);
+    // Call the sequencer again before giving up
+    if (!sequencer(state)) {
+      // Release the navigation step size - if the sequecern hasn't done it
+      state.stepping.stepSize.release(cstep::actor);
+    }
     return;
   }
 
@@ -323,11 +373,7 @@ struct Navigator
                                                       true)) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
-        // remember that we processed this surface
-        if (state.navigation.rememberSurfaces) {
-          state.navigation.processedSurfaces.push_back(
-              state.navigation.targetSurface);
-        }
+
         debugLog(state, [&] {
           std::stringstream dstream;
           dstream << "Current surface set to target surface ";
@@ -376,11 +422,7 @@ struct Navigator
     // an extrapolation process
     state.navigation.currentSurface = state.navigation.startSurface;
     if (state.navigation.currentSurface) {
-      // remember that we processed this surface
-      if (state.navigation.rememberSurfaces) {
-        state.navigation.processedSurfaces.push_back(
-            state.navigation.startSurface);
-      }
+      rememberState(state);
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Current surface set to start surface ";
@@ -489,11 +531,7 @@ struct Navigator
           state.navigation.currentSurface
               = state.navigation.navLayerIter->representation;
           if (state.navigation.currentSurface) {
-            // remember that you processed this surface
-            if (state.navigation.rememberSurfaces) {
-              state.navigation.processedSurfaces.push_back(
-                  state.navigation.currentSurface);
-            }
+            rememberState(state);
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Current surface set to approach surface ";
@@ -741,11 +779,7 @@ struct Navigator
         // store the boundary for eventual actors to work on it
         state.navigation.currentSurface = boundarySurface;
         if (state.navigation.currentSurface) {
-          // remember that you processed this surface
-          if (state.navigation.rememberSurfaces) {
-            state.navigation.processedSurfaces.push_back(
-                state.navigation.currentSurface);
-          }
+          rememberState(state);
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Current surface set to boundary surface ";
@@ -997,11 +1031,7 @@ struct Navigator
         } else {
           state.navigation.currentSurface = layerSurface;
           if (state.navigation.currentSurface) {
-            // remember that you processed this surface
-            if (state.navigation.rememberSurfaces) {
-              state.navigation.processedSurfaces.push_back(
-                  state.navigation.currentSurface);
-            }
+            rememberState(state);
             debugLog(state, [&] {
               std::stringstream dstream;
               dstream << "Current surface set to approach surface\n";
@@ -1181,10 +1211,7 @@ struct Navigator
         state.navigation.currentSurface = surface;
         if (state.navigation.currentSurface) {
           // remember that you processed this surface
-          if (state.navigation.rememberSurfaces) {
-            state.navigation.processedSurfaces.push_back(
-                state.navigation.currentSurface);
-          }
+          rememberState(state);
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Current surface set to resolved surface ";
@@ -1288,6 +1315,28 @@ struct Navigator
   }
 
 private:
+  /// Helper method to create a surface interseciton for the surface memory
+  ///
+  /// @tparam propagator_state_t Type of the propagator state
+  ///
+  /// @param[in,out] state the propagator state for the debug flag,
+  ///      prefix and length
+  template <typename propagator_state_t>
+  void
+  rememberState(propagator_state_t& state) const
+  {
+    // remember that we processed this surface
+    if (state.navigation.rememberStates) {
+      debugLog(state,
+               [&] { return std::string("Remember navigation state."); });
+      state.navigation.processedSurfaces.push_back(SurfaceIntersection(
+          Intersection(
+              state.stepping.position(), state.stepping.pathAccumulated, true),
+          state.navigation.currentSurface,
+          state.stepping.navDir));
+    }
+  }
+
   /// The private navigation debug logging
   ///
   /// It needs to be fed by a lambda function that returns a string,
@@ -1307,7 +1356,9 @@ private:
   {
     if (state.options.debug) {
       std::string vName = "No Volume";
-      if (state.navigation.currentVolume) {
+      if (state.navigation.reverseMode) {
+        vName = "reverse mode";
+      } else if (state.navigation.currentVolume) {
         vName = state.navigation.currentVolume->volumeName();
       }
       std::vector<std::string> lines;
@@ -1323,4 +1374,5 @@ private:
     }
   }
 };
+
 }  // namespace Acts

@@ -51,14 +51,14 @@ namespace Test {
   auto tGeometry = testGeometry<ModuleSurface>(stepState);
 
   // create a navigator for this tracking geometry
-  Navigator navigatorES(tGeometry);
-  Navigator navigatorSL(tGeometry);
+  Navigator<> navigatorES(tGeometry);
+  Navigator<> navigatorSL(tGeometry);
 
   using BField                 = ConstantBField;
   using StepCorrector          = detail::IntersectionCorrector;
   using EigenStepper           = EigenStepper<BField, StepCorrector>;
-  using EigenPropagator        = Propagator<EigenStepper, Navigator>;
-  using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
+  using EigenPropagator        = Propagator<EigenStepper, Navigator<>>;
+  using StraightLinePropagator = Propagator<StraightLineStepper, Navigator<>>;
 
   const double    Bz = 2. * units::_T;
   BField          bField(0, 0, Bz);

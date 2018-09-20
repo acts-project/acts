@@ -143,6 +143,7 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
+
       if (state.navigation.targetReached) {
         return true;
       }
@@ -223,11 +224,12 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (state.navigation.currentVolume) {
+      if (state.navigation.currentVolume != nullptr) {
         return false;
       }
       state.navigation.targetReached = true;
-      return true;
+      // allow a sequencer to interpret this
+      return state.navigation.processedSurfaces.empty() ? true : false;
     }
   };
 

@@ -166,12 +166,8 @@ struct PropagatorOptions
 ///  - Stepper::state_type state for the actual transport caching
 ///  (pos,dir,field)
 ///
-/// @tparam stepper_t stepper implementation of the propagation algorithm
-/// @tparam navigator_list_t the (optional) navigator type, it is a type
-///         of action_list with is called before all the other optios
-/// @tparam path_aborter_t Type of object to abort when path limit reached
-/// @tparam target_aborter_t Type of the object to do initial step estimation
-///                          and target abort
+/// @tparam stepper_t Type of stepper implementation of the propagation
+/// @tparam naviagor_t Type of the navigator (optional)
 ///
 /// This Propagator class serves as high-level steering code for propagating
 /// track parameters. The actual implementation of the propagation has to be
@@ -317,7 +313,11 @@ private:
     debugLog(state, [&] {
       return std::string("Calling pre-stepping navigator & actions.");
     });
+
+    // Navigator initialize call
     m_navigator(state);
+
+    // Pre-Stepping call to the action list
     state.options.actionList(state, result);
 
     bool terminatedNormally = false;
@@ -354,7 +354,6 @@ private:
     // Post-stepping call to the action list
     debugLog(state,
              [&] { return std::string("Calling post-stepping action list."); });
-
     state.options.actionList(state, result);
 
     // return progress flag here, decide on SUCCESS later
