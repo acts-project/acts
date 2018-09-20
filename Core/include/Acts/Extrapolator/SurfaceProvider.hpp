@@ -59,7 +59,7 @@ struct SurfaceProvider
         const auto cLayer = sf->associatedLayer();
         if (cLayer != nullptr) {
           // th current surfaces
-          auto& cSurfaces = state.navigation.userSurfacesOnLayer.find(cLayer);
+          auto cSurfaces = state.navigation.userSurfacesOnLayer.find(cLayer);
           // we already have an entry, add to it
           if (cSurfaces != state.navigation.userSurfacesOnLayer.end()) {
             cSurfaces->second.push_back(sf);
