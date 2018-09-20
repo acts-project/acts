@@ -74,6 +74,7 @@ namespace Test {
                                      rBounds,
                                      std::move(surArray),
                                      1. * units::_mm);
+      surfaces[i]->associateLayer(*layers[i]);
     }
 
     // Build volume for surfaces with negative x-values
@@ -116,8 +117,8 @@ namespace Test {
     for (i = 2; i < 6; i++) layVec.push_back(layers[i]);
     std::unique_ptr<const LayerArray> layArr2(
         layArrCreator.layerArray(layVec,
-                                 1. * units::_m - 1. * units::_mm,
-                                 2. * units::_m + 1. * units::_mm,
+                                 1. * units::_m - 2. * units::_mm,
+                                 2. * units::_m + 2. * units::_mm,
                                  BinningType::arbitrary,
                                  BinningValue::binX));
 
