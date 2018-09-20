@@ -469,7 +469,7 @@ Acts::TrackingVolume::visitSurfaces(
     // no sub volumes => loop over the confined layers
     if (m_confinedLayers) {
       for (const auto& layer : m_confinedLayers->arrayObjects()) {
-        if (!layer->surfaceArray()) {
+        if (layer->surfaceArray() == nullptr) {
           // no surface array (?)
           continue;
         }
