@@ -27,10 +27,11 @@ using id = unsigned long int;
 
 struct SurfaceCollector
 {
-	std::vector<Surface*> surfaces;
+	std::vector<Surface const*> surfaces;
 	
 	std::shared_ptr<TrackingGeometry> detector;
-	std::vector<FittableMeasurement<id>> measurements;
+	//~ std::vector<FittableMeasurement<id>> measurements;
+	std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
 	
     SurfaceCollector() = default;
 
@@ -40,8 +41,14 @@ struct SurfaceCollector
     {
 //~ std::cout << state.options.debugString << std::endl;
 std::cout << state.stepping.position().x() << "\t" << state.stepping.position().y() << "\t" << state.stepping.position().z() << "\t" << state.navigation.currentSurface << std::endl;
-std::cout << detector->lowestTrackingVolume(state.stepping.position())->volumeName() << "\t" << state.navigation.currentVolume->volumeName() << std::endl;
-std::cout << state.navigation.navSurfaces.size() << "\t" << state.navigation.navBoundaries.size() << std::endl;
+if(state.navigation.currentSurface)
+std::cout << state.navigation.currentSurface->type() << "\t" 
+		  << state.navigation.currentSurface->associatedLayer() << "\t" << state.navigation.currentSurface->associatedMaterial() << std::endl;
+if(measurements.find(state.navigation.currentSurface) != measurements.end())
+{
+	std::cout << "HIT: " << state.navigation.currentSurface << std::endl;
+	//~ surfaces.push_back(state.navigation.currentSurface);
+}
     }
 };
   
@@ -54,7 +61,7 @@ std::cout << state.navigation.navSurfaces.size() << "\t" << state.navigation.nav
     std::shared_ptr<TrackingGeometry> detector = buildGeometry();
 
 	// Construct measurements
-    std::vector<FittableMeasurement<id>> measurements;
+    std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
 
     ActsSymMatrixD<2> cov2D;
     cov2D << 1. * units::_mm, 0., 0., 1. * units::_mm;
@@ -65,16 +72,14 @@ std::cout << state.navigation.navSurfaces.size() << "\t" << state.navigation.nav
                              ->surfaceArray()
                              ->at(pos)[0];
 std::cout << sur << "\t";
-    measurements.push_back(
-        Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.));
-
+    measurements[sur].push_back(std::move(Measurement<id, eLOC_0, eLOC_1> m(*sur, 0, cov2D, 0., 0.)));
     pos = {-1. * units::_m, 0., 0.};
     sur = detector->lowestTrackingVolume(pos)
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
 std::cout << sur << "\t";
-    measurements.push_back(
+    measurements[sur].push_back(
         Measurement<id, eLOC_0, eLOC_1>(*sur, 1, cov2D, 0., 0.));
 
     ActsSymMatrixD<1> cov1D;
@@ -86,7 +91,7 @@ std::cout << sur << "\t";
               ->surfaceArray()
               ->at(pos)[0];
 std::cout << sur << "\t";
-    measurements.push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, 0.));
+    measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, 0.));
 
     pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
     sur = detector->lowestTrackingVolume(pos)
@@ -94,7 +99,7 @@ std::cout << sur << "\t";
               ->surfaceArray()
               ->at(pos)[0];
 std::cout << sur << "\t";
-    measurements.push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, 0.));
+    measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, 0.));
 
     pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
     sur = detector->lowestTrackingVolume(pos)
@@ -102,7 +107,7 @@ std::cout << sur << "\t";
               ->surfaceArray()
               ->at(pos)[0];
 std::cout << sur << "\t";
-    measurements.push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, 0.));
+    measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, 0.));
 
     pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
     sur = detector->lowestTrackingVolume(pos)
@@ -110,7 +115,7 @@ std::cout << sur << "\t";
               ->surfaceArray()
               ->at(pos)[0];
 std::cout << sur << std::endl;
-    measurements.push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, 0.));
+    measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, 0.));
 
 	// Build navigator
 	Navigator navi(detector);
@@ -129,7 +134,6 @@ std::cout << sur << std::endl;
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 	
 	Vector3D startParams(-3. * units::_m, 0., 0.), startMom(1. * units::_GeV, 0., 0);
-	//~ Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0);
                              
 	SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(std::move(covPtr), startParams, startMom);
 
@@ -142,7 +146,6 @@ std::cout << sur << std::endl;
 	propOpts.debug = true;
 	
 	pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
-	//~ pos = {-2. * units::_m, 0., 0.};
 	sur = detector->lowestTrackingVolume(pos)
               ->associatedLayer(pos)
               ->surfaceArray()
