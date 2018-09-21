@@ -134,13 +134,14 @@ namespace Test {
     trackVolume2->sign(GeometrySignature::Global);
 
     // Glue volumes
-    trackVolume1->glueTrackingVolume(BoundarySurfaceFace::positiveFaceYZ,
-                                     trackVolume2,
-                                     BoundarySurfaceFace::negativeFaceXY);
-
     trackVolume2->glueTrackingVolume(BoundarySurfaceFace::negativeFaceYZ,
                                      trackVolume1,
-                                     BoundarySurfaceFace::positiveFaceXY);
+                                     BoundarySurfaceFace::positiveFaceYZ);
+                                     
+    trackVolume1->glueTrackingVolume(BoundarySurfaceFace::positiveFaceYZ,
+                                     trackVolume2,
+                                     BoundarySurfaceFace::negativeFaceYZ);
+
 
     // Build world volume
     Transform3D trafoWorld;

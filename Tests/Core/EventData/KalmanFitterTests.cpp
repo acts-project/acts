@@ -38,7 +38,9 @@ struct SurfaceCollector
     void
     operator()(propagator_state_t& state) const
     {
-std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSurface << std::endl;
+std::cout << state.options.debugString << std::endl;
+std::cout << state.stepping.position().x() << "\t" << state.stepping.position().y() << "\t" << state.stepping.position().z() << "\t" << state.navigation.currentSurface << std::endl;
+std::cout << detector->lowestTrackingVolume(state.stepping.position())->volumeName() << "\t" << state.navigation.currentVolume->volumeName() << std::endl;
     }
 };
   
@@ -61,6 +63,7 @@ std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSu
                              ->associatedLayer(pos)
                              ->surfaceArray()
                              ->at(pos)[0];
+std::cout << sur << "\t";
     measurements.push_back(
         Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.));
 
@@ -69,6 +72,7 @@ std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSu
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << "\t";
     measurements.push_back(
         Measurement<id, eLOC_0, eLOC_1>(*sur, 1, cov2D, 0., 0.));
 
@@ -80,6 +84,7 @@ std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSu
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << "\t";
     measurements.push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, 0.));
 
     pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
@@ -87,6 +92,7 @@ std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSu
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << "\t";
     measurements.push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, 0.));
 
     pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
@@ -94,6 +100,7 @@ std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSu
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << "\t";
     measurements.push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, 0.));
 
     pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
@@ -101,13 +108,14 @@ std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSu
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << std::endl;
     measurements.push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, 0.));
 
 	// Build navigator
 	Navigator navi(detector);
-	navi.resolvePassive = false;
+	navi.resolvePassive = true;
 	navi.resolveMaterial = false;
-	navi.resolveSensitive = true;
+	navi.resolveSensitive = false;
 	
 	StraightLineStepper sls;
 	
@@ -120,6 +128,7 @@ std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSu
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 	
 	Vector3D startParams(-3. * units::_m, 0., 0.), startMom(1. * units::_GeV, 0., 0);
+	//~ Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0);
                              
 	SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(std::move(covPtr), startParams, startMom);
 
@@ -129,16 +138,16 @@ std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSu
 		
     Propagator<StraightLineStepper, Navigator>::Options<ActionList<SurfaceCollector>> propOpts;
     propOpts.actionList = aList;
-    propOpts.maxStepSize = 2. * units::_m;
 	propOpts.debug = true;
 	
 	pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
+	//~ pos = {-2. * units::_m, 0., 0.};
 	sur = detector->lowestTrackingVolume(pos)
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
 	prop.propagate(sbtp, *sur, propOpts);
-	
+
     BOOST_TEST(true);
   }
 }  // namespace Test
