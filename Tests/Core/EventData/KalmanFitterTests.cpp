@@ -23,7 +23,25 @@
 namespace Acts {
 namespace Test {
 
-  using id = unsigned long int;
+using id = unsigned long int;
+
+struct SurfaceCollector
+{
+	std::vector<Surface*> surfaces;
+	
+	std::shared_ptr<TrackingGeometry> detector;
+	std::vector<FittableMeasurement<id>> measurements;
+	
+    SurfaceCollector() = default;
+
+    template <typename propagator_state_t>
+    void
+    operator()(propagator_state_t& state) const
+    {
+std::cout << state.stepping.position().x() << "\t" << state.navigation.currentSurface << std::endl;
+    }
+};
+  
   ///
   /// @brief Unit test for Kalman fitter with measurements along the x-axis
   ///
@@ -43,7 +61,6 @@ namespace Test {
                              ->associatedLayer(pos)
                              ->surfaceArray()
                              ->at(pos)[0];
-    //~ sur->associateLayer(*detector->lowestTrackingVolume(pos)->associatedLayer(pos));
     measurements.push_back(
         Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.));
 
@@ -52,7 +69,6 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-              //~ sur->associateLayer(*detector->lowestTrackingVolume(pos)->associatedLayer(pos));
     measurements.push_back(
         Measurement<id, eLOC_0, eLOC_1>(*sur, 1, cov2D, 0., 0.));
 
@@ -64,7 +80,6 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-              //~ sur->associateLayer(*detector->lowestTrackingVolume(pos)->associatedLayer(pos));
     measurements.push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, 0.));
 
     pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
@@ -72,7 +87,6 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-              //~ sur->associateLayer(*detector->lowestTrackingVolume(pos)->associatedLayer(pos));
     measurements.push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, 0.));
 
     pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
@@ -80,7 +94,6 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-              //~ sur->associateLayer(*detector->lowestTrackingVolume(pos)->associatedLayer(pos));
     measurements.push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, 0.));
 
     pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
@@ -88,12 +101,13 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-              //~ sur->associateLayer(*detector->lowestTrackingVolume(pos)->associatedLayer(pos));
     measurements.push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, 0.));
 
 	// Build navigator
 	Navigator navi(detector);
+	navi.resolvePassive = false;
 	navi.resolveMaterial = false;
+	navi.resolveSensitive = true;
 	
 	StraightLineStepper sls;
 	
@@ -105,15 +119,24 @@ namespace Test {
         1. / (10 * units::_GeV);
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 	
-	Vector3D startPos(-2.5 * units::_m, 0., 0.);
-	Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0);
+	Vector3D startParams(-3. * units::_m, 0., 0.), startMom(1. * units::_GeV, 0., 0);
                              
 	SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(std::move(covPtr), startParams, startMom);
-         
-    Propagator<StraightLineStepper, Navigator>::Options<> propOpts;
-	propOpts.maxStepSize = 2. * units::_m;
+
+	ActionList<SurfaceCollector> aList;
+	aList.get<SurfaceCollector>().detector = detector;
+	aList.get<SurfaceCollector>().measurements = measurements;
+		
+    Propagator<StraightLineStepper, Navigator>::Options<ActionList<SurfaceCollector>> propOpts;
+    propOpts.actionList = aList;
+    propOpts.maxStepSize = 2. * units::_m;
 	propOpts.debug = true;
-	                    
+	
+	pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
+	sur = detector->lowestTrackingVolume(pos)
+              ->associatedLayer(pos)
+              ->surfaceArray()
+              ->at(pos)[0];
 	prop.propagate(sbtp, *sur, propOpts);
 	
     BOOST_TEST(true);
