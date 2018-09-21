@@ -78,9 +78,7 @@ namespace Test {
     }
 
     // Build volume for surfaces with negative x-values
-    Transform3D trafoVol1(
-        Transform3D::Identity()
-        * rotation);  // TODO: is rotation and the cube volume a duplication?
+    Transform3D trafoVol1(Transform3D::Identity());
     trafoVol1.translation() = Vector3D(-1.5 * units::_m, 0., 0.);
 
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
@@ -110,7 +108,7 @@ namespace Test {
     trackVolume1->sign(GeometrySignature::Global);
 
     // Build volume for surfaces with positive x-values
-    Transform3D trafoVol2(Transform3D::Identity() * rotation);
+    Transform3D trafoVol2(Transform3D::Identity());
     trafoVol2.translation() = Vector3D(1.5 * units::_m, 0., 0.);
 
     layVec.clear();
@@ -144,7 +142,7 @@ namespace Test {
 
 
     // Build world volume
-    Transform3D trafoWorld;
+    Transform3D trafoWorld(Transform3D::Identity());
     trafoWorld.translation() = Vector3D(0., 0., 0.);
 
     auto worldVol = std::make_shared<const CuboidVolumeBounds>(

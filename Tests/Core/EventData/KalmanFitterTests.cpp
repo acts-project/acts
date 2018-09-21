@@ -38,9 +38,10 @@ struct SurfaceCollector
     void
     operator()(propagator_state_t& state) const
     {
-std::cout << state.options.debugString << std::endl;
+//~ std::cout << state.options.debugString << std::endl;
 std::cout << state.stepping.position().x() << "\t" << state.stepping.position().y() << "\t" << state.stepping.position().z() << "\t" << state.navigation.currentSurface << std::endl;
 std::cout << detector->lowestTrackingVolume(state.stepping.position())->volumeName() << "\t" << state.navigation.currentVolume->volumeName() << std::endl;
+std::cout << state.navigation.navSurfaces.size() << "\t" << state.navigation.navBoundaries.size() << std::endl;
     }
 };
   

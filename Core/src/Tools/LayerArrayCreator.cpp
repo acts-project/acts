@@ -72,7 +72,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
 
   // arbitrary binning
   case arbitrary: {
-    std::vector<float> boundaries;
+    std::vector<double> boundaries;
     // initial step
     boundaries.push_back(min);
     double                       layerValue     = 0.;
