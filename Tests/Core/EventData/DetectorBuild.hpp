@@ -135,11 +135,10 @@ namespace Test {
     trackVolume2->glueTrackingVolume(BoundarySurfaceFace::negativeFaceYZ,
                                      trackVolume1,
                                      BoundarySurfaceFace::positiveFaceYZ);
-                                     
+
     trackVolume1->glueTrackingVolume(BoundarySurfaceFace::positiveFaceYZ,
                                      trackVolume2,
                                      BoundarySurfaceFace::negativeFaceYZ);
-
 
     // Build world volume
     Transform3D trafoWorld(Transform3D::Identity());

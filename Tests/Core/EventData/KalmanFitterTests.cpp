@@ -12,45 +12,58 @@
 #include <vector>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "DetectorBuild.hpp"
 
 namespace Acts {
 namespace Test {
 
-using id = unsigned long int;
+  using id = unsigned long int;
 
-struct SurfaceCollector
-{
-	std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
-	
+  ///
+  /// @brief This struct collects surfaces which are hit by the propagator and
+  /// which carries at least one measurement
+  ///
+  struct SurfaceCollector
+  {
+    // Collection of measurements sorted by their surfaces
+    std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
+
+    /// @brief Constructor
     SurfaceCollector() = default;
 
-	using result_type = std::vector<Surface const*>;
+    using result_type = std::vector<Surface const*>;
 
+    /// @brief Operater that is callable by an ActionList. The function collects
+    /// the surfaces
+    ///
+    /// @tparam propagator_state_t Type of the propagator state
+    /// @param [in] state State of the propagator
+    /// @param [out] result Vector of matching surfaces
     template <typename propagator_state_t>
     void
     operator()(propagator_state_t& state, result_type& result) const
     {
-		if(measurements.find(state.navigation.currentSurface) != measurements.end())
-			result.push_back(state.navigation.currentSurface);
+      if (measurements.find(state.navigation.currentSurface)
+          != measurements.end())
+        result.push_back(state.navigation.currentSurface);
     }
-};
-  
+  };
+
   ///
   /// @brief Unit test for Kalman fitter with measurements along the x-axis
   ///
   BOOST_AUTO_TEST_CASE(kalman_fitter_initialization)
   {
-	// Build detector
+    // Build detector
     std::shared_ptr<TrackingGeometry> detector = buildGeometry();
 
-	// Construct measurements
+    // Construct measurements
     std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
 
     ActsSymMatrixD<2> cov2D;
@@ -61,7 +74,8 @@ struct SurfaceCollector
                              ->associatedLayer(pos)
                              ->surfaceArray()
                              ->at(pos)[0];
-    measurements[sur].push_back(std::move(Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.)));
+    measurements[sur].push_back(
+        std::move(Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.)));
     pos = {-1. * units::_m, 0., 0.};
     sur = detector->lowestTrackingVolume(pos)
               ->associatedLayer(pos)
@@ -101,36 +115,41 @@ struct SurfaceCollector
               ->at(pos)[0];
     measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, 0.));
 
-	// Build navigator
-	Navigator navi(detector);
-	navi.resolvePassive = true;
-	navi.resolveMaterial = false;
-	navi.resolveSensitive = false;
-	// Use default stepper
-	StraightLineStepper sls;
-	// Build navigator
-	Propagator<StraightLineStepper, Navigator> prop(sls, navi);
-	
-	// Set initial parameters for the particle track
+    // Build navigator
+    Navigator navi(detector);
+    navi.resolvePassive   = true;
+    navi.resolveMaterial  = false;
+    navi.resolveSensitive = false;
+    // Use default stepper
+    StraightLineStepper sls;
+    // Build navigator
+    Propagator<StraightLineStepper, Navigator> prop(sls, navi);
+
+    // Set initial parameters for the particle track
     ActsSymMatrixD<5> cov;
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
         0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
         1. / (10 * units::_GeV);
-    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-	Vector3D startParams(-3. * units::_m, 0., 0.), startMom(1. * units::_GeV, 0., 0);
-                            
-	SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(std::move(covPtr), startParams, startMom);
+    auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    Vector3D startParams(-3. * units::_m, 0., 0.),
+        startMom(1. * units::_GeV, 0., 0);
 
-	// Create surface collection
-	ActionList<SurfaceCollector> aList;
-	aList.get<SurfaceCollector>().measurements = measurements;
-	// Set options for propagator
-    Propagator<StraightLineStepper, Navigator>::Options<ActionList<SurfaceCollector>> propOpts;
+    SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(
+        std::move(covPtr), startParams, startMom);
+
+    // Create surface collection
+    ActionList<SurfaceCollector> aList;
+    aList.get<SurfaceCollector>().measurements = measurements;
+    // Set options for propagator
+    Propagator<StraightLineStepper,
+               Navigator>::Options<ActionList<SurfaceCollector>>
+        propOpts;
     propOpts.actionList = aList;
 
-	// Launch and collect
-	const auto& result = prop.propagate(sbtp, *sur, propOpts);
-    const std::vector<Surface const*>& surResult = result.get<typename SurfaceCollector::result_type>();
+    // Launch and collect
+    const auto& result = prop.propagate(sbtp, *sur, propOpts);
+    const std::vector<Surface const*>& surResult
+        = result.get<typename SurfaceCollector::result_type>();
 
     BOOST_TEST(surResult.size() == 6);
   }
