@@ -2,12 +2,12 @@
 set -e
 
 
-if ! which python &> /dev/null; then
+if ! which python2 &> /dev/null; then
   echo "python2 not installed. Coverage reporting requires python2"
   exit 1
 fi
 
-PYTHON=$(which python)
+PYTHON=$(which python2)
 
 if [ ! -f CMakeCache.txt ]; then
     echo "Not in CMake build dir. Not executing"
