@@ -17,8 +17,10 @@
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
 #include "DetectorBuild.hpp"
 
 namespace Acts {
@@ -50,9 +52,12 @@ namespace Test {
     void
     operator()(propagator_state_t& state, result_type& result) const
     {
+		//~ std::cout << state.options.debugString << std::endl;
+		std::cout << state.stepping.position().x() << " " << state.stepping.position().y() << " " << state.stepping.position().z() << "\t" << state.navigation.currentSurface << std::endl;
       if (measurements.find(state.navigation.currentSurface)
           != measurements.end())
-        result.push_back(state.navigation.currentSurface);
+          {std::cout << "true" << std::endl;
+        result.push_back(state.navigation.currentSurface);}
     }
   };
   
@@ -78,6 +83,19 @@ namespace Test {
 	  }
   };
 
+	struct EndOfWorld
+	{
+		EndOfWorld() = default;
+		
+		template <typename propagator_state_t>
+		bool
+		operator()(propagator_state_t& state) const
+		{
+			if(std::abs(state.stepping.position().x()) > 3. * units::_m || std::abs(state.stepping.position().y()) > 0.5 * units::_m || std::abs(state.stepping.position().z()) > 0.5 * units::_m)
+				return true;
+			return false;
+		}
+	};
   ///
   /// @brief Unit test for Kalman fitter with measurements along the x-axis
   ///
@@ -97,6 +115,7 @@ namespace Test {
                              ->associatedLayer(pos)
                              ->surfaceArray()
                              ->at(pos)[0];
+std::cout << sur << "\t";
     measurements[sur].push_back(
         std::move(Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.)));
     pos = {-1. * units::_m, 0., 0.};
@@ -104,6 +123,7 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << "\t";
     measurements[sur].push_back(
         Measurement<id, eLOC_0, eLOC_1>(*sur, 1, cov2D, 0., 0.));
 
@@ -115,6 +135,7 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << "\t";
     measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, 0.));
 
     pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
@@ -122,6 +143,7 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << "\t";
     measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, 0.));
 
     pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
@@ -129,6 +151,7 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << "\t";
     measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, 0.));
 
     pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
@@ -136,6 +159,7 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
+std::cout << sur << std::endl;
     measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, 0.));
 
     // Build navigator
@@ -160,7 +184,7 @@ namespace Test {
     SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(
         std::move(covPtr), startParams, startMom);
 
-    // Create surface collection
+    // Create action list for surface collection
     ActionList<SurfaceCollection, SurfaceCollector<SelectSurfaceWithHit>> aList;
     aList.get<SurfaceCollection>().measurements = measurements;
     aList.get<SurfaceCollector<SelectSurfaceWithHit>>().selector.measurements = measurements;
@@ -176,9 +200,31 @@ namespace Test {
         = result.get<typename SurfaceCollection::result_type>();
     const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResult2 = result.get<typename SurfaceCollector<SelectSurfaceWithHit>::result_type>();
 
+	// Test if results match the number of measurements
     BOOST_TEST(surResult.size() == 6);
     BOOST_TEST(surResult2.collected.size() == 6);
+
+	// Re-configure propagation with B-field
+    ConstantBField bField(Vector3D(0., 0.5 * units::_T, 0.));
+    EigenStepper<ConstantBField> es(bField);
+    Propagator<EigenStepper<ConstantBField>, Navigator> propB(es, navi);
+    covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    SingleCurvilinearTrackParameters<ChargedPolicy> sbtpB(std::move(covPtr), startParams, startMom, 1.);
+    AbortList<EndOfWorld> abortList;
+    Propagator<EigenStepper<ConstantBField>, Navigator>::Options<ActionList<SurfaceCollection, SurfaceCollector<SelectSurfaceWithHit>>, AbortList<EndOfWorld>> propOptsB;
+    //~ Propagator<EigenStepper<ConstantBField>, Navigator>::Options<ActionList<SurfaceCollection, SurfaceCollector<SelectSurfaceWithHit>>> propOptsB;
+    propOptsB.actionList = aList;
+    propOptsB.stopConditions = abortList;
+    propOptsB.maxStepSize = 2. * units::_m;
+    propOptsB.debug = true;
+    const auto& resultB = propB.propagate(sbtpB, *sur, propOptsB);
+    const std::vector<Surface const*>& surResultB = resultB.get<typename SurfaceCollection::result_type>();
+    const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResultB2 = resultB.get<typename SurfaceCollector<SelectSurfaceWithHit>::result_type>();
     
+    for(size_t i = 0; i < surResultB2.collected.size(); i++)
+		std::cout << surResultB2.collected[i].position.x() << " " << surResultB2.collected[i].position.y() << " " << surResultB2.collected[i].position.z() << std::endl << std::endl;
+	BOOST_TEST(surResultB.size() == 6);
+	BOOST_TEST(surResultB2.collected.size() == 6);
   }
 }  // namespace Test
 }  // namespace Acts
