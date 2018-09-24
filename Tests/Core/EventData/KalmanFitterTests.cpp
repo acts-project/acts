@@ -13,6 +13,7 @@
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
+#include "Acts/Extrapolator/SurfaceCollector.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -29,13 +30,13 @@ namespace Test {
   /// @brief This struct collects surfaces which are hit by the propagator and
   /// which carries at least one measurement
   ///
-  struct SurfaceCollector
+  struct SurfaceCollection
   {
     // Collection of measurements sorted by their surfaces
     std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
 
     /// @brief Constructor
-    SurfaceCollector() = default;
+    SurfaceCollection() = default;
 
     using result_type = std::vector<Surface const*>;
 
@@ -53,6 +54,28 @@ namespace Test {
           != measurements.end())
         result.push_back(state.navigation.currentSurface);
     }
+  };
+  
+  ///
+  /// @brief Selector structure for the SurfaceCollector
+  ///
+  struct SelectSurfaceWithHit
+  {
+	  // Collection of measurements sorted by their surfaces
+	  std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
+	  
+	  /// @brief Constructor
+	  SelectSurfaceWithHit() = default;
+	  
+	  /// @brief Operator that tests if a surface has a measurements
+	  ///
+	  /// @param [in] sur Surface that is tested for measurements
+	  /// @return Boolean result of the test
+	  bool
+	  operator()(Surface const& sur) const
+	  {
+		return (measurements.find(&sur) != measurements.end());
+	  }
   };
 
   ///
@@ -138,20 +161,24 @@ namespace Test {
         std::move(covPtr), startParams, startMom);
 
     // Create surface collection
-    ActionList<SurfaceCollector> aList;
-    aList.get<SurfaceCollector>().measurements = measurements;
+    ActionList<SurfaceCollection, SurfaceCollector<SelectSurfaceWithHit>> aList;
+    aList.get<SurfaceCollection>().measurements = measurements;
+    aList.get<SurfaceCollector<SelectSurfaceWithHit>>().selector.measurements = measurements;
     // Set options for propagator
     Propagator<StraightLineStepper,
-               Navigator>::Options<ActionList<SurfaceCollector>>
+               Navigator>::Options<ActionList<SurfaceCollection, SurfaceCollector<SelectSurfaceWithHit>>>
         propOpts;
     propOpts.actionList = aList;
 
     // Launch and collect
     const auto& result = prop.propagate(sbtp, *sur, propOpts);
     const std::vector<Surface const*>& surResult
-        = result.get<typename SurfaceCollector::result_type>();
+        = result.get<typename SurfaceCollection::result_type>();
+    const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResult2 = result.get<typename SurfaceCollector<SelectSurfaceWithHit>::result_type>();
 
     BOOST_TEST(surResult.size() == 6);
+    BOOST_TEST(surResult2.collected.size() == 6);
+    
   }
 }  // namespace Test
 }  // namespace Acts
