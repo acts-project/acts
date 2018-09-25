@@ -22,7 +22,9 @@ Acts::Surface::Surface(std::shared_ptr<const Transform3D> tform)
 }
 
 Acts::Surface::Surface(const DetectorElementBase& detelement)
-  : GeometryObject(), m_transform(nullptr), m_associatedDetElement(&detelement)
+  : GeometryObject()
+  , m_transform(std::make_shared<const Transform3D>(detelement.transform()))
+  , m_associatedDetElement(&detelement)
 {
 }
 

@@ -12,7 +12,9 @@
 #include <vector>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Detector/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -25,6 +27,60 @@
 namespace Acts {
 namespace Test {
 
+  ///
+  /// @brief Stub implementation of the detector element
+  ///
+  class DetElem : public DetectorElementBase
+  {
+  public:
+    /// @brief Constructor
+    ///
+    /// @param [in] trafo Transformation of the detector element
+    /// @param [in] rBounds Rectangle boundaries of the plane surface
+    /// @param [in] thickness Thickness of the detector element
+    DetElem(std::shared_ptr<const Transform3D>     trafo,
+            std::shared_ptr<const RectangleBounds> rBounds,
+            double                                 thickness)
+      : DetectorElementBase()
+      , m_trafo(trafo)
+      , m_surface(new PlaneSurface(rBounds, *this))
+      , m_thickness(thickness)
+    {
+    }
+
+    /// @brief Getter of the transformation
+    virtual const Transform3D&
+    transform() const
+    {
+      return *m_trafo;
+    }
+
+    /// @brief Getter of the surface
+    virtual const Surface&
+    surface() const
+    {
+      return *m_surface;
+    }
+
+    /// @brief Getter of the thickness
+    virtual double
+    thickness() const
+    {
+      return m_thickness;
+    }
+
+    // Pointer to the transformation
+    std::shared_ptr<const Transform3D> m_trafo;
+    // Surface related to the detector element
+    Surface const* m_surface;
+    // Thickness of the detector element
+    double m_thickness;
+  };
+
+  /// @brief Builds a simple 4-layer detector with 2 pixel-like and 2
+  /// double-strip-like detectors
+  ///
+  /// @return Pointer to the tracking geometry
   std::shared_ptr<TrackingGeometry>
   buildGeometry()
   {
@@ -52,14 +108,21 @@ namespace Test {
     std::shared_ptr<const RectangleBounds> rBounds(
         new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
 
+    MaterialProperties matProp(
+        352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
+    std::shared_ptr<const SurfaceMaterial> surMat(
+        new HomogeneousSurfaceMaterial(matProp));
+
     // Construct surfaces
     std::array<PlaneSurface*, 6> surfaces;
     unsigned int i;
     for (i = 0; i < translations.size(); i++) {
       Transform3D trafo(Transform3D::Identity() * rotation);
       trafo.translation() = translations[i];
-      surfaces[i] = new PlaneSurface(std::make_shared<const Transform3D>(trafo),
-                                     rBounds);
+      DetElem de(
+          std::make_shared<const Transform3D>(trafo), rBounds, 1. * units::_um);
+      surfaces[i] = new PlaneSurface(rBounds, de);
+      surfaces[i]->setAssociatedMaterial(surMat);
     }
 
     // Construct layers
