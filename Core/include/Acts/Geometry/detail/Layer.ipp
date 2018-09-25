@@ -192,7 +192,10 @@ std::vector<SurfaceIntersection> Layer::compatibleSurfaces(
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the type(s) that are collected
     for (auto& sSurface : sensitiveSurfaces) {
-      processSurface(*sSurface, true);
+      if (sSurface->associatedDetectorElement())
+        processSurface(*sSurface, true);
+      else
+        processSurface(*sSurface);
     }
   }
 
