@@ -244,8 +244,8 @@ namespace Test {
                 << surResultB2.collected[i].position.y() << " "
                 << surResultB2.collected[i].position.z() << std::endl
                 << std::endl;
-    BOOST_TEST(surResultB.size() == 6);
-    BOOST_TEST(surResultB2.collected.size() == 6);
+    BOOST_TEST(surResultB.size() == 2);
+    BOOST_TEST(surResultB2.collected.size() == 2);
   }
 }  // namespace Test
 }  // namespace Acts

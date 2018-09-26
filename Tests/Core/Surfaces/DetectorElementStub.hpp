@@ -51,7 +51,11 @@ class LineBounds;
 class DetectorElementStub : public DetectorElementBase
 {
 public:
-  DetectorElementStub() : DetectorElementBase() {}
+  DetectorElementStub()
+    : DetectorElementBase()
+    , m_elementTransform(new Transform3D(Transform3D::Identity()))
+  {
+  }
 
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
@@ -175,7 +179,9 @@ DetectorElementStub::identifier() const
 inline const Transform3D&
 DetectorElementStub::transform() const
 {
+  //~ if(m_elementTransform)
   return *m_elementTransform;
+  //~ else return Transform3D::Identity();
 }
 
 inline const Surface&
