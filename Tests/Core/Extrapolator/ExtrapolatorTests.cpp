@@ -47,9 +47,11 @@ namespace Test {
 
   std::vector<std::shared_ptr<const Surface>> stepState;
   auto tGeometry = testGeometry<PlaneSurface>(stepState);
+  bool debugMode = false;
 
   // get the navigator and provide the TrackingGeometry
   Navigator<> navigator(tGeometry);
+
   using BFieldType          = ConstantBField;
   using EigenStepperType    = EigenStepper<BFieldType>;
   using EigenPropagatorType = Propagator<EigenStepperType, Navigator<>>;
@@ -59,8 +61,12 @@ namespace Test {
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
+<<<<<<< HEAD
   const int ntests    = 100;
   bool      debugMode = false;
+=======
+  const int ntests = 10;
+>>>>>>> f03391c4... First KalmanActor version
 
   // A plane selector for the SurfaceCollector
   struct PlaneSelector
@@ -182,6 +188,7 @@ namespace Test {
 
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
+    options.debug       = debugMode;
 
     const auto& result           = epropagator.propagate(start, options);
     auto        collector_result = result.get<PlaneCollector::result_type>();
@@ -190,10 +197,16 @@ namespace Test {
     PropagatorOptions<> optionsEmpty;
 
     optionsEmpty.maxStepSize = 25. * units::_cm;
-    // try propagation from start to each surface
+    optionsEmpty.debug       = true;
+    // Try propagation from start to each surface
     for (const auto& colsf : collector_result.collected) {
-      // get the surface
       const auto& csurface = colsf.surface;
+      // Avoid going to the same surface
+      // @todo: decide on strategy and write unit test for this
+      if (csurface == &start.referenceSurface()) {
+        continue;
+      }
+      // Extrapolate & check
       const auto& cresult
           = epropagator.propagate(start, *csurface, optionsEmpty).endParameters;
       bool worked = (cresult != nullptr);
@@ -286,7 +299,7 @@ namespace Test {
           ^ bdata::random((bdata::seed = 23,
                            bdata::distribution
                            = std::uniform_int_distribution<>(0, 1)))
-          ^ bdata::xrange(100),
+          ^ bdata::xrange(ntests),
       pT,
       phi,
       theta,

@@ -4,12 +4,12 @@ target_link_libraries (KalmanSequencerTests PRIVATE ActsCore)
 add_test (NAME KalmanSequencerUnitTest COMMAND KalmanSequencerTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanSequencerUnitTest TARGETS KalmanSequencerTests)
 
-#add_executable (KalmanFilterTest KalmanFilterTests.cpp)
-#target_include_directories (KalmanFilterTest PRIVATE ${Boost_INCLUDE_DIRS})
-#target_link_libraries (KalmanFilterTest PRIVATE ActsCore)
-#add_test (NAME KalmanFilterUnitTest COMMAND KalmanFilterTest)
-#acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanFilterUnitTest TARGETS KalmanFilterTest)
-#
+add_executable (KalmanFilterTest KalmanFilterTests.cpp)
+target_include_directories (KalmanFilterTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (KalmanFilterTest PRIVATE ActsCore)
+add_test (NAME KalmanFilterUnitTest COMMAND KalmanFilterTest)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanFilterUnitTest TARGETS KalmanFilterTest)
+
 add_executable (GainMatrixTests GainMatrixTests.cpp)
 target_include_directories (GainMatrixTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (GainMatrixTests PRIVATE ActsCore)

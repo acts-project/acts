@@ -54,7 +54,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
       solution = (lpos + path * ldir);
     }
     // is valid if it goes into the right direction
-    return ((navDir == 0) || path * navDir >= 0.);
+    return ((navDir == anyDirection) || path * navDir >= 0.);
   };
   // solve first
   bool valid = solve(gpos, gdir);

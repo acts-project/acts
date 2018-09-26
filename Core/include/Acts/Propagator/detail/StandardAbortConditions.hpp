@@ -228,8 +228,7 @@ namespace detail {
         return false;
       }
       state.navigation.targetReached = true;
-      // allow a sequencer to interpret this
-      return state.navigation.processedSurfaces.empty() ? true : false;
+      return true;
     }
   };
 

@@ -233,6 +233,8 @@ private:
       , targetAborters(std::move(tabs))
       , stepping(start, options.direction, options.maxStepSize)
     {
+      // Setting the start surface
+      navigation.startSurface = &start.referenceSurface();
     }
 
     /// These are the options - provided for each propagation step
@@ -313,7 +315,6 @@ private:
     debugLog(state, [&] {
       return std::string("Calling pre-stepping navigator & actions.");
     });
-
     // Navigator initialize call
     m_navigator(state);
 
@@ -325,7 +326,7 @@ private:
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it only takes the stepping state
       double s = m_stepper.step(state.stepping);
-      // accumulate the path length
+      // Accumulate the path length
       result.pathLength += s;
       // Call the actions, can (& will likely) modify the state
       debugLog(state, [&] {
@@ -336,12 +337,13 @@ private:
       });
       m_navigator(state);
       state.options.actionList(state, result);
+
       // Call the stop_conditions and the internal stop conditions
       // break condition triggered, but still count the step
       debugLog(state,
                [&] { return std::string("Calling aborters after step."); });
       if (state.options.stopConditions(result, state)
-          || state.targetAborters(result, state)) {
+          or state.targetAborters(result, state)) {
         terminatedNormally = true;
         break;
       }
@@ -493,9 +495,6 @@ public:
     // Initialize the internal propagator state
     using StateType = State<parameters_t, OptionsType, TargetAborters>;
     StateType state(start, options, targetAborters);
-
-    // Setting the start and the target surface
-    state.navigation.startSurface  = &start.referenceSurface();
     state.navigation.targetSurface = &target;
 
     // Apply the loop protection, it resets the interal path limit

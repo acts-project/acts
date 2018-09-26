@@ -63,16 +63,17 @@ namespace Test {
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
-  const int ntests    = 1;
-  bool      debugMode = true;
+  const int ntests    = 100;
+  const int skip      = 0;
+  bool      debugMode = false;
 
   // This test case checks Kalman fitter sequencing & reverse navigation
   BOOST_DATA_TEST_CASE(
       kalman_sequencer_test,
       bdata::random((bdata::seed = 20,
                      bdata::distribution
-                     = std::uniform_real_distribution<>(0.1 * units::_GeV,
-                                                        0.5 * units::_GeV)))
+                     = std::uniform_real_distribution<>(0.25 * units::_GeV,
+                                                        1.5 * units::_GeV)))
           ^ bdata::random((bdata::seed = 21,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
@@ -90,7 +91,8 @@ namespace Test {
       index)
   {
     double dcharge = -1 + 2 * charge;
-    (void)index;
+
+    if (index < skip) return;
 
     // define start parameters
     double   x  = 0;
@@ -127,6 +129,9 @@ namespace Test {
                 << std::endl;
       std::cout << kalmanSequencerOutput.debugString << std::endl;
     }
+
+    BOOST_TEST(status.endParameters != nullptr);
+    BOOST_TEST(status.endParameters->position().norm() < 0.25);
   }
 
 }  // namespace Test

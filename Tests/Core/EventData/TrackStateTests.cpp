@@ -20,15 +20,13 @@ namespace Acts {
 namespace Test {
 
   using Identifier = unsigned long int;
-
   template <ParID_t... params>
   using MeasurementType = Measurement<Identifier, params...>;
-
   template <ParID_t... params>
   using MeasuredState
-      = MeasuredTrackState<Identifier, TrackParameters, params...>;
-  using ParametricState = ParametricTrackState<Identifier, TrackParameters>;
-  using VariantState    = VariantTrackState<Identifier, TrackParameters>;
+      = MeasuredTrackState<Identifier, BoundParameters, params...>;
+  using ParametricState = ParametricTrackState<Identifier, BoundParameters>;
+  using VariantState    = VariantTrackState<Identifier, BoundParameters>;
   ///
   /// @brief Unit test for creation of Measurement object
   ///
@@ -60,8 +58,8 @@ namespace Test {
         pars_array[4];
 
     // constructor from parameter vector
-    auto ataPlane
-        = std::make_unique<const BoundParameters>(nullptr, pars, plane);
+    BoundParameters ataPlane(nullptr, pars, plane);
+
     // The parametric track state from the parameters
     VariantState pts = ParametricState(std::move(ataPlane));
 

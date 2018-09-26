@@ -9,13 +9,171 @@
 // STL include(s)
 #include <memory>
 
-// Boost include(s)
-#define BOOST_TEST_MODULE Measurement Tests
+#define BOOST_TEST_MODULE KalmanFitter Tests
 #include <boost/test/included/unit_test.hpp>
 
-// ATS include(s)
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackState.hpp"
+#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Fitter/KalmanActor.hpp"
+#include "Acts/Fitter/KalmanFitter.hpp"
+#include "Acts/Fitter/KalmanSequencer.hpp"
+#include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+
+namespace Acts {
+namespace Test {
+
+  // Propagator placeholder
+  struct Propagator
+  {
+  };
+  // Updator placeholder
+  struct Updator
+  {
+  };
+  // Calibrator placeholder
+  struct Calibrator
+  {
+  };
+  // Measurement placeholder
+  struct MeasurementSet1
+  {
+    int ms = 1;
+  };
+  // Measurement placeholder
+  struct MeasurementSet2
+  {
+    int ms = 2;
+  };
+
+  template <typename parameters_t>
+  struct PropagatorState
+  {
+    // PropgatorState from parameters
+    explicit PropagatorState(const parameters_t& pars) : stepping(pars) {}
+
+    /// Fake a stepper state
+    EigenStepper<ConstantBField>::State stepping;
+
+    /// Fake a navigator state
+    Navigator<KalmanSequencer>::State navigation;
+  };
+
+  // Shorthand
+  using Identifier = unsigned long int;
+  template <ParID_t... params>
+  using MeasurementType = Measurement<Identifier, params...>;
+  template <ParID_t... params>
+  using MeasuredState
+      = MeasuredTrackState<Identifier, BoundParameters, params...>;
+  using ParametricState   = ParametricTrackState<Identifier, BoundParameters>;
+  using VariantState      = VariantTrackState<Identifier, BoundParameters>;
+  using KalmanTrackStates = std::vector<VariantState>;
+
+  // The plane surfaces
+  PlaneSurface plane6(Vector3D(6., 0., 0.), Vector3D(1., 0., 0.));
+  PlaneSurface plane7a(Vector3D(7., -0.1, 0.), Vector3D(1., 0., 0.));
+  PlaneSurface plane7b(Vector3D(7., 0.1, 0.), Vector3D(1., 0., 0.));
+  PlaneSurface plane8(Vector3D(8., 0., 0.), Vector3D(1., 0., 0.));
+  PlaneSurface plane9(Vector3D(9., 0., 0.), Vector3D(1., 0., 0.));
+  PlaneSurface plane10(Vector3D(10., 0., 0.), Vector3D(1., 0., 0.));
+
+  auto planeLayer7 = PlaneLayer::create(nullptr, nullptr);
+  auto planeLayer9 = PlaneLayer::create(nullptr, nullptr);
+
+  /// Construct a KalmanActor
+  BOOST_AUTO_TEST_CASE(KalmanActorConstruction)
+  {
+
+    plane7a.associateLayer(*planeLayer7);
+    plane7b.associateLayer(*planeLayer7);
+    plane9.associateLayer(*planeLayer9);
+
+    // Construct the 1D measurement
+    ActsSymMatrixD<1> cov1D7a;
+    cov1D7a << 0.04;
+    MeasurementType<ParDef::eLOC_0> m1D7a(plane7a, 0, std::move(cov1D7a), 0.02);
+
+    ActsSymMatrixD<1> cov1D7b;
+    cov1D7b << 0.04;
+    MeasurementType<ParDef::eLOC_0> m1D7b(plane7b, 0, std::move(cov1D7b), 0.02);
+
+    // Construct the 2D measurement
+    ActsSymMatrixD<2> cov2D;
+    cov2D << 0.04, 0., 0.09, 0.;
+    MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m2D(
+        plane9, 0, std::move(cov2D), 0.02, 0.03);
+
+    // The 1D track state from the measurement - on surface 7a
+    VariantState mPlane7a = MeasuredState<ParDef::eLOC_0>(m1D7a);
+
+    // The 1D track state from the measurement - on surface 7b
+    VariantState mPlane7b = MeasuredState<ParDef::eLOC_0>(m1D7b);
+
+    // The 2D track state from the measurement
+    VariantState mPlane9 = MeasuredState<ParDef::eLOC_0, ParDef::eLOC_1>(m2D);
+
+    // Create the track states
+    KalmanTrackStates              tStates = {mPlane7a, mPlane7b, mPlane9};
+    KalmanActor<KalmanTrackStates> kalmanActor;
+    kalmanActor.trackStates = std::move(tStates);
+
+    CurvilinearParameters cPars(
+        nullptr, Vector3D(0., 0., 0.), Vector3D(0., 0., 0.), -1.);
+
+    // The call objects
+    PropagatorState<CurvilinearParameters>      propState(cPars);
+    KalmanActor<KalmanTrackStates>::result_type kalmanActorResult;
+    kalmanActor(propState, kalmanActorResult);
+
+    // Test that the fittedStates are now in the result
+    BOOST_TEST(kalmanActorResult.fittedStates.size() == 3);
+
+    // Test that the layer map of the PropagatorState is filled
+    BOOST_TEST(propState.navigation.sequence.externalSurfaces.size() == 3);
+
+    // Test that two measurements are on layer 7 & 9
+    auto layer7ms = propState.navigation.sequence.externalSurfaces.count(
+        planeLayer7.get());
+    BOOST_TEST(layer7ms == 2);
+
+    auto layer9ms = propState.navigation.sequence.externalSurfaces.count(
+        planeLayer9.get());
+    BOOST_TEST(layer9ms == 1);
+  }
+
+  /// Construct a KalmanFitter
+  // BOOST_AUTO_TEST_CASE(KalmanFitterConstruction)
+  //{
+  //
+  //
+  //
+  //  // Propgator, Updator and input measurements
+  //  Propagator p;
+  //  Updator u;
+  //  Parameters ip;
+  //  Surface s;
+  //  MeasurementSet1 input1;
+  //
+  //  /// Testing the KF construction
+  //  KalmanFitter<Propagator,Updator> kfitterM2M(p,u);
+  //  auto output1 = kfitterM2M.fit(input1,ip,&s);
+  //  BOOST_TEST(output1.ms == 1);
+  //
+  //  // Now create an input converter
+  //
+  //}
+
+}  // namespace Test
+}  // namespace Acts
+
+/*#include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/KalmanUpdator.hpp"
@@ -177,3 +335,4 @@ namespace Test {
   }
 }  // namespace Test
 }  // namespace Acts
+*/

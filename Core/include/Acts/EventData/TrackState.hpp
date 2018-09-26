@@ -37,7 +37,7 @@ public:
   /// @tparam measurement_t Type of the measurement
   /// @param m The measurement object
   TrackState(Measurement<identifier_t, params...>&& m)
-    : m_surface(&m.referenceSurface()), m_measurement(std::move(m))
+    : surface(&m.referenceSurface()), measurement(std::move(m))
   {
   }
 
@@ -46,7 +46,7 @@ public:
   /// @tparam measurement_t Type of the measurement
   /// @param m The measurement object
   TrackState(const Measurement<identifier_t, params...>& m)
-    : m_surface(&m.referenceSurface()), m_measurement(m)
+    : surface(&m.referenceSurface()), measurement(m)
   {
   }
 
@@ -54,8 +54,8 @@ public:
   ///
   /// @tparam parameters_t Type of the predicted parameters
   /// @param p The parameters object as unitue ptr
-  TrackState(std::unique_ptr<const parameters_t> p)
-    : m_surface(&(p->referenceSurface())), m_predicted(std::move(p))
+  TrackState(parameters_t p)
+    : surface(&(p.referenceSurface())), predictedState(std::move(p))
   {
   }
 
@@ -65,89 +65,51 @@ public:
   /// Copy constructor
   ///
   /// @param rhs is the source TrackState
-  TrackState(const TrackState& rhs)
-  {
-    m_surface   = rhs.m_surface;
-    m_predicted = rhs.m_predicted
-        ? std::unique_ptr<const parameters_t>(rhs.m_predicted->clone())
-        : nullptr;
-    m_updated = rhs.m_updated
-        ? std::unique_ptr<const parameters_t>(rhs.m_updated->clone())
-        : nullptr;
-    m_smoothed = rhs.m_smoothed
-        ? std::unique_ptr<const parameters_t>(rhs.m_smoothed->clone())
-        : nullptr;
-  }
+  TrackState(const TrackState& rhs) = default;
 
   /// Copy move constructor
   ///
   /// @param rhs is the source TrackState
-  TrackState(TrackState&& rhs)
-  {
-    m_surface   = rhs.m_surface;
-    m_predicted = std::move(rhs.m_predicted);
-    m_updated   = std::move(rhs.m_updated);
-    m_smoothed  = std::move(rhs.m_smoothed);
-  }
+  TrackState(TrackState&& rhs) = default;
 
   /// Assignment operator
   ///
   /// @param rhs is the source TrackState
   TrackState&
   operator=(const TrackState& rhs)
-  {
-    if (&rhs != this) {
-      m_predicted = rhs.m_predicted
-          ? std::unique_ptr<const parameters_t>(rhs.m_predicted->clone())
-          : nullptr;
-      m_updated = rhs.m_updated
-          ? std::unique_ptr<const parameters_t>(rhs.m_updated->clone())
-          : nullptr;
-      m_smoothed = rhs.m_smoothed
-          ? std::unique_ptr<const parameters_t>(rhs.m_smoothed->clone())
-          : nullptr;
-    }
-    return (*this);
-  }
+      = default;
 
   /// Assignment move operator
   ///
   /// @param rhs is the source TrackState
   TrackState&
   operator=(TrackState&& rhs)
-  {
-    m_surface   = rhs.m_surface;
-    m_predicted = std::move(rhs.m_predicted);
-    m_updated   = std::move(rhs.m_updated);
-    m_smoothed  = std::move(rhs.m_smoothed);
-    return (*this);
-  }
+      = default;
 
   /// @brief return method for the surface
   const Surface&
   referenceSurface() const
   {
-    return (*m_surface);
+    return (*surface);
   }
 
-private:
   /// The surface of this TrackState
-  const Surface* m_surface = nullptr;
+  const Surface* surface = nullptr;
 
   /// The optional measurement
-  boost::optional<Measurement<identifier_t, params...>> m_measurement;
+  boost::optional<Measurement<identifier_t, params...>> measurement;
 
   /// The optional calibrabed measurement
-  boost::optional<Measurement<identifier_t, params...>> m_calibrated;
+  boost::optional<Measurement<identifier_t, params...>> calibratedMeasurement;
 
-  /// The predicted state if needed
-  std::unique_ptr<const parameters_t> m_predicted = nullptr;
+  /// The predicted state
+  boost::optional<parameters_t> predictedState;
 
-  /// The updated state if needed
-  std::unique_ptr<const parameters_t> m_updated = nullptr;
+  /// The updated state
+  boost::optional<parameters_t> updatedState;
 
-  /// The smoothed state if needed
-  std::unique_ptr<const parameters_t> m_smoothed = nullptr;
+  /// The smoothed state
+  boost::optional<parameters_t> smoothedState;
 };
 
 /// @brief track state for measurements

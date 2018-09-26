@@ -159,7 +159,7 @@ public:
     ///        position
     ///
     /// @return the full transport jacobian
-    const ActsMatrixD<5, 5>
+    void
     covarianceTransport(bool reinitialize = false)
     {
       // Optimized trigonometry on the propagation direction
@@ -227,8 +227,8 @@ public:
         jacToGlobal(5, eTHETA) = -sinTheta;
         jacToGlobal(6, eQOP)   = 1;
       }
-      // return the full transport jacobian
-      return jacFull;
+      // Store the jacobian
+      jacobian = jacFull * jacobian;
     }
 
     /// Method for on-demand transport of the covariance
@@ -246,7 +246,7 @@ public:
     ///
     /// @return the full transport jacobian
     template <typename S>
-    const ActsMatrixD<5, 5>
+    void
     covarianceTransport(const S& surface, bool reinitialize = false)
     {
       using VectorHelpers::phi;
@@ -282,8 +282,6 @@ public:
       }
       // store in the global jacobian
       jacobian = jacFull * jacobian;
-      // return the full transport jacobian
-      return jacFull;
     }
 
     /// Global particle position

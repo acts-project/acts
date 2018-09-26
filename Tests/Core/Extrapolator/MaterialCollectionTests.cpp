@@ -332,7 +332,7 @@ namespace Test {
 
     if (debugModeBwdStep) {
       // check if the surfaces are free
-      std::cout << ">>> Backeard steps to be processed sequentially ..."
+      std::cout << ">>> Backward steps to be processed sequentially ..."
                 << std::endl;
       for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
         std::cout << "--> Surface with "
@@ -400,6 +400,7 @@ namespace Test {
       std::cout << bwdStepOutput.debugString << std::endl;
     }
   }
+
   // This test case checks that no segmentation fault appears
   // - this tests the collection of surfaces
   BOOST_DATA_TEST_CASE(

@@ -8,230 +8,148 @@
 
 #pragma once
 
-#include <list>
+#include <boost/variant.hpp>
 #include <memory>
-#include <type_traits>
-
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/surface_getter.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
-class Track;
 
-namespace KF {
-  template <typename ID>
-  struct Step
+/// @brief void measurement calibrator
+struct VoidCalibrator
+{
+  /// @brief void measurement calibrator only moves the
+  /// the measurement through for further processing
+  ///
+  /// @tparam measurement_t Type of the measurement
+  /// @tparam parameter_t Type of the parameters for calibration
+  ///
+  /// @param m Measurement to be moved through
+  /// @param p Parameters to be used for calibration
+  ///
+  /// @return void-calibrated measurement
+  template <typename measurement_t, typename parameters_t>
+  measurement_t
+  operator()(measurement_t m, const parameters_t& /*p*/) const
   {
-  public:
-    using JacobianMatrix = ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars>;
+    return std::move(m);
+  }
+};
 
-    const BoundParameters*
-    getPredictedState() const
-    {
-      return m_pPredicted.get();
-    }
-    const BoundParameters*
-    getFilteredState() const
-    {
-      return m_pFiltered.get();
-    }
-    const BoundParameters*
-    getSmoothedState() const
-    {
-      return m_pSmoothed.get();
-    }
-    const FittableMeasurement<ID>*
-    getCalibratedMeasurement() const
-    {
-      return m_pCalibratedMeasurement.get();
-    }
-    const JacobianMatrix*
-    getJacobian() const
-    {
-      return m_pJacobian.get();
-    }
+/// @brief void input/output converter
+struct VoidConverter
+{
+  /// @brief void measurement converter only moves the
+  /// the measurement through for further processing
+  ///
+  /// @tparam measurement_container_t Type of the measurement
+  ///
+  /// @param ms Measurements to be moved through
+  ///
+  /// @return moved measurements
+  template <typename measurements_t>
+  measurements_t
+  operator()(measurements_t ms) const
+  {
+    return std::move(ms);
+  }
+};
 
-    void
-    setPredictedState(std::unique_ptr<const BoundParameters> newPars)
-    {
-      m_pPredicted = std::move(newPars);
-    }
-    void
-    setFilteredState(std::unique_ptr<const BoundParameters> newPars)
-    {
-      m_pFiltered = std::move(newPars);
-    }
-    void
-    setSmoothedState(std::unique_ptr<const BoundParameters> newPars)
-    {
-      m_pSmoothed = std::move(newPars);
-    }
-    void
-    setCalibratedMeasurement(
-        std::unique_ptr<const FittableMeasurement<ID>> newMeasurement)
-    {
-      m_pCalibratedMeasurement = std::move(newMeasurement);
-    }
-    void
-    setJacobian(std::unique_ptr<const JacobianMatrix> newJacobian)
-    {
-      m_pJacobian = std::move(newJacobian);
-    }
-
-  private:
-    std::unique_ptr<const BoundParameters>         m_pPredicted;
-    std::unique_ptr<const BoundParameters>         m_pFiltered;
-    std::unique_ptr<const BoundParameters>         m_pSmoothed;
-    std::unique_ptr<const JacobianMatrix>          m_pJacobian;
-    std::unique_ptr<const FittableMeasurement<ID>> m_pCalibratedMeasurement;
-  };
-}
-
-/// KalmanFitter implementation
-/// Extrapolator, CacheGenerator, Calibrator and Updator are
-/// template arguments
-template <typename Extrapolator,
-          typename CacheGenerator,
-          typename Calibrator,
-          typename Updator>
+/// @brief Kalman fitter implementation of Acts
+///
+/// @tparam propagator_t Type of the propagation class
+/// @tparam updator_t Type of the updated class
+/// @tparam calibrator_t Type of the calibrator class
+/// @tparam input_converter_t Type of the input converter class
+/// @tparam output_converter_t Type of the output converter class
+///
+/// The Kalman forward filter is a subclass of the KalmanFilter and
+/// implemented as an Actor to the propagator engine. This takes the
+/// measurements and provides it to the KalmanSequencer that has to
+/// be part of the navigator.
+///
+/// Measurements are not required to be ordered for the KalmanFilter,
+/// measurement ordering needs to be figured out by the navigation of
+/// the propagator.
+///
+/// The Updator is the implemented kalman updator formalism, it
+/// runs via a visitor pattern through the measurements.
+///
+/// The Calibrator is a dedicated calibration algorithm that allows
+/// to calibrate measurements using track information, this could be
+/// e.g. sagging for wires, module deformations, etc.
+///
+/// The Input converter is a converter that transforms the input
+/// measurement/track/segments into a set of FittableMeasurements
+///
+/// The Output converter is a converter that transforms the
+/// set of track states into a given track/track particle class
+template <typename propagator_t,
+          typename updator_t,
+          typename calibrator_t       = VoidCalibrator,
+          typename input_converter_t  = VoidConverter,
+          typename output_converter_t = VoidConverter>
 class KalmanFitter
 {
+
 public:
+  /// Constructor from arguments
+  ///
+  KalmanFitter(propagator_t       pPropagator,
+               updator_t          pUpdator,
+               calibrator_t       pCalibrator = calibrator_t(),
+               input_converter_t  pInputCnv   = input_converter_t(),
+               output_converter_t pOutputCnv  = output_converter_t())
+    : m_propagator(std::move(pPropagator))
+    , m_updator(std::move(pUpdator))
+    , m_calibrator(std::move(pCalibrator))
+    , m_inputConverter(std::move(pInputCnv))
+    , m_outputConverter(std::move(pOutputCnv))
+  {
+  }
+
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
   ///
-  /// @param vMeasurements are the fittable measurements
-  /// @param pInitialPars is the initial track parameters
-  /// @return cache a Cache object
-  template <typename MeasurementContainer>
-  auto
-  fit(const MeasurementContainer&            vMeasurements,
-      std::unique_ptr<const BoundParameters> pInitialPars = nullptr) const
-  {
-    using Meas_t = typename MeasurementContainer::value_type;
-    typedef std::result_of_t<Extrapolator(const Meas_t&,
-                                          const TrackParameters&)>
-                                                       ExResult;
-    typedef std::result_of_t<CacheGenerator(ExResult)> StepCache;
-    using Cache = std::list<StepCache>;
-
-    Cache c = forwardFilter(vMeasurements, std::move(pInitialPars));
-    applySmoothing(c);
-
-    return convertCacheToTrack(std::move(c));
-  }
-
-  /// Forward filter implementation
+  /// @tparam input_measurements_t Type of the fittable measurements
+  /// @tparam parameters_t Type of the initial parameters
+  /// @tparam surface_t Type of the reference surface
   ///
-  /// @tparam MeasurementContainer defines the measurements
-  /// @param vMeasurements are the fittable measurements
-  /// @param pInitialPars is the initial track parameters
-  /// @return cache a Cache object
-  template <typename MeasurementContainer>
-  auto
-  forwardFilter(const MeasurementContainer&            vMeasurements,
-                std::unique_ptr<const BoundParameters> pInitialPars) const
-  {
-    // typedef to actual measurement type
-    using Meas_t = typename MeasurementContainer::value_type;
-    typedef std::result_of_t<Extrapolator(const Meas_t&,
-                                          const TrackParameters&)>
-                                                       ExResult;
-    typedef std::result_of_t<CacheGenerator(ExResult)> StepCache;
-    using Cache = std::list<StepCache>;
-
-    // create initial parameters if they are not provided
-    if (not pInitialPars) {
-      ActsSymMatrixD<Acts::NGlobalPars> cov;
-      cov << 100, 0, 0, 0, 0, 0, 100, 0, 0, 0, 0, 0, 10, 0, 0, 0, 0, 0, 10, 0,
-          0, 0, 0, 0, 1;
-      ActsVectorD<5> parValues;
-      parValues << 0, 0, 0, 0, 0.001;
-      std::cout << *std::begin(vMeasurements) << std::endl;
-      detail::getSurface(*std::begin(vMeasurements));
-      pInitialPars = std::make_unique<const BoundParameters>(
-          std::make_unique<const ActsSymMatrixD<Acts::NGlobalPars>>(
-              std::move(cov)),
-          parValues,
-          detail::getSurface(*std::begin(vMeasurements)));
-    }
-
-    Cache                  c;
-    const BoundParameters* pPredicted = nullptr;
-    const TrackParameters* pUpdated   = pInitialPars.get();
-    for (const Meas_t& m : vMeasurements) {
-      StepCache step = m_oCacheGenerator(m_oExtrapolator(m, *pUpdated));
-
-      pPredicted = step->getPredictedState();
-      step->setCalibratedMeasurement(m_oCalibrator(m, *pPredicted));
-      step->setFilteredState(m_oUpdator(m, *pPredicted));
-      pUpdated = step->getFilteredState();
-      c.push_back(std::move(step));
-    }
-
-    return c;
-  }
-
-  /// Apply the smoothing
+  /// @param measurements are the fittable measurements
+  /// @param initalParameters is the initial track parameters
   ///
-  /// @tparam StepCache uses the list of steps caches
-  /// @param cache is the list of step caches
-  template <typename StepCache>
-  void
-  applySmoothing(std::list<StepCache>& cache) const
-  {
-    using GMatrix = ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars>;
-    // smoothing update matrix
-    GMatrix G;
-    // smoothed parameter vector and covariance matrix
-    BoundParameters::ParVector_t smoothedPars;
-    BoundParameters::CovMatrix_t smoothedCov;
-    // smoothed track parameters
-    std::unique_ptr<const BoundParameters> pSmoothed = nullptr;
-
-    auto it = cache.rbegin();
-
-    // for the last measurement the filtered state and the smoothed state are
-    // equal
-    (*it)->setSmoothedState(std::unique_ptr<const BoundParameters>(
-        (*it)->getFilteredState()->clone()));
-    // remember the previous step cache and move on
-    decltype(it) pLast = it++;
-    // loop over the remaining caches
-    for (; it != cache.rend(); ++it, ++pLast) {
-      G = (*(*it)->getFilteredState()->covariance())
-          * (*(*it)->getJacobian()).transpose()
-          * (*(*pLast)->getPredictedState()->covariance()).inverse();
-      smoothedPars = (*it)->getFilteredState()->parameters()
-          + G * ((*pLast)->getSmoothedState()->parameters()
-                 - (*pLast)->getPredictedState()->parameters());
-      smoothedCov = *(*it)->getFilteredState()->covariance()
-          - G * (*(*pLast)->getPredictedState()->covariance()
-                 - *(*pLast)->getSmoothedState()->covariance())
-              * G.transpose();
-
-      // create smoothed track parameters
-      pSmoothed = std::make_unique<const BoundParameters>(
-          std::make_unique<const decltype(smoothedCov)>(std::move(smoothedCov)),
-          smoothedPars,
-          (*it)->getFilteredState()->referenceSurface());
-      (*it)->setSmoothedState(std::move(pSmoothed));
-    }
-  }
-
-  template <typename Cache>
+  /// @return the output as an output track
+  template <typename input_measurements_t,
+            typename parameters_t,
+            typename surface_t>
   auto
-  convertCacheToTrack(Cache c) const
+  fit(const input_measurements_t& measurements,
+      const parameters_t& /*initalParameters*/,
+      const surface_t* /*pReferenceSurface = nullptr*/) const
   {
-    return c;
+    // Bring the measurements into Acts style
+    auto trackStates = m_inputConverter(measurements);
+
+    // Return the converted Track
+    return m_outputConverter(trackStates);
   }
 
-  Extrapolator   m_oExtrapolator;
-  CacheGenerator m_oCacheGenerator;
-  Calibrator     m_oCalibrator;
-  Updator        m_oUpdator;
+private:
+  /// The propgator for the transport and material update
+  propagator_t m_propagator;
+
+  /// The updator for measurement updates
+  updator_t m_updator;
+
+  /// The measurement calibrator
+  calibrator_t m_calibrator;
+
+  /// The input converter to Fittable measurements
+  input_converter_t m_inputConverter;
+
+  /// The output converter into a given format
+  output_converter_t m_outputConverter;
 };
 
 }  // namespace Acts
