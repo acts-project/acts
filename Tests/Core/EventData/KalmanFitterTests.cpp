@@ -9,6 +9,7 @@
 #define BOOST_TEST_MODULE KalmanFitter Tests
 #include <boost/test/included/unit_test.hpp>
 
+#include <random>
 #include <vector>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
@@ -243,6 +244,129 @@ namespace Test {
                 << std::endl;
     BOOST_TEST(surResultB.size() == 2);
     BOOST_TEST(surResultB2.collected.size() == 2);
+  }
+
+  ///
+  /// @brief Unit test for Kalman fitter with measurements with noise along the
+  /// x-axis
+  ///
+  BOOST_AUTO_TEST_CASE(kalman_fitter_with_noise)
+  {
+    // Build detector
+    std::shared_ptr<TrackingGeometry> detector = buildGeometry();
+
+    // Construct measurements
+    std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
+
+    std::normal_distribution<double> gauss(0.0, 2. * units::_cm);
+    std::default_random_engine       generator(42);
+
+    ActsSymMatrixD<2> cov2D;
+    double dX = gauss(generator), dY = gauss(generator);
+    cov2D << dX * dX, 0., 0., dY * dY;
+
+    Vector3D       pos(-2. * units::_m, 0., 0.);
+    Surface const* sur = detector->lowestTrackingVolume(pos)
+                             ->associatedLayer(pos)
+                             ->surfaceArray()
+                             ->at(pos)[0];
+    measurements[sur].push_back(
+        Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, dX, dY));
+
+	dX = gauss(generator), dY = gauss(generator);
+	cov2D << dX * dX, 0., 0., dY * dY;
+    pos = {-1. * units::_m, 0., 0.};
+    sur = detector->lowestTrackingVolume(pos)
+              ->associatedLayer(pos)
+              ->surfaceArray()
+              ->at(pos)[0];
+    measurements[sur].push_back(
+        Measurement<id, eLOC_0, eLOC_1>(*sur, 1, cov2D, dX, dY));
+
+    ActsSymMatrixD<1> cov1D;
+    dX = gauss(generator);
+    cov1D << dX * dX;
+
+    pos = {1. * units::_m - 1. * units::_mm, 0., 0.};
+    sur = detector->lowestTrackingVolume(pos)
+              ->associatedLayer(pos)
+              ->surfaceArray()
+              ->at(pos)[0];
+    measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, dX));
+
+    dX = gauss(generator);
+    cov1D << dX * dX;
+    pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
+    sur = detector->lowestTrackingVolume(pos)
+              ->associatedLayer(pos)
+              ->surfaceArray()
+              ->at(pos)[0];
+    measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, dX));
+
+    dX = gauss(generator);
+    cov1D << dX * dX;
+    pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
+    sur = detector->lowestTrackingVolume(pos)
+              ->associatedLayer(pos)
+              ->surfaceArray()
+              ->at(pos)[0];
+    measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, dX));
+
+    dX = gauss(generator);
+    cov1D << dX * dX;
+    pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
+    sur = detector->lowestTrackingVolume(pos)
+              ->associatedLayer(pos)
+              ->surfaceArray()
+              ->at(pos)[0];
+    measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, dX));
+
+    // Build navigator
+    Navigator navi(detector);
+    navi.resolvePassive   = false;
+    navi.resolveMaterial  = false;
+    navi.resolveSensitive = true;
+
+    // Use default stepper
+    StraightLineStepper sls;
+    // Build navigator
+    Propagator<StraightLineStepper, Navigator> prop(sls, navi);
+
+    // Set initial parameters for the particle track
+    ActsSymMatrixD<5> cov;
+    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
+        1. / (10 * units::_GeV);
+    auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    Vector3D startParams(-3. * units::_m, 0., 0.),
+        startMom(1. * units::_GeV, 0., 0);
+
+    SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(
+        std::move(covPtr), startParams, startMom);
+
+    // Create action list for surface collection
+    ActionList<SurfaceCollection, SurfaceCollector<SelectSurfaceWithHit>> aList;
+    aList.get<SurfaceCollection>().measurements = measurements;
+    aList.get<SurfaceCollector<SelectSurfaceWithHit>>().selector.measurements
+        = measurements;
+    // Set options for propagator
+    Propagator<StraightLineStepper, Navigator>::
+        Options<ActionList<SurfaceCollection,
+                           SurfaceCollector<SelectSurfaceWithHit>>>
+            propOpts;
+    propOpts.actionList = aList;
+
+    // Launch and collect
+    const auto&                        result = prop.propagate(sbtp, propOpts);
+    const std::vector<Surface const*>& surResult
+        = result.get<typename SurfaceCollection::result_type>();
+    const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResult2
+        = result.get<
+            typename SurfaceCollector<SelectSurfaceWithHit>::result_type>();
+
+    // Test if results match the number of measurements
+    BOOST_TEST(surResult.size() == 6);
+    BOOST_TEST(surResult2.collected.size() == 6);
   }
 }  // namespace Test
 }  // namespace Acts
