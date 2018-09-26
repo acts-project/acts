@@ -11,6 +11,7 @@
 
 #include <random>
 #include <vector>
+#include <math.h>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
@@ -114,15 +115,51 @@ namespace Test {
       return false;
     }
   };
-
-  std::normal_distribution<double> gauss(0.0, 2. * units::_cm);
+  
+  std::normal_distribution<double> gauss(0., 2. * units::_cm);
   std::default_random_engine       generator(42);
   ActsSymMatrixD<1>                cov1D;
   ActsSymMatrixD<2>                cov2D;
   double                           dX, dY;
   Vector3D                         pos;
   Surface const*                   sur;
+  
+	struct MaterialScattering
+	{
+		MaterialScattering() = default;
+		
+		template<typename propagator_state_t>
+		void
+		operator()(propagator_state_t& state) const
+		{
+			if(state.navigation.currentSurface && state.navigation.currentSurface->associatedMaterial() && state.stepping.cov != ActsSymMatrixD<5>::Zero())
+			{
+				std::normal_distribution<double> scatterAngle(0., 0.17); //< \approx 10 degree
+				double dPhi = scatterAngle(generator), dTheta = scatterAngle(generator);
 
+				state.stepping.cov(ePHI, ePHI) += dPhi * dPhi;
+				state.stepping.cov(eTHETA, eTHETA) += dTheta * dTheta;
+				
+				double norm = state.stepping.direction().norm();
+				double phi = std::acos(state.stepping.direction().z() / norm);
+				double theta = std::atan2(state.stepping.direction().y(), state.stepping.direction().x());
+				
+				state.stepping.dir = {norm * std::sin(theta + dTheta) * std::cos(phi + dPhi),
+									  norm * std::sin(theta + dTheta) * std::sin(phi + dPhi),
+									  norm * std::cos(theta + dTheta)};
+			}
+		}
+	};
+	
+
+
+	/// @brief Function to calculate measurements with x and/or y coordinates
+	///
+	/// @param [in] detector Detector geometry for surface lookup
+	/// @param [in] surfaces Vector of Coordinates referring to surfaces that will receive measurements
+	/// @param [in] dimensions Vector that states if the measurement has a x and/or y coordinate
+	/// @param [in] noise Boolean expression if the measurements receive underlying noise
+	/// @return Map containing the surfaces and the corresponding measurements
   std::map<Surface const*, std::vector<FittableMeasurement<id>>>
   createMeasurements(std::shared_ptr<TrackingGeometry> detector,
                      std::vector<Vector3D>&            surfaces,
@@ -131,8 +168,10 @@ namespace Test {
   {
     std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
 
+	// Walk over every surface
     for (unsigned long int i = 0; i < surfaces.size(); i++) {
       dX = noise ? gauss(generator) : 0.;
+      // Produce a measurement with x and y coordinate
       if (dimensions[i].first && dimensions[i].second) {
         dY = noise ? gauss(generator) : 0.;
         cov2D << dX * dX, 0., 0., dY * dY;
@@ -143,7 +182,7 @@ namespace Test {
         measurements[sur].push_back(
             Measurement<id, eLOC_0, eLOC_1>(*sur, i, cov2D, dX, dY));
       } else {
-
+		// Produce measurement with x XOR y coordinate
         cov1D << dX * dX;
         sur = detector->lowestTrackingVolume(surfaces[i])
                   ->associatedLayer(surfaces[i])
@@ -305,11 +344,6 @@ namespace Test {
     navi.resolveMaterial  = false;
     navi.resolveSensitive = true;
 
-    // Use default stepper
-    StraightLineStepper sls;
-    // Build navigator
-    Propagator<StraightLineStepper, Navigator> prop(sls, navi);
-
     // Set initial parameters for the particle track
     ActsSymMatrixD<5> cov;
     cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
@@ -319,32 +353,43 @@ namespace Test {
     Vector3D startParams(-3. * units::_m, 0., 0.),
         startMom(1. * units::_GeV, 0., 0);
 
-    SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(
-        std::move(covPtr), startParams, startMom);
-
     // Create action list for surface collection
-    ActionList<SurfaceCollection, SurfaceCollector<SelectSurfaceWithHit>> aList;
+    ActionList<MaterialScattering, SurfaceCollection, SurfaceCollector<SelectSurfaceWithHit>> aList;
     aList.get<SurfaceCollection>().measurements = measurements;
     aList.get<SurfaceCollector<SelectSurfaceWithHit>>().selector.measurements
         = measurements;
-    // Set options for propagator
-    Propagator<StraightLineStepper, Navigator>::
-        Options<ActionList<SurfaceCollection,
-                           SurfaceCollector<SelectSurfaceWithHit>>>
-            propOpts;
-    propOpts.actionList = aList;
 
-    // Launch and collect
-    const auto&                        result = prop.propagate(sbtp, propOpts);
-    const std::vector<Surface const*>& surResult
-        = result.get<typename SurfaceCollection::result_type>();
-    const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResult2
-        = result.get<
+    // Re-configure propagation with B-field
+    ConstantBField               bField(Vector3D(0., 0., 0.));
+    EigenStepper<ConstantBField> es(bField);
+    Propagator<EigenStepper<ConstantBField>, Navigator> propB(es, navi);
+    covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    SingleCurvilinearTrackParameters<ChargedPolicy> sbtpB(
+        std::move(covPtr), startParams, startMom, 1.);
+    AbortList<EndOfWorld> abortList;
+    Propagator<EigenStepper<ConstantBField>, Navigator>::
+        Options<ActionList<MaterialScattering, SurfaceCollection,
+                           SurfaceCollector<SelectSurfaceWithHit>>,
+                AbortList<EndOfWorld>>
+            propOptsB;
+    propOptsB.actionList     = aList;
+    propOptsB.stopConditions = abortList;
+    propOptsB.maxSteps       = 1e6;
+
+    const auto& resultB = propB.propagate(sbtpB, propOptsB);
+    const std::vector<Surface const*>& surResultB
+        = resultB.get<typename SurfaceCollection::result_type>();
+    const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResultB2
+        = resultB.get<
             typename SurfaceCollector<SelectSurfaceWithHit>::result_type>();
 
-    // Test if results match the number of measurements
-    BOOST_TEST(surResult.size() == 6);
-    BOOST_TEST(surResult2.collected.size() == 6);
+    for (size_t i = 0; i < surResultB2.collected.size(); i++)
+      std::cout << surResultB2.collected[i].position.x() << " "
+                << surResultB2.collected[i].position.y() << " "
+                << surResultB2.collected[i].position.z() << std::endl
+                << std::endl;
+    BOOST_TEST(surResultB.size() == 1);
+    BOOST_TEST(surResultB2.collected.size() == 1);
   }
 }  // namespace Test
 }  // namespace Acts
