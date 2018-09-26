@@ -126,15 +126,13 @@ namespace Test {
                              ->associatedLayer(pos)
                              ->surfaceArray()
                              ->at(pos)[0];
-    std::cout << sur << "\t";
     measurements[sur].push_back(
-        std::move(Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.)));
+        Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.));
     pos = {-1. * units::_m, 0., 0.};
     sur = detector->lowestTrackingVolume(pos)
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-    std::cout << sur << "\t";
     measurements[sur].push_back(
         Measurement<id, eLOC_0, eLOC_1>(*sur, 1, cov2D, 0., 0.));
 
@@ -146,7 +144,6 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-    std::cout << sur << "\t";
     measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, 0.));
 
     pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
@@ -154,7 +151,6 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-    std::cout << sur << "\t";
     measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, 0.));
 
     pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
@@ -162,7 +158,6 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-    std::cout << sur << "\t";
     measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, 0.));
 
     pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
@@ -170,7 +165,6 @@ namespace Test {
               ->associatedLayer(pos)
               ->surfaceArray()
               ->at(pos)[0];
-    std::cout << sur << std::endl;
     measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, 0.));
 
     // Build navigator
