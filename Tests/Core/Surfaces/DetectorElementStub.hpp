@@ -53,7 +53,6 @@ class DetectorElementStub : public DetectorElementBase
 public:
   DetectorElementStub()
     : DetectorElementBase()
-    , m_elementTransform(new Transform3D(Transform3D::Identity()))
   {
   }
 
@@ -179,9 +178,7 @@ DetectorElementStub::identifier() const
 inline const Transform3D&
 DetectorElementStub::transform() const
 {
-  //~ if(m_elementTransform)
   return *m_elementTransform;
-  //~ else return Transform3D::Identity();
 }
 
 inline const Surface&

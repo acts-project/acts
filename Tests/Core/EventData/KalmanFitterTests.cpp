@@ -100,9 +100,6 @@ namespace Test {
       if (std::abs(state.stepping.position().x()) > 3. * units::_m
           || std::abs(state.stepping.position().y()) > 0.5 * units::_m
           || std::abs(state.stepping.position().z()) > 0.5 * units::_m)
-        //~ if (state.stepping.position().x() > -999.5 * units::_mm
-        //~ || std::abs(state.stepping.position().y()) > 0.5 * units::_m
-        //~ || std::abs(state.stepping.position().z()) > 0.5 * units::_m)
         return true;
       return false;
     }
