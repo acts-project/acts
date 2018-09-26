@@ -230,10 +230,11 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the collect
     for (auto& sSurface : sensitiveSurfaces) {
-      if (sSurface->associatedDetectorElement())
+      if (sSurface->associatedDetectorElement()) {
         processSurface(*sSurface, true);
-      else
+      } else {
         processSurface(*sSurface);
+      }
     }
   }
 
