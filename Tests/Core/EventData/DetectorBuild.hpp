@@ -119,9 +119,12 @@ namespace Test {
     for (i = 0; i < translations.size(); i++) {
       Transform3D trafo(Transform3D::Identity() * rotation);
       trafo.translation() = translations[i];
-      
-      surfaces[i] = new PlaneSurface(rBounds, *(new DetElem(
-          std::make_shared<const Transform3D>(trafo), rBounds, 1. * units::_um)));
+
+      surfaces[i] = new PlaneSurface(
+          rBounds,
+          *(new DetElem(std::make_shared<const Transform3D>(trafo),
+                        rBounds,
+                        1. * units::_um)));
       surfaces[i]->setAssociatedMaterial(surMat);
     }
 
