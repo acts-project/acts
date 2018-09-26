@@ -54,17 +54,14 @@ namespace Test {
     void
     operator()(propagator_state_t& state, result_type& result) const
     {
-      //~ std::cout << state.options.debugString << std::endl;
-      if (state.navigation.currentSurface)
-        std::cout << state.stepping.position().x() << " "
-                  << state.stepping.position().y() << " "
-                  << state.stepping.position().z() << "\t"
-                  << state.navigation.currentSurface->geoID().toString()
-                  << std::endl;
       if (measurements.find(state.navigation.currentSurface)
           != measurements.end()) {
-        std::cout << "true" << std::endl;
         result.push_back(state.navigation.currentSurface);
+        std::cout << "Selected surface "
+                  << state.navigation.currentSurface->geoID().toString()
+                  << " at position (" << state.stepping.position().x() << ", "
+                  << state.stepping.position().y() << ", "
+                  << state.stepping.position().z() << ")" << std::endl;
       }
     }
   };
@@ -320,11 +317,6 @@ namespace Test {
         = resultB.get<
             typename SurfaceCollector<SelectSurfaceWithHit>::result_type>();
 
-    for (size_t i = 0; i < surResultB2.collected.size(); i++)
-      std::cout << surResultB2.collected[i].position.x() << " "
-                << surResultB2.collected[i].position.y() << " "
-                << surResultB2.collected[i].position.z() << std::endl
-                << std::endl;
     BOOST_TEST(surResultB.size() == 2);
     BOOST_TEST(surResultB2.collected.size() == 2);
   }
@@ -339,6 +331,7 @@ namespace Test {
     std::shared_ptr<TrackingGeometry> detector = buildGeometry();
 
     // Construct measurements
+    // Get the position of the sensitive surfaces
     std::vector<Vector3D> surfaces;
     surfaces.push_back({-2. * units::_m, 0., 0.});
     surfaces.push_back({-1. * units::_m, 0., 0.});
@@ -347,6 +340,7 @@ namespace Test {
     surfaces.push_back({2. * units::_m - 1. * units::_mm, 0., 0.});
     surfaces.push_back({2. * units::_m + 1. * units::_mm, 0., 0.});
 
+    // Define the measured components
     std::vector<std::pair<bool, bool>> dimensions;
     dimensions.push_back(std::make_pair(true, true));
     dimensions.push_back(std::make_pair(true, true));
@@ -382,12 +376,11 @@ namespace Test {
     aList.get<SurfaceCollector<SelectSurfaceWithHit>>().selector.measurements
         = measurements;
 
-    // Re-configure propagation with B-field
+    // Configure propagation with deactivated B-field
     ConstantBField               bField(Vector3D(0., 0., 0.));
     EigenStepper<ConstantBField> es(bField);
-    Propagator<EigenStepper<ConstantBField>, Navigator> propB(es, navi);
-    covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    SingleCurvilinearTrackParameters<ChargedPolicy> sbtpB(
+    Propagator<EigenStepper<ConstantBField>, Navigator> prop(es, navi);
+    SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
         std::move(covPtr), startParams, startMom, 1.);
     AbortList<EndOfWorld> abortList;
     Propagator<EigenStepper<ConstantBField>, Navigator>::
@@ -395,25 +388,61 @@ namespace Test {
                            SurfaceCollection,
                            SurfaceCollector<SelectSurfaceWithHit>>,
                 AbortList<EndOfWorld>>
-            propOptsB;
-    propOptsB.actionList     = aList;
-    propOptsB.stopConditions = abortList;
-    propOptsB.maxSteps       = 1e6;
+            propOpts;
+    propOpts.actionList     = aList;
+    propOpts.stopConditions = abortList;
+    propOpts.maxSteps       = 1e6;
 
-    const auto& resultB = propB.propagate(sbtpB, propOptsB);
+    // Launch and collect results
+    const auto&                        result = prop.propagate(sbtp, propOpts);
+    const std::vector<Surface const*>& surResult
+        = result.get<typename SurfaceCollection::result_type>();
+    const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResult2
+        = result.get<
+            typename SurfaceCollector<SelectSurfaceWithHit>::result_type>();
+
+    BOOST_TEST(surResult.size() == 3);
+    BOOST_TEST(surResult2.collected.size() == 3);
+
+    // Rebuild for further stability testing without measurements on every
+    // surface
+    // Remove a single measurement
+    std::map<Surface const*, std::vector<FittableMeasurement<id>>>::iterator it;
+    it = measurements.find(detector->lowestTrackingVolume(surfaces[1])
+                               ->associatedLayer(surfaces[1])
+                               ->surfaceArray()
+                               ->at(surfaces[1])[0]);
+    measurements.erase(it);
+
+    it = measurements.find(detector->lowestTrackingVolume(surfaces[5])
+                               ->associatedLayer(surfaces[5])
+                               ->surfaceArray()
+                               ->at(surfaces[5])[0]);
+    measurements.erase(it);
+
+    // Update measurements in the action list
+    aList.get<SurfaceCollection>().measurements = measurements;
+    aList.get<SurfaceCollector<SelectSurfaceWithHit>>().selector.measurements
+        = measurements;
+    propOpts.actionList = aList;
+
+    // Configure propagation with deactivated B-field
+    prop   = Propagator<EigenStepper<ConstantBField>, Navigator>(es, navi);
+    covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    sbtp   = SingleCurvilinearTrackParameters<ChargedPolicy>(
+        std::move(covPtr), startParams, startMom, 1.);
+
+    // Launch and collect results
+    const auto&                        resultB = prop.propagate(sbtp, propOpts);
     const std::vector<Surface const*>& surResultB
         = resultB.get<typename SurfaceCollection::result_type>();
     const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResultB2
         = resultB.get<
             typename SurfaceCollector<SelectSurfaceWithHit>::result_type>();
 
-    for (size_t i = 0; i < surResultB2.collected.size(); i++)
-      std::cout << surResultB2.collected[i].position.x() << " "
-                << surResultB2.collected[i].position.y() << " "
-                << surResultB2.collected[i].position.z() << std::endl
-                << std::endl;
-    BOOST_TEST(surResultB.size() == 3);
-    BOOST_TEST(surResultB2.collected.size() == 3);
+    BOOST_TEST(surResultB.size() == 4);
+    BOOST_TEST(surResultB2.collected.size() == 4);
   }
+
 }  // namespace Test
 }  // namespace Acts
