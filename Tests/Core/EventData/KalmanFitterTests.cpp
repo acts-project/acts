@@ -90,10 +90,19 @@ namespace Test {
     }
   };
 
+  ///
+  /// @brief Aborter for the case that a particle leaves the detector
+  ///
   struct EndOfWorld
   {
+    /// @brief Constructor
     EndOfWorld() = default;
 
+    /// @brief Main call operator for the abort operation
+    ///
+    /// @tparam propagator_state_t State of the propagator
+    /// @param [in] state State of the propagation
+    /// @return Boolean statement if the particle is still in the detector
     template <typename propagator_state_t>
     bool
     operator()(propagator_state_t& state) const
@@ -105,6 +114,54 @@ namespace Test {
       return false;
     }
   };
+
+  std::normal_distribution<double> gauss(0.0, 2. * units::_cm);
+  std::default_random_engine       generator(42);
+  ActsSymMatrixD<1>                cov1D;
+  ActsSymMatrixD<2>                cov2D;
+  double                           dX, dY;
+  Vector3D                         pos;
+  Surface const*                   sur;
+
+  std::map<Surface const*, std::vector<FittableMeasurement<id>>>
+  createMeasurements(std::shared_ptr<TrackingGeometry> detector,
+                     std::vector<Vector3D>&            surfaces,
+                     std::vector<std::pair<bool, bool>>& dimensions,
+                     bool noise)
+  {
+    std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
+
+    for (unsigned long int i = 0; i < surfaces.size(); i++) {
+      dX = noise ? gauss(generator) : 0.;
+      if (dimensions[i].first && dimensions[i].second) {
+        dY = noise ? gauss(generator) : 0.;
+        cov2D << dX * dX, 0., 0., dY * dY;
+        sur = detector->lowestTrackingVolume(surfaces[i])
+                  ->associatedLayer(surfaces[i])
+                  ->surfaceArray()
+                  ->at(surfaces[i])[0];
+        measurements[sur].push_back(
+            Measurement<id, eLOC_0, eLOC_1>(*sur, i, cov2D, dX, dY));
+      } else {
+
+        cov1D << dX * dX;
+        sur = detector->lowestTrackingVolume(surfaces[i])
+                  ->associatedLayer(surfaces[i])
+                  ->surfaceArray()
+                  ->at(surfaces[i])[0];
+        if (dimensions[i].first) {
+          measurements[sur].push_back(
+              Measurement<id, eLOC_0>(*sur, i, cov1D, dX));
+        } else if (dimensions[i].second) {
+          measurements[sur].push_back(
+              Measurement<id, eLOC_1>(*sur, i, cov1D, dX));
+        }
+      }
+    }
+
+    return measurements;
+  }
+
   ///
   /// @brief Unit test for Kalman fitter with measurements along the x-axis
   ///
@@ -114,56 +171,24 @@ namespace Test {
     std::shared_ptr<TrackingGeometry> detector = buildGeometry();
 
     // Construct measurements
-    std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
+    std::vector<Vector3D> surfaces;
+    surfaces.push_back({-2. * units::_m, 0., 0.});
+    surfaces.push_back({-1. * units::_m, 0., 0.});
+    surfaces.push_back({1. * units::_m - 1. * units::_mm, 0., 0.});
+    surfaces.push_back({1. * units::_m + 1. * units::_mm, 0., 0.});
+    surfaces.push_back({2. * units::_m - 1. * units::_mm, 0., 0.});
+    surfaces.push_back({2. * units::_m + 1. * units::_mm, 0., 0.});
 
-    ActsSymMatrixD<2> cov2D;
-    cov2D << 1. * units::_mm, 0., 0., 1. * units::_mm;
+    std::vector<std::pair<bool, bool>> dimensions;
+    dimensions.push_back(std::make_pair(true, true));
+    dimensions.push_back(std::make_pair(true, true));
+    dimensions.push_back(std::make_pair(true, false));
+    dimensions.push_back(std::make_pair(false, true));
+    dimensions.push_back(std::make_pair(true, false));
+    dimensions.push_back(std::make_pair(false, true));
 
-    Vector3D       pos(-2. * units::_m, 0., 0.);
-    Surface const* sur = detector->lowestTrackingVolume(pos)
-                             ->associatedLayer(pos)
-                             ->surfaceArray()
-                             ->at(pos)[0];
-    measurements[sur].push_back(
-        Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, 0., 0.));
-    pos = {-1. * units::_m, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(
-        Measurement<id, eLOC_0, eLOC_1>(*sur, 1, cov2D, 0., 0.));
-
-    ActsSymMatrixD<1> cov1D;
-    cov1D << 1. * units::_mm;
-
-    pos = {1. * units::_m - 1. * units::_mm, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, 0.));
-
-    pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, 0.));
-
-    pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, 0.));
-
-    pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, 0.));
+    std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements
+        = createMeasurements(detector, surfaces, dimensions, false);
 
     // Build navigator
     Navigator navi(detector);
@@ -183,7 +208,6 @@ namespace Test {
         1. / (10 * units::_GeV);
     auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     Vector3D startParams(-3. * units::_m, 0., 0.),
-        //~ Vector3D startParams(-1.0006 * units::_m, 0., 499.8 * units::_mm),
         startMom(1. * units::_GeV, 0., 0);
 
     SingleCurvilinearTrackParameters<NeutralPolicy> sbtp(
@@ -250,76 +274,30 @@ namespace Test {
   /// @brief Unit test for Kalman fitter with measurements with noise along the
   /// x-axis
   ///
-  BOOST_AUTO_TEST_CASE(kalman_fitter_with_noise)
+  BOOST_AUTO_TEST_CASE(kalman_fitter_noisy)
   {
     // Build detector
     std::shared_ptr<TrackingGeometry> detector = buildGeometry();
 
     // Construct measurements
-    std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements;
+    std::vector<Vector3D> surfaces;
+    surfaces.push_back({-2. * units::_m, 0., 0.});
+    surfaces.push_back({-1. * units::_m, 0., 0.});
+    surfaces.push_back({1. * units::_m - 1. * units::_mm, 0., 0.});
+    surfaces.push_back({1. * units::_m + 1. * units::_mm, 0., 0.});
+    surfaces.push_back({2. * units::_m - 1. * units::_mm, 0., 0.});
+    surfaces.push_back({2. * units::_m + 1. * units::_mm, 0., 0.});
 
-    std::normal_distribution<double> gauss(0.0, 2. * units::_cm);
-    std::default_random_engine       generator(42);
+    std::vector<std::pair<bool, bool>> dimensions;
+    dimensions.push_back(std::make_pair(true, true));
+    dimensions.push_back(std::make_pair(true, true));
+    dimensions.push_back(std::make_pair(true, false));
+    dimensions.push_back(std::make_pair(false, true));
+    dimensions.push_back(std::make_pair(true, false));
+    dimensions.push_back(std::make_pair(false, true));
 
-    ActsSymMatrixD<2> cov2D;
-    double dX = gauss(generator), dY = gauss(generator);
-    cov2D << dX * dX, 0., 0., dY * dY;
-
-    Vector3D       pos(-2. * units::_m, 0., 0.);
-    Surface const* sur = detector->lowestTrackingVolume(pos)
-                             ->associatedLayer(pos)
-                             ->surfaceArray()
-                             ->at(pos)[0];
-    measurements[sur].push_back(
-        Measurement<id, eLOC_0, eLOC_1>(*sur, 0, cov2D, dX, dY));
-
-	dX = gauss(generator), dY = gauss(generator);
-	cov2D << dX * dX, 0., 0., dY * dY;
-    pos = {-1. * units::_m, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(
-        Measurement<id, eLOC_0, eLOC_1>(*sur, 1, cov2D, dX, dY));
-
-    ActsSymMatrixD<1> cov1D;
-    dX = gauss(generator);
-    cov1D << dX * dX;
-
-    pos = {1. * units::_m - 1. * units::_mm, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 2, cov1D, dX));
-
-    dX = gauss(generator);
-    cov1D << dX * dX;
-    pos = {1. * units::_m + 1. * units::_mm, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 3, cov1D, dX));
-
-    dX = gauss(generator);
-    cov1D << dX * dX;
-    pos = {2. * units::_m - 1. * units::_mm, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(Measurement<id, eLOC_0>(*sur, 4, cov1D, dX));
-
-    dX = gauss(generator);
-    cov1D << dX * dX;
-    pos = {2. * units::_m + 1. * units::_mm, 0., 0.};
-    sur = detector->lowestTrackingVolume(pos)
-              ->associatedLayer(pos)
-              ->surfaceArray()
-              ->at(pos)[0];
-    measurements[sur].push_back(Measurement<id, eLOC_1>(*sur, 5, cov1D, dX));
+    std::map<Surface const*, std::vector<FittableMeasurement<id>>> measurements
+        = createMeasurements(detector, surfaces, dimensions, true);
 
     // Build navigator
     Navigator navi(detector);
