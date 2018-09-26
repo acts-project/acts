@@ -154,15 +154,18 @@ namespace Test {
         state.stepping.cov(eTHETA, eTHETA) += dTheta * dTheta;
 
         // Update the angles
-        double norm  = state.stepping.direction().norm();
-        double theta = std::acos(state.stepping.direction().z() / norm);
+        double theta = std::acos(state.stepping.direction().z());
         double phi   = std::atan2(state.stepping.direction().y(),
                                 state.stepping.direction().x());
 
-        state.stepping.dir
-            = {norm * std::sin(theta + dTheta) * std::cos(phi + dPhi),
-               norm * std::sin(theta + dTheta) * std::sin(phi + dPhi),
-               norm * std::cos(theta + dTheta)};
+        state.stepping.update(
+            state.stepping.position(),
+            {std::sin(theta + dTheta) * std::cos(phi + dPhi),
+             std::sin(theta + dTheta) * std::sin(phi + dPhi),
+             std::cos(theta + dTheta)},
+            std::max(state.stepping.p
+                         - std::abs(gauss(generator)) * units::_MeV,
+                     0.));
       }
     }
   };
@@ -409,8 +412,8 @@ namespace Test {
                 << surResultB2.collected[i].position.y() << " "
                 << surResultB2.collected[i].position.z() << std::endl
                 << std::endl;
-    BOOST_TEST(surResultB.size() == 1);
-    BOOST_TEST(surResultB2.collected.size() == 1);
+    BOOST_TEST(surResultB.size() == 3);
+    BOOST_TEST(surResultB2.collected.size() == 3);
   }
 }  // namespace Test
 }  // namespace Acts
