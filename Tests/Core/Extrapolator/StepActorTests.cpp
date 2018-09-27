@@ -181,6 +181,8 @@ BOOST_AUTO_TEST_CASE(step_actor_test)
     {
 		BOOST_TEST(pos.x() == 0.);
 		BOOST_TEST(pos.y() == 0.);
+		if(pos == stepResult.position.back())
+			BOOST_TEST(pos.z() == 2. * units::_m);
     }
     for(const auto& mom : stepResult.momentum)
     {
@@ -193,19 +195,90 @@ BOOST_AUTO_TEST_CASE(step_actor_test)
 		BOOST_TEST(c == ActsSymMatrixD<5>::Identity());
 	}
 }
-	//~ {
-	//~ std::shared_ptr<TrackingGeometry> material = buildMatDetector();
+{
+	std::shared_ptr<TrackingGeometry> material = buildMatDetector();
 	
-    //~ Navigator naviMat(material);
-    //~ naviMat.resolvePassive   = true;
-    //~ naviMat.resolveMaterial  = true;
-    //~ naviMat.resolveSensitive = true;
+    Navigator naviMat(material);
+    naviMat.resolvePassive   = true;
+    naviMat.resolveMaterial  = true;
+    naviMat.resolveSensitive = true;
     
+	// Set initial parameters for the particle track
+    ActsSymMatrixD<5> cov;
+    cov << 1. * units::_mm, 0., 0., 0., 0., 
+		   0., 1. * units::_mm, 0., 0., 0.,
+		   0., 0., 1., 0., 0., 
+		   0., 0., 0., 1., 0., 
+		   0., 0., 0., 0., 1.;
+    auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    Vector3D startParams(0., 0., 0.), startMom(0., 0., 1. * units::_GeV);
+    SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+        std::move(covPtr), startParams, startMom, 1.);
+
+    // Create action list for surface collection
+    ActionList<StepCollector, StepActor> aList;
+	AbortList<EndOfWorld> abortList;
+	
+    // Set options for propagator
+	Propagator<EigenStepper<ConstantBField>, Navigator>::
+        Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>> propOpts;
+    propOpts.actionList     = aList;
+    propOpts.stopConditions = abortList;
+    propOpts.maxSteps       = 1e6;
+    propOpts.maxStepSize = 2. * units::_m;
+    propOpts.debug = true;
+
+    // Re-configure propagation with B-field
+    ConstantBField               bField(Vector3D(0., 0., 0.));
+    EigenStepper<ConstantBField> es(bField);
+    Propagator<EigenStepper<ConstantBField>, Navigator> prop(es, naviMat);
     
-    //~ ConstantBField               bField(Vector3D(0., 0.5 * units::_T, 0.));
-    //~ EigenStepper<ConstantBField> es(bField);
-    //~ Propagator<EigenStepper<ConstantBField>, Navigator> propB(es, naviVac);
-	//~ }
+    const auto& result = prop.propagate(sbtp, propOpts);
+    const StepCollector::this_result& stepResult
+        = result.get<typename StepCollector::result_type>();
+        
+    for(const auto& pos : stepResult.position)
+    {
+		if(pos == stepResult.position.front())
+		{
+			BOOST_TEST(pos.x() == 0.);
+			BOOST_TEST(pos.y() == 0.);
+			BOOST_TEST(pos.z() == 0.);
+		}
+		else
+		{
+			BOOST_TEST(pos.x() != 0.);
+			BOOST_TEST(pos.y() != 0.);
+			BOOST_TEST(pos.z() != 0.);
+		}
+    }
+    for(const auto& mom : stepResult.momentum)
+    {
+		if(mom == stepResult.momentum.front())
+		{
+			BOOST_TEST(mom.x() == 0.);
+			BOOST_TEST(mom.y() == 0.);
+			BOOST_TEST(mom.z() == 1. * units::_GeV);
+		}
+		else
+		{
+			BOOST_TEST(mom.x() != 0.);
+			BOOST_TEST(mom.y() != 0.);
+			BOOST_TEST(mom.z() != 1. * units::_GeV);
+		}
+	}
+	for(const auto& c : stepResult.cov)
+	{
+		if(c == stepResult.cov.front())
+		{
+			BOOST_TEST(c == ActsSymMatrixD<5>::Identity());
+		}
+		else
+		{
+			BOOST_TEST(c != ActsSymMatrixD<5>::Identity());
+		}
+	}
+}
 }
  
 }  // namespace Test
