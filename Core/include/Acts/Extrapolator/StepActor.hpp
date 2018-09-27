@@ -15,7 +15,7 @@ struct StepActor
 
   //~ struct this_result
   //~ {
-    //~ std::vector<MaterialInteraction> materialInteractions;
+  //~ std::vector<MaterialInteraction> materialInteractions;
   //~ };
 
   //~ using result_type = this_result;
@@ -25,7 +25,6 @@ struct StepActor
   //~ operator()(propagator_state_t& state, result_type& result) const
   operator()(propagator_state_t& state) const
   {
-	  
   }
 };
 }
