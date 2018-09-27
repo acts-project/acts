@@ -240,6 +240,5 @@ namespace Test {
     return std::shared_ptr<TrackingGeometry>(
         new Acts::TrackingGeometry(mtvpWorld));
   }
-
 }  // namespace Test
 }  // namespace Acts

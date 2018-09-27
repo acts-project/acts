@@ -24,6 +24,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "DetectorBuild.hpp"
+#include "../Common/BoxGeometryBuilder.hpp"
 
 namespace Acts {
 namespace Test {
@@ -223,8 +224,9 @@ namespace Test {
   ///
   BOOST_AUTO_TEST_CASE(kalman_fitter_initialization)
   {
+	  BoxGeometryBuilder bg;
     // Build detector
-    std::shared_ptr<TrackingGeometry> detector = buildGeometry();
+    std::shared_ptr<TrackingGeometry> detector = bg.buildGeometry<DetElem>();
 
     // Construct measurements
     std::vector<Vector3D> surfaces;
