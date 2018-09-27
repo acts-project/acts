@@ -42,7 +42,7 @@ namespace Test {
     /// @brief Constructor
     SurfaceCollection() = default;
 
-    using result_type = std::vector<Surface const*>;
+    using result_type = std::vector<FittableMeasurement<id>>;
 
     /// @brief Operater that is callable by an ActionList. The function collects
     /// the surfaces
@@ -56,7 +56,7 @@ namespace Test {
     {
       if (measurements.find(state.navigation.currentSurface)
           != measurements.end()) {
-        result.push_back(state.navigation.currentSurface);
+        result.push_back(measurements.at(state.navigation.currentSurface)[0]);
         std::cout << "Selected surface "
                   << state.navigation.currentSurface->geoID().toString()
                   << " at position (" << state.stepping.position().x() << ", "
@@ -283,7 +283,7 @@ namespace Test {
 
     // Launch and collect
     const auto&                        result = prop.propagate(sbtp, propOpts);
-    const std::vector<Surface const*>& surResult
+    const std::vector<FittableMeasurement<id>>& surResult
         = result.get<typename SurfaceCollection::result_type>();
     const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResult2
         = result.get<
@@ -311,7 +311,7 @@ namespace Test {
     propOptsB.maxSteps       = 1e6;
 
     const auto& resultB = propB.propagate(sbtpB, propOptsB);
-    const std::vector<Surface const*>& surResultB
+    const std::vector<FittableMeasurement<id>>& surResultB
         = resultB.get<typename SurfaceCollection::result_type>();
     const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResultB2
         = resultB.get<
@@ -395,7 +395,7 @@ namespace Test {
 
     // Launch and collect results
     const auto&                        result = prop.propagate(sbtp, propOpts);
-    const std::vector<Surface const*>& surResult
+    const std::vector<FittableMeasurement<id>>& surResult
         = result.get<typename SurfaceCollection::result_type>();
     const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResult2
         = result.get<
@@ -434,7 +434,7 @@ namespace Test {
 
     // Launch and collect results
     const auto&                        resultB = prop.propagate(sbtp, propOpts);
-    const std::vector<Surface const*>& surResultB
+    const std::vector<FittableMeasurement<id>>& surResultB
         = resultB.get<typename SurfaceCollection::result_type>();
     const SurfaceCollector<SelectSurfaceWithHit>::this_result& surResultB2
         = resultB.get<
