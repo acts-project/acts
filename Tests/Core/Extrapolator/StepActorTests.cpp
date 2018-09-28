@@ -45,9 +45,9 @@ namespace Test {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (std::abs(state.stepping.position().x()) >= 0.5 * units::_m
+      if (std::abs(state.stepping.position().x()) >= 2. * units::_m
           || std::abs(state.stepping.position().y()) >= 0.5 * units::_m
-          || std::abs(state.stepping.position().z()) >= 2. * units::_m)
+          || std::abs(state.stepping.position().z()) >= 0.5 * units::_m)
         return true;
       return false;
     }
@@ -94,13 +94,22 @@ namespace Test {
   buildVacDetector()
   {
     // Build vacuum block
-    Transform3D trafoVac(Transform3D::Identity());
-    trafoVac.translation() = Vector3D(0., 0., 1. * units::_m);
+    RotationMatrix3D rotation;
+    double           rotationAngle = M_PI * 0.5;
+    Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3D         yPos(0., 1., 0.);
+    Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    rotation.col(0) = xPos;
+    rotation.col(1) = yPos;
+    rotation.col(2) = zPos;
+    
+    Transform3D trafoLay(Transform3D::Identity() * rotation);
+    trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
 
     std::shared_ptr<const PlanarBounds> rBounds(
         new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
     LayerPtr dummyLayer = PlaneLayer::create(
-        std::make_shared<const Transform3D>(trafoVac), rBounds);
+        std::make_shared<const Transform3D>(trafoLay), rBounds);
 
     LayerArrayCreator layArrCreator(
         getDefaultLogger("LayerArrayCreator", Logging::VERBOSE));
@@ -109,13 +118,13 @@ namespace Test {
                                  0.,
                                  2. * units::_m,
                                  BinningType::arbitrary,
-                                 BinningValue::binZ));
+                                 BinningValue::binX));
 
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
-        0.5 * units::_m, 0.5 * units::_m, 1. * units::_m);
+        1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
-    //~ auto trackingVac = TrackingVolume::create(std::make_shared<const
-    // Transform3D>(trafoVac), boundsVol, nullptr, "Vacuum");
+	Transform3D trafoVac(Transform3D::Identity());
+	trafoVac.translation() = Vector3D(1. * units::_m, 0., 0.);
     auto trackingVac
         = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVac),
                                  boundsVol,
@@ -133,13 +142,22 @@ namespace Test {
   buildMatDetector()
   {
     // Build material block
-    Transform3D trafoMat(Transform3D::Identity());
-    trafoMat.translation() = Vector3D(0., 0., 1. * units::_m);
+    RotationMatrix3D rotation;
+    double           rotationAngle = M_PI * 0.5;
+    Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3D         yPos(0., 1., 0.);
+    Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    rotation.col(0) = xPos;
+    rotation.col(1) = yPos;
+    rotation.col(2) = zPos;
+    
+    Transform3D trafoLay(Transform3D::Identity() * rotation);
+    trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
 
     std::shared_ptr<const PlanarBounds> rBounds(
         new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
     LayerPtr dummyLayer = PlaneLayer::create(
-        std::make_shared<const Transform3D>(trafoMat), rBounds);
+        std::make_shared<const Transform3D>(trafoLay), rBounds);
 
     LayerArrayCreator layArrCreator(
         getDefaultLogger("LayerArrayCreator", Logging::VERBOSE));
@@ -151,11 +169,13 @@ namespace Test {
                                  BinningValue::binZ));
 
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
-        0.5 * units::_m, 0.5 * units::_m, 1. * units::_m);
+        1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
     std::shared_ptr<const Material> mat(
         new Material(352.8, 407., 9.012, 4., 1.848e-3));
 
+	Transform3D trafoMat(Transform3D::Identity());
+	trafoMat.translation() = Vector3D(1. * units::_m, 0., 0.);
     auto trackingMat
         = TrackingVolume::create(std::make_shared<const Transform3D>(trafoMat),
                                  boundsVol,
@@ -191,7 +211,7 @@ namespace Test {
       cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0., 0.,
           0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
       auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-      Vector3D startParams(0., 0., 0.), startMom(0., 0., 1. * units::_GeV);
+      Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
       SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
           std::move(covPtr), startParams, startMom, 1.);
 
@@ -221,15 +241,15 @@ namespace Test {
       // Check that the propagation happend in a straight line without
       // interactions
       for (const auto& pos : stepResult.position) {
-        BOOST_TEST(pos.x() == 0.);
         BOOST_TEST(pos.y() == 0.);
+        BOOST_TEST(pos.z() == 0.);
         if (pos == stepResult.position.back())
-          BOOST_TEST(pos.z() == 2. * units::_m);
+          BOOST_TEST(pos.x() == 2. * units::_m);
       }
       for (const auto& mom : stepResult.momentum) {
-        BOOST_TEST(mom.x() == 0.);
+        BOOST_TEST(mom.x() == 1. * units::_GeV);
         BOOST_TEST(mom.y() == 0.);
-        BOOST_TEST(mom.z() == 1. * units::_GeV);
+        BOOST_TEST(mom.z() == 0.);
       }
       for (const auto& c : stepResult.cov) {
         BOOST_TEST(c == ActsSymMatrixD<5>::Identity());
@@ -250,7 +270,7 @@ namespace Test {
       cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0., 0.,
           0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
       auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-      Vector3D startParams(0., 0., 0.), startMom(0., 0., 1. * units::_GeV);
+      Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
       SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
           std::move(covPtr), startParams, startMom, 1.);
 
@@ -279,21 +299,21 @@ namespace Test {
 
       // Check that there occured interaction
       for (const auto& pos : stepResult.position) {
-        BOOST_TEST(pos.x() == 0.);
         BOOST_TEST(pos.y() == 0.);
+        BOOST_TEST(pos.z() == 0.);
         if (pos == stepResult.position.front()) {
-          BOOST_TEST(pos.z() == 0.);
+          BOOST_TEST(pos.x() == 0.);
         } else {
-          BOOST_TEST(pos.z() != 0.);
+          BOOST_TEST(pos.x() != 0.);
         }
       }
       for (const auto& mom : stepResult.momentum) {
-        BOOST_TEST(mom.x() == 0.);
         BOOST_TEST(mom.y() == 0.);
+        BOOST_TEST(mom.z() == 0.);
         if (mom == stepResult.momentum.front()) {
-          BOOST_TEST(mom.z() == 1. * units::_GeV);
+          BOOST_TEST(mom.x() == 1. * units::_GeV);
         } else {
-          BOOST_TEST(mom.z() != 1. * units::_GeV);
+          BOOST_TEST(mom.x() != 1. * units::_GeV);
         }
       }
       for (const auto& c : stepResult.cov) {
