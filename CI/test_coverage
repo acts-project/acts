@@ -14,8 +14,10 @@ if [ ! -f CMakeCache.txt ]; then
     exit 1
 fi
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
 set -x
 mkdir -p coverage
-$PYTHON ../cmake/gcovr -r . -e '../Tests/' -e '../Legacy/' --html --html-details -o coverage/index.html
-$PYTHON ../cmake/gcovr -r . -e '../Tests/' -e '../Legacy/' --branches
+$PYTHON $DIR/../cmake/gcovr -r $DIR/.. -e '../Tests/' -e '../Legacy/' --html --html-details -o coverage/index.html
+$PYTHON $DIR/../cmake/gcovr -r $DIR/.. -e '../Tests/' -e '../Legacy/' --branches
 
