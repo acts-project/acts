@@ -14,13 +14,13 @@
 
 namespace Acts {
 
-// TODO: This requires a test if there actually exists sth like a covariance
-// matrix in the stepper
 // TODO: Pure post step update
+// TODO: Step size needs to be adapted before the actual step
+// TODO: Release step size if no material available anymore
 struct StepActor
 {
   /// multiple scattering switch on/off
-  bool multipleScattering = true;
+  bool multipleScattering = false;
   /// the scattering struct
   detail::HighlandScattering scattering;
 
@@ -28,11 +28,15 @@ struct StepActor
   bool energyLoss = true;
   /// the energy loss struct
   detail::IonisationLoss ionisationloss;
+  
+  /// Maximal step size in a dense volume
+  double maxStepSize = 10. * units::_cm;
 
   template <typename propagator_state_t>
   void
   operator()(propagator_state_t& state) const
   {
+std::cout << "call\t" << state.navigation.currentVolume << std::endl;
     // if we are on target, everything should have been done
     if (state.navigation.targetReached) {
       return;
@@ -41,7 +45,15 @@ struct StepActor
     if (!multipleScattering && !energyLoss) {
       return;
     }
-    if (state.stepping.pathAccumulated == 0.) return;
+    // No action at first step
+    if (state.stepping.pathAccumulated == 0.)
+    {
+		if(state.navigation.currentVolume && state.navigation.currentVolume->material() && state.stepping.stepSize > maxStepSize)
+		{
+			state.stepping.stepSize = maxStepSize;
+		}
+		return;
+	}
 
     if (state.navigation.currentVolume
         && state.navigation.currentVolume->material()) {
@@ -51,15 +63,11 @@ struct StepActor
       // to integrate process noise, we need to transport
       // the covariance to the current position in space
       if (state.stepping.covTransport) {
-        state.stepping.covarianceTransport(true);
+        state.stepping.covarianceTransport(false);
       }
-
+std::cout << "pos: " << state.stepping.pos << std::endl;
       const double thickness
-          = state.stepping.stepSize;  // TODO: Assuming there are no further
-                                      // corrections necessary
-      state.stepping.stepSize = 1. * units::_mm;  // TODO: hardcoded, needs to
-                                                  // be released if volume is
-                                                  // left
+          = state.stepping.stepSize;
 
       // the momentum at current position
       const double p     = state.stepping.p;
@@ -98,6 +106,12 @@ struct StepActor
       }
       // apply the energy loss
       if (energyLoss) {
+		// TODO: Updating the energy after the step might lead to bigger errors than some midpoint-update or a diff between pre-&post-update
+		if((state.stepping.stepSize > maxStepSize))
+		{
+			state.stepping.stepSize = 10. * units::_cm;
+		}
+			
         // calculate gamma
         const double lgamma = E / m;
         // energy loss and straggling - per unit length
@@ -135,6 +149,11 @@ struct StepActor
         }
       }
     }
+    else
+    {
+		if(energyLoss)
+			state.stepping.stepSize = state.options.maxStepSize;
+	}
   }
 };
 }
