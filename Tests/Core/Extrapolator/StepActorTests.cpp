@@ -115,7 +115,7 @@ namespace Test {
         0.5 * units::_m, 0.5 * units::_m, 1. * units::_m);
 
     //~ auto trackingVac = TrackingVolume::create(std::make_shared<const
-    //Transform3D>(trafoVac), boundsVol, nullptr, "Vacuum");
+    // Transform3D>(trafoVac), boundsVol, nullptr, "Vacuum");
     auto trackingVac
         = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVac),
                                  boundsVol,
@@ -279,18 +279,18 @@ namespace Test {
 
       // Check that there occured interaction
       for (const auto& pos : stepResult.position) {
-          BOOST_TEST(pos.x() == 0.);
-          BOOST_TEST(pos.y() == 0.);
-          if (pos == stepResult.position.front()) {
+        BOOST_TEST(pos.x() == 0.);
+        BOOST_TEST(pos.y() == 0.);
+        if (pos == stepResult.position.front()) {
           BOOST_TEST(pos.z() == 0.);
         } else {
           BOOST_TEST(pos.z() != 0.);
         }
       }
       for (const auto& mom : stepResult.momentum) {
-          BOOST_TEST(mom.x() == 0.);
-          BOOST_TEST(mom.y() == 0.);
-         if (mom == stepResult.momentum.front()) {
+        BOOST_TEST(mom.x() == 0.);
+        BOOST_TEST(mom.y() == 0.);
+        if (mom == stepResult.momentum.front()) {
           BOOST_TEST(mom.z() == 1. * units::_GeV);
         } else {
           BOOST_TEST(mom.z() != 1. * units::_GeV);

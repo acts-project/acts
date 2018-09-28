@@ -244,7 +244,7 @@ public:
   /// Method to return the BoundarySurfaces
   const std::vector<TrackingVolumeBoundaryPtr>&
   boundarySurfaces() const;
-  
+
   /// Return the material of the volume
   std::shared_ptr<const Material>
   material() const;
@@ -476,7 +476,7 @@ TrackingVolume::volumeName() const
 inline std::shared_ptr<const Material>
 TrackingVolume::material() const
 {
-	return m_material;
+  return m_material;
 }
 
 inline const LayerArray*
