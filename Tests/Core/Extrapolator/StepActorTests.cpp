@@ -45,9 +45,9 @@ namespace Test {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (std::abs(state.stepping.position().x()) > 0.5 * units::_m
-          || std::abs(state.stepping.position().y()) > 0.5 * units::_m
-          || std::abs(state.stepping.position().z()) > 2. * units::_m)
+      if (std::abs(state.stepping.position().x()) >= 0.5 * units::_m
+          || std::abs(state.stepping.position().y()) >= 0.5 * units::_m
+          || std::abs(state.stepping.position().z()) >= 2. * units::_m)
         return true;
       return false;
     }
@@ -227,7 +227,7 @@ namespace Test {
           BOOST_TEST(pos.z() == 2. * units::_m);
       }
       for (const auto& mom : stepResult.momentum) {
-        rBounds, BOOST_TEST(mom.x() == 0.);
+        BOOST_TEST(mom.x() == 0.);
         BOOST_TEST(mom.y() == 0.);
         BOOST_TEST(mom.z() == 1. * units::_GeV);
       }
@@ -278,27 +278,21 @@ namespace Test {
           = result.get<typename StepCollector::result_type>();
 
       // Check that there occured interaction
-      // TODO: It may be too hard to assume that an interaction occured after
-      // the first step already
       for (const auto& pos : stepResult.position) {
-        if (pos == stepResult.position.front()) {
           BOOST_TEST(pos.x() == 0.);
           BOOST_TEST(pos.y() == 0.);
+          if (pos == stepResult.position.front()) {
           BOOST_TEST(pos.z() == 0.);
         } else {
-          BOOST_TEST(pos.x() != 0.);
-          BOOST_TEST(pos.y() != 0.);
           BOOST_TEST(pos.z() != 0.);
         }
       }
       for (const auto& mom : stepResult.momentum) {
-        if (mom == stepResult.momentum.front()) {
           BOOST_TEST(mom.x() == 0.);
           BOOST_TEST(mom.y() == 0.);
+         if (mom == stepResult.momentum.front()) {
           BOOST_TEST(mom.z() == 1. * units::_GeV);
         } else {
-          BOOST_TEST(mom.x() != 0.);
-          BOOST_TEST(mom.y() != 0.);
           BOOST_TEST(mom.z() != 1. * units::_GeV);
         }
       }

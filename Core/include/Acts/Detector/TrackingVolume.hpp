@@ -244,6 +244,10 @@ public:
   /// Method to return the BoundarySurfaces
   const std::vector<TrackingVolumeBoundaryPtr>&
   boundarySurfaces() const;
+  
+  /// Return the material of the volume
+  std::shared_ptr<const Material>
+  material() const;
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -467,6 +471,12 @@ inline const std::string&
 TrackingVolume::volumeName() const
 {
   return m_name;
+}
+
+inline std::shared_ptr<const Material>
+TrackingVolume::material() const
+{
+	return m_material;
 }
 
 inline const LayerArray*
