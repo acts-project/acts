@@ -10,6 +10,7 @@
 
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 #include "Constants.hpp"
 
 namespace Acts {
@@ -163,6 +164,63 @@ namespace detail {
       factor *= factor;
       sigma2 *= factor;
       return std::sqrt(sigma2);
+    }
+  };
+
+  /// @brief Structure for the energy loss of muons in dense material. It
+  /// combines the effect of energy loss by ionisation with bremsstrahlung,
+  /// direct e+e- pair production and photonuclear interaction.
+  struct MuonEnergyLoss
+  {
+    /// @brief Main call operator for the energy loss. The following equations
+    /// are provided by ATL-SOFT-PUB-2008-003.
+    ///
+    /// @tparam material_t Type of the material
+    /// @param [in] m Masst of the particle
+    /// @param [in] lbeta Beta factor of the particle
+    /// @param [in] lgamma Gamma factor of the particle
+    /// @param [in] mat Material that is penetrated
+    /// @param [in] path Path length of the particle through the material
+    /// @param [in] mean Boolean flag for using the mean or the mode for
+    /// ionisation losses
+    template <typename material_t>
+    std::pair<double, double>
+    operator()(double            m,
+               double            lbeta,
+               double            lgamma,
+               const material_t& mat,
+               double            path = 1.,
+               bool              mean = true)
+    {
+      // Calculate the ionisation energy loss
+      IonisationLoss iLoss;
+      auto           energyLoss = iLoss(m, lbeta, lgamma, mat, path, mean);
+
+      // Calculate the bremsstrahlung energy loss (eq. 6)
+      const double p       = m * lgamma * lbeta;
+      const double E       = std::sqrt(p * p + m * m);
+      const double meOverm = constants::me / m;
+      energyLoss.first += E / mat.X0 * (meOverm * meOverm) * path;
+
+      // Calculate the energy loss due to direct e+e- pair production and
+      // photonuclear interaction (eq. 7, 8)
+      if (E > 8. * units::_GeV) {
+        const double invX0 = 1. / mat.X0;
+        if (E > 1. * units::_TeV) {
+          energyLoss.first += (0.5345 - 6.803e-5 * E - 2.278e-11 * E * E
+                               + 9.899e-18 * E * E * E)
+              * invX0 * path;
+        } else {
+          energyLoss.first += (2.986 - 9.253e-5 * E) * invX0 * path;
+        }
+      }
+
+      // Calculate the width of the energy loss (eq. 12 - 14)
+      const double a      = 121 + 3.9e-3 * E + 5.3e-9 * E * E;
+      const double Eloss2 = a * path * mat.rho() * constants::ka_BetheBloch
+          * 0.5 / (lbeta * lbeta);
+      energyLoss.second = std::sqrt(Eloss2) / (lbeta * p * p);
+      return energyLoss;
     }
   };
 
