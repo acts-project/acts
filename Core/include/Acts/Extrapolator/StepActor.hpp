@@ -28,7 +28,7 @@ struct StepActor
   bool energyLoss = true;
   /// the energy loss struct
   detail::IonisationLoss ionisationloss;
-  
+
   /// Maximal step size in a dense volume
   double maxStepSize = 10. * units::_cm;
 
@@ -36,7 +36,7 @@ struct StepActor
   void
   operator()(propagator_state_t& state) const
   {
-std::cout << "call\t" << state.navigation.currentVolume << std::endl;
+    std::cout << "call\t" << state.navigation.currentVolume << std::endl;
     // if we are on target, everything should have been done
     if (state.navigation.targetReached) {
       return;
@@ -46,14 +46,14 @@ std::cout << "call\t" << state.navigation.currentVolume << std::endl;
       return;
     }
     // No action at first step
-    if (state.stepping.pathAccumulated == 0.)
-    {
-		if(state.navigation.currentVolume && state.navigation.currentVolume->material() && state.stepping.stepSize > maxStepSize)
-		{
-			state.stepping.stepSize = maxStepSize;
-		}
-		return;
-	}
+    if (state.stepping.pathAccumulated == 0.) {
+      if (state.navigation.currentVolume
+          && state.navigation.currentVolume->material()
+          && state.stepping.stepSize > maxStepSize) {
+        state.stepping.stepSize = maxStepSize;
+      }
+      return;
+    }
 
     if (state.navigation.currentVolume
         && state.navigation.currentVolume->material()) {
@@ -65,9 +65,8 @@ std::cout << "call\t" << state.navigation.currentVolume << std::endl;
       if (state.stepping.covTransport) {
         state.stepping.covarianceTransport(false);
       }
-std::cout << "pos: " << state.stepping.pos << std::endl;
-      const double thickness
-          = state.stepping.stepSize;
+      std::cout << "pos: " << state.stepping.pos << std::endl;
+      const double thickness = state.stepping.stepSize;
 
       // the momentum at current position
       const double p     = state.stepping.p;
@@ -106,12 +105,12 @@ std::cout << "pos: " << state.stepping.pos << std::endl;
       }
       // apply the energy loss
       if (energyLoss) {
-		// TODO: Updating the energy after the step might lead to bigger errors than some midpoint-update or a diff between pre-&post-update
-		if((state.stepping.stepSize > maxStepSize))
-		{
-			state.stepping.stepSize = 10. * units::_cm;
-		}
-			
+        // TODO: Updating the energy after the step might lead to bigger errors
+        // than some midpoint-update or a diff between pre-&post-update
+        if ((state.stepping.stepSize > maxStepSize)) {
+          state.stepping.stepSize = 10. * units::_cm;
+        }
+
         // calculate gamma
         const double lgamma = E / m;
         // energy loss and straggling - per unit length
@@ -148,12 +147,9 @@ std::cout << "pos: " << state.stepping.pos << std::endl;
           }
         }
       }
+    } else {
+      if (energyLoss) state.stepping.stepSize = state.options.maxStepSize;
     }
-    else
-    {
-		if(energyLoss)
-			state.stepping.stepSize = state.options.maxStepSize;
-	}
   }
 };
 }

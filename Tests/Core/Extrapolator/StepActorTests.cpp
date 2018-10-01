@@ -102,7 +102,7 @@ namespace Test {
     rotation.col(0) = xPos;
     rotation.col(1) = yPos;
     rotation.col(2) = zPos;
-    
+
     Transform3D trafoLay(Transform3D::Identity() * rotation);
     trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
 
@@ -123,8 +123,8 @@ namespace Test {
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
         1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
-	Transform3D trafoVac(Transform3D::Identity());
-	trafoVac.translation() = Vector3D(1. * units::_m, 0., 0.);
+    Transform3D trafoVac(Transform3D::Identity());
+    trafoVac.translation() = Vector3D(1. * units::_m, 0., 0.);
     auto trackingVac
         = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVac),
                                  boundsVol,
@@ -150,7 +150,7 @@ namespace Test {
     rotation.col(0) = xPos;
     rotation.col(1) = yPos;
     rotation.col(2) = zPos;
-    
+
     Transform3D trafoLay(Transform3D::Identity() * rotation);
     trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
 
@@ -174,8 +174,8 @@ namespace Test {
     std::shared_ptr<const Material> mat(
         new Material(352.8, 407., 9.012, 4., 1.848e-3));
 
-	Transform3D trafoMat(Transform3D::Identity());
-	trafoMat.translation() = Vector3D(1. * units::_m, 0., 0.);
+    Transform3D trafoMat(Transform3D::Identity());
+    trafoMat.translation() = Vector3D(1. * units::_m, 0., 0.);
     auto trackingMat
         = TrackingVolume::create(std::make_shared<const Transform3D>(trafoMat),
                                  boundsVol,
