@@ -45,10 +45,14 @@ namespace Test {
     bool
     operator()(propagator_state_t& state) const
     {
+      std::cout << "aborter call at " << state.stepping.position().x()
+                << std::endl;
       if (std::abs(state.stepping.position().x()) >= 2. * units::_m
           || std::abs(state.stepping.position().y()) >= 0.5 * units::_m
-          || std::abs(state.stepping.position().z()) >= 0.5 * units::_m)
+          || std::abs(state.stepping.position().z()) >= 0.5 * units::_m) {
+        std::cout << "cond true" << std::endl;
         return true;
+      }
       return false;
     }
   };
@@ -334,6 +338,19 @@ namespace Test {
         } else {
           BOOST_TEST(c != ActsSymMatrixD<5>::Identity());
         }
+      }
+      //////////////////////////////////////////////////////////////////
+
+      bField.setField(0., 0.5 * units::_T, 0.);
+      EigenStepper<ConstantBField> esB(bField);
+      Propagator<EigenStepper<ConstantBField>, Navigator> probB(esB, naviMat);
+
+      const auto& resultB = probB.propagate(sbtp, propOpts);
+      const StepCollector::this_result& stepResultB
+          = resultB.get<typename StepCollector::result_type>();
+
+      for (const auto& pos : stepResultB.position) {
+        std::cout << "pos: " << std::endl << pos << std::endl;
       }
     }
   }
