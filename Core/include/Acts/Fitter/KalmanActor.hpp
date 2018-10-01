@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/EventData/detail/surface_getter.hpp"
+#include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -17,11 +18,31 @@ namespace Acts {
 
 /// @brief Propagator Actor plugin for the KalmanFilter
 ///
-template <typename track_states_t>
+/// @tparam track_states_t is any iterable std::container of
+/// boost::variant TrackState objects.
+///
+/// @tparam updator_t The Kalman updator used for this fitter
+///
+/// @tparam calibrator_t The Measurement calibrator for Fittable
+/// measurements to be calibrated
+///
+/// The KalmanActor does not rely on the measurements to be
+/// sorted along the track.
+template <typename track_states_t,
+          typename updator_t    = VoidKalmanComponents,
+          typename calibrator_t = VoidKalmanComponents>
 class KalmanActor
 {
 public:
+  /// Shorthand for readability
   using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
+
+  /// Explicit constructor with updagor and calibrator
+  explicit KalmanActor(updator_t    pUpdator    = updator_t(),
+                       calibrator_t pCalibrator = calibrator_t())
+    : m_updator(std::move(pUpdator)), m_calibrator(std::move(pCalibrator))
+  {
+  }
 
   /// Simple result struct to be returned
   /// It mainly acts as an internal state state which is
@@ -49,36 +70,59 @@ public:
   operator()(propagator_state_t& state, result_type& result) const
   {
     // Initialization of the Actor:
-    // Move the TrackState vector and feed the Sequencer
-    // with the measurements to be fitted
+    // Only when track states are not set
     if (result.fittedStates.empty()) {
+      // -> Move the TrackState vector
+      // -> Feed the KalmanSequencer with the measurements to be fitted
       initialize(state, result);
     }
 
-    // Waiting for a current surface that appears in the measurement list
+    // Waiting for a current surface that appears in the measurement list:
     auto surface = state.navigation.currentSurface;
     if (surface) {
-      auto cindexItr = result.accessIndex.find(surface);
-      if (cindexItr != result.accessIndex.end()) {
-        // The current index & thus the current measurement
-        auto cmeasurement = result.fittedStates[cindexItr->second];
-        // Create the predicted state
-        state.stepping.covarianceTransport(*surface, true);
-        auto jacobian = state.stepping.jacobian;
-        // Prediction
-        auto covPtr
-            = std::make_unique<const ActsMatrixD<5, 5>>(state.stepping.cov);
-        BoundParameters predicted(std::move(covPtr),
-                                  state.stepping.pos,
-                                  state.stepping.p * state.stepping.dir,
-                                  state.stepping.q,
-                                  *surface);
-      }
+      // Check if the surface is in the measurement map
+      // -> Get the measurement / calibrate
+      // -> Create the predicted state
+      // -> Perform the kalman update
+      // -> Check outlier behavior (@todo)
+      // -> Fill strack state information & update stepper information
+      update(surface, state, result);
     }
   }
 
 private:
-  /// @brief Kalman actor operation
+  /// @brief Kalman actor operation : update
+  ///
+  /// @tparam propagator_state_t is the type of Propagagor state
+  ///
+  /// @param surface The surface where the update happens
+  /// @param state The mutable propagator state object
+  /// @param result The mutable result state object
+  template <typename propagator_state_t>
+  void
+  update(const Surface*      surface,
+         propagator_state_t& state,
+         result_type&        result) const
+  {
+    auto cindexItr = result.accessIndex.find(surface);
+    if (cindexItr != result.accessIndex.end()) {
+      // The current index & thus the current track state
+      auto cmeasurement = result.fittedStates[cindexItr->second];
+      // Transport the covariance to the current surface
+      state.stepping.covarianceTransport(*surface, true);
+      auto jacobian = state.stepping.jacobian;
+      // Create the predicted state
+      auto covPtr
+          = std::make_unique<const ActsMatrixD<5, 5>>(state.stepping.cov);
+      BoundParameters predicted(std::move(covPtr),
+                                state.stepping.pos,
+                                state.stepping.p * state.stepping.dir,
+                                state.stepping.q,
+                                *surface);
+    }
+  }
+
+  /// @brief Kalman actor operation : initialize
   ///
   /// @tparam propagator_state_t is the type of Propagagor state
   ///
@@ -155,6 +199,12 @@ private:
       state.options.debugString += dstream.str();
     }
   }
+
+  /// The Kalman updator
+  updator_t m_updator;
+
+  /// The measuremetn calibrator
+  calibrator_t m_calibrator;
 };
 
 }  // namespace Acts

@@ -44,5 +44,4 @@ namespace detail {
   }
 
 }  // namespace detail
-
 }  // namespace Acts

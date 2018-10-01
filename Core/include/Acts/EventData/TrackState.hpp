@@ -17,6 +17,12 @@ namespace Acts {
 
 class Surface;
 
+// @brief enum of readability in parameter acces
+enum StateType : int { predicted = 0, updated = 1, smoothed = 2 };
+
+// @brief enum of readability in measurement acces
+enum MeasurementType : int { noncalibrated = 0, calibrated = 1 };
+
 /// @class TrackState
 ///
 /// @brief Templated class to hold the track information

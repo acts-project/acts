@@ -18,12 +18,13 @@ namespace Acts {
 
 /// @brief Update step of Kalman Filter using gain matrix formalism
 ///
+/// @tparam parameters_t Type of the parameters to be used
+///
 /// This is implemented as a boost vistor pattern for use of the
 /// boost variant container
+template <typename parameters_t>
 class GainMatrixUpdator
 {
-private:
-  using return_type = std::unique_ptr<const BoundParameters>;
 
 public:
   /// @brief Public call operator for the boost visitor pattern
@@ -36,21 +37,21 @@ public:
   ///
   /// @return The updated parameters
   template <typename measurement_t>
-  return_type
-  operator()(const measurement_t& m, const BoundParameters& pars) const
+  parameters_t
+  operator()(const measurement_t& m, const parameters_t& pars) const
   {
     GainMatrixUpdatorImpl impl(pars);
     return boost::apply_visitor(impl, m);
   }
 
 private:
-  struct GainMatrixUpdatorImpl : public boost::static_visitor<return_type>
+  struct GainMatrixUpdatorImpl : public boost::static_visitor<parameters_t>
   {
   public:
     /// @brief Explicit constructor of the GainMatrix updator
     ///
     /// @param pars The predicted parameters
-    explicit GainMatrixUpdatorImpl(const BoundParameters& pars)
+    explicit GainMatrixUpdatorImpl(const parameters_t& pars)
       : m_pParameters(&pars)
     {
     }
@@ -64,37 +65,36 @@ private:
     ///
     /// @return The updated parameters
     template <typename measurement_t>
-    return_type
+    parameters_t
     operator()(const measurement_t& m) const
     {
       static const ActsSymMatrixD<Acts::NGlobalPars> unit
           = ActsSymMatrixD<Acts::NGlobalPars>::Identity();
 
       const auto* pCov_trk = m_pParameters->covariance();
-      if (!pCov_trk) return nullptr;
-
       // Take the projector (measurement mapping function)
       const auto& H = m.projector();
+
       // The Kalman gain matrix
       ActsMatrixD<Acts::NGlobalPars, measurement_t::size()> K = (*pCov_trk)
           * H.transpose()
           * (H * (*pCov_trk) * H.transpose() + m.covariance()).inverse();
       // New parameters after update
-      BoundParameters::ParVector_t newParValues
+      typename parameters_t::ParVector_t newParValues
           = m_pParameters->parameters() + K * m.residual(*m_pParameters);
       // New covaraincd after update
-      BoundParameters::CovMatrix_t newCov = (unit - K * H) * (*pCov_trk);
+      typename parameters_t::CovMatrix_t newCov = (unit - K * H) * (*pCov_trk);
 
       // Create a new measurement with the updated parameters and covariance
-      return std::make_unique<const BoundParameters>(
-          std::make_unique<const BoundParameters::CovMatrix_t>(
+      return parameters_t(
+          std::make_unique<const typename parameters_t::CovMatrix_t>(
               std::move(newCov)),
           newParValues,
           m_pParameters->referenceSurface());
     }
 
   private:
-    const BoundParameters* m_pParameters;
+    const parameters_t* m_pParameters;
   };
 };
 

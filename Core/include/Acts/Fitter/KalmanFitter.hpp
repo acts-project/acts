@@ -12,49 +12,10 @@
 #include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
-
-/// @brief void measurement calibrator
-struct VoidCalibrator
-{
-  /// @brief void measurement calibrator only moves the
-  /// the measurement through for further processing
-  ///
-  /// @tparam measurement_t Type of the measurement
-  /// @tparam parameter_t Type of the parameters for calibration
-  ///
-  /// @param m Measurement to be moved through
-  /// @param p Parameters to be used for calibration
-  ///
-  /// @return void-calibrated measurement
-  template <typename measurement_t, typename parameters_t>
-  measurement_t
-  operator()(measurement_t m, const parameters_t& /*p*/) const
-  {
-    return std::move(m);
-  }
-};
-
-/// @brief void input/output converter
-struct VoidConverter
-{
-  /// @brief void measurement converter only moves the
-  /// the measurement through for further processing
-  ///
-  /// @tparam measurement_container_t Type of the measurement
-  ///
-  /// @param ms Measurements to be moved through
-  ///
-  /// @return moved measurements
-  template <typename measurements_t>
-  measurements_t
-  operator()(measurements_t ms) const
-  {
-    return std::move(ms);
-  }
-};
 
 /// @brief Kalman fitter implementation of Acts
 ///
@@ -85,11 +46,13 @@ struct VoidConverter
 ///
 /// The Output converter is a converter that transforms the
 /// set of track states into a given track/track particle class
+///
+/// The void components are provided mainly for unit testing.
 template <typename propagator_t,
-          typename updator_t,
-          typename calibrator_t       = VoidCalibrator,
-          typename input_converter_t  = VoidConverter,
-          typename output_converter_t = VoidConverter>
+          typename updator_t          = VoidKalmanComponents,
+          typename calibrator_t       = VoidKalmanComponents,
+          typename input_converter_t  = VoidKalmanComponents,
+          typename output_converter_t = VoidKalmanComponents>
 class KalmanFitter
 {
 
@@ -97,7 +60,7 @@ public:
   /// Constructor from arguments
   ///
   KalmanFitter(propagator_t       pPropagator,
-               updator_t          pUpdator,
+               updator_t          pUpdator    = updator_t(),
                calibrator_t       pCalibrator = calibrator_t(),
                input_converter_t  pInputCnv   = input_converter_t(),
                output_converter_t pOutputCnv  = output_converter_t())
