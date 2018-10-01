@@ -107,7 +107,7 @@ struct StepActor
       if (energyLoss) {
         // TODO: Updating the energy after the step might lead to bigger errors
         // than some midpoint-update or a diff between pre-&post-update
-        if ((state.stepping.stepSize > maxStepSize)) {
+        if (state.stepping.stepSize > maxStepSize) {
           state.stepping.stepSize = 10. * units::_cm;
         }
 
@@ -148,7 +148,9 @@ struct StepActor
         }
       }
     } else {
-      if (energyLoss) state.stepping.stepSize = state.options.maxStepSize;
+      if (state.navigation.currentVolume && energyLoss) {
+        state.stepping.stepSize = state.options.maxStepSize;
+      }
     }
   }
 };
