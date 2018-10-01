@@ -14,6 +14,8 @@
 
 namespace Acts {
 
+using cstep = detail::ConstrainedStep;
+
 // TODO: Logging
 struct StepActor
 {
@@ -47,7 +49,7 @@ struct StepActor
       if (state.navigation.currentVolume
           && state.navigation.currentVolume->material()
           && state.stepping.stepSize > maxStepSize) {
-        state.stepping.stepSize = maxStepSize;
+        state.stepping.stepSize.update(maxStepSize, cstep::user);
       }
       return;
     }
@@ -108,7 +110,7 @@ struct StepActor
             && state.navigation.navBoundaryIter->representation->isOnSurface(
                    state.stepping.position(), true)
             && (state.stepping.stepSize > maxStepSize)) {
-          state.stepping.stepSize = maxStepSize;
+          state.stepping.stepSize.update(maxStepSize, cstep::user);
         }
 
         // calculate gamma
@@ -152,7 +154,7 @@ struct StepActor
           && state.navigation.navBoundaryIter->representation->isOnSurface(
                  state.stepping.position(), true)
           && energyLoss) {
-        state.stepping.stepSize = state.options.maxStepSize;
+        state.stepping.stepSize.release(cstep::user);
       }
     }
   }

@@ -177,7 +177,7 @@ namespace Test {
                                  0.,
                                  2. * units::_m,
                                  BinningType::arbitrary,
-                                 BinningValue::binZ));
+                                 BinningValue::binX));
 
     // Build the volume
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
