@@ -90,10 +90,13 @@ namespace Test {
     }
   };
 
+  /// @brief Builds tracking geometry without anything in it
+  ///
+  /// @return Pointer to the tracking geometry
   std::shared_ptr<TrackingGeometry>
   buildVacDetector()
   {
-    // Build vacuum block
+    // Construct the rotation
     RotationMatrix3D rotation;
     double           rotationAngle = M_PI * 0.5;
     Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
@@ -103,9 +106,11 @@ namespace Test {
     rotation.col(1) = yPos;
     rotation.col(2) = zPos;
 
+    // Build the transformation
     Transform3D trafoLay(Transform3D::Identity() * rotation);
     trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
 
+    // Build a dummy layer
     std::shared_ptr<const PlanarBounds> rBounds(
         new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
     LayerPtr dummyLayer = PlaneLayer::create(
@@ -120,6 +125,7 @@ namespace Test {
                                  BinningType::arbitrary,
                                  BinningValue::binX));
 
+    // Build the volume
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
         1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
@@ -138,10 +144,13 @@ namespace Test {
     return std::shared_ptr<TrackingGeometry>(new TrackingGeometry(trackingVac));
   }
 
+  /// @brief Builds tracking geometry that contains one volume with material
+  ///
+  /// @return Pointer to the tracking geometry
   std::shared_ptr<TrackingGeometry>
   buildMatDetector()
   {
-    // Build material block
+    // Construct the rotation
     RotationMatrix3D rotation;
     double           rotationAngle = M_PI * 0.5;
     Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
@@ -151,9 +160,11 @@ namespace Test {
     rotation.col(1) = yPos;
     rotation.col(2) = zPos;
 
+    // Build the transformation
     Transform3D trafoLay(Transform3D::Identity() * rotation);
     trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
 
+    // Build a dummy layer
     std::shared_ptr<const PlanarBounds> rBounds(
         new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
     LayerPtr dummyLayer = PlaneLayer::create(
@@ -168,6 +179,7 @@ namespace Test {
                                  BinningType::arbitrary,
                                  BinningValue::binZ));
 
+    // Build the volume
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
         1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 

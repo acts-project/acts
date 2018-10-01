@@ -14,9 +14,7 @@
 
 namespace Acts {
 
-// TODO: Pure post step update
-// TODO: Step size needs to be adapted before the actual step
-// TODO: Release step size if no material available anymore
+// TODO: Logging
 struct StepActor
 {
   /// multiple scattering switch on/off
@@ -36,7 +34,6 @@ struct StepActor
   void
   operator()(propagator_state_t& state) const
   {
-    std::cout << "call\t" << state.navigation.currentVolume << std::endl;
     // if we are on target, everything should have been done
     if (state.navigation.targetReached) {
       return;
@@ -65,7 +62,7 @@ struct StepActor
       if (state.stepping.covTransport) {
         state.stepping.covarianceTransport(false);
       }
-      std::cout << "pos: " << state.stepping.pos << std::endl;
+
       const double thickness = state.stepping.stepSize;
 
       // the momentum at current position
@@ -107,8 +104,11 @@ struct StepActor
       if (energyLoss) {
         // TODO: Updating the energy after the step might lead to bigger errors
         // than some midpoint-update or a diff between pre-&post-update
-        if (state.stepping.stepSize > maxStepSize) {
-          state.stepping.stepSize = 10. * units::_cm;
+        if (!state.navigation.navBoundaries.empty()
+            && state.navigation.navBoundaryIter->representation->isOnSurface(
+                   state.stepping.position(), true)
+            && (state.stepping.stepSize > maxStepSize)) {
+          state.stepping.stepSize = maxStepSize;
         }
 
         // calculate gamma
@@ -148,7 +148,10 @@ struct StepActor
         }
       }
     } else {
-      if (state.navigation.currentVolume && energyLoss) {
+      if (!state.navigation.navBoundaries.empty()
+          && state.navigation.navBoundaryIter->representation->isOnSurface(
+                 state.stepping.position(), true)
+          && energyLoss) {
         state.stepping.stepSize = state.options.maxStepSize;
       }
     }
