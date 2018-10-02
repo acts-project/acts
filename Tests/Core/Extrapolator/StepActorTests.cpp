@@ -45,14 +45,10 @@ namespace Test {
     bool
     operator()(propagator_state_t& state) const
     {
-      std::cout << "aborter call at " << state.stepping.position().x()
-                << std::endl;
       if (std::abs(state.stepping.position().x()) >= 2. * units::_m
           || std::abs(state.stepping.position().y()) >= 0.5 * units::_m
-          || std::abs(state.stepping.position().z()) >= 0.5 * units::_m) {
-        std::cout << "cond true" << std::endl;
+          || std::abs(state.stepping.position().z()) >= 0.5 * units::_m)
         return true;
-      }
       return false;
     }
   };
@@ -166,7 +162,7 @@ namespace Test {
 
     // Build the transformation
     Transform3D trafoLay(Transform3D::Identity() * rotation);
-    trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
+    trafoLay.translation() = Vector3D(1. * units::_cm, 0., 0.);
 
     // Build a dummy layer
     std::shared_ptr<const PlanarBounds> rBounds(
@@ -292,6 +288,7 @@ namespace Test {
 
       // Create action list for surface collection
       ActionList<StepCollector, StepActor> aList;
+      aList.get<StepActor>().energyLoss = false;
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
@@ -302,13 +299,14 @@ namespace Test {
       propOpts.stopConditions = abortList;
       propOpts.maxSteps       = 1e6;
       propOpts.maxStepSize    = 2. * units::_m;
+      propOpts.debug          = true;
 
       // Re-configure propagation with B-field
       ConstantBField               bField(Vector3D(0., 0., 0.));
       EigenStepper<ConstantBField> es(bField);
       Propagator<EigenStepper<ConstantBField>, Navigator> prop(es, naviMat);
 
-      // Launch and collect results
+      //~ // Launch and collect results
       const auto&                       result = prop.propagate(sbtp, propOpts);
       const StepCollector::this_result& stepResult
           = result.get<typename StepCollector::result_type>();
@@ -341,7 +339,7 @@ namespace Test {
       }
       //////////////////////////////////////////////////////////////////
 
-      bField.setField(0., 0.5 * units::_T, 0.);
+      bField.setField(0., 1. * units::_T, 0.);
       EigenStepper<ConstantBField> esB(bField);
       Propagator<EigenStepper<ConstantBField>, Navigator> probB(esB, naviMat);
 

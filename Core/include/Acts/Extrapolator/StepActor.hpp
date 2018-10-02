@@ -102,6 +102,7 @@ struct StepActor
           }
         }
       }
+
       // apply the energy loss
       if (energyLoss) {
         // TODO: Updating the energy after the step might lead to bigger errors
@@ -109,10 +110,9 @@ struct StepActor
         if (!state.navigation.navBoundaries.empty()
             && state.navigation.navBoundaryIter->representation->isOnSurface(
                    state.stepping.position(), true)
-            && (state.stepping.stepSize > maxStepSize)) {
+            && (state.stepping.stepSize.value(cstep::user) > maxStepSize)) {
           state.stepping.stepSize.update(maxStepSize, cstep::user);
         }
-
         // calculate gamma
         const double lgamma = E / m;
         // energy loss and straggling - per unit length
