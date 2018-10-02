@@ -162,7 +162,7 @@ namespace Test {
 
     // Build the transformation
     Transform3D trafoLay(Transform3D::Identity() * rotation);
-    trafoLay.translation() = Vector3D(1. * units::_cm, 0., 0.);
+    trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
 
     // Build a dummy layer
     std::shared_ptr<const PlanarBounds> rBounds(
@@ -288,7 +288,7 @@ namespace Test {
 
       // Create action list for surface collection
       ActionList<StepCollector, StepActor> aList;
-      aList.get<StepActor>().energyLoss = false;
+      //~ aList.get<StepActor>().energyLoss = false;
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
@@ -306,7 +306,7 @@ namespace Test {
       EigenStepper<ConstantBField> es(bField);
       Propagator<EigenStepper<ConstantBField>, Navigator> prop(es, naviMat);
 
-      //~ // Launch and collect results
+      // Launch and collect results
       const auto&                       result = prop.propagate(sbtp, propOpts);
       const StepCollector::this_result& stepResult
           = result.get<typename StepCollector::result_type>();

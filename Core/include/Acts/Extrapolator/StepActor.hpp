@@ -17,10 +17,11 @@ namespace Acts {
 using cstep = detail::ConstrainedStep;
 
 // TODO: Logging
+// TODO: release of the constrained step testing
 struct StepActor
 {
   /// multiple scattering switch on/off
-  bool multipleScattering = false;
+  bool multipleScattering = true;
   /// the scattering struct
   detail::HighlandScattering scattering;
 
@@ -36,6 +37,9 @@ struct StepActor
   void
   operator()(propagator_state_t& state) const
   {
+    if (!state.navigation.navigationBreak)
+      state.navigation.continueNavigationAfterBreak = true;
+
     // if we are on target, everything should have been done
     if (state.navigation.targetReached) {
       return;
@@ -105,12 +109,7 @@ struct StepActor
 
       // apply the energy loss
       if (energyLoss) {
-        // TODO: Updating the energy after the step might lead to bigger errors
-        // than some midpoint-update or a diff between pre-&post-update
-        if (!state.navigation.navBoundaries.empty()
-            && state.navigation.navBoundaryIter->representation->isOnSurface(
-                   state.stepping.position(), true)
-            && (state.stepping.stepSize.value(cstep::user) > maxStepSize)) {
+        if (state.stepping.stepSize.value(cstep::user) > maxStepSize) {
           state.stepping.stepSize.update(maxStepSize, cstep::user);
         }
         // calculate gamma
@@ -150,10 +149,9 @@ struct StepActor
         }
       }
     } else {
-      if (!state.navigation.navBoundaries.empty()
-          && state.navigation.navBoundaryIter->representation->isOnSurface(
-                 state.stepping.position(), true)
-          && energyLoss) {
+      if (energyLoss
+          && state.options.maxStepSize
+              > state.stepping.stepSize.value(cstep::user)) {
         state.stepping.stepSize.release(cstep::user);
       }
     }
