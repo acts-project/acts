@@ -13,17 +13,13 @@
 // leave blank line
 
 #include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Extrapolator/StepActor.hpp"
-#include "Acts/Layers/PlaneLayer.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Tools/LayerArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Volumes/CuboidVolumeBounds.hpp"
+#include "DetectorBuilder.hpp"
 
 namespace Acts {
 namespace Test {
@@ -89,117 +85,6 @@ namespace Test {
       result.cov.push_back(state.stepping.cov);
     }
   };
-
-  /// @brief Builds tracking geometry without anything in it
-  ///
-  /// @return Pointer to the tracking geometry
-  std::shared_ptr<TrackingGeometry>
-  buildVacDetector()
-  {
-    // Construct the rotation
-    RotationMatrix3D rotation;
-    double           rotationAngle = M_PI * 0.5;
-    Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
-    Vector3D         yPos(0., 1., 0.);
-    Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-    rotation.col(0) = xPos;
-    rotation.col(1) = yPos;
-    rotation.col(2) = zPos;
-
-    // Build the transformation
-    Transform3D trafoLay(Transform3D::Identity() * rotation);
-    trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
-
-    // Build a dummy layer
-    std::shared_ptr<const PlanarBounds> rBounds(
-        new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
-    LayerPtr dummyLayer = PlaneLayer::create(
-        std::make_shared<const Transform3D>(trafoLay), rBounds);
-
-    LayerArrayCreator layArrCreator(
-        getDefaultLogger("LayerArrayCreator", Logging::VERBOSE));
-    std::unique_ptr<const LayerArray> layArr(
-        layArrCreator.layerArray({dummyLayer},
-                                 0.,
-                                 2. * units::_m,
-                                 BinningType::arbitrary,
-                                 BinningValue::binX));
-
-    // Build the volume
-    auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
-        1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
-
-    Transform3D trafoVac(Transform3D::Identity());
-    trafoVac.translation() = Vector3D(1. * units::_m, 0., 0.);
-    auto trackingVac
-        = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVac),
-                                 boundsVol,
-                                 nullptr,
-                                 std::move(layArr),
-                                 {},
-                                 {},
-                                 {},
-                                 "Vacuum");
-
-    return std::shared_ptr<TrackingGeometry>(new TrackingGeometry(trackingVac));
-  }
-
-  /// @brief Builds tracking geometry that contains one volume with material
-  ///
-  /// @return Pointer to the tracking geometry
-  std::shared_ptr<TrackingGeometry>
-  buildMatDetector()
-  {
-    // Construct the rotation
-    RotationMatrix3D rotation;
-    double           rotationAngle = M_PI * 0.5;
-    Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
-    Vector3D         yPos(0., 1., 0.);
-    Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-    rotation.col(0) = xPos;
-    rotation.col(1) = yPos;
-    rotation.col(2) = zPos;
-
-    // Build the transformation
-    Transform3D trafoLay(Transform3D::Identity() * rotation);
-    trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
-
-    // Build a dummy layer
-    std::shared_ptr<const PlanarBounds> rBounds(
-        new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
-    LayerPtr dummyLayer = PlaneLayer::create(
-        std::make_shared<const Transform3D>(trafoLay), rBounds);
-
-    LayerArrayCreator layArrCreator(
-        getDefaultLogger("LayerArrayCreator", Logging::VERBOSE));
-    std::unique_ptr<const LayerArray> layArr(
-        layArrCreator.layerArray({dummyLayer},
-                                 0.,
-                                 2. * units::_m,
-                                 BinningType::arbitrary,
-                                 BinningValue::binX));
-
-    // Build the volume
-    auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
-        1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
-
-    std::shared_ptr<const Material> mat(
-        new Material(352.8, 407., 9.012, 4., 1.848e-3));
-
-    Transform3D trafoMat(Transform3D::Identity());
-    trafoMat.translation() = Vector3D(1. * units::_m, 0., 0.);
-    auto trackingMat
-        = TrackingVolume::create(std::make_shared<const Transform3D>(trafoMat),
-                                 boundsVol,
-                                 mat,
-                                 std::move(layArr),
-                                 {},
-                                 {},
-                                 {},
-                                 "Material");
-
-    return std::shared_ptr<TrackingGeometry>(new TrackingGeometry(trackingMat));
-  }
 
   /// @brief This is a test for the StepActor that updates the propagator in
   /// dense material. The test consists out of 2 parts.
@@ -288,7 +173,6 @@ namespace Test {
 
       // Create action list for surface collection
       ActionList<StepCollector, StepActor> aList;
-      //~ aList.get<StepActor>().energyLoss = false;
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
@@ -339,6 +223,7 @@ namespace Test {
       }
       //////////////////////////////////////////////////////////////////
 
+      // Re-launch the configuration with magnetic field
       bField.setField(0., 1. * units::_T, 0.);
       EigenStepper<ConstantBField> esB(bField);
       Propagator<EigenStepper<ConstantBField>, Navigator> probB(esB, naviMat);
@@ -347,11 +232,39 @@ namespace Test {
       const StepCollector::this_result& stepResultB
           = resultB.get<typename StepCollector::result_type>();
 
+      // Check that there occured interaction
       for (const auto& pos : stepResultB.position) {
-        std::cout << "pos: " << std::endl << pos << std::endl;
+        if (pos == stepResultB.position.front()) {
+          BOOST_TEST(pos.x() == 0.);
+          BOOST_TEST(pos.y() == 0.);
+          BOOST_TEST(pos.z() == 0.);
+        } else {
+          BOOST_TEST(pos.x() != 0.);
+          BOOST_TEST(pos.y() == 0.);
+          BOOST_TEST(pos.z() != 0.);
+        }
+      }
+      for (const auto& mom : stepResultB.momentum) {
+        if (mom == stepResultB.momentum.front()) {
+          BOOST_TEST(mom.x() == 1. * units::_GeV);
+          BOOST_TEST(mom.y() == 0.);
+          BOOST_TEST(mom.z() == 0.);
+        } else {
+          BOOST_TEST(mom.x() != 1. * units::_GeV);
+          BOOST_TEST(mom.y() == 0.);
+          BOOST_TEST(mom.z() != 0.);
+        }
+      }
+      for (const auto& c : stepResultB.cov) {
+        if (c == stepResultB.cov.front()) {
+          BOOST_TEST(c == ActsSymMatrixD<5>::Identity());
+        } else {
+          BOOST_TEST(c != ActsSymMatrixD<5>::Identity());
+        }
       }
     }
   }
+  // TODO: Test step size release
 
 }  // namespace Test
 }  // namespace Acts
