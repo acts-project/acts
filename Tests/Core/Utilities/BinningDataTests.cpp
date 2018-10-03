@@ -52,14 +52,14 @@ namespace Test {
   BinningData etaData_eq(open, binEta, 5, -2.5, 2.5);
 
   // the binnings - arbitrary
-  std::vector<float> values = {0., 1., 2., 3., 4., 10.};
+  std::vector<double> values = {0., 1., 2., 3., 4., 10.};
   // bin boundaries
   // | 0 | 1 | 2 | 3 | 4 | 10 |
   BinningData xData_arb(open, binX, values);
   BinningData yData_arb(open, binY, values);
   // | -M_PI |  -2 |  -1 |  1 |  2 |  M_PI |
-  std::vector<float> phiValues = {-M_PI, -2., -1., 1., 2., M_PI};
-  BinningData        phiData_arb(closed, binPhi, phiValues);
+  std::vector<double> phiValues = {-M_PI, -2., -1., 1., 2., M_PI};
+  BinningData         phiData_arb(closed, binPhi, phiValues);
 
   // the binnings - arbitrary when switching to binary search - for boundary
   // sizes >= 50
@@ -70,14 +70,14 @@ namespace Test {
   double phiDelta     = 0.1064;
 
   // the binning - substructure
-  std::vector<float> sstr = {0., 1., 1.5, 2., 3.};
+  std::vector<double> sstr = {0., 1., 1.5, 2., 3.};
   // multiplicative
   auto xData_sstr_mult = std::make_unique<const BinningData>(open, binX, sstr);
   // | 0 | 1 | 1.5 | 2 |  3 | 4 | 4.5 | 5 | 6 | 7 | 7.5 | 8 | 9 |
   BinningData xData_mult(open, binX, 3, 0., 9., std::move(xData_sstr_mult));
   /// additive
   // | 0 | 1 | 1.5 | 2 |  3 | 4 | 5 |
-  std::vector<float> main_sstr = {0., 3., 4., 5.};
+  std::vector<double> main_sstr = {0., 3., 4., 5.};
   auto xData_sstr_add = std::make_unique<const BinningData>(open, binX, sstr);
   BinningData xData_add(open, binX, main_sstr, std::move(xData_sstr_add));
 
@@ -88,8 +88,8 @@ namespace Test {
   {
     // the binnings - arbitrary when switching to binary search - for boundary
     // sizes >= 50
-    std::vector<float> values_binary;
-    std::vector<float> phiValues_binary;
+    std::vector<double> values_binary;
+    std::vector<double> phiValues_binary;
     for (size_t i = 0; i <= nBins_binary; i++) {
       values_binary.push_back(valueMin + i * delta);
       phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -148,8 +148,8 @@ namespace Test {
   {
     // the binnings - arbitrary when switching to binary search - for boundary
     // sizes >= 50
-    std::vector<float> values_binary;
-    std::vector<float> phiValues_binary;
+    std::vector<double> values_binary;
+    std::vector<double> phiValues_binary;
     for (size_t i = 0; i <= nBins_binary; i++) {
       values_binary.push_back(valueMin + i * delta);
       phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -216,8 +216,8 @@ namespace Test {
   {
     // the binnings - arbitrary when switching to binary search - for boundary
     // sizes >= 50
-    std::vector<float> values_binary;
-    std::vector<float> phiValues_binary;
+    std::vector<double> values_binary;
+    std::vector<double> phiValues_binary;
     for (size_t i = 0; i <= nBins_binary; i++) {
       values_binary.push_back(valueMin + i * delta);
       phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -260,8 +260,8 @@ namespace Test {
   {
     // the binnings - arbitrary when switching to binary search - for boundary
     // sizes >= 50
-    std::vector<float> values_binary;
-    std::vector<float> phiValues_binary;
+    std::vector<double> values_binary;
+    std::vector<double> phiValues_binary;
     for (size_t i = 0; i <= nBins_binary; i++) {
       values_binary.push_back(valueMin + i * delta);
       phiValues_binary.push_back(phiMin + i * phiDelta);
@@ -362,8 +362,8 @@ namespace Test {
   {
     // the binnings - arbitrary when switching to binary search - for boundary
     // sizes >= 50
-    std::vector<float> values_binary;
-    std::vector<float> phiValues_binary;
+    std::vector<double> values_binary;
+    std::vector<double> phiValues_binary;
     for (size_t i = 0; i <= nBins_binary; i++) {
       values_binary.push_back(valueMin + i * delta);
       phiValues_binary.push_back(phiMin + i * phiDelta);
