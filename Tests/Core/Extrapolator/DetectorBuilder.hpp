@@ -145,11 +145,11 @@ namespace Test {
 
     // Build the transformation
     Transform3D trafoLay1(Transform3D::Identity() * rotation);
-    trafoLay1.translation() = Vector3D(1. * units::_m, 0., 0.);
+    trafoLay1.translation() = Vector3D(0.5 * units::_m, 0., 0.);
     Transform3D trafoLay2(Transform3D::Identity() * rotation);
-    trafoLay2.translation() = Vector3D(3. * units::_m, 0., 0.);
+    trafoLay2.translation() = Vector3D(1.5 * units::_m, 0., 0.);
     Transform3D trafoLay3(Transform3D::Identity() * rotation);
-    trafoLay3.translation() = Vector3D(5. * units::_m, 0., 0.);
+    trafoLay3.translation() = Vector3D(2.5 * units::_m, 0., 0.);
 
     // Build a dummy layer
     std::shared_ptr<const PlanarBounds> rBounds(
@@ -166,32 +166,32 @@ namespace Test {
     std::unique_ptr<const LayerArray> layArr1(
         layArrCreator.layerArray({dummyLayer1},
                                  0.,
-                                 2. * units::_m,
+                                 1. * units::_m,
                                  BinningType::arbitrary,
                                  BinningValue::binX));
     std::unique_ptr<const LayerArray> layArr2(
         layArrCreator.layerArray({dummyLayer2},
-                                 2.,
-                                 4. * units::_m,
+                                 1.,
+                                 2. * units::_m,
                                  BinningType::arbitrary,
                                  BinningValue::binX));
     std::unique_ptr<const LayerArray> layArr3(
         layArrCreator.layerArray({dummyLayer3},
-                                 4.,
-                                 6. * units::_m,
+                                 2.,
+                                 3. * units::_m,
                                  BinningType::arbitrary,
                                  BinningValue::binX));
 
     // Build the volume
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
-        1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
+        0.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
     Transform3D trafoVol1(Transform3D::Identity());
-    trafoVol1.translation() = Vector3D(1. * units::_m, 0., 0.);
+    trafoVol1.translation() = Vector3D(0.5 * units::_m, 0., 0.);
     Transform3D trafoVol2(Transform3D::Identity());
-    trafoVol2.translation() = Vector3D(3. * units::_m, 0., 0.);
+    trafoVol2.translation() = Vector3D(1.5 * units::_m, 0., 0.);
     Transform3D trafoVol3(Transform3D::Identity());
-    trafoVol3.translation() = Vector3D(5. * units::_m, 0., 0.);
+    trafoVol3.translation() = Vector3D(2.5 * units::_m, 0., 0.);
 
     std::shared_ptr<const Material> mat(
         new Material(352.8, 407., 9.012, 4., 1.848e-3));
@@ -243,22 +243,22 @@ namespace Test {
 
     // Build world volume
     Transform3D trafoWorld(Transform3D::Identity());
-    trafoWorld.translation() = Vector3D(3. * units::_m, 0., 0.);
+    trafoWorld.translation() = Vector3D(1.5 * units::_m, 0., 0.);
 
     auto worldVol = std::make_shared<const CuboidVolumeBounds>(
-        3. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
+        1.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
     std::vector<std::pair<TrackingVolumePtr, Vector3D>> tapVec;
 
     tapVec.push_back(
-        std::make_pair(trackingVac1, Vector3D(1. * units::_m, 0., 0.)));
+        std::make_pair(trackingVac1, Vector3D(0.5 * units::_m, 0., 0.)));
     tapVec.push_back(
-        std::make_pair(trackingMat, Vector3D(3. * units::_m, 0., 0.)));
+        std::make_pair(trackingMat, Vector3D(1.5 * units::_m, 0., 0.)));
     tapVec.push_back(
-        std::make_pair(trackingVac2, Vector3D(5. * units::_m, 0., 0.)));
+        std::make_pair(trackingVac2, Vector3D(2.5 * units::_m, 0., 0.)));
 
     std::vector<double> binBoundaries
-        = {0., 2. * units::_m, 4. * units::_m, 6. * units::_m};
+        = {0., 1. * units::_m, 2. * units::_m, 3. * units::_m};
 
     BinningData binData(BinningOption::open, BinningValue::binX, binBoundaries);
     std::unique_ptr<const BinUtility> bu(new BinUtility(binData));

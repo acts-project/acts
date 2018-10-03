@@ -24,11 +24,16 @@
 namespace Acts {
 namespace Test {
 
+  using cstep = detail::ConstrainedStep;
+
   ///
   /// @brief Aborter for the case that a particle leaves the detector
   ///
   struct EndOfWorld
   {
+
+    double maxX = 2. * units::_m;
+
     /// @brief Constructor
     EndOfWorld() = default;
 
@@ -41,7 +46,7 @@ namespace Test {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (std::abs(state.stepping.position().x()) >= 2. * units::_m
+      if (std::abs(state.stepping.position().x()) >= maxX
           || std::abs(state.stepping.position().y()) >= 0.5 * units::_m
           || std::abs(state.stepping.position().z()) >= 0.5 * units::_m)
         return true;
@@ -66,6 +71,8 @@ namespace Test {
       std::vector<Vector3D> momentum;
       // Covariance matrix of the propagator after each step
       std::vector<ActsSymMatrixD<5>> cov;
+      // Step sizes of the propagator after each step
+      std::vector<cstep> stepSize;
     };
 
     using result_type = this_result;
@@ -83,6 +90,7 @@ namespace Test {
       result.position.push_back(state.stepping.position());
       result.momentum.push_back(state.stepping.momentum());
       result.cov.push_back(state.stepping.cov);
+      result.stepSize.push_back(state.stepping.stepSize);
     }
   };
 
@@ -243,7 +251,6 @@ namespace Test {
           BOOST_TEST(pos.y() == 0.);
           BOOST_TEST(pos.z() != 0.);
         }
-        std::cout << pos << std::endl;
       }
       for (const auto& mom : stepResultB.momentum) {
         if (mom == stepResultB.momentum.front()) {
@@ -262,6 +269,64 @@ namespace Test {
         } else {
           BOOST_TEST(c != ActsSymMatrixD<5>::Identity());
         }
+      }
+    }
+    {
+      // Build detector
+      std::shared_ptr<TrackingGeometry> det = buildVacMatVacDetector();
+
+      // Build navigator
+      Navigator naviVac(det);
+      naviVac.resolvePassive   = true;
+      naviVac.resolveMaterial  = true;
+      naviVac.resolveSensitive = true;
+
+      // Set initial parameters for the particle track
+      ActsSymMatrixD<5> cov;
+      cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0., 0.,
+          0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
+      auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+      Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
+      SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+          std::move(covPtr), startParams, startMom, 1.);
+
+      // Create action list for surface collection
+      ActionList<StepCollector, StepActor> aList;
+      AbortList<EndOfWorld> abortList;
+      abortList.get<EndOfWorld>().maxX = 3. * units::_m;
+
+      // Set options for propagator
+      Propagator<EigenStepper<ConstantBField>, Navigator>::
+          Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
+              propOpts;
+      propOpts.actionList     = aList;
+      propOpts.stopConditions = abortList;
+      propOpts.maxSteps       = 1e6;
+      propOpts.maxStepSize    = 2. * units::_m;
+
+      // Re-configure propagation with B-field
+      ConstantBField               bField(Vector3D(0., 0.5 * units::_T, 0.));
+      EigenStepper<ConstantBField> es(bField);
+      Propagator<EigenStepper<ConstantBField>, Navigator> prop(es, naviVac);
+
+      // Launch and collect results
+      const auto&                       result = prop.propagate(sbtp, propOpts);
+      const StepCollector::this_result& stepResult
+          = result.get<typename StepCollector::result_type>();
+
+      // Check that the propagation step size is constrained and released
+      // properly
+      for (unsigned int i = 0; i < stepResult.stepSize.size(); i++) {
+        if (stepResult.position[i].x() < 1. * units::_m)
+          BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
+                     == propOpts.maxStepSize);
+        if (stepResult.position[i].x() > 1. * units::_m
+            && stepResult.position[i].x() < 2. * units::_m)
+          BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
+                     == aList.get<StepActor>().maxStepSize);
+        if (stepResult.position[i].x() > 2. * units::_m)
+          BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
+                     == propOpts.maxStepSize);
       }
     }
   }
