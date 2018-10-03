@@ -30,6 +30,7 @@ namespace Acts{
         }else{
           spIndex++;
         }
+        // loop over all bins starting from current phiBin (i) and zBin (j) 
         size_t j = zIndex;
         for(size_t i = phiIndex; i <= phiZbins[0]; i++){
           for(; j <= phiZbins[1]; j++){
@@ -42,7 +43,7 @@ namespace Acts{
               return *this;
             }
           }
-          j=0;
+          j=1;
         }
         phiIndex = phiZbins[0];
         zIndex   = phiZbins[1];
@@ -57,12 +58,14 @@ namespace Acts{
         return (spIndex == otherState.spIndex && zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
       }
 
-      SeedingStateIterator(SPGrid* spgrid, IBinFinder* botBinFinder, IBinFinder* tBinFinder):
+      SeedingStateIterator(const SPGrid* spgrid, IBinFinder* botBinFinder, IBinFinder* tBinFinder):
                                                                  currentBin(&(spgrid->at({1,1}))){
         grid = spgrid;
         bottomBinFinder = botBinFinder;
         topBinFinder = tBinFinder;
         phiZbins = grid->getNBins();
+        bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
+        topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
         for(size_t i = 1; i <= phiZbins[0]; i++){
           for(size_t j = 1; j <= phiZbins[1]; j++){
             if ( currentBin->size()==0){
@@ -76,7 +79,7 @@ namespace Acts{
         }
       }
       
-      SeedingStateIterator(SPGrid* spgrid, IBinFinder* botBinFinder, IBinFinder* tBinFinder, size_t phiInd, size_t zInd, size_t spInd):
+      SeedingStateIterator(const SPGrid* spgrid, IBinFinder* botBinFinder, IBinFinder* tBinFinder, size_t phiInd, size_t zInd, size_t spInd):
                                                                  currentBin(&(spgrid->at({phiInd,zInd}))){
         bottomBinFinder = botBinFinder;
         topBinFinder = tBinFinder;
@@ -84,11 +87,12 @@ namespace Acts{
         phiIndex = phiInd;
         zIndex = zInd;
         spIndex = spInd;
+        phiZbins = grid->getNBins();
         bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
         topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
       }
 
-      // middle spacepoint bin indices
+      // middle spacepoint bin
       const std::vector<std::unique_ptr<const InternalSpacePoint > > * currentBin;
       std::set<size_t> bottomBinIndices;
       std::set<size_t> topBinIndices;

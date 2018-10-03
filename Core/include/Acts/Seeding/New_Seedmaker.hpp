@@ -64,10 +64,7 @@ namespace Acts {
          std::shared_ptr<Acts::IBinFinder> topBinFinder) const;
 
 
-/// Create all seed from the space points passed in createSpacePointGrid
-/// Specify number of seeds
-//      void
-//      createSeeds(std::shared_ptr<Acts::SeedmakerState> state) const ;
+/// Create all seed from the space point referenced by it
       void
       createSeedsForSP ( SeedingStateIterator it,
                          std::shared_ptr<Acts::SeedmakerState> state) const;

@@ -63,8 +63,8 @@ namespace Acts {
     (const size_t spIndex, const Acts::Vector3D& globalPos, const Acts::Vector2D& offsetXY, const Acts::Vector2D& cov)
     {
       m_spIndex  = spIndex;
-      m_x        = globalPos.x()+offsetXY.x();
-      m_y        = globalPos.y()+offsetXY.y();
+      m_x        = globalPos.x()-offsetXY.x();
+      m_y        = globalPos.y()-offsetXY.y();
       m_z        = globalPos.z();
       m_r        = std::sqrt(m_x*m_x+m_y*m_y);
       m_covr     = cov.x();

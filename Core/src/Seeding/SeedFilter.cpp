@@ -13,11 +13,9 @@
 namespace Acts{
   //constructor
   SeedFilter::SeedFilter(SeedFilterConfig config,
-                         IExperimentCuts* expCuts)
+                         IExperimentCuts* expCuts /* = 0*/)
                          :m_cfg (config),
                           m_experimentCuts (expCuts){}
-
-  SeedFilter::SeedFilter(SeedFilterConfig config): m_cfg (config) {}
 
   //destructor
   SeedFilter::~SeedFilter(){}
@@ -28,21 +26,21 @@ namespace Acts{
   SeedFilter::filterSeeds_2SpFixed(const InternalSpacePoint* bottomSP,
                                    const InternalSpacePoint* middleSP,
                                    std::vector<const InternalSpacePoint* >& topSpVec,
-                                   std::vector<float>& invHelixRadiusVec,
+                                   std::vector<float>& invHelixDiameterVec,
                                    std::vector<float>& impactParametersVec,
                                    float zOrigin) const {
   
     std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > > selectedSeeds;
-  
-    // if two compatible seeds with high distance in r are found, compatible seeds span 5 layers
-    // -> very good seed
-    std::vector<float> compatibleSeedRadii;
 
     for(size_t i = 0; i < topSpVec.size(); i++){
+  
+      // if two compatible seeds with high distance in r are found, compatible seeds span 5 layers
+      // -> very good seed
+      std::vector<float> compatibleSeedR;
 
-      float invHelixRadius = invHelixRadiusVec[i];
-      float lowerLimitCurv = invHelixRadius - m_cfg.deltaInvHelixRadius; 
-      float upperLimitCurv = invHelixRadius + m_cfg.deltaInvHelixRadius; 
+      float invHelixDiameter = invHelixDiameterVec[i];
+      float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter; 
+      float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter; 
       float currentTop_r   = topSpVec[i]->radius();
       float impact         = impactParametersVec[i];
 
@@ -56,19 +54,20 @@ namespace Acts{
         // curvature difference within limits?
         // TODO: how much slower than sorting all vectors by curvature
         // and breaking out of loop? i.e. is vector size large (e.g. in jets?)
-        if (invHelixRadiusVec[j] < lowerLimitCurv) continue;
-        if (invHelixRadiusVec[j] > upperLimitCurv) continue;
+        if (invHelixDiameterVec[j] < lowerLimitCurv) continue;
+        if (invHelixDiameterVec[j] > upperLimitCurv) continue;
         bool newCompSeed = true;
-        for(float previousRadius : compatibleSeedRadii){
+        for(float previousDiameter : compatibleSeedR){
           // original ATLAS code uses higher min distance for 2nd found compatible seed (20mm instead of 5mm)
-          if(std::abs(previousRadius - otherTop_r) < m_cfg.deltaRMin) {newCompSeed = false; break;}
+          // add new compatible seed only if distance larger than rmin to all other compatible seeds
+          if(std::abs(previousDiameter - otherTop_r) < m_cfg.deltaRMin) {newCompSeed = false; break;}
         }
         if(newCompSeed)
         {
-          compatibleSeedRadii.push_back(otherTop_r);
+          compatibleSeedR.push_back(otherTop_r);
           weight+= m_cfg.compatSeedWeight;
         }
-        if(compatibleSeedRadii.size() >= m_cfg.compatSeedLimit) break;
+        if(compatibleSeedR.size() >= m_cfg.compatSeedLimit) break;
       }
       if(m_experimentCuts != nullptr){
         // add detector specific considerations on the seed weight

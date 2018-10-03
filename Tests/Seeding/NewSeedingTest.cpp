@@ -34,6 +34,11 @@ std::vector<const SpacePoint*> readFile(std::string filename){
       if (linetype == "lxyz"){
         ss >> layer >> x >> y >> z >> covr >> covz;
         r = std::sqrt(x*x+y*y);
+        float f22 = covr;
+        float wid = covz;
+        float cov = wid*wid*.08333; if(cov < f22) cov = f22;
+        if(std::abs(z) > 450.) {covz = 9.*cov; covr = .06;}
+        else               {covr = 9.*cov; covz = .06;}
         SpacePoint * sp = new SpacePoint{x,y,z,r,layer,covr,covz};
    //     if(r < 200.){
    //       sp->setClusterList(1,0);
@@ -51,9 +56,9 @@ int main(){
 
   Acts::SeedmakerConfig config;
 // silicon detector max
-  config.rMax = 600.;
+  config.rMax = 160.;
   config.deltaRMin = 5.;
-  config.deltaRMax = 270.;
+  config.deltaRMax = 160.;
   config.collisionRegionMin = -250.;
   config.collisionRegionMax = 250.;
   config.zMin = -2800.;
@@ -63,9 +68,11 @@ int main(){
   config.cotThetaMax = 7.40627;
   config.sigmaScattering = 1.00000;
 
-  config.minPt = 400.;
+  config.minPt = 500.;
+  config.bFieldInZ = 0.00199724;
 
   config.beamPos={-.5,-.5};
+  config.impactMax=10.;
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder>(Acts::BinFinder());
   auto topBinFinder = std::make_shared<Acts::BinFinder>(Acts::BinFinder());
@@ -79,7 +86,7 @@ int main(){
     (const SpacePoint* sp,float zAlign,float rAlign,float sigma=1)
     -> Acts::Vector2D
     {
-      return {sp->covz,sp->covr};
+      return {sp->covr,sp->covz};
     };
 
   std::shared_ptr<Acts::SeedmakerState> state = a.initState(spVec, ct, bottomBinFinder, topBinFinder);
@@ -96,14 +103,14 @@ int main(){
     state->outputQueue.pop();
     const Acts::InternalSpacePoint* spC = seed->spacepoint0();
     const SpacePoint* sp = spVec[spC->spIndex()];
-//    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+    std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     spC = seed->spacepoint1();
     sp = spVec[spC->spIndex()];
-//    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     spC = seed->spacepoint2();
     sp = spVec[spC->spIndex()];
-//    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-//    std::cout << std::endl;
+    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+    std::cout << std::endl;
   }
   return 0;
 }

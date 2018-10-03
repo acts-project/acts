@@ -20,7 +20,7 @@
 namespace Acts{
   struct SeedFilterConfig{
     // the allowed delta between two inverted seed radii for them to be considered compatible.
-    float deltaInvHelixRadius = 0.00003;
+    float deltaInvHelixDiameter = 0.00003;
     // the impact parameters (d0) is multiplied by this factor and subtracted from weight
     float impactWeightFactor = 1.;
     // seed weight increased by this value if a compatible seed has been found.
@@ -40,8 +40,7 @@ namespace Acts{
   class SeedFilter{
     public: 
     SeedFilter(SeedFilterConfig cfg,
-               IExperimentCuts* expCuts);
-    SeedFilter(SeedFilterConfig cfg);
+               IExperimentCuts* expCuts = 0);
 
     SeedFilter() = delete;
     ~SeedFilter();
@@ -60,7 +59,7 @@ namespace Acts{
     filterSeeds_2SpFixed(const InternalSpacePoint* bottomSP,
                          const InternalSpacePoint* middleSP,
                          std::vector<const InternalSpacePoint*>& topSpVec,
-                         std::vector<float>& invHelixRadiusVec,
+                         std::vector<float>& invHelixDiameterVec,
                          std::vector<float>& impactParametersVec,
                          float zOrigin) const;
 

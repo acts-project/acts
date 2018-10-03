@@ -10,17 +10,17 @@ namespace Acts{
 
 struct SeedingGridConfig{
     // magnetic field in kTesla
-    float bFieldInZ = 0.00208;
+    float bFieldInZ;
     // minimum pT to be found by seedfinder in MeV
-    float minPt = 400;
+    float minPt;
     // maximum extension of sensitive detector layer relevant for seeding as distance from x=y=0 (i.e. in r) in mm
-    float rMax = 563;
+    float rMax;
     // maximum extension of sensitive detector layer relevant for seeding in positive direction in z in mm
-    float zMax = 2750;
+    float zMax;
     // maximum extension of sensitive detector layer relevant for seeding in negative direction in z in mm
-    float zMin = -2750;
+    float zMin;
     // maximum distance in r from middle space point to bottom or top spacepoint in mm
-    float deltaRMax = 150;
+    float deltaRMax;
     // maximum forward direction expressed as cot(theta)
     float cotThetaMax;
 };

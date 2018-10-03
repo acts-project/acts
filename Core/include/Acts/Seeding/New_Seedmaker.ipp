@@ -11,7 +11,6 @@
 
 #include "Acts/Seeding/IBinFinder.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include <iostream>
 
 namespace Acts{
 
@@ -107,30 +106,10 @@ New_Seedmaker::initState
     }
     rBins[rIndex].push_back(std::move(isp));
   }
-//  too expensive :(
-//  std::sort(indexVec.begin(),indexVec.end(),[spVec]
-//       (const size_t indA, const size_t indB)
-//        {auto spA = spVec[indA];
-//        auto spB = spVec[indB];
-//        // compare x*x+y*y (i.e. r^2) of both SP
-//        float rA = spA->x()*spA->x()+spA->y()*spA->y();
-//        float rB = spB->x()*spB->x()+spB->y()*spB->y();
-//        return rA < rB; });
+  // fill rbins into grid such that each grid bin is sorted in r
+  // space points with delta r < rbin size can be out of order
   for(auto& rbin : rBins){
     for(auto& isp : rbin){
-//    done during r-binning
-//    for(auto spIndex : indexVec){
-//      auto sp = spVec[spIndex];
-//      float spX = sp->x();
-//      float spY = sp->y();
-//      float spZ = sp->z();
-//      if(spZ > zMax || spZ < zMin) continue;
-//      float spPhi = std::atan2(spY,spX);
-//      if(spPhi > phiMax || spPhi < phiMin) continue;
-//      // covariance configuration should be done outside of the Seedmaker
-//      Acts::Vector2D cov = covTool(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
-//      Acts::Vector3D globalPos(spX,spY,spZ);
-//      InternalSpacePoint sps(spIndex, globalPos, m_config.beamPos, cov);
       Acts::Vector2D spLocation(isp->phi(),isp->z());
       std::vector<std::unique_ptr<const InternalSpacePoint> >& bin = grid->at(spLocation);
       bin.push_back(std::move(isp));
@@ -142,47 +121,21 @@ New_Seedmaker::initState
   return state;
 }
 
-//void
-//New_Seedmaker::createSeeds
-//( std::shared_ptr<Acts::SeedmakerState> state) const
-//{
-//  std::array<long unsigned int,2ul> phiZbins = state->phiZbins;
-//
-//  
-//  if(state->outputQueue.size() >= m_config.minSeeds) {
-//    return;
-//  }
-//  // loop over all space point bins, break out of loop if queue full
-//  // store indices in state to continue seed creation after break
-//  for (; state->phiIndex <= phiZbins[0]; state->phiIndex++){
-//    for (; state->zIndex <= phiZbins[1]; state->zIndex++){
-//      std::set<size_t > bottomBins = m_config.bottomBinFinder->findBins(state->phiIndex,state->zIndex,state->binnedSP);
-//      std::set<size_t > topBins = m_config.topBinFinder->findBins(state->phiIndex,state->zIndex,state->binnedSP);
-//      auto& curbin = state->binnedSP->at({state->phiIndex,state->zIndex});
-//      createSeedsInRegion(curbin, bottomBins, topBins, state);
-//      if(state->outputQueue.size() >= m_config.minSeeds){return;}
-//    }
-//    state->zIndex = 1;
-//  }
-//  return;
-//}
-
 void
 New_Seedmaker::createSeedsForSP
 ( SeedingStateIterator it,
   std::shared_ptr<Acts::SeedmakerState> state) const
 {
   const std::vector<std::unique_ptr<const InternalSpacePoint > >* currentBin = it.currentBin;
-  auto& spMunique = (*currentBin)[it.spIndex];
-  std::set<size_t>& bottomBinIndices = it.bottomBinIndices;
-  std::set<size_t>& topBinIndices = it.topBinIndices;
+  const InternalSpacePoint* spM = (*currentBin)[it.spIndex].get();
 
-  const InternalSpacePoint* spM = spMunique.get();
   float rM = spM->radius();
   float zM = spM->z();
   float covrM = spM->covr();
   float covzM = spM->covz();
 
+  std::set<size_t>& bottomBinIndices = it.bottomBinIndices;
+  std::set<size_t>& topBinIndices = it.topBinIndices;
   std::vector<const InternalSpacePoint* > compatBottomSP;
 
   // bottom space point
@@ -245,6 +198,7 @@ New_Seedmaker::createSeedsForSP
   size_t numTopSP = compatTopSP.size();
 
   for(size_t b = 0; b < numBotSP; b++){
+
     auto lb = linCircleBottom[b];
     float  Zob  = lb.Zo      ;
     float  cotThetaB = lb.cotTheta ;
@@ -270,6 +224,7 @@ New_Seedmaker::createSeedsForSP
     curvatures.clear();
     impactParameters.clear();
     for(size_t t = 0; t < numTopSP; t++) {
+      
       auto lt = linCircleTop[t];
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term for errors on spM
@@ -306,22 +261,23 @@ New_Seedmaker::createSeedsForSP
       // calculated radius must not be smaller than minimum radius
       if(S2 < B2*m_config.minHelixDiameter2) continue;
       // 1/helixradius: (B/sqrt(S2))/2 (we leave everything squared)
-      float iHelixradius2 = 4*B2/S2;
+      float iHelixDiameter2 = B2/S2;
       // calculate scattering for p(T) calculated from seed curvature
-      float pT2scatter = iHelixradius2 * m_config.pT2perRadius;
+      float pT2scatter = 4*iHelixDiameter2 * m_config.pT2perRadius;
       //FIXME: include upper pT limit for scatter calc
       //convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta) from rad to deltaCotTheta
       float p2scatter = pT2scatter * iSinTheta2;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if(deltaCotTheta2 - error2 > 0 && dCotThetaMinusError2 > p2scatter * m_config.sigmaScattering* m_config.sigmaScattering) continue;
       // A and B allow calculation of impact params in U/V plane with linear function
-      // (in contrast to x^2 in x/y plane)
+      // (in contrast to having to solve a quadratic function in x/y plane)
       float Im  = std::abs((A-B*rM)*rM)                ;
 
       if(Im <= m_config.impactMax) {
         topSpVec.push_back(compatTopSP[t]);
-        curvatures.push_back(sqrt(iHelixradius2));
-        impactParameters.push_back(Im);
+        // inverse diameter is signed depending if the curvature is positive/negative in phi
+        curvatures.push_back(B/std::sqrt(S2));
+        impactParameters.push_back(Im );
       }
     }
     if(!topSpVec.empty()) {
@@ -362,12 +318,9 @@ void New_Seedmaker::transformCoordinates
     // orthogonal to origin->spM (y)
     float x = deltaX * cosPhiM + deltaY*sinPhiM;
     float y = deltaY * cosPhiM - deltaX*sinPhiM;
-    // 1/(deltaR*deltaR)
-    // x*x+y*y is larger for smaller impact params and higher pT
-    // x*x+y*y is always > 1 (unless pT is too low for this Seedfinder)
     // 1/(length of M -> SP) 
     float iDeltaR2 = 1./(deltaX*deltaX+deltaY*deltaY);
-    float iDeltaR = sqrt(iDeltaR2);
+    float iDeltaR = std::sqrt(iDeltaR2);
     // 
     int bottomFactor = 1 * (!bottom) - 1*bottom ;
     // cot_theta = (deltaZ/deltaR)
