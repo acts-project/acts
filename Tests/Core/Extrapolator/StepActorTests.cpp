@@ -243,6 +243,7 @@ namespace Test {
           BOOST_TEST(pos.y() == 0.);
           BOOST_TEST(pos.z() != 0.);
         }
+        std::cout << pos << std::endl;
       }
       for (const auto& mom : stepResultB.momentum) {
         if (mom == stepResultB.momentum.front()) {

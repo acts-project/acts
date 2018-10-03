@@ -817,7 +817,7 @@ private:
       navOpts.startObject = state.navigation.currentSurface;
       // Evaluate the boundary surfaces
       state.navigation.navBoundaries
-          = state.navigation.currentVolume->compatibleBoundaries(
+          = state.navigation.currentVolume->boundaries(
               state.stepping, navOpts, navCorr);
       // The number of boundary candidates
       debugLog(state, [&] {

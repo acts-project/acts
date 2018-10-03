@@ -37,9 +37,6 @@ struct StepActor
   void
   operator()(propagator_state_t& state) const
   {
-    if (!state.navigation.navigationBreak)
-      state.navigation.continueNavigationAfterBreak = true;
-
     // if we are on target, everything should have been done
     if (state.navigation.targetReached) {
       return;
