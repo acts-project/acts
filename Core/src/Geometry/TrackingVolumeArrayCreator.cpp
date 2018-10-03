@@ -33,7 +33,7 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
 
   // prepare what we need :
   // (1) arbitrary binning for volumes is fast enough
-  std::vector<float> boundaries;
+  std::vector<double> boundaries;
   boundaries.reserve(tVolumes.size() + 1);
   // (2) the vector needed for the BinnedArray
   std::vector<TrackingVolumeOrderPosition> tVolumesOrdered;
