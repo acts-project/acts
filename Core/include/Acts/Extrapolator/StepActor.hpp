@@ -17,7 +17,6 @@ namespace Acts {
 using cstep = detail::ConstrainedStep;
 
 // TODO: Logging
-// TODO: release of the constrained step testing
 struct StepActor
 {
   /// multiple scattering switch on/off
@@ -31,7 +30,7 @@ struct StepActor
   detail::IonisationLoss ionisationloss;
 
   /// Maximal step size in a dense volume
-  double maxStepSize = 10. * units::_cm;
+  double maxStepSize = 50. * units::_mm;
 
   template <typename propagator_state_t>
   void

@@ -17,6 +17,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Sorter.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 
 namespace Acts {
@@ -818,7 +819,7 @@ private:
       // Evaluate the boundary surfaces
       state.navigation.navBoundaries
           = state.navigation.currentVolume->boundaries(
-              state.stepping, navOpts, navCorr);
+              state.stepping, navOpts, navCorr, BoundaryIntersectionSorter());
       // The number of boundary candidates
       debugLog(state, [&] {
         std::stringstream dstream;
