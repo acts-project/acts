@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/EventData/detail/surface_getter.hpp"
+#include "Acts/EventData/detail/trackstate_manipulation.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -29,7 +30,7 @@ namespace Acts {
 /// The KalmanActor does not rely on the measurements to be
 /// sorted along the track.
 template <typename track_states_t,
-          typename updator_t    = VoidKalmanComponents,
+          typename updator_t    = VoidKalmanUpdator,
           typename calibrator_t = VoidKalmanComponents>
 class KalmanActor
 {
@@ -51,6 +52,10 @@ public:
   {
     // Move the result into the fitted states
     track_states_t fittedStates;
+
+    // Counter for handled states
+    size_t processedStates = 0;
+
     // The index map for accessing the track state in order
     std::map<const Surface*, size_t> accessIndex;
   };
@@ -88,7 +93,9 @@ public:
       // -> Fill strack state information & update stepper information
       update(surface, state, result);
     }
-  }
+
+    // Smooth and throw a stop condition when all track states have been handled
+    if (processedStates == trackStates.size()) }
 
 private:
   /// @brief Kalman actor operation : update
@@ -104,21 +111,24 @@ private:
          propagator_state_t& state,
          result_type&        result) const
   {
+    // Try to find the surface in the measurement surfaces
     auto cindexItr = result.accessIndex.find(surface);
     if (cindexItr != result.accessIndex.end()) {
-      // The current index & thus the current track state
-      auto cmeasurement = result.fittedStates[cindexItr->second];
-      // Transport the covariance to the current surface
-      state.stepping.covarianceTransport(*surface, true);
-      auto jacobian = state.stepping.jacobian;
-      // Create the predicted state
-      auto covPtr
-          = std::make_unique<const ActsMatrixD<5, 5>>(state.stepping.cov);
-      BoundParameters predicted(std::move(covPtr),
-                                state.stepping.pos,
-                                state.stepping.p * state.stepping.dir,
-                                state.stepping.q,
-                                *surface);
+      // Transport & bind the stateto the current surface
+      auto boundState = state.stepping.bind(*surface, true);
+      // Get the current VariantTrackState
+      auto trackState = result.fittedStates[cindexItr->second];
+      // Perform the update
+      auto updPar = m_updator(trackState, boundState);
+      // if the update is successful, set covariance and
+      if (updPar) {
+        const auto& updPos = updPar->position();
+        const auto& updMom = updPar->momentum();
+        state.stepping.update(updPos, updMom.normalized(), updMom.norm());
+        state.stepping.cov = *(updPar->covariance());
+      }
+      // We count the processed state
+      ++result.processedStates;
     }
   }
 

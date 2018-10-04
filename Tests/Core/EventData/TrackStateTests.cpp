@@ -20,14 +20,17 @@
 namespace Acts {
 namespace Test {
 
+  using Jacobian   = ActsMatrixD<5, 5>;
   using Identifier = unsigned long int;
+
   template <ParID_t... params>
   using MeasurementType = Measurement<Identifier, params...>;
   template <ParID_t... params>
   using MeasuredState
-      = MeasuredTrackState<Identifier, BoundParameters, params...>;
-  using ParametricState = ParametricTrackState<Identifier, BoundParameters>;
-  using VariantState    = VariantTrackState<Identifier, BoundParameters>;
+      = MeasuredTrackState<Identifier, BoundParameters, Jacobian, params...>;
+  using ParametricState
+      = ParametricTrackState<Identifier, BoundParameters, Jacobian>;
+  using VariantState = VariantTrackState<Identifier, BoundParameters, Jacobian>;
   ///
   /// @brief Unit test for creation of Measurement object
   ///
@@ -68,6 +71,47 @@ namespace Test {
         = {std::move(m1D), std::move(m2D), std::move(pts)};
 
     BOOST_CHECK(trackStates.size() == 3);
+
+    // Test to extract the surface of these guys
+    for (auto& ts : trackStates) {
+      const Surface* sf = &(detail::getSurface(ts));
+      BOOST_TEST(sf != nullptr);
+    }
+
+    // Create predicted, updated and smoothed parameters
+    BoundParameters ataPlaneUpdt(nullptr, pars, plane);
+    BoundParameters ataPlanePred(nullptr, pars, plane);
+    BoundParameters ataPlaneSmth(nullptr, pars, plane);
+
+    // Get the predicted parameters back from the trackState
+    auto& ptsfList = trackStates[2];
+    auto  ataPlanefListPred
+        = detail::getParamaters<BoundParameters>(ptsfList, predicted);
+    BOOST_TEST(ataPlanefListPred);
+
+    // Check that the other parameters are empty
+    auto ataPlanefListUpdt
+        = detail::getParamaters<BoundParameters>(ptsfList, updated);
+    BOOST_TEST(!ataPlanefListUpdt);
+
+    auto ataPlanefListSmthd
+        = detail::getParamaters<BoundParameters>(ptsfList, smoothed);
+    BOOST_TEST(!ataPlanefListSmthd);
+
+    // Get the track States from the list
+    auto& m2DfList = trackStates[1];
+
+    detail::setParameters<BoundParameters>(
+        m2DfList, std::move(ataPlaneUpdt), updated);
+    auto ataPlanefListUpdtM2D
+        = detail::getParamaters<BoundParameters>(m2DfList, updated);
+    BOOST_TEST(ataPlanefListUpdtM2D);
+
+    detail::setParameters<BoundParameters>(
+        m2DfList, std::move(ataPlanePred), predicted);
+    auto ataPlanefListPred2D
+        = detail::getParamaters<BoundParameters>(m2DfList, predicted);
+    BOOST_TEST(ataPlanefListPred2D);
   }
 
 }  // namespace Test

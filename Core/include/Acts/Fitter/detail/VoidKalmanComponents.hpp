@@ -29,20 +29,6 @@ struct VoidKalmanComponents
     return std::move(m);
   }
 
-  /// @brief Public call mimicking an updator
-  ///
-  /// @tparam measurement_t Type of the measurement to be used
-  /// @param m The measurement
-  /// @param pars The predicted parameters
-  ///
-  /// @return The copied predicted parameters
-  template <typename measurement_t, typename parameters_t>
-  parameters_t
-  operator()(const measurement_t& /*m*/, const parameters_t& pars) const
-  {
-    return pars;
-  }
-
   /// @brief void measurement converter only moves the
   /// the measurement through for further processing
   ///
@@ -56,6 +42,25 @@ struct VoidKalmanComponents
   operator()(measurements_t ms) const
   {
     return std::move(ms);
+  }
+};
+
+/// @brief void Kalman updator
+/// @brief void measurement calibrator
+struct VoidKalmanUpdator
+{
+  /// @brief Public call mimicking an updator
+  ///
+  /// @tparam measurement_t Type of the measurement to be used
+  /// @param m The measurement
+  /// @param pars The predicted parameters
+  ///
+  /// @return The copied predicted parameters
+  template <typename track_state_t, typename predicted_state_t>
+  auto
+  operator()(track_state_t& m, predicted_state_t predicted) const
+  {
+    return &(predicted.parameters);
   }
 };
 

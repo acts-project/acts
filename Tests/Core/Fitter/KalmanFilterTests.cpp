@@ -66,14 +66,16 @@ namespace Test {
   };
 
   // Shorthand
+  using Jacobian   = ActsMatrixD<5, 5>;
   using Identifier = unsigned long int;
   template <ParID_t... params>
   using MeasurementType = Measurement<Identifier, params...>;
   template <ParID_t... params>
   using MeasuredState
-      = MeasuredTrackState<Identifier, BoundParameters, params...>;
-  using ParametricState   = ParametricTrackState<Identifier, BoundParameters>;
-  using VariantState      = VariantTrackState<Identifier, BoundParameters>;
+      = MeasuredTrackState<Identifier, BoundParameters, Jacobian, params...>;
+  using ParametricState
+      = ParametricTrackState<Identifier, BoundParameters, Jacobian>;
+  using VariantState = VariantTrackState<Identifier, BoundParameters, Jacobian>;
   using KalmanTrackStates = std::vector<VariantState>;
 
   // The plane surfaces

@@ -53,11 +53,11 @@ namespace Test {
         parValues,
         cylinder);
 
-    GainMatrixUpdator<BoundParameters> g;
-    BoundParameters                    filtered(g(m, pars));
+    // GainMatrixUpdator<BoundParameters> g;
+    // BoundParameters                    filtered(g(m, pars));
 
-    std::cout << pars << std::endl;
-    std::cout << filtered << std::endl;
+    // std::cout << pars << std::endl;
+    // std::cout << filtered << std::endl;
   }
 }  // namespace Test
 }  // namespace Acts

@@ -29,7 +29,7 @@ namespace detail {
   public:
     /// Explicit constructor
     ///
-    /// @pram psType Type of the TrackState
+    /// @param psType Type of the TrackState
     explicit ParametersGetter(StateType psType) : sType(psType) {}
 
     /// @brief Call operator for parameters extraction using the boost visitor
@@ -102,7 +102,7 @@ namespace detail {
   ///
   /// @param edm is the boost variant edm object
   template <typename parameters_t, BOOST_VARIANT_ENUM_PARAMS(typename T)>
-  const boost::optional<parameters_t>&
+  boost::optional<parameters_t>
   getParamaters(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm,
                 StateType                                           sType)
   {
@@ -123,6 +123,53 @@ namespace detail {
   {
     ParametersSetter<parameters_t> ps(std::move(pars), sType);
     return boost::apply_visitor(ps, edm);
+  }
+
+  /// @brief Visitor pattern to extract the optional boost parameter
+  ///
+  /// @tparam parameters_t the parameter type to be retrieved
+  template <typename measurement_t>
+  struct MeasurementGetter
+      : public boost::static_visitor<const boost::optional<measurement_t>&>
+  {
+  public:
+    /// Explicit constructor
+    ///
+    /// @param pmType Type of the Measurement
+    explicit MeasurementGetter(MeasurementType pmType) : mType(pmType) {}
+
+    /// @brief Call operator for measurement extraction using the boost visitor
+    /// pattern
+    ///
+    /// @tparam track_state_t Type of the measurement object (templated)
+    /// @param edm The edm object for which the measurement will be extracted
+    template <typename track_state_t>
+    const boost::optional<measurement_t>&
+    operator()(const track_state_t& edm) const
+    {
+      switch (mType) {
+      case uncalibrated:
+        return edm.measurement;
+      default:
+        return edm.calibratedMeasurement;
+      }
+    }
+    /// The state type for the retrieving
+    MeasurementType mType = MeasurementType::uncalibrated;
+  };
+
+  /// @brief get method to be used with the visitor pattern
+  ///
+  /// @tparam measurement_t the measurement type to be retrieved
+  ///
+  /// @param edm is the boost variant edm object
+  template <typename measurement_t, BOOST_VARIANT_ENUM_PARAMS(typename T)>
+  boost::optional<measurement_t>
+  getMeasurement(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm,
+                 StateType                                           mType)
+  {
+    MeasurementGetter<measurement_t> mg(mType);
+    return boost::apply_visitor(mg, edm);
   }
 
 }  // namespace detail

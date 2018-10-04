@@ -71,6 +71,31 @@ public:
   /// by the propagator
   struct State
   {
+    /// The Bound representation of this state
+    struct Bound
+    {
+      /// Explicit constructor for the Bound state
+      ///
+      /// @param pars Track parameterisation on the surface
+      /// @param jac  jacobian matrix to this bound state
+      /// @param path path length to this bound state
+      explicit Bound(BoundParameters pars, ActsMatrixD<5, 5> jac, double path)
+        : parameters(std::move(pars))
+        , jacobian(std::move(jac))
+        , pathLength(path)
+      {
+      }
+
+      /// The bound parameters
+      BoundParameters parameters;
+
+      /// The jacobian matrix
+      ActsMatrixD<5, 5> jacobian;
+
+      /// The path length
+      double pathLength;
+    };
+
     /// Constructor from the initial track parameters
     /// @param[in] par The track parameters at start
     /// @param[in] ndir The navigation direciton w.r.t momentum
@@ -128,6 +153,39 @@ public:
     charge() const
     {
       return q;
+    }
+
+    /// Create and return the bound state at the current position
+    ///
+    /// @brief This transports (if necessary) the covariance
+    /// to the surface and creates a bound state
+    ///
+    /// @tparam surface_t The Surface type where this is bound to
+    ///
+    /// @param surface The surface to which we bind the state
+    /// @param reinitiqalize Boolean flag whether reinitialization is needed
+    ///
+    /// @return a bound state
+    template <typename surface_t>
+    Bound
+    bind(const surface_t& surface, bool reinitialize = true)
+    {
+      // Transport the covariance to here
+      std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
+      if (covTransport) {
+        covarianceTransport(surface, reinitialize);
+        covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+      }
+
+      // Create the bound parameters
+      BoundParameters parameters(std::move(covPtr), pos, p * dir, q, surface);
+      // Create the bound state
+      Bound boundState(std::move(parameters), jacobianBound, pathAccumulated);
+      // Reset the jacobian to identity
+      if (reinitialize) {
+        jacobianBound = ActsMatrixD<5, 5>::Identity();
+      }
+      return boundState;
     }
 
     /// Return a corrector
@@ -245,9 +303,9 @@ public:
     /// @note no check is done if the position is actually on the surface
     ///
     /// @return the full transport jacobian
-    template <typename S>
+    template <typename surface_t>
     void
-    covarianceTransport(const S& surface, bool reinitialize = false)
+    covarianceTransport(const surface_t& surface, bool reinitialize = true)
     {
       using VectorHelpers::phi;
       using VectorHelpers::theta;
@@ -281,7 +339,8 @@ public:
         surface.initJacobianToGlobal(jacToGlobal, pos, dir, pars);
       }
       // store in the global jacobian
-      jacobian = jacFull * jacobian;
+      jacobian      = jacFull * jacobian;
+      jacobianBound = jacFull * jacobianBound;
     }
 
     /// Global particle position
@@ -304,8 +363,11 @@ public:
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
-    /// The full jacobian of the transport
+    /// The full jacobian of the transport entire transport
     ActsMatrixD<5, 5> jacobian = ActsMatrixD<5, 5>::Identity();
+
+    /// The partial jacobian of the transport from the last bound state
+    ActsMatrixD<5, 5> jacobianBound = ActsMatrixD<5, 5>::Identity();
 
     /// Jacobian from local to the global frame
     ActsMatrixD<7, 5> jacToGlobal = ActsMatrixD<7, 5>::Zero();
@@ -378,9 +440,9 @@ public:
   ///
   /// @param [in] state Propagation state used
   /// @param [in] surface Destination surface to which the conversion is done
-  template <typename S>
+  template <typename surface_t>
   static BoundParameters
-  convert(State& state, const S& surface, bool reinitialize = false)
+  convert(State& state, const surface_t& surface, bool reinitialize = false)
   {
     std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     // Perform error propagation if an initial covariance matrix was provided
