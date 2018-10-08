@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "DetectorBuilder.hpp"
+#include <fstream>
 
 namespace Acts {
 namespace Test {
@@ -31,7 +32,7 @@ namespace Test {
   ///
   struct EndOfWorld
   {
-
+	/// Maximum value in x-direction of the detector
     double maxX = 2. * units::_m;
 
     /// @brief Constructor
@@ -175,7 +176,7 @@ namespace Test {
       cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0., 0.,
           0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
       auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-      Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
+      Vector3D startParams(0., 0., 0.), startMom(5. * units::_GeV, 0., 0.); // TODO: modified mom
       SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
           std::move(covPtr), startParams, startMom, 1.);
 
@@ -229,6 +230,59 @@ namespace Test {
           BOOST_TEST(c != ActsSymMatrixD<5>::Identity());
         }
       }
+      
+      std::ofstream ofs("out.txt");
+      for(double ss = 0.1; ss < 1; ss += 0.1)
+      {
+		  cov << 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+          0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.;
+		  covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+		  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp2(
+			  std::move(covPtr), startParams, startMom, 1.);
+			  
+		  aList.get<StepActor>().maxStepSize = ss;
+		  aList.get<StepActor>().multipleScattering = false;
+		  propOpts.actionList = aList;
+		  
+		  Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es, naviMat);
+  
+		  const auto& result2 = prop2.propagate(sbtp2, propOpts);
+		  const StepCollector::this_result& stepResult2 = result2.get<typename StepCollector::result_type>();
+		  
+		  for(unsigned int i = stepResult2.position.size() - 1; i > 0; i--)
+			if(stepResult2.position[i].x() <= 1000.)
+			{
+				//~ std::cout << "posx: " << stepResult2.position[i].x() << std::endl;
+				ofs << ss << " " << stepResult2.momentum[i].x() << " " << stepResult2.momentum[i].y() << " " << stepResult2.momentum[i].z() << " " << stepResult2.cov[i](4, 4) << std::endl;
+				break;
+			}
+	  }
+      for(unsigned int ss = 1; ss < 100; ss++)
+      {
+		  cov << 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
+          0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.;
+		  covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+		  SingleCurvilinearTrackParameters<ChargedPolicy> sbtp2(
+			  std::move(covPtr), startParams, startMom, 1.);
+			  
+		  aList.get<StepActor>().maxStepSize = ss;
+		  aList.get<StepActor>().multipleScattering = false;
+		  propOpts.actionList = aList;
+		  
+		  Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es, naviMat);
+  
+		  const auto& result2 = prop2.propagate(sbtp2, propOpts);
+		  const StepCollector::this_result& stepResult2 = result2.get<typename StepCollector::result_type>();
+		  
+		  for(unsigned int i = stepResult2.position.size() - 1; i > 0; i--)
+			if(stepResult2.position[i].x() <= 1000.)
+			{
+				//~ std::cout << "posx: " << stepResult2.position[i].x() << std::endl;
+				ofs << ss << " " << stepResult2.momentum[i].x() << " " << stepResult2.momentum[i].y() << " " << stepResult2.momentum[i].z() << " " << stepResult2.cov[i](4, 4) << std::endl;
+				break;
+			}
+	  }
+	  ofs.close();
       //////////////////////////////////////////////////////////////////
 
       // Re-launch the configuration with magnetic field
@@ -305,7 +359,7 @@ namespace Test {
       propOpts.maxStepSize    = 2. * units::_m;
 
       // Re-configure propagation with B-field
-      ConstantBField               bField(Vector3D(0., 0.5 * units::_T, 0.));
+      ConstantBField               bField(Vector3D(0., 2. * units::_T, 0.));
       EigenStepper<ConstantBField> es(bField);
       Propagator<EigenStepper<ConstantBField>, Navigator> prop(es, naviVac);
 
@@ -317,20 +371,53 @@ namespace Test {
       // Check that the propagation step size is constrained and released
       // properly
       for (unsigned int i = 0; i < stepResult.stepSize.size(); i++) {
-        if (stepResult.position[i].x() < 1. * units::_m)
+        if (stepResult.position[i].x() < 1. * units::_m && std::abs(stepResult.position[i].z()) < 0.5)
           BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
                      == propOpts.maxStepSize);
         if (stepResult.position[i].x() > 1. * units::_m
-            && stepResult.position[i].x() < 2. * units::_m)
+            && stepResult.position[i].x() < 2. * units::_m && std::abs(stepResult.position[i].z()) < 0.5)
           BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
                      == aList.get<StepActor>().maxStepSize);
-        if (stepResult.position[i].x() > 2. * units::_m)
+        if (stepResult.position[i].x() > 2. * units::_m && std::abs(stepResult.position[i].z()) < 0.5)
           BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
                      == propOpts.maxStepSize);
+        std::cout << "pos: " << stepResult.position[i].x() << "\t" << stepResult.position[i].y() << "\t" << stepResult.position[i].z() << std::endl;
       }
+      
+      //~ std::ofstream ofs("out.txt");
+      //~ for(unsigned int ss = 1; ss < 100; ss++)
+      //~ {
+		//~ for(unsigned int mom = 1; mom < 10; mom++)
+		//~ {
+			//~ for(double bfield = 0.5; bfield < 2.5; bfield += 0.1)
+			//~ {
+			  //~ covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+			  //~ startMom = {mom * units::_GeV, 0., 0.};
+			  //~ SingleCurvilinearTrackParameters<ChargedPolicy> sbtp2(
+				  //~ std::move(covPtr), startParams, startMom, 1.);
+				  
+			  //~ aList.get<StepActor>().maxStepSize = ss;
+			  //~ propOpts.actionList = aList;
+			  
+     	      //~ ConstantBField               bField2(Vector3D(0., bfield * units::_T, 0.));
+			  //~ EigenStepper<ConstantBField> es2(bField2);
+			  //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es2, naviVac);
+      
+			  //~ const auto& result2 = prop2.propagate(sbtp2, propOpts);
+			  //~ const StepCollector::this_result& stepResult2 = result2.get<typename StepCollector::result_type>();
+			  
+			  //~ for(unsigned int i = stepResult2.position.size() - 1; i > 0; i--)
+				//~ if(stepResult2.position[i].x() <= 3000.)
+				//~ {
+					//~ std::cout << "posx: " << stepResult2.position[i].x() << std::endl;
+					//~ ofs << ss << " " << mom << " " << bfield << " " << stepResult2.position[i].x() << std::endl;
+					//~ break;
+				//~ }
+			//~ }
+		//~ }  
+	  //~ }
+	  //~ ofs.close();
     }
   }
-  // TODO: Test step size release
-
 }  // namespace Test
 }  // namespace Acts
