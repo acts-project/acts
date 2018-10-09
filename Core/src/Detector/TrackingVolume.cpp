@@ -10,6 +10,7 @@
 // TrackingVolume.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
+#include <functional>
 #include <utility>
 
 #include "Acts/Detector/DetachedTrackingVolume.hpp"
@@ -458,4 +459,29 @@ Acts::TrackingVolume::closeGeometry(
   //       closeGeometry(*(volumesIter->trackingVolume()), &tvol, ++cCounter);
   // }
   //
+}
+
+void
+Acts::TrackingVolume::visitSurfaces(
+    const std::function<void(const Acts::Surface*)>& visitor) const
+{
+  if (!m_confinedVolumes) {
+    // no sub volumes => loop over the confined layers
+    if (m_confinedLayers) {
+      for (const auto& layer : m_confinedLayers->arrayObjects()) {
+        if (layer->surfaceArray() == nullptr) {
+          // no surface array (?)
+          continue;
+        }
+        for (const auto& srf : layer->surfaceArray()->surfaces()) {
+          visitor(srf);
+        }
+      }
+    }
+  } else {
+    // contains sub volumes
+    for (const auto& volume : m_confinedVolumes->arrayObjects()) {
+      volume->visitSurfaces(visitor);
+    }
+  }
 }

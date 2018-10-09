@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include <functional>
 #include <map>
 #include <string>
 #include "Acts/Layers/Layer.hpp"
@@ -273,6 +274,13 @@ public:
   /// Return detached subVolumes - not the ownership
   const DetachedVolumeVector
   confinedDetachedVolumes() const;
+
+  /// @brief Visit all sensitive surfaces
+  ///
+  /// @param visitor The callable. Will be called for each sensitive surface
+  /// that is found
+  void
+  visitSurfaces(const std::function<void(const Acts::Surface*)>& visitor) const;
 
   /// Return unordered subVolumes - not the ownership
   const TrackingVolumeVector

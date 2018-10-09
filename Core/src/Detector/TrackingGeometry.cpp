@@ -10,8 +10,10 @@
 // TrackingGeometry.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Detector/TrackingGeometry.hpp"
+#include <functional>
+
 #include "Acts/Detector/DetachedTrackingVolume.hpp"
+#include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -155,4 +157,11 @@ const Acts::Surface*
 Acts::TrackingGeometry::getBeamline() const
 {
   return m_beam.get();
+}
+
+void
+Acts::TrackingGeometry::visitSurfaces(
+    const std::function<void(const Acts::Surface*)>& visitor) const
+{
+  highestTrackingVolume()->visitSurfaces(visitor);
 }
