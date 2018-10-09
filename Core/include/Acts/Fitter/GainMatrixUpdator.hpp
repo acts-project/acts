@@ -34,6 +34,8 @@ public:
 
   /// Explicit constructor
   ///
+  /// @param calibrator is the calibration struct/class that converts
+  /// uncalibrated measurements into calibrated ones
   GainMatrixUpdator(calibrator_t calibrator = calibrator_t())
     : m_mCalibrator(std::move(calibrator))
   {
@@ -44,10 +46,10 @@ public:
   ///
   /// @return The optional parameters - indicating if the update happened
   template <typename track_state_t>
-  const parameters_t*
+  boost::optional<parameters_t>
   operator()(track_state_t& m, predicted_state_t predicted) const
   {
-    GainMatrixUpdatorImpl impl(m_mCalibrator, predicted);
+    GainMatrixUpdatorImpl impl(m_mCalibrator, std::move(predicted));
     return boost::apply_visitor(impl, m);
   }
 
@@ -57,12 +59,14 @@ private:
 
   /// @brief GainMatrix updator implementation
   struct GainMatrixUpdatorImpl
-      : public boost::static_visitor<const parameters_t*>
+      : public boost::static_visitor<boost::optional<parameters_t>>
   {
   public:
     /// @brief Explicit constructor of the GainMatrix updator
     ///
-    /// @param pars The predicted parameters
+    /// @param calibrator The calibration struct/class that converts
+    /// uncalibrated measurements into calibrated ones
+    /// @param predictedState The tuple of predicted parameters, jacobian, path
     explicit GainMatrixUpdatorImpl(const calibrator_t& calibrator,
                                    predicted_state_t   predictedState)
       : m_mCalibrator(&calibrator), m_pState(std::move(predictedState))
@@ -78,7 +82,7 @@ private:
     ///
     /// @return The filtered parameters
     template <typename track_state_t>
-    const parameters_t*
+    boost::optional<parameters_t>
     operator()(track_state_t& trackState) const
     {
       // Covariance matrix initialization
@@ -116,9 +120,6 @@ private:
           newParValues,
           predicted.referenceSurface());
 
-      // Prepare the return parameters pointers
-      const parameters_t* filteredPtr = &filtered;
-
       // Set (and move) everything
       trackState.measurement.calibrated = std::move(cMeasurement);
       trackState.parametric.predicted   = std::move(predicted);
@@ -127,8 +128,8 @@ private:
           = std::move(std::get<jacobian_t>(m_pState));
       trackState.parametric.pathLength = std::get<double>(m_pState);
 
-      // Return the pointer for stepping update
-      return filteredPtr;
+      // Return the optional filtered state
+      return trackState.parametric.filtered;
     }
 
   private:

@@ -189,17 +189,12 @@ private:
       auto trackState = result.fittedStates[cindexItr->second];
       // Perform the update and obtain the filtered parameters
       auto filteredPars = m_updator(trackState, std::move(boundState));
-
       // If the update is successful, set covariance and
       if (filteredPars) {
-        const auto& pos = filteredPars->position();
-        const auto& mom = filteredPars->momentum();
-        state.stepping.update(pos, mom.normalized(), mom.norm());
-        state.stepping.cov = *(filteredPars->covariance());
+        state.stepping.update(filteredPars.get());
       }
       // We count the processed state
       ++result.processedStates;
-
     } else if (surface->associatedDetectorElement()) {
       // Count the missed surface
       result.missedActiveSurfaces.push_back(surface);
@@ -223,10 +218,7 @@ private:
     auto smoothedPars = m_smoother(result.fittedStates);
     // Update the stepping parameters - in order to progress to destination
     if (smoothedPars) {
-      const auto& pos = smoothedPars->position();
-      const auto& mom = smoothedPars->momentum();
-      state.stepping.update(pos, mom.normalized(), mom.norm());
-      state.stepping.cov = *(smoothedPars->covariance());
+      state.stepping.update(smoothedPars.get());
     }
     // Set the destination surface - we should re-do the navigation
   }

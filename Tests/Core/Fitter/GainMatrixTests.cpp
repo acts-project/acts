@@ -9,6 +9,7 @@
 #include <memory>
 
 #define BOOST_TEST_MODULE GainMatrix Tests
+#include <boost/optional/optional_io.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 #include "Acts/EventData/Measurement.hpp"
@@ -33,7 +34,7 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {
-    // make dummy measurement
+    // Make dummy measurement
     CylinderSurface cylinder(nullptr, 3, 10);
 
     ActsSymMatrixD<2> cov;
@@ -41,7 +42,7 @@ namespace Test {
     VariantState mState = MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
         cylinder, 0, std::move(cov), -0.1, 0.45);
 
-    // make dummy track parameter
+    // Make dummy track parameter
     ActsSymMatrixD<Acts::NGlobalPars> covTrk;
     covTrk << 0.08, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,
         0, 0, 0, 0, 1;
@@ -56,8 +57,8 @@ namespace Test {
         std::move(pars), ActsMatrixD<5, 5>::Identity(), 0.);
     // Gain matrix update and filtered state
     GainMatrixUpdator<BoundParameters, Jacobian> gmu;
-    const BoundParameters* filtered = gmu(mState, bState);
-    BOOST_TEST(filtered != nullptr);
+    auto filteredPars = gmu(mState, bState);
+    BOOST_TEST(filteredPars);
   }
 
 }  // namespace Test

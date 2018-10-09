@@ -139,9 +139,9 @@ public:
     /// @tparam surface_t The Surface type where this is bound to
     ///
     /// @param surface The surface to which we bind the state
-    /// @param reinitiqalize Boolean flag whether reinitialization is needed
+    /// @param reinitialize Boolean flag whether reinitialization is needed
     ///
-    /// @return A bound state: the jacobian towards it, and the path length
+    /// @return A bBund state: the jacobian towards it, and the path length
     template <typename surface_t>
     std::tuple<BoundParameters, ActsMatrixD<5, 5>, double>
     bind(const surface_t& surface, bool reinitialize = true)
@@ -170,6 +170,19 @@ public:
     corrector() const
     {
       return corrector_t(startPos, startDir, pathAccumulated);
+    }
+
+    /// Method to update the stepper to the some parameters
+    void
+    update(const BoundParameters& pars)
+    {
+      const auto& mom = pars.momentum();
+      pos             = pars.position();
+      dir             = mom.normalized();
+      p               = mom.norm();
+      if (pars.covariance() != nullptr) {
+        cov = (*(pars.covariance()));
+      }
     }
 
     /// Method to update momentum, direction and p

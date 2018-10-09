@@ -17,6 +17,7 @@ namespace Acts {
 
 /// @brief Kalman smoother implementation based on Gain matrix formalism
 ///
+///
 /// @tparam parameters_t Type of the track parameters
 /// @tparam jacobian_t Type of the Jacobian
 template <typename parameters_t, typename jacobian_t>
@@ -27,7 +28,7 @@ public:
   /// @todo write documentation
 
   template <typename track_states_t>
-  const parameters_t*
+  boost::optional<parameters_t>
   operator()(track_states_t& filteredStates) const
   {
     // The reverse iteration
@@ -78,7 +79,7 @@ public:
       lState = cState;
     }
     // The result is the pointer to the last smoothed state - for the cache
-    return (&lState.smoothed.get());
+    return lState.smoothed;
   }
 };
 }
