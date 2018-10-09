@@ -30,7 +30,7 @@ namespace detail {
     /// Explicit constructor
     ///
     /// @param psType Type of the TrackState
-    explicit ParametersGetter(StateType psType) : sType(psType) {}
+    explicit ParametersGetter(ParametericType psType) : sType(psType) {}
 
     /// @brief Call operator for parameters extraction using the boost visitor
     /// pattern
@@ -43,15 +43,15 @@ namespace detail {
     {
       switch (sType) {
       case predicted:
-        return edm.predictedState;
-      case updated:
-        return edm.updatedState;
+        return edm.parametric.predicted;
+      case filtered:
+        return edm.parametric.filtered;
       default:
-        return edm.smoothedState;
+        return edm.parametric.smoothed;
       }
     }
     /// The state type for the retrieving
-    StateType sType = StateType::predicted;
+    ParametericType sType = ParametericType::predicted;
   };
 
   /// @brief Visitor pattern to extract the surface
@@ -64,7 +64,7 @@ namespace detail {
     /// Explicit constructor
     ///
     /// @pram psType Type of the TrackState
-    explicit ParametersSetter(parameters_t pars, StateType psType)
+    explicit ParametersSetter(parameters_t pars, ParametericType psType)
       : sParameters(std::move(pars)), sType(psType)
     {
     }
@@ -80,21 +80,60 @@ namespace detail {
     {
       switch (sType) {
       case predicted:
-        edm.predictedState = std::move(sParameters);
+        edm.parametric.predicted = std::move(sParameters);
         break;
-      case updated:
-        edm.updatedState = std::move(sParameters);
+      case filtered:
+        edm.parametric.filtered = std::move(sParameters);
         break;
       default:
-        edm.smoothedState = std::move(sParameters);
+        edm.parametric.smoothed = std::move(sParameters);
       }
     }
     /// The parameters that will be moved into the track state
     parameters_t sParameters;
 
-    /// The type of state that will be updated
-    StateType sType = StateType::predicted;
+    /// The type of state that will be filtered
+    ParametericType sType = ParametericType::predicted;
   };
+
+  /// @brief Visitor pattern to extract the optional boost parameter
+  ///
+  /// @tparam parametric_state_t the bound parametric state
+  template <typename parametric_state_t>
+  struct ParametricStateGetter
+      : public boost::static_visitor<parametric_state_t&>
+  {
+  public:
+    /// Explicit constructor
+    explicit ParametricStateGetter() {}
+
+    /// @brief Call operator for extracting the parameteric_state_t
+    ///
+    /// @tparam track_state_t Type of the measurement object (templated)
+    /// @tparam parametric_state_t Type of the parameteric state
+    ///
+    /// @param edm The edm object for which the parameters will be extracted
+    template <typename track_state_t>
+    parametric_state_t&
+    operator()(track_state_t& edm) const
+    {
+      return edm.parametric;
+    }
+  };
+
+  /// @brief get parametric state with a visitor pattern
+  ///
+  /// @tparam parametric_state_t Type of the parameteric state
+  ///
+  /// @param edm The edm object for which the parameters will be extracted
+  template <typename parametric_state_t, BOOST_VARIANT_ENUM_PARAMS(typename T)>
+  parametric_state_t&
+  parametricState(boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm)
+  {
+    static const ParametricStateGetter<parametric_state_t> psg
+        = ParametricStateGetter<parametric_state_t>();
+    return boost::apply_visitor(psg, edm);
+  }
 
   /// @brief get method to be used with the visitor pattern
   ///
@@ -104,7 +143,7 @@ namespace detail {
   template <typename parameters_t, BOOST_VARIANT_ENUM_PARAMS(typename T)>
   boost::optional<parameters_t>
   getParamaters(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm,
-                StateType                                           sType)
+                ParametericType                                     sType)
   {
     ParametersGetter<parameters_t> pg(sType);
     return boost::apply_visitor(pg, edm);
@@ -119,7 +158,7 @@ namespace detail {
   void
   setParameters(boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm,
                 parameters_t                                  pars,
-                StateType                                     sType)
+                ParametericType                               sType)
   {
     ParametersSetter<parameters_t> ps(std::move(pars), sType);
     return boost::apply_visitor(ps, edm);
@@ -149,9 +188,9 @@ namespace detail {
     {
       switch (mType) {
       case uncalibrated:
-        return edm.measurement;
+        return edm.measurement.uncalibrated;
       default:
-        return edm.calibratedMeasurement;
+        return edm.measurement.calibrated;
       }
     }
     /// The state type for the retrieving
@@ -166,10 +205,35 @@ namespace detail {
   template <typename measurement_t, BOOST_VARIANT_ENUM_PARAMS(typename T)>
   boost::optional<measurement_t>
   getMeasurement(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm,
-                 StateType                                           mType)
+                 ParametericType                                     mType)
   {
     MeasurementGetter<measurement_t> mg(mType);
     return boost::apply_visitor(mg, edm);
+  }
+
+  /// @ brief visitor pattern to extract the path length
+  ///
+  struct PathLengthGetter : public boost::static_visitor<double>
+  {
+  public:
+    /// @brief call operator for surface extraction using the boost visitor
+    /// pattern
+    /// @tparam measurement_t Type of the measurement (templated)
+    /// @param m The measurement for which the surface will be extracted
+    template <typename edm_object_t>
+    double
+    operator()(const edm_object_t& edm) const
+    {
+      return edm.parametric.pathLength;
+    }
+  };
+
+  template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
+  double
+  getPathLength(const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm)
+  {
+    static const PathLengthGetter plg = PathLengthGetter();
+    return boost::apply_visitor(plg, edm);
   }
 
 }  // namespace detail

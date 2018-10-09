@@ -95,8 +95,6 @@ public:
     auto trackStates = m_inputConverter(measurements);
     // Run the forward filter as plugin to the Propagator
 
-    // Apply the smoothing
-
     // Return the converted Track
     return m_outputConverter(trackStates);
   }

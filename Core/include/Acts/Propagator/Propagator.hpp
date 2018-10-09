@@ -414,8 +414,8 @@ public:
     TargetAborters targetAborters;
 
     // Initialize the internal propagator state
-    using StateType = State<parameters_t, OptionsType, TargetAborters>;
-    StateType state(start, options, targetAborters);
+    using ParametericType = State<parameters_t, OptionsType, TargetAborters>;
+    ParametericType state(start, options, targetAborters);
 
     // Apply the loop protection - it resets the internal path limit
     if (options.loopProtection) {
@@ -493,8 +493,8 @@ public:
     TargetAborters targetAborters;
 
     // Initialize the internal propagator state
-    using StateType = State<parameters_t, OptionsType, TargetAborters>;
-    StateType state(start, options, targetAborters);
+    using ParametericType = State<parameters_t, OptionsType, TargetAborters>;
+    ParametericType state(start, options, targetAborters);
     state.navigation.targetSurface = &target;
 
     // Apply the loop protection, it resets the interal path limit

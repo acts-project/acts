@@ -201,9 +201,11 @@ public:
     decltype(it) pLast = it++;
     // loop over the remaining caches
     for (; it != cache.rend(); ++it, ++pLast) {
+      /// Gain smoothing matrix
       G = (*(*it)->getFilteredState()->covariance())
           * (*(*it)->getJacobian()).transpose()
           * (*(*pLast)->getPredictedState()->covariance()).inverse();
+      // Calculate the smoo
       smoothedPars = (*it)->getFilteredState()->parameters()
           + G * ((*pLast)->getSmoothedState()->parameters()
                  - (*pLast)->getPredictedState()->parameters());
@@ -212,7 +214,7 @@ public:
                  - *(*pLast)->getSmoothedState()->covariance())
               * G.transpose();
 
-      // create smoothed track parameters
+      // Create smoothed track parameters
       pSmoothed = std::make_unique<const BoundParameters>(
           std::make_unique<const decltype(smoothedCov)>(std::move(smoothedCov)),
           smoothedPars,

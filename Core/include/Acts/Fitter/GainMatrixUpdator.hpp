@@ -12,6 +12,7 @@
 #include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -22,15 +23,18 @@ namespace Acts {
 /// This is implemented as a boost vistor pattern for use of the
 /// boost variant container
 template <typename parameters_t,
-          typename predicted_state_t,
-          typename calibrator_t>
+          typename jacobian_t,
+          typename calibrator_t = VoidKalmanComponents>
 class GainMatrixUpdator
 {
 
 public:
+  // Shortand
+  using predicted_state_t = std::tuple<parameters_t, jacobian_t, double>;
+
   /// Explicit constructor
   ///
-  GainMatrixUpdator(calibrator_t calibrator)
+  GainMatrixUpdator(calibrator_t calibrator = calibrator_t())
     : m_mCalibrator(std::move(calibrator))
   {
   }
@@ -51,6 +55,7 @@ private:
   /// The calibrator
   calibrator_t m_mCalibrator;
 
+  /// @brief GainMatrix updator implementation
   struct GainMatrixUpdatorImpl
       : public boost::static_visitor<const parameters_t*>
   {
@@ -71,7 +76,7 @@ private:
     ///
     /// @todo Include the incremental chi-2 here or do some outlier steering ?
     ///
-    /// @return The updated parameters
+    /// @return The filtered parameters
     template <typename track_state_t>
     const parameters_t*
     operator()(track_state_t& trackState) const
@@ -81,11 +86,11 @@ private:
           = ActsSymMatrixD<Acts::NGlobalPars>::Identity();
 
       // Predicated Parameters
-      const auto& predicted = m_pState.parameters;
-      const auto& jacobian  = m_pState.jacobian;
+      const auto& predicted = std::get<parameters_t>(m_pState);
 
       // Calibrate the measurement
-      auto cMeasurement = m_calibrator(trackState.measurement.get(), predicted);
+      auto cMeasurement = (*m_mCalibrator)(
+          trackState.measurement.uncalibrated.get(), predicted);
       const auto* pCov_trk = predicted.covariance();
 
       // Take the projector (measurement mapping function)
@@ -104,33 +109,34 @@ private:
       // New covaraincd after update
       typename parameters_t::CovMatrix_t newCov = (unit - K * H) * (*pCov_trk);
 
-      // Create a new updated parameters and covariance
-      parameters_t updated(
+      // Create a new filtered parameters and covariance
+      parameters_t filtered(
           std::make_unique<const typename parameters_t::CovMatrix_t>(
               std::move(newCov)),
           newParValues,
           predicted.referenceSurface());
 
       // Prepare the return parameters pointers
-      const parameters_t* updatedPtr = &updated;
+      const parameters_t* filteredPtr = &filtered;
 
-      // Set & move everything
-      trackState.calibratedMeasurement = std::move(cMeasurement);
-      trackState.predicted             = std::move(m_pState.parameters);
-      trackState.updated               = std::move(updated);
-      trackState.jacobian              = std::move(m_pState.jacobian);
-      trackState.pathLength            = m_pState.pathLength;
+      // Set (and move) everything
+      trackState.measurement.calibrated = std::move(cMeasurement);
+      trackState.parametric.predicted   = std::move(predicted);
+      trackState.parametric.filtered    = std::move(filtered);
+      trackState.parametric.jacobian
+          = std::move(std::get<jacobian_t>(m_pState));
+      trackState.parametric.pathLength = std::get<double>(m_pState);
 
       // Return the pointer for stepping update
-      return updatedPtr;
+      return filteredPtr;
     }
 
   private:
-    /// Predicted state (parameters, jacobian, path)
-    predicted_state_t m_pState;
-
     /// The Calibator
     const calibrator_t* m_mCalibrator;
+
+    /// Predicted state (parameters, jacobian, path)
+    predicted_state_t m_pState;
   };
 };
 

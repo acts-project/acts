@@ -13,6 +13,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/EventData/detail/surface_getter.hpp"
+#include "Acts/EventData/detail/trackstate_manipulation.hpp"
+#include "Acts/EventData/detail/trackstate_sorters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
@@ -26,9 +28,9 @@ namespace Test {
   template <ParID_t... params>
   using MeasurementType = Measurement<Identifier, params...>;
   template <ParID_t... params>
-  using MeasuredState
+  using MeasuredTrackState
       = MeasuredTrackState<Identifier, BoundParameters, Jacobian, params...>;
-  using ParametricState
+  using ParametricTrackState
       = ParametricTrackState<Identifier, BoundParameters, Jacobian>;
   using VariantState = VariantTrackState<Identifier, BoundParameters, Jacobian>;
   ///
@@ -44,6 +46,7 @@ namespace Test {
     ActsSymMatrixD<1> cov1D;
     cov1D << 0.04;
     MeasurementType<ParDef::eLOC_0> m1D(plane, 0, std::move(cov1D), 0.02);
+
     // Construct the 2D measurement
     ActsSymMatrixD<2> cov2D;
     cov2D << 0.04, 0., 0.09, 0.;
@@ -51,9 +54,11 @@ namespace Test {
         plane, 0, std::move(cov2D), 0.02, 0.03);
 
     // The 1D track state from the measurement
-    VariantState mts1D = MeasuredState<ParDef::eLOC_0>(m1D);
+    VariantState mts1D = MeasuredTrackState<ParDef::eLOC_0>(m1D);
+
     // The 2D track state from the measurement
-    VariantState mts2D = MeasuredState<ParDef::eLOC_0, ParDef::eLOC_1>(m2D);
+    VariantState mts2D
+        = MeasuredTrackState<ParDef::eLOC_0, ParDef::eLOC_1>(m2D);
 
     // Construct the parameter
     std::array<double, 5> pars_array = {{-0.1234, 9.8765, 0.45, 0.888, 0.001}};
@@ -61,11 +66,11 @@ namespace Test {
     pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
         pars_array[4];
 
-    // constructor from parameter vector
+    // constructor from parameter vector: predicted filtered, smoothed
     BoundParameters ataPlane(nullptr, pars, plane);
 
     // The parametric track state from the parameters
-    VariantState pts = ParametricState(std::move(ataPlane));
+    VariantState pts = ParametricTrackState(std::move(ataPlane));
 
     std::vector<VariantState> trackStates
         = {std::move(m1D), std::move(m2D), std::move(pts)};
@@ -78,7 +83,7 @@ namespace Test {
       BOOST_TEST(sf != nullptr);
     }
 
-    // Create predicted, updated and smoothed parameters
+    // Create predicted, filtered and smoothed parameters
     BoundParameters ataPlaneUpdt(nullptr, pars, plane);
     BoundParameters ataPlanePred(nullptr, pars, plane);
     BoundParameters ataPlaneSmth(nullptr, pars, plane);
@@ -91,7 +96,7 @@ namespace Test {
 
     // Check that the other parameters are empty
     auto ataPlanefListUpdt
-        = detail::getParamaters<BoundParameters>(ptsfList, updated);
+        = detail::getParamaters<BoundParameters>(ptsfList, filtered);
     BOOST_TEST(!ataPlanefListUpdt);
 
     auto ataPlanefListSmthd
@@ -102,9 +107,9 @@ namespace Test {
     auto& m2DfList = trackStates[1];
 
     detail::setParameters<BoundParameters>(
-        m2DfList, std::move(ataPlaneUpdt), updated);
+        m2DfList, std::move(ataPlaneUpdt), filtered);
     auto ataPlanefListUpdtM2D
-        = detail::getParamaters<BoundParameters>(m2DfList, updated);
+        = detail::getParamaters<BoundParameters>(m2DfList, filtered);
     BOOST_TEST(ataPlanefListUpdtM2D);
 
     detail::setParameters<BoundParameters>(
@@ -112,6 +117,34 @@ namespace Test {
     auto ataPlanefListPred2D
         = detail::getParamaters<BoundParameters>(m2DfList, predicted);
     BOOST_TEST(ataPlanefListPred2D);
+
+    // Test the sorting helper
+    ParametricTrackState surfacePlaneAt2(&plane);
+    surfacePlaneAt2.parametric.pathLength = 2.;
+
+    BoundParameters      ataPlaneAt1(nullptr, pars, plane);
+    ParametricTrackState ataPlaneState1(std::move(ataPlaneAt1));
+    ataPlaneState1.parametric.pathLength = 1.;
+
+    std::vector<VariantState> undorderedStates
+        = {std::move(surfacePlaneAt2), std::move(ataPlaneState1)};
+
+    // Sort the varaint track state
+    detail::path_length_sorter plSorter;
+    std::sort(undorderedStates.begin(), undorderedStates.end(), plSorter);
+
+    auto   firstOrdered   = undorderedStates[0];
+    double fistPathLength = detail::getPathLength(firstOrdered);
+    BOOST_TEST(fistPathLength == 1.);
+
+    auto   secondOrdered    = undorderedStates[1];
+    double secondPathLength = detail::getPathLength(secondOrdered);
+    BOOST_TEST(secondPathLength == 2.);
+
+    using ParState = ParametricState<BoundParameters, Jacobian>;
+    auto& pState   = detail::parametricState<ParState>(firstOrdered);
+
+    BOOST_TEST(pState.pathLength == 1.);
   }
 
 }  // namespace Test

@@ -16,6 +16,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Fitter/GainMatrixSmoother.hpp"
+#include "Acts/Fitter/GainMatrixUpdator.hpp"
 #include "Acts/Fitter/KalmanActor.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
 #include "Acts/Fitter/KalmanSequencer.hpp"
@@ -121,17 +123,22 @@ namespace Test {
     // The 2D track state from the measurement
     VariantState mPlane9 = MeasuredState<ParDef::eLOC_0, ParDef::eLOC_1>(m2D);
 
+    using KalmanUpdator  = GainMatrixUpdator<BoundParameters, Jacobian>;
+    using KalmanSmoother = GainMatrixSmoother<BoundParameters, Jacobian>;
+    using KalmanActor
+        = KalmanActor<KalmanTrackStates, KalmanUpdator, KalmanSmoother>;
+
     // Create the track states
-    KalmanTrackStates              tStates = {mPlane7a, mPlane7b, mPlane9};
-    KalmanActor<KalmanTrackStates> kalmanActor;
+    KalmanTrackStates tStates = {mPlane7a, mPlane7b, mPlane9};
+    KalmanActor       kalmanActor;
     kalmanActor.trackStates = std::move(tStates);
 
     CurvilinearParameters cPars(
         nullptr, Vector3D(0., 0., 0.), Vector3D(0., 0., 0.), -1.);
 
     // The call objects
-    PropagatorState<CurvilinearParameters>      propState(cPars);
-    KalmanActor<KalmanTrackStates>::result_type kalmanActorResult;
+    PropagatorState<CurvilinearParameters> propState(cPars);
+    KalmanActor::result_type               kalmanActorResult;
     kalmanActor(propState, kalmanActorResult);
 
     // Test that the fittedStates are now in the result

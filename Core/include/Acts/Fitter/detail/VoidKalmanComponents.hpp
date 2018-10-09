@@ -10,7 +10,7 @@
 
 namespace Acts {
 
-/// @brief void measurement calibrator
+/// @brief void Measurement calibrator and converter
 struct VoidKalmanComponents
 {
   /// @brief Public call mimicking a calibrator
@@ -46,21 +46,40 @@ struct VoidKalmanComponents
 };
 
 /// @brief void Kalman updator
-/// @brief void measurement calibrator
 struct VoidKalmanUpdator
 {
   /// @brief Public call mimicking an updator
   ///
   /// @tparam measurement_t Type of the measurement to be used
+  /// @tpredicted_state_t Type of the (bound) predicted state
+  ///
   /// @param m The measurement
   /// @param pars The predicted parameters
   ///
   /// @return The copied predicted parameters
   template <typename track_state_t, typename predicted_state_t>
   auto
-  operator()(track_state_t& m, predicted_state_t predicted) const
+  operator()(track_state_t& /*m*/, const predicted_state_t& predicted) const
   {
     return &(predicted.parameters);
+  }
+};
+
+/// @brief void Kalman smoother
+struct VoidKalmanSmoother
+{
+  /// @brief Public call mimicking an updator
+  ///
+  /// @tparam track_states_t Type of thetrack states
+  ///
+  /// @param states The track states to be smoothed
+  ///
+  /// @return The resulting
+  template <typename parameters_t, typename track_states_t>
+  const parameters_t*
+  operator()(track_states_t& /*states*/) const
+  {
+    return nullptr;
   }
 };
 

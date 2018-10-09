@@ -71,30 +71,6 @@ public:
   /// by the propagator
   struct State
   {
-    /// The Bound representation of this state
-    struct Bound
-    {
-      /// Explicit constructor for the Bound state
-      ///
-      /// @param pars Track parameterisation on the surface
-      /// @param jac  jacobian matrix to this bound state
-      /// @param path path length to this bound state
-      explicit Bound(BoundParameters pars, ActsMatrixD<5, 5> jac, double path)
-        : parameters(std::move(pars))
-        , jacobian(std::move(jac))
-        , pathLength(path)
-      {
-      }
-
-      /// The bound parameters
-      BoundParameters parameters;
-
-      /// The jacobian matrix
-      ActsMatrixD<5, 5> jacobian;
-
-      /// The path length
-      double pathLength;
-    };
 
     /// Constructor from the initial track parameters
     /// @param[in] par The track parameters at start
@@ -165,9 +141,9 @@ public:
     /// @param surface The surface to which we bind the state
     /// @param reinitiqalize Boolean flag whether reinitialization is needed
     ///
-    /// @return a bound state
+    /// @return A bound state: the jacobian towards it, and the path length
     template <typename surface_t>
-    Bound
+    std::tuple<BoundParameters, ActsMatrixD<5, 5>, double>
     bind(const surface_t& surface, bool reinitialize = true)
     {
       // Transport the covariance to here
@@ -176,15 +152,16 @@ public:
         covarianceTransport(surface, reinitialize);
         covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
       }
-
       // Create the bound parameters
       BoundParameters parameters(std::move(covPtr), pos, p * dir, q, surface);
       // Create the bound state
-      Bound boundState(std::move(parameters), jacobianBound, pathAccumulated);
+      auto boundState = std::tuple<BoundParameters, ActsMatrixD<5, 5>, double>(
+          std::move(parameters), std::move(jacobianBound), pathAccumulated);
       // Reset the jacobian to identity
       if (reinitialize) {
         jacobianBound = ActsMatrixD<5, 5>::Identity();
       }
+      /// State
       return boundState;
     }
 
@@ -338,7 +315,7 @@ public:
         pars << loc[eLOC_0], loc[eLOC_1], phi(dir), theta(dir), q / p;
         surface.initJacobianToGlobal(jacToGlobal, pos, dir, pars);
       }
-      // store in the global jacobian
+      // Store The global jacobian (duplication for the moment)
       jacobian      = jacFull * jacobian;
       jacobianBound = jacFull * jacobianBound;
     }

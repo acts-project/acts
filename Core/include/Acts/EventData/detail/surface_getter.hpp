@@ -25,7 +25,7 @@ namespace detail {
   public:
     /// @brief call operator for surface extraction using the boost visitor
     /// pattern
-    /// @tparam measurement_t Type of the measurement (templated)
+    /// @tparam edm_object_t Type of the measurement (templated)
     /// @param m The measurement for which the surface will be extracted
     template <typename edm_object_t>
     const Surface&
