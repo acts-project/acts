@@ -11,10 +11,14 @@
 #include <boost/variant.hpp>
 #include <memory>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/trackstate_manipulation.hpp"
 
 namespace Acts {
 
-/// @brief Kalman smoother to work on track states
+/// @brief Kalman smoother implementation based on Gain matrix formalism
+///
+/// @tparam parameters_t Type of the track parameters
+/// @tparam jacobian_t Type of the Jacobian
 template <typename parameters_t, typename jacobian_t>
 class GainMatrixSmoother
 {
