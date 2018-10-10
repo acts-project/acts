@@ -81,7 +81,7 @@ namespace Test {
     for (auto& ts : trackStates) {
       const Surface* sf = &(detail::getSurface(ts));
       bool           surfaceExists(sf != nullptr);
-      BOOST_TEST(sf != nullptr);
+      BOOST_TEST(surfaceExists);
     }
 
     // Create predicted, filtered and smoothed parameters
