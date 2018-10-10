@@ -104,7 +104,8 @@ namespace Test {
     double   q  = dcharge;
     Vector3D pos(x, y, z);
     Vector3D mom(px, py, pz);
-    /// a covariance matrix to transport
+
+    /// A covariance matrix to transport
     CurvilinearParameters start(nullptr, pos, mom, q);
 
     // Debug output
@@ -129,8 +130,6 @@ namespace Test {
                 << std::endl;
       std::cout << kalmanSequencerOutput.debugString << std::endl;
     }
-
-    BOOST_TEST(status.endParameters != nullptr);
     BOOST_TEST(status.endParameters->position().norm() < 0.25);
   }
 
