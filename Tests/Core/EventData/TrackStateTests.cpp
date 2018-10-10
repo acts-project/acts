@@ -80,7 +80,7 @@ namespace Test {
     // Test to extract the surface of these guys
     for (auto& ts : trackStates) {
       const Surface* sf = &(detail::getSurface(ts));
-      bool surfaceExists(sf != nullptr);
+      bool           surfaceExists(sf != nullptr);
       BOOST_TEST(sf != nullptr);
     }
 
