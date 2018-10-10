@@ -61,6 +61,9 @@ namespace detail {
   struct ParametersSetter : public boost::static_visitor<void>
   {
   public:
+    /// Default constructor is deleted
+    ParametersSetter() = delete;
+
     /// Explicit constructor
     ///
     /// @pram psType Type of the TrackState
