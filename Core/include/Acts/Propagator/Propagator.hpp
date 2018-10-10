@@ -414,8 +414,8 @@ public:
     TargetAborters targetAborters;
 
     // Initialize the internal propagator state
-    using ParametericType = State<parameters_t, OptionsType, TargetAborters>;
-    ParametericType state(start, options, targetAborters);
+    using StateType = State<parameters_t, OptionsType, TargetAborters>;
+    StateType state(start, options, targetAborters);
 
     // Apply the loop protection - it resets the internal path limit
     if (options.loopProtection) {
