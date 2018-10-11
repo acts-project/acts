@@ -16,6 +16,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 
 namespace Acts {
 
@@ -415,19 +416,30 @@ public:
     return std::move(state.fieldCache.getField(pos));
   }
 
-// TODO
-double dEds(double momentum)
+/// @brief This function calculates the energy loss dE per path length ds of a particle through material. The energy loss consists of ionisation and radiation.
+///
+/// @tparam material_t Type of the material
+/// @param [in] momentum Initial momentum of the particle
+/// @param [in] energy Initial energy of the particle
+/// @param [in] mass Mass of the particle
+/// @param [in] material Penetrated material
+/// @return Infinitesimal energy loss
+template<typename material_t>
+double dEds(const double momentum, const double energy, const double mass, const material_t material)
 {
-  m_delIoni = 0.; m_delRad = 0.; m_kazL = 0.;
-  if (m_material->x0()==0 || m_material->averageZ()==0) return 0.; 
+	// Easy exit if material is invalid
+  if (material.X0() == 0 || material.Z() == 0) return 0.; 
 
-  double m_delIoni = m_matInt.dEdl_ionization(p, m_material, m_particle, m_sigmaIoni, m_kazL);    
+	// Calculate energy loss by
+	// a) ionisation
+  double ionisationEnergyLoss = energyLoss(m, lbeta, lgamma, material);
 
-  m_delRad  = m_matInt.dEdl_radiation(p, m_material, m_particle, m_sigmaRad);
+	// b) radiation
+  // TODO: There doesn't radiate anything
+  double radiationEnergyLoss = 0.;
 
-  double eLoss = m_MPV ? 0.9*m_delIoni + 0.15*m_delRad : m_delIoni + m_delRad;
-
-  return eLoss;
+	// return sum of contributions
+  return ionisationEnergyLoss + radiationEnergyLoss;
 }
 // TODO
 double dgdl(double qop)
@@ -702,6 +714,8 @@ double momentumCutOff = 0.;
 private:
   /// Magnetic field inside of the detector
   BField m_bField;
+  
+  detail::IonisationLoss energyLoss;
 };
 
 }  // namespace Acts
