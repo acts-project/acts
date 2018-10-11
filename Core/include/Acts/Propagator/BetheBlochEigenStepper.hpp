@@ -525,7 +525,7 @@ double dgdqop(const double energy, const double qop, const double mass, const ma
   step(State& state) const
   {
 bool energyLoss = true;
-bool material = true;
+bool material = true; // TODO: how to pass this?
 bool includeGgradient = true;
 std::array<double, 4> dL, qop, dP;
 double dgdqop = 0.;
@@ -545,14 +545,19 @@ double g;
     const Vector3D B_first = getField(state, state.pos);
     const Vector3D k1      = qop[0] * state.dir.cross(B_first); // TODO: athena multiplies c to that expression
 
+	// Calculate the energy loss
   if (energyLoss && material) {
-    g = dEds(momentum); //Use the same energy loss throughout the step.
-    double E = std::sqrt(momentum * momentum + state.mass * state.mass);
+	double E = std::sqrt(momentum * momentum + state.mass * state.mass);
+	// Use the same energy loss throughout the step.
+    g = dEds(momentum, E, state.mass, material); 
+    // Change of the momentum per path length
     dP[0] = g * E / momentum;
     if (state.covTransport) {
+		// Calculate the change of the the energy loss per path length and inverse momentum
       if (includeGgradient) {
-        dgdqop = dgdqop(qop); //Use this value throughout the step.
+        dgdqop = dgdqop(E, qop[0], state.mass, material); //Use this value throughout the step.
       }
+      
       dL[0] = -qop[0] * qop[0] * g * E * (3. - (momentum * momentum)/(E * E)) - qop[0] * qop[0] * qop[0] * E * dgdqop;
     }
   }
@@ -571,11 +576,13 @@ double g;
       
      // Second Runge-Kutta point
     if (energyLoss && material) {
+		// Update parameters related to a changed momentum
       momentum = initialMomentum + h * 0.5 * dP[0];
       //~ if (momentum <= momentumCutOff) return false; //Abort propagation
       double E = std::sqrt(momentum * momentum + state.mass * state.mass);
       dP[1] = g * E / momentum;
       qop[1] = state.q / momentum;
+      // Calculate term for later error propagation
       if (state.covTransport) {
         dL[1] = -qop[1] * qop[1] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[1] * qop[1] * qop[1] * E * dgdqop;
       }
@@ -587,11 +594,13 @@ double g;
 
       // Third Runge-Kutta point
     if (energyLoss && material) {
+		// Update parameters related to a changed momentum
       momentum = initialMomentum + h * 0.5 * dP[1];
        //~ if (momentum <= momentumCutOff) return false; //Abort propagation
       double E = std::sqrt(momentum * momentum + state.mass * state.mass);
       dP[2] = g * E / momentum;
       qop[2] = state.q / momentum;
+      // Calculate term for later error propagation
       if (state.covTransport) {
 		dL[2] = - qop[2] * qop[2] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[2] * qop[2] * qop[2] * E * dgdqop;
       }
@@ -601,11 +610,13 @@ double g;
 
       // Last Runge-Kutta point
     if (energyLoss && material) {
+		// Update parameters related to a changed momentum
       momentum = initialMomentum + h * dP[2];
       //~ if (momentum <= momentumCutOff) return false; //Abort propagation
       double E = std::sqrt(momentum * momentum + state.mass * state.mass);
       dP[3] = g * E / momentum;
       qop[3] = state.q / momentum;
+      // Calculate term for later error propagation
       if (state.covTransport) {
 			dL[3] = -qop[3] * qop[3] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[3] * qop[3] * qop[3] * E * dgdqop;
       }
