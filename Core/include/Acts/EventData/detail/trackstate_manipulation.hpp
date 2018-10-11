@@ -108,7 +108,7 @@ namespace detail {
   {
   public:
     /// Explicit constructor
-    explicit ParametricStateGetter() {}
+    explicit ParametricStateGetter() = default;
 
     /// @brief Call operator for extracting the parameteric_state_t
     ///
