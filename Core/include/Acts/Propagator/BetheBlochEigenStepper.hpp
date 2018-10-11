@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
+#include "Acts/Extrapolator/detail/Constants.hpp"
 
 namespace Acts {
 
@@ -425,13 +426,14 @@ public:
 /// @param [in] material Penetrated material
 /// @return Infinitesimal energy loss
 template<typename material_t>
-double dEds(const double momentum, const double energy, const double mass, const material_t material)
+double dEds(const double momentum, const double energy, const double mass, const material_t& material)
 {
 	// Easy exit if material is invalid
   if (material.X0() == 0 || material.Z() == 0) return 0.; 
 
 	// Calculate energy loss by
 	// a) ionisation
+	// TODO: Allow change between mean and mode
   double ionisationEnergyLoss = energyLoss(m, lbeta, lgamma, material);
 
 	// b) radiation
@@ -441,57 +443,72 @@ double dEds(const double momentum, const double energy, const double mass, const
 	// return sum of contributions
   return ionisationEnergyLoss + radiationEnergyLoss;
 }
-// TODO
-double dgdl(double qop)
+
+/// @brief This function calculates the derivation of g=dE/dx by d(q/p)
+///
+/// @tparam material_t Type of the material
+/// @param [in] energy Initial energy of the particle
+/// @param [in] qop Initial value of q/p of the particle
+/// @param [in] mass Mass of the particle
+/// @param [in] material Penetrated material
+/// @return Derivative evaluated at the point defined by the function parameters
+template<typename material_t>
+double dgdqop(const double energy, const double qop, const double mass, const material_t& material)
 {
-  if (m_material->x0()==0 || m_material->averageZ()==0) return 0.; 
-  if (m_material->zOverAtimesRho()==0) return 0.; 
+	// Fast exit if material is invalid
+  if (material.0() == 0 || material.Z() == 0 || material.zOverAtimesRho() == 0) return 0.;
 
-  double p     = fabs( 1./l);
-  double m     = s_particleMasses.mass[m_particle];
-  double me    = s_particleMasses.mass[Trk::electron];
-  double E     = std::sqrt(p*p+m*m);
-  double beta  = p/E;
-  double gamma = E/m;
-  double I     = 16.e-6*std::pow( m_material->averageZ(),0.9);
-  double kaz   = 0.5*30.7075*m_material->zOverAtimesRho();
+  // Bethe-Bloch
+  // Constants for readability
+  const double me    = detail::me;
+  const double me2 = me * me;
+  const double qop3 = qop * qop * qop;
+  const double qop4 = qop3 * qop;
+  const double m     = mass;
+  const double m2 = m * m;
+  const double m4 = m2 * m2;
+  const double I     = constants::eionisation * std::pow(mat.Z(), 0.9);
+  const double I2 = I * I;
+  const double E     = energy;
+  const double gamma = E / m;
+  
+  double lnCore = 4. * me2 / (m4 * I2 * qop4) / (1. + 2. * gamma * me / m + me2 / m2);
+  double lnCore_deriv = -4. * me2 / (m4 * I2) * std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2 ,-2.) *
+    (4. * qop3 + 8. * me * qop3 * gamma / m - 2. * me * qop / (m2 * m * gamma) + 4.* qop3 * me2/ m2));
 
-  //Bethe-Bloch
-  double lnCore = 4.*me*me/(m*m*m*m*I*I*l*l*l*l)/(1.+2.*gamma*me/m+me*me/m*m);
-  double lnCore_deriv = -4.*me*me/(m*m*m*m*I*I) * std::pow( l*l*l*l+2.*gamma*l*l*l*l*me/m+l*l*l*l*me*me/(m*m) ,-2.) *
-    (4.*l*l*l+8.*me*l*l*l*gamma/m-2.*me*l/(m*m*m*gamma)+4.*l*l*l*me*me/(m*m));
-  double ln_deriv = 2.*l*m*m*log(lnCore) + lnCore_deriv/(lnCore*beta*beta);
-  double Bethe_Bloch_deriv = -kaz*ln_deriv;
+  const double beta  = std::abs(1 / (E * qop));
+  const double beta2 = beta * beta;
+  const double kaz   = 0.5 * constants::ka_BetheBloch * material.zOverAtimesRho();
+  
+  double ln_deriv = 2. * qop * m2 * std::log(lnCore) + lnCore_deriv / (lnCore * beta2);
+  double Bethe_Bloch_deriv = -kaz * ln_deriv;
 
   //density effect, only valid for high energies (gamma > 10 -> p > 1GeV for muons)
   if (gamma > 10.) {
-    double delta = 2.*log(28.816e-6 * std::sqrt(1000.*m_material->zOverAtimesRho())/I) + 2.*log(beta*gamma) - 1.;
-    double delta_deriv = -2./(l*beta*beta)+2.*delta*l*m*m;
-    Bethe_Bloch_deriv += kaz*delta_deriv;
+    double delta = 2. * std::log(28.816e-6 * std::sqrt(1000. * material->zOverAtimesRho()) / I) + 2. * std::log(beta * gamma) - 1.;
+    double delta_deriv = -2. / (qop * beta2) + 2. * delta * qop * m2;
+    Bethe_Bloch_deriv += kaz * delta_deriv;
   }
 
   //Bethe-Heitler
-  double Bethe_Heitler_deriv = me*me/(m*m*m_material->x0()*l*l*l*E);
+  double Bethe_Heitler_deriv = me2 / (m2 * material.X0() * qop3 * E);
 
   //Radiative corrections (e+e- pair production + photonuclear) for muons at energies above 8 GeV and below 1 TeV
+  // TODO: no dgdqop for radiation if there is no radiation
   double radiative_deriv = 0.;
-  if ((m_particle == Trk::muon) && (E > 8000.)) {
-    if (E < 1.e6) {
-      radiative_deriv = 6.803e-5/(m_material->x0()*l*l*l*E) + 2.*2.278e-11/(m_material->x0()*l*l*l) -
-        3.*9.899e-18*E/(m_material->x0()*l*l*l);
-    } else {
-      radiative_deriv = 9.253e-5/(m_material->x0()*l*l*l*E);
-    }
-  }
+  //~ if ((m_particle == Trk::muon) && (E > 8000.)) {
+    //~ if (E < 1.e6) {
+      //~ radiative_deriv = 6.803e-5/(m_material->x0()*l*l*l*E) + 2.*2.278e-11/(m_material->x0()*l*l*l) -
+        //~ 3.*9.899e-18*E/(m_material->x0()*l*l*l);
+    //~ } else {
+      //~ radiative_deriv = 9.253e-5/(m_material->x0()*l*l*l*E);
+    //~ }
+  //~ }
 
   //return the total derivative
-  if (m_MPV) {
-    return 0.9*Bethe_Bloch_deriv + 0.15*Bethe_Heitler_deriv + 0.15*radiative_deriv; //Most probable value
-  }
-  else {
     return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv; //Mean value
-  }
 }
+
   /// Perform a Runge-Kutta track parameter propagation step
   ///
   /// @param[in,out] state is the propagation state associated with the track
@@ -512,7 +529,7 @@ bool includeBgradient = true;
 bool errorPropagation = true;
 std::array<double, 4> dL, qop;
 std::array<Vector3D, 4> dP, dir;
-double dgdl = 0.;
+double dgdqop = 0.;
 double momentumCutOff = 0.;
 
     // Charge-momentum ratio, in SI units
@@ -535,9 +552,9 @@ double momentumCutOff = 0.;
     dP[0] = g * E / momentum;
     if (errorPropagation) {
       if (includeGgradient) {
-        dgdl = dgdlambda(qop); //Use this value throughout the step.
+        dgdqop = dgdqop(qop); //Use this value throughout the step.
       }
-      dL[0] = -qop[0] * qop[0] * g * E * (3. - (momentum * momentum)/(E * E)) - qop[0] * qop[0] * qop[0] * E * dgdl;
+      dL[0] = -qop[0] * qop[0] * g * E * (3. - (momentum * momentum)/(E * E)) - qop[0] * qop[0] * qop[0] * E * dgdqop;
     }
   }
 
@@ -561,7 +578,7 @@ double momentumCutOff = 0.;
       dP[1] = g * E / momentum;
       qop[1] = state.q / momentum;
       if (errorPropagation) {
-        dL[1] = -qop[1] * qop[1] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[1] * qop[1] * qop[1] * E * dgdl;
+        dL[1] = -qop[1] * qop[1] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[1] * qop[1] * qop[1] * E * dgdqop;
       }
     }
 
@@ -578,7 +595,7 @@ double momentumCutOff = 0.;
       dP[2] = g * E / momentum;
       qop[2] = state.q / momentum;
       if (errorPropagation) {
-		dL[2] = - qop[2] * qop[2] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[2] * qop[2] * qop[2] * E * dgdl;
+		dL[2] = - qop[2] * qop[2] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[2] * qop[2] * qop[2] * E * dgdqop;
       }
     }
     
@@ -593,7 +610,7 @@ double momentumCutOff = 0.;
       dP[3] = g * E / momentum;
       qop[3] = state.q / momentum;
       if (errorPropagation) {
-			dL[3] = -qop[3] * qop[3] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[3] * qop[3] * qop[3] * E * dgdl;
+			dL[3] = -qop[3] * qop[3] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[3] * qop[3] * qop[3] * E * dgdqop;
       }
     }
 
