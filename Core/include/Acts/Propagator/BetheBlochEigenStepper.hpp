@@ -375,7 +375,9 @@ public:
     }
     // return the parameters
     return CurvilinearParameters(
-        std::move(covPtr), state.pos, state.p * state.dir, state.q);
+        std::move(covPtr), state.pos, state.p * state.//Update inverse momentum if energyloss is switched on
+    //~ if (energyLoss && material) {
+      //~ momentum = initialMomentum + (distanceStepped/6.)*(dP1 + 2.*dP2 + 2.*dP3 + dP4);dir, state.q);
   }
 
   /// Convert the propagation state to track parameters at a certain surface
@@ -471,19 +473,19 @@ double dgdqop(const double energy, const double qop, const double mass, const ma
   const double I2 = I * I;
   const double E     = energy;
   const double gamma = E / m;
-  
-  double lnCore = 4. * me2 / (m4 * I2 * qop4) / (1. + 2. * gamma * me / m + me2 / m2);
-  double lnCore_deriv = -4. * me2 / (m4 * I2) * std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2 ,-2.) *
-    (4. * qop3 + 8. * me * qop3 * gamma / m - 2. * me * qop / (m2 * m * gamma) + 4.* qop3 * me2/ m2));
-
   const double beta  = std::abs(1 / (E * qop));
   const double beta2 = beta * beta;
   const double kaz   = 0.5 * constants::ka_BetheBloch * material.zOverAtimesRho();
   
+  // Parts of the derivative
+  double lnCore = 4. * me2 / (m4 * I2 * qop4) / (1. + 2. * gamma * me / m + me2 / m2);
+  double lnCore_deriv = -4. * me2 / (m4 * I2) * std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2 ,-2.) *
+    (4. * qop3 + 8. * me * qop3 * gamma / m - 2. * me * qop / (m2 * m * gamma) + 4.* qop3 * me2/ m2));
+  // Combine parts
   double ln_deriv = 2. * qop * m2 * std::log(lnCore) + lnCore_deriv / (lnCore * beta2);
   double Bethe_Bloch_deriv = -kaz * ln_deriv;
 
-  //density effect, only valid for high energies (gamma > 10 -> p > 1GeV for muons)
+  // Density effect, only valid for high energies (gamma > 10 -> p > 1GeV for muons)
   if (gamma > 10.) {
     double delta = 2. * std::log(28.816e-6 * std::sqrt(1000. * material->zOverAtimesRho()) / I) + 2. * std::log(beta * gamma) - 1.;
     double delta_deriv = -2. / (qop * beta2) + 2. * delta * qop * m2;
@@ -505,8 +507,8 @@ double dgdqop(const double energy, const double qop, const double mass, const ma
     //~ }
   //~ }
 
-  //return the total derivative
-    return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv; //Mean value
+  // Return the total derivative
+  return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv;
 }
 
   /// Perform a Runge-Kutta track parameter propagation step
@@ -525,16 +527,14 @@ double dgdqop(const double energy, const double qop, const double mass, const ma
 bool energyLoss = true;
 bool material = true;
 bool includeGgradient = true;
-bool includeBgradient = true;
-bool errorPropagation = true;
-std::array<double, 4> dL, qop;
-std::array<Vector3D, 4> dP, dir;
+std::array<double, 4> dL, qop, dP;
 double dgdqop = 0.;
 double momentumCutOff = 0.;
+double g;
 
     // Charge-momentum ratio, in SI units
-    double     momentum = units::Nat2SI<units::MOMENTUM>(state.p);
-    double initalMomentum = momentum;
+    double     initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
+    double momentum = initalMomentum;
     qop[0] = state.q / momentum;
 
     // Runge-Kutta integrator state
@@ -543,14 +543,13 @@ double momentumCutOff = 0.;
 
     // First Runge-Kutta point (at current position)
     const Vector3D B_first = getField(state, state.pos);
-    dir[0] = state.dir;
-    const Vector3D k1      = qop[0] * dir[0].cross(B_first); // TODO: athena multiplies c to that expression
+    const Vector3D k1      = qop[0] * state.dir.cross(B_first); // TODO: athena multiplies c to that expression
 
   if (energyLoss && material) {
     g = dEds(momentum); //Use the same energy loss throughout the step.
     double E = std::sqrt(momentum * momentum + state.mass * state.mass);
     dP[0] = g * E / momentum;
-    if (errorPropagation) {
+    if (state.covTransport) {
       if (includeGgradient) {
         dgdqop = dgdqop(qop); //Use this value throughout the step.
       }
@@ -558,7 +557,7 @@ double momentumCutOff = 0.;
     }
   }
 
-// TODO: abort condition for too many steps, too low momentum (at any point in the propagation), error propagation
+// TODO: abort condition for too many steps, too low momentum (at any point in the propagation)
   
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
@@ -577,14 +576,13 @@ double momentumCutOff = 0.;
       double E = std::sqrt(momentum * momentum + state.mass * state.mass);
       dP[1] = g * E / momentum;
       qop[1] = state.q / momentum;
-      if (errorPropagation) {
+      if (state.covTransport) {
         dL[1] = -qop[1] * qop[1] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[1] * qop[1] * qop[1] * E * dgdqop;
       }
     }
 
       const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * k1;
       B_middle            = getField(state, pos1);
-      dir[1] = dir[0] + half_h * k1;
       k2                  = qop[1] * (state.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
@@ -594,12 +592,11 @@ double momentumCutOff = 0.;
       double E = std::sqrt(momentum * momentum + state.mass * state.mass);
       dP[2] = g * E / momentum;
       qop[2] = state.q / momentum;
-      if (errorPropagation) {
+      if (state.covTransport) {
 		dL[2] = - qop[2] * qop[2] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[2] * qop[2] * qop[2] * E * dgdqop;
       }
     }
-    
-	  dir[2] = dir[0] + half_h * k2;
+
       k3 = qop[2] * (state.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
@@ -609,27 +606,18 @@ double momentumCutOff = 0.;
       double E = std::sqrt(momentum * momentum + state.mass * state.mass);
       dP[3] = g * E / momentum;
       qop[3] = state.q / momentum;
-      if (errorPropagation) {
+      if (state.covTransport) {
 			dL[3] = -qop[3] * qop[3] * g * E * (3. - (momentum * momentum) / (E * E)) - qop[3] * qop[3] * qop[3] * E * dgdqop;
       }
     }
 
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
       B_last              = getField(state, pos2);
-      dir[3] = dir[0] + h * k3;
       k4                  = qop[3] * (state.dir + h * k3).cross(B_last);
 
       // Return an estimate of the local integration error
       return h2 * (k1 - k2 - k3 + k4).template lpNorm<1>();
     };
-    
-    // TODO: This should be in the lambda
-    //~ //Update inverse momentum if energyloss is switched on
-    //~ if (energyLoss && material) {
-      //~ momentum = initialMomentum + (distanceStepped/6.)*(dP1 + 2.*dP2 + 2.*dP3 + dP4);
-      //~ if (momentum <= m_momentumCutOff) return false; //Abort propagation
-      //~ P[6] = charge/momentum;
-    //~ } 
     
     double tolerance = 5e-5; // TODO: hardcode
     
@@ -722,6 +710,12 @@ double momentumCutOff = 0.;
     state.dir /= state.dir.norm();
     state.derivative.template head<3>()     = state.dir;
     state.derivative.template segment<3>(3) = k4;
+
+    //Update inverse momentum if energyloss is switched on
+    if (energyLoss && material) {
+      state.p += (h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3]);
+      //~ if (momentum <= m_momentumCutOff) return false; //Abort propagation
+    } 
 
     state.pathAccumulated += h;
     return h;
