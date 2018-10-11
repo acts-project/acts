@@ -18,6 +18,8 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 #include "Acts/Extrapolator/detail/Constants.hpp"
+// tmp includes
+#include "Acts/Material/Material.hpp"
 
 namespace Acts {
 
@@ -525,7 +527,7 @@ double dgdqop(const double energy, const double qop, const double mass, const ma
   step(State& state) const
   {
 bool energyLoss = true;
-bool material = true; // TODO: how to pass this?
+Material material(352.8, 394.133, 9.012, 4., 1.848e-3); // TODO: how to pass this?
 bool includeGgradient = true;
 std::array<double, 4> dL, qop, dP;
 double dgdqop = 0.;
@@ -557,7 +559,7 @@ double g;
       if (includeGgradient) {
         dgdqop = dgdqop(E, qop[0], state.mass, material); //Use this value throughout the step.
       }
-      
+      // Calculate term for later error propagation
       dL[0] = -qop[0] * qop[0] * g * E * (3. - (momentum * momentum)/(E * E)) - qop[0] * qop[0] * qop[0] * E * dgdqop;
     }
   }
@@ -645,15 +647,19 @@ double g;
 	
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {
+		
+/// The calculations a based on ATL-SOFT-PUB-2009-002. The update of the Jacobian matrix is requires only the calculation of eq. 17 and 18. Since the terms of eq. 18 are currently 0, this matrix is not needed in the calculation. The matrix A from eq. 17 consists out of 3 different parts. The first one is given by the upper left 3x3 matrix that are calculated by dFdT and dGdT. The second is given by the top 3 lines of the rightmost column. This is calculated by dFdL and dGdL. The remaining non-zero term is calculated directly. The naming of the variables is explained in eq. 11 and are directly related to the initial problem in eq. 7.
+/// The evaluation is based by propagating the parameters T and lambda (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating the derivations for matrix A.
+
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
       const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
       // This sets the reference to the sub matrices
-      // dFdx is already initialised as (3x3) idendity
+      // dFdx is already initialised as (3x3) zero
       auto dFdT = D.block<3, 3>(0, 3);
       auto dFdL = D.block<3, 1>(0, 6);
-      // dGdx is already initialised as (3x3) zero
+      // dGdx is already initialised as (3x3) identity
       auto dGdT = D.block<3, 3>(3, 3);
       auto dGdL = D.block<3, 1>(3, 6);
 
@@ -667,6 +673,7 @@ double g;
       ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
+		// Evaluation of the rightmost column without the last term. 
 	  jdL1 = dL[0];
       dk1dL = state.dir.cross(B_first);
       jdL2 = dL[1] * (1. + half_h * jdL1);
@@ -703,13 +710,14 @@ double g;
       dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
       dFdT *= h;
 
-      dFdL = conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
+      dFdL = conv * (1. + h2 / 6 * (dk1dL + dk2dL + dk3dL));
 
       dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
 
-      dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
+      dGdL = conv * (1. + h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL));
       
-      D(6, 6) = conv * (1. + (h / 6.) * (jdL1 + 2. * (jdL2 + jdL3) + jdL4));
+      // Evaluation of the dLambda''/dlambda term
+      D(6, 6) += conv * (h / 6.) * (jdL1 + 2. * (jdL2 + jdL3) + jdL4);
               
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
