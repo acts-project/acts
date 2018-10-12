@@ -20,6 +20,7 @@
 #include "Acts/Utilities/Units.hpp"
 
 // tmp includes
+#include <cstdlib>
 #include "Acts/Material/Material.hpp"
 
 namespace Acts {
@@ -358,7 +359,7 @@ public:
   static CurvilinearParameters
   convert(State& state, bool reinitialize = false)
   {
-   std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
+    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
     // only do the covariance transport if needed
     if (state.covTransport) {
       // transport the covariance forward
@@ -424,16 +425,18 @@ public:
   dEds(const double      momentum,
        const double      energy,
        const double      mass,
-       const material_t& material)
+       const material_t& material) const
   {
     // Easy exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0) return 0.;
 
     // Calculate energy loss by
     // a) ionisation
-    // TODO: Allow change between mean and mode
-    double ionisationEnergyLoss = energyLoss(mass, momentum / energy, energy / mass, material);
-
+    // TODO: Allow change between mean and mode & make return as pure double
+    double ionisationEnergyLoss
+        = energyLoss(mass, momentum / energy, energy / mass, material).first;
+    std::cout << "eloss: " << momentum << "\t" << energy << "\t" << mass << "\t"
+              << ionisationEnergyLoss << std::endl;
     // b) radiation
     // TODO: There doesn't radiate anything
     double radiationEnergyLoss = 0.;
@@ -456,7 +459,7 @@ public:
   dgdqop(const double      energy,
          const double      qop,
          const double      mass,
-         const material_t& material)
+         const material_t& material) const
   {
     // Fast exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0
@@ -484,44 +487,48 @@ public:
     // Parts of the derivative
     double lnCore
         = 4. * me2 / (m4 * I2 * qop4) / (1. + 2. * gamma * me / m + me2 / m2);
-  double lnCore_deriv = -4. * me2 / (m4 * I2) * std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2 ,-2.) *
-    (4. * qop3 + 8. * me * qop3 * gamma / m - 2. * me * qop / (m2 * m * gamma) + 4.* qop3 * me2/ m2);
-    
-  // Combine parts
-  double ln_deriv
-      = 2. * qop * m2 * std::log(lnCore) + lnCore_deriv / (lnCore * beta2);
-  double Bethe_Bloch_deriv = -kaz * ln_deriv;
+    double lnCore_deriv = -4. * me2 / (m4 * I2)
+        * std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2, -2.)
+        * (4. * qop3 + 8. * me * qop3 * gamma / m
+           - 2. * me * qop / (m2 * m * gamma)
+           + 4. * qop3 * me2 / m2);
 
-  // Density effect, only valid for high energies (gamma > 10 -> p > 1GeV for
-  // muons)
-  if (gamma > 10.) {
-    double delta = 2.
-            * std::log(28.816e-6 * std::sqrt(1000. * material->zOverAtimesRho())
-                       / I)
-        + 2. * std::log(beta * gamma) - 1.;
-    double delta_deriv = -2. / (qop * beta2) + 2. * delta * qop * m2;
-    Bethe_Bloch_deriv += kaz * delta_deriv;
-  }
+    // Combine parts
+    double ln_deriv
+        = 2. * qop * m2 * std::log(lnCore) + lnCore_deriv / (lnCore * beta2);
+    double Bethe_Bloch_deriv = -kaz * ln_deriv;
 
-  // Bethe-Heitler
-  double Bethe_Heitler_deriv = me2 / (m2 * material.X0() * qop3 * E);
+    // Density effect, only valid for high energies (gamma > 10 -> p > 1GeV for
+    // muons)
+    if (gamma > 10.) {
+      double delta
+          = 2. * std::log(28.816e-6
+                          * std::sqrt(1000. * material.zOverAtimesRho())
+                          / I)
+          + 2. * std::log(beta * gamma) - 1.;
+      double delta_deriv = -2. / (qop * beta2) + 2. * delta * qop * m2;
+      Bethe_Bloch_deriv += kaz * delta_deriv;
+    }
 
-  // Radiative corrections (e+e- pair production + photonuclear) for muons at
-  // energies above 8 GeV and below 1 TeV
-  // TODO: no dgdqop for radiation if there is no radiation
-  double radiative_deriv = 0.;
-  //if ((m_particle == Trk::muon) && (E > 8000.)) {
-  //if (E < 1.e6) {
-  //radiative_deriv = 6.803e-5/(m_material->x0()*l*l*l*E) +
-  //~ //2.*2.278e-11/(m_material->x0()*l*l*l) -
-  //3.*9.899e-18*E/(m_material->x0()*l*l*l);
-  //} else {
-  //radiative_deriv = 9.253e-5/(m_material->x0()*l*l*l*E);
-  //}
-  //}
+    // Bethe-Heitler
+    double Bethe_Heitler_deriv = me2 / (m2 * material.X0() * qop3 * E);
 
-  // Return the total derivative
-  return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv;
+    // Radiative corrections (e+e- pair production + photonuclear) for muons at
+    // energies above 8 GeV and below 1 TeV
+    // TODO: no dgdqop for radiation if there is no radiation
+    double radiative_deriv = 0.;
+    // if ((m_particle == Trk::muon) && (E > 8000.)) {
+    // if (E < 1.e6) {
+    // radiative_deriv = 6.803e-5/(m_material->x0()*l*l*l*E) +
+    //~ //2.*2.278e-11/(m_material->x0()*l*l*l) -
+    // 3.*9.899e-18*E/(m_material->x0()*l*l*l);
+    //} else {
+    // radiative_deriv = 9.253e-5/(m_material->x0()*l*l*l*E);
+    //}
+    //}
+
+    // Return the total derivative
+    return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv;
   }
 
   /// Perform a Runge-Kutta track parameter propagation step
@@ -539,17 +546,19 @@ public:
   {
     bool     energyLossFlag = true;
     Material material(
-        352.8, 394.133, 9.012, 4., 1.848e-3);  // TODO: how to pass this?
+        352.8, 394.133, 9.012, 4., 1.848e-3);         // TODO: how to pass this?
+    state.mass            = 139.57018 * units::_MeV;  // TODO: hardcoded
     bool includeGgradient = true;
     std::array<double, 4> dL, qop, dP;
-    double dgdqopValue         = 0.;
+    double dgdqopValue    = 0.;
     double momentumCutOff = 0.;
     double g;
 
     // Charge-momentum ratio, in SI units
     double initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
-    double momentum        = initialMomentum;
-    qop[0]                 = state.q / momentum;
+    std::cout << "step " << state.p << "\t" << initialMomentum << std::endl;
+    double momentum = initialMomentum;
+    qop[0]          = state.q / momentum;
 
     // Runge-Kutta integrator state
     double   h2, half_h;
@@ -572,10 +581,11 @@ public:
         // Calculate the change of the the energy loss per path length and
         // inverse momentum
         if (includeGgradient) {
-          dgdqopValue = dgdqop(E,
-                          qop[0],
-                          state.mass,
-                          material);  // Use this value throughout the step.
+          dgdqopValue
+              = dgdqop(E,
+                       qop[0],
+                       state.mass,
+                       material);  // Use this value throughout the step.
         }
         // Calculate term for later error propagation
         dL[0]
@@ -583,7 +593,8 @@ public:
             - qop[0] * qop[0] * qop[0] * E * dgdqopValue;
       }
     }
-
+    std::cout << "consts: " << g << "\t" << dP[0] << "\t" << dgdqopValue << "\t"
+              << dL[0] << std::endl;
     // TODO: abort condition for too many steps, too low momentum (at any point
     // in the propagation)
 
@@ -591,7 +602,8 @@ public:
     // size, going up to the point where it can return an estimate of the local
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
-    const auto tryRungeKuttaStep = [&](const double h) -> double {
+    //~ const auto tryRungeKuttaStep = [&](const double h) -> double {
+    const auto tryRungeKuttaStep = [&](double h) -> double {
 
       // State the square and half of the step size
       h2     = h * h;
@@ -601,7 +613,7 @@ public:
       if (energyLossFlag && material) {
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * 0.5 * dP[0];
-        //if (momentum <= momentumCutOff) return false; //Abort propagation
+        // if (momentum <= momentumCutOff) return false; //Abort propagation
         double E = std::sqrt(momentum * momentum + state.mass * state.mass);
         dP[1]    = g * E / momentum;
         qop[1]   = state.q / momentum;
@@ -621,7 +633,7 @@ public:
       if (energyLossFlag && material) {
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * 0.5 * dP[1];
-        //if (momentum <= momentumCutOff) return false; //Abort propagation
+        // if (momentum <= momentumCutOff) return false; //Abort propagation
         double E = std::sqrt(momentum * momentum + state.mass * state.mass);
         dP[2]    = g * E / momentum;
         qop[2]   = state.q / momentum;
@@ -639,7 +651,7 @@ public:
       if (energyLossFlag && material) {
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * dP[2];
-        //if (momentum <= momentumCutOff) return false; //Abort propagation
+        // if (momentum <= momentumCutOff) return false; //Abort propagation
         double E = std::sqrt(momentum * momentum + state.mass * state.mass);
         dP[3]    = g * E / momentum;
         qop[3]   = state.q / momentum;
@@ -654,7 +666,7 @@ public:
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
       B_last              = getField(state, pos2);
       k4                  = qop[3] * (state.dir + h * k3).cross(B_last);
-
+      std::cout << "h2: " << h2 << std::endl;
       // Return an estimate of the local integration error
       return h2 * (k1 - k2 - k3 + k4).template lpNorm<1>();
     };
@@ -664,12 +676,14 @@ public:
     // Select and adjust the appropriate Runge-Kutta step size
     // @todo remove magic numbers and implement better step estimation
     double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
+    std::cout << "call " << error_estimate << std::endl;
     while (error_estimate > 4. * tolerance) {
       state.stepSize = state.stepSize
           * std::min(std::max(0.25,
                               std::pow((tolerance / error_estimate), 0.25)),
                      4.);
       error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
+      std::cout << "call" << error_estimate << std::endl;
     }
 
     // use the adjusted step size
@@ -695,6 +709,7 @@ public:
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
       const double conv = units::SI2Nat<units::MOMENTUM>(1);
+      //~ const double conv = 1.;
 
       // This sets the reference to the sub matrices
       // dFdx is already initialised as (3x3) zero
@@ -715,16 +730,16 @@ public:
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
       // Evaluation of the rightmost column without the last term.
-      const double jdL1  = dL[0];
-      dk1dL = state.dir.cross(B_first);
-      const double jdL2  = dL[1] * (1. + half_h * jdL1);
+      const double jdL1 = dL[0];
+      dk1dL             = state.dir.cross(B_first);
+      const double jdL2 = dL[1] * (1. + half_h * jdL1);
       dk2dL = (1. + half_h * jdL1) * (state.dir + half_h * k1).cross(B_middle)
           + qop[1] * half_h * dk1dL.cross(B_middle);
-      const double jdL3  = dL[2] * (1. + half_h * jdL2);
+      const double jdL3 = dL[2] * (1. + half_h * jdL2);
       dk3dL = (1. + half_h * jdL2) * (state.dir + half_h * k2).cross(B_middle)
           + qop[2] * half_h * dk2dL.cross(B_middle);
-      const double jdL4  = dL[3] * (1. + h * jdL3);
-      dk4dL = (1. + h * jdL3) * (state.dir + h * k3).cross(B_last)
+      const double jdL4 = dL[3] * (1. + h * jdL3);
+      dk4dL             = (1. + h * jdL3) * (state.dir + h * k3).cross(B_last)
           + qop[3] * h * dk3dL.cross(B_last);
 
       dk1dT(0, 1) = B_first.z();
@@ -750,8 +765,8 @@ public:
       dFdT.setIdentity();
       dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
       dFdT *= h;
-	
-	Vector3D onesVec(1., 1., 1.);
+
+      Vector3D onesVec(1., 1., 1.);
       dFdL = conv * (onesVec * h + h2 / 6 * (dk1dL + dk2dL + dk3dL));
 
       dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
@@ -760,7 +775,8 @@ public:
 
       // Evaluation of the dLambda''/dlambda term
       D(6, 6) += conv * (h / 6.) * (jdL1 + 2. * (jdL2 + jdL3) + jdL4);
-
+      std::cout << "D:\n" << D << std::endl;
+      std::cout << "jac:\n" << state.jacTransport << std::endl;
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
     }
@@ -775,29 +791,36 @@ public:
     // Update inverse momentum if energyLossFlag is switched on
     if (energyLossFlag && material) {
       state.p += (h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3]);
-      //if (momentum <= m_momentumCutOff) return false; //Abort propagation
+      // if (momentum <= m_momentumCutOff) return false; //Abort propagation
     }
-
+    std::cout << "result pos: " << state.pos << std::endl;
+    std::cout << "result dir: " << state.dir << std::endl;
+    std::cout << "result p: " << state.p << std::endl;
+    std::cout << "result cov:\n" << state.jacTransport << std::endl;
     state.pathAccumulated += h;
+    std::exit(1);
     return h;
   }
 
-private :
-    /// Magnetic field inside of the detector
-    BField m_bField;
+private:
+  /// Magnetic field inside of the detector
+  BField m_bField;
 
-detail::IonisationLoss energyLoss;
+  const double c2 = units::_c * units::_c;
+  const double c4 = c2 * c2;
 
-ActsMatrixD<3, 3>
-cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
-{
-  ActsMatrixD<3, 3> r;
-  r.col(0) = m.col(0).cross(v);
-  r.col(1) = m.col(1).cross(v);
-  r.col(2) = m.col(2).cross(v);
+  detail::IonisationLoss energyLoss;
 
-  return r;
-}
+  ActsMatrixD<3, 3>
+  cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) const
+  {
+    ActsMatrixD<3, 3> r;
+    r.col(0) = m.col(0).cross(v);
+    r.col(1) = m.col(1).cross(v);
+    r.col(2) = m.col(2).cross(v);
+
+    return r;
+  }
 };
 
 }  // namespace Acts

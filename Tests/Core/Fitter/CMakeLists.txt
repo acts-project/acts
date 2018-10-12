@@ -9,3 +9,7 @@ target_include_directories (GainMatrixTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (GainMatrixTests PRIVATE ActsCore)
 add_test (NAME GainMatrixUnitTest COMMAND GainMatrixTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST GainMatrixUnitTest TARGETS GainMatrixTests)
+
+add_executable (StepActorTests StepActorTests.cpp)
+target_link_libraries (StepActorTests PRIVATE ActsCore)
+add_test(NAME StepActorUnitTests COMMAND StepActorTests)

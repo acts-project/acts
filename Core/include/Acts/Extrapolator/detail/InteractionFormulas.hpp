@@ -38,10 +38,13 @@ namespace detail {
     ///
     /// @tparam material_t Type of the material class
     ///
-    /// @param[in] p The value of the momentum
-    /// @param[in] m The masses of the different particles
-    /// @param[in] mat The material that is traversed
-    /// @param[in] path The path length (optional)
+    /// @param [in] m The masses of the different particles
+    /// @param [in] lbeta Beta factor of the particle
+    /// @param [in] lgamma Gamma factor of the particle
+    /// @param [in] mat The material that is traversed
+    /// @param [in] path The path length (optional)
+    /// @param [in] mean Toggle between calculation of mean (true) and mode
+    /// (false)
     ///
     /// @return A std::pair. The first entry is the mean energy loss due to
     /// ionization along a given path length. The second entry is the sigma of
