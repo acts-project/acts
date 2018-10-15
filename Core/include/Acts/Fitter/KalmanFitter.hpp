@@ -12,6 +12,9 @@
 #include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/surface_getter.hpp"
+#include "Acts/EventData/detail/trackstate_manipulation.hpp"
+#include "Acts/EventData/detail/trackstate_sorters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -35,12 +38,12 @@ namespace Acts {
 /// and eventually the smoothing.  Updator, Smoother and Calibrator are
 /// given to the Actor for further use:
 /// - The Updator is the implemented kalman updator formalism, it
-///   runs via a visitor pattern through the measurements. 
-/// - The Smoother is called at the end of the forward fit by the Actor.  
+///   runs via a visitor pattern through the measurements.
+/// - The Smoother is called at the end of the forward fit by the Actor.
 /// - The Calibrator is a dedicated calibration algorithm that allows
 ///   to calibrate measurements using track information, this could be
 ///    e.g. sagging for wires, module deformations, etc.
-/// 
+///
 /// Measurements are not required to be ordered for the KalmanFilter,
 /// measurement ordering needs to be figured out by the navigation of
 /// the propagator.
@@ -61,10 +64,9 @@ template <typename propagator_t,
 class KalmanFitter
 {
 public:
-  
   /// Shorthand definition
   using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
-    
+
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
   /// @tparam track_states_t is any iterable std::container of
@@ -78,13 +80,13 @@ public:
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
   template <typename track_states_t>
-  class KalmanActor
+  class Actor
   {
   public:
     /// Explicit constructor with updagor and calibrator
-    KalmanActor(updator_t    pUpdator    = updator_t(),
-                smoother_t   pSmoother   = smoother_t(),
-                calibrator_t pCalibrator = calibrator_t())
+    Actor(updator_t    pUpdator    = updator_t(),
+          smoother_t   pSmoother   = smoother_t(),
+          calibrator_t pCalibrator = calibrator_t())
       : m_updator(std::move(pUpdator))
       , m_smoother(std::move(pSmoother))
       , m_calibrator(std::move(pCalibrator))
@@ -204,7 +206,8 @@ public:
         ++stateIndex;
       }
       // Feed the KalmanSequencer with the measurement surfaces
-      state.navigation.sequence.externalSurfaces = std::move(measurementSurfaces);
+      state.navigation.sequence.externalSurfaces
+          = std::move(measurementSurfaces);
     }
 
     /// @brief Kalman actor operation : update
@@ -253,7 +256,8 @@ public:
     {
       // Sort the TrackStates according to the path length
       detail::path_length_sorter plSorter;
-      std::sort(result.fittedStates.begin(), result.fittedStates.end(), plSorter);
+      std::sort(
+          result.fittedStates.begin(), result.fittedStates.end(), plSorter);
       // Smooth the track states and obtain the last smoothed track parameters
       auto smoothedPars = m_smoother(result.fittedStates);
       // Update the stepping parameters - in order to progress to destination
@@ -272,7 +276,7 @@ public:
     /// The Measuremetn calibrator
     calibrator_t m_calibrator;
   };
-  
+
   /// Default constructor is deleted
   KalmanFitter() = delete;
 
@@ -309,9 +313,7 @@ public:
   {
     // Bring the measurements into Acts style
     auto trackStates = m_inputConverter(measurements);
-    
-    
-    
+
     // Return the converted Track
     return m_outputConverter(trackStates);
   }

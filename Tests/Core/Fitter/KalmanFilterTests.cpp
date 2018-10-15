@@ -18,9 +18,7 @@
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdator.hpp"
-#include "Acts/Fitter/KalmanActor.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
-#include "Acts/Fitter/KalmanSequencer.hpp"
 #include "Acts/Layers/PlaneLayer.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -31,6 +29,7 @@
 namespace Acts {
 namespace Test {
 
+  /*
   // Propagator placeholder
   struct Propagator
   {
@@ -156,7 +155,7 @@ namespace Test {
         planeLayer9.get());
     BOOST_TEST(layer9ms == 1);
   }
-
+  */
   /// Construct a KalmanFitter
   // BOOST_AUTO_TEST_CASE(KalmanFitterConstruction)
   //{

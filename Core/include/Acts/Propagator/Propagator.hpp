@@ -161,7 +161,7 @@ public:
   /// @tparam aborter_list_t List of abort conditions tested after each
   ///    propagation step using the current propagation and stepper state
   template <typename action_list_t  = ActionList<>,
-            typename aborter_list_t = AbortList<> >
+            typename aborter_list_t = AbortList<>>
   struct Options
   {
 
@@ -203,7 +203,6 @@ public:
 
     /// List of abort conditions
     aborter_list_t stopConditions;
-
   };
 
   /// Constructor from implementation object
@@ -347,7 +346,7 @@ private:
         dstream << s;
         return dstream.str();
       });
-      // Post-step navigator call 
+      // Post-step navigator call
       m_navigator(state);
       state.options.actionList(state, result);
 

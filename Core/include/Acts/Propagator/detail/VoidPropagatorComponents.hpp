@@ -10,7 +10,7 @@
 
 namespace Acts {
 
-  namespace detail {
+namespace detail {
   /// @brief The void navigator struct as a default navigator
   ///
   /// It does not provide any navigation action, the compiler
@@ -19,7 +19,7 @@ namespace Acts {
   struct VoidNavigator
   {
 
-    /// @brief Nested State struct, minimal requirement 
+    /// @brief Nested State struct, minimal requirement
     struct State
     {
       /// Navigation state - external state: the start surface
@@ -41,7 +41,7 @@ namespace Acts {
     /// Unique typedef to publish to the Propagator
     using state_type = State;
 
-    /// Navigation call - void 
+    /// Navigation call - void
     ///
     /// @tparam propagator_state_t is the type of Propagatgor state
     ///
@@ -53,5 +53,5 @@ namespace Acts {
     }
   };
 
-} // namespace detail
-} // namespace Acts
+}  // namespace detail
+}  // namespace Acts

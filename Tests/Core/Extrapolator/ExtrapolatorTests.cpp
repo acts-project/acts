@@ -22,7 +22,6 @@
 #include "Acts/Extrapolator/MaterialInteractor.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Extrapolator/SurfaceCollector.hpp"
-#include "Acts/Fitter/KalmanSequencer.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
