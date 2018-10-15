@@ -30,10 +30,7 @@ namespace Acts {
 ///
 /// The KalmanActor does not rely on the measurements to be
 /// sorted along the track.
-template <typename track_states_t,
-          typename updator_t,
-          typename smoother_t,
-          typename calibrator_t = VoidKalmanComponents>
+template <typename track_states_t>
 class KalmanActor
 {
 public:
@@ -223,33 +220,6 @@ private:
     // Set the destination surface - we should re-do the navigation
   }
 
-  /// The private KalmanActor debug logging
-  ///
-  /// It needs to be fed by a lambda function that returns a string,
-  /// that guarantees that the lambda is only called in the
-  /// state.options.debug == true
-  /// case in order not to spend time when not needed.
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param[in,out] state the propagator state for the debug flag,
-  ///      prefix and length
-  /// @param logAction is a callable function that returns a stremable object
-  template <typename propagator_state_t>
-  void
-  debugLog(propagator_state_t&                 state,
-           const std::function<std::string()>& logAction) const
-  {
-    if (state.options.debug) {
-      std::stringstream dstream;
-      std::string       ds = (state.stepping.navDir == forward) ? "K->" : "<-K";
-      dstream << ds << std::setw(state.options.debugPfxWidth);
-      dstream << "KalmanActor"
-              << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
-    }
-  }
 
   /// The Kalman updator
   updator_t m_updator;

@@ -15,6 +15,7 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAbortConditions.hpp"
+#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -24,47 +25,6 @@ namespace Acts {
 
 /// Result status of track parameter propagation
 enum struct Status { SUCCESS, FAILURE, UNSET, IN_PROGRESS, WRONG_DIRECTION };
-
-/// @brief The void navigator struct as a default navigator
-///
-/// It does not provide any navigation action, the compiler
-/// should eventually optimise that the function core is not done
-struct VoidNavigator
-{
-
-  /// Nested State struct
-  struct State
-  {
-    /// Navigation state - external state: the start surface
-    const Surface* startSurface = nullptr;
-
-    /// Navigation state - external state: the current surface
-    const Surface* currentSurface = nullptr;
-
-    /// Navigation state - external state: the target surface
-    const Surface* targetSurface = nullptr;
-
-    /// Indicator if the target is reached
-    bool targetReached = false;
-
-    /// Navigation state : a break has been detected
-    bool navigationBreak = false;
-  };
-
-  /// Unique typedef to publish to the Propagator
-  using state_type = State;
-
-  /// Navigation call
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  ///
-  /// Empty call, hopefully the compiler checks this
-  template <typename propagator_state_t>
-  void
-  operator()(propagator_state_t& /*state*/) const
-  {
-  }
-};
 
 /// @brief Simple class holding result of propagation call
 ///
@@ -183,7 +143,7 @@ struct PropagatorOptions
 /// - a type mapping for: (initial track parameter type and destination
 ///   surface type) -> type of internal state object
 ///
-template <typename stepper_t, typename navigator_t = VoidNavigator>
+template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final
 {
 public:
@@ -192,6 +152,59 @@ public:
 
   /// Typedef the navigator state
   using NavigatorState = typename navigator_t::state_type;
+
+  /// @brief Options for propagate() call
+  ///
+  /// @tparam action_list_t List of action types called after each
+  ///    propagation step with the current propagation and stepper state
+  ///
+  /// @tparam aborter_list_t List of abort conditions tested after each
+  ///    propagation step using the current propagation and stepper state
+  template <typename action_list_t  = ActionList<>,
+            typename aborter_list_t = AbortList<> >
+  struct Options
+  {
+
+    /// Propagation direction
+    NavigationDirection direction = forward;
+
+    /// The |pdg| code for (eventual) material integration - pion default
+    int absPdgCode = 211;
+
+    /// The mass for the particle for (eventual) material integration
+    double mass = 139.57018 * units::_MeV;
+
+    /// Maximum number of steps for one propagate() call
+    unsigned int maxSteps = 1000;
+
+    /// Required tolerance to reach target (surface, pathlength)
+    double targetTolerance = s_onSurfaceTolerance;
+
+    /// Absolute maximum step size
+    double maxStepSize = 1 * units::_m;
+
+    /// Absolute maximum path length
+    double pathLimit = std::numeric_limits<double>::max();
+
+    /// Loop protection step, it adapts the pathLimit
+    bool   loopProtection = true;
+    double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
+
+    /// Debug output steering:
+    // - the string where debug messages are stored (optionally)
+    // - it also has some formatting options
+    bool        debug         = false;  ///< switch debug on
+    std::string debugString   = "";     ///< the string to collect msgs
+    size_t      debugPfxWidth = 30;     ///< the prefix width
+    size_t      debugMsgWidth = 50;     ///< the mesage width
+
+    /// List of actions
+    action_list_t actionList;
+
+    /// List of abort conditions
+    aborter_list_t stopConditions;
+
+  };
 
   /// Constructor from implementation object
   ///
@@ -317,7 +330,6 @@ private:
     });
     // Navigator initialize call
     m_navigator(state);
-
     // Pre-Stepping call to the action list
     state.options.actionList(state, result);
 
@@ -335,6 +347,7 @@ private:
         dstream << s;
         return dstream.str();
       });
+      // Post-step navigator call 
       m_navigator(state);
       state.options.actionList(state, result);
 

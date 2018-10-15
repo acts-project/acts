@@ -120,7 +120,7 @@ namespace Test {
     StepperState stepping;
 
     /// Navigation state - internal state of the Navigator
-    Navigator<>::state_type navigation;
+    Navigator::state_type navigation;
   };
 
   template <typename stepper_state_t>
@@ -144,7 +144,7 @@ namespace Test {
   {
 
     // create a navigator
-    Navigator<> navigator;
+    Navigator navigator;
     navigator.initialStepFactor = 1.;
     navigator.trackingGeometry  = tGeometry;
     navigator.resolveSensitive  = true;

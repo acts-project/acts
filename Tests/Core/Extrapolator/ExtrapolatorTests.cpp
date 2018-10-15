@@ -50,11 +50,11 @@ namespace Test {
   bool debugMode = false;
 
   // get the navigator and provide the TrackingGeometry
-  Navigator<> navigator(tGeometry);
+  Navigator navigator(tGeometry);
 
   using BFieldType          = ConstantBField;
   using EigenStepperType    = EigenStepper<BFieldType>;
-  using EigenPropagatorType = Propagator<EigenStepperType, Navigator<>>;
+  using EigenPropagatorType = Propagator<EigenStepperType, Navigator>;
 
   const double        Bz = 2. * units::_T;
   BFieldType          bField(0, 0, Bz);

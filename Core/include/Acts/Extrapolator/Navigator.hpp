@@ -82,33 +82,6 @@ struct NavigationOptions
   }
 };
 
-struct VoidSequencer
-{
-  using ExternalSurfaces = std::multimap<const Layer*, const Surface*>;
-
-  /// @brief void result struct
-  struct state_type
-  {
-    /// Measurement surfaces
-    ExternalSurfaces externalSurfaces = {};
-  };
-
-  /// Navigation sequencer, this allows to steer bouncing for
-  /// e.g. Kalman filtering or any other global navigation steering,
-  /// such as providing external surface to the navigation
-  ///
-  /// @tparam propagator_state_t is the type of Propagator state
-  ///
-  /// @param[in,out] state is the mutable stepper state object
-  /// @param[in,out] memory Boolean flag to memorize surface
-  template <typename propagator_state_t>
-  bool
-  operator()(propagator_state_t& /*state*/, bool /*memory*/) const
-  {
-    return false;
-  }
-};
-
 /// Navigator struct
 ///
 /// This is an Actor to be added to the ActorList in order to navigate
@@ -131,51 +104,40 @@ struct VoidSequencer
 /// the isOnSurface call fails, it also  re-computes the step size, to make
 /// sure we end up at the desired surface.
 ///
-/// @tparam sequencer_t Type Struct that allows to do global navigation
-///         steering, at default, a void call is done.
-template <typename sequencer_t = VoidSequencer>
 class Navigator
 {
 
 public:
-  using Surfaces    = std::vector<const Surface*>;
-  using SurfaceIter = std::vector<const Surface*>::iterator;
+  
+  using Surfaces               = std::vector<const Surface*>;
+  using SurfaceIter            = std::vector<const Surface*>::iterator;
 
-  using NavigationSurfaces    = std::vector<SurfaceIntersection>;
-  using NavigationSurfaceIter = NavigationSurfaces::iterator;
+  using NavigationSurfaces     = std::vector<SurfaceIntersection>;
+  using NavigationSurfaceIter  = NavigationSurfaces::iterator;
 
-  using NavigationLayers    = std::vector<LayerIntersection>;
-  using NavigationLayerIter = NavigationLayers::iterator;
+  using NavigationLayers       = std::vector<LayerIntersection>;
+  using NavigationLayerIter    = NavigationLayers::iterator;
 
   using NavigationBoundaries   = std::vector<BoundaryIntersection>;
   using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
-  using SequencerState = typename sequencer_t::state_type;
+  using ExternalSurfaces       = std::multimap<const Layer*, const Surface*>;
 
   /// Constructor with shared tracking geometry
   ///
   /// @param tGeometry The tracking geometry for the navigator
-  /// @param tSequencer The (optional) sequencer for user steering
-  Navigator(std::shared_ptr<const TrackingGeometry> tGeometry  = nullptr,
-            sequencer_t                             tSequencer = sequencer_t())
-    : trackingGeometry(std::move(tGeometry)), sequencer(std::move(tSequencer))
-  {
-  }
+  Navigator(std::shared_ptr<const TrackingGeometry> tGeometry  = nullptr)
+    : trackingGeometry(std::move(tGeometry))
+  {}
 
   /// Tracking Geometry for this Navigator
   std::shared_ptr<const TrackingGeometry> trackingGeometry;
-
-  /// The sequencer (default is void sequencer)
-  sequencer_t sequencer;
 
   /// The tolerance used to defined "reached"
   double tolerance = s_onSurfaceTolerance;
 
   /// Change initial step (avoids overstepping, when no correction done)
   double initialStepFactor = 0.5;
-
-  /// Number of target attempts for the targetVolume
-  int targetAttempts = 2;
 
   /// Configuration for this Navigator
   /// stop at every sensitive surface (whether it has material or not)
@@ -211,6 +173,9 @@ public:
     /// the current boundary iterator of the navigation state
     NavigationBoundaryIter navBoundaryIter = navBoundaries.end();
 
+    /// Externally provided surfaces - these are tried to be hit
+    ExternalSurfaces  externalSurfaces = {};
+
     /// Navigation sate: the world volume
     const TrackingVolume* worldVolume = nullptr;
 
@@ -231,14 +196,9 @@ public:
     /// Navigation state: the target surface
     const Surface* targetSurface = nullptr;
     /// Indicator if the target is reached
-    bool targetReached = false;
+    bool targetReached   = false;
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
-    /// The navigator is in reverse mode
-    bool reverseMode = false;
-
-    /// The sequencer state
-    SequencerState sequence;
   };
 
   /// Unique typedef to publish to the Propagator
@@ -264,10 +224,8 @@ public:
       return;
     }
 
-    // Call the sequencer prior to the navigation
-    if (sequencer(state, false)) {
-      debugLog(state, [&] { return std::string("Sequencer action applied."); });
-    }
+    // Call the navigation helper prior to actual navigation
+    state.options.navigationHelper(state);
     debugLog(state, [&] { return std::string("Entering navigator."); });
 
     // Navigator always resets the current surface first
@@ -346,11 +304,8 @@ public:
     debugLog(state, [&] {
       return std::string("Navigation break - no valid actions left.");
     });
-    // Call the sequencer again before giving up
-    if (not sequencer(state, false)) {
-      // Release the navigation step size - if the sequecern hasn't done it
-      state.stepping.stepSize.release(cstep::actor);
-    }
+    // Release the navigation step size - if the sequecern hasn't done it
+    state.stepping.stepSize.release(cstep::actor);
     return;
   }
 
@@ -547,8 +502,6 @@ public:
               dstream << state.navigation.currentSurface->geoID().toString();
               return dstream.str();
             });
-            // Call to the sequencer for surface memory
-            sequencer(state, true);
           }
           // no returning to the stepper at this stage
           return false;
@@ -796,8 +749,6 @@ public:
             dstream << state.navigation.currentSurface->geoID().toString();
             return dstream.str();
           });
-          // Call to the sequencer for surface memory
-          sequencer(state, true);
         }
         // resolve the new layer situation
         if (resolveLayers(state, navCorr)) {
@@ -1053,8 +1004,6 @@ public:
               dstream << "\nof layer " << layer->geoID().toString();
               return dstream.str();
             });
-            // Call to the sequencer for surface memory
-            sequencer(state, true);
           }
         }
         // if you found surfaces return to the stepper
@@ -1229,8 +1178,6 @@ public:
             dstream << state.navigation.currentSurface->geoID().toString();
             return dstream.str();
           });
-          // Call to the sequencer for surface memory
-          sequencer(state, true);
         }
         // break if the surface is the target surface
         if (surface == state.navigation.targetSurface) {

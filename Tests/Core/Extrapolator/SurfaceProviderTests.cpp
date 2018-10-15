@@ -33,7 +33,7 @@ namespace Test {
 
   struct PropagatorState
   {
-    Navigator<>::State navigation;
+    Navigator::State navigation;
   };
 
   BOOST_AUTO_TEST_CASE(SurfaceProviderTest)
