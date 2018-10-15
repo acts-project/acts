@@ -426,7 +426,7 @@ public:
        const double      energy,
        const double      mass,
        const material_t& material) const
-  {
+  {  
     // Easy exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0) return 0.;
 
@@ -434,9 +434,8 @@ public:
     // a) ionisation
     // TODO: Allow change between mean and mode & make return as pure double
     double ionisationEnergyLoss
-        = energyLoss(mass, momentum / energy, energy / mass, material).first;
-    std::cout << "eloss: " << momentum << "\t" << energy << "\t" << mass << "\t"
-              << ionisationEnergyLoss << std::endl;
+        = energyLoss(mass, momentum * units::_c / energy, energy / (mass * c2), material, 1., true, true).first;
+
     // b) radiation
     // TODO: There doesn't radiate anything
     double radiationEnergyLoss = 0.;
@@ -548,10 +547,11 @@ public:
     Material material(
         352.8, 394.133, 9.012, 4., 1.848e-3);         // TODO: how to pass this?
     state.mass            = 139.57018 * units::_MeV;  // TODO: hardcoded
+    double massSI            = units::Nat2SI<units::MASS>(state.mass);  // TODO: hardcoded
     bool includeGgradient = true;
     std::array<double, 4> dL, qop, dP;
     double dgdqopValue    = 0.;
-    double momentumCutOff = 0.;
+    //~ double momentumCutOff = 0.;
     double g;
 
     // Charge-momentum ratio, in SI units
@@ -572,11 +572,11 @@ public:
 
     // Calculate the energy loss
     if (energyLossFlag && material) {
-      double E = std::sqrt(momentum * momentum + state.mass * state.mass);
+      double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
       // Use the same energy loss throughout the step.
-      g = dEds(momentum, E, state.mass, material);
+      g = dEds(momentum, E, massSI, material);
       // Change of the momentum per path length
-      dP[0] = g * E / momentum;
+      dP[0] = g * E / units::SI2Nat<units::MOMENTUM>(momentum);
       if (state.covTransport) {
         // Calculate the change of the the energy loss per path length and
         // inverse momentum
@@ -593,8 +593,7 @@ public:
             - qop[0] * qop[0] * qop[0] * E * dgdqopValue;
       }
     }
-    std::cout << "consts: " << g << "\t" << dP[0] << "\t" << dgdqopValue << "\t"
-              << dL[0] << std::endl;
+
     // TODO: abort condition for too many steps, too low momentum (at any point
     // in the propagation)
 
@@ -602,9 +601,8 @@ public:
     // size, going up to the point where it can return an estimate of the local
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
-    //~ const auto tryRungeKuttaStep = [&](const double h) -> double {
-    const auto tryRungeKuttaStep = [&](double h) -> double {
-
+    const auto tryRungeKuttaStep = [&](const double h) -> double {
+		
       // State the square and half of the step size
       h2     = h * h;
       half_h = h * 0.5;
@@ -614,7 +612,7 @@ public:
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * 0.5 * dP[0];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum + state.mass * state.mass);
+        double E = std::sqrt(momentum * momentum * c2 + state.mass * state.mass * c4);
         dP[1]    = g * E / momentum;
         qop[1]   = state.q / momentum;
         // Calculate term for later error propagation
@@ -634,7 +632,7 @@ public:
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * 0.5 * dP[1];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum + state.mass * state.mass);
+        double E = std::sqrt(momentum * momentum + state.mass * state.mass * c4);
         dP[2]    = g * E / momentum;
         qop[2]   = state.q / momentum;
         // Calculate term for later error propagation
@@ -652,7 +650,7 @@ public:
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * dP[2];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum + state.mass * state.mass);
+        double E = std::sqrt(momentum * momentum + state.mass * state.mass * c4);
         dP[3]    = g * E / momentum;
         qop[3]   = state.q / momentum;
         // Calculate term for later error propagation
@@ -709,7 +707,6 @@ public:
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
       const double conv = units::SI2Nat<units::MOMENTUM>(1);
-      //~ const double conv = 1.;
 
       // This sets the reference to the sub matrices
       // dFdx is already initialised as (3x3) zero
@@ -806,8 +803,8 @@ private:
   /// Magnetic field inside of the detector
   BField m_bField;
 
-  const double c2 = units::_c * units::_c;
-  const double c4 = c2 * c2;
+const double c2 = units::_c * units::_c;
+const double c4 = units::_c * units::_c * units::_c * units::_c;
 
   detail::IonisationLoss energyLoss;
 

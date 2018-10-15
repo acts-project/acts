@@ -45,6 +45,7 @@ namespace detail {
     /// @param [in] path The path length (optional)
     /// @param [in] mean Toggle between calculation of mean (true) and mode
     /// (false)
+    /// @param [in] siUnits Toggle for the unit system between SI and natural units
     ///
     /// @return A std::pair. The first entry is the mean energy loss due to
     /// ionization along a given path length. The second entry is the sigma of
@@ -57,7 +58,8 @@ namespace detail {
                double            lgamma,
                const material_t& mat,
                double            path = 1.,
-               bool              mean = true) const
+               bool              mean = true,
+               bool siUnits = false) const
     {
 
       // the return value
@@ -70,7 +72,9 @@ namespace detail {
 
       // See (1) table 33.1
       // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]
-      double kaz  = 0.5 * constants::ka_BetheBloch * mat.zOverAtimesRho();
+      double kaz;
+      kaz  = 0.5 * constants::ka_BetheBloch * mat.zOverAtimesRho();
+      
       double eta2 = lbeta * lgamma;
       eta2 *= eta2;
       // density effect, only valid for high energies
@@ -87,17 +91,43 @@ namespace detail {
       // divide by lbeta^2 for non-electrons
       kaz /= lbeta * lbeta;
       double kazL = kaz * path;
+	
+		if(siUnits)
+		{
+			kaz  = 0.5 * units::Nat2SI<units::ENERGY>(30.7075 * units::_MeV) * units::_mm * units::_mm * mat.zOverAtimesRho();
+			kaz /= lbeta * lbeta;
+			I = units::Nat2SI<units::ENERGY>(I);
+			eta2 *= units::_c * units::_c;
+			kazL *= kaz * path * units::_e * units::_e;
+		}
 
       // The landau width (FWHM) is 4.*kazL
       // The factor is the conversion factor from FWHM to sigma for
       // gaussian curve: 1. / (2. * sqrt(2. * log(2.))).
       double sigma = 2. * kazL * 1. / (std::sqrt(2. * std::log(2.)));
       if (mean) {
-        // calculate the fraction to the electron mass
+		  // calculate the fraction to the electron mass
         double mfrac = constants::me / m;
         // Calculate the mean value for reconstruction
         // See ATL-SOFT-PUB-2008-003 equation (2)
-        double tMax = 2. * eta2 * constants::me
+        double tMax;
+		  if(siUnits)
+		  {
+			  tMax = 2. * eta2 * units::Nat2SI<units::MASS>(constants::me)
+            / (1. + 2. * lgamma * mfrac + mfrac * mfrac);
+			// See ATL-SOFT-PUB-2008-003 equation (1)
+			// or:
+			// http://pdg.lbl.gov/2018/reviews/rpp2018-rev-passage-particles-matter.pdf
+			// PDG formula 33.5
+			dE = -kazL * 2.0
+				* (0.5 * std::log(2. * units::Nat2SI<units::MASS>(constants::me) * eta2 * tMax / (I * I))
+				   - (lbeta * lbeta)
+				   - delta * 0.5);
+std::cout << "interaction: " << kazL << "\t" << 2. * units::Nat2SI<units::MASS>(constants::me) * eta2 * tMax / (I * I) << "\t" << (lbeta * lbeta) << "\t" << delta << std::endl;
+		  }
+		  else
+		  {
+			  tMax = 2. * eta2 * constants::me
             / (1. + 2. * lgamma * mfrac + mfrac * mfrac);
         // See ATL-SOFT-PUB-2008-003 equation (1)
         // or:
@@ -107,6 +137,10 @@ namespace detail {
             * (0.5 * std::log(2. * constants::me * eta2 * tMax / (I * I))
                - (lbeta * lbeta)
                - delta * 0.5);
+           }
+
+        
+
       } else {
         // Calculate the most probably value for simulation
         //
