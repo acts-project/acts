@@ -187,13 +187,15 @@ namespace Test {
           std::move(covPtr), startParams, startMom, 1.);
 
       // Create action list for surface collection
-      ActionList<StepCollector, StepActor> aList;
+      //~ ActionList<StepCollector, StepActor> aList;
+      ActionList<StepCollector> aList;
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
       //~ Propagator<EigenStepper<ConstantBField>, Navigator>::
       Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator>::
-          Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
+          //~ Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
+          Options<ActionList<StepCollector>, AbortList<EndOfWorld>>
               propOpts;
       propOpts.actionList     = aList;
       propOpts.stopConditions = abortList;
