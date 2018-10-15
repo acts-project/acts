@@ -435,7 +435,7 @@ public:
     // TODO: Allow change between mean and mode & make return as pure double
     double ionisationEnergyLoss
         = energyLoss(mass, momentum * units::_c / energy, energy / (mass * c2), material, 1., true, true).first;
-std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units::ENERGY>(ionisationEnergyLoss) << std::endl;
+std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << units::SI2Nat<units::ENERGY>(ionisationEnergyLoss) << std::endl;
     // b) radiation
     // TODO: There doesn't radiate anything
     double radiationEnergyLoss = 0.;
@@ -546,6 +546,7 @@ std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units
     bool     energyLossFlag = true;
     Material material(
         352.8, 394.133, 9.012, 4., 1.848e-3);         // TODO: how to pass this?
+        //~ 95.7, 465.2, 28.03, 14., 2.32e-3);         // TODO: how to pass this?
     state.mass            = 139.57018 * units::_MeV;  // TODO: hardcoded
     double massSI            = units::Nat2SI<units::MASS>(state.mass);  // TODO: hardcoded
     bool includeGgradient = false;
@@ -798,7 +799,7 @@ std::cout << "p abzug: " << units::SI2Nat<units::MOMENTUM>((h / 6.) * (dP[0] + 2
     std::cout << "result p: " << state.p << std::endl;
     std::cout << "result cov:\n" << state.jacTransport << std::endl;
     state.pathAccumulated += h;
-    std::exit(1);
+    //~ std::exit(1);
     return h;
   }
 

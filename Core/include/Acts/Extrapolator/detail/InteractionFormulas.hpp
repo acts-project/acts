@@ -68,21 +68,17 @@ namespace detail {
       // Ionization - Bethe-Bloch
       // See ATL-SOFT-PUB-2008-003 equation (4)
       // 16 eV * Z**0.9
-      double I;
-      if(siUnits)
-      {
-		I = units::Nat2SI<units::ENERGY>(constants::eionisation * std::pow(mat.Z(), 0.9));
-	  }
-	  else
-		I = constants::eionisation * std::pow(mat.Z(), 0.9);
+      double I = constants::eionisation * std::pow(mat.Z(), 0.9);
 
       // See (1) table 33.1
       // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]
       double kaz;
       if(siUnits)
-		kaz  = 0.5 * units::Nat2SI<units::ENERGY>(30.7075 * units::_MeV) * units::_mm * units::_mm * mat.zOverAtimesRho();
+      {
+		kaz  = 0.5 * units::Nat2SI<units::ENERGY>(30.7075 * units::_MeV) * units::_mm * units::_mm / units::_g * mat.zOverAtimesRho();
+	}
 	else
-      kaz  = 0.5 * constants::ka_BetheBloch * mat.zOverAtimesRho();
+	  kaz  = 0.5 * constants::ka_BetheBloch * mat.zOverAtimesRho();
       
       double eta2 = lbeta * lgamma;
       eta2 *= eta2;
@@ -101,11 +97,9 @@ namespace detail {
       kaz /= lbeta * lbeta;
       double kazL = kaz * path;
 	
-	
 		if(siUnits)
 		{
-			eta2 *= units::_c * units::_c;
-			kazL *= kaz * path * units::_e * units::_e;
+			kazL *= units::_e * units::_e;
 		}
 
       // The landau width (FWHM) is 4.*kazL
@@ -113,22 +107,18 @@ namespace detail {
       // gaussian curve: 1. / (2. * sqrt(2. * log(2.))).
       double sigma = 2. * kazL * 1. / (std::sqrt(2. * std::log(2.)));
       if (mean) {
-		
-        double tMax;
-        double mElectron = siUnits ? units::Nat2SI<units::MASS>(constants::me) : constants::me;
-			
 			 // calculate the fraction to the electron mass
-			double mfrac = mElectron / m;
+			double mfrac = siUnits ? (constants::me / units::SI2Nat<units::MASS>(m)) : (constants::me / m);
 	    // Calculate the mean value for reconstruction
         // See ATL-SOFT-PUB-2008-003 equation (2)
-			  tMax = 2. * eta2 * mElectron
+			  double tMax = 2. * eta2 * constants::me
             / (1. + 2. * lgamma * mfrac + mfrac * mfrac);
 			// See ATL-SOFT-PUB-2008-003 equation (1)
 			// or:
 			// http://pdg.lbl.gov/2018/reviews/rpp2018-rev-passage-particles-matter.pdf
 			// PDG formula 33.5
 			dE = -kazL * 2.0
-				* (0.5 * std::log(2. * mElectron * eta2 * tMax / (I * I))
+				* (0.5 * std::log(2. * constants::me * eta2 * tMax / (I * I))
 				   - (lbeta * lbeta)
 				   - delta * 0.5);
       } else {
