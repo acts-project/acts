@@ -131,8 +131,6 @@ namespace detail {
 				* (0.5 * std::log(2. * mElectron * eta2 * tMax / (I * I))
 				   - (lbeta * lbeta)
 				   - delta * 0.5);
-std::cout << "BB: " << mElectron << "\t" << kazL << "\t" << 2. * mElectron * eta2 * tMax / (I * I) << "\t" << (lbeta * lbeta) << "\t" << delta << std::endl;
-std::cout << "BB2: " << I << "\t" << tMax << "\t" << eta2 << "\t" << mfrac << std::endl;
       } else {
         // Calculate the most probably value for simulation
         //

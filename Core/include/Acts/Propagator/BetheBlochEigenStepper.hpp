@@ -614,13 +614,13 @@ std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * 0.5 * dP[0];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum * c2 + state.mass * state.mass * c4);
-        dP[1]    = g * E / momentum;
+        double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
+        dP[1]    = g * E / (momentum * c2);
         qop[1]   = state.q / momentum;
         // Calculate term for later error propagation
         if (state.covTransport) {
           dL[1] = -qop[1] * qop[1] * g * E
-                  * (3. - (momentum * momentum) / (E * E))
+                  * (3. - (momentum * momentum * c2) / (E * E)) / c2
               - qop[1] * qop[1] * qop[1] * E * dgdqopValue;
         }
       }
@@ -634,13 +634,13 @@ std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * 0.5 * dP[1];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum + state.mass * state.mass * c4);
-        dP[2]    = g * E / momentum;
+        double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
+        dP[2]    = g * E / (momentum * c2);
         qop[2]   = state.q / momentum;
         // Calculate term for later error propagation
         if (state.covTransport) {
           dL[2] = -qop[2] * qop[2] * g * E
-                  * (3. - (momentum * momentum) / (E * E))
+                  * (3. - (momentum * momentum * c2) / (E * E)) / c2
               - qop[2] * qop[2] * qop[2] * E * dgdqopValue;
         }
       }
@@ -652,13 +652,13 @@ std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * dP[2];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum + state.mass * state.mass * c4);
-        dP[3]    = g * E / momentum;
+        double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
+        dP[3]    = g * E / (momentum * c2);
         qop[3]   = state.q / momentum;
         // Calculate term for later error propagation
         if (state.covTransport) {
           dL[3] = -qop[3] * qop[3] * g * E
-                  * (3. - (momentum * momentum) / (E * E))
+                  * (3. - (momentum * momentum * c2) / (E * E)) / c2
               - qop[3] * qop[3] * qop[3] * E * dgdqopValue;
         }
       }
@@ -666,7 +666,7 @@ std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
       B_last              = getField(state, pos2);
       k4                  = qop[3] * (state.dir + h * k3).cross(B_last);
-      std::cout << "h2: " << h2 << std::endl;
+std::cout << "h2: " << h2 << std::endl;
       // Return an estimate of the local integration error
       return h2 * (k1 - k2 - k3 + k4).template lpNorm<1>();
     };
@@ -691,7 +691,7 @@ std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units
 
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {
-
+std::cout << "dL: " << dL[0] << "\t" << dL[1] << "\t" << dL[2] << "\t" << dL[3] << std::endl;
       /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
       /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
       /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -766,11 +766,11 @@ std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units
       dFdT *= h;
 
       Vector3D onesVec(1., 1., 1.);
-      dFdL = conv * (onesVec * h + h2 / 6 * (dk1dL + dk2dL + dk3dL));
+      dFdL = onesVec * h + conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
 
       dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
 
-      dGdL = conv * (onesVec + h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL));
+      dGdL = onesVec + conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
       // Evaluation of the dLambda''/dlambda term
       D(6, 6) += conv * (h / 6.) * (jdL1 + 2. * (jdL2 + jdL3) + jdL4);
@@ -789,7 +789,8 @@ std::cout << "ion loss: " << ionisationEnergyLoss << "\t" << units::SI2Nat<units
 
     // Update inverse momentum if energyLossFlag is switched on
     if (energyLossFlag && material) {
-      state.p += (h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3]);
+std::cout << "p abzug: " << units::SI2Nat<units::MOMENTUM>((h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3])) << std::endl;
+      state.p += units::SI2Nat<units::MOMENTUM>((h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3]));
       // if (momentum <= m_momentumCutOff) return false; //Abort propagation
     }
     std::cout << "result pos: " << state.pos << std::endl;
