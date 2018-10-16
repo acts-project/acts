@@ -103,6 +103,59 @@ struct Result : private detail::Extendable<result_list...>
   operator bool() const { return (endParameters && status == Status::SUCCESS); }
 };
 
+/// @brief Options for propagate() call
+///
+/// @tparam action_list_t List of action types called after each
+///    propagation step with the current propagation and stepper state
+///
+/// @tparam aborter_list_t List of abort conditions tested after each
+///    propagation step using the current propagation and stepper state
+///
+template <typename action_list_t  = ActionList<>,
+          typename aborter_list_t = AbortList<>>
+struct PropagatorOptions
+{
+
+  /// Propagation direction
+  NavigationDirection direction = forward;
+
+  /// The |pdg| code for (eventual) material integration - pion default
+  int absPdgCode = 211;
+
+  /// The mass for the particle for (eventual) material integration
+  double mass = 139.57018 * units::_MeV;
+
+  /// Maximum number of steps for one propagate() call
+  unsigned int maxSteps = 1000;
+
+  /// Required tolerance to reach target (surface, pathlength)
+  double targetTolerance = s_onSurfaceTolerance;
+
+  /// Absolute maximum step size
+  double maxStepSize = 1 * units::_m;
+
+  /// Absolute maximum path length
+  double pathLimit = std::numeric_limits<double>::max();
+
+  /// Loop protection step, it adapts the pathLimit
+  bool   loopProtection = true;
+  double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
+
+  /// Debug output steering:
+  // - the string where debug messages are stored (optionally)
+  // - it also has some formatting options
+  bool        debug         = false;  ///< switch debug on
+  std::string debugString   = "";     ///< the string to collect msgs
+  size_t      debugPfxWidth = 30;     ///< the prefix width
+  size_t      debugMsgWidth = 50;     ///< the mesage width
+
+  /// List of actions
+  action_list_t actionList;
+
+  /// List of abort conditions
+  aborter_list_t stopConditions;
+};
+
 /// @brief Propagator for particles (optionally in a magnetic field)
 ///
 /// The Propagator works with a state objects given at function call
@@ -142,58 +195,6 @@ public:
   /// Typedef the navigator state
   using NavigatorState = typename navigator_t::state_type;
 
-  /// @brief Options for propagate() call
-  ///
-  /// @tparam action_list_t List of action types called after each
-  ///    propagation step with the current propagation and stepper state
-  ///
-  /// @tparam aborter_list_t List of abort conditions tested after each
-  ///    propagation step using the current propagation and stepper state
-  ///
-  template <typename action_list_t  = ActionList<>,
-            typename aborter_list_t = AbortList<>>
-  struct Options
-  {
-
-    /// Propagation direction
-    NavigationDirection direction = forward;
-
-    /// The |pdg| code for (eventual) material integration - pion default
-    int absPdgCode = 211;
-
-    /// The mass for the particle for (eventual) material integration
-    double mass = 139.57018 * units::_MeV;
-
-    /// Maximum number of steps for one propagate() call
-    unsigned int maxSteps = 1000;
-
-    /// Required tolerance to reach target (surface, pathlength)
-    double targetTolerance = s_onSurfaceTolerance;
-
-    /// Absolute maximum step size
-    double maxStepSize = 1 * units::_m;
-
-    /// Absolute maximum path length
-    double pathLimit = std::numeric_limits<double>::max();
-
-    /// Loop protection step, it adapts the pathLimit
-    bool   loopProtection = true;
-    double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
-
-    /// Debug output steering:
-    // - the string where debug messages are stored (optionally)
-    // - it also has some formatting options
-    bool        debug         = false;  ///< switch debug on
-    std::string debugString   = "";     ///< the string to collect msgs
-    size_t      debugPfxWidth = 30;     ///< the prefix width
-    size_t      debugMsgWidth = 50;     ///< the mesage width
-
-    /// List of actions
-    action_list_t actionList;
-
-    /// List of abort conditions
-    aborter_list_t stopConditions;
-  };
 
   /// Constructor from implementation object
   ///
@@ -378,7 +379,7 @@ public:
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
   propagate(const parameters_t& start,
-            const Options<action_list_t, aborter_list_t>& options) const
+            const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced by the propagation
@@ -390,7 +391,7 @@ public:
         = action_list_t_result_t<ReturnParameterType, action_list_t>;
 
     // Type of provided options which consist action and abort list
-    using OptionsType = Options<action_list_t, aborter_list_t>;
+    using OptionsType = PropagatorOptions<action_list_t, aborter_list_t>;
 
     static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                   "return track parameter type must be copy-constructible");
@@ -455,7 +456,7 @@ public:
       action_list_t>
   propagate(const parameters_t& start,
             const surface_t&    target,
-            const Options<action_list_t, aborter_list_t>& options) const
+            const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced at the end of the propagation
@@ -464,7 +465,7 @@ public:
                                                            surface_t>;
 
     // Type of provided options
-    using OptionsType = Options<action_list_t, aborter_list_t>;
+    using OptionsType = PropagatorOptions<action_list_t, aborter_list_t>;
 
     // Type of the full propagation result, including output from actions
     using ResultType

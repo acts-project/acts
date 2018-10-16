@@ -119,13 +119,7 @@ namespace Test {
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
-    // Action list and abort list
-    using ActionListType      = ActionList<>;
-    using AbortConditionsType = AbortList<>;
-
-    typename EigenPropagatorType::template Options<ActionListType,
-                                                   AbortConditionsType>
-        options;
+    PropagatorOptions<> options;
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
@@ -183,13 +177,8 @@ namespace Test {
     // A PlaneSelector for the SurfaceCollector
     using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
-    // Action list and abort list
-    using ActionListType      = ActionList<PlaneCollector>;
-    using AbortConditionsType = AbortList<>;
+    PropagatorOptions<ActionList<PlaneCollector>> options;
 
-    typename EigenPropagatorType::template Options<ActionListType,
-                                                   AbortConditionsType>
-        options;
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
@@ -197,10 +186,7 @@ namespace Test {
     auto        collector_result = result.get<PlaneCollector::result_type>();
 
     // step through the surfaces and go step by step
-    using ActionListEmpty = ActionList<>;
-    typename EigenPropagatorType::template Options<ActionListEmpty,
-                                                   AbortConditionsType>
-        optionsEmpty;
+    PropagatorOptions<> optionsEmpty;
 
     optionsEmpty.maxStepSize = 25. * units::_cm;
     // try propagation from start to each surface
@@ -261,13 +247,8 @@ namespace Test {
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
-    // Action list and abort list
-    using ActionListType      = ActionList<MaterialInteractor>;
-    using AbortConditionsType = AbortList<>;
+    PropagatorOptions<ActionList<MaterialInteractor>> options;
 
-    typename EigenPropagatorType::template Options<ActionListType,
-                                                   AbortConditionsType>
-        options;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
@@ -325,12 +306,8 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-    using ActionListType      = ActionList<MaterialInteractor>;
-    using AbortConditionsType = AbortList<>;
 
-    typename EigenPropagatorType::template Options<ActionListType,
-                                                   AbortConditionsType>
-        options;
+    PropagatorOptions<ActionList<MaterialInteractor>> options;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 1500. * units::_mm;
 
