@@ -65,17 +65,6 @@ template <typename Impl>
 class PropagatorWrapper final
 {
 public:
-  /// @brief Options for propagate() call
-  ///
-  /// @tparam Actions List of action types called after each
-  ///                   propagation step with the current propagation
-  ///                   cache
-  ///
-  /// @tparam Aborters  List of abort conditions tested after each
-  ///                   propagation step using the current propagation
-  ///                   cache
-  ///
-
   /// Constructor from implementation object
   explicit PropagatorWrapper(Impl impl) : m_impl(impl) {}
 
