@@ -75,33 +75,13 @@ public:
   ///                   propagation step using the current propagation
   ///                   cache
   ///
-  template <typename Actions = ActionList<>, typename Aborters = AbortList<>>
-  struct Options
-  {
-    /// Propagation direction
-    NavigationDirection direction = forward;
 
-    /// Maximum number of steps for one propagate() call
-    unsigned int maxSteps = 1000;
 
-    /// Required tolerance to reach target (surface, pathlength)
-    double targetTolerance = 1 * units::_um;
 
-    /// Absolute maximum step size
-    double maxStepSize = 1 * units::_m;
 
-    /// Absolute maximum path length
-    double pathLimit = std::numeric_limits<double>::max();
 
-    /// List of actions
-    Actions action_list;
 
-    /// List of abort conditions
-    Aborters stop_conditions;
 
-    /// debug flag
-    bool debug = false;
-  };
 
   /// Constructor from implementation object
   explicit PropagatorWrapper(Impl impl) : m_impl(impl) {}
@@ -162,7 +142,7 @@ public:
   template <typename Actions, typename Aborters>
   action_list_result_t<NeutralCurvilinearParameters, Actions>
   propagate(const NeutralParameters& start,
-            const Options<Actions, Aborters>& options) const
+            const PropagatorOptions<Actions, Aborters>& options) const
   {
     // The extrapolation cell
     ExtrapolationCell<NeutralParameters> ec(start);
@@ -181,7 +161,7 @@ public:
   template <typename Actions, typename Aborters>
   action_list_result_t<CurvilinearParameters, Actions>
   propagate(const TrackParameters& start,
-            const Options<Actions, Aborters>& options) const
+            const PropagatorOptions<Actions, Aborters>& options) const
   {
     // The extrapolation cell
     ExtrapolationCell<TrackParameters> ec(start);
@@ -200,7 +180,7 @@ public:
   template <typename Actions, typename Aborters>
   action_list_result_t<CurvilinearParameters, Actions>
   propagate(const CurvilinearParameters& start,
-            const Options<Actions, Aborters>& options) const
+            const PropagatorOptions<Actions, Aborters>& options) const
   {
     // The extrapolation cell
     ExtrapolationCell<TrackParameters> ec(start);
@@ -241,7 +221,7 @@ public:
   action_list_result_t<NeutralParameters, Actions>
   propagate(const NeutralParameters& start,
             const Surface&           target,
-            const Options<Actions, Aborters>& options) const
+            const PropagatorOptions<Actions, Aborters>& options) const
   {
     // The extrapolation cell
     ExtrapolationCell<NeutralParameters> ec(start);
@@ -262,7 +242,7 @@ public:
   action_list_result_t<TrackParameters, Actions>
   propagate(const TrackParameters& start,
             const Surface&         target,
-            const Options<Actions, Aborters>& options) const
+            const PropagatorOptions<Actions, Aborters>& options) const
   {
 
     // The extrapolation cell
@@ -302,7 +282,7 @@ private:
   propagate_(Cache& cache,
              const Parameters& /*start*/,
              const Surface& surface,
-             const Options<Actions, Aborters>& options) const
+             const PropagatorOptions<Actions, Aborters>& options) const
   {
     // Type of the full propagation result, including output from actions
     using result_type = action_list_result_t<Parameters, Actions>;
