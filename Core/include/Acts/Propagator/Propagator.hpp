@@ -195,7 +195,6 @@ public:
   /// Typedef the navigator state
   using NavigatorState = typename navigator_t::state_type;
 
-
   /// Constructor from implementation object
   ///
   /// @param stepper The stepper implementation is moved to a private member
@@ -378,8 +377,9 @@ public:
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
-  propagate(const parameters_t& start,
-            const PropagatorOptions<action_list_t, aborter_list_t>& options) const
+  propagate(
+      const parameters_t& start,
+      const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced by the propagation
@@ -454,9 +454,10 @@ public:
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,
       action_list_t>
-  propagate(const parameters_t& start,
-            const surface_t&    target,
-            const PropagatorOptions<action_list_t, aborter_list_t>& options) const
+  propagate(
+      const parameters_t& start,
+      const surface_t&    target,
+      const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced at the end of the propagation

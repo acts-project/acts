@@ -196,7 +196,8 @@ namespace Test {
     using ActionList_type      = ActionList<PerpendicularMeasure>;
     using AbortConditions_type = AbortList<>;
 
-    using options_type = PropagatorOptions<ActionList_type, AbortConditions_type>;
+    using options_type
+        = PropagatorOptions<ActionList_type, AbortConditions_type>;
 
     options_type options;
   }

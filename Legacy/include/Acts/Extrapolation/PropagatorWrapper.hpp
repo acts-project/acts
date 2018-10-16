@@ -76,13 +76,6 @@ public:
   ///                   cache
   ///
 
-
-
-
-
-
-
-
   /// Constructor from implementation object
   explicit PropagatorWrapper(Impl impl) : m_impl(impl) {}
 

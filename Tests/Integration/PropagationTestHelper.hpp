@@ -179,8 +179,8 @@ namespace IntegrationTest {
 
     // setup propagation options
     // Action list and abort list
-    using DebugOutput     = Acts::detail::DebugOutputActor;
-    using ActionList      = Acts::ActionList<DebugOutput>;
+    using DebugOutput = Acts::detail::DebugOutputActor;
+    using ActionList  = Acts::ActionList<DebugOutput>;
 
     PropagatorOptions<ActionList> fwdOptions;
     fwdOptions.pathLimit   = plimit;

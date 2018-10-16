@@ -120,7 +120,6 @@ namespace Test {
     using ActionList_type      = ActionList<MaterialCollector, DebugOutput>;
     using AbortConditions_type = AbortList<>;
 
-
     using Options = PropagatorOptions<ActionList_type, AbortConditions_type>;
     Options fwdOptions;
 
