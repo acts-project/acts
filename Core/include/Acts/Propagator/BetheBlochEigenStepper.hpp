@@ -435,7 +435,6 @@ public:
     // TODO: Allow change between mean and mode & make return as pure double
     double ionisationEnergyLoss
         = energyLoss(mass, momentum * units::_c / energy, energy / (mass * c2), material, 1., true, true).first;
-std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << units::SI2Nat<units::ENERGY>(ionisationEnergyLoss) << std::endl;
     // b) radiation
     // TODO: There doesn't radiate anything
     double radiationEnergyLoss = 0.;
@@ -544,6 +543,7 @@ std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << u
   step(State& state) const
   {
     bool     energyLossFlag = true;
+    // TODO: Pass mass & material via actor
     Material material(
         352.8, 394.133, 9.012, 4., 1.848e-3);         // TODO: how to pass this?
         //~ 95.7, 465.2, 28.03, 14., 2.32e-3);         // TODO: how to pass this?
@@ -577,6 +577,7 @@ std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << u
       // Use the same energy loss throughout the step.
       g = dEds(momentum, E, massSI, material);
       // Change of the momentum per path length
+      // dPds = dPdE * dEds
       dP[0] = g * E / (momentum * c2);
       if (state.covTransport) {
         // Calculate the change of the the energy loss per path length and
@@ -590,10 +591,9 @@ std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << u
         }
         // Calculate term for later error propagation
         dL[0]
-            = -qop[0] * qop[0] * g * E * (3. - (momentum * momentum * c2) / (E * E)) / c2
+            = -qop[0] * qop[0] * g * E * (3. - (momentum * momentum * c2) / (E * E)) / c3
             - qop[0] * qop[0] * qop[0] * E * dgdqopValue;
       }
-      std::cout << "dP[0]: " << dP[0] << "\t" << dL[0] << "\t" << (momentum * momentum * c2) / (E * E) << std::endl;
     }
 
 
@@ -621,7 +621,7 @@ std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << u
         // Calculate term for later error propagation
         if (state.covTransport) {
           dL[1] = -qop[1] * qop[1] * g * E
-                  * (3. - (momentum * momentum * c2) / (E * E)) / c2
+                  * (3. - (momentum * momentum * c2) / (E * E)) / c3
               - qop[1] * qop[1] * qop[1] * E * dgdqopValue;
         }
       }
@@ -641,7 +641,7 @@ std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << u
         // Calculate term for later error propagation
         if (state.covTransport) {
           dL[2] = -qop[2] * qop[2] * g * E
-                  * (3. - (momentum * momentum * c2) / (E * E)) / c2
+                  * (3. - (momentum * momentum * c2) / (E * E)) / c3
               - qop[2] * qop[2] * qop[2] * E * dgdqopValue;
         }
       }
@@ -659,7 +659,7 @@ std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << u
         // Calculate term for later error propagation
         if (state.covTransport) {
           dL[3] = -qop[3] * qop[3] * g * E
-                  * (3. - (momentum * momentum * c2) / (E * E)) / c2
+                  * (3. - (momentum * momentum * c2) / (E * E)) / c3
               - qop[3] * qop[3] * qop[3] * E * dgdqopValue;
         }
       }
@@ -667,7 +667,6 @@ std::cout << "ion loss: " << energy << "\t" << ionisationEnergyLoss << "\t" << u
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
       B_last              = getField(state, pos2);
       k4                  = qop[3] * (state.dir + h * k3).cross(B_last);
-std::cout << "h2: " << h2 << std::endl;
       // Return an estimate of the local integration error
       return h2 * (k1 - k2 - k3 + k4).template lpNorm<1>();
     };
@@ -693,6 +692,7 @@ std::cout << "h2: " << h2 << std::endl;
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {
 std::cout << "dL: " << dL[0] << "\t" << dL[1] << "\t" << dL[2] << "\t" << dL[3] << std::endl;
+std::cout << "dP: " << dP[0] << "\t" << dP[1] << "\t" << dP[2] << "\t" << dP[3] << std::endl;
       /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
       /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
       /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -777,6 +777,7 @@ std::cout << "dL: " << dL[0] << "\t" << dL[1] << "\t" << dL[2] << "\t" << dL[3] 
       D(6, 6) += conv * (h / 6.) * (jdL1 + 2. * (jdL2 + jdL3) + jdL4);
       std::cout << "D:\n" << D << std::endl;
       std::cout << "jac:\n" << state.jacTransport << std::endl;
+      std::cout << "conv: " << conv << std::endl;
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
     }
@@ -790,7 +791,7 @@ std::cout << "dL: " << dL[0] << "\t" << dL[1] << "\t" << dL[2] << "\t" << dL[3] 
 
     // Update inverse momentum if energyLossFlag is switched on
     if (energyLossFlag && material) {
-std::cout << "p abzug: " << units::SI2Nat<units::MOMENTUM>((h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3])) << std::endl;
+std::cout << "p abzug: " << (h / 6.) * units::SI2Nat<units::MOMENTUM>(dP[0] + 2. * (dP[1] + dP[2]) + dP[3]) << std::endl;
       state.p += units::SI2Nat<units::MOMENTUM>((h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3]));
       // if (momentum <= m_momentumCutOff) return false; //Abort propagation
     }
@@ -799,7 +800,7 @@ std::cout << "p abzug: " << units::SI2Nat<units::MOMENTUM>((h / 6.) * (dP[0] + 2
     std::cout << "result p: " << state.p << std::endl;
     std::cout << "result cov:\n" << state.jacTransport << std::endl;
     state.pathAccumulated += h;
-    //~ std::exit(1);
+    std::exit(1);
     return h;
   }
 
@@ -808,6 +809,7 @@ private:
   BField m_bField;
 
 const double c2 = units::_c * units::_c;
+const double c3 = units::_c * units::_c * units::_c;
 const double c4 = units::_c * units::_c * units::_c * units::_c;
 
   detail::IonisationLoss energyLoss;
