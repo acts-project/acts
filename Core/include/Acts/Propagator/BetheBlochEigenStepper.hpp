@@ -61,13 +61,16 @@ public:
     }
 
     /// Mass
-    double mass = 139.57018 * units::_MeV;
+    double mass = 0.;
     
-    /// Material that is passed
-    Material* material = new Material(352.8, 394.133, 9.012, 4., 1.848e-3);
+    // TODO: would be nicer with TrackingVolume** to keep track of changes
+    /// Volume with material that is passed
+    TrackingVolume const* volume = nullptr;
+     //~ = new Material(352.8, 394.133, 9.012, 4., 1.848e-3);
     //~ 95.7, 465.2, 28.03, 14., 2.32e-3);  
+
     /// Boolean flag for energy loss while stepping
-    bool     energyLossFlag = true;
+    bool energyLossFlag = true;
    
     /// Tolerance for the error of the integration
 	double tolerance = 5e-5;
@@ -243,22 +246,22 @@ public:
               B_first);  // TODO: athena multiplies c to that expression
 
     // Calculate the energy loss
-    if (state.energyLossFlag && state.material) {
+    if (state.energyLossFlag && state.volume->material()) {
       double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
       // Use the same energy loss throughout the step.
-      g = dEds(momentum, E, massSI, *state.material);
+      g = dEds(momentum, E, massSI, *state.volume->material());
       // Change of the momentum per path length
       // dPds = dPdE * dEds
       dP[0] = g * E / (momentum * c2);
       if (state.covTransport) {
         // Calculate the change of the the energy loss per path length and
         // inverse momentum
-        if (includeGgradient) {
+        if (state.includeGgradient) {
           dgdqopValue
               = dgdqop(E,
                        qop[0],
                        state.mass,
-                       *state.material);  // Use this value throughout the step.
+                       *state.volume->material());  // Use this value throughout the step.
         }
         // Calculate term for later error propagation
         dL[0]
@@ -282,7 +285,7 @@ public:
       half_h = h * 0.5;
 
       // Second Runge-Kutta point
-      if (state.energyLossFlag && material) {
+      if (state.energyLossFlag && state.volume->material()) {
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * 0.5 * dP[0];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
@@ -302,7 +305,7 @@ public:
       k2                  = qop[1] * (state.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
-      if (state.energyLossFlag && material) {
+      if (state.energyLossFlag && state.volume->material()) {
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * 0.5 * dP[1];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
@@ -320,7 +323,7 @@ public:
       k3 = qop[2] * (state.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
-      if (state.energyLossFlag && material) {
+      if (state.energyLossFlag && state.volume->material()) {
         // Update parameters related to a changed momentum
         momentum = initialMomentum + h * dP[2];
         // if (momentum <= momentumCutOff) return false; //Abort propagation
@@ -345,10 +348,10 @@ public:
     // Select and adjust the appropriate Runge-Kutta step size
     // @todo remove magic numbers and implement better step estimation
     double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
-    while (error_estimate > 4. * tolerance) {
+    while (error_estimate > 4. * state.tolerance) {
       state.stepSize = state.stepSize
           * std::min(std::max(0.25,
-                              std::pow((tolerance / error_estimate), 0.25)),
+                              std::pow((state.tolerance / error_estimate), 0.25)),
                      4.);
       error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     }
@@ -394,6 +397,7 @@ public:
       ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
+	// TODO: require dL = {0,0,0,0} without energy loss -> simplifying next couple of lines
       // Evaluation of the rightmost column without the last term.
       const double jdL1 = dL[0];
       dk1dL             = state.dir.cross(B_first);
@@ -454,7 +458,7 @@ public:
     state.derivative.template segment<3>(3) = k4;
 
     // Update inverse momentum if state.energyLossFlag is switched on
-    if (state.energyLossFlag && material) {
+    if (state.energyLossFlag && state.volume->material()) {
       state.p += units::SI2Nat<units::MOMENTUM>((h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3]));
       // if (momentum <= m_momentumCutOff) return false; //Abort propagation
     }

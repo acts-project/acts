@@ -8,17 +8,21 @@
 
 #pragma once
 
-#include <cmath>
-#include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
-#include "Acts/Utilities/Helpers.hpp"
-
 namespace Acts {
-
-using cstep = detail::ConstrainedStep;
 
 // TODO: Logging
 struct StepActor
 {
+	// Configurations for 
+    /// Boolean flag for energy loss while stepping
+    bool energyLossFlag = true;
+    /// Tolerance for the error of the integration
+	double tolerance = 5e-5;
+    /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
+	bool includeGgradient = false;
+	/// Cut-off value for the momentum
+    double momentumCutOff = 0.;
+    
   template <typename propagator_state_t>
   void
   operator()(propagator_state_t& state) const
@@ -27,49 +31,17 @@ struct StepActor
     if (state.navigation.targetReached) {
       return;
     }
-    // if switched off, then return - alows run-time configuration
-    if (!multipleScattering && !energyLoss) {
-      return;
-    }
-    // No action at first step
-    if (state.stepping.pathAccumulated == 0.) {
-      if (state.navigation.currentVolume
-          && state.navigation.currentVolume->material()
-          && state.stepping.stepSize > maxStepSize) {
-        state.stepping.stepSize.update(maxStepSize, cstep::user);
-      }
-      return;
-    }
 
     if (state.navigation.currentVolume
-        && state.navigation.currentVolume->material()) {
-      std::shared_ptr<const Material> matVol
-          = state.navigation.currentVolume->material();
-
-      // to integrate process noise, we need to transport
-      // the covariance to the current position in space
-      if (state.stepping.covTransport) {
-        state.stepping.covarianceTransport(false);
-      }
-
-
-      }
-
-      // apply the energy loss
-      if (energyLoss) {
-        if (state.stepping.stepSize.value(cstep::user) > maxStepSize) {
-          state.stepping.stepSize.update(maxStepSize, cstep::user);
-        }
-
-      }
-		else 
-		{
-      if (energyLoss
-          && state.options.maxStepSize
-              > state.stepping.stepSize.value(cstep::user)) {
-        state.stepping.stepSize.release(cstep::user);
-      }
-    }
+        && state.navigation.currentVolume != state.stepping.volume) 
+	{
+		state.stepping.mass = state.options.mass;
+		state.stepping.volume = state.navigation.currentVolume;
+		state.stepping.energyLossFlag = energyLossFlag;
+		state.stepping.tolerance = tolerance;
+		state.stepping.includeGgradient = includeGgradient;
+		state.stepping.momentumCutOff = momentumCutOff;
+	}
   }
 };
 }
