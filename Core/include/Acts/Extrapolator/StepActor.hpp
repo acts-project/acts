@@ -19,19 +19,6 @@ using cstep = detail::ConstrainedStep;
 // TODO: Logging
 struct StepActor
 {
-  /// multiple scattering switch on/off
-  bool multipleScattering = true;
-  /// the scattering struct
-  detail::HighlandScattering scattering;
-
-  /// energy loss switch on/off
-  bool energyLoss = true;
-  /// the energy loss struct
-  detail::IonisationLoss ionisationloss;
-
-  /// Maximal step size in a dense volume
-  double maxStepSize = 50. * units::_mm;
-
   template <typename propagator_state_t>
   void
   operator()(propagator_state_t& state) const
@@ -65,42 +52,7 @@ struct StepActor
         state.stepping.covarianceTransport(false);
       }
 
-      const double thickness = state.stepping.stepSize;
 
-      // the momentum at current position
-      const double p     = state.stepping.p;
-      const double m     = state.options.mass;
-      const double E     = std::sqrt(p * p + m * m);
-      const double lbeta = p / E;
-
-      // apply the multiple scattering
-      // - only when you do covariance transport
-      if (multipleScattering && state.stepping.covTransport) {
-        // thickness in X0 from without path correction
-        double tInX0 = thickness / matVol->X0();
-        // retrieve the scattering contribution
-        double sigmaScat = scattering(p, lbeta, tInX0);
-        double sinTheta
-            = std::sin(VectorHelpers::theta(state.stepping.direction()));
-        double sigmaDeltaPhiSq = sigmaScat * sigmaScat / (sinTheta * sinTheta);
-        double sigmaDeltaThetaSq = sigmaScat * sigmaScat;
-        // good in any case for positive direction
-        if (state.stepping.navDir == forward) {
-          // just add the multiple scattering component
-          state.stepping.cov(ePHI, ePHI)
-              += state.stepping.navDir * sigmaDeltaPhiSq;
-          state.stepping.cov(eTHETA, eTHETA)
-              += state.stepping.navDir * sigmaDeltaThetaSq;
-        } else {
-          // we check if the covariance stays positive
-          double sEphi   = state.stepping.cov(ePHI, ePHI);
-          double sEtheta = state.stepping.cov(eTHETA, eTHETA);
-          if (sEphi > sigmaDeltaPhiSq && sEtheta > sigmaDeltaThetaSq) {
-            // noise removal is not applied if covariance would fall below 0
-            state.stepping.cov(ePHI, ePHI) -= sigmaDeltaPhiSq;
-            state.stepping.cov(eTHETA, eTHETA) -= sigmaDeltaThetaSq;
-          }
-        }
       }
 
       // apply the energy loss
@@ -108,40 +60,7 @@ struct StepActor
         if (state.stepping.stepSize.value(cstep::user) > maxStepSize) {
           state.stepping.stepSize.update(maxStepSize, cstep::user);
         }
-        // calculate gamma
-        const double lgamma = E / m;
-        // energy loss and straggling - per unit length
-        std::pair<double, double> eLoss
-            = ionisationloss(m, lbeta, lgamma, *matVol, thickness);
-        // apply the energy loss
-        const double dEdl = state.stepping.navDir * eLoss.first;
-        const double dE   = thickness * dEdl;
-        // check for energy conservation, and only apply momentum change
-        // when kinematically allowed
-        if (E + dE > m) {
-          // calcuate the new momentum
-          const double newP = std::sqrt((E + dE) * (E + dE) - m * m);
-          // update the state/momentum
-          state.stepping.p = std::copysign(newP, state.stepping.p);
-        }
-        // transfer this into energy loss straggling and appply to covariance:
-        // do that even if you had not applied energy loss do to
-        // the kineamtic limit to catch the cases of deltE < MOP/MPV
-        if (state.stepping.covTransport) {
-          // calculate the straggling
-          const double sigmaQoverP = thickness * eLoss.second / (lbeta * p * p);
-          // good in any case for positive direction
-          if (state.stepping.navDir == forward) {
-            state.stepping.cov(eQOP, eQOP)
-                += state.stepping.navDir * sigmaQoverP * sigmaQoverP;
-          } else {
-            // check that covariance entry doesn't become neagive
-            double sEqop = state.stepping.cov(eQOP, eQOP);
-            if (sEqop > sigmaQoverP * sigmaQoverP) {
-              state.stepping.cov(eQOP, eQOP)
-                  += state.stepping.navDir * sigmaQoverP * sigmaQoverP;
-            }
-          }
+
         }
       }
     } else {
