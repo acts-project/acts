@@ -18,13 +18,22 @@
 @PACKAGE_INIT@
 
 set(_supported_components @_supported_components@)
+set(_git_hash @_git_hash@)
+set(_git_hash_short @_git_hash_short@)
+set(_git_local_changes @_git_local_changes@)
 
 # copy version to all uppercase
 set(ACTS_VERSION "${Acts_VERSION}")
 
 # print information about found version
 if (NOT (${Acts_FIND_QUIETLY}))
-  message (STATUS "found Acts version ${Acts_VERSION}")
+  
+  set(_git_msg "[${_git_hash_short}]")
+  if(${_git_local_changes} STREQUAL "DIRTY")
+          set(_git_msg "${_git_msg} - DIRTY")
+  endif()
+
+  message (STATUS "found Acts version ${Acts_VERSION} - ${_git_msg}")
   message (STATUS "supported components are:")
   foreach (_scomp ${_supported_components})
     message (STATUS "   - ${_scomp}")

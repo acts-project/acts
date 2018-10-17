@@ -4,6 +4,12 @@ project (Acts VERSION 0.6.0 LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
+# get git commit hash
+include (GetGitRevisionDescription)
+get_git_head_revision(_git_refspec _git_hash)
+git_local_changes(_git_local_changes)
+string(SUBSTRING "${_git_hash}" 0 8 _git_hash_short)
+
 # build options
 
 # all options must be defined here to keep the list directly visible and
