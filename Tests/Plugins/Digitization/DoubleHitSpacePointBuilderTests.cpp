@@ -67,8 +67,8 @@ namespace Test {
     rotationPos.col(0) = xPos;
     rotationPos.col(1) = yPos;
     rotationPos.col(2) = zPos;
-    Transform3D t3d    = getTransformFromRotTransl(
-        rotationPos, Vector3D(0., 0., 10. * units::_m));
+    Transform3D t3d(Transform3D::Identity() * rotationPos);
+    t3d.translation() = Vector3D(0., 0., 10. * units::_m);
 
     // Build Digitization
     const DigitizationModule digMod(segmentation, 1., 1., 0.);
@@ -104,8 +104,8 @@ namespace Test {
     rotationNeg.col(0) = xNeg;
     rotationNeg.col(1) = yNeg;
     rotationNeg.col(2) = zNeg;
-    Transform3D t3d2   = getTransformFromRotTransl(
-        rotationNeg, Vector3D(0., 0., 10.005 * units::_m));
+    Transform3D t3d2(Transform3D::Identity() * rotationNeg);
+    t3d2.translation() = Vector3D(0., 0., 10.005 * units::_m);
 
     DetectorElementStub detElem2(
         id2,
@@ -148,8 +148,8 @@ namespace Test {
 
     // Build third PlanarModuleCluster
     const int   id3(2);
-    Transform3D t3d3 = getTransformFromRotTransl(
-        rotationNeg, Vector3D(0., 10. * units::_m, 10.005 * units::_m));
+    Transform3D t3d3(Transform3D::Identity() * rotationNeg);
+    t3d3.translation() = Vector3D(0., 0., 10.005 * units::_m);
 
     DetectorElementStub detElem3(
         id3,

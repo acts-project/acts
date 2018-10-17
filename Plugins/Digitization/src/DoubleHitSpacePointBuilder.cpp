@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Digitization/DoubleHitSpacePointBuilder.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include <cmath>
 #include <limits>
+#include "Acts/Utilities/Helpers.hpp"
 
 ///
 /// @note Used abbreviation: "Strip Detector Element" -> SDE

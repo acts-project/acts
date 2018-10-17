@@ -65,8 +65,8 @@ namespace Test {
     rotationPos.col(0) = xPos;
     rotationPos.col(1) = yPos;
     rotationPos.col(2) = zPos;
-    Transform3D t3d    = getTransformFromRotTransl(
-        rotationPos, Vector3D(0., 0., 10. * units::_m));
+    Transform3D t3d(Transform3D::Identity() * rotationPos);
+    t3d.translation() = Vector3D(0., 0., 10. * units::_m);
 
     // Build Digitization
     const DigitizationModule digMod(segmentation, 1., 1., 0.);
