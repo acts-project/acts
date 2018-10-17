@@ -142,7 +142,7 @@ namespace Test {
 
     //~ // Launch and collect results
     //~ const auto&                       result = prop.propagate(sbtp,
-    //propOpts);
+    // propOpts);
     //~ const StepCollector::this_result& stepResult
     //~ = result.get<typename StepCollector::result_type>();
 
@@ -176,7 +176,7 @@ namespace Test {
       // Set initial parameters for the particle track
       ActsSymMatrixD<5> cov;
       //~ cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0.,
-      //0.,
+      // 0.,
       //~ 0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
       cov << 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
           0., 0., 0., 0., 0., 0., 0., 0.;
@@ -194,7 +194,8 @@ namespace Test {
       // Set options for propagator
       //~ Propagator<EigenStepper<ConstantBField>, Navigator>::
       Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator>::
-          //~ Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
+          //~ Options<ActionList<StepCollector, StepActor>,
+          // AbortList<EndOfWorld>>
           Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
               propOpts;
       propOpts.actionList     = aList;
@@ -255,17 +256,18 @@ namespace Test {
       //~ propOpts.actionList = aList;
 
       //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es,
-      //naviMat);
+      // naviMat);
 
       //~ const auto& result2 = prop2.propagate(sbtp2, propOpts);
       //~ const StepCollector::this_result& stepResult2 = result2.get<typename
-      //StepCollector::result_type>();
+      // StepCollector::result_type>();
 
       //~ for(unsigned int i = stepResult2.position.size() - 1; i > 0; i--)
       //~ if(stepResult2.position[i].x() <= 1000.)
       //~ {
       //~ ofs << ss << " " << stepResult2.momentum[i].x() << " " <<
-      //stepResult2.momentum[i].y() << " " << stepResult2.momentum[i].z() << " "
+      // stepResult2.momentum[i].y() << " " << stepResult2.momentum[i].z() << "
+      // "
       //<< stepResult2.cov[i](4, 4) << std::endl;
       //~ break;
       //~ }
@@ -283,17 +285,18 @@ namespace Test {
       //~ propOpts.actionList = aList;
 
       //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es,
-      //naviMat);
+      // naviMat);
 
       //~ const auto& result2 = prop2.propagate(sbtp2, propOpts);
       //~ const StepCollector::this_result& stepResult2 = result2.get<typename
-      //StepCollector::result_type>();
+      // StepCollector::result_type>();
 
       //~ for(unsigned int i = stepResult2.position.size() - 1; i > 0; i--)
       //~ if(stepResult2.position[i].x() <= 1000.)
       //~ {
       //~ ofs << ss << " " << stepResult2.momentum[i].x() << " " <<
-      //stepResult2.momentum[i].y() << " " << stepResult2.momentum[i].z() << " "
+      // stepResult2.momentum[i].y() << " " << stepResult2.momentum[i].z() << "
+      // "
       //<< stepResult2.cov[i](4, 4) << std::endl;
       //~ break;
       //~ }
@@ -305,7 +308,7 @@ namespace Test {
       //~ bField.setField(0., 1. * units::_T, 0.);
       //~ EigenStepper<ConstantBField> esB(bField);
       //~ Propagator<EigenStepper<ConstantBField>, Navigator> probB(esB,
-      //naviMat);
+      // naviMat);
 
       //~ const auto& resultB = probB.propagate(sbtp, propOpts);
       //~ const StepCollector::this_result& stepResultB
@@ -382,7 +385,7 @@ namespace Test {
 
     //~ // Launch and collect results
     //~ const auto&                       result = prop.propagate(sbtp,
-    //propOpts);
+    // propOpts);
     //~ const StepCollector::this_result& stepResult
     //~ = result.get<typename StepCollector::result_type>();
 
@@ -390,21 +393,21 @@ namespace Test {
     //~ // properly
     //~ for (unsigned int i = 0; i < stepResult.stepSize.size(); i++) {
     //~ if (stepResult.position[i].x() < 1. * units::_m &&
-    //std::abs(stepResult.position[i].z()) < 0.5)
+    // std::abs(stepResult.position[i].z()) < 0.5)
     //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
     //~ == propOpts.maxStepSize);
     //~ if (stepResult.position[i].x() > 1. * units::_m
     //~ && stepResult.position[i].x() < 2. * units::_m &&
-    //std::abs(stepResult.position[i].z()) < 0.5)
+    // std::abs(stepResult.position[i].z()) < 0.5)
     //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
     //~ == aList.get<StepActor>().maxStepSize);
     //~ if (stepResult.position[i].x() > 2. * units::_m &&
-    //std::abs(stepResult.position[i].z()) < 0.5)
+    // std::abs(stepResult.position[i].z()) < 0.5)
     //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
     //~ == propOpts.maxStepSize);
     //~ std::cout << "pos: " << stepResult.position[i].x() << "\t" <<
-    //stepResult.position[i].y() << "\t" << stepResult.position[i].z() <<
-    //std::endl;
+    // stepResult.position[i].y() << "\t" << stepResult.position[i].z() <<
+    // std::endl;
     //~ }
     //~ //////////////////////////////////////////////////////////////////
     //~ std::ofstream ofs("out.txt");
@@ -423,20 +426,20 @@ namespace Test {
     //~ propOpts.actionList = aList;
 
     //~ ConstantBField               bField2(Vector3D(0., bfield * units::_T,
-    //0.));
+    // 0.));
     //~ EigenStepper<ConstantBField> es2(bField2);
     //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es2, naviVac);
 
     //~ const auto& result2 = prop2.propagate(sbtp2, propOpts);
     //~ const StepCollector::this_result& stepResult2 = result2.get<typename
-    //StepCollector::result_type>();
+    // StepCollector::result_type>();
 
     //~ for(unsigned int i = stepResult2.position.size() - 1; i > 0; i--)
     //~ if(stepResult2.position[i].x() <= 3000.)
     //~ {
     //~ std::cout << "posx: " << stepResult2.position[i].x() << std::endl;
     //~ ofs << ss << " " << mom << " " << bfield << " " <<
-    //stepResult2.position[i].x() << std::endl;
+    // stepResult2.position[i].x() << std::endl;
     //~ break;
     //~ }
     //~ }

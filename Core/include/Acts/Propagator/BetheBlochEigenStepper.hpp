@@ -77,6 +77,9 @@ public:
 
     /// Cut-off value for the momentum
     double momentumCutOff = 0.;
+
+    /// Cut-off value for the step size
+    double stepSizeCutOff = 0.;
   };
 
   /// Always use the same propagation state type, independently of the initial
@@ -208,7 +211,6 @@ public:
 private:
   struct EnergyLossData
   {
-    // TODO
     double                          initialMomentum;
     double                          massSI;
     std::shared_ptr<const Material> material;
@@ -340,8 +342,7 @@ public:
       initializeEnergyLoss(elData, state.covTransport, state.includeGgradient);
     }
 
-    // TODO: abort condition for too many steps, too low momentum (at any point
-    // in the propagation)
+    // TODO: too low momentum (at any point in the propagation)
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
@@ -386,10 +387,12 @@ public:
       return h2 * (k1 - k2 - k3 + k4).template lpNorm<1>();
     };
 
-    // Select and adjust the appropriate Runge-Kutta step size
-    // @todo remove magic numbers and implement better step estimation
+    // Select and adjust the appropriate Runge-Kutta step size in ATLAS style
     double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     while (error_estimate > 4. * state.tolerance) {
+      if (state.stepSize < state.stepSizeCutOff) {
+        break;
+      }
       state.stepSize = state.stepSize
           * std::min(std::max(
                          0.25,
@@ -439,8 +442,6 @@ public:
       ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
-      // TODO: require dL = {0,0,0,0} without energy loss -> simplifying next
-      // couple of lines
       // Evaluation of the rightmost column without the last term.
       if (elData) {
         elData->jdL[0] = elData->dLdl[0];
@@ -465,6 +466,7 @@ public:
         dk4dL = (state.dir + h * k3).cross(B_last)
             + qop0 * h * dk3dL.cross(B_last);
       }
+
       dk1dT(0, 1) = B_first.z();
       dk1dT(0, 2) = -B_first.y();
       dk1dT(1, 0) = -B_first.z();
