@@ -5,11 +5,11 @@ add_test (NAME ClusterizationUnitTest COMMAND ClusterizationTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST ClusterizationUnitTest TARGETS ClusterizationTests)
 
 add_executable (SingleHitSpacePointBuilderTests SingleHitSpacePointBuilderTests.cpp)
-target_link_libraries (SingleHitSpacePointBuilderTests PRIVATE Acts::Core Acts::DigitizationPlugin)
+target_link_libraries (SingleHitSpacePointBuilderTests PRIVATE ActsCore ActsDigitizationPlugin)
 add_test (NAME SingleHitSpacePointBuilderUnitTest COMMAND SingleHitSpacePointBuilderTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST SingleHitSpacePointBuilderUnitTest TARGETS SingleHitSpacePointBuilderTests)
 
 add_executable (DoubleHitSpacePointBuilderTests DoubleHitSpacePointBuilderTests.cpp)
-target_link_libraries (DoubleHitSpacePointBuilderTests PRIVATE Acts::Core Acts::DigitizationPlugin)
+target_link_libraries (DoubleHitSpacePointBuilderTests PRIVATE ActsCore ActsDigitizationPlugin)
 add_test (NAME DoubleHitSpacePointBuilderUnitTest COMMAND DoubleHitSpacePointBuilderTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST DoubleHitSpacePointBuilderUnitTest TARGETS DoubleHitSpacePointBuilderTests)

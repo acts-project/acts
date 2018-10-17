@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Digitization/DoubleHitSpacePointBuilder.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include <cmath>
 #include <limits>
 
@@ -32,10 +33,10 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClusters(
 
   // Calculate the angles of the vectors
   double phi1, theta1, phi2, theta2;
-  phi1   = (pos1 - m_cfg.vertex).phi();
-  theta1 = (pos1 - m_cfg.vertex).theta();
-  phi2   = (pos2 - m_cfg.vertex).phi();
-  theta2 = (pos2 - m_cfg.vertex).theta();
+  phi1   = VectorHelpers::phi(pos1 - m_cfg.vertex);
+  theta1 = VectorHelpers::theta(pos1 - m_cfg.vertex);
+  phi2   = VectorHelpers::phi(pos2 - m_cfg.vertex);
+  theta2 = VectorHelpers::theta(pos2 - m_cfg.vertex);
 
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
@@ -212,7 +213,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
   if (m_cfg.stripLengthGapTolerance <= 0.) {
     return false;
   }
-  spaPoPa.qmag = spaPoPa.q.mag();
+  spaPoPa.qmag = spaPoPa.q.norm();
   // Increase the limits. This allows a check if the point is just slightly
   // outside the SDE
   spaPoPa.limitExtended
