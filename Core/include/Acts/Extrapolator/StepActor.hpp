@@ -61,9 +61,9 @@ struct StepActor
           state.stepping.stepSize.update(maxStepSize, cstep::user);
         }
 
-        }
       }
-    } else {
+		else 
+		{
       if (energyLoss
           && state.options.maxStepSize
               > state.stepping.stepSize.value(cstep::user)) {
