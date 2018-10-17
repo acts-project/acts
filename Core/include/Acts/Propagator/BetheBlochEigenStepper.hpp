@@ -193,23 +193,62 @@ public:
     // energies above 8 GeV and below 1 TeV
     // TODO: no dgdqop for radiation if there is no radiation
     double radiative_deriv = 0.;
-    // if ((m_particle == Trk::muon) && (E > 8000.)) {
-    // if (E < 1.e6) {
-    // radiative_deriv = 6.803e-5/(m_material->x0()*l*l*l*E) +
-    //~ //2.*2.278e-11/(m_material->x0()*l*l*l) -
-    // 3.*9.899e-18*E/(m_material->x0()*l*l*l);
-    //} else {
-    // radiative_deriv = 9.253e-5/(m_material->x0()*l*l*l*E);
-    //}
-    //}
 
     // Return the total derivative
     return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv;
   }
 
+  /// @brief Initializer of all parameters related to a RKN4 step with energy loss of a particle in material
+  /// @note This function serves for reducing the length of the actual BetheBlochEigenStepper::step() function.
+  ///
+  /// TODO: comments
+  void
+  initializeEnergyLoss(const double momentum, const double mass, double& g, const Material& material, double& dPds, bool covTransport, bool includeGgradient, double& dgdqopValue, const double qop, double& dLdl) const
+  {
+      double E = std::sqrt(momentum * momentum * c2 + mass * mass * c4);
+      // Use the same energy loss throughout the step.
+      g = dEds(momentum, E, mass, material);
+      // Change of the momentum per path length
+      // dPds = dPdE * dEds
+      dPds = g * E / (momentum * c2);
+      if(covTransport) {
+        // Calculate the change of the the energy loss per path length and
+        // inverse momentum
+        if(includeGgradient) {
+          dgdqopValue
+              = dgdqop(E,
+                       qop,
+                       mass,
+                       material);  // Use this value throughout the step.
+        }
+        // Calculate term for later error propagation
+        dLdl
+            = -qop * qop * g * E * (3. - (momentum * momentum * c2) / (E * E)) / c3
+            - qop * qop * qop * E * dgdqopValue;
+      }
+   }
+      
+   // TODO: comments  
+   void
+   updateEnergyLoss(double& momentum, const double initialMomentum, const double h, const double PreviousdPds, const double mass, double& dPds, const double g, const int q, double& qop, const bool covTransport, double& dLdl, const double dgdqopValue) const
+   {
+        // Update parameters related to a changed momentum
+        momentum = initialMomentum + h * PreviousdPds;
+        // if (momentum <= momentumCutOff) return false; //Abort propagation
+        double E = std::sqrt(momentum * momentum * c2 + mass * mass * c4);
+        dPds    = g * E / (momentum * c2);
+        qop   = q / momentum;
+        // Calculate term for later error propagation
+        if (covTransport) {
+          dLdl = -qop * qop * g * E
+                  * (3. - (momentum * momentum * c2) / (E * E)) / c3
+              - qop * qop * qop * E * dgdqopValue;
+        }
+      }
+  
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param[in,out] state is the propagation state associated with the track
+  /// @param [in,out] state is the propagation state associated with the track
   ///                      parameters that are being propagated.
   ///
   ///                      the state contains the desired step size.
@@ -222,7 +261,8 @@ public:
   {
     double massSI            = units::Nat2SI<units::MASS>(*state.mass);
 	std::shared_ptr<const Material> material = (*state.volume)->material();
-    std::array<double, 4> dL, qop, dP;
+	
+    std::array<double, 4> dLdl, qop, dPds;
     double dgdqopValue    = 0.;
     double g;
 
@@ -244,27 +284,7 @@ public:
 
     // Calculate the energy loss
     if (state.energyLossFlag && material) {
-      double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
-      // Use the same energy loss throughout the step.
-      g = dEds(momentum, E, massSI, *material);
-      // Change of the momentum per path length
-      // dPds = dPdE * dEds
-      dP[0] = g * E / (momentum * c2);
-      if (state.covTransport) {
-        // Calculate the change of the the energy loss per path length and
-        // inverse momentum
-        if (state.includeGgradient) {
-          dgdqopValue
-              = dgdqop(E,
-                       qop[0],
-                       *state.mass,
-                       *material);  // Use this value throughout the step.
-        }
-        // Calculate term for later error propagation
-        dL[0]
-            = -qop[0] * qop[0] * g * E * (3. - (momentum * momentum * c2) / (E * E)) / c3
-            - qop[0] * qop[0] * qop[0] * E * dgdqopValue;
-      }
+		initializeEnergyLoss(momentum, massSI, g, *material, dPds[0], state.covTransport, state.includeGgradient, dgdqopValue, qop[0], dLdl[0]);
     }
 
 
@@ -283,18 +303,7 @@ public:
 
       // Second Runge-Kutta point
       if (state.energyLossFlag && material) {
-        // Update parameters related to a changed momentum
-        momentum = initialMomentum + h * 0.5 * dP[0];
-        // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
-        dP[1]    = g * E / (momentum * c2);
-        qop[1]   = state.q / momentum;
-        // Calculate term for later error propagation
-        if (state.covTransport) {
-          dL[1] = -qop[1] * qop[1] * g * E
-                  * (3. - (momentum * momentum * c2) / (E * E)) / c3
-              - qop[1] * qop[1] * qop[1] * E * dgdqopValue;
-        }
+updateEnergyLoss(momentum, initialMomentum, h * 0.5, dPds[0], massSI, dPds[1], g, state.q, qop[1], state.covTransport, dLdl[1], dgdqopValue);
       }
 
       const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * k1;
@@ -303,36 +312,14 @@ public:
 
       // Third Runge-Kutta point
       if (state.energyLossFlag && material) {
-        // Update parameters related to a changed momentum
-        momentum = initialMomentum + h * 0.5 * dP[1];
-        // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
-        dP[2]    = g * E / (momentum * c2);
-        qop[2]   = state.q / momentum;
-        // Calculate term for later error propagation
-        if (state.covTransport) {
-          dL[2] = -qop[2] * qop[2] * g * E
-                  * (3. - (momentum * momentum * c2) / (E * E)) / c3
-              - qop[2] * qop[2] * qop[2] * E * dgdqopValue;
-        }
+updateEnergyLoss(momentum, initialMomentum, h * 0.5, dPds[1], massSI, dPds[2], g, state.q, qop[2], state.covTransport, dLdl[2], dgdqopValue);
       }
 
       k3 = qop[2] * (state.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
       if (state.energyLossFlag && material) {
-        // Update parameters related to a changed momentum
-        momentum = initialMomentum + h * dP[2];
-        // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum * c2 + massSI * massSI * c4);
-        dP[3]    = g * E / (momentum * c2);
-        qop[3]   = state.q / momentum;
-        // Calculate term for later error propagation
-        if (state.covTransport) {
-          dL[3] = -qop[3] * qop[3] * g * E
-                  * (3. - (momentum * momentum * c2) / (E * E)) / c3
-              - qop[3] * qop[3] * qop[3] * E * dgdqopValue;
-        }
+updateEnergyLoss(momentum, initialMomentum, h, dPds[2], massSI, dPds[3], g, state.q, qop[3], state.covTransport, dLdl[3], dgdqopValue);
       }
 
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
@@ -396,15 +383,15 @@ public:
 
 	// TODO: require dL = {0,0,0,0} without energy loss -> simplifying next couple of lines
       // Evaluation of the rightmost column without the last term.
-      const double jdL1 = dL[0];
+      const double jdL1 = dLdl[0];
       dk1dL             = state.dir.cross(B_first);
-      const double jdL2 = dL[1] * (1. + half_h * jdL1);
+      const double jdL2 = dLdl[1] * (1. + half_h * jdL1);
       dk2dL = (1. + half_h * jdL1) * (state.dir + half_h * k1).cross(B_middle)
           + qop[1] * half_h * dk1dL.cross(B_middle);
-      const double jdL3 = dL[2] * (1. + half_h * jdL2);
+      const double jdL3 = dLdl[2] * (1. + half_h * jdL2);
       dk3dL = (1. + half_h * jdL2) * (state.dir + half_h * k2).cross(B_middle)
           + qop[2] * half_h * dk2dL.cross(B_middle);
-      const double jdL4 = dL[3] * (1. + h * jdL3);
+      const double jdL4 = dLdl[3] * (1. + h * jdL3);
       dk4dL             = (1. + h * jdL3) * (state.dir + h * k3).cross(B_last)
           + qop[3] * h * dk3dL.cross(B_last);
 
@@ -456,7 +443,7 @@ public:
 
     // Update inverse momentum if state.energyLossFlag is switched on
     if (state.energyLossFlag && material) {
-      state.p += units::SI2Nat<units::MOMENTUM>((h / 6.) * (dP[0] + 2. * (dP[1] + dP[2]) + dP[3]));
+      state.p += units::SI2Nat<units::MOMENTUM>((h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]));
       // if (momentum <= m_momentumCutOff) return false; //Abort propagation
     }
     std::cout << "result pos: " << state.pos << std::endl;
