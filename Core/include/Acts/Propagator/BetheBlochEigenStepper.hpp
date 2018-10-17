@@ -13,13 +13,13 @@
 #include "Acts/Extrapolator/detail/Constants.hpp"
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Material/Material.hpp"
-#include "Acts/Propagator/EigenStepper.hpp"
 
 namespace Acts {
 
@@ -55,27 +55,27 @@ public:
     template <typename T>
     explicit State(const T&            par,
                    NavigationDirection ndir = forward,
-                   double ssize = std::numeric_limits<double>::max()) 
+                   double ssize = std::numeric_limits<double>::max())
       : EigenStepper<BField, corrector_t>::State(par, ndir, ssize)
     {
     }
 
     /// Mass
     double* mass = nullptr;
-    
+
     /// Volume with material that is passed
     TrackingVolume const** volume = nullptr;
 
     /// Boolean flag for energy loss while stepping
     bool energyLossFlag = true;
-   
+
     /// Tolerance for the error of the integration
-	double tolerance = 5e-5;
+    double tolerance = 5e-5;
 
     /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
-	bool includeGgradient = false;
+    bool includeGgradient = false;
 
-	/// Cut-off value for the momentum
+    /// Cut-off value for the momentum
     double momentumCutOff = 0.;
   };
 
@@ -104,15 +104,21 @@ public:
        const double      energy,
        const double      mass,
        const material_t& material) const
-  {  
+  {
     // Easy exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0) return 0.;
 
     // Calculate energy loss by
     // a) ionisation
     // TODO: Allow change between mean and mode & make return as pure double
-    double ionisationEnergyLoss
-        = energyLoss(mass, momentum * units::_c / energy, energy / (mass * c2), material, 1., true, true).first;
+    double ionisationEnergyLoss = energyLoss(mass,
+                                             momentum * units::_c / energy,
+                                             energy / (mass * c2),
+                                             material,
+                                             1.,
+                                             true,
+                                             true)
+                                      .first;
     // b) radiation
     // TODO: There doesn't radiate anything
     double radiationEnergyLoss = 0.;
@@ -128,7 +134,8 @@ public:
   /// @param [in] qop Initial value of q/p of the particle
   /// @param [in] mass Mass of the particle
   /// @param [in] material Penetrated material
-  /// @return Derivative evaluated at the point defined by the function
+  /// @return Derivative evaEnergyLossDataluated at the point defined by the
+  /// function
   /// parameters
   template <typename material_t>
   double
@@ -198,54 +205,96 @@ public:
     return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv;
   }
 
-  /// @brief Initializer of all parameters related to a RKN4 step with energy loss of a particle in material
-  /// @note This function serves for reducing the length of the actual BetheBlochEigenStepper::step() function.
-  ///
-  /// TODO: comments
-  void
-  initializeEnergyLoss(const double momentum, const double mass, double& g, const Material& material, double& dPds, bool covTransport, bool includeGgradient, double& dgdqopValue, const double qop, double& dLdl) const
+private:
+  struct EnergyLossData
   {
-      double E = std::sqrt(momentum * momentum * c2 + mass * mass * c4);
-      // Use the same energy loss throughout the step.
-      g = dEds(momentum, E, mass, material);
-      // Change of the momentum per path length
-      // dPds = dPdE * dEds
-      dPds = g * E / (momentum * c2);
-      if(covTransport) {
-        // Calculate the change of the the energy loss per path length and
-        // inverse momentum
-        if(includeGgradient) {
-          dgdqopValue
-              = dgdqop(E,
-                       qop,
-                       mass,
-                       material);  // Use this value throughout the step.
-        }
-        // Calculate term for later error propagation
-        dLdl
-            = -qop * qop * g * E * (3. - (momentum * momentum * c2) / (E * E)) / c3
-            - qop * qop * qop * E * dgdqopValue;
+    // TODO
+    double                          initialMomentum;
+    double                          massSI;
+    std::shared_ptr<const Material> material;
+    std::array<double, 4> dLdl, qop, dPds, jdL;
+    double dgdqopValue = 0.;
+    double g;
+  };
+
+  /// @brief Initializer of all parameters related to a RKN4 step with energy
+  /// loss of a particle in material
+  /// @note This function serves for reducing the length of the actual
+  /// BetheBlochEigenStepper::step() function.
+  ///
+  /// @param [in, out] elData Data container related to material interaction of
+  /// the particle
+  /// @param [in] covTransport Boolean flag if covariance should be transported
+  /// @param [in] includeGgradient Boolean flag if d(dEds)d(qop) should be used
+  void
+  initializeEnergyLoss(EnergyLossData* elData,
+                       bool            covTransport,
+                       bool            includeGgradient) const
+  {
+    double E = std::sqrt(elData->initialMomentum * elData->initialMomentum * c2
+                         + elData->massSI * elData->massSI * c4);
+    // Use the same energy loss throughout the step.
+    elData->g
+        = dEds(elData->initialMomentum, E, elData->massSI, *(elData->material));
+    // Change of the momentum per path length
+    // dPds = dPdE * dEds
+    elData->dPds[0] = elData->g * E / (elData->initialMomentum * c2);
+    if (covTransport) {
+      // Calculate the change of the the energy loss per path length and
+      // inverse momentum
+      if (includeGgradient) {
+        elData->dgdqopValue = dgdqop(
+            E,
+            elData->qop[0],
+            elData->massSI,
+            *(elData->material));  // Use this value throughout the step.
       }
-   }
-      
-   // TODO: comments  
-   void
-   updateEnergyLoss(double& momentum, const double initialMomentum, const double h, const double PreviousdPds, const double mass, double& dPds, const double g, const int q, double& qop, const bool covTransport, double& dLdl, const double dgdqopValue) const
-   {
-        // Update parameters related to a changed momentum
-        momentum = initialMomentum + h * PreviousdPds;
-        // if (momentum <= momentumCutOff) return false; //Abort propagation
-        double E = std::sqrt(momentum * momentum * c2 + mass * mass * c4);
-        dPds    = g * E / (momentum * c2);
-        qop   = q / momentum;
-        // Calculate term for later error propagation
-        if (covTransport) {
-          dLdl = -qop * qop * g * E
-                  * (3. - (momentum * momentum * c2) / (E * E)) / c3
-              - qop * qop * qop * E * dgdqopValue;
-        }
-      }
-  
+      // Calculate term for later error propagation
+      elData->dLdl[0] = -elData->qop[0] * elData->qop[0] * elData->g * E
+              * (3.
+                 - (elData->initialMomentum * elData->initialMomentum * c2)
+                     / (E * E))
+              / c3
+          - elData->qop[0] * elData->qop[0] * elData->qop[0] * E
+              * elData->dgdqopValue;
+    }
+  }
+
+  /// @brief Update of the kinematic parameters of the RKN4 sub-steps after
+  /// initialization with energy loss of a particle in material
+  ///
+  /// @param [in, out] elData Data container related to material interaction of
+  /// the particle
+  /// @param [out] momentum Updated momentum
+  /// @param [in] h Stepped distance of the sub-step (1-3)
+  /// @param [in] q Charge of the particle
+  /// @param [in] covTransport Boolean flag if covariance should be transported
+  /// @param [in] index Index of the sub-step (1-3)
+  void
+  updateEnergyLoss(EnergyLossData* elData,
+                   double&         momentum,
+                   const double    h,
+                   const int       q,
+                   const bool      covTransport,
+                   const int       index) const
+  {
+    // Update parameters related to a changed momentum
+    momentum = elData->initialMomentum + h * elData->dPds[index - 1];
+    // if (momentum <= momentumCutOff) return false; //Abort propagation
+    double E = std::sqrt(momentum * momentum * c2
+                         + elData->massSI * elData->massSI * c4);
+    elData->dPds[index] = elData->g * E / (momentum * c2);
+    elData->qop[index]  = q / momentum;
+    // Calculate term for later error propagation
+    if (covTransport) {
+      elData->dLdl[index] = -elData->qop[index] * elData->qop[index] * elData->g
+              * E * (3. - (momentum * momentum * c2) / (E * E)) / c3
+          - elData->qop[index] * elData->qop[index] * elData->qop[index] * E
+              * elData->dgdqopValue;
+    }
+  }
+
+public:
   /// Perform a Runge-Kutta track parameter propagation step
   ///
   /// @param [in,out] state is the propagation state associated with the track
@@ -259,18 +308,22 @@ public:
   double
   step(State& state) const
   {
-    double massSI            = units::Nat2SI<units::MASS>(*state.mass);
-	std::shared_ptr<const Material> material = (*state.volume)->material();
-	
-    std::array<double, 4> dLdl, qop, dPds;
-    double dgdqopValue    = 0.;
-    double g;
+    EnergyLossData* elData;
 
+    double momentum, qop0;
 
-    // Charge-momentum ratio, in SI units
-    double initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
-    double momentum = initialMomentum;
-    qop[0]          = state.q / momentum;
+    if (state.energyLossFlag && (*state.volume)->material()) {
+      elData           = new EnergyLossData();
+      elData->massSI   = units::Nat2SI<units::MASS>(*state.mass);
+      elData->material = (*state.volume)->material();
+
+      elData->initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
+      momentum                = elData->initialMomentum;
+      elData->qop[0]          = state.q / momentum;
+    } else {
+      momentum = units::Nat2SI<units::MOMENTUM>(state.p);
+      qop0     = state.q / momentum;
+    }
 
     // Runge-Kutta integrator state
     double   h2, half_h;
@@ -278,15 +331,14 @@ public:
 
     // First Runge-Kutta point (at current position)
     const Vector3D B_first = this->getField(state, state.pos);
-    const Vector3D k1      = qop[0]
+    const Vector3D k1      = (elData ? elData->qop[0] : qop0)
         * state.dir.cross(
               B_first);  // TODO: athena multiplies c to that expression
 
     // Calculate the energy loss
-    if (state.energyLossFlag && material) {
-		initializeEnergyLoss(momentum, massSI, g, *material, dPds[0], state.covTransport, state.includeGgradient, dgdqopValue, qop[0], dLdl[0]);
+    if (elData) {
+      initializeEnergyLoss(elData, state.covTransport, state.includeGgradient);
     }
-
 
     // TODO: abort condition for too many steps, too low momentum (at any point
     // in the propagation)
@@ -296,35 +348,40 @@ public:
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
     const auto tryRungeKuttaStep = [&](const double h) -> double {
-		
+
       // State the square and half of the step size
       h2     = h * h;
       half_h = h * 0.5;
 
       // Second Runge-Kutta point
-      if (state.energyLossFlag && material) {
-updateEnergyLoss(momentum, initialMomentum, h * 0.5, dPds[0], massSI, dPds[1], g, state.q, qop[1], state.covTransport, dLdl[1], dgdqopValue);
+      if (elData) {
+        updateEnergyLoss(
+            elData, momentum, h * 0.5, state.q, state.covTransport, 1);
       }
 
       const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * k1;
       B_middle            = this->getField(state, pos1);
-      k2                  = qop[1] * (state.dir + half_h * k1).cross(B_middle);
+      k2                  = (elData ? elData->qop[1] : qop0)
+          * (state.dir + half_h * k1).cross(B_middle);
 
       // Third Runge-Kutta point
-      if (state.energyLossFlag && material) {
-updateEnergyLoss(momentum, initialMomentum, h * 0.5, dPds[1], massSI, dPds[2], g, state.q, qop[2], state.covTransport, dLdl[2], dgdqopValue);
+      if (elData) {
+        updateEnergyLoss(
+            elData, momentum, h * 0.5, state.q, state.covTransport, 2);
       }
 
-      k3 = qop[2] * (state.dir + half_h * k2).cross(B_middle);
+      k3 = (elData ? elData->qop[2] : qop0)
+          * (state.dir + half_h * k2).cross(B_middle);
 
       // Last Runge-Kutta point
-      if (state.energyLossFlag && material) {
-updateEnergyLoss(momentum, initialMomentum, h, dPds[2], massSI, dPds[3], g, state.q, qop[3], state.covTransport, dLdl[3], dgdqopValue);
+      if (elData) {
+        updateEnergyLoss(elData, momentum, h, state.q, state.covTransport, 3);
       }
 
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
       B_last              = this->getField(state, pos2);
-      k4                  = qop[3] * (state.dir + h * k3).cross(B_last);
+      k4                  = (elData ? elData->qop[3] : qop0)
+          * (state.dir + h * k3).cross(B_last);
       // Return an estimate of the local integration error
       return h2 * (k1 - k2 - k3 + k4).template lpNorm<1>();
     };
@@ -334,8 +391,9 @@ updateEnergyLoss(momentum, initialMomentum, h, dPds[2], massSI, dPds[3], g, stat
     double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     while (error_estimate > 4. * state.tolerance) {
       state.stepSize = state.stepSize
-          * std::min(std::max(0.25,
-                              std::pow((state.tolerance / error_estimate), 0.25)),
+          * std::min(std::max(
+                         0.25,
+                         std::pow((state.tolerance / error_estimate), 0.25)),
                      4.);
       error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     }
@@ -381,39 +439,51 @@ updateEnergyLoss(momentum, initialMomentum, h, dPds[2], massSI, dPds[3], g, stat
       ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
-	// TODO: require dL = {0,0,0,0} without energy loss -> simplifying next couple of lines
+      // TODO: require dL = {0,0,0,0} without energy loss -> simplifying next
+      // couple of lines
       // Evaluation of the rightmost column without the last term.
-      const double jdL1 = dLdl[0];
-      dk1dL             = state.dir.cross(B_first);
-      const double jdL2 = dLdl[1] * (1. + half_h * jdL1);
-      dk2dL = (1. + half_h * jdL1) * (state.dir + half_h * k1).cross(B_middle)
-          + qop[1] * half_h * dk1dL.cross(B_middle);
-      const double jdL3 = dLdl[2] * (1. + half_h * jdL2);
-      dk3dL = (1. + half_h * jdL2) * (state.dir + half_h * k2).cross(B_middle)
-          + qop[2] * half_h * dk2dL.cross(B_middle);
-      const double jdL4 = dLdl[3] * (1. + h * jdL3);
-      dk4dL             = (1. + h * jdL3) * (state.dir + h * k3).cross(B_last)
-          + qop[3] * h * dk3dL.cross(B_last);
-
+      if (elData) {
+        elData->jdL[0] = elData->dLdl[0];
+        dk1dL          = state.dir.cross(B_first);
+        elData->jdL[1] = elData->dLdl[1] * (1. + half_h * elData->jdL[0]);
+        dk2dL          = (1. + half_h * elData->jdL[0])
+                * (state.dir + half_h * k1).cross(B_middle)
+            + elData->qop[1] * half_h * dk1dL.cross(B_middle);
+        elData->jdL[2] = elData->dLdl[2] * (1. + half_h * elData->jdL[1]);
+        dk3dL          = (1. + half_h * elData->jdL[1])
+                * (state.dir + half_h * k2).cross(B_middle)
+            + elData->qop[2] * half_h * dk2dL.cross(B_middle);
+        elData->jdL[3] = elData->dLdl[3] * (1. + h * elData->jdL[2]);
+        dk4dL = (1. + h * elData->jdL[2]) * (state.dir + h * k3).cross(B_last)
+            + elData->qop[3] * h * dk3dL.cross(B_last);
+      } else {
+        dk1dL = state.dir.cross(B_first);
+        dk2dL = (state.dir + half_h * k1).cross(B_middle)
+            + qop0 * half_h * dk1dL.cross(B_middle);
+        dk3dL = (state.dir + half_h * k2).cross(B_middle)
+            + qop0 * half_h * dk2dL.cross(B_middle);
+        dk4dL = (state.dir + h * k3).cross(B_last)
+            + qop0 * h * dk3dL.cross(B_last);
+      }
       dk1dT(0, 1) = B_first.z();
       dk1dT(0, 2) = -B_first.y();
       dk1dT(1, 0) = -B_first.z();
       dk1dT(1, 2) = B_first.x();
       dk1dT(2, 0) = B_first.y();
       dk1dT(2, 1) = -B_first.x();
-      dk1dT *= qop[0];
+      dk1dT *= elData->qop[0];
 
       dk2dT += h / 2 * dk1dT;
       dk2dT *= cross(dk2dT, B_middle);
-      dk2dT *= qop[1];
+      dk2dT *= elData->qop[1];
 
       dk3dT += h / 2 * dk2dT;
       dk3dT *= cross(dk3dT, B_middle);
-      dk3dT *= qop[2];
+      dk3dT *= elData->qop[2];
 
       dk4dT += h * dk3dT;
       dk4dT *= cross(dk4dT, B_last);
-      dk4dT *= qop[3];
+      dk4dT *= elData->qop[3];
 
       dFdT.setIdentity();
       dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
@@ -427,7 +497,10 @@ updateEnergyLoss(momentum, initialMomentum, h, dPds[2], massSI, dPds[3], g, stat
       dGdL = onesVec + conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
       // Evaluation of the dLambda''/dlambda term
-      D(6, 6) += conv * (h / 6.) * (jdL1 + 2. * (jdL2 + jdL3) + jdL4);
+      if (elData)
+        D(6, 6) += conv * (h / 6.)
+            * (elData->jdL[0] + 2. * (elData->jdL[1] + elData->jdL[2])
+               + elData->jdL[3]);
       std::cout << "D:\n" << D << std::endl;
       std::cout << "jac:\n" << state.jacTransport << std::endl;
       // for moment, only update the transport part
@@ -442,8 +515,11 @@ updateEnergyLoss(momentum, initialMomentum, h, dPds[2], massSI, dPds[3], g, stat
     state.derivative.template segment<3>(3) = k4;
 
     // Update inverse momentum if state.energyLossFlag is switched on
-    if (state.energyLossFlag && material) {
-      state.p += units::SI2Nat<units::MOMENTUM>((h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]));
+    if (elData) {
+      state.p += units::SI2Nat<units::MOMENTUM>(
+          (h / 6.) * (elData->dPds[0] + 2. * (elData->dPds[1] + elData->dPds[2])
+                      + elData->dPds[3]));
+      delete (elData);
       // if (momentum <= m_momentumCutOff) return false; //Abort propagation
     }
     std::cout << "result pos: " << state.pos << std::endl;
@@ -459,22 +535,11 @@ private:
   /// Magnetic field inside of the detector
   BField m_bField;
 
-const double c2 = units::_c * units::_c;
-const double c3 = units::_c * units::_c * units::_c;
-const double c4 = units::_c * units::_c * units::_c * units::_c;
+  const double c2 = units::_c * units::_c;
+  const double c3 = units::_c * units::_c * units::_c;
+  const double c4 = units::_c * units::_c * units::_c * units::_c;
 
   detail::IonisationLoss energyLoss;
-
-  //~ ActsMatrixD<3, 3>
-  //~ cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) const
-  //~ {
-    //~ ActsMatrixD<3, 3> r;
-    //~ r.col(0) = m.col(0).cross(v);
-    //~ r.col(1) = m.col(1).cross(v);
-    //~ r.col(2) = m.col(2).cross(v);
-
-    //~ return r;
-  //~ }
 };
 
 }  // namespace Acts
