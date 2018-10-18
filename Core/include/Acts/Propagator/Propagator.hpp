@@ -18,6 +18,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+#include <boost/algorithm/string.hpp>
+
 namespace Acts {
 
 /// Result status of track parameter propagation
@@ -529,12 +531,17 @@ private:
            const std::function<std::string()>& logAction) const
   {
     if (state.options.debug) {
-      std::stringstream dstream;
-      dstream << "|->" << std::setw(state.options.debugPfxWidth);
-      dstream << "Propagator"
-              << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
+      std::vector<std::string> lines;
+      std::string input = logAction();
+      boost::split(lines, input, boost::is_any_of("\n"));
+      for(const auto& line : lines) {
+        std::stringstream dstream;
+        dstream << "|->" << std::setw(state.options.debugPfxWidth);
+        dstream << "Propagator"
+                << " | ";
+        dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
+        state.options.debugString += dstream.str();
+      }
     }
   }
 };
