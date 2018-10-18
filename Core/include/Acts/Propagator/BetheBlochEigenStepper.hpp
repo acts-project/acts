@@ -122,7 +122,7 @@ private:
     // TODO: make return as pure double
     double ionisationEnergyLoss = energyLoss(mass,
                                              momentum * units::_c / energy,
-                                             energy / (mass * c2),
+                                             energy / (mass * units::_c2),
                                              material,
                                              1.,
                                              meanEnergyLoss,
@@ -250,14 +250,14 @@ private:
   initializeEnergyLoss(std::unique_ptr<EnergyLossData> eld,
 						const State& state) const
   {
-    double E = std::sqrt(eld->initialMomentum * eld->initialMomentum * c2
-                         + eld->massSI * eld->massSI * c4);
+    double E = std::sqrt(eld->initialMomentum * eld->initialMomentum * units::_c2
+                         + eld->massSI * eld->massSI * units::_c4);
     // Use the same energy loss throughout the step.
     eld->g
         = dEds(eld->initialMomentum, E, eld->massSI, *(eld->material), state.meanEnergyLoss);
     // Change of the momentum per path length
     // dPds = dPdE * dEds
-    eld->dPds[0] = eld->g * E / (eld->initialMomentum * c2);
+    eld->dPds[0] = eld->g * E / (eld->initialMomentum * units::_c2);
     if (state.covTransport) {
       // Calculate the change of the the energy loss per path length and
       // inverse momentum
@@ -271,9 +271,9 @@ private:
       // Calculate term for later error propagation
       eld->dLdl[0] = -eld->qop[0] * eld->qop[0] * eld->g * E
               * (3.
-                 - (eld->initialMomentum * eld->initialMomentum * c2)
+                 - (eld->initialMomentum * eld->initialMomentum * units::_c2)
                      / (E * E))
-              / c3
+              / units::_c3
           - eld->qop[0] * eld->qop[0] * eld->qop[0] * E
               * eld->dgdqopValue;
     }
@@ -304,14 +304,14 @@ private:
     // Update parameters related to a changed momentum
     momentum = eld->initialMomentum + h * eld->dPds[i - 1];
     // if (momentum <= momentumCutOff) return false; //Abort propagation
-    double E = std::sqrt(momentum * momentum * c2
-                         + eld->massSI * eld->massSI * c4);
-    eld->dPds[i] = eld->g * E / (momentum * c2);
+    double E = std::sqrt(momentum * momentum * units::_c2
+                         + eld->massSI * eld->massSI * units::_c4);
+    eld->dPds[i] = eld->g * E / (momentum * units::_c2);
     eld->qop[i]  = q / momentum;
     // Calculate term for later error propagation
     if (covTransport) {
       eld->dLdl[i] = -eld->qop[i] * eld->qop[i] * eld->g
-              * E * (3. - (momentum * momentum * c2) / (E * E)) / c3
+              * E * (3. - (momentum * momentum * units::_c2) / (E * E)) / units::_c3
           - eld->qop[i] * eld->qop[i] * eld->qop[i] * E
               * eld->dgdqopValue;
     }
@@ -574,11 +574,7 @@ public:
 private:
   /// Magnetic field inside of the detector
   BField m_bField;
-
-  const double c2 = units::_c * units::_c;
-  const double c3 = units::_c * units::_c * units::_c;
-  const double c4 = units::_c * units::_c * units::_c * units::_c;
-
+	/// Energy loss calculator
   detail::IonisationLoss energyLoss;
 };
 

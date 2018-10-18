@@ -15,35 +15,33 @@ namespace Acts {
 
 namespace constants {
 
-  // @todo change to constexpr
-
   // See (1) table 32.1
   // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]
-  const double ka_BetheBloch
+  constexpr double ka_BetheBloch
       = 30.7075 * (units::_MeV * units::_mm * units::_mm);
 
   /// Ionisation potential
   /// Ionization - Bethe-Bloch
   /// See ATL-SOFT-PUB-2008-003 equation (4)
   /// 16 eV * Z**0.9
-  const double eionisation = 16 * units::_eV;
+  constexpr double eionisation = 16 * units::_eV;
 
   /// Plasma energy [ eV ]
-  const double eplasma = 28.816 * units::_eV;
+  constexpr double eplasma = 28.816 * units::_eV;
 
   /// Fine structure constexprant
   constexpr double alpha = 1. / 137.;
 
   /// Multiple scattering parameters for MIPS [ in MeV]
-  const double main_RutherfordScott = 13.6 * units::_MeV;
-  const double log_RutherfordScott  = 0.038;
+  constexpr double main_RutherfordScott = 13.6 * units::_MeV;
+  constexpr double log_RutherfordScott  = 0.038;
 
   /// Multiple scattering parameters for electrons [ in MeV ]
-  const double main_RossiGreisen = 17.5 * units::_MeV;
-  const double log_RossiGreisen  = 0.125;
+  constexpr double main_RossiGreisen = 17.5 * units::_MeV;
+  constexpr double log_RossiGreisen  = 0.125;
 
   /// Electron mass [ in MeV ]
-  const double me = 0.51099891 * units::_MeV;
+  constexpr double me = 0.51099891 * units::_MeV;
 
 }  // end of namespace constants
 
