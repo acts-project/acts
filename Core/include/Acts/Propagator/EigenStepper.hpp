@@ -19,16 +19,6 @@
 
 namespace Acts {
 
-ActsMatrixD<3, 3>
-cross(const ActsMatrixD<3, 3>& m, const Vector3D& v)
-{
-  ActsMatrixD<3, 3> r;
-  r.col(0) = m.col(0).cross(v);
-  r.col(1) = m.col(1).cross(v);
-  r.col(2) = m.col(2).cross(v);
-
-  return r;
-}
 
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
 /// for the following ODE:
@@ -60,6 +50,18 @@ private:
   {
     using type = CurvilinearParameters;
   };
+
+  // internal cross product helper method
+  ActsMatrixD<3, 3>
+  cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) const
+  {
+    ActsMatrixD<3, 3> r;
+    r.col(0) = m.col(0).cross(v);
+    r.col(1) = m.col(1).cross(v);
+    r.col(2) = m.col(2).cross(v);
+
+    return r;
+  }
 
 public:
   using cstep = detail::ConstrainedStep;
