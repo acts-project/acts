@@ -20,12 +20,16 @@ struct StepActor
   // Configurations for Stepper
   /// Boolean flag for energy loss while stepping
   bool m_energyLossFlag = true;
+  /// Toggle between mean and mode evaluation of energy loss
+  bool m_meanEnergyLoss = true;
   /// Tolerance for the error of the integration
   double m_tolerance = 5e-5;
   /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
   bool m_includeGgradient = false;
   /// Cut-off value for the momentum
   double m_momentumCutOff = 0.;
+  /// Cut-off value for the step size
+  double m_stepSizeCutOff = 0.;
   /// User defined flag for updating parameters in the stepper
   bool m_update = false;
 
@@ -51,6 +55,7 @@ struct StepActor
 
       // Initialize user defined parameters
       state.stepping.energyLossFlag   = m_energyLossFlag;
+      state.stepping.meanEnergyLoss = m_meanEnergyLoss;
       state.stepping.tolerance        = m_tolerance;
       state.stepping.includeGgradient = m_includeGgradient;
       state.stepping.momentumCutOff   = m_momentumCutOff;

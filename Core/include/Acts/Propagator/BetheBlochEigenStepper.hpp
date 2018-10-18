@@ -68,6 +68,9 @@ public:
 
     /// Boolean flag for energy loss while stepping
     bool energyLossFlag = true;
+    
+    /// Toggle between mean and mode evaluation of energy loss
+    bool meanEnergyLoss = true;
 
     /// Tolerance for the error of the integration
     double tolerance = 5e-5;
@@ -106,20 +109,21 @@ public:
   dEds(const double      momentum,
        const double      energy,
        const double      mass,
-       const material_t& material) const
+       const material_t& material,
+       const bool meanEnergyLoss = true) const
   {
     // Easy exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0) return 0.;
 
     // Calculate energy loss by
     // a) ionisation
-    // TODO: Allow change between mean and mode & make return as pure double
+    // TODO: make return as pure double
     double ionisationEnergyLoss = energyLoss(mass,
                                              momentum * units::_c / energy,
                                              energy / (mass * c2),
                                              material,
                                              1.,
-                                             true,
+                                             meanEnergyLoss,
                                              true)
                                       .first;
     // b) radiation
@@ -209,6 +213,7 @@ public:
   }
 
 private:
+
   struct EnergyLossData
   {
     double                          initialMomentum;
@@ -226,25 +231,23 @@ private:
   ///
   /// @param [in, out] elData Data container related to material interaction of
   /// the particle
-  /// @param [in] covTransport Boolean flag if covariance should be transported
-  /// @param [in] includeGgradient Boolean flag if d(dEds)d(qop) should be used
+  /// @param [in] state Deliverer of configurations
   void
   initializeEnergyLoss(EnergyLossData* elData,
-                       bool            covTransport,
-                       bool            includeGgradient) const
-  {
+						const State& state) const
+  { // TODO: shorter naming of elData
     double E = std::sqrt(elData->initialMomentum * elData->initialMomentum * c2
                          + elData->massSI * elData->massSI * c4);
     // Use the same energy loss throughout the step.
     elData->g
-        = dEds(elData->initialMomentum, E, elData->massSI, *(elData->material));
+        = dEds(elData->initialMomentum, E, elData->massSI, *(elData->material), state.meanEnergyLoss);
     // Change of the momentum per path length
     // dPds = dPdE * dEds
     elData->dPds[0] = elData->g * E / (elData->initialMomentum * c2);
-    if (covTransport) {
+    if (state.covTransport) {
       // Calculate the change of the the energy loss per path length and
       // inverse momentum
-      if (includeGgradient) {
+      if (state.includeGgradient) {
         elData->dgdqopValue = dgdqop(
             E,
             elData->qop[0],
@@ -317,7 +320,7 @@ public:
     if (state.energyLossFlag && (*state.volume)->material()) {
       elData           = new EnergyLossData();
       elData->massSI   = units::Nat2SI<units::MASS>(*state.mass);
-      elData->material = (*state.volume)->material();
+      //~ elData->material = (*state.volume)->material();
 
       elData->initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
       momentum                = elData->initialMomentum;
@@ -339,7 +342,7 @@ public:
 
     // Calculate the energy loss
     if (elData) {
-      initializeEnergyLoss(elData, state.covTransport, state.includeGgradient);
+      initializeEnergyLoss(elData, state);
     }
 
     // TODO: too low momentum (at any point in the propagation)
@@ -444,6 +447,7 @@ public:
 
       // Evaluation of the rightmost column without the last term.
       if (elData) {
+		  // For the case of energy loss
         elData->jdL[0] = elData->dLdl[0];
         dk1dL          = state.dir.cross(B_first);
         elData->jdL[1] = elData->dLdl[1] * (1. + half_h * elData->jdL[0]);
@@ -458,6 +462,7 @@ public:
         dk4dL = (1. + h * elData->jdL[2]) * (state.dir + h * k3).cross(B_last)
             + elData->qop[3] * h * dk3dL.cross(B_last);
       } else {
+		  // For the case without energy loss
         dk1dL = state.dir.cross(B_first);
         dk2dL = (state.dir + half_h * k1).cross(B_middle)
             + qop0 * half_h * dk1dL.cross(B_middle);
