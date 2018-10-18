@@ -19,7 +19,6 @@
 
 namespace Acts {
 
-
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
 /// for the following ODE:
 ///

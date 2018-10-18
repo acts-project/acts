@@ -539,9 +539,9 @@ private:
   {
     if (state.options.debug) {
       std::vector<std::string> lines;
-      std::string input = logAction();
+      std::string              input = logAction();
       boost::split(lines, input, boost::is_any_of("\n"));
-      for(const auto& line : lines) {
+      for (const auto& line : lines) {
         std::stringstream dstream;
         dstream << "|->" << std::setw(state.options.debugPfxWidth);
         dstream << "Propagator"

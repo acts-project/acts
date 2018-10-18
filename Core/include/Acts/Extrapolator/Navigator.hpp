@@ -836,10 +836,9 @@ struct Navigator
         dstream << state.navigation.navLayers.size();
         dstream << " layer candidates found at path(s): \n";
         for (const auto& lc : state.navigation.navLayers) {
-          dstream << lc.intersection.pathLength << " -> " 
+          dstream << lc.intersection.pathLength << " -> "
                   << lc.object->geoID().toString() << "\n"
                   << " |-> " << lc.representation->geoID().toString() << "\n";
-
         }
         return dstream.str();
       });
@@ -972,8 +971,8 @@ struct Navigator
               dstream << "Current surface set to approach surface\n";
               dstream << layerSurface->geoID().toString();
               auto center = state.navigation.currentSurface->center();
-              dstream << "\nat pos (" << center.x() << ", "
-                      << center.y() << ", " << center.z() << ")";
+              dstream << "\nat pos (" << center.x() << ", " << center.y()
+                      << ", " << center.z() << ")";
               dstream << "\nof layer " << layer->geoID().toString();
               return dstream.str();
             });
@@ -1136,8 +1135,8 @@ struct Navigator
       if (surface->isOnSurface(state.stepping.position(), true)) {
         debugLog(state, [&] {
           std::stringstream dstream;
-          dstream << "Surface "; 
-          dstream << surface->geoID().toString(); 
+          dstream << "Surface ";
+          dstream << surface->geoID().toString();
           dstream << " successfully hit, storing it.";
           return dstream.str();
         });
@@ -1271,9 +1270,9 @@ private:
         vName = state.navigation.currentVolume->volumeName();
       }
       std::vector<std::string> lines;
-      std::string input = logAction();
+      std::string              input = logAction();
       boost::split(lines, input, boost::is_any_of("\n"));
-      for(const auto& line : lines) {
+      for (const auto& line : lines) {
         std::stringstream dstream;
         dstream << ">>>" << std::setw(state.options.debugPfxWidth) << vName
                 << " | ";
