@@ -89,7 +89,7 @@ namespace IntegrationTest {
     namespace VH = VectorHelpers;
 
     // setup propagation options
-    typename Propagator_type::template Options<> options;
+    PropagatorOptions<> options;
     options.pathLimit   = 5 * units::_m;
     options.maxStepSize = 1 * units::_cm;
     options.debug       = debug;
@@ -179,18 +179,15 @@ namespace IntegrationTest {
 
     // setup propagation options
     // Action list and abort list
-    using DebugOutput     = Acts::detail::DebugOutputActor;
-    using ActionList      = Acts::ActionList<DebugOutput>;
-    using AbortConditions = Acts::AbortList<>;
+    using DebugOutput = Acts::detail::DebugOutputActor;
+    using ActionList  = Acts::ActionList<DebugOutput>;
 
-    typename Propagator_type::template Options<ActionList, AbortConditions>
-        fwdOptions;
+    PropagatorOptions<ActionList> fwdOptions;
     fwdOptions.pathLimit   = plimit;
     fwdOptions.maxStepSize = 1 * units::_cm;
     fwdOptions.debug       = debug;
 
-    typename Propagator_type::template Options<ActionList, AbortConditions>
-        bwdOptions;
+    PropagatorOptions<ActionList> bwdOptions;
     bwdOptions.direction   = backward;
     bwdOptions.pathLimit   = -plimit;
     bwdOptions.maxStepSize = 1 * units::_cm;
@@ -257,7 +254,7 @@ namespace IntegrationTest {
               bool debug        = false)
   {
     // setup propagation options
-    typename Propagator_type::template Options<> options;
+    PropagatorOptions<> options;
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -322,7 +319,7 @@ namespace IntegrationTest {
     using DebugOutput = detail::DebugOutputActor;
 
     // setup propagation options
-    typename Propagator_type::template Options<ActionList<DebugOutput>> options;
+    PropagatorOptions<ActionList<DebugOutput>> options;
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -403,7 +400,7 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    typename Propagator_type::template Options<> options;
+    PropagatorOptions<> options;
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -466,7 +463,7 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    typename Propagator_type::template Options<> options;
+    PropagatorOptions<> options;
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;

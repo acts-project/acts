@@ -208,13 +208,7 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
 
-    // Action list and abort list
-    using ActionList_type      = ActionList<>;
-    using AbortConditions_type = AbortList<>;
-
-    typename EigenPropagator::template Options<ActionList_type,
-                                               AbortConditions_type>
-        options;
+    PropagatorOptions<> options;
 
     const auto& result = epropagator.propagate(start, options);
 

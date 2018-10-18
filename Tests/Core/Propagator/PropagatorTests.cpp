@@ -189,17 +189,15 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(PropagatorOptions_)
   {
 
-    typedef typename Propagator<EigenStepper_type>::template Options<>
-                      null_options_type;
+    using null_options_type = PropagatorOptions<>;
     null_options_type null_options;
     // todo write null options test
 
     using ActionList_type      = ActionList<PerpendicularMeasure>;
     using AbortConditions_type = AbortList<>;
 
-    typedef typename Propagator<EigenStepper_type>::
-        template Options<ActionList_type, AbortConditions_type>
-            options_type;
+    using options_type
+        = PropagatorOptions<ActionList_type, AbortConditions_type>;
 
     options_type options;
   }
@@ -234,9 +232,7 @@ namespace Test {
     using AbortConditions_type = AbortList<>;
 
     // setup propagation options
-    typename EigenPropagator_type::template Options<ActionList_type,
-                                                    AbortConditions_type>
-        options;
+    PropagatorOptions<ActionList_type, AbortConditions_type> options;
 
     options.pathLimit   = 20 * units::_m;
     options.maxStepSize = 1 * units::_cm;
@@ -291,7 +287,7 @@ namespace Test {
     (void)index;
 
     // setup propagation options - the tow step options
-    typename EigenPropagator_type::template Options<> options_2s;
+    PropagatorOptions<> options_2s;
     options_2s.pathLimit   = 50 * units::_cm;
     options_2s.maxStepSize = 1 * units::_cm;
 
@@ -320,7 +316,7 @@ namespace Test {
         = epropagator.propagate(*mid_parameters, options_2s).endParameters;
 
     // setup propagation options - the one step options
-    typename EigenPropagator_type::template Options<> options_1s;
+    PropagatorOptions<> options_1s;
     options_1s.pathLimit   = 100 * units::_cm;
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a path length of 100 in one step
@@ -363,7 +359,7 @@ namespace Test {
     (void)index;
 
     // setup propagation options - 2 setp options
-    typename EigenPropagator_type::template Options<> options_2s;
+    PropagatorOptions<> options_2s;
     options_2s.pathLimit   = 10 * units::_m;
     options_2s.maxStepSize = 1 * units::_cm;
 
@@ -394,7 +390,7 @@ namespace Test {
               .endParameters;
 
     // setup propagation options - one step options
-    typename EigenPropagator_type::template Options<> options_1s;
+    PropagatorOptions<> options_1s;
     options_1s.pathLimit   = 10 * units::_m;
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a final surface in one stop

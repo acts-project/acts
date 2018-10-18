@@ -120,9 +120,8 @@ namespace Test {
     using ActionList_type      = ActionList<MaterialCollector, DebugOutput>;
     using AbortConditions_type = AbortList<>;
 
-    typename Propagator_type::template Options<ActionList_type,
-                                               AbortConditions_type>
-        fwdOptions;
+    using Options = PropagatorOptions<ActionList_type, AbortConditions_type>;
+    Options fwdOptions;
 
     fwdOptions.maxStepSize = 25. * units::_cm;
     fwdOptions.pathLimit   = 25 * units::_cm;
@@ -167,9 +166,7 @@ namespace Test {
     }
 
     // backward material test
-    typename Propagator_type::template Options<ActionList_type,
-                                               AbortConditions_type>
-        bwdOptions;
+    Options bwdOptions;
     bwdOptions.maxStepSize = -25 * units::_cm;
     bwdOptions.pathLimit   = -25 * units::_cm;
     bwdOptions.direction   = backward;
@@ -224,9 +221,7 @@ namespace Test {
 
     // stepping from one surface to the next
     // now go from surface to surface and check
-    typename Propagator_type::template Options<ActionList_type,
-                                               AbortConditions_type>
-        fwdStepOptions;
+    Options fwdStepOptions;
 
     fwdStepOptions.maxStepSize = 25. * units::_cm;
     fwdStepOptions.pathLimit   = 25 * units::_cm;
@@ -314,9 +309,7 @@ namespace Test {
 
     // stepping from one surface to the next : backwards
     // now go from surface to surface and check
-    typename Propagator_type::template Options<ActionList_type,
-                                               AbortConditions_type>
-        bwdStepOptions;
+    Options bwdStepOptions;
 
     bwdStepOptions.maxStepSize = -25 * units::_cm;
     bwdStepOptions.pathLimit   = -25 * units::_cm;

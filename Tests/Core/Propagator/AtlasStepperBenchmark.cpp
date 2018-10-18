@@ -69,7 +69,7 @@ main(int argc, char* argv[])
   Stepper_type    atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 
-  Propagator_type::Options<> options;
+  PropagatorOptions<> options;
   options.pathLimit = maxPath * units::_m;
 
   Vector3D          pos(0, 0, 0);
