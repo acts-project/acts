@@ -214,13 +214,26 @@ public:
 
 private:
 
+	/// @brief This struct serves as data container to keep track of all parameters that are related to an energy loss of a particle in matter.
   struct EnergyLossData
   {
+	  /// Particles momentum at k1
     double                          initialMomentum;
+    /// Particles mass in SI units
     double                          massSI;
+    /// Material that will be passed
     std::shared_ptr<const Material> material;
-    std::array<double, 4> dLdl, qop, dPds, jdL;
+    /// Derivatives dLambda''dlambda at each sub-step point
+    std::array<double, 4> dLdl;
+    /// q/p at each sub-step
+    std::array<double, 4> qop;
+    /// Derivatives dPds at each sub-step
+    std::array<double, 4> dPds;
+    /// Propagation of derivatives of dLambda''dlambda at each sub-step
+    std::array<double, 4> jdL;
+    /// Derivative d(dEds)d(q/p) evaluated at the initial point
     double dgdqopValue = 0.;
+    /// Derivative dEds at the initial point
     double g;
   };
 
@@ -229,46 +242,48 @@ private:
   /// @note This function serves for reducing the length of the actual
   /// BetheBlochEigenStepper::step() function.
   ///
-  /// @param [in, out] elData Data container related to material interaction of
+  /// @param [in, out] eld Data container related to material interaction of
   /// the particle
   /// @param [in] state Deliverer of configurations
   void
-  initializeEnergyLoss(EnergyLossData* elData,
+  initializeEnergyLoss(EnergyLossData* eld,
 						const State& state) const
-  { // TODO: shorter naming of elData
-    double E = std::sqrt(elData->initialMomentum * elData->initialMomentum * c2
-                         + elData->massSI * elData->massSI * c4);
+  { // TODO: shorter naming of eld
+    double E = std::sqrt(eld->initialMomentum * eld->initialMomentum * c2
+                         + eld->massSI * eld->massSI * c4);
     // Use the same energy loss throughout the step.
-    elData->g
-        = dEds(elData->initialMomentum, E, elData->massSI, *(elData->material), state.meanEnergyLoss);
+    eld->g
+        = dEds(eld->initialMomentum, E, eld->massSI, *(eld->material), state.meanEnergyLoss);
     // Change of the momentum per path length
     // dPds = dPdE * dEds
-    elData->dPds[0] = elData->g * E / (elData->initialMomentum * c2);
+    eld->dPds[0] = eld->g * E / (eld->initialMomentum * c2);
     if (state.covTransport) {
       // Calculate the change of the the energy loss per path length and
       // inverse momentum
       if (state.includeGgradient) {
-        elData->dgdqopValue = dgdqop(
+        eld->dgdqopValue = dgdqop(
             E,
-            elData->qop[0],
-            elData->massSI,
-            *(elData->material));  // Use this value throughout the step.
+            eld->qop[0],
+            eld->massSI,
+            *(eld->material));  // Use this value throughout the step.
       }
       // Calculate term for later error propagation
-      elData->dLdl[0] = -elData->qop[0] * elData->qop[0] * elData->g * E
+      eld->dLdl[0] = -eld->qop[0] * eld->qop[0] * eld->g * E
               * (3.
-                 - (elData->initialMomentum * elData->initialMomentum * c2)
+                 - (eld->initialMomentum * eld->initialMomentum * c2)
                      / (E * E))
               / c3
-          - elData->qop[0] * elData->qop[0] * elData->qop[0] * E
-              * elData->dgdqopValue;
+          - eld->qop[0] * eld->qop[0] * eld->qop[0] * E
+              * eld->dgdqopValue;
     }
   }
 
   /// @brief Update of the kinematic parameters of the RKN4 sub-steps after
   /// initialization with energy loss of a particle in material
+  /// @note This function serves for reducing the length of the actual
+  /// BetheBlochEigenStepper::step() function.
   ///
-  /// @param [in, out] elData Data container related to material interaction of
+  /// @param [in, out] eld Data container related to material interaction of
   /// the particle
   /// @param [out] momentum Updated momentum
   /// @param [in] h Stepped distance of the sub-step (1-3)
@@ -276,7 +291,7 @@ private:
   /// @param [in] covTransport Boolean flag if covariance should be transported
   /// @param [in] index Index of the sub-step (1-3)
   void
-  updateEnergyLoss(EnergyLossData* elData,
+  updateEnergyLoss(EnergyLossData* eld,
                    double&         momentum,
                    const double    h,
                    const int       q,
@@ -284,18 +299,18 @@ private:
                    const int       index) const
   {
     // Update parameters related to a changed momentum
-    momentum = elData->initialMomentum + h * elData->dPds[index - 1];
+    momentum = eld->initialMomentum + h * eld->dPds[index - 1];
     // if (momentum <= momentumCutOff) return false; //Abort propagation
     double E = std::sqrt(momentum * momentum * c2
-                         + elData->massSI * elData->massSI * c4);
-    elData->dPds[index] = elData->g * E / (momentum * c2);
-    elData->qop[index]  = q / momentum;
+                         + eld->massSI * eld->massSI * c4);
+    eld->dPds[index] = eld->g * E / (momentum * c2);
+    eld->qop[index]  = q / momentum;
     // Calculate term for later error propagation
     if (covTransport) {
-      elData->dLdl[index] = -elData->qop[index] * elData->qop[index] * elData->g
+      eld->dLdl[index] = -eld->qop[index] * eld->qop[index] * eld->g
               * E * (3. - (momentum * momentum * c2) / (E * E)) / c3
-          - elData->qop[index] * elData->qop[index] * elData->qop[index] * E
-              * elData->dgdqopValue;
+          - eld->qop[index] * eld->qop[index] * eld->qop[index] * E
+              * eld->dgdqopValue;
     }
   }
 
@@ -527,7 +542,7 @@ public:
           (h / 6.) * (elData->dPds[0] + 2. * (elData->dPds[1] + elData->dPds[2])
                       + elData->dPds[3]));
       delete (elData);
-      // if (momentum <= m_momentumCutOff) return false; //Abort propagation
+      // TODO: if (momentum <= m_momentumCutOff) return false; //Abort propagation
     }
     std::cout << "result pos: " << state.pos << std::endl;
     std::cout << "result dir: " << state.dir << std::endl;
