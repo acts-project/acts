@@ -95,6 +95,7 @@ public:
   BetheBlochEigenStepper(BField bField = BField())
     : m_bField(std::move(bField)){};
 
+// TODO: private
   /// @brief This function calculates the energy loss dE per path length ds of a
   /// particle through material. The energy loss consists of ionisation and
   /// radiation.
@@ -246,8 +247,8 @@ private:
   /// @param [in, out] eld Data container related to material interaction of
   /// the particle
   /// @param [in] state Deliverer of configurations
-  void
-  initializeEnergyLoss(EnergyLossData* eld,
+  std::unique_ptr<EnergyLossData>
+  initializeEnergyLoss(std::unique_ptr<EnergyLossData> eld,
 						const State& state) const
   {
     double E = std::sqrt(eld->initialMomentum * eld->initialMomentum * c2
@@ -277,6 +278,7 @@ private:
           - eld->qop[0] * eld->qop[0] * eld->qop[0] * E
               * eld->dgdqopValue;
     }
+    return std::move(eld);
   }
 
   /// @brief Update of the kinematic parameters of the RKN4 sub-steps after
@@ -291,8 +293,9 @@ private:
   /// @param [in] q Charge of the particle
   /// @param [in] covTransport Boolean flag if covariance should be transported
   /// @param [in] i Index of the sub-step (1-3)
-  void
-  updateEnergyLoss(EnergyLossData* eld,
+  /// TODO
+  std::unique_ptr<EnergyLossData>
+  updateEnergyLoss(std::unique_ptr<EnergyLossData> eld,
                    double&         momentum,
                    const double    h,
                    const int       q,
@@ -313,6 +316,7 @@ private:
           - eld->qop[i] * eld->qop[i] * eld->qop[i] * E
               * eld->dgdqopValue;
     }
+    return std::move(eld);
   }
 
 public:
@@ -329,13 +333,14 @@ public:
   double
   step(State& state) const
   {
-    EnergyLossData* elData;
+
+    std::unique_ptr<EnergyLossData> elData;
     double momentum, qop0;
 
 	// Set up initial data
-    if (state.energyLossFlag && (*state.volume)->material()) {
+    if (state.energyLossFlag && (*state.volume) && (*state.volume)->material()) {
 		// Set up container for energy loss
-      elData           = new EnergyLossData();
+      elData           = std::make_unique<EnergyLossData>();
       elData->massSI   = units::Nat2SI<units::MASS>(*state.mass);
       elData->material = (*state.volume)->material();
       elData->initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
@@ -359,10 +364,8 @@ public:
 
     // Calculate the energy loss
     if (elData) {
-      initializeEnergyLoss(elData, state);
+      elData = initializeEnergyLoss(std::move(elData), state);
     }
-
-    // TODO: too low momentum (at any point in the propagation)
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
@@ -377,8 +380,8 @@ public:
       // Second Runge-Kutta point
       if (elData) {
 		  // Update parameters and check for momentum condition
-        updateEnergyLoss(
-            elData, momentum, h * 0.5, state.q, state.covTransport, 1);
+        elData = updateEnergyLoss(
+            std::move(elData), momentum, h * 0.5, state.q, state.covTransport, 1);
         if(momentum < state.momentumCutOff)
 			return std::numeric_limits<double>::max();
       }
@@ -391,8 +394,8 @@ public:
       // Third Runge-Kutta point
       if (elData) {
 		  // Update parameters and check for momentum condition
-        updateEnergyLoss(
-            elData, momentum, h * 0.5, state.q, state.covTransport, 2);
+        elData = updateEnergyLoss(
+            std::move(elData), momentum, h * 0.5, state.q, state.covTransport, 2);
        if(momentum < state.momentumCutOff)
 			return std::numeric_limits<double>::max();
       }
@@ -403,7 +406,7 @@ public:
       // Last Runge-Kutta point
       if (elData) {
 		  // Update parameters and check for momentum condition
-        updateEnergyLoss(elData, momentum, h, state.q, state.covTransport, 3);
+        elData = updateEnergyLoss(std::move(elData), momentum, h, state.q, state.covTransport, 3);
         if(momentum < state.momentumCutOff)
 			return std::numeric_limits<double>::max();
       }
@@ -433,6 +436,18 @@ public:
 
     // use the adjusted step size
     const double h = state.stepSize;
+    
+    // Break propagation if momentum becomes below cut-off
+    if (elData) {
+		double newMomentum = state.p + units::SI2Nat<units::MOMENTUM>(
+          (h / 6.) * (elData->dPds[0] + 2. * (elData->dPds[1] + elData->dPds[2])
+                      + elData->dPds[3]));
+        if(units::Nat2SI<units::MOMENTUM>(newMomentum) < state.momentumCutOff)
+			return 0.;
+		else
+			// Update momentum
+			state.p = newMomentum;
+	}
 
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {
@@ -505,19 +520,19 @@ public:
       dk1dT(1, 2) = B_first.x();
       dk1dT(2, 0) = B_first.y();
       dk1dT(2, 1) = -B_first.x();
-      dk1dT *= elData->qop[0];
+      dk1dT *= (elData ? elData->qop[0] : qop0);
 
       dk2dT += h / 2 * dk1dT;
       dk2dT *= cross(dk2dT, B_middle);
-      dk2dT *= elData->qop[1];
+      dk2dT *= (elData ? elData->qop[1] : qop0);
 
       dk3dT += h / 2 * dk2dT;
       dk3dT *= cross(dk3dT, B_middle);
-      dk3dT *= elData->qop[2];
+      dk3dT *= (elData ? elData->qop[2] : qop0);
 
       dk4dT += h * dk3dT;
       dk4dT *= cross(dk4dT, B_last);
-      dk4dT *= elData->qop[3];
+      dk4dT *= (elData ? elData->qop[3] : qop0);
 
       dFdT.setIdentity();
       dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
@@ -548,20 +563,12 @@ public:
     state.derivative.template head<3>()     = state.dir;
     state.derivative.template segment<3>(3) = k4;
 
-    // Update inverse momentum if state.energyLossFlag is switched on
-    if (elData) {
-      state.p += units::SI2Nat<units::MOMENTUM>(
-          (h / 6.) * (elData->dPds[0] + 2. * (elData->dPds[1] + elData->dPds[2])
-                      + elData->dPds[3]));
-      delete (elData);
-      // TODO: if (momentum <= m_momentumCutOff) return false; //Abort propagation
-    }
     std::cout << "result pos: " << state.pos << std::endl;
     std::cout << "result dir: " << state.dir << std::endl;
     std::cout << "result p: " << state.p << std::endl;
     std::cout << "result cov:\n" << state.jacTransport << std::endl;
     state.pathAccumulated += h;
-    std::exit(1);
+    //~ std::exit(1);
     return h;
   }
 
