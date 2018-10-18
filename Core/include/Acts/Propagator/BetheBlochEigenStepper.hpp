@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <limits>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/detail/Constants.hpp"
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
@@ -78,7 +79,7 @@ public:
     /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
     bool includeGgradient = false;
 
-    /// Cut-off value for the momentum
+    /// Cut-off value for the momentum in SI units
     double momentumCutOff = 0.;
 
     /// Cut-off value for the step size
@@ -248,7 +249,7 @@ private:
   void
   initializeEnergyLoss(EnergyLossData* eld,
 						const State& state) const
-  { // TODO: shorter naming of eld
+  {
     double E = std::sqrt(eld->initialMomentum * eld->initialMomentum * c2
                          + eld->massSI * eld->massSI * c4);
     // Use the same energy loss throughout the step.
@@ -289,27 +290,27 @@ private:
   /// @param [in] h Stepped distance of the sub-step (1-3)
   /// @param [in] q Charge of the particle
   /// @param [in] covTransport Boolean flag if covariance should be transported
-  /// @param [in] index Index of the sub-step (1-3)
+  /// @param [in] i Index of the sub-step (1-3)
   void
   updateEnergyLoss(EnergyLossData* eld,
                    double&         momentum,
                    const double    h,
                    const int       q,
                    const bool      covTransport,
-                   const int       index) const
+                   const int       i) const
   {
     // Update parameters related to a changed momentum
-    momentum = eld->initialMomentum + h * eld->dPds[index - 1];
+    momentum = eld->initialMomentum + h * eld->dPds[i - 1];
     // if (momentum <= momentumCutOff) return false; //Abort propagation
     double E = std::sqrt(momentum * momentum * c2
                          + eld->massSI * eld->massSI * c4);
-    eld->dPds[index] = eld->g * E / (momentum * c2);
-    eld->qop[index]  = q / momentum;
+    eld->dPds[i] = eld->g * E / (momentum * c2);
+    eld->qop[i]  = q / momentum;
     // Calculate term for later error propagation
     if (covTransport) {
-      eld->dLdl[index] = -eld->qop[index] * eld->qop[index] * eld->g
+      eld->dLdl[i] = -eld->qop[i] * eld->qop[i] * eld->g
               * E * (3. - (momentum * momentum * c2) / (E * E)) / c3
-          - eld->qop[index] * eld->qop[index] * eld->qop[index] * E
+          - eld->qop[i] * eld->qop[i] * eld->qop[i] * E
               * eld->dgdqopValue;
     }
   }
@@ -329,18 +330,19 @@ public:
   step(State& state) const
   {
     EnergyLossData* elData;
-
     double momentum, qop0;
 
+	// Set up initial data
     if (state.energyLossFlag && (*state.volume)->material()) {
+		// Set up container for energy loss
       elData           = new EnergyLossData();
       elData->massSI   = units::Nat2SI<units::MASS>(*state.mass);
-      //~ elData->material = (*state.volume)->material();
-
+      elData->material = (*state.volume)->material();
       elData->initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
       momentum                = elData->initialMomentum;
       elData->qop[0]          = state.q / momentum;
     } else {
+		// Set up data for the case without energy loss
       momentum = units::Nat2SI<units::MOMENTUM>(state.p);
       qop0     = state.q / momentum;
     }
@@ -353,7 +355,7 @@ public:
     const Vector3D B_first = this->getField(state, state.pos);
     const Vector3D k1      = (elData ? elData->qop[0] : qop0)
         * state.dir.cross(
-              B_first);  // TODO: athena multiplies c to that expression
+              B_first);
 
     // Calculate the energy loss
     if (elData) {
@@ -374,8 +376,11 @@ public:
 
       // Second Runge-Kutta point
       if (elData) {
+		  // Update parameters and check for momentum condition
         updateEnergyLoss(
             elData, momentum, h * 0.5, state.q, state.covTransport, 1);
+        if(momentum < state.momentumCutOff)
+			return std::numeric_limits<double>::max();
       }
 
       const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * k1;
@@ -385,8 +390,11 @@ public:
 
       // Third Runge-Kutta point
       if (elData) {
+		  // Update parameters and check for momentum condition
         updateEnergyLoss(
             elData, momentum, h * 0.5, state.q, state.covTransport, 2);
+       if(momentum < state.momentumCutOff)
+			return std::numeric_limits<double>::max();
       }
 
       k3 = (elData ? elData->qop[2] : qop0)
@@ -394,7 +402,10 @@ public:
 
       // Last Runge-Kutta point
       if (elData) {
+		  // Update parameters and check for momentum condition
         updateEnergyLoss(elData, momentum, h, state.q, state.covTransport, 3);
+        if(momentum < state.momentumCutOff)
+			return std::numeric_limits<double>::max();
       }
 
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
@@ -408,14 +419,15 @@ public:
     // Select and adjust the appropriate Runge-Kutta step size in ATLAS style
     double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     while (error_estimate > 4. * state.tolerance) {
-      if (state.stepSize < state.stepSizeCutOff) {
-        break;
-      }
       state.stepSize = state.stepSize
           * std::min(std::max(
                          0.25,
                          std::pow((state.tolerance / error_estimate), 0.25)),
                      4.);
+      // If step size becomes too small the particle remains at the initial place
+      if (state.stepSize < state.stepSizeCutOff) {
+        return 0.; // Not moving due to too low momentum needs an aborter
+      }
       error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     }
 

@@ -26,7 +26,7 @@ struct StepActor
   double m_tolerance = 5e-5;
   /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
   bool m_includeGgradient = false;
-  /// Cut-off value for the momentum
+  /// Cut-off value for the momentum in SI units
   double m_momentumCutOff = 0.;
   /// Cut-off value for the step size
   double m_stepSizeCutOff = 0.;
