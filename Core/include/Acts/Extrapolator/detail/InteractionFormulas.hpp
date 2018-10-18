@@ -50,9 +50,7 @@ namespace detail {
     /// @note The only conversion needed is for @p kazL if siUnits is true.
     ///
     /// @return A std::pair. The first entry is the mean energy loss due to
-    /// ionization along a given path length. The second entry is the sigma of
-    /// the
-    /// distribution.
+    /// ionization along a given path length or its mode. The second entry is the sigma of the distribution.
     template <typename material_t>
     std::pair<double, double>
     operator()(double            m,

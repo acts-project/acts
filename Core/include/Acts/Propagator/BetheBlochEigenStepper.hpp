@@ -95,7 +95,7 @@ public:
   BetheBlochEigenStepper(BField bField = BField())
     : m_bField(std::move(bField)){};
 
-// TODO: private
+private:
   /// @brief This function calculates the energy loss dE per path length ds of a
   /// particle through material. The energy loss consists of ionisation and
   /// radiation.
@@ -214,8 +214,6 @@ public:
     return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv;
   }
 
-private:
-
 	/// @brief This struct serves as data container to keep track of all parameters that are related to an energy loss of a particle in matter.
   struct EnergyLossData
   {
@@ -247,6 +245,7 @@ private:
   /// @param [in, out] eld Data container related to material interaction of
   /// the particle
   /// @param [in] state Deliverer of configurations
+  /// @return Modified EnergyLossData
   std::unique_ptr<EnergyLossData>
   initializeEnergyLoss(std::unique_ptr<EnergyLossData> eld,
 						const State& state) const
@@ -286,14 +285,14 @@ private:
   /// @note This function serves for reducing the length of the actual
   /// BetheBlochEigenStepper::step() function.
   ///
-  /// @param [in, out] eld Data container related to material interaction of
+  /// @param [in] eld Data container related to material interaction of
   /// the particle
   /// @param [out] momentum Updated momentum
   /// @param [in] h Stepped distance of the sub-step (1-3)
   /// @param [in] q Charge of the particle
   /// @param [in] covTransport Boolean flag if covariance should be transported
   /// @param [in] i Index of the sub-step (1-3)
-  /// TODO
+  /// @return Modified EnergyLossData
   std::unique_ptr<EnergyLossData>
   updateEnergyLoss(std::unique_ptr<EnergyLossData> eld,
                    double&         momentum,
