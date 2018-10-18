@@ -52,6 +52,7 @@ struct StepActor
       // Let the stepper track the volume and particles mass
       state.stepping.volume = &state.navigation.currentVolume;
       state.stepping.mass   = &(state.options.mass);
+      state.stepping.pdg = &(state.options.absPdgCode);
 
       // Initialize user defined parameters
       state.stepping.energyLossFlag   = m_energyLossFlag;

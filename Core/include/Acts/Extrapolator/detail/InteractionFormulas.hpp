@@ -200,7 +200,7 @@ namespace detail {
     /// are provided by ATL-SOFT-PUB-2008-003.
     ///
     /// @tparam material_t Type of the material
-    /// @param [in] p Momentum of the particle
+    /// @param [in] E Energy of the particle
     /// @param [in] m Mass of the particle
     /// @param [in] mat Material that is penetrated
     /// @param [in] pdg PDG code of the particle
@@ -209,7 +209,7 @@ namespace detail {
     /// @return Radiation energy loss
     template <typename material_t>
     double
-    operator()(double p,
+    operator()(double E,
 			   double            m,
                const material_t& mat,
                int pdg,
@@ -220,21 +220,23 @@ namespace detail {
 		if(mat.X0() == 0.) return 0.;
 		
       double           energyLoss;
-	  const double E       = std::sqrt(p * p + m * m);
-      const double meOverm = constants::me / m;
-      
-      // Calculate the bremsstrahlung energy loss (eq. 6)
-      energyLoss = -E * (meOverm * meOverm) * path;
+      const double meOverm = constants::me / (siUnits ? units::SI2Nat<units::MASS>(m) : m);
 
+      // Converting energy if needed
+      if(siUnits)
+		E = units::SI2Nat<units::ENERGY>(E);
+		
+      // Calculate the bremsstrahlung energy loss (eq. 6)
+      energyLoss = -E * (meOverm * meOverm);
+     
       // Calculate the energy loss due to direct e+e- pair production and
       // photonuclear interaction (eq. 7, 8) if muons are present
       if ((pdg == 13 || pdg == -13) && E > 8. * units::_GeV) {
         if (E < 1. * units::_TeV) {
-          energyLoss += (0.5345 - 6.803e-5 * E - 2.278e-11 * E * E
-                               + 9.899e-18 * E * E * E)
-             * path;
+          energyLoss += 0.5345 - 6.803e-5 * E - 2.278e-11 * E * E
+                               + 9.899e-18 * E * E * E;
         } else {
-          energyLoss += (2.986 - 9.253e-5 * E) * path;
+          energyLoss += 2.986 - 9.253e-5 * E;
         }
       }
 
@@ -244,7 +246,11 @@ namespace detail {
       // const double Eloss2 = a * path * mat.rho() * constants::ka_BetheBloch
         //  * 0.5 / (lbeta * lbeta);
       // energyLoss.second = std::sqrt(Eloss2) / (lbeta * p * p);
-      return energyLoss / mat.X0();
+      
+      // Return energy loss
+      if(siUnits)
+		return units::Nat2SI<units::ENERGY>(energyLoss) * path / mat.X0();
+      return energyLoss * path / mat.X0();
     }
   };
 }  // namespace detail

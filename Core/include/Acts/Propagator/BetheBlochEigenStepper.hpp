@@ -63,6 +63,9 @@ public:
 
     /// Mass
     double* mass = nullptr;
+    
+    /// PDG code
+    int* pdg = nullptr;
 
     /// Volume with material that is passed
     TrackingVolume const** volume = nullptr;
@@ -99,6 +102,7 @@ private:
   /// @brief This function calculates the energy loss dE per path length ds of a
   /// particle through material. The energy loss consists of ionisation and
   /// radiation.
+  /// @note The calculations use SI units and it is assumed that the arguments are given in SI units.
   ///
   /// @tparam material_t Type of the material
   /// @param [in] momentum Initial momentum of the particle
@@ -132,9 +136,13 @@ private:
                                              true)
                                       .first;
     // b) radiation
-    double radiationEnergyLoss = radiationLoss(momentum, mass, material, pdg, true);
+    double radiationEnergyLoss = radiationLoss(energy, mass, material, pdg, 1., true);
+               
+    // Rescaling for mode evaluation. TODO: Factor just copied but not tested from Athena
+    if(!meanEnergyLoss)
+		radiationEnergyLoss *= 0.15;
 
-    // return sum of contributions
+    // Return sum of contributions
     return ionisationEnergyLoss + radiationEnergyLoss;
   }
 
@@ -256,7 +264,7 @@ private:
                          + eld->massSI * eld->massSI * units::_c4);
     // Use the same energy loss throughout the step.
     eld->g
-        = dEds(eld->initialMomentum, E, eld->massSI, *(eld->material), state.meanEnergyLoss);
+        = dEds(eld->initialMomentum, E, eld->massSI, *(eld->material), *(state.pdg), state.meanEnergyLoss);
     // Change of the momentum per path length
     // dPds = dPdE * dEds
     eld->dPds[0] = eld->g * E / (eld->initialMomentum * units::_c2);
