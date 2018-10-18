@@ -193,62 +193,59 @@ namespace detail {
     }
   };
 
-  /// @brief Structure for the energy loss of muons in dense material. It
-  /// combines the effect of energy loss by ionisation with bremsstrahlung,
-  /// direct e+e- pair production and photonuclear interaction.
-  struct MuonEnergyLoss
+  /// @brief Structure for the energy loss of particles due to radiation in dense material. It combines the effect of energy loss by ionisation with bremsstrahlung, direct e+e- pair production and photonuclear interaction.
+  struct RadiationLoss
   {
     /// @brief Main call operator for the energy loss. The following equations
     /// are provided by ATL-SOFT-PUB-2008-003.
     ///
     /// @tparam material_t Type of the material
-    /// @param [in] m Masst of the particle
-    /// @param [in] lbeta Beta factor of the particle
-    /// @param [in] lgamma Gamma factor of the particle
+    /// @param [in] p Momentum of the particle
+    /// @param [in] m Mass of the particle
     /// @param [in] mat Material that is penetrated
+    /// @param [in] pdg PDG code of the particle
     /// @param [in] path Path length of the particle through the material
-    /// @param [in] mean Boolean flag for using the mean or the mode for
-    /// ionisation losses
+    /// @param [in] siUnits Boolean flag if SI or natural units should be used
+    /// @return Radiation energy loss
     template <typename material_t>
-    std::pair<double, double>
-    operator()(double            m,
-               double            lbeta,
-               double            lgamma,
+    double
+    operator()(double p,
+			   double            m,
                const material_t& mat,
+               int pdg,
                double            path = 1.,
-               bool              mean = true)
+               bool siUnits = false) const
     {
-      // Calculate the ionisation energy loss
-      IonisationLoss iLoss;
-      auto           energyLoss = iLoss(m, lbeta, lgamma, mat, path, mean);
-
-      // Calculate the bremsstrahlung energy loss (eq. 6)
-      const double p       = m * lgamma * lbeta;
-      const double E       = std::sqrt(p * p + m * m);
+		// Easy exit
+		if(mat.X0() == 0.) return 0.;
+		
+      double           energyLoss;
+	  const double E       = std::sqrt(p * p + m * m);
       const double meOverm = constants::me / m;
-      energyLoss.first += E / mat.X0 * (meOverm * meOverm) * path;
+      
+      // Calculate the bremsstrahlung energy loss (eq. 6)
+      energyLoss = -E * (meOverm * meOverm) * path;
 
       // Calculate the energy loss due to direct e+e- pair production and
-      // photonuclear interaction (eq. 7, 8)
-      if (E > 8. * units::_GeV) {
-        const double invX0 = 1. / mat.X0;
-        if (E > 1. * units::_TeV) {
-          energyLoss.first += (0.5345 - 6.803e-5 * E - 2.278e-11 * E * E
+      // photonuclear interaction (eq. 7, 8) if muons are present
+      if ((pdg == 13 || pdg == -13) && E > 8. * units::_GeV) {
+        if (E < 1. * units::_TeV) {
+          energyLoss += (0.5345 - 6.803e-5 * E - 2.278e-11 * E * E
                                + 9.899e-18 * E * E * E)
-              * invX0 * path;
+             * path;
         } else {
-          energyLoss.first += (2.986 - 9.253e-5 * E) * invX0 * path;
+          energyLoss += (2.986 - 9.253e-5 * E) * path;
         }
       }
 
+	  // TODO: uncertainty not needed yet and differences between Athena and the paper. If needed, the return type should be modified to a pair of doubles.
       // Calculate the width of the energy loss (eq. 12 - 14)
-      const double a      = 121 + 3.9e-3 * E + 5.3e-9 * E * E;
-      const double Eloss2 = a * path * mat.rho() * constants::ka_BetheBloch
-          * 0.5 / (lbeta * lbeta);
-      energyLoss.second = std::sqrt(Eloss2) / (lbeta * p * p);
-      return energyLoss;
+      // const double a      = 121 + 3.9e-3 * E + 5.3e-9 * E * E;
+      // const double Eloss2 = a * path * mat.rho() * constants::ka_BetheBloch
+        //  * 0.5 / (lbeta * lbeta);
+      // energyLoss.second = std::sqrt(Eloss2) / (lbeta * p * p);
+      return energyLoss / mat.X0();
     }
   };
-
 }  // namespace detail
 }  // namespace Acts

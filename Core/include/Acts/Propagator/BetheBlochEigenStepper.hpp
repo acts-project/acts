@@ -105,6 +105,8 @@ private:
   /// @param [in] energy Initial energy of the particle
   /// @param [in] mass Mass of the particle
   /// @param [in] material Penetrated material
+  /// @param [in] pdg PDG code of the particle
+  /// @param [in] meanEnergyLoss Boolean flag if mean or mode should be evaluated for the energy loss due to ionisation
   /// @return Infinitesimal energy loss
   template <typename material_t>
   double
@@ -112,6 +114,7 @@ private:
        const double      energy,
        const double      mass,
        const material_t& material,
+       const int pdg,
        const bool meanEnergyLoss = true) const
   {
     // Easy exit if material is invalid
@@ -120,7 +123,7 @@ private:
     // Calculate energy loss by
     // a) ionisation
     // TODO: make return as pure double
-    double ionisationEnergyLoss = energyLoss(mass,
+    double ionisationEnergyLoss = ionisationLoss(mass,
                                              momentum * units::_c / energy,
                                              energy / (mass * units::_c2),
                                              material,
@@ -129,8 +132,7 @@ private:
                                              true)
                                       .first;
     // b) radiation
-    // TODO: There doesn't radiate anything
-    double radiationEnergyLoss = 0.;
+    double radiationEnergyLoss = radiationLoss(momentum, mass, material, pdg, true);
 
     // return sum of contributions
     return ionisationEnergyLoss + radiationEnergyLoss;
@@ -567,7 +569,7 @@ public:
     std::cout << "result p: " << state.p << std::endl;
     std::cout << "result cov:\n" << state.jacTransport << std::endl;
     state.pathAccumulated += h;
-    //~ std::exit(1);
+    std::exit(1);
     return h;
   }
 
@@ -575,7 +577,8 @@ private:
   /// Magnetic field inside of the detector
   BField m_bField;
 	/// Energy loss calculator
-  detail::IonisationLoss energyLoss;
+  detail::IonisationLoss ionisationLoss;
+  detail::RadiationLoss radiationLoss;
 };
 
 }  // namespace Acts
