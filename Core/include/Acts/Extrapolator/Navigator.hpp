@@ -18,6 +18,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 
+#include <boost/algorithm/string.hpp>
+
 namespace Acts {
 
 using cstep = detail::ConstrainedStep;
@@ -832,9 +834,11 @@ struct Navigator
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << state.navigation.navLayers.size();
-        dstream << " layer candidates found at path(s): ";
-        for (auto& lc : state.navigation.navLayers) {
-          dstream << lc.intersection.pathLength << "  ";
+        dstream << " layer candidates found at path(s): \n";
+        for (const auto& lc : state.navigation.navLayers) {
+          dstream << lc.intersection.pathLength << " -> "
+                  << lc.object->geoID().toString() << "\n"
+                  << " |-> " << lc.representation->geoID().toString() << "\n";
         }
         return dstream.str();
       });
@@ -964,8 +968,12 @@ struct Navigator
           if (state.navigation.currentSurface) {
             debugLog(state, [&] {
               std::stringstream dstream;
-              dstream << "Current surface set to layer surface ";
-              dstream << state.navigation.currentSurface->geoID().toString();
+              dstream << "Current surface set to approach surface\n";
+              dstream << layerSurface->geoID().toString();
+              auto center = state.navigation.currentSurface->center();
+              dstream << "\nat pos (" << center.x() << ", " << center.y()
+                      << ", " << center.z() << ")";
+              dstream << "\nof layer " << layer->geoID().toString();
               return dstream.str();
             });
           }
@@ -1126,7 +1134,11 @@ struct Navigator
       // it the current one to pass it to the other actors
       if (surface->isOnSurface(state.stepping.position(), true)) {
         debugLog(state, [&] {
-          return std::string("Surface successfully hit, storing it.");
+          std::stringstream dstream;
+          dstream << "Surface ";
+          dstream << surface->geoID().toString();
+          dstream << " successfully hit, storing it.";
+          return dstream.str();
         });
         // the surface will only appear due to correct
         // collect(Property) flag
@@ -1257,11 +1269,16 @@ private:
       if (state.navigation.currentVolume) {
         vName = state.navigation.currentVolume->volumeName();
       }
-      std::stringstream dstream;
-      dstream << ">>>" << std::setw(state.options.debugPfxWidth) << vName
-              << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
+      std::vector<std::string> lines;
+      std::string              input = logAction();
+      boost::split(lines, input, boost::is_any_of("\n"));
+      for (const auto& line : lines) {
+        std::stringstream dstream;
+        dstream << ">>>" << std::setw(state.options.debugPfxWidth) << vName
+                << " | ";
+        dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
+        state.options.debugString += dstream.str();
+      }
     }
   }
 };

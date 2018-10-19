@@ -149,11 +149,11 @@ GeometryID::toString() const
   geo_id_value sensitive_id = value(sensitive_mask);
 
   std::stringstream dstream;
-  dstream << "[" << std::setw(5) << volume_id;
-  dstream << " | " << std::setw(5) << boundary_id;
-  dstream << " | " << std::setw(5) << layer_id;
-  dstream << " | " << std::setw(5) << approach_id;
-  dstream << " | " << std::setw(10) << sensitive_id << " ]";
+  dstream << "[ " << std::setw(3) << volume_id;
+  dstream << " | " << std::setw(3) << boundary_id;
+  dstream << " | " << std::setw(3) << layer_id;
+  dstream << " | " << std::setw(3) << approach_id;
+  dstream << " | " << std::setw(4) << sensitive_id << " ]";
   return dstream.str();
 }
 

@@ -18,6 +18,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+#include <boost/algorithm/string.hpp>
+
 namespace Acts {
 
 /// Result status of track parameter propagation
@@ -318,6 +320,7 @@ private:
     m_navigator(state);
     state.options.actionList(state, result);
 
+    bool terminatedNormally = false;
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it only takes the stepping state
@@ -339,9 +342,15 @@ private:
                [&] { return std::string("Calling aborters after step."); });
       if (state.options.stopConditions(result, state)
           || state.targetAborters(result, state)) {
+        terminatedNormally = true;
         break;
       }
     }
+
+    if (!terminatedNormally) {
+      state.navigation.navigationBreak = true;
+    }
+
     // Post-stepping call to the action list
     debugLog(state,
              [&] { return std::string("Calling post-stepping action list."); });
@@ -529,12 +538,17 @@ private:
            const std::function<std::string()>& logAction) const
   {
     if (state.options.debug) {
-      std::stringstream dstream;
-      dstream << "|->" << std::setw(state.options.debugPfxWidth);
-      dstream << "Propagator"
-              << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
+      std::vector<std::string> lines;
+      std::string              input = logAction();
+      boost::split(lines, input, boost::is_any_of("\n"));
+      for (const auto& line : lines) {
+        std::stringstream dstream;
+        dstream << "|->" << std::setw(state.options.debugPfxWidth);
+        dstream << "Propagator"
+                << " | ";
+        dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
+        state.options.debugString += dstream.str();
+      }
     }
   }
 };
