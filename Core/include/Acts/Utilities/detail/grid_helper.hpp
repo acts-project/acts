@@ -204,16 +204,14 @@ namespace detail {
 
     template <class... Axes>
     static void
-    exteriorBinIndices(
-        std::array<size_t, sizeof...(Axes)>& idx,
-        std::array<bool, sizeof...(Axes)> isExterior,
-        std::set<size_t>& combinations,
-        const std::tuple<Axes...>& axes)
+    exteriorBinIndices(std::array<size_t, sizeof...(Axes)>& idx,
+                       std::array<bool, sizeof...(Axes)>    isExterior,
+                       std::set<size_t>&          combinations,
+                       const std::tuple<Axes...>& axes)
     {
       // iterate over this axis' bins, remembering which bins are exterior
-      for (size_t i = 0; i < std::get<N>(axes).getNBins() + 2; ++i)
-      {
-        idx.at(N) = i;
+      for (size_t i = 0; i < std::get<N>(axes).getNBins() + 2; ++i) {
+        idx.at(N)        = i;
         isExterior.at(N) = (i == 0) || (i == std::get<N>(axes).getNBins() + 1);
         // vary other axes recursively
         grid_helper_impl<N - 1>::exteriorBinIndices(
@@ -381,11 +379,10 @@ namespace detail {
 
     template <class... Axes>
     static void
-    exteriorBinIndices(
-        std::array<size_t, sizeof...(Axes)>& idx,
-        std::array<bool, sizeof...(Axes)> isExterior,
-        std::set<size_t>& combinations,
-        const std::tuple<Axes...>& axes)
+    exteriorBinIndices(std::array<size_t, sizeof...(Axes)>& idx,
+                       std::array<bool, sizeof...(Axes)>    isExterior,
+                       std::set<size_t>&          combinations,
+                       const std::tuple<Axes...>& axes)
     {
       // For each exterior bin on this axis, we will do this
       auto recordExteriorBin = [&](size_t i) {
@@ -398,9 +395,8 @@ namespace detail {
       };
 
       // The first and last bins on this axis are exterior by definition
-      for (size_t i : { static_cast<size_t>(0),
-                        std::get<0u>(axes).getNBins() + 1 })
-      {
+      for (size_t i :
+           {static_cast<size_t>(0), std::get<0u>(axes).getNBins() + 1}) {
         recordExteriorBin(i);
       }
 
@@ -409,11 +405,12 @@ namespace detail {
       for (size_t N = 1; N < sizeof...(Axes); ++N) {
         otherAxisExterior = otherAxisExterior | isExterior[N];
       }
-      if (!otherAxisExterior) { return; }
+      if (!otherAxisExterior) {
+        return;
+      }
 
       // Otherwise, we're on a grid border: iterate over all the other indices
-      for (size_t i = 1; i <= std::get<0u>(axes).getNBins(); ++i)
-      {
+      for (size_t i = 1; i <= std::get<0u>(axes).getNBins(); ++i) {
         recordExteriorBin(i);
       }
     }
@@ -763,9 +760,10 @@ namespace detail {
       constexpr size_t MAX = sizeof...(Axes) - 1;
 
       std::array<size_t, sizeof...(Axes)> idx;
-      std::array<bool, sizeof...(Axes)> isExterior;
+      std::array<bool, sizeof...(Axes)>   isExterior;
       std::set<size_t> combinations;
-      grid_helper_impl<MAX>::exteriorBinIndices(idx, isExterior, combinations, axes);
+      grid_helper_impl<MAX>::exteriorBinIndices(
+          idx, isExterior, combinations, axes);
 
       return combinations;
     }

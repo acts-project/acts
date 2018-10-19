@@ -299,7 +299,7 @@ namespace detail {
     void
     setExteriorBins(const value_type& value)
     {
-      for (size_t index: grid_helper::exteriorBinIndices(m_axes)) {
+      for (size_t index : grid_helper::exteriorBinIndices(m_axes)) {
         at(index) = value;
       }
     }
