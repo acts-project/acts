@@ -50,9 +50,12 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 
   if (mGlobal != nullptr) {
     // the new combined translation
-    TGeoHMatrix nTransform = (*mGlobal) * (*nodeTransform);
-    std::string nName      = tGeoDetElement->GetName();
-    std::string suffix     = "_transform";
+    // TGeoHMatrix nTransform = (*mGlobal) * (*nodeTransform);
+    TGeoHMatrix nTransform
+        = TGeoCombiTrans(*mGlobal) * TGeoCombiTrans(*nodeTransform);
+    // TGeoHMatrix nTransform = mGlobal->operator*(*nodeTransform);
+    std::string nName  = tGeoDetElement->GetName();
+    std::string suffix = "_transform";
     nTransform.SetName((nName + suffix).c_str());
     translation = nTransform.GetTranslation();
     rotation    = nTransform.GetRotationMatrix();

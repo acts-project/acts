@@ -6,7 +6,7 @@ target_include_directories (ActsDD4hepPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CU
 target_include_directories (ActsDD4hepPlugin PUBLIC ${DD4hep_INCLUDE_DIRS})
 target_link_libraries (ActsDD4hepPlugin PUBLIC ActsCore)
 target_link_libraries (ActsDD4hepPlugin PUBLIC ActsTGeoPlugin)
-target_link_libraries (ActsDD4hepPlugin PUBLIC ${DD4hep_DDCORE_LIBRARY} ${DD4hep_DDSEGMENTATION_LIBRARY})
+target_link_libraries (ActsDD4hepPlugin PUBLIC ${DD4hep_DDCORE_LIBRARY})
 
 install (TARGETS ActsDD4hepPlugin
          EXPORT ActsDD4hepPluginTargets
