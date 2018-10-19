@@ -21,6 +21,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
 
 namespace Acts {
 
@@ -62,13 +63,16 @@ public:
     }
 
     /// Mass
-    double* mass = nullptr;
+    //~ double* mass = nullptr;
+    double* mass = new double(139.57018 * units::_MeV);
     
     /// PDG code
-    int* pdg = nullptr;
+    //~ int* pdg = nullptr;
+    int* pdg = new int(211);
 
     /// Volume with material that is passed
-    TrackingVolume const** volume = nullptr;
+    //~ TrackingVolume const** volume = nullptr;
+    std::shared_ptr<Material> material = std::make_shared<Material>(Material(352.8, 394.133, 9.012, 4., 1.848e-3));
 
     /// Boolean flag for energy loss while stepping
     bool energyLossFlag = true;
@@ -138,7 +142,8 @@ private:
     // b) radiation
     double radiationEnergyLoss = radiationLoss(energy, mass, material, pdg, 1., true);
                
-    // Rescaling for mode evaluation. TODO: Factor just copied but not tested from Athena
+    // Rescaling for mode evaluation. 
+    // TODO: Factor just copied from Athena but not tested for correctness
     if(!meanEnergyLoss)
 		radiationEnergyLoss *= 0.15;
 
@@ -163,6 +168,7 @@ private:
          const double      mass,
          const material_t& material) const
   {
+	  // TODO: all unit conversions from nat to SI
     // Fast exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0
         || material.zOverAtimesRho() == 0)
@@ -328,6 +334,8 @@ private:
     return std::move(eld);
   }
 
+// TODO: using B field gradient
+
 public:
   /// Perform a Runge-Kutta track parameter propagation step
   ///
@@ -347,11 +355,12 @@ public:
     double momentum, qop0;
 
 	// Set up initial data
-    if (state.energyLossFlag && (*state.volume) && (*state.volume)->material()) {
+    //~ if (state.energyLossFlag && (*state.volume) && (*state.volume)->material()) {
+    if (state.energyLossFlag && state.material) {
 		// Set up container for energy loss
       elData           = std::make_unique<EnergyLossData>();
       elData->massSI   = units::Nat2SI<units::MASS>(*state.mass);
-      elData->material = (*state.volume)->material();
+      elData->material = state.material;
       elData->initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
       momentum                = elData->initialMomentum;
       elData->qop[0]          = state.q / momentum;
@@ -360,7 +369,6 @@ public:
       momentum = units::Nat2SI<units::MOMENTUM>(state.p);
       qop0     = state.q / momentum;
     }
-
     // Runge-Kutta integrator state
     double   h2, half_h;
     Vector3D B_middle, B_last, k2, k3, k4;
@@ -547,7 +555,7 @@ public:
       dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
       dFdT *= h;
 
-      Vector3D onesVec(1., 1., 1.);
+      Vector3D onesVec(0., 0., 0.);
       dFdL = onesVec * h + conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
 
       dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
@@ -577,7 +585,7 @@ public:
     std::cout << "result p: " << state.p << std::endl;
     std::cout << "result cov:\n" << state.jacTransport << std::endl;
     state.pathAccumulated += h;
-    std::exit(1);
+    //~ std::exit(1);
     return h;
   }
 
