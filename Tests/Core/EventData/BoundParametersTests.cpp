@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE BoundParameters Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank as
 #include <boost/test/data/test_case.hpp>
+// clang-format on
 
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -22,11 +22,11 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
-#include "../Utilities/TestHelper.hpp"
 #include "ParametersTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -130,7 +130,7 @@ namespace Test {
     // we should have a new updated position
     Vector3D lPosition3D(ux, uy, 0.);
     Vector3D uposition = rot * lPosition3D + center;
-    checkCloseVec3D(uposition, ataPlane_from_pars.position());
+    CHECK_CLOSE_REL(uposition, ataPlane_from_pars.position(), 1e-6);
 
     double uphi   = 1.2;
     double utheta = 0.2;

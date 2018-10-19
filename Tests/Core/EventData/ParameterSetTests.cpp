@@ -6,15 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
+#define BOOST_TEST_MODULE ParameterSet Tests
+#include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include <cmath>
 #include <memory>
 #include <random>
 
-#define BOOST_TEST_MODULE ParameterSet Tests
-#include <boost/test/included/unit_test.hpp>
-#include "../Utilities/TestHelper.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
 using namespace Acts::detail;
 
 ///
@@ -601,7 +605,7 @@ namespace Test {
         nullptr, first_loc0, first_phi, first_theta);
     ParameterSet<ParID_t::eLOC_0, ParID_t::ePHI, ParID_t::eTHETA> second(
         nullptr, second_loc0, second_phi, second_theta);
-    checkCloseVec3D(residuals, second.residual(first));
+    CHECK_CLOSE_REL(residuals, second.residual(first), 1e-6);
 
     // some more checks for bound variables
     check_residuals_for_bound_parameters();

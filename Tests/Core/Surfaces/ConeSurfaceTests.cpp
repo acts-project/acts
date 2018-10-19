@@ -6,25 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE ConeSurface Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
 #include <limits>
+
 #include "Acts/Surfaces/ConeSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-
-#include "../Utilities/TestHelper.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -110,8 +105,9 @@ namespace Test {
     //
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
-    checkCloseVec3D(coneSurfaceObject->binningPosition(BinningValue::binPhi),
-                    binningPosition);
+    CHECK_CLOSE_ABS(coneSurfaceObject->binningPosition(BinningValue::binPhi),
+                    binningPosition,
+                    1e-6);
     //
     /// Test referenceFrame
     Vector3D         globalPosition{2.0, 2.0, 2.0};
@@ -126,7 +122,7 @@ namespace Test {
     /// Test normal, given 3D position
     Vector3D origin{0., 0., 0.};
     Vector3D normal3D = {0., -1., 0.};
-    checkCloseVec3D(coneSurfaceObject->normal(origin), normal3D);
+    CHECK_CLOSE_ABS(coneSurfaceObject->normal(origin), normal3D, 1e-6);
     //
     /// Test normal given 2D rphi position
     Vector2D positionPiBy2(1.0, M_PI / 2.);
@@ -137,7 +133,7 @@ namespace Test {
     //
     /// Test rotational symmetry axis
     Vector3D symmetryAxis{0., 0., 1.};
-    checkCloseVec3D(coneSurfaceObject->rotSymmetryAxis(), symmetryAxis);
+    CHECK_CLOSE_ABS(coneSurfaceObject->rotSymmetryAxis(), symmetryAxis, 1e-6);
     //
     /// Test bounds
     BOOST_TEST(coneSurfaceObject->bounds().type() == SurfaceBounds::Cone);
@@ -155,7 +151,7 @@ namespace Test {
     // std::cout<<localPosition<<std::endl;
     Vector2D expectedLocalPosition{1.0, M_PI / 2.0};
 
-    checkCloseVec2D(localPosition, expectedLocalPosition);
+    CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-6);
     //
     /// Test isOnSurface
     Vector3D offSurface{100, 1, 2};
@@ -170,7 +166,7 @@ namespace Test {
         offSurface, direction, forward, false);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 100., true, 0};
     BOOST_TEST(intersect.valid);
-    checkCloseVec3D(intersect.position, expectedIntersect.position);
+    CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-6);
     BOOST_CHECK_CLOSE_FRACTION(
         intersect.pathLength, expectedIntersect.pathLength, 1e-6);
     BOOST_CHECK_CLOSE_FRACTION(

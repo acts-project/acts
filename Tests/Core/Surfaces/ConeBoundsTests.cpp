@@ -6,25 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Cone Bounds Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
+#include <limits>
+
 #include "Acts/Surfaces/ConeBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-//
-#include "../Utilities/TestHelper.hpp"
-//
-#include <limits>
 
 /* Note on nomenclature:
   alpha = cone opening half angle

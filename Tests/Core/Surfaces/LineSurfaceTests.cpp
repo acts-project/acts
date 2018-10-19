@@ -6,28 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Line Surface Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
+#include <limits>
+
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-//
-#include "../Utilities/TestHelper.hpp"
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
-//
-#include <limits>
 
 namespace utf = boost::unit_test;
 
@@ -82,7 +76,7 @@ namespace Test {
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub line(pTransform, 2.0, 20.);
     Vector3D        referencePosition{0., 1., 2.};
-    checkCloseVec3D(referencePosition, line.binningPosition(binX));
+    CHECK_CLOSE_ABS(referencePosition, line.binningPosition(binX), 1e-6);
     //
     // bounds()
     auto              pLineBounds = std::make_shared<const LineBounds>(10.0);
@@ -98,7 +92,7 @@ namespace Test {
     Vector2D       localPosition;
     BOOST_CHECK(line.globalToLocal(gpos, mom, localPosition));
     const Vector2D expectedResult{0, -2};
-    checkCloseVec2D(expectedResult, localPosition);
+    CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
     //
     // intersectionEstimate
     const Vector3D      direction{0., 1., 2.};
@@ -108,8 +102,9 @@ namespace Test {
         {0., 0., 0.}, direction.normalized(), navDir, bcheck);
     BOOST_CHECK(intersection.valid);
     Vector3D expectedIntersection(0, 1., 2.);
-    checkCloseVec3D(intersection.position,
-                    expectedIntersection);  // need more tests..
+    CHECK_CLOSE_ABS(intersection.position,
+                    expectedIntersection,
+                    1e-6);  // need more tests..
     //
     // isOnSurface
     const Vector3D insidePosition{0., 2.5, 0.};
@@ -120,7 +115,7 @@ namespace Test {
     //
     // lineDirection
     const Vector3D zDirection{0., 0., 1.};
-    checkCloseVec3D(line.lineDirection(), zDirection);
+    CHECK_CLOSE_ABS(line.lineDirection(), zDirection, 1e-6);
     //
     // localToGlobal
     Vector3D returnedGlobalPosition{0., 0., 0.};
@@ -128,7 +123,7 @@ namespace Test {
     const Vector3D momentum{300., 200., 0.};  // find better values!
     line.localToGlobal(localPosition, momentum, returnedGlobalPosition);
     const Vector3D expectedGlobalPosition{0, 1, 0};
-    checkCloseVec3D(returnedGlobalPosition, expectedGlobalPosition);
+    CHECK_CLOSE_ABS(returnedGlobalPosition, expectedGlobalPosition, 1e-6);
     //
     // referenceFrame
     Vector3D globalPosition{0., 0., 0.};
@@ -148,7 +143,7 @@ namespace Test {
     //
     // normal
     Vector3D normalVector{0., 0., 1.};  // line direction is same as normal????
-    checkCloseVec3D(line.normal(), normalVector);
+    CHECK_CLOSE_ABS(line.normal(), normalVector, 1e-6);
     //
     // pathCorrection
     auto any3DVector = normalVector;

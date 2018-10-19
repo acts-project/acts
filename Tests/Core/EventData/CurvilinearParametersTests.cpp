@@ -6,13 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE CurvilinearParameters Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
-#include "../Utilities/TestHelper.hpp"
 #include "ParametersTestHelper.hpp"
 
 namespace Acts {
@@ -49,14 +52,14 @@ namespace Test {
         curvilinear_neut, pos, mom, 0., {{0., 0., fphi, ftheta, oOp}});
 
     // check that the created surface is at the position
-    checkCloseVec3D(curvilinear_pos.referenceSurface().center(), pos);
-    checkCloseVec3D(curvilinear_neg.referenceSurface().center(), pos);
-    checkCloseVec3D(curvilinear_neut.referenceSurface().center(), pos);
+    CHECK_CLOSE_REL(curvilinear_pos.referenceSurface().center(), pos, 1e-6);
+    CHECK_CLOSE_REL(curvilinear_neg.referenceSurface().center(), pos, 1e-6);
+    CHECK_CLOSE_REL(curvilinear_neut.referenceSurface().center(), pos, 1e-6);
 
     // check that the z-axis of the created surface is along momentum direction
-    checkCloseVec3D(curvilinear_pos.referenceSurface().normal(pos), dir);
-    checkCloseVec3D(curvilinear_neg.referenceSurface().normal(pos), dir);
-    checkCloseVec3D(curvilinear_neut.referenceSurface().normal(pos), dir);
+    CHECK_CLOSE_REL(curvilinear_pos.referenceSurface().normal(pos), dir, 1e-6);
+    CHECK_CLOSE_REL(curvilinear_neg.referenceSurface().normal(pos), dir, 1e-6);
+    CHECK_CLOSE_REL(curvilinear_neut.referenceSurface().normal(pos), dir, 1e-6);
 
     // check the reference frame of curvilinear parameters
     // it is the x-y frame of the created surface
@@ -67,9 +70,9 @@ namespace Test {
     mFrame.col(0)           = uAxis;
     mFrame.col(1)           = vAxis;
     mFrame.col(2)           = tAxis;
-    checkCloseRM3D(mFrame, curvilinear_pos.referenceFrame());
-    checkCloseRM3D(mFrame, curvilinear_neg.referenceFrame());
-    checkCloseRM3D(mFrame, curvilinear_neut.referenceFrame());
+    CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_pos.referenceFrame(), 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_neg.referenceFrame(), 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_neut.referenceFrame(), 1e-6, 1e-9);
 
     /// copy construction test
     CurvilinearParameters        curvilinear_pos_copy(curvilinear_pos);
