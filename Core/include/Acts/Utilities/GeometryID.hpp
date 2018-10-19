@@ -32,12 +32,14 @@ class GeometryID
 {
 
 public:
-  const static geo_id_value volume_mask    = 0xff00000000000000;
-  const static geo_id_value boundary_mask  = 0x00ff000000000000;
-  const static geo_id_value layer_mask     = 0x0000ff0000000000;
-  const static geo_id_value approach_mask  = 0x000000f000000000;
-  const static geo_id_value sensitive_mask = 0x0000000ffff00000;
-  const static geo_id_value channel_mask   = 0x00000000000fffff;
+  // clang-format off
+  constexpr static geo_id_value volume_mask    = 0xff00000000000000; // 256 volumes
+  constexpr static geo_id_value boundary_mask  = 0x00f0000000000000; // 15 boundaries
+  constexpr static geo_id_value layer_mask     = 0x000fff0000000000; // 4095 layers
+  constexpr static geo_id_value approach_mask  = 0x000000f000000000; // 15 approach surfaces
+  constexpr static geo_id_value sensitive_mask = 0x0000000ffff00000; // 65535 sensitive surfaces
+  constexpr static geo_id_value channel_mask   = 0x00000000000fffff; // 1048575 channels
+  // clang-format on
 
   /// default constructor
   ///
