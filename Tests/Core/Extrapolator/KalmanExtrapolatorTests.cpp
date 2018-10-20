@@ -6,12 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Kalman Extrapolator Test
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
 
-#include <math.h>
+#include <cmath>
 #include <random>
 #include <vector>
+
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
@@ -21,6 +24,7 @@
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -173,7 +177,7 @@ namespace Test {
       accJacobian = j * accJacobian;
     }
     accJacobian = swlJacobian * accJacobian;
-    BOOST_TEST(pJacobian.isApprox(accJacobian));
+    CHECK_CLOSE_OR_SMALL(pJacobian, accJacobian, 1e-6, 1e-9);
   }
 }
 }

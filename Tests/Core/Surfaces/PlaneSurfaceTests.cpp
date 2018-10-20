@@ -72,7 +72,6 @@ namespace Test {
   /// Unit test for testing PlaneSurface properties
   BOOST_AUTO_TEST_CASE(PlaneSurfaceProperties)
   {
-    double withinOnePercent = 0.01;
     // bounds object, rectangle type
     auto rBounds = std::make_shared<const RectangleBounds>(3., 4.);
     /// Test clone method
@@ -115,8 +114,11 @@ namespace Test {
     RotationMatrix3D expectedFrame;
     expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
-    BOOST_TEST(planeSurfaceObject->referenceFrame(globalPosition, momentum)
-                   .isApprox(expectedFrame));
+    CHECK_CLOSE_OR_SMALL(
+        planeSurfaceObject->referenceFrame(globalPosition, momentum),
+        expectedFrame,
+        1e-6,
+        1e-9);
     //
     /// Test normal, given 3D position
     Vector3D normal3D(0., 0., 1.);
@@ -133,14 +135,13 @@ namespace Test {
     Vector3D expectedPosition{
         1.5 + translation.x(), 1.7 + translation.y(), translation.z()};
 
-    BOOST_TEST(globalPosition.isApprox(expectedPosition, withinOnePercent));
+    CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
     //
     /// Testing globalToLocal
     planeSurfaceObject->globalToLocal(globalPosition, momentum, localPosition);
     Vector2D expectedLocalPosition{1.5, 1.7};
 
-    BOOST_TEST(localPosition.isApprox(expectedLocalPosition, withinOnePercent),
-               "Testing globalToLocal");
+    CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
 
     /// Test isOnSurface
     Vector3D offSurface{0, 1, -2.};
@@ -225,7 +226,7 @@ namespace Test {
         rectBounds->halflengthX(), rectBoundsRec->halflengthX(), 1e-4);
     CHECK_CLOSE_REL(
         rectBounds->halflengthY(), rectBoundsRec->halflengthY(), 1e-4);
-    BOOST_TEST(rot->isApprox(rectSrfRec->transform(), 1e-4));
+    CHECK_CLOSE_OR_SMALL(*rot, rectSrfRec->transform(), 1e-4, 1e-9);
 
     std::array<Vector2D, 3> vertices
         = {{Vector2D(1, 1), Vector2D(1, -1), Vector2D(-1, 1)}};
@@ -243,7 +244,7 @@ namespace Test {
                       triangleBoundsRec->vertices().at(i),
                       1e-4);
     }
-    BOOST_TEST(rot->isApprox(triangleSrfRec->transform(), 1e-4));
+    CHECK_CLOSE_OR_SMALL(*rot, triangleSrfRec->transform(), 1e-4, 1e-9);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

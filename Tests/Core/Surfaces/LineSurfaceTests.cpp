@@ -134,7 +134,8 @@ namespace Test {
     expectedRotationMatrix << -v1, 0., v0, v0, 0., v1, 0., 1., -0.;
     // std::cout<<returnedRotationMatrix<<std::endl;
     // std::cout<<expectedRotationMatrix<<std::endl;
-    BOOST_TEST(returnedRotationMatrix.isApprox(expectedRotationMatrix));
+    CHECK_CLOSE_OR_SMALL(
+        returnedRotationMatrix, expectedRotationMatrix, 1e-6, 1e-9);
     //
     // name()
     boost::test_tools::output_test_stream output;

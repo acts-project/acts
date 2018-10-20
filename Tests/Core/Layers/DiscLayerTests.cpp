@@ -6,28 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Layer Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//#include <limits>
-#include "Acts/Layers/DiscLayer.hpp"
-#include "Acts/Surfaces/RadialBounds.hpp"
-//#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/Layers/DiscLayer.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
+
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;
@@ -114,13 +110,14 @@ namespace Test {
       variant_map pl      = var_map.get<variant_map>("payload");
       BOOST_TEST(pl.get<double>("thickness") == 6);
       Transform3D act = from_variant<Transform3D>(pl.at("transform"));
-      BOOST_TEST(pTransform->isApprox(act));
+      CHECK_CLOSE_OR_SMALL(*pTransform, act, 1e-6, 1e-9);
 
       auto pDiscLayer2
           = std::dynamic_pointer_cast<DiscLayer>(DiscLayer::create(var_data));
 
       BOOST_TEST(pDiscLayer->thickness() == pDiscLayer2->thickness());
-      BOOST_TEST(pDiscLayer->transform().isApprox(pDiscLayer2->transform()));
+      CHECK_CLOSE_OR_SMALL(
+          pDiscLayer->transform(), pDiscLayer2->transform(), 1e-6, 1e-9);
 
       auto cvBoundsExp = dynamic_cast<const CylinderVolumeBounds*>(
           &(pDiscLayer->representingVolume()->volumeBounds()));

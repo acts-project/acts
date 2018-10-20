@@ -119,7 +119,7 @@ namespace Test {
     BOOST_TEST(pSurface.use_count() == 5);
 
     // check that the reference frame is the rotation matrix
-    BOOST_CHECK(ataPlane_from_pars.referenceFrame().isApprox(rot));
+    CHECK_CLOSE_REL(ataPlane_from_pars.referenceFrame(), rot, 1e-6);
 
     /// modification test via setter functions
     double ux = 0.3;
@@ -144,7 +144,7 @@ namespace Test {
                                         sin(uphi) * sin(utheta),
                                         cos(utheta));
 
-    BOOST_CHECK(umomentum.isApprox(ataPlane_from_pars.momentum()));
+    CHECK_CLOSE_REL(umomentum, ataPlane_from_pars.momentum(), 1e-6);
   }
 
   /// @brief Unit test for parameters at a disc
@@ -230,8 +230,8 @@ namespace Test {
 
     // check that the reference frame is the
     // rotation matrix of the surface
-    BOOST_CHECK(ataDisc_from_pars.referenceFrame().isApprox(
-        dSurface->transform().matrix().block<3, 3>(0, 0)));
+    const auto& dRotation = dSurface->transform().matrix().block<3, 3>(0, 0);
+    CHECK_CLOSE_REL(ataDisc_from_pars.referenceFrame(), dRotation, 1e-6);
   }
 
   /// @brief Unit test for parameters at a cylinder
@@ -334,7 +334,7 @@ namespace Test {
     refframe.col(1) = transverse_y;
     refframe.col(2) = normal_at_intersect;
     // check if the manually constructed reference frame is the provided one
-    BOOST_CHECK(ataCylinder_from_pars.referenceFrame().isApprox(refframe));
+    CHECK_CLOSE_REL(ataCylinder_from_pars.referenceFrame(), refframe, 1e-6);
   }
 
   /// @brief Unit test for parameters at the perigee

@@ -6,13 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Propagator Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank
 #include <boost/test/data/test_case.hpp>
+// clang-format on
+
 #include <cmath>
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 /// test consistency of forward-backward propagation
 BOOST_DATA_TEST_CASE(
@@ -143,8 +145,7 @@ BOOST_DATA_TEST_CASE(
                                    rand3,
                                    covtpr,
                                    debug);
-  BOOST_CHECK(
-      e_at_cylinder.first.isApprox(a_at_cylinder.first, 1 * units::_um));
+  CHECK_CLOSE_ABS(e_at_cylinder.first, a_at_cylinder.first, 10. * units::_um);
 }
 
 /// test consistency of propagators to a plane
@@ -218,7 +219,7 @@ BOOST_DATA_TEST_CASE(
                                                       true,
                                                       covtpr);
 
-  BOOST_CHECK(e_at_plane.first.isApprox(a_at_plane.first, 1 * units::_um));
+  CHECK_CLOSE_ABS(e_at_plane.first, a_at_plane.first, 1 * units::_um);
 }
 
 /// test consistency of propagators to a disc
@@ -292,7 +293,7 @@ BOOST_DATA_TEST_CASE(
                                                      true,
                                                      covtpr);
 
-  BOOST_CHECK(e_at_disc.first.isApprox(a_at_disc.first, 1 * units::_um));
+  CHECK_CLOSE_ABS(e_at_disc.first, a_at_disc.first, 1 * units::_um);
 }
 
 /// test consistency of propagators to a line
@@ -375,7 +376,7 @@ BOOST_DATA_TEST_CASE(
                                                       covtpr,
                                                       debug);
 
-  BOOST_CHECK(e_at_line.first.isApprox(a_at_line.first, 1 * units::_um));
+  CHECK_CLOSE_ABS(e_at_line.first, a_at_line.first, 1 * units::_um);
 }
 
 /// test correct covariance transport for curvilinear parameters

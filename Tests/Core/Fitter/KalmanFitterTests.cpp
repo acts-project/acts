@@ -6,13 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE KalmanFitter Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
 
 #include <algorithm>
-#include <math.h>
+#include <cmath>
 #include <random>
 #include <vector>
+
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -30,6 +33,7 @@
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
@@ -303,8 +307,9 @@ namespace Test {
     auto fittedAgainTrack      = kFitter.fit(measurements, rStart, rSurface);
     auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
 
-    BOOST_TEST(fittedParameters.parameters().isApprox(
-        fittedAgainParameters.parameters()));
+    CHECK_CLOSE_REL(fittedParameters.parameters(),
+                    fittedAgainParameters.parameters(),
+                    1e-6);
 
     // Change the order of the measurements
     std::vector<TrackState> shuffledMeasurements = {measurements[3],
@@ -319,8 +324,9 @@ namespace Test {
         = kFitter.fit(shuffledMeasurements, rStart, rSurface);
     auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
 
-    BOOST_TEST(fittedParameters.parameters().isApprox(
-        fittedShuffledParameters.parameters()));
+    CHECK_CLOSE_REL(fittedParameters.parameters(),
+                    fittedShuffledParameters.parameters(),
+                    1e-6);
 
     // Remove one measurement and find a hole
     std::vector<TrackState> measurementsWithHole = {measurements[0],
@@ -337,8 +343,10 @@ namespace Test {
     // Count one hole
     BOOST_TEST(fittedWithHoleTrack.missedActiveSurfaces.size() == 1);
     // And the parameters should be different
-    BOOST_TEST(!fittedParameters.parameters().isApprox(
-        fittedWithHoleParameters.parameters()));
+    BOOST_CHECK(
+        !Acts::Test::checkCloseRel(fittedParameters.parameters(),
+                                   fittedWithHoleParameters.parameters(),
+                                   1e-6));
   }
 
 }  // namespace Test

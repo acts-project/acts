@@ -525,7 +525,7 @@ namespace Test {
     BOOST_TEST(sa);
     BOOST_TEST(sa2);
 
-    BOOST_TEST(sa->transform().isApprox(sa2->transform()));
+    CHECK_CLOSE_OR_SMALL(sa->transform(), sa2->transform(), 1e-6, 1e-9);
 
     // let's make sure the binning is really ok
     // we check that lookup at center of input surface centers
@@ -546,7 +546,7 @@ namespace Test {
         auto srf1 = bc1.at(i);
         auto srf2 = bc2.at(i);
 
-        BOOST_TEST(srf1->transform().isApprox(srf2->transform()));
+        CHECK_CLOSE_OR_SMALL(srf1->transform(), srf2->transform(), 1e-6, 1e-9);
       }
     }
   }
@@ -578,7 +578,7 @@ namespace Test {
     BOOST_TEST(sa);
     BOOST_TEST(sa2);
 
-    BOOST_TEST(sa->transform().isApprox(sa2->transform()));
+    CHECK_CLOSE_OR_SMALL(sa->transform(), sa2->transform(), 1e-6, 1e-9);
 
     for (const auto& srfRef : surfaces) {
 
@@ -593,7 +593,7 @@ namespace Test {
         auto srf1 = bc1.at(i);
         auto srf2 = bc2.at(i);
 
-        BOOST_TEST(srf1->transform().isApprox(srf2->transform()));
+        CHECK_CLOSE_OR_SMALL(srf1->transform(), srf2->transform(), 1e-6, 1e-9);
       }
     }
   }

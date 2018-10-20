@@ -38,8 +38,9 @@ namespace Test {
     SolenoidBField bField(cfg);
 
     SolenoidBField::Cache cache;
-    BOOST_TEST(bField.getField({0, 0, 0}, cache)
-                   .isApprox(Vector3D(0, 0, 2.0 * Acts::units::_T)));
+    CHECK_CLOSE_ABS(bField.getField({0, 0, 0}, cache),
+                    Vector3D(0, 0, 2.0 * Acts::units::_T),
+                    1e-6 * Acts::units::_T);
 
     // std::ofstream outf("solenoid.csv");
     // outf << "x;y;z;B_x;B_y;B_z" << std::endl;
@@ -57,7 +58,7 @@ namespace Test {
         BOOST_CHECK_SMALL(B1.y(), tol);
         BOOST_TEST(std::abs(B1.z()) > tol_B);  // greater than zero
         // check symmetry: at z=0 it should be exactly symmetric
-        BOOST_TEST(B1.isApprox(B2));
+        CHECK_CLOSE_ABS(B1, B2, tol_B);
 
         // at this point in r, go along the length
         for (size_t j = 0; j <= steps; j++) {

@@ -36,11 +36,11 @@ add_test(NAME StepperUnitTest COMMAND StepperTests)
 # these tests rely on the Legacy code
 if (ACTS_BUILD_LEGACY)
   add_executable (JacobianTests JacobianTests.cpp)
-  target_link_libraries (JacobianTests PRIVATE ActsCore ActsLegacy)
+  target_link_libraries (JacobianTests PRIVATE ActsCore ActsLegacy ActsTestsCommonHelpers)
   add_test(NAME JacobianUnitTests COMMAND JacobianTests)
   
   add_executable (PropagatorTests PropagatorTests.cpp)
-  target_link_libraries (PropagatorTests PRIVATE ActsCore ActsLegacy)
+  target_link_libraries (PropagatorTests PRIVATE ActsCore ActsLegacy ActsTestsCommonHelpers)
   add_test(NAME PropagatorUnitTests COMMAND PropagatorTests)
   
   # define executables

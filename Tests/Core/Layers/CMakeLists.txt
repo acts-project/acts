@@ -12,7 +12,7 @@ target_link_libraries (PlaneLayerTests PRIVATE ActsCore)
 add_test (NAME PlaneLayerUnitTest COMMAND PlaneLayerTests)
 
 add_executable (DiscLayerTests DiscLayerTests.cpp)
-target_link_libraries (DiscLayerTests PRIVATE ActsCore)
+target_link_libraries (DiscLayerTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME DiscLayerUnitTest COMMAND DiscLayerTests)
 
 add_executable (CylinderLayerTests CylinderLayerTests.cpp)
@@ -24,7 +24,7 @@ target_link_libraries (ConeLayerTests PRIVATE ActsCore)
 add_test (NAME ConeLayerUnitTest COMMAND ConeLayerTests)
 
 add_executable (NavigationLayerTests NavigationLayerTests.cpp)
-target_link_libraries (NavigationLayerTests PRIVATE ActsCore)
+target_link_libraries (NavigationLayerTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME NavigationLayerUnitTest COMMAND NavigationLayerTests)
 
 add_executable (ProtoLayerTests ProtoLayerTests.cpp)

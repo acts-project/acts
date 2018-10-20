@@ -6,24 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE PerigeeSurface Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
 #include <limits>
+
 #include "Acts/Layers/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
@@ -120,7 +117,8 @@ namespace Test {
                == "PerigeeSurface");
 
     auto perigee2 = Surface::makeShared<PerigeeSurface>(var_data);
-    BOOST_TEST(perigee->transform().isApprox(perigee2->transform()));
+    CHECK_CLOSE_OR_SMALL(
+        perigee->transform(), perigee2->transform(), 1e-6, 1e-9);
   }
   BOOST_AUTO_TEST_SUITE_END()
 

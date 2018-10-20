@@ -95,10 +95,10 @@ namespace Test {
     Vector3D uposition = curvilinear_neg_copy.referenceSurface().transform()
         * Vector3D(ux, uy, 0.);
     // the position should be updated
-    BOOST_CHECK(curvilinear_pos_copy.position().isApprox(uposition));
+    CHECK_CLOSE_REL(curvilinear_pos_copy.position(), uposition, 1e-6);
     // it should be the position of the surface
-    BOOST_CHECK(
-        curvilinear_pos_copy.referenceSurface().center().isApprox(uposition));
+    CHECK_CLOSE_REL(
+        curvilinear_pos_copy.referenceSurface().center(), uposition, 1e-6);
 
     double uphi   = 1.2;
     double utheta = 0.2;
@@ -111,10 +111,12 @@ namespace Test {
     Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
                                         sin(uphi) * sin(utheta),
                                         cos(utheta));
-    BOOST_CHECK(umomentum.isApprox(curvilinear_pos_copy.momentum()));
+    CHECK_CLOSE_REL(umomentum, curvilinear_pos_copy.momentum(), 1e-6);
     // the updated momentum should be the col(2) of the transform
-    BOOST_CHECK(umomentum.normalized().isApprox(
-        curvilinear_pos_copy.referenceSurface().transform().rotation().col(2)));
+    CHECK_CLOSE_REL(
+        umomentum.normalized(),
+        curvilinear_pos_copy.referenceSurface().transform().rotation().col(2),
+        1e-6);
   }
 }  // namespace Test
 }  // namespace Acts

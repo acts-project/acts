@@ -6,22 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE CylinderSurface Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
 #include <limits>
+
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
@@ -117,11 +114,17 @@ namespace Test {
     expectedFrame << rootHalf, 0., rootHalf, rootHalf, 0., -rootHalf, 0., 1.,
         0.;
     // check without shift
-    BOOST_TEST(cylinderSurfaceObject->referenceFrame(globalPosition, momentum)
-                   .isApprox(expectedFrame));
+    CHECK_CLOSE_OR_SMALL(
+        cylinderSurfaceObject->referenceFrame(globalPosition, momentum),
+        expectedFrame,
+        1e-6,
+        1e-9);
     // check with shift and different momentum
-    BOOST_TEST(cylinderSurfaceObject->referenceFrame(globalPositionZ, momentum2)
-                   .isApprox(expectedFrame));
+    CHECK_CLOSE_OR_SMALL(
+        cylinderSurfaceObject->referenceFrame(globalPositionZ, momentum2),
+        expectedFrame,
+        1e-6,
+        1e-9);
     //
     /// Test normal, given 3D position
     Vector3D origin{0., 0., 0.};
@@ -132,11 +135,11 @@ namespace Test {
     Vector3D pos45degZ   = {rootHalf, 1 + rootHalf, 4.};
     Vector3D normal45deg = {rootHalf, rootHalf, 0.};
     // test the normal vector
-    BOOST_TEST(cylinderSurfaceObject->normal(pos45deg).isApprox(normal45deg)
-               == true);
+    CHECK_CLOSE_ABS(
+        cylinderSurfaceObject->normal(pos45deg), normal45deg, 1e-6 * rootHalf);
     // thest that the normal vector is independent of z coordinate
-    BOOST_TEST(cylinderSurfaceObject->normal(pos45degZ).isApprox(normal45deg)
-               == true);
+    CHECK_CLOSE_ABS(
+        cylinderSurfaceObject->normal(pos45degZ), normal45deg, 1e-6 * rootHalf);
     //
     /// Test normal given 2D rphi position
     Vector2D positionPiBy2(1.0, 0.);
@@ -178,7 +181,7 @@ namespace Test {
         = cylinderSurfaceObject->intersectionEstimate(offSurface, direction);
     Intersection expectedIntersect{Vector3D{1, 1, 2}, 99., true, 0};
     BOOST_TEST(intersect.valid);
-    BOOST_TEST(intersect.position.isApprox(expectedIntersect.position));
+    CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
     BOOST_TEST(intersect.pathLength == expectedIntersect.pathLength);
     BOOST_TEST(intersect.distance == expectedIntersect.distance);
     //

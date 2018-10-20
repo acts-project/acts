@@ -6,22 +6,25 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE FromJson Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include <climits>
 #include <fstream>
 
 #include "Acts/Layers/DiscLayer.hpp"
 #include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Plugins/Json/FromJson.hpp"
 #include "Acts/Plugins/Json/lib/json.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/LayerCreator.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-
-#include "Acts/Plugins/Json/FromJson.hpp"
 
 namespace Acts {
 
@@ -175,7 +178,7 @@ namespace Test {
     BOOST_TEST(sa);
     BOOST_TEST(sa2);
 
-    BOOST_TEST(sa->transform().isApprox(sa2->transform()));
+    CHECK_CLOSE_OR_SMALL(sa->transform(), sa2->transform(), 1e-6, 1e-9);
 
     for (const auto& srfRef : surfaces) {
 
@@ -192,7 +195,7 @@ namespace Test {
 
         // std::cout << srf1->transform().matrix() << std::endl <<
         // srf2->transform().matrix() << std::endl;
-        BOOST_TEST(srf1->transform().isApprox(srf2->transform()));
+        CHECK_CLOSE_OR_SMALL(srf1->transform(), srf2->transform(), 1e-6, 1e-9);
       }
     }
   }

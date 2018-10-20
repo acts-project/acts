@@ -67,31 +67,31 @@ namespace Test {
       // both parameters inside bounds, difference is positive
       ParameterSet<ParID_t::eTHETA> bound1(nullptr, theta_1);
       ParameterSet<ParID_t::eTHETA> bound2(nullptr, theta_2);
-      BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta, tol));
+      CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
 
       // both parameters inside bound, difference negative
       dTheta << (theta_2 - theta_1);
-      BOOST_CHECK(bound2.residual(bound1).isApprox(dTheta, tol));
+      CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
 
       // one parameter above upper bound, difference positive
       theta_1 = max + 1;
       bound1.setParameter<ParID_t::eTHETA>(theta_1);
       dTheta << max - theta_2;
-      BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta, tol));
+      CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
 
       // one parameter above upper bound, difference negative
       dTheta << theta_2 - max;
-      BOOST_CHECK(bound2.residual(bound1).isApprox(dTheta, tol));
+      CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
 
       // one parameter below lower bound, difference positive
       theta_1 = min - 1;
       bound1.setParameter<ParID_t::eTHETA>(theta_1);
       dTheta << theta_2 - min;
-      BOOST_CHECK(bound2.residual(bound1).isApprox(dTheta, tol));
+      CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
 
       // one parameter below lower bound, difference negative
       dTheta << min - theta_2;
-      BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta, tol));
+      CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
 
       // both parameters outside bounds, both below
       theta_1 = min - 1;
@@ -99,7 +99,7 @@ namespace Test {
       bound1.setParameter<ParID_t::eTHETA>(theta_1);
       bound2.setParameter<ParID_t::eTHETA>(theta_2);
       dTheta << 0;
-      BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta, tol));
+      CHECK_SMALL(bound1.residual(bound2), tol);
 
       // both parameters outside bounds, both above
       theta_1 = max + 1;
@@ -107,7 +107,7 @@ namespace Test {
       bound1.setParameter<ParID_t::eTHETA>(theta_1);
       bound2.setParameter<ParID_t::eTHETA>(theta_2);
       dTheta << 0;
-      BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta, tol));
+      CHECK_SMALL(bound1.residual(bound2), tol);
 
       // both parameters outside bounds, one above, one below
       theta_1 = max + 1;
@@ -115,9 +115,9 @@ namespace Test {
       bound1.setParameter<ParID_t::eTHETA>(theta_1);
       bound2.setParameter<ParID_t::eTHETA>(theta_2);
       dTheta << max - min;
-      BOOST_CHECK(bound1.residual(bound2).isApprox(dTheta, tol));
+      CHECK_CLOSE_REL(bound1.residual(bound2), dTheta, tol);
       dTheta << min - max;
-      BOOST_CHECK(bound2.residual(bound1).isApprox(dTheta, tol));
+      CHECK_CLOSE_REL(bound2.residual(bound1), dTheta, tol);
     }
 
     void
@@ -135,17 +135,17 @@ namespace Test {
       ParameterSet<ParID_t::ePHI> cyclic2(nullptr, phi_2);
 
       // no boundary crossing, difference is positive
-      BOOST_CHECK(cyclic1.residual(cyclic2).isApprox(dPhi, tol));
+      CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
 
       // no boundary crossing, difference is negative
-      BOOST_CHECK(cyclic2.residual(cyclic1).isApprox(-dPhi, tol));
+      CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
 
       // forward boundary crossing
       phi_1 = -0.9 * M_PI;
       cyclic1.setParameter<ParID_t::ePHI>(phi_1);
       dPhi << get_cyclic_difference(phi_1, phi_2, min, max);
-      BOOST_CHECK(cyclic1.residual(cyclic2).isApprox(dPhi, tol));
-      BOOST_CHECK(cyclic2.residual(cyclic1).isApprox(-dPhi, tol));
+      CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
+      CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
 
       // backward boundary crossing
       phi_1 = 0.7 * M_PI;
@@ -153,8 +153,8 @@ namespace Test {
       cyclic1.setParameter<ParID_t::ePHI>(phi_1);
       cyclic2.setParameter<ParID_t::ePHI>(phi_2);
       dPhi << get_cyclic_difference(phi_1, phi_2, min, max);
-      BOOST_CHECK(cyclic1.residual(cyclic2).isApprox(dPhi, tol));
-      BOOST_CHECK(cyclic2.residual(cyclic1).isApprox(-dPhi, tol));
+      CHECK_CLOSE_REL(cyclic1.residual(cyclic2), dPhi, tol);
+      CHECK_CLOSE_REL(cyclic2.residual(cyclic1), -dPhi, tol);
     }
 
     void

@@ -6,17 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE JacobianTests Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -27,6 +22,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -139,9 +135,9 @@ namespace Test {
 
     // create the matrices
     auto asMatrix = convertToMatrix(astepState.pVector);
-    bool ases     = asMatrix.isApprox(estepState.jacToGlobal);
+
     // cross comparison checks
-    BOOST_CHECK(ases);
+    CHECK_CLOSE_OR_SMALL(asMatrix, estepState.jacToGlobal, 1e-6, 1e-9);
   }
 
   /// This tests the jacobian of local curvilinear -> global

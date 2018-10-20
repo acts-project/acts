@@ -117,15 +117,17 @@ namespace Test {
       variant_map pl      = var_map.get<variant_map>("payload");
       BOOST_CHECK_EQUAL(pl.get<double>("thickness"), 0.4);
       Transform3D act = from_variant<Transform3D>(pl.at("transform"));
-      BOOST_TEST(pTransform->isApprox(act));
+      CHECK_CLOSE_OR_SMALL(*pTransform, act, 1e-6, 1e-9);
 
       auto pCylinderLayer2 = std::dynamic_pointer_cast<CylinderLayer>(
           CylinderLayer::create(var_data));
 
       BOOST_CHECK_EQUAL(pCylinderLayer->thickness(),
                         pCylinderLayer2->thickness());
-      BOOST_TEST(
-          pCylinderLayer->transform().isApprox(pCylinderLayer2->transform()));
+      CHECK_CLOSE_OR_SMALL(pCylinderLayer->transform(),
+                           pCylinderLayer2->transform(),
+                           1e-6,
+                           1e-9);
 
       auto cvBoundsExp = dynamic_cast<const CylinderVolumeBounds*>(
           &(pCylinderLayer->representingVolume()->volumeBounds()));

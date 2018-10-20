@@ -6,25 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Surface Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include <limits>
+
 #include "Acts/Layers/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"   //to get s_noBounds
 #include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
 #include "SurfaceStub.hpp"
 
 using boost::test_tools::output_test_stream;
@@ -150,10 +149,7 @@ namespace Test {
     BOOST_TEST(surface.associatedMaterial() == pNewMaterial.get());  // passes
                                                                      // ??
     //
-    auto returnedTransform = surface.transform();
-    bool constructedTransformEqualsRetrievedTransform
-        = returnedTransform.isApprox(*pTransform);
-    BOOST_TEST(constructedTransformEqualsRetrievedTransform);
+    CHECK_CLOSE_OR_SMALL(surface.transform(), *pTransform, 1e-6, 1e-9);
     // type() is pure virtual
   }
 

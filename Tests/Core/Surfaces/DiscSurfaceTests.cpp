@@ -6,28 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Disc Surface Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
+#include <limits>
+
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-//
-#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
-//
-#include <limits>
 
 namespace utf = boost::unit_test;
 namespace tt  = boost::test_tools;
@@ -127,20 +122,19 @@ namespace Test {
     Vector2D rPhiNotInSector{1.2, M_PI};  // outside sector at Phi=0, +/- pi/8
     discSurfaceObject->localToGlobal(
         rPhiOnDisc, ignoredMomentum, returnedPosition);
-    BOOST_TEST(returnedPosition.isApprox(expectedPosition),
-               "LocalToGlobal for rPhiOnDisc");
+    CHECK_CLOSE_ABS(returnedPosition, expectedPosition, 1e-6);
     //
     discSurfaceObject->localToGlobal(
         rPhiNotInSector, ignoredMomentum, returnedPosition);
     Vector3D expectedNonPosition{-1.2, 0, 0};
-    BOOST_TEST(returnedPosition.isApprox(expectedNonPosition));
+    CHECK_CLOSE_ABS(returnedPosition, expectedNonPosition, 1e-6);
     //
     /// Test globalToLocal
     Vector2D returnedLocalPosition{33., 44.};
     Vector2D expectedLocalPosition{1.2, 0.0};
     BOOST_TEST(discSurfaceObject->globalToLocal(
         point3DOnSurface, ignoredMomentum, returnedLocalPosition));  // pass
-    BOOST_TEST(returnedLocalPosition.isApprox(expectedLocalPosition));
+    CHECK_CLOSE_ABS(returnedLocalPosition, expectedLocalPosition, 1e-6);
     //
     BOOST_TEST(discSurfaceObject->globalToLocal(
                    point3DNotInSector, ignoredMomentum, returnedLocalPosition)
@@ -154,25 +148,28 @@ namespace Test {
     /// Test localPolarToCartesian
     Vector2D rPhi1_1{std::sqrt(2.), M_PI / 4.};
     Vector2D cartesian1_1{1., 1.};
-    BOOST_TEST(discSurfaceObject->localPolarToCartesian(rPhi1_1).isApprox(
-        cartesian1_1));
+    CHECK_CLOSE_REL(
+        discSurfaceObject->localPolarToCartesian(rPhi1_1), cartesian1_1, 1e-6);
     //
     /// Test localCartesianToPolar
-    BOOST_TEST(discSurfaceObject->localCartesianToPolar(cartesian1_1)
-                   .isApprox(rPhi1_1));
+    CHECK_CLOSE_REL(
+        discSurfaceObject->localCartesianToPolar(cartesian1_1), rPhi1_1, 1e-6);
     //
     /// Test localPolarToLocalCartesian
-    BOOST_TEST(discSurfaceObject->localPolarToLocalCartesian(rPhi1_1).isApprox(
-        cartesian1_1));
+    CHECK_CLOSE_REL(discSurfaceObject->localPolarToLocalCartesian(rPhi1_1),
+                    cartesian1_1,
+                    1e-6);
     //
     /// Test localCartesianToGlobal
     Vector3D cartesian3D1_1{1., 1., 0.};
-    BOOST_TEST(discSurfaceObject->localCartesianToGlobal(cartesian1_1)
-                   .isApprox(cartesian3D1_1));
+    CHECK_CLOSE_ABS(discSurfaceObject->localCartesianToGlobal(cartesian1_1),
+                    cartesian3D1_1,
+                    1e-6);
     //
     /// Test globalToLocalCartesian
-    BOOST_TEST(discSurfaceObject->globalToLocalCartesian(cartesian3D1_1)
-                   .isApprox(cartesian1_1));
+    CHECK_CLOSE_REL(discSurfaceObject->globalToLocalCartesian(cartesian3D1_1),
+                    cartesian1_1,
+                    1e-6);
     //
     /// Test pathCorrection
     double   projected3DMomentum = std::sqrt(3.) * 1.e6;
@@ -193,7 +190,7 @@ namespace Test {
         = discSurfaceObject->intersectionEstimate(globalPosition, direction);
     Intersection expectedIntersect{Vector3D{1.2, 0., 0.}, 10., true, 0.0};
     BOOST_TEST(intersect.valid);
-    BOOST_TEST(intersect.position.isApprox(expectedIntersect.position));
+    CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
     BOOST_TEST(intersect.pathLength == expectedIntersect.pathLength);
     BOOST_TEST(intersect.distance == expectedIntersect.distance);
     //
@@ -234,8 +231,8 @@ namespace Test {
     std::cout << var_rdisc << std::endl;
 
     auto rdisc2 = Surface::makeShared<DiscSurface>(var_rdisc);
-    BOOST_TEST(rdisc->transform().isApprox(rdisc2->transform()));
-    BOOST_TEST(rdisc2->transform().isApprox(*trf));
+    CHECK_CLOSE_OR_SMALL(rdisc->transform(), rdisc2->transform(), 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(rdisc2->transform(), *trf, 1e-6, 1e-9);
 
     const RadialBounds* rbounds_act
         = dynamic_cast<const RadialBounds*>(&rdisc2->bounds());
@@ -254,8 +251,8 @@ namespace Test {
 
     auto dtdisc2 = Surface::makeShared<DiscSurface>(var_dtdisc);
 
-    BOOST_TEST(dtdisc->transform().isApprox(dtdisc2->transform()));
-    BOOST_TEST(dtdisc2->transform().isApprox(*trf));
+    CHECK_CLOSE_OR_SMALL(dtdisc->transform(), dtdisc2->transform(), 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(dtdisc2->transform(), *trf, 1e-6, 1e-9);
 
     const DiscTrapezoidalBounds* dtbounds_act
         = dynamic_cast<const DiscTrapezoidalBounds*>(&dtdisc2->bounds());

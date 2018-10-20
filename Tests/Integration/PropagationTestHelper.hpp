@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
 #include "covariance_validation_fixture.hpp"
 
 namespace tt = boost::test_tools;
@@ -395,7 +397,7 @@ namespace IntegrationTest {
                          double                 charge,
                          double                 plimit,
                          int /*index*/,
-                         double reltol = 1e-4,
+                         double reltol = 1e-2,
                          bool   debug  = false)
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
@@ -436,11 +438,7 @@ namespace IntegrationTest {
     ActsSymMatrixD<5> calculated_cov = fixture.calculateCovariance(
         start_wo_c, *(start.covariance()), *tp, options);
     ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));
-    bool cov_similar = calculated_cov.isApprox(obtained_cov, reltol);
-    BOOST_CHECK(cov_similar);
-    if (!cov_similar) {
-      BOOST_CHECK_EQUAL(calculated_cov, obtained_cov);
-    }
+    CHECK_CLOSE_OR_SMALL(calculated_cov, obtained_cov, reltol, 1e-4);
   }
 
   template <typename Propagator_type,
@@ -528,12 +526,7 @@ namespace IntegrationTest {
     ActsSymMatrixD<5> calculated_cov = fixture.calculateCovariance(
         start_wo_c, *(start.covariance()), *tp, options);
 
-    bool cov_similar = calculated_cov.isApprox(obtained_cov, reltol);
-    BOOST_CHECK(cov_similar);
-    if (!cov_similar) {
-      // the second check is for screen output
-      BOOST_CHECK_EQUAL(calculated_cov, obtained_cov);
-    }
+    CHECK_CLOSE_OR_SMALL(calculated_cov, obtained_cov, reltol, 1e-4);
   }
 }
 }

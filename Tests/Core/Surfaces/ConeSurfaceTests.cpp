@@ -87,7 +87,6 @@ namespace Test {
   /// Unit test for testing ConeSurface properties
   BOOST_AUTO_TEST_CASE(ConeSurfaceProperties)
   {
-    double withinOnePercent = 0.01;
     /// Test clone method
     double alpha{M_PI / 8.} /*,halfPhiSector{M_PI/16.}, zMin{1.0}, zMax{10.}*/;
     bool   symmetric(false);
@@ -116,8 +115,11 @@ namespace Test {
     RotationMatrix3D expectedFrame;
     expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1.,
         0.;
-    BOOST_TEST(coneSurfaceObject->referenceFrame(globalPosition, momentum)
-                   .isApprox(expectedFrame));
+    CHECK_CLOSE_OR_SMALL(
+        coneSurfaceObject->referenceFrame(globalPosition, momentum),
+        expectedFrame,
+        1e-6,
+        1e-9);
     //
     /// Test normal, given 3D position
     Vector3D origin{0., 0., 0.};
@@ -128,8 +130,8 @@ namespace Test {
     Vector2D positionPiBy2(1.0, M_PI / 2.);
     Vector3D normalAtPiBy2{0.0312768, 0.92335, -0.382683};
 
-    BOOST_TEST(coneSurfaceObject->normal(positionPiBy2)
-                   .isApprox(normalAtPiBy2, withinOnePercent));
+    CHECK_CLOSE_OR_SMALL(
+        coneSurfaceObject->normal(positionPiBy2), normalAtPiBy2, 1e-2, 1e-9);
     //
     /// Test rotational symmetry axis
     Vector3D symmetryAxis{0., 0., 1.};
@@ -144,7 +146,7 @@ namespace Test {
     // std::cout<<globalPosition<<std::endl;
     Vector3D expectedPosition{0.0220268, 1.65027, 3.5708};
 
-    BOOST_TEST(globalPosition.isApprox(expectedPosition, withinOnePercent));
+    CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
     //
     /// Testing globalToLocal
     coneSurfaceObject->globalToLocal(globalPosition, momentum, localPosition);

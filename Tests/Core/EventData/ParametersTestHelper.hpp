@@ -31,8 +31,8 @@ namespace Test {
     CHECK_CLOSE_REL(pars.parameters()[eTHETA], values[3], 1e-6);
     CHECK_CLOSE_REL(pars.parameters()[eQOP], values[4], 1e-6);
     // check global parameters
-    BOOST_CHECK(pars.position().isApprox(position));
-    BOOST_CHECK(pars.momentum().isApprox(momentum));
+    CHECK_CLOSE_REL(pars.position(), position, 1e-6);
+    CHECK_CLOSE_REL(pars.momentum(), momentum, 1e-6);
     BOOST_CHECK_EQUAL(pars.charge(), charge);
   }
 }
