@@ -6,23 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE DiscTrapezoidal Bounds Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank
-
 #include <boost/test/data/test_case.hpp>
-// leave blank
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank
-
-//
-#include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
+// clang-format on
 
 #include <limits>
+
+#include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -74,9 +70,9 @@ namespace Test {
     Vector2D origin(0., 0.);
     Vector2D outside(30., 0.);
     Vector2D inSurface(2., 0.0);
-    BOOST_CHECK_CLOSE_FRACTION(
+    CHECK_CLOSE_REL(
         discTrapezoidalBoundsObject.distanceToBoundary(origin), 2.0, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
+    CHECK_CLOSE_REL(
         discTrapezoidalBoundsObject.distanceToBoundary(outside), 24.0, 1e-6);
     //
     /// Test dump
@@ -96,33 +92,31 @@ namespace Test {
                == false);
     //
     /// Test rMin
-    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.rMin(), rMin, 1e-6);
+    CHECK_CLOSE_REL(discTrapezoidalBoundsObject.rMin(), rMin, 1e-6);
     //
     /// Test rMax
-    BOOST_CHECK_CLOSE_FRACTION(discTrapezoidalBoundsObject.rMax(), rMax, 1e-6);
+    CHECK_CLOSE_REL(discTrapezoidalBoundsObject.rMax(), rMax, 1e-6);
     //
     /// Test averagePhi
-    BOOST_CHECK_CLOSE_FRACTION(
-        discTrapezoidalBoundsObject.averagePhi(), averagePhi, 1e-6);
+    CHECK_SMALL(discTrapezoidalBoundsObject.averagePhi(), 1e-9);
     //
     /// Test rCenter (redundant; not configurable)
-    BOOST_CHECK_CLOSE_FRACTION(
-        discTrapezoidalBoundsObject.rCenter(), 2.5243377989621383, 1e-6);
+    CHECK_CLOSE_REL(discTrapezoidalBoundsObject.rCenter(), 2.524337798, 1e-6);
     //
     /// Test halfPhiSector (redundant; not configurable)
     BOOST_CHECK_SMALL(discTrapezoidalBoundsObject.stereo(), 1e-6);
     //
     /// Test minHalflengthX
-    BOOST_CHECK_CLOSE_FRACTION(
+    CHECK_CLOSE_REL(
         discTrapezoidalBoundsObject.minHalflengthX(), minHalfX, 1e-6);
     //
     /// Test maxHalflengthX
-    BOOST_CHECK_CLOSE_FRACTION(
+    CHECK_CLOSE_REL(
         discTrapezoidalBoundsObject.maxHalflengthX(), maxHalfX, 1e-6);
     //
     /// Test halflengthY
-    BOOST_CHECK_CLOSE_FRACTION(
-        discTrapezoidalBoundsObject.halflengthY(), 0.79228699139326131, 1e-6);
+    CHECK_CLOSE_REL(
+        discTrapezoidalBoundsObject.halflengthY(), 0.792286991, 1e-6);
   }
   /// Unit test for testing DiscTrapezoidalBounds assignment
   BOOST_AUTO_TEST_CASE(DiscTrapezoidalBoundsAssignment)

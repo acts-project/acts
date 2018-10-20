@@ -12,7 +12,7 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST InterpolatedBFieldMapUnitTest
 
 add_executable (SolenoidBFieldTests SolenoidBFieldTests.cpp)
 target_include_directories (SolenoidBFieldTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (SolenoidBFieldTests PRIVATE ActsCore)
+target_link_libraries (SolenoidBFieldTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME SolenoidBFieldUnitTest COMMAND SolenoidBFieldTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST SolenoidBFieldUnitTest TARGETS SolenoidBFieldTests)
 

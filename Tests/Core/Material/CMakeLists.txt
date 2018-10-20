@@ -1,14 +1,14 @@
 add_executable (MaterialCompositionTests MaterialCompositionTests.cpp)
 target_include_directories (MaterialCompositionTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (MaterialCompositionTests PRIVATE ActsCore)
+target_link_libraries (MaterialCompositionTests PRIVATE ActsCore ActsTestsCommonHelpers)
 
 add_executable (MaterialTests MaterialTests.cpp)
 target_include_directories (MaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (MaterialTests PRIVATE ActsCore)
+target_link_libraries (MaterialTests PRIVATE ActsCore ActsTestsCommonHelpers)
 
 add_executable (MaterialPropertiesTests MaterialPropertiesTests.cpp)
 target_include_directories (MaterialPropertiesTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (MaterialPropertiesTests PRIVATE ActsCore)
+target_link_libraries (MaterialPropertiesTests PRIVATE ActsCore ActsTestsCommonHelpers)
 
 add_executable (HomogeneousSurfaceMaterialTests HomogeneousSurfaceMaterialTests.cpp)
 target_include_directories (HomogeneousSurfaceMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})

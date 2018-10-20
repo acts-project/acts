@@ -6,24 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Navigator Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include <memory>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -193,9 +190,8 @@ namespace Test {
     double beamPipeRadius
         = perp(state.navigation.navLayerIter->intersection.position);
     // step size has been updated
-    BOOST_CHECK_CLOSE_FRACTION(static_cast<double>(state.stepping.stepSize),
-                               beamPipeRadius,
-                               s_onSurfaceTolerance);
+    CHECK_CLOSE_ABS(
+        state.stepping.stepSize, beamPipeRadius, s_onSurfaceTolerance);
     if (debug) {
       std::cout << "<<< Test 1a >>> initialize at "
                 << toString(state.stepping.position()) << std::endl;

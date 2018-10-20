@@ -6,17 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE LoopAborter Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -24,6 +19,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -214,9 +210,9 @@ namespace Test {
     const auto& result = epropagator.propagate(start, options);
 
     // this test assumes state.options.loopFraction = 0.5
-    BOOST_CHECK_CLOSE(px, -result.endParameters->momentum().x(), 1e-2);
-    BOOST_CHECK_CLOSE(py, -result.endParameters->momentum().y(), 1e-2);
-    BOOST_CHECK_CLOSE(pz, result.endParameters->momentum().z(), 1e-2);
+    CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);
+    CHECK_CLOSE_REL(py, -result.endParameters->momentum().y(), 1e-2);
+    CHECK_CLOSE_REL(pz, result.endParameters->momentum().z(), 1e-2);
   }
 
 }  // namespace Test

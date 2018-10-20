@@ -81,32 +81,28 @@ namespace Test {
     // std::cout << coneBoundsObject.distanceToBoundary(origin) << std::endl;
     //
     /// test for r
-    BOOST_CHECK_CLOSE_FRACTION(
-        coneBoundsObject.r(zMin), zMin * std::tan(alpha), 1e-6);
+    CHECK_CLOSE_REL(coneBoundsObject.r(zMin), zMin * std::tan(alpha), 1e-6);
     //
     /// test for tanAlpha
-    BOOST_CHECK_CLOSE_FRACTION(
-        coneBoundsObject.tanAlpha(), std::tan(alpha), 1e-6);
+    CHECK_CLOSE_REL(coneBoundsObject.tanAlpha(), std::tan(alpha), 1e-6);
     //
     /// test for sinAlpha
-    BOOST_CHECK_CLOSE_FRACTION(
-        coneBoundsObject.sinAlpha(), std::sin(alpha), 1e-6);
+    CHECK_CLOSE_REL(coneBoundsObject.sinAlpha(), std::sin(alpha), 1e-6);
     //
     /// test for cosAlpha
-    BOOST_CHECK_CLOSE_FRACTION(
-        coneBoundsObject.cosAlpha(), std::cos(alpha), 1e-6);
+    CHECK_CLOSE_REL(coneBoundsObject.cosAlpha(), std::cos(alpha), 1e-6);
     //
     /// test for alpha
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.alpha(), alpha, 1e-6);
+    CHECK_CLOSE_REL(coneBoundsObject.alpha(), alpha, 1e-6);
     //
     /// test for minZ
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.minZ(), zMin, 1e-6);
+    CHECK_CLOSE_REL(coneBoundsObject.minZ(), zMin, 1e-6);
     //
     /// test for maxZ
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.maxZ(), zMax, 1e-6);
+    CHECK_CLOSE_REL(coneBoundsObject.maxZ(), zMax, 1e-6);
     //
     /// test for averagePhi
-    BOOST_CHECK_CLOSE_FRACTION(coneBoundsObject.halfPhiSector(), halfPhi, 1e-6);
+    CHECK_CLOSE_REL(coneBoundsObject.halfPhiSector(), halfPhi, 1e-6);
     //
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;

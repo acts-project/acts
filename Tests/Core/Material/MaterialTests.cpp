@@ -6,11 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Material Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include <climits>
+
 #include "Acts/Material/Material.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
@@ -44,15 +48,14 @@ namespace Test {
     float rho = 2.329 * au::_g / (au::_cm * au::_cm * au::_cm);
 
     Material silicon(X0, L0, A, Z, rho);
-    BOOST_CHECK_CLOSE(silicon.X0(), 93.70 * au::_mm, 0.001);
-    BOOST_CHECK_CLOSE(silicon.L0(), 465.2 * au::_mm, 0.001);
-    BOOST_CHECK_CLOSE(silicon.Z(), 14., 0.001);
-    BOOST_CHECK_CLOSE(silicon.A(), 28.0855, 0.001);
-    BOOST_CHECK_CLOSE(silicon.rho(),
-                      0.002329 * au::_g / (au::_mm * au::_mm * au::_mm),
-                      0.001);
-    BOOST_CHECK_CLOSE(
-        silicon.zOverAtimesRho(), 14. / 28.0855 * 0.002329, 0.0001);
+    CHECK_CLOSE_REL(silicon.X0(), 93.70 * au::_mm, 0.001);
+    CHECK_CLOSE_REL(silicon.L0(), 465.2 * au::_mm, 0.001);
+    CHECK_CLOSE_REL(silicon.Z(), 14., 0.001);
+    CHECK_CLOSE_REL(silicon.A(), 28.0855, 0.001);
+    CHECK_CLOSE_REL(silicon.rho(),
+                    0.002329 * au::_g / (au::_mm * au::_mm * au::_mm),
+                    0.001);
+    CHECK_CLOSE_REL(silicon.zOverAtimesRho(), 14. / 28.0855 * 0.002329, 0.0001);
 
     Material copiedSilicon(silicon);
     BOOST_TEST(silicon == copiedSilicon);

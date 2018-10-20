@@ -6,26 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Layer Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Layers/CylinderLayer.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
+
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;
@@ -64,7 +62,7 @@ namespace Test {
       // construct with thickness:
       auto pCylinderLayerWithThickness
           = CylinderLayer::create(pTransform, pCylinder, nullptr, thickness);
-      BOOST_CHECK_CLOSE_FRACTION(
+      CHECK_CLOSE_REL(
           pCylinderLayerWithThickness->thickness(), thickness, 1e-6);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(

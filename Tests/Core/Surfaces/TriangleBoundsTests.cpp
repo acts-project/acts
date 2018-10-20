@@ -6,20 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Triangle Bounds Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank
-
 #include <boost/test/data/test_case.hpp>
-// leave blank
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank
+// clang-format on
 
 #include <limits>
 
 #include "Acts/Surfaces/TriangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
@@ -76,10 +73,8 @@ namespace Test {
         "Following two tests fail because the triangle has six vertices");
     BOOST_TEST(triangleBoundsObject.vertices().size() == (size_t)3);
     for (size_t i = 0; i < 3; i++) {
-      Vector2D act = triangleBoundsObject.vertices().at(i);
-      Vector2D exp = expectedVertices.at(i);
-      BOOST_CHECK_CLOSE(act[0], exp[0], 1e-6);
-      BOOST_CHECK_CLOSE(act[1], exp[1], 1e-6);
+      CHECK_CLOSE_REL(
+          triangleBoundsObject.vertices().at(i), expectedVertices.at(i), 1e-6);
     }
     /// Test boundingBox NOTE: Bounding box too big
     BOOST_TEST(triangleBoundsObject.boundingBox() == RectangleBounds(4., 5.));

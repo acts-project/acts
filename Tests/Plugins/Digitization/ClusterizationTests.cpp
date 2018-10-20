@@ -6,19 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE CreateClusters Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank as
-#include <algorithm>
 #include <boost/test/data/test_case.hpp>
+// clang-format on
+
+#include <algorithm>
 #include <chrono>
 #include <ctime>
 #include <unordered_map>
 #include <utility>
 #include <vector>
+
 #include "Acts/Plugins/Digitization/Clusterization.hpp"
 #include "Acts/Plugins/Digitization/DigitizationCell.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -215,7 +218,7 @@ namespace Test {
                                   clusterSizes1.begin(),
                                   clusterSizes1.end());
     // check cells
-    BOOST_CHECK_CLOSE(data1, nCellsWithoutDuplicates, 10e-5);
+    CHECK_CLOSE_REL(data1, nCellsWithoutDuplicates, 1e-5);
 
     // Common Edge, digital,no energy cut
     // createClusters
@@ -241,7 +244,7 @@ namespace Test {
                                   clusterSizes2.begin(),
                                   clusterSizes2.end());
     // check cells
-    BOOST_CHECK_CLOSE(data2, nCellsWithoutDuplicates, 10e-5);
+    CHECK_CLOSE_REL(data2, nCellsWithoutDuplicates, 1e-5);
 
     // Common Corner, analogue,no energy cut
     // createClusters
@@ -267,7 +270,7 @@ namespace Test {
                                   clusterSizes3.begin(),
                                   clusterSizes3.end());
     // check cells
-    BOOST_CHECK_CLOSE(data3, nCells, 10e-5);
+    CHECK_CLOSE_REL(data3, nCells, 1e-5);
 
     // Common Corner, analogue, energy cut
     // createClusters
@@ -294,7 +297,7 @@ namespace Test {
                                   clusterSizes4.begin(),
                                   clusterSizes4.end());
     // check cells
-    BOOST_CHECK_CLOSE(data4, nCells, 10e-5);
+    CHECK_CLOSE_REL(data4, nCells, 1e-5);
   }
 
   /// This test tests the clusterization of cells which belong to the same
@@ -378,7 +381,7 @@ namespace Test {
         BOOST_CHECK_EQUAL(cells.size(), delta);
       }
     }
-    BOOST_CHECK_CLOSE(data1, nCellsInClusters, 10e-5);
+    CHECK_CLOSE_REL(data1, nCellsInClusters, 1e-5);
 
     // now test merging - there is no merging at the moment
     float data2 = 0;
@@ -389,7 +392,7 @@ namespace Test {
         BOOST_CHECK_EQUAL(cells.size(), delta);
       }
     }
-    BOOST_CHECK_CLOSE(data2, nCellsInClusters, 10e-5);
+    CHECK_CLOSE_REL(data2, nCellsInClusters, 1e-5);
 
     // now we add some cells which lead to merging only for common corner and
     // create new clusters for edge case)
@@ -507,7 +510,7 @@ namespace Test {
       }
       BOOST_CHECK_EQUAL(cells.size(), 3);
     }
-    BOOST_CHECK_CLOSE(data7, nCellsInClusters, 10e-5);
+    CHECK_CLOSE_REL(data7, nCellsInClusters, 1e-5);
 
     // analougue readout
     auto mergedCells8 = Acts::createClusters<Acts::DigitizationCell>(
@@ -520,7 +523,7 @@ namespace Test {
       }
       BOOST_CHECK_EQUAL(cells.size(), 3);
     }
-    BOOST_CHECK_CLOSE(data8, nCellsInClustersDuplicated, 10e-5);
+    CHECK_CLOSE_REL(data8, nCellsInClustersDuplicated, 1e-5);
 
     // analougue readout & energy cut
     auto mergedCells9 = Acts::createClusters<Acts::DigitizationCell>(
@@ -533,7 +536,7 @@ namespace Test {
       }
       BOOST_CHECK_EQUAL(cells.size(), 2);
     }
-    BOOST_CHECK_CLOSE(data9, (nClustersNoTouch * 2) * 2, 10e-5);
+    CHECK_CLOSE_REL(data9, (nClustersNoTouch * 2) * 2, 1e-5);
   }
 }
 }

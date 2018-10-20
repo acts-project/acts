@@ -6,17 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Extrapolator Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/MaterialInteractor.hpp"
@@ -30,6 +25,7 @@
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -340,7 +336,7 @@ namespace Test {
     if (mom.norm() < pmax) {
       BOOST_CHECK(status.pathLength < options.pathLimit);
     } else {
-      BOOST_CHECK_CLOSE(status.pathLength, options.pathLimit, 1e-3);
+      CHECK_CLOSE_REL(status.pathLength, options.pathLimit, 1e-3);
     }
   }
 

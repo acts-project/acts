@@ -6,19 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE MaterialCollection Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include <memory>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/MaterialInteractor.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
@@ -33,6 +29,7 @@
 #include "Acts/Propagator/detail/RelativePathCorrector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -150,8 +147,8 @@ namespace Test {
       fwdStepMaterialInX0 += mInteraction.materialProperties.thicknessInX0();
       fwdStepMaterialInL0 += mInteraction.materialProperties.thicknessInL0();
     }
-    BOOST_CHECK_CLOSE(fwdMaterial.materialInX0, fwdStepMaterialInX0, 1e-3);
-    BOOST_CHECK_CLOSE(fwdMaterial.materialInL0, fwdStepMaterialInL0, 1e-3);
+    CHECK_CLOSE_REL(fwdMaterial.materialInX0, fwdStepMaterialInX0, 1e-3);
+    CHECK_CLOSE_REL(fwdMaterial.materialInL0, fwdStepMaterialInL0, 1e-3);
 
     // get the forward output to the screen
     if (debugModeFwd) {
@@ -208,8 +205,8 @@ namespace Test {
       bwdStepMaterialInL0 += mInteraction.materialProperties.thicknessInL0();
     }
 
-    BOOST_CHECK_CLOSE(bwdMaterial.materialInX0, bwdStepMaterialInX0, 1e-3);
-    BOOST_CHECK_CLOSE(bwdMaterial.materialInL0, bwdStepMaterialInL0, 1e-3);
+    CHECK_CLOSE_REL(bwdMaterial.materialInX0, bwdStepMaterialInX0, 1e-3);
+    CHECK_CLOSE_REL(bwdMaterial.materialInL0, bwdStepMaterialInL0, 1e-3);
 
     // get the backward output to the screen
     if (debugModeBwd) {
@@ -229,8 +226,8 @@ namespace Test {
     BOOST_TEST(bwdMaterial.materialInteractions.size()
                == fwdMaterial.materialInteractions.size());
 
-    BOOST_CHECK_CLOSE(bwdMaterial.materialInX0, fwdMaterial.materialInX0, 1e-3);
-    BOOST_CHECK_CLOSE(bwdMaterial.materialInL0, bwdMaterial.materialInL0, 1e-3);
+    CHECK_CLOSE_REL(bwdMaterial.materialInX0, fwdMaterial.materialInX0, 1e-3);
+    CHECK_CLOSE_REL(bwdMaterial.materialInL0, bwdMaterial.materialInL0, 1e-3);
 
     // stepping from one surface to the next
     // now go from surface to surface and check
@@ -309,8 +306,8 @@ namespace Test {
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
     // forward-forward step compatibility test
-    BOOST_CHECK_CLOSE(fwdStepStepMaterialInX0, fwdStepMaterialInX0, 1e-3);
-    BOOST_CHECK_CLOSE(fwdStepStepMaterialInL0, fwdStepMaterialInL0, 1e-3);
+    CHECK_CLOSE_REL(fwdStepStepMaterialInX0, fwdStepMaterialInX0, 1e-3);
+    CHECK_CLOSE_REL(fwdStepStepMaterialInL0, fwdStepMaterialInL0, 1e-3);
 
     // get the backward output to the screen
     if (debugModeFwdStep) {
@@ -398,8 +395,8 @@ namespace Test {
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
     // forward-forward step compatibility test
-    BOOST_CHECK_CLOSE(bwdStepStepMaterialInX0, bwdStepMaterialInX0, 1e-3);
-    BOOST_CHECK_CLOSE(bwdStepStepMaterialInL0, bwdStepMaterialInL0, 1e-3);
+    CHECK_CLOSE_REL(bwdStepStepMaterialInX0, bwdStepMaterialInX0, 1e-3);
+    CHECK_CLOSE_REL(bwdStepStepMaterialInL0, bwdStepMaterialInL0, 1e-3);
 
     // get the backward output to the screen
     if (debugModeBwdStep) {

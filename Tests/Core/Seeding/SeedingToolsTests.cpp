@@ -6,17 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <iostream>
-
 // clang-format off
 #define BOOST_TEST_MODULE Seeding Tools Tests
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 
+#include <iostream>
+
 #include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/detail/cyclic_range.hpp"
 #include "Acts/Seeding/detail/geometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
 #include "SeedingTestsCommon.hpp"
 
 namespace data = boost::unit_test::data;
@@ -168,11 +170,11 @@ BOOST_AUTO_TEST_CASE(ExampleContainerPhiCyclicRangeTest)
     auto range = layer.rangeDeltaPhi(1.5 * dphi, 1.1 * dphi);
     auto it    = range.begin();
     BOOST_TEST(std::distance(range.begin(), range.end()) == 3);
-    BOOST_CHECK_CLOSE((*it).phi(), 0.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), 0.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE((*it).phi(), 1.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), 1.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE((*it).phi(), 2.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), 2.5 * dphi, 1e-6);
     ++it;
     BOOST_TEST(!(it != range.end()));
   }
@@ -181,17 +183,17 @@ BOOST_AUTO_TEST_CASE(ExampleContainerPhiCyclicRangeTest)
     auto range = layer.rangeDeltaPhi(M_PI, 2.6 * dphi);
     auto it    = range.begin();
     BOOST_TEST(std::distance(range.begin(), range.end()) == 6);
-    BOOST_CHECK_CLOSE((*it).phi(), M_PI - 2.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), M_PI - 2.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE((*it).phi(), M_PI - 1.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), M_PI - 1.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE((*it).phi(), M_PI - 0.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), M_PI - 0.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE((*it).phi(), -M_PI + 0.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), -M_PI + 0.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE((*it).phi(), -M_PI + 1.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), -M_PI + 1.5 * dphi, 1e-6);
     ++it;
-    BOOST_CHECK_CLOSE((*it).phi(), -M_PI + 2.5 * dphi, 1e-6);
+    CHECK_CLOSE_REL((*it).phi(), -M_PI + 2.5 * dphi, 1e-6);
     ++it;
     BOOST_TEST(!(it != range.end()));
   }
@@ -203,8 +205,8 @@ BOOST_AUTO_TEST_CASE(ZeroCurvatureCircleTest)
 
   Acts::Vector3D delta(1, 1, 0);
 
-  BOOST_CHECK_CLOSE(calcCircleCurvature(delta, delta), 0, 1e-6);
-  BOOST_CHECK_CLOSE(calcCircleCurvature(-delta, -delta), 0, 1e-6);
+  CHECK_SMALL(calcCircleCurvature(delta, delta), 1e-9);
+  CHECK_SMALL(calcCircleCurvature(-delta, -delta), 1e-9);
 }
 
 BOOST_AUTO_TEST_CASE(SignCurvatureCircleTest)
@@ -227,13 +229,13 @@ BOOST_AUTO_TEST_CASE(EstimateD0CircleTest)
   // track position on the y-axis pointing towards positive x
   double phi = 0;
   // vanishing curvature
-  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, 1, 0), phi, 0), 1, 1e-6);
-  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(10, 1, 0), phi, 0), 1, 1e-6);
-  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, -1, 0), phi, 0), -1, 1e-6);
-  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(10, -1, 0), phi, 0), -1, 1e-6);
-  // small curvature (epsilon is given in percent, *not* fraction)
-  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, 1, 0), phi, 1e-4), 1, 0.1);
-  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, 1, 0), phi, -1e-4), 1, 0.1);
-  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, -1, 0), phi, 1e-4), -1, 0.1);
-  BOOST_CHECK_CLOSE(estimateCircleD0(Vector3D(0, -1, 0), phi, -1e-4), -1, 0.1);
+  CHECK_CLOSE_REL(estimateCircleD0(Vector3D(0, 1, 0), phi, 0), 1, 1e-6);
+  CHECK_CLOSE_REL(estimateCircleD0(Vector3D(10, 1, 0), phi, 0), 1, 1e-6);
+  CHECK_CLOSE_REL(estimateCircleD0(Vector3D(0, -1, 0), phi, 0), -1, 1e-6);
+  CHECK_CLOSE_REL(estimateCircleD0(Vector3D(10, -1, 0), phi, 0), -1, 1e-6);
+  // small curvature
+  CHECK_CLOSE_REL(estimateCircleD0(Vector3D(0, 1, 0), phi, 1e-4), 1, 1e-3);
+  CHECK_CLOSE_REL(estimateCircleD0(Vector3D(0, 1, 0), phi, -1e-4), 1, 1e-3);
+  CHECK_CLOSE_REL(estimateCircleD0(Vector3D(0, -1, 0), phi, 1e-4), -1, 1e-3);
+  CHECK_CLOSE_REL(estimateCircleD0(Vector3D(0, -1, 0), phi, -1e-4), -1, 1e-3);
 }

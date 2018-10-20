@@ -167,16 +167,13 @@ namespace Test {
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 100., true, 0};
     BOOST_TEST(intersect.valid);
     CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        intersect.pathLength, expectedIntersect.pathLength, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        intersect.distance, expectedIntersect.distance, 1e-6);
+    CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-6);
+    CHECK_CLOSE_ABS(intersect.distance, expectedIntersect.distance, 1e-6);
     //
     /// Test pathCorrection
-    BOOST_CHECK_CLOSE_FRACTION(
-        coneSurfaceObject->pathCorrection(offSurface, momentum),
-        0.40218866453252877,
-        0.01);
+    CHECK_CLOSE_REL(coneSurfaceObject->pathCorrection(offSurface, momentum),
+                    0.40218866453252877,
+                    0.01);
     //
     /// Test name
     BOOST_TEST(coneSurfaceObject->name() == std::string("Acts::ConeSurface"));

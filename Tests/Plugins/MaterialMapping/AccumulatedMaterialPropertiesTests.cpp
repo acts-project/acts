@@ -6,12 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE AccumulatedMaterialProperties Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include <climits>
+
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedMaterialProperties.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace Acts {
 namespace Test {
@@ -74,26 +78,26 @@ namespace Test {
 
     // Thickness must be one for mapping
     // Thickness in X0 is additive
-    BOOST_CHECK_CLOSE(mpAbc.thickness(), 1., 0.0001);
+    CHECK_CLOSE_REL(mpAbc.thickness(), 1., 0.0001);
     // A/Z should be 0.5 roughly for both
-    BOOST_CHECK_CLOSE(mpAbc.averageZ() / mpAbc.averageA(), 0.5, 0.0001);
+    CHECK_CLOSE_REL(mpAbc.averageZ() / mpAbc.averageA(), 0.5, 0.0001);
     // Thickness in X0 is additive
-    BOOST_CHECK_CLOSE(mpAbc.thicknessInX0(),
-                      a.thicknessInX0() + b.thicknessInX0() + c.thicknessInX0(),
-                      0.0001);
+    CHECK_CLOSE_REL(mpAbc.thicknessInX0(),
+                    a.thicknessInX0() + b.thicknessInX0() + c.thicknessInX0(),
+                    0.0001);
     // Consistency check : X0
-    BOOST_CHECK_CLOSE(
+    CHECK_CLOSE_REL(
         mpAbc.thickness() / mpAbc.averageX0(), mpAbc.thicknessInX0(), 0.0001);
     // Consistency check : L0
-    BOOST_CHECK_CLOSE(mpAbc.thicknessInL0(),
-                      a.thicknessInL0() + b.thicknessInL0() + c.thicknessInL0(),
-                      0.0001);
+    CHECK_CLOSE_REL(mpAbc.thicknessInL0(),
+                    a.thicknessInL0() + b.thicknessInL0() + c.thicknessInL0(),
+                    0.0001);
     // The density scales with the thickness then
     double rhoTmapped = mpAbc.averageRho() * mpAbc.thickness();
     double rhoTadded
         = (a.thickness() * a.averageRho() + b.thickness() * b.averageRho()
            + c.thickness() * c.averageRho());
-    BOOST_CHECK_CLOSE(rhoTmapped, rhoTadded, 0.0001);
+    CHECK_CLOSE_REL(rhoTmapped, rhoTadded, 0.0001);
   }
 
   /// Test the total averaging behavior
@@ -133,9 +137,9 @@ namespace Test {
 
     BOOST_CHECK_EQUAL(halfA.thicknessInX0(), matAV.thicknessInX0());
     BOOST_CHECK_EQUAL(halfA.thicknessInL0(), matAV.thicknessInL0());
-    BOOST_CHECK_CLOSE(halfA.averageRho() * halfA.thickness(),
-                      matAV.averageRho() * matAV.thickness(),
-                      0.0001);
+    CHECK_CLOSE_REL(halfA.averageRho() * halfA.thickness(),
+                    matAV.averageRho() * matAV.thickness(),
+                    0.0001);
     BOOST_CHECK_EQUAL(2, averageAV.second);
 
     // Test:
@@ -153,9 +157,9 @@ namespace Test {
 
     BOOST_CHECK_EQUAL(doubleA.thicknessInX0(), matAA3.thicknessInX0());
     BOOST_CHECK_EQUAL(doubleA.thicknessInL0(), matAA3.thicknessInL0());
-    BOOST_CHECK_CLOSE(doubleA.averageRho() * doubleA.thickness(),
-                      matAA3.averageRho() * matAA3.thickness(),
-                      0.0001);
+    CHECK_CLOSE_REL(doubleA.averageRho() * doubleA.thickness(),
+                    matAA3.averageRho() * matAA3.thickness(),
+                    0.0001);
     BOOST_CHECK_EQUAL(2, averageAA3.second);
 
     /// Test:
@@ -171,7 +175,7 @@ namespace Test {
     auto averageAA3V = aa3v.totalAverage();
     auto matAA3V     = averageAA3V.first;
 
-    BOOST_CHECK_CLOSE(4. / 3., matAA3V.thicknessInX0(), 0.00001);
+    CHECK_CLOSE_REL(4. / 3., matAA3V.thicknessInX0(), 0.00001);
     BOOST_CHECK_EQUAL(3, averageAA3V.second);
 
     /// Test:
@@ -185,7 +189,7 @@ namespace Test {
     auto averageA4V = a4v.totalAverage();
     auto matA4V     = averageA4V.first;
 
-    BOOST_CHECK_CLOSE(doubleA.thicknessInX0(), matA4V.thicknessInX0(), 0.00001);
+    CHECK_CLOSE_REL(doubleA.thicknessInX0(), matA4V.thicknessInX0(), 0.00001);
     BOOST_CHECK_EQUAL(2, averageA4V.second);
   }
 

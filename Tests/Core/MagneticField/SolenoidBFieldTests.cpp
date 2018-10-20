@@ -7,18 +7,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /// @file SolenoidBFieldTests.cpp
-#define BOOST_TEST_MODULE Solenoid magnetic field tests
 
 // clang-format off
+#define BOOST_TEST_MODULE Solenoid magnetic field tests
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/floating_point_comparison.hpp>
-#include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 // clang-format on
 
 #include <fstream>
+
+#include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -91,19 +92,19 @@ namespace Test {
             BOOST_TEST(std::abs(B_zp_rn.z()) > tol_B);
             if (i > 0) {
               // z components should be the same for +- r
-              BOOST_CHECK_CLOSE(B_zp_rp.z(), B_zp_rn.z(), tol);
-              BOOST_CHECK_CLOSE(B_zn_rp.z(), B_zn_rn.z(), tol);
+              CHECK_CLOSE_ABS(B_zp_rp.z(), B_zp_rn.z(), tol_B);
+              CHECK_CLOSE_ABS(B_zn_rp.z(), B_zn_rn.z(), tol_B);
               // x components should be exactly opposite
-              BOOST_CHECK_CLOSE(B_zp_rp.x(), -B_zp_rn.x(), tol);
-              BOOST_CHECK_CLOSE(B_zn_rp.x(), -B_zn_rn.x(), tol);
+              CHECK_CLOSE_ABS(B_zp_rp.x(), -B_zp_rn.x(), tol_B);
+              CHECK_CLOSE_ABS(B_zn_rp.x(), -B_zn_rn.x(), tol_B);
             }
             if (j > 0) {
               // z components should be the same for +- z
-              BOOST_CHECK_CLOSE(B_zp_rp.z(), B_zn_rp.z(), tol);
-              BOOST_CHECK_CLOSE(B_zp_rn.z(), B_zn_rn.z(), tol);
+              CHECK_CLOSE_ABS(B_zp_rp.z(), B_zn_rp.z(), tol_B);
+              CHECK_CLOSE_ABS(B_zp_rn.z(), B_zn_rn.z(), tol_B);
               // x components should be exactly opposite
-              BOOST_CHECK_CLOSE(B_zp_rp.x(), -B_zn_rp.x(), tol);
-              BOOST_CHECK_CLOSE(B_zp_rn.x(), -B_zn_rn.x(), tol);
+              CHECK_CLOSE_ABS(B_zp_rp.x(), -B_zn_rp.x(), tol_B);
+              CHECK_CLOSE_ABS(B_zp_rn.x(), -B_zn_rn.x(), tol_B);
             }
           }
         }

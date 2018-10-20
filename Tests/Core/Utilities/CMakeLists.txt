@@ -18,7 +18,7 @@ add_test (NAME IntersectionUnitTests COMMAND IntersectionTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST IntersectionUnitTests TARGETS IntersectionTests)
 
 add_executable (BinningDataTests BinningDataTests.cpp)
-target_link_libraries (BinningDataTests PRIVATE ActsCore)
+target_link_libraries (BinningDataTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME BinningDataUnitTest COMMAND BinningDataTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST BinningDataUnitTest TARGETS BinningDataTests)
 
@@ -49,17 +49,17 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST AxesUnitTest TARGETS AxesTest
 
 add_executable (GridTests GridTests.cpp)
 target_include_directories (GridTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (GridTests PRIVATE ActsCore)
+target_link_libraries (GridTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME GridUnitTest COMMAND GridTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST GridUnitTest TARGETS GridTests)
 
 add_executable (InterpolationTests InterpolationTests.cpp)
 target_include_directories (InterpolationTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (InterpolationTests PRIVATE ActsCore)
+target_link_libraries (InterpolationTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME InterpolationUnitTest COMMAND InterpolationTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST InterpolationUnitTest TARGETS InterpolationTests)
 
 add_executable (BFieldMapUtilsTests BFieldMapUtilsTests.cpp)
-target_link_libraries (BFieldMapUtilsTests PRIVATE ActsCore)
+target_link_libraries (BFieldMapUtilsTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME BFieldMapUtilsTest COMMAND BFieldMapUtilsTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST BFieldMapUtilsTest TARGETS BFieldMapUtilsTests)

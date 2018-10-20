@@ -6,11 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE grid tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include <chrono>
 #include <random>
 
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/concept/AnyGrid.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
@@ -974,39 +978,29 @@ namespace Test {
     g.at(Point({{1., 3., 4.}})) = 70.;
     g.at(Point({{2., 3., 4.}})) = 80.;
 
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{1., 1., 1.}})), 10., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{2., 1., 1.}})), 20., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{1., 3., 1.}})), 30., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{2., 3., 1.}})), 40., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{1., 1., 4.}})), 50., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{2., 1., 4.}})), 60., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{1., 3., 4.}})), 70., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{2., 3., 4.}})), 80., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{1.5, 1., 1.}})), 15., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{1.5, 3., 1.}})), 35., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{1., 2., 1.}})), 20., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{2., 2., 1.}})), 30., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{1.5, 1., 4.}})), 55., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{1.5, 3., 4.}})), 75., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{1., 2., 4.}})), 60., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{2., 2., 4.}})), 70., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{1., 1., 2.5}})), 30., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{1., 3., 2.5}})), 50., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{2., 1., 2.5}})), 40., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{2., 3., 2.5}})), 60., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{1.5, 2., 2.5}})), 360. / 8, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(
-        g.interpolate(Point({{1.3, 2.1, 1.6}})), 32., 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(g.interpolate(Point({{2., 3., 4.}})), 80., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1., 1., 1.}})), 10., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 1., 1.}})), 20., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1., 3., 1.}})), 30., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 3., 1.}})), 40., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1., 1., 4.}})), 50., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 1., 4.}})), 60., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1., 3., 4.}})), 70., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 3., 4.}})), 80., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1.5, 1., 1.}})), 15., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1.5, 3., 1.}})), 35., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1., 2., 1.}})), 20., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 2., 1.}})), 30., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1.5, 1., 4.}})), 55., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1.5, 3., 4.}})), 75., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1., 2., 4.}})), 60., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 2., 4.}})), 70., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1., 1., 2.5}})), 30., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1., 3., 2.5}})), 50., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 1., 2.5}})), 40., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 3., 2.5}})), 60., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1.5, 2., 2.5}})), 360. / 8, 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{1.3, 2.1, 1.6}})), 32., 1e-6);
+    CHECK_CLOSE_REL(g.interpolate(Point({{2., 3., 4.}})), 80., 1e-6);
   }
 
   BOOST_AUTO_TEST_CASE(neighborhood)

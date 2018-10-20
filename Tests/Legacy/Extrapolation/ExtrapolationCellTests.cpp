@@ -6,13 +6,16 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE ExtrapolationCell Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Extrapolation/ExtrapolationCell.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
@@ -149,7 +152,7 @@ namespace Test {
     // the path length is still 0
     BOOST_CHECK_EQUAL(0., ecc.pathLength);
     // the thickness in X0 is thickness/X0
-    BOOST_CHECK_CLOSE(thickness / X0, ecc.materialX0, 0.001);
+    CHECK_CLOSE_REL(thickness / X0, ecc.materialX0, 0.001);
 
     // (B) propagation step
     // create the ExtrapolationCell from the start parameters
@@ -176,7 +179,7 @@ namespace Test {
     /// the step length should be the pathLength
     BOOST_CHECK_EQUAL(pathLength, ecc.pathLength);
     // the thickness in X0 is thickness/X0
-    BOOST_CHECK_CLOSE(thickness / X0, ecc.materialX0, 0.001);
+    CHECK_CLOSE_REL(thickness / X0, ecc.materialX0, 0.001);
 
     // (B1) full-update emulation, creating new parameters
     auto pMatParameters = std::make_unique<const NeutralCurvilinearParameters>(
@@ -201,7 +204,7 @@ namespace Test {
     /// the step length should be the pathLength
     BOOST_CHECK_EQUAL(pathLength, ecc.pathLength);
     // the thickness in X0 is two times thickness/X0
-    BOOST_CHECK_CLOSE(2. * thickness / X0, ecc.materialX0, 0.001);
+    CHECK_CLOSE_REL(2. * thickness / X0, ecc.materialX0, 0.001);
 
     // (C) destination
     // emulate propagation to final surface
@@ -225,7 +228,7 @@ namespace Test {
     /// the step length should be the pathLength
     BOOST_CHECK_EQUAL(2 * pathLength, ecc.pathLength);
     // the thickness in X0 is still two times thickness/X0
-    BOOST_CHECK_CLOSE(2. * thickness / X0, ecc.materialX0, 0.001);
+    CHECK_CLOSE_REL(2. * thickness / X0, ecc.materialX0, 0.001);
     // it *thinks* it would be the last step so
     BOOST_CHECK_EQUAL(nPtr, ecc.extrapolationSteps.back().parameters.get());
     // the end parameters should be the the dParametersPtr
@@ -261,7 +264,7 @@ namespace Test {
     /// the step length should be the pathLength
     BOOST_CHECK_EQUAL(2 * pathLength, ecc.pathLength);
     // the thickness in X0 is still two times thickness/X0
-    BOOST_CHECK_CLOSE(3. * thickness / X0, ecc.materialX0, 0.001);
+    CHECK_CLOSE_REL(3. * thickness / X0, ecc.materialX0, 0.001);
     // the last step parameters are the destination parameters
     BOOST_CHECK_EQUAL(dParametersPtr,
                       ecc.extrapolationSteps.back().parameters.get());

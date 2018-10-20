@@ -11,7 +11,7 @@ target_link_libraries (IntersectionCorrectorTests PRIVATE ActsCore)
 add_test(NAME IntersectionCorrectorUnitTests COMMAND IntersectionCorrectorTests)
 
 add_executable (LoopProtectionTests LoopProtectionTests.cpp)
-target_link_libraries (LoopProtectionTests PRIVATE ActsCore)
+target_link_libraries (LoopProtectionTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test(NAME LoopProtectionUnitTests COMMAND LoopProtectionTests)
 
 add_executable (ConstrainedStepTests ConstrainedStepTests.cpp)

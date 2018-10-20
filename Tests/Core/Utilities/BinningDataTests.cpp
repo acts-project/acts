@@ -6,10 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE BinningData Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include <cmath>
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -128,12 +132,12 @@ namespace Test {
     BOOST_CHECK_EQUAL(xData_arb_binary.value(xyPosition), 0.5);
 
     // r/phi/rphiData
-    BOOST_CHECK_CLOSE(
-        rData_eq.value(xyzPosition), sqrt(0.5 * 0.5 + 1.5 * 1.5), 10e-5);
+    CHECK_CLOSE_REL(
+        rData_eq.value(xyzPosition), sqrt(0.5 * 0.5 + 1.5 * 1.5), 1e-5);
     BOOST_CHECK_EQUAL(rData_eq.value(rphiPosition), 3.5);
 
-    BOOST_CHECK_CLOSE(phiData_eq.value(phi0Position), 0., 10e-5);
-    BOOST_CHECK_CLOSE(phiData_eq.value(phiPihPosition), M_PI / 2, 10e-5);
+    CHECK_SMALL(phiData_eq.value(phi0Position), 1e-6 * M_PI);
+    CHECK_CLOSE_REL(phiData_eq.value(phiPihPosition), M_PI / 2, 1e-5);
 
     BOOST_CHECK_EQUAL(phiData_eq.bins(), size_t(5));
     BOOST_CHECK_EQUAL(phiData_arb.bins(), size_t(5));
@@ -350,10 +354,7 @@ namespace Test {
                                            float(-M_PI + 3 * phiStep),
                                            float(-M_PI + 4 * phiStep),
                                            float(-M_PI + 5 * phiStep)};
-    for (size_t ib = 0; ib < phiData_eq.boundaries().size(); ++ib) {
-      BOOST_CHECK_CLOSE(
-          phiData_eq.boundaries()[ib], phiBoundaries_eq[ib], 10e-5);
-    }
+    CHECK_CLOSE_REL(phiData_eq.boundaries(), phiBoundaries_eq, 1e-5);
   }
 
   // test bin center values
@@ -426,10 +427,7 @@ namespace Test {
            float(-M_PI + 4 * phiStep) + deltaPhi,
            float(-M_PI + 5 * phiStep) + deltaPhi};
     // this is the boundary test
-    for (size_t ib = 0; ib < phiData_mod.boundaries().size(); ++ib) {
-      BOOST_CHECK_CLOSE(
-          phiData_mod.boundaries()[ib], phiBoundaries_mod[ib], 10e-5);
-    }
+    CHECK_CLOSE_REL(phiData_mod.boundaries(), phiBoundaries_mod, 1e-5);
 
     // now test the bin jump 0/maxbin
 

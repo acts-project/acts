@@ -6,22 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE PlaneSurface Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include <limits>
+
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TriangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
@@ -223,9 +221,9 @@ namespace Test {
     auto rectSrfRec = Surface::makeShared<PlaneSurface>(rectVariant);
     auto rectBoundsRec
         = dynamic_cast<const RectangleBounds*>(&rectSrfRec->bounds());
-    BOOST_CHECK_CLOSE(
+    CHECK_CLOSE_REL(
         rectBounds->halflengthX(), rectBoundsRec->halflengthX(), 1e-4);
-    BOOST_CHECK_CLOSE(
+    CHECK_CLOSE_REL(
         rectBounds->halflengthY(), rectBoundsRec->halflengthY(), 1e-4);
     BOOST_TEST(rot->isApprox(rectSrfRec->transform(), 1e-4));
 
@@ -241,10 +239,9 @@ namespace Test {
     auto triangleBoundsRec
         = dynamic_cast<const TriangleBounds*>(&triangleSrfRec->bounds());
     for (size_t i = 0; i < 3; i++) {
-      Vector2D exp = triangleBounds->vertices().at(i);
-      Vector2D act = triangleBoundsRec->vertices().at(i);
-      BOOST_CHECK_CLOSE(exp.x(), act.x(), 1e-4);
-      BOOST_CHECK_CLOSE(exp.y(), act.y(), 1e-4);
+      CHECK_CLOSE_REL(triangleBounds->vertices().at(i),
+                      triangleBoundsRec->vertices().at(i),
+                      1e-4);
     }
     BOOST_TEST(rot->isApprox(triangleSrfRec->transform(), 1e-4));
   }

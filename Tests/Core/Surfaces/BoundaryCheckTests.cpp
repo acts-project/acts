@@ -6,18 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE BoundaryCheck Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include "Acts/Surfaces/BoundaryCheck.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -63,7 +60,7 @@ namespace Test {
       Vector2D        ll(rectDimensions.xmin, rectDimensions.ymin);
       Vector2D        ur(rectDimensions.xmax, rectDimensions.ymax);
       double          distance = bcheck.distance(testPoint, ll, ur);
-      BOOST_CHECK_CLOSE_FRACTION(refDistance, distance, 1e-6);
+      CHECK_CLOSE_REL(refDistance, distance, 1e-6);
     }
 
     for (size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
@@ -72,7 +69,7 @@ namespace Test {
       Vector2D ll(rectShiftedDimensions.xmin, rectShiftedDimensions.ymin);
       Vector2D ur(rectShiftedDimensions.xmax, rectShiftedDimensions.ymax);
       double   distance = bcheck.distance(testPoint, ll, ur);
-      BOOST_CHECK_CLOSE_FRACTION(refDistance, distance, 1e-6);
+      CHECK_CLOSE_REL(refDistance, distance, 1e-6);
     }
   }
 
@@ -103,14 +100,14 @@ namespace Test {
       const Vector2D& testPoint   = rectTestPoints.at(i);
       double          refDistance = rectDistances.at(i);
       double          distance    = bcheck.distance(testPoint, rectVertices);
-      BOOST_CHECK_CLOSE_FRACTION(refDistance, distance, 1e-6);
+      CHECK_CLOSE_REL(refDistance, distance, 1e-6);
     }
 
     for (size_t i = 0; i < rectShiftedTestPoints.size(); i++) {
       const Vector2D& testPoint   = rectShiftedTestPoints.at(i);
       double          refDistance = rectShiftedDistances.at(i);
       double distance = bcheck.distance(testPoint, rectShiftedVertices);
-      BOOST_CHECK_CLOSE_FRACTION(refDistance, distance, 1e-6);
+      CHECK_CLOSE_REL(refDistance, distance, 1e-6);
     }
   }
 

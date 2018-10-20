@@ -6,11 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE LayerCreator
 #include <boost/test/included/unit_test.hpp>
-
 #include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
+// clang-format on
+
+#include <fstream>
+#include <random>
 
 #include "Acts/Layers/CylinderLayer.hpp"
 #include "Acts/Layers/DiscLayer.hpp"
@@ -19,15 +23,12 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/LayerCreator.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/VariantData.hpp"
-
 #include "Acts/Utilities/Definitions.hpp"
-
-#include <fstream>
-#include <random>
+#include "Acts/Utilities/VariantData.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -280,20 +281,19 @@ namespace Test {
             p_LC->cylinderLayer(srf, equidistant, equidistant, pl));
 
     double rMax = 10.6071, rMin = 9.59111;  // empirical
-    BOOST_CHECK_CLOSE_FRACTION(
-        layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
+    CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
 
     const CylinderBounds* bounds = &layer->bounds();
-    BOOST_CHECK_CLOSE_FRACTION(bounds->r(), (rMax + rMin) / 2., 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(bounds->halflengthZ(), 14 + envZ, 1e-3);
+    CHECK_CLOSE_REL(bounds->r(), (rMax + rMin) / 2., 1e-3);
+    CHECK_CLOSE_REL(bounds->halflengthZ(), 14 + envZ, 1e-3);
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     auto axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0)->getNBins() == 30);
     BOOST_TEST(axes.at(1)->getNBins() == 7);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMin(), -M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMax(), M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMin(), -14, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMax(), 14, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMax(), 14, 1e-3);
 
     // CASE II
 
@@ -302,37 +302,35 @@ namespace Test {
     pl2.envZ = {envZ, envZ};
     layer    = std::dynamic_pointer_cast<CylinderLayer>(
         p_LC->cylinderLayer(srf, 30, 7, pl2));
-    BOOST_CHECK_CLOSE_FRACTION(
-        layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
+    CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
     bounds = &layer->bounds();
-    BOOST_CHECK_CLOSE_FRACTION(bounds->r(), (rMax + rMin) / 2., 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(bounds->halflengthZ(), 14 + envZ, 1e-3);
+    CHECK_CLOSE_REL(bounds->r(), (rMax + rMin) / 2., 1e-3);
+    CHECK_CLOSE_REL(bounds->halflengthZ(), 14 + envZ, 1e-3);
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0)->getNBins() == 30);
     BOOST_TEST(axes.at(1)->getNBins() == 7);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMin(), -M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMax(), M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMin(), -14, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMax(), 14, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMax(), 14, 1e-3);
 
     layer = std::dynamic_pointer_cast<CylinderLayer>(
         p_LC->cylinderLayer(srf, 13, 3, pl2));
-    BOOST_CHECK_CLOSE_FRACTION(
-        layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
+    CHECK_CLOSE_REL(layer->thickness(), (rMax - rMin) + 2 * envR, 1e-3);
     bounds = &layer->bounds();
-    BOOST_CHECK_CLOSE_FRACTION(bounds->r(), (rMax + rMin) / 2., 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(bounds->halflengthZ(), 14 + envZ, 1e-3);
+    CHECK_CLOSE_REL(bounds->r(), (rMax + rMin) / 2., 1e-3);
+    CHECK_CLOSE_REL(bounds->halflengthZ(), 14 + envZ, 1e-3);
     // this succeeds despite sub-optimal binning
     // since we now have multientry bins
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0)->getNBins() == 13);
     BOOST_TEST(axes.at(1)->getNBins() == 3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMin(), -M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMax(), M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMin(), -14, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMax(), 14, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMax(), 14, 1e-3);
 
     // CASE III
     ProtoLayer pl3;
@@ -342,10 +340,10 @@ namespace Test {
     pl3.maxZ = 25;
     layer    = std::dynamic_pointer_cast<CylinderLayer>(
         p_LC->cylinderLayer(srf, equidistant, equidistant, pl3));
-    BOOST_CHECK_CLOSE_FRACTION(layer->thickness(), 19, 1e-3);
+    CHECK_CLOSE_REL(layer->thickness(), 19, 1e-3);
     bounds = &layer->bounds();
-    BOOST_CHECK_CLOSE_FRACTION(bounds->r(), 10.5, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(bounds->halflengthZ(), 25, 1e-3);
+    CHECK_CLOSE_REL(bounds->r(), 10.5, 1e-3);
+    CHECK_CLOSE_REL(bounds->halflengthZ(), 25, 1e-3);
 
     // this should fail, b/c it's a completely inconvenient binning
     // but it succeeds despite sub-optimal binning
@@ -355,10 +353,10 @@ namespace Test {
     axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0)->getNBins() == 30);
     BOOST_TEST(axes.at(1)->getNBins() == 7);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMin(), -M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMax(), M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMin(), -25, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMax(), 25, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMin(), -25, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMax(), 25, 1e-3);
   }
 
   BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture)
@@ -379,26 +377,26 @@ namespace Test {
     pl.maxR                          = 25;
     std::shared_ptr<DiscLayer> layer = std::dynamic_pointer_cast<DiscLayer>(
         p_LC->discLayer(surfaces, equidistant, equidistant, pl));
-    BOOST_CHECK_CLOSE_FRACTION(layer->thickness(), 20, 1e-3);
+    CHECK_CLOSE_REL(layer->thickness(), 20, 1e-3);
     const RadialBounds* bounds
         = dynamic_cast<const RadialBounds*>(&layer->bounds());
-    BOOST_CHECK_CLOSE_FRACTION(bounds->rMin(), 5, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(bounds->rMax(), 25, 1e-3);
+    CHECK_CLOSE_REL(bounds->rMin(), 5, 1e-3);
+    CHECK_CLOSE_REL(bounds->rMax(), 25, 1e-3);
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     auto axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0)->getNBins() == 3);
     BOOST_TEST(axes.at(1)->getNBins() == 30);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMin(), 5, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMax(), 25, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMin(), -M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMax(), M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMin(), 5, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMax(), 25, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMax(), M_PI, 1e-3);
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
     // BOOST_TEST(bu->transform() != nullptr);
     // double actAngle = ((*bu->transform()) * Vector3D(1, 0, 0)).phi();
     // double expAngle = -2 * M_PI / 30 / 2.;
-    // BOOST_CHECK_CLOSE_FRACTION(actAngle, expAngle, 1e-3);
+    // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
 
     double     envMinR = 1, envMaxR = 1, envZ = 5;
     size_t     nBinsR = 3, nBinsPhi = 30;
@@ -409,47 +407,47 @@ namespace Test {
         p_LC->discLayer(surfaces, nBinsR, nBinsPhi, pl2));
 
     double rMin = 8, rMax = 22.0227;
-    BOOST_CHECK_CLOSE_FRACTION(layer->thickness(), 0.4 + 2 * envZ, 1e-3);
+    CHECK_CLOSE_REL(layer->thickness(), 0.4 + 2 * envZ, 1e-3);
     bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
-    BOOST_CHECK_CLOSE_FRACTION(bounds->rMin(), rMin - envMinR, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(bounds->rMax(), rMax + envMaxR, 1e-3);
+    CHECK_CLOSE_REL(bounds->rMin(), rMin - envMinR, 1e-3);
+    CHECK_CLOSE_REL(bounds->rMax(), rMax + envMaxR, 1e-3);
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0)->getNBins() == nBinsR);
     BOOST_TEST(axes.at(1)->getNBins() == nBinsPhi);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMin(), rMin, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMax(), rMax, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMin(), -M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMax(), M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMin(), rMin, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMax(), rMax, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMax(), M_PI, 1e-3);
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
     // BOOST_TEST(bu->transform() != nullptr);
     // actAngle = ((*bu->transform()) * Vector3D(1, 0, 0)).phi();
     // expAngle = -2 * M_PI / 30 / 2.;
-    // BOOST_CHECK_CLOSE_FRACTION(actAngle, expAngle, 1e-3);
+    // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
 
     layer = std::dynamic_pointer_cast<DiscLayer>(
         p_LC->discLayer(surfaces, equidistant, equidistant, pl2));
-    BOOST_CHECK_CLOSE_FRACTION(layer->thickness(), 0.4 + 2 * envZ, 1e-3);
+    CHECK_CLOSE_REL(layer->thickness(), 0.4 + 2 * envZ, 1e-3);
     bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
-    BOOST_CHECK_CLOSE_FRACTION(bounds->rMin(), rMin - envMinR, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(bounds->rMax(), rMax + envMaxR, 1e-3);
+    CHECK_CLOSE_REL(bounds->rMin(), rMin - envMinR, 1e-3);
+    CHECK_CLOSE_REL(bounds->rMax(), rMax + envMaxR, 1e-3);
     BOOST_TEST(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
     BOOST_TEST(axes.at(0)->getNBins() == nBinsR);
     BOOST_TEST(axes.at(1)->getNBins() == nBinsPhi);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMin(), rMin, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(0)->getMax(), rMax, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMin(), -M_PI, 1e-3);
-    BOOST_CHECK_CLOSE_FRACTION(axes.at(1)->getMax(), M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMin(), rMin, 1e-3);
+    CHECK_CLOSE_REL(axes.at(0)->getMax(), rMax, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
+    CHECK_CLOSE_REL(axes.at(1)->getMax(), M_PI, 1e-3);
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
     // BOOST_TEST(bu->transform() != nullptr);
     // actAngle = ((*bu->transform()) * Vector3D(1, 0, 0)).phi();
     // expAngle = -2 * M_PI / 30 / 2.;
-    // BOOST_CHECK_CLOSE_FRACTION(actAngle, expAngle, 1e-3);
+    // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
   }
 
   BOOST_FIXTURE_TEST_CASE(LayerCreator_barrelStagger, LayerCreatorFixture)
