@@ -470,8 +470,8 @@ public:
             typename surface_t,
             typename action_list_t,
             typename aborter_list_t,
-            typename path_arborter_t  = detail::PathLimitReached,
-            typename target_aborter_t = detail::SurfaceReached>
+            typename target_aborter_t = detail::SurfaceReached,
+            typename path_arborter_t  = detail::PathLimitReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,

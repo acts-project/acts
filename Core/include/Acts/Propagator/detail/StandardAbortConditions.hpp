@@ -65,6 +65,7 @@ namespace detail {
       dstream << std::setw(state.options.debugMsgWidth);
       dstream << logAction() << '\n';
       state.options.debugString += dstream.str();
+      std::cout << dstream.str();
     }
   }
 
@@ -92,6 +93,9 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
+      if (state.navigation.targetReached) {
+        return true;
+      }
       // Check if the maximum allowed step size has to be updated
       double limit     = std::min(internalLimit, state.options.pathLimit);
       double distance  = limit - state.stepping.pathAccumulated;
@@ -123,6 +127,7 @@ namespace detail {
   /// it then triggers an propagation abort of the propagation
   struct SurfaceReached
   {
+
     /// Default Constructor
     SurfaceReached() = default;
 
@@ -143,15 +148,26 @@ namespace detail {
     bool
     operator()(propagator_state_t& state) const
     {
+      return (*this)(state, *state.navigation.targetSurface);
+    }
 
+    /// boolean operator for abort condition without using the result
+    ///
+    /// @tparam propagator_state_t Type of the propagator state
+    ///
+    /// @param[in,out] state The propagation state object
+    /// @param[in] targetSurface The target surface
+    template <typename propagator_state_t>
+    bool
+    operator()(propagator_state_t& state, const Surface& targetSurface) const
+    {
       if (state.navigation.targetReached) {
         return true;
       }
 
-      // check if the cache filled the currentSurface
+      // Check if the cache filled the currentSurface
       if (state.navigation.currentSurface
-          && state.navigation.currentSurface
-              == state.navigation.targetSurface) {
+          && state.navigation.currentSurface == &targetSurface) {
         targetDebugLog(state, "x", [&] {
           std::string ds("Target surface reached.");
           return ds;
@@ -162,9 +178,8 @@ namespace detail {
       }
       // calculate the distance to the surface
       const double tolerance = state.options.targetTolerance;
-      const auto   iestimate
-          = state.navigation.targetSurface->intersectionEstimate(
-              state.stepping, TargetOptions(state.options.direction), nullptr);
+      const auto   iestimate = targetSurface.intersectionEstimate(
+          state.stepping, TargetOptions(state.options.direction), nullptr);
       const double distance = iestimate.intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
@@ -178,7 +193,7 @@ namespace detail {
           return dstream.str();
         });
         // assigning the currentSurface
-        state.navigation.currentSurface = state.navigation.targetSurface;
+        state.navigation.currentSurface = &targetSurface;
         targetDebugLog(state, "x", [&] {
           std::stringstream dstream;
           dstream << "Current surface set to target surface  ";

@@ -16,6 +16,10 @@
 #include "Acts/EventData/detail/trackstate_manipulation.hpp"
 #include "Acts/EventData/detail/trackstate_sorters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
+#include "Acts/Propagator/AbortList.hpp"
+#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -67,6 +71,75 @@ public:
   /// Shorthand definition
   using MeasurementSurfaces = std::multimap<const Layer*, const Surface*>;
 
+  /// Default constructor is deleted
+  KalmanFitter() = delete;
+
+  /// Constructor from arguments
+  KalmanFitter(propagator_t       pPropagator,
+               input_converter_t  pInputCnv  = input_converter_t(),
+               output_converter_t pOutputCnv = output_converter_t())
+    : m_propagator(std::move(pPropagator))
+    , m_inputConverter(std::move(pInputCnv))
+    , m_outputConverter(std::move(pOutputCnv))
+  {
+  }
+
+  /// Fit implementation of the foward filter, calls the
+  /// the forward filter and backward smoother
+  ///
+  /// @tparam input_measurements_t Type of the fittable measurements
+  /// @tparam parameters_t Type of the initial parameters
+  /// @tparam surface_t Type of the reference surface
+  ///
+  /// @param measurements The fittable measurements
+  /// @param sParameters The initial track parameters
+  /// @param rSurface The reference surface
+  ///
+  /// @return the output as an output track
+  template <typename input_measurements_t,
+            typename parameters_t,
+            typename surface_t>
+  auto
+  fit(const input_measurements_t& measurements,
+      const parameters_t&         sParameters,
+      const surface_t*            rSurface = nullptr) const
+  {
+    // Bring the measurements into Acts style
+    auto trackStates = m_inputConverter(measurements);
+
+    // Create the ActionList and AbortList
+    using KalmanActor = Actor<decltype(trackStates)>;
+    using Actors      = ActionList<KalmanActor>;
+    using Aborters    = AbortList<>;
+
+    // Create some options
+    using Options = typename propagator_t::template Options<Actors, Aborters>;
+    Options kalmanOptions;
+    kalmanOptions.debug = true;
+
+    // Catch the actor and set the measurements
+    auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
+    kalmanActor.trackStates   = std::move(trackStates);
+    kalmanActor.targetSurface = rSurface;
+
+    // Run the fitter
+    const auto& result
+        = m_propagator.template propagate(sParameters, kalmanOptions);
+
+    // Return the converted Track
+    return m_outputConverter(trackStates);
+  }
+
+private:
+  /// The propgator for the transport and material update
+  propagator_t m_propagator;
+
+  /// The input converter to Fittable measurements
+  input_converter_t m_inputConverter;
+
+  /// The output converter into a given format
+  output_converter_t m_outputConverter;
+
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
   /// @tparam track_states_t is any iterable std::container of
@@ -107,10 +180,16 @@ public:
       // Counter for handled states
       size_t processedStates = 0;
 
+      // Indicator if you smoothed
+      bool smoothed = false;
+
       // The index map for accessing the track state in order
       std::map<const Surface*, size_t> accessIndex;
     };
     using result_type = this_result;
+
+    /// The target surface
+    const Surface* targetSurface = nullptr;
 
     /// The Track states with which the Actor is initialized
     track_states_t trackStates = {};
@@ -148,11 +227,18 @@ public:
 
       // Finalization:
       // - When all track states have been handled
-      if (result.processedStates == trackStates.size()) {
+      if (result.processedStates == trackStates.size()
+          and not result.smoothed) {
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
         // -> Set a stop condition when all track states have been handled
         finalize(state, result);
+      }
+      // Post-finalization:
+      // - Progress to target/reference surface and built the final track
+      // parameters
+      if (result.smoothed and targetReached(state, *targetSurface)) {
+        state.navigation.navigationBreak = true;
       }
     }
 
@@ -167,11 +253,19 @@ public:
     void
     initialize(propagator_state_t& state, result_type& result) const
     {
+      // Screen output message
+      debugLog(state, [&] {
+        std::stringstream dstream;
+        dstream << "Initializing KalmanFitter with ";
+        dstream << trackStates.size();
+        dstream << " measurements to fit.";
+        return dstream.str();
+      });
       // Create the multimap
       MeasurementSurfaces measurementSurfaces;
       // Move the track states
       result.fittedStates = std::move(trackStates);
-      // @todo -----> outsource this to a assign to layer method
+      // @todo -----> out source this to a assign to layer method
 
       // Memorize the index to access the state
       size_t stateIndex = 0;
@@ -205,9 +299,16 @@ public:
         }
         ++stateIndex;
       }
+      // Screen output message
+      debugLog(state, [&] {
+        std::stringstream dstream;
+        dstream << "Set ";
+        dstream << measurementSurfaces.size();
+        dstream << " measurements surfaces to the navigation.";
+        return dstream.str();
+      });
       // Feed the KalmanSequencer with the measurement surfaces
-      state.navigation.sequence.externalSurfaces
-          = std::move(measurementSurfaces);
+      state.navigation.externalSurfaces = std::move(measurementSurfaces);
     }
 
     /// @brief Kalman actor operation : update
@@ -226,14 +327,27 @@ public:
       // Try to find the surface in the measurement surfaces
       auto cindexItr = result.accessIndex.find(surface);
       if (cindexItr != result.accessIndex.end()) {
-        // Transport & bind the stateto the current surface
+        // Screen output message
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Measurement surface ";
+          dstream << surface->geoID().toString();
+          dstream << " detected.";
+          return dstream.str();
+        });
+        // Transport & bind the state to the current surface
         auto boundState = state.stepping.bind(*surface, true);
         // Get the current VariantTrackState
-        auto trackState = result.fittedStates[cindexItr->second];
+        auto& trackState = result.fittedStates[cindexItr->second];
         // Perform the update and obtain the filtered parameters
-        auto filteredPars = m_updator(trackState, std::move(boundState));
+        const auto& filteredPars = m_updator(trackState, std::move(boundState));
         // If the update is successful, set covariance and
         if (filteredPars) {
+          // Update the stepping state
+          debugLog(state, [&] {
+            return std::string(
+                "Filtering step successful, updating stepping state.");
+          });
           state.stepping.update(filteredPars.get());
         }
         // We count the processed state
@@ -254,17 +368,64 @@ public:
     void
     finalize(propagator_state_t& state, result_type& result) const
     {
+      // Remember you smoothed the track states
+      result.smoothed = true;
+
       // Sort the TrackStates according to the path length
       detail::path_length_sorter plSorter;
       std::sort(
           result.fittedStates.begin(), result.fittedStates.end(), plSorter);
+      // Screen output for debugging
+      debugLog(state, [&] {
+        std::stringstream dstream;
+        dstream << "Apply smoothing on ";
+        dstream << result.fittedStates.size();
+        dstream << " filtered track states.";
+        return dstream.str();
+      });
       // Smooth the track states and obtain the last smoothed track parameters
-      auto smoothedPars = m_smoother(result.fittedStates);
+      const auto& smoothedPars = m_smoother(result.fittedStates);
       // Update the stepping parameters - in order to progress to destination
       if (smoothedPars) {
+        // Update the stepping state
+        debugLog(state, [&] {
+          return std::string("Smoothing successful, updating stepping state, "
+                             "set target surface.");
+        });
         state.stepping.update(smoothedPars.get());
+        // Reverse the propagation direction
+        state.stepping.stepSize
+            = detail::ConstrainedStep(-1. * state.options.maxStepSize);
+        state.options.direction = backward;
       }
       // Set the destination surface - we should re-do the navigation
+    }
+
+    /// The private KalmanActor debug logging
+    ///
+    /// It needs to be fed by a lambda function that returns a string,
+    /// that guarantees that the lambda is only called in the
+    /// options.debug == true case in order not to spend time when not needed.
+    ///
+    /// @tparam propagator_state_t Type of the nested propagator state object
+    ///
+    /// @param state the propagator state for the debug flag, prefix/length
+    /// @param logAction is a callable function that returns a stremable object
+    template <typename propagator_state_t>
+    void
+    debugLog(propagator_state_t&                 state,
+             const std::function<std::string()>& logAction) const
+    {
+      if (state.options.debug) {
+        std::stringstream dstream;
+        dstream << "K->" << std::setw(state.options.debugPfxWidth);
+        dstream << "KalmanActor"
+                << " | ";
+        dstream << std::setw(state.options.debugMsgWidth) << logAction()
+                << '\n';
+        state.options.debugString += dstream.str();
+        std::cout << dstream.str();
+      }
     }
 
     /// The Kalman updator
@@ -275,61 +436,10 @@ public:
 
     /// The Measuremetn calibrator
     calibrator_t m_calibrator;
+
+    /// The Surface beeing
+    detail::SurfaceReached targetReached;
   };
-
-  /// Default constructor is deleted
-  KalmanFitter() = delete;
-
-  /// Constructor from arguments
-  KalmanFitter(propagator_t       pPropagator,
-               calibrator_t       pCalibrator = calibrator_t(),
-               input_converter_t  pInputCnv   = input_converter_t(),
-               output_converter_t pOutputCnv  = output_converter_t())
-    : m_propagator(std::move(pPropagator))
-    , m_calibrator(std::move(pCalibrator))
-    , m_inputConverter(std::move(pInputCnv))
-    , m_outputConverter(std::move(pOutputCnv))
-  {
-  }
-
-  /// Fit implementation of the foward filter, calls the
-  /// the forward filter and backward smoother
-  ///
-  /// @tparam input_measurements_t Type of the fittable measurements
-  /// @tparam parameters_t Type of the initial parameters
-  /// @tparam surface_t Type of the reference surface
-  ///
-  /// @param measurements are the fittable measurements
-  /// @param initalParameters is the initial track parameters
-  ///
-  /// @return the output as an output track
-  template <typename input_measurements_t,
-            typename parameters_t,
-            typename surface_t>
-  auto
-  fit(const input_measurements_t& measurements,
-      const parameters_t& /*initalParameters*/,
-      const surface_t* /*pReferenceSurface = nullptr*/) const
-  {
-    // Bring the measurements into Acts style
-    auto trackStates = m_inputConverter(measurements);
-
-    // Return the converted Track
-    return m_outputConverter(trackStates);
-  }
-
-private:
-  /// The propgator for the transport and material update
-  propagator_t m_propagator;
-
-  /// The measurement calibrator
-  calibrator_t m_calibrator;
-
-  /// The input converter to Fittable measurements
-  input_converter_t m_inputConverter;
-
-  /// The output converter into a given format
-  output_converter_t m_outputConverter;
 };
 
 }  // namespace Acts

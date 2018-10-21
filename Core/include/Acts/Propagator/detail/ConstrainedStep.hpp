@@ -72,7 +72,7 @@ namespace detail {
 
     /// constructor from double
     /// @paramn value is the initial value for all steps
-    ConstrainedStep(const double& value)
+    ConstrainedStep(double value)
       : values({{value, value, value, value}})
       , direction(value > 0. ? forward : backward)
     {

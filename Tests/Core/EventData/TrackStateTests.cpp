@@ -143,7 +143,7 @@ namespace Test {
     BOOST_TEST(secondPathLength == 2.);
 
     using ParState = ParametricState<BoundParameters, Jacobian>;
-    auto& pState   = detail::parametricState<ParState>(firstOrdered);
+    auto& pState   = detail::getParametricState<ParState>(firstOrdered);
 
     BOOST_TEST(pState.pathLength == 1.);
   }

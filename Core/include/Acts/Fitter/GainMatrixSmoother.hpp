@@ -33,7 +33,6 @@ public:
   {
     // The reverse iteration
     auto rit = filteredStates.rbegin();
-    // For the last measurement the filtered state and the smoothed state are
 
     using ps_t = ParametricState<parameters_t, jacobian_t>;
     // smoothed parameter vector and covariance matrix
@@ -41,7 +40,7 @@ public:
     typename parameters_t::CovMatrix_t smoothedCov;
 
     // For the last state: smoothed is filtered - also: swicth to next
-    auto& lState    = detail::parametricState<ps_t>(*rit++);
+    auto& lState    = detail::getParametricState<ps_t>(*rit);
     lState.smoothed = lState.filtered.get();
 
     // Smoothing gain matrix
@@ -49,10 +48,10 @@ public:
     GMatrix G;
 
     // Loop and smooth ofer the remaining
-    for (; rit != filteredStates.rend(); ++rit) {
+    for (++rit; rit != filteredStates.rend(); ++rit) {
 
       // The current state
-      auto& cState = detail::parametricState<ps_t>(*rit);
+      auto& cState = detail::getParametricState<ps_t>(*rit);
 
       /// Gain smoothing matrix
       G = (*cState.filtered.get().covariance())

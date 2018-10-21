@@ -51,8 +51,6 @@ struct NavigationOptions
   const object_t* startObject = nullptr;
   /// object to check against: at end
   const object_t* endObject = nullptr;
-  /// inserter objects
-  std::vector<const object_t*> inserterObjects = {};
 
   double pathLimit = std::numeric_limits<double>::max();
 
@@ -395,7 +393,6 @@ public:
         return dstream.str();
       });
     }
-
     // Fast Navigation initialization for start condition:
     // short-cut through object association, saves navigation in the
     // geometry and volume tree search for the lowest volume
@@ -546,7 +543,6 @@ public:
   void
   initializeTarget(propagator_state_t& state, const corrector_t& navCorr) const
   {
-
     if (state.navigation.targetVolume && state.stepping.pathAccumulated == 0.) {
       debugLog(state, [&] {
         return std::string("Re-initialzing cancelled as it is the first step.");
@@ -1044,7 +1040,7 @@ public:
         }
       }
     }
-    // let's re-initialize the target
+    // Re-initialize the target
     initializeTarget(state, navCorr);
     // we are at the end of trying layers
     if (state.navigation.currentVolume == state.navigation.targetVolume) {
@@ -1348,9 +1344,7 @@ private:
   {
     if (state.options.debug) {
       std::string vName = "No Volume";
-      if (state.navigation.reverseMode) {
-        vName = "reverse mode";
-      } else if (state.navigation.currentVolume) {
+      if (state.navigation.currentVolume) {
         vName = state.navigation.currentVolume->volumeName();
       }
       std::vector<std::string> lines;

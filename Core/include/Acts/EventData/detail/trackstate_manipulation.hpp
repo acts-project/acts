@@ -131,7 +131,7 @@ namespace detail {
   /// @param edm The edm object for which the parameters will be extracted
   template <typename parametric_state_t, BOOST_VARIANT_ENUM_PARAMS(typename T)>
   parametric_state_t&
-  parametricState(boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm)
+  getParametricState(boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& edm)
   {
     static const ParametricStateGetter<parametric_state_t> psg
         = ParametricStateGetter<parametric_state_t>();

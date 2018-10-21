@@ -29,9 +29,9 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/Common/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "ExtrapolatorTestGeometry.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -44,8 +44,11 @@ namespace Test {
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
-  std::vector<std::shared_ptr<const Surface>> stepState;
-  auto tGeometry = testGeometry<PlaneSurface>(stepState);
+  std::vector<std::unique_ptr<const Surface>> stepState;
+
+  CylindricalTrackingGeometry cGeometry;
+  auto                        tGeometry = cGeometry();
+
   bool debugMode = false;
 
   // get the navigator and provide the TrackingGeometry
@@ -60,12 +63,8 @@ namespace Test {
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
-<<<<<<< HEAD
   const int ntests    = 100;
   bool      debugMode = false;
-=======
-  const int ntests = 10;
->>>>>>> f03391c4... First KalmanActor version
 
   // A plane selector for the SurfaceCollector
   struct PlaneSelector

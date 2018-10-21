@@ -8,10 +8,11 @@
 
 ///  Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
+
 #include <boost/test/included/unit_test.hpp>
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "GeometryCreation.hpp"
+#include "TrackingVolumeCreation.hpp"
 
 namespace Acts {
 

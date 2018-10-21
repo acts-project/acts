@@ -23,10 +23,10 @@
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/Common/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "ExtrapolatorTestGeometry.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -134,8 +134,9 @@ namespace Test {
   }
 
   // the surface cache & the creation of the geometry
-  std::vector<std::shared_ptr<const Surface>> surfaceCache;
-  auto tGeometry = testGeometry<PlaneSurface>(surfaceCache);
+
+  CylindricalTrackingGeometry cGeometry;
+  auto                        tGeometry = cGeometry();
 
   // the debug boolean
   bool debug = true;
