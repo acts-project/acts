@@ -104,7 +104,7 @@ namespace Test {
     CHECK_CLOSE_REL(discTrapezoidalBoundsObject.rCenter(), 2.524337798, 1e-6);
     //
     /// Test halfPhiSector (redundant; not configurable)
-    BOOST_CHECK_SMALL(discTrapezoidalBoundsObject.stereo(), 1e-6);
+    CHECK_SMALL(discTrapezoidalBoundsObject.stereo(), 1e-6);
     //
     /// Test minHalflengthX
     CHECK_CLOSE_REL(

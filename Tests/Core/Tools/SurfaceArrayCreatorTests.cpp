@@ -36,7 +36,7 @@ namespace Test {
 #define CHECK_ROTATION_ANGLE(t, a, tolerance)                                  \
   {                                                                            \
     Vector3D v = (*t) * Vector3D(1, 0, 0);                                     \
-    BOOST_CHECK_SMALL(phi(v) - (a), tolerance);                                \
+    CHECK_CLOSE_ABS(phi(v), (a), tolerance);                                   \
   }
 
   using SrfVec = std::vector<std::shared_ptr<const Surface>>;
@@ -324,7 +324,7 @@ namespace Test {
       CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
       CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
+      CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift  = 0.;
@@ -390,7 +390,7 @@ namespace Test {
       CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
       CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
       BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
+      CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift  = 0.;
@@ -455,8 +455,8 @@ namespace Test {
         = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
     BOOST_TEST(axis.nBins == 1);
 
-    BOOST_CHECK_SMALL(axis.max - phi(Vector3D(8, 1, 0)), 1e-3);
-    BOOST_CHECK_SMALL(axis.min - phi(Vector3D(8, -1, 0)), 1e-3);
+    CHECK_CLOSE_ABS(axis.max, phi(Vector3D(8, 1, 0)), 1e-3);
+    CHECK_CLOSE_ABS(axis.min, phi(Vector3D(8, -1, 0)), 1e-3);
     BOOST_TEST(axis.bType == equidistant);
   }
 
@@ -508,8 +508,8 @@ namespace Test {
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_Z_3.obj");
     BOOST_TEST(axis.nBins == 10);
-    BOOST_CHECK_SMALL(axis.max - 30.9749, 1e-3);
-    BOOST_CHECK_SMALL(axis.min + 0.974873, 1e-3);
+    CHECK_CLOSE_ABS(axis.max, 30.9749, 1e-3);
+    CHECK_CLOSE_ABS(axis.min, -0.974873, 1e-3);
     BOOST_TEST(axis.bType == equidistant);
   }
 
@@ -526,8 +526,8 @@ namespace Test {
     ProtoLayer pl  = ProtoLayer(surfacesRaw);
     auto axis = createEquidistantAxis(surfacesRaw, BinningValue::binR, pl, trf);
     BOOST_TEST(axis.nBins == 1);
-    BOOST_CHECK_SMALL(axis.max - perp(Vector3D(17, 1, 0)), 1e-3);
-    BOOST_CHECK_SMALL(axis.min - 13, 1e-3);
+    CHECK_CLOSE_ABS(axis.max, perp(Vector3D(17, 1, 0)), 1e-3);
+    CHECK_CLOSE_ABS(axis.min, 13, 1e-3);
     BOOST_TEST(axis.bType == equidistant);
 
     // multiple rings
@@ -549,7 +549,7 @@ namespace Test {
     BOOST_TEST(axis.nBins == 3);
     CHECK_CLOSE_REL(axis.max, perp(Vector3D(20 + 2, 1, 0)), 1e-3);
     // BOOST_TEST(axis.min == 8, tt::tolerance(1e-3)); // fails for some reason
-    BOOST_CHECK_SMALL((axis.min - 8), 1e-3);
+    CHECK_CLOSE_ABS(axis.min, 8, 1e-3);
     BOOST_TEST(axis.bType == equidistant);
   }
 

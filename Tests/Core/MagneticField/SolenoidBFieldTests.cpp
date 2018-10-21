@@ -54,8 +54,8 @@ namespace Test {
       {
         Vector3D B1 = bField.getField({r, 0, 0}, cache);
         Vector3D B2 = bField.getField({-r, 0, 0}, cache);
-        BOOST_CHECK_SMALL(B1.x(), tol);
-        BOOST_CHECK_SMALL(B1.y(), tol);
+        CHECK_SMALL(B1.x(), tol);
+        CHECK_SMALL(B1.y(), tol);
         BOOST_TEST(std::abs(B1.z()) > tol_B);  // greater than zero
         // check symmetry: at z=0 it should be exactly symmetric
         CHECK_CLOSE_ABS(B1, B2, tol_B);

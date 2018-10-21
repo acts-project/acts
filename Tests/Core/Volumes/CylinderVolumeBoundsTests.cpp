@@ -6,11 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Cylinder Volume Bounds Tests
 #include <boost/test/included/unit_test.hpp>
-
 #include <boost/test/data/test_case.hpp>
+// clang-format on
+
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
@@ -82,10 +85,8 @@ namespace Test {
     // checks for zero value. double precision value is not exact.
     // boost's equality test does a relative tolerance check  which
     // fails b/c relative diff is large: Perform only abs distance test here
-    BOOST_CHECK_SMALL(negDiscPosZ + cylBounds.halflengthZ() - centerPosZ,
-                      10e-12);
-    BOOST_CHECK_SMALL(posDiscPosZ - cylBounds.halflengthZ() - centerPosZ,
-                      10e-12);
+    CHECK_CLOSE_ABS(negDiscPosZ + cylBounds.halflengthZ(), centerPosZ, 1e-12);
+    CHECK_CLOSE_ABS(posDiscPosZ - cylBounds.halflengthZ(), centerPosZ, 1e-12);
     // orientation of disc surfaces
     // positive disc durface should point in positive direction in the frame of
     // the volume
