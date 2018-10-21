@@ -258,7 +258,7 @@ namespace Test {
     }
 
     auto measurements = mResult.template get<MeasurementCreator::result_type>();
-    BOOST_TEST(measurements.size() == 6);
+    BOOST_CHECK_EQUAL(measurements.size(), 6);
 
     // The KalmanFitter - we use the eigen stepper for covariance transport
     // Build navigator for the measurement creatoin
@@ -341,7 +341,7 @@ namespace Test {
     auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
 
     // Count one hole
-    BOOST_TEST(fittedWithHoleTrack.missedActiveSurfaces.size() == 1);
+    BOOST_CHECK_EQUAL(fittedWithHoleTrack.missedActiveSurfaces.size(), 1);
     // And the parameters should be different
     BOOST_CHECK(
         !Acts::Test::checkCloseRel(fittedParameters.parameters(),

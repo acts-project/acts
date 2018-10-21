@@ -48,7 +48,7 @@ namespace Test {
       const double halfX(10.), halfY(5.);  // 20 x 10 rectangle
       auto pRectangle  = std::make_shared<const RectangleBounds>(halfX, halfY);
       auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
-      BOOST_TEST(pPlaneLayer->layerType() == LayerType::active);
+      BOOST_CHECK_EQUAL(pPlaneLayer->layerType(), LayerType::active);
       // next level: need an array of Surfaces;
       // bounds object, rectangle type
       auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
@@ -63,11 +63,12 @@ namespace Test {
       auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
       auto pPlaneLayerFromSurfaces = PlaneLayer::create(
           pTransform, pRectangle, std::move(pSurfaceArray));
-      BOOST_TEST(pPlaneLayerFromSurfaces->layerType() == LayerType::active);
+      BOOST_CHECK_EQUAL(pPlaneLayerFromSurfaces->layerType(),
+                        LayerType::active);
       // construct with thickness:
       auto pPlaneLayerWithThickness = PlaneLayer::create(
           pTransform, pRectangle, std::move(pSurfaceArray), thickness);
-      BOOST_TEST(pPlaneLayerWithThickness->thickness() == thickness);
+      BOOST_CHECK_EQUAL(pPlaneLayerWithThickness->thickness(), thickness);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
@@ -78,8 +79,8 @@ namespace Test {
                                std::move(pSurfaceArray),
                                thickness,
                                std::move(ad));
-      BOOST_TEST(pPlaneLayerWithApproachDescriptor->approachDescriptor()
-                 == adPtr);
+      BOOST_CHECK_EQUAL(pPlaneLayerWithApproachDescriptor->approachDescriptor(),
+                        adPtr);
       // with the layerType specified...
       auto pPlaneLayerWithLayerType
           = PlaneLayer::create(pTransform,
@@ -88,7 +89,8 @@ namespace Test {
                                thickness,
                                std::move(ad),
                                LayerType::passive);
-      BOOST_TEST(pPlaneLayerWithLayerType->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pPlaneLayerWithLayerType->layerType(),
+                        LayerType::passive);
     }
 
     /// Unit test for testing Layer properties
@@ -100,8 +102,8 @@ namespace Test {
       auto pRectangle  = std::make_shared<const RectangleBounds>(halfX, halfY);
       auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
       // auto planeSurface = pPlaneLayer->surfaceRepresentation();
-      BOOST_TEST(pPlaneLayer->surfaceRepresentation().name()
-                 == std::string("Acts::PlaneSurface"));
+      BOOST_CHECK_EQUAL(pPlaneLayer->surfaceRepresentation().name(),
+                        std::string("Acts::PlaneSurface"));
     }
 
     BOOST_AUTO_TEST_SUITE_END()

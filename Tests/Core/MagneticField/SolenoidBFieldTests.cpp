@@ -56,7 +56,7 @@ namespace Test {
         Vector3D B2 = bField.getField({-r, 0, 0}, cache);
         CHECK_SMALL(B1.x(), tol);
         CHECK_SMALL(B1.y(), tol);
-        BOOST_TEST(std::abs(B1.z()) > tol_B);  // greater than zero
+        BOOST_CHECK_GT(std::abs(B1.z()), tol_B);  // greater than zero
         // check symmetry: at z=0 it should be exactly symmetric
         CHECK_CLOSE_ABS(B1, B2, tol_B);
 
@@ -87,10 +87,10 @@ namespace Test {
             //}
 
             // non-zero z
-            BOOST_TEST(std::abs(B_zp_rp.z()) > tol_B);
-            BOOST_TEST(std::abs(B_zn_rp.z()) > tol_B);
-            BOOST_TEST(std::abs(B_zn_rn.z()) > tol_B);
-            BOOST_TEST(std::abs(B_zp_rn.z()) > tol_B);
+            BOOST_CHECK_GT(std::abs(B_zp_rp.z()), tol_B);
+            BOOST_CHECK_GT(std::abs(B_zn_rp.z()), tol_B);
+            BOOST_CHECK_GT(std::abs(B_zn_rn.z()), tol_B);
+            BOOST_CHECK_GT(std::abs(B_zp_rn.z()), tol_B);
             if (i > 0) {
               // z components should be the same for +- r
               CHECK_CLOSE_ABS(B_zp_rp.z(), B_zp_rn.z(), tol_B);

@@ -6,20 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Rectangle Bounds Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include <algorithm>
 #include <limits>
+
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
@@ -52,7 +50,8 @@ namespace Test {
   {
     const double    halfX(10.), halfY(5.);
     RectangleBounds twentyByTenRectangle(halfX, halfY);
-    BOOST_TEST(twentyByTenRectangle.type() == Acts::SurfaceBounds::Rectangle);
+    BOOST_CHECK_EQUAL(twentyByTenRectangle.type(),
+                      Acts::SurfaceBounds::Rectangle);
     //
     // nonsensical bounds are also permitted, but maybe should not be
     const double zeroHalfX(0.), zeroHalfY(0.);
@@ -62,21 +61,21 @@ namespace Test {
     //
     // BOOST_TEST_MESSAGE("Initialise with zero dimensions");
     RectangleBounds zeroDimensionsRectangle(zeroHalfX, zeroHalfY);
-    BOOST_TEST(zeroDimensionsRectangle.type()
-               == Acts::SurfaceBounds::Rectangle);
+    BOOST_CHECK_EQUAL(zeroDimensionsRectangle.type(),
+                      Acts::SurfaceBounds::Rectangle);
     //
     // BOOST_TEST_MESSAGE("Initialise with infinite dimensions");
     RectangleBounds infinite(infHalfX, infHalfY);
-    BOOST_TEST(infinite.type() == Acts::SurfaceBounds::Rectangle);
+    BOOST_CHECK_EQUAL(infinite.type(), Acts::SurfaceBounds::Rectangle);
     //
     // BOOST_TEST_MESSAGE("Initialise with NaN dimensions");
     RectangleBounds nanRectangle(nanHalfX, nanHalfY);
-    BOOST_TEST(nanRectangle.type() == Acts::SurfaceBounds::Rectangle);
+    BOOST_CHECK_EQUAL(nanRectangle.type(), Acts::SurfaceBounds::Rectangle);
     //
     // BOOST_TEST_MESSAGE("Initialise with negative dimensions");
     RectangleBounds negativeDimensionedRectangle(negHalfX, negHalfY);
-    BOOST_TEST(negativeDimensionedRectangle.type()
-               == Acts::SurfaceBounds::Rectangle);
+    BOOST_CHECK_EQUAL(negativeDimensionedRectangle.type(),
+                      Acts::SurfaceBounds::Rectangle);
   }
 
   /// Unit test for testing RectangleBounds properties
@@ -85,20 +84,23 @@ namespace Test {
   {
     const double    halfX(10.), halfY(5.);
     RectangleBounds rect(halfX, halfY);
-    BOOST_TEST(rect.halflengthX() == 10.);
-    BOOST_TEST(rect.halflengthY() == 5.);
+    BOOST_CHECK_EQUAL(rect.halflengthX(), 10.);
+    BOOST_CHECK_EQUAL(rect.halflengthY(), 5.);
     const std::vector<Vector2D> coords
         = {{10., -5.}, {10., 5.}, {-10., 5.}, {-10., -5.}};
     // equality, ensure ordering is ok
-    BOOST_TEST(
-        std::equal(coords.begin(), coords.end(), rect.vertices().begin()));
+    const auto& rectVertices = rect.vertices();
+    BOOST_CHECK_EQUAL_COLLECTIONS(coords.cbegin(),
+                                  coords.cend(),
+                                  rectVertices.cbegin(),
+                                  rectVertices.cend());
     const Vector2D pointA{1.0, 1.0}, pointB{9.0, 1.0}, outside{10.1, 5.1};
     // distance is signed, from boundary to point. (doesn't seem right, given
     // the name of the method)
-    BOOST_TEST(rect.distanceToBoundary(pointA) == -4.0);
-    BOOST_TEST(rect.distanceToBoundary(pointB) == -1.0);
+    CHECK_CLOSE_REL(rect.distanceToBoundary(pointA), -4.0, 1e-6);
+    CHECK_CLOSE_REL(rect.distanceToBoundary(pointB), -1.0, 1e-6);
     BoundaryCheck bcheck(true, true);
-    BOOST_TEST(rect.inside(pointA, bcheck));
+    BOOST_CHECK(rect.inside(pointA, bcheck));
   }
   BOOST_AUTO_TEST_CASE(RectangleBoundsAssignment)
   {
@@ -108,7 +110,10 @@ namespace Test {
     rectB                       = rectA;
     const auto originalVertices = rectA.vertices();
     const auto assignedVertices = rectB.vertices();
-    BOOST_TEST(originalVertices == assignedVertices);
+    BOOST_CHECK_EQUAL_COLLECTIONS(originalVertices.cbegin(),
+                                  originalVertices.cend(),
+                                  assignedVertices.cbegin(),
+                                  assignedVertices.cend());
   }
 
   BOOST_AUTO_TEST_CASE(RectangleBoundsClone)
@@ -116,10 +121,13 @@ namespace Test {
     const double    halfX(10.), halfY(5.);
     RectangleBounds rectA(halfX, halfY);
     auto            rectB = rectA.clone();
-    BOOST_TEST(bool(rectB));  // not null pointer
+    BOOST_CHECK_NE(rectB, nullptr);
     const auto& originalVertices = rectA.vertices();
     const auto& clonedVertices   = rectB->vertices();
-    BOOST_TEST(originalVertices == clonedVertices);
+    BOOST_CHECK_EQUAL_COLLECTIONS(originalVertices.cbegin(),
+                                  originalVertices.cend(),
+                                  clonedVertices.cbegin(),
+                                  clonedVertices.cend());
     delete rectB;
   }
 
@@ -130,14 +138,14 @@ namespace Test {
 
     std::cout << var_data << std::endl;
     variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_TEST(var_map.get<std::string>("type") == "RectangleBounds");
+    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "RectangleBounds");
     variant_map pl = var_map.get<variant_map>("payload");
-    BOOST_TEST(pl.get<double>("halflengthX") == 10);
-    BOOST_TEST(pl.get<double>("halflengthY") == 15);
+    BOOST_CHECK_EQUAL(pl.get<double>("halflengthX"), 10.);
+    BOOST_CHECK_EQUAL(pl.get<double>("halflengthY"), 15.);
 
     RectangleBounds rect2(var_data);
-    BOOST_TEST(rect.halflengthX() == rect2.halflengthX());
-    BOOST_TEST(rect.halflengthY() == rect2.halflengthY());
+    BOOST_CHECK_EQUAL(rect.halflengthX(), rect2.halflengthX());
+    BOOST_CHECK_EQUAL(rect.halflengthY(), rect2.halflengthY());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

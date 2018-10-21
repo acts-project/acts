@@ -52,13 +52,13 @@ namespace Test {
     std::vector<size_t> nBins_rz  = {rPos.size(), zPos.size()};
     std::vector<double> minima_rz = {0., 0.};
     std::vector<double> maxima_rz = {3., 3.};
-    BOOST_TEST(mapper_rz.getNBins() == nBins_rz);
+    BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_TEST(mapper_rz.getMin() == minima_rz);
+    BOOST_CHECK(mapper_rz.getMin() == minima_rz);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_TEST(mapper_rz.getMax() == maxima_rz);
+    BOOST_CHECK(mapper_rz.getMax() == maxima_rz);
 
     // create b field in xyz
     std::vector<Acts::Vector3D> bField_xyz;
@@ -80,13 +80,13 @@ namespace Test {
     std::vector<size_t> nBins_xyz  = {xPos.size(), yPos.size(), zPos.size()};
     std::vector<double> minima_xyz = {0., 0., 0.};
     std::vector<double> maxima_xyz = {3., 3., 3.};
-    BOOST_TEST(mapper_xyz.getNBins() == nBins_xyz);
+    BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_TEST(mapper_xyz.getMin() == minima_xyz);
+    BOOST_CHECK(mapper_xyz.getMin() == minima_xyz);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_TEST(mapper_xyz.getMax() == maxima_xyz);
+    BOOST_CHECK(mapper_xyz.getMax() == maxima_xyz);
 
     // check if filled value is expected value in rz
     Acts::Vector3D pos0_rz(0., 0., 0.);
@@ -129,9 +129,9 @@ namespace Test {
     auto b2_xyz = bField_xyz.at(localToGlobalBin_xyz(
         {{2, 2, 2}}, {{xPos.size(), yPos.size(), zPos.size()}}));
     // check the value
-    BOOST_TEST(value0_xyz == b0_xyz);
-    BOOST_TEST(value1_xyz == b1_xyz);
-    BOOST_TEST(value2_xyz == b2_xyz);
+    BOOST_CHECK_EQUAL(value0_xyz, b0_xyz);
+    BOOST_CHECK_EQUAL(value1_xyz, b1_xyz);
+    BOOST_CHECK_EQUAL(value2_xyz, b2_xyz);
 
     // checkx-,y-,z-symmetry - need to check close (because of interpolation
     // there can be small differences)
@@ -168,15 +168,15 @@ namespace Test {
     std::vector<size_t> nBins_rz  = {rPos.size(), 2 * zPos.size() - 1};
     std::vector<double> minima_rz = {0., -2.};
     std::vector<double> maxima_rz = {3., 3.};
-    BOOST_TEST(mapper_rz.getNBins() == nBins_rz);
+    BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
     auto vec  = mapper_rz.getNBins();
     auto vec0 = mapper_rz.getMin();
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_TEST(mapper_rz.getMin() == minima_rz);
+    BOOST_CHECK(mapper_rz.getMin() == minima_rz);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_TEST(mapper_rz.getMax() == maxima_rz);
+    BOOST_CHECK(mapper_rz.getMax() == maxima_rz);
 
     // the bfield values in xyz
     std::vector<Acts::Vector3D> bField_xyz;
@@ -203,13 +203,13 @@ namespace Test {
         = {2 * xPos.size() - 1, 2 * yPos.size() - 1, 2 * zPos.size() - 1};
     std::vector<double> minima_xyz = {-2., -2., -2.};
     std::vector<double> maxima_xyz = {3., 3., 3.};
-    BOOST_TEST(mapper_xyz.getNBins() == nBins_xyz);
+    BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_TEST(mapper_xyz.getMin() == minima_xyz);
+    BOOST_CHECK(mapper_xyz.getMin() == minima_xyz);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_TEST(mapper_xyz.getMax() == maxima_xyz);
+    BOOST_CHECK(mapper_xyz.getMax() == maxima_xyz);
 
     Acts::Vector3D pos0(1.2, 1.3, 1.4);
     Acts::Vector3D pos1(1.2, 1.3, -1.4);
@@ -308,7 +308,7 @@ namespace Test {
     std::vector<size_t> nBins_rz  = {rPos.size(), 2 * zPos.size() - 1};
     std::vector<double> minima_rz = {0., -((nBins - 1) * stepZ)};
     std::vector<double> maxima_rz = {nBins * stepR, nBins * stepZ};
-    BOOST_TEST(mapper_rz.getNBins() == nBins_rz);
+    BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
     CHECK_CLOSE_ABS(mapper_rz.getMin(), minima_rz, 1e-10);
@@ -342,7 +342,7 @@ namespace Test {
         -((nBins - 1) * stepR), -((nBins - 1) * stepR), -((nBins - 1) * stepZ)};
     std::vector<double> maxima_xyz
         = {nBins * stepR, nBins * stepR, nBins * stepZ};
-    BOOST_TEST(mapper_xyz.getNBins() == nBins_xyz);
+    BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
     CHECK_CLOSE_REL(mapper_xyz.getMin(), minima_xyz, 1e-10);

@@ -123,8 +123,7 @@ namespace Test {
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
-    BOOST_TEST(
-        (epropagator.propagate(start, options).endParameters != nullptr));
+    BOOST_CHECK(epropagator.propagate(start, options).endParameters != nullptr);
   }
 
   // This test case checks that no segmentation fault appears
@@ -202,8 +201,7 @@ namespace Test {
       // Extrapolate & check
       const auto& cresult
           = epropagator.propagate(start, *csurface, optionsEmpty).endParameters;
-      bool worked = (cresult != nullptr);
-      BOOST_TEST(worked);
+      BOOST_CHECK(cresult != nullptr);
     }
   }
 
@@ -264,8 +262,8 @@ namespace Test {
     const auto& result = epropagator.propagate(start, options);
     if (result.endParameters) {
       // test that you actually lost some energy
-      BOOST_TEST(result.endParameters->momentum().norm()
-                 < start.momentum().norm());
+      BOOST_CHECK_LT(result.endParameters->momentum().norm(),
+                     start.momentum().norm());
     }
 
     if (debugMode) {

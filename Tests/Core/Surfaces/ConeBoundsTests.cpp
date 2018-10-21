@@ -43,22 +43,24 @@ namespace Test {
     const bool symmetric(false);
     BOOST_TEST_CHECKPOINT("Four parameter constructor (last two at default)");
     ConeBounds defaultConeBounds(alpha, symmetric);
-    BOOST_TEST(defaultConeBounds.type() == SurfaceBounds::Cone);
+    BOOST_CHECK_EQUAL(defaultConeBounds.type(), SurfaceBounds::Cone);
     BOOST_TEST_CHECKPOINT("Four parameter constructor");
     ConeBounds fourParameterConstructed(alpha, symmetric, halfPhi, averagePhi);
-    BOOST_TEST(fourParameterConstructed.type() == SurfaceBounds::Cone);
+    BOOST_CHECK_EQUAL(fourParameterConstructed.type(), SurfaceBounds::Cone);
     BOOST_TEST_CHECKPOINT("Five parameter constructor (last two at default)");
     ConeBounds defaulted5ParamConeBounds(alpha, zMin, zMax);
-    BOOST_TEST(defaulted5ParamConeBounds.type() == SurfaceBounds::Cone);
+    BOOST_CHECK_EQUAL(defaulted5ParamConeBounds.type(), SurfaceBounds::Cone);
     BOOST_TEST_CHECKPOINT("Five parameter constructor)");
     ConeBounds fiveParamConstructedConeBounds(
         alpha, zMin, zMax, halfPhi, averagePhi);
-    BOOST_TEST(fiveParamConstructedConeBounds.type() == SurfaceBounds::Cone);
+    BOOST_CHECK_EQUAL(fiveParamConstructedConeBounds.type(),
+                      SurfaceBounds::Cone);
     BOOST_TEST_CHECKPOINT("Copy constructor");
     ConeBounds copyConstructedConeBounds(fiveParamConstructedConeBounds);
-    BOOST_TEST(copyConstructedConeBounds == fiveParamConstructedConeBounds);
+    BOOST_CHECK_EQUAL(copyConstructedConeBounds,
+                      fiveParamConstructedConeBounds);
     auto pClonedConeBounds = fiveParamConstructedConeBounds.clone();
-    BOOST_TEST(*pClonedConeBounds == fiveParamConstructedConeBounds);
+    BOOST_CHECK_EQUAL(*pClonedConeBounds, fiveParamConstructedConeBounds);
     delete pClonedConeBounds;
   }
   /// Unit tests for properties of ConeBounds object
@@ -72,10 +74,10 @@ namespace Test {
     ConeBounds     coneBoundsObject(alpha, zMin, zMax, halfPhi, averagePhi);
     //
     /// test for type (redundant)
-    BOOST_TEST(coneBoundsObject.type() == SurfaceBounds::Cone);
+    BOOST_CHECK_EQUAL(coneBoundsObject.type(), SurfaceBounds::Cone);
     //
     /// test for inside
-    BOOST_TEST(coneBoundsObject.inside(origin) == false);
+    BOOST_CHECK(!coneBoundsObject.inside(origin));
     //
     /// test for distanceToBoundary
     // std::cout << coneBoundsObject.distanceToBoundary(origin) << std::endl;
@@ -107,7 +109,7 @@ namespace Test {
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
     coneBoundsObject.dump(dumpOuput);
-    BOOST_TEST(dumpOuput.is_equal(
+    BOOST_CHECK(dumpOuput.is_equal(
         "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) = "
         "(0.4142136, 3.0000000, 6.0000000, 0.0000000, 0.7853982)"));
   }
@@ -120,7 +122,7 @@ namespace Test {
     ConeBounds originalConeBounds(alpha, zMin, zMax, halfPhi, averagePhi);
     ConeBounds assignedConeBounds(0.1, 2.3, 4.5, 1.2, 2.1);
     assignedConeBounds = originalConeBounds;
-    BOOST_TEST(assignedConeBounds == originalConeBounds);
+    BOOST_CHECK_EQUAL(assignedConeBounds, originalConeBounds);
   }
 
   BOOST_AUTO_TEST_CASE(ConeBounds_toVariantData)
@@ -133,7 +135,7 @@ namespace Test {
     std::cout << var_cone << std::endl;
 
     variant_map var_cone_map = boost::get<variant_map>(var_cone);
-    BOOST_TEST(var_cone_map.get<std::string>("type") == "ConeBounds");
+    BOOST_CHECK_EQUAL(var_cone_map.get<std::string>("type"), "ConeBounds");
     variant_map pl = var_cone_map.get<variant_map>("payload");
     BOOST_CHECK_EQUAL(pl.get<double>("alpha"), alpha);
     BOOST_CHECK_EQUAL(pl.get<double>("zMin"), zMin);

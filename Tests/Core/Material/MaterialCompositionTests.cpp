@@ -120,8 +120,8 @@ namespace Test {
       totalFraction += eFraction.fraction();
     }
     // to better fit we need to implement some proper weight scaling
-    BOOST_TEST(std::abs(1. - totalFraction)
-               < elementsC.elements().size() * elMaxTolerance);
+    BOOST_CHECK_LT(std::abs(1. - totalFraction),
+                   elementsC.elements().size() * elMaxTolerance);
   }
 
   BOOST_AUTO_TEST_CASE(MaterialComposition_movable_test)

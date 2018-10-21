@@ -111,7 +111,7 @@ namespace Test {
     // Test to extract the surface of these guys
     for (auto& ts : trackStates) {
       const Surface* sf = &ts.referenceSurface();
-      BOOST_TEST(sf == plane.get());
+      BOOST_CHECK_EQUAL(sf, plane.get());
     }
 
     // Create predicted, filtered and smoothed parameters
@@ -122,25 +122,25 @@ namespace Test {
     // Get the predicted parameters back from the trackState
     auto& ptsfList          = trackStates[2];
     auto& ataPlanefListPred = ptsfList.parameter.predicted;
-    BOOST_TEST(ataPlanefListPred);
+    BOOST_CHECK(ataPlanefListPred);
 
     // Check that the other parameters are empty
     auto& ataPlanefListUpdt = ptsfList.parameter.filtered;
-    BOOST_TEST(!ataPlanefListUpdt);
+    BOOST_CHECK(!ataPlanefListUpdt);
 
     auto& ataPlanefListSmthd = ptsfList.parameter.smoothed;
-    BOOST_TEST(!ataPlanefListSmthd);
+    BOOST_CHECK(!ataPlanefListSmthd);
 
     // Get the track States from the list
     auto& m2DfList = trackStates[1];
 
     m2DfList.parameter.filtered = std::move(ataPlaneUpdt);
     auto& ataPlanefListUpdtM2D  = m2DfList.parameter.filtered;
-    BOOST_TEST(ataPlanefListUpdtM2D);
+    BOOST_CHECK(ataPlanefListUpdtM2D);
 
     m2DfList.parameter.predicted = std::move(ataPlanePred);
     auto& ataPlanefListPred2D    = m2DfList.parameter.predicted;
-    BOOST_TEST(ataPlanefListPred2D);
+    BOOST_CHECK(ataPlanefListPred2D);
 
     // Test the sorting helper
     BoundParameters ataPlaneAt1(nullptr, pars, plane);
@@ -159,14 +159,14 @@ namespace Test {
     std::sort(unorderedStates.begin(), unorderedStates.end(), plSorter);
 
     auto firstOrdered = unorderedStates[0];
-    BOOST_TEST(firstOrdered.parameter.pathLength == 1.);
+    BOOST_CHECK_EQUAL(firstOrdered.parameter.pathLength, 1.);
 
     auto secondOrdered = unorderedStates[1];
-    BOOST_TEST(secondOrdered.parameter.pathLength == 2.);
+    BOOST_CHECK_EQUAL(secondOrdered.parameter.pathLength, 2.);
 
     auto& pState = firstOrdered.parameter;
 
-    BOOST_TEST(pState.pathLength == 1.);
+    BOOST_CHECK_EQUAL(pState.pathLength, 1.);
 
     std::shuffle(unorderedStates.begin(), unorderedStates.end(), generator);
 

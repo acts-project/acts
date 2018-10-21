@@ -91,11 +91,11 @@ namespace Test {
                     0.0001);
 
     // The material properties are not the same
-    BOOST_TEST(abc != abcNS);
+    BOOST_CHECK_NE(abc, abcNS);
     // Because thickness is not the same
-    BOOST_TEST(abc.thickness() != abcNS.thickness());
+    BOOST_CHECK_NE(abc.thickness(), abcNS.thickness());
     // And the densities are differnt
-    BOOST_TEST(abc.averageRho() != abcNS.averageRho());
+    BOOST_CHECK_NE(abc.averageRho(), abcNS.averageRho());
     // Though the amount should be the same
     CHECK_CLOSE_REL(abc.thicknessInX0(), abcNS.thicknessInX0(), 0.0001);
     CHECK_CLOSE_REL(abc.thicknessInL0(), abcNS.thicknessInL0(), 0.0001);
@@ -115,8 +115,8 @@ namespace Test {
     MaterialProperties halfScaled = mat;
     halfScaled *= 0.5;
 
-    BOOST_TEST(mat != halfMat);
-    BOOST_TEST(halfMat == halfScaled);
+    BOOST_CHECK_NE(mat, halfMat);
+    BOOST_CHECK_EQUAL(halfMat, halfScaled);
 
     // this means half the scattering
     CHECK_CLOSE_REL(mat.thicknessInX0(), 2. * halfMat.thicknessInX0(), 0.0001);

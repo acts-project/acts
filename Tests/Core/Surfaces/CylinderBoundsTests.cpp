@@ -6,23 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Cylinder Bounds Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
+#include <limits>
+
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-//
-#include <limits>
 
 namespace Acts {
 
@@ -34,17 +30,18 @@ namespace Test {
     /// test default construction
     // CylinderBounds defaultConstructedCylinderBounds;  // deleted
     double radius(0.5), halfz(10.), halfphi(M_PI / 2.0), averagePhi(M_PI / 2.0);
-    BOOST_TEST(CylinderBounds(radius, halfz).type() == SurfaceBounds::Cylinder);
-    BOOST_TEST(CylinderBounds(radius, halfphi, halfz).type()
-               == SurfaceBounds::Cylinder);
-    BOOST_TEST(CylinderBounds(radius, averagePhi, halfphi, halfz).type()
-               == SurfaceBounds::Cylinder);
+    BOOST_CHECK_EQUAL(CylinderBounds(radius, halfz).type(),
+                      SurfaceBounds::Cylinder);
+    BOOST_CHECK_EQUAL(CylinderBounds(radius, halfphi, halfz).type(),
+                      SurfaceBounds::Cylinder);
+    BOOST_CHECK_EQUAL(CylinderBounds(radius, averagePhi, halfphi, halfz).type(),
+                      SurfaceBounds::Cylinder);
     //
     /// test copy construction;
     CylinderBounds cylinderBounds(radius, halfz);
     CylinderBounds copyConstructedCylinderBounds(cylinderBounds);
-    BOOST_TEST(copyConstructedCylinderBounds.type() == SurfaceBounds::Cylinder,
-               "Test trivial method on copy constructed object");
+    BOOST_CHECK_EQUAL(copyConstructedCylinderBounds.type(),
+                      SurfaceBounds::Cylinder);
   }
 
   /// Unit tests for CylinderBounds properties
@@ -65,7 +62,7 @@ namespace Test {
     delete pCylinderBoundsClone;
 
     /// test for type()
-    BOOST_TEST(cylinderBoundsObject.type() == SurfaceBounds::Cylinder);
+    BOOST_CHECK_EQUAL(cylinderBoundsObject.type(), SurfaceBounds::Cylinder);
 
     /// test for inside(), 2D coords are r or phi ,z? : needs clarification
     const Vector2D      origin{0., 0.};
@@ -75,50 +72,55 @@ namespace Test {
     const Vector2D      unitZ{0.0, 1.0};
     const Vector2D      unitPhi{1.0, 0.0};
     const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
-    BOOST_TEST(
-        cylinderBoundsObject.inside(atPiBy2, trueBoundaryCheckWithTolerance)
-        == true);
-    BOOST_TEST(
-        cylinderBoundsSegment.inside(unitPhi, trueBoundaryCheckWithTolerance)
-        == false);
-    BOOST_TEST(
-        cylinderBoundsObject.inside(origin, trueBoundaryCheckWithTolerance)
-        == true);
+    BOOST_CHECK(
+        cylinderBoundsObject.inside(atPiBy2, trueBoundaryCheckWithTolerance));
+    BOOST_CHECK(
+        !cylinderBoundsSegment.inside(unitPhi, trueBoundaryCheckWithTolerance));
+    BOOST_CHECK(
+        cylinderBoundsObject.inside(origin, trueBoundaryCheckWithTolerance));
 
     /// test for inside3D() with Vector3D argument
     const Vector3D origin3D{0., 0., 0.};
-    BOOST_TEST(
-        cylinderBoundsObject.inside3D(origin3D, trueBoundaryCheckWithTolerance)
-        == false);
+    BOOST_CHECK(!cylinderBoundsObject.inside3D(origin3D,
+                                               trueBoundaryCheckWithTolerance));
 
     /// test for distanceToBoundary
-    BOOST_TEST(cylinderBoundsObject.distanceToBoundary(origin) == 0.5);  // fail
-    BOOST_TEST(cylinderBoundsObject.distanceToBoundary(beyondEnd)
-               == 10.0);  // pass
+    CHECK_CLOSE_REL(cylinderBoundsObject.distanceToBoundary(origin),
+                    0.5,
+                    1e-6);  // fail
+    CHECK_CLOSE_REL(cylinderBoundsObject.distanceToBoundary(beyondEnd),
+                    10.0,
+                    1e-6);  // pass
     double sinPiBy8 = std::sin(M_PI / 8.);
-    BOOST_TEST(cylinderBoundsSegment.distanceToBoundary(atPi)
-               == sinPiBy8);  // pass
-    BOOST_TEST(cylinderBoundsSegment.distanceToBoundary(origin)
-               == 0.5);  // fail
+    CHECK_CLOSE_REL(cylinderBoundsSegment.distanceToBoundary(atPi),
+                    sinPiBy8,
+                    1e-6);  // pass
+    CHECK_CLOSE_REL(cylinderBoundsSegment.distanceToBoundary(origin),
+                    0.5,
+                    1e-6);  // fail
 
     /// test for r()
-    BOOST_TEST(cylinderBoundsObject.r() == nominalRadius);
+    CHECK_CLOSE_REL(cylinderBoundsObject.r(), nominalRadius, 1e-6);
 
     /// test for averagePhi
-    BOOST_TEST(cylinderBoundsObject.averagePhi() == averagePhi);
+    CHECK_CLOSE_REL(cylinderBoundsObject.averagePhi(), averagePhi, 1e-6);
 
     /// test for halfPhiSector
-    BOOST_TEST(cylinderBoundsSegment.halfPhiSector() == halfphi);  // fail
+    CHECK_CLOSE_REL(cylinderBoundsSegment.halfPhiSector(),
+                    halfphi,
+                    1e-6);  // fail
 
     /// test for halflengthZ (NOTE: Naming violation)
-    BOOST_TEST(cylinderBoundsObject.halflengthZ() == nominalHalfLength);
+    CHECK_CLOSE_REL(
+        cylinderBoundsObject.halflengthZ(), nominalHalfLength, 1e-6);
 
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
     cylinderBoundsObject.dump(dumpOuput);
-    BOOST_TEST(dumpOuput.is_equal("Acts::CylinderBounds: (radius, averagePhi, "
-                                  "halfPhiSector, halflengthInZ) = (0.5000000, "
-                                  "0.0000000, 3.1415927, 20.0000000)"));
+    BOOST_CHECK(
+        dumpOuput.is_equal("Acts::CylinderBounds: (radius, averagePhi, "
+                           "halfPhiSector, halflengthInZ) = (0.5000000, "
+                           "0.0000000, 3.1415927, 20.0000000)"));
   }
   /// Unit test for testing CylinderBounds assignment
   BOOST_AUTO_TEST_CASE(CylinderBoundsAssignment)
@@ -128,8 +130,8 @@ namespace Test {
     CylinderBounds cylinderBoundsObject(nominalRadius, nominalHalfLength);
     CylinderBounds assignedCylinderBounds(10.5, 6.6);
     assignedCylinderBounds = cylinderBoundsObject;
-    BOOST_TEST(assignedCylinderBounds.r() == cylinderBoundsObject.r());
-    BOOST_TEST(assignedCylinderBounds == cylinderBoundsObject);
+    BOOST_CHECK_EQUAL(assignedCylinderBounds.r(), cylinderBoundsObject.r());
+    BOOST_CHECK_EQUAL(assignedCylinderBounds, cylinderBoundsObject);
   }
 
   BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData)
@@ -141,19 +143,19 @@ namespace Test {
     std::cout << var_data << std::endl;
 
     variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_TEST(var_map.get<std::string>("type") == "CylinderBounds");
+    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "CylinderBounds");
     variant_map pl = var_map.get<variant_map>("payload");
 
-    BOOST_TEST(pl.get<double>("radius") == radius);
-    BOOST_TEST(pl.get<double>("avgPhi") == avgPhi);
-    BOOST_TEST(pl.get<double>("halfPhi") == halfPhi);
-    BOOST_TEST(pl.get<double>("halfZ") == halfZ);
+    BOOST_CHECK_EQUAL(pl.get<double>("radius"), radius);
+    BOOST_CHECK_EQUAL(pl.get<double>("avgPhi"), avgPhi);
+    BOOST_CHECK_EQUAL(pl.get<double>("halfPhi"), halfPhi);
+    BOOST_CHECK_EQUAL(pl.get<double>("halfZ"), halfZ);
 
     CylinderBounds cylBounds2(var_data);
-    BOOST_TEST(cylBounds.r() == cylBounds2.r());
-    BOOST_TEST(cylBounds.averagePhi() == cylBounds2.averagePhi());
-    BOOST_TEST(cylBounds.halfPhiSector() == cylBounds2.halfPhiSector());
-    BOOST_TEST(cylBounds.halflengthZ() == cylBounds2.halflengthZ());
+    BOOST_CHECK_EQUAL(cylBounds.r(), cylBounds2.r());
+    BOOST_CHECK_EQUAL(cylBounds.averagePhi(), cylBounds2.averagePhi());
+    BOOST_CHECK_EQUAL(cylBounds.halfPhiSector(), cylBounds2.halfPhiSector());
+    BOOST_CHECK_EQUAL(cylBounds.halflengthZ(), cylBounds2.halflengthZ());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

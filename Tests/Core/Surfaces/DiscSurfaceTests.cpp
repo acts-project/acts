@@ -102,18 +102,16 @@ namespace Test {
                       origin3D);
     //
     /// Test bounds
-    BOOST_TEST(discSurfaceObject->bounds().type() = SurfaceBounds::Disc);
+    BOOST_CHECK_EQUAL(discSurfaceObject->bounds().type(), SurfaceBounds::Disc);
     //
     Vector3D ignoredMomentum{0., 0., 0.};
     /// Test isOnSurface()
     Vector3D point3DNotInSector{0.0, 1.2, 0};
     Vector3D point3DOnSurface{1.2, 0.0, 0};
-    BOOST_TEST(discSurfaceObject->isOnSurface(
-                   point3DNotInSector, ignoredMomentum, true)
-               == false);  // passes
-    BOOST_TEST(
-        discSurfaceObject->isOnSurface(point3DOnSurface, ignoredMomentum, true)
-        == true);  // passes
+    BOOST_CHECK(!discSurfaceObject->isOnSurface(
+        point3DNotInSector, ignoredMomentum, true));  // passes
+    BOOST_CHECK(discSurfaceObject->isOnSurface(
+        point3DOnSurface, ignoredMomentum, true));  // passes
     //
     /// Test localToGlobal
     Vector3D returnedPosition{10.9, 8.7, 6.5};
@@ -132,18 +130,20 @@ namespace Test {
     /// Test globalToLocal
     Vector2D returnedLocalPosition{33., 44.};
     Vector2D expectedLocalPosition{1.2, 0.0};
-    BOOST_TEST(discSurfaceObject->globalToLocal(
+    BOOST_CHECK(discSurfaceObject->globalToLocal(
         point3DOnSurface, ignoredMomentum, returnedLocalPosition));  // pass
     CHECK_CLOSE_ABS(returnedLocalPosition, expectedLocalPosition, 1e-6);
     //
-    BOOST_TEST(discSurfaceObject->globalToLocal(
-                   point3DNotInSector, ignoredMomentum, returnedLocalPosition)
-               == false);  // test fails
+    BOOST_CHECK(!discSurfaceObject->globalToLocal(
+        point3DNotInSector,
+        ignoredMomentum,
+        returnedLocalPosition));  // test fails
     //
     Vector3D pointOutsideRadius{0.0, 100., 0};
-    BOOST_TEST(discSurfaceObject->globalToLocal(
-                   pointOutsideRadius, ignoredMomentum, returnedLocalPosition)
-               == false);  // fails
+    BOOST_CHECK(
+        !discSurfaceObject->globalToLocal(pointOutsideRadius,
+                                          ignoredMomentum,
+                                          returnedLocalPosition));  // fails
     //
     /// Test localPolarToCartesian
     Vector2D rPhi1_1{std::sqrt(2.), M_PI / 4.};
@@ -176,9 +176,10 @@ namespace Test {
     Vector3D momentum{
         projected3DMomentum, projected3DMomentum, projected3DMomentum};
     Vector3D ignoredPosition{1.1, 2.2, 3.3};
-    BOOST_TEST(discSurfaceObject->pathCorrection(ignoredPosition, momentum)
-                   == std::sqrt(3),
-               tt::tolerance(0.01));
+    CHECK_CLOSE_REL(
+        discSurfaceObject->pathCorrection(ignoredPosition, momentum),
+        std::sqrt(3),
+        0.01);
     //
     /// intersectionEstimate
     Vector3D globalPosition{1.2, 0.0, -10.};
@@ -189,15 +190,15 @@ namespace Test {
     auto intersect
         = discSurfaceObject->intersectionEstimate(globalPosition, direction);
     Intersection expectedIntersect{Vector3D{1.2, 0., 0.}, 10., true, 0.0};
-    BOOST_TEST(intersect.valid);
+    BOOST_CHECK(intersect.valid);
     CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
-    BOOST_TEST(intersect.pathLength == expectedIntersect.pathLength);
-    BOOST_TEST(intersect.distance == expectedIntersect.distance);
+    CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-9);
+    CHECK_CLOSE_ABS(intersect.distance, expectedIntersect.distance, 1e-9);
     //
     /// Test name
     boost::test_tools::output_test_stream nameOuput;
     nameOuput << discSurfaceObject->name();
-    BOOST_TEST(nameOuput.is_equal("Acts::DiscSurface"));
+    BOOST_CHECK(nameOuput.is_equal("Acts::DiscSurface"));
   }
   //
   /// Unit test for testing DiscSurface assignment and equality
@@ -236,10 +237,10 @@ namespace Test {
 
     const RadialBounds* rbounds_act
         = dynamic_cast<const RadialBounds*>(&rdisc2->bounds());
-    BOOST_TEST(rbounds->rMin() == rbounds_act->rMin());
-    BOOST_TEST(rbounds->rMax() == rbounds_act->rMax());
-    BOOST_TEST(rbounds->averagePhi() == rbounds_act->averagePhi());
-    BOOST_TEST(rbounds->halfPhiSector() == rbounds_act->halfPhiSector());
+    BOOST_CHECK_EQUAL(rbounds->rMin(), rbounds_act->rMin());
+    BOOST_CHECK_EQUAL(rbounds->rMax(), rbounds_act->rMax());
+    BOOST_CHECK_EQUAL(rbounds->averagePhi(), rbounds_act->averagePhi());
+    BOOST_CHECK_EQUAL(rbounds->halfPhiSector(), rbounds_act->halfPhiSector());
 
     double rMin = 1, rMax = 5, minHalfX = 2, maxHalfX = 4, stereo = M_PI / 8.;
     auto   dtbounds = std::make_shared<const DiscTrapezoidalBounds>(
@@ -256,11 +257,13 @@ namespace Test {
 
     const DiscTrapezoidalBounds* dtbounds_act
         = dynamic_cast<const DiscTrapezoidalBounds*>(&dtdisc2->bounds());
-    BOOST_TEST(dtbounds->rMin() == dtbounds_act->rMin());
-    BOOST_TEST(dtbounds->rMax() == dtbounds_act->rMax());
-    BOOST_TEST(dtbounds->minHalflengthX() == dtbounds_act->minHalflengthX());
-    BOOST_TEST(dtbounds->maxHalflengthX() == dtbounds_act->maxHalflengthX());
-    BOOST_TEST(dtbounds->stereo() == dtbounds_act->stereo());
+    BOOST_CHECK_EQUAL(dtbounds->rMin(), dtbounds_act->rMin());
+    BOOST_CHECK_EQUAL(dtbounds->rMax(), dtbounds_act->rMax());
+    BOOST_CHECK_EQUAL(dtbounds->minHalflengthX(),
+                      dtbounds_act->minHalflengthX());
+    BOOST_CHECK_EQUAL(dtbounds->maxHalflengthX(),
+                      dtbounds_act->maxHalflengthX());
+    BOOST_CHECK_EQUAL(dtbounds->stereo(), dtbounds_act->stereo());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

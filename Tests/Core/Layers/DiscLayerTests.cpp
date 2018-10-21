@@ -46,7 +46,7 @@ namespace Test {
       const double minRad(10.), maxRad(5.);  // 20 x 10 disc
       auto         pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);
       auto         pDiscLayer = DiscLayer::create(pTransform, pDisc);
-      BOOST_TEST(pDiscLayer->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pDiscLayer->layerType(), LayerType::passive);
       // next level: need an array of Surfaces;
       // bounds object, rectangle type
       auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
@@ -58,19 +58,20 @@ namespace Test {
       const double thickness(1.0);
       auto         pDiscLayerFromSurfaces
           = DiscLayer::create(pTransform, pDisc, nullptr);
-      BOOST_TEST(pDiscLayerFromSurfaces->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pDiscLayerFromSurfaces->layerType(),
+                        LayerType::passive);
       // construct with thickness:
       auto pDiscLayerWithThickness
           = DiscLayer::create(pTransform, pDisc, nullptr, thickness);
-      BOOST_TEST(pDiscLayerWithThickness->thickness() == thickness);
+      BOOST_CHECK_EQUAL(pDiscLayerWithThickness->thickness(), thickness);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
       auto adPtr                            = ad.get();
       auto pDiscLayerWithApproachDescriptor = DiscLayer::create(
           pTransform, pDisc, nullptr, thickness, std::move(ad));
-      BOOST_TEST(pDiscLayerWithApproachDescriptor->approachDescriptor()
-                 == adPtr);
+      BOOST_CHECK_EQUAL(pDiscLayerWithApproachDescriptor->approachDescriptor(),
+                        adPtr);
       // with the layerType specified...
       auto pDiscLayerWithLayerType = DiscLayer::create(pTransform,
                                                        pDisc,
@@ -78,7 +79,8 @@ namespace Test {
                                                        thickness,
                                                        std::move(ad),
                                                        LayerType::passive);
-      BOOST_TEST(pDiscLayerWithLayerType->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pDiscLayerWithLayerType->layerType(),
+                        LayerType::passive);
     }
 
     /// Unit test for testing Layer properties
@@ -90,8 +92,8 @@ namespace Test {
       auto         pDisc = std::make_shared<const RadialBounds>(minRad, maxRad);
       auto         pDiscLayer = DiscLayer::create(pTransform, pDisc);
       // auto planeSurface = pDiscLayer->surfaceRepresentation();
-      BOOST_TEST(pDiscLayer->surfaceRepresentation().name()
-                 == std::string("Acts::DiscSurface"));
+      BOOST_CHECK_EQUAL(pDiscLayer->surfaceRepresentation().name(),
+                        std::string("Acts::DiscSurface"));
     }
 
     BOOST_AUTO_TEST_CASE(DiscLayer_toVariantData)
@@ -108,14 +110,14 @@ namespace Test {
 
       variant_map var_map = boost::get<variant_map>(var_data);
       variant_map pl      = var_map.get<variant_map>("payload");
-      BOOST_TEST(pl.get<double>("thickness") == 6);
+      BOOST_CHECK_EQUAL(pl.get<double>("thickness"), 6);
       Transform3D act = from_variant<Transform3D>(pl.at("transform"));
       CHECK_CLOSE_OR_SMALL(*pTransform, act, 1e-6, 1e-9);
 
       auto pDiscLayer2
           = std::dynamic_pointer_cast<DiscLayer>(DiscLayer::create(var_data));
 
-      BOOST_TEST(pDiscLayer->thickness() == pDiscLayer2->thickness());
+      BOOST_CHECK_EQUAL(pDiscLayer->thickness(), pDiscLayer2->thickness());
       CHECK_CLOSE_OR_SMALL(
           pDiscLayer->transform(), pDiscLayer2->transform(), 1e-6, 1e-9);
 
@@ -124,10 +126,11 @@ namespace Test {
       auto cvBoundsAct = dynamic_cast<const CylinderVolumeBounds*>(
           &(pDiscLayer2->representingVolume()->volumeBounds()));
 
-      BOOST_TEST(cvBoundsExp->innerRadius() == cvBoundsAct->innerRadius());
-      BOOST_TEST(cvBoundsExp->outerRadius() == cvBoundsAct->outerRadius());
-      BOOST_TEST(cvBoundsExp->halfPhiSector() == cvBoundsAct->halfPhiSector());
-      BOOST_TEST(cvBoundsExp->halflengthZ() == cvBoundsAct->halflengthZ());
+      BOOST_CHECK_EQUAL(cvBoundsExp->innerRadius(), cvBoundsAct->innerRadius());
+      BOOST_CHECK_EQUAL(cvBoundsExp->outerRadius(), cvBoundsAct->outerRadius());
+      BOOST_CHECK_EQUAL(cvBoundsExp->halfPhiSector(),
+                        cvBoundsAct->halfPhiSector());
+      BOOST_CHECK_EQUAL(cvBoundsExp->halflengthZ(), cvBoundsAct->halflengthZ());
     }
 
     BOOST_AUTO_TEST_SUITE_END()

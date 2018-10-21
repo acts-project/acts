@@ -92,7 +92,11 @@ namespace Test {
   {
     SurfaceBoundsStub       surface(5);
     std::vector<TDD_real_t> reference{0, 1, 2, 3, 4};
-    BOOST_TEST(reference == surface.valueStore());
+    const auto&             valueStore = surface.valueStore();
+    BOOST_CHECK_EQUAL_COLLECTIONS(reference.cbegin(),
+                                  reference.cend(),
+                                  valueStore.cbegin(),
+                                  valueStore.cend());
   }
   /// Unit test for testing SurfaceBounds properties
   BOOST_AUTO_TEST_CASE(SurfaceBoundsEquality)
@@ -100,12 +104,17 @@ namespace Test {
     SurfaceBoundsStub surface(1);
     SurfaceBoundsStub copiedSurface(surface);
     SurfaceBoundsStub differentSurface(2);
-    BOOST_TEST(surface == copiedSurface);
-    BOOST_TEST(surface != differentSurface);
+    BOOST_CHECK_EQUAL(surface, copiedSurface);
+    BOOST_CHECK_NE(surface, differentSurface);
     SurfaceBoundsStub assignedSurface;
     assignedSurface = surface;
-    BOOST_TEST(surface == assignedSurface);
-    BOOST_TEST(surface.valueStore() == assignedSurface.valueStore());
+    BOOST_CHECK_EQUAL(surface, assignedSurface);
+    const auto& surfaceValueStore  = surface.valueStore();
+    const auto& assignedValueStore = assignedSurface.valueStore();
+    BOOST_CHECK_EQUAL_COLLECTIONS(surfaceValueStore.cbegin(),
+                                  surfaceValueStore.cend(),
+                                  assignedValueStore.cbegin(),
+                                  assignedValueStore.cend());
   }
   BOOST_AUTO_TEST_SUITE_END()
 

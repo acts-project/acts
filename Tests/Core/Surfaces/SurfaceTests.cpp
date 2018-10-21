@@ -65,18 +65,18 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(SurfaceConstruction)
   {
     // SurfaceStub s;
-    BOOST_TEST(Surface::Other == SurfaceStub().type());
+    BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub().type());
     SurfaceStub original;
-    BOOST_TEST(Surface::Other == SurfaceStub(original).type());
+    BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(original).type());
     Translation3D translation{0., 1., 2.};
     Transform3D   transform(translation);
-    BOOST_TEST(Surface::Other == SurfaceStub(original, transform).type());
+    BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(original, transform).type());
     // need some cruft to make the next one work
     auto pTransform = std::make_shared<const Transform3D>(translation);
     std::shared_ptr<const Acts::PlanarBounds> p
         = std::make_shared<const RectangleBounds>(5., 10.);
     DetectorElementStub detElement{pTransform, p, 0.2, nullptr};
-    BOOST_TEST(Surface::Other == SurfaceStub(detElement).type());
+    BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(detElement).type());
   }
 
   /// Unit test for testing Surface properties
@@ -95,19 +95,19 @@ namespace Test {
     DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
     SurfaceStub         surface(detElement);
     // associatedDetectorElement
-    BOOST_TEST(surface.associatedDetectorElement() == &detElement);
+    BOOST_CHECK_EQUAL(surface.associatedDetectorElement(), &detElement);
     // test  associatelayer, associatedLayer
     surface.associateLayer(*pLayer);
-    BOOST_TEST(surface.associatedLayer() == pLayer.get());
+    BOOST_CHECK_EQUAL(surface.associatedLayer(), pLayer.get());
     // associated Material is not set to the surface
     // it is set to the detector element surface though
-    BOOST_TEST(surface.associatedMaterial() != pMaterial.get());
+    BOOST_CHECK_NE(surface.associatedMaterial(), pMaterial.get());
     // center()
-    BOOST_TEST(reference == surface.center());
+    CHECK_CLOSE_OR_SMALL(reference, surface.center(), 1e-6, 1e-9);
     // stream insertion operator <<
     output_test_stream output;
     output << surface;
-    BOOST_TEST(!output.is_empty(false));  // no check on contents
+    BOOST_CHECK(!output.is_empty(false));  // no check on contents
     // insideBounds
     Vector2D localPosition{0.1, 3.0};
     BOOST_CHECK(surface.insideBounds(localPosition));
@@ -120,8 +120,7 @@ namespace Test {
     auto     intersectionEstimate
         = surface.intersectionEstimate(reference, mom, forward, false);
     const Intersection ref{Vector3D{1, 1, 1}, 20., true};
-    bool               trial = (ref.position == intersectionEstimate.position);
-    BOOST_TEST(trial, "intersectionEstimate() delegates to derived class");
+    BOOST_CHECK_EQUAL(ref.position, intersectionEstimate.position);
     // isFree
     BOOST_CHECK(!surface.isFree());
     // isOnSurface
@@ -133,21 +132,20 @@ namespace Test {
     unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
     auto referenceFrame = surface.referenceFrame(
         reference, mom);  // need more complex case to test
-    bool ok = (referenceFrame == unitary);
-    BOOST_TEST(ok, "referenceFrame() returns sensible answer");
+    BOOST_CHECK_EQUAL(referenceFrame, unitary);
     // normal()
     auto normal = surface.Surface::normal(reference);  // needs more complex
                                                        // test
     Vector3D zero{0., 0., 0.};
-    BOOST_TEST(zero == normal);
+    BOOST_CHECK_EQUAL(zero, normal);
     // pathCorrection is pure virtual
     // associatedMaterial()
     MaterialProperties newProperties{0.5, 0.5, 0.5, 20., 10., 5.};
     auto               pNewMaterial
         = std::make_shared<const HomogeneousSurfaceMaterial>(newProperties);
     surface.setAssociatedMaterial(pNewMaterial);
-    BOOST_TEST(surface.associatedMaterial() == pNewMaterial.get());  // passes
-                                                                     // ??
+    BOOST_CHECK_EQUAL(surface.associatedMaterial(),
+                      pNewMaterial.get());  // passes ??
     //
     CHECK_CLOSE_OR_SMALL(surface.transform(), *pTransform, 1e-6, 1e-9);
     // type() is pure virtual
@@ -176,21 +174,15 @@ namespace Test {
     SurfaceStub surface3(detElement2);  // 3 differs in thickness
     SurfaceStub surface4(detElement3);  // 4 has a different transform and id
     //
-    bool equalSurface = (surface1 == surface2);
-    BOOST_TEST(equalSurface, "Equality between similar surfaces");
+    BOOST_CHECK_EQUAL(surface1, surface2);
     //
     // remove test for the moment,
-    // surfaces do not have a concept of thickness (only detector elemetns have)
-    // bool unequalSurface
-    //    = (surface1 != surface3);  // only thickness is different here;
-    // BOOST_TEST(unequalSurface,
-    //           "Different thickness surfaces should be unequal");  // will
-    //           fail
+    // surfaces do not have a concept of thickness (only detector elements have)
+    // only thickness is different here
     //
-    bool unequalSurface
-        = (surface1 != surface4);  // bounds or transform must be different;
-    BOOST_TEST(unequalSurface,
-               "Different transform surfaces should be unequal");
+    // BOOST_CHECK_NE(surface1, surface3);  // will fail
+    //
+    BOOST_CHECK_NE(surface1, surface4);
   }
   BOOST_AUTO_TEST_SUITE_END()
 

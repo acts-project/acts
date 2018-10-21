@@ -81,39 +81,42 @@ namespace Test {
 
     json json_parsed = json::parse(json_str);
 
-    BOOST_TEST(map.get<int>("int") == json_parsed["int"].get<int>());
-    BOOST_TEST(map.get<double>("float") == json_parsed["float"].get<double>());
-    BOOST_TEST(map.get<std::string>("string")
-               == json_parsed["string"].get<std::string>());
+    BOOST_CHECK_EQUAL(map.get<int>("int"), json_parsed["int"].get<int>());
+    BOOST_CHECK_EQUAL(map.get<double>("float"),
+                      json_parsed["float"].get<double>());
+    BOOST_CHECK_EQUAL(map.get<std::string>("string"),
+                      json_parsed["string"].get<std::string>());
 
-    BOOST_TEST(object.get<std::string>("key")
-               == json_parsed["object"]["key"].get<std::string>());
-    BOOST_TEST(object.get<std::string>("other")
-               == json_parsed["object"]["other"].get<std::string>());
+    BOOST_CHECK_EQUAL(object.get<std::string>("key"),
+                      json_parsed["object"]["key"].get<std::string>());
+    BOOST_CHECK_EQUAL(object.get<std::string>("other"),
+                      json_parsed["object"]["other"].get<std::string>());
 
-    BOOST_TEST(vector.get<bool>(0) == json_parsed["array"][0].get<bool>());
-    BOOST_TEST(vector.get<std::string>(1)
-               == json_parsed["array"][1].get<std::string>());
+    BOOST_CHECK_EQUAL(vector.get<bool>(0), json_parsed["array"][0].get<bool>());
+    BOOST_CHECK_EQUAL(vector.get<std::string>(1),
+                      json_parsed["array"][1].get<std::string>());
 
     variant_data var_from_json = from_json(json_parsed);
     std::cout << var_from_json << std::endl;
 
     variant_map map_from_json = boost::get<variant_map>(var_from_json);
 
-    BOOST_TEST(map.get<int>("int") == map_from_json.get<int>("int"));
-    BOOST_TEST(map.get<double>("float") == map_from_json.get<double>("float"));
-    BOOST_TEST(map.get<std::string>("string")
-               == map_from_json.get<std::string>("string"));
+    BOOST_CHECK_EQUAL(map.get<int>("int"), map_from_json.get<int>("int"));
+    BOOST_CHECK_EQUAL(map.get<double>("float"),
+                      map_from_json.get<double>("float"));
+    BOOST_CHECK_EQUAL(map.get<std::string>("string"),
+                      map_from_json.get<std::string>("string"));
 
     variant_map object_json = map_from_json.get<variant_map>("object");
-    BOOST_TEST(object.get<std::string>("key")
-               == object_json.get<std::string>("key"));
-    BOOST_TEST(object.get<std::string>("other")
-               == object_json.get<std::string>("other"));
+    BOOST_CHECK_EQUAL(object.get<std::string>("key"),
+                      object_json.get<std::string>("key"));
+    BOOST_CHECK_EQUAL(object.get<std::string>("other"),
+                      object_json.get<std::string>("other"));
 
     variant_vector vector_json = map_from_json.get<variant_vector>("array");
-    BOOST_TEST(vector.get<bool>(0) == vector_json.get<bool>(0));
-    BOOST_TEST(vector.get<std::string>(1) == vector_json.get<std::string>(1));
+    BOOST_CHECK_EQUAL(vector.get<bool>(0), vector_json.get<bool>(0));
+    BOOST_CHECK_EQUAL(vector.get<std::string>(1),
+                      vector_json.get<std::string>(1));
   }
 
   BOOST_AUTO_TEST_CASE(JsonLoader_float_int_discrimination)
@@ -127,7 +130,7 @@ namespace Test {
     variant_data output      = from_json(json_parsed);
     double       value       = boost::get<double>(output);
 
-    BOOST_TEST(ref_value == value);
+    BOOST_CHECK_EQUAL(ref_value, value);
   }
 
   BOOST_AUTO_TEST_CASE(JsonLoader_layer_load_test)
@@ -175,8 +178,8 @@ namespace Test {
     auto sa  = layer->surfaceArray();
     auto sa2 = layer2->surfaceArray();
 
-    BOOST_TEST(sa);
-    BOOST_TEST(sa2);
+    BOOST_CHECK(sa);
+    BOOST_CHECK(sa2);
 
     CHECK_CLOSE_OR_SMALL(sa->transform(), sa2->transform(), 1e-6, 1e-9);
 
@@ -187,7 +190,7 @@ namespace Test {
       std::vector<const Surface*> bc1 = sa->at(ctr);
       std::vector<const Surface*> bc2 = sa2->at(ctr);
 
-      BOOST_TEST(bc1.size() == bc2.size());
+      BOOST_CHECK_EQUAL(bc1.size(), bc2.size());
 
       for (size_t i = 0; i < bc1.size(); i++) {
         auto srf1 = bc1.at(i);

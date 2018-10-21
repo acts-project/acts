@@ -110,7 +110,7 @@ namespace Test {
     auto mState = smMapper.createState(*tGeometry);
 
     /// Test if this is not null
-    BOOST_TEST(mState.accumulatedMaterial.size() == 3);
+    BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3);
 
     // material properties
     MaterialProperties a(1., 1., 1., 1., 1., 1.);

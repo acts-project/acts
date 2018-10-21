@@ -90,7 +90,7 @@ namespace Test {
     CHECK_CLOSE_REL(
         b.getField(pos, bCache), BField::value({{perp(pos), pos.z()}}), 1e-6);
     auto c = bCache.fieldCell;
-    BOOST_TEST(c.isInside(pos));
+    BOOST_CHECK(c.isInside(pos));
     CHECK_CLOSE_REL(
         c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
@@ -99,7 +99,7 @@ namespace Test {
     CHECK_CLOSE_REL(
         b.getField(pos, bCache2), BField::value({{perp(pos), pos.z()}}), 1e-6);
     c = bCache2.fieldCell;
-    BOOST_TEST(c.isInside(pos));
+    BOOST_CHECK(c.isInside(pos));
     CHECK_CLOSE_REL(
         c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
@@ -108,16 +108,16 @@ namespace Test {
     CHECK_CLOSE_REL(
         b.getField(pos, bCache3), BField::value({{perp(pos), pos.z()}}), 1e-6);
     c = bCache3.fieldCell;
-    BOOST_TEST(c.isInside(pos));
+    BOOST_CHECK(c.isInside(pos));
     CHECK_CLOSE_REL(
         c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     // some field cell tests
-    BOOST_TEST(c.isInside((pos << 3, 2, -3.7).finished()));
-    BOOST_TEST(c.isInside((pos << -2, 3, -4.7).finished()));
-    BOOST_TEST(not c.isInside((pos << -2, 3, 4.7).finished()));
-    BOOST_TEST(not c.isInside((pos << 0, 2, -4.7).finished()));
-    BOOST_TEST(not c.isInside((pos << 5, 2, 14.).finished()));
+    BOOST_CHECK(c.isInside((pos << 3, 2, -3.7).finished()));
+    BOOST_CHECK(c.isInside((pos << -2, 3, -4.7).finished()));
+    BOOST_CHECK(not c.isInside((pos << -2, 3, 4.7).finished()));
+    BOOST_CHECK(not c.isInside((pos << 0, 2, -4.7).finished()));
+    BOOST_CHECK(not c.isInside((pos << 5, 2, 14.).finished()));
   }
 }  // namespace Test
 

@@ -115,7 +115,7 @@ namespace Test {
         }
         std::vector<const Surface*> binContent = sArray->at(i);
         BOOST_TEST_INFO("Bin: " << i);
-        BOOST_TEST(binContent.size() == n);
+        BOOST_CHECK_EQUAL(binContent.size(), n);
         result = result && binContent.size() == n;
       }
 
@@ -286,10 +286,10 @@ namespace Test {
     const CylinderBounds* bounds = &layer->bounds();
     CHECK_CLOSE_REL(bounds->r(), (rMax + rMin) / 2., 1e-3);
     CHECK_CLOSE_REL(bounds->halflengthZ(), 14 + envZ, 1e-3);
-    BOOST_TEST(checkBinning(*layer->surfaceArray()));
+    BOOST_CHECK(checkBinning(*layer->surfaceArray()));
     auto axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == 30);
-    BOOST_TEST(axes.at(1)->getNBins() == 7);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
     CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
     CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
     CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
@@ -306,10 +306,10 @@ namespace Test {
     bounds = &layer->bounds();
     CHECK_CLOSE_REL(bounds->r(), (rMax + rMin) / 2., 1e-3);
     CHECK_CLOSE_REL(bounds->halflengthZ(), 14 + envZ, 1e-3);
-    BOOST_TEST(checkBinning(*layer->surfaceArray()));
+    BOOST_CHECK(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == 30);
-    BOOST_TEST(axes.at(1)->getNBins() == 7);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
     CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
     CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
     CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
@@ -323,10 +323,10 @@ namespace Test {
     CHECK_CLOSE_REL(bounds->halflengthZ(), 14 + envZ, 1e-3);
     // this succeeds despite sub-optimal binning
     // since we now have multientry bins
-    BOOST_TEST(checkBinning(*layer->surfaceArray()));
+    BOOST_CHECK(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == 13);
-    BOOST_TEST(axes.at(1)->getNBins() == 3);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 13);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 3);
     CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
     CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
     CHECK_CLOSE_REL(axes.at(1)->getMin(), -14, 1e-3);
@@ -348,11 +348,11 @@ namespace Test {
     // this should fail, b/c it's a completely inconvenient binning
     // but it succeeds despite sub-optimal binning
     // since we now have multientry bins
-    BOOST_TEST(checkBinning(*layer->surfaceArray()));
+    BOOST_CHECK(checkBinning(*layer->surfaceArray()));
 
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == 30);
-    BOOST_TEST(axes.at(1)->getNBins() == 7);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
     CHECK_CLOSE_REL(axes.at(0)->getMin(), -M_PI, 1e-3);
     CHECK_CLOSE_REL(axes.at(0)->getMax(), M_PI, 1e-3);
     CHECK_CLOSE_REL(axes.at(1)->getMin(), -25, 1e-3);
@@ -382,10 +382,10 @@ namespace Test {
         = dynamic_cast<const RadialBounds*>(&layer->bounds());
     CHECK_CLOSE_REL(bounds->rMin(), 5, 1e-3);
     CHECK_CLOSE_REL(bounds->rMax(), 25, 1e-3);
-    BOOST_TEST(checkBinning(*layer->surfaceArray()));
+    BOOST_CHECK(checkBinning(*layer->surfaceArray()));
     auto axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == 3);
-    BOOST_TEST(axes.at(1)->getNBins() == 30);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 30);
     CHECK_CLOSE_REL(axes.at(0)->getMin(), 5, 1e-3);
     CHECK_CLOSE_REL(axes.at(0)->getMax(), 25, 1e-3);
     CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
@@ -393,7 +393,7 @@ namespace Test {
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
-    // BOOST_TEST(bu->transform() != nullptr);
+    // BOOST_CHECK_NE(bu->transform(), nullptr);
     // double actAngle = ((*bu->transform()) * Vector3D(1, 0, 0)).phi();
     // double expAngle = -2 * M_PI / 30 / 2.;
     // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
@@ -411,10 +411,10 @@ namespace Test {
     bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
     CHECK_CLOSE_REL(bounds->rMin(), rMin - envMinR, 1e-3);
     CHECK_CLOSE_REL(bounds->rMax(), rMax + envMaxR, 1e-3);
-    BOOST_TEST(checkBinning(*layer->surfaceArray()));
+    BOOST_CHECK(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == nBinsR);
-    BOOST_TEST(axes.at(1)->getNBins() == nBinsPhi);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), nBinsR);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), nBinsPhi);
     CHECK_CLOSE_REL(axes.at(0)->getMin(), rMin, 1e-3);
     CHECK_CLOSE_REL(axes.at(0)->getMax(), rMax, 1e-3);
     CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
@@ -422,7 +422,7 @@ namespace Test {
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
-    // BOOST_TEST(bu->transform() != nullptr);
+    // BOOST_CHECK_NE(bu->transform(), nullptr);
     // actAngle = ((*bu->transform()) * Vector3D(1, 0, 0)).phi();
     // expAngle = -2 * M_PI / 30 / 2.;
     // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
@@ -433,10 +433,10 @@ namespace Test {
     bounds = dynamic_cast<const RadialBounds*>(&layer->bounds());
     CHECK_CLOSE_REL(bounds->rMin(), rMin - envMinR, 1e-3);
     CHECK_CLOSE_REL(bounds->rMax(), rMax + envMaxR, 1e-3);
-    BOOST_TEST(checkBinning(*layer->surfaceArray()));
+    BOOST_CHECK(checkBinning(*layer->surfaceArray()));
     axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == nBinsR);
-    BOOST_TEST(axes.at(1)->getNBins() == nBinsPhi);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), nBinsR);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), nBinsPhi);
     CHECK_CLOSE_REL(axes.at(0)->getMin(), rMin, 1e-3);
     CHECK_CLOSE_REL(axes.at(0)->getMax(), rMax, 1e-3);
     CHECK_CLOSE_REL(axes.at(1)->getMin(), -M_PI, 1e-3);
@@ -444,7 +444,7 @@ namespace Test {
     checkBinContentSize(layer->surfaceArray(), 1);
 
     // check that it's applying a rotation transform to improve phi binning
-    // BOOST_TEST(bu->transform() != nullptr);
+    // BOOST_CHECK_NE(bu->transform(), nullptr);
     // actAngle = ((*bu->transform()) * Vector3D(1, 0, 0)).phi();
     // expAngle = -2 * M_PI / 30 / 2.;
     // CHECK_CLOSE_REL(actAngle, expAngle, 1e-3);
@@ -467,8 +467,8 @@ namespace Test {
 
     std::cout << (*layer->surfaceArray()) << std::endl;
     auto axes = layer->surfaceArray()->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == 30);
-    BOOST_TEST(axes.at(1)->getNBins() == 7);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
 
     // check if binning is good!
     for (const auto& pr : barrel.second) {
@@ -482,7 +482,7 @@ namespace Test {
 
       Vector3D ctr        = A->binningPosition(binR);
       auto     binContent = layer->surfaceArray()->at(ctr);
-      BOOST_TEST(binContent.size() == 2);
+      BOOST_CHECK_EQUAL(binContent.size(), 2);
       std::set<const Surface*> act;
       act.insert(binContent[0]);
       act.insert(binContent[1]);
@@ -490,7 +490,7 @@ namespace Test {
       std::set<const Surface*> exp;
       exp.insert(A);
       exp.insert(B);
-      BOOST_TEST(exp == act);
+      BOOST_CHECK(exp == act);
     }
 
     // checkBinning should also report everything is fine
@@ -522,8 +522,8 @@ namespace Test {
     auto sa  = layer->surfaceArray();
     auto sa2 = layer2->surfaceArray();
 
-    BOOST_TEST(sa);
-    BOOST_TEST(sa2);
+    BOOST_CHECK(sa);
+    BOOST_CHECK(sa2);
 
     CHECK_CLOSE_OR_SMALL(sa->transform(), sa2->transform(), 1e-6, 1e-9);
 
@@ -540,7 +540,7 @@ namespace Test {
       std::vector<const Surface*> bc1 = sa->at(ctr);
       std::vector<const Surface*> bc2 = sa2->at(ctr);
 
-      BOOST_TEST(bc1.size() == bc2.size());
+      BOOST_CHECK_EQUAL(bc1.size(), bc2.size());
 
       for (size_t i = 0; i < bc1.size(); i++) {
         auto srf1 = bc1.at(i);
@@ -575,8 +575,8 @@ namespace Test {
     auto sa  = layer->surfaceArray();
     auto sa2 = layer2->surfaceArray();
 
-    BOOST_TEST(sa);
-    BOOST_TEST(sa2);
+    BOOST_CHECK(sa);
+    BOOST_CHECK(sa2);
 
     CHECK_CLOSE_OR_SMALL(sa->transform(), sa2->transform(), 1e-6, 1e-9);
 
@@ -587,7 +587,7 @@ namespace Test {
       std::vector<const Surface*> bc1 = sa->at(ctr);
       std::vector<const Surface*> bc2 = sa2->at(ctr);
 
-      BOOST_TEST(bc1.size() == bc2.size());
+      BOOST_CHECK_EQUAL(bc1.size(), bc2.size());
 
       for (size_t i = 0; i < bc1.size(); i++) {
         auto srf1 = bc1.at(i);

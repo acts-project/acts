@@ -41,19 +41,19 @@ namespace Test {
     Translation3D translation{0., 1., 2.};
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     auto          pNullTransform = std::make_shared<const Transform3D>();
-    BOOST_TEST(
+    BOOST_CHECK_EQUAL(
         Surface::makeShared<ConeSurface>(pNullTransform, alpha, symmetric)
-            ->type()
-        == Surface::Cone);
-    BOOST_TEST(
-        Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric)->type()
-        == Surface::Cone);
+            ->type(),
+        Surface::Cone);
+    BOOST_CHECK_EQUAL(
+        Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric)->type(),
+        Surface::Cone);
     //
     /// Constructor with transform pointer, alpha,z min and max, halfPhiSector
-    BOOST_TEST(Surface::makeShared<ConeSurface>(
-                   pTransform, alpha, zMin, zMax, halfPhiSector)
-                   ->type()
-               == Surface::Cone);
+    BOOST_CHECK_EQUAL(Surface::makeShared<ConeSurface>(
+                          pTransform, alpha, zMin, zMax, halfPhiSector)
+                          ->type(),
+                      Surface::Cone);
     //
 
     /// Constructor with transform and ConeBounds pointer
@@ -61,8 +61,9 @@ namespace Test {
     // double avphi=0.)
     auto pConeBounds = std::make_shared<const ConeBounds>(
         alpha, zMin, zMax, halfPhiSector, 0.);
-    BOOST_TEST(Surface::makeShared<ConeSurface>(pTransform, pConeBounds)->type()
-               == Surface::Cone);
+    BOOST_CHECK_EQUAL(
+        Surface::makeShared<ConeSurface>(pTransform, pConeBounds)->type(),
+        Surface::Cone);
     //
     //
     /// Copy constructor
@@ -70,13 +71,13 @@ namespace Test {
         = Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
     auto copiedConeSurface
         = Surface::makeShared<ConeSurface>(*coneSurfaceObject);
-    BOOST_TEST(copiedConeSurface->type() == Surface::Cone);
-    BOOST_TEST(*copiedConeSurface == *coneSurfaceObject);
+    BOOST_CHECK_EQUAL(copiedConeSurface->type(), Surface::Cone);
+    BOOST_CHECK_EQUAL(*copiedConeSurface, *coneSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedConeSurface
         = Surface::makeShared<ConeSurface>(*coneSurfaceObject, *pTransform);
-    BOOST_TEST(copiedTransformedConeSurface->type() == Surface::Cone);
+    BOOST_CHECK_EQUAL(copiedTransformedConeSurface->type(), Surface::Cone);
 
     /// Construct with nullptr bounds
     BOOST_CHECK_THROW(auto nullBounds
@@ -97,10 +98,10 @@ namespace Test {
         = Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
     //
     auto pClonedConeSurface = coneSurfaceObject->clone();
-    BOOST_TEST(pClonedConeSurface->type() == Surface::Cone);
+    BOOST_CHECK_EQUAL(pClonedConeSurface->type(), Surface::Cone);
     //
     /// Test type (redundant)
-    BOOST_TEST(coneSurfaceObject->type() == Surface::Cone);
+    BOOST_CHECK_EQUAL(coneSurfaceObject->type(), Surface::Cone);
     //
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
@@ -138,7 +139,7 @@ namespace Test {
     CHECK_CLOSE_ABS(coneSurfaceObject->rotSymmetryAxis(), symmetryAxis, 1e-6);
     //
     /// Test bounds
-    BOOST_TEST(coneSurfaceObject->bounds().type() == SurfaceBounds::Cone);
+    BOOST_CHECK_EQUAL(coneSurfaceObject->bounds().type(), SurfaceBounds::Cone);
     //
     /// Test localToGlobal
     Vector2D localPosition{1.0, M_PI / 2.0};
@@ -157,17 +158,15 @@ namespace Test {
     //
     /// Test isOnSurface
     Vector3D offSurface{100, 1, 2};
-    BOOST_TEST(coneSurfaceObject->isOnSurface(globalPosition, momentum, true)
-               == true);
-    BOOST_TEST(coneSurfaceObject->isOnSurface(offSurface, momentum, true)
-               == false);
+    BOOST_CHECK(coneSurfaceObject->isOnSurface(globalPosition, momentum, true));
+    BOOST_CHECK(!coneSurfaceObject->isOnSurface(offSurface, momentum, true));
     //
     /// intersectionEstimate
     Vector3D direction{-1., 0, 0};
     auto     intersect = coneSurfaceObject->intersectionEstimate(
         offSurface, direction, forward, false);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 100., true, 0};
-    BOOST_TEST(intersect.valid);
+    BOOST_CHECK(intersect.valid);
     CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-6);
     CHECK_CLOSE_ABS(intersect.pathLength, expectedIntersect.pathLength, 1e-6);
     CHECK_CLOSE_ABS(intersect.distance, expectedIntersect.distance, 1e-6);
@@ -178,13 +177,14 @@ namespace Test {
                     0.01);
     //
     /// Test name
-    BOOST_TEST(coneSurfaceObject->name() == std::string("Acts::ConeSurface"));
+    BOOST_CHECK_EQUAL(coneSurfaceObject->name(),
+                      std::string("Acts::ConeSurface"));
     //
     /// Test dump
     // TODO 2017-04-12 msmk: check how to correctly check output
     //    boost::test_tools::output_test_stream dumpOuput;
     //    coneSurfaceObject.dump(dumpOuput);
-    //    BOOST_TEST(dumpOuput.is_equal(
+    //    BOOST_CHECK(dumpOuput.is_equal(
     //      "Acts::ConeSurface\n"
     //      "    Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
     //      "    Rotation:             colX = (1.000000, 0.000000, 0.000000)\n"
@@ -208,7 +208,7 @@ namespace Test {
         = Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
     //
     /// Test equality operator
-    BOOST_TEST(*coneSurfaceObject == *coneSurfaceObject2);
+    BOOST_CHECK_EQUAL(*coneSurfaceObject, *coneSurfaceObject2);
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a ConeSurface object to the existing one");
@@ -217,7 +217,7 @@ namespace Test {
         = Surface::makeShared<ConeSurface>(nullptr, 0.1, true);
     *assignedConeSurface = *coneSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_TEST(*assignedConeSurface == *coneSurfaceObject);
+    BOOST_CHECK_EQUAL(*assignedConeSurface, *coneSurfaceObject);
   }
 
   BOOST_AUTO_TEST_CASE(ConeSurface_toVariantData)

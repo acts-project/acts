@@ -21,16 +21,14 @@ namespace Test {
   {
     CylindricalTrackingGeometry cGeometry;
     auto                        tGeometry = cGeometry();
-    bool                        success(tGeometry != nullptr);
-    BOOST_TEST(success);
+    BOOST_CHECK_NE(tGeometry, nullptr);
   }
 
   BOOST_AUTO_TEST_CASE(CubicTrackingGeometryTest)
   {
     CubicTrackingGeometry cGeometry;
     auto                  tGeometry = cGeometry();
-    bool                  success(tGeometry != nullptr);
-    BOOST_TEST(success);
+    BOOST_CHECK_NE(tGeometry, nullptr);
   }
 
 }  // namespace Acts

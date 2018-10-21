@@ -58,16 +58,16 @@ namespace Test {
     CHECK_CLOSE_REL(silicon.zOverAtimesRho(), 14. / 28.0855 * 0.002329, 0.0001);
 
     Material copiedSilicon(silicon);
-    BOOST_TEST(silicon == copiedSilicon);
+    BOOST_CHECK_EQUAL(silicon, copiedSilicon);
 
     Material moveCopiedSilicon(std::move(copiedSilicon));
-    BOOST_TEST(silicon == moveCopiedSilicon);
+    BOOST_CHECK_EQUAL(silicon, moveCopiedSilicon);
 
     Material assignedSilicon = silicon;
-    BOOST_TEST(silicon == assignedSilicon);
+    BOOST_CHECK_EQUAL(silicon, assignedSilicon);
 
     Material moveAssignedSilicon = std::move(assignedSilicon);
-    BOOST_TEST(silicon == moveAssignedSilicon);
+    BOOST_CHECK_EQUAL(silicon, moveAssignedSilicon);
   }
 }
 }

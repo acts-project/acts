@@ -25,7 +25,7 @@ namespace Test {
     auto                       accMat0D = material0D.accumulatedMaterial();
     BOOST_CHECK_EQUAL(accMat0D.size(), 1);
     BOOST_CHECK_EQUAL(accMat0D[0].size(), 1);
-    BOOST_TEST(material0D.splitFactor() == 0.);
+    BOOST_CHECK_EQUAL(material0D.splitFactor(), 0.);
 
     // Test:
     // BinnesSurfaceMatieral accumulation - 1D
@@ -67,8 +67,8 @@ namespace Test {
     auto accMatProp0D = accMat0D[0][0];
     auto matProp0D    = accMatProp0D.totalAverage();
 
-    BOOST_TEST(matProp0D.second == 2);
-    BOOST_TEST(matProp0D.first.thicknessInX0() == two.thicknessInX0());
+    BOOST_CHECK_EQUAL(matProp0D.second, 2);
+    BOOST_CHECK_EQUAL(matProp0D.first.thicknessInX0(), two.thicknessInX0());
   }
 
   /// Test the filling and conversion
@@ -112,15 +112,16 @@ namespace Test {
     auto accMatProp10 = accMat2D[1][0].totalAverage();
     auto accMatProp11 = accMat2D[1][1].totalAverage();
 
-    BOOST_TEST(accMatProp00.second == 1);
-    BOOST_TEST(accMatProp01.second == 2);
-    BOOST_TEST(accMatProp10.second == 3);
-    BOOST_TEST(accMatProp11.second == 4);
+    BOOST_CHECK_EQUAL(accMatProp00.second, 1);
+    BOOST_CHECK_EQUAL(accMatProp01.second, 2);
+    BOOST_CHECK_EQUAL(accMatProp10.second, 3);
+    BOOST_CHECK_EQUAL(accMatProp11.second, 4);
 
-    BOOST_TEST(accMatProp00.first.thicknessInX0() == one.thicknessInX0());
-    BOOST_TEST(accMatProp01.first.thicknessInX0() == two.thicknessInX0());
-    BOOST_TEST(accMatProp10.first.thicknessInX0() == three.thicknessInX0());
-    BOOST_TEST(accMatProp11.first.thicknessInX0() == four.thicknessInX0());
+    BOOST_CHECK_EQUAL(accMatProp00.first.thicknessInX0(), one.thicknessInX0());
+    BOOST_CHECK_EQUAL(accMatProp01.first.thicknessInX0(), two.thicknessInX0());
+    BOOST_CHECK_EQUAL(accMatProp10.first.thicknessInX0(),
+                      three.thicknessInX0());
+    BOOST_CHECK_EQUAL(accMatProp11.first.thicknessInX0(), four.thicknessInX0());
   }
 
 }  // namespace Test

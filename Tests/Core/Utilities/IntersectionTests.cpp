@@ -28,7 +28,7 @@ namespace Test {
 
     // a non-valid intersection
     Intersection nIp(Vector3D(3., 3., 0.), 3., false);
-    BOOST_CHECK_EQUAL(nIp.valid, false);
+    BOOST_CHECK(!nIp.valid);
 
     std::vector<Intersection> fstpIntersections = {fIp, sIp, tIp};
     std::vector<Intersection> tsfpIntersections = {tIp, sIp, fIp};
@@ -187,7 +187,7 @@ namespace Test {
                    secondSet.begin(),
                    secondSet.end(),
                    std::back_inserter(unionSetStd));
-    BOOST_TEST(unionSetStd.size() == 6);
+    BOOST_CHECK_EQUAL(unionSetStd.size(), 6);
 
     // This should give 5 different inteseciton attempts (for each surface 1)
     SameSurfaceIntersection onSameSurface;
@@ -197,7 +197,7 @@ namespace Test {
                    secondSet.end(),
                    std::back_inserter(unionSetCst),
                    onSameSurface);
-    BOOST_TEST(unionSetCst.size() == 5);
+    BOOST_CHECK_EQUAL(unionSetCst.size(), 5);
   }
 
 }  // namespace Test

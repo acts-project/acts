@@ -6,23 +6,19 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Ellipse Bounds Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank
-
 #include <boost/test/data/test_case.hpp>
-// leave blank
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank
+// clang-format on
 
-//
+#include <limits>
+
 #include "Acts/Surfaces/EllipseBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-//
-#include <limits>
 
 namespace Acts {
 
@@ -37,16 +33,16 @@ namespace Test {
     // EllipseBounds defaultConstructedEllipseBounds;  //deleted
     //
     /// Test construction with dimensions
-    BOOST_TEST(
+    BOOST_CHECK_EQUAL(
         EllipseBounds(minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector)
-            .type()
-        == SurfaceBounds::Ellipse);
+            .type(),
+        SurfaceBounds::Ellipse);
     //
     /// Copy constructor
     EllipseBounds original(
         minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector);
     EllipseBounds copied(original);
-    BOOST_TEST(copied.type() == SurfaceBounds::Ellipse);
+    BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::Ellipse);
   }
 
   /// Unit tests for EllipseBounds properties
@@ -59,11 +55,11 @@ namespace Test {
     EllipseBounds ellipseBoundsObject(
         minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector);
     auto pClonedEllipseBoundsObject = ellipseBoundsObject.clone();
-    BOOST_TEST(bool(pClonedEllipseBoundsObject));
+    BOOST_CHECK_NE(pClonedEllipseBoundsObject, nullptr);
     delete pClonedEllipseBoundsObject;
     //
     /// Test type() (redundant; already used in constructor confirmation)
-    BOOST_TEST(ellipseBoundsObject.type() == SurfaceBounds::Ellipse);
+    BOOST_CHECK_EQUAL(ellipseBoundsObject.type(), SurfaceBounds::Ellipse);
     //
     // clone already tested
     //
@@ -71,51 +67,56 @@ namespace Test {
     Vector2D origin(0., 0.);
     Vector2D outsideBy10(0., 30.);
     Vector2D inRectangle(17., 11.);
-    BOOST_TEST(ellipseBoundsObject.distanceToBoundary(origin)
-               == 10.);  // makes sense
-    BOOST_TEST(ellipseBoundsObject.distanceToBoundary(outsideBy10)
-               == 10.);  // fails, not clear why
+    CHECK_CLOSE_REL(ellipseBoundsObject.distanceToBoundary(origin),
+                    10.,
+                    1e-6);  // makes sense
+    CHECK_CLOSE_REL(ellipseBoundsObject.distanceToBoundary(outsideBy10),
+                    10.,
+                    1e-6);  // fails, not clear why
     //
     /// Test rMinX
-    BOOST_TEST(ellipseBoundsObject.rMinX() == minRad1);
+    BOOST_CHECK_EQUAL(ellipseBoundsObject.rMinX(), minRad1);
     //
     /// Test rMinY
-    BOOST_TEST(ellipseBoundsObject.rMinY() == minRad2);
+    BOOST_CHECK_EQUAL(ellipseBoundsObject.rMinY(), minRad2);
     //
     /// Test rMaxX
-    BOOST_TEST(ellipseBoundsObject.rMaxX() == maxRad1);
+    BOOST_CHECK_EQUAL(ellipseBoundsObject.rMaxX(), maxRad1);
     //
     /// Test rMaxY
-    BOOST_TEST(ellipseBoundsObject.rMaxY() == maxRad2);
+    BOOST_CHECK_EQUAL(ellipseBoundsObject.rMaxY(), maxRad2);
     //
     /// Test averagePhi
-    BOOST_TEST(ellipseBoundsObject.averagePhi() == averagePhi);
+    BOOST_CHECK_EQUAL(ellipseBoundsObject.averagePhi(), averagePhi);
     //
     /// Test vertices
     std::vector<Vector2D> expectedVertices{
         {15, 0}, {0, 20}, {-15, 0}, {0, -20}};
-    BOOST_TEST(ellipseBoundsObject.vertices() == expectedVertices);
+    const auto& actualVertices = ellipseBoundsObject.vertices();
+    BOOST_CHECK_EQUAL_COLLECTIONS(actualVertices.cbegin(),
+                                  actualVertices.cend(),
+                                  expectedVertices.cbegin(),
+                                  expectedVertices.cend());
     //
     /// Test boundingBox
-    BOOST_TEST(ellipseBoundsObject.boundingBox() == RectangleBounds(15., 20.));
+    BOOST_CHECK_EQUAL(ellipseBoundsObject.boundingBox(),
+                      RectangleBounds(15., 20.));
     //
     /// Test halfPhiSector
-    BOOST_TEST(ellipseBoundsObject.halfPhiSector() == M_PI / 2.);
+    BOOST_CHECK_EQUAL(ellipseBoundsObject.halfPhiSector(), M_PI / 2.);
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
     ellipseBoundsObject.dump(dumpOuput);
-    BOOST_TEST(dumpOuput.is_equal(
+    BOOST_CHECK(dumpOuput.is_equal(
         "Acts::EllipseBounds:  (innerRadiusX, innerRadiusY, outerRadiusX, "
         "outerRadiusY, hPhiSector) = (10.0000000, 15.0000000, 15.0000000, "
         "20.0000000, 0.0000000, 1.5707963)"));
     //
     /// Test inside
-    BOOST_TEST(ellipseBoundsObject.inside(inRectangle, BoundaryCheck(true))
-               == false);
+    BOOST_CHECK(!ellipseBoundsObject.inside(inRectangle, BoundaryCheck(true)));
     // dont understand why this is so:
-    BOOST_TEST(ellipseBoundsObject.inside(outsideBy10, BoundaryCheck(true))
-               == false);
+    BOOST_CHECK(!ellipseBoundsObject.inside(outsideBy10, BoundaryCheck(true)));
   }
   /// Unit test for testing EllipseBounds assignment
   BOOST_AUTO_TEST_CASE(EllipseBoundsAssignment)
@@ -127,13 +128,14 @@ namespace Test {
     EllipseBounds similarlyConstructeEllipseBoundsObject(
         minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector);
     /// Test operator ==
-    BOOST_TEST(ellipseBoundsObject == similarlyConstructeEllipseBoundsObject);
+    BOOST_CHECK_EQUAL(ellipseBoundsObject,
+                      similarlyConstructeEllipseBoundsObject);
     //
     /// Test assignment
     EllipseBounds assignedEllipseBoundsObject(11., 12., 17., 18., 1.);
     // object, in some sense
     assignedEllipseBoundsObject = ellipseBoundsObject;
-    BOOST_TEST(assignedEllipseBoundsObject == ellipseBoundsObject);
+    BOOST_CHECK_EQUAL(assignedEllipseBoundsObject, ellipseBoundsObject);
   }
 
   BOOST_AUTO_TEST_CASE(EllipseBounds_toVariantData)
@@ -147,22 +149,22 @@ namespace Test {
     std::cout << var_data << std::endl;
 
     variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_TEST(var_map.get<std::string>("type") == "EllipseBounds");
+    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "EllipseBounds");
     variant_map pl = var_map.get<variant_map>("payload");
-    BOOST_TEST(pl.get<double>("rMinX") == minRad1);
-    BOOST_TEST(pl.get<double>("rMinY") == minRad2);
-    BOOST_TEST(pl.get<double>("rMaxX") == maxRad1);
-    BOOST_TEST(pl.get<double>("rMaxY") == maxRad2);
-    BOOST_TEST(pl.get<double>("avgPhi") == averagePhi);
-    BOOST_TEST(pl.get<double>("halfPhi") == phiSector);
+    BOOST_CHECK_EQUAL(pl.get<double>("rMinX"), minRad1);
+    BOOST_CHECK_EQUAL(pl.get<double>("rMinY"), minRad2);
+    BOOST_CHECK_EQUAL(pl.get<double>("rMaxX"), maxRad1);
+    BOOST_CHECK_EQUAL(pl.get<double>("rMaxY"), maxRad2);
+    BOOST_CHECK_EQUAL(pl.get<double>("avgPhi"), averagePhi);
+    BOOST_CHECK_EQUAL(pl.get<double>("halfPhi"), phiSector);
 
     EllipseBounds ell2(var_data);
-    BOOST_TEST(ell.rMinX() == ell2.rMinX());
-    BOOST_TEST(ell.rMinY() == ell2.rMinY());
-    BOOST_TEST(ell.rMaxX() == ell2.rMaxX());
-    BOOST_TEST(ell.rMaxY() == ell2.rMaxY());
-    BOOST_TEST(ell.averagePhi() == ell2.averagePhi());
-    BOOST_TEST(ell.halfPhiSector() == ell2.halfPhiSector());
+    BOOST_CHECK_EQUAL(ell.rMinX(), ell2.rMinX());
+    BOOST_CHECK_EQUAL(ell.rMinY(), ell2.rMinY());
+    BOOST_CHECK_EQUAL(ell.rMaxX(), ell2.rMaxX());
+    BOOST_CHECK_EQUAL(ell.rMaxY(), ell2.rMaxY());
+    BOOST_CHECK_EQUAL(ell.averagePhi(), ell2.averagePhi());
+    BOOST_CHECK_EQUAL(ell.halfPhiSector(), ell2.halfPhiSector());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

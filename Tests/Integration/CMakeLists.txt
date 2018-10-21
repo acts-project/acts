@@ -18,5 +18,5 @@ target_link_libraries (SeedingTest PRIVATE ActsLegacy)
 add_integration_test(SeedingTest)
 
 add_executable (InterpolatedSolenoidBFieldTest InterpolatedSolenoidBFieldTest.cpp)
-target_link_libraries (InterpolatedSolenoidBFieldTest PRIVATE ActsCore)
+target_link_libraries (InterpolatedSolenoidBFieldTest PRIVATE ActsCore ActsTestsCommonHelpers)
 add_integration_test(InterpolatedSolenoidBFieldTest)

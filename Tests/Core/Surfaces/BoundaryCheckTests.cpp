@@ -29,10 +29,10 @@ namespace Test {
     BoundaryCheck check(true);
     Vector2D      ll(-1, -1);
     Vector2D      ur(1, 1);
-    BOOST_TEST(check.isInside({0, 0}, ll, ur) == true);
-    BOOST_TEST(check.isInside({2, 2}, ll, ur) == false);
-    BOOST_TEST(check.isInside({0, 2}, ll, ur) == false);
-    BOOST_TEST(check.isInside({2, 0}, ll, ur) == false);
+    BOOST_CHECK(check.isInside({0, 0}, ll, ur));
+    BOOST_CHECK(!check.isInside({2, 2}, ll, ur));
+    BOOST_CHECK(!check.isInside({0, 2}, ll, ur));
+    BOOST_CHECK(!check.isInside({2, 0}, ll, ur));
   }
   // Aligned box w/ tolerance check along first axis
   BOOST_AUTO_TEST_CASE(BoundaryCheckBoxToleranceLoc0)
@@ -40,11 +40,11 @@ namespace Test {
     BoundaryCheck check(true, false, 1.5, 0.0);
     Vector2D      ll(-1, -1);
     Vector2D      ur(1, 1);
-    BOOST_TEST(check.isInside({0, 0}, ll, ur) == true);
-    BOOST_TEST(check.isInside({2, 2}, ll, ur) == true);
-    BOOST_TEST(check.isInside({4, 4}, ll, ur) == false);
-    BOOST_TEST(check.isInside({0, 2}, ll, ur) == true);
-    BOOST_TEST(check.isInside({2, 0}, ll, ur) == true);
+    BOOST_CHECK(check.isInside({0, 0}, ll, ur));
+    BOOST_CHECK(check.isInside({2, 2}, ll, ur));
+    BOOST_CHECK(!check.isInside({4, 4}, ll, ur));
+    BOOST_CHECK(check.isInside({0, 2}, ll, ur));
+    BOOST_CHECK(check.isInside({2, 0}, ll, ur));
   }
 
   BOOST_AUTO_TEST_CASE(BoundaryCheckBoxDistance)
@@ -81,11 +81,11 @@ namespace Test {
     BoundaryCheck check(cov, 3.0);
     Vector2D      ll(-1, -1);
     Vector2D      ur(1, 1);
-    BOOST_TEST(check.isInside({0, 0}, ll, ur) == true);
-    BOOST_TEST(check.isInside({2, 2}, ll, ur) == true);
-    BOOST_TEST(check.isInside({4, 4}, ll, ur) == false);
-    BOOST_TEST(check.isInside({0, 3}, ll, ur) == true);
-    BOOST_TEST(check.isInside({3, 0}, ll, ur) == true);
+    BOOST_CHECK(check.isInside({0, 0}, ll, ur));
+    BOOST_CHECK(check.isInside({2, 2}, ll, ur));
+    BOOST_CHECK(!check.isInside({4, 4}, ll, ur));
+    BOOST_CHECK(check.isInside({0, 3}, ll, ur));
+    BOOST_CHECK(check.isInside({3, 0}, ll, ur));
   }
 
   BOOST_AUTO_TEST_CASE(BoundaryCheckPolyDistance)
@@ -116,10 +116,10 @@ namespace Test {
   {
     Vector2D      vertices[] = {{-2, 0}, {2, 0}, {0, 2}};
     BoundaryCheck check(true);
-    BOOST_TEST(check.isInside({0, 0}, vertices) == true);
-    BOOST_TEST(check.isInside({0, 1}, vertices) == true);
-    BOOST_TEST(check.isInside({2, 2}, vertices) == false);
-    BOOST_TEST(check.isInside({0, -1}, vertices) == false);
+    BOOST_CHECK(check.isInside({0, 0}, vertices));
+    BOOST_CHECK(check.isInside({0, 1}, vertices));
+    BOOST_CHECK(!check.isInside({2, 2}, vertices));
+    BOOST_CHECK(!check.isInside({0, -1}, vertices));
   }
   // Triangle w/ covariance check
   BOOST_AUTO_TEST_CASE(BoundaryCheckTriangleCovariance)
@@ -128,12 +128,12 @@ namespace Test {
     ActsSymMatrixD<2> cov;
     cov << 0.5, 0, 0, 0.5;
     BoundaryCheck check(cov, 4.1);
-    BOOST_TEST(check.isInside({0, 0}, vertices) == true);
-    BOOST_TEST(check.isInside({0, 1}, vertices) == true);
-    BOOST_TEST(check.isInside({0, 2}, vertices) == true);
-    BOOST_TEST(check.isInside({0, 3}, vertices) == true);
-    BOOST_TEST(check.isInside({0, 4}, vertices) == true);
-    BOOST_TEST(check.isInside({0, 5}, vertices) == false);
+    BOOST_CHECK(check.isInside({0, 0}, vertices));
+    BOOST_CHECK(check.isInside({0, 1}, vertices));
+    BOOST_CHECK(check.isInside({0, 2}, vertices));
+    BOOST_CHECK(check.isInside({0, 3}, vertices));
+    BOOST_CHECK(check.isInside({0, 4}, vertices));
+    BOOST_CHECK(!check.isInside({0, 5}, vertices));
   }
   BOOST_AUTO_TEST_SUITE_END()
 }  // namespace Test

@@ -39,13 +39,14 @@ namespace Test {
       std::shared_ptr<const Surface> pSurface
           = Surface::makeShared<SurfaceStub>();
       auto pNavigationLayer = NavigationLayer::create(std::move(pSurface));
-      BOOST_TEST(pNavigationLayer->layerType() == LayerType::navigation);
+      BOOST_CHECK_EQUAL(pNavigationLayer->layerType(), LayerType::navigation);
       // next level: with thickness
       const double thickness = 0.1;
       auto         pSurface2 = Surface::makeShared<SurfaceStub>();
       auto         pThickNavigationLayer
           = NavigationLayer::create(std::move(pSurface2), thickness);
-      BOOST_TEST(pThickNavigationLayer->layerType() == LayerType::navigation);
+      BOOST_CHECK_EQUAL(pThickNavigationLayer->layerType(),
+                        LayerType::navigation);
     }
 
     /// Unit test for testing NavigationLayer properties
@@ -60,9 +61,10 @@ namespace Test {
       BinningValue b{BinningValue::binZ};
       Vector3D     origin{0., 0., 0.};
       // binningPosition(), needs a better test
-      BOOST_TEST(pNavigationLayer->binningPosition(b) == origin);
+      BOOST_CHECK_EQUAL(pNavigationLayer->binningPosition(b), origin);
       // surfaceRepresentation() [looks dangerous]
-      BOOST_TEST(rawSurfacePtr == &(pNavigationLayer->surfaceRepresentation()));
+      BOOST_CHECK_EQUAL(rawSurfacePtr,
+                        &(pNavigationLayer->surfaceRepresentation()));
       // isOnLayer()
       BOOST_CHECK(pNavigationLayer->isOnLayer(origin, true));
       // isOnLayer()
@@ -97,8 +99,8 @@ namespace Test {
           pNavigationLayer2->surfaceRepresentation().transform(),
           1e-6,
           1e-9);
-      BOOST_TEST(rbounds2->halflengthX() == w);
-      BOOST_TEST(rbounds2->halflengthY() == h);
+      BOOST_CHECK_EQUAL(rbounds2->halflengthX(), w);
+      BOOST_CHECK_EQUAL(rbounds2->halflengthY(), h);
     }
 
     BOOST_AUTO_TEST_SUITE_END()

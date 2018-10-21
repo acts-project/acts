@@ -144,7 +144,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(phiData_arb_binary.bins(), size_t(nBins_binary));
 
     // h/etaData
-    BOOST_TEST((std::abs(etaData_eq.value(eta0Position) - 0.) < 1e-5));
+    CHECK_SMALL(etaData_eq.value(eta0Position), 1e-5);
   }
 
   // test bin values
@@ -406,7 +406,7 @@ namespace Test {
                                         float(-M_PI + 4.5 * phiStep)};
 
     for (size_t ib = 0; ib < phiCenters_eq.size(); ++ib) {
-      BOOST_TEST((std::abs(phiData_eq.center(ib) - phiCenters_eq[ib]) < 1e-3));
+      CHECK_CLOSE_ABS(phiData_eq.center(ib), phiCenters_eq[ib], 1e-3);
     }
   }
 

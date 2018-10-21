@@ -255,8 +255,8 @@ namespace Test {
     const auto& result = epropagator.propagate(start, *cSurface, options);
     auto&       sor    = result.get<so_result>();
 
-    BOOST_TEST(sor.surfaces_passed == 1);
-    BOOST_TEST(std::abs(sor.surface_passed_r - 10.) < 1e-5);
+    BOOST_CHECK_EQUAL(sor.surfaces_passed, 1);
+    CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);
   }
 
   BOOST_DATA_TEST_CASE(

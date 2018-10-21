@@ -83,8 +83,7 @@ namespace Test {
     LineSurfaceStub   boundedLine(pTransform, pLineBounds);
     const LineBounds& bounds
         = dynamic_cast<const LineBounds&>(boundedLine.bounds());
-    BOOST_TEST(bounds == LineBounds(10.0),
-               "bounds() equals construction bounds");
+    BOOST_CHECK_EQUAL(bounds, LineBounds(10.0));
     //
     // globalToLocal()
     Vector3D       gpos{0., 1., 0.};
@@ -108,10 +107,10 @@ namespace Test {
     //
     // isOnSurface
     const Vector3D insidePosition{0., 2.5, 0.};
-    BOOST_TEST(
+    BOOST_CHECK(
         line.isOnSurface(insidePosition, mom, false));  // need better test here
     const Vector3D outsidePosition{100., 100., 200.};
-    BOOST_TEST(!line.isOnSurface(outsidePosition, mom, true));
+    BOOST_CHECK(!line.isOnSurface(outsidePosition, mom, true));
     //
     // lineDirection
     const Vector3D zDirection{0., 0., 1.};
@@ -140,7 +139,7 @@ namespace Test {
     // name()
     boost::test_tools::output_test_stream output;
     output << line.name();
-    BOOST_TEST(output.is_equal("Acts::LineSurface"));
+    BOOST_CHECK(output.is_equal("Acts::LineSurface"));
     //
     // normal
     Vector3D normalVector{0., 0., 1.};  // line direction is same as normal????
@@ -158,13 +157,9 @@ namespace Test {
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub originalLine(pTransform, 2.0, 20.);
     LineSurfaceStub assignedLine(pTransform, 1.0, 1.0);
-    BOOST_TEST(assignedLine != originalLine,
-               "LineSurfaces are different before assignment");  // operator !=
-                                                                 // from base
+    BOOST_CHECK_NE(assignedLine, originalLine);  // operator != from base
     assignedLine = originalLine;
-    BOOST_TEST(assignedLine == originalLine,
-               "LineSurfaces are equal value after assignment");  // operator ==
-                                                                  // from base
+    BOOST_CHECK_EQUAL(assignedLine, originalLine);  // operator == from base
   }
 
   BOOST_AUTO_TEST_CASE(LineSurface_toVariantData)

@@ -113,9 +113,9 @@ namespace IntegrationTest {
 
     // test propagation invariants
     // clang-format off
-    BOOST_TEST((pT - VH::perp(tp->momentum())) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((pz - tp->momentum()(2)) == 0., tt::tolerance(1 * units::_keV));
-    BOOST_TEST((theta - VH::theta(tp->momentum())) == 0., tt::tolerance(1e-4));
+    CHECK_CLOSE_ABS(pT, VH::perp(tp->momentum()), 1 * units::_keV);
+    CHECK_CLOSE_ABS(pz, tp->momentum()(2), 1 * units::_keV);
+    CHECK_CLOSE_ABS(theta, VH::theta(tp->momentum()), 1e-4);
     // clang-format on
 
     double r = std::abs(Nat2SI<units::MOMENTUM>(pT) / (q * Bz));
@@ -157,10 +157,10 @@ namespace IntegrationTest {
     double exp_y = yc + r * sin(phi0 + turns * 2 * M_PI);
 
     // clang-format off
-    BOOST_TEST((exp_phi - VH::phi(tp->momentum())) == 0., tt::tolerance(1e-4));
-    BOOST_TEST((exp_x - tp->position()(0)) == 0., tt::tolerance(disttol));
-    BOOST_TEST((exp_y - tp->position()(1)) == 0., tt::tolerance(disttol));
-    BOOST_TEST((exp_z - tp->position()(2)) == 0., tt::tolerance(disttol));
+    CHECK_CLOSE_ABS(exp_phi, VH::phi(tp->momentum()), 1e-4);
+    CHECK_CLOSE_ABS(exp_x, tp->position()(0), disttol);
+    CHECK_CLOSE_ABS(exp_y, tp->position()(1), disttol);
+    CHECK_CLOSE_ABS(exp_z, tp->position()(2), disttol);
     // clang-format on
     return tp->position();
   }
@@ -217,12 +217,12 @@ namespace IntegrationTest {
 
     // test propagation invariants
     // clang-format off
-    BOOST_TEST((x - bwdPosition(0)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((y - bwdPosition(1)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((z - bwdPosition(2)) == 0.,  tt::tolerance(disttol));
-    BOOST_TEST((px - bwdMomentum(0)) == 0., tt::tolerance(momtol));
-    BOOST_TEST((py - bwdMomentum(1)) == 0., tt::tolerance(momtol));
-    BOOST_TEST((pz - bwdMomentum(2)) == 0., tt::tolerance(momtol));
+    CHECK_CLOSE_ABS(x, bwdPosition(0), disttol);
+    CHECK_CLOSE_ABS(y, bwdPosition(1), disttol);
+    CHECK_CLOSE_ABS(z, bwdPosition(2), disttol);
+    CHECK_CLOSE_ABS(px, bwdMomentum(0), momtol);
+    CHECK_CLOSE_ABS(py, bwdMomentum(1), momtol);
+    CHECK_CLOSE_ABS(pz, bwdMomentum(2), momtol);
     // clang-format on
 
     if (debug) {

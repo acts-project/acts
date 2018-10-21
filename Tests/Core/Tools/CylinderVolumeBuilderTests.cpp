@@ -87,21 +87,21 @@ namespace Test {
     outerConfig6.zMax = 10.;
 
     // check if first volume wraps around the inner volume (wrapping in z)
-    BOOST_TEST(outerConfig1.wraps(innerConfig));
+    BOOST_CHECK(outerConfig1.wraps(innerConfig));
     // check if second volume wraps around the inner volume (wrapping in z)
-    BOOST_TEST(outerConfig2.wraps(innerConfig));
+    BOOST_CHECK(outerConfig2.wraps(innerConfig));
     // check if third volume wraps around the inner volume (wrapping in r)
-    BOOST_TEST(outerConfig3.wraps(innerConfig));
+    BOOST_CHECK(outerConfig3.wraps(innerConfig));
     // check if volume at inside the inner volume can not be wrapped
-    BOOST_TEST(!outerConfig4.wraps(innerConfig));
+    BOOST_CHECK(!outerConfig4.wraps(innerConfig));
     // check if outside volume can not be wrapped around inside volume
-    BOOST_TEST(!innerConfig.wraps(outerConfig3));
+    BOOST_CHECK(!innerConfig.wraps(outerConfig3));
     // check if outside volume containes inside volume
-    BOOST_TEST(outerConfig5.wraps(innerConfig));
+    BOOST_CHECK(outerConfig5.wraps(innerConfig));
     // check if inside volume is not contained by outside volume
-    BOOST_TEST(!innerConfig.wraps(outerConfig5));
+    BOOST_CHECK(!innerConfig.wraps(outerConfig5));
     // check if outside volume wraps around the inside volume
-    BOOST_TEST(outerConfig6.wraps(innerConfig));
+    BOOST_CHECK(outerConfig6.wraps(innerConfig));
   }
 
   /// Unit test for testing the contains(), containsInR() and containsInZ()
@@ -179,25 +179,25 @@ namespace Test {
     innerConfig1.zMax = inner + 5.;
 
     // check if first volume wraps around the inner volume (wrapping in z)
-    BOOST_TEST(!outerConfig1.contains(innerConfig));
+    BOOST_CHECK(!outerConfig1.contains(innerConfig));
     // check if second volume wraps around the inner volume (wrapping in z)
-    BOOST_TEST(!outerConfig2.contains(innerConfig));
+    BOOST_CHECK(!outerConfig2.contains(innerConfig));
     // check if volume at inside the inner volume can not be wrapped
-    BOOST_TEST(!outerConfig4.contains(innerConfig));
+    BOOST_CHECK(!outerConfig4.contains(innerConfig));
     // check if outside volume can not be wrapped around inside volume
-    BOOST_TEST(!innerConfig.contains(outerConfig3));
+    BOOST_CHECK(!innerConfig.contains(outerConfig3));
     // check if outside volume containes inside volume
-    BOOST_TEST(outerConfig5.contains(innerConfig));
+    BOOST_CHECK(outerConfig5.contains(innerConfig));
     // check if inside volume is not contained by outside volume
-    BOOST_TEST(!innerConfig.contains(outerConfig5));
+    BOOST_CHECK(!innerConfig.contains(outerConfig5));
     // check if inside volume is not contained by outside volume
-    BOOST_TEST(!outerConfig6.contains(innerConfig));
+    BOOST_CHECK(!outerConfig6.contains(innerConfig));
 
     // containment checks in r and z for volumes which either contain in r or z
-    BOOST_TEST(innerConfig.containsInZ(innerConfig1));
-    BOOST_TEST(!innerConfig.containsInR(innerConfig1));
-    BOOST_TEST(innerConfig1.containsInR(innerConfig));
-    BOOST_TEST(!innerConfig1.containsInZ(innerConfig));
+    BOOST_CHECK(innerConfig.containsInZ(innerConfig1));
+    BOOST_CHECK(!innerConfig.containsInR(innerConfig1));
+    BOOST_CHECK(innerConfig1.containsInR(innerConfig));
+    BOOST_CHECK(!innerConfig1.containsInZ(innerConfig));
   }
 
   /// Unit test for testing the coverlapsInR()
@@ -254,15 +254,15 @@ namespace Test {
     Config5.zMax = 10.;
 
     // volume does not overlap with volume completely inside
-    BOOST_TEST(!Config0.overlapsInR(Config1));
+    BOOST_CHECK(!Config0.overlapsInR(Config1));
     // volume does not overlap with volume completely outside
-    BOOST_TEST(!Config0.overlapsInR(Config2));
+    BOOST_CHECK(!Config0.overlapsInR(Config2));
     // volume overlaps with rMin
-    BOOST_TEST(Config0.overlapsInR(Config3));
+    BOOST_CHECK(Config0.overlapsInR(Config3));
     // volume overlaps with rMax
-    BOOST_TEST(Config0.overlapsInR(Config4));
+    BOOST_CHECK(Config0.overlapsInR(Config4));
     // volume overlaps with rMin and rMax
-    BOOST_TEST(Config0.overlapsInR(Config5));
+    BOOST_CHECK(Config0.overlapsInR(Config5));
   }
 
   /// Unit test for testing the coverlapsInZ()
@@ -335,17 +335,17 @@ namespace Test {
     Config7.zMax = right;
 
     // volume to the right and left do not overlap
-    BOOST_TEST(!Config0.overlapsInZ(Config1));
-    BOOST_TEST(!Config0.overlapsInZ(Config2));
+    BOOST_CHECK(!Config0.overlapsInZ(Config1));
+    BOOST_CHECK(!Config0.overlapsInZ(Config2));
     // volume with same boundaries overlaps
-    BOOST_TEST(Config0.overlapsInZ(Config3));
+    BOOST_CHECK(Config0.overlapsInZ(Config3));
     // inside volume overlaps
-    BOOST_TEST(Config0.overlapsInZ(Config4));
+    BOOST_CHECK(Config0.overlapsInZ(Config4));
     // volume around overlaps
-    BOOST_TEST(Config0.overlapsInZ(Config5));
+    BOOST_CHECK(Config0.overlapsInZ(Config5));
     // volume overlaps on the sides
-    BOOST_TEST(Config0.overlapsInZ(Config6));
-    BOOST_TEST(Config0.overlapsInZ(Config7));
+    BOOST_CHECK(Config0.overlapsInZ(Config6));
+    BOOST_CHECK(Config0.overlapsInZ(Config7));
   }
 
 }  // namespace Test

@@ -73,12 +73,12 @@ namespace Test {
       CHECK_CLOSE_REL(
           surfIntersection.intersection.pathLength, expectedIntersection, 1e-6);
       // containedSurfaces()
-      BOOST_TEST(approachDescriptor.containedSurfaces().size()
-                 == someSurfaces.size());
+      BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().size(),
+                        someSurfaces.size());
 
       for (size_t i = 0; i < someSurfaces.size(); i++) {
-        BOOST_TEST(approachDescriptor.containedSurfaces().at(i)
-                   == someSurfaces.at(i).get());
+        BOOST_CHECK_EQUAL(approachDescriptor.containedSurfaces().at(i),
+                          someSurfaces.at(i).get());
       }
     }
 

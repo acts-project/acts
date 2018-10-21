@@ -146,7 +146,7 @@ namespace Test {
 
     auto updatedLimit
         = pState.options.abortList.get<PathLimitReached>().internalLimit;
-    BOOST_TEST(updatedLimit < initialLimit);
+    BOOST_CHECK_LT(updatedLimit, initialLimit);
   }
 
   using BField          = ConstantBField;

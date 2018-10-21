@@ -110,13 +110,13 @@ namespace Test {
     consistencyCheck(n_ataPlane_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
-    BOOST_TEST(&ataPlane_from_pars.referenceSurface() == pSurface.get());
-    BOOST_TEST(&ataPlane_from_pars.referenceSurface()
-               == &ataPlane_from_global.referenceSurface());
-    BOOST_TEST(&n_ataPlane_from_pars.referenceSurface() == pSurface.get());
-    BOOST_TEST(&n_ataPlane_from_pars.referenceSurface()
-               == &n_ataPlane_from_global.referenceSurface());
-    BOOST_TEST(pSurface.use_count() == 5);
+    BOOST_CHECK_EQUAL(&ataPlane_from_pars.referenceSurface(), pSurface.get());
+    BOOST_CHECK_EQUAL(&ataPlane_from_pars.referenceSurface(),
+                      &ataPlane_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(&n_ataPlane_from_pars.referenceSurface(), pSurface.get());
+    BOOST_CHECK_EQUAL(&n_ataPlane_from_pars.referenceSurface(),
+                      &n_ataPlane_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(pSurface.use_count(), 5);
 
     // check that the reference frame is the rotation matrix
     CHECK_CLOSE_REL(ataPlane_from_pars.referenceFrame(), rot, 1e-6);
@@ -220,13 +220,13 @@ namespace Test {
     consistencyCheck(n_ataDisc_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
-    BOOST_TEST(&ataDisc_from_pars.referenceSurface() == dSurface.get());
-    BOOST_TEST(&ataDisc_from_pars.referenceSurface()
-               == &ataDisc_from_global.referenceSurface());
-    BOOST_TEST(&n_ataDisc_from_pars.referenceSurface() == dSurface.get());
-    BOOST_TEST(&n_ataDisc_from_pars.referenceSurface()
-               == &n_ataDisc_from_global.referenceSurface());
-    BOOST_TEST(dSurface.use_count() == 5);
+    BOOST_CHECK_EQUAL(&ataDisc_from_pars.referenceSurface(), dSurface.get());
+    BOOST_CHECK_EQUAL(&ataDisc_from_pars.referenceSurface(),
+                      &ataDisc_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(&n_ataDisc_from_pars.referenceSurface(), dSurface.get());
+    BOOST_CHECK_EQUAL(&n_ataDisc_from_pars.referenceSurface(),
+                      &n_ataDisc_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(dSurface.use_count(), 5);
 
     // check that the reference frame is the
     // rotation matrix of the surface
@@ -315,13 +315,15 @@ namespace Test {
     consistencyCheck(n_ataCylinder_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
-    BOOST_TEST(&ataCylinder_from_pars.referenceSurface() == cSurface.get());
-    BOOST_TEST(&ataCylinder_from_pars.referenceSurface()
-               == &ataCylinder_from_global.referenceSurface());
-    BOOST_TEST(&n_ataCylinder_from_pars.referenceSurface() == cSurface.get());
-    BOOST_TEST(&n_ataCylinder_from_pars.referenceSurface()
-               == &n_ataCylinder_from_global.referenceSurface());
-    BOOST_TEST(cSurface.use_count() == 5);
+    BOOST_CHECK_EQUAL(&ataCylinder_from_pars.referenceSurface(),
+                      cSurface.get());
+    BOOST_CHECK_EQUAL(&ataCylinder_from_pars.referenceSurface(),
+                      &ataCylinder_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(&n_ataCylinder_from_pars.referenceSurface(),
+                      cSurface.get());
+    BOOST_CHECK_EQUAL(&n_ataCylinder_from_pars.referenceSurface(),
+                      &n_ataCylinder_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(cSurface.use_count(), 5);
 
     auto pPosition = ataCylinder_from_pars.position();
     // the reference frame is
@@ -401,13 +403,14 @@ namespace Test {
     consistencyCheck(n_ataPerigee_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
-    BOOST_TEST(&ataPerigee_from_pars.referenceSurface() == pSurface.get());
-    BOOST_TEST(&ataPerigee_from_pars.referenceSurface()
-               == &ataPerigee_from_global.referenceSurface());
-    BOOST_TEST(&n_ataPerigee_from_pars.referenceSurface() == pSurface.get());
-    BOOST_TEST(&n_ataPerigee_from_pars.referenceSurface()
-               == &n_ataPerigee_from_global.referenceSurface());
-    BOOST_TEST(pSurface.use_count() == 5);
+    BOOST_CHECK_EQUAL(&ataPerigee_from_pars.referenceSurface(), pSurface.get());
+    BOOST_CHECK_EQUAL(&ataPerigee_from_pars.referenceSurface(),
+                      &ataPerigee_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(&n_ataPerigee_from_pars.referenceSurface(),
+                      pSurface.get());
+    BOOST_CHECK_EQUAL(&n_ataPerigee_from_pars.referenceSurface(),
+                      &n_ataPerigee_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(pSurface.use_count(), 5);
   }
 
   /// @brief Unit test for parameters at a line
@@ -479,13 +482,13 @@ namespace Test {
     consistencyCheck(n_ataLine_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
-    BOOST_TEST(&ataLine_from_pars.referenceSurface() == sSurface.get());
-    BOOST_TEST(&ataLine_from_pars.referenceSurface()
-               == &ataLine_from_global.referenceSurface());
-    BOOST_TEST(&n_ataLine_from_pars.referenceSurface() == sSurface.get());
-    BOOST_TEST(&n_ataLine_from_pars.referenceSurface()
-               == &n_ataLine_from_global.referenceSurface());
-    BOOST_TEST(sSurface.use_count() == 5);
+    BOOST_CHECK_EQUAL(&ataLine_from_pars.referenceSurface(), sSurface.get());
+    BOOST_CHECK_EQUAL(&ataLine_from_pars.referenceSurface(),
+                      &ataLine_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(&n_ataLine_from_pars.referenceSurface(), sSurface.get());
+    BOOST_CHECK_EQUAL(&n_ataLine_from_pars.referenceSurface(),
+                      &n_ataLine_from_global.referenceSurface());
+    BOOST_CHECK_EQUAL(sSurface.use_count(), 5);
   }
 }
 }

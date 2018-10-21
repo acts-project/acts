@@ -6,13 +6,17 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE HomogeneousSurfaceMaterial Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include <climits>
+
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace Acts {
 
@@ -29,19 +33,19 @@ namespace Test {
     // Copy constructor
     HomogeneousSurfaceMaterial hsmCopy(hsm);
     // Test equality of the copy
-    BOOST_TEST(hsm == hsmCopy);
+    BOOST_CHECK_EQUAL(hsm, hsmCopy);
     // Copy move constructor
     HomogeneousSurfaceMaterial hsmCopyMoved(std::move(hsmCopy));
     // Test equality of the copy
-    BOOST_TEST(hsm == hsmCopyMoved);
+    BOOST_CHECK_EQUAL(hsm, hsmCopyMoved);
     // Assignment constructor
     HomogeneousSurfaceMaterial hsmAssigned = hsm;
     // Test equality of the asignment
-    BOOST_TEST(hsm == hsmAssigned);
+    BOOST_CHECK_EQUAL(hsm, hsmAssigned);
     // Assignment move constructor
     HomogeneousSurfaceMaterial hsmAssignedMoved(std::move(hsmAssigned));
     // Test equality of the copy
-    BOOST_TEST(hsm == hsmAssignedMoved);
+    BOOST_CHECK_EQUAL(hsm, hsmAssignedMoved);
   }
 
   // Test the Scaling
@@ -58,8 +62,8 @@ namespace Test {
 
     auto matBin = hsm.materialProperties(0, 0);
 
-    BOOST_TEST(matBin == matHalf);
-    BOOST_TEST(matBin != mat);
+    BOOST_CHECK_EQUAL(matBin, matHalf);
+    BOOST_CHECK_NE(matBin, mat);
   }
 
   // Test the Access
@@ -82,9 +86,9 @@ namespace Test {
     auto matbin = hsmfwd.materialProperties(0, 0);
 
     // Test equality of the copy
-    BOOST_TEST(mat == mat2d);
-    BOOST_TEST(mat == mat3d);
-    BOOST_TEST(mat == matbin);
+    BOOST_CHECK_EQUAL(mat, mat2d);
+    BOOST_CHECK_EQUAL(mat, mat3d);
+    BOOST_CHECK_EQUAL(mat, matbin);
 
     NavigationDirection fDir = forward;
     NavigationDirection bDir = backward;
@@ -94,13 +98,13 @@ namespace Test {
     MaterialUpdateStage post = postUpdate;
 
     // (a) Forward factor material test
-    BOOST_TEST(hsmfwd.factor(fDir, full) == 1.);
-    BOOST_TEST(hsmfwd.factor(fDir, pre) == 0.);
-    BOOST_TEST(hsmfwd.factor(fDir, post) == 1.);
+    BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, full), 1.);
+    BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, pre), 0.);
+    BOOST_CHECK_EQUAL(hsmfwd.factor(fDir, post), 1.);
 
-    BOOST_TEST(hsmfwd.factor(bDir, full) == 1.);
-    BOOST_TEST(hsmfwd.factor(bDir, pre) == 1.);
-    BOOST_TEST(hsmfwd.factor(bDir, post) == 0.);
+    BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, full), 1.);
+    BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, pre), 1.);
+    BOOST_CHECK_EQUAL(hsmfwd.factor(bDir, post), 0.);
 
     auto matFwdFull
         = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, fDir, full);
@@ -115,23 +119,23 @@ namespace Test {
     auto matFwdPre = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, fDir, pre);
     auto matBwdPre = hsmfwd.materialProperties(Vector3D{0., 0., 0.}, bDir, pre);
 
-    BOOST_TEST(mat == matFwdFull);
-    BOOST_TEST(mat == matBwdFull);
+    BOOST_CHECK_EQUAL(mat, matFwdFull);
+    BOOST_CHECK_EQUAL(mat, matBwdFull);
 
-    BOOST_TEST(mat == matFwdPost);
-    BOOST_TEST(vacuum == matBwdPost);
+    BOOST_CHECK_EQUAL(mat, matFwdPost);
+    BOOST_CHECK_EQUAL(vacuum, matBwdPost);
 
-    BOOST_TEST(vacuum == matFwdPre);
-    BOOST_TEST(mat == matBwdPre);
+    BOOST_CHECK_EQUAL(vacuum, matFwdPre);
+    BOOST_CHECK_EQUAL(mat, matBwdPre);
 
     // (b) Split factor material test
-    BOOST_TEST(hsmhalf.factor(fDir, full) == 1.);
-    BOOST_TEST(hsmhalf.factor(fDir, pre) == 0.5);
-    BOOST_TEST(hsmhalf.factor(fDir, post) == 0.5);
+    BOOST_CHECK_EQUAL(hsmhalf.factor(fDir, full), 1.);
+    CHECK_CLOSE_REL(hsmhalf.factor(fDir, pre), 0.5, 1e-6);
+    CHECK_CLOSE_REL(hsmhalf.factor(fDir, post), 0.5, 1e-6);
 
-    BOOST_TEST(hsmhalf.factor(bDir, full) == 1.);
-    BOOST_TEST(hsmhalf.factor(bDir, pre) == 0.5);
-    BOOST_TEST(hsmhalf.factor(bDir, post) == 0.5);
+    BOOST_CHECK_EQUAL(hsmhalf.factor(bDir, full), 1.);
+    CHECK_CLOSE_REL(hsmhalf.factor(bDir, pre), 0.5, 1e-6);
+    CHECK_CLOSE_REL(hsmhalf.factor(bDir, post), 0.5, 1e-6);
 
     matFwdFull = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, fDir, full);
     matBwdFull = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, bDir, full);
@@ -142,23 +146,23 @@ namespace Test {
     matFwdPre = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, fDir, pre);
     matBwdPre = hsmhalf.materialProperties(Vector3D{0., 0., 0.}, bDir, pre);
 
-    BOOST_TEST(mat == matFwdFull);
-    BOOST_TEST(mat == matBwdFull);
+    BOOST_CHECK_EQUAL(mat, matFwdFull);
+    BOOST_CHECK_EQUAL(mat, matBwdFull);
 
-    BOOST_TEST(matHalf == matFwdPost);
-    BOOST_TEST(matHalf == matBwdPost);
+    BOOST_CHECK_EQUAL(matHalf, matFwdPost);
+    BOOST_CHECK_EQUAL(matHalf, matBwdPost);
 
-    BOOST_TEST(matHalf == matFwdPre);
-    BOOST_TEST(matHalf == matBwdPre);
+    BOOST_CHECK_EQUAL(matHalf, matFwdPre);
+    BOOST_CHECK_EQUAL(matHalf, matBwdPre);
 
     // c) Forward factor material test
-    BOOST_TEST(hsmbwd.factor(fDir, full) == 1.);
-    BOOST_TEST(hsmbwd.factor(fDir, pre) == 1.);
-    BOOST_TEST(hsmbwd.factor(fDir, post) == 0.);
+    BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, full), 1.);
+    BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, pre), 1.);
+    BOOST_CHECK_EQUAL(hsmbwd.factor(fDir, post), 0.);
 
-    BOOST_TEST(hsmbwd.factor(bDir, full) == 1.);
-    BOOST_TEST(hsmbwd.factor(bDir, pre) == 0.);
-    BOOST_TEST(hsmbwd.factor(bDir, post) == 1.);
+    BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, full), 1.);
+    BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, pre), 0.);
+    BOOST_CHECK_EQUAL(hsmbwd.factor(bDir, post), 1.);
 
     matFwdFull = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, fDir, full);
     matBwdFull = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, bDir, full);
@@ -169,14 +173,14 @@ namespace Test {
     matFwdPre = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, fDir, pre);
     matBwdPre = hsmbwd.materialProperties(Vector3D{0., 0., 0.}, bDir, pre);
 
-    BOOST_TEST(mat == matFwdFull);
-    BOOST_TEST(mat == matBwdFull);
+    BOOST_CHECK_EQUAL(mat, matFwdFull);
+    BOOST_CHECK_EQUAL(mat, matBwdFull);
 
-    BOOST_TEST(vacuum == matFwdPost);
-    BOOST_TEST(mat == matBwdPost);
+    BOOST_CHECK_EQUAL(vacuum, matFwdPost);
+    BOOST_CHECK_EQUAL(mat, matBwdPost);
 
-    BOOST_TEST(mat == matFwdPre);
-    BOOST_TEST(vacuum == matBwdPre);
+    BOOST_CHECK_EQUAL(mat, matFwdPre);
+    BOOST_CHECK_EQUAL(vacuum, matBwdPre);
   }
 }
 }

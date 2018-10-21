@@ -40,17 +40,17 @@ namespace Test {
 
     /// All of the material should be invalid (the accessible ones)
     auto averageA = a.totalAverage();
-    BOOST_TEST(bool(averageA.first) == false);
+    BOOST_CHECK_EQUAL(bool(averageA.first), false);
     BOOST_CHECK_EQUAL(averageA.second, 0);
 
     /// All of the material should be invalid (the accessible ones)
     auto averageB = bMoved.totalAverage();
-    BOOST_TEST(bool(averageB.first) == false);
+    BOOST_CHECK_EQUAL(bool(averageB.first), false);
     BOOST_CHECK_EQUAL(averageB.second, 0);
 
     /// All of the material should be invalid (the accessible ones)
     auto averageC = cMovedAssigned.totalAverage();
-    BOOST_TEST(bool(averageC.first) == false);
+    BOOST_CHECK_EQUAL(bool(averageC.first), false);
     BOOST_CHECK_EQUAL(averageC.second, 0);
   }
 

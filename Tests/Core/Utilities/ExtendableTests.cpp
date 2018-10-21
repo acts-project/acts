@@ -49,27 +49,27 @@ namespace Test {
     // Test the empty list
     detail::Extendable<> nullist;
     (void)nullist;
-    BOOST_TEST(std::tuple_size<std::tuple<>>::value == 0);
+    BOOST_CHECK_EQUAL(std::tuple_size<std::tuple<>>::value, 0);
 
     detail::Extendable<TypeA> alist;
     auto&                     a0_object = alist.get<TypeA>();
     a0_object.vaA                       = 1.;
-    BOOST_TEST(alist.get<TypeA>().vaA == 1.);
+    BOOST_CHECK_EQUAL(alist.get<TypeA>().vaA, 1.);
 
     detail::Extendable<TypeA, TypeB> ablist;
     auto& a1_object = ablist.get<TypeA>();
     a1_object.vaA   = 2.;
     auto& b1_object = ablist.get<TypeB>();
     b1_object.vaB   = 3;
-    BOOST_TEST(ablist.get<TypeA>().vaA == 2.);
-    BOOST_TEST(ablist.get<TypeB>().vaB == 3);
+    BOOST_CHECK_EQUAL(ablist.get<TypeA>().vaA, 2.);
+    BOOST_CHECK_EQUAL(ablist.get<TypeB>().vaB, 3);
 
     TypeC c;
     c.vaC = '4';
     detail::Extendable<TypeA, TypeB, TypeC> abcList = ablist.append<TypeC>(c);
-    BOOST_TEST(abcList.get<TypeA>().vaA == 2.);
-    BOOST_TEST(abcList.get<TypeB>().vaB == 3);
-    BOOST_TEST(abcList.get<TypeC>().vaC == '4');
+    BOOST_CHECK_EQUAL(abcList.get<TypeA>().vaA, 2.);
+    BOOST_CHECK_EQUAL(abcList.get<TypeB>().vaB, 3);
+    BOOST_CHECK_EQUAL(abcList.get<TypeC>().vaC, '4');
   }
 
 }  // namespace Test

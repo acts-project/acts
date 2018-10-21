@@ -3,7 +3,7 @@ target_link_libraries (ExtendableTests PRIVATE ActsCore)
 add_test(NAME ExtendableUnitTests COMMAND ExtendableTests)
 
 add_executable (UnitConversionTests UnitConversionTests.cpp)
-target_link_libraries (UnitConversionTests PRIVATE ActsCore)
+target_link_libraries (UnitConversionTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME UnitConversionUnitTest COMMAND UnitConversionTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST UnitConversionUnitTest TARGETS UnitConversionTests)
 
@@ -38,7 +38,7 @@ add_test (NAME MPLUnitTest COMMAND MPLTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST MPLUnitTest TARGETS MPLTests)
 
 add_executable (RealQuadraticEquationTests RealQuadraticEquationTests.cpp)
-target_link_libraries (RealQuadraticEquationTests PRIVATE ActsCore)
+target_link_libraries (RealQuadraticEquationTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME RealQuadraticEquationUnitTest COMMAND RealQuadraticEquationTests)
 
 add_executable (AxesTests AxesTests.cpp)

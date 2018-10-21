@@ -43,24 +43,25 @@ namespace Test {
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     auto          pNullTransform = std::make_shared<const Transform3D>();
     // constructor with nullptr transform
-    BOOST_TEST(
-        Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)->type()
-        == Surface::Plane);
+    BOOST_CHECK_EQUAL(
+        Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)->type(),
+        Surface::Plane);
     // constructor with transform
-    BOOST_TEST(Surface::makeShared<PlaneSurface>(pTransform, rBounds)->type()
-               == Surface::Plane);
+    BOOST_CHECK_EQUAL(
+        Surface::makeShared<PlaneSurface>(pTransform, rBounds)->type(),
+        Surface::Plane);
     /// Copy constructor
     auto planeSurfaceObject
         = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     auto copiedPlaneSurface
         = Surface::makeShared<PlaneSurface>(*planeSurfaceObject);
-    BOOST_TEST(copiedPlaneSurface->type() == Surface::Plane);
-    BOOST_TEST(*copiedPlaneSurface == *planeSurfaceObject);
+    BOOST_CHECK_EQUAL(copiedPlaneSurface->type(), Surface::Plane);
+    BOOST_CHECK_EQUAL(*copiedPlaneSurface, *planeSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedPlaneSurface
         = Surface::makeShared<PlaneSurface>(*planeSurfaceObject, *pTransform);
-    BOOST_TEST(copiedTransformedPlaneSurface->type() == Surface::Plane);
+    BOOST_CHECK_EQUAL(copiedTransformedPlaneSurface->type(), Surface::Plane);
 
     /// Construct with nullptr bounds
     DetectorElementStub detElem;
@@ -82,12 +83,12 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     //
     auto pClonedPlaneSurface = planeSurfaceObject->clone();
-    BOOST_TEST(pClonedPlaneSurface->type() == Surface::Plane);
+    BOOST_CHECK_EQUAL(pClonedPlaneSurface->type(), Surface::Plane);
     // Test clone method with translation
     auto pClonedShiftedPlaneSurface
         = planeSurfaceObject->clone(pTransform.get());
     // Does it exist at all in a decent state?
-    BOOST_TEST(pClonedShiftedPlaneSurface->type() == Surface::Plane);
+    BOOST_CHECK_EQUAL(pClonedShiftedPlaneSurface->type(), Surface::Plane);
     // Is it in the right place?
     Translation3D translation2{0., 2., 4.};
     auto pTransform2 = std::make_shared<const Transform3D>(translation2);
@@ -95,18 +96,18 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
     // these two surfaces should be equivalent now (prematurely testing equality
     // also)
-    BOOST_TEST(*pClonedShiftedPlaneSurface == *planeSurfaceObject2);
+    BOOST_CHECK_EQUAL(*pClonedShiftedPlaneSurface, *planeSurfaceObject2);
     // and, trivially, the shifted cloned surface should be different from the
     // original
-    BOOST_TEST(*pClonedShiftedPlaneSurface != *planeSurfaceObject);
+    BOOST_CHECK_NE(*pClonedShiftedPlaneSurface, *planeSurfaceObject);
     //
     /// Test type (redundant)
-    BOOST_TEST(planeSurfaceObject->type() == Surface::Plane);
+    BOOST_CHECK_EQUAL(planeSurfaceObject->type(), Surface::Plane);
     //
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
-    BOOST_TEST(planeSurfaceObject->binningPosition(BinningValue::binX)
-               == binningPosition);
+    BOOST_CHECK_EQUAL(planeSurfaceObject->binningPosition(BinningValue::binX),
+                      binningPosition);
     //
     /// Test referenceFrame
     Vector3D         globalPosition{2.0, 2.0, 0.0};
@@ -122,10 +123,11 @@ namespace Test {
     //
     /// Test normal, given 3D position
     Vector3D normal3D(0., 0., 1.);
-    BOOST_TEST(planeSurfaceObject->normal() == normal3D);
+    BOOST_CHECK_EQUAL(planeSurfaceObject->normal(), normal3D);
     //
     /// Test bounds
-    BOOST_TEST(planeSurfaceObject->bounds().type() == SurfaceBounds::Rectangle);
+    BOOST_CHECK_EQUAL(planeSurfaceObject->bounds().type(),
+                      SurfaceBounds::Rectangle);
 
     /// Test localToGlobal
     Vector2D localPosition{1.5, 1.7};
@@ -145,34 +147,34 @@ namespace Test {
 
     /// Test isOnSurface
     Vector3D offSurface{0, 1, -2.};
-    BOOST_TEST(planeSurfaceObject->isOnSurface(globalPosition, momentum, true)
-               == true);
-    BOOST_TEST(planeSurfaceObject->isOnSurface(offSurface, momentum, true)
-               == false);
+    BOOST_CHECK(
+        planeSurfaceObject->isOnSurface(globalPosition, momentum, true));
+    BOOST_CHECK(!planeSurfaceObject->isOnSurface(offSurface, momentum, true));
     //
     /// intersectionEstimate
     Vector3D direction{0., 0., 1.};
     auto     intersect = planeSurfaceObject->intersectionEstimate(
         offSurface, direction, forward, true);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 4., true, 0};
-    BOOST_TEST(intersect.valid);
-    BOOST_TEST(intersect.position == expectedIntersect.position);
-    BOOST_TEST(intersect.pathLength == expectedIntersect.pathLength);
-    BOOST_TEST(intersect.distance == expectedIntersect.distance);
+    BOOST_CHECK(intersect.valid);
+    BOOST_CHECK_EQUAL(intersect.position, expectedIntersect.position);
+    BOOST_CHECK_EQUAL(intersect.pathLength, expectedIntersect.pathLength);
+    BOOST_CHECK_EQUAL(intersect.distance, expectedIntersect.distance);
     //
     /// Test pathCorrection
-    // BOOST_TEST(planeSurfaceObject.pathCorrection(offSurface, momentum)
-    //               == 0.40218866453252877,
-    //           tt::tolerance(0.01));
+    // CHECK_CLOSE_REL(planeSurfaceObject->pathCorrection(offSurface, momentum),
+    //                 0.40218866453252877,
+    //                 0.01);
     //
     /// Test name
-    BOOST_TEST(planeSurfaceObject->name() == std::string("Acts::PlaneSurface"));
+    BOOST_CHECK_EQUAL(planeSurfaceObject->name(),
+                      std::string("Acts::PlaneSurface"));
     //
     /// Test dump
     // TODO 2017-04-12 msmk: check how to correctly check output
     //    boost::test_tools::output_test_stream dumpOuput;
     //    planeSurfaceObject.dump(dumpOuput);
-    //    BOOST_TEST(dumpOuput.is_equal(
+    //    BOOST_CHECK(dumpOuput.is_equal(
     //      "Acts::PlaneSurface\n"
     //      "    Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
     //      "    Rotation:             colX = (1.000000, 0.000000, 0.000000)\n"
@@ -195,7 +197,7 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     //
     /// Test equality operator
-    BOOST_TEST(*planeSurfaceObject == *planeSurfaceObject2);
+    BOOST_CHECK_EQUAL(*planeSurfaceObject, *planeSurfaceObject2);
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a PlaneSurface object to the existing one");
@@ -204,7 +206,7 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(nullptr, nullptr);
     *assignedPlaneSurface = *planeSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_TEST(*assignedPlaneSurface == *planeSurfaceObject);
+    BOOST_CHECK_EQUAL(*assignedPlaneSurface, *planeSurfaceObject);
   }
 
   BOOST_AUTO_TEST_CASE(PlaneSurface_Serialization)

@@ -6,23 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE MagneticField Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank
 #include <boost/test/data/test_case.hpp>
+// clang-format on
 
+#include <boost/type_erasure/any_cast.hpp>
 #include <cmath>
 #include <fstream>
 #include <iostream>
 #include <random>
 
-#include <boost/test/data/test_case.hpp>
-#include <boost/type_erasure/any_cast.hpp>
-
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BFieldMapUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -144,7 +142,7 @@ namespace IntegrationTest {
     if (std::abs(r - R) > 10 && (std::abs(z) < L / 3. || r > 20)) {
       // only if more than 10mm away from coil for all z
       // only if not close to r=0 for large z
-      BOOST_TEST(std::abs(B.norm() - Bm.norm()) / B.norm() < 0.05);
+      CHECK_CLOSE_REL(Bm.norm(), B.norm(), 0.05);
     }
 
     std::ofstream& ofstr = valid.m_ofstr;

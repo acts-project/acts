@@ -12,7 +12,7 @@ target_link_libraries (MaterialPropertiesTests PRIVATE ActsCore ActsTestsCommonH
 
 add_executable (HomogeneousSurfaceMaterialTests HomogeneousSurfaceMaterialTests.cpp)
 target_include_directories (HomogeneousSurfaceMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (HomogeneousSurfaceMaterialTests PRIVATE ActsCore)
+target_link_libraries (HomogeneousSurfaceMaterialTests PRIVATE ActsCore ActsTestsCommonHelpers)
 
 add_executable (BinnedSurfaceMaterialTests BinnedSurfaceMaterialTests.cpp)
 target_include_directories (BinnedSurfaceMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})

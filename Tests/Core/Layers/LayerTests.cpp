@@ -47,7 +47,7 @@ namespace Test {
       //
       /// Minimum possible construction (default constructor is deleted)
       LayerStub minallyConstructed(nullptr);
-      BOOST_TEST(minallyConstructed.constructedOk());
+      BOOST_CHECK(minallyConstructed.constructedOk());
       /// Need an approach descriptor for the next level of complexity:
       std::vector<std::shared_ptr<const Surface>> aSurfaces{
           Surface::makeShared<SurfaceStub>(),
@@ -58,7 +58,7 @@ namespace Test {
       LayerStub    approachDescriptorConstructed(
           nullptr, thickness, std::move(ad));
       /// Construction with (minimal) approach descriptor
-      BOOST_TEST(approachDescriptorConstructed.constructedOk());
+      BOOST_CHECK(approachDescriptorConstructed.constructedOk());
       // Copy construction is deleted
     }
 
@@ -80,40 +80,40 @@ namespace Test {
       LayerStub    layerStub(nullptr, thickness, std::move(ad));
       //
       /// surfaceArray()
-      BOOST_TEST(layerStub.surfaceArray() == nullptr);
+      BOOST_CHECK_EQUAL(layerStub.surfaceArray(), nullptr);
       /// thickness()
-      BOOST_TEST(layerStub.thickness() == thickness);
+      BOOST_CHECK_EQUAL(layerStub.thickness(), thickness);
       // onLayer() is templated; can't find implementation!
       /// isOnLayer() (delegates to the Surface 'isOnSurface()')
       const Vector3D pos{0.0, 0.0, 0.0};
       const Vector3D pos2{100., 100., std::nan("")};
-      BOOST_TEST(layerStub.isOnLayer(pos) == true);
+      BOOST_CHECK(layerStub.isOnLayer(pos));
       // this should fail, but does not, but possibly my fault in SurfaceStub
       // implementation:
-      BOOST_TEST(layerStub.isOnLayer(pos2) == false);
+      BOOST_CHECK(!layerStub.isOnLayer(pos2));
       /// approachDescriptor(), retrieved as a pointer.
-      BOOST_TEST(layerStub.approachDescriptor() == adPtr);
+      BOOST_CHECK_EQUAL(layerStub.approachDescriptor(), adPtr);
       const Vector3D gpos{0., 0., 1.0};
       const Vector3D direction{0., 0., -1.};
       /// nextLayer()
-      BOOST_TEST(!(layerStub.nextLayer(gpos, direction)));
+      BOOST_CHECK(!(layerStub.nextLayer(gpos, direction)));
       /// trackingVolume()
-      BOOST_TEST(!layerStub.trackingVolume());
+      BOOST_CHECK(!layerStub.trackingVolume());
       /// enclosingDetachedTrackingVolume()
-      BOOST_TEST(!layerStub.enclosingDetachedTrackingVolume());
+      BOOST_CHECK(!layerStub.enclosingDetachedTrackingVolume());
       /// registerRepresentingVolume(const AbstractVolume* avol)
       // need a volume:
       auto cubeVolumePtr = std::make_shared<CuboidVolumeBounds>(1., 2., 3.);
       AbstractVolume* abstractVolumePtr
           = new AbstractVolume(nullptr, cubeVolumePtr);
       layerStub.registerRepresentingVolume(abstractVolumePtr);
-      BOOST_TEST(layerStub.representingVolume() == abstractVolumePtr);
+      BOOST_CHECK_EQUAL(layerStub.representingVolume(), abstractVolumePtr);
       // BOOST_TEST_CHECKPOINT("Before ending test");
       // deletion results in "memory access violation at address: 0x00000071: no
       // mapping at fault address"
       // delete abstractVolumePtr;
       /// layerType()
-      BOOST_TEST(layerStub.layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(layerStub.layerType(), LayerType::passive);
     }
 
     BOOST_AUTO_TEST_SUITE_END()

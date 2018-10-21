@@ -46,7 +46,7 @@ namespace Test {
       double radius(0.5), halfz(10.);
       auto   pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
       auto   pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
-      BOOST_TEST(pCylinderLayer->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pCylinderLayer->layerType(), LayerType::passive);
       // next level: need an array of Surfaces;
       // bounds object, rectangle type
       auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
@@ -58,7 +58,8 @@ namespace Test {
       const double thickness(1.0);
       auto         pCylinderLayerFromSurfaces
           = CylinderLayer::create(pTransform, pCylinder, nullptr);
-      BOOST_TEST(pCylinderLayerFromSurfaces->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pCylinderLayerFromSurfaces->layerType(),
+                        LayerType::passive);
       // construct with thickness:
       auto pCylinderLayerWithThickness
           = CylinderLayer::create(pTransform, pCylinder, nullptr, thickness);
@@ -70,8 +71,8 @@ namespace Test {
       auto adPtr                                = ad.get();
       auto pCylinderLayerWithApproachDescriptor = CylinderLayer::create(
           pTransform, pCylinder, nullptr, thickness, std::move(ad));
-      BOOST_TEST(pCylinderLayerWithApproachDescriptor->approachDescriptor()
-                 == adPtr);
+      BOOST_CHECK_EQUAL(
+          pCylinderLayerWithApproachDescriptor->approachDescriptor(), adPtr);
       // with the layerType specified...
       auto pCylinderLayerWithLayerType
           = CylinderLayer::create(pTransform,
@@ -80,8 +81,8 @@ namespace Test {
                                   thickness,
                                   std::move(ad),
                                   LayerType::passive);
-      BOOST_TEST(pCylinderLayerWithLayerType->layerType()
-                 == LayerType::passive);
+      BOOST_CHECK_EQUAL(pCylinderLayerWithLayerType->layerType(),
+                        LayerType::passive);
     }
 
     /// Unit test for testing Layer properties
@@ -94,8 +95,8 @@ namespace Test {
       auto   pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
       auto   pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
       // auto planeSurface = pCylinderLayer->surfaceRepresentation();
-      BOOST_TEST(pCylinderLayer->surfaceRepresentation().name()
-                 == std::string("Acts::CylinderSurface"));
+      BOOST_CHECK_EQUAL(pCylinderLayer->surfaceRepresentation().name(),
+                        std::string("Acts::CylinderSurface"));
     }
 
     BOOST_AUTO_TEST_CASE(CylinderLayer_toVariantData)

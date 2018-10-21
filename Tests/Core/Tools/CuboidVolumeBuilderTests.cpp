@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE CuboidVolumeBuilderTest
-
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
 
 #include <vector>
+
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Layers/Layer.hpp"
@@ -19,6 +21,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -72,15 +75,15 @@ namespace Test {
     }
 
     // Test that there are actually 4 surface configurations
-    BOOST_TEST(surfaceConfig.size() == 4);
+    BOOST_CHECK_EQUAL(surfaceConfig.size(), 4);
 
     // Test that 4 surfaces can be built
     for (const auto& cfg : surfaceConfig) {
       std::shared_ptr<const PlaneSurface> pSur = cvb.buildSurface(cfg);
-      BOOST_TEST(pSur != nullptr);
-      BOOST_TEST(pSur->center() == cfg.position);
-      BOOST_TEST(pSur->associatedMaterial() != nullptr);
-      BOOST_TEST(pSur->associatedDetectorElement() != nullptr);
+      BOOST_CHECK_NE(pSur, nullptr);
+      CHECK_CLOSE_ABS(pSur->center(), cfg.position, 1e-9);
+      BOOST_CHECK_NE(pSur->associatedMaterial(), nullptr);
+      BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
     }
 
     ////////////////////////////////////////////////////////////////////
@@ -93,15 +96,15 @@ namespace Test {
     }
 
     // Test that there are actually 4 layer configurations
-    BOOST_TEST(layerConfig.size() == 4);
+    BOOST_CHECK_EQUAL(layerConfig.size(), 4);
 
     // Test that 4 layers with surfaces can be built
     for (auto& cfg : layerConfig) {
       LayerPtr layer = cvb.buildLayer(cfg);
-      BOOST_TEST(layer != nullptr);
-      BOOST_TEST(cfg.surface != nullptr);
-      BOOST_TEST(layer->surfaceArray()->surfaces().size() == 1);
-      BOOST_TEST(layer->layerType() == LayerType::active);
+      BOOST_CHECK_NE(layer, nullptr);
+      BOOST_CHECK_NE(cfg.surface, nullptr);
+      BOOST_CHECK_EQUAL(layer->surfaceArray()->surfaces().size(), 1);
+      BOOST_CHECK_EQUAL(layer->layerType(), LayerType::active);
     }
 
     for (auto& cfg : layerConfig) {
@@ -119,21 +122,21 @@ namespace Test {
 
     // Test the building
     std::shared_ptr<TrackingVolume> trVol = cvb.buildVolume(volumeConfig);
-    BOOST_TEST(volumeConfig.layers.size() == 4);
-    BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
-               == volumeConfig.layers.size() * 2
-                   + 1);  // #layers = navigation + material layers
-    BOOST_TEST(trVol->volumeName() == volumeConfig.name);
-    BOOST_TEST(trVol->material() != nullptr);
+    BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+    BOOST_CHECK_EQUAL(trVol->confinedLayers()->arrayObjects().size(),
+                      volumeConfig.layers.size() * 2
+                          + 1);  // #layers = navigation + material layers
+    BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
+    BOOST_CHECK_NE(trVol->material(), nullptr);
 
     // Test the building
     volumeConfig.layers.clear();
     trVol = cvb.buildVolume(volumeConfig);
-    BOOST_TEST(volumeConfig.layers.size() == 4);
-    BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
-               == volumeConfig.layers.size() * 2
-                   + 1);  // #layers = navigation + material layers
-    BOOST_TEST(trVol->volumeName() == volumeConfig.name);
+    BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+    BOOST_CHECK_EQUAL(trVol->confinedLayers()->arrayObjects().size(),
+                      volumeConfig.layers.size() * 2
+                          + 1);  // #layers = navigation + material layers
+    BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
 
     volumeConfig.layers.clear();
     for (auto& lay : volumeConfig.layerCfg) {
@@ -141,9 +144,9 @@ namespace Test {
       lay.active  = true;
     }
     trVol = cvb.buildVolume(volumeConfig);
-    BOOST_TEST(volumeConfig.layers.size() == 4);
+    BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
     for (auto& lay : volumeConfig.layers) {
-      BOOST_TEST(lay->layerType() == LayerType::active);
+      BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
     }
 
     volumeConfig.layers.clear();
@@ -151,9 +154,9 @@ namespace Test {
       lay.active = true;
     }
     trVol = cvb.buildVolume(volumeConfig);
-    BOOST_TEST(volumeConfig.layers.size() == 4);
+    BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
     for (auto& lay : volumeConfig.layers) {
-      BOOST_TEST(lay->layerType() == LayerType::active);
+      BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
     }
 
     ////////////////////////////////////////////////////////////////////
@@ -214,10 +217,12 @@ namespace Test {
     TrackingGeometryBuilder tgb(tgbCfg);
 
     std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
-    BOOST_TEST(detector->lowestTrackingVolume({1., 0., 0.})->volumeName()
-               == volumeConfig.name);
-    BOOST_TEST(detector->lowestTrackingVolume({-1., 0., 0.})->volumeName()
-               == volumeConfig2.name);
+    BOOST_CHECK_EQUAL(
+        detector->lowestTrackingVolume({1., 0., 0.})->volumeName(),
+        volumeConfig.name);
+    BOOST_CHECK_EQUAL(
+        detector->lowestTrackingVolume({-1., 0., 0.})->volumeName(),
+        volumeConfig2.name);
   }
 }  // namespace Test
 }  // namespace Acts

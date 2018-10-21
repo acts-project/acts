@@ -171,21 +171,21 @@ namespace Test {
     // - and thus should call a return to the stepper
     navigator.status(state);
     // Check that the currentVolume is set
-    BOOST_TEST((state.navigation.currentVolume != nullptr));
+    BOOST_CHECK_NE(state.navigation.currentVolume, nullptr);
     // Check that the currentVolume is the startVolume
-    BOOST_TEST(
-        (state.navigation.currentVolume == state.navigation.startVolume));
+    BOOST_CHECK_EQUAL(state.navigation.currentVolume,
+                      state.navigation.startVolume);
     // Check that the currentSurface is reset to:
-    BOOST_TEST((state.navigation.currentSurface == nullptr));
+    BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
     // No layer has been found
-    BOOST_TEST((state.navigation.navLayers.size() == 0));
+    BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0);
     // ACTORS-ABORTERS-TARGET
     navigator.target(state);
     // A layer has been found
-    BOOST_TEST((state.navigation.navLayers.size() == 1));
+    BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1);
     // The iterator should points to the begin
-    BOOST_TEST(
-        (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
+    BOOST_CHECK(state.navigation.navLayerIter
+                == state.navigation.navLayers.begin());
     // Cache the beam pipe radius
     double beamPipeRadius
         = perp(state.navigation.navLayerIter->intersection.position);
@@ -207,12 +207,12 @@ namespace Test {
     // STATUS
     navigator.status(state);
     // Check that the currentVolume is the still startVolume
-    BOOST_TEST(
-        (state.navigation.currentVolume == state.navigation.startVolume));
+    BOOST_CHECK_EQUAL(state.navigation.currentVolume,
+                      state.navigation.startVolume);
     // The layer number has not changed
-    BOOST_TEST((state.navigation.navLayers.size() == 1));
+    BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1);
     // The iterator still points to the begin
-    BOOST_TEST(
+    BOOST_CHECK(
         (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
     // ACTORS-ABORTERS-TARGET
     navigator.target(state);

@@ -34,20 +34,21 @@ namespace Test {
     // deleted
     //
     /// Test construction with dimensions and default stereo
-    BOOST_TEST(
-        DiscTrapezoidalBounds(minHalfX, maxHalfX, rMin, rMax, averagePhi).type()
-        == SurfaceBounds::DiscTrapezoidal);
+    BOOST_CHECK_EQUAL(
+        DiscTrapezoidalBounds(minHalfX, maxHalfX, rMin, rMax, averagePhi)
+            .type(),
+        SurfaceBounds::DiscTrapezoidal);
     //
     /// Test construction with all dimensions
-    BOOST_TEST(DiscTrapezoidalBounds(
-                   minHalfX, maxHalfX, rMin, rMax, averagePhi, stereo)
-                   .type()
-               == SurfaceBounds::DiscTrapezoidal);
+    BOOST_CHECK_EQUAL(DiscTrapezoidalBounds(
+                          minHalfX, maxHalfX, rMin, rMax, averagePhi, stereo)
+                          .type(),
+                      SurfaceBounds::DiscTrapezoidal);
     //
     /// Copy constructor
     DiscTrapezoidalBounds original(minHalfX, maxHalfX, rMin, rMax, averagePhi);
     DiscTrapezoidalBounds copied(original);
-    BOOST_TEST(copied.type() == SurfaceBounds::DiscTrapezoidal);
+    BOOST_CHECK_EQUAL(copied.type(), SurfaceBounds::DiscTrapezoidal);
   }
 
   /// Unit tests for DiscTrapezoidalBounds properties
@@ -59,12 +60,12 @@ namespace Test {
     DiscTrapezoidalBounds discTrapezoidalBoundsObject(
         minHalfX, maxHalfX, rMin, rMax, averagePhi);
     auto pClonedDiscTrapezoidalBounds = discTrapezoidalBoundsObject.clone();
-    BOOST_TEST(bool(pClonedDiscTrapezoidalBounds));
+    BOOST_CHECK_NE(pClonedDiscTrapezoidalBounds, nullptr);
     delete pClonedDiscTrapezoidalBounds;
     //
     /// Test type() (redundant; already used in constructor confirmation)
-    BOOST_TEST(discTrapezoidalBoundsObject.type()
-               == SurfaceBounds::DiscTrapezoidal);
+    BOOST_CHECK_EQUAL(discTrapezoidalBoundsObject.type(),
+                      SurfaceBounds::DiscTrapezoidal);
     //
     /// Test distanceToBoundary
     Vector2D origin(0., 0.);
@@ -78,18 +79,17 @@ namespace Test {
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
     discTrapezoidalBoundsObject.dump(dumpOuput);
-    BOOST_TEST(dumpOuput.is_equal(
+    BOOST_CHECK(dumpOuput.is_equal(
         "Acts::DiscTrapezoidalBounds:  (innerRadius, outerRadius, hMinX, "
         "hMaxX, hlengthY, hPhiSector, averagePhi, rCenter, stereo) = "
         "(2.0000000, 6.0000000, 1.0000000, 5.0000000, 0.7922870, 0.9851108, "
         "0.0000000, 2.5243378, 0.0000000)"));
     //
     /// Test inside
-    BOOST_TEST(
-        discTrapezoidalBoundsObject.inside(inSurface, BoundaryCheck(true))
-        == true);
-    BOOST_TEST(discTrapezoidalBoundsObject.inside(outside, BoundaryCheck(true))
-               == false);
+    BOOST_CHECK(
+        discTrapezoidalBoundsObject.inside(inSurface, BoundaryCheck(true)));
+    BOOST_CHECK(
+        !discTrapezoidalBoundsObject.inside(outside, BoundaryCheck(true)));
     //
     /// Test rMin
     CHECK_CLOSE_REL(discTrapezoidalBoundsObject.rMin(), rMin, 1e-6);
@@ -131,8 +131,8 @@ namespace Test {
     DiscTrapezoidalBounds assignedDiscTrapezoidalBoundsObject(
         2.1, 6.6, 3.4, 4.2, 33.);
     assignedDiscTrapezoidalBoundsObject = discTrapezoidalBoundsObject;
-    BOOST_TEST(assignedDiscTrapezoidalBoundsObject
-               == discTrapezoidalBoundsObject);
+    BOOST_CHECK_EQUAL(assignedDiscTrapezoidalBoundsObject,
+                      discTrapezoidalBoundsObject);
   }
 
   BOOST_AUTO_TEST_CASE(DiscTrapezoidalBounds_toVariantData)
@@ -145,7 +145,8 @@ namespace Test {
     std::cout << var_dt << std::endl;
 
     variant_map var_dt_map = boost::get<variant_map>(var_dt);
-    BOOST_TEST(var_dt_map.get<std::string>("type") == "DiscTrapezoidalBounds");
+    BOOST_CHECK_EQUAL(var_dt_map.get<std::string>("type"),
+                      "DiscTrapezoidalBounds");
     variant_map pl = var_dt_map.get<variant_map>("payload");
     BOOST_CHECK_EQUAL(pl.get<double>("rMin"), rMin);
     BOOST_CHECK_EQUAL(pl.get<double>("rMax"), rMax);

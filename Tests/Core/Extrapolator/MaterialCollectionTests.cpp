@@ -140,8 +140,8 @@ namespace Test {
     double fwdStepMaterialInX0 = 0.;
     double fwdStepMaterialInL0 = 0.;
     // check that the collected material is not zero
-    BOOST_TEST(fwdMaterial.materialInX0 != 0.);
-    BOOST_TEST(fwdMaterial.materialInL0 != 0.);
+    BOOST_CHECK_NE(fwdMaterial.materialInX0, 0.);
+    BOOST_CHECK_NE(fwdMaterial.materialInL0, 0.);
     // check that the sum of all steps is the total material
     for (auto& mInteraction : fwdMaterial.materialInteractions) {
       fwdStepMaterialInX0 += mInteraction.materialProperties.thicknessInX0();
@@ -197,8 +197,8 @@ namespace Test {
     double bwdStepMaterialInL0 = 0.;
 
     // check that the collected material is not zero
-    BOOST_TEST(bwdMaterial.materialInX0 != 0.);
-    BOOST_TEST(bwdMaterial.materialInL0 != 0.);
+    BOOST_CHECK_NE(bwdMaterial.materialInX0, 0.);
+    BOOST_CHECK_NE(bwdMaterial.materialInL0, 0.);
     // check that the sum of all steps is the total material
     for (auto& mInteraction : bwdMaterial.materialInteractions) {
       bwdStepMaterialInX0 += mInteraction.materialProperties.thicknessInX0();
@@ -223,8 +223,8 @@ namespace Test {
     }
 
     // forward-backward compatibility test
-    BOOST_TEST(bwdMaterial.materialInteractions.size()
-               == fwdMaterial.materialInteractions.size());
+    BOOST_CHECK_EQUAL(bwdMaterial.materialInteractions.size(),
+                      fwdMaterial.materialInteractions.size());
 
     CHECK_CLOSE_REL(bwdMaterial.materialInX0, fwdMaterial.materialInX0, 1e-3);
     CHECK_CLOSE_REL(bwdMaterial.materialInL0, bwdMaterial.materialInL0, 1e-3);
