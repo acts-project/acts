@@ -105,7 +105,7 @@ namespace detail {
       // The landau width (FWHM) is 4.*kazL
       // The factor is the conversion factor from FWHM to sigma for
       // gaussian curve: 1. / (2. * sqrt(2. * log(2.))).
-      double sigma = 2. * kazL * 1. / (std::sqrt(2. * std::log(2.)));
+      double sigma = kazL * constants::landau2gauss;
       if (mean) {
         // Calculate the fraction to the electron mass
         double mfrac = siUnits ? (constants::me / units::SI2Nat<units::MASS>(m))
@@ -146,7 +146,7 @@ namespace detail {
     }
   };
 
-  /// @brield Multiple scattering as function of dInX0
+  /// @brief Multiple scattering as function of dInX0
   ///
   /// It supports MIP and electron scattering and return
   /// the space angle which has to be transformed into actual
@@ -198,6 +198,7 @@ namespace detail {
   {
     /// @brief Main call operator for the energy loss. The following equations
     /// are provided by ATL-SOFT-PUB-2008-003.
+    /// TODO: uncertainty not needed yet and differences between Athena and the paper. If needed, the return type should be modified to a pair of doubles.
     ///
     /// @tparam material_t Type of the material
     /// @param [in] E Energy of the particle
@@ -239,14 +240,7 @@ namespace detail {
           energyLoss += 2.986 - 9.253e-5 * E;
         }
       }
-
-	  // TODO: uncertainty not needed yet and differences between Athena and the paper. If needed, the return type should be modified to a pair of doubles.
-      // Calculate the width of the energy loss (eq. 12 - 14)
-      // const double a      = 121 + 3.9e-3 * E + 5.3e-9 * E * E;
-      // const double Eloss2 = a * path * mat.rho() * constants::ka_BetheBloch
-        //  * 0.5 / (lbeta * lbeta);
-      // energyLoss.second = std::sqrt(Eloss2) / (lbeta * p * p);
-      
+       
       // Return energy loss
       if(siUnits)
 		return units::Nat2SI<units::ENERGY>(energyLoss) * path / mat.X0();

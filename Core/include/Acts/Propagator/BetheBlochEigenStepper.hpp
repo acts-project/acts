@@ -63,16 +63,13 @@ public:
     }
 
     /// Mass
-    //~ double* mass = nullptr;
-    double* mass = new double(139.57018 * units::_MeV);
+    double* mass = nullptr;
     
     /// PDG code
-    //~ int* pdg = nullptr;
-    int* pdg = new int(211);
+    int* pdg = nullptr;
 
     /// Volume with material that is passed
-    //~ TrackingVolume const** volume = nullptr;
-    std::shared_ptr<Material> material = std::make_shared<Material>(Material(352.8, 394.133, 9.012, 4., 1.848e-3));
+    TrackingVolume const** volume = nullptr;
 
     /// Boolean flag for energy loss while stepping
     bool energyLossFlag = true;
@@ -355,12 +352,11 @@ public:
     double momentum, qop0;
 
 	// Set up initial data
-    //~ if (state.energyLossFlag && (*state.volume) && (*state.volume)->material()) {
-    if (state.energyLossFlag && state.material) {
+    if (state.energyLossFlag && (*state.volume) && (*state.volume)->material()) {
 		// Set up container for energy loss
       elData           = std::make_unique<EnergyLossData>();
       elData->massSI   = units::Nat2SI<units::MASS>(*state.mass);
-      elData->material = state.material;
+      elData->material = (*state.volume)->material();
       elData->initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
       momentum                = elData->initialMomentum;
       elData->qop[0]          = state.q / momentum;
@@ -555,12 +551,11 @@ public:
       dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
       dFdT *= h;
 
-      Vector3D onesVec(0., 0., 0.);
-      dFdL = onesVec * h + conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
+      dFdL = conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
 
       dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
 
-      dGdL = onesVec + conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
+      dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
       // Evaluation of the dLambda''/dlambda term
       if (elData)
