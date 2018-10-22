@@ -167,6 +167,7 @@ private:
   {
 	  // TODO: all unit conversions from nat to SI
 	  // TODO: camelcase naming
+	  // TODO: Move derivatives to InteractionFormulas.hpp
     // Fast exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0
         || material.zOverAtimesRho() == 0)
@@ -209,12 +210,12 @@ private:
     // muons)
     if (gamma > 10.) {
       double delta
-          = 2. * std::log(28.816e-6
+          = 2. * std::log(constants::eplasma
                           * std::sqrt(1000. * material.zOverAtimesRho())
                           / I)
           + 2. * std::log(beta * gamma) - 1.;
-      double delta_deriv = -2. / (qop * beta2) + 2. * delta * qop * m2;
-      Bethe_Bloch_deriv += kaz * delta_deriv;
+      double delta_deriv = -2. / (qopNU * beta2) + 2. * delta * qopNU * m2;
+      Bethe_Bloch_deriv += kaz * delta_deriv * units::Nat2SI<units::MOMENTUM>(1.);
     }
 
     // Bethe-Heitler
