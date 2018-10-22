@@ -127,7 +127,6 @@ private:
 
     // Calculate energy loss by
     // a) ionisation
-    // TODO: make return as pure double
     double ionisationEnergyLoss = ionisationLoss(mass,
                                              momentum * units::_c / energy,
                                              energy / (mass * units::_c2),
@@ -163,9 +162,9 @@ private:
   dgdqop(const double      energy,
          const double      qop,
          const double      mass,
-         const material_t& material) const
+         const material_t& material,
+         const int pdg) const
   {
-	  // TODO: Radiative + check for muons
     // Fast exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0
         || material.zOverAtimesRho() == 0)
@@ -174,16 +173,20 @@ private:
     // Bethe-Bloch
     const double betheBlochDerivative = ionisationLoss.dqop(energy, qop, mass, material, true);
     
-    // Bethe-Heitler
-    const double betheHeitlerDerivative = radiationLoss.dqop(mass, material, qop, energy, true);
-
-    // Radiative corrections (e+e- pair production + photonuclear) for muons at
-    // energies above 8 GeV and below 1 TeV
-    // TODO: no dgdqop for radiation if there is no radiation
-    double radiativeDerivative = 0.;
+    // Bethe-Heitler (+ pair production & photonuclear interaction for muons)
+    const double betheHeitlerDerivative = radiationLoss.dqop(mass, material, qop, energy, pdg, true);
 
     // Return the total derivative
-    return betheBlochDerivative + betheHeitlerDerivative + radiativeDerivative;
+    return betheBlochDerivative + betheHeitlerDerivative;
+   
+		// TODO: Athena rescaled the values!
+      //~ //return the total derivative
+  //~ if (m_MPV) {
+    //~ return 0.9*Bethe_Bloch_deriv + 0.15*Bethe_Heitler_deriv + 0.15*radiative_deriv; //Most probable value
+  //~ }
+  //~ else {
+    //~ return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv; //Mean value
+  //~ }
   }
 
 	/// @brief This struct serves as data container to keep track of all parameters that are related to an energy loss of a particle in matter.
@@ -238,7 +241,7 @@ private:
             E,
             eld->qop[0],
             eld->massSI,
-            *(eld->material));  // Use this value throughout the step.
+            *(eld->material), *(state.pdg));  // Use this value throughout the step.
       }
       // Calculate term for later error propagation
       eld->dLdl[0] = (-eld->qop[0] * eld->qop[0] * eld->g * E

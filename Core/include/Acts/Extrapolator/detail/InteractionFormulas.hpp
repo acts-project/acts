@@ -269,7 +269,6 @@ namespace detail {
     }
   };
 
-	// TODO: The effects should be seperated
   /// @brief Structure for the energy loss of particles due to radiation in dense material. It combines the effect of bremsstrahlung with direct e+e- pair production and photonuclear interaction. The last two effects are just included for muons.
   struct RadiationLoss
   {
@@ -331,27 +330,38 @@ namespace detail {
     /// @param [in] material Material that is penetrated
     /// @param [in] qop Charge over momentum of the particle
     /// @param [in] energy Energy of the particle
+    /// @param [in] pdg PDG code of the particle
     /// @param [in] siUnits Boolean flag if SI or natural units should be used
     /// @return The evaluated derivative
     template<typename material_t>
     double
-    dqop(const double mass, const material_t& material, const double qop, const double energy, const bool siUnits = false) const
+    dqop(const double mass, const material_t& material, const double qop, const double energy, const int pdg, const bool siUnits = false) const
     {
 		// Fast exit if material is invalid
 		if(material.X0() == 0.) return 0.;
-		// TODO: higher E muons corrections
+		
+		const double invqop3X0 = 1. / (qop * qop * qop * material.X0());
+		
+		double muonExpansion = 0.;
+		if((pdg == 13 || pdg == -13) && (siUnits ? units::SI2Nat<units::ENERGY>(energy) : energy) > 8. * units::_GeV)
+		{
+			if((siUnits ? units::SI2Nat<units::ENERGY>(energy) : energy) < 1. * units::_TeV)
+				muonExpansion = 6.803e-5 * invqop3X0 / energy + 2. * 2.278e-11 * invqop3X0
+                               - 3. * 9.899e-18 * invqop3X0 * energy;
+            else
+				muonExpansion = 9.253e-5 * invqop3X0 / energy;
+		}	
 		if(siUnits)
 		{
 			// Just rescale the mass to natural units, qop & energy are already given in the right system 
 			const double scaling = units::SI2Nat<units::MASS>(1.);	
-			return constants::me * constants::me / (mass * mass * material.X0() * qop * qop * qop * energy * scaling * scaling);
+			return constants::me * constants::me * invqop3X0 / (mass * mass * energy * scaling * scaling) + muonExpansion;
 		}
 		else
 		{
-		 return constants::me * constants::me / (mass * mass * material.X0() * qop * qop * qop * energy);
+		 return constants::me * constants::me * invqop3X0 / (mass * mass * energy) + muonExpansion;
 		}
-	}
-    
+	}    
   };
 }  // namespace detail
 }  // namespace Acts
