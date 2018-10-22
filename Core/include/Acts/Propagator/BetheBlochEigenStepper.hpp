@@ -219,8 +219,7 @@ private:
     }
 
     // Bethe-Heitler
-    //~ double Bethe_Heitler_deriv = me2 / (m2 * material.X0() * qop3 * E);
-    double Bethe_Heitler_deriv = 0.;
+    double Bethe_Heitler_deriv = me2 / (m2 * material.X0() * qop * qop * qop * energy);
 
     // Radiative corrections (e+e- pair production + photonuclear) for muons at
     // energies above 8 GeV and below 1 TeV
