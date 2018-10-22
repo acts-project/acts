@@ -30,7 +30,7 @@ if ret != 0:
   # bundled version needs python2
   if sys.version_info < (3,):
     # this python is v2, use it
-    gcovr = [sys.executable, gcovr_exe]
+    gcovr = [sys.executable, bundled_gcovr]
   else:
     # this is not python2, see if installed
     ret, python_exe = check_output(["which", "python2"])
@@ -53,7 +53,6 @@ if ret != 0:
 else:
   # gcovr in path, use directry
   gcovr = [gcovr_exe] # will have correct python version
-
 
 script_dir = os.path.dirname(__file__)
 source_dir = os.path.abspath(os.path.join(script_dir, ".."))
