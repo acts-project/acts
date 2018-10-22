@@ -42,9 +42,9 @@ namespace constants {
 
   /// Electron mass [ in MeV ]
   constexpr double me = 0.51099891 * units::_MeV;
-  
+
   /// 4 * scaling factor for Landau FWHM to gaussian sigma
-  constexpr double landau2gauss =  2. / (std::sqrt(2. * std::log(2.)));
+  constexpr double landau2gauss = 2. / (std::sqrt(2. * std::log(2.)));
 
 }  // end of namespace constants
 
