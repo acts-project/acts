@@ -144,6 +144,82 @@ namespace detail {
       // return the energy loss and stragling
       return std::make_pair(dE, sigma);
     }
+    
+    /// @brief Evaluation of the energy loss dEds by ionisation derived by q/p (=d(dE/ds)/d(q/p)).
+    ///
+    /// @tparam material_t Type of the material
+    /// @param [in] energy Energy of the particle
+    /// @param [in] qop Charge over momentum of the particle
+    /// @param [in] mass Mass of the particle
+    /// @param [in] material Material that is penetrated
+    /// @param [in] siUnits Boolean flag if SI or natural units should be used
+    ///
+    /// @note The strategy is to evaluate everything in natural units as long as they are involved in terms that lead to canceling out of units. So, only the terms that define the resulting unit are treated in the individual unit system. Therewith the amount of calculations of constants and conversions gets reduced.
+    /// @return The evaluated derivative
+    template<typename material_t>
+    double
+    dqop(const double      energy,
+         const double      qop,
+         const double      mass,
+         const material_t& material,
+         const bool siUnits = false) const
+    {
+		    // Fast exit if material is invalid
+    if (material.Z() == 0
+        || material.zOverAtimesRho() == 0)
+      return 0.;
+      
+		// Constants for readability
+		const double me    = constants::me;
+		const double me2   = me * me;
+		const double qop1 = siUnits ? qop / units::SI2Nat<units::MOMENTUM>(1.) : qop;
+		const double qop3  = qop1 * qop1 * qop1;
+		const double qop4  = qop3 * qop1;
+		const double m     = siUnits ? units::SI2Nat<units::MASS>(mass) : mass;
+		const double m2    = m * m;
+		const double m4    = m2 * m2;
+		const double I     = constants::eionisation * std::pow(material.Z(), 0.9);
+		const double I2    = I * I;
+		const double E     = siUnits ? units::SI2Nat<units::ENERGY>(energy) : energy;
+		const double gamma = E / m;
+		const double beta  = std::abs(1 / (E * qop1));
+		const double beta2 = beta * beta;
+		const double kaz
+			= siUnits ? 0.5 * units::Nat2SI<units::ENERGY>(30.7075 * units::_MeV)
+				* units::_mm2 * units::_e2 / units::_g * material.zOverAtimesRho() : 0.5 * constants::ka_BetheBloch * material.zOverAtimesRho();
+				
+		// Parts of the derivative
+		const double lnCore
+			= 4. * me2 / (m4 * I2 * qop4) / (1. + 2. * gamma * me / m + me2 / m2);
+		const double lnCoreDerivative = -4. * me2 / (m4 * I2)
+			* std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2, -2.)
+			* (4. * qop3 + 8. * me * qop3 * gamma / m
+			   - 2. * me * qop1 / (m2 * m * gamma)
+			   + 4. * qop3 * me2 / m2);
+
+		// Combine parts
+		const double lnDerivative
+			= 2. * qop1 * m2 * std::log(lnCore) + lnCoreDerivative / (lnCore * beta2);
+		double betheBlochDerivative = -kaz * lnDerivative;
+		
+		// Density effect, only valid for high energies (gamma > 10 -> p > 1GeV for
+		// muons)
+		if (gamma > 10.) {
+		  const double delta
+			  = 2. * std::log(constants::eplasma
+							  * std::sqrt(1000. * material.zOverAtimesRho())
+							  / I)
+			  + 2. * std::log(beta * gamma) - 1.;
+		  const double deltaDerivative = -2. / (qop1 * beta2) + 2. * delta * qop1 * m2;
+		  betheBlochDerivative += kaz * deltaDerivative;
+		}
+		
+		if(siUnits)
+			return betheBlochDerivative * units::Nat2SI<units::MOMENTUM>(1.);
+		else
+			return betheBlochDerivative;
+	}
+    
   };
 
   /// @brief Multiple scattering as function of dInX0
@@ -193,7 +269,8 @@ namespace detail {
     }
   };
 
-  /// @brief Structure for the energy loss of particles due to radiation in dense material. It combines the effect of energy loss by ionisation with bremsstrahlung, direct e+e- pair production and photonuclear interaction.
+	// TODO: The effects should be seperated
+  /// @brief Structure for the energy loss of particles due to radiation in dense material. It combines the effect of bremsstrahlung with direct e+e- pair production and photonuclear interaction. The last two effects are just included for muons.
   struct RadiationLoss
   {
     /// @brief Main call operator for the energy loss. The following equations
@@ -246,6 +323,35 @@ namespace detail {
 		return units::Nat2SI<units::ENERGY>(energyLoss) * path / mat.X0();
       return energyLoss * path / mat.X0();
     }
+    
+    /// @brief Evaluation of the energy loss dEds by radiation, direct e+e- pair production and photonuclear interaction derived by q/p (=d(dE/ds)/d(q/p)).
+    ///
+    /// @tparam material_t Type of the material
+    /// @param [in] mass Mass of the particle
+    /// @param [in] material Material that is penetrated
+    /// @param [in] qop Charge over momentum of the particle
+    /// @param [in] energy Energy of the particle
+    /// @param [in] siUnits Boolean flag if SI or natural units should be used
+    /// @return The evaluated derivative
+    template<typename material_t>
+    double
+    dqop(const double mass, const material_t& material, const double qop, const double energy, const bool siUnits = false) const
+    {
+		// Fast exit if material is invalid
+		if(material.X0() == 0.) return 0.;
+		// TODO: higher E muons corrections
+		if(siUnits)
+		{
+			// Just rescale the mass to natural units, qop & energy are already given in the right system 
+			const double scaling = units::SI2Nat<units::MASS>(1.);	
+			return constants::me * constants::me / (mass * mass * material.X0() * qop * qop * qop * energy * scaling * scaling);
+		}
+		else
+		{
+		 return constants::me * constants::me / (mass * mass * material.X0() * qop * qop * qop * energy);
+		}
+	}
+    
   };
 }  // namespace detail
 }  // namespace Acts

@@ -165,69 +165,25 @@ private:
          const double      mass,
          const material_t& material) const
   {
-	  // TODO: all unit conversions from nat to SI
-	  // TODO: camelcase naming
-	  // TODO: Move derivatives to InteractionFormulas.hpp
+	  // TODO: Radiative + check for muons
     // Fast exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0
         || material.zOverAtimesRho() == 0)
       return 0.;
 
     // Bethe-Bloch
-    // Constants for readability
-    const double me    = constants::me;
-    const double me2   = me * me;
-    const double qopNU = qop / units::SI2Nat<units::MOMENTUM>(1.);
-    const double qop3  = qopNU * qopNU * qopNU;
-    const double qop4  = qop3 * qopNU;
-    const double m     = units::SI2Nat<units::MASS>(mass);
-    const double m2    = m * m;
-    const double m4    = m2 * m2;
-    const double I     = constants::eionisation * std::pow(material.Z(), 0.9);
-    const double I2    = I * I;
-    const double E     = units::SI2Nat<units::ENERGY>(energy);
-    const double gamma = E / m;
-    const double beta  = std::abs(1 / (E * qopNU));
-    const double beta2 = beta * beta;
-    const double kaz
-        = 0.5 * units::Nat2SI<units::ENERGY>(30.7075 * units::_MeV)
-            * units::_mm2 * units::_e2 / units::_g * material.zOverAtimesRho();
-    // Parts of the derivative
-    double lnCore
-        = 4. * me2 / (m4 * I2 * qop4) / (1. + 2. * gamma * me / m + me2 / m2);
-    double lnCore_deriv = -4. * me2 / (m4 * I2)
-        * std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2, -2.)
-        * (4. * qop3 + 8. * me * qop3 * gamma / m
-           - 2. * me * qopNU / (m2 * m * gamma)
-           + 4. * qop3 * me2 / m2);
-
-    // Combine parts
-    double ln_deriv
-        = 2. * qopNU * m2 * std::log(lnCore) + lnCore_deriv / (lnCore * beta2);
-    double Bethe_Bloch_deriv = -kaz * ln_deriv * units::Nat2SI<units::MOMENTUM>(1.);
+    const double betheBlochDerivative = ionisationLoss.dqop(energy, qop, mass, material, true);
     
-    // Density effect, only valid for high energies (gamma > 10 -> p > 1GeV for
-    // muons)
-    if (gamma > 10.) {
-      double delta
-          = 2. * std::log(constants::eplasma
-                          * std::sqrt(1000. * material.zOverAtimesRho())
-                          / I)
-          + 2. * std::log(beta * gamma) - 1.;
-      double delta_deriv = -2. / (qopNU * beta2) + 2. * delta * qopNU * m2;
-      Bethe_Bloch_deriv += kaz * delta_deriv * units::Nat2SI<units::MOMENTUM>(1.);
-    }
-
     // Bethe-Heitler
-    double Bethe_Heitler_deriv = me2 / (m2 * material.X0() * qop * qop * qop * energy);
+    const double betheHeitlerDerivative = radiationLoss.dqop(mass, material, qop, energy, true);
 
     // Radiative corrections (e+e- pair production + photonuclear) for muons at
     // energies above 8 GeV and below 1 TeV
     // TODO: no dgdqop for radiation if there is no radiation
-    double radiative_deriv = 0.;
+    double radiativeDerivative = 0.;
 
     // Return the total derivative
-    return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv;
+    return betheBlochDerivative + betheHeitlerDerivative + radiativeDerivative;
   }
 
 	/// @brief This struct serves as data container to keep track of all parameters that are related to an energy loss of a particle in matter.
