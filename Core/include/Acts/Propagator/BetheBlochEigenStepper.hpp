@@ -24,6 +24,7 @@
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
+// TODO: Merge this class with the EigenStepper
 
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
 /// for the following ODE:
@@ -49,9 +50,9 @@ public:
   struct State : public EigenStepper<BField, corrector_t>::State
   {
     /// Constructor from the initial track parameters
-    /// @param[in] par The track parameters at start
-    /// @param[in] ndir The navigation direciton w.r.t momentum
-    /// @param[in] sszice is the maximum step size
+    /// @param [in] par The track parameters at start
+    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] sszice is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
@@ -113,7 +114,7 @@ private:
   /// @param [in] material Penetrated material
   /// @param [in] pdg PDG code of the particle
   /// @param [in] meanEnergyLoss Boolean flag if mean or mode should be
-  /// evaluated for the energy loss due to ionisation
+  /// evaluated for the energy loss
   /// @return Infinitesimal energy loss
   template <typename material_t>
   double
@@ -156,6 +157,9 @@ private:
   /// @param [in] qop Initial value of q/p of the particle
   /// @param [in] mass Mass of the particle
   /// @param [in] material Penetrated material
+  /// @param [in] pdg PDG code of the particle
+  /// @param [in] meanEnergyLoss Boolean flag if mean or mode should be
+  /// evaluated for the energy loss
   /// @return Derivative evaEnergyLossDataluated at the point defined by the
   /// function
   /// parameters
@@ -165,7 +169,8 @@ private:
          const double      qop,
          const double      mass,
          const material_t& material,
-         const int         pdg) const
+         const int         pdg,
+         const bool        meanEnergyLoss = true) const
   {
     // Fast exit if material is invalid
     if (material.X0() == 0 || material.Z() == 0
@@ -177,22 +182,15 @@ private:
         = ionisationLoss.dqop(energy, qop, mass, material, true);
 
     // Bethe-Heitler (+ pair production & photonuclear interaction for muons)
-    const double betheHeitlerDerivative
+    const double radiationDerivative
         = radiationLoss.dqop(mass, material, qop, energy, pdg, true);
 
     // Return the total derivative
-    return betheBlochDerivative + betheHeitlerDerivative;
-
-    // TODO: Athena rescaled the values!
-    //~ //return the total derivative
-    //~ if (m_MPV) {
-    //~ return 0.9*Bethe_Bloch_deriv + 0.15*Bethe_Heitler_deriv +
-    //0.15*radiative_deriv; //Most probable value
-    //~ }
-    //~ else {
-    //~ return Bethe_Bloch_deriv + Bethe_Heitler_deriv + radiative_deriv; //Mean
-    //value
-    //~ }
+    if (meanEnergyLoss)
+      return betheBlochDerivative + radiationDerivative;
+    else
+      // TODO: The scaling factors are just copied from Athena without any test
+      return 0.9 * betheBlochDerivative + 0.15 * radiationDerivative;
   }
 
   /// @brief This struct serves as data container to keep track of all
