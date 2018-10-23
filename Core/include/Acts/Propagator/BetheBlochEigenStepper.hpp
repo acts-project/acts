@@ -22,9 +22,76 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Propagator/detail/DenseEnvironmentExtension.hpp"
 
 namespace Acts {
 // TODO: Merge this class with the EigenStepper
+
+/// @brief Default evaluater of the k_i's and elements of the transport matrix D. This is a pure implementation by textbook.
+// TODO: D matrix elements in functions 
+struct DefaultExtension
+{
+	/// @brief Default constructor
+	DefaultExtension() = default;
+	
+	/// Local store for q/p
+	double qop = 0.;
+	
+	/// @brief Evaluates the k1 of the RKN4 by textbook
+	///
+	/// @param [in] q Charge of the particle
+	/// @param [in] p Momentum of the particle
+	/// @param [in] dir Direction of the particle
+	/// @param [in] bField B-Field at the first position
+	/// @return Vector of k1
+	const Vector3D
+	k1(const double q, const double p, const Vector3D& dir, const Vector3D& bField)
+	{
+		  // Store qop, it is always used
+		  qop = q / units::Nat2SI<units::MOMENTUM>(p);
+		  
+		  return qop * dir.cross(bField);
+	}
+	
+	/// @brief Evaluates the k2 of the RKN4 by textbook
+	///
+	/// @param [in] dir Direction of the particle
+	/// @param [in] half_h Half the step size
+	/// @param [in] k1 Evaluated value of k1
+	/// @param [in] bField B-Field at the second position
+	/// @return Vector of k2
+	const Vector3D
+	k2(const Vector3D& dir, const double half_h, const Vector3D& k1, const Vector3D& bField)
+	{
+		return qop * (dir + half_h * k1).cross(bField);      
+	}
+	
+	/// @brief Evaluates the k3 of the RKN4 by textbook
+	///
+	/// @param [in] dir Direction of the particle
+	/// @param [in] half_h Half the step size
+	/// @param [in] k2 Evaluated value of k2
+	/// @param [in] bField B-Field at the second position
+	/// @return Vector of k3
+	const Vector3D
+	k3(const Vector3D& dir, const double half_h, const Vector3D& k2, const Vector3D& bField)
+	{
+		return qop * (dir + half_h * k2).cross(bField);
+	}
+	
+	/// @brief Evaluates the k4 of the RKN4 by textbook
+	///
+	/// @param [in] dir Direction of the particle
+	/// @param [in] h Step size
+	/// @param [in] k3 Evaluated value of k3
+	/// @param [in] bField B-Field at the last position
+	/// @return Vector of k4
+	const Vector3D
+	k4(const Vector3D& dir, const double h, const Vector3D& k3, const Vector3D& bField)
+	{
+		return qop * (dir + h * k3).cross(bField);
+	}
+};
 
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
 /// for the following ODE:
@@ -38,7 +105,7 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField, typename corrector_t = VoidCorrector>
+template <typename BField, typename corrector_t = VoidCorrector, typename extension_t = DefaultExtension>
 class BetheBlochEigenStepper : public EigenStepper<BField, corrector_t>
 {
 
@@ -76,7 +143,7 @@ public:
     /// Constructor from the initial track parameters
     /// @param [in] par The track parameters at start
     /// @param [in] ndir The navigation direciton w.r.t momentum
-    /// @param [in] sszice is the maximum step size
+    /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
@@ -86,6 +153,8 @@ public:
       : EigenStepper<BField, corrector_t>::State(par, ndir, ssize)
     {
     }
+
+	extension_t extension;
 
     /// Mass
     double mass = 0.;
@@ -114,6 +183,7 @@ public:
     /// Cut-off value for the step size
     double stepSizeCutOff = 0.;
 
+	/// Data container for the energy loss
     EnergyLossData elData;
   };
 
@@ -318,37 +388,29 @@ public:
   step(State& state) const
   {
 
+    // Runge-Kutta integrator state
+    double   h2, half_h;
+    Vector3D B_middle, B_last, k1, k2, k3, k4;
+
+    // First Runge-Kutta point (at current position)
+    const Vector3D B_first = this->getField(state, state.pos);
+    
     double     momentum, qop0;
-    const bool denseEnviromentStep = state.energyLossFlag && (*state.volume)
+    const bool denseEnvironmentStep = state.energyLossFlag && (*state.volume)
         && (*state.volume)->material();
 
     // Set up initial data
-    if (denseEnviromentStep) {
+    if (denseEnvironmentStep) {
       // Set up container for energy loss
       state.elData.massSI          = units::Nat2SI<units::MASS>(state.mass);
       state.elData.material        = (*state.volume)->material();
       state.elData.initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
       momentum                     = state.elData.initialMomentum;
       state.elData.qop[0]          = state.q / momentum;
-    } else {
-      // Set up data for the case without energy loss
-      momentum = units::Nat2SI<units::MOMENTUM>(state.p);
-      qop0     = state.q / momentum;
-    }
-    // Runge-Kutta integrator state
-    double   h2, half_h;
-    Vector3D B_middle, B_last, k2, k3, k4;
-
-    // First Runge-Kutta point (at current position)
-    const Vector3D B_first = this->getField(state, state.pos);
-    Vector3D       k1      = state.dir.cross(B_first);
-
-    // Calculate the energy loss
-    if (denseEnviromentStep) {
-      k1 *= state.elData.qop[0];
+      k1 = state.elData.qop[0] * state.dir.cross(B_first);
       initializeEnergyLoss(state.elData, state);
     } else {
-      k1 *= qop0;
+		k1 = state.extension.k1(state.q, state.p, state.dir, B_first);
     }
 
     // The following functor starts to perform a Runge-Kutta step of a certain
@@ -361,59 +423,47 @@ public:
       h2     = h * h;
       half_h = h * 0.5;
 
-      // Second Runge-Kutta point
-      if (denseEnviromentStep) {
+ // Second Runge-Kutta point
+      const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * k1;
+      B_middle            = this->getField(state, pos1);
+     
+      if (denseEnvironmentStep) {
         // Update parameters and check for momentum condition
         updateEnergyLoss(
             state.elData, momentum, h * 0.5, state.q, state.covTransport, 1);
         if (momentum < state.momentumCutOff)
           return std::numeric_limits<double>::max();
+        k2 = state.elData.qop[1] * (state.dir + half_h * k1).cross(B_middle);
+      }
+		else {
+        k2 = state.extension.k2(state.dir, half_h, k1, B_middle);
       }
 
-      const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * k1;
-      B_middle            = this->getField(state, pos1);
-      k2                  = (state.dir + half_h * k1).cross(B_middle);
-
-      if (denseEnviromentStep) {
-        k2 *= state.elData.qop[1];
-      } else {
-        k2 *= qop0;
-      }
-
-      // Third Runge-Kutta point
-      if (denseEnviromentStep) {
+// Third Runge-Kutta point   
+      if (denseEnvironmentStep) {
         // Update parameters and check for momentum condition
         updateEnergyLoss(
             state.elData, momentum, h * 0.5, state.q, state.covTransport, 2);
         if (momentum < state.momentumCutOff)
           return std::numeric_limits<double>::max();
-      }
-
-      k3 = (state.dir + half_h * k2).cross(B_middle);
-
-      if (denseEnviromentStep) {
-        k3 *= state.elData.qop[2];
+        k3 = state.elData.qop[2] * (state.dir + half_h * k2).cross(B_middle);
       } else {
-        k3 *= qop0;
+        k3 = state.extension.k3(state.dir, half_h, k2, B_middle);
       }
 
       // Last Runge-Kutta point
-      if (denseEnviromentStep) {
+      const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
+      B_last              = this->getField(state, pos2);
+      
+      if (denseEnvironmentStep) {
         // Update parameters and check for momentum condition
         updateEnergyLoss(
             state.elData, momentum, h, state.q, state.covTransport, 3);
         if (momentum < state.momentumCutOff)
           return std::numeric_limits<double>::max();
-      }
-
-      const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
-      B_last              = this->getField(state, pos2);
-      k4                  = (state.dir + h * k3).cross(B_last);
-
-      if (denseEnviromentStep) {
-        k4 *= state.elData.qop[3];
+        k4 = state.elData.qop[3] * (state.dir + h * k3).cross(B_last);
       } else {
-        k4 *= qop0;
+        k4 = state.extension.k4(state.dir, h, k3, B_last);
       }
 
       // Return an estimate of the local integration error
@@ -440,7 +490,7 @@ public:
     const double h = state.stepSize;
 
     // Break propagation if momentum becomes below cut-off
-    if (denseEnviromentStep) {
+    if (denseEnvironmentStep) {
       double newMomentum
           = state.p
           + units::SI2Nat<units::MOMENTUM>(
@@ -493,7 +543,7 @@ public:
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
       // Evaluation of the rightmost column without the last term.
-      if (denseEnviromentStep) {
+      if (denseEnvironmentStep) {
         // For the case of energy loss
         state.elData.jdL[0] = state.elData.dLdl[0];
         dk1dL               = state.dir.cross(B_first);
@@ -529,7 +579,7 @@ public:
       dk1dT(1, 2) = B_first.x();
       dk1dT(2, 0) = B_first.y();
       dk1dT(2, 1) = -B_first.x();
-      if (denseEnviromentStep) {
+      if (denseEnvironmentStep) {
         dk1dT *= state.elData.qop[0];
       } else {
         dk1dT *= qop0;
@@ -537,7 +587,7 @@ public:
 
       dk2dT += h / 2 * dk1dT;
       dk2dT *= cross(dk2dT, B_middle);
-      if (denseEnviromentStep) {
+      if (denseEnvironmentStep) {
         dk2dT *= state.elData.qop[1];
       } else {
         dk2dT *= qop0;
@@ -545,7 +595,7 @@ public:
 
       dk3dT += h / 2 * dk2dT;
       dk3dT *= cross(dk3dT, B_middle);
-      if (denseEnviromentStep) {
+      if (denseEnvironmentStep) {
         dk3dT *= state.elData.qop[2];
       } else {
         dk3dT *= qop0;
@@ -553,7 +603,7 @@ public:
 
       dk4dT += h * dk3dT;
       dk4dT *= cross(dk4dT, B_last);
-      if (denseEnviromentStep) {
+      if (denseEnvironmentStep) {
         dk4dT *= state.elData.qop[3];
       } else {
         dk4dT *= qop0;
@@ -570,7 +620,7 @@ public:
       dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
       // Evaluation of the dLambda''/dlambda term
-      if (denseEnviromentStep)
+      if (denseEnvironmentStep)
         D(6, 6) += conv * (h / 6.)
             * (state.elData.jdL[0]
                + 2. * (state.elData.jdL[1] + state.elData.jdL[2])

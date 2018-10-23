@@ -17,7 +17,7 @@ struct StepActor
 {
   // Configurations for Stepper
   /// Boolean flag for energy loss while stepping
-  bool m_energyLossFlag = true;
+  bool m_energyLossFlag = false;
   /// Toggle between mean and mode evaluation of energy loss
   bool m_meanEnergyLoss = true;
   /// Tolerance for the error of the integration
