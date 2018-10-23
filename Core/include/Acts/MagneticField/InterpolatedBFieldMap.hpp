@@ -37,7 +37,6 @@ class InterpolatedBFieldMap final
   template <typename T, class Point, size_t DIM>
   using AnyGrid_t = concept::AnyNDimInterpGrid<T, Point, DIM>;
 
-public:
   /// @brief struct representing smallest grid unit in magnetic field grid
   ///
   /// @tparam DIM_POS Dimensionality of magnetic field map
@@ -121,6 +120,8 @@ public:
     ///       in Acts::interpolate.
     std::array<Vector3D, N> m_fieldValues;
   };
+
+public:
 
   /// @brief struct for mapping global 3D positions to field values
   ///
@@ -266,6 +267,13 @@ public:
     /// points.
     concept::AnyFieldLookup<> mapper;
   };
+  
+  struct Cache 
+  {
+    concept::AnyFieldCell<> fieldCell;
+    bool initialized = false;
+  };
+
 
   /// @brief create interpolated magnetic field map
   ///
@@ -291,19 +299,23 @@ public:
   {
     return m_config.mapper.getField(position);
   }
-
-  /// @brief retrieve field cell for given position
+    
+  /// @brief retrieve magnetic field value
   ///
   /// @param [in] position global 3D position
-  /// @return field cell containing the given global position
+  /// @param [in,out] cache Cache object. Contains field cell used for interpolation
   ///
-  /// @pre The given @c position must lie within the range of the underlying
-  ///      magnetic field map.
-  concept::AnyFieldCell<>
-  getFieldCell(const Vector3D& position) const
+  /// @return magnetic field vector at given position
+  Vector3D
+  getField(const Vector3D& position, Cache& cache) const
   {
-    return m_config.mapper.getFieldCell(position);
+    if (!cache.initialized || !cache.fieldCell.isInside(position)) {
+      cache.fieldCell = getFieldCell(position);
+    }
+    return cache.fieldCell.getField(position);
   }
+
+
 
   /// @brief retrieve magnetic field value & its gradient
   ///
@@ -359,8 +371,24 @@ public:
   }
 
 private:
+
+  /// @brief retrieve field cell for given position
+  ///
+  /// @param [in] position global 3D position
+  /// @return field cell containing the given global position
+  ///
+  /// @pre The given @c position must lie within the range of the underlying
+  ///      magnetic field map.
+  concept::AnyFieldCell<>
+  getFieldCell(const Vector3D& position) const
+  {
+    return m_config.mapper.getFieldCell(position);
+  }
+
+
   /// @brief configuration object
   Config m_config;
+
 };
 
 }  // namespace Acts

@@ -52,8 +52,7 @@ public:
     /// Lazily initialized cache for the magnetic field
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
-    bool                    fieldCacheReady = false;
-    concept::AnyFieldCell<> fieldCache;
+    typename BField::Cache fieldCache{};
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -733,12 +732,8 @@ public:
   Vector3D
   getField(State& state, const Vector3D& pos) const
   {
-    if (!state.fieldCacheReady || !state.fieldCache.isInside(pos)) {
-      state.fieldCacheReady = true;
-      state.fieldCache      = m_bField.getFieldCell(pos);
-    }
     // get the field from the cell
-    state.field = state.fieldCache.getField(pos);
+    m_bField.getField(pos, state.fieldCache);
     return state.field;
   }
 

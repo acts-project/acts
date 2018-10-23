@@ -21,56 +21,16 @@ namespace Acts {
 class ConstantBField final
 {
 public:
-  /// @brief struct representing smallest grid unit in magnetic field grid
-  /// Implementation of the field cell concept for the constant magnetic
-  /// field.
-  /// @note The field cell for the constant magnetic field is the same
-  /// everywhere. The FieldCell for the constant magnetic field is only
-  /// implemented for consistency.
-  struct FieldCell
+  struct Cache
   {
-  public:
-    /// @brief construct constant magnetic field cell from components
-    ///
-    /// @param [in] Bx magnetic field component in global x-direction
-    /// @param [in] By magnetic field component in global y-direction
-    /// @param [in] Bz magnetic field component in global z-direction
-    FieldCell(double Bx, double By, double Bz) : m_BField(Bx, By, Bz) {}
-
-    /// @brief retrieve field at given position
-    ///
-    /// @param [in] position global 3D position
-    /// @return magnetic field value at the given position
-    ///
-    /// @note The field is the same everywhere for a constant B-Field
-    Vector3D
-    getField(const Vector3D& /*position*/) const
-    {
-      return m_BField;
-    }
-
-    /// @brief check whether given 3D position is inside this field cell
-    ///
-    /// @param [in] position global 3D position
-    /// @return @c true if position is inside the current field cell,
-    ///         otherwise @c false
-    /// @note The method will always return true for the constant B-Field
-    bool
-    isInside(const Vector3D& /*position*/) const
-    {
-      return true;
-    }
-
-  private:
-    /// magnetic field vector
-    Vector3D m_BField;
+    // empty, we don't need a cache
   };
 
   /// @brief construct constant magnetic field from field vector
   ///
   /// @param [in] B magnetic field vector in global coordinate system
   explicit ConstantBField(Vector3D B)
-    : m_BField(std::move(B)), m_fieldCell(B.x(), B.y(), B.z())
+    : m_BField(std::move(B))
   {
   }
 
@@ -80,8 +40,7 @@ public:
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
   ConstantBField(double Bx, double By, double Bz)
-    : m_BField(Bx, By, Bz), m_fieldCell(Bx, By, Bz)
-  {
+    : m_BField(Bx, By, Bz)  {
   }
 
   /// @brief retrieve magnetic field value
@@ -97,15 +56,18 @@ public:
     return m_BField;
   }
 
-  /// @brief retrieve field cell for given position
+  /// @brief retrieve magnetic field value
   ///
-  /// @param [in] position global 3D position
-  /// @return field cell containing the given global position
+  /// @param [in] position global position
+  /// @param [in] cache Cache object (is ignored)
+  /// @return magnetic field vector
   ///
-  concept::AnyFieldCell<>
-  getFieldCell(const Vector3D& /*position*/) const
+  /// @note The @p position is ignored and only kept as argument to provide
+  ///       a consistent interface with other magnetic field services.
+  Vector3D
+  getField(const Vector3D& /*position*/, Cache& /*cache*/) const
   {
-    return m_fieldCell;
+    return m_BField;
   }
 
   /// @brief retrieve magnetic field value & its gradient
@@ -132,9 +94,9 @@ public:
   ///         otherwise @c false
   /// @note The method will always return true for the constant B-Field
   bool
-  isInside(const Vector3D& position) const
+  isInside(const Vector3D& /*position*/) const
   {
-    return m_fieldCell.isInside(position);
+    return true;
   }
 
   /// @brief update magnetic field vector from components
@@ -160,7 +122,5 @@ public:
 private:
   /// magnetic field vector
   Vector3D m_BField;
-  /// The field cell
-  FieldCell m_fieldCell;
 };
 }  // namespace Acts
