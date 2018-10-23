@@ -15,3 +15,7 @@ target_include_directories (SolenoidBFieldTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (SolenoidBFieldTests PRIVATE ActsCore)
 add_test (NAME SolenoidBFieldUnitTest COMMAND SolenoidBFieldTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST SolenoidBFieldUnitTest TARGETS SolenoidBFieldTests)
+
+add_executable (SolenoidFieldBenchmark SolenoidFieldBenchmark.cpp)
+target_include_directories (SolenoidFieldBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (SolenoidFieldBenchmark PRIVATE ActsCore)
