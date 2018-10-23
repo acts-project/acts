@@ -53,13 +53,13 @@ namespace Test {
       const Vector3D       Btrue(bx, by, bz);
       const Vector3D       pos(x, y, z);
       const ConstantBField BField(Btrue);
-      
+
       ConstantBField::Cache bCache;
 
       BOOST_TEST(Btrue == BField.getField(pos));
       BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
       BOOST_TEST(Btrue == BField.getField(-2 * pos));
-      
+
       BOOST_TEST(Btrue == BField.getField(pos, bCache));
       BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0), bCache));
       BOOST_TEST(Btrue == BField.getField(-2 * pos, bCache));
@@ -120,7 +120,7 @@ namespace Test {
       BOOST_TEST(Btrue == BField.getField(pos));
       BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
       BOOST_TEST(Btrue == BField.getField(-2 * pos));
-      
+
       BOOST_TEST(Btrue == BField.getField(pos, bCache));
       BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0), bCache));
       BOOST_TEST(Btrue == BField.getField(-2 * pos, bCache));
@@ -131,13 +131,13 @@ namespace Test {
       const Vector3D Btrue(bx, by, bz);
       const Vector3D pos(x, y, z);
       BField.setField(bx, by, bz);
-      
+
       ConstantBField::Cache bCache;
 
       BOOST_TEST(Btrue == BField.getField(pos));
       BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
       BOOST_TEST(Btrue == BField.getField(-2 * pos));
-      
+
       BOOST_TEST(Btrue == BField.getField(pos, bCache));
       BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0), bCache));
       BOOST_TEST(Btrue == BField.getField(-2 * pos, bCache));

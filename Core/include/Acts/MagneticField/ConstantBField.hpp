@@ -29,19 +29,14 @@ public:
   /// @brief construct constant magnetic field from field vector
   ///
   /// @param [in] B magnetic field vector in global coordinate system
-  explicit ConstantBField(Vector3D B)
-    : m_BField(std::move(B))
-  {
-  }
+  explicit ConstantBField(Vector3D B) : m_BField(std::move(B)) {}
 
   /// @brief construct constant magnetic field from components
   ///
   /// @param [in] Bx magnetic field component in global x-direction
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
-  ConstantBField(double Bx, double By, double Bz)
-    : m_BField(Bx, By, Bz)  {
-  }
+  ConstantBField(double Bx, double By, double Bz) : m_BField(Bx, By, Bz) {}
 
   /// @brief retrieve magnetic field value
   ///

@@ -25,7 +25,7 @@ namespace Acts {
 
 namespace IntegrationTest {
 
-  const int  ntests = 1;
+  const int ntests = 1;
   BOOST_DATA_TEST_CASE(
       constant_bfieldorward_propagation_,
       bdata::random((bdata::seed = 0,
@@ -48,9 +48,7 @@ namespace IntegrationTest {
       charge,
       index)
   {
-
   }
-
 
 }  // namespace IntegrationTest
 

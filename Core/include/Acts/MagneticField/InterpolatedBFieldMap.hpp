@@ -122,7 +122,6 @@ class InterpolatedBFieldMap final
   };
 
 public:
-
   /// @brief struct for mapping global 3D positions to field values
   ///
   /// @tparam DIM_POS Dimensionality of position in magnetic field map
@@ -267,13 +266,12 @@ public:
     /// points.
     concept::AnyFieldLookup<> mapper;
   };
-  
-  struct Cache 
+
+  struct Cache
   {
     concept::AnyFieldCell<> fieldCell;
-    bool initialized = false;
+    bool                    initialized = false;
   };
-
 
   /// @brief create interpolated magnetic field map
   ///
@@ -299,11 +297,12 @@ public:
   {
     return m_config.mapper.getField(position);
   }
-    
+
   /// @brief retrieve magnetic field value
   ///
   /// @param [in] position global 3D position
-  /// @param [in,out] cache Cache object. Contains field cell used for interpolation
+  /// @param [in,out] cache Cache object. Contains field cell used for
+  /// interpolation
   ///
   /// @return magnetic field vector at given position
   Vector3D
@@ -314,8 +313,6 @@ public:
     }
     return cache.fieldCell.getField(position);
   }
-
-
 
   /// @brief retrieve magnetic field value & its gradient
   ///
@@ -371,7 +368,6 @@ public:
   }
 
 private:
-
   /// @brief retrieve field cell for given position
   ///
   /// @param [in] position global 3D position
@@ -385,10 +381,8 @@ private:
     return m_config.mapper.getFieldCell(position);
   }
 
-
   /// @brief configuration object
   Config m_config;
-
 };
 
 }  // namespace Acts

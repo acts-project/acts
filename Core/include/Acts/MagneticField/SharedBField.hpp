@@ -40,7 +40,7 @@ public:
   }
 
   /// @brief Retrieve magnetic field value
-  /// 
+  ///
   /// @param [in] position global 3D position
   /// @param [in,out] cache Cache object, passed through to wrapped BField
   Vector3D
@@ -48,7 +48,6 @@ public:
   {
     return m_bField->getField(position, cache);
   }
-
 
   /// @brief retrieve magnetic field value & its gradient
   ///

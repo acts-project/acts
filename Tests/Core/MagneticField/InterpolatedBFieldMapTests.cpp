@@ -75,28 +75,32 @@ namespace Test {
 
     // create BField service
     InterpolatedBFieldMap b(std::move(config));
-    
+
     Vector3D pos;
     pos << -3, 2.5, 1.7;
     // test the cache interface
     InterpolatedBFieldMap::Cache bCache;
-    BOOST_TEST(b.getField(pos, bCache).isApprox(BField::value({{perp(pos), pos.z()}})));
+    BOOST_TEST(b.getField(pos, bCache)
+                   .isApprox(BField::value({{perp(pos), pos.z()}})));
 
-    BOOST_TEST(b.getField(pos, bCache).isApprox(BField::value({{perp(pos), pos.z()}})));
+    BOOST_TEST(b.getField(pos, bCache)
+                   .isApprox(BField::value({{perp(pos), pos.z()}})));
     auto c = bCache.fieldCell;
     BOOST_TEST(c.isInside(pos));
     BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
 
     pos << 0, 1.5, -2.5;
     InterpolatedBFieldMap::Cache bCache2;
-    BOOST_TEST(b.getField(pos, bCache2).isApprox(BField::value({{perp(pos), pos.z()}})));
+    BOOST_TEST(b.getField(pos, bCache2)
+                   .isApprox(BField::value({{perp(pos), pos.z()}})));
     c = bCache2.fieldCell;
     BOOST_TEST(c.isInside(pos));
     BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
 
     pos << 2, 3, -4;
     InterpolatedBFieldMap::Cache bCache3;
-    BOOST_TEST(b.getField(pos, bCache3).isApprox(BField::value({{perp(pos), pos.z()}})));
+    BOOST_TEST(b.getField(pos, bCache3)
+                   .isApprox(BField::value({{perp(pos), pos.z()}})));
     c = bCache3.fieldCell;
     BOOST_TEST(c.isInside(pos));
     BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
