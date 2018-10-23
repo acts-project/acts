@@ -14,8 +14,51 @@
 
 #include <vector>
 #include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Utilities/Intersection.hpp"
 
 namespace Acts {
+
+// full intersection with surface
+using BoundaryIntersection
+    = FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface>;
+
+struct DefaultBoundaryIntersectionSorter
+{
+  DefaultBoundaryIntersectionSorter() = default;
+
+  template <typename parameters_t, typename options_t, typename corrector_t>
+  std::vector<BoundaryIntersection>
+  operator()(std::vector<const BoundarySurfaceT<TrackingVolume>*>& boundaries,
+             const parameters_t&                                   parameters,
+             const options_t&                                      options,
+             const corrector_t& corrfnc) const
+  {
+    std::vector<BoundaryIntersection> bIntersections;
+    for (auto& bSurface : boundaries) {
+      const auto& bSurfaceRep = bSurface->surfaceRepresentation();
+      // intersect the surface
+      SurfaceIntersection bsIntersection
+          = bSurfaceRep.intersectionEstimate(parameters, options, corrfnc);
+      // check if the intersection is valid, but exlude the on-surface case
+      // when requested -- move to intersectionestimate
+      if (bsIntersection) {
+        bIntersections.push_back(
+            BoundaryIntersection(bsIntersection.intersection,
+                                 bSurface,
+                                 &bSurfaceRep,
+                                 options.navDir));
+      }
+    }
+    // and now sort to get the closest - need custom sort here to respect sign
+    // sort them accordingly to the path length
+    if (options.navDir == forward) {
+      std::sort(bIntersections.begin(), bIntersections.end());
+    } else {
+      std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
+    }
+    return bIntersections;
+  }
+};
 
 /// @brief This struct sorts the boundary surfaces of a tracking volume. The
 /// sorting is based on the probability of intersection from a given location in
@@ -157,5 +200,4 @@ private:
         bsIntersection.intersection, boundary, surface, options.navDir);
   }
 };
-
 }  // end of Acts namespace

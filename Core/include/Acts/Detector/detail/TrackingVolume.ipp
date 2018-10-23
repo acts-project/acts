@@ -68,16 +68,21 @@ TrackingVolume::compatibleLayers(const parameters_t& parameters,
 
 // Returns the boundary surfaces ordered in probability to hit them based on
 // straight line intersection @todo change hard-coded default
-template <typename parameters_t, typename options_t, typename corrector_t>
+template <typename parameters_t,
+          typename options_t,
+          typename corrector_t,
+          typename sorter_t>
 std::vector<BoundaryIntersection>
 TrackingVolume::compatibleBoundaries(const parameters_t& parameters,
                                      const options_t&    options,
-                                     const corrector_t&  corrfnc) const
+                                     const corrector_t&  corrfnc,
+                                     const sorter_t&     sorter) const
 {
   // Loop over boundarySurfaces and calculate the intersection
-  std::vector<BoundaryIntersection> bIntersections;
-  auto                              excludeObject = options.startObject;
-  auto&                             bSurfaces     = boundarySurfaces();
+  auto  excludeObject = options.startObject;
+  auto& bSurfaces     = boundarySurfaces();
+  std::vector<const BoundarySurfaceT<TrackingVolume>*> nonExcludedBoundaries;
+
   for (auto& bsIter : bSurfaces) {
     // get the boundary surface pointer
     const BoundarySurfaceT<TrackingVolume>* bSurface = bsIter.get();
@@ -86,23 +91,7 @@ TrackingVolume::compatibleBoundaries(const parameters_t& parameters,
     if (excludeObject && excludeObject == &bSurfaceRep) {
       continue;
     }
-    // intersect the surface
-    SurfaceIntersection bsIntersection
-        = bSurfaceRep.intersectionEstimate(parameters, options, corrfnc);
-    // check if the intersection is valid, but exlude the on-surface case
-    // when requested -- move to intersectionestimate
-    if (bsIntersection) {
-      bIntersections.push_back(BoundaryIntersection(
-          bsIntersection.intersection, bSurface, &bSurfaceRep, options.navDir));
-    }
+    nonExcludedBoundaries.push_back(bSurface);
   }
-  // and now sort to get the closest - need custom sort here to respect sign
-  // sort them accordingly to the path length
-  if (options.navDir == forward) {
-    std::sort(bIntersections.begin(), bIntersections.end());
-  } else {
-    std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
-  }
-  // and return
-  return bIntersections;
+  return sorter(nonExcludedBoundaries, parameters, options, corrfnc);
 }

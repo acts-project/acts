@@ -13,8 +13,6 @@ namespace Acts {
 /// @brief Actor as configurator of the Stepper for working with material
 /// interaction. It sets up a tracking of the material and the particles mass
 /// and adds further configuration properties.
-/// The additional properties will only be updated (fully) if the corresponding
-/// flag is set by the user.
 struct StepActor
 {
   // Configurations for Stepper
@@ -30,8 +28,6 @@ struct StepActor
   double m_momentumCutOff = 0.;
   /// Cut-off value for the step size
   double m_stepSizeCutOff = 0.;
-  /// User defined flag for updating parameters in the stepper
-  bool m_update = false;
 
   /// @brief Main call operator for setting up stepper properties
   ///
@@ -51,8 +47,8 @@ struct StepActor
     if (state.stepping.pathAccumulated == 0.) {
       // Let the stepper track the volume and particles mass
       state.stepping.volume = &state.navigation.currentVolume;
-      state.stepping.mass   = &(state.options.mass);
-      state.stepping.pdg    = &(state.options.absPdgCode);
+      state.stepping.mass   = state.options.mass;
+      state.stepping.pdg    = state.options.absPdgCode;
 
       // Initialize user defined parameters
       state.stepping.energyLossFlag   = m_energyLossFlag;
@@ -60,15 +56,6 @@ struct StepActor
       state.stepping.tolerance        = m_tolerance;
       state.stepping.includeGgradient = m_includeGgradient;
       state.stepping.momentumCutOff   = m_momentumCutOff;
-    } else {
-      // Walk over every updateable parameter and perform the update if wished
-      // (but also as often as wished)
-      if (m_update) {
-        state.stepping.energyLossFlag   = m_energyLossFlag;
-        state.stepping.tolerance        = m_tolerance;
-        state.stepping.includeGgradient = m_includeGgradient;
-        state.stepping.momentumCutOff   = m_momentumCutOff;
-      }
     }
   }
 };

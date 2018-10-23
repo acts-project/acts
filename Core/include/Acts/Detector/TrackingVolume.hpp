@@ -20,6 +20,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
+#include "Acts/Utilities/Sorter.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 #include "Acts/Volumes/Volume.hpp"
 
@@ -167,24 +168,28 @@ public:
                    const options_t&    options,
                    const corrector_t&  corrfnc = corrector_t()) const;
 
-  /// @brief Returns the boundary surfaces ordered in probability
+  /// @brief Returns all boundary surfaces sorted by the user.
   ///
-  /// @param_t parameters_t Type of parameters used for the decomposition
-  /// @param_t options_t Type of navigation options object for decomposition
-  /// @param_t corrector_t Type of (optional) corrector for surface intersection
+  /// @tparam parameters_t Type of parameters used for the decomposition
+  /// @tparam options_t Type of navigation options object for decomposition
+  /// @tparam corrector_t Type of (optional) corrector for surface intersection
+  /// @tparam sorter_t Type of the boundary surface sorter
   ///
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
+  /// @param sorter Sorter of the boundary surfaces
   ///
   /// @return is the templated boundary intersection
   template <typename parameters_t,
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
+            typename sorter_t    = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection>
   compatibleBoundaries(const parameters_t& parameters,
                        const options_t&    options,
-                       const corrector_t&  corrfnc = corrector_t()) const;
+                       const corrector_t&  corrfnc = corrector_t(),
+                       const sorter_t&     sorter  = sorter_t()) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
