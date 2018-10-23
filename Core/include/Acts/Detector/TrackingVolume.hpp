@@ -14,13 +14,13 @@
 #include <functional>
 #include <map>
 #include <string>
+#include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
-#include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 #include "Acts/Volumes/Volume.hpp"
 

@@ -14,10 +14,10 @@
 #include <string>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 
 namespace Acts {

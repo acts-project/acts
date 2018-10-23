@@ -44,9 +44,7 @@ namespace constants {
   constexpr double me = 0.51099891 * units::_MeV;
 
   /// 4 * scaling factor for Landau FWHM to gaussian sigma
-  constexpr double landau2gauss
-      = 1.698643600576038085443005668205779239430282187568707885723;
-  // = 2. / (std::sqrt(2. * std::log(2.)))
+  const double landau2gauss = 2. / (std::sqrt(2. * std::log(2.)));
 
 }  // end of namespace constants
 
