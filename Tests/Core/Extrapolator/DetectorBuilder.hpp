@@ -37,7 +37,7 @@ namespace Test {
 
     // Build the transformation
     Transform3D trafoLay(Transform3D::Identity() * rotation);
-    trafoLay.translation() = Vector3D(1. * units::_m, 0., 0.);
+    trafoLay.translation() = Vector3D(0.5 * units::_m, 0., 0.);
 
     // Build a dummy layer
     std::shared_ptr<const PlanarBounds> rBounds(
@@ -50,16 +50,16 @@ namespace Test {
     std::unique_ptr<const LayerArray> layArr(
         layArrCreator.layerArray({dummyLayer},
                                  0.,
-                                 2. * units::_m,
+                                 1. * units::_m,
                                  BinningType::arbitrary,
                                  BinningValue::binX));
 
     // Build the volume
     auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
-        1. * units::_m, 0.5 * units::_m, 0.5 * units::_m);
+        0.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
     Transform3D trafoVac(Transform3D::Identity());
-    trafoVac.translation() = Vector3D(1. * units::_m, 0., 0.);
+    trafoVac.translation() = Vector3D(0.5 * units::_m, 0., 0.);
     auto trackingVac
         = TrackingVolume::create(std::make_shared<const Transform3D>(trafoVac),
                                  boundsVol,

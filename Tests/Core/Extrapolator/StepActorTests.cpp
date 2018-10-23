@@ -34,7 +34,7 @@ namespace Test {
   struct EndOfWorld
   {
     /// Maximum value in x-direction of the detector
-    double maxX = 2. * units::_m;
+    double maxX = 1. * units::_m;
 
     /// @brief Constructor
     EndOfWorld() = default;
@@ -72,7 +72,7 @@ namespace Test {
       // Momentum of the propagator after each step
       std::vector<Vector3D> momentum;
       // Covariance matrix of the propagator after each step
-      std::vector<ActsSymMatrixD<5>> cov;
+      std::vector<ActsMatrixD<7, 7>> jac;
       // Step sizes of the propagator after each step
       std::vector<cstep> stepSize;
     };
@@ -91,10 +91,13 @@ namespace Test {
     {
       result.position.push_back(state.stepping.position());
       result.momentum.push_back(state.stepping.momentum());
-      result.cov.push_back(state.stepping.cov);
+      result.jac.push_back(state.stepping.jacTransport);
       result.stepSize.push_back(state.stepping.stepSize);
     }
   };
+
+  ActsMatrixD<7, 7> id77 = ActsMatrixD<7, 7>::Identity();
+  bool output = false;
 
   /// @brief This is a test for the StepActor that updates the propagator in
   /// dense material. The test consists out of 2 parts.
@@ -103,66 +106,67 @@ namespace Test {
   /// 2.: Test that the StepActor acts if there is material in a TrackingVolume
   BOOST_AUTO_TEST_CASE(step_actor_test)
   {
-    //~ {
-    //~ // Build detector
-    //~ std::shared_ptr<TrackingGeometry> vacuum = buildVacDetector();
+    {
+      // Build detector
+      std::shared_ptr<TrackingGeometry> vacuum = buildVacDetector();
 
-    //~ // Build navigator
-    //~ Navigator naviVac(vacuum);
-    //~ naviVac.resolvePassive   = true;
-    //~ naviVac.resolveMaterial  = true;
-    //~ naviVac.resolveSensitive = true;
+      // Build navigator
+      Navigator naviVac(vacuum);
+      naviVac.resolvePassive   = true;
+      naviVac.resolveMaterial  = true;
+      naviVac.resolveSensitive = true;
 
-    //~ // Set initial parameters for the particle track
-    //~ ActsSymMatrixD<5> cov;
-    //~ cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0., 0.,
-    //~ 0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
-    //~ auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-    //~ Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
-    //~ SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
-    //~ std::move(covPtr), startParams, startMom, 1.);
+      // Set initial parameters for the particle track
+      ActsSymMatrixD<5> cov;
+      cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0., 0.,
+          0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
+      auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+      Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
+      SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+          std::move(covPtr), startParams, startMom, 1.);
 
-    //~ // Create action list for surface collection
-    //~ ActionList<StepCollector, StepActor> aList;
-    //~ AbortList<EndOfWorld> abortList;
+      // Create action list for surface collection
+      ActionList<StepCollector, StepActor> aList;
+      AbortList<EndOfWorld> abortList;
 
-    //~ // Set options for propagator
-    //~ Propagator<EigenStepper<ConstantBField>, Navigator>::
-    //~ Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
-    //~ propOpts;
-    //~ propOpts.actionList     = aList;
-    //~ propOpts.stopConditions = abortList;
-    //~ propOpts.maxSteps       = 1e6;
-    //~ propOpts.maxStepSize    = 2. * units::_m;
+      // Set options for propagator
+      Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator>::
+          Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
+              propOpts;
+      propOpts.actionList     = aList;
+      propOpts.stopConditions = abortList;
+      propOpts.maxSteps       = 1e6;
+      propOpts.maxStepSize    = 1. * units::_m;
 
-    //~ // Re-configure propagation with B-field
-    //~ ConstantBField               bField(Vector3D(0., 0., 0.));
-    //~ EigenStepper<ConstantBField> es(bField);
-    //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop(es, naviVac);
+      // Re-configure propagation with B-field
+      ConstantBField                         bField(Vector3D(0., 0., 0.));
+      BetheBlochEigenStepper<ConstantBField> es(bField);
+      Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator> prop(
+          es, naviVac);
 
-    //~ // Launch and collect results
-    //~ const auto&                       result = prop.propagate(sbtp,
-    // propOpts);
-    //~ const StepCollector::this_result& stepResult
-    //~ = result.get<typename StepCollector::result_type>();
+      // Launch and collect results
+      const auto&                       result = prop.propagate(sbtp, propOpts);
+      const StepCollector::this_result& stepResult
+          = result.get<typename StepCollector::result_type>();
 
-    //~ // Check that the propagation happend in a straight line without
-    //~ // interactions
-    //~ for (const auto& pos : stepResult.position) {
-    //~ BOOST_TEST(pos.y() == 0.);
-    //~ BOOST_TEST(pos.z() == 0.);
-    //~ if (pos == stepResult.position.back())
-    //~ BOOST_TEST(pos.x() == 2. * units::_m);
-    //~ }
-    //~ for (const auto& mom : stepResult.momentum) {
-    //~ BOOST_TEST(mom.x() == 1. * units::_GeV);
-    //~ BOOST_TEST(mom.y() == 0.);
-    //~ BOOST_TEST(mom.z() == 0.);
-    //~ }
-    //~ for (const auto& c : stepResult.cov) {
-    //~ BOOST_TEST(c == ActsSymMatrixD<5>::Identity());
-    //~ }
-    //~ }
+      // Check that the propagation happend in a straight line without
+      // interactions
+      for (const auto& pos : stepResult.position) {
+        BOOST_TEST(pos.y() == 0.);
+        BOOST_TEST(pos.z() == 0.);
+        if (pos == stepResult.position.back())
+          BOOST_TEST(pos.x() == 1. * units::_m);
+      }
+      for (const auto& mom : stepResult.momentum) {
+        BOOST_TEST(mom.x() == 1. * units::_GeV);
+        BOOST_TEST(mom.y() == 0.);
+        BOOST_TEST(mom.z() == 0.);
+      }
+      // TODO: Tests for cov by direct calculation
+      //~ for (const auto& j : stepResult.jac) {
+      //~ BOOST_TEST(j == id77);
+      //~ }
+    }
     {
       // Build detector
       std::shared_ptr<TrackingGeometry> material = buildMatDetector();
@@ -175,11 +179,8 @@ namespace Test {
 
       // Set initial parameters for the particle track
       ActsSymMatrixD<5> cov;
-      //~ cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0.,
-      // 0.,
-      //~ 0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
-      cov << 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-          0., 0., 0., 0., 0., 0., 0., 0.;
+      cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0., 0.,
+          0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
       auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
       Vector3D startParams(0., 0., 0.),
           startMom(5. * units::_GeV, 0., 0.);  // TODO: modified mom
@@ -187,21 +188,17 @@ namespace Test {
           std::move(covPtr), startParams, startMom, 1.);
 
       // Create action list for surface collection
-      //~ ActionList<StepCollector, StepActor> aList;
       ActionList<StepCollector, StepActor> aList;
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
-      //~ Propagator<EigenStepper<ConstantBField>, Navigator>::
       Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator>::
-          //~ Options<ActionList<StepCollector, StepActor>,
-          // AbortList<EndOfWorld>>
           Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
               propOpts;
       propOpts.actionList     = aList;
       propOpts.stopConditions = abortList;
       propOpts.maxSteps       = 1e6;
-      propOpts.maxStepSize    = 2. * units::_m;
+      propOpts.maxStepSize    = 1. * units::_m;
       propOpts.debug          = true;
 
       // Re-configure propagation with B-field
@@ -229,114 +226,54 @@ namespace Test {
         BOOST_TEST(mom.y() == 0.);
         BOOST_TEST(mom.z() == 0.);
         if (mom == stepResult.momentum.front()) {
+          BOOST_TEST(mom.x() == 5. * units::_GeV);
+        } else {
+          BOOST_TEST(mom.x() < 5. * units::_GeV);
+        }
+      }
+      // TODO: Tests for cov by direct calculation
+      //~ for (const auto& j : stepResult.jac) {
+      //~ if (j == stepResult.jac.front()) {
+      //~ BOOST_TEST(j == id77);
+      //~ } else {
+      //~ BOOST_TEST(j != id77);
+      //~ }
+      //~ }
+
+      // Re-launch the configuration with magnetic field
+      bField.setField(0., 1. * units::_T, 0.);
+      BetheBlochEigenStepper<ConstantBField> esB(bField);
+      Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator> probB(
+          esB, naviMat);
+
+      const auto& resultB = probB.propagate(sbtp, propOpts);
+      const StepCollector::this_result& stepResultB
+          = resultB.get<typename StepCollector::result_type>();
+
+      // Check that there occured interaction
+      for (const auto& pos : stepResultB.position) {
+        if (pos == stepResultB.position.front()) {
+          BOOST_TEST(pos.x() == 0.);
+          BOOST_TEST(pos.y() == 0.);
+          BOOST_TEST(pos.z() == 0.);
+        } else {
+          BOOST_TEST(pos.x() != 0.);
+          BOOST_TEST(pos.y() == 0.);
+          BOOST_TEST(pos.z() != 0.);
+        }
+      }
+      for (const auto& mom : stepResultB.momentum) {
+        if (mom == stepResultB.momentum.front()) {
           BOOST_TEST(mom.x() == 1. * units::_GeV);
+          BOOST_TEST(mom.y() == 0.);
+          BOOST_TEST(mom.z() == 0.);
         } else {
           BOOST_TEST(mom.x() != 1. * units::_GeV);
+          BOOST_TEST(mom.y() == 0.);
+          BOOST_TEST(mom.z() != 0.);
         }
       }
-      for (const auto& c : stepResult.cov) {
-        if (c == stepResult.cov.front()) {
-          BOOST_TEST(c == ActsSymMatrixD<5>::Identity());
-        } else {
-          BOOST_TEST(c != ActsSymMatrixD<5>::Identity());
-        }
-      }
-      //~ //////////////////////////////////////////////////////////////////
-      //~ std::ofstream ofs("out.txt");
-      //~ for(double ss = 0.1; ss < 1; ss += 0.1)
-      //~ {
-      //~ cov << 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-      //~ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.;
-      //~ covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-      //~ SingleCurvilinearTrackParameters<ChargedPolicy> sbtp2(
-      //~ std::move(covPtr), startParams, startMom, 1.);
-
-      //~ aList.get<StepActor>().maxStepSize = ss;
-      //~ aList.get<StepActor>().multipleScattering = false;
-      //~ propOpts.actionList = aList;
-
-      //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es,
-      // naviMat);
-
-      //~ const auto& result2 = prop2.propagate(sbtp2, propOpts);
-      //~ const StepCollector::this_result& stepResult2 = result2.get<typename
-      // StepCollector::result_type>();
-
-      //~ for(unsigned int i = stepResult2.position.size() - 1; i > 0; i--)
-      //~ if(stepResult2.position[i].x() <= 1000.)
-      //~ {
-      //~ ofs << ss << " " << stepResult2.momentum[i].x() << " " <<
-      // stepResult2.momentum[i].y() << " " << stepResult2.momentum[i].z() << "
-      // "
-      //<< stepResult2.cov[i](4, 4) << std::endl;
-      //~ break;
-      //~ }
-      //~ }
-      //~ for(unsigned int ss = 1; ss < 100; ss++)
-      //~ {
-      //~ cov << 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.,
-      //~ 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0., 0.;
-      //~ covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-      //~ SingleCurvilinearTrackParameters<ChargedPolicy> sbtp2(
-      //~ std::move(covPtr), startParams, startMom, 1.);
-
-      //~ aList.get<StepActor>().maxStepSize = ss;
-      //~ aList.get<StepActor>().multipleScattering = false;
-      //~ propOpts.actionList = aList;
-
-      //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es,
-      // naviMat);
-
-      //~ const auto& result2 = prop2.propagate(sbtp2, propOpts);
-      //~ const StepCollector::this_result& stepResult2 = result2.get<typename
-      // StepCollector::result_type>();
-
-      //~ for(unsigned int i = stepResult2.position.size() - 1; i > 0; i--)
-      //~ if(stepResult2.position[i].x() <= 1000.)
-      //~ {
-      //~ ofs << ss << " " << stepResult2.momentum[i].x() << " " <<
-      // stepResult2.momentum[i].y() << " " << stepResult2.momentum[i].z() << "
-      // "
-      //<< stepResult2.cov[i](4, 4) << std::endl;
-      //~ break;
-      //~ }
-      //~ }
-      //~ ofs.close();
-      //~ //////////////////////////////////////////////////////////////////
-
-      //~ // Re-launch the configuration with magnetic field
-      //~ bField.setField(0., 1. * units::_T, 0.);
-      //~ EigenStepper<ConstantBField> esB(bField);
-      //~ Propagator<EigenStepper<ConstantBField>, Navigator> probB(esB,
-      // naviMat);
-
-      //~ const auto& resultB = probB.propagate(sbtp, propOpts);
-      //~ const StepCollector::this_result& stepResultB
-      //~ = resultB.get<typename StepCollector::result_type>();
-
-      //~ // Check that there occured interaction
-      //~ for (const auto& pos : stepResultB.position) {
-      //~ if (pos == stepResultB.position.front()) {
-      //~ BOOST_TEST(pos.x() == 0.);
-      //~ BOOST_TEST(pos.y() == 0.);
-      //~ BOOST_TEST(pos.z() == 0.);
-      //~ } else {
-      //~ BOOST_TEST(pos.x() != 0.);
-      //~ BOOST_TEST(pos.y() == 0.);
-      //~ BOOST_TEST(pos.z() != 0.);
-      //~ }
-      //~ }
-      //~ for (const auto& mom : stepResultB.momentum) {
-      //~ if (mom == stepResultB.momentum.front()) {
-      //~ BOOST_TEST(mom.x() == 1. * units::_GeV);
-      //~ BOOST_TEST(mom.y() == 0.);
-      //~ BOOST_TEST(mom.z() == 0.);
-      //~ } else {
-      //~ BOOST_TEST(mom.x() != 1. * units::_GeV);
-      //~ BOOST_TEST(mom.y() == 0.);
-      //~ BOOST_TEST(mom.z() != 0.);
-      //~ }
-      //~ }
+      // TODO: Tests for cov by direct calculation
       //~ for (const auto& c : stepResultB.cov) {
       //~ if (c == stepResultB.cov.front()) {
       //~ BOOST_TEST(c == ActsSymMatrixD<5>::Identity());

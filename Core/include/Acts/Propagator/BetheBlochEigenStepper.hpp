@@ -70,7 +70,7 @@ public:
     int* pdg = nullptr;
 
     /// Volume with material that is passed
-    TrackingVolume const** volume = nullptr;
+    TrackingVolume const* const* volume = nullptr;
 
     /// Boolean flag for energy loss while stepping
     bool energyLossFlag = true;
@@ -566,7 +566,7 @@ public:
     std::cout << "result p: " << state.p << std::endl;
     std::cout << "result cov:\n" << state.jacTransport << std::endl;
     state.pathAccumulated += h;
-    std::exit(1);
+    //~ std::exit(1);
     return h;
   }
 
