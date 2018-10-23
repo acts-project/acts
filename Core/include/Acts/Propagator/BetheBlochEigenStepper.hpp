@@ -43,6 +43,30 @@ class BetheBlochEigenStepper : public EigenStepper<BField, corrector_t>
 {
 
 public:
+  /// @brief This struct serves as data container to keep track of all
+  /// parameters that are related to an energy loss of a particle in matter.
+  struct EnergyLossData
+  {
+    /// Particles momentum at k1
+    double initialMomentum = 0.;
+    /// Particles mass in SI units
+    double massSI = 0.;
+    /// Material that will be passed
+    std::shared_ptr<const Material> material;
+    /// Derivatives dLambda''dlambda at each sub-step point
+    std::array<double, 4> dLdl;
+    /// q/p at each sub-step
+    std::array<double, 4> qop;
+    /// Derivatives dPds at each sub-step
+    std::array<double, 4> dPds;
+    /// Propagation of derivatives of dLambda''dlambda at each sub-step
+    std::array<double, 4> jdL;
+    /// Derivative d(dEds)d(q/p) evaluated at the initial point
+    double dgdqopValue = 0.;
+    /// Derivative dEds at the initial point
+    double g = 0.;
+  };
+
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local
@@ -89,6 +113,8 @@ public:
 
     /// Cut-off value for the step size
     double stepSizeCutOff = 0.;
+
+    EnergyLossData elData;
   };
 
   /// Always use the same propagation state type, independently of the initial
@@ -193,30 +219,6 @@ private:
       return 0.9 * betheBlochDerivative + 0.15 * radiationDerivative;
   }
 
-  /// @brief This struct serves as data container to keep track of all
-  /// parameters that are related to an energy loss of a particle in matter.
-  struct EnergyLossData
-  {
-    /// Particles momentum at k1
-    double initialMomentum = 0.;
-    /// Particles mass in SI units
-    double massSI = 0.;
-    /// Material that will be passed
-    std::shared_ptr<const Material> material;
-    /// Derivatives dLambda''dlambda at each sub-step point
-    std::array<double, 4> dLdl;
-    /// q/p at each sub-step
-    std::array<double, 4> qop;
-    /// Derivatives dPds at each sub-step
-    std::array<double, 4> dPds;
-    /// Propagation of derivatives of dLambda''dlambda at each sub-step
-    std::array<double, 4> jdL;
-    /// Derivative d(dEds)d(q/p) evaluated at the initial point
-    double dgdqopValue = 0.;
-    /// Derivative dEds at the initial point
-    double g = 0.;
-  };
-
   /// @brief Initializer of all parameters related to a RKN4 step with energy
   /// loss of a particle in material
   /// @note This function serves for reducing the length of the actual
@@ -225,7 +227,6 @@ private:
   /// @param [in, out] eld Data container related to material interaction of
   /// the particle
   /// @param [in] state Deliverer of configurations
-  //~ /// @return Modified EnergyLossData
   void
   initializeEnergyLoss(EnergyLossData& eld, const State& state) const
   {
@@ -261,7 +262,6 @@ private:
              - eld.qop[0] * eld.qop[0] * eld.qop[0] * E * eld.dgdqopValue)
           / units::_c3;
     }
-    //~ return std::move(eld);
   }
 
   /// @brief Update of the kinematic parameters of the RKN4 sub-steps after
@@ -276,7 +276,6 @@ private:
   /// @param [in] q Charge of the particle
   /// @param [in] covTransport Boolean flag if covariance should be transported
   /// @param [in] i Index of the sub-step (1-3)
-  //~ /// @return Modified EnergyLossData
   void
   updateEnergyLoss(EnergyLossData& eld,
                    double&         momentum,
@@ -300,7 +299,6 @@ private:
              - eld.qop[i] * eld.qop[i] * eld.qop[i] * E * eld.dgdqopValue)
           / units::_c3;
     }
-    //~ return std::move(eld);
   }
 
   // TODO: using B field gradient
@@ -320,19 +318,18 @@ public:
   step(State& state) const
   {
 
-    EnergyLossData elData;
-    double         momentum, qop0;
-    const bool     denseEnviromentStep = state.energyLossFlag && (*state.volume)
+    double     momentum, qop0;
+    const bool denseEnviromentStep = state.energyLossFlag && (*state.volume)
         && (*state.volume)->material();
 
     // Set up initial data
     if (denseEnviromentStep) {
       // Set up container for energy loss
-      elData.massSI          = units::Nat2SI<units::MASS>(state.mass);
-      elData.material        = (*state.volume)->material();
-      elData.initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
-      momentum               = elData.initialMomentum;
-      elData.qop[0]          = state.q / momentum;
+      state.elData.massSI          = units::Nat2SI<units::MASS>(state.mass);
+      state.elData.material        = (*state.volume)->material();
+      state.elData.initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
+      momentum                     = state.elData.initialMomentum;
+      state.elData.qop[0]          = state.q / momentum;
     } else {
       // Set up data for the case without energy loss
       momentum = units::Nat2SI<units::MOMENTUM>(state.p);
@@ -348,8 +345,8 @@ public:
 
     // Calculate the energy loss
     if (denseEnviromentStep) {
-      k1 *= elData.qop[0];
-      initializeEnergyLoss(elData, state);
+      k1 *= state.elData.qop[0];
+      initializeEnergyLoss(state.elData, state);
     } else {
       k1 *= qop0;
     }
@@ -368,7 +365,7 @@ public:
       if (denseEnviromentStep) {
         // Update parameters and check for momentum condition
         updateEnergyLoss(
-            elData, momentum, h * 0.5, state.q, state.covTransport, 1);
+            state.elData, momentum, h * 0.5, state.q, state.covTransport, 1);
         if (momentum < state.momentumCutOff)
           return std::numeric_limits<double>::max();
       }
@@ -378,7 +375,7 @@ public:
       k2                  = (state.dir + half_h * k1).cross(B_middle);
 
       if (denseEnviromentStep) {
-        k2 *= elData.qop[1];
+        k2 *= state.elData.qop[1];
       } else {
         k2 *= qop0;
       }
@@ -387,7 +384,7 @@ public:
       if (denseEnviromentStep) {
         // Update parameters and check for momentum condition
         updateEnergyLoss(
-            elData, momentum, h * 0.5, state.q, state.covTransport, 2);
+            state.elData, momentum, h * 0.5, state.q, state.covTransport, 2);
         if (momentum < state.momentumCutOff)
           return std::numeric_limits<double>::max();
       }
@@ -395,7 +392,7 @@ public:
       k3 = (state.dir + half_h * k2).cross(B_middle);
 
       if (denseEnviromentStep) {
-        k3 *= elData.qop[2];
+        k3 *= state.elData.qop[2];
       } else {
         k3 *= qop0;
       }
@@ -403,7 +400,8 @@ public:
       // Last Runge-Kutta point
       if (denseEnviromentStep) {
         // Update parameters and check for momentum condition
-        updateEnergyLoss(elData, momentum, h, state.q, state.covTransport, 3);
+        updateEnergyLoss(
+            state.elData, momentum, h, state.q, state.covTransport, 3);
         if (momentum < state.momentumCutOff)
           return std::numeric_limits<double>::max();
       }
@@ -413,7 +411,7 @@ public:
       k4                  = (state.dir + h * k3).cross(B_last);
 
       if (denseEnviromentStep) {
-        k4 *= elData.qop[3];
+        k4 *= state.elData.qop[3];
       } else {
         k4 *= qop0;
       }
@@ -444,10 +442,11 @@ public:
     // Break propagation if momentum becomes below cut-off
     if (denseEnviromentStep) {
       double newMomentum
-          = state.p + units::SI2Nat<units::MOMENTUM>(
-                          (h / 6.) * (elData.dPds[0]
-                                      + 2. * (elData.dPds[1] + elData.dPds[2])
-                                      + elData.dPds[3]));
+          = state.p
+          + units::SI2Nat<units::MOMENTUM>(
+                (h / 6.) * (state.elData.dPds[0]
+                            + 2. * (state.elData.dPds[1] + state.elData.dPds[2])
+                            + state.elData.dPds[3]));
       if (units::Nat2SI<units::MOMENTUM>(newMomentum) < state.momentumCutOff)
         return 0.;
       else
@@ -496,19 +495,23 @@ public:
       // Evaluation of the rightmost column without the last term.
       if (denseEnviromentStep) {
         // For the case of energy loss
-        elData.jdL[0] = elData.dLdl[0];
-        dk1dL         = state.dir.cross(B_first);
-        elData.jdL[1] = elData.dLdl[1] * (1. + half_h * elData.jdL[0]);
-        dk2dL         = (1. + half_h * elData.jdL[0])
+        state.elData.jdL[0] = state.elData.dLdl[0];
+        dk1dL               = state.dir.cross(B_first);
+        state.elData.jdL[1]
+            = state.elData.dLdl[1] * (1. + half_h * state.elData.jdL[0]);
+        dk2dL = (1. + half_h * state.elData.jdL[0])
                 * (state.dir + half_h * k1).cross(B_middle)
-            + elData.qop[1] * half_h * dk1dL.cross(B_middle);
-        elData.jdL[2] = elData.dLdl[2] * (1. + half_h * elData.jdL[1]);
-        dk3dL         = (1. + half_h * elData.jdL[1])
+            + state.elData.qop[1] * half_h * dk1dL.cross(B_middle);
+        state.elData.jdL[2]
+            = state.elData.dLdl[2] * (1. + half_h * state.elData.jdL[1]);
+        dk3dL = (1. + half_h * state.elData.jdL[1])
                 * (state.dir + half_h * k2).cross(B_middle)
-            + elData.qop[2] * half_h * dk2dL.cross(B_middle);
-        elData.jdL[3] = elData.dLdl[3] * (1. + h * elData.jdL[2]);
-        dk4dL = (1. + h * elData.jdL[2]) * (state.dir + h * k3).cross(B_last)
-            + elData.qop[3] * h * dk3dL.cross(B_last);
+            + state.elData.qop[2] * half_h * dk2dL.cross(B_middle);
+        state.elData.jdL[3]
+            = state.elData.dLdl[3] * (1. + h * state.elData.jdL[2]);
+        dk4dL = (1. + h * state.elData.jdL[2])
+                * (state.dir + h * k3).cross(B_last)
+            + state.elData.qop[3] * h * dk3dL.cross(B_last);
       } else {
         // For the case without energy loss
         dk1dL = state.dir.cross(B_first);
@@ -527,7 +530,7 @@ public:
       dk1dT(2, 0) = B_first.y();
       dk1dT(2, 1) = -B_first.x();
       if (denseEnviromentStep) {
-        dk1dT *= elData.qop[0];
+        dk1dT *= state.elData.qop[0];
       } else {
         dk1dT *= qop0;
       }
@@ -535,7 +538,7 @@ public:
       dk2dT += h / 2 * dk1dT;
       dk2dT *= cross(dk2dT, B_middle);
       if (denseEnviromentStep) {
-        dk2dT *= elData.qop[1];
+        dk2dT *= state.elData.qop[1];
       } else {
         dk2dT *= qop0;
       }
@@ -543,7 +546,7 @@ public:
       dk3dT += h / 2 * dk2dT;
       dk3dT *= cross(dk3dT, B_middle);
       if (denseEnviromentStep) {
-        dk3dT *= elData.qop[2];
+        dk3dT *= state.elData.qop[2];
       } else {
         dk3dT *= qop0;
       }
@@ -551,7 +554,7 @@ public:
       dk4dT += h * dk3dT;
       dk4dT *= cross(dk4dT, B_last);
       if (denseEnviromentStep) {
-        dk4dT *= elData.qop[3];
+        dk4dT *= state.elData.qop[3];
       } else {
         dk4dT *= qop0;
       }
@@ -569,8 +572,9 @@ public:
       // Evaluation of the dLambda''/dlambda term
       if (denseEnviromentStep)
         D(6, 6) += conv * (h / 6.)
-            * (elData.jdL[0] + 2. * (elData.jdL[1] + elData.jdL[2])
-               + elData.jdL[3]);
+            * (state.elData.jdL[0]
+               + 2. * (state.elData.jdL[1] + state.elData.jdL[2])
+               + state.elData.jdL[3]);
       std::cout << "D:\n" << D << std::endl;
       std::cout << "jac:\n" << state.jacTransport << std::endl;
       // for moment, only update the transport part

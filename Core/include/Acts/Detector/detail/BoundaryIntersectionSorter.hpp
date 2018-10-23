@@ -14,13 +14,18 @@
 
 #include <vector>
 #include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Volumes/BoundarySurfaceT.hpp"
 
 namespace Acts {
 
-// full intersection with surface
+// Full intersection with surface
 using BoundaryIntersection
     = FullIntersection<BoundarySurfaceT<TrackingVolume>, Surface>;
+
+// Typedef of the surface intersection
+using SurfaceIntersection = ObjectIntersection<Surface>;
 
 struct DefaultBoundaryIntersectionSorter
 {
