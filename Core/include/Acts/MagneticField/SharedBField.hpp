@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -21,6 +20,9 @@ template <typename BField>
 class SharedBField
 {
 public:
+  // typedef wrapped BField's cache type
+  using Cache = typename BField::Cache;
+
   /// @brief the constructur with a shared pointer
   /// @note since it is a shared field, we enforce it to be const
   /// @tparam bField is the shared BField to be stored
@@ -37,18 +39,16 @@ public:
     return m_bField->getField(position);
   }
 
-  /// @brief retrieve field cell for given position
-  ///
+  /// @brief Retrieve magnetic field value
+  /// 
   /// @param [in] position global 3D position
-  /// @return field cell containing the given global position
-  ///
-  /// @pre The given @c position must lie within the range of the underlying
-  ///      magnetic field map.
-  concept::AnyFieldCell<>
-  getFieldCell(const Vector3D& position) const
+  /// @param [in,out] cache Cache object, passed through to wrapped BField
+  Vector3D
+  getField(const Vector3D& position, Cache& cache) const
   {
-    return m_bField->getFieldCell(position);
+    return m_bField->getField(position, cache);
   }
+
 
   /// @brief retrieve magnetic field value & its gradient
   ///
