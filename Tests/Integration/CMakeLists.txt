@@ -16,3 +16,7 @@ add_integration_test(PropagationTests)
 add_executable (SeedingTest ATLSeedingIntegrationTest.cpp)
 target_link_libraries (SeedingTest PRIVATE ActsLegacy)
 add_integration_test(SeedingTest)
+
+add_executable (InterpolatedSolenoidBFieldTest InterpolatedSolenoidBFieldTest.cpp)
+target_link_libraries (InterpolatedSolenoidBFieldTest PRIVATE ActsCore)
+add_integration_test(InterpolatedSolenoidBFieldTest)

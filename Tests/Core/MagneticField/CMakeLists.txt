@@ -9,3 +9,9 @@ target_include_directories (InterpolatedBFieldMapTests PRIVATE ${Boost_INCLUDE_D
 target_link_libraries (InterpolatedBFieldMapTests PRIVATE ActsCore)
 add_test (NAME InterpolatedBFieldMapUnitTest COMMAND InterpolatedBFieldMapTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST InterpolatedBFieldMapUnitTest TARGETS InterpolatedBFieldMapTests)
+
+add_executable (SolenoidBFieldTests SolenoidBFieldTests.cpp)
+target_include_directories (SolenoidBFieldTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (SolenoidBFieldTests PRIVATE ActsCore)
+add_test (NAME SolenoidBFieldUnitTest COMMAND SolenoidBFieldTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST SolenoidBFieldUnitTest TARGETS SolenoidBFieldTests)
