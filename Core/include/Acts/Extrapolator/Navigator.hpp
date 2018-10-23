@@ -17,7 +17,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Sorter.hpp"
+#include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 
 namespace Acts {

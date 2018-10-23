@@ -20,7 +20,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
-#include "Acts/Utilities/Sorter.hpp"
+#include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 #include "Acts/Volumes/Volume.hpp"
 
