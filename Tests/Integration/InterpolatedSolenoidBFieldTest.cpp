@@ -88,10 +88,10 @@ namespace IntegrationTest {
 
     // [4] Create the transformation for the bfield
     // map (Br,Bz) -> (Bx,By,Bz)
-    auto transformBField = [](const Acts::Vector2D& field,
+    auto transformBField = [](const Acts::Vector2D& bfield,
                               const Acts::Vector3D& pos) {
       return Acts::Vector3D(
-          field.x() * cos(phi(pos)), field.x() * sin(phi(pos)), field.y());
+          bfield.x() * cos(phi(pos)), bfield.x() * sin(phi(pos)), bfield.y());
     };
 
     // iterate over all bins, set their value to the solenoid value
