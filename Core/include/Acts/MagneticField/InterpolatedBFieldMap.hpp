@@ -134,6 +134,8 @@ public:
   struct FieldMapper
   {
   public:
+    using Grid_t = AnyGrid_t<ActsVectorD<DIM_BFIELD>, ActsVectorD<DIM_POS>, DIM_POS>;
+
     /// @brief default constructor
     ///
     /// @param [in] transformPos mapping of global 3D coordinates (cartesian)
@@ -238,6 +240,16 @@ public:
       return m_grid.isInside(m_transformPos(position));
     }
 
+    /// @brief Get a const reference on the underlying grid structure
+    /// 
+    /// @return grid reference
+    const Grid_t&
+    getGrid() const
+    {
+      return m_grid;
+    }
+
+
   private:
     /// geometric transformation applied to global 3D positions
     std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
@@ -247,7 +259,7 @@ public:
     std::function<Vector3D(const ActsVectorD<DIM_BFIELD>&, const Vector3D&)>
         m_transformBField;
     /// grid storing magnetic field values
-    AnyGrid_t<ActsVectorD<DIM_BFIELD>, ActsVectorD<DIM_POS>, DIM_POS> m_grid;
+    Grid_t m_grid;
   };
 
   /// @brief configuration object for magnetic field interpolation

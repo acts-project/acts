@@ -19,6 +19,7 @@
 #include <random>
 
 #include <boost/test/data/test_case.hpp>
+#include <boost/type_erasure/any_cast.hpp>
 
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
@@ -26,6 +27,7 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+#include "Acts/Utilities/BFieldMapUtils.hpp"
 
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
@@ -64,67 +66,29 @@ namespace IntegrationTest {
     std::cout << "zMin = " << zMin << std::endl;
     std::cout << "zMax = " << zMax << std::endl;
 
-    double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
-    double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
-
-    rMax += stepR;
-    zMax += stepZ;
-
-    // Create the axis for the grid
-    Acts::detail::EquidistantAxis rAxis(rMin, rMax, nBinsR);
-    Acts::detail::EquidistantAxis zAxis(zMin, zMax, nBinsZ);
-
-    // Create the grid
+    auto mapper = solenoidFieldMapper({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
+    // I know this is the correct grid type
     using Grid_t = Acts::detail::Grid<Acts::Vector2D,
-                                      Acts::detail::EquidistantAxis,
-                                      Acts::detail::EquidistantAxis>;
-    Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
+          Acts::detail::EquidistantAxis,
+          Acts::detail::EquidistantAxis>;
+    const Grid_t& grid = boost::type_erasure::any_cast<const Grid_t>(mapper.getGrid());
+    using index_t = Grid_t::index_t;
+    using point_t = Grid_t::point_t;
 
-    // [3] Create the transformation for the position
-    // map (x,y,z) -> (r,z)
-    auto transformPos = [](const Acts::Vector3D& pos) {
-      return Acts::Vector2D(perp(pos), pos.z());
-    };
-
-    // [4] Create the transformation for the bfield
-    // map (Br,Bz) -> (Bx,By,Bz)
-    auto transformBField = [](const Acts::Vector2D& bfield,
-                              const Acts::Vector3D& pos) {
-      return Acts::Vector3D(
-          bfield.x() * cos(phi(pos)), bfield.x() * sin(phi(pos)), bfield.y());
-    };
-
-    // iterate over all bins, set their value to the solenoid value
-    // at their lower left position
     for (size_t i = 0; i <= nBinsR + 1; i++) {
       for (size_t j = 0; j <= nBinsZ + 1; j++) {
         // std::cout << "(i,j) = " << i << "," << j << std::endl;
-        Grid_t::index_t index({i, j});
+        index_t index({i, j});
         if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
-          // under or overflow bin, set zero
-          // std::cout << "-> under / overflow" << std::endl;
-          grid.at(index) = Grid_t::value_type(0, 0);
+          // under or overflow bin
         } else {
-          // regular bin, get lower left boundary
-          // std::cout << "-> regular bin" << std::endl;
-          Grid_t::point_t lowerLeft = grid.getLowerLeftBinEdge(index);
-          // std::cout << "lowerLeft = " << lowerLeft[0] << ", " << lowerLeft[1]
-          // << std::endl;;
-          // do lookup
-          Vector2D B = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
-          // std::cout << "B = " << B[0] << ", " << B[1] << std::endl;
-          grid.at(index) = B;
-
+          point_t lowerLeft = grid.getLowerLeftBinEdge(index);
+          Vector2D B = grid.at(index);
           ostr << i << ";" << j << ";" << lowerLeft[0] << ";" << lowerLeft[1];
           ostr << ";" << B[0] << ";" << B[1] << std::endl;
         }
       }
     }
-
-    // [5] Create the mapper & BField Service
-    // create field mapping
-    Acts::InterpolatedBFieldMap::FieldMapper<2, 2> mapper(
-        transformPos, transformBField, std::move(grid));
 
     Acts::InterpolatedBFieldMap::Config cfg;
     cfg.mapper = std::move(mapper);
@@ -145,20 +109,6 @@ namespace IntegrationTest {
   };
 
   StreamWrapper valid(std::ofstream("magfield_lookup.csv"));
-
-  // struct TestSetup {
-  // TestSetup()
-  //: bSolenoidField({R, L, nCoils, bMagCenter}),
-  // bFieldMap(makeFieldMap(bSolenoidField))
-  //{
-  // std::cout << "global setup\n";
-  //}
-
-  // static SolenoidBField bSolenoidField;
-  // static InterpolatedBFieldMap bFieldMap;
-  //};
-
-  // BOOST_GLOBAL_FIXTURE(TestSetup);
 
   const int ntests = 1000000;
   BOOST_DATA_TEST_CASE(
