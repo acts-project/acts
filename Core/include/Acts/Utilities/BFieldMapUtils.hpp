@@ -140,12 +140,12 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
 /// @param zlim pair of z bounds
 /// @param nbins pair of bin counts
 /// @param field the solenoid field instance
-/// 
+///
 /// @return A field mapper instance for use in interpolation.
 Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
-solenoidFieldMapper(std::pair<double, double> rlim, 
-                          std::pair<double, double> zlim, 
-                          std::pair<size_t, size_t> nbins,
-                          const SolenoidBField& field);
+solenoidFieldMapper(std::pair<double, double> rlim,
+                    std::pair<double, double> zlim,
+                    std::pair<size_t, size_t> nbins,
+                    const SolenoidBField& field);
 
 }  // namespace Acts

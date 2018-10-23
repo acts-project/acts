@@ -134,7 +134,8 @@ public:
   struct FieldMapper
   {
   public:
-    using Grid_t = AnyGrid_t<ActsVectorD<DIM_BFIELD>, ActsVectorD<DIM_POS>, DIM_POS>;
+    using Grid_t
+        = AnyGrid_t<ActsVectorD<DIM_BFIELD>, ActsVectorD<DIM_POS>, DIM_POS>;
 
     /// @brief default constructor
     ///
@@ -241,14 +242,13 @@ public:
     }
 
     /// @brief Get a const reference on the underlying grid structure
-    /// 
+    ///
     /// @return grid reference
     const Grid_t&
     getGrid() const
     {
       return m_grid;
     }
-
 
   private:
     /// geometric transformation applied to global 3D positions

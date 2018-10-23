@@ -8,10 +8,10 @@
 
 #include "Acts/Utilities/BFieldMapUtils.hpp"
 #include <iostream>
+#include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
-#include "Acts/MagneticField/SolenoidBField.hpp"
 
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
@@ -236,8 +236,8 @@ Acts::fieldMapperXYZ(
 }
 
 Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
-Acts::solenoidFieldMapper(std::pair<double, double> rlim, 
-                          std::pair<double, double> zlim, 
+Acts::solenoidFieldMapper(std::pair<double, double> rlim,
+                          std::pair<double, double> zlim,
                           std::pair<size_t, size_t> nbins,
                           const SolenoidBField& field)
 {
@@ -291,7 +291,7 @@ Acts::solenoidFieldMapper(std::pair<double, double> rlim,
         // regular bin, get lower left boundary
         Grid_t::point_t lowerLeft = grid.getLowerLeftBinEdge(index);
         // do lookup
-        Vector2D B = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
+        Vector2D B     = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
         grid.at(index) = B;
       }
     }
@@ -303,5 +303,3 @@ Acts::solenoidFieldMapper(std::pair<double, double> rlim,
       transformPos, transformBField, std::move(grid));
   return mapper;
 }
-
-

@@ -23,11 +23,11 @@
 
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Utilities/BFieldMapUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
-#include "Acts/Utilities/BFieldMapUtils.hpp"
 
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
@@ -66,12 +66,14 @@ namespace IntegrationTest {
     std::cout << "zMin = " << zMin << std::endl;
     std::cout << "zMax = " << zMax << std::endl;
 
-    auto mapper = solenoidFieldMapper({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
+    auto mapper = solenoidFieldMapper(
+        {rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, field);
     // I know this is the correct grid type
     using Grid_t = Acts::detail::Grid<Acts::Vector2D,
-          Acts::detail::EquidistantAxis,
-          Acts::detail::EquidistantAxis>;
-    const Grid_t& grid = boost::type_erasure::any_cast<const Grid_t>(mapper.getGrid());
+                                      Acts::detail::EquidistantAxis,
+                                      Acts::detail::EquidistantAxis>;
+    const Grid_t& grid
+        = boost::type_erasure::any_cast<const Grid_t>(mapper.getGrid());
     using index_t = Grid_t::index_t;
     using point_t = Grid_t::point_t;
 
@@ -82,8 +84,8 @@ namespace IntegrationTest {
         if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
           // under or overflow bin
         } else {
-          point_t lowerLeft = grid.getLowerLeftBinEdge(index);
-          Vector2D B = grid.at(index);
+          point_t  lowerLeft = grid.getLowerLeftBinEdge(index);
+          Vector2D B         = grid.at(index);
           ostr << i << ";" << j << ";" << lowerLeft[0] << ";" << lowerLeft[1];
           ostr << ";" << B[0] << ";" << B[1] << std::endl;
         }

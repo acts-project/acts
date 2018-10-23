@@ -6,20 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/BFieldMapUtils.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Utilities/BFieldMapUtils.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#include <iostream>
-#include <string>
 #include <chrono>
+#include <iostream>
 #include <random>
+#include <string>
 
-int main(int argc, char *argv[]) {
+int
+main(int argc, char* argv[])
+{
 
   size_t n = 1e6;
-  if(argc == 2) {
+  if (argc == 2) {
     n = std::stoi(argv[1]);
   }
 
@@ -37,14 +39,15 @@ int main(int argc, char *argv[]) {
 
   size_t printStep = n / 10;
 
-  Acts::SolenoidBField        bSolenoidField({R, L, nCoils, bMagCenter});
+  Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
   std::cout << "building map" << std::endl;
-  auto mapper = Acts::solenoidFieldMapper({rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, bSolenoidField);
+  auto mapper = Acts::solenoidFieldMapper(
+      {rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, bSolenoidField);
   Acts::InterpolatedBFieldMap::Config cfg;
-  cfg.mapper = std::move(mapper);
+  cfg.mapper     = std::move(mapper);
   auto bFieldMap = Acts::InterpolatedBFieldMap(std::move(cfg));
 
-  std::mt19937 rng;
+  std::mt19937                     rng;
   std::uniform_real_distribution<> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
   std::uniform_real_distribution<> rDist(0, R * 1.5);
   std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
@@ -52,49 +55,53 @@ int main(int argc, char *argv[]) {
   std::cout << "number of points: " << n << std::endl;
   std::cout << "start" << std::endl;
   using clock = std::chrono::steady_clock;
-  auto start = clock::now();
+  auto start  = clock::now();
 
-  double z, r, phi;
+  double         z, r, phi;
   Acts::Vector3D pos;
   Acts::Vector3D B;
-  for(size_t i=0;i<n;i++) {
-    if(i%printStep == 0) {
+  for (size_t i = 0; i < n; i++) {
+    if (i % printStep == 0) {
       std::cout << i << std::endl;
     }
 
-    z = zDist(rng);
-    r = rDist(rng);
+    z   = zDist(rng);
+    r   = rDist(rng);
     phi = phiDist(rng);
-    pos = {r*std::cos(phi), r*std::sin(phi), z};
+    pos = {r * std::cos(phi), r * std::sin(phi), z};
 
     B = bSolenoidField.getField(pos);
-    //std::cout << B << std::endl;
+    // std::cout << B << std::endl;
   }
 
-  auto end =clock::now();
-  double ms_solenoid = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+  auto   end = clock::now();
+  double ms_solenoid
+      = std::chrono::duration_cast<std::chrono::duration<double>>(end - start)
+            .count();
   start = clock::now();
 
-  for(size_t i=0;i<n;i++) {
-    if(i%printStep== 0) {
+  for (size_t i = 0; i < n; i++) {
+    if (i % printStep == 0) {
       std::cout << i << std::endl;
     }
 
-    z = zDist(rng);
-    r = rDist(rng);
+    z   = zDist(rng);
+    r   = rDist(rng);
     phi = phiDist(rng);
-    pos = {r*std::cos(phi), r*std::sin(phi), z};
+    pos = {r * std::cos(phi), r * std::sin(phi), z};
 
     B = bFieldMap.getField(pos);
-    //std::cout << B << std::endl;
+    // std::cout << B << std::endl;
   }
 
   end = clock::now();
-  auto ms_map = std::chrono::duration_cast<std::chrono::duration<double>>(end - start).count();
+  auto ms_map
+      = std::chrono::duration_cast<std::chrono::duration<double>>(end - start)
+            .count();
 
-  std::cout << "solenoid: " << (ms_solenoid*1000.) << "ms, per lookup: " 
-    << (ms_solenoid/n*1000.) << "ms" << std::endl;
-  std::cout << "map: " << (ms_map*1000.) << "ms, per lookup: " 
-    << (ms_map/n*1000.) << "ms" << std::endl;
-
+  std::cout << "solenoid: " << (ms_solenoid * 1000.)
+            << "ms, per lookup: " << (ms_solenoid / n * 1000.) << "ms"
+            << std::endl;
+  std::cout << "map: " << (ms_map * 1000.)
+            << "ms, per lookup: " << (ms_map / n * 1000.) << "ms" << std::endl;
 }
