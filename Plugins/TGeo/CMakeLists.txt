@@ -2,11 +2,17 @@ file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
 add_library (ActsTGeoPlugin SHARED ${src_files})
 
-string(REGEX MATCH "(LCG_[0-9][0-9])" _lcg_version "$ENV{CMAKE_PREFIX_PATH}")
-string(REGEX MATCH "([A-Za-z0-9_-]*)$" _lcg_platform "$ENV{CMAKE_PREFIX_PATH}")
-if(${_lcg_version} STREQUAL "LCG_93" AND ${_lcg_platform} STREQUAL "x86_64-centos7-gcc7-opt")
-  message(FATAL_ERROR "Compiling on ${_lcg_platform} using ${_lcg_version} with TGeoPlugin \
-  enabled. There is no clean way to resolve C++ standard requirements. Bailing out")
+if(NOT "$ENV{CMAKE_PREFIX_PATH}" STREQUAL "")
+  string(REGEX MATCH "(LCG_[0-9][0-9])" _lcg_version "$ENV{CMAKE_PREFIX_PATH}")
+  if (NOT "${_lcg_version}" STREQUAL "")
+    string(REGEX MATCH "([A-Za-z0-9_-]*)$" _lcg_platform "$ENV{CMAKE_PREFIX_PATH}")
+    if(NOT "${_lcg_platform}" STREQUAL "")
+      if(${_lcg_version} STREQUAL "LCG_93" AND ${_lcg_platform} STREQUAL "x86_64-centos7-gcc7-opt")
+        message(FATAL_ERROR "Compiling on ${_lcg_platform} using ${_lcg_version} with TGeoPlugin \
+        enabled. There is no clean way to resolve C++ standard requirements. Bailing out")
+      endif()
+    endif()
+  endif()
 endif()
 
 
