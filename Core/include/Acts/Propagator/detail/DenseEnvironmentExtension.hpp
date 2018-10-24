@@ -437,10 +437,7 @@ namespace detail {
       dFdT.setIdentity();
       dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
       dFdT *= h;
-      std::cout << "dk1dl: " << dk1dL << std::endl;
-      std::cout << "dk2dl: " << dk2dL << std::endl;
-      std::cout << "dk3dl: " << dk3dL << std::endl;
-      std::cout << "dk4dl: " << dk4dL << std::endl;
+
       dFdL = conv * h * h / 6 * (dk1dL + dk2dL + dk3dL);
 
       dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
@@ -479,10 +476,7 @@ namespace detail {
     double
     dEds(const double      momentum,
          const double      energy,
-         const double      mass,
-         const material_t& material,
-         const int         pdg,
-         const bool        meanEnergyLoss = true) const
+         const material_t& material) const
     {
       // Easy exit if material is invalid
       if (material.X0() == 0 || material.Z() == 0) return 0.;
@@ -490,9 +484,9 @@ namespace detail {
       // Calculate energy loss by
       // a) ionisation
       double ionisationEnergyLoss
-          = ionisationLoss(mass,  // TODO: maybe wrong mass
+          = ionisationLoss(elData.massSI,
                            momentum * units::_c / energy,
-                           energy / (mass * units::_c2),
+                           energy / (elData.massSI * units::_c2),
                            material,
                            1.,
                            meanEnergyLoss,
@@ -500,7 +494,7 @@ namespace detail {
                 .first;
       // b) radiation
       double radiationEnergyLoss
-          = radiationLoss(energy, mass, material, pdg, 1., true);
+          = radiationLoss(energy, elData.massSI, material, pdg, 1., true);
 
       // Rescaling for mode evaluation.
       // TODO: Factor just copied from Athena but not tested for correctness
@@ -521,29 +515,25 @@ namespace detail {
     /// @param [in] meanEnergyLoss Boolean flag if mean or mode should be
     /// evaluated for the energy loss
     /// @return Derivative evaEnergyLossDataluated at the point defined by the
-    /// function
-    /// parameters
+    /// function parameters
     template <typename material_t>
     double
     dgdqop(const double      energy,
            const double      qop,
-           const double      mass,
-           const material_t& material,
-           const int         pdg,
-           const bool        meanEnergyLoss = true) const
+           const material_t& material) const
     {
       // Fast exit if material is invalid
-      if (material.X0() == 0 || material.Z() == 0
-          || material.zOverAtimesRho() == 0)
+      if (material.X0() == 0. || material.Z() == 0.
+          || material.zOverAtimesRho() == 0.)
         return 0.;
 
       // Bethe-Bloch
       const double betheBlochDerivative
-          = ionisationLoss.dqop(energy, qop, mass, material, true);
+          = ionisationLoss.dqop(energy, qop, elData.massSI, material, true);
 
       // Bethe-Heitler (+ pair production & photonuclear interaction for muons)
       const double radiationDerivative
-          = radiationLoss.dqop(mass, material, qop, energy, pdg, true);
+          = radiationLoss.dqop(elData.massSI, material, qop, energy, pdg, true);
 
       // Return the total derivative
       if (meanEnergyLoss)
@@ -571,24 +561,18 @@ namespace detail {
           = std::sqrt(eld.initialMomentum * eld.initialMomentum * units::_c2
                       + eld.massSI * eld.massSI * units::_c4);
       // Use the same energy loss throughout the step.
-      eld.g = dEds(eld.initialMomentum,
-                   E,
-                   eld.massSI,
-                   *(eld.material),
-                   pdg,
-                   meanEnergyLoss);
+      eld.g = dEds(eld.initialMomentum, E, *(eld.material));
       // Change of the momentum per path length
       // dPds = dPdE * dEds
       eld.dPds[0] = eld.g * E / (eld.initialMomentum * units::_c2);
       if (state.covTransport) {
-        // Calculate the change of the the energy loss per path length and
+        // Calculate the change of the energy loss per path length and
         // inverse momentum
         if (includeGgradient) {
-          eld.dgdqopValue = dgdqop(E,
-                                   eld.qop[0],
-                                   eld.massSI,
-                                   *(eld.material),
-                                   pdg);  // Use this value throughout the step.
+          eld.dgdqopValue
+              = dgdqop(E,
+                       eld.qop[0],
+                       *(eld.material));  // Use this value throughout the step.
         }
         // Calculate term for later error propagation
         eld.dLdl[0]

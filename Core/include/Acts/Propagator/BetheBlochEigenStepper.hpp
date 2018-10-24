@@ -134,11 +134,11 @@ public:
 
   //~ private:
   //~ /// @brief This function calculates the energy loss dE per path length ds
-  //of a
+  // of a
   //~ /// particle through material. The energy loss consists of ionisation and
   //~ /// radiation.
   //~ /// @note The calculations use SI units and it is assumed that the
-  //arguments
+  // arguments
   //~ /// are given in SI units.
   //~ ///
   //~ /// @tparam material_t Type of the material
@@ -228,7 +228,7 @@ public:
   //~ }
 
   //~ /// @brief Initializer of all parameters related to a RKN4 step with
-  //energy
+  // energy
   //~ /// loss of a particle in material
   //~ /// @note This function serves for reducing the length of the actual
   //~ /// BetheBlochEigenStepper::step() function.
@@ -240,7 +240,7 @@ public:
   //~ initializeEnergyLoss(EnergyLossData& eld, const State& state) const
   //~ {
   //~ double E = std::sqrt(eld.initialMomentum * eld.initialMomentum *
-  //units::_c2
+  // units::_c2
   //~ + eld.massSI * eld.massSI * units::_c4);
   //~ // Use the same energy loss throughout the step.
   //~ eld.g = dEds(eld.initialMomentum,
@@ -285,7 +285,7 @@ public:
   //~ /// @param [in] h Stepped distance of the sub-step (1-3)
   //~ /// @param [in] q Charge of the particle
   //~ /// @param [in] covTransport Boolean flag if covariance should be
-  //transported
+  // transported
   //~ /// @param [in] i Index of the sub-step (1-3)
   //~ void
   //~ updateEnergyLoss(EnergyLossData& eld,
