@@ -321,7 +321,7 @@ public:
   getField(const Vector3D& position, Cache& cache) const
   {
     if (!cache.initialized || !cache.fieldCell.isInside(position)) {
-      cache.fieldCell = getFieldCell(position);
+      cache.fieldCell   = getFieldCell(position);
       cache.initialized = true;
     }
     return cache.fieldCell.getField(position);

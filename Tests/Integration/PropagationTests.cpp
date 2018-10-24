@@ -66,7 +66,7 @@ namespace IntegrationTest {
   AtlasPropagator_type apropagator(std::move(astepper));
   auto                 bFieldPtr = std::make_shared<const BField_type>(bField);
   auto                 wConfig   = PropagationEngine_type::Config(bFieldPtr);
-  auto                 wengine    = std::make_shared<PropagationEngine_type>(
+  auto                 wengine   = std::make_shared<PropagationEngine_type>(
       wConfig,
       Acts::getDefaultLogger("RungeKuttaEngine", Acts::Logging::INFO));
   WrappedPropagator_type wpropagator(wengine);

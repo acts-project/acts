@@ -144,10 +144,10 @@ namespace IntegrationTest {
     Vector3D Bm = bFieldMap.getField(pos) / Acts::units::_T;
 
     // test less than 5% deviation
-    if(std::abs(r - R) > 10 && (std::abs(z) < L/3. || r > 20)) {
+    if (std::abs(r - R) > 10 && (std::abs(z) < L / 3. || r > 20)) {
       // only if more than 10mm away from coil for all z
       // only if not close to r=0 for large z
-      BOOST_TEST(std::abs(B.norm() - Bm.norm())/B.norm() < 0.05);
+      BOOST_TEST(std::abs(B.norm() - Bm.norm()) / B.norm() < 0.05);
     }
 
     std::ofstream& ofstr = valid.m_ofstr;
