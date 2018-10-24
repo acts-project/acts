@@ -733,7 +733,7 @@ public:
   getField(State& state, const Vector3D& pos) const
   {
     // get the field from the cell
-    m_bField.getField(pos, state.fieldCache);
+    state.field = m_bField.getField(pos, state.fieldCache);
     return state.field;
   }
 

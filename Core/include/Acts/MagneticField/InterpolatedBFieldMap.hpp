@@ -322,6 +322,7 @@ public:
   {
     if (!cache.initialized || !cache.fieldCell.isInside(position)) {
       cache.fieldCell = getFieldCell(position);
+      cache.initialized = true;
     }
     return cache.fieldCell.getField(position);
   }

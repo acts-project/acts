@@ -112,9 +112,9 @@ namespace IntegrationTest {
 
   StreamWrapper valid(std::ofstream("magfield_lookup.csv"));
 
-  const int ntests = 1000000;
+  const int ntests = 10000;
   BOOST_DATA_TEST_CASE(
-      constant_bfieldorward_propagation_,
+      solenoid_interpolated_bfield_comparison,
       bdata::random((bdata::seed   = 1,
                      bdata::engine = std::mt19937(),
                      bdata::distribution
@@ -135,7 +135,6 @@ namespace IntegrationTest {
       index)
   {
     (void)index;
-    // std::cout << z << " " << r << " " << phi << std::endl;
     if (index % 1000 == 0) {
       std::cout << index << std::endl;
     }
@@ -143,6 +142,13 @@ namespace IntegrationTest {
     Vector3D pos(r * std::cos(phi), r * std::sin(phi), z);
     Vector3D B  = bSolenoidField.getField(pos) / Acts::units::_T;
     Vector3D Bm = bFieldMap.getField(pos) / Acts::units::_T;
+
+    // test less than 5% deviation
+    if(std::abs(r - R) > 10 && (std::abs(z) < L/3. || r > 20)) {
+      // only if more than 10mm away from coil for all z
+      // only if not close to r=0 for large z
+      BOOST_TEST(std::abs(B.norm() - Bm.norm())/B.norm() < 0.05);
+    }
 
     std::ofstream& ofstr = valid.m_ofstr;
     ofstr << pos.x() << ";" << pos.y() << ";" << pos.z() << ";";
