@@ -18,7 +18,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
-#include "Acts/Propagator/detail/DenseEnvironmentExtension.hpp"
+#include "Acts/Propagator/detail/StepperExtension.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -156,21 +156,7 @@ public:
     // use the adjusted step size
     const double h = state.stepSize;
 
-    // TODO
-    //~ // Break propagation if momentum becomes below cut-off
-    //~ if (denseEnvironmentStep) {
-    //~ double newMomentum
-    //~ = state.p
-    //~ + units::SI2Nat<units::MOMENTUM>(
-    //~ (h / 6.) * (state.elData.dPds[0]
-    //~ + 2. * (state.elData.dPds[1] + state.elData.dPds[2])
-    //~ + state.elData.dPds[3]));
-    //~ if (units::Nat2SI<units::MOMENTUM>(newMomentum) < state.momentumCutOff)
-    //~ return 0.;
-    //~ else
-    //~ // Update momentum
-    //~ state.p = newMomentum;
-    //~ }
+	state.extension.finalizeStep(state, h);
 
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {

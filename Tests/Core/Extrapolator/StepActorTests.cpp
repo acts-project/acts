@@ -21,6 +21,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Propagator/detail/StepperExtension.hpp"
 #include "DetectorBuilder.hpp"
 
 namespace Acts {
@@ -126,12 +127,14 @@ namespace Test {
           std::move(covPtr), startParams, startMom, 1.);
 
       // Create action list for surface collection
-      ActionList<StepCollector, StepActor> aList;
+      //~ ActionList<StepCollector, StepActor> aList;
+      ActionList<StepCollector> aList;
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
-      Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator>::
-          Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
+      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension>, Navigator>::
+          //~ Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
+          Options<ActionList<StepCollector>, AbortList<EndOfWorld>>
               propOpts;
       propOpts.actionList     = aList;
       propOpts.stopConditions = abortList;
@@ -140,8 +143,8 @@ namespace Test {
 
       // Re-configure propagation with B-field
       ConstantBField                         bField(Vector3D(0., 0., 0.));
-      BetheBlochEigenStepper<ConstantBField> es(bField);
-      Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator> prop(
+      BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension> es(bField);
+      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension>, Navigator> prop(
           es, naviVac);
 
       // Launch and collect results

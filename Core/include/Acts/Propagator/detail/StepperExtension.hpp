@@ -12,7 +12,7 @@
 
 namespace Acts {
 namespace detail {
-  // TODO: rename file
+
   /// @brief Default evaluater of the k_i's and elements of the transport matrix
   /// D of the RKN4 stepping. This is a pure implementation by textbook.
   // TODO: note used unit systems
@@ -108,6 +108,15 @@ namespace detail {
       return true;
     }
 
+	/// @brief Veto function after a RKN4 step was accepted by judging on the error of the step. Since the textbook does not deliver further vetos, this is a dummy function.
+	///
+	template<typename stepper_state_t>
+    bool
+    finalizeStep(stepper_state_t&, const double)
+    {
+		return true;
+	}
+	
     /// @brief Evaluates the transport matrix D for the jacobian
     ///
     /// @param [in] dir Direction of the particle
@@ -356,10 +365,34 @@ namespace detail {
       // Update parameters and check for momentum condition
       updateEnergyLoss(h, state, 3);
       if (elData.currentMomentum < momentumCutOff)
-        return std::numeric_limits<double>::max();
+        return false;
       k4 = elData.qop[3] * (state.dir + h * k3).cross(bField);
       return true;
     }
+
+	/// @brief After a RKN4 step was accepted by the stepper this method has an additional veto on the quality of the step. The veto lies in evaluation of the energy loss and the therewith constrained to keep the momentum after the step in reasonable values.
+	///
+	/// @tparam stepper_state_t Type of the state of the stepper
+	/// @param [in, out] state State of the stepper
+	/// @param [in] h Step size
+	/// @return Boolean flag if step evaluation is valid
+	template<typename stepper_state_t>
+    bool
+    finalizeStep(stepper_state_t& state, const double h)
+    {
+		// Evaluate the new momentum
+		double newMomentum = state.p + conv * (h / 6.) * (elData.dPds[0] + 2. * (elData.dPds[1] + elData.dPds[2]) + elData.dPds[3]);
+	
+		// Break propagation if momentum becomes below cut-off
+		if (units::Nat2SI<units::MOMENTUM>(newMomentum) < momentumCutOff)
+			return false;
+		else
+		{
+			// Update momentum
+			state.p = newMomentum;
+			return true;
+		}
+	}
 
     /// @brief Evaluates the transport matrix D for the jacobian
     ///
