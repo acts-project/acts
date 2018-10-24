@@ -23,7 +23,6 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 // clang-format on
 
-
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
 
@@ -32,14 +31,15 @@ namespace Acts {
 namespace Test {
 
   /// This is the canonical interface that all field implementations
-  /// need to comply with. 
+  /// need to comply with.
   /// This test group is should include ALL field implementations,
   /// to make sure they conform to the interface, even if they are
   /// not implicitly tested by some of the other tests (e.g. Propagation)
   /// The function does not assert any functionality, it just ensures
   /// the interface compiles
   template <class BField_t>
-  void testInterfaceConsistency(const BField_t& field)
+  void
+  testInterfaceConsistency(const BField_t& field)
   {
     using Cache_t = typename BField_t::Cache;
     Vector3D pos(0, 0, 0);
@@ -54,7 +54,6 @@ namespace Test {
     Cache_t cache;
     field.getField(pos, cache);
     field.getFieldGradient(pos, gradient, cache);
-
   }
 
   BOOST_AUTO_TEST_CASE(TestConstantBFieldInterfaceConsistency)
@@ -68,24 +67,47 @@ namespace Test {
     SolenoidBField field({100, 1000, 20, 5});
     testInterfaceConsistency(field);
   }
-  
+
   BOOST_AUTO_TEST_CASE(TestInterpolatedBFieldMapInterfaceConsistency)
   {
     // define dummy mapper and field cell, we don't need them to do anything
-    struct DummyFieldCell {
-      Vector3D getField(const Vector3D&) const { return {0, 0, 0}; }
-      bool isInside(const Vector3D&) const { return true; }
-    };
-
-    struct DummyMapper : DummyFieldCell {
-      concept::AnyFieldCell<> getFieldCell(const Vector3D&) const { 
-        return DummyFieldCell(); 
+    struct DummyFieldCell
+    {
+      Vector3D
+      getField(const Vector3D&) const
+      {
+        return {0, 0, 0};
       }
-      std::vector<size_t> getNBins() const { return {42}; }
-      std::vector<double> getMin() const { return {5}; }
-      std::vector<double> getMax() const { return {15}; }
+      bool
+      isInside(const Vector3D&) const
+      {
+        return true;
+      }
     };
 
+    struct DummyMapper : DummyFieldCell
+    {
+      concept::AnyFieldCell<>
+      getFieldCell(const Vector3D&) const
+      {
+        return DummyFieldCell();
+      }
+      std::vector<size_t>
+      getNBins() const
+      {
+        return {42};
+      }
+      std::vector<double>
+      getMin() const
+      {
+        return {5};
+      }
+      std::vector<double>
+      getMax() const
+      {
+        return {15};
+      }
+    };
 
     InterpolatedBFieldMap::Config config;
     config.scale  = 1.;
@@ -96,10 +118,11 @@ namespace Test {
 
     testInterfaceConsistency(b);
   }
-  
+
   BOOST_AUTO_TEST_CASE(TestSharedBFieldInterfaceConsistency)
   {
-    SharedBField<ConstantBField> field(std::make_shared<ConstantBField>(Vector3D(1, 1, 1)));
+    SharedBField<ConstantBField> field(
+        std::make_shared<ConstantBField>(Vector3D(1, 1, 1)));
     testInterfaceConsistency(field);
   }
 }  // namespace Test

@@ -95,7 +95,9 @@ Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
   double r = std::abs(pos[0]);
   double z = pos[1];
 
-  if (r == 0) return 0.;
+  if (r == 0) {
+    return 0.;
+  }
 
   double k_2      = k2(r, z);
   double k        = std::sqrt(k_2);

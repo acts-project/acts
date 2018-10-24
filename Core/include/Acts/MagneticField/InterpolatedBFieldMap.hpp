@@ -341,7 +341,7 @@ public:
   {
     return m_config.mapper.getField(position);
   }
-  
+
   /// @brief retrieve magnetic field value & its gradient
   ///
   /// @param [in]  position   global 3D position

@@ -73,7 +73,7 @@ public:
   Vector3D
   getFieldGradient(const Vector3D& position,
                    ActsMatrixD<3, 3>& /*derivative*/) const;
-  
+
   /// @brief retrieve magnetic field value & its gradient
   ///
   /// @param [in]  position   global 3D position
