@@ -16,8 +16,6 @@ namespace Acts {
 struct StepActor
 {
   // Configurations for Stepper
-  /// Boolean flag for energy loss while stepping
-  bool m_energyLossFlag = false;
   /// Toggle between mean and mode evaluation of energy loss
   bool m_meanEnergyLoss = true;
   /// Tolerance for the error of the integration
@@ -46,16 +44,16 @@ struct StepActor
     // Initialize all parameters
     if (state.stepping.pathAccumulated == 0.) {
       // Let the stepper track the volume and particles mass
-      state.stepping.volume = &state.navigation.currentVolume;
-      state.stepping.mass   = state.options.mass;
-      state.stepping.pdg    = state.options.absPdgCode;
+      state.stepping.extension.volume = &state.navigation.currentVolume;
+      state.stepping.extension.mass   = state.options.mass;
+      state.stepping.extension.pdg    = state.options.absPdgCode;
 
       // Initialize user defined parameters
-      state.stepping.energyLossFlag   = m_energyLossFlag;
-      state.stepping.meanEnergyLoss   = m_meanEnergyLoss;
-      state.stepping.tolerance        = m_tolerance;
-      state.stepping.includeGgradient = m_includeGgradient;
-      state.stepping.momentumCutOff   = m_momentumCutOff;
+      state.stepping.extension.meanEnergyLoss   = m_meanEnergyLoss;
+      state.stepping.extension.includeGgradient = m_includeGgradient;
+      state.stepping.extension.momentumCutOff   = m_momentumCutOff;
+      state.stepping.tolerance                  = m_tolerance;
+      state.stepping.stepSizeCutOff             = m_stepSizeCutOff;
     }
   }
 };
