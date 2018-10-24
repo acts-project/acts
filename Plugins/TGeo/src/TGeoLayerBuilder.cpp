@@ -243,8 +243,9 @@ Acts::TGeoLayerBuilder::resolveSensitive(
         ACTS_VERBOSE(offset << "  node translation in z = " << z);
       }
       // build the matrix
-      TGeoHMatrix nTransform = tgTransform * (*tgMatrix);
-      std::string suffix     = "_transform";
+      TGeoHMatrix nTransform
+          = TGeoCombiTrans(tgTransform) * TGeoCombiTrans(*tgMatrix);
+      std::string suffix = "_transform";
       nTransform.SetName((tNodeName + suffix).c_str());
       // if it's not accepted, get the associated volume
       TGeoVolume* nodeVolume = tgNode->GetVolume();
