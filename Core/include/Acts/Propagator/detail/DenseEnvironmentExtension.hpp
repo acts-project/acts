@@ -14,7 +14,7 @@ namespace Acts {
 namespace detail {
   // TODO: rename file
   /// @brief Default evaluater of the k_i's and elements of the transport matrix
-  /// D. This is a pure implementation by textbook.
+  /// D of the RKN4 stepping. This is a pure implementation by textbook.
   // TODO: note used unit systems
   struct DefaultExtension
   {
@@ -192,6 +192,11 @@ namespace detail {
     }
   };
 
+  /// @brief Evaluater of the k_i's and elements of the transport matrix
+  /// D of the RKN4 stepping. This implementation involves energy loss due to
+  /// ioninisation, bremsstrahlung, pair production and photonuclear interaction
+  /// in the propagation and the jacobian. These effects will only occur if the
+  /// propagation is in a TrackingVolume with attached material.
   struct DenseEnvironmentExtension
   {
     /// @brief This struct serves as data container to keep track of all
@@ -274,7 +279,7 @@ namespace detail {
       elData.currentMomentum = elData.initialMomentum;
       elData.qop[0]          = state.q / elData.initialMomentum;
       k1                     = elData.qop[0] * state.dir.cross(bField);
-      initializeEnergyLoss(elData, state);
+      initializeEnergyLoss(state);
     }
 
     /// @brief Evaluates the k2 of the RKN4 in a dense environment
@@ -297,7 +302,7 @@ namespace detail {
       if (!volume || !(*volume) || !(*volume)->material()) return true;
 
       // Update parameters and check for momentum condition
-      updateEnergyLoss(elData, half_h, state, 1);
+      updateEnergyLoss(half_h, state, 1);
       if (elData.currentMomentum < momentumCutOff) return false;
       k2 = elData.qop[1] * (state.dir + half_h * k1).cross(bField);
       return true;
@@ -323,7 +328,7 @@ namespace detail {
       if (!volume || !(*volume) || !(*volume)->material()) return true;
 
       // Update parameters and check for momentum condition
-      updateEnergyLoss(elData, half_h, state, 2);
+      updateEnergyLoss(half_h, state, 2);
       if (elData.currentMomentum < momentumCutOff) return false;
       k3 = elData.qop[2] * (state.dir + half_h * k2).cross(bField);
       return true;
@@ -349,7 +354,7 @@ namespace detail {
       if (!volume || !(*volume) || !(*volume)->material()) return true;
 
       // Update parameters and check for momentum condition
-      updateEnergyLoss(elData, h, state, 3);
+      updateEnergyLoss(h, state, 3);
       if (elData.currentMomentum < momentumCutOff)
         return std::numeric_limits<double>::max();
       k4 = elData.qop[3] * (state.dir + h * k3).cross(bField);
@@ -509,12 +514,8 @@ namespace detail {
     /// @tparam material_t Type of the material
     /// @param [in] energy Initial energy of the particle
     /// @param [in] qop Initial value of q/p of the particle
-    /// @param [in] mass Mass of the particle
     /// @param [in] material Penetrated material
-    /// @param [in] pdg PDG code of the particle
-    /// @param [in] meanEnergyLoss Boolean flag if mean or mode should be
-    /// evaluated for the energy loss
-    /// @return Derivative evaEnergyLossDataluated at the point defined by the
+    /// @return Derivative evaluated at the point defined by the
     /// function parameters
     template <typename material_t>
     double
@@ -546,81 +547,72 @@ namespace detail {
 
     /// @brief Initializer of all parameters related to a RKN4 step with energy
     /// loss of a particle in material
-    /// @note This function serves for reducing the length of the actual
-    /// BetheBlochEigenStepper::step() function.
     ///
-    /// @param [in, out] eld Data container related to material interaction of
-    /// the particle
+    /// @tparam stepper_state_t Type of the state of the stepper
     /// @param [in] state Deliverer of configurations
     template <typename stepper_state_t>
     void
-    initializeEnergyLoss(EnergyLossData&        eld,
-                         const stepper_state_t& state) const
+    initializeEnergyLoss(const stepper_state_t& state)
     {
-      double E
-          = std::sqrt(eld.initialMomentum * eld.initialMomentum * units::_c2
-                      + eld.massSI * eld.massSI * units::_c4);
+      double E = std::sqrt(elData.initialMomentum * elData.initialMomentum
+                               * units::_c2
+                           + elData.massSI * elData.massSI * units::_c4);
       // Use the same energy loss throughout the step.
-      eld.g = dEds(eld.initialMomentum, E, *(eld.material));
+      elData.g = dEds(elData.initialMomentum, E, *(elData.material));
       // Change of the momentum per path length
       // dPds = dPdE * dEds
-      eld.dPds[0] = eld.g * E / (eld.initialMomentum * units::_c2);
+      elData.dPds[0] = elData.g * E / (elData.initialMomentum * units::_c2);
       if (state.covTransport) {
         // Calculate the change of the energy loss per path length and
         // inverse momentum
         if (includeGgradient) {
-          eld.dgdqopValue
-              = dgdqop(E,
-                       eld.qop[0],
-                       *(eld.material));  // Use this value throughout the step.
+          elData.dgdqopValue = dgdqop(
+              E,
+              elData.qop[0],
+              *(elData.material));  // Use this value throughout the step.
         }
         // Calculate term for later error propagation
-        eld.dLdl[0]
-            = (-eld.qop[0] * eld.qop[0] * eld.g * E
+        elData.dLdl[0]
+            = (-elData.qop[0] * elData.qop[0] * elData.g * E
                    * (3.
-                      - (eld.initialMomentum * eld.initialMomentum * units::_c2)
+                      - (elData.initialMomentum * elData.initialMomentum
+                         * units::_c2)
                           / (E * E))
-               - eld.qop[0] * eld.qop[0] * eld.qop[0] * E * eld.dgdqopValue)
+               - elData.qop[0] * elData.qop[0] * elData.qop[0] * E
+                   * elData.dgdqopValue)
             / units::_c3;
       }
     }
 
     /// @brief Update of the kinematic parameters of the RKN4 sub-steps after
     /// initialization with energy loss of a particle in material
-    /// @note This function serves for reducing the length of the actual
-    /// BetheBlochEigenStepper::step() function.
     ///
     /// @tparam stepper_state_t Type of the state of the stepper
-    /// @param [in] eld Data container related to material interaction of
-    /// the particle
-    /// @param [out] momentum Updated momentum
     /// @param [in] h Stepped distance of the sub-step (1-3)
     /// @param [in] state State of the stepper
     /// @param [in] i Index of the sub-step (1-3)
     template <typename stepper_state_t>
     void
-    updateEnergyLoss(
-        EnergyLossData& eld,  // TODO: no need to pass the member variable
-        const double    h,
-        const stepper_state_t& state,
-        const int              i) const
+    updateEnergyLoss(const double h, const stepper_state_t& state, const int i)
     {
       // Update parameters related to a changed momentum
-      eld.currentMomentum = eld.initialMomentum + h * eld.dPds[i - 1];
+      elData.currentMomentum = elData.initialMomentum + h * elData.dPds[i - 1];
       // if (momentum <= momentumCutOff) return false; //Abort propagation
-      double E
-          = std::sqrt(eld.currentMomentum * eld.currentMomentum * units::_c2
-                      + eld.massSI * eld.massSI * units::_c4);
-      eld.dPds[i] = eld.g * E / (eld.currentMomentum * units::_c2);
-      eld.qop[i]  = state.q / eld.currentMomentum;
+      double E = std::sqrt(elData.currentMomentum * elData.currentMomentum
+                               * units::_c2
+                           + elData.massSI * elData.massSI * units::_c4);
+      elData.dPds[i] = elData.g * E / (elData.currentMomentum * units::_c2);
+      elData.qop[i]  = state.q / elData.currentMomentum;
       // Calculate term for later error propagation
       if (state.covTransport) {
-        eld.dLdl[i]
-            = (-eld.qop[i] * eld.qop[i] * eld.g * E
+        elData.dLdl[i]
+            = (-elData.qop[i] * elData.qop[i] * elData.g * E
                    * (3.
-                      - (eld.currentMomentum * eld.currentMomentum * units::_c2)
+                      - (elData.currentMomentum * elData.currentMomentum
+                         * units::_c2)
                           / (E * E))
-               - eld.qop[i] * eld.qop[i] * eld.qop[i] * E * eld.dgdqopValue)
+               - elData.qop[i] * elData.qop[i] * elData.qop[i] * E
+                   * elData.dgdqopValue)
             / units::_c3;
       }
     }
