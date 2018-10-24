@@ -19,3 +19,8 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST SolenoidBFieldUnitTest TARGET
 add_executable (SolenoidFieldBenchmark SolenoidFieldBenchmark.cpp)
 target_include_directories (SolenoidFieldBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (SolenoidFieldBenchmark PRIVATE ActsCore)
+
+add_executable (MagneticFieldInterfaceConsistencyTests MagneticFieldInterfaceConsistencyTests.cpp)
+target_include_directories (MagneticFieldInterfaceConsistencyTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (MagneticFieldInterfaceConsistencyTests PRIVATE ActsCore)
+add_test(NAME MagneticFieldInterfaceConsistencyTests COMMAND MagneticFieldInterfaceConsistencyTests)

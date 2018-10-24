@@ -58,6 +58,14 @@ Acts::SolenoidBField::getFieldGradient(const Vector3D& position,
   return getField(position);
 }
 
+Acts::Vector3D
+Acts::SolenoidBField::getFieldGradient(const Vector3D& position,
+                                       ActsMatrixD<3, 3>& /*derivative*/,
+                                       Cache& /*cache*/) const
+{
+  return getField(position);
+}
+
 Acts::Vector2D
 Acts::SolenoidBField::multiCoilField(const Vector2D& pos, double scale) const
 {

@@ -82,6 +82,25 @@ public:
     return m_BField;
   }
 
+  /// @brief retrieve magnetic field value & its gradient
+  ///
+  /// @param [in]  position   global position
+  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
+  /// @param [in] cache Cache object (is ignored)
+  /// @return magnetic field vector
+  ///
+  /// @note The @p position is ignored and only kept as argument to provide
+  ///       a consistent interface with other magnetic field services.
+  /// @note currently the derivative is not calculated
+  /// @todo return derivative
+  Vector3D
+  getFieldGradient(const Vector3D& /*position*/,
+                   ActsMatrixD<3, 3>& /*derivative*/,
+                   Cache& /*cache*/) const
+  {
+    return m_BField;
+  }
+
   /// @brief check whether given 3D position is inside look-up domain
   ///
   /// @param [in] position global 3D position

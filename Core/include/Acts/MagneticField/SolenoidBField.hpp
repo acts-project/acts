@@ -52,7 +52,7 @@ public:
   /// @brief Retrieve magnetic field value
   ///
   /// @param [in] position global 3D position
-  /// @param [in,out] cache Cache object, passed through to wrapped BField
+  /// @param [in] cache Cache object, passed through to wrapped BField
   Vector3D
   getField(const Vector3D& position, Cache& /*cache*/) const;
 
@@ -73,6 +73,20 @@ public:
   Vector3D
   getFieldGradient(const Vector3D& position,
                    ActsMatrixD<3, 3>& /*derivative*/) const;
+  
+  /// @brief retrieve magnetic field value & its gradient
+  ///
+  /// @param [in]  position   global 3D position
+  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
+  /// @param [in] cache Cache object, passed through to wrapped BField
+  /// @return magnetic field vector
+  ///
+  /// @note currently the derivative is not calculated
+  /// @todo return derivative
+  Vector3D
+  getFieldGradient(const Vector3D& position,
+                   ActsMatrixD<3, 3>& /*derivative*/,
+                   Cache& /*cache*/) const;
 
 private:
   Config m_cfg;

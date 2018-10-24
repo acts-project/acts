@@ -341,6 +341,24 @@ public:
   {
     return m_config.mapper.getField(position);
   }
+  
+  /// @brief retrieve magnetic field value & its gradient
+  ///
+  /// @param [in]  position   global 3D position
+  /// @param [out] derivative gradient of magnetic field vector as (3x3) matrix
+  /// @param [in,out] cache Cache object. Contains field cell used for
+  /// @return magnetic field vector
+  ///
+  /// @note currently the derivative is not calculated
+  /// @note Cache is not used currently
+  /// @todo return derivative
+  Vector3D
+  getFieldGradient(const Vector3D& position,
+                   ActsMatrixD<3, 3>& /*derivative*/,
+                   Cache& /*cache*/) const
+  {
+    return m_config.mapper.getField(position);
+  }
 
   /// @brief get global scaling factor for magnetic field
   ///
