@@ -110,6 +110,7 @@ namespace detail {
 
 	/// @brief Veto function after a RKN4 step was accepted by judging on the error of the step. Since the textbook does not deliver further vetos, this is a dummy function.
 	///
+	// TODO
 	template<typename stepper_state_t>
     bool
     finalizeStep(stepper_state_t&, const double)

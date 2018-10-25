@@ -132,7 +132,8 @@ namespace Test {
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
-      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension>, Navigator>::
+      //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension>, Navigator>::
+      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>, Navigator>::
           //~ Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
           Options<ActionList<StepCollector>, AbortList<EndOfWorld>>
               propOpts;
@@ -143,8 +144,10 @@ namespace Test {
 
       // Re-configure propagation with B-field
       ConstantBField                         bField(Vector3D(0., 0., 0.));
-      BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension> es(bField);
-      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension>, Navigator> prop(
+      //~ BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension> es(bField);
+      BetheBlochEigenStepper<ConstantBField, VoidCorrector> es(bField);
+      //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension>, Navigator> prop(
+      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>, Navigator> prop(
           es, naviVac);
 
       // Launch and collect results
@@ -169,7 +172,9 @@ namespace Test {
       //~ for (const auto& j : stepResult.jac) {
       //~ BOOST_TEST(j == id77);
       //~ }
+std::exit(1);
     }
+    /**
     {
       // Build detector
       std::shared_ptr<TrackingGeometry> material = buildMatDetector();
@@ -388,6 +393,7 @@ namespace Test {
     //~ ofs.close();
     //~ //////////////////////////////////////////////////////////////////
     //~ }
+    **/
   }
 }  // namespace Test
 }  // namespace Acts

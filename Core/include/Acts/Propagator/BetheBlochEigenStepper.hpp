@@ -23,6 +23,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Propagator/ExtensionList.hpp"
 
 namespace Acts {
 // TODO: Merge this class with the EigenStepper
@@ -41,10 +42,10 @@ namespace Acts {
 ///
 template <typename BField,
           typename corrector_t = VoidCorrector,
-          typename extension_t = detail::DenseEnvironmentExtension>
+          //~ typename extension_t = detail::DenseEnvironmentExtension>
+          typename extensionlist_t = ExtensionList<detail::DefaultExtension, detail::DenseEnvironmentExtension>>
 class BetheBlochEigenStepper : public EigenStepper<BField, corrector_t>
 {
-
 public:
 
   /// @brief State for track parameter propagation
@@ -67,7 +68,7 @@ public:
     {
     }
 
-    extension_t extension;
+    extensionlist_t extension;
 
     /// Tolerance for the error of the integration
     double tolerance = 5e-5;
