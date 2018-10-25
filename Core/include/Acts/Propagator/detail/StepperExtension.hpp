@@ -52,20 +52,14 @@ namespace detail {
     /// this is a dummy function.
     ///
     // TODO
-    template <typename stepper_state_t>
+    template <typename stepper_state_t, typename stepper_data_t>
     bool
-    finalize(stepper_state_t& state,
-             const double     h,
-             const Vector3D&  bField1,
-             const Vector3D&  bField2,
-             const Vector3D&  bField3,
-             const Vector3D&  k1,
-             const Vector3D&  k2,
-             const Vector3D&  k3,
+    finalize(stepper_state_t&      state,
+             const double          h,
+             const stepper_data_t& data,
              ActsMatrixD<7, 7>& D) const
     {
-      if (state.covTransport)
-        transportMatrix(state.dir, bField1, bField2, bField3, h, k1, k2, k3, D);
+      if (state.covTransport) transportMatrix(state.dir, h, data, D);
       return true;
     }
 
@@ -82,15 +76,11 @@ namespace detail {
     /// @param [in] k3 Vector of k3
     /// @param [out] D Transport matrix
     /// @return Boolean flag is step evaluation is valid
+    template <typename stepper_data_t>
     bool
-    transportMatrix(const Vector3D& dir,
-                    const Vector3D& bField1,
-                    const Vector3D& bField2,
-                    const Vector3D& bField3,
-                    const double    h,
-                    const Vector3D& k1,
-                    const Vector3D& k2,
-                    const Vector3D& k3,
+    transportMatrix(const Vector3D&       dir,
+                    const double          h,
+                    const stepper_data_t& sd,
                     ActsMatrixD<7, 7>& D) const
     {
       D = ActsMatrixD<7, 7>::Identity();
@@ -115,31 +105,32 @@ namespace detail {
       ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
 
       // For the case without energy loss
-      dk1dL = dir.cross(bField1);
-      dk2dL = (dir + half_h * k1).cross(bField2)
-          + qop * half_h * dk1dL.cross(bField2);
-      dk3dL = (dir + half_h * k2).cross(bField2)
-          + qop * half_h * dk2dL.cross(bField2);
-      dk4dL = (dir + h * k3).cross(bField3) + qop * h * dk3dL.cross(bField3);
+      dk1dL = dir.cross(sd.B_first);
+      dk2dL = (dir + half_h * sd.k1).cross(sd.B_middle)
+          + qop * half_h * dk1dL.cross(sd.B_middle);
+      dk3dL = (dir + half_h * sd.k2).cross(sd.B_middle)
+          + qop * half_h * dk2dL.cross(sd.B_middle);
+      dk4dL = (dir + h * sd.k3).cross(sd.B_last)
+          + qop * h * dk3dL.cross(sd.B_last);
 
-      dk1dT(0, 1) = bField1.z();
-      dk1dT(0, 2) = -bField1.y();
-      dk1dT(1, 0) = -bField1.z();
-      dk1dT(1, 2) = bField1.x();
-      dk1dT(2, 0) = bField1.y();
-      dk1dT(2, 1) = -bField1.x();
+      dk1dT(0, 1) = sd.B_first.z();
+      dk1dT(0, 2) = -sd.B_first.y();
+      dk1dT(1, 0) = -sd.B_first.z();
+      dk1dT(1, 2) = sd.B_first.x();
+      dk1dT(2, 0) = sd.B_first.y();
+      dk1dT(2, 1) = -sd.B_first.x();
       dk1dT *= qop;
 
       dk2dT += half_h * dk1dT;
-      dk2dT *= cross(dk2dT, bField2);
+      dk2dT *= cross(dk2dT, sd.B_middle);
       dk2dT *= qop;
 
       dk3dT += half_h * dk2dT;
-      dk3dT *= cross(dk3dT, bField2);
+      dk3dT *= cross(dk3dT, sd.B_middle);
       dk3dT *= qop;
 
       dk4dT += h * dk3dT;
-      dk4dT *= cross(dk4dT, bField3);
+      dk4dT *= cross(dk4dT, sd.B_last);
       dk4dT *= qop;
 
       dFdT.setIdentity();
@@ -259,16 +250,11 @@ namespace detail {
     /// @param [in, out] state State of the stepper
     /// @param [in] h Step size
     /// @return Boolean flag if step evaluation is valid
-    template <typename stepper_state_t>
+    template <typename stepper_state_t, typename stepper_data_t>
     bool
-    finalize(stepper_state_t& state,
-             const double     h,
-             const Vector3D&  bField1,
-             const Vector3D&  bField2,
-             const Vector3D&  bField3,
-             const Vector3D&  k1,
-             const Vector3D&  k2,
-             const Vector3D&  k3,
+    finalize(stepper_state_t&      state,
+             const double          h,
+             const stepper_data_t& data,
              ActsMatrixD<7, 7>& D) const
     {
       // Evaluate the new momentum
@@ -286,7 +272,7 @@ namespace detail {
       }
 
       if (state.covTransport) {
-        transportMatrix(state.dir, bField1, bField2, bField3, h, k1, k2, k3, D);
+        transportMatrix(state.dir, h, data, D);
       }
       return true;
     }
@@ -304,15 +290,11 @@ namespace detail {
     /// @param [in] k3 Vector of k3
     /// @param [out] D Transport matrix
     /// @return Boolean flag is step evaluation is valid
+    template <typename stepper_data_t>
     bool
-    transportMatrix(const Vector3D& dir,
-                    const Vector3D& bField1,
-                    const Vector3D& bField2,
-                    const Vector3D& bField3,
-                    const double    h,
-                    const Vector3D& k1,
-                    const Vector3D& k2,
-                    const Vector3D& k3,
+    transportMatrix(const Vector3D&       dir,
+                    const double          h,
+                    const stepper_data_t& sd,
                     ActsMatrixD<7, 7>& D) const
     {
       if (!volume || !(*volume) || !(*volume)->material()) return true;
@@ -343,35 +325,35 @@ namespace detail {
 
       // Evaluation of the rightmost column without the last term.
       jdL[0] = elData.dLdl[0];
-      dk1dL  = dir.cross(bField1);
+      dk1dL  = dir.cross(sd.B_first);
       jdL[1] = elData.dLdl[1] * (1. + half_h * jdL[0]);
-      dk2dL  = (1. + half_h * jdL[0]) * (dir + half_h * k1).cross(bField2)
-          + elData.qop[1] * half_h * dk1dL.cross(bField2);
+      dk2dL = (1. + half_h * jdL[0]) * (dir + half_h * sd.k1).cross(sd.B_middle)
+          + elData.qop[1] * half_h * dk1dL.cross(sd.B_middle);
       jdL[2] = elData.dLdl[2] * (1. + half_h * jdL[1]);
-      dk3dL  = (1. + half_h * jdL[1]) * (dir + half_h * k2).cross(bField2)
-          + elData.qop[2] * half_h * dk2dL.cross(bField2);
+      dk3dL = (1. + half_h * jdL[1]) * (dir + half_h * sd.k2).cross(sd.B_middle)
+          + elData.qop[2] * half_h * dk2dL.cross(sd.B_middle);
       jdL[3] = elData.dLdl[3] * (1. + h * jdL[2]);
-      dk4dL  = (1. + h * jdL[2]) * (dir + h * k3).cross(bField3)
-          + elData.qop[3] * h * dk3dL.cross(bField3);
+      dk4dL  = (1. + h * jdL[2]) * (dir + h * sd.k3).cross(sd.B_last)
+          + elData.qop[3] * h * dk3dL.cross(sd.B_last);
 
-      dk1dT(0, 1) = bField1.z();
-      dk1dT(0, 2) = -bField1.y();
-      dk1dT(1, 0) = -bField1.z();
-      dk1dT(1, 2) = bField1.x();
-      dk1dT(2, 0) = bField1.y();
-      dk1dT(2, 1) = -bField1.x();
+      dk1dT(0, 1) = sd.B_first.z();
+      dk1dT(0, 2) = -sd.B_first.y();
+      dk1dT(1, 0) = -sd.B_first.z();
+      dk1dT(1, 2) = sd.B_first.x();
+      dk1dT(2, 0) = sd.B_first.y();
+      dk1dT(2, 1) = -sd.B_first.x();
       dk1dT *= elData.qop[0];
 
       dk2dT += half_h * dk1dT;
-      dk2dT *= cross(dk2dT, bField2);
+      dk2dT *= cross(dk2dT, sd.B_middle);
       dk2dT *= elData.qop[1];
 
       dk3dT += half_h * dk2dT;
-      dk3dT *= cross(dk3dT, bField2);
+      dk3dT *= cross(dk3dT, sd.B_middle);
       dk3dT *= elData.qop[2];
 
       dk4dT += h * dk3dT;
-      dk4dT *= cross(dk4dT, bField3);
+      dk4dT *= cross(dk4dT, sd.B_last);
       dk4dT *= elData.qop[3];
 
       dFdT.setIdentity();

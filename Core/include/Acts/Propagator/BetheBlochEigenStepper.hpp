@@ -17,15 +17,17 @@
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/ExtensionList.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StepperExtension.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Propagator/ExtensionList.hpp"
 
 namespace Acts {
+// TODO: Priority of extensionlist elements
+// TODO: configuration possibility
 // TODO: Merge this class with the EigenStepper
 
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
@@ -40,14 +42,20 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField,
-          typename corrector_t = VoidCorrector,
-          //~ typename extension_t = detail::DenseEnvironmentExtension>
-          typename extensionlist_t = ExtensionList<detail::DefaultExtension, detail::DenseEnvironmentExtension>> // TODO: change default
+template <
+    typename BField,
+    typename corrector_t = VoidCorrector,
+    typename extensionlist_t
+    = ExtensionList<detail::DefaultExtension,
+                    detail::DenseEnvironmentExtension>>  // TODO: change default
 class BetheBlochEigenStepper : public EigenStepper<BField, corrector_t>
 {
 public:
-
+  struct StepData
+  {
+    Vector3D B_first, B_middle, B_last;
+    Vector3D k1, k2, k3, k4;
+  };
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local
@@ -100,42 +108,42 @@ public:
   double
   step(State& state) const
   {
-
     // Runge-Kutta integrator state
-    double   h2, half_h;
-    Vector3D B_middle, B_last, k1, k2, k3, k4;
+    StepData sd;
+
+    double h2, half_h;
 
     // First Runge-Kutta point (at current position)
-    const Vector3D B_first = this->getField(state, state.pos);
+    sd.B_first = this->getField(state, state.pos);
 
-    state.extension.k(state, k1, B_first);
+    state.extension.k(state, sd.k1, sd.B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
     const auto tryRungeKuttaStep = [&](const double h) -> double {
-	   
+
       // State the square and half of the step size
       h2     = h * h;
       half_h = h * 0.5;
 
       // Second Runge-Kutta point
-      const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * k1;
-      B_middle            = this->getField(state, pos1);
-      state.extension.k(state, k2, B_middle, 1, half_h, k1);
+      const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * sd.k1;
+      sd.B_middle         = this->getField(state, pos1);
+      state.extension.k(state, sd.k2, sd.B_middle, 1, half_h, sd.k1);
 
       // Third Runge-Kutta point
-      state.extension.k(state, k3, B_middle, 2, half_h, k2);
+      state.extension.k(state, sd.k3, sd.B_middle, 2, half_h, sd.k2);
 
       // Last Runge-Kutta point
-      const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
-      B_last              = this->getField(state, pos2);
+      const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * sd.k3;
+      sd.B_last           = this->getField(state, pos2);
 
-      state.extension.k(state, k4, B_last, 3, h, k3);
+      state.extension.k(state, sd.k4, sd.B_last, 3, h, sd.k3);
 
       // Return an estimate of the local integration error
-      return h2 * (k1 - k2 - k3 + k4).template lpNorm<1>();
+      return h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>();
     };
 
     // Select and adjust the appropriate Runge-Kutta step size in ATLAS style
@@ -157,9 +165,9 @@ public:
     // use the adjusted step size
     const double h = state.stepSize;
 
-	// The step transport matrix in global coordinates
-	 ActsMatrixD<7, 7> D;
-	 state.extension.finalize(state, h, B_first, B_middle, B_last, k1, k2, k3, D);
+    // The step transport matrix in global coordinates
+    ActsMatrixD<7, 7> D;
+    state.extension.finalize(state, h, sd, D);
 
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {
@@ -175,7 +183,7 @@ public:
       /// initial problem in eq. 7.
       /// The evaluation is based by propagating the parameters T and lambda
       /// (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating
-      /// the derivations for matrix A.     
+      /// the derivations for matrix A.
 
       std::cout << "D:\n" << D << std::endl;
       std::cout << "jac:\n" << state.jacTransport << std::endl;
@@ -184,11 +192,11 @@ public:
     }
 
     // Update the track parameters according to the equations of motion
-    state.pos += h * state.dir + h2 / 6. * (k1 + k2 + k3);
-    state.dir += h / 6. * (k1 + 2. * k2 + 2. * k3 + k4);
+    state.pos += h * state.dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);
+    state.dir += h / 6. * (sd.k1 + 2. * sd.k2 + 2. * sd.k3 + sd.k4);
     state.dir /= state.dir.norm();
     state.derivative.template head<3>()     = state.dir;
-    state.derivative.template segment<3>(3) = k4;
+    state.derivative.template segment<3>(3) = sd.k4;
 
     std::cout << "result pos: " << state.pos << std::endl;
     std::cout << "result dir: " << state.dir << std::endl;
