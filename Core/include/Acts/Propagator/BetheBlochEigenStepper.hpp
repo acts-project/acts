@@ -108,14 +108,14 @@ public:
     // First Runge-Kutta point (at current position)
     const Vector3D B_first = this->getField(state, state.pos);
 
-    state.extension.evaluatek1(state, B_first, k1);
+    state.extension.k(state, k1, B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
     const auto tryRungeKuttaStep = [&](const double h) -> double {
-
+	   
       // State the square and half of the step size
       h2     = h * h;
       half_h = h * 0.5;
@@ -123,16 +123,16 @@ public:
       // Second Runge-Kutta point
       const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * k1;
       B_middle            = this->getField(state, pos1);
-      state.extension.evaluatek2(state, half_h, k1, B_middle, k2);
+      state.extension.k(state, k2, B_middle, 1, half_h, k1);
 
       // Third Runge-Kutta point
-      state.extension.evaluatek3(state, half_h, k2, B_middle, k3);
+      state.extension.k(state, k3, B_middle, 2, half_h, k2);
 
       // Last Runge-Kutta point
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * k3;
       B_last              = this->getField(state, pos2);
 
-      state.extension.evaluatek4(state, h, k3, B_last, k4);
+      state.extension.k(state, k4, B_last, 3, h, k3);
 
       // Return an estimate of the local integration error
       return h2 * (k1 - k2 - k3 + k4).template lpNorm<1>();

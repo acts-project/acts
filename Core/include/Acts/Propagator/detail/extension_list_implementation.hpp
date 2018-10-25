@@ -11,38 +11,30 @@
 
 namespace Acts {
 namespace detail {
-  namespace {
-
-    struct extension_caller
-    {
-      template <typename extension, typename stepper_state_t>
-      static void
-      evaluatek1(extension& ext, stepper_state_t& state, const Vector3D& bField, Vector3D& k1)
-      {
-        //~ ext.k1(state, result.template get<detail::result_type_t<actor>>());
-        ext.evaluatek1(state, bField, k1);
-      }
-    };
-  }  // end of anonymous namespace
-
   /// The dummy list call implementation
   template <typename... extensions>
   struct extension_list_impl;
-
+  
   /// The extension list call implementation
   /// - it calls 'extension' on the current entry of the tuple
   /// - then broadcasts the extension call to the remaining tuple
   template <typename first, typename... others>
   struct extension_list_impl<first, others...>
-  {
-    template <typename T, typename stepper_state_t>
-    static void
-    evaluatek1(T& obs_tuple, stepper_state_t& state, const Vector3D& bField, Vector3D& k1)
-    {
-      auto&    this_extension = std::get<first>(obs_tuple); // Extract extension
-      this_extension.evaluatek1(state, bField, k1); // Call function
-      extension_list_impl<others...>::evaluatek1(obs_tuple, state, bField, k1); // Forward to next element
-    }
+  {    
+    template<typename T, typename stepper_state_t>
+    static bool
+    k(T& obs_tuple, const stepper_state_t& state, Vector3D& knew,
+		const Vector3D&        bField,
+		const int i = 0,
+	   const double           h = 0,
+	   const Vector3D&        kprev = Vector3D())
+	{
+		auto& this_extension = std::get<first>(obs_tuple);
+		if(this_extension.k(state, knew, bField, i, h, kprev))
+			return extension_list_impl<others...>::k(obs_tuple, state, knew, bField, i, h, kprev);
+		else
+			return false;
+	}
   };
 
   /// The extension list call implementation
@@ -50,27 +42,33 @@ namespace detail {
   template <typename last>
   struct extension_list_impl<last>
   {
-    template <typename T, typename stepper_state_t>
-    static void
-    evaluatek1(T& obs_tuple, stepper_state_t& state, const Vector3D& bField, Vector3D& k1)
-    {
-      auto&    this_extension = std::get<last>(obs_tuple);
-      extension_caller::evaluatek1(this_extension, state, bField, k1);
-    }
+    template<typename T, typename stepper_state_t>
+    static bool
+    k(T& obs_tuple, const stepper_state_t& state, Vector3D& knew,
+		const Vector3D&        bField,
+		const int i = 0,
+	   const double           h = 0,
+	   const Vector3D&        kprev = Vector3D())
+	{
+		auto& this_extension = std::get<last>(obs_tuple);
+		return this_extension.k(state, knew, bField, i, h, kprev);
+	}
   };
 
   /// The empty extension list call implementation
   template <>
   struct extension_list_impl<>
   {
-    template <typename T, typename stepper_state_t>
-    static void
-    evaluatek1(T& /*unused*/,
-           stepper_state_t& /*unused*/,
-           const Vector3D& /*unused*/,
-           Vector3D& /*unused*/)
-    {
-    }
+    template<typename T, typename stepper_state_t>
+    static bool
+    k(T& /*unused*/, const stepper_state_t& /*unused*/, Vector3D& /*unused*/,
+		const Vector3D&        /*unused*/,
+		const int /*unused*/,
+	   const double           /*unused*/,
+	   const Vector3D&        /*unused*/)
+	{
+		return true;
+	}
   };
 
 }  // namespace detail

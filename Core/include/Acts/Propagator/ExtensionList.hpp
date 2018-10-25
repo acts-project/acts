@@ -29,66 +29,36 @@ public:
 
   using detail::Extendable<extensions...>::get;
 
-	template <typename stepper_state_t>
-    void
-    evaluatek1(const stepper_state_t& state,
-               const Vector3D&        bField,
-               Vector3D&              k1)
-    {    
+	template<typename stepper_state_t>
+	bool
+	k(const stepper_state_t& state,
+		Vector3D&              knew,
+		const Vector3D&        bField,
+		const int i = 0,
+	   const double           h = 0,
+	   const Vector3D&        kprev = Vector3D())
+    {
 		using impl = detail::extension_list_impl<extensions...>;
-		impl::evaluatek1(tuple(), state, bField, k1);
-    }
-
-    template <typename stepper_state_t>
-    bool
-    evaluatek2(const stepper_state_t& state,
-               const double           half_h,
-               const Vector3D&        k1,
-               const Vector3D&        bField,
-               Vector3D&              k2) const
-    {
-      return true;
-    }
-
-    template <typename stepper_state_t>
-    bool
-    evaluatek3(const stepper_state_t& state,
-               const double           half_h,
-               const Vector3D&        k2,
-               const Vector3D&        bField,
-               Vector3D&              k3) const
-    {
-      return true;
-    }
-
-    template <typename stepper_state_t>
-    bool
-    evaluatek4(const stepper_state_t& state,
-               const double           h,
-               const Vector3D&        k3,
-               const Vector3D&        bField,
-               Vector3D&              k4) const
-    {
-      return true;
-    }
+		return impl::k(tuple(), state, knew, bField, i, h, kprev);
+	}
 
 	template<typename stepper_state_t>
     bool
-    finalizeStep(stepper_state_t&, const double)
+    finalizeStep(stepper_state_t& /*unused*/, const double /*unused*/)
     {
 		return true;
 	}
 	
     bool
-    evaluateD(const Vector3D& dir,
-              const Vector3D& bField1,
-              const Vector3D& bField2,
-              const Vector3D& bField3,
-              const double    h,
-              const Vector3D& k1,
-              const Vector3D& k2,
-              const Vector3D& k3,
-              ActsMatrixD<7, 7>& D) const
+    evaluateD(const Vector3D& /*unused*/,
+              const Vector3D& /*unused*/,
+              const Vector3D& /*unused*/,
+              const Vector3D& /*unused*/,
+              const double    /*unused*/,
+              const Vector3D& /*unused*/,
+              const Vector3D& /*unused*/,
+              const Vector3D& /*unused*/,
+              ActsMatrixD<7, 7>& /*unused*/) const
     {
       return true;
     }

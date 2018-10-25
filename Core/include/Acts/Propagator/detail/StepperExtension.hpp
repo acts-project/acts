@@ -27,86 +27,109 @@ namespace detail {
     /// Local store for conversion of momentum from SI to natural units
     const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
-    /// @brief Evaluates the k1 of the RKN4 by textbook
-    ///
-    /// @tparam stepper_state_t Type of the state of the stepper
-    /// @param [in] state State of the stepper
-    /// @param [in] bField B-Field at the first position
-    /// @param [out] k1 Vector of k1
-    template <typename stepper_state_t>
-    void
-    evaluatek1(const stepper_state_t& state,
-               const Vector3D&        bField,
-               Vector3D&              k1)
+    //~ /// @brief Evaluates the k1 of the RKN4 by textbook
+    //~ ///
+    //~ /// @tparam stepper_state_t Type of the state of the stepper
+    //~ /// @param [in] state State of the stepper
+    //~ /// @param [in] bField B-Field at the first position
+    //~ /// @param [out] k1 Vector of k1
+    //~ template <typename stepper_state_t>
+    //~ void
+    //~ evaluatek1(const stepper_state_t& state,
+               //~ const Vector3D&        bField,
+               //~ Vector3D&              k1)
+    //~ {
+      //~ // Store qop, it is always used if valid
+      //~ qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
+
+      //~ k1 = qop * state.dir.cross(bField);
+    //~ }
+
+	template<typename stepper_state_t>
+	bool
+	k(const stepper_state_t& state,
+		Vector3D&              knew,
+		const Vector3D&        bField,
+		const int i = 0,
+	   const double           h = 0,
+	   const Vector3D&        kprev = Vector3D())
     {
-      // Store qop, it is always used if valid
+	  if(i == 0)
+	  {
+	  // Store qop, it is always used if valid
       qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
 
-      k1 = qop * state.dir.cross(bField);
-    }
+      knew = qop * state.dir.cross(bField);
+  }
+  else
+  {
+	  knew = qop * (state.dir + h * kprev).cross(bField);
+     }
+      return true; 
+	}
+	
+    //~ /// @brief Evaluates the k2 of the RKN4 by textbook
+    //~ ///
+    //~ /// @tparam stepper_state_t Type of the state of the stepper
+    //~ /// @param [in] dir Direction of the particle
+    //~ /// @param [in] half_h Half the step size
+    //~ /// @param [in] k1 Evaluated value of k1
+    //~ /// @param [in] bField B-Field at the second position
+    //~ /// @param [out] k2 Vector of k2
+    //~ /// @return Boolean flag if step evaluation is valid
+    //~ template <typename stepper_state_t>
+    //~ bool
+    //~ evaluatek2(const stepper_state_t& state,
+               //~ const double           half_h,
+               //~ const Vector3D&        k1,
+               //~ const Vector3D&        bField,
+               //~ Vector3D&              k2) const
+    //~ {
+      //~ k2 = qop * (state.dir + half_h * k1).cross(bField);
+      //~ return true;
+    //~ }
 
-    /// @brief Evaluates the k2 of the RKN4 by textbook
-    ///
-    /// @tparam stepper_state_t Type of the state of the stepper
-    /// @param [in] dir Direction of the particle
-    /// @param [in] half_h Half the step size
-    /// @param [in] k1 Evaluated value of k1
-    /// @param [in] bField B-Field at the second position
-    /// @param [out] k2 Vector of k2
-    /// @return Boolean flag if step evaluation is valid
-    template <typename stepper_state_t>
-    bool
-    evaluatek2(const stepper_state_t& state,
-               const double           half_h,
-               const Vector3D&        k1,
-               const Vector3D&        bField,
-               Vector3D&              k2) const
-    {
-      k2 = qop * (state.dir + half_h * k1).cross(bField);
-      return true;
-    }
+    //~ /// @brief Evaluates the k3 of the RKN4 by textbook
+    //~ ///
+    //~ /// @tparam stepper_state_t Type of the state of the stepper
+    //~ /// @param [in] dir Direction of the particle
+    //~ /// @param [in] half_h Half the step size
+    //~ /// @param [in] k2 Evaluated value of k2
+    //~ /// @param [in] bField B-Field at the second position
+    //~ /// @param [out] k3 Vector of k3
+    //~ /// @return Boolean flag if step evaluation is valid
+    //~ template <typename stepper_state_t>
+    //~ bool
+    //~ evaluatek3(const stepper_state_t& state,
+               //~ const double           half_h,
+               //~ const Vector3D&        k2,
+               //~ const Vector3D&        bField,
+               //~ Vector3D&              k3) const
+    //~ {
+      //~ k3 = qop * (state.dir + half_h * k2).cross(bField);
+      //~ return true;
+    //~ }
 
-    /// @brief Evaluates the k3 of the RKN4 by textbook
-    ///
-    /// @tparam stepper_state_t Type of the state of the stepper
-    /// @param [in] dir Direction of the particle
-    /// @param [in] half_h Half the step size
-    /// @param [in] k2 Evaluated value of k2
-    /// @param [in] bField B-Field at the second position
-    /// @param [out] k3 Vector of k3
-    /// @return Boolean flag if step evaluation is valid
-    template <typename stepper_state_t>
-    bool
-    evaluatek3(const stepper_state_t& state,
-               const double           half_h,
-               const Vector3D&        k2,
-               const Vector3D&        bField,
-               Vector3D&              k3) const
-    {
-      k3 = qop * (state.dir + half_h * k2).cross(bField);
-      return true;
-    }
-
-    /// @brief Evaluates the k4 of the RKN4 by textbook
-    ///
-    /// @tparam stepper_state_t Type of the state of the steppers
-    /// @param [in] dir Direction of the particle
-    /// @param [in] h Step size
-    /// @param [in] k3 Evaluated value of k3
-    /// @param [in] bField B-Field at the last position
-    /// @param [out] k4 Vector of k4
-    /// @return Boolean flag if step evaluation is valid
-    template <typename stepper_state_t>
-    bool
-    evaluatek4(const stepper_state_t& state,
-               const double           h,
-               const Vector3D&        k3,
-               const Vector3D&        bField,
-               Vector3D&              k4) const
-    {
-      k4 = qop * (state.dir + h * k3).cross(bField);
-      return true;
-    }
+    //~ /// @brief Evaluates the k4 of the RKN4 by textbook
+    //~ ///
+    //~ /// @tparam stepper_state_t Type of the state of the steppers
+    //~ /// @param [in] dir Direction of the particle
+    //~ /// @param [in] h Step size
+    //~ /// @param [in] k3 Evaluated value of k3
+    //~ /// @param [in] bField B-Field at the last position
+    //~ /// @param [out] k4 Vector of k4
+    //~ /// @return Boolean flag if step evaluation is valid
+    //~ template <typename stepper_state_t>
+    //~ bool
+    //~ evaluatek4(const stepper_state_t& state,
+               //~ const double           h,
+               //~ const Vector3D&        k3,
+               //~ const Vector3D&        bField,
+               //~ Vector3D&              k4) const
+    //~ {
+      //~ k4 = qop * (state.dir + h * k3).cross(bField);
+      //~ return true;
+    //~ }
 
 	/// @brief Veto function after a RKN4 step was accepted by judging on the error of the step. Since the textbook does not deliver further vetos, this is a dummy function.
 	///
@@ -268,108 +291,141 @@ namespace detail {
     /// @brief Default constructor
     DenseEnvironmentExtension() = default;
 
-    /// @brief Evaluates the k1 of the RKN4 in a dense environment
-    ///
-    /// @tparam steppter_state_t Type of the state of the stepper
-    /// @param [in] state State of the stepper
-    /// @param [in] bField B-Field at the first position
-    /// @param [out] k1 Vector of k1
-    template <typename stepper_state_t>
-    void
-    evaluatek1(const stepper_state_t& state,
-               const Vector3D&        bField,
-               Vector3D&              k1)
+    //~ /// @brief Evaluates the k1 of the RKN4 in a dense environment
+    //~ ///
+    //~ /// @tparam steppter_state_t Type of the state of the stepper
+    //~ /// @param [in] state State of the stepper
+    //~ /// @param [in] bField B-Field at the first position
+    //~ /// @param [out] k1 Vector of k1
+    //~ template <typename stepper_state_t>
+    //~ void
+    //~ evaluatek1(const stepper_state_t& state,
+               //~ const Vector3D&        bField,
+               //~ Vector3D&              k1)
+    //~ {
+      //~ if (!volume || !(*volume) || !(*volume)->material()) return; //
+
+      //~ // Set up container for energy loss
+      //~ elData.massSI          = units::Nat2SI<units::MASS>(mass);
+      //~ elData.material        = (*volume)->material();
+      //~ elData.initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
+      //~ elData.currentMomentum = elData.initialMomentum;
+      //~ elData.qop[0]          = state.q / elData.initialMomentum;
+      //~ initializeEnergyLoss(state);
+      //~ k1                     = elData.qop[0] * state.dir.cross(bField); //
+    //~ }
+
+	template<typename stepper_state_t>
+	bool
+	k(const stepper_state_t& state,
+		Vector3D&              knew,
+		const Vector3D&        bField,
+		const int i = 0,
+	   const double           h = 0,
+	   const Vector3D&        kprev = Vector3D())
     {
-      if (!volume || !(*volume) || !(*volume)->material()) return;
-
-      // Set up container for energy loss
-      elData.massSI          = units::Nat2SI<units::MASS>(mass);
-      elData.material        = (*volume)->material();
-      elData.initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
-      elData.currentMomentum = elData.initialMomentum;
-      elData.qop[0]          = state.q / elData.initialMomentum;
-      k1                     = elData.qop[0] * state.dir.cross(bField);
-      initializeEnergyLoss(state);
-    }
-
-    /// @brief Evaluates the k2 of the RKN4 in a dense environment
-    ///
-    /// @tparam steppter_state_t Type of the state of the stepper
-    /// @param [in] state State of the stepper
-    /// @param [in] half_h Half the step size
-    /// @param [in] k1 Evaluated value of k1
-    /// @param [in] bField B-Field at the second position
-    /// @param [out] k2 Vector of k2
-    /// @return Boolean flag if step evaluation is valid
-    template <typename stepper_state_t>
-    bool
-    evaluatek2(const stepper_state_t& state,
-               const double           half_h,
-               const Vector3D&        k1,
-               const Vector3D&        bField,
-               Vector3D&              k2)
-    {
-      if (!volume || !(*volume) || !(*volume)->material()) return true;
-
-      // Update parameters and check for momentum condition
-      updateEnergyLoss(half_h, state, 1);
-      if (elData.currentMomentum < momentumCutOff) return false;
-      k2 = elData.qop[1] * (state.dir + half_h * k1).cross(bField);
+	  if (!volume || !(*volume) || !(*volume)->material()) return true;
+	
+	  if(i == 0)
+	  {
+		  // Set up container for energy loss
+		  elData.massSI          = units::Nat2SI<units::MASS>(mass);
+		  elData.material        = (*volume)->material();
+		  elData.initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
+		  elData.currentMomentum = elData.initialMomentum;
+		  elData.qop[0]          = state.q / elData.initialMomentum;
+		  initializeEnergyLoss(state);
+		  knew                     = elData.qop[0] * state.dir.cross(bField);
+	  }
+	  else
+	  {
+		  // Update parameters and check for momentum condition
+		  updateEnergyLoss(h, state, i);
+		  if (elData.currentMomentum < momentumCutOff) return false;
+		  knew = elData.qop[i] * (state.dir + h * kprev).cross(bField);
+	  }
+      
       return true;
-    }
+	}
 
-    /// @brief Evaluates the k3 of the RKN4 in a dense environment
-    ///
-    /// @tparam steppter_state_t Type of the state of the stepper
-    /// @param [in] state State of the stepper
-    /// @param [in] half_h Half the step size
-    /// @param [in] k2 Evaluated value of k2
-    /// @param [in] bField B-Field at the second position
-    /// @param [out] k3 Vector of k3
-    /// @return Boolean flag if step evaluation is valid
-    template <typename stepper_state_t>
-    bool
-    evaluatek3(const stepper_state_t& state,
-               const double           half_h,
-               const Vector3D&        k2,
-               const Vector3D&        bField,
-               Vector3D&              k3)
-    {
-      if (!volume || !(*volume) || !(*volume)->material()) return true;
+    //~ /// @brief Evaluates the k2 of the RKN4 in a dense environment
+    //~ ///
+    //~ /// @tparam steppter_state_t Type of the state of the stepper
+    //~ /// @param [in] state State of the stepper
+    //~ /// @param [in] half_h Half the step size
+    //~ /// @param [in] k1 Evaluated value of k1
+    //~ /// @param [in] bField B-Field at the second position
+    //~ /// @param [out] k2 Vector of k2
+    //~ /// @return Boolean flag if step evaluation is valid
+    //~ template <typename stepper_state_t>
+    //~ bool
+    //~ evaluatek2(const stepper_state_t& state,
+               //~ const double           half_h,
+               //~ const Vector3D&        k1,
+               //~ const Vector3D&        bField,
+               //~ Vector3D&              k2)
+    //~ {
+      //~ if (!volume || !(*volume) || !(*volume)->material()) return true;
 
-      // Update parameters and check for momentum condition
-      updateEnergyLoss(half_h, state, 2);
-      if (elData.currentMomentum < momentumCutOff) return false;
-      k3 = elData.qop[2] * (state.dir + half_h * k2).cross(bField);
-      return true;
-    }
+      //~ // Update parameters and check for momentum condition
+      //~ updateEnergyLoss(half_h, state, 1);
+      //~ if (elData.currentMomentum < momentumCutOff) return false;
+      //~ k2 = elData.qop[1] * (state.dir + half_h * k1).cross(bField);
+      //~ return true;
+    //~ }
 
-    /// @brief Evaluates the k4 of the RKN4 in a dense environment
-    ///
-    /// @tparam steppter_state_t Type of the state of the stepper
-    /// @param [in] state State of the stepper
-    /// @param [in] h Step size
-    /// @param [in] k3 Evaluated value of k3
-    /// @param [in] bField B-Field at the last position
-    /// @param [out] k4 Vector of k4
-    /// @return Boolean flag if step evaluation is valid
-    template <typename stepper_state_t>
-    bool
-    evaluatek4(const stepper_state_t& state,
-               const double           h,
-               const Vector3D&        k3,
-               const Vector3D&        bField,
-               Vector3D&              k4)
-    {
-      if (!volume || !(*volume) || !(*volume)->material()) return true;
+    //~ /// @brief Evaluates the k3 of the RKN4 in a dense environment
+    //~ ///
+    //~ /// @tparam steppter_state_t Type of the state of the stepper
+    //~ /// @param [in] state State of the stepper
+    //~ /// @param [in] half_h Half the step size
+    //~ /// @param [in] k2 Evaluated value of k2
+    //~ /// @param [in] bField B-Field at the second position
+    //~ /// @param [out] k3 Vector of k3
+    //~ /// @return Boolean flag if step evaluation is valid
+    //~ template <typename stepper_state_t>
+    //~ bool
+    //~ evaluatek3(const stepper_state_t& state,
+               //~ const double           half_h,
+               //~ const Vector3D&        k2,
+               //~ const Vector3D&        bField,
+               //~ Vector3D&              k3)
+    //~ {
+      //~ if (!volume || !(*volume) || !(*volume)->material()) return true;
 
-      // Update parameters and check for momentum condition
-      updateEnergyLoss(h, state, 3);
-      if (elData.currentMomentum < momentumCutOff)
-        return false;
-      k4 = elData.qop[3] * (state.dir + h * k3).cross(bField);
-      return true;
-    }
+      //~ // Update parameters and check for momentum condition
+      //~ updateEnergyLoss(half_h, state, 2);
+      //~ if (elData.currentMomentum < momentumCutOff) return false;
+      //~ k3 = elData.qop[2] * (state.dir + half_h * k2).cross(bField);
+      //~ return true;
+    //~ }
+
+    //~ /// @brief Evaluates the k4 of the RKN4 in a dense environment
+    //~ ///
+    //~ /// @tparam steppter_state_t Type of the state of the stepper
+    //~ /// @param [in] state State of the stepper
+    //~ /// @param [in] h Step size
+    //~ /// @param [in] k3 Evaluated value of k3
+    //~ /// @param [in] bField B-Field at the last position
+    //~ /// @param [out] k4 Vector of k4
+    //~ /// @return Boolean flag if step evaluation is valid
+    //~ template <typename stepper_state_t>
+    //~ bool
+    //~ evaluatek4(const stepper_state_t& state,
+               //~ const double           h,
+               //~ const Vector3D&        k3,
+               //~ const Vector3D&        bField,
+               //~ Vector3D&              k4)
+    //~ {
+      //~ if (!volume || !(*volume) || !(*volume)->material()) return true;
+
+      //~ // Update parameters and check for momentum condition
+      //~ updateEnergyLoss(h, state, 3);
+      //~ if (elData.currentMomentum < momentumCutOff)
+        //~ return false;
+      //~ k4 = elData.qop[3] * (state.dir + h * k3).cross(bField);
+      //~ return true;
+    //~ }
 
 	/// @brief After a RKN4 step was accepted by the stepper this method has an additional veto on the quality of the step. The veto lies in evaluation of the energy loss and the therewith constrained to keep the momentum after the step in reasonable values.
 	///
