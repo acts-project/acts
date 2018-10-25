@@ -27,50 +27,49 @@ namespace detail {
     /// Local store for conversion of momentum from SI to natural units
     const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
-	template<typename stepper_state_t>
-	bool
-	k(const stepper_state_t& state,
-		Vector3D&              knew,
-		const Vector3D&        bField,
-		const int i = 0,
-	   const double           h = 0,
-	   const Vector3D&        kprev = Vector3D())
-    {
-	  if(i == 0)
-	  {
-	  // Store qop, it is always used if valid
-      qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
-
-      knew = qop * state.dir.cross(bField);
-  }
-  else
-  {
-	  knew = qop * (state.dir + h * kprev).cross(bField);
-     }
-      return true; 
-	}
-
-	/// @brief Veto function after a RKN4 step was accepted by judging on the error of the step. Since the textbook does not deliver further vetos, this is a dummy function.
-	///
-	// TODO
-	template<typename stepper_state_t>
+    template <typename stepper_state_t>
     bool
-    finalize(stepper_state_t& state, 
-				const double h,
-				const Vector3D& bField1 = Vector3D(),
-              const Vector3D& bField2 = Vector3D(),
-              const Vector3D& bField3 = Vector3D(),
-              const Vector3D& k1 = Vector3D(),
-              const Vector3D& k2 = Vector3D(),
-              const Vector3D& k3 = Vector3D(),
-              ActsMatrixD<7, 7>& D = ActsMatrixD<7, 7>()) const
+    k(const stepper_state_t& state,
+      Vector3D&              knew,
+      const Vector3D&        bField,
+      const int              i     = 0,
+      const double           h     = 0,
+      const Vector3D&        kprev = Vector3D())
     {
-		if(state.covTransport)
-			D(state.dir, bField1, bField2, bField3, h, k1, k2, k3, D);
-		return true;
-	}
+      if (i == 0) {
+        // Store qop, it is always used if valid
+        qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
 
-private:	
+        knew = qop * state.dir.cross(bField);
+      } else {
+        knew = qop * (state.dir + h * kprev).cross(bField);
+      }
+      return true;
+    }
+
+    /// @brief Veto function after a RKN4 step was accepted by judging on the
+    /// error of the step. Since the textbook does not deliver further vetos,
+    /// this is a dummy function.
+    ///
+    // TODO
+    template <typename stepper_state_t>
+    bool
+    finalize(stepper_state_t& state,
+             const double     h,
+             const Vector3D&  bField1,
+             const Vector3D&  bField2,
+             const Vector3D&  bField3,
+             const Vector3D&  k1,
+             const Vector3D&  k2,
+             const Vector3D&  k3,
+             ActsMatrixD<7, 7>& D) const
+    {
+      if (state.covTransport)
+        transportMatrix(state.dir, bField1, bField2, bField3, h, k1, k2, k3, D);
+      return true;
+    }
+
+  private:
     /// @brief Evaluates the transport matrix D for the jacobian
     ///
     /// @param [in] dir Direction of the particle
@@ -84,16 +83,18 @@ private:
     /// @param [out] D Transport matrix
     /// @return Boolean flag is step evaluation is valid
     bool
-    D(const Vector3D& dir,
-              const Vector3D& bField1,
-              const Vector3D& bField2,
-              const Vector3D& bField3,
-              const double    h,
-              const Vector3D& k1,
-              const Vector3D& k2,
-              const Vector3D& k3,
-              ActsMatrixD<7, 7>& D) const
+    transportMatrix(const Vector3D& dir,
+                    const Vector3D& bField1,
+                    const Vector3D& bField2,
+                    const Vector3D& bField3,
+                    const double    h,
+                    const Vector3D& k1,
+                    const Vector3D& k2,
+                    const Vector3D& k3,
+                    ActsMatrixD<7, 7>& D) const
     {
+      D = ActsMatrixD<7, 7>::Identity();
+
       double half_h = h * 0.5;
       // This sets the reference to the sub matrices
       // dFdx is already initialised as (3x3) zero
@@ -219,77 +220,78 @@ private:
     /// @brief Default constructor
     DenseEnvironmentExtension() = default;
 
-	template<typename stepper_state_t>
-	bool
-	k(const stepper_state_t& state,
-		Vector3D&              knew,
-		const Vector3D&        bField,
-		const int i = 0,
-	   const double           h = 0,
-	   const Vector3D&        kprev = Vector3D())
-    {
-	  if (!volume || !(*volume) || !(*volume)->material()) return true;
-	
-	  if(i == 0)
-	  {
-		  // Set up container for energy loss
-		  elData.massSI          = units::Nat2SI<units::MASS>(mass);
-		  elData.material        = (*volume)->material();
-		  elData.initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
-		  elData.currentMomentum = elData.initialMomentum;
-		  elData.qop[0]          = state.q / elData.initialMomentum;
-		  initializeEnergyLoss(state);
-		  knew                     = elData.qop[0] * state.dir.cross(bField);
-	  }
-	  else
-	  {
-		  // Update parameters and check for momentum condition
-		  updateEnergyLoss(h, state, i);
-		  if (elData.currentMomentum < momentumCutOff) return false;
-		  knew = elData.qop[i] * (state.dir + h * kprev).cross(bField);
-	  }
-      
-      return true;
-	}
-
-	/// @brief After a RKN4 step was accepted by the stepper this method has an additional veto on the quality of the step. The veto lies in evaluation of the energy loss and the therewith constrained to keep the momentum after the step in reasonable values.
-	///
-	/// @tparam stepper_state_t Type of the state of the stepper
-	/// @param [in, out] state State of the stepper
-	/// @param [in] h Step size
-	/// @return Boolean flag if step evaluation is valid
-	template<typename stepper_state_t>
+    template <typename stepper_state_t>
     bool
-    finalize(stepper_state_t& state, 
-				const double h,
-				const Vector3D& bField1 = Vector3D(),
-              const Vector3D& bField2 = Vector3D(),
-              const Vector3D& bField3 = Vector3D(),
-              const Vector3D& k1 = Vector3D(),
-              const Vector3D& k2 = Vector3D(),
-              const Vector3D& k3 = Vector3D(),
-              ActsMatrixD<7, 7>& D = ActsMatrixD<7, 7>()) const
+    k(const stepper_state_t& state,
+      Vector3D&              knew,
+      const Vector3D&        bField,
+      const int              i     = 0,
+      const double           h     = 0,
+      const Vector3D&        kprev = Vector3D())
     {
-		// Evaluate the new momentum
-		double newMomentum = state.p + conv * (h / 6.) * (elData.dPds[0] + 2. * (elData.dPds[1] + elData.dPds[2]) + elData.dPds[3]);
-	
-		// Break propagation if momentum becomes below cut-off
-		if (units::Nat2SI<units::MOMENTUM>(newMomentum) < momentumCutOff)
-			return false;
-		else
-		{
-			// Update momentum
-			state.p = newMomentum;
-		}
-		
-		if(state.covTransport)
-		{
-			D(state.dir, bField1, bField2, bField3, h, k1, k2, k3, D);
-		}
-		return true;
-	}
+      if (!volume || !(*volume) || !(*volume)->material()) return true;
 
- private:
+      if (i == 0) {
+        // Set up container for energy loss
+        elData.massSI          = units::Nat2SI<units::MASS>(mass);
+        elData.material        = (*volume)->material();
+        elData.initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
+        elData.currentMomentum = elData.initialMomentum;
+        elData.qop[0]          = state.q / elData.initialMomentum;
+        initializeEnergyLoss(state);
+        knew = elData.qop[0] * state.dir.cross(bField);
+      } else {
+        // Update parameters and check for momentum condition
+        updateEnergyLoss(h, state, i);
+        if (elData.currentMomentum < momentumCutOff) return false;
+        knew = elData.qop[i] * (state.dir + h * kprev).cross(bField);
+      }
+
+      return true;
+    }
+
+    /// @brief After a RKN4 step was accepted by the stepper this method has an
+    /// additional veto on the quality of the step. The veto lies in evaluation
+    /// of the energy loss and the therewith constrained to keep the momentum
+    /// after the step in reasonable values.
+    ///
+    /// @tparam stepper_state_t Type of the state of the stepper
+    /// @param [in, out] state State of the stepper
+    /// @param [in] h Step size
+    /// @return Boolean flag if step evaluation is valid
+    template <typename stepper_state_t>
+    bool
+    finalize(stepper_state_t& state,
+             const double     h,
+             const Vector3D&  bField1,
+             const Vector3D&  bField2,
+             const Vector3D&  bField3,
+             const Vector3D&  k1,
+             const Vector3D&  k2,
+             const Vector3D&  k3,
+             ActsMatrixD<7, 7>& D) const
+    {
+      // Evaluate the new momentum
+      double newMomentum = state.p
+          + conv * (h / 6.)
+              * (elData.dPds[0] + 2. * (elData.dPds[1] + elData.dPds[2])
+                 + elData.dPds[3]);
+
+      // Break propagation if momentum becomes below cut-off
+      if (units::Nat2SI<units::MOMENTUM>(newMomentum) < momentumCutOff)
+        return false;
+      else {
+        // Update momentum
+        state.p = newMomentum;
+      }
+
+      if (state.covTransport) {
+        transportMatrix(state.dir, bField1, bField2, bField3, h, k1, k2, k3, D);
+      }
+      return true;
+    }
+
+  private:
     /// @brief Evaluates the transport matrix D for the jacobian
     ///
     /// @param [in] dir Direction of the particle
@@ -303,18 +305,19 @@ private:
     /// @param [out] D Transport matrix
     /// @return Boolean flag is step evaluation is valid
     bool
-    D(const Vector3D& dir,
-              const Vector3D& bField1,
-              const Vector3D& bField2,
-              const Vector3D& bField3,
-              const double    h,
-              const Vector3D& k1,
-              const Vector3D& k2,
-              const Vector3D& k3,
-              ActsMatrixD<7, 7>& D) const
+    transportMatrix(const Vector3D& dir,
+                    const Vector3D& bField1,
+                    const Vector3D& bField2,
+                    const Vector3D& bField3,
+                    const double    h,
+                    const Vector3D& k1,
+                    const Vector3D& k2,
+                    const Vector3D& k3,
+                    ActsMatrixD<7, 7>& D) const
     {
       if (!volume || !(*volume) || !(*volume)->material()) return true;
 
+      D                   = ActsMatrixD<7, 7>::Identity();
       const double half_h = h * 0.5;
 
       // This sets the reference to the sub matrices
@@ -337,18 +340,18 @@ private:
 
       /// Propagation of derivatives of dLambda''dlambda at each sub-step
       std::array<double, 4> jdL;
-      
+
       // Evaluation of the rightmost column without the last term.
       jdL[0] = elData.dLdl[0];
-      dk1dL         = dir.cross(bField1);
+      dk1dL  = dir.cross(bField1);
       jdL[1] = elData.dLdl[1] * (1. + half_h * jdL[0]);
-      dk2dL = (1. + half_h * jdL[0]) * (dir + half_h * k1).cross(bField2)
+      dk2dL  = (1. + half_h * jdL[0]) * (dir + half_h * k1).cross(bField2)
           + elData.qop[1] * half_h * dk1dL.cross(bField2);
       jdL[2] = elData.dLdl[2] * (1. + half_h * jdL[1]);
-      dk3dL = (1. + half_h * jdL[1]) * (dir + half_h * k2).cross(bField2)
+      dk3dL  = (1. + half_h * jdL[1]) * (dir + half_h * k2).cross(bField2)
           + elData.qop[2] * half_h * dk2dL.cross(bField2);
       jdL[3] = elData.dLdl[3] * (1. + h * jdL[2]);
-      dk4dL         = (1. + h * elData.jdL[2]) * (dir + h * k3).cross(bField3)
+      dk4dL  = (1. + h * jdL[2]) * (dir + h * k3).cross(bField3)
           + elData.qop[3] * h * dk3dL.cross(bField3);
 
       dk1dT(0, 1) = bField1.z();
@@ -382,12 +385,10 @@ private:
       dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
       // Evaluation of the dLambda''/dlambda term
-      D(6, 6) += conv * (h / 6.)
-          * (elData.jdL[0] + 2. * (elData.jdL[1] + elData.jdL[2])
-             + elData.jdL[3]);
+      D(6, 6) += conv * (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
       return true;
     }
-    
+
     /// Energy loss calculator
     detail::IonisationLoss ionisationLoss;
     detail::RadiationLoss  radiationLoss;

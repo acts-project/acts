@@ -23,38 +23,39 @@ private:
                 "same extension type specified several times");
 
   using detail::Extendable<extensions...>::tuple;
-  
+
   using impl = detail::extension_list_impl<extensions...>;
 
 public:
-
   using detail::Extendable<extensions...>::get;
 
-	template<typename stepper_state_t>
-	bool
-	k(const stepper_state_t& state,
-		Vector3D&              knew,
-		const Vector3D&        bField,
-		const int i = 0,
-	   const double           h = 0,
-	   const Vector3D&        kprev = Vector3D())
-    {
-		return impl::k(tuple(), state, knew, bField, i, h, kprev);
-	}
+  template <typename stepper_state_t>
+  bool
+  k(const stepper_state_t& state,
+    Vector3D&              knew,
+    const Vector3D&        bField,
+    const int              i     = 0,
+    const double           h     = 0,
+    const Vector3D&        kprev = Vector3D())
+  {
+    return impl::k(tuple(), state, knew, bField, i, h, kprev);
+  }
 
-	template<typename stepper_state_t>
-    bool
-    finalize(stepper_state_t& state,const double    h,
-				const Vector3D& bField1 = Vector3D(),
-              const Vector3D& bField2 = Vector3D(),
-              const Vector3D& bField3 = Vector3D(),
-              const Vector3D& k1 = Vector3D(),
-              const Vector3D& k2 = Vector3D(),
-              const Vector3D& k3 = Vector3D(),
-              ActsMatrixD<7, 7>& D = ActsMatrixD<7, 7>())
-    {
-		return impl::finalize(tuple(), state, bField1, bField2, bField3, h, k1, k2, k3, D);
-	}
+  template <typename stepper_state_t>
+  bool
+  finalize(stepper_state_t& state,
+           const double     h,
+           const Vector3D&  bField1,
+           const Vector3D&  bField2,
+           const Vector3D&  bField3,
+           const Vector3D&  k1,
+           const Vector3D&  k2,
+           const Vector3D&  k3,
+           ActsMatrixD<7, 7>& D)
+  {
+    return impl::finalize(
+        tuple(), state, h, bField1, bField2, bField3, k1, k2, k3, D);
+  }
 };
 
 }  // namespace Acts

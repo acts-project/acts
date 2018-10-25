@@ -17,13 +17,13 @@
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/ExtensionList.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StepperExtension.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
-//~ #include "Acts/Propagator/ExtensionList.hpp"
 
 namespace Acts {
 // TODO: Merge this class with the EigenStepper
@@ -40,14 +40,16 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField,
-          typename corrector_t = VoidCorrector,
-          //~ typename extension_t = detail::DenseEnvironmentExtension>
-          typename extensionlist_t = ExtensionList<detail::DefaultExtension, detail::DenseEnvironmentExtension>> // TODO: change default
+template <
+    typename BField,
+    typename corrector_t = VoidCorrector,
+    //~ typename extension_t = detail::DenseEnvironmentExtension>
+    typename extensionlist_t
+    = ExtensionList<detail::DefaultExtension,
+                    detail::DenseEnvironmentExtension>>  // TODO: change default
 class BetheBlochEigenStepper : public EigenStepper<BField, corrector_t>
 {
 public:
-
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local
@@ -115,7 +117,7 @@ public:
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
     const auto tryRungeKuttaStep = [&](const double h) -> double {
-	   
+
       // State the square and half of the step size
       h2     = h * h;
       half_h = h * 0.5;
@@ -157,6 +159,11 @@ public:
     // use the adjusted step size
     const double h = state.stepSize;
 
+    // The step transport matrix in global coordinates
+    ActsMatrixD<7, 7> D;
+    state.extension.finalize(
+        state, h, B_first, B_middle, B_last, k1, k2, k3, D);
+
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {
       /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
@@ -173,20 +180,11 @@ public:
       /// (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating
       /// the derivations for matrix A.
 
-      // The step transport matrix in global coordinates
-      ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
-
-		state.extension.finalize(state, h, B_first, B_middle, B_last, k1, k2, k3, D);
-
       std::cout << "D:\n" << D << std::endl;
       std::cout << "jac:\n" << state.jacTransport << std::endl;
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
     }
-    else
-    {
-		state.extension.finalize(state, h);
-	}
 
     // Update the track parameters according to the equations of motion
     state.pos += h * state.dir + h2 / 6. * (k1 + k2 + k3);

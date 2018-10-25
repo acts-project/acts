@@ -20,8 +20,8 @@
 #include "Acts/Propagator/BetheBlochEigenStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Propagator/detail/StepperExtension.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "DetectorBuilder.hpp"
 
 namespace Acts {
@@ -129,12 +129,15 @@ namespace Test {
       // Create action list for surface collection
       //~ ActionList<StepCollector, StepActor> aList;
       ActionList<StepCollector> aList;
-      AbortList<EndOfWorld> abortList;
+      AbortList<EndOfWorld>     abortList;
 
       // Set options for propagator
-      //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension>, Navigator>::
-      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>, Navigator>::
-          //~ Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
+      //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector,
+      //detail::DefaultExtension>, Navigator>::
+      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>,
+                 Navigator>::
+          //~ Options<ActionList<StepCollector, StepActor>,
+          //AbortList<EndOfWorld>>
           Options<ActionList<StepCollector>, AbortList<EndOfWorld>>
               propOpts;
       propOpts.actionList     = aList;
@@ -143,12 +146,15 @@ namespace Test {
       propOpts.maxStepSize    = 1. * units::_m;
 
       // Re-configure propagation with B-field
-      ConstantBField                         bField(Vector3D(0., 0., 0.));
-      //~ BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension> es(bField);
+      ConstantBField bField(Vector3D(0., 0., 0.));
+      //~ BetheBlochEigenStepper<ConstantBField, VoidCorrector,
+      //detail::DefaultExtension> es(bField);
       BetheBlochEigenStepper<ConstantBField, VoidCorrector> es(bField);
-      //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector, detail::DefaultExtension>, Navigator> prop(
-      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>, Navigator> prop(
-          es, naviVac);
+      //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector,
+      //detail::DefaultExtension>, Navigator> prop(
+      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>,
+                 Navigator>
+          prop(es, naviVac);
 
       // Launch and collect results
       const auto&                       result = prop.propagate(sbtp, propOpts);
@@ -172,7 +178,7 @@ namespace Test {
       //~ for (const auto& j : stepResult.jac) {
       //~ BOOST_TEST(j == id77);
       //~ }
-std::exit(1);
+      std::exit(1);
     }
     /**
     {
