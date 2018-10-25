@@ -27,19 +27,31 @@ namespace detail {
     /// Local store for conversion of momentum from SI to natural units
     const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
+    /// @brief Evaluater of the k_i's of the RKN4
+    ///
+    /// @tparam stepper_state_t Type of the state of the stepper
+    /// @param [in] state State of the stepper
+    /// @param [out] knew Next k_i that is evaluated
+    /// @param [in] bField B-Field at the evaluation position
+    /// @param [in] i Index of the k_i
+    /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
+    /// @param [in] kprev Evaluated k_{i - 1}
+    /// @return Boolean flag if the calculation is valid
     template <typename stepper_state_t>
     bool
     k(const stepper_state_t& state,
       Vector3D&              knew,
       const Vector3D&        bField,
       const int              i     = 0,
-      const double           h     = 0,
+      const double           h     = 0.,
       const Vector3D&        kprev = Vector3D())
     {
+      // First step does not rely on previous data
       if (i == 0) {
         // Store qop, it is always used if valid
         qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
 
+        // Evaluate the k_i
         knew = qop * state.dir.cross(bField);
       } else {
         knew = qop * (state.dir + h * kprev).cross(bField);
@@ -51,7 +63,8 @@ namespace detail {
     /// error of the step. Since the textbook does not deliver further vetos,
     /// this is a dummy function.
     ///
-    // TODO
+    /// @tparam stepper_state_t Type of the state of the stepper
+    /// @return Boolean flag if the calculation is valid
     template <typename stepper_state_t>
     bool
     finalize(stepper_state_t& /*unused*/, const double /*unused*/) const
@@ -61,9 +74,15 @@ namespace detail {
 
     /// @brief Veto function after a RKN4 step was accepted by judging on the
     /// error of the step. Since the textbook does not deliver further vetos,
-    /// this is a dummy function.
+    /// this is just for the evaluation of the transport matrix.
     ///
-    // TODO
+    /// @tparam stepper_state_t Type of the state of the stepper
+    /// @tparam stepper_data_t Type of the data collected in the step
+    /// @param [in] state State of the stepper
+    /// @param [in] h Step size
+    /// @param [in] data Data of B-field and k_i's
+    /// @param [out] D Transport matrix
+    /// @return Boolean flag if the calculation is valid
     template <typename stepper_state_t, typename stepper_data_t>
     bool
     finalize(stepper_state_t&      state,
@@ -78,15 +97,10 @@ namespace detail {
     /// @brief Evaluates the transport matrix D for the jacobian
     ///
     /// @param [in] dir Direction of the particle
-    /// @param [in] bFiedl1 B-field at the first position
-    /// @param [in] bField2 B-field at the middle position
-    /// @param [in] bField3 B-field at the last position
     /// @param [in] h Step size
-    /// @param [in] k1 Vector of k1
-    /// @param [in] k2 Vector of k2
-    /// @param [in] k3 Vector of k3
+    /// @param [in] sd Data of B-field and k_i's
     /// @param [out] D Transport matrix
-    /// @return Boolean flag is step evaluation is valid
+    /// @return Boolean flag if evaluation is valid
     template <typename stepper_data_t>
     bool
     transportMatrix(const Vector3D&       dir,
@@ -236,17 +250,28 @@ namespace detail {
     /// @brief Default constructor
     DenseEnvironmentExtension() = default;
 
+    /// @brief Evaluater of the k_i's of the RKN4
+    ///
+    /// @tparam stepper_state_t Type of the state of the stepper
+    /// @param [in] state State of the stepper
+    /// @param [out] knew Next k_i that is evaluated
+    /// @param [in] bField B-Field at the evaluation position
+    /// @param [in] i Index of the k_i
+    /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
+    /// @param [in] kprev Evaluated k_{i - 1}
+    /// @return Boolean flag if the calculation is valid
     template <typename stepper_state_t>
     bool
     k(const stepper_state_t& state,
       Vector3D&              knew,
       const Vector3D&        bField,
       const int              i     = 0,
-      const double           h     = 0,
+      const double           h     = 0.,
       const Vector3D&        kprev = Vector3D())
     {
       if (!volume || !(*volume) || !(*volume)->material()) return true;
 
+      // i = 0 is used for setup and evaluation of k
       if (i == 0) {
         // Set up container for energy loss
         elData.massSI          = units::Nat2SI<units::MASS>(mass);
@@ -255,14 +280,15 @@ namespace detail {
         elData.currentMomentum = elData.initialMomentum;
         elData.qop[0]          = state.q / elData.initialMomentum;
         initializeEnergyLoss(state);
+        // Evaluate k
         knew = elData.qop[0] * state.dir.cross(bField);
       } else {
         // Update parameters and check for momentum condition
         updateEnergyLoss(h, state, i);
         if (elData.currentMomentum < momentumCutOff) return false;
+        // Evaluate k
         knew = elData.qop[i] * (state.dir + h * kprev).cross(bField);
       }
-
       return true;
     }
 
@@ -272,9 +298,9 @@ namespace detail {
     /// after the step in reasonable values.
     ///
     /// @tparam stepper_state_t Type of the state of the stepper
-    /// @param [in, out] state State of the stepper
+    /// @param [in] state State of the stepper
     /// @param [in] h Step size
-    /// @return Boolean flag if step evaluation is valid
+    /// @return Boolean flag if the calculation is valid
     template <typename stepper_state_t>
     bool
     finalize(stepper_state_t& state, const double h) const
@@ -295,14 +321,19 @@ namespace detail {
     }
 
     /// @brief After a RKN4 step was accepted by the stepper this method has an
-    /// additional veto on the quality of the step. The veto lies in evaluation
-    /// of the energy loss and the therewith constrained to keep the momentum
-    /// after the step in reasonable values.
+    /// additional veto on the quality of the step. The veto lies in the
+    /// evaluation
+    /// of the energy loss, the therewith constrained to keep the momentum
+    /// after the step in reasonable values and the evaluation of the transport
+    /// matrix.
     ///
     /// @tparam stepper_state_t Type of the state of the stepper
-    /// @param [in, out] state State of the stepper
+    /// @tparam stepper_data_t Type of the data collected in the step
+    /// @param [in] state State of the stepper
     /// @param [in] h Step size
-    /// @return Boolean flag if step evaluation is valid
+    /// @param [in] data Data of B-field and k_i's
+    /// @param [out] D Transport matrix
+    /// @return Boolean flag if the calculation is valid
     template <typename stepper_state_t, typename stepper_data_t>
     bool
     finalize(stepper_state_t&      state,
@@ -317,15 +348,10 @@ namespace detail {
     /// @brief Evaluates the transport matrix D for the jacobian
     ///
     /// @param [in] dir Direction of the particle
-    /// @param [in] bFiedl1 B-field at the first position
-    /// @param [in] bField2 B-field at the middle position
-    /// @param [in] bField3 B-field at the last position
     /// @param [in] h Step size
-    /// @param [in] k1 Vector of k1
-    /// @param [in] k2 Vector of k2
-    /// @param [in] k3 Vector of k3
+    /// @param [in] sd Data of B-field and k_i's
     /// @param [out] D Transport matrix
-    /// @return Boolean flag is step evaluation is valid
+    /// @return Boolean flag if evaluation is valid
     template <typename stepper_data_t>
     bool
     transportMatrix(const Vector3D&       dir,
@@ -426,8 +452,7 @@ namespace detail {
     detail::RadiationLoss  radiationLoss;
 
     /// @brief This function calculates the energy loss dE per path length ds of
-    /// a
-    /// particle through material. The energy loss consists of ionisation and
+    /// a particle through material. The energy loss consists of ionisation and
     /// radiation.
     /// @note The calculations use SI units and it is assumed that the arguments
     /// are given in SI units.
@@ -435,11 +460,7 @@ namespace detail {
     /// @tparam material_t Type of the material
     /// @param [in] momentum Initial momentum of the particle
     /// @param [in] energy Initial energy of the particle
-    /// @param [in] mass Mass of the particle
     /// @param [in] material Penetrated material
-    /// @param [in] pdg PDG code of the particle
-    /// @param [in] meanEnergyLoss Boolean flag if mean or mode should be
-    /// evaluated for the energy loss
     /// @return Infinitesimal energy loss
     template <typename material_t>
     double
