@@ -12,7 +12,6 @@
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
-//~ #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 namespace Acts {
 
@@ -24,6 +23,8 @@ private:
                 "same extension type specified several times");
 
   using detail::Extendable<extensions...>::tuple;
+  
+  using impl = detail::extension_list_impl<extensions...>;
 
 public:
 
@@ -38,30 +39,22 @@ public:
 	   const double           h = 0,
 	   const Vector3D&        kprev = Vector3D())
     {
-		using impl = detail::extension_list_impl<extensions...>;
 		return impl::k(tuple(), state, knew, bField, i, h, kprev);
 	}
 
 	template<typename stepper_state_t>
     bool
-    finalizeStep(stepper_state_t& /*unused*/, const double /*unused*/)
+    finalize(stepper_state_t& state,const double    h,
+				const Vector3D& bField1 = Vector3D(),
+              const Vector3D& bField2 = Vector3D(),
+              const Vector3D& bField3 = Vector3D(),
+              const Vector3D& k1 = Vector3D(),
+              const Vector3D& k2 = Vector3D(),
+              const Vector3D& k3 = Vector3D(),
+              ActsMatrixD<7, 7>& D = ActsMatrixD<7, 7>())
     {
-		return true;
+		return impl::finalize(tuple(), state, bField1, bField2, bField3, h, k1, k2, k3, D);
 	}
-	
-    bool
-    evaluateD(const Vector3D& /*unused*/,
-              const Vector3D& /*unused*/,
-              const Vector3D& /*unused*/,
-              const Vector3D& /*unused*/,
-              const double    /*unused*/,
-              const Vector3D& /*unused*/,
-              const Vector3D& /*unused*/,
-              const Vector3D& /*unused*/,
-              ActsMatrixD<7, 7>& /*unused*/) const
-    {
-      return true;
-    }
 };
 
 }  // namespace Acts

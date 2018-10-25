@@ -23,7 +23,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Propagator/ExtensionList.hpp"
+//~ #include "Acts/Propagator/ExtensionList.hpp"
 
 namespace Acts {
 // TODO: Merge this class with the EigenStepper
@@ -43,7 +43,7 @@ namespace Acts {
 template <typename BField,
           typename corrector_t = VoidCorrector,
           //~ typename extension_t = detail::DenseEnvironmentExtension>
-          typename extensionlist_t = ExtensionList<detail::DefaultExtension, detail::DenseEnvironmentExtension>>
+          typename extensionlist_t = ExtensionList<detail::DefaultExtension, detail::DenseEnvironmentExtension>> // TODO: change default
 class BetheBlochEigenStepper : public EigenStepper<BField, corrector_t>
 {
 public:
@@ -157,8 +157,6 @@ public:
     // use the adjusted step size
     const double h = state.stepSize;
 
-	state.extension.finalizeStep(state, h);
-
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {
       /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
@@ -178,14 +176,17 @@ public:
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
 
-      state.extension.evaluateD(
-          state.dir, B_first, B_middle, B_last, h, k1, k2, k3, D);
+		state.extension.finalize(state, h, B_first, B_middle, B_last, k1, k2, k3, D);
 
       std::cout << "D:\n" << D << std::endl;
       std::cout << "jac:\n" << state.jacTransport << std::endl;
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
     }
+    else
+    {
+		state.extension.finalize(state, h);
+	}
 
     // Update the track parameters according to the equations of motion
     state.pos += h * state.dir + h2 / 6. * (k1 + k2 + k3);
