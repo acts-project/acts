@@ -50,6 +50,13 @@ public:
   {
     return impl::finalize(tuple(), state, h, data, D);
   }
+
+  template <typename stepper_state_t>
+  bool
+  finalize(stepper_state_t& state, const double h)
+  {
+    return impl::finalize(tuple(), state, h);
+  }
 };
 
 }  // namespace Acts

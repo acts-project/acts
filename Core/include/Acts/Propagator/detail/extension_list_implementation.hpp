@@ -54,6 +54,17 @@ namespace detail {
       else
         return false;
     }
+
+    template <typename T, typename stepper_state_t>
+    static bool
+    finalize(const T& obs_tuple, stepper_state_t& state, const double h)
+    {
+      auto& this_extension = std::get<first>(obs_tuple);
+      if (this_extension.finalize(state, h))
+        return extension_list_impl<others...>::finalize(obs_tuple, state, h);
+      else
+        return false;
+    }
   };
 
   /// The extension list call implementation
@@ -86,6 +97,14 @@ namespace detail {
       auto& this_extension = std::get<last>(obs_tuple);
       return this_extension.finalize(state, h, data, D);
     }
+
+    template <typename T, typename stepper_state_t>
+    static bool
+    finalize(const T& obs_tuple, stepper_state_t& state, const double h)
+    {
+      auto& this_extension = std::get<last>(obs_tuple);
+      return this_extension.finalize(state, h);
+    }
   };
 
   /// The empty extension list call implementation
@@ -112,6 +131,15 @@ namespace detail {
              const double /*unused*/,
              const stepper_data_t& /*unused*/,
              ActsMatrixD<7, 7>& /*unused*/)
+    {
+      return true;
+    }
+
+    template <typename T, typename stepper_state_t>
+    static bool
+    finalize(T& /*unused*/,
+             stepper_state_t& /*unused*/,
+             const double /*unused*/)
     {
       return true;
     }

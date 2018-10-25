@@ -100,7 +100,7 @@ public:
   /// @param [in,out] state is the propagation state associated with the track
   ///                      parameters that are being propagated.
   ///
-  ///                      the state contains the desired step size.
+  ///                      The state contains the desired step size.
   ///                      It can be negative during backwards track
   ///                      propagation,
   ///                      and since we're using an adaptive algorithm, it can
@@ -165,31 +165,18 @@ public:
     // use the adjusted step size
     const double h = state.stepSize;
 
-    // The step transport matrix in global coordinates
-    ActsMatrixD<7, 7> D;
-    state.extension.finalize(state, h, sd, D);
-
     // When doing error propagation, update the associated Jacobian matrix
     if (state.covTransport) {
-      /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
-      /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
-      /// Since the terms of eq. 18 are currently 0, this matrix is not needed
-      /// in the calculation. The matrix A from eq. 17 consists out of 3
-      /// different parts. The first one is given by the upper left 3x3 matrix
-      /// that are calculated by dFdT and dGdT. The second is given by the top 3
-      /// lines of the rightmost column. This is calculated by dFdL and dGdL.
-      /// The remaining non-zero term is calculated directly. The naming of the
-      /// variables is explained in eq. 11 and are directly related to the
-      /// initial problem in eq. 7.
-      /// The evaluation is based by propagating the parameters T and lambda
-      /// (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating
-      /// the derivations for matrix A.
+      // The step transport matrix in global coordinates
+      ActsMatrixD<7, 7> D;
 
+      state.extension.finalize(state, h, sd, D);
       std::cout << "D:\n" << D << std::endl;
       std::cout << "jac:\n" << state.jacTransport << std::endl;
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
-    }
+    } else
+      state.extension.finalize(state, h);
 
     // Update the track parameters according to the equations of motion
     state.pos += h * state.dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);

@@ -52,6 +52,18 @@ namespace detail {
     /// this is a dummy function.
     ///
     // TODO
+    template <typename stepper_state_t>
+    bool
+    finalize(stepper_state_t& /*unused*/, const double /*unused*/) const
+    {
+      return true;
+    }
+
+    /// @brief Veto function after a RKN4 step was accepted by judging on the
+    /// error of the step. Since the textbook does not deliver further vetos,
+    /// this is a dummy function.
+    ///
+    // TODO
     template <typename stepper_state_t, typename stepper_data_t>
     bool
     finalize(stepper_state_t&      state,
@@ -59,8 +71,7 @@ namespace detail {
              const stepper_data_t& data,
              ActsMatrixD<7, 7>& D) const
     {
-      if (state.covTransport) transportMatrix(state.dir, h, data, D);
-      return true;
+      return transportMatrix(state.dir, h, data, D);
     }
 
   private:
@@ -83,6 +94,20 @@ namespace detail {
                     const stepper_data_t& sd,
                     ActsMatrixD<7, 7>& D) const
     {
+      /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
+      /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
+      /// Since the terms of eq. 18 are currently 0, this matrix is not needed
+      /// in the calculation. The matrix A from eq. 17 consists out of 3
+      /// different parts. The first one is given by the upper left 3x3 matrix
+      /// that are calculated by dFdT and dGdT. The second is given by the top 3
+      /// lines of the rightmost column. This is calculated by dFdL and dGdL.
+      /// The remaining non-zero term is calculated directly. The naming of the
+      /// variables is explained in eq. 11 and are directly related to the
+      /// initial problem in eq. 7.
+      /// The evaluation is based by propagating the parameters T and lambda
+      /// (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating
+      /// the derivations for matrix A.
+
       D = ActsMatrixD<7, 7>::Identity();
 
       double half_h = h * 0.5;
@@ -250,12 +275,9 @@ namespace detail {
     /// @param [in, out] state State of the stepper
     /// @param [in] h Step size
     /// @return Boolean flag if step evaluation is valid
-    template <typename stepper_state_t, typename stepper_data_t>
+    template <typename stepper_state_t>
     bool
-    finalize(stepper_state_t&      state,
-             const double          h,
-             const stepper_data_t& data,
-             ActsMatrixD<7, 7>& D) const
+    finalize(stepper_state_t& state, const double h) const
     {
       // Evaluate the new momentum
       double newMomentum = state.p
@@ -266,15 +288,29 @@ namespace detail {
       // Break propagation if momentum becomes below cut-off
       if (units::Nat2SI<units::MOMENTUM>(newMomentum) < momentumCutOff)
         return false;
-      else {
-        // Update momentum
-        state.p = newMomentum;
-      }
 
-      if (state.covTransport) {
-        transportMatrix(state.dir, h, data, D);
-      }
+      // Update momentum
+      state.p = newMomentum;
       return true;
+    }
+
+    /// @brief After a RKN4 step was accepted by the stepper this method has an
+    /// additional veto on the quality of the step. The veto lies in evaluation
+    /// of the energy loss and the therewith constrained to keep the momentum
+    /// after the step in reasonable values.
+    ///
+    /// @tparam stepper_state_t Type of the state of the stepper
+    /// @param [in, out] state State of the stepper
+    /// @param [in] h Step size
+    /// @return Boolean flag if step evaluation is valid
+    template <typename stepper_state_t, typename stepper_data_t>
+    bool
+    finalize(stepper_state_t&      state,
+             const double          h,
+             const stepper_data_t& data,
+             ActsMatrixD<7, 7>& D) const
+    {
+      return finalize(state, h) && transportMatrix(state.dir, h, data, D);
     }
 
   private:
@@ -298,6 +334,20 @@ namespace detail {
                     ActsMatrixD<7, 7>& D) const
     {
       if (!volume || !(*volume) || !(*volume)->material()) return true;
+
+      /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
+      /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
+      /// Since the terms of eq. 18 are currently 0, this matrix is not needed
+      /// in the calculation. The matrix A from eq. 17 consists out of 3
+      /// different parts. The first one is given by the upper left 3x3 matrix
+      /// that are calculated by dFdT and dGdT. The second is given by the top 3
+      /// lines of the rightmost column. This is calculated by dFdL and dGdL.
+      /// The remaining non-zero term is calculated directly. The naming of the
+      /// variables is explained in eq. 11 and are directly related to the
+      /// initial problem in eq. 7.
+      /// The evaluation is based by propagating the parameters T and lambda
+      /// (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating
+      /// the derivations for matrix A.
 
       D                   = ActsMatrixD<7, 7>::Identity();
       const double half_h = h * 0.5;
