@@ -15,7 +15,6 @@
 #include <fstream>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
-#include "Acts/Extrapolator/StepActor.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/BetheBlochEigenStepper.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
@@ -183,7 +182,7 @@ namespace Test {
       //~ for (const auto& j : stepResult.jac) {
       //~ BOOST_TEST(j == id77);
       //~ }
-      std::exit(1);
+      //~ std::exit(1);
     }
     /**
     {
