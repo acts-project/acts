@@ -8,43 +8,7 @@
 
 #pragma once
 
-//~ #include "Acts/Propagator/EigenStepper.hpp"
-
 namespace Acts {
-
-// TODO: Move to EigenStepper
-/// @brief Actor as configurator of the Stepper for working with the default
-/// EigenStepper. It sets up steering properties by the user.
-struct DefaultExtensionActor
-{
-  // Configurations for Stepper
-  /// Tolerance for the error of the integration
-  double m_tolerance = 5e-5;
-  /// Cut-off value for the step size
-  double m_stepSizeCutOff = 0.;
-
-  /// @brief Main call operator for setting up stepper properties
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param [in, out] state State of the propagator
-  template <typename propagator_state_t>
-  void
-  operator()(propagator_state_t& state) const
-  {
-    // Initialize all parameters
-    if (state.stepping.pathAccumulated == 0.) {
-      // Let the stepper track the volume and particles mass
-      state.stepping.volume = &state.navigation.currentVolume;
-      state.stepping.mass   = state.options.mass;
-      state.stepping.pdg    = state.options.absPdgCode;
-
-      // Initialize user defined parameters
-      state.stepping.tolerance      = m_tolerance;
-      state.stepping.stepSizeCutOff = m_stepSizeCutOff;
-    }
-  }
-};
 
 /// @brief Default evaluater of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This is a pure implementation by textbook.
@@ -237,6 +201,12 @@ private:
     return true;
   }
 
+  /// @brief Calculates column-wise cross products of a matrix and a vector and
+  /// stores the result column-wise in a matrix.
+  ///
+  /// @param [in] m Matrix that will be used for cross products
+  /// @param [in] v Vector for cross products
+  /// @return Constructed matrix
   ActsMatrixD<3, 3>
   cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) const
   {
