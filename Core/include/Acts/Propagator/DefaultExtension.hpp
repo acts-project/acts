@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 
 namespace Acts {
 
@@ -48,14 +48,13 @@ struct DefaultExtensionActor
 
 /// @brief Default evaluater of the k_i's and elements of the transport matrix
 /// D of the RKN4 stepping. This is a pure implementation by textbook.
-// TODO: note used unit systems
 struct DefaultExtension
 {
   /// @brief Default constructor
   DefaultExtension() = default;
 
-  /// Local store for q/p
-  double m_qop = 0.;
+  /// Local store for q/p in SI units
+  double qop = 0.;
 
   /// Local store for conversion of momentum from SI to natural units
   const double m_conv = units::SI2Nat<units::MOMENTUM>(1);
@@ -87,12 +86,12 @@ struct DefaultExtension
       if (!validExtensionForStep(state)) return false;
 
       // Store qop, it is always used if valid
-      m_qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
+      qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
 
       // Evaluate the k_i
-      knew = m_qop * state.dir.cross(bField);
+      knew = qop * state.dir.cross(bField);
     } else {
-      knew = m_qop * (state.dir + h * kprev).cross(bField);
+      knew = qop * (state.dir + h * kprev).cross(bField);
     }
     return true;
   }
@@ -199,11 +198,11 @@ private:
     // For the case without energy loss
     dk1dL = dir.cross(sd.B_first);
     dk2dL = (dir + half_h * sd.k1).cross(sd.B_middle)
-        + m_qop * half_h * dk1dL.cross(sd.B_middle);
+        + qop * half_h * dk1dL.cross(sd.B_middle);
     dk3dL = (dir + half_h * sd.k2).cross(sd.B_middle)
-        + m_qop * half_h * dk2dL.cross(sd.B_middle);
+        + qop * half_h * dk2dL.cross(sd.B_middle);
     dk4dL = (dir + h * sd.k3).cross(sd.B_last)
-        + m_qop * h * dk3dL.cross(sd.B_last);
+        + qop * h * dk3dL.cross(sd.B_last);
 
     dk1dT(0, 1) = sd.B_first.z();
     dk1dT(0, 2) = -sd.B_first.y();
@@ -211,19 +210,19 @@ private:
     dk1dT(1, 2) = sd.B_first.x();
     dk1dT(2, 0) = sd.B_first.y();
     dk1dT(2, 1) = -sd.B_first.x();
-    dk1dT *= m_qop;
+    dk1dT *= qop;
 
     dk2dT += half_h * dk1dT;
     dk2dT *= cross(dk2dT, sd.B_middle);
-    dk2dT *= m_qop;
+    dk2dT *= qop;
 
     dk3dT += half_h * dk2dT;
     dk3dT *= cross(dk3dT, sd.B_middle);
-    dk3dT *= m_qop;
+    dk3dT *= qop;
 
     dk4dT += h * dk3dT;
     dk4dT *= cross(dk4dT, sd.B_last);
-    dk4dT *= m_qop;
+    dk4dT *= qop;
 
     dFdT.setIdentity();
     dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);

@@ -28,7 +28,6 @@
 
 namespace Acts {
 // TODO: Priority of extensionlist elements
-// TODO: configuration possibility
 // TODO: Merge this class with the EigenStepper
 
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
@@ -51,11 +50,16 @@ template <typename BField,
 class BetheBlochEigenStepper : public EigenStepper<BField, corrector_t>
 {
 public:
+
+	/// @brief Storage of magnetic field and the sub steps during a RKN4 step
   struct StepData
   {
+	  /// Magnetic fields
     Vector3D B_first, B_middle, B_last;
+	/// k_i of the RKN4 algorithm
     Vector3D k1, k2, k3, k4;
   };
+  
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local

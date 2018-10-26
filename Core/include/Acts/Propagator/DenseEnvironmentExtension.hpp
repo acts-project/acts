@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 
 namespace Acts {
 
@@ -30,10 +31,10 @@ struct DenseEnvironmentExtension
     /// Particles mass in SI units
     double massSI = 0.;
     /// Material that will be passed
-    std::shared_ptr<const Material> material;
+    std::shared_ptr<const Material> material = nullptr;
     /// Derivatives dLambda''dlambda at each sub-step point
     std::array<double, 4> dLdl;
-    /// q/p at each sub-step
+    /// q/p at each sub-step in SI units
     std::array<double, 4> qop;
     /// Derivatives dPds at each sub-step
     std::array<double, 4> dPds;

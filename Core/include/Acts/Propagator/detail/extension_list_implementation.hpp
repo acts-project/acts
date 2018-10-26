@@ -31,6 +31,7 @@ namespace detail {
       const double           h     = 0,
       const Vector3D&        kprev = Vector3D())
     {
+		// TODO: this method needs a memory for (in-)valid evaluater
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
       if (this_extension.k(state, knew, bField, i, h, kprev))
