@@ -16,10 +16,11 @@
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Propagator/DefaultExtension.hpp"
+#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/ExtensionList.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
-#include "Acts/Propagator/detail/StepperExtension.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -42,12 +43,11 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <
-    typename BField,
-    typename corrector_t = VoidCorrector,
-    typename extensionlist_t
-    = ExtensionList<detail::DefaultExtension,
-                    detail::DenseEnvironmentExtension>>  // TODO: change default
+template <typename BField,
+          typename corrector_t = VoidCorrector,
+          typename extensionlist_t
+          = ExtensionList<DefaultExtension,
+                          DenseEnvironmentExtension>>  // TODO: change default
 class BetheBlochEigenStepper : public EigenStepper<BField, corrector_t>
 {
 public:
@@ -83,6 +83,15 @@ public:
 
     /// Cut-off value for the step size
     double stepSizeCutOff = 0.;
+
+    /// Mass in natural units
+    double mass = 0.;
+
+    /// PDG code
+    int pdg = 0;
+
+    /// Volume with material that is passed
+    TrackingVolume const* const* volume = nullptr;
   };
 
   /// Always use the same propagation state type, independently of the initial
@@ -115,7 +124,6 @@ public:
 
     // First Runge-Kutta point (at current position)
     sd.B_first = this->getField(state, state.pos);
-
     state.extension.k(state, sd.k1, sd.B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
@@ -139,7 +147,6 @@ public:
       // Last Runge-Kutta point
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * sd.k3;
       sd.B_last           = this->getField(state, pos2);
-
       state.extension.k(state, sd.k4, sd.B_last, 3, h, sd.k3);
 
       // Return an estimate of the local integration error
@@ -180,7 +187,7 @@ public:
 
     // Update the track parameters according to the equations of motion
     state.pos += h * state.dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);
-    state.dir += h / 6. * (sd.k1 + 2. * sd.k2 + 2. * sd.k3 + sd.k4);
+    state.dir += h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
     state.dir /= state.dir.norm();
     state.derivative.template head<3>()     = state.dir;
     state.derivative.template segment<3>(3) = sd.k4;

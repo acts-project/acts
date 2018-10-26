@@ -18,9 +18,10 @@
 #include "Acts/Extrapolator/StepActor.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/BetheBlochEigenStepper.hpp"
+#include "Acts/Propagator/DefaultExtension.hpp"
+#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/detail/StepperExtension.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "DetectorBuilder.hpp"
 
@@ -127,19 +128,23 @@ namespace Test {
           std::move(covPtr), startParams, startMom, 1.);
 
       // Create action list for surface collection
-      //~ ActionList<StepCollector, StepActor> aList;
-      ActionList<StepCollector> aList;
-      AbortList<EndOfWorld>     abortList;
+      ActionList<StepCollector,
+                 DefaultExtensionActor,
+                 DenseEnvironmentExtensionActor>
+          aList;
+      //~ ActionList<StepCollector> aList;
+      AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
       //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector,
-      //detail::DefaultExtension>, Navigator>::
+      // detail::DefaultExtension>, Navigator>::
       Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>,
-                 Navigator>::
-          //~ Options<ActionList<StepCollector, StepActor>,
-          //AbortList<EndOfWorld>>
-          Options<ActionList<StepCollector>, AbortList<EndOfWorld>>
-              propOpts;
+                 Navigator>::Options<ActionList<StepCollector,
+                                                DefaultExtensionActor,
+                                                DenseEnvironmentExtensionActor>,
+                                     AbortList<EndOfWorld>>
+          //~ Options<ActionList<StepCollector>, AbortList<EndOfWorld>>
+          propOpts;
       propOpts.actionList     = aList;
       propOpts.stopConditions = abortList;
       propOpts.maxSteps       = 1e6;
@@ -148,10 +153,10 @@ namespace Test {
       // Re-configure propagation with B-field
       ConstantBField bField(Vector3D(0., 0., 0.));
       //~ BetheBlochEigenStepper<ConstantBField, VoidCorrector,
-      //detail::DefaultExtension> es(bField);
+      // detail::DefaultExtension> es(bField);
       BetheBlochEigenStepper<ConstantBField, VoidCorrector> es(bField);
       //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector,
-      //detail::DefaultExtension>, Navigator> prop(
+      // detail::DefaultExtension>, Navigator> prop(
       Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>,
                  Navigator>
           prop(es, naviVac);
