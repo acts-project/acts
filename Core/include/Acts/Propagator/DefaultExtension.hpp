@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Propagator/EigenStepper.hpp"
+//~ #include "Acts/Propagator/EigenStepper.hpp"
 
 namespace Acts {
 
@@ -201,8 +201,8 @@ private:
         + qop * half_h * dk1dL.cross(sd.B_middle);
     dk3dL = (dir + half_h * sd.k2).cross(sd.B_middle)
         + qop * half_h * dk2dL.cross(sd.B_middle);
-    dk4dL = (dir + h * sd.k3).cross(sd.B_last)
-        + qop * h * dk3dL.cross(sd.B_last);
+    dk4dL
+        = (dir + h * sd.k3).cross(sd.B_last) + qop * h * dk3dL.cross(sd.B_last);
 
     dk1dT(0, 1) = sd.B_first.z();
     dk1dT(0, 2) = -sd.B_first.y();
@@ -235,6 +235,17 @@ private:
     dGdL = m_conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
     return true;
+  }
+
+  ActsMatrixD<3, 3>
+  cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) const
+  {
+    ActsMatrixD<3, 3> r;
+    r.col(0) = m.col(0).cross(v);
+    r.col(1) = m.col(1).cross(v);
+    r.col(2) = m.col(2).cross(v);
+
+    return r;
   }
 };
 }  // namespace Acts

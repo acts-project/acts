@@ -16,7 +16,6 @@
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Propagator/BetheBlochEigenStepper.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -135,9 +134,12 @@ namespace Test {
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
-      //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector,
+      //~ Propagator<EigenStepper<ConstantBField, VoidCorrector,
       // detail::DefaultExtension>, Navigator>::
-      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>,
+      Propagator<EigenStepper<ConstantBField,
+                              VoidCorrector,
+                              ExtensionList<DefaultExtension,
+                                            DenseEnvironmentExtension>>,
                  Navigator>::Options<ActionList<StepCollector,
                                                 DefaultExtensionActor,
                                                 DenseEnvironmentExtensionActor>,
@@ -151,12 +153,18 @@ namespace Test {
 
       // Re-configure propagation with B-field
       ConstantBField bField(Vector3D(0., 0., 0.));
-      //~ BetheBlochEigenStepper<ConstantBField, VoidCorrector,
+      //~ EigenStepper<ConstantBField, VoidCorrector,
       // detail::DefaultExtension> es(bField);
-      BetheBlochEigenStepper<ConstantBField, VoidCorrector> es(bField);
-      //~ Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector,
+      EigenStepper<ConstantBField,
+                   VoidCorrector,
+                   ExtensionList<DefaultExtension, DenseEnvironmentExtension>>
+          es(bField);
+      //~ Propagator<EigenStepper<ConstantBField, VoidCorrector,
       // detail::DefaultExtension>, Navigator> prop(
-      Propagator<BetheBlochEigenStepper<ConstantBField, VoidCorrector>,
+      Propagator<EigenStepper<ConstantBField,
+                              VoidCorrector,
+                              ExtensionList<DefaultExtension,
+                                            DenseEnvironmentExtension>>,
                  Navigator>
           prop(es, naviVac);
 
@@ -210,7 +218,7 @@ namespace Test {
       AbortList<EndOfWorld> abortList;
 
       // Set options for propagator
-      Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator>::
+      Propagator<EigenStepper<ConstantBField>, Navigator>::
           Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
               propOpts;
       propOpts.actionList     = aList;
@@ -221,8 +229,8 @@ namespace Test {
 
       // Re-configure propagation with B-field
       ConstantBField                         bField(Vector3D(0., 0., 0.));
-      BetheBlochEigenStepper<ConstantBField> es(bField);
-      Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator> prop(
+      EigenStepper<ConstantBField> es(bField);
+      Propagator<EigenStepper<ConstantBField>, Navigator> prop(
           es, naviMat);
 
       // Launch and collect results
@@ -260,8 +268,8 @@ namespace Test {
 
       // Re-launch the configuration with magnetic field
       bField.setField(0., 1. * units::_T, 0.);
-      BetheBlochEigenStepper<ConstantBField> esB(bField);
-      Propagator<BetheBlochEigenStepper<ConstantBField>, Navigator> probB(
+      EigenStepper<ConstantBField> esB(bField);
+      Propagator<EigenStepper<ConstantBField>, Navigator> probB(
           esB, naviMat);
 
       const auto& resultB = probB.propagate(sbtp, propOpts);
