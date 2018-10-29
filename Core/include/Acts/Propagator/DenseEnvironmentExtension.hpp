@@ -99,6 +99,7 @@ struct DenseEnvironmentExtension
     const double           h     = 0.,
     const Vector3D&        kprev = Vector3D())
   {
+    std::cout << "dense1" << std::endl;
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
@@ -117,6 +118,8 @@ struct DenseEnvironmentExtension
       // Evaluate k
       knew = eld.qop[i] * (state.dir + h * kprev).cross(bField);
     }
+
+    std::cout << "dense2" << std::endl;
     return true;
   }
 

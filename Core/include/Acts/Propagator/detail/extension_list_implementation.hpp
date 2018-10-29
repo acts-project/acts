@@ -46,13 +46,13 @@ namespace detail {
     {
       if (!(*it))
         return extension_list_impl<others...>::k(
-            obs_tuple, state, knew, bField, it++, i, h, kprev);
+            obs_tuple, state, knew, bField, ++it, i, h, kprev);
       // TODO: this method needs a memory for (in-)valid evaluater
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
       if (this_extension.k(state, knew, bField, i, h, kprev))
         return extension_list_impl<others...>::k(
-            obs_tuple, state, knew, bField, it++, i, h, kprev);
+            obs_tuple, state, knew, bField, ++it, i, h, kprev);
       else
         // Break at false
         return false;
@@ -72,12 +72,12 @@ namespace detail {
     {
       if (!(*it))
         return extension_list_impl<others...>::finalize(
-            obs_tuple, state, h, data, D, it++);
+            obs_tuple, state, h, data, D, ++it);
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
       if (this_extension.finalize(state, h, data, D))
         return extension_list_impl<others...>::finalize(
-            obs_tuple, state, h, data, D, it++);
+            obs_tuple, state, h, data, D, ++it);
       else
         // Break at false
         return false;
@@ -95,20 +95,20 @@ namespace detail {
     {
       if (!(*it))
         return extension_list_impl<others...>::finalize(
-            obs_tuple, state, h, it++);
+            obs_tuple, state, h, ++it);
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
       if (this_extension.finalize(state, h))
         return extension_list_impl<others...>::finalize(
-            obs_tuple, state, h, it++);
+            obs_tuple, state, h, ++it);
       else
         // Break at false
         return false;
     }
   };
 
-  /// The extension list call implementation
-  /// - it calls 'k()' on the last entry of the tuple
+  //~ /// The extension list call implementation
+  //~ /// - it calls 'k()' on the last entry of the tuple
   template <typename last>
   struct extension_list_impl<last>
   {

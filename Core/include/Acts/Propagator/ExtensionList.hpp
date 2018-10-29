@@ -18,20 +18,27 @@ namespace Acts {
 struct VoidAuctioneer
 {
   std::vector<bool>
-  operator()(std::vector<bool> v)
+  operator()(std::vector<bool> vCandidates)
   {
-    return std::move(v);
+    return std::move(vCandidates);
   }
 };
 
-//~ struct FirstValidAuctioneer
-//~ {
-//~ std::vector<bool>
-//~ operator()(std::vector<bool> v)
-//~ {
-//~ return std::move(v);
-//~ }
-//~ };
+struct FirstValidAuctioneer
+{
+  std::vector<bool>
+  operator()(std::vector<bool> vCandidates)
+  {
+    bool firstValidFound = false;
+    for (auto& v : vCandidates) {
+      if (firstValidFound)
+        v = false;
+      else if (v)
+        firstValidFound = true;
+    }
+    return std::move(v);
+  }
+};
 
 /// @brief Container of extensions used in the stepper of the propagation
 /// @tparam extensions Types of the extensions
