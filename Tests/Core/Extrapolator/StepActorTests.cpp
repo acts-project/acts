@@ -13,6 +13,7 @@
 // leave blank line
 
 #include <fstream>
+#include "../../Integration/PropagationTestHelper.hpp"
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -20,6 +21,8 @@
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "DetectorBuilder.hpp"
 
@@ -99,13 +102,18 @@ namespace Test {
   ActsMatrixD<7, 7> id77 = ActsMatrixD<7, 7>::Identity();
   bool output = false;
 
-  /// @brief This is a test for the StepActor that updates the propagator in
-  /// dense material. The test consists out of 2 parts.
-  /// 1.: Test that the StepActor does not act if there is no material in a
-  /// TrackingVolume
-  /// 2.: Test that the StepActor acts if there is material in a TrackingVolume
+  /// @brief This function tests the EigenStepper with the DefaultExtension and
+  /// the DenseEnvironmentExtension. The focus of this tests lies in the
+  /// choosing of the right extension for the individual use case. This is
+  /// performed with three different detectors:
+  /// a) Pure vaccuum -> DefaultExtension needs to act
+  /// b) Pure Be -> DenseEnvironmentExtension needs to act
+  /// c) Vacuum - Be - Vacuum -> Both should act and switch during the
+  /// propagation
   BOOST_AUTO_TEST_CASE(step_actor_test)
   {
+    // Test case a). The DenseEnvironmentExtension should state that it is not
+    // valid in this case.
     {
       // Build detector
       std::shared_ptr<TrackingGeometry> vacuum = buildVacDetector();
@@ -117,7 +125,8 @@ namespace Test {
       naviVac.resolveSensitive = true;
 
       // Set initial parameters for the particle track
-      ActsSymMatrixD<5> cov;
+      ActsSymMatrixD<5> cov
+          = ActsSymMatrixD<5>::Identity();  // TODO: does it work?
       cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0., 0.,
           0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
       auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
@@ -178,12 +187,11 @@ namespace Test {
         BOOST_TEST(mom.y() == 0.);
         BOOST_TEST(mom.z() == 0.);
       }
-      // TODO: Tests for cov by direct calculation
-      //~ for (const auto& j : stepResult.jac) {
-      //~ BOOST_TEST(j == id77);
-      //~ }
-      //~ std::exit(1);
+
+      IntegrationTest::covariance_curvilinear(
+          prop, startMom.x(), 0., M_PI * 0.5, 1., 0.5 * units::_m, 0);
     }
+    // Test case b). The DefaultExtension should state that it is invalid here.
     {
       // Build detector
       std::shared_ptr<TrackingGeometry> material = buildMatDetector();
@@ -264,14 +272,9 @@ namespace Test {
           BOOST_TEST(mom.x() < 5. * units::_GeV);
         }
       }
-      // TODO: Tests for cov by direct calculation
-      //~ for (const auto& j : stepResult.jac) {
-      //~ if (j == stepResult.jac.front()) {
-      //~ BOOST_TEST(j == id77);
-      //~ } else {
-      //~ BOOST_TEST(j != id77);
-      //~ }
-      //~ }
+
+      IntegrationTest::covariance_curvilinear(
+          prop, startMom.x(), 0., M_PI * 0.5, 1., 0.5 * units::_m, 0);
 
       // Re-launch the configuration with magnetic field
       bField.setField(0., 1. * units::_T, 0.);
@@ -284,9 +287,9 @@ namespace Test {
                               ExtensionList<DefaultExtension,
                                             DenseEnvironmentExtension>>,
                  Navigator>
-          probB(esB, naviMat);
+          propB(esB, naviMat);
 
-      const auto& resultB = probB.propagate(sbtp, propOpts);
+      const auto& resultB = propB.propagate(sbtp, propOpts);
       const StepCollector::this_result& stepResultB
           = resultB.get<typename StepCollector::result_type>();
 
@@ -313,82 +316,83 @@ namespace Test {
           BOOST_TEST(mom.z() != 0.);
         }
       }
-      // TODO: Tests for cov by direct calculation
-      //~ for (const auto& c : stepResultB.cov) {
-      //~ if (c == stepResultB.cov.front()) {
-      //~ BOOST_TEST(c == ActsSymMatrixD<5>::Identity());
-      //~ } else {
-      //~ BOOST_TEST(c != ActsSymMatrixD<5>::Identity());
-      //~ }
-      //~ }
+      IntegrationTest::covariance_curvilinear(
+          propB, startMom.x(), 0., M_PI * 0.5, 1., 0.5 * units::_m, 0);
     }
     /**
-       //~ {
-       //~ // Build detector
-       //~ std::shared_ptr<TrackingGeometry> det = buildVacMatVacDetector();
+    // Test case c). Both should be involved in their part of the detector
+    {
+      // Build detector
+      std::shared_ptr<TrackingGeometry> det = buildVacMatVacDetector();
 
-       //~ // Build navigator
-       //~ Navigator naviVac(det);
-       //~ naviVac.resolvePassive   = true;
-       //~ naviVac.resolveMaterial  = true;
-       //~ naviVac.resolveSensitive = true;
+      // Build navigator
+      Navigator naviVac(det);
+      naviVac.resolvePassive   = true;
+      naviVac.resolveMaterial  = true;
+      naviVac.resolveSensitive = true;
 
-       //~ // Set initial parameters for the particle track
-       //~ ActsSymMatrixD<5> cov;
-       //~ cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0.,
-       0.,
-       //~ 0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
-       //~ auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
-       //~ Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
-       //~ SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
-       //~ std::move(covPtr), startParams, startMom, 1.);
+      // Set initial parameters for the particle track
+      ActsSymMatrixD<5> cov;
+      cov << 1. * units::_mm, 0., 0., 0., 0., 0., 1. * units::_mm, 0., 0.,
+          0.,
+          0., 0., 1., 0., 0., 0., 0., 0., 1., 0., 0., 0., 0., 0., 1.;
+      auto     covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+      Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
+      SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+          std::move(covPtr), startParams, startMom, 1.);
 
-       //~ // Create action list for surface collection
-       //~ ActionList<StepCollector, StepActor> aList;
-       //~ AbortList<EndOfWorld> abortList;
-       //~ abortList.get<EndOfWorld>().maxX = 3. * units::_m;
+      // Create action list for surface collection
+      ActionList<StepCollector, DefaultExtensionActor,
+                 DenseEnvironmentExtensionActor> aList;
+      AbortList<EndOfWorld> abortList;
+      abortList.get<EndOfWorld>().maxX = 3. * units::_m;
 
-       //~ // Set options for propagator
-       //~ Propagator<EigenStepper<ConstantBField>, Navigator>::
-       //~ Options<ActionList<StepCollector, StepActor>, AbortList<EndOfWorld>>
-       //~ propOpts;
-       //~ propOpts.actionList     = aList;
-       //~ propOpts.stopConditions = abortList;
-       //~ propOpts.maxSteps       = 1e6;
-       //~ propOpts.maxStepSize    = 2. * units::_m;
+      // Set options for propagator
+      Propagator<EigenStepper<ConstantBField, VoidCorrector,
+                   ExtensionList<DefaultExtension, DenseEnvironmentExtension>>,
+    Navigator>::
+          Options<ActionList<StepCollector, DefaultExtensionActor,
+                 DenseEnvironmentExtensionActor>, AbortList<EndOfWorld>>
+              propOpts;
+      propOpts.actionList     = aList;
+      propOpts.stopConditions = abortList;
+      propOpts.maxSteps       = 1e6;
+      propOpts.maxStepSize    = 2. * units::_m;
 
-       //~ // Re-configure propagation with B-field
-       //~ ConstantBField               bField(Vector3D(0., 2. * units::_T,
-       0.));
-       //~ EigenStepper<ConstantBField> es(bField);
-       //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop(es,
-       naviVac);
+      // Re-configure propagation with B-field
+      ConstantBField               bField(Vector3D(0., 2. * units::_T, 0.));
+      EigenStepper<ConstantBField, VoidCorrector,
+                   ExtensionList<DefaultExtension, DenseEnvironmentExtension>>
+    es(bField);
+      Propagator<EigenStepper<ConstantBField, VoidCorrector,
+                   ExtensionList<DefaultExtension, DenseEnvironmentExtension>>,
+    Navigator> prop(es, naviVac);
 
-       //~ // Launch and collect results
-       //~ const auto&                       result = prop.propagate(sbtp,
-       // propOpts);
-       //~ const StepCollector::this_result& stepResult
-       //~ = result.get<typename StepCollector::result_type>();
+      // Launch and collect results
+       const auto&                       result = prop.propagate(sbtp,
+    propOpts);
+       const StepCollector::this_result& stepResult
+       = result.get<typename StepCollector::result_type>();
 
-       //~ // Check that the propagation step size is constrained and released
-       //~ // properly
+       // Check that the propagation step size is constrained and released
+       // properly
        //~ for (unsigned int i = 0; i < stepResult.stepSize.size(); i++) {
-       //~ if (stepResult.position[i].x() < 1. * units::_m &&
-       // std::abs(stepResult.position[i].z()) < 0.5)
-       //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
-       //~ == propOpts.maxStepSize);
-       //~ if (stepResult.position[i].x() > 1. * units::_m
-       //~ && stepResult.position[i].x() < 2. * units::_m &&
-       // std::abs(stepResult.position[i].z()) < 0.5)
-       //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
-       //~ == aList.get<StepActor>().maxStepSize);
-       //~ if (stepResult.position[i].x() > 2. * units::_m &&
-       // std::abs(stepResult.position[i].z()) < 0.5)
-       //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
-       //~ == propOpts.maxStepSize);
-       //~ std::cout << "pos: " << stepResult.position[i].x() << "\t" <<
-       // stepResult.position[i].y() << "\t" << stepResult.position[i].z() <<
-       // std::endl;
+        //~ if (stepResult.position[i].x() < 1. * units::_m
+            //~ && std::abs(stepResult.position[i].z()) < 0.5)
+          //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
+                     //~ == propOpts.maxStepSize);
+        //~ if (stepResult.position[i].x() > 1. * units::_m
+            //~ && stepResult.position[i].x() < 2. * units::_m
+            //~ && std::abs(stepResult.position[i].z()) < 0.5)
+          //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
+                     //~ == aList.get<StepActor>().maxStepSize);
+        //~ if (stepResult.position[i].x() > 2. * units::_m
+            //~ && std::abs(stepResult.position[i].z()) < 0.5)
+          //~ BOOST_TEST(stepResult.stepSize[i].value(cstep::user)
+                     //~ == propOpts.maxStepSize);
+        //~ std::cout << "pos: " << stepResult.position[i].x() << "\t"
+                  //~ << stepResult.position[i].y() << "\t"
+                  //~ << stepResult.position[i].z() << std::endl;
        //~ }
        //~ //////////////////////////////////////////////////////////////////
        //~ std::ofstream ofs("out.txt");
@@ -410,7 +414,7 @@ namespace Test {
        // 0.));
        //~ EigenStepper<ConstantBField> es2(bField2);
        //~ Propagator<EigenStepper<ConstantBField>, Navigator> prop2(es2,
-       naviVac);
+       //~ naviVac);
 
        //~ const auto& result2 = prop2.propagate(sbtp2, propOpts);
        //~ const StepCollector::this_result& stepResult2 = result2.get<typename
@@ -429,8 +433,8 @@ namespace Test {
        //~ }
        //~ ofs.close();
        //~ //////////////////////////////////////////////////////////////////
-       //~ }
-       **/
+    }
+    **/
   }
 }  // namespace Test
 }  // namespace Acts

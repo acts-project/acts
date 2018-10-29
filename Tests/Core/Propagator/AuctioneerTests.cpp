@@ -20,25 +20,27 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(AuctioneerTest_VoidAuctioneer)
   {
-	  // Build arbitrary vector
+    // Build arbitrary vector
     std::vector<bool> vec = {false, true, false, true};
     // Let it run through auction
     detail::VoidAuctioneer va;
-    std::vector<bool> resultVa = va(vec);
+    std::vector<bool>      resultVa = va(vec);
     // Test that vector did not change
-    BOOST_CHECK_EQUAL_COLLECTIONS(vec.begin(), vec.end(), resultVa.begin(), resultVa.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        vec.begin(), vec.end(), resultVa.begin(), resultVa.end());
   }
 
   BOOST_AUTO_TEST_CASE(AuctioneerTest_FirstValidAuctioneer)
   {
-	  // Build arbitrary vector
+    // Build arbitrary vector
     std::vector<bool> vec = {false, true, false, true};
     // Let it run through auction
     detail::FirstValidAuctioneer fva;
-    std::vector<bool> resultFva = fva(vec);
-    std::vector<bool> expected = {false, true, false, false};
+    std::vector<bool>            resultFva = fva(vec);
+    std::vector<bool>            expected  = {false, true, false, false};
     // Test that vector did not change
-    BOOST_CHECK_EQUAL_COLLECTIONS(expected.begin(), expected.end(), resultFva.begin(), resultFva.end());
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        expected.begin(), expected.end(), resultFva.begin(), resultFva.end());
   }
 }  // namespace Test
 }  // namespace Acts

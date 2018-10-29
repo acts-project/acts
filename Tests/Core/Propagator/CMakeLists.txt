@@ -25,6 +25,10 @@ target_link_libraries (EigenStepperBenchmark PRIVATE ${Boost_LIBRARIES})
 
 install (TARGETS EigenStepperBenchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Profiling)
 
+add_executable (AuctioneerTests AuctioneerTests.cpp)
+target_link_libraries (AuctioneerTests PRIVATE ActsCore)
+add_test(NAME AuctioneerUnitTest COMMAND AuctioneerTests)
+
 # these tests rely on the Legacy code
 if (ACTS_BUILD_LEGACY)
   add_executable (JacobianTests JacobianTests.cpp)

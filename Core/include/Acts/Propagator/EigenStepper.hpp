@@ -15,6 +15,7 @@
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/ExtensionList.hpp"
+#include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -37,7 +38,8 @@ namespace Acts {
 ///
 template <typename BField,
           typename corrector_t     = VoidIntersectionCorrector,
-          typename extensionlist_t = ExtensionList<DefaultExtension>>
+          typename extensionlist_t = ExtensionList<DefaultExtension>,
+          typename auctioneer_t    = detail::VoidAuctioneer>
 class EigenStepper
 {
 
@@ -545,7 +547,7 @@ public:
 
     // First Runge-Kutta point (at current position)
     sd.B_first = this->getField(state, state.pos);
-    state.extension.k(state, sd.k1, sd.B_first);
+    state.extension.template k<State, auctioneer_t>(state, sd.k1, sd.B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
@@ -602,8 +604,8 @@ public:
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
 
-      std::cout << "D:\n" << D << std::endl;
-      std::cout << "jac:\n" << state.jacTransport << std::endl;
+      //~ std::cout << "D:\n" << D << std::endl;
+      //~ std::cout << "jac:\n" << state.jacTransport << std::endl;
     } else
       state.extension.finalize(state, h);
 
@@ -615,10 +617,10 @@ public:
     state.derivative.template segment<3>(3) = sd.k4;
     state.pathAccumulated += h;
 
-    std::cout << "result pos: " << state.pos << std::endl;
-    std::cout << "result dir: " << state.dir << std::endl;
-    std::cout << "result p: " << state.p << std::endl;
-    std::cout << "result cov:\n" << state.jacTransport << std::endl;
+    //~ std::cout << "result pos: " << state.pos << std::endl;
+    //~ std::cout << "result dir: " << state.dir << std::endl;
+    //~ std::cout << "result p: " << state.p << std::endl;
+    //~ std::cout << "result cov:\n" << state.jacTransport << std::endl;
 
     return h;
   }

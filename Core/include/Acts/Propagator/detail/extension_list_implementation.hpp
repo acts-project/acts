@@ -52,7 +52,7 @@ namespace detail {
       if (!(*it))
         return extension_list_impl<others...>::k(
             obs_tuple, state, knew, bField, ++it, i, h, kprev);
-      // TODO: this method needs a memory for (in-)valid evaluater
+
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
       if (this_extension.k(state, knew, bField, i, h, kprev))
