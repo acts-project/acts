@@ -16,7 +16,8 @@ namespace detail {
   struct extension_list_impl;
 
   /// The extension list call implementation
-  /// - it calls 'k()' on the current entry of the tuple
+  /// - it calls 'validExtensionsForStep()' on the current entry of the tuple
+  /// - it stores the result in @p validExtensions
   /// - then broadcasts the extension call to the remaining tuple
   template <typename first, typename... others>
   struct extension_list_impl<first, others...>
@@ -33,6 +34,9 @@ namespace detail {
           obs_tuple, state, validExtensions);
     }
 
+    /// The extension list call implementation
+    /// - it calls 'k()' on the current entry of the tuple
+    /// - then broadcasts the extension call to the remaining tuple
     template <typename T, typename stepper_state_t>
     static bool
     k(T&                                obs_tuple,
@@ -44,6 +48,7 @@ namespace detail {
       const double                      h     = 0,
       const Vector3D&                   kprev = Vector3D())
     {
+      // If element is invalid: continue
       if (!(*it))
         return extension_list_impl<others...>::k(
             obs_tuple, state, knew, bField, ++it, i, h, kprev);
@@ -70,6 +75,7 @@ namespace detail {
              ActsMatrixD<7, 7>& D,
              std::vector<bool>::const_iterator it)
     {
+      // If element is invalid: continue
       if (!(*it))
         return extension_list_impl<others...>::finalize(
             obs_tuple, state, h, data, D, ++it);
@@ -93,6 +99,7 @@ namespace detail {
              const double                      h,
              std::vector<bool>::const_iterator it)
     {
+      // If element is invalid: continue
       if (!(*it))
         return extension_list_impl<others...>::finalize(
             obs_tuple, state, h, ++it);
@@ -107,12 +114,13 @@ namespace detail {
     }
   };
 
-  //~ /// The extension list call implementation
-  //~ /// - it calls 'k()' on the last entry of the tuple
   template <typename last>
   struct extension_list_impl<last>
   {
 
+    /// The extension list call implementation
+    /// - it calls 'validExtensionsForStep()' on the last entry of the tuple
+    /// - it stores the result in @p validExtensions
     template <typename T, typename stepper_state_t>
     static void
     validExtensionForStep(const T&               obs_tuple,
@@ -123,6 +131,8 @@ namespace detail {
       validExtensions.push_back(this_extension.validExtensionForStep(state));
     }
 
+    /// The extension list call implementation
+    /// - it calls 'k()' on the last entry of the tuple
     template <typename T, typename stepper_state_t>
     static bool
     k(T&                                obs_tuple,
