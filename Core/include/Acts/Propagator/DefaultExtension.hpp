@@ -23,8 +23,22 @@ struct DefaultExtension
   /// Local store for conversion of momentum from SI to natural units
   const double m_conv = units::SI2Nat<units::MOMENTUM>(1);
 
-  /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0., the
-  /// check if the step can be performed in a valid environment. If so, this
+  /// @brief Control function if the step evaluation would be valid
+  ///
+  /// @tparam stepper_state_t Type of the state of the stepper
+  /// @param [in] state State of the stepper
+  /// @return Boolean flag if the step would be valid
+  template <typename stepper_state_t>
+  bool
+  validExtensionForStep(const stepper_state_t& state) const
+  {
+    // Check existence of a volume with material
+    if (state.volume && (*state.volume) && (*state.volume)->material())
+      return false;
+    return true;
+  }
+
+  /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up qop, too.
   ///
   /// @tparam stepper_state_t Type of the state of the stepper
@@ -46,9 +60,6 @@ struct DefaultExtension
   {
     // First step does not rely on previous data
     if (i == 0) {
-      // Check if step evaluation is valid within this extension
-      if (!validExtensionForStep(state)) return false;
-
       // Store qop, it is always used if valid
       qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
 
@@ -94,22 +105,7 @@ struct DefaultExtension
     return transportMatrix(state.dir, h, data, D);
   }
 
-private:
-  /// @brief Control function if the step evaluation would be valid
-  ///
-  /// @tparam stepper_state_t Type of the state of the stepper
-  /// @param [in] state State of the stepper
-  /// @return Boolean flag if the step would be valid
-  template <typename stepper_state_t>
-  bool
-  validExtensionForStep(const stepper_state_t& state)
-  {
-    // Check existence of a volume with material
-    if (state.volume && (*state.volume) && (*state.volume)->material())
-      return false;
-    return true;
-  }
-
+protected:
   /// @brief Evaluates the transport matrix D for the jacobian
   ///
   /// @param [in] dir Direction of the particle
