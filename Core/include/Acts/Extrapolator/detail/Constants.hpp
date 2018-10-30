@@ -17,8 +17,7 @@ namespace constants {
 
   // See (1) table 32.1
   // K/A*Z = 0.5 * 30.7075MeV/(g/mm2) * Z/A * rho[g/mm3]
-  constexpr double ka_BetheBloch
-      = 30.7075 * (units::_MeV * units::_mm * units::_mm);
+  constexpr double ka_BetheBloch = 30.7075 * (units::_MeV * units::_mm2);
 
   /// Ionisation potential
   /// Ionization - Bethe-Bloch
