@@ -628,7 +628,7 @@ struct DefaultExtensionActor
 {
   // Configurations for Stepper
   /// Tolerance for the error of the integration
-  double m_tolerance = 5e-5;
+  double m_tolerance = 1e-6;
   /// Cut-off value for the step size
   double m_stepSizeCutOff = 0.;
 

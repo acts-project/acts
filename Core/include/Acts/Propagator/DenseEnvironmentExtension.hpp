@@ -314,7 +314,8 @@ protected:
         = radiationLoss(energy, eld.massSI, material, pdg, 1., true);
 
     // Rescaling for mode evaluation.
-    // C.f. ATL-SOFT-PUB-2008-003 section 3. The mode evaluation for the energy loss by ionisation can be directly evaluated.
+    // C.f. ATL-SOFT-PUB-2008-003 section 3. The mode evaluation for the energy
+    // loss by ionisation can be directly evaluated.
     if (!meanEnergyLoss) radiationEnergyLoss *= 0.15;
 
     // Return sum of contributions

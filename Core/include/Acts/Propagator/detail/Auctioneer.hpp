@@ -55,7 +55,7 @@ namespace detail {
     /// @param [in] vCandidates Candidates that are treated as valid extensions
     /// @return The to vCandidates identical list of valid extensions
     std::vector<bool>
-    operator()(std::vector<bool> vCandidates)
+    operator()(std::vector<bool> vCandidates) const
     {
       return std::move(vCandidates);
     }
@@ -74,11 +74,10 @@ namespace detail {
     /// @param [in] vCandidates Candidates for a valid extension
     /// @return List with at most one valid extension
     std::vector<bool>
-    operator()(std::vector<bool> vCandidates)
+    operator()(std::vector<bool> vCandidates) const
     {
       // Indicator if the first valid was already found
       bool firstValidFound = false;
-      //~ for (bool& v : vCandidates) {
       for (unsigned int i = 0; i < vCandidates.size(); i++) {
         // If a valid extensions is already found, set all following to false
         if (firstValidFound) vCandidates[i] = false;
