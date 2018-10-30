@@ -130,9 +130,7 @@ protected:
     /// The remaining non-zero term is calculated directly. The naming of the
     /// variables is explained in eq. 11 and are directly related to the
     /// initial problem in eq. 7.
-    /// The evaluation is based by propagating the parameters T and lambda
-    /// (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating
-    /// the derivations for matrix A.
+    /// The evaluation is based by propagating the parameters T and lambda as given in eq. 16 and evaluating the derivations for matrix A.
 
     D = ActsMatrixD<7, 7>::Identity();
 

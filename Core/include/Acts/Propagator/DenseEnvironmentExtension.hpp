@@ -196,7 +196,7 @@ protected:
     /// The remaining non-zero term is calculated directly. The naming of the
     /// variables is explained in eq. 11 and are directly related to the
     /// initial problem in eq. 7.
-    /// The evaluation is based by propagating the parameters T and lambda
+    /// The evaluation is based on propagating the parameters T and lambda
     /// (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating
     /// the derivations for matrix A.
 
@@ -314,7 +314,7 @@ protected:
         = radiationLoss(energy, eld.massSI, material, pdg, 1., true);
 
     // Rescaling for mode evaluation.
-    // TODO: Factor just copied from Athena but not tested for correctness
+    // C.f. ATL-SOFT-PUB-2008-003 section 3. The mode evaluation for the energy loss by ionisation can be directly evaluated.
     if (!meanEnergyLoss) radiationEnergyLoss *= 0.15;
 
     // Return sum of contributions
@@ -354,8 +354,7 @@ protected:
     if (meanEnergyLoss)
       return betheBlochDerivative + radiationDerivative;
     else
-      // TODO: The scaling factors are just copied from Athena without any
-      // test
+      // C.f. ATL-SOFT-PUB-2008-003 section 3
       return 0.9 * betheBlochDerivative + 0.15 * radiationDerivative;
   }
 
