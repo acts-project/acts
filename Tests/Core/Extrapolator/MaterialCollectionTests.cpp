@@ -72,7 +72,7 @@ namespace Test {
   const int skip             = 0;
   bool      debugModeFwd     = false;
   bool      debugModeBwd     = false;
-  bool      debugModeFwdStep = false;
+  bool      debugModeFwdStep = true;
   bool      debugModeBwdStep = false;
 
   /// the actual test nethod that runs the test
@@ -101,9 +101,9 @@ namespace Test {
     }
 
     // define start parameters
-    double                x  = 0;
-    double                y  = 0;
-    double                z  = 0;
+    double                x  = 0.;
+    double                y  = 0.;
+    double                z  = 0.;
     double                px = pT * cos(phi);
     double                py = pT * sin(phi);
     double                pz = pT / tan(theta);
@@ -122,7 +122,7 @@ namespace Test {
     Options fwdOptions;
 
     fwdOptions.maxStepSize = 25. * units::_cm;
-    fwdOptions.pathLimit   = 25 * units::_cm;
+    fwdOptions.pathLimit   = 25. * units::_cm;
     fwdOptions.debug       = debugModeFwd;
 
     // get the material collector and configure it
@@ -236,7 +236,7 @@ namespace Test {
     // now go from surface to surface and check
     Options fwdStepOptions;
     fwdStepOptions.maxStepSize = 25. * units::_cm;
-    fwdStepOptions.pathLimit   = 25 * units::_cm;
+    fwdStepOptions.pathLimit   = 25. * units::_cm;
     fwdStepOptions.debug       = debugModeFwdStep;
 
     // get the material collector and configure it
