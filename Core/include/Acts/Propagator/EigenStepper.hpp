@@ -65,6 +65,12 @@ private:
 public:
   using cstep = detail::ConstrainedStep;
 
+  /// Jacobian, Covariance and State defintions
+  using Jacobian         = ActsMatrixD<5, 5>;
+  using Covariance       = ActsSymMatrixD<5>;
+  using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
+  using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
+
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local
@@ -134,35 +140,74 @@ public:
     /// Create and return the bound state at the current position
     ///
     /// @brief This transports (if necessary) the covariance
-    /// to the surface and creates a bound state
+    /// to the surface and creates a bound state. It does not check
+    /// if the transported state is at the surface, this needs to
+    /// be guaranteed by the propagator
     ///
     /// @tparam surface_t The Surface type where this is bound to
     ///
     /// @param surface The surface to which we bind the state
-    /// @param reinitialize Boolean flag whether reinitialization is needed
+    /// @param reinitialize Boolean flag whether reinitialization is needed,
+    ///        i.e. if this is an intermediate state of a larger propagation
     ///
-    /// @return A bBund state: the jacobian towards it, and the path length
+    /// @return A bound state:
+    ///   - the parameters at the surface
+    ///   - the stepweise jacobian towards it (from last bound)
+    ///   - and the path length (from start - for ordering)
     template <typename surface_t>
-    std::tuple<BoundParameters, ActsMatrixD<5, 5>, double>
-    bind(const surface_t& surface, bool reinitialize = true)
+    BoundState
+    boundState(const surface_t& surface, bool reinitialize = true)
     {
       // Transport the covariance to here
-      std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
+      std::unique_ptr<const Covariance> covPtr = nullptr;
       if (covTransport) {
         covarianceTransport(surface, reinitialize);
-        covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+        covPtr = std::make_unique<const Covariance>(cov);
       }
       // Create the bound parameters
       BoundParameters parameters(std::move(covPtr), pos, p * dir, q, surface);
       // Create the bound state
-      auto boundState = std::tuple<BoundParameters, ActsMatrixD<5, 5>, double>(
-          std::move(parameters), std::move(jacobianBound), pathAccumulated);
+      BoundState boundState{std::move(parameters), jacobian, pathAccumulated};
       // Reset the jacobian to identity
       if (reinitialize) {
-        jacobianBound = ActsMatrixD<5, 5>::Identity();
+        jacobian = Jacobian::Identity();
       }
-      /// State
+      /// Return the State
       return boundState;
+    }
+
+    /// Create and return a curvilinear state at the current position
+    ///
+    /// @brief This transports (if necessary) the covariance
+    /// to the current position and creates a curvilinear state.
+    ///
+    /// @param reinitialize Boolean flag whether reinitialization is needed
+    ///        i.e. if this is an intermediate state of a larger propagation
+    ///
+    /// @return A curvilinear state:
+    ///   - the curvilinear parameters at given position
+    ///   - the stepweise jacobian towards it (from last bound)
+    ///   - and the path length (from start - for ordering)
+    CurvilinearState
+    curvilinearState(bool reinitialize = true)
+    {
+      // Transport the covariance to here
+      std::unique_ptr<const Covariance> covPtr = nullptr;
+      if (covTransport) {
+        covarianceTransport(reinitialize);
+        covPtr = std::make_unique<const Covariance>(cov);
+      }
+      // Create the curvilinear parameters
+      CurvilinearParameters parameters(std::move(covPtr), pos, p * dir, q);
+      // Create the bound state
+      CurvilinearState curvState{
+          std::move(parameters), jacobian, pathAccumulated};
+      // Reset the jacobian to identity
+      if (reinitialize) {
+        jacobian = Jacobian::Identity();
+      }
+      /// Return the State
+      return curvState;
     }
 
     /// Return a corrector
@@ -275,7 +320,7 @@ public:
         jacToGlobal(5, eTHETA) = -sinTheta;
         jacToGlobal(6, eQOP)   = 1;
       }
-      // Store the jacobian
+      // Store The global and bound jacobian (duplication for the moment)
       jacobian = jacFull * jacobian;
     }
 
@@ -328,9 +373,8 @@ public:
         pars << loc[eLOC_0], loc[eLOC_1], phi(dir), theta(dir), q / p;
         surface.initJacobianToGlobal(jacToGlobal, pos, dir, pars);
       }
-      // Store The global jacobian (duplication for the moment)
-      jacobian      = jacFull * jacobian;
-      jacobianBound = jacFull * jacobianBound;
+      // Store The global and bound jacobian (duplication for the moment)
+      jacobian = jacFull * jacobian;
     }
 
     /// Global particle position
@@ -356,9 +400,6 @@ public:
     /// The full jacobian of the transport entire transport
     ActsMatrixD<5, 5> jacobian = ActsMatrixD<5, 5>::Identity();
 
-    /// The partial jacobian of the transport from the last bound state
-    ActsMatrixD<5, 5> jacobianBound = ActsMatrixD<5, 5>::Identity();
-
     /// Jacobian from local to the global frame
     ActsMatrixD<7, 5> jacToGlobal = ActsMatrixD<7, 5>::Zero();
 
@@ -370,8 +411,8 @@ public:
 
     /// Covariance matrix (and indicator)
     //// associated with the initial error on track parameters
-    bool              covTransport = false;
-    ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
+    bool       covTransport = false;
+    Covariance cov          = Covariance::Zero();
 
     /// Lazily initialized state of the field Cache
 
@@ -406,47 +447,52 @@ public:
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
   /// Convert the propagation state (global) to curvilinear parameters
-  /// @param state The stepper state
-  /// @param reinitialize is a flag to (optionally) reinitialse the state
-  /// @return curvilinear parameters
-  static CurvilinearParameters
-  convert(State& state, bool reinitialize = false)
+  /// This is called by the propagator
+  ///
+  /// @tparam result_t Type of the propagator result to be filled
+  ///
+  /// @param[in,out] state The stepper state
+  /// @param[in,out] result The propagator result object to be filled
+  template <typename result_t>
+  void
+  convert(State& state, result_t& result) const
   {
-    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
-    // only do the covariance transport if needed
+    auto  curvState      = state.curvilinearState();
+    auto& curvParameters = std::get<CurvilinearParameters>(curvState);
+    // Fill the end parameters, @todo error handling
+    result.endParameters = std::make_unique<const CurvilinearParameters>(
+        std::move(curvParameters));
+    // Only fill the transport jacobian when covariance transport was done
     if (state.covTransport) {
-      // transport the covariance forward
-      state.covarianceTransport(reinitialize);
-      covPtr = std::make_unique<const ActsMatrixD<5, 5>>(state.cov);
+      auto& tJacobian = std::get<Jacobian>(curvState);
+      result.transportJacobian
+          = std::make_unique<const Jacobian>(std::move(tJacobian));
     }
-    // return the parameters
-    return CurvilinearParameters(
-        std::move(covPtr), state.pos, state.p * state.dir, state.q);
   }
 
   /// Convert the propagation state to track parameters at a certain surface
   ///
-  /// @tparam S The surface type
+  /// @tparam result_t Type of the propagator result to be filled
+  /// @tparam surface_t Type of the surface
   ///
-  /// @param [in] state Propagation state used
+  /// @param [in,out] state Propagation state used
+  /// @param [in,out] result Result object from the propagator
   /// @param [in] surface Destination surface to which the conversion is done
-  template <typename surface_t>
-  static BoundParameters
-  convert(State& state, const surface_t& surface, bool reinitialize = false)
+  template <typename result_t, typename surface_t>
+  void
+  convert(State& state, result_t& result, const surface_t& surface) const
   {
-    std::unique_ptr<const ActsSymMatrixD<5>> covPtr = nullptr;
-    // Perform error propagation if an initial covariance matrix was provided
+    auto  boundState      = state.boundState(surface);
+    auto& boundParameters = std::get<BoundParameters>(boundState);
+    // Fill the end parameters, @todo error handling
+    result.endParameters
+        = std::make_unique<const BoundParameters>(std::move(boundParameters));
+    // Only fill the transport jacobian when covariance transport was done
     if (state.covTransport) {
-      // transport the covariance forward
-      state.covarianceTransport(surface, reinitialize);
-      covPtr = std::make_unique<const ActsSymMatrixD<5>>(state.cov);
+      auto& tJacobian = std::get<Jacobian>(boundState);
+      result.transportJacobian
+          = std::make_unique<const Jacobian>(std::move(tJacobian));
     }
-    // return the bound parameters
-    return BoundParameters(std::move(covPtr),
-                           state.pos,
-                           state.p * state.dir,
-                           state.q,
-                           surface.getSharedPtr());
   }
 
   /// Get the field for the stepping, it checks first if the access is still

@@ -109,8 +109,6 @@ Acts::DiscSurface::DiscSurface(const variant_data& vardata) : GeometryObject()
   }
 }
 
-Acts::DiscSurface::~DiscSurface() = default;
-
 Acts::DiscSurface&
 Acts::DiscSurface::operator=(const DiscSurface& other)
 {

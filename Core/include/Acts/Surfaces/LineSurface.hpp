@@ -75,7 +75,8 @@ public:
   /// @param vardata the @c variant_data to build from
   LineSurface(const variant_data& vardata);
 
-  ~LineSurface() override;
+  /// Destructor - defaulted
+  ~LineSurface() override = default;
 
   /// Assignment operator
   ///

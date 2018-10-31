@@ -23,7 +23,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
+#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -102,6 +102,9 @@ namespace Test {
     double pathLimit      = std::numeric_limits<double>::max();
     bool   loopProtection = true;
     double loopFraction   = 0.5;
+
+    /// Contains: target aborters
+    AbortList<PathLimitReached> abortList;
   };
 
   /// @brief mockup of propagtor state
@@ -111,8 +114,6 @@ namespace Test {
     SteppingState stepping;
     /// Contains: navigation state
     NavigationState navigation;
-    /// Contains: target aborters
-    AbortList<PathLimitReached> targetAborters;
     /// Contains: options
     Options options;
   };
@@ -142,13 +143,13 @@ namespace Test {
     Stepper pStepper;
 
     auto initialLimit
-        = pState.targetAborters.get<PathLimitReached>().internalLimit;
+        = pState.options.abortList.get<PathLimitReached>().internalLimit;
 
     LoopProtection<PathLimitReached> lProtection;
     lProtection(pState, pStepper);
 
     auto updatedLimit
-        = pState.targetAborters.get<PathLimitReached>().internalLimit;
+        = pState.options.abortList.get<PathLimitReached>().internalLimit;
     BOOST_TEST(updatedLimit < initialLimit);
   }
 
@@ -209,7 +210,6 @@ namespace Test {
     CurvilinearParameters start(nullptr, pos, mom, q);
 
     PropagatorOptions<> options;
-
     const auto& result = epropagator.propagate(start, options);
 
     // this test assumes state.options.loopFraction = 0.5

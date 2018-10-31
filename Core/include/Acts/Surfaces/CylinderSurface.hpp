@@ -95,8 +95,8 @@ public:
   /// @param vardata the @c variant_data to build from
   CylinderSurface(const variant_data& vardata);
 
-  /// Destructor
-  ~CylinderSurface() override;
+  /// Destructor - defaulted
+  ~CylinderSurface() override = default;
 
   /// Assignment operator
   ///

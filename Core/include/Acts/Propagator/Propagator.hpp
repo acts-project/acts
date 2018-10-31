@@ -14,12 +14,10 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
-#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
+#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-
-#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 
@@ -48,6 +46,9 @@ struct Result : private detail::Extendable<result_list...>
   /// Final track parameters - initialized to null pointer
   std::unique_ptr<const parameters_t> endParameters = nullptr;
 
+  /// Full transport jacobian
+  std::unique_ptr<const ActsMatrixD<5, 5>> transportJacobian = nullptr;
+
   /// Propagation status
   Status status = Status::UNSET;
 
@@ -63,59 +64,6 @@ struct Result : private detail::Extendable<result_list...>
   ///         is SUCCESS, otherwise @c false
   ///
   operator bool() const { return (endParameters && status == Status::SUCCESS); }
-};
-
-/// @brief Options for propagate() call
-///
-/// @tparam action_list_t List of action types called after each
-///    propagation step with the current propagation and stepper state
-///
-/// @tparam aborter_list_t List of abort conditions tested after each
-///    propagation step using the current propagation and stepper state
-///
-template <typename action_list_t  = ActionList<>,
-          typename aborter_list_t = AbortList<>>
-struct PropagatorOptions
-{
-
-  /// Propagation direction
-  NavigationDirection direction = forward;
-
-  /// The |pdg| code for (eventual) material integration - pion default
-  int absPdgCode = 211;
-
-  /// The mass for the particle for (eventual) material integration
-  double mass = 139.57018 * units::_MeV;
-
-  /// Maximum number of steps for one propagate() call
-  unsigned int maxSteps = 1000;
-
-  /// Required tolerance to reach target (surface, pathlength)
-  double targetTolerance = s_onSurfaceTolerance;
-
-  /// Absolute maximum step size
-  double maxStepSize = 1 * units::_m;
-
-  /// Absolute maximum path length
-  double pathLimit = std::numeric_limits<double>::max();
-
-  /// Loop protection step, it adapts the pathLimit
-  bool   loopProtection = true;
-  double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
-
-  /// Debug output steering:
-  // - the string where debug messages are stored (optionally)
-  // - it also has some formatting options
-  bool        debug         = false;  ///< switch debug on
-  std::string debugString   = "";     ///< the string to collect msgs
-  size_t      debugPfxWidth = 30;     ///< the prefix width
-  size_t      debugMsgWidth = 50;     ///< the mesage width
-
-  /// List of actions
-  action_list_t actionList;
-
-  /// List of abort conditions
-  aborter_list_t stopConditions;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -165,6 +113,38 @@ public:
   struct Options
   {
 
+    /// @brief Expand the Options with extended aborters
+    ///
+    /// @tparam extended_aborter_list_t Type of the new aborter list
+    ///
+    /// @param aborters The new aborter list to be used (internally)
+    template <typename extended_aborter_list_t>
+    Options<action_list_t, extended_aborter_list_t>
+    extend(extended_aborter_list_t aborters) const
+    {
+      Options<action_list_t, extended_aborter_list_t> eoptions;
+      // Copy the options over
+      eoptions.direction       = direction;
+      eoptions.absPdgCode      = absPdgCode;
+      eoptions.mass            = mass;
+      eoptions.maxSteps        = maxSteps;
+      eoptions.maxStepSize     = maxStepSize;
+      eoptions.targetTolerance = targetTolerance;
+      eoptions.pathLimit       = pathLimit;
+      eoptions.loopProtection  = loopProtection;
+      eoptions.loopFraction    = loopFraction;
+      // Output option
+      eoptions.debug         = debug;
+      eoptions.debugString   = debugString;
+      eoptions.debugPfxWidth = debugPfxWidth;
+      eoptions.debugMsgWidth = debugMsgWidth;
+      // Action / abort list
+      eoptions.actionList = actionList;
+      eoptions.abortList  = std::move(aborters);
+      // And return the options
+      return eoptions;
+    }
+
     /// Propagation direction
     NavigationDirection direction = forward;
 
@@ -177,20 +157,21 @@ public:
     /// Maximum number of steps for one propagate() call
     unsigned int maxSteps = 1000;
 
-    /// Required tolerance to reach target (surface, pathlength)
-    double targetTolerance = s_onSurfaceTolerance;
-
     /// Absolute maximum step size
-    double maxStepSize = 1 * units::_m;
+    double maxStepSize = std::numeric_limits<double>::max();
 
     /// Absolute maximum path length
     double pathLimit = std::numeric_limits<double>::max();
+
+    /// Required tolerance to reach target (surface, pathlength)
+    double targetTolerance = s_onSurfaceTolerance;
 
     /// Loop protection step, it adapts the pathLimit
     bool   loopProtection = true;
     double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
 
     /// Debug output steering:
+    //  -> @todo: move to a debug struct
     // - the string where debug messages are stored (optionally)
     // - it also has some formatting options
     bool        debug         = false;  ///< switch debug on
@@ -202,13 +183,13 @@ public:
     action_list_t actionList;
 
     /// List of abort conditions
-    aborter_list_t stopConditions;
+    aborter_list_t abortList;
   };
 
   /// Constructor from implementation object
   ///
   /// @param stepper The stepper implementation is moved to a private member
-  /// @param navigator The navigator implementation, moved to a private member
+  /// @param navigator The navigator implentiation, moved to a private member
   explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
     : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
   {
@@ -223,9 +204,7 @@ private:
   ///
   /// This struct holds the common state information for propagating
   /// which is independent of the actual stepper implementation.
-  template <typename parameters_t,
-            typename propagator_option_t,
-            typename target_aborter_list_t>
+  template <typename parameters_t, typename propagator_option_t>
   struct State
   {
 
@@ -238,12 +217,8 @@ private:
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param tabs The internal target aborters created in the call nethod
-    State(const parameters_t&        start,
-          const propagator_option_t& topts,
-          target_aborter_list_t      tabs)
-      : options(topts)
-      , targetAborters(std::move(tabs))
-      , stepping(start, options.direction, options.maxStepSize)
+    State(const parameters_t& start, const propagator_option_t& topts)
+      : options(topts), stepping(start, options.direction, options.maxStepSize)
     {
       // Setting the start surface
       navigation.startSurface = &start.referenceSurface();
@@ -251,9 +226,6 @@ private:
 
     /// These are the options - provided for each propagation step
     propagator_option_t options;
-
-    /// These are the target aborters (internally created)
-    target_aborter_list_t targetAborters;
 
     /// Stepper state - internal state of the Stepper
     StepperState stepping;
@@ -317,57 +289,46 @@ private:
   Status
   propagate_(result_t& result, propagator_state_t& state) const
   {
-    // Pre-stepping call to the abort list
-    debugLog(state,
-             [&] { return std::string("Calling pre-stepping aborters."); });
-    if (state.targetAborters(result, state)) {
-      return Status::FAILURE;
-    }
+
     // Pre-stepping call to the navigator and action list
-    debugLog(state, [&] {
-      return std::string("Calling pre-stepping navigator & actions.");
-    });
-    // Navigator initialize call
-    m_navigator(state);
+    debugLog(state, [&] { return std::string("Entering propagation."); });
+
+    // Navigator initialize state call
+    m_navigator.status(state);
     // Pre-Stepping call to the action list
     state.options.actionList(state, result);
-
-    bool terminatedNormally = false;
-    // Propagation loop : stepping
-    for (; result.steps < state.options.maxSteps; ++result.steps) {
-      // Perform a propagation step - it only takes the stepping state
-      double s = m_stepper.step(state.stepping);
-      // Accumulate the path length
-      result.pathLength += s;
-      // Call the actions, can (& will likely) modify the state
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Calling navigator & actions after step of size = ";
-        dstream << s;
-        return dstream.str();
-      });
-      // Post-step navigator call
-      m_navigator(state);
-      state.options.actionList(state, result);
-
-      // Call the stop_conditions and the internal stop conditions
-      // break condition triggered, but still count the step
-      debugLog(state,
-               [&] { return std::string("Calling aborters after step."); });
-      if (state.options.stopConditions(result, state)
-          or state.targetAborters(result, state)) {
-        terminatedNormally = true;
-        break;
+    // Pre-Stepping: abort condition check
+    if (!state.options.abortList(result, state)) {
+      // Pre-Stepping: target setting
+      m_navigator.target(state);
+      // Stepping loop
+      debugLog(state, [&] { return std::string("Starting stepping loop."); });
+      // Propagation loop : stepping
+      for (; result.steps < state.options.maxSteps; ++result.steps) {
+        // Perform a propagation step - it only takes the stepping state
+        double s = m_stepper.step(state.stepping);
+        // Accumulate the path length
+        result.pathLength += s;
+        // Call the actions, can (& will likely) modify the state
+        debugLog(state, [&] {
+          std::stringstream dstream;
+          dstream << "Step with size = ";
+          dstream << s;
+          dstream << " performed.";
+          return dstream.str();
+        });
+        // Post-step
+        // navigator status call - action list - aborter list - target call
+        m_navigator.status(state);
+        state.options.actionList(state, result);
+        if (state.options.abortList(result, state)) {
+          break;
+        }
+        m_navigator.target(state);
       }
     }
-
-    if (!terminatedNormally) {
-      state.navigation.navigationBreak = true;
-    }
-
     // Post-stepping call to the action list
-    debugLog(state,
-             [&] { return std::string("Calling post-stepping action list."); });
+    debugLog(state, [&] { return std::string("Stepping loop done."); });
     state.options.actionList(state, result);
 
     // return progress flag here, decide on SUCCESS later
@@ -395,13 +356,12 @@ public:
   template <typename parameters_t,
             typename action_list_t,
             typename aborter_list_t,
-            typename path_arborter_t = detail::PathLimitReached>
+            typename path_aborter_t = detail::PathLimitReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
-  propagate(
-      const parameters_t& start,
-      const PropagatorOptions<action_list_t, aborter_list_t>& options) const
+  propagate(const parameters_t& start,
+            const Options<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced by the propagation
@@ -412,26 +372,26 @@ public:
     using ResultType
         = action_list_t_result_t<ReturnParameterType, action_list_t>;
 
-    // Type of provided options which consist action and abort list
-    using OptionsType = PropagatorOptions<action_list_t, aborter_list_t>;
-
     static_assert(std::is_copy_constructible<ReturnParameterType>::value,
                   "return track parameter type must be copy-constructible");
 
     // Initialize the propagation result object
     ResultType result(Status::IN_PROGRESS);
 
-    // Internal Abort list - only with path limit as no target surface given
-    using TargetAborters = AbortList<path_arborter_t>;
-    TargetAborters targetAborters;
+    // Expand the abort list with a path aborter
+    path_aborter_t pathAborter;
+    auto           abortList = options.abortList.append(pathAborter);
 
+    // The expanded options (including path limit)
+    auto eOptions     = options.extend(abortList);
+    using OptionsType = decltype(eOptions);
     // Initialize the internal propagator state
-    using StateType = State<parameters_t, OptionsType, TargetAborters>;
-    StateType state(start, options, targetAborters);
+    using StateType = State<parameters_t, OptionsType>;
+    StateType state(start, eOptions);
 
     // Apply the loop protection - it resets the internal path limit
     if (options.loopProtection) {
-      detail::LoopProtection<path_arborter_t> lProtection;
+      detail::LoopProtection<path_aborter_t> lProtection;
       lProtection(state, m_stepper);
     }
 
@@ -439,9 +399,8 @@ public:
     if (propagate_(result, state) != Status::IN_PROGRESS) {
       result.status = Status::FAILURE;
     } else {
-      /// Convert into the return type
-      result.endParameters = std::make_unique<const ReturnParameterType>(
-          m_stepper.convert(state.stepping));
+      /// Convert into to return type and fill the result object
+      m_stepper.convert(state.stepping, result);
       result.status = Status::SUCCESS;
     }
 
@@ -471,15 +430,14 @@ public:
             typename action_list_t,
             typename aborter_list_t,
             typename target_aborter_t = detail::SurfaceReached,
-            typename path_arborter_t  = detail::PathLimitReached>
+            typename path_aborter_t   = detail::PathLimitReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,
       action_list_t>
-  propagate(
-      const parameters_t& start,
-      const surface_t&    target,
-      const PropagatorOptions<action_list_t, aborter_list_t>& options) const
+  propagate(const parameters_t& start,
+            const surface_t&    target,
+            const Options<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced at the end of the propagation
@@ -488,7 +446,13 @@ public:
                                                            surface_t>;
 
     // Type of provided options
-    using OptionsType = PropagatorOptions<action_list_t, aborter_list_t>;
+    target_aborter_t targetAborter;
+    path_aborter_t   pathAborter;
+    auto abortList = options.abortList.append(targetAborter, pathAborter);
+
+    // Create the extended options and declare their type
+    auto eOptions     = options.extend(abortList);
+    using OptionsType = decltype(eOptions);
 
     // Type of the full propagation result, including output from actions
     using ResultType
@@ -500,17 +464,13 @@ public:
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
 
-    // Internal Abort list for target and path surface
-    using TargetAborters = AbortList<target_aborter_t, path_arborter_t>;
-    TargetAborters targetAborters;
-
     // Initialize the internal propagator state
-    using StateType = State<parameters_t, OptionsType, TargetAborters>;
-    StateType state(start, options, targetAborters);
+    using StateType = State<parameters_t, OptionsType>;
+    StateType state(start, eOptions);
     state.navigation.targetSurface = &target;
 
     // Apply the loop protection, it resets the interal path limit
-    detail::LoopProtection<path_arborter_t> lProtection;
+    detail::LoopProtection<path_aborter_t> lProtection;
     lProtection(state, m_stepper);
 
     // Perform the actual propagation
@@ -518,8 +478,7 @@ public:
       result.status = Status::FAILURE;
     } else {
       // Compute the final results and mark the propagation as successful
-      result.endParameters = std::make_unique<const return_parameter_type>(
-          m_stepper.convert(state.stepping, target));
+      m_stepper.convert(state.stepping, result, target);
       result.status = Status::SUCCESS;
     }
     return result;
@@ -548,17 +507,13 @@ private:
            const std::function<std::string()>& logAction) const
   {
     if (state.options.debug) {
-      std::vector<std::string> lines;
-      std::string              input = logAction();
-      boost::split(lines, input, boost::is_any_of("\n"));
-      for (const auto& line : lines) {
-        std::stringstream dstream;
-        dstream << "|->" << std::setw(state.options.debugPfxWidth);
-        dstream << "Propagator"
-                << " | ";
-        dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
-        state.options.debugString += dstream.str();
-      }
+      std::stringstream dstream;
+      std::string       ds = (state.stepping.navDir == forward) ? "P->" : "<-P";
+      dstream << ds << std::setw(state.options.debugPfxWidth);
+      dstream << "Propagator"
+              << " | ";
+      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
+      state.options.debugString += dstream.str();
     }
   }
 };

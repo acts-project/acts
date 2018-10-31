@@ -199,34 +199,35 @@ public:
   StraightLineStepper() = default;
 
   /// Convert the propagation state (global) to curvilinear parameters
-  /// @param state The stepper state
-  /// @return curvilinear parameters
-  static CurvilinearParameters
-  convert(State& state)
+  ///
+  /// @tparam result_t Type of the propagator result to be filled
+  ///
+  /// @param[in,out] state The stepper state
+  /// @param[in,out] result The result object from the propagator
+  template <typename result_t>
+  void
+  convert(State& state, result_t& result) const
   {
-    // return the parameters
-    return CurvilinearParameters(
+    // Fill the end parameters
+    result.endParameters = std::make_unique<const CurvilinearParameters>(
         nullptr, state.pos, state.p * state.dir, state.q);
   }
 
   /// Convert the propagation state to track parameters at a certain surface
   ///
-  /// @tparam surface_t The surface type
+  /// @tparam result_t Type of the propagator result to be filled
+  /// @tparam surface_t Type of the surface
   ///
-  /// @param [in] state Propagation state used
+  /// @param [in,out] state Propagation state used
+  /// @param [in,out] result Result object from the propagator
   /// @param [in] surface Destination surface to which the conversion is done
-  ///
-  /// @return are parameters bound to the target surface
-  template <typename surface_t>
-  static BoundParameters
-  convert(State& state, const surface_t& surface)
+  template <typename result_t, typename surface_t>
+  void
+  convert(State& state, result_t& result, const surface_t& surface) const
   {
-    // return the bound parameters
-    return BoundParameters(nullptr,
-                           state.pos,
-                           state.p * state.dir,
-                           state.q,
-                           surface.getSharedPtr());
+    // Fill the end parameters
+    result.endParameters = std::make_unique<const BoundParameters>(
+        nullptr, state.pos, state.p * state.dir, state.q, surface.getSharedPtr());
   }
 
   /// Perform a straight line propagation step

@@ -78,7 +78,8 @@ public:
   /// @param vardata the @c variant_data to build from
   StrawSurface(const variant_data& vardata);
 
-  ~StrawSurface() override;
+  /// Destructor - defaulted
+  ~StrawSurface() override = default;
 
   /// Assignment operator
   ///

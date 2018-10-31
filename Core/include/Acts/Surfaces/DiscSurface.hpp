@@ -112,7 +112,8 @@ public:
   /// @param vardata the @c variant_data to build from
   DiscSurface(const variant_data& vardata);
 
-  ~DiscSurface() override;
+  /// Destructor - defaulted
+  ~DiscSurface() override = default;
 
   /// Assignement operator
   ///

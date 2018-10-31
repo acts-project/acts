@@ -88,7 +88,7 @@ namespace Test {
       double pathAccumulated = 0.;
 
       // adaptive sep size of the runge-kutta integration
-      cstep stepSize = cstep(100 * units::_cm);
+      Cstep stepSize = Cstep(100 * units::_cm);
     };
 
     /// emulate the options template
@@ -164,8 +164,6 @@ namespace Test {
     state.stepping.pos = position;
     state.stepping.dir = momentum.normalized();
 
-    auto navCorr = state.stepping.corrector();
-
     // foward navigation ----------------------------------------------
     if (debug) {
       std::cout << "<<<<<<<<<<<<<<<<<<<<< FORWARD NAVIGATION >>>>>>>>>>>>>>>>>>"
@@ -175,20 +173,24 @@ namespace Test {
     // (1) Initialization navigation from start point
     // - this will call resolveLayers() as well
     // - and thus should call a return to the stepper
-    BOOST_TEST(navigator.initialize(state, navCorr) == true);
-    // check that the currentVolume is set
+    navigator.status(state);
+    // Check that the currentVolume is set
     BOOST_TEST((state.navigation.currentVolume != nullptr));
-    // check that the currentVolume is the startVolume
+    // Check that the currentVolume is the startVolume
     BOOST_TEST(
         (state.navigation.currentVolume == state.navigation.startVolume));
-    // check that the currentSurface is reset to:
+    // Check that the currentSurface is reset to:
     BOOST_TEST((state.navigation.currentSurface == nullptr));
-    // one layer has been found
+    // No layer has been found
+    BOOST_TEST((state.navigation.navLayers.size() == 0));
+    // ACTORS-ABORTERS-TARGET
+    navigator.target(state);
+    // A layer has been found
     BOOST_TEST((state.navigation.navLayers.size() == 1));
-    // the iterator should point to it
+    // The iterator should points to the begin
     BOOST_TEST(
         (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
-    // cache the beam pipe radius
+    // Cache the beam pipe radius
     double beamPipeRadius
         = perp(state.navigation.navLayerIter->intersection.position);
     // step size has been updated
@@ -199,26 +201,47 @@ namespace Test {
       std::cout << "<<< Test 1a >>> initialize at "
                 << toString(state.stepping.position()) << std::endl;
       std::cout << state.options.debugString << std::endl;
+      // Clear the debug string for the next test
       state.options.debugString = "";
     }
 
-    // positive return: do the step
+    // Do the step towards the beam pipe
     step(state.stepping);
     Vector3D onBeamPipe = state.stepping.position();
 
     // (2) re-entering navigator:
-    // initialize : do not return to the stepper
-    BOOST_TEST(navigator.initialize(state, navCorr) == false);
-    // handleSurfaces : do not return to the stepper, no surfaces set
-    BOOST_TEST(navigator.handleSurfaces(state, navCorr) == false);
-    // handle_layer should store the layer surface, but return false
-    BOOST_TEST(navigator.handleLayers(state, navCorr) == false);
-    BOOST_TEST((state.navigation.currentSurface != nullptr));
-    // handleBoundaries should return true
-    BOOST_TEST(navigator.handleBoundaries(state, navCorr) == true);
-    // the iterator should point to it
+    // STATUS
+    navigator.status(state);
+    // Check that the currentVolume is the still startVolume
+    BOOST_TEST(
+        (state.navigation.currentVolume == state.navigation.startVolume));
+    // The layer number has not changed
+    BOOST_TEST((state.navigation.navLayers.size() == 1));
+    // The iterator still points to the begin
+    BOOST_TEST(
+        (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
+    // ACTORS-ABORTERS-TARGET
+    navigator.target(state);
+
     if (debug) {
-      std::cout << "<<< Test 1b >>> handleLayers, and set step to boundary at "
+      std::cout << "<<< Test 1b >>> step to the BeamPipe at  "
+                << toString(state.stepping.position()) << std::endl;
+      std::cout << state.options.debugString << std::endl;
+      state.options.debugString = "";
+    }
+
+    // Do the step towards the boundary
+    step(state.stepping);
+    Vector3D onBoundary = state.stepping.position();
+
+    // (3) re-entering navigator:
+    // STATUS
+    navigator.status(state);
+    // ACTORS-ABORTERS-TARGET
+    navigator.target(state);
+
+    if (debug) {
+      std::cout << "<<< Test 1c >>> step to the Boundary at  "
                 << toString(state.stepping.position()) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
@@ -226,8 +249,137 @@ namespace Test {
 
     // positive return: do the step
     step(state.stepping);
-    Vector3D onBoundary = state.stepping.position();
+    // (4) re-entering navigator:
+    // STATUS
+    navigator.status(state);
+    // ACTORS-ABORTERS-TARGET
+    navigator.target(state);
 
+    if (debug) {
+      std::cout << "<<< Test 1d >>> step to 1st layer at  "
+                << toString(state.stepping.position()) << std::endl;
+      std::cout << state.options.debugString << std::endl;
+      state.options.debugString = "";
+    }
+
+    // Step through the surfaces on first layer
+    for (size_t isf = 0; isf < 5; ++isf) {
+
+      step(state.stepping);
+      // (5-9) re-entering navigator:
+      // STATUS
+      navigator.status(state);
+      // ACTORS-ABORTERS-TARGET
+      navigator.target(state);
+
+      if (debug) {
+        std::cout << "<<< Test 1e-1i >>> step within 1st layer at  "
+                  << toString(state.stepping.position()) << std::endl;
+        std::cout << state.options.debugString << std::endl;
+        state.options.debugString = "";
+      }
+    }
+
+    // positive return: do the step
+    step(state.stepping);
+    // (10) re-entering navigator:
+    // STATUS
+    navigator.status(state);
+    // ACTORS-ABORTERS-TARGET
+    navigator.target(state);
+
+    if (debug) {
+      std::cout << "<<< Test 1j >>> step to 2nd layer at  "
+                << toString(state.stepping.position()) << std::endl;
+      std::cout << state.options.debugString << std::endl;
+      state.options.debugString = "";
+    }
+
+    // Step through the surfaces on second layer
+    for (size_t isf = 0; isf < 5; ++isf) {
+
+      step(state.stepping);
+      // (11-15) re-entering navigator:
+      // STATUS
+      navigator.status(state);
+      // ACTORS-ABORTERS-TARGET
+      navigator.target(state);
+
+      if (debug) {
+        std::cout << "<<< Test 1k-1o >>> step within 2nd layer at  "
+                  << toString(state.stepping.position()) << std::endl;
+        std::cout << state.options.debugString << std::endl;
+        state.options.debugString = "";
+      }
+    }
+
+    // positive return: do the step
+    step(state.stepping);
+    // (16) re-entering navigator:
+    // STATUS
+    navigator.status(state);
+    // ACTORS-ABORTERS-TARGET
+    navigator.target(state);
+
+    if (debug) {
+      std::cout << "<<< Test 1p >>> step to 3rd layer at  "
+                << toString(state.stepping.position()) << std::endl;
+      std::cout << state.options.debugString << std::endl;
+      state.options.debugString = "";
+    }
+
+    // Step through the surfaces on third layer
+    for (size_t isf = 0; isf < 3; ++isf) {
+
+      step(state.stepping);
+      // (17-19) re-entering navigator:
+      // STATUS
+      navigator.status(state);
+      // ACTORS-ABORTERS-TARGET
+      navigator.target(state);
+
+      if (debug) {
+        std::cout << "<<< Test 1q-1s >>> step within 3rd layer at  "
+                  << toString(state.stepping.position()) << std::endl;
+        std::cout << state.options.debugString << std::endl;
+        state.options.debugString = "";
+      }
+    }
+
+    // positive return: do the step
+    step(state.stepping);
+    // (20) re-entering navigator:
+    // STATUS
+    navigator.status(state);
+    // ACTORS-ABORTERS-TARGET
+    navigator.target(state);
+
+    if (debug) {
+      std::cout << "<<< Test 1t >>> step to 4th layer at  "
+                << toString(state.stepping.position()) << std::endl;
+      std::cout << state.options.debugString << std::endl;
+      state.options.debugString = "";
+    }
+
+    // Step through the surfaces on second layer
+    for (size_t isf = 0; isf < 3; ++isf) {
+
+      step(state.stepping);
+      // (21-23) re-entering navigator:
+      // STATUS
+      navigator.status(state);
+      // ACTORS-ABORTERS-TARGET
+      navigator.target(state);
+
+      if (debug) {
+        std::cout << "<<< Test 1t-1v >>> step within 4th layer at  "
+                  << toString(state.stepping.position()) << std::endl;
+        std::cout << state.options.debugString << std::endl;
+        state.options.debugString = "";
+      }
+    }
+
+    /*
     // (3) re-entering navigator:
     // initialize : do not return to the stepper
     BOOST_TEST(navigator.initialize(state, navCorr) == false);
@@ -418,7 +570,7 @@ namespace Test {
     // re-initialize the propagator state
     state                         = PropagatorState();
     state.stepping.navDir         = backward;
-    state.stepping.stepSize       = cstep(-100 * units::_cm);
+    state.stepping.stepSize       = Cstep(-100 * units::_cm);
     state.stepping.dir            = momentum.normalized();
     state.stepping.pos            = eposition;
     state.options.debug           = debug;
@@ -626,8 +778,8 @@ namespace Test {
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
+    */
   }
 
 }  // namespace Test
-
 }  // namespace Acts

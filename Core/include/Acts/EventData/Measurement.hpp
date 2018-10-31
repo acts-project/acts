@@ -14,6 +14,8 @@
 #include "Acts/EventData/ParameterSet.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceMemory.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -62,26 +64,25 @@ public:
   using ParVector_t = typename ParSet_t::ParVector_t;
   /// type of the covariance matrix of the measurement
   using CovMatrix_t = typename ParSet_t::CovMatrix_t;
-  /// matrix type for projecting full parameter vector onto local parameter
-  /// space
+  /// matrix type for projecting full parameter vector onto local parameters
   using Projection_t = typename ParSet_t::Projection_t;
+
+  /// Delete the default constructor
+  Measurement() = delete;
 
   /// @brief standard constructor
   ///
   /// Interface class for all possible measurements.
   ///
   /// @note Only a reference to the given surface is stored. The user must
-  /// ensure
-  /// that the lifetime of the @c Surface
-  ///       object surpasses the lifetime of this Measurement object.<br />
-  ///       The given parameter values are interpreted as values to the
-  /// parameters as defined in the class template
-  ///       argument @c params.
+  /// ensure that the lifetime of the @c Surface object surpasses the lifetime
+  /// of this Measurement object.
+  /// The given parameter values are interpreted as values to the
+  /// parameters as defined in the class template argument @c params.
   ///
   /// @attention The current design will fail if the in-memory location of
-  /// the @c
-  /// Surface object is changed (e.g.
-  ///            if it is stored in a container and this gets relocated).
+  /// the @c Surface object is changed (e.g. if it is stored in a
+  /// container and this gets relocated).
   ///
   /// @param surface surface at which the measurement took place
   /// @param id identification object for this measurement
@@ -142,10 +143,13 @@ public:
   Measurement<identifier_t, params...>&
   operator=(const Measurement<identifier_t, params...>& rhs)
   {
-    m_oParameters = rhs.m_oParameters;
-    m_pSurface    = rhs.m_pSurface;
-    m_oIdentifier = rhs.m_oIdentifier;
-
+    // check for self-assignment
+    if (&rhs != this) {
+      deletePtr<Surface>(m_pSurface);
+      m_oParameters = rhs.m_oParameters;
+      m_pSurface    = createPtr<Surface>(*rhs.m_pSurface);
+      m_oIdentifier = rhs.m_oIdentifier;
+    }
     return *this;
   }
 
@@ -158,10 +162,10 @@ public:
   Measurement<identifier_t, params...>&
   operator=(Measurement<identifier_t, params...>&& rhs)
   {
+    deletePtr<Surface>(m_pSurface);
     m_oParameters = std::move(rhs.m_oParameters);
     m_pSurface    = std::move(rhs.m_pSurface);
     m_oIdentifier = std::move(rhs.m_oIdentifier);
-
     return *this;
   }
 
@@ -332,6 +336,7 @@ private:
   ParSet_t m_oParameters;  ///< measured parameter set
   std::shared_ptr<const Surface>
                m_pSurface;     ///< surface at which the measurement took place
+
   identifier_t m_oIdentifier;  ///< identifier for this measurement
 };
 

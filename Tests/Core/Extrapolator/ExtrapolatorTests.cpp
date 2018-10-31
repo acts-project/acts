@@ -49,9 +49,9 @@ namespace Test {
   CylindricalTrackingGeometry cGeometry;
   auto                        tGeometry = cGeometry();
 
-  bool debugMode = false;
+  bool debugMode = true;
 
-  // get the navigator and provide the TrackingGeometry
+  // Get the navigator and provide the TrackingGeometry
   Navigator navigator(tGeometry);
 
   using BFieldType          = ConstantBField;
@@ -69,7 +69,8 @@ namespace Test {
   // A plane selector for the SurfaceCollector
   struct PlaneSelector
   {
-
+    /// Call operator
+    /// @param sf The input surface to be checked
     bool
     operator()(const Surface& sf) const
     {

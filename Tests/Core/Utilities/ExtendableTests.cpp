@@ -31,31 +31,45 @@ namespace Test {
   // and the standard aborters
   BOOST_AUTO_TEST_CASE(Extendable_)
   {
-    struct type_a
+    struct TypeA
     {
-      double va_a = 0.;
-    };
-    struct type_b
-    {
-      double va_b = 0.;
+      double vaA = 0.;
     };
 
+    struct TypeB
+    {
+      int vaB = 0;
+    };
+
+    struct TypeC
+    {
+      char vaC = '0';
+    };
+
+    // Test the empty list
     detail::Extendable<> nullist;
     (void)nullist;
     BOOST_TEST(std::tuple_size<std::tuple<>>::value == 0);
 
-    detail::Extendable<type_a> alist;
-    auto&                      a0_object = alist.get<type_a>();
-    a0_object.va_a                       = 1.;
-    BOOST_TEST(alist.get<type_a>().va_a == 1.);
+    detail::Extendable<TypeA> alist;
+    auto&                     a0_object = alist.get<TypeA>();
+    a0_object.vaA                       = 1.;
+    BOOST_TEST(alist.get<TypeA>().vaA == 1.);
 
-    detail::Extendable<type_a, type_b> ablist;
-    auto& a1_object = ablist.get<type_a>();
-    a1_object.va_a  = 2.;
-    auto& b1_object = ablist.get<type_b>();
-    b1_object.va_b  = 3.;
-    BOOST_TEST(ablist.get<type_a>().va_a == 2.);
-    BOOST_TEST(ablist.get<type_b>().va_b == 3.);
+    detail::Extendable<TypeA, TypeB> ablist;
+    auto& a1_object = ablist.get<TypeA>();
+    a1_object.vaA   = 2.;
+    auto& b1_object = ablist.get<TypeB>();
+    b1_object.vaB   = 3;
+    BOOST_TEST(ablist.get<TypeA>().vaA == 2.);
+    BOOST_TEST(ablist.get<TypeB>().vaB == 3);
+
+    TypeC c;
+    c.vaC = '4';
+    detail::Extendable<TypeA, TypeB, TypeC> abcList = ablist.append<TypeC>(c);
+    BOOST_TEST(abcList.get<TypeA>().vaA == 2.);
+    BOOST_TEST(abcList.get<TypeB>().vaB == 3);
+    BOOST_TEST(abcList.get<TypeC>().vaC == '4');
   }
 
 }  // namespace Test

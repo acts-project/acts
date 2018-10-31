@@ -89,8 +89,6 @@ Acts::LineSurface::LineSurface(const variant_data& vardata) : GeometryObject()
   }
 }
 
-Acts::LineSurface::~LineSurface() = default;
-
 Acts::variant_data
 Acts::LineSurface::toVariantData() const
 {

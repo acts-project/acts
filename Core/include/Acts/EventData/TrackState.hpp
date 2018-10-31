@@ -8,9 +8,11 @@
 
 #pragma once
 
+#include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/detail/trackstate_type_generator.hpp"
+#include "Acts/Surfaces/SurfaceMemory.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -33,13 +35,13 @@ template <typename parameters_t, typename jacobian_t>
 struct ParametricState
 {
   /// The predicted state
-  boost::optional<parameters_t> predicted;
+  boost::optional<parameters_t> predicted{boost::none};
   /// The filtered state
-  boost::optional<parameters_t> filtered;
+  boost::optional<parameters_t> filtered{boost::none};
   /// The smoothed state
-  boost::optional<parameters_t> smoothed;
+  boost::optional<parameters_t> smoothed{boost::none};
   /// The transport jacobian matrix
-  boost::optional<jacobian_t> jacobian;
+  boost::optional<jacobian_t> jacobian{boost::none};
   /// The path length along the track - will help sorting
   double pathLength = 0.;
 };
@@ -71,39 +73,76 @@ public:
   /// (in case the latter is different)
   struct MeasuredState
   {
-    /// The optional measurement
-    boost::optional<Measurement<identifier_t, params...>> uncalibrated;
-    /// The optional calibrabed measurement
-    boost::optional<Measurement<identifier_t, params...>> calibrated;
-  };
+    /// The default measured state initializes
+    MeasuredState() = default;
 
-  /// Constructor from (uncalibrated) measurement (move)
-  ///
-  /// @tparam measurement_t Type of the measurement
-  /// @param m The measurement object
-  TrackState(Measurement<identifier_t, params...>&& m)
-    : surface(&m.referenceSurface())
-  {
-    measurement.uncalibrated = std::move(m);
-  }
+    /// The copy constructor
+    ///
+    /// @param ms The source MeasuredState
+    MeasuredState(const MeasuredState& ms)
+      : uncalibrated(ms.uncalibrated), calibrated(ms.calibrated)
+    {
+    }
+
+    /// The move constructor
+    ///
+    /// @param ms The source MeasuredState
+    MeasuredState(MeasuredState&& ms)
+      : uncalibrated(std::move(ms.uncalibrated))
+      , calibrated(std::move(ms.calibrated))
+    {
+    }
+
+    /// The copy assignement operator
+    ///
+    /// @param ms The source MeasuredState
+    MeasuredState&
+    operator=(const MeasuredState& ms)
+    {
+      if (this != &ms) {
+        uncalibrated = ms.uncalibrated;
+        calibrated   = ms.calibrated;
+      }
+      return (*this);
+    }
+
+    /// The Move assignement operator
+    ///
+    /// @param ms The source MeasuredState
+    MeasuredState&
+    operator=(MeasuredState&& ms)
+    {
+      uncalibrated = std::move(ms.uncalibrated);
+      calibrated   = std::move(ms.calibrated);
+      return (*this);
+    }
+
+    /// The optional measurement
+    boost::optional<Measurement<identifier_t, params...>> uncalibrated{
+        boost::none};
+    /// The optional calibrabed measurement
+    boost::optional<Measurement<identifier_t, params...>> calibrated{
+        boost::none};
+  };
 
   /// Constructor from (uncalibrated) measurement
   ///
   /// @tparam measurement_t Type of the measurement
-  /// @param m The measurement object (moved)
-  TrackState(const Measurement<identifier_t, params...>& m)
-    : surface(&m.referenceSurface())
+  /// @param m The measurement object
+  TrackState(Measurement<identifier_t, params...> m)
   {
     measurement.uncalibrated = std::move(m);
+    assignSurface(measurement.uncalibrated);
   }
 
   /// Constructor from parameters
   ///
   /// @tparam parameters_t Type of the predicted parameters
-  /// @param p The parameters object (moved)
-  TrackState(parameters_t p) : surface(&(p.referenceSurface()))
+  /// @param p The parameters object
+  TrackState(parameters_t p)
   {
     parametric.predicted = std::move(p);
+    assignSurface(parametric.predicted);
   }
 
   /// Virtual destructor
@@ -112,26 +151,46 @@ public:
   /// Copy constructor
   ///
   /// @param rhs is the source TrackState
-  TrackState(const TrackState& rhs) = default;
+  TrackState(const TrackState& rhs)
+    : surface(rhs.surface)
+    , parametric(rhs.parametric)
+    , measurement(rhs.measurement)
+  {
+  }
 
   /// Copy move constructor
   ///
   /// @param rhs is the source TrackState
-  TrackState(TrackState&& rhs) = default;
+  TrackState(TrackState&& rhs)
+    : surface(movePtr<Surface>(rhs.surface))
+    , parametric(std::move(rhs.parametric))
+    , measurement(std::move(rhs.measurement))
+  {
+  }
 
   /// Assignment operator
   ///
   /// @param rhs is the source TrackState
   TrackState&
   operator=(const TrackState& rhs)
-      = default;
+  {
+    surface     = rhs.surface;
+    parametric  = rhs.parametric;
+    measurement = rhs.measurement;
+    return (*this);
+  }
 
   /// Assignment move operator
   ///
   /// @param rhs is the source TrackState
   TrackState&
   operator=(TrackState&& rhs)
-      = default;
+  {
+    surface     = movePtr<Surface>(rhs.surface);
+    parametric  = std::move(rhs.parametric);
+    measurement = std::move(rhs.measurement);
+    return (*this);
+  }
 
   /// @brief return method for the surface
   const Surface&
@@ -157,6 +216,17 @@ public:
 
   /// The measurement part
   MeasuredState measurement;
+
+private:
+  /// Assign the surface from an optional parameter
+  ///
+  /// @tparam Type of the optional parameter
+  template <typename optional_type_t>
+  void
+  assignSurface(const optional_type_t& optional)
+  {
+    surface = &(optional.template get().referenceSurface());
+  }
 };
 
 /// @brief track state for measurements

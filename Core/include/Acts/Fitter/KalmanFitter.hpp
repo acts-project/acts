@@ -19,7 +19,7 @@
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
-#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
+#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -100,17 +100,18 @@ public:
             typename parameters_t,
             typename surface_t>
   auto
-  fit(const input_measurements_t& measurements,
-      const parameters_t&         sParameters,
-      const surface_t*            rSurface = nullptr) const
+  fit(input_measurements_t measurements,
+      const parameters_t&  sParameters,
+      const surface_t*     rSurface = nullptr) const
   {
     // Bring the measurements into Acts style
     auto trackStates = m_inputConverter(measurements);
 
     // Create the ActionList and AbortList
-    using KalmanActor = Actor<decltype(trackStates)>;
-    using Actors      = ActionList<KalmanActor>;
-    using Aborters    = AbortList<>;
+    using KalmanActor  = Actor<decltype(trackStates)>;
+    using KalmanResult = typename KalmanActor::result_type;
+    using Actors       = ActionList<KalmanActor>;
+    using Aborters     = AbortList<>;
 
     // Create some options
     using Options = typename propagator_t::template Options<Actors, Aborters>;
@@ -126,8 +127,11 @@ public:
     const auto& result
         = m_propagator.template propagate(sParameters, kalmanOptions);
 
+    /// Get the result of the fit
+    auto kalmanResult = result.template get<KalmanResult>();
+
     // Return the converted Track
-    return m_outputConverter(trackStates);
+    return m_outputConverter(std::move(kalmanResult));
   }
 
 private:
@@ -156,6 +160,8 @@ private:
   class Actor
   {
   public:
+    using TrackState = typename track_states_t::value_type;
+
     /// Explicit constructor with updagor and calibrator
     Actor(updator_t    pUpdator    = updator_t(),
           smoother_t   pSmoother   = smoother_t(),
@@ -172,10 +178,10 @@ private:
     struct this_result
     {
       // Move the result into the fitted states
-      track_states_t fittedStates;
+      track_states_t fittedStates = {};
 
-      // Measurement surfaces without hits
-      std::vector<const Surface*> missedActiveSurfaces = {};
+      // The optional Parameters at the
+      boost::optional<BoundParameters> fittedParameters;
 
       // Counter for handled states
       size_t processedStates = 0;
@@ -183,9 +189,14 @@ private:
       // Indicator if you smoothed
       bool smoothed = false;
 
+      // Measurement surfaces without hits
+      std::vector<const Surface*> missedActiveSurfaces = {};
+
       // The index map for accessing the track state in order
-      std::map<const Surface*, size_t> accessIndex;
+      std::map<const Surface*, size_t> accessIndices = {};
     };
+
+    /// Broadcast the result_type
     using result_type = this_result;
 
     /// The target surface
@@ -238,6 +249,11 @@ private:
       // - Progress to target/reference surface and built the final track
       // parameters
       if (result.smoothed and targetReached(state, *targetSurface)) {
+        // Transport & bind the parameter to the final surface
+        auto fittedState = state.stepping.boundState(*targetSurface, true);
+        // Assign the fitted parameters
+        result.fittedParameters = std::get<BoundParameters>(fittedState);
+        // Break the navigation for stopping the Propagation
         state.navigation.navigationBreak = true;
       }
     }
@@ -265,8 +281,6 @@ private:
       MeasurementSurfaces measurementSurfaces;
       // Move the track states
       result.fittedStates = std::move(trackStates);
-      // @todo -----> out source this to a assign to layer method
-
       // Memorize the index to access the state
       size_t stateIndex = 0;
       for (auto& tState : result.fittedStates) {
@@ -295,7 +309,7 @@ private:
           measurementSurfaces.insert(
               std::pair<const Layer*, const Surface*>(layer, surface));
           // Insert the fitted state into the fittedStates map
-          result.accessIndex[surface] = stateIndex;
+          result.accessIndices[surface] = stateIndex;
         }
         ++stateIndex;
       }
@@ -325,8 +339,8 @@ private:
            result_type&        result) const
     {
       // Try to find the surface in the measurement surfaces
-      auto cindexItr = result.accessIndex.find(surface);
-      if (cindexItr != result.accessIndex.end()) {
+      auto cindexItr = result.accessIndices.find(surface);
+      if (cindexItr != result.accessIndices.end()) {
         // Screen output message
         debugLog(state, [&] {
           std::stringstream dstream;
@@ -336,7 +350,7 @@ private:
           return dstream.str();
         });
         // Transport & bind the state to the current surface
-        auto boundState = state.stepping.bind(*surface, true);
+        auto boundState = state.stepping.boundState(*surface, true);
         // Get the current VariantTrackState
         auto& trackState = result.fittedStates[cindexItr->second];
         // Perform the update and obtain the filtered parameters
@@ -345,8 +359,10 @@ private:
         if (filteredPars) {
           // Update the stepping state
           debugLog(state, [&] {
-            return std::string(
-                "Filtering step successful, updating stepping state.");
+            std::stringstream dstream;
+            dstream << "Filtering step successful, updated parameters are : ";
+            dstream << filteredPars.get();
+            return dstream.str();
           });
           state.stepping.update(filteredPars.get());
         }
@@ -398,7 +414,6 @@ private:
             = detail::ConstrainedStep(-1. * state.options.maxStepSize);
         state.options.direction = backward;
       }
-      // Set the destination surface - we should re-do the navigation
     }
 
     /// The private KalmanActor debug logging

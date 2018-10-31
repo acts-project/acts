@@ -9,6 +9,7 @@
 #define BOOST_TEST_MODULE KalmanFitter Tests
 #include <boost/test/included/unit_test.hpp>
 
+#include <algorithm>
 #include <math.h>
 #include <random>
 #include <vector>
@@ -25,7 +26,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
+#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/Common/CubicTrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -35,6 +36,7 @@
 namespace Acts {
 namespace Test {
 
+  // A few initialisations and definitionas
   using Identifier = GeometryID;
   using Jacobian   = ActsMatrixD<5, 5>;
 
@@ -47,8 +49,6 @@ namespace Test {
   using ElementResolution  = std::vector<Resolution>;
   using VolumeResolution   = std::map<geo_id_value, ElementResolution>;
   using DetectorResolution = std::map<geo_id_value, VolumeResolution>;
-
-  bool debug = true;
 
   std::normal_distribution<double> gauss(0., 1.);
   std::default_random_engine       generator(42);
@@ -79,7 +79,7 @@ namespace Test {
     void
     operator()(propagator_state_t& state, result_type& result) const
     {
-
+      // monitor the current surface
       auto surface = state.navigation.currentSurface;
       if (surface and surface->associatedDetectorElement()) {
         auto         geoID    = surface->geoID();
@@ -95,38 +95,33 @@ namespace Test {
             Acts::Vector2D lPos;
             surface->globalToLocal(
                 state.stepping.position(), state.stepping.direction(), lPos);
-            if (debug) {
-              if (lResolution->second.size() == 1) {
-                double sp = lResolution->second[0].second;
-                cov1D << sp * sp;
-                double dp = sp * gauss(generator);
-                if (lResolution->second[0].first == eLOC_0) {
-                  // push back & move a LOC_0 measurement
-                  Measurement<Identifier, eLOC_0> m0(
-                      *surface, geoID, cov1D, lPos[eLOC_0] + dp);
-                  result.push_back(MeasuredTrackState<eLOC_0>(std::move(m0)));
-                } else {
-                  // push back & move a LOC_1 measurement
-                  Measurement<Identifier, eLOC_1> m1(
-                      *surface, geoID, cov1D, lPos[eLOC_1] + dp);
-                  result.push_back(MeasuredTrackState<eLOC_1>(std::move(m1)));
-                }
-              } else if (lResolution->second.size() == 2) {
-                // Create the measurment and move it
-                double sx = lResolution->second[eLOC_0].second;
-                double sy = lResolution->second[eLOC_1].second;
-                cov2D << sx * sx, 0., 0., sy * sy;
-                double dx = sx * gauss(generator);
-                double dy = sy * gauss(generator);
-                // push back & move a LOC_0, LOC_1 measurement
-                Measurement<Identifier, eLOC_0, eLOC_1> m01(*surface,
-                                                            geoID,
-                                                            cov2D,
-                                                            lPos[eLOC_0] + dx,
-                                                            lPos[eLOC_1] + dy);
-                result.push_back(
-                    MeasuredTrackState<eLOC_0, eLOC_1>(std::move(m01)));
+            if (lResolution->second.size() == 1) {
+              double sp = lResolution->second[0].second;
+              cov1D << sp * sp;
+              double dp = sp * gauss(generator);
+              if (lResolution->second[0].first == eLOC_0) {
+                // push back & move a LOC_0 measurement
+                Measurement<Identifier, eLOC_0> m0(
+                    *surface, geoID, cov1D, lPos[eLOC_0] + dp);
+                result.push_back(MeasuredTrackState<eLOC_0>(std::move(m0)));
+              } else {
+                // push back & move a LOC_1 measurement
+                Measurement<Identifier, eLOC_1> m1(
+                    *surface, geoID, cov1D, lPos[eLOC_1] + dp);
+                result.push_back(MeasuredTrackState<eLOC_1>(std::move(m1)));
               }
+            } else if (lResolution->second.size() == 2) {
+              // Create the measurment and move it
+              double sx = lResolution->second[eLOC_0].second;
+              double sy = lResolution->second[eLOC_1].second;
+              cov2D << sx * sx, 0., 0., sy * sy;
+              double dx = sx * gauss(generator);
+              double dy = sy * gauss(generator);
+              // push back & move a LOC_0, LOC_1 measurement
+              Measurement<Identifier, eLOC_0, eLOC_1> m01(
+                  *surface, geoID, cov2D, lPos[eLOC_0] + dx, lPos[eLOC_1] + dy);
+              result.push_back(
+                  MeasuredTrackState<eLOC_0, eLOC_1>(std::move(m01)));
             }
           }
         }
@@ -320,11 +315,6 @@ namespace Test {
     using MeasurementActions  = ActionList<MeasurementCreator>;
     using MeasurementAborters = AbortList<detail::EndOfWorldReached>;
 
-    // Set options for propagator
-    MeasurementPropagator::Options<MeasurementActions, MeasurementAborters>
-          mOptions;
-    auto& mCreator = mOptions.actionList.get<MeasurementCreator>();
-
     auto pixelResX = Resolution(eLOC_0, 25. * units::_um);
     auto pixelResY = Resolution(eLOC_1, 50. * units::_um);
     auto stripResX = Resolution(eLOC_0, 100. * units::_um);
@@ -345,14 +335,18 @@ namespace Test {
     stripVolumeRes[8] = stripElementResO;
 
     DetectorResolution detRes;
-    detRes[2] = std::move(pixelVolumeRes);
-    detRes[3] = std::move(stripVolumeRes);
+    detRes[2] = pixelVolumeRes;
+    detRes[3] = stripVolumeRes;
 
+    // Set options for propagator
+    MeasurementPropagator::Options<MeasurementActions, MeasurementAborters>
+          mOptions;
+    auto& mCreator              = mOptions.actionList.get<MeasurementCreator>();
     mCreator.detectorResolution = detRes;
 
     // Launch and collect - the measurements
-    const auto& mResult      = mPropagator.propagate(mStart, mOptions);
-    auto&       measurements = mResult.get<MeasurementCreator::result_type>();
+    auto mResult      = mPropagator.propagate(mStart, mOptions);
+    auto measurements = mResult.get<MeasurementCreator::result_type>();
     BOOST_TEST(measurements.size() == 6);
 
     // The KalmanFitter - we use the eigen stepper for covariance transport
@@ -371,14 +365,18 @@ namespace Test {
 
     // Set initial parameters for the particle track
     ActsSymMatrixD<5> cov;
-    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
-        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
-        1. / (10 * units::_GeV);
+    cov << 1000. * units::_um, 0., 0., 0., 0., 0., 1000. * units::_um, 0., 0.,
+        0., 0., 0., 0.05, 0., 0., 0., 0., 0., 0.05, 0., 0., 0., 0., 0., 0.01;
+
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 
-    Vector3D rPos(-3. * units::_m, 0., 0.), rMom(1. * units::_GeV, 0., 0);
+    Vector3D rPos(-3. * units::_m,
+                  10. * units::_um * gauss(generator),
+                  100. * units::_um * gauss(generator));
+    Vector3D rMom(1. * units::_GeV, 0.01 * units::_GeV, 0.);
+
     SingleCurvilinearTrackParameters<ChargedPolicy> rStart(
-        std::move(covPtr), mPos, mMom, 1.);
+        std::move(covPtr), rPos, rMom, 1.);
 
     const Surface* rSurface = &rStart.referenceSurface();
 
@@ -388,7 +386,50 @@ namespace Test {
 
     KalmanFitter kFitter(rPropagator);
 
-    auto fittedTrack = kFitter.fit(measurements, rStart, rSurface);
+    // Fit the track
+    auto fittedTrack      = kFitter.fit(measurements, rStart, rSurface);
+    auto fittedParameters = fittedTrack.fittedParameters.get();
+    /*
+    // Make sure it is deterministic
+    auto fittedAgainTrack = kFitter.fit(measurements, rStart, rSurface);
+    auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
+
+    BOOST_TEST(fittedParameters.parameters().isApprox(fittedAgainParameters.parameters()));
+
+    // Change the order of the measurements
+    std::vector<VariantTrackState>
+      shuffledMeasurements = {  measurements[3],
+                                measurements[2],
+                                measurements[1],
+                                measurements[4],
+                                measurements[5],
+                                measurements[0] };
+
+    // Make sure it works for shuffled measurements as well
+    auto fittedShuffledTrack      = kFitter.fit(shuffledMeasurements, rStart,
+   rSurface);
+    auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
+
+    BOOST_TEST(fittedParameters.parameters().isApprox(fittedShuffledParameters.parameters()));
+
+    // Remove one measurement and find a hole
+    std::vector<VariantTrackState>
+      measurementsWithHole = {  measurements[0],
+                                measurements[1],
+                                measurements[2],
+                                measurements[4],
+                                measurements[5] };
+
+   // Make sure it works for shuffled measurements as well
+   auto fittedWithHoleTrack      = kFitter.fit(measurementsWithHole, rStart,
+   rSurface);
+   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
+
+   // Count one hole
+   BOOST_TEST(fittedWithHoleTrack.missedActiveSurfaces.size() == 1);
+   // And the parameters should be different
+   BOOST_TEST(!fittedParameters.parameters().isApprox(fittedWithHoleParameters.parameters()));
+   */
   }
 
   /*

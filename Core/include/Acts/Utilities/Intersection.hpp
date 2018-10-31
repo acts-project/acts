@@ -88,13 +88,16 @@ struct Intersection
   }
 };
 
-/// class extensions to return also the object
+/// class extensions to return also the object - can be merged with
+/// FullIntersection
 template <typename object_t>
 class ObjectIntersection
 {
 public:
-  Intersection        intersection{};   ///< the intersection iself
-  const object_t*     object{nullptr};  ///< the object that was intersected
+  Intersection    intersection{};   ///< the intersection iself
+  const object_t* object{nullptr};  ///< the object that was intersected
+  const object_t* representation{
+      nullptr};  ///< the representation of the object
   NavigationDirection pDirection{
       anyDirection};  ///< the direction in which it was taken
 
@@ -109,7 +112,10 @@ public:
   ObjectIntersection(const Intersection& sInter,
                      const object_t*     sObject,
                      NavigationDirection dir = forward)
-    : intersection(sInter), object(sObject), pDirection(dir)
+    : intersection(sInter)
+    , object(sObject)
+    , representation(sObject)
+    , pDirection(dir)
   {
   }
 

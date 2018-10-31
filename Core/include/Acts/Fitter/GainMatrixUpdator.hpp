@@ -43,6 +43,8 @@ public:
 
   /// @brief Public call operator for the boost visitor pattern
   ///
+  /// @tparam track_state_t Type of the track state for the update
+  /// @tparam predicted_state_t Type of the track state prediction
   ///
   /// @return The optional parameters - indicating if the update happened
   template <typename track_state_t>

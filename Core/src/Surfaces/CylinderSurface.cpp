@@ -96,8 +96,6 @@ Acts::CylinderSurface::CylinderSurface(const variant_data& vardata)
   }
 }
 
-Acts::CylinderSurface::~CylinderSurface() = default;
-
 Acts::CylinderSurface&
 Acts::CylinderSurface::operator=(const CylinderSurface& other)
 {

@@ -48,6 +48,28 @@ namespace detail {
     /// Empty call, compiler should optise that
     template <typename propagator_state_t>
     void
+    status(propagator_state_t& /*state*/) const
+    {
+    }
+
+    /// Navigation call - void
+    ///
+    /// @tparam propagator_state_t is the type of Propagatgor state
+    ///
+    /// Empty call, compiler should optise that
+    template <typename propagator_state_t>
+    void
+    target(propagator_state_t& /*state*/) const
+    {
+    }
+
+    /// Navigation call - void
+    ///
+    /// @tparam propagator_state_t is the type of Propagatgor state
+    ///
+    /// Empty call, compiler should optise that
+    template <typename propagator_state_t>
+    void
     operator()(propagator_state_t& /*state*/) const
     {
     }

@@ -26,7 +26,8 @@ class AtlasStepper
 {
 
 public:
-  using cstep = detail::ConstrainedStep;
+  using Jacobian = ActsMatrixD<5, 5>;
+  using cstep    = detail::ConstrainedStep;
 
   struct State
   {
@@ -324,8 +325,16 @@ public:
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 
-  static CurvilinearParameters
-  convert(State& state)
+  /// Convert the propagation state (global) to curvilinear parameters
+  /// This is called by the propagator
+  ///
+  /// @tparam result_t Type of the propagator result to be filled
+  ///
+  /// @param[in,out] state The stepper state
+  /// @param[in,out] result The propagator result object to be filled
+  template <typename result_t>
+  void
+  convert(State& state, result_t& result) const
   {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
@@ -464,17 +473,26 @@ public:
 
       cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
           J * (*state.covariance) * J.transpose());
+      // Optionally : fill the jacobian
+      result.transportJacobian = std::make_unique<const Jacobian>(std::move(J));
     }
 
-    return CurvilinearParameters(std::move(cov), gp, mom, state.charge());
+    // Fill the result
+    result.endParameters = std::make_unique<const CurvilinearParameters>(
+        std::move(cov), gp, mom, state.charge());
   }
 
-  /// @brief convert method into bound parameters
+  /// Convert the propagation state to track parameters at a certain surface
   ///
-  /// @param state is the propagation state to be converted
-  /// @param s the target surface
-  static BoundParameters
-  convert(State& state, const Surface& s)
+  /// @tparam result_t Type of the propagator result to be filled
+  /// @tparam surface_t Type of the surface
+  ///
+  /// @param [in,out] state Propagation state used
+  /// @param [in,out] result Result object from the propagator
+  /// @param [in] s Destination surface to which the conversion is done
+  template <typename result_t, typename surface_t>
+  void
+  convert(State& state, result_t& result, const surface_t& s) const
   {
 
     // the convert method invalidates the state (in case it's reused)
@@ -715,9 +733,9 @@ public:
 
       cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
           J * (*state.covariance) * J.transpose());
-    }
 
-    return BoundParameters(
+    // Fill the end parameters
+    result.endParameters = std::make_unique<const BoundParameters>(
         std::move(cov), gp, mom, state.charge(), s.getSharedPtr());
   }
 

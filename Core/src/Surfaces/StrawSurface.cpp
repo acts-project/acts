@@ -79,8 +79,6 @@ Acts::StrawSurface::StrawSurface(const variant_data& vardata)
   }
 }
 
-Acts::StrawSurface::~StrawSurface() = default;
-
 Acts::StrawSurface&
 Acts::StrawSurface::operator=(const StrawSurface& other)
 {

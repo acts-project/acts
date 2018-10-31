@@ -69,10 +69,12 @@ public:
               * G.transpose();
 
       // Create smoothed track parameters
-      cState.smoothed = parameters_t(
+      parameters_t smoothed(
           std::make_unique<const decltype(smoothedCov)>(std::move(smoothedCov)),
           smoothedPars,
           cState.filtered.get().referenceSurface());
+
+      cState.smoothed = std::move(smoothed);
 
       // Point last state to current state
       lState = cState;

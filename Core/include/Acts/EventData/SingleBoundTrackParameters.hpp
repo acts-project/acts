@@ -9,6 +9,7 @@
 #pragma once
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/SurfaceMemory.hpp"
 
 namespace Acts {
 
@@ -181,7 +182,6 @@ public:
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
       m_pSurface                                   = rhs.m_pSurface;
     }
-
     return *this;
   }
 
