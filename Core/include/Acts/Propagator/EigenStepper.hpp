@@ -171,8 +171,19 @@ class EigenStepper {
     /// List of algorithmic extensions
     extensionlist_t extension;
 
+<<<<<<< HEAD
     /// Auctioneer for choosing the extension
     auctioneer_t auctioneer;
+=======
+    /// Tolerance for the error of the integration
+    double tolerance = 1e-8;
+
+    /// Cut-off value for the step size
+    double stepSizeCutOff = 0.;
+
+    /// Mass in natural units
+    double mass = 0.;
+>>>>>>> Fixed MaterialCollection bug with EigenStepper
 
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
     struct {
