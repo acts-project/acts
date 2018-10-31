@@ -228,7 +228,6 @@ namespace detail {
         betheBlochDerivative
             = kaz * (2. * m2 * qop1 * (lnCore + lnCoreXi + 0.2)
                      + (lnCoreDerivative + lnCoreXiDerivative) / beta2);
-
       }
       // Density effect, only valid for high energies (gamma > 10 -> p > 1GeV
       // for muons). The derivative includes the kinematic parts of the

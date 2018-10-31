@@ -199,7 +199,13 @@ protected:
     /// The evaluation is based on propagating the parameters T and lambda
     /// (including g(lambda) and E(lambda)) as given in eq. 16 and evaluating
     /// the derivations for matrix A.
-
+    /// @note The translation for u_{n+1} in eq. 7 is in this case a
+    /// 3-dimensional vector without a dependency of Lambda or lambda neither in
+    /// u_n nor in u_n'. The second and forth eq. in eq. 14 have the constant
+    /// offset matrices h * Id and Id respectively. This involves that the
+    /// constant offset does not exist for rectangular matrix dGdu' (due to the
+    /// missing Lambda part) and only exists for dFdu' in dlambda/dlambda.
+    
     D                   = ActsMatrixD<7, 7>::Identity();
     const double half_h = h * 0.5;
 
