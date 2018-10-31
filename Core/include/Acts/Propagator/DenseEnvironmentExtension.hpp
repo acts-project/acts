@@ -205,7 +205,7 @@ protected:
     /// offset matrices h * Id and Id respectively. This involves that the
     /// constant offset does not exist for rectangular matrix dGdu' (due to the
     /// missing Lambda part) and only exists for dFdu' in dlambda/dlambda.
-    
+
     D                   = ActsMatrixD<7, 7>::Identity();
     const double half_h = h * 0.5;
 

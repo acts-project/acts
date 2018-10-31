@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///  Boost include(s)
-#define BOOST_TEST_MODULE StepActor Tests
+#define BOOST_TEST_MODULE Stepper Tests
 
 #include <boost/test/included/unit_test.hpp>
 // leave blank line
@@ -34,7 +34,8 @@ namespace Test {
   using cstep = detail::ConstrainedStep;
 
   ///
-  /// @brief Aborter for the case that a particle leaves the detector
+  /// @brief Aborter for the case that a particle leaves the detector or reaches
+  /// a custom made threshold.
   ///
   struct EndOfWorld
   {
@@ -388,7 +389,7 @@ namespace Test {
   {
     // Build detector
     std::shared_ptr<TrackingGeometry> det = buildVacMatVacDetector();
-    // TODO: Try to evaluate dgdqop for mode of dEds instead of scaling
+
     // Build navigator
     Navigator naviDet(det);
     naviDet.resolvePassive   = true;

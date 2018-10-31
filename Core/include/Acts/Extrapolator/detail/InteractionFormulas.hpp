@@ -311,9 +311,6 @@ namespace detail {
   {
     /// @brief Main call operator for the energy loss. The following equations
     /// are provided by ATL-SOFT-PUB-2008-003.
-    /// TODO: uncertainty not needed yet and differences between Athena and the
-    /// paper. If needed, the return type should be modified to a pair of
-    /// doubles.
     ///
     /// @tparam material_t Type of the material
     /// @param [in] E Energy of the particle
