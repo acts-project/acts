@@ -345,7 +345,7 @@ protected:
 
     // Bethe-Bloch
     const double betheBlochDerivative
-        = ionisationLoss.dqop(energy, qop, eld.massSI, material, true);
+        = ionisationLoss.dqop(energy, qop, eld.massSI, material, true, true);
 
     // Bethe-Heitler (+ pair production & photonuclear interaction for muons)
     const double radiationDerivative

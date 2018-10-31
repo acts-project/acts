@@ -24,6 +24,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "DetectorBuilder.hpp"
 
+// TODO: Testing of covariances in Integration test - requires N-layer box
+// detector for implementation of DenseEnvironmentExtension
 namespace tt = boost::test_tools;
 
 namespace Acts {
@@ -214,7 +216,6 @@ namespace Test {
     for (unsigned int i = 0; i < stepResult.momentum.size(); i++) {
       BOOST_TEST(stepResult.momentum[i] == stepResultDef.momentum[i]);
     }
-
   }
   // Test case b). The DefaultExtension should state that it is invalid here.
   BOOST_AUTO_TEST_CASE(step_extension_material_test)

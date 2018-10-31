@@ -147,13 +147,16 @@ namespace detail {
     }
 
     /// @brief Evaluation of the energy loss dEds by ionisation derived by q/p
-    /// (=d(dE/ds)/d(q/p)).
+    /// (=d(dE/ds)/d(q/p)). The underlying equations for dE/ds are given by
+    /// Formula 33.5 (mean energy loss) and Formula 33.11 (most probable energy
+    /// loss).
     ///
     /// @tparam material_t Type of the material
     /// @param [in] energy Energy of the particle
     /// @param [in] qop Charge over momentum of the particle
     /// @param [in] mass Mass of the particle
     /// @param [in] material Material that is penetrated
+    /// @param [in] mean Boolean flag if mean or mode of dEds should be derived
     /// @param [in] siUnits Boolean flag if SI or natural units should be used
     ///
     /// @note The strategy is to evaluate everything in natural units as long as
@@ -168,24 +171,19 @@ namespace detail {
          const double      qop,
          const double      mass,
          const material_t& material,
+         const bool        mean    = true,
          const bool        siUnits = false) const
     {
       // Fast exit if material is invalid
       if (material.Z() == 0 || material.zOverAtimesRho() == 0) return 0.;
 
       // Constants for readability
-      const double me  = constants::me;
-      const double me2 = me * me;
       const double qop1
           = siUnits ? qop / units::SI2Nat<units::MOMENTUM>(1.) : qop;
-      const double qop3 = qop1 * qop1 * qop1;
-      const double qop4 = qop3 * qop1;
-      const double m    = siUnits ? units::SI2Nat<units::MASS>(mass) : mass;
-      const double m2   = m * m;
-      const double m4   = m2 * m2;
-      const double I    = constants::eionisation * std::pow(material.Z(), 0.9);
-      const double I2   = I * I;
-      const double E = siUnits ? units::SI2Nat<units::ENERGY>(energy) : energy;
+      const double m  = siUnits ? units::SI2Nat<units::MASS>(mass) : mass;
+      const double m2 = m * m;
+      const double I  = constants::eionisation * std::pow(material.Z(), 0.9);
+      const double E  = siUnits ? units::SI2Nat<units::ENERGY>(energy) : energy;
       const double gamma = E / m;
       const double beta  = std::abs(1 / (E * qop1));
       const double beta2 = beta * beta;
@@ -193,35 +191,65 @@ namespace detail {
           ? 0.5 * units::Nat2SI<units::ENERGY>(30.7075 * units::_MeV)
               * units::_mm2 * units::_e2 / units::_g * material.zOverAtimesRho()
           : 0.5 * constants::ka_BetheBloch * material.zOverAtimesRho();
+      // Storage of the result
+      double betheBlochDerivative = 0.;
+      if (mean) {
+        // Constants related to the mean evaluation
+        const double me   = constants::me;
+        const double me2  = me * me;
+        const double qop3 = qop1 * qop1 * qop1;
+        const double qop4 = qop3 * qop1;
+        const double m4   = m2 * m2;
+        const double I2   = I * I;
 
-      // Parts of the derivative
-      const double lnCore
-          = 4. * me2 / (m4 * I2 * qop4) / (1. + 2. * gamma * me / m + me2 / m2);
-      const double lnCoreDerivative = -4. * me2 / (m4 * I2)
-          * std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2, -2.)
-          * (4. * qop3 + 8. * me * qop3 * gamma / m
-             - 2. * me * qop1 / (m2 * m * gamma)
-             + 4. * qop3 * me2 / m2);
+        // Parts of the derivative
+        const double lnCore = 4. * me2 / (m4 * I2 * qop4)
+            / (1. + 2. * gamma * me / m + me2 / m2);
+        const double lnCoreDerivative = -4. * me2 / (m4 * I2)
+            * std::pow(qop4 + 2. * gamma * qop4 * me / m + qop4 * me2 / m2, -2.)
+            * (4. * qop3 + 8. * me * qop3 * gamma / m
+               - 2. * me * qop1 / (m2 * m * gamma)
+               + 4. * qop3 * me2 / m2);
 
-      // Combine parts
-      const double lnDerivative = 2. * qop1 * m2 * std::log(lnCore)
-          + lnCoreDerivative / (lnCore * beta2);
-      double betheBlochDerivative = -kaz * lnDerivative;
+        // Combine parts
+        const double lnDerivative = 2. * qop1 * m2 * std::log(lnCore)
+            + lnCoreDerivative / (lnCore * beta2);
+        betheBlochDerivative = -kaz * lnDerivative;
+      } else {
+        // Parts of the mode derivative
+        //~ const double Xi = kaz / beta2;
+        //~ const double XiDerivative = kaz * 2. * m2 * qop1;
+        const double lnCore   = std::log(2. * m * beta2 * gamma * gamma / I);
+        const double lnCoreXi = std::log(kaz / (beta2 * I));
+        const double lnCoreDerivative   = -2. * m * beta * gamma;
+        const double lnCoreXiDerivative = 2. * beta2 * m2;
 
+        // Result evaluation (without the density effect)
+        betheBlochDerivative
+            = kaz * (2. * m2 * qop1 * (lnCore + lnCoreXi + 0.2)
+                     + (lnCoreDerivative + lnCoreXiDerivative) / beta2);
+
+      }
       // Density effect, only valid for high energies (gamma > 10 -> p > 1GeV
-      // for
-      // muons)
+      // for muons). The derivative includes the kinematic parts of the
+      // pre-factor
       if (gamma > 10.) {
         const double delta
             = 2. * std::log(constants::eplasma
                             * std::sqrt(1000. * material.zOverAtimesRho())
                             / I)
             + 2. * std::log(beta * gamma) - 1.;
-        const double deltaDerivative
-            = -2. / (qop1 * beta2) + 2. * delta * qop1 * m2;
-        betheBlochDerivative += kaz * deltaDerivative;
+        if (mean) {
+          const double deltaDerivative
+              = -2. / (qop1 * beta2) + 2. * delta * qop1 * m2;
+          betheBlochDerivative += kaz * deltaDerivative;
+        } else {
+          const double deltaDerivative
+              = -kaz * 2. / (qop1 * beta2) + kaz * 2. * m2 * qop1 * delta;
+          betheBlochDerivative -= deltaDerivative;
+        }
       }
-
+      // Convert to right unit system and return
       if (siUnits)
         return betheBlochDerivative * units::Nat2SI<units::MOMENTUM>(1.);
       else
