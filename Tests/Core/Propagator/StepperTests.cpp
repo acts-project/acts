@@ -133,14 +133,10 @@ namespace Test {
     AbortList<EndOfWorld> abortList;
 
     // Set options for propagator
-    Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
-                            ExtensionList<DefaultExtension,
-                                          DenseEnvironmentExtension>>,
-               Navigator>::Options<ActionList<StepCollector,
-                                              DefaultExtensionActor,
-                                              DenseEnvironmentExtensionActor>,
-                                   AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector,
+                                 DefaultExtensionActor,
+                                 DenseEnvironmentExtensionActor>,
+                      AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
     propOpts.stopConditions = abortList;
@@ -182,12 +178,8 @@ namespace Test {
     ActionList<StepCollector, DefaultExtensionActor> aListDef;
 
     // Set options for propagator
-    Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
-                            ExtensionList<DefaultExtension>>,
-               Navigator>::Options<ActionList<StepCollector,
-                                              DefaultExtensionActor>,
-                                   AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector, DefaultExtensionActor>,
+                      AbortList<EndOfWorld>>
         propOptsDef;
     propOptsDef.actionList     = aListDef;
     propOptsDef.stopConditions = abortList;
@@ -245,14 +237,10 @@ namespace Test {
     AbortList<EndOfWorld> abortList;
 
     // Set options for propagator
-    Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
-                            ExtensionList<DefaultExtension,
-                                          DenseEnvironmentExtension>>,
-               Navigator>::Options<ActionList<StepCollector,
-                                              DefaultExtensionActor,
-                                              DenseEnvironmentExtensionActor>,
-                                   AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector,
+                                 DefaultExtensionActor,
+                                 DenseEnvironmentExtensionActor>,
+                      AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
     propOpts.stopConditions = abortList;
@@ -300,13 +288,10 @@ namespace Test {
 
     // Rebuild and check the choice of extension
     // Set options for propagator
-    Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
-                            ExtensionList<DenseEnvironmentExtension>>,
-               Navigator>::Options<ActionList<StepCollector,
-                                              DefaultExtensionActor,
-                                              DenseEnvironmentExtensionActor>,
-                                   AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector,
+                                 DefaultExtensionActor,
+                                 DenseEnvironmentExtensionActor>,
+                      AbortList<EndOfWorld>>
         propOptsDense;
     propOptsDense.actionList     = aList;
     propOptsDense.stopConditions = abortList;
@@ -412,14 +397,10 @@ namespace Test {
     abortList.get<EndOfWorld>().maxX = 3. * units::_m;
 
     // Set options for propagator
-    Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
-                            ExtensionList<DefaultExtension,
-                                          DenseEnvironmentExtension>>,
-               Navigator>::Options<ActionList<StepCollector,
-                                              DefaultExtensionActor,
-                                              DenseEnvironmentExtensionActor>,
-                                   AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector,
+                                 DefaultExtensionActor,
+                                 DenseEnvironmentExtensionActor>,
+                      AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
     propOpts.stopConditions = abortList;
@@ -478,12 +459,8 @@ namespace Test {
     // Set options for propagator
     ActionList<StepCollector, DefaultExtensionActor> aListDef;
 
-    Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
-                            ExtensionList<DefaultExtension>>,
-               Navigator>::Options<ActionList<StepCollector,
-                                              DefaultExtensionActor>,
-                                   AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector, DefaultExtensionActor>,
+                      AbortList<EndOfWorld>>
         propOptsDef;
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
@@ -521,13 +498,10 @@ namespace Test {
         std::move(covPtr), startParams, startMom, 1.);
 
     // Set options for propagator
-    Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
-                            ExtensionList<DenseEnvironmentExtension>>,
-               Navigator>::Options<ActionList<StepCollector,
-                                              DefaultExtensionActor,
-                                              DenseEnvironmentExtensionActor>,
-                                   AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector,
+                                 DefaultExtensionActor,
+                                 DenseEnvironmentExtensionActor>,
+                      AbortList<EndOfWorld>>
         propOptsDense;
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
