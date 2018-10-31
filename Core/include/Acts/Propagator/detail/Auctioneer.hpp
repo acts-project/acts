@@ -57,7 +57,7 @@ namespace detail {
     std::vector<bool>
     operator()(std::vector<bool> vCandidates) const
     {
-      return std::move(vCandidates);
+      return vCandidates;
     }
   };
 
@@ -86,7 +86,7 @@ namespace detail {
         else if (vCandidates[i])
           firstValidFound = true;
       }
-      return std::move(vCandidates);
+      return vCandidates;
     }
   };
 
