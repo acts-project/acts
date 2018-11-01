@@ -23,6 +23,8 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
+#include <memory>
+
 namespace Acts {
 
 class DetectorElementBase;
@@ -42,7 +44,8 @@ class TrackingVolume;
 /// Surfaces are either owned by Detector elements or the Tracking Geometry,
 /// in which case they are not copied within the data model objects.
 ///
-class Surface : public virtual GeometryObject
+class Surface : public virtual GeometryObject,
+                public std::enable_shared_from_this<Surface>
 {
 public:
   /// @enum SurfaceType
@@ -92,6 +95,49 @@ public:
   /// Destructor
   virtual ~Surface();
 
+  /// Factory for producing memory managed instances of Surface.
+  /// Will forward all parameters and will attempt to find a suitable constructor.
+  template <class T, typename... Args>
+  static std::shared_ptr<T>
+  makeShared(Args&&... args)
+  {
+    return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+  }
+
+  /// Retrieve a @c std::shared_ptr for this surface (non-const version)
+  ///
+  /// @note Will error if this was not created through the @c makeShared factory
+  ///       since it needs access to the original reference. In C++14 this is undefined
+  ///       behavior (but most likely implemented as a @c bad_weak_ptr exception), in 
+  ///       C++17 it is defined as that exception.
+  /// @note Only call this if you need shared ownership of this object.
+  /// 
+  /// @return The shared pointer
+  std::shared_ptr<Surface>
+  getSharedPtr();
+
+  /// Retrieve a @c std::shared_ptr for this surface (const version)
+  ///
+  /// @note Will error if this was not created through the @c makeShared factory
+  ///       since it needs access to the original reference. In C++14 this is undefined
+  ///       behavior (but most likely implemented as a @c bad_weak_ptr exception), in 
+  ///       C++17 it is defined as that exception.
+  /// @note Only call this if you need shared ownership of this object.
+  /// 
+  /// @return The shared pointer
+  std::shared_ptr<const Surface>
+  getSharedPtr() const;
+
+protected:
+  // deleted to prevent creation of unmanaged surfaces (except for on the stack)
+  void*
+  operator new(std::size_t size);
+
+public:
+  // needs to be defined since we overload operator new()
+  void
+  operator delete(void* ptr);
+
   /// Assignment operator is not allowed
   /// @note copy construction invalidates the association
   /// to detector element and identifier
@@ -117,22 +163,24 @@ public:
   virtual bool
   operator!=(const Surface& sf) const;
 
-  /// Conditional Implicit constructor
-  /// uses the copy constructor (if needed)
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
   ///
-  /// Checks if a surface is free and either clones or returns
-  /// the pointer to itself. The return object is const.
-  virtual const Surface*
-  cloneIfFree() const = 0;
+  /// @param shift additional, optional shift
+  std::shared_ptr<Surface>
+  clone(const Transform3D* shift = nullptr) const
+  {
+    return std::shared_ptr<Surface>(this->clone_impl(shift));
+  }
 
-  /// Implicit constructor
-  /// uses the copy constructor a new position can optionally be given
-  ///
-  /// @param shift is an additional (optional shift can be given)
-  /// shift after cloning
+private:
+  /// Implementation method for clone. Returns a bare pointer that is 
+  /// wrapped into a shared pointer by ::clone(). This is needed for 
+  /// covariant overload of this method.
   virtual Surface*
-  clone(const Transform3D* shift = nullptr) const = 0;
+  clone_impl(const Transform3D* shift = nullptr) const = 0;
 
+public:
   /// Return method for the Surface type to avoid dynamic casts
   virtual SurfaceType
   type() const = 0;

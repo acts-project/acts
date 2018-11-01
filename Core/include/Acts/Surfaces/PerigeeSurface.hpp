@@ -67,11 +67,12 @@ public:
   const PerigeeSurface*
   cloneIfFree() const final;
 
-  /// Virtual constructor
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
   ///
-  /// @param shift is the potential shift that is applied after cloning
-  PerigeeSurface*
-  clone(const Transform3D* shift = nullptr) const final;
+  /// @param shift additional, optional shift
+  std::shared_ptr<PerigeeSurface>
+  clone(const Transform3D* shirt = nullptr) const;
 
   /// Assignment operator
   ///
@@ -97,6 +98,14 @@ public:
   /// @return The representation
   variant_data
   toVariantData() const override;
+
+private:
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
+  ///
+  /// @param shift additional, optional shift
+  PerigeeSurface*
+  clone_impl(const Transform3D* shift = nullptr) const override;
 };
 
 }  // namespace

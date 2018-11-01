@@ -28,6 +28,7 @@ Acts::Surface::Surface(const DetectorElementBase& detelement)
 
 Acts::Surface::Surface(const Surface& other)
   : GeometryObject(other)
+  , std::enable_shared_from_this<Surface>()
   , m_transform(other.m_transform)
   , m_associatedMaterial(other.m_associatedMaterial)
 {
@@ -43,6 +44,18 @@ Acts::Surface::Surface(const Surface& other, const Transform3D& shift)
 }
 
 Acts::Surface::~Surface() = default;
+
+std::shared_ptr<Acts::Surface>
+Acts::Surface::getSharedPtr()
+{
+  return shared_from_this();
+}
+
+std::shared_ptr<const Acts::Surface>
+Acts::Surface::getSharedPtr() const
+{
+  return shared_from_this();
+}
 
 Acts::Surface&
 Acts::Surface::operator=(const Surface& other)
@@ -139,4 +152,17 @@ bool
 Acts::Surface::operator!=(const Acts::Surface& sf) const
 {
   return !(operator==(sf));
+}
+
+void*
+Acts::Surface::operator new(std::size_t size)
+{
+  void* p = malloc(size);
+  return p;
+}
+
+void
+Acts::Surface::operator delete(void* ptr)
+{
+  free(ptr);
 }

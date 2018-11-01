@@ -98,11 +98,12 @@ public:
   const ConeSurface*
   cloneIfFree() const final;
 
-  /// Implicit Constructor
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
   ///
-  /// @param shift is the optional shift applied after cloning
-  ConeSurface*
-  clone(const Transform3D* shift = nullptr) const final;
+  /// @param shift additional, optional shift
+  std::shared_ptr<ConeSurface>
+  clone(const Transform3D* shift = nullptr) const;
 
   /// The binning position method - is overloaded for r-type binning
   ///
@@ -244,6 +245,14 @@ public:
 
 protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
+
+private:
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
+  ///
+  /// @param shift additional, optional shift
+  ConeSurface*
+  clone_impl(const Transform3D* shift = nullptr) const override;
 };
 
 #include "Acts/Surfaces/detail/ConeSurface.ipp"

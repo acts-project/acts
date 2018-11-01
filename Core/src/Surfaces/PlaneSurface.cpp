@@ -172,8 +172,14 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
              : true);
 }
 
-Acts::PlaneSurface*
+std::shared_ptr<Acts::PlaneSurface>
 Acts::PlaneSurface::clone(const Transform3D* shift) const
+{
+  return std::shared_ptr<PlaneSurface>(this->clone_impl(shift));
+}
+
+Acts::PlaneSurface*
+Acts::PlaneSurface::clone_impl(const Transform3D* shift) const
 {
   if (shift != nullptr) {
     return new PlaneSurface(*this, *shift);

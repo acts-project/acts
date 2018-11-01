@@ -218,8 +218,14 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
           : true);
 }
 
-Acts::DiscSurface*
+std::shared_ptr<Acts::DiscSurface>
 Acts::DiscSurface::clone(const Transform3D* shift) const
+{
+  return std::shared_ptr<DiscSurface>(this->clone_impl(shift));
+}
+
+Acts::DiscSurface*
+Acts::DiscSurface::clone_impl(const Transform3D* shift) const
 {
   if (shift != nullptr) {
     return new DiscSurface(*this, *shift);

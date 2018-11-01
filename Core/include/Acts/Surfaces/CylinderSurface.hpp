@@ -112,11 +112,12 @@ public:
   const CylinderSurface*
   cloneIfFree() const final;
 
-  /// Implicit Constructor - optionally with a shift
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
   ///
-  /// @param shift is an optional transform for a shift applied after coping
-  CylinderSurface*
-  clone(const Transform3D* shift = nullptr) const final;
+  /// @param shift additional, optional shift
+  std::shared_ptr<CylinderSurface>
+  clone(const Transform3D* shift = nullptr) const;
 
   /// The binning position method - is overloaded for r-type binning
   ///
@@ -275,6 +276,13 @@ public:
 
 protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
+private:
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
+  ///
+  /// @param shift additional, optional shift
+  CylinderSurface*
+  clone_impl(const Transform3D* shift = nullptr) const override;
 };
 
 #include "Acts/Surfaces/detail/CylinderSurface.ipp"

@@ -94,11 +94,12 @@ public:
   StrawSurface&
   operator=(const StrawSurface& other);
 
-  /// Implicit constructor - shift can be provided
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
   ///
-  /// @param shift is an optional shift to be applied
-  StrawSurface*
-  clone(const Transform3D* shift = nullptr) const final;
+  /// @param shift additional, optional shift
+  std::shared_ptr<StrawSurface>
+  clone(const Transform3D* shift = nullptr) const;
 
   /// Return the surface type
   SurfaceType
@@ -118,6 +119,14 @@ public:
   /// @param l1div Number of divisions along l1 (z)
   virtual PolyhedronRepresentation
   polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
+
+private:
+  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// a shift.
+  ///
+  /// @param shift additional, optional shift
+  StrawSurface*
+  clone_impl(const Transform3D* shift = nullptr) const override;
 };
 
 inline Surface::SurfaceType

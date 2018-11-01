@@ -74,8 +74,14 @@ Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
   return *this;
 }
 
-Acts::PerigeeSurface*
+std::shared_ptr<Acts::PerigeeSurface>
 Acts::PerigeeSurface::clone(const Transform3D* shift) const
+{
+  return std::shared_ptr<PerigeeSurface>(this->clone_impl(shift));
+}
+
+Acts::PerigeeSurface*
+Acts::PerigeeSurface::clone_impl(const Transform3D* shift) const
 {
   if (shift != nullptr) {
     return new PerigeeSurface(*this, *shift);
