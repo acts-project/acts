@@ -1,0 +1,60 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2017-2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#define BOOST_TEST_MODULE BoxGeometryBuilderTest
+
+#include <boost/test/included/unit_test.hpp>
+
+#include <vector>
+#include "Acts/Tools/BoxGeometryBuilder.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
+#include "Acts/Material/Material.hpp"
+
+namespace Acts {
+namespace Test {
+
+  BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest)
+  {
+	BoxGeometryBuilder bgb;
+	
+	std::vector<BoxGeometryBuilder::SurfaceConfig> surcfg;
+	for(unsigned int i = 1; i < 5; i++)
+	{
+		BoxGeometryBuilder::SurfaceConfig sc;
+		sc.position = {i * units::_m, 0., 0.};
+
+				std::shared_ptr<const RectangleBounds> rBounds;
+				std::shared_ptr<const SurfaceMaterial> surMat;
+				double thickness;
+				
+		// Construct the rotation
+		double           rotationAngle = M_PI * 0.5;
+		Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
+		Vector3D         yPos(0., 1., 0.);
+		Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+		sc.rotation.col(0) = xPos;
+		sc.rotation.col(1) = yPos;
+		sc.rotation.col(2) = zPos;
+		
+		// Boundaries of the surfaces
+		sc.rBounds = std::make_shared<const RectangleBounds>(
+			RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+
+		// Material of the surfaces
+		MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
+		sc.surMat = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(matProp));
+		
+		sc.thickness = 1. * units::_um;
+		surcfg.push_back(sc);
+	}
+   
+   BOOST_TEST(surcfg.size() == 4);
+  }
+}  // namespace Test
+}  // namespace Acts
