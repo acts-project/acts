@@ -22,7 +22,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::SpacePointBuilder(
 }
 
 double
-Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClusters(
+Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClustersChecked(
     const Acts::Vector3D& pos1,
     const Acts::Vector3D& pos2) const
 {
@@ -107,7 +107,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
          iClustersBack++) {
       // Calculate the distances between the hits
       currentDiff
-          = differenceOfClusters(globalCoords(*(clustersFront[iClustersFront])),
+          = differenceOfClustersChecked(
+                                 globalCoords(*(clustersFront[iClustersFront])),
                                  globalCoords(*(clustersBack[iClustersBack])));
       // Store the closest clusters (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
