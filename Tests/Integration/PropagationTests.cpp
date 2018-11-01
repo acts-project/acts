@@ -38,7 +38,6 @@
 #include "Acts/Propagator/RiddersPropagator.hpp"
 
 #include "PropagationTestHelper.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
