@@ -106,10 +106,9 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
     for (unsigned int iClustersBack = 0; iClustersBack < clustersBack.size();
          iClustersBack++) {
       // Calculate the distances between the hits
-      currentDiff
-          = differenceOfClustersChecked(
-                                 globalCoords(*(clustersFront[iClustersFront])),
-                                 globalCoords(*(clustersBack[iClustersBack])));
+      currentDiff = differenceOfClustersChecked(
+          globalCoords(*(clustersFront[iClustersFront])),
+          globalCoords(*(clustersBack[iClustersBack])));
       // Store the closest clusters (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin        = currentDiff;
