@@ -1,23 +1,77 @@
-#!/usr/bin/env bash
-set -e
+#!/usr/bin/env python
+# vi:syntax=python
+from __future__ import print_function
+import sys
+import os
+import subprocess
 
+if not os.path.exists("CMakeCache.txt"):
+  print("Not in CMake build dir. Not executing")
+  sys.exit(1)
 
-if ! which python2 &> /dev/null; then
-  echo "python2 not installed. Coverage reporting requires python2"
-  exit 1
-fi
+def check_output(*args, **kwargs):
+  p = subprocess.Popen(*args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, **kwargs)
+  p.wait()
+  stdout, stderr = p.communicate()
+  if sys.version_info > (2,):
+    stdout = stdout.decode("utf-8")
+  return (p.returncode, stdout.strip())
 
-PYTHON=$(which python2)
+# call helper function
+def call(cmd):
+  print(" ".join(cmd))
+  subprocess.check_call(cmd)
 
-if [ ! -f CMakeCache.txt ]; then
-    echo "Not in CMake build dir. Not executing"
-    exit 1
-fi
+bundled_gcovr = os.path.abspath(os.path.join(os.getcwd(), "../cmake/gcovr"))
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+ret, gcovr_exe = check_output(["which", "gcovr"])
+if ret != 0:
+  # gcovr not in path
+  # bundled version needs python2
+  if sys.version_info < (3,):
+    # this python is v2, use it
+    gcovr = [sys.executable, bundled_gcovr]
+  else:
+    # this is not python2, see if installed
+    ret, python_exe = check_output(["which", "python2"])
+    if ret == 0:
+      gcovr = [python_exe, bundled_gcovr]
+    else:
+      # check if python executable is v2
+      ret, python_exe = check_output(["which", "python"])
+      if ret != 0:
+        # on python3, no python2 installed but also no gcovr, nothing we can do
+        print("Cannot run coverage in this configuration")
+        sys.exit(1)
+      ret, python_ver = check_output(["python", "--version"])
+      assert ret == 0, "Error checking python version"
+      import re
+      version = tuple(map(int, re.match("^Python (\d\.\d\.\d)", python_ver).group(1).split(".")))
+      if version > (2,):
+        # version ok, use it
+        gcovr = [python_exe, bundled_gcovr]
+else:
+  # gcovr in path, use directry
+  gcovr = [gcovr_exe] # will have correct python version
 
-set -x
-mkdir -p coverage
-$PYTHON $DIR/../cmake/gcovr -r $DIR/.. -e '../Tests/' -e '../Legacy/' --html --html-details -o coverage/index.html
-$PYTHON $DIR/../cmake/gcovr -r $DIR/.. -e '../Tests/' -e '../Legacy/' --branches
+script_dir = os.path.dirname(__file__)
+source_dir = os.path.abspath(os.path.join(script_dir, ".."))
+coverage_dir = os.path.abspath("coverage")
+
+if not os.path.exists(coverage_dir):
+  os.makedirs(coverage_dir)
+
+excludes = ["-e", "../Tests/", "-e", "../Legacy"]
+
+# create the html report
+call(gcovr
+     + ["-r", source_dir]
+     + excludes +
+     ["--html", "--html-details",
+     "-o", os.path.join(coverage_dir, "index.html")])
+
+call(gcovr
+     + ["-r", source_dir]
+     + excludes)
+
 
