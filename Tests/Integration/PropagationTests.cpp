@@ -60,6 +60,7 @@ namespace IntegrationTest {
   AtlasStepperType    astepper(bField);
   AtlasPropagatorType apropagator(std::move(astepper));
 
+
   // The constant field test
   /// test forward propagation in constant magnetic field
   BOOST_DATA_TEST_CASE(
