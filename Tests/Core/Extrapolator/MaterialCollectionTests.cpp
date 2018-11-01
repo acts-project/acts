@@ -438,6 +438,5 @@ namespace Test {
     runTest(epropagator, pT, phi, theta, charge, index);
     runTest(slpropagator, pT, phi, theta, charge, index);
   }
-
 }  // namespace Test
 }  // namespace Acts
