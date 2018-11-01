@@ -92,7 +92,7 @@ namespace IntegrationTest {
     PropagatorOptions<> options;
     options.pathLimit   = 5 * units::_m;
     options.maxStepSize = 1 * units::_cm;
-    options.maxSteps = 1e4;
+    options.maxSteps    = 1e4;
     options.debug       = debug;
 
     // define start parameters
@@ -401,12 +401,13 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    PropagatorOptions<> options;
+    PropagatorOptions<ActionList<DefaultExtensionActor>> options;
     // setup propagation options
-    options.maxStepSize = plimit;
-    options.pathLimit   = plimit;
-    options.debug       = debug;
-    options.maxSteps = 1e4;
+    options.maxStepSize                                         = plimit;
+    options.pathLimit                                           = plimit;
+    options.debug                                               = debug;
+    options.actionList.get<DefaultExtensionActor>().m_tolerance = 1e-12;
+    options.maxSteps                                            = 1e4;
 
     // define start parameters
     double   x  = 0;
@@ -470,6 +471,7 @@ namespace IntegrationTest {
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
     options.debug       = debug;
+    options.maxSteps    = 2e3;
 
     // define start parameters
     double            x  = 0;
