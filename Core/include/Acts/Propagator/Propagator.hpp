@@ -376,7 +376,6 @@ public:
       const parameters_t& start,
       const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
-
     // Type of track parameters produced by the propagation
     using ReturnParameterType =
         typename stepper_t::template return_parameter_type<parameters_t>;

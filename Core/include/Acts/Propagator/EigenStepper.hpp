@@ -579,17 +579,19 @@ public:
     // Select and adjust the appropriate Runge-Kutta step size in ATLAS style
     double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     while (error_estimate > state.tolerance) {
-      state.stepSize = state.stepSize
-          * std::min(std::max(
-                         0.25,
-                         std::pow((state.tolerance / error_estimate), 0.25)),
-                     4.);
-      // If step size becomes too small the particle remains at the initial
-      // place
-      if (state.stepSize < state.stepSizeCutOff) {
-        return 0.;  // Not moving due to too low momentum needs an aborter
-      }
-      error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
+      //~ state.stepSize = state.stepSize
+          //~ * std::min(std::max(
+                         //~ 0.25,
+                         //~ std::pow((state.tolerance / error_estimate), 0.25)),
+                     //~ 4.);
+      //~ // If step size becomes too small the particle remains at the initial
+      //~ // place
+      //~ if (state.stepSize < state.stepSizeCutOff) {
+        //~ return 0.;  // Not moving due to too low momentum needs an aborter
+      //~ }
+      //~ error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
+      state.stepSize = state.stepSize * 0.5;
+      error_estimate = tryRungeKuttaStep(state.stepSize);
     }
 
     // use the adjusted step size
