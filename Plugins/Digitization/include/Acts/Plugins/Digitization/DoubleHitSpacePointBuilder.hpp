@@ -167,9 +167,9 @@ private:
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
   /// @param pos1 position of the first cluster
   /// @param pos2 position the second cluster
-  /// @return the squared sum in case of success, otherwise -1
+  /// @return the squared sum within configuration parameters, otherwise -1
   double
-  differenceOfClusters(const Vector3D& pos1, const Vector3D& pos2) const;
+  differenceOfClustersChecked(const Vector3D& pos1, const Vector3D& pos2) const;
 
   /// @brief Calculates the top and bottom ends of a SDE
   /// that corresponds to a given hit
