@@ -92,6 +92,7 @@ namespace IntegrationTest {
     PropagatorOptions<> options;
     options.pathLimit   = 5 * units::_m;
     options.maxStepSize = 1 * units::_cm;
+    options.maxSteps = 1e4;
     options.debug       = debug;
 
     // define start parameters
@@ -405,6 +406,7 @@ namespace IntegrationTest {
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
     options.debug       = debug;
+    options.maxSteps = 1e4;
 
     // define start parameters
     double   x  = 0;
