@@ -25,6 +25,53 @@ namespace Acts {
 /// Result status of track parameter propagation
 enum struct Status { SUCCESS, FAILURE, UNSET, IN_PROGRESS, WRONG_DIRECTION };
 
+<<<<<<< HEAD
+=======
+/// @brief The void navigator struct as a default navigator
+///
+/// It does not provide any navigation action, the compiler
+/// should eventually optimise that the function core is not done
+struct VoidNavigator
+{
+
+  /// Nested State struct
+  struct State
+  {
+    /// Navigation state - external state: the start surface
+    const Surface* startSurface = nullptr;
+
+    /// Navigation state - external state: the current surface
+    const Surface* currentSurface = nullptr;
+
+    /// Navigation state - external state: the target surface
+    const Surface* targetSurface = nullptr;
+
+    /// Indicator if the target is reached
+    bool targetReached = false;
+
+    /// Navigation state : a break has been detected
+    bool navigationBreak = false;
+
+    /// Navigation state: the current volume
+    const TrackingVolume* currentVolume = nullptr;
+  };
+
+  /// Unique typedef to publish to the Propagator
+  using state_type = State;
+
+  /// Navigation call
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  ///
+  /// Empty call, hopefully the compiler checks this
+  template <typename propagator_state_t>
+  void
+  operator()(propagator_state_t& /*state*/) const
+  {
+  }
+};
+
+>>>>>>> unit & integration tests work
 /// @brief Simple class holding result of propagation call
 ///
 /// @tparam parameters_t Type of final track parameters

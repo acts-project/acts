@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Helpers.hpp"
+
 namespace Acts {
 
 /// @brief Default evaluater of the k_i's and elements of the transport matrix
@@ -178,15 +180,15 @@ protected:
     dk1dT *= qop;
 
     dk2dT += half_h * dk1dT;
-    dk2dT *= cross(dk2dT, sd.B_middle);
+    dk2dT *= VectorHelpers::cross(dk2dT, sd.B_middle);
     dk2dT *= qop;
 
     dk3dT += half_h * dk2dT;
-    dk3dT *= cross(dk3dT, sd.B_middle);
+    dk3dT *= VectorHelpers::cross(dk3dT, sd.B_middle);
     dk3dT *= qop;
 
     dk4dT += h * dk3dT;
-    dk4dT *= cross(dk4dT, sd.B_last);
+    dk4dT *= VectorHelpers::cross(dk4dT, sd.B_last);
     dk4dT *= qop;
 
     dFdT.setIdentity();
@@ -200,23 +202,6 @@ protected:
     dGdL = m_conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
 
     return true;
-  }
-
-  /// @brief Calculates column-wise cross products of a matrix and a vector and
-  /// stores the result column-wise in a matrix.
-  ///
-  /// @param [in] m Matrix that will be used for cross products
-  /// @param [in] v Vector for cross products
-  /// @return Constructed matrix
-  ActsMatrixD<3, 3>
-  cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) const
-  {
-    ActsMatrixD<3, 3> r;
-    r.col(0) = m.col(0).cross(v);
-    r.col(1) = m.col(1).cross(v);
-    r.col(2) = m.col(2).cross(v);
-
-    return r;
   }
 };
 }  // namespace Acts
