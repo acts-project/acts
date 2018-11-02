@@ -49,18 +49,20 @@ namespace detail {
       const Vector3D&                   kprev = Vector3D())
     {
       // If element is invalid: continue
-      if (!(*it))
+      if (!(*it)) {
         return extension_list_impl<others...>::k(
             obs_tuple, state, knew, bField, ++it, i, h, kprev);
+      }
 
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
-      if (this_extension.k(state, knew, bField, i, h, kprev))
+      if (this_extension.k(state, knew, bField, i, h, kprev)) {
         return extension_list_impl<others...>::k(
             obs_tuple, state, knew, bField, ++it, i, h, kprev);
-      else
+      } else {
         // Break at false
         return false;
+      }
     }
 
     /// The extension list call implementation
@@ -76,17 +78,19 @@ namespace detail {
              std::vector<bool>::const_iterator it)
     {
       // If element is invalid: continue
-      if (!(*it))
+      if (!(*it)) {
         return extension_list_impl<others...>::finalize(
             obs_tuple, state, h, data, D, ++it);
+      }
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
-      if (this_extension.finalize(state, h, data, D))
+      if (this_extension.finalize(state, h, data, D)) {
         return extension_list_impl<others...>::finalize(
             obs_tuple, state, h, data, D, ++it);
-      else
+      } else {
         // Break at false
         return false;
+      }
     }
 
     /// The extension list call implementation
@@ -100,17 +104,19 @@ namespace detail {
              std::vector<bool>::const_iterator it)
     {
       // If element is invalid: continue
-      if (!(*it))
+      if (!(*it)) {
         return extension_list_impl<others...>::finalize(
             obs_tuple, state, h, ++it);
+      }
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
-      if (this_extension.finalize(state, h))
+      if (this_extension.finalize(state, h)) {
         return extension_list_impl<others...>::finalize(
             obs_tuple, state, h, ++it);
-      else
+      } else {
         // Break at false
         return false;
+      }
     }
   };
 
@@ -144,7 +150,9 @@ namespace detail {
       const double                      h     = 0,
       const Vector3D&                   kprev = Vector3D())
     {
-      if (!(*it)) return true;
+      if (!(*it)) {
+        return true;
+      }
       auto& this_extension = std::get<last>(obs_tuple);
       return this_extension.k(state, knew, bField, i, h, kprev);
     }
@@ -160,7 +168,9 @@ namespace detail {
              ActsMatrixD<7, 7>& D,
              std::vector<bool>::const_iterator it)
     {
-      if (!(*it)) return true;
+      if (!(*it)) {
+        return true;
+      }
       auto& this_extension = std::get<last>(obs_tuple);
       return this_extension.finalize(state, h, data, D);
     }
@@ -174,7 +184,9 @@ namespace detail {
              const double                      h,
              std::vector<bool>::const_iterator it)
     {
-      if (!(*it)) return true;
+      if (!(*it)) {
+        return true;
+      }
       auto& this_extension = std::get<last>(obs_tuple);
       return this_extension.finalize(state, h);
     }

@@ -71,7 +71,9 @@ public:
     const double           h     = 0,
     const Vector3D&        kprev = Vector3D())
   {
-    if (i == 0) validExtensionForStep<stepper_state_t, auctioneer_t>(state);
+    if (i == 0) {
+      validExtensionForStep<stepper_state_t, auctioneer_t>(state);
+    }
     return impl::k(
         tuple(), state, knew, bField, validExtensions.cbegin(), i, h, kprev);
   }

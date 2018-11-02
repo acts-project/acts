@@ -80,11 +80,16 @@ namespace detail {
       bool firstValidFound = false;
       for (unsigned int i = 0; i < vCandidates.size(); i++) {
         // If a valid extensions is already found, set all following to false
-        if (firstValidFound) vCandidates[i] = false;
+        if (firstValidFound) {
+          vCandidates[i] = false;
+        }
         // If the first valid isn't found yet, toggle the flag on the first
         // found
-        else if (vCandidates[i])
-          firstValidFound = true;
+        else {
+          if (vCandidates[i]) {
+            firstValidFound = true;
+          }
+        }
       }
       return vCandidates;
     }

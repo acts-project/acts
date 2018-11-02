@@ -72,11 +72,14 @@ struct DenseEnvironmentExtension
   validExtensionForStep(const stepper_state_t& state) const
   {
     // Check for valid particle properties
-    if (state.q == 0. || state.p < conv * momentumCutOff) return false;
+    if (state.q == 0. || state.p < conv * momentumCutOff) {
+      return false;
+    }
 
     // Check existence of a volume with material
-    if (!state.volume || !(*state.volume) || !(*state.volume)->material())
+    if (!state.volume || !(*state.volume) || !(*state.volume)->material()) {
       return false;
+    }
     return true;
   }
 
@@ -114,7 +117,9 @@ struct DenseEnvironmentExtension
     } else {
       // Update parameters and check for momentum condition
       updateEnergyLoss(h, state, i);
-      if (eld.currentMomentum < momentumCutOff) return false;
+      if (eld.currentMomentum < momentumCutOff) {
+        return false;
+      }
       // Evaluate k
       knew = eld.qop[i] * (state.dir + h * kprev).cross(bField);
     }
@@ -140,8 +145,9 @@ struct DenseEnvironmentExtension
             * (eld.dPds[0] + 2. * (eld.dPds[1] + eld.dPds[2]) + eld.dPds[3]);
 
     // Break propagation if momentum becomes below cut-off
-    if (units::Nat2SI<units::MOMENTUM>(newMomentum) < momentumCutOff)
+    if (units::Nat2SI<units::MOMENTUM>(newMomentum) < momentumCutOff) {
       return false;
+    }
 
     // Update momentum
     state.p = newMomentum;
@@ -303,7 +309,9 @@ protected:
        const int         pdg) const
   {
     // Easy exit if material is invalid
-    if (material.X0() == 0 || material.Z() == 0) return 0.;
+    if (material.X0() == 0 || material.Z() == 0) {
+      return 0.;
+    }
 
     // Calculate energy loss by
     // a) ionisation
@@ -323,7 +331,9 @@ protected:
     // Rescaling for mode evaluation.
     // C.f. ATL-SOFT-PUB-2008-003 section 3. The mode evaluation for the energy
     // loss by ionisation can be directly evaluated.
-    if (!meanEnergyLoss) radiationEnergyLoss *= 0.15;
+    if (!meanEnergyLoss) {
+      radiationEnergyLoss *= 0.15;
+    }
 
     // Return sum of contributions
     return ionisationEnergyLoss + radiationEnergyLoss;
@@ -347,8 +357,9 @@ protected:
   {
     // Fast exit if material is invalid
     if (material.X0() == 0. || material.Z() == 0.
-        || material.zOverAtimesRho() == 0.)
+        || material.zOverAtimesRho() == 0.) {
       return 0.;
+    }
 
     // Bethe-Bloch
     const double betheBlochDerivative
@@ -359,11 +370,12 @@ protected:
         = radiationLoss.dqop(eld.massSI, material, qop, energy, pdg, true);
 
     // Return the total derivative
-    if (meanEnergyLoss)
+    if (meanEnergyLoss) {
       return betheBlochDerivative + radiationDerivative;
-    else
+    } else {
       // C.f. ATL-SOFT-PUB-2008-003 section 3
       return 0.9 * betheBlochDerivative + 0.15 * radiationDerivative;
+    }
   }
 
   /// @brief Initializer of all parameters related to a RKN4 step with energy

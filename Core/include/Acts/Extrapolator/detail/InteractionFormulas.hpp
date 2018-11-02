@@ -78,9 +78,9 @@ namespace detail {
       if (siUnits) {
         kaz = 0.5 * units::Nat2SI<units::ENERGY>(30.7075 * units::_MeV)
             * units::_mm * units::_mm / units::_g * mat.zOverAtimesRho();
-      } else
+      } else {
         kaz = 0.5 * constants::ka_BetheBloch * mat.zOverAtimesRho();
-
+      }
       double eta2 = lbeta * lgamma;
       eta2 *= eta2;
       // density effect, only valid for high energies
@@ -175,7 +175,9 @@ namespace detail {
          const bool        siUnits = false) const
     {
       // Fast exit if material is invalid
-      if (material.Z() == 0 || material.zOverAtimesRho() == 0) return 0.;
+      if (material.Z() == 0 || material.zOverAtimesRho() == 0) {
+        return 0.;
+      }
 
       // Constants for readability
       const double qop1
@@ -247,10 +249,11 @@ namespace detail {
         }
       }
       // Convert to right unit system and return
-      if (siUnits)
+      if (siUnits) {
         return betheBlochDerivative * units::Nat2SI<units::MOMENTUM>(1.);
-      else
+      } else {
         return betheBlochDerivative;
+      }
     }
   };
 
@@ -328,14 +331,18 @@ namespace detail {
                bool              siUnits = false) const
     {
       // Easy exit
-      if (mat.X0() == 0.) return 0.;
+      if (mat.X0() == 0.) {
+        return 0.;
+      }
 
       double       energyLoss;
       const double meOverm
           = constants::me / (siUnits ? units::SI2Nat<units::MASS>(m) : m);
 
       // Converting energy if needed
-      if (siUnits) E = units::SI2Nat<units::ENERGY>(E);
+      if (siUnits) {
+        E = units::SI2Nat<units::ENERGY>(E);
+      }
 
       // Calculate the bremsstrahlung energy loss (eq. 6)
       energyLoss = -E * (meOverm * meOverm);
@@ -352,8 +359,9 @@ namespace detail {
       }
 
       // Return energy loss
-      if (siUnits)
+      if (siUnits) {
         return units::Nat2SI<units::ENERGY>(energyLoss) * path / mat.X0();
+      }
       return energyLoss * path / mat.X0();
     }
 
@@ -379,7 +387,9 @@ namespace detail {
          const bool        siUnits = false) const
     {
       // Fast exit if material is invalid
-      if (material.X0() == 0.) return 0.;
+      if (material.X0() == 0.) {
+        return 0.;
+      }
 
       const double invqop3X0 = 1. / (qop * qop * qop * material.X0());
 
@@ -388,12 +398,13 @@ namespace detail {
           && (siUnits ? units::SI2Nat<units::ENERGY>(energy) : energy)
               > 8. * units::_GeV) {
         if ((siUnits ? units::SI2Nat<units::ENERGY>(energy) : energy)
-            < 1. * units::_TeV)
+            < 1. * units::_TeV) {
           muonExpansion = 6.803e-5 * invqop3X0 / energy
               + 2. * 2.278e-11 * invqop3X0
               - 3. * 9.899e-18 * invqop3X0 * energy;
-        else
+        } else {
           muonExpansion = 9.253e-5 * invqop3X0 / energy;
+        }
       }
       if (siUnits) {
         // Just rescale the mass to natural units, qop & energy are already

@@ -592,8 +592,9 @@ public:
 
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
-    } else
+    } else {
       state.extension.finalize(state, h);
+    }
 
     // Update the track parameters according to the equations of motion
     state.pos += h * state.dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);

@@ -35,8 +35,9 @@ struct DefaultExtension
   validExtensionForStep(const stepper_state_t& state) const
   {
     // Check existence of a volume with material
-    if (state.volume && (*state.volume) && (*state.volume)->material())
+    if (state.volume && (*state.volume) && (*state.volume)->material()) {
       return false;
+    }
     return true;
   }
 
