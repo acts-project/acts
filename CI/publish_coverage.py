@@ -7,12 +7,19 @@ import requests
 import tempfile
 from urllib.parse import urljoin
 
-from fs.sshfs import SSHFS
+# from fs.sshfs import SSHFS
+from sshfs import SSHFS
 from fs.osfs import OSFS
 import fs.copy
 import gitlab
+import gitlab.exceptions
 from datetime import datetime
 from dateutil.parser import parse
+
+from concurrent.futures import ThreadPoolExecutor, wait
+
+import logging
+# logging.basicConfig(format='%(levelname)s:%(message)s', level=logging.DEBUG)
 
 def main():
     p = argparse.ArgumentParser()
@@ -24,6 +31,7 @@ def main():
     p.add_argument("--coverage-root", default=os.getenv("COVERAGE_WEBSITE_ROOT", "/eos/user/a/atsjenkins/www/ACTS/coverage"))
     p.add_argument("--website-public-url", default=os.getenv("COVERAGE_WEBSITE_URL", "https://acts.web.cern.ch/ACTS/coverage/"))
     p.add_argument("--project-id", default=3031, type=int)
+    p.add_argument("--dry-run", "-s", action="store_true")
 
     args = p.parse_args()
 
@@ -37,6 +45,8 @@ def main():
         print("Unable to establish SSH connection to lxplus")
         print("This might indicate a problem with the credentials")
         print("or a temporary connection / configuration problem")
+
+        raise
         sys.exit(1)
 
     gl = gitlab.Gitlab("https://gitlab.cern.ch/")
@@ -49,14 +59,28 @@ def main():
 
     src_fs = OSFS(args.coverage_source)
 
-    fs.copy.copy_dir(src_fs, ".", www_fs, commit_slug)
+    if not args.dry_run:
+        fs.copy.copy_dir(src_fs, ".", www_fs, commit_slug)
 
     # cleanup
     # get all deployed commits
     deployed_commits = set(filter(www_fs.isdir, www_fs.listdir(".")))
-    deployed_time = [parse(project.commits.get(c).committed_date) for c in deployed_commits]
 
-    deployed_commits_with_time = list(reversed(sorted(zip(deployed_commits, deployed_time), key=lambda i: i[1])))
+    with ThreadPoolExecutor(max_workers=8) as tp:
+        # deployed_commit_info = p.map(project.commits.get, deployed_commits)
+        futures = [tp.submit(project.commits.get, c) for c in deployed_commits]
+        wait(futures)
+
+    deployed_commits_with_time = []
+    for commit, future in zip(deployed_commits, futures):
+        try:
+            info = future.result()
+            date = parse(info.committed_date)
+            deployed_commits_with_time.append((commit, date))
+        except gitlab.exceptions.GitlabGetError as e:
+            print("Commit", commit, "not found, will remove")
+
+    deployed_commits_with_time = list(reversed(sorted(deployed_commits_with_time, key=lambda i: i[1])))
 
     # take the n newest commits
     commits_to_keep = set(h for h,_ in deployed_commits_with_time[:args.coverage_commit_limit])
@@ -76,8 +100,9 @@ def main():
     if len(commits_to_delete) > 0:
         print("Removing:", ", ".join(commits_to_delete))
 
-        for commit in commits_to_delete:
-            www_fs.removetree(commit)
+        if not args.dry_run:
+            for commit in commits_to_delete:
+                www_fs.removetree(commit)
 
     # install / update indexfile
     latest_commit = deployed_commits_with_time[0][0]
@@ -96,7 +121,8 @@ Redirecting to <a href"{0}">{0}</a>
 
     with www_fs.open("index.html", "w") as f:
         print("Writing index file redirecting to", latest_coverage_url)
-        f.write(index_content)
+        if not args.dry_run:
+            f.write(index_content)
 
 if "__main__" == __name__:
     main()
