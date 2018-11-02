@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <boost/algorithm/string.hpp>
 #include <iterator>
 #include <sstream>
 #include <string>
@@ -18,7 +19,6 @@
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
-#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 

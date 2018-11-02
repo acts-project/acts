@@ -132,13 +132,11 @@ namespace Test {
     using Aborters       = AbortList<detail::EndOfWorldReached>;
 
     // Create some options
-    using StepWiseOptions =
-        PropagatorOptions<StepWiseActors, Aborters>;
+    using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;
     StepWiseOptions swOptions;
 
-    using PlainActors = ActionList<>;
-    using PlainOptions =
-        PropagatorOptions<PlainActors, Aborters>;
+    using PlainActors  = ActionList<>;
+    using PlainOptions = PropagatorOptions<PlainActors, Aborters>;
     PlainOptions pOptions;
 
     // Run the standard propagation

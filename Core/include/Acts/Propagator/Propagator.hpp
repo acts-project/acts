@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <memory>
 #include <type_traits>
@@ -18,7 +19,6 @@
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 
@@ -67,7 +67,6 @@ struct Result : private detail::Extendable<result_list...>
   operator bool() const { return (endParameters && status == Status::SUCCESS); }
 };
 
-
 /// @brief Options for propagate() call
 ///
 /// @tparam action_list_t List of action types called after each
@@ -81,78 +80,77 @@ template <typename action_list_t  = ActionList<>,
 struct PropagatorOptions
 {
 
- /// @brief Expand the Options with extended aborters
- ///
- /// @tparam extended_aborter_list_t Type of the new aborter list
- ///
- /// @param aborters The new aborter list to be used (internally)
- template <typename extended_aborter_list_t>
- PropagatorOptions<action_list_t, extended_aborter_list_t>
- extend(extended_aborter_list_t aborters) const
- {
-   PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions;
-   // Copy the options over
-   eoptions.direction       = direction;
-   eoptions.absPdgCode      = absPdgCode;
-   eoptions.mass            = mass;
-   eoptions.maxSteps        = maxSteps;
-   eoptions.maxStepSize     = maxStepSize;
-   eoptions.targetTolerance = targetTolerance;
-   eoptions.pathLimit       = pathLimit;
-   eoptions.loopProtection  = loopProtection;
-   eoptions.loopFraction    = loopFraction;
-   // Output option
-   eoptions.debug         = debug;
-   eoptions.debugString   = debugString;
-   eoptions.debugPfxWidth = debugPfxWidth;
-   eoptions.debugMsgWidth = debugMsgWidth;
-   // Action / abort list
-   eoptions.actionList = actionList;
-   eoptions.abortList  = std::move(aborters);
-   // And return the options
-   return eoptions;
- }
+  /// @brief Expand the Options with extended aborters
+  ///
+  /// @tparam extended_aborter_list_t Type of the new aborter list
+  ///
+  /// @param aborters The new aborter list to be used (internally)
+  template <typename extended_aborter_list_t>
+  PropagatorOptions<action_list_t, extended_aborter_list_t>
+  extend(extended_aborter_list_t aborters) const
+  {
+    PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions;
+    // Copy the options over
+    eoptions.direction       = direction;
+    eoptions.absPdgCode      = absPdgCode;
+    eoptions.mass            = mass;
+    eoptions.maxSteps        = maxSteps;
+    eoptions.maxStepSize     = maxStepSize;
+    eoptions.targetTolerance = targetTolerance;
+    eoptions.pathLimit       = pathLimit;
+    eoptions.loopProtection  = loopProtection;
+    eoptions.loopFraction    = loopFraction;
+    // Output option
+    eoptions.debug         = debug;
+    eoptions.debugString   = debugString;
+    eoptions.debugPfxWidth = debugPfxWidth;
+    eoptions.debugMsgWidth = debugMsgWidth;
+    // Action / abort list
+    eoptions.actionList = actionList;
+    eoptions.abortList  = std::move(aborters);
+    // And return the options
+    return eoptions;
+  }
 
- /// Propagation direction
- NavigationDirection direction = forward;
+  /// Propagation direction
+  NavigationDirection direction = forward;
 
- /// The |pdg| code for (eventual) material integration - pion default
- int absPdgCode = 211;
+  /// The |pdg| code for (eventual) material integration - pion default
+  int absPdgCode = 211;
 
- /// The mass for the particle for (eventual) material integration
- double mass = 139.57018 * units::_MeV;
+  /// The mass for the particle for (eventual) material integration
+  double mass = 139.57018 * units::_MeV;
 
- /// Maximum number of steps for one propagate() call
- unsigned int maxSteps = 1000;
+  /// Maximum number of steps for one propagate() call
+  unsigned int maxSteps = 1000;
 
- /// Absolute maximum step size
- double maxStepSize = std::numeric_limits<double>::max();
+  /// Absolute maximum step size
+  double maxStepSize = std::numeric_limits<double>::max();
 
- /// Absolute maximum path length
- double pathLimit = std::numeric_limits<double>::max();
+  /// Absolute maximum path length
+  double pathLimit = std::numeric_limits<double>::max();
 
- /// Required tolerance to reach target (surface, pathlength)
- double targetTolerance = s_onSurfaceTolerance;
+  /// Required tolerance to reach target (surface, pathlength)
+  double targetTolerance = s_onSurfaceTolerance;
 
- /// Loop protection step, it adapts the pathLimit
- bool   loopProtection = true;
- double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
+  /// Loop protection step, it adapts the pathLimit
+  bool   loopProtection = true;
+  double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
 
- /// Debug output steering:
- //  -> @todo: move to a debug struct
- // - the string where debug messages are stored (optionally)
- // - it also has some formatting options
- bool        debug         = false;  ///< switch debug on
- std::string debugString   = "";     ///< the string to collect msgs
- size_t      debugPfxWidth = 30;     ///< the prefix width
- size_t      debugMsgWidth = 50;     ///< the mesage width
+  /// Debug output steering:
+  //  -> @todo: move to a debug struct
+  // - the string where debug messages are stored (optionally)
+  // - it also has some formatting options
+  bool        debug         = false;  ///< switch debug on
+  std::string debugString   = "";     ///< the string to collect msgs
+  size_t      debugPfxWidth = 30;     ///< the prefix width
+  size_t      debugMsgWidth = 50;     ///< the mesage width
 
- /// List of actions
- action_list_t actionList;
+  /// List of actions
+  action_list_t actionList;
 
- /// List of abort conditions
- aborter_list_t abortList;
- 
+  /// List of abort conditions
+  aborter_list_t abortList;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -364,8 +362,9 @@ public:
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
-  propagate(const parameters_t& start,
-            const PropagatorOptions<action_list_t, aborter_list_t>& options) const
+  propagate(
+      const parameters_t& start,
+      const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced by the propagation
@@ -439,9 +438,10 @@ public:
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,
       action_list_t>
-  propagate(const parameters_t& start,
-            const surface_t&    target,
-            const PropagatorOptions<action_list_t, aborter_list_t>& options) const
+  propagate(
+      const parameters_t& start,
+      const surface_t&    target,
+      const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced at the end of the propagation

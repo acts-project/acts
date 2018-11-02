@@ -328,11 +328,15 @@ namespace Test {
 
     // Action list and abort list
 <<<<<<< HEAD
+<<<<<<< HEAD
     using DebugOutput = detail::DebugOutputActor;
 
     PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
 =======
     using ActionListType      = ActionList<MaterialInteractor, DebugOutput>;
+=======
+    using ActionListType = ActionList<MaterialInteractor, DebugOutput>;
+>>>>>>> 72ec98ab... clang-format
     PropagatorOptions<ActionListType> options;
 >>>>>>> cfb3891a... clang-format
     options.maxStepSize = 25. * units::_cm;
