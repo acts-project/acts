@@ -24,7 +24,7 @@ namespace Acts {
 /// E_1(k^2) = complete elliptic integral of the 1st kind
 /// E_2(k^2) = complete elliptic integral of the 2nd kind
 ///
-/// E_1(k^2) and E_2(k^2) are usually indicated as k(k^2) and E(k^2) in
+/// E_1(k^2) and E_2(k^2) are usually indicated as K(k^2) and E(k^2) in
 /// literature,
 /// respectively
 ///              _
