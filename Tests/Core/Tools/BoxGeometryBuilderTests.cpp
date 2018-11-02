@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -75,48 +75,48 @@ namespace Test {
 	BoxGeometryBuilder bgb;
 	
 	// Create configurations for surfaces
-	std::vector<BoxGeometryBuilder::SurfaceConfig> surcfg;
+	std::vector<BoxGeometryBuilder::Config> config;
 	for(unsigned int i = 1; i < 5; i++)
 	{
 		// Position of the surfaces
-		BoxGeometryBuilder::SurfaceConfig sc;
-		sc.position = {i * units::_m, 0., 0.};
-
-				std::shared_ptr<const RectangleBounds> rBounds;
-				std::shared_ptr<const SurfaceMaterial> surMat;
-				double thickness;
+		BoxGeometryBuilder::Config cfg;
+		cfg.surfaceCfg.position = {i * units::_m, 0., 0.};
 				
 		// Rotation of the surfaces
 		double           rotationAngle = M_PI * 0.5;
 		Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
 		Vector3D         yPos(0., 1., 0.);
 		Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-		sc.rotation.col(0) = xPos;
-		sc.rotation.col(1) = yPos;
-		sc.rotation.col(2) = zPos;
+		cfg.surfaceCfg.rotation.col(0) = xPos;
+		cfg.surfaceCfg.rotation.col(1) = yPos;
+		cfg.surfaceCfg.rotation.col(2) = zPos;
 		
 		// Boundaries of the surfaces
-		sc.rBounds = std::make_shared<const RectangleBounds>(
+		cfg.surfaceCfg.rBounds = std::make_shared<const RectangleBounds>(
 			RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
 
 		// Material of the surfaces
 		MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-		sc.surMat = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(matProp));
+		cfg.surfaceCfg.surMat = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(matProp));
 		
 		// Thickness of the detector element
-		sc.thickness = 1. * units::_um;
+		cfg.surfaceCfg.thickness = 1. * units::_um;
 		
-		surcfg.push_back(sc);
+		config.push_back(cfg);
 	}
 	
-   BOOST_TEST(surcfg.size() == 4);
+   BOOST_TEST(config.size() == 4);
    
-   bgb.buildSensitiveSurfaces<DetElem>(surcfg);
-   for(const auto& sc : surcfg)
-	BOOST_TEST(sc.surface != nullptr);
-   bgb.buildPassiveSurfaces(surcfg);
-   for(const auto& sc : surcfg)
-	BOOST_TEST(sc.surface != nullptr);
+   bgb.buildSensitiveSurfaces<DetElem>(config);
+   for(const auto& cfg : config)
+	BOOST_TEST(cfg.surface != nullptr);
+   bgb.buildPassiveSurfaces(config);
+   for(const auto& cfg : config)
+	BOOST_TEST(cfg.surface != nullptr);
+	
+	bgb.buildLayers(config);
+	for(const auto& cfg : config)
+		BOOST_TEST(cfg.layer != nullptr);
   }
 }  // namespace Test
 }  // namespace Acts
