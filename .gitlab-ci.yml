@@ -297,14 +297,14 @@ website_deploy:
 
 coverage_deploy:
   stage: deploy
+  image: alpine:3.8
   dependencies:
     - unit_tests_slc6_lcg94
+  before_script:
+    - apk --no-cache add python3 py3-pynacl py3-pip py3-cryptography py3-bcrypt
+    - pip3 install -r CI/requirements.txt
   script:
-    - unset PYTHONHOME
-    - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
     - CI/publish_coverage.py
-  after_script:
-    - kdestroy
   only:
     - master
 
