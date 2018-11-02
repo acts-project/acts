@@ -53,7 +53,7 @@ namespace IntegrationTest {
     std::ofstream ostr("solenoidmap.csv");
     ostr << "i;j;r;z;B_r;B_z" << std::endl;
 
-    double rMin = -0.1;
+    double rMin = 0;
     double rMax = R * 2.;
     double zMin = 2 * (-L / 2.);
     double zMax = 2 * (L / 2.);
