@@ -71,7 +71,6 @@ main(int argc, char* argv[])
     pos = {r * std::cos(phi), r * std::sin(phi), z};
 
     B = bSolenoidField.getField(pos);
-    // std::cout << B << std::endl;
   }
 
   auto   end = clock::now();
@@ -91,7 +90,6 @@ main(int argc, char* argv[])
     pos = {r * std::cos(phi), r * std::sin(phi), z};
 
     B = bFieldMap.getField(pos);
-    // std::cout << B << std::endl;
   }
 
   end = clock::now();
