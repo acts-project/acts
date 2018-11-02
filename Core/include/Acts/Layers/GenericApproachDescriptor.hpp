@@ -14,7 +14,9 @@
 
 #include <algorithm>
 #include "Acts/Utilities/ApproachDescriptor.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Volumes/BoundarySurfaceT.hpp"
 
 namespace Acts {
 
@@ -26,7 +28,6 @@ namespace Acts {
 /// It is templated in order to allow for BoundarySurfaces from
 /// representing volumes of layers to be re-used
 
-template <class T>
 class GenericApproachDescriptor : public ApproachDescriptor
 {
 public:
@@ -34,31 +35,16 @@ public:
   /// passing ownership
   ///
   /// @param aSurfaces are the approach surfaces
-  GenericApproachDescriptor(const std::vector<const T*>& aSurfaces)
-    : ApproachDescriptor(), m_surfaces(), m_surfaceCache(aSurfaces)
+  GenericApproachDescriptor(
+      std::vector<std::shared_ptr<const Surface>> aSurfaces)
+    : ApproachDescriptor(), m_surfaces(std::move(aSurfaces)), m_surfaceCache()
   {
-    // create the surface container with memory control
-    for (const auto& sf : aSurfaces) {
-      m_surfaces.push_back(std::shared_ptr<const T>(sf));
-    }
-  }
-
-  /// A generic approach descriptor with shared surfaces to test
-  /// can not be used with Acts::Surfaces objects
-  ///
-  /// @param aSurfaces are the approach surfaces
-  GenericApproachDescriptor(std::vector<std::shared_ptr<const T>> aSurfaces)
-    : ApproachDescriptor(), m_surfaces(aSurfaces), m_surfaceCache()
-  {
-    m_surfaceCache.reserve(m_surfaces.size());
-    // cache the surfaces
-    for (const auto& sf : aSurfaces) {
-      m_surfaceCache.push_back(&(sf->surfaceRepresentation()));
-    }
+    m_surfaceCache = unpack_shared_vector(m_surfaces);
   }
 
   /// A generic approach descriptor with n surfaces to test
   ~GenericApproachDescriptor() override = default;
+
   /// register the Layer to the surfaces
   ///
   /// @param lay is the layer to be registerd
@@ -90,7 +76,7 @@ public:
 
 private:
   /// approach surfaces with ownership control
-  std::vector<std::shared_ptr<const T>> m_surfaces;
+  std::vector<std::shared_ptr<const Surface>> m_surfaces;
 
   /// the surface container cache
   ///
@@ -100,57 +86,5 @@ private:
   std::vector<const Surface*> m_surfaceCache;
 };
 
-template <class T>
-void
-GenericApproachDescriptor<T>::registerLayer(const Layer& lay)
-{
-  // go through the surfaces
-  for (auto& sf : m_surfaceCache) {
-    auto mutableSf = const_cast<Surface*>(sf);
-    mutableSf->associateLayer(lay);
-  }
-}
-
-template <class T>
-ObjectIntersection<Surface>
-GenericApproachDescriptor<T>::approachSurface(const Vector3D&      gpos,
-                                              const Vector3D&      gdir,
-                                              NavigationDirection  navDir,
-                                              const BoundaryCheck& bcheck,
-                                              CorrFnc corrfnc) const
-{
-  // the intersection estimates
-  std::vector<ObjectIntersection<Surface>> sIntersections;
-  sIntersections.reserve(m_surfaceCache.size());
-  for (auto& sf : m_surfaceCache) {
-    // intersect
-    auto intersection
-        = sf->intersectionEstimate(gpos, gdir, navDir, bcheck, corrfnc);
-    sIntersections.push_back(
-        ObjectIntersection<Surface>(intersection, sf, navDir));
-  }
-  // sort depedning on the navigation direction
-  if (navDir == forward) {
-    std::sort(sIntersections.begin(), sIntersections.end());
-  } else {
-    std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
-  }
-  // return what you have
-  return (*sIntersections.begin());
-}
-
-template <class T>
-const std::vector<const Surface*>&
-GenericApproachDescriptor<T>::containedSurfaces() const
-{
-  return m_surfaceCache;
-}
-
-template <class T>
-std::vector<const Surface*>&
-GenericApproachDescriptor<T>::containedSurfaces()
-{
-  return m_surfaceCache;
-}
 
 }  // namespace Acts
