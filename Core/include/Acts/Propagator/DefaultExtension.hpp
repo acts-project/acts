@@ -145,10 +145,10 @@ protected:
 
     double half_h = h * 0.5;
     // This sets the reference to the sub matrices
-    // dFdx is already initialised as (3x3) zero
+    // dFdx is already initialised as (3x3) idendity
     auto dFdT = D.block<3, 3>(0, 3);
     auto dFdL = D.block<3, 1>(0, 6);
-    // dGdx is already initialised as (3x3) identity
+    // dGdx is already initialised as (3x3) zero
     auto dGdT = D.block<3, 3>(3, 3);
     auto dGdL = D.block<3, 1>(3, 6);
 
@@ -180,13 +180,13 @@ protected:
     dk1dT *= qop;
 
     dk2dT += half_h * dk1dT;
-    dk2dT *= qop * VectorHelpers::cross(dk2dT, sd.B_middle);
+    dk2dT = qop * VectorHelpers::cross(dk2dT, sd.B_middle);
 
     dk3dT += half_h * dk2dT;
-    dk3dT *= qop * VectorHelpers::cross(dk3dT, sd.B_middle);
+    dk3dT = qop * VectorHelpers::cross(dk3dT, sd.B_middle);
 
     dk4dT += h * dk3dT;
-    dk4dT *= qop * VectorHelpers::cross(dk4dT, sd.B_last);
+    dk4dT = qop * VectorHelpers::cross(dk4dT, sd.B_last);
 
     dFdT.setIdentity();
     dFdT += h / 6. * (dk1dT + dk2dT + dk3dT);

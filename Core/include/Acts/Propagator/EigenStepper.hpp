@@ -58,18 +58,6 @@ private:
     using type = CurvilinearParameters;
   };
 
-  // internal cross product helper method
-  ActsMatrixD<3, 3>
-  cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) const
-  {
-    ActsMatrixD<3, 3> r;
-    r.col(0) = m.col(0).cross(v);
-    r.col(1) = m.col(1).cross(v);
-    r.col(2) = m.col(2).cross(v);
-
-    return r;
-  }
-
 public:
   using cstep = detail::ConstrainedStep;
 
@@ -394,15 +382,14 @@ public:
     }
 
     /// Global particle position
-    Vector3D pos = Vector3D(0, 0, 0);
-
+    Vector3D pos = Vector3D(0., 0., 0.);
     /// Global start particle position
-    Vector3D startPos = Vector3D(0, 0, 0);
+    Vector3D startPos = Vector3D(0., 0., 0.);
 
     /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1, 0, 0);
+    Vector3D dir = Vector3D(1., 0., 0.);
     /// Momentum start direction (normalized)
-    Vector3D startDir = Vector3D(1, 0, 0);
+    Vector3D startDir = Vector3D(1., 0., 0.);
 
     /// Momentum
     double p = 0.;
@@ -573,31 +560,31 @@ public:
       state.extension.k(state, sd.k4, sd.B_last, 3, h, sd.k3);
 
       // Return an estimate of the local integration error
-      //~ return h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>();
-      return h * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>();
+      return h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>();
     };
 
-    // Select and adjust the appropriate Runge-Kutta step size in ATLAS style
-    // (c.f. ATL-SOFT-PUB-2009-001)
-    //~ double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
-    //~ while (error_estimate > state.tolerance) {
-      //~ state.stepSize = state.stepSize
-          //~ * std::min(std::max(
-                         //~ 0.25,
-                         //~ std::pow((state.tolerance / error_estimate), 0.25)),
-                     //~ 4.);
-      //~ // If step size becomes too small the particle remains at the initial
-      //~ // place
-      //~ if (state.stepSize < state.stepSizeCutOff) {
-        //~ return 0.;  // Not moving due to too low momentum needs an aborter
-      //~ }
-      //~ error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
-    //~ }
-    double error_estimate = tryRungeKuttaStep(state.stepSize);
-    while (error_estimate > 0.0002) {
-      state.stepSize = state.stepSize * 0.5;
-      error_estimate = tryRungeKuttaStep(state.stepSize);
+    // Select and adjust the appropriate Runge-Kutta step size as given
+    // ATL-SOFT-PUB-2009-001
+    double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
+    while (error_estimate > state.tolerance) {
+      state.stepSize = state.stepSize
+          * std::min(std::max(
+                         0.25,
+                         std::pow((state.tolerance / std::abs(error_estimate)),
+                                  0.25)),
+                     4.);
+      // If step size becomes too small the particle remains at the initial
+      // place
+      if (state.stepSize < state.stepSizeCutOff) {
+        return 0.;  // Not moving due to too low momentum needs an aborter
+      }
+      error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     }
+    //~ double error_estimate = tryRungeKuttaStep(state.stepSize);
+    //~ while (error_estimate > 0.0002) {
+    //~ state.stepSize = state.stepSize * 0.5;
+    //~ error_estimate = tryRungeKuttaStep(state.stepSize);
+    //~ }
 
     // use the adjusted step size
     const double h = state.stepSize;
