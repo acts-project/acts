@@ -30,8 +30,8 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(TestSolenoidBField)
   {
     SolenoidBField::Config cfg;
-    cfg.L          = 5.8 * Acts::units::_m;
-    cfg.R          = (2.56 + 2.46) * 0.5 * 0.5 * Acts::units::_m;
+    cfg.length     = 5.8 * Acts::units::_m;
+    cfg.radius     = (2.56 + 2.46) * 0.5 * 0.5 * Acts::units::_m;
     cfg.nCoils     = 1154;
     cfg.bMagCenter = 2. * Acts::units::_T;
     SolenoidBField bField(cfg);
@@ -50,8 +50,6 @@ namespace Test {
       double r = 1.5 * cfg.R / steps * i;
       BOOST_TEST_CONTEXT("r=" << r)
       {
-        // std::cout << cfg.R << " " << steps << " " << cfg.R/steps << " " << i
-        // << " " << r << std::endl;
         Vector3D B1 = bField.getField({r, 0, 0}, cache);
         Vector3D B2 = bField.getField({-r, 0, 0}, cache);
         BOOST_CHECK_SMALL(B1.x(), tol);

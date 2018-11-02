@@ -46,9 +46,6 @@ namespace IntegrationTest {
   const size_t nBinsR     = 150;
   const size_t nBinsZ     = 200;
 
-  // std::ofstream validfs("magfield_lookup.csv");
-  // validfs << "x;y;z;B_x;B_y;B_z;Bm_x;Bm_y;Bm_z" << std::endl;
-
   InterpolatedBFieldMap
   makeFieldMap(const SolenoidBField& field)
   {
