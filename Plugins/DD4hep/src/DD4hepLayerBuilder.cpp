@@ -60,7 +60,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
     // go through layers
     for (auto& detElement : m_cfg.negativeLayers) {
       // prepare the layer surfaces
-      std::vector<const Surface*> layerSurfaces;
+      std::vector<std::shared_ptr<const Surface>> layerSurfaces;
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
@@ -163,7 +163,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
             << "]");
         // Create an approachdescriptor for the layer
         // create the new surfaces for the approachdescriptor
-        std::vector<const Acts::Surface*> aSurfaces;
+        std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
         // The layer thicknesses
         auto layerThickness
             = std::fabs(pl.minZ - pl.maxZ) + pl.envZ.first + pl.envZ.second;
@@ -178,20 +178,23 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
           std::swap(innerPos, outerPos);
         }
 
-        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
-            std::make_shared<const Transform3D>(Translation3D(innerPos)
-                                                * transform->rotation()),
-            pl.minR,
-            pl.maxR);
+        std::shared_ptr<Acts::DiscSurface> innerBoundary
+            = Surface::makeShared<Acts::DiscSurface>(
+                std::make_shared<const Transform3D>(Translation3D(innerPos)
+                                                    * transform->rotation()),
+                pl.minR,
+                pl.maxR);
 
-        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
-            std::make_shared<const Transform3D>(Translation3D(outerPos)
-                                                * transform->rotation()),
-            pl.minR,
-            pl.maxR);
+        std::shared_ptr<Acts::DiscSurface> outerBoundary
+            = Surface::makeShared<Acts::DiscSurface>(
+                std::make_shared<const Transform3D>(Translation3D(outerPos)
+                                                    * transform->rotation()),
+                pl.minR,
+                pl.maxR);
 
-        Acts::DiscSurface* centralSurface
-            = new Acts::DiscSurface(transform, pl.minR, pl.maxR);
+        std::shared_ptr<Acts::DiscSurface> centralSurface
+            = Surface::makeShared<Acts::DiscSurface>(
+                transform, pl.minR, pl.maxR);
 
         // set material surface
         if (layerPos == Acts::LayerMaterialPos::inner) {
@@ -212,9 +215,8 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
         aSurfaces.push_back(centralSurface);
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
-        approachDescriptor
-            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
-                aSurfaces);
+        approachDescriptor = std::make_unique<Acts::GenericApproachDescriptor>(
+            std::move(aSurfaces));
       }
       std::shared_ptr<Layer> negativeLayer = nullptr;
       // In case the layer is sensitive
@@ -287,7 +289,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
     // go through layers
     for (auto& detElement : m_cfg.centralLayers) {
       // prepare the layer surfaces
-      std::vector<const Surface*> layerSurfaces;
+      std::vector<std::shared_ptr<const Surface>> layerSurfaces;
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
@@ -363,15 +365,15 @@ Acts::DD4hepLayerBuilder::centralLayers() const
 
         // Create an approachdescriptor for the layer
         // create the new surfaces for the approachdescriptor
-        std::vector<const Acts::Surface*> aSurfaces;
+        std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
         // create the inner boundary surface
-        Acts::CylinderSurface* innerBoundary
-            = new Acts::CylinderSurface(transform, pl.minR, halfZ);
+        auto innerBoundary = Surface::makeShared<Acts::CylinderSurface>(
+            transform, pl.minR, halfZ);
         // create outer boundary surface
-        Acts::CylinderSurface* outerBoundary
-            = new Acts::CylinderSurface(transform, pl.maxR, halfZ);
+        auto outerBoundary = Surface::makeShared<Acts::CylinderSurface>(
+            transform, pl.maxR, halfZ);
         // create the central surface
-        Acts::CylinderSurface* centralSurface = new Acts::CylinderSurface(
+        auto centralSurface = Surface::makeShared<Acts::CylinderSurface>(
             transform, (pl.minR + pl.maxR) * 0.5, halfZ);
 
         std::pair<size_t, size_t> materialBins = detExtension->materialBins();
@@ -418,9 +420,8 @@ Acts::DD4hepLayerBuilder::centralLayers() const
 
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
-        approachDescriptor
-            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
-                aSurfaces);
+        approachDescriptor = std::make_unique<Acts::GenericApproachDescriptor>(
+            std::move(aSurfaces));
       }
 
       std::shared_ptr<Layer> centralLayer = nullptr;
@@ -496,7 +497,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
     // go through layers
     for (auto& detElement : m_cfg.positiveLayers) {
       // prepare the layer surfaces
-      std::vector<const Surface*> layerSurfaces;
+      std::vector<std::shared_ptr<const Surface>> layerSurfaces;
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
@@ -599,7 +600,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
             << "]");
         // Create an approachdescriptor for the layer
         // create the new surfaces for the approachdescriptor
-        std::vector<const Acts::Surface*> aSurfaces;
+        std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
         // The layer thicknesses
         auto layerThickness
             = std::fabs(pl.minZ - pl.maxZ) + pl.envZ.first + pl.envZ.second;
@@ -614,20 +615,20 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
           std::swap(innerPos, outerPos);
         }
 
-        Acts::DiscSurface* innerBoundary = new Acts::DiscSurface(
+        auto innerBoundary = Surface::makeShared<Acts::DiscSurface>(
             std::make_shared<const Transform3D>(Translation3D(innerPos)
                                                 * transform->rotation()),
             pl.minR,
             pl.maxR);
 
-        Acts::DiscSurface* outerBoundary = new Acts::DiscSurface(
+        auto outerBoundary = Surface::makeShared<Acts::DiscSurface>(
             std::make_shared<const Transform3D>(Translation3D(outerPos)
                                                 * transform->rotation()),
             pl.minR,
             pl.maxR);
 
-        Acts::DiscSurface* centralSurface
-            = new Acts::DiscSurface(transform, pl.minR, pl.maxR);
+        auto centralSurface = Surface::makeShared<Acts::DiscSurface>(
+            transform, pl.minR, pl.maxR);
 
         // set material surface
         if (layerPos == Acts::LayerMaterialPos::inner) {
@@ -648,8 +649,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
         // create an ApproachDescriptor with standard surfaces - these
         // will be deleted by the approach descriptor
         approachDescriptor
-            = std::make_unique<Acts::GenericApproachDescriptor<Acts::Surface>>(
-                aSurfaces);
+            = std::make_unique<Acts::GenericApproachDescriptor>(aSurfaces);
       }
 
       std::shared_ptr<Layer> positiveLayer = nullptr;
@@ -711,9 +711,9 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
 
 void
 Acts::DD4hepLayerBuilder::resolveSensitive(
-    const dd4hep::DetElement&          detElement,
-    std::vector<const Acts::Surface*>& surfaces,
-    const std::string&                 axes) const
+    const dd4hep::DetElement&                          detElement,
+    std::vector<std::shared_ptr<const Acts::Surface>>& surfaces,
+    const std::string&                                 axes) const
 {
   const dd4hep::DetElement::Children& children = detElement.children();
   if (!children.empty()) {
@@ -728,7 +728,8 @@ Acts::DD4hepLayerBuilder::resolveSensitive(
     }
   }
 }
-const Acts::Surface*
+
+std::shared_ptr<const Acts::Surface>
 Acts::DD4hepLayerBuilder::createSensitiveSurface(
     const dd4hep::DetElement& detElement,
     bool                      isDisc,
@@ -753,7 +754,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
           detElement, axes, units::_cm, isDisc, material, digiModule);
 
   // return the surface
-  return (&(dd4hepDetElement->surface()));
+  return dd4hepDetElement->surface().getSharedPtr();
 }
 
 std::shared_ptr<const Acts::Transform3D>

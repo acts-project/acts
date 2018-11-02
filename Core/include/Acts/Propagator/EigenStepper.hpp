@@ -392,8 +392,11 @@ public:
       covPtr = std::make_unique<const ActsSymMatrixD<5>>(state.cov);
     }
     // return the bound parameters
-    return BoundParameters(
-        std::move(covPtr), state.pos, state.p * state.dir, state.q, surface);
+    return BoundParameters(std::move(covPtr),
+                           state.pos,
+                           state.p * state.dir,
+                           state.q,
+                           surface.getSharedPtr());
   }
 
   /// Get the field for the stepping, it checks first if the access is still

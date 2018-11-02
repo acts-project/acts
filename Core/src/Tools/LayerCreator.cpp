@@ -47,12 +47,13 @@ Acts::LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger)
 }
 
 Acts::MutableLayerPtr
-Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
-                                  size_t                             binsPhi,
-                                  size_t                             binsZ,
-                                  boost::optional<ProtoLayer> _protoLayer,
-                                  std::shared_ptr<const Transform3D>  transform,
-                                  std::unique_ptr<ApproachDescriptor> ad) const
+Acts::LayerCreator::cylinderLayer(
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t                                      binsPhi,
+    size_t                                      binsZ,
+    boost::optional<ProtoLayer>                 _protoLayer,
+    std::shared_ptr<const Transform3D>          transform,
+    std::unique_ptr<ApproachDescriptor>         ad) const
 {
 
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
@@ -108,7 +109,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        surfaces, binsPhi, binsZ, protoLayer, nullptr);
+        std::move(surfaces), binsPhi, binsZ, protoLayer, nullptr);
 
     checkBinning(*sArray);
   }
@@ -133,12 +134,13 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
 }
 
 Acts::MutableLayerPtr
-Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
-                                  BinningType                        bTypePhi,
-                                  BinningType                        bTypeZ,
-                                  boost::optional<ProtoLayer> _protoLayer,
-                                  std::shared_ptr<const Transform3D>  transform,
-                                  std::unique_ptr<ApproachDescriptor> ad) const
+Acts::LayerCreator::cylinderLayer(
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    BinningType                                 bTypePhi,
+    BinningType                                 bTypeZ,
+    boost::optional<ProtoLayer>                 _protoLayer,
+    std::shared_ptr<const Transform3D>          transform,
+    std::unique_ptr<ApproachDescriptor>         ad) const
 {
 
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
@@ -191,7 +193,7 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        surfaces, bTypePhi, bTypeZ, protoLayer, nullptr);
+        std::move(surfaces), bTypePhi, bTypeZ, protoLayer, nullptr);
 
     checkBinning(*sArray);
   }
@@ -216,12 +218,13 @@ Acts::LayerCreator::cylinderLayer(const std::vector<const Surface*>& surfaces,
 }
 
 Acts::MutableLayerPtr
-Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
-                              size_t                              binsR,
-                              size_t                              binsPhi,
-                              boost::optional<ProtoLayer>         _protoLayer,
-                              std::shared_ptr<const Transform3D>  transform,
-                              std::unique_ptr<ApproachDescriptor> ad) const
+Acts::LayerCreator::discLayer(
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t                                      binsR,
+    size_t                                      binsPhi,
+    boost::optional<ProtoLayer>                 _protoLayer,
+    std::shared_ptr<const Transform3D>          transform,
+    std::unique_ptr<ApproachDescriptor>         ad) const
 {
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
@@ -263,7 +266,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        surfaces, binsR, binsPhi, protoLayer, transform);
+        std::move(surfaces), binsR, binsPhi, protoLayer, transform);
 
     checkBinning(*sArray);
   }
@@ -290,12 +293,13 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 }
 
 Acts::MutableLayerPtr
-Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
-                              BinningType                         bTypeR,
-                              BinningType                         bTypePhi,
-                              boost::optional<ProtoLayer>         _protoLayer,
-                              std::shared_ptr<const Transform3D>  transform,
-                              std::unique_ptr<ApproachDescriptor> ad) const
+Acts::LayerCreator::discLayer(
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    BinningType                                 bTypeR,
+    BinningType                                 bTypePhi,
+    boost::optional<ProtoLayer>                 _protoLayer,
+    std::shared_ptr<const Transform3D>          transform,
+    std::unique_ptr<ApproachDescriptor>         ad) const
 {
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
@@ -334,7 +338,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        surfaces, bTypeR, bTypePhi, protoLayer, transform);
+        std::move(surfaces), bTypeR, bTypePhi, protoLayer, transform);
 
     checkBinning(*sArray);
   }
@@ -359,7 +363,7 @@ Acts::LayerCreator::discLayer(const std::vector<const Surface*>&  surfaces,
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::planeLayer(
-    const std::vector<const Surface*>& /**surfaces*/,
+    std::vector<std::shared_ptr<const Surface>> /**surfaces*/,
     double /**envelopeXY*/,
     double /**envelopeZ*/,
     size_t /**binsX*/,

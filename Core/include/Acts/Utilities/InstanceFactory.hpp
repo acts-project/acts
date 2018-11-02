@@ -9,6 +9,7 @@
 #pragma once
 #include <boost/functional/value_factory.hpp>
 #include <map>
+#include <memory>
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
@@ -35,7 +36,8 @@ class InstanceFactory
   using PlanarBoundsPtr  = std::shared_ptr<const PlanarBounds>;
   using SurfaceBoundsFactory
       = std::function<SurfaceBoundsPtr(const variant_data&)>;
-  using SurfaceFactory = std::function<const Surface*(const variant_data&)>;
+  using SurfaceFactory
+      = std::function<std::shared_ptr<Surface>(const variant_data&)>;
 
 public:
   /// Default constructor. Sets up a map to lambdas which return
@@ -68,8 +70,9 @@ public:
       return std::make_shared<const DiscTrapezoidalBounds>(data);
     };
 
-    m_surfaces["PlaneSurface"]
-        = [](auto const& data) { return new PlaneSurface(data); };
+    m_surfaces["PlaneSurface"] = [](auto const& data) {
+      return Surface::makeShared<PlaneSurface>(data);
+    };
   }
 
   /// Method to produce surface bounds type objects
@@ -118,7 +121,7 @@ public:
   /// @param cname The class name
   /// @param data The @c variant_data to construct from
   /// @return Pointer to the created surface
-  const Surface*
+  std::shared_ptr<Surface>
   surface(const std::string& cname, const variant_data& data) const
   {
     throw_assert(m_surfaces.count(cname),

@@ -97,7 +97,7 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
                        << " configurations.");
   for (auto layerCfg : layerConfigs) {
     // prepare the layer surfaces
-    std::vector<const Surface*> layerSurfaces;
+    std::vector<std::shared_ptr<const Surface>> layerSurfaces;
 
     ACTS_DEBUG("- layer configuration found for layer " << layerCfg.layerName
                                                         << " with sensor "
@@ -132,14 +132,14 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
 
 void
 Acts::TGeoLayerBuilder::resolveSensitive(
-    std::vector<const Acts::Surface*>& layerSurfaces,
-    TGeoVolume*                        tgVolume,
-    TGeoNode*                          tgNode,
-    const TGeoMatrix&                  tgTransform,
-    const LayerConfig&                 layerConfig,
-    int                                type,
-    bool                               correctBranch,
-    const std::string&                 offset)
+    std::vector<std::shared_ptr<const Acts::Surface>>& layerSurfaces,
+    TGeoVolume*                                        tgVolume,
+    TGeoNode*                                          tgNode,
+    const TGeoMatrix&                                  tgTransform,
+    const LayerConfig&                                 layerConfig,
+    int                                                type,
+    bool                                               correctBranch,
+    const std::string&                                 offset)
 {
   /// some screen output for disk debugging
   if (type != 0) {
@@ -229,7 +229,9 @@ Acts::TGeoLayerBuilder::resolveSensitive(
         // record the element @todo solve with provided cache
         m_elementStore.push_back(tgElement);
         // record the surface
-        layerSurfaces.push_back(&(tgElement->surface()));
+        // element owns the surface, we give shared ownership to
+        // layer surfaces -> i.e. the Layer to be built
+        layerSurfaces.push_back(tgElement->surface().getSharedPtr());
       }
     } else {
       // is not yet the senstive one

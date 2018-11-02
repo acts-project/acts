@@ -59,12 +59,6 @@ public:
   {
   }
 
-  /// Constructor from surface
-  ///
-  /// @tparam parameters_t Type of the predicted parameters
-  /// @param s The Surface for the track state
-  TrackState(const Surface* s) : m_surface(s) {}
-
   /// Virtual destructor
   virtual ~TrackState() = default;
 

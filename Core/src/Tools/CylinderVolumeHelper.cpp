@@ -898,8 +898,9 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
     if (faceOne == cylinderCover || faceOne == tubeOuterCover) {
       // (1) create the BoundaryCylinderSurface
       // now create the CylinderSurface
-      std::unique_ptr<const Surface> cSurface(
-          new CylinderSurface(transform, rGlueMin, 0.5 * (zMax - zMin)));
+      std::shared_ptr<const Surface> cSurface
+          = Surface::makeShared<CylinderSurface>(
+              transform, rGlueMin, 0.5 * (zMax - zMin));
       ACTS_VERBOSE("             creating a new cylindrical boundary surface "
                    "with bounds = "
                    << cSurface->bounds());
@@ -911,8 +912,8 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
     } else {
       // (2) create the BoundaryDiscSurface, in that case the zMin/zMax provided
       // are both the position of the disk in question
-      std::unique_ptr<const Surface> dSurface(
-          new DiscSurface(transform, rMin, rMax));
+      std::shared_ptr<const Surface> dSurface
+          = Surface::makeShared<DiscSurface>(transform, rMin, rMax);
       ACTS_VERBOSE("             creating a new disc-like boundary surface "
                    "with bounds = "
                    << dSurface->bounds());

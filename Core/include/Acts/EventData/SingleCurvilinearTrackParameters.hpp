@@ -50,7 +50,7 @@ public:
                                                                 dCharge),
           position,
           momentum)
-    , m_upSurface(position, momentum)
+    , m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum))
   {
   }
 
@@ -73,7 +73,7 @@ public:
                                                                 0),
           position,
           momentum)
-    , m_upSurface(position, momentum)
+    , m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum))
   {
   }
 
@@ -82,7 +82,7 @@ public:
   SingleCurvilinearTrackParameters(
       const SingleCurvilinearTrackParameters<ChargePolicy>& copy)
     : SingleTrackParameters<ChargePolicy>(copy)
-    , m_upSurface(this->position(), this->momentum())
+    , m_upSurface(copy.m_upSurface)  // copy shared ptr
   {
   }
 
@@ -106,7 +106,8 @@ public:
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
-      m_upSurface = PlaneSurface(this->position(), this->momentum());
+      m_upSurface = Surface::makeShared<PlaneSurface>(this->position(),
+                                                      this->momentum());
     }
     return *this;
   }
@@ -152,7 +153,8 @@ public:
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(typename par_type<par>::type());
     // recreate the surface
-    m_upSurface = PlaneSurface(this->position(), this->momentum().normalized());
+    m_upSurface = Surface::makeShared<PlaneSurface>(
+        this->position(), this->momentum().normalized());
     // reset to (0,0)
     this->getParameterSet().template setParameter<par>(0.);
   }
@@ -176,14 +178,15 @@ public:
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(typename par_type<par>::type());
     // recreate the surface
-    m_upSurface = PlaneSurface(this->position(), this->momentum().normalized());
+    m_upSurface = Surface::makeShared<PlaneSurface>(
+        this->position(), this->momentum().normalized());
   }
 
   /// @brief access to the reference surface
   const Surface&
   referenceSurface() const final
   {
-    return m_upSurface;
+    return *m_upSurface;
   }
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
@@ -195,10 +198,10 @@ public:
   RotationMatrix3D
   referenceFrame() const final
   {
-    return m_upSurface.transform().linear();
+    return m_upSurface->transform().linear();
   }
 
 private:
-  PlaneSurface m_upSurface;
+  std::shared_ptr<PlaneSurface> m_upSurface;
 };
 }  // namespace Acts

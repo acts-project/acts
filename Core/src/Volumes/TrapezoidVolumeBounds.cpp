@@ -75,11 +75,11 @@ Acts::TrapezoidVolumeBounds::operator=(const TrapezoidVolumeBounds& trabo)
   return *this;
 }
 
-const std::vector<const Acts::Surface*>
+std::vector<std::shared_ptr<const Acts::Surface>>
 Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
     std::shared_ptr<const Transform3D> transformPtr) const
 {
-  std::vector<const Surface*> rSurfaces;
+  std::vector<std::shared_ptr<const Surface>> rSurfaces;
 
   Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
                                                     : (*transformPtr.get());
@@ -97,12 +97,12 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
       = new Transform3D(transform * AngleAxis3D(M_PI, Vector3D(0., 1., 0.))
                         * Translation3D(Vector3D(0., 0., halflengthZ())));
 
-  rSurfaces.push_back(new PlaneSurface(
+  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform), xytBounds));
   //   (2) - at positive local z
   tTransform = new Transform3D(
       transform * Translation3D(Vector3D(0., 0., halflengthZ())));
-  rSurfaces.push_back(new PlaneSurface(
+  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform), xytBounds));
   // face surfaces yz
   // transmute cyclical
@@ -125,7 +125,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D faceAlphaPosition = transform * faceAlphaPosition0;
   tTransform = new Transform3D((trapezoidRotation * faceAlphaRotation)
                                * Translation3D(faceAlphaPosition));
-  rSurfaces.push_back(new PlaneSurface(
+  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform), faceAlphaBounds));
   //   (4) - at point B, attached to beta opening angle
   Vector3D         B(minHalflengthX(), -halflengthY(), trapezoidCenter.z());
@@ -146,7 +146,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D faceBetaPosition = transform * faceBetaPosition0;
   tTransform = new Transform3D(trapezoidRotation * faceBetaRotation
                                * Translation3D(faceBetaPosition));
-  rSurfaces.push_back(new PlaneSurface(
+  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform), faceBetaBounds));
   // face surfaces zx
   //   (5) - at negative local x
@@ -155,7 +155,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
                         * Translation3D(Vector3D(0., halflengthY(), 0.))
                         * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
                         * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
-  rSurfaces.push_back(new PlaneSurface(
+  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceZXRectangleBoundsBottom())));
   //   (6) - at positive local x
@@ -163,7 +163,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
       transform * Translation3D(Vector3D(0., halflengthY(), 0.))
       * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
       * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
-  rSurfaces.push_back(new PlaneSurface(
+  rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceZXRectangleBoundsTop())));
 

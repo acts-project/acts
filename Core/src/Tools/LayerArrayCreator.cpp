@@ -108,8 +108,8 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
       }
 
       // create the navigation layer surface from the layer
-      std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
-          *layIter, bValue, -std::abs(layerValue - navigationValue)));
+      std::shared_ptr<const Surface> navLayerSurface = createNavigationSurface(
+          *layIter, bValue, -std::abs(layerValue - navigationValue));
       ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
                    << (navLayerSurface->binningPosition(bValue)).x()
                    << ", "
@@ -139,8 +139,8 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
     // create navigation layer only when necessary
     if (navigationValue != max) {
       // create the navigation layer surface from the layer
-      std::unique_ptr<const Surface> navLayerSurface(createNavigationSurface(
-          *lastLayer, bValue, navigationValue - layerValue));
+      std::shared_ptr<const Surface> navLayerSurface = createNavigationSurface(
+          *lastLayer, bValue, navigationValue - layerValue);
       ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
                    << (navLayerSurface->binningPosition(bValue)).x()
                    << ", "
@@ -172,7 +172,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
                                                          std::move(binUtility));
 }
 
-Acts::Surface*
+std::shared_ptr<Acts::Surface>
 Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
                                                  BinningValue bValue,
                                                  double       offset) const
@@ -209,7 +209,7 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
   }
   }
   // navigation surface
-  Surface* navigationSurface = nullptr;
+  std::shared_ptr<Surface> navigationSurface;
   // for everything else than a cylinder it's a copy with shift
   if (layerSurface.type() != Surface::Cylinder) {
     // create a transform that does the shift
@@ -229,8 +229,8 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
         ? std::make_shared<const Transform3D>(layerSurface.transform())
         : nullptr;
     // new navigation layer
-    navigationSurface
-        = new CylinderSurface(navTrasform, navigationR, halflengthZ);
+    navigationSurface = Surface::makeShared<CylinderSurface>(
+        navTrasform, navigationR, halflengthZ);
   }
   return navigationSurface;
 }

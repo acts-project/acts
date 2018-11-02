@@ -119,7 +119,7 @@ public:
   /// @param transformPtr is the transform applied by the volume
   ///
   /// @return a vector of surfaces to be used as boundary surfaces
-  const std::vector<const Surface*>
+  std::vector<std::shared_ptr<const Surface>>
   decomposeToSurfaces(
       std::shared_ptr<const Transform3D> transformPtr) const override;
 

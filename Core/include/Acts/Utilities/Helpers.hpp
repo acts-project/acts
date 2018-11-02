@@ -16,7 +16,9 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
+#include <memory>
 #include <string>
+#include <vector>
 #include "strings.h"
 
 // Acts include(s)
@@ -192,6 +194,30 @@ toString(const Acts::Transform3D& transform,
   sout << offset << "Rotation    : "
        << toString(transform.rotation(), precision + 2, rotationOffset);
   return sout.str();
+}
+
+template <typename T>
+std::vector<T*>
+unpack_shared_vector(const std::vector<std::shared_ptr<T>>& items)
+{
+  std::vector<T*> rawPtrs;
+  rawPtrs.reserve(items.size());
+  for (const std::shared_ptr<T>& item : items) {
+    rawPtrs.push_back(item.get());
+  }
+  return rawPtrs;
+}
+
+template <typename T>
+std::vector<const T*>
+unpack_shared_vector(const std::vector<std::shared_ptr<const T>>& items)
+{
+  std::vector<const T*> rawPtrs;
+  rawPtrs.reserve(items.size());
+  for (const std::shared_ptr<const T>& item : items) {
+    rawPtrs.push_back(item.get());
+  }
+  return rawPtrs;
 }
 
 }  // end of Acts namespace

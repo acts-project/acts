@@ -110,10 +110,10 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
   auto counterPlaneTransform = std::const_pointer_cast<const Transform3D>(
       mutableCounterPlaneTransform);
   // - build the readout & counter readout surfaces
-  boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
-      new PlaneSurface(readoutPlaneTransform, readoutPlaneBounds)));
-  boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
-      new PlaneSurface(counterPlaneTransform, counterPlaneBounds)));
+  boundarySurfaces.push_back(Surface::makeShared<PlaneSurface>(
+      readoutPlaneTransform, readoutPlaneBounds));
+  boundarySurfaces.push_back(Surface::makeShared<PlaneSurface>(
+      counterPlaneTransform, counterPlaneBounds));
 
   // (B) - bin X and lorentz surfaces
   // -----------------------------------------------------------
@@ -177,8 +177,8 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
       std::shared_ptr<const PlanarBounds> boundaryXBounds
           = boundaryStraight ? xBinBounds : lorentzPlaneBounds;
       // boundary surfaces
-      boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
-          new PlaneSurface(boundaryXTransform, boundaryXBounds)));
+      boundarySurfaces.push_back(Surface::makeShared<PlaneSurface>(
+          boundaryXTransform, boundaryXBounds));
       // (ii) this is the in between bins  --- ( 1 <= ibin < m_mbnsX )
     } else {
       // shift by the lorentz angle
@@ -187,8 +187,8 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
       auto lorentzPlaneTransform = std::make_shared<const Transform3D>(
           Translation3D(lorentzPlanePosition) * lorentzPlaneRotationMatrix);
       // lorentz plane surfaces
-      segmentationSurfacesX.push_back(std::shared_ptr<const PlaneSurface>(
-          new PlaneSurface(lorentzPlaneTransform, lorentzPlaneBounds)));
+      segmentationSurfacesX.push_back(Surface::makeShared<PlaneSurface>(
+          lorentzPlaneTransform, lorentzPlaneBounds));
     }
   }
 
@@ -218,11 +218,11 @@ Acts::CartesianSegmentation::createSegmentationSurfaces(
         Translation3D(binSurfaceCenter) * yBinRotationMatrix);
     // these are the boundaries
     if (ibiny == 0 || ibiny == m_binUtility->bins(1)) {
-      boundarySurfaces.push_back(std::shared_ptr<const PlaneSurface>(
-          new PlaneSurface(binTransform, yBinBounds)));
+      boundarySurfaces.push_back(
+          Surface::makeShared<PlaneSurface>(binTransform, yBinBounds));
     } else {  // these are the bin boundaries
-      segmentationSurfacesY.push_back(std::shared_ptr<const PlaneSurface>(
-          new PlaneSurface(binTransform, yBinBounds)));
+      segmentationSurfacesY.push_back(
+          Surface::makeShared<PlaneSurface>(binTransform, yBinBounds));
     }
   }
 }

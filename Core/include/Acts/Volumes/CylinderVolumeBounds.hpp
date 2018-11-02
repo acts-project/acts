@@ -132,7 +132,7 @@ public:
   /// @param transformPtr is the transform where the boundary surfaces are
   /// situated
   /// @note this surface is a factory method, the volume handles the memory
-  const std::vector<const Acts::Surface*>
+  std::vector<std::shared_ptr<const Surface>>
   decomposeToSurfaces(
       std::shared_ptr<const Transform3D> transformPtr) const override;
 

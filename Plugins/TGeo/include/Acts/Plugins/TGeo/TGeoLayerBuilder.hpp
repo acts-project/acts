@@ -138,14 +138,14 @@ private:
 
   /// Private helper function to parse the geometry tree
   void
-  resolveSensitive(std::vector<const Surface*>& layerSurfaces,
-                   TGeoVolume*                  tgVolume,
-                   TGeoNode*                    tgNode,
-                   const TGeoMatrix&            tgTransform,
-                   const LayerConfig&           layerConfig,
-                   int                          type,
-                   bool                         correctBranch = false,
-                   const std::string&           offset        = "");
+  resolveSensitive(std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
+                   TGeoVolume*                                  tgVolume,
+                   TGeoNode*                                    tgNode,
+                   const TGeoMatrix&                            tgTransform,
+                   const LayerConfig&                           layerConfig,
+                   int                                          type,
+                   bool               correctBranch = false,
+                   const std::string& offset        = "");
 
   // Private helper method : build layers
   // @param layers is goint to be filled

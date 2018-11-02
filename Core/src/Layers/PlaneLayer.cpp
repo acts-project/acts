@@ -57,9 +57,9 @@ void
 Acts::PlaneLayer::buildApproachDescriptor()
 {
   // delete it
-  m_approachDescriptor = nullptr;
+  m_approachDescriptor.reset(nullptr);
   // delete the surfaces
-  std::vector<const Acts::Surface*> aSurfaces;
+  std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
   // get the appropriate transform, the center and the normal vector
   const Transform3D& lTransform = PlaneSurface::transform();
   RotationMatrix3D   lRotation  = lTransform.rotation();
@@ -73,18 +73,18 @@ Acts::PlaneLayer::buildApproachDescriptor()
       Translation3D(lCenter + 0.5 * Layer::m_layerThickness * lVector)
       * lRotation);
   // create the new surfaces
-  aSurfaces.push_back(
-      new Acts::PlaneSurface(std::shared_ptr<const Transform3D>(apnTransform),
-                             PlaneSurface::m_bounds));
-  aSurfaces.push_back(
-      new PlaneSurface(std::shared_ptr<const Transform3D>(appTransform),
-                       PlaneSurface::m_bounds));
+  aSurfaces.push_back(Surface::makeShared<Acts::PlaneSurface>(
+      std::shared_ptr<const Transform3D>(apnTransform),
+      PlaneSurface::m_bounds));
+  aSurfaces.push_back(Surface::makeShared<Acts::PlaneSurface>(
+      std::shared_ptr<const Transform3D>(appTransform),
+      PlaneSurface::m_bounds));
   // set the layer and make TrackingGeometry
-  for (auto& sfPtr : aSurfaces) {
+  for (auto& sfPtr : m_approachDescriptor->containedSurfaces()) {
     auto& mutableSf = *(const_cast<Surface*>(sfPtr));
     mutableSf.associateLayer(*this);
   }
   // @todo check if we can provide the layer at surface creation
   m_approachDescriptor
-      = std::make_unique<const GenericApproachDescriptor<Surface>>(aSurfaces);
+      = std::make_unique<const GenericApproachDescriptor>(std::move(aSurfaces));
 }

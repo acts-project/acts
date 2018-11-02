@@ -19,6 +19,7 @@
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 
@@ -27,14 +28,16 @@ using Acts::VectorHelpers::perp;
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Surface*>&        surfaces,
-    size_t                                    binsPhi,
-    size_t                                    binsZ,
-    boost::optional<ProtoLayer>               protoLayerOpt,
-    const std::shared_ptr<const Transform3D>& transformOpt) const
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t                                      binsPhi,
+    size_t                                      binsZ,
+    boost::optional<ProtoLayer>                 protoLayerOpt,
+    const std::shared_ptr<const Transform3D>&   transformOpt) const
 {
+  std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -45,10 +48,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
   Transform3D transform
       = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
-  ProtoAxis pAxisPhi
-      = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, binsPhi);
+  ProtoAxis pAxisPhi = createEquidistantAxis(
+      surfacesRaw, binPhi, protoLayer, transform, binsPhi);
   ProtoAxis pAxisZ
-      = createEquidistantAxis(surfaces, binZ, protoLayer, transform, binsZ);
+      = createEquidistantAxis(surfacesRaw, binZ, protoLayer, transform, binsZ);
 
   double R = protoLayer.maxR - protoLayer.minR;
 
@@ -68,23 +71,27 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                 detail::AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-  sl->fill(surfaces);
-  completeBinning(*sl, surfaces);
+  sl->fill(surfacesRaw);
+  completeBinning(*sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(
-      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
+      std::move(sl),
+      std::move(surfaces),
+      std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
-    const std::vector<const Surface*>&        surfaces,
-    BinningType                               bTypePhi,
-    BinningType                               bTypeZ,
-    boost::optional<ProtoLayer>               protoLayerOpt,
-    const std::shared_ptr<const Transform3D>& transformOpt) const
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    BinningType                                 bTypePhi,
+    BinningType                                 bTypeZ,
+    boost::optional<ProtoLayer>                 protoLayerOpt,
+    const std::shared_ptr<const Transform3D>&   transformOpt) const
 {
+  std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
 
   double      R = 0.5 * (protoLayer.maxR - protoLayer.minR);
   Transform3D transform
@@ -95,15 +102,15 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 
   if (bTypePhi == equidistant) {
     pAxisPhi
-        = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
+        = createEquidistantAxis(surfacesRaw, binPhi, protoLayer, transform, 0);
   } else {
-    pAxisPhi = createVariableAxis(surfaces, binPhi, protoLayer, transform);
+    pAxisPhi = createVariableAxis(surfacesRaw, binPhi, protoLayer, transform);
   }
 
   if (bTypeZ == equidistant) {
-    pAxisZ = createEquidistantAxis(surfaces, binZ, protoLayer, transform);
+    pAxisZ = createEquidistantAxis(surfacesRaw, binZ, protoLayer, transform);
   } else {
-    pAxisZ = createVariableAxis(surfaces, binZ, protoLayer, transform);
+    pAxisZ = createVariableAxis(surfacesRaw, binZ, protoLayer, transform);
   }
 
   Transform3D itransform = transform.inverse();
@@ -121,8 +128,8 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                 detail::AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-  sl->fill(surfaces);
-  completeBinning(*sl, surfaces);
+  sl->fill(surfacesRaw);
+  completeBinning(*sl, surfacesRaw);
 
   // get the number of bins
   auto   axes  = sl->getAxes();
@@ -136,19 +143,23 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                       << " bins.");
 
   return std::make_unique<SurfaceArray>(
-      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
+      std::move(sl),
+      std::move(surfaces),
+      std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Surface*>&        surfaces,
-    size_t                                    binsR,
-    size_t                                    binsPhi,
-    boost::optional<ProtoLayer>               protoLayerOpt,
-    const std::shared_ptr<const Transform3D>& transformOpt) const
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t                                      binsR,
+    size_t                                      binsPhi,
+    boost::optional<ProtoLayer>                 protoLayerOpt,
+    const std::shared_ptr<const Transform3D>&   transformOpt) const
 {
+  std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
@@ -156,9 +167,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
       = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
 
   ProtoAxis pAxisR
-      = createEquidistantAxis(surfaces, binR, protoLayer, transform, binsR);
-  ProtoAxis pAxisPhi
-      = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, binsPhi);
+      = createEquidistantAxis(surfacesRaw, binR, protoLayer, transform, binsR);
+  ProtoAxis pAxisPhi = createEquidistantAxis(
+      surfacesRaw, binPhi, protoLayer, transform, binsPhi);
 
   double Z = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
   ACTS_VERBOSE("- z-position of disk estimated as " << Z);
@@ -188,23 +199,27 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1
                                       << " bins.");
-  sl->fill(surfaces);
-  completeBinning(*sl, surfaces);
+  sl->fill(surfacesRaw);
+  completeBinning(*sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(
-      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
+      std::move(sl),
+      std::move(surfaces),
+      std::make_shared<const Transform3D>(transform));
 }
 
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
-    const std::vector<const Surface*>&        surfaces,
-    BinningType                               bTypeR,
-    BinningType                               bTypePhi,
-    boost::optional<ProtoLayer>               protoLayerOpt,
-    const std::shared_ptr<const Transform3D>& transformOpt) const
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    BinningType                                 bTypeR,
+    BinningType                                 bTypePhi,
+    boost::optional<ProtoLayer>                 protoLayerOpt,
+    const std::shared_ptr<const Transform3D>&   transformOpt) const
 {
+  std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
@@ -215,9 +230,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   ProtoAxis pAxisR;
 
   if (bTypeR == equidistant) {
-    pAxisR = createEquidistantAxis(surfaces, binR, protoLayer, transform);
+    pAxisR = createEquidistantAxis(surfacesRaw, binR, protoLayer, transform);
   } else {
-    pAxisR = createVariableAxis(surfaces, binR, protoLayer, transform);
+    pAxisR = createVariableAxis(surfacesRaw, binR, protoLayer, transform);
   }
 
   // if we have more than one R ring, we need to figure out
@@ -226,7 +241,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     // more than one R-Ring, we need to adjust
     // this FORCES equidistant binning
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
-    for (const auto& srf : surfaces) {
+    for (const auto& srf : surfacesRaw) {
       Vector3D bpos = srf->binningPosition(binR);
       size_t   bin  = pAxisR.getBin(perp(bpos));
       phiModules.at(bin).push_back(srf);
@@ -255,15 +270,15 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     size_t nBinsPhi
         = (*std::min_element(nPhiModules.begin(), nPhiModules.end()));
     pAxisPhi = createEquidistantAxis(
-        surfaces, binPhi, protoLayer, transform, nBinsPhi);
+        surfacesRaw, binPhi, protoLayer, transform, nBinsPhi);
 
   } else {
     // use regular determination
     if (bTypePhi == equidistant) {
-      pAxisPhi
-          = createEquidistantAxis(surfaces, binPhi, protoLayer, transform, 0);
+      pAxisPhi = createEquidistantAxis(
+          surfacesRaw, binPhi, protoLayer, transform, 0);
     } else {
-      pAxisPhi = createVariableAxis(surfaces, binPhi, protoLayer, transform);
+      pAxisPhi = createVariableAxis(surfacesRaw, binPhi, protoLayer, transform);
     }
   }
 
@@ -296,17 +311,19 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
                                       << bins0 * bins1
                                       << " bins.");
 
-  sl->fill(surfaces);
-  completeBinning(*sl, surfaces);
+  sl->fill(surfacesRaw);
+  completeBinning(*sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(
-      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
+      std::move(sl),
+      std::move(surfaces),
+      std::make_shared<const Transform3D>(transform));
 }
 
 /// SurfaceArrayCreator interface method - create an array on a plane
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
-    const std::vector<const Surface*>& /*surfaces*/,
+    std::vector<std::shared_ptr<const Surface>> /*surfaces*/,
     double /*halflengthX*/,
     double /*halflengthY*/,
     size_t /*binsX*/,

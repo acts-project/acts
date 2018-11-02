@@ -717,7 +717,8 @@ public:
           J * (*state.covariance) * J.transpose());
     }
 
-    return BoundParameters(std::move(cov), gp, mom, state.charge(), s);
+    return BoundParameters(
+        std::move(cov), gp, mom, state.charge(), s.getSharedPtr());
   }
 
   AtlasStepper(BField bField = BField()) : m_bField(std::move(bField)){};

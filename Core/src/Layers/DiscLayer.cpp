@@ -140,7 +140,7 @@ void
 Acts::DiscLayer::buildApproachDescriptor()
 {
   // delete it
-  m_approachDescriptor = nullptr;
+  m_approachDescriptor.reset(nullptr);
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume != nullptr) {
     // get the boundary surfaces
@@ -148,14 +148,14 @@ Acts::DiscLayer::buildApproachDescriptor()
         bSurfaces
         = m_representingVolume->boundarySurfaces();
     // fill in the surfaces into the vector
-    std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>
-        aSurfaces;
-    aSurfaces.push_back(bSurfaces.at(negativeFaceXY));
-    aSurfaces.push_back(bSurfaces.at(positiveFaceXY));
+    std::vector<std::shared_ptr<const Surface>> aSurfaces;
+    aSurfaces.push_back(
+        bSurfaces.at(negativeFaceXY)->surfaceRepresentation().getSharedPtr());
+    aSurfaces.push_back(
+        bSurfaces.at(positiveFaceXY)->surfaceRepresentation().getSharedPtr());
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor = std::
-        make_unique<const GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
-            aSurfaces);
+    m_approachDescriptor = std::make_unique<const GenericApproachDescriptor>(
+        std::move(aSurfaces));
   } else {
     // create the new surfaces - positions first
     Vector3D aspPosition(center()
@@ -167,13 +167,15 @@ Acts::DiscLayer::buildApproachDescriptor()
     auto aspTransform
         = std::make_shared<const Transform3D>(Translation3D(aspPosition));
     // create the vector
-    std::vector<const Surface*> aSurfaces;
-    aSurfaces.push_back(new DiscSurface(asnTransform, m_bounds));
-    aSurfaces.push_back(new DiscSurface(aspTransform, m_bounds));
+    std::vector<std::shared_ptr<const Surface>> aSurfaces;
+    aSurfaces.push_back(
+        Surface::makeShared<DiscSurface>(asnTransform, m_bounds));
+    aSurfaces.push_back(
+        Surface::makeShared<DiscSurface>(aspTransform, m_bounds));
     // create an ApproachDescriptor with standard surfaces surfaces - these
     // will be deleted by the approach descriptor
-    m_approachDescriptor
-        = std::make_unique<const GenericApproachDescriptor<Surface>>(aSurfaces);
+    m_approachDescriptor = std::make_unique<const GenericApproachDescriptor>(
+        std::move(aSurfaces));
   }
   // @todo check if we can give the layer at curface creation
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {

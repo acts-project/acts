@@ -22,7 +22,7 @@
 Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume)
   : m_world(highestVolume)
-  , m_beam(std::make_unique<const PerigeeSurface>(s_origin))
+  , m_beam(Surface::makeShared<PerigeeSurface>(s_origin))
 {
   // close up the geometry
   size_t volumeID = 0;
@@ -148,7 +148,7 @@ Acts::TrackingGeometry::associatedLayer(const Acts::Vector3D& gp) const
 
 void
 Acts::TrackingGeometry::registerBeamTube(
-    std::unique_ptr<const PerigeeSurface> beam)
+    std::shared_ptr<const PerigeeSurface> beam)
 {
   m_beam = std::move(beam);
 }

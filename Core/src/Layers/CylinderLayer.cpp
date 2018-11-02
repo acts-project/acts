@@ -140,7 +140,7 @@ void
 Acts::CylinderLayer::buildApproachDescriptor()
 {
   // delete it
-  m_approachDescriptor = nullptr;
+  m_approachDescriptor.reset(nullptr);
   // delete the surfaces
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume != nullptr) {
@@ -148,30 +148,33 @@ Acts::CylinderLayer::buildApproachDescriptor()
     const std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>&
         bSurfaces
         = m_representingVolume->boundarySurfaces();
+
     // fill in the surfaces into the vector
-    std::vector<std::shared_ptr<const BoundarySurfaceT<AbstractVolume>>>
-        aSurfaces;
+    std::vector<std::shared_ptr<const Surface>> aSurfaces;
     if (bSurfaces.size() > size_t(tubeOuterCover)) {
-      aSurfaces.push_back(bSurfaces.at(tubeInnerCover));
+      aSurfaces.push_back(
+          bSurfaces.at(tubeInnerCover)->surfaceRepresentation().getSharedPtr());
     }
-    aSurfaces.push_back(bSurfaces.at(tubeOuterCover));
+    aSurfaces.push_back(
+        bSurfaces.at(tubeOuterCover)->surfaceRepresentation().getSharedPtr());
     // create an ApproachDescriptor with Boundary surfaces
-    m_approachDescriptor = std::
-        make_unique<const GenericApproachDescriptor<BoundarySurfaceT<AbstractVolume>>>(
-            aSurfaces);
+    m_approachDescriptor = std::make_unique<const GenericApproachDescriptor>(
+        std::move(aSurfaces));
   } else {
     // create the new surfaces
-    std::vector<const Acts::Surface*> aSurfaces;
-    aSurfaces.push_back(new CylinderSurface(m_transform,
-                                            m_bounds->r() - 0.5 * thickness(),
-                                            m_bounds->halflengthZ()));
-    aSurfaces.push_back(new CylinderSurface(m_transform,
-                                            m_bounds->r() + 0.5 * thickness(),
-                                            m_bounds->halflengthZ()));
+    std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
+    aSurfaces.push_back(
+        Surface::makeShared<CylinderSurface>(m_transform,
+                                             m_bounds->r() - 0.5 * thickness(),
+                                             m_bounds->halflengthZ()));
+    aSurfaces.push_back(
+        Surface::makeShared<CylinderSurface>(m_transform,
+                                             m_bounds->r() + 0.5 * thickness(),
+                                             m_bounds->halflengthZ()));
     // create an ApproachDescriptor with standard surfaces surfaces - these will
     // be deleted by the approach descriptor
-    m_approachDescriptor
-        = std::make_unique<const GenericApproachDescriptor<Surface>>(aSurfaces);
+    m_approachDescriptor = std::make_unique<const GenericApproachDescriptor>(
+        std::move(aSurfaces));
   }
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
     if (sfPtr != nullptr) {

@@ -118,7 +118,7 @@ public:
   /// @note this is a factory method
   ///
   /// @return vector of surfaces from the decopmosition
-  const std::vector<const Surface*>
+  std::vector<std::shared_ptr<const Surface>>
   decomposeToSurfaces(
       std::shared_ptr<const Transform3D> transformPtr) const override;
 
