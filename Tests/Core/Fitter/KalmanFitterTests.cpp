@@ -26,6 +26,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/Common/CubicTrackingGeometry.hpp"
@@ -50,11 +51,15 @@ namespace Test {
   using VolumeResolution   = std::map<geo_id_value, ElementResolution>;
   using DetectorResolution = std::map<geo_id_value, VolumeResolution>;
 
+  using DebugOutput = detail::DebugOutputActor;
+
   std::normal_distribution<double> gauss(0., 1.);
   std::default_random_engine       generator(42);
 
   ActsSymMatrixD<1> cov1D;
   ActsSymMatrixD<2> cov2D;
+
+  bool debugMode = false;
 
   /// @brief This struct creates FittableMeasurements on the
   /// detector surfaces, according to the given smearing xxparameters
@@ -312,7 +317,7 @@ namespace Test {
     SingleCurvilinearTrackParameters<NeutralPolicy> mStart(nullptr, mPos, mMom);
 
     // Create action list for the measurement creation
-    using MeasurementActions  = ActionList<MeasurementCreator>;
+    using MeasurementActions  = ActionList<MeasurementCreator, DebugOutput>;
     using MeasurementAborters = AbortList<detail::EndOfWorldReached>;
 
     auto pixelResX = Resolution(eLOC_0, 25. * units::_um);
@@ -340,13 +345,21 @@ namespace Test {
 
     // Set options for propagator
     MeasurementPropagator::Options<MeasurementActions, MeasurementAborters>
-          mOptions;
+        mOptions;
+    mOptions.debug              = debugMode;
     auto& mCreator              = mOptions.actionList.get<MeasurementCreator>();
     mCreator.detectorResolution = detRes;
 
     // Launch and collect - the measurements
-    auto mResult      = mPropagator.propagate(mStart, mOptions);
-    auto measurements = mResult.get<MeasurementCreator::result_type>();
+    auto mResult = mPropagator.propagate(mStart, mOptions);
+    if (debugMode) {
+      const auto debugString
+          = mResult.template get<DebugOutput::result_type>().debugString;
+      std::cout << ">>>> Measurement creation: " << std::endl;
+      std::cout << debugString;
+    }
+
+    auto measurements = mResult.template get<MeasurementCreator::result_type>();
     BOOST_TEST(measurements.size() == 6);
 
     // The KalmanFitter - we use the eigen stepper for covariance transport
@@ -373,7 +386,9 @@ namespace Test {
     Vector3D rPos(-3. * units::_m,
                   10. * units::_um * gauss(generator),
                   100. * units::_um * gauss(generator));
-    Vector3D rMom(1. * units::_GeV, 0.01 * units::_GeV, 0.);
+    Vector3D rMom(1. * units::_GeV,
+                  0.025 * units::_GeV * gauss(generator),
+                  0.025 * units::_GeV * gauss(generator));
 
     SingleCurvilinearTrackParameters<ChargedPolicy> rStart(
         std::move(covPtr), rPos, rMom, 1.);

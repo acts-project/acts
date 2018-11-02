@@ -95,6 +95,7 @@ namespace detail {
       if (state.navigation.targetReached) {
         return true;
       }
+
       // Check if the maximum allowed step size has to be updated
       double limit     = std::min(internalLimit, state.options.pathLimit);
       double distance  = limit - state.stepping.pathAccumulated;

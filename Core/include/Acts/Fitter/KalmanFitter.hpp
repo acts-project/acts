@@ -226,7 +226,7 @@ private:
       // Update:
       // - Waiting for a current surface that appears in the measurement list
       auto surface = state.navigation.currentSurface;
-      if (surface) {
+      if (surface and not result.smoothed) {
         // Check if the surface is in the measurement map
         // -> Get the measurement / calibrate
         // -> Create the predicted state
@@ -439,7 +439,6 @@ private:
         dstream << std::setw(state.options.debugMsgWidth) << logAction()
                 << '\n';
         state.options.debugString += dstream.str();
-        std::cout << dstream.str();
       }
     }
 

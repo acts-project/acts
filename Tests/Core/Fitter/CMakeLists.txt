@@ -4,11 +4,11 @@
 # add_test (NAME KalmanFilterUnitTest COMMAND KalmanFilterTest)
 # acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanFilterUnitTest TARGETS KalmanFilterTest)
 
-# add_executable (KalmanFitterTests KalmanFitterTests.cpp)
-# target_include_directories (KalmanFitterTests PRIVATE ${Boost_INCLUDE_DIRS})
-# target_link_libraries (KalmanFitterTests PRIVATE ActsCore ActsTestsCommon)
-# add_test (NAME KalmanFitterUnitTests COMMAND KalmanFitterTests)
-# acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanFitterUnitTests TARGETS KalmanFitterTests)
+add_executable (KalmanFitterTests KalmanFitterTests.cpp)
+target_include_directories (KalmanFitterTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (KalmanFitterTests PRIVATE ActsCore ActsTestsCommon)
+add_test (NAME KalmanFitterUnitTests COMMAND KalmanFitterTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanFitterUnitTests TARGETS KalmanFitterTests)
 
 add_executable (GainMatrixTests GainMatrixTests.cpp)
 target_include_directories (GainMatrixTests PRIVATE ${Boost_INCLUDE_DIRS})

@@ -167,13 +167,13 @@ public:
       // Create the bound parameters
       BoundParameters parameters(std::move(covPtr), pos, p * dir, q, surface);
       // Create the bound state
-      BoundState boundState{std::move(parameters), jacobian, pathAccumulated};
+      BoundState bState{std::move(parameters), jacobian, pathAccumulated};
       // Reset the jacobian to identity
       if (reinitialize) {
         jacobian = Jacobian::Identity();
       }
       /// Return the State
-      return boundState;
+      return bState;
     }
 
     /// Create and return a curvilinear state at the current position
@@ -425,7 +425,7 @@ public:
     double pathAccumulated = 0.;
 
     /// adaptive step size of the runge-kutta integration
-    cstep stepSize = std::numeric_limits<double>::max();
+    cstep stepSize{std::numeric_limits<double>::max()};
   };
 
   /// Always use the same propagation state type, independently of the initial
