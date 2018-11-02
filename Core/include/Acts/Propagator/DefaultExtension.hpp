@@ -47,7 +47,7 @@ struct DefaultExtension
   /// @param [in] state State of the stepper
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
-  /// @param [in] i Index of the k_i
+  /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   /// @return Boolean flag if the calculation is valid
@@ -180,26 +180,23 @@ protected:
     dk1dT *= qop;
 
     dk2dT += half_h * dk1dT;
-    dk2dT *= VectorHelpers::cross(dk2dT, sd.B_middle);
-    dk2dT *= qop;
+    dk2dT *= qop * VectorHelpers::cross(dk2dT, sd.B_middle);
 
     dk3dT += half_h * dk2dT;
-    dk3dT *= VectorHelpers::cross(dk3dT, sd.B_middle);
-    dk3dT *= qop;
+    dk3dT *= qop * VectorHelpers::cross(dk3dT, sd.B_middle);
 
     dk4dT += h * dk3dT;
-    dk4dT *= VectorHelpers::cross(dk4dT, sd.B_last);
-    dk4dT *= qop;
+    dk4dT *= qop * VectorHelpers::cross(dk4dT, sd.B_last);
 
     dFdT.setIdentity();
-    dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
+    dFdT += h / 6. * (dk1dT + dk2dT + dk3dT);
     dFdT *= h;
 
-    dFdL = m_conv * h * h / 6 * (dk1dL + dk2dL + dk3dL);
+    dFdL = m_conv * (h * h) / 6. * (dk1dL + dk2dL + dk3dL);
 
-    dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
+    dGdT += h / 6. * (dk1dT + 2. * (dk2dT + dk3dT) + dk4dT);
 
-    dGdL = m_conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
+    dGdL = m_conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
     return true;
   }

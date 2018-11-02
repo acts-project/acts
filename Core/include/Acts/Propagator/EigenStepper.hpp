@@ -546,7 +546,7 @@ public:
     double h2, half_h;
 
     // First Runge-Kutta point (at current position)
-    sd.B_first = this->getField(state, state.pos);
+    sd.B_first = getField(state, state.pos);
     state.extension.template k<State, auctioneer_t>(state, sd.k1, sd.B_first);
 
     // The following functor starts to perform a Runge-Kutta step of a certain
@@ -561,7 +561,7 @@ public:
 
       // Second Runge-Kutta point
       const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * sd.k1;
-      sd.B_middle         = this->getField(state, pos1);
+      sd.B_middle         = getField(state, pos1);
       state.extension.k(state, sd.k2, sd.B_middle, 1, half_h, sd.k1);
 
       // Third Runge-Kutta point
@@ -569,30 +569,34 @@ public:
 
       // Last Runge-Kutta point
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * sd.k3;
-      sd.B_last           = this->getField(state, pos2);
+      sd.B_last           = getField(state, pos2);
       state.extension.k(state, sd.k4, sd.B_last, 3, h, sd.k3);
 
       // Return an estimate of the local integration error
-      return h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>();
+      //~ return h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>();
+      return h * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>();
     };
 
     // Select and adjust the appropriate Runge-Kutta step size in ATLAS style
     // (c.f. ATL-SOFT-PUB-2009-001)
-    double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
-    while (error_estimate > state.tolerance) {
-      state.stepSize = state.stepSize
-          * std::min(std::max(
-                         0.25,
-                         std::pow((state.tolerance / error_estimate), 0.25)),
-                     4.);
-      // If step size becomes too small the particle remains at the initial
-      // place
-      if (state.stepSize < state.stepSizeCutOff) {
-        return 0.;  // Not moving due to too low momentum needs an aborter
-      }
-      error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
-      //~ state.stepSize = state.stepSize * 0.5;
-      //~ error_estimate = tryRungeKuttaStep(state.stepSize);
+    //~ double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
+    //~ while (error_estimate > state.tolerance) {
+      //~ state.stepSize = state.stepSize
+          //~ * std::min(std::max(
+                         //~ 0.25,
+                         //~ std::pow((state.tolerance / error_estimate), 0.25)),
+                     //~ 4.);
+      //~ // If step size becomes too small the particle remains at the initial
+      //~ // place
+      //~ if (state.stepSize < state.stepSizeCutOff) {
+        //~ return 0.;  // Not moving due to too low momentum needs an aborter
+      //~ }
+      //~ error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
+    //~ }
+    double error_estimate = tryRungeKuttaStep(state.stepSize);
+    while (error_estimate > 0.0002) {
+      state.stepSize = state.stepSize * 0.5;
+      error_estimate = tryRungeKuttaStep(state.stepSize);
     }
 
     // use the adjusted step size

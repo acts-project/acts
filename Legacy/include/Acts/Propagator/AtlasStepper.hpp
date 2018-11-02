@@ -71,6 +71,13 @@ public:
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
 
+    /// Dummy variables for compatibility - eventually set but not used
+    double tolerance = 1e-8;
+    double stepSizeCutOff = 0.;
+    double mass = 0.;
+    int pdg = 0;
+    TrackingVolume const* const* volume = nullptr;
+    
     Vector3D
     position() const
     {

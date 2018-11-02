@@ -87,7 +87,7 @@ struct DenseEnvironmentExtension
   /// @param [in] state State of the stepper
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
-  /// @param [in] i Index of the k_i
+  /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   /// @return Boolean flag if the calculation is valid
