@@ -77,7 +77,7 @@ namespace Test {
 
   /// the actual test nethod that runs the test
   /// can be used with several propagator types
-  /// @tparam Propagator_type is the actual propagator type
+  /// @tparam propagator_t is the actual propagator type
   ///
   /// @param prop is the propagator instance
   /// @param pT the transverse momentum
@@ -85,14 +85,14 @@ namespace Test {
   /// @param theta the polar angle of the track at creation
   /// @parm charge is the charge of the particle
   /// @param index is the run index from the test
-  template <typename Propagator_type>
+  template <typename propagator_t>
   void
-  runTest(const Propagator_type& prop,
-          double                 pT,
-          double                 phi,
-          double                 theta,
-          int                    charge,
-          int                    index)
+  runTest(const propagator_t& prop,
+          double              pT,
+          double              phi,
+          double              theta,
+          int                 charge,
+          int                 index)
   {
     double dcharge = -1 + 2 * charge;
 
@@ -137,18 +137,8 @@ namespace Test {
     }
     // forward material test
     const auto& fwdResult = prop.propagate(start, fwdOptions);
-<<<<<<< HEAD
     auto&       fwdMaterial
         = fwdResult.template get<MaterialInteractor::result_type>();
-=======
-
-    if (debugModeFwd) {
-      std::cout << ">>> Forward Propagation : end." << std::endl;
-    }
-
-    auto& fwdMaterial
-        = fwdResult.template get<MaterialCollector::result_type>();
->>>>>>> 71e8793e... fix MaterialCollection test
 
     double fwdStepMaterialInX0 = 0.;
     double fwdStepMaterialInL0 = 0.;
@@ -245,7 +235,6 @@ namespace Test {
     // stepping from one surface to the next
     // now go from surface to surface and check
     Options fwdStepOptions;
-
     fwdStepOptions.maxStepSize = 25. * units::_cm;
     fwdStepOptions.pathLimit   = 25 * units::_cm;
     fwdStepOptions.debug       = debugModeFwdStep;
@@ -447,7 +436,7 @@ namespace Test {
       index)
   {
     runTest(epropagator, pT, phi, theta, charge, index);
-    // runTest(slpropagator, pT, phi, theta, charge, index);
+    runTest(slpropagator, pT, phi, theta, charge, index);
   }
 
 }  // namespace Test

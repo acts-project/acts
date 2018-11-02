@@ -67,5 +67,6 @@ namespace {
     // rhs = nullptr; // The move has to set it to zero
     // return returnSf;
   }
-}
-};
+
+}  // namespace anonymous
+}  // namespace Acts
