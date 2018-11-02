@@ -69,6 +69,12 @@ BOOST_DATA_TEST_CASE(
                   1e-3,
                   Acts::units::_eV,
                   debug);
+<<<<<<< HEAD
+=======
+  // foward backward runge kutta engine
+  // foward_backward(wpropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
+  // Acts::units::_eV, debug);
+>>>>>>> Wrongly set * removed, step size adjustment fixed
 }
 
 /// test consistency of propagators when approaching a cylinder
