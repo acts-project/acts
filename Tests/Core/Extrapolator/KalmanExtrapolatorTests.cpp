@@ -133,12 +133,12 @@ namespace Test {
 
     // Create some options
     using StepWiseOptions =
-        typename Propagator::template Options<StepWiseActors, Aborters>;
+        PropagatorOptions<StepWiseActors, Aborters>;
     StepWiseOptions swOptions;
 
     using PlainActors = ActionList<>;
     using PlainOptions =
-        typename Propagator::template Options<PlainActors, Aborters>;
+        PropagatorOptions<PlainActors, Aborters>;
     PlainOptions pOptions;
 
     // Run the standard propagation

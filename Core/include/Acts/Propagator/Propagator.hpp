@@ -18,6 +18,7 @@
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 
@@ -66,6 +67,94 @@ struct Result : private detail::Extendable<result_list...>
   operator bool() const { return (endParameters && status == Status::SUCCESS); }
 };
 
+
+/// @brief Options for propagate() call
+///
+/// @tparam action_list_t List of action types called after each
+///    propagation step with the current propagation and stepper state
+///
+/// @tparam aborter_list_t List of abort conditions tested after each
+///    propagation step using the current propagation and stepper state
+///
+template <typename action_list_t  = ActionList<>,
+          typename aborter_list_t = AbortList<>>
+struct PropagatorOptions
+{
+
+ /// @brief Expand the Options with extended aborters
+ ///
+ /// @tparam extended_aborter_list_t Type of the new aborter list
+ ///
+ /// @param aborters The new aborter list to be used (internally)
+ template <typename extended_aborter_list_t>
+ PropagatorOptions<action_list_t, extended_aborter_list_t>
+ extend(extended_aborter_list_t aborters) const
+ {
+   PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions;
+   // Copy the options over
+   eoptions.direction       = direction;
+   eoptions.absPdgCode      = absPdgCode;
+   eoptions.mass            = mass;
+   eoptions.maxSteps        = maxSteps;
+   eoptions.maxStepSize     = maxStepSize;
+   eoptions.targetTolerance = targetTolerance;
+   eoptions.pathLimit       = pathLimit;
+   eoptions.loopProtection  = loopProtection;
+   eoptions.loopFraction    = loopFraction;
+   // Output option
+   eoptions.debug         = debug;
+   eoptions.debugString   = debugString;
+   eoptions.debugPfxWidth = debugPfxWidth;
+   eoptions.debugMsgWidth = debugMsgWidth;
+   // Action / abort list
+   eoptions.actionList = actionList;
+   eoptions.abortList  = std::move(aborters);
+   // And return the options
+   return eoptions;
+ }
+
+ /// Propagation direction
+ NavigationDirection direction = forward;
+
+ /// The |pdg| code for (eventual) material integration - pion default
+ int absPdgCode = 211;
+
+ /// The mass for the particle for (eventual) material integration
+ double mass = 139.57018 * units::_MeV;
+
+ /// Maximum number of steps for one propagate() call
+ unsigned int maxSteps = 1000;
+
+ /// Absolute maximum step size
+ double maxStepSize = std::numeric_limits<double>::max();
+
+ /// Absolute maximum path length
+ double pathLimit = std::numeric_limits<double>::max();
+
+ /// Required tolerance to reach target (surface, pathlength)
+ double targetTolerance = s_onSurfaceTolerance;
+
+ /// Loop protection step, it adapts the pathLimit
+ bool   loopProtection = true;
+ double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
+
+ /// Debug output steering:
+ //  -> @todo: move to a debug struct
+ // - the string where debug messages are stored (optionally)
+ // - it also has some formatting options
+ bool        debug         = false;  ///< switch debug on
+ std::string debugString   = "";     ///< the string to collect msgs
+ size_t      debugPfxWidth = 30;     ///< the prefix width
+ size_t      debugMsgWidth = 50;     ///< the mesage width
+
+ /// List of actions
+ action_list_t actionList;
+
+ /// List of abort conditions
+ aborter_list_t abortList;
+ 
+};
+
 /// @brief Propagator for particles (optionally in a magnetic field)
 ///
 /// The Propagator works with a state objects given at function call
@@ -100,91 +189,6 @@ public:
 
   /// Typedef the navigator state
   using NavigatorState = typename navigator_t::state_type;
-
-  /// @brief Options for propagate() call
-  ///
-  /// @tparam action_list_t List of action types called after each
-  ///    propagation step with the current propagation and stepper state
-  ///
-  /// @tparam aborter_list_t List of abort conditions tested after each
-  ///    propagation step using the current propagation and stepper state
-  template <typename action_list_t  = ActionList<>,
-            typename aborter_list_t = AbortList<>>
-  struct Options
-  {
-
-    /// @brief Expand the Options with extended aborters
-    ///
-    /// @tparam extended_aborter_list_t Type of the new aborter list
-    ///
-    /// @param aborters The new aborter list to be used (internally)
-    template <typename extended_aborter_list_t>
-    Options<action_list_t, extended_aborter_list_t>
-    extend(extended_aborter_list_t aborters) const
-    {
-      Options<action_list_t, extended_aborter_list_t> eoptions;
-      // Copy the options over
-      eoptions.direction       = direction;
-      eoptions.absPdgCode      = absPdgCode;
-      eoptions.mass            = mass;
-      eoptions.maxSteps        = maxSteps;
-      eoptions.maxStepSize     = maxStepSize;
-      eoptions.targetTolerance = targetTolerance;
-      eoptions.pathLimit       = pathLimit;
-      eoptions.loopProtection  = loopProtection;
-      eoptions.loopFraction    = loopFraction;
-      // Output option
-      eoptions.debug         = debug;
-      eoptions.debugString   = debugString;
-      eoptions.debugPfxWidth = debugPfxWidth;
-      eoptions.debugMsgWidth = debugMsgWidth;
-      // Action / abort list
-      eoptions.actionList = actionList;
-      eoptions.abortList  = std::move(aborters);
-      // And return the options
-      return eoptions;
-    }
-
-    /// Propagation direction
-    NavigationDirection direction = forward;
-
-    /// The |pdg| code for (eventual) material integration - pion default
-    int absPdgCode = 211;
-
-    /// The mass for the particle for (eventual) material integration
-    double mass = 139.57018 * units::_MeV;
-
-    /// Maximum number of steps for one propagate() call
-    unsigned int maxSteps = 1000;
-
-    /// Absolute maximum step size
-    double maxStepSize = std::numeric_limits<double>::max();
-
-    /// Absolute maximum path length
-    double pathLimit = std::numeric_limits<double>::max();
-
-    /// Required tolerance to reach target (surface, pathlength)
-    double targetTolerance = s_onSurfaceTolerance;
-
-    /// Loop protection step, it adapts the pathLimit
-    bool   loopProtection = true;
-    double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
-
-    /// Debug output steering:
-    //  -> @todo: move to a debug struct
-    // - the string where debug messages are stored (optionally)
-    // - it also has some formatting options
-    bool        debug         = false;  ///< switch debug on
-    std::string debugString   = "";     ///< the string to collect msgs
-    size_t      debugPfxWidth = 30;     ///< the prefix width
-    size_t      debugMsgWidth = 50;     ///< the mesage width
-
-    /// List of actions
-    action_list_t actionList;
-
-    /// List of abort conditions
-    aborter_list_t abortList;
-  };
 
   /// Constructor from implementation object
   ///
@@ -361,7 +365,7 @@ public:
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
   propagate(const parameters_t& start,
-            const Options<action_list_t, aborter_list_t>& options) const
+            const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced by the propagation
@@ -437,7 +441,7 @@ public:
       action_list_t>
   propagate(const parameters_t& start,
             const surface_t&    target,
-            const Options<action_list_t, aborter_list_t>& options) const
+            const PropagatorOptions<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced at the end of the propagation
@@ -507,13 +511,17 @@ private:
            const std::function<std::string()>& logAction) const
   {
     if (state.options.debug) {
-      std::stringstream dstream;
-      std::string       ds = (state.stepping.navDir == forward) ? "P->" : "<-P";
-      dstream << ds << std::setw(state.options.debugPfxWidth);
-      dstream << "Propagator"
-              << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
+      std::vector<std::string> lines;
+      std::string              input = logAction();
+      boost::split(lines, input, boost::is_any_of("\n"));
+      for (const auto& line : lines) {
+        std::stringstream dstream;
+        dstream << "|->" << std::setw(state.options.debugPfxWidth);
+        dstream << "Propagator"
+                << " | ";
+        dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
+        state.options.debugString += dstream.str();
+      }
     }
   }
 };

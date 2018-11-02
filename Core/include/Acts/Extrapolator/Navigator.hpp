@@ -18,6 +18,7 @@
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
+#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 
@@ -1315,11 +1316,16 @@ private:
       if (state.navigation.currentVolume) {
         vName = state.navigation.currentVolume->volumeName();
       }
-      std::stringstream dstream;
-      std::string       ds = (state.stepping.navDir == forward) ? "-->" : "<--";
-      dstream << ds << std::setw(state.options.debugPfxWidth) << vName << " | ";
-      dstream << std::setw(state.options.debugMsgWidth) << logAction() << '\n';
-      state.options.debugString += dstream.str();
+      std::vector<std::string> lines;
+      std::string              input = logAction();
+      boost::split(lines, input, boost::is_any_of("\n"));
+      for (const auto& line : lines) {
+        std::stringstream dstream;
+        dstream << ">>>" << std::setw(state.options.debugPfxWidth) << vName
+                << " | ";
+        dstream << std::setw(state.options.debugMsgWidth) << line << '\n';
+        state.options.debugString += dstream.str();
+      }
     }
   }
 };

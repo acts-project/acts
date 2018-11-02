@@ -344,8 +344,7 @@ namespace Test {
     detRes[3] = stripVolumeRes;
 
     // Set options for propagator
-    MeasurementPropagator::Options<MeasurementActions, MeasurementAborters>
-        mOptions;
+    PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions;
     mOptions.debug              = debugMode;
     auto& mCreator              = mOptions.actionList.get<MeasurementCreator>();
     mCreator.detectorResolution = detRes;

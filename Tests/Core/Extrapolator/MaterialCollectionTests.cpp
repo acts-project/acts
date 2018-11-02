@@ -118,7 +118,7 @@ namespace Test {
     using ActionList_type      = ActionList<MaterialInteractor, DebugOutput>;
     using AbortConditions_type = AbortList<>;
 
-    using Options = PropagatorOptions<ActionList_type, AbortConditions_type>;
+    using Options = PropagatorOptions<ActionListType, AbortListType>;
     Options fwdOptions;
 
     fwdOptions.maxStepSize = 25. * units::_cm;

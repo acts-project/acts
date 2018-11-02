@@ -16,6 +16,7 @@
 #include "Acts/EventData/detail/trackstate_manipulation.hpp"
 #include "Acts/EventData/detail/trackstate_sorters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
@@ -113,11 +114,8 @@ public:
     using Actors       = ActionList<KalmanActor>;
     using Aborters     = AbortList<>;
 
-    // Create some options
-    using Options = typename propagator_t::template Options<Actors, Aborters>;
-    Options kalmanOptions;
-    kalmanOptions.debug = true;
-
+    // Create relevant options for the propagation options
+    PropagatorOptions<Actors, Aborters> kalmanOptions;
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.trackStates   = std::move(trackStates);
