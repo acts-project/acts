@@ -200,7 +200,7 @@ public:
   /// Constructor from implementation object
   ///
   /// @param stepper The stepper implementation is moved to a private member
-  /// @param navigator The navigator implentiation, moved to a private member
+  /// @param navigator The navigator implementation, moved to a private member
   explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
     : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
   {
