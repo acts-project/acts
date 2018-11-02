@@ -240,5 +240,15 @@ struct VoidCorrector
   {
     return false;
   }
+
+  /// Step modification call
+  ///
+  /// @stay put and don't do antyhing
+  template <typename step_t>
+  bool
+  operator()(step_t& /*unused*/) const
+  {
+    return false;
+  }
 };
 }

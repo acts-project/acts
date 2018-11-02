@@ -30,7 +30,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/IntersectionCorrector.hpp"
+#include "Acts/Propagator/detail/RelativePathCorrector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/Common/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -55,7 +55,7 @@ namespace Test {
   Navigator navigatorSL(tGeometry);
 
   using BField                 = ConstantBField;
-  using StepCorrector          = detail::IntersectionCorrector;
+  using StepCorrector          = detail::RelativePathCorrector;
   using EigenStepper           = EigenStepper<BField, StepCorrector>;
   using EigenPropagator        = Propagator<EigenStepper, Navigator>;
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
@@ -68,7 +68,6 @@ namespace Test {
   StraightLineStepper    slstepper;
   StraightLinePropagator slpropagator(std::move(slstepper),
                                       std::move(navigatorSL));
-
   const int ntests           = 500;
   const int skip             = 0;
   bool      debugModeFwd     = false;
@@ -133,10 +132,23 @@ namespace Test {
     fwdMaterialInteractor.energyLoss         = false;
     fwdMaterialInteractor.multipleScattering = false;
 
+    if (debugModeFwd) {
+      std::cout << ">>> Forward Propagation : start." << std::endl;
+    }
     // forward material test
     const auto& fwdResult = prop.propagate(start, fwdOptions);
+<<<<<<< HEAD
     auto&       fwdMaterial
         = fwdResult.template get<MaterialInteractor::result_type>();
+=======
+
+    if (debugModeFwd) {
+      std::cout << ">>> Forward Propagation : end." << std::endl;
+    }
+
+    auto& fwdMaterial
+        = fwdResult.template get<MaterialCollector::result_type>();
+>>>>>>> 71e8793e... fix MaterialCollection test
 
     double fwdStepMaterialInX0 = 0.;
     double fwdStepMaterialInL0 = 0.;
@@ -155,7 +167,7 @@ namespace Test {
     if (debugModeFwd) {
       const auto& fwdOutput
           = fwdResult.template get<DebugOutput::result_type>();
-      std::cout << ">>> Forward Propgation & Navigation output " << std::endl;
+      std::cout << ">>> Forward Propagation & Navigation output " << std::endl;
       std::cout << fwdOutput.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
@@ -180,8 +192,17 @@ namespace Test {
     bwdMaterialInteractor.multipleScattering = false;
 
     const auto& startSurface = start.referenceSurface();
-    const auto& bwdResult    = prop.propagate(
+
+    if (debugModeBwd) {
+      std::cout << ">>> Backward Propagation : start." << std::endl;
+    }
+    const auto& bwdResult = prop.propagate(
         *fwdResult.endParameters.template get(), startSurface, bwdOptions);
+
+    if (debugModeBwd) {
+      std::cout << ">>> Backward Propagation : end." << std::endl;
+    }
+
     auto& bwdMaterial
         = bwdResult.template get<MaterialInteractor::result_type>();
 
@@ -204,7 +225,7 @@ namespace Test {
     if (debugModeBwd) {
       const auto& bwd_output
           = bwdResult.template get<DebugOutput::result_type>();
-      std::cout << ">>> Backward Propgation & Navigation output " << std::endl;
+      std::cout << ">>> Backward Propagation & Navigation output " << std::endl;
       std::cout << bwd_output.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
@@ -426,7 +447,7 @@ namespace Test {
       index)
   {
     runTest(epropagator, pT, phi, theta, charge, index);
-    runTest(slpropagator, pT, phi, theta, charge, index);
+    // runTest(slpropagator, pT, phi, theta, charge, index);
   }
 
 }  // namespace Test

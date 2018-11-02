@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///  Boost include(s)
-#define BOOST_TEST_MODULE IntersectionCorrector Tests
+#define BOOST_TEST_MODULE RelativePathCorrector Tests
 
 #include <boost/test/included/unit_test.hpp>
 // leave blank line
@@ -18,7 +18,7 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-#include "Acts/Propagator/detail/IntersectionCorrector.hpp"
+#include "Acts/Propagator/detail/RelativePathCorrector.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -31,7 +31,7 @@ namespace Acts {
 namespace Test {
 
   // This tests the implementation of the Step corrector
-  BOOST_AUTO_TEST_CASE(IntersectionCorrectorTests)
+  BOOST_AUTO_TEST_CASE(RelativePathCorrectorTests)
   {
     // construct the surface
     Vector3D     pcenter(-4., 4., 0.);
@@ -63,7 +63,7 @@ namespace Test {
     auto ointersect = intersect();
 
     // Step corrector for the (n) track
-    detail::IntersectionCorrector corrFncn(p0n, d0n, pathn);
+    detail::RelativePathCorrector corrFncn(p0n, d0n, pathn);
     // -> correct & intersect
     corrFncn(position, direction, ointersect.pathLength);
     auto nintersect = intersect();
@@ -72,7 +72,7 @@ namespace Test {
     direction = originalDirection;
 
     // Step corrector for the (p) track
-    detail::IntersectionCorrector corrFncp(p0p, d0p, pathp);
+    detail::RelativePathCorrector corrFncp(p0p, d0p, pathp);
     // -> correct & intersect
     corrFncp(position, direction, ointersect.pathLength);
     auto pintersect = intersect();

@@ -60,12 +60,11 @@ namespace detail {
       std::stringstream dstream;
       dstream << " " << status << " ";
       dstream << std::setw(state.options.debugPfxWidth);
-      dstream << " target aborter "
+      dstream << " Target "
               << " | ";
       dstream << std::setw(state.options.debugMsgWidth);
       dstream << logAction() << '\n';
       state.options.debugString += dstream.str();
-      std::cout << dstream.str();
     }
   }
 
@@ -165,9 +164,11 @@ namespace detail {
         return true;
       }
 
-      // Check if the cache filled the currentSurface
-      if (state.navigation.currentSurface
-          && state.navigation.currentSurface == &targetSurface) {
+      // Check if the cache filled the currentSurface - or if we are on the
+      // surface
+      if ((state.navigation.currentSurface
+           && state.navigation.currentSurface == &targetSurface)
+          || targetSurface.isOnSurface(state.stepping.position(), true)) {
         targetDebugLog(state, "x", [&] {
           std::string ds("Target surface reached.");
           return ds;
@@ -176,11 +177,11 @@ namespace detail {
         state.navigation.targetReached = true;
         return true;
       }
-      // calculate the distance to the surface
-      const double tolerance = state.options.targetTolerance;
-      const auto   iestimate = targetSurface.intersectionEstimate(
-          state.stepping, TargetOptions(state.options.direction), nullptr);
-      const double distance = iestimate.intersection.pathLength;
+      // Calculate the distance to the surface
+      const double tolerance    = state.options.targetTolerance;
+      const auto   intersection = targetSurface.intersectionEstimate(
+          state.stepping.position(), state.stepping.direction(), anyDirection);
+      const double distance = intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
       // return true if you fall below tolerance

@@ -34,23 +34,31 @@ TrackingVolume::compatibleLayers(const parameters_t& parameters,
         // - resolveSensitive -> always take layer if it has a surface array
         // - resolveMaterial -> always take layer if it has material
         // - resolvePassive -> always take, unless it's a navigation layer
-        if (tLayer->resolve(options)) {
+        // skip the start object
+        if (tLayer != options.startObject && tLayer->resolve(options)) {
           // if it's a resolveable start layer, you are by definition on it
           if (tLayer == options.startObject) {
             // create an intersection with path length 0.
             Intersection   cIntersection(pos, 0., true);
             const Surface* tSurface = &(tLayer->surfaceRepresentation());
-            lIntersections.push_back(
-                LayerIntersection(cIntersection, tLayer, tSurface));
+            // Exclude if the surface is the target Surface
+            if (tSurface != options.targetSurface) {
+              lIntersections.push_back(
+                  LayerIntersection(cIntersection, tLayer, tSurface));
+            } else {
+              break;
+            }
           } else {
             // layer on approach intersection
             auto atIntersection
                 = tLayer->surfaceOnApproach(parameters, options, corrfnc);
             auto path = atIntersection.intersection.pathLength;
-
+            bool withinLimit
+                = (path * path <= options.pathLimit * options.pathLimit);
             // Intersection is ok - take it (move to surface on appraoch)
             if (atIntersection
-                && path * path <= options.pathLimit * options.pathLimit) {
+                && (atIntersection.object != options.targetSurface)
+                && withinLimit) {
               // create a layer intersection
               lIntersections.push_back(LayerIntersection(
                   atIntersection.intersection, tLayer, atIntersection.object));
