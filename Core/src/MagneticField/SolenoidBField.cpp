@@ -14,8 +14,8 @@
 
 Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(std::move(config))
 {
-  m_dz = m_cfg.L / m_cfg.nCoils;
-  m_R2 = m_cfg.R * m_cfg.R;
+  m_dz = m_cfg.length / m_cfg.nCoils;
+  m_R2 = m_cfg.radius * m_cfg.radius;
   // we need to scale so we reproduce the expected B field strength
   // at the center of the solenoid
   Vector2D field = multiCoilField({0, 0}, 1.);  // scale = 1
@@ -73,7 +73,7 @@ Acts::SolenoidBField::multiCoilField(const Vector2D& pos, double scale) const
   Vector2D resultField(0, 0);
   for (size_t coil = 0; coil < m_cfg.nCoils; coil++) {
     Vector2D shiftedPos
-        = Vector2D(pos[0], pos[1] + m_cfg.L * 0.5 - m_dz * (coil + 0.5));
+        = Vector2D(pos[0], pos[1] + m_cfg.length * 0.5 - m_dz * (coil + 0.5));
     resultField += singleCoilField(shiftedPos, scale);
   }
 
@@ -89,7 +89,16 @@ Acts::SolenoidBField::singleCoilField(const Vector2D& pos, double scale) const
 double
 Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
 {
+
+  //              _
+  //     2       /  pi / 2          2    2          - 1 / 2
+  // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
+  //  1         _/  0
   using boost::math::ellint_1;
+  //              _          ____________________
+  //     2       /  pi / 2| /       2    2
+  // E (k )  =   |        |/ 1  -  k  sin {theta} dtheta
+  //  2         _/  0
   using boost::math::ellint_2;
 
   double r = std::abs(pos[0]);
@@ -99,9 +108,17 @@ Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
     return 0.;
   }
 
-  double k_2      = k2(r, z);
-  double k        = std::sqrt(k_2);
-  double constant = scale * k * z / (4 * M_PI * std::sqrt(m_cfg.R * r * r * r));
+  //                            _                             _
+  //              mu  I        |  /     2 \                    |
+  //                0     kz   |  |2 - k  |    2          2    |
+  // B (r, z)  =  ----- ------ |  |-------|E (k )  -  E (k )   |
+  //  r            4pi     ___ |  |      2| 2          1       |
+  //                    | /  3 |_ \2 - 2k /                   _|
+  //                    |/ Rr
+  double k_2 = k2(r, z);
+  double k   = std::sqrt(k_2);
+  double constant
+      = scale * k * z / (4 * M_PI * std::sqrt(m_cfg.radius * r * r * r));
 
   double B = (2. - k_2) / (2. - 2. * k_2) * ellint_2(k_2) - ellint_1(k_2);
 
@@ -112,11 +129,26 @@ Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
 double
 Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const
 {
+  //              _
+  //     2       /  pi / 2          2    2          - 1 / 2
+  // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
+  //  1         _/  0
   using boost::math::ellint_1;
+  //              _          ____________________
+  //     2       /  pi / 2| /       2    2
+  // E (k )  =   |        |/ 1  -  k  sin {theta} dtheta
+  //  2         _/  0
   using boost::math::ellint_2;
 
   double r = std::abs(pos[0]);
   double z = pos[1];
+
+  //                         _                                       _
+  //             mu  I      |  /         2      \                     |
+  //               0     k  |  | (R + r)k  - 2r |     2          2    |
+  // B (r,z)  =  ----- ---- |  | -------------- | E (k )  +  E (k )   |
+  //  z           4pi    __ |  |           2    |  2          1       |
+  //                   |/Rr |_ \   2r(1 - k )   /                    _|
 
   if (r == 0) {
     double res = scale / 2. * m_R2 / (std::sqrt(m_R2 + z * z) * (m_R2 + z * z));
@@ -125,9 +157,9 @@ Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const
 
   double k_2      = k2(r, z);
   double k        = std::sqrt(k_2);
-  double constant = scale * k / (4 * M_PI * std::sqrt(m_cfg.R * r));
-  double B
-      = ((m_cfg.R + r) * k_2 - 2. * r) / (2. * r * (1. - k_2)) * ellint_2(k_2)
+  double constant = scale * k / (4 * M_PI * std::sqrt(m_cfg.radius * r));
+  double B        = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2))
+          * ellint_2(k_2)
       + ellint_1(k_2);
 
   return constant * B;
@@ -136,5 +168,10 @@ Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const
 double
 Acts::SolenoidBField::k2(double r, double z) const
 {
-  return 4 * m_cfg.R * r / ((m_cfg.R + r) * (m_cfg.R + r) + z * z);
+  //  2           4Rr
+  // k   =  ---------------
+  //               2      2
+  //        (R + r)   +  z
+  return 4 * m_cfg.radius * r
+      / ((m_cfg.radius + r) * (m_cfg.radius + r) + z * z);
 }

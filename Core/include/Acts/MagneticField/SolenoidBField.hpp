@@ -20,6 +20,46 @@ namespace Acts {
 /// The config exposes a target field value in the center. This value is used
 /// to empirically determine a scale factor which reproduces this field value
 /// in the center.
+///
+/// E_1(k^2) = complete elliptic integral of the 1st kind
+/// E_2(k^2) = complete elliptic integral of the 2nd kind
+///
+/// E_1(k^2) and E_2(k^2) are usually indicated as k(k^2) and E(k^2) in
+/// literature,
+/// respectively
+///              _
+///     2       /  pi / 2          2    2          - 1 / 2
+/// E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
+///  1         _/  0
+///
+///              _          ____________________
+///     2       /  pi / 2| /       2    2
+/// E (k )  =   |        |/ 1  -  k  sin {theta} dtheta
+///  2         _/  0
+///
+/// k^2 = is a function of the point (r, z) and of the radius of the coil R
+///
+///  2           4Rr
+/// k   =  ---------------
+///               2      2
+///        (R + r)   +  z
+/// Using these, you can evaluate the two components B_r and B_z of the
+/// magnetic field:
+///                            _                             _
+///              mu  I        |  /     2 \                    |
+///                0     kz   |  |2 - k  |    2          2    |
+/// B (r, z)  =  ----- ------ |  |-------|E (k )  -  E (k )   |
+///  r            4pi     ___ |  |      2| 2          1       |
+///                    | /  3 |_ \2 - 2k /                   _|
+///                    |/ Rr
+///
+///                         _                                       _
+///             mu  I      |  /         2      \                     |
+///               0     k  |  | (R + r)k  - 2r |     2          2    |
+/// B (r,z)  =  ----- ---- |  | -------------- | E (k )  +  E (k )   |
+///  z           4pi    __ |  |           2    |  2          1       |
+///                   |/Rr |_ \   2r(1 - k )   /                    _|
+///
 class SolenoidBField
 {
 public:
@@ -28,11 +68,18 @@ public:
     // empty, we don't need one
   };
 
+  /// Config struct for the SolenoidBfield
   struct Config
   {
-    double R;
-    double L;
+    /// Radius at which the coils are located
+    double radius;
+    /// Extent of the solenoid in z. It goes from
+    /// -length/2 to +length/2 by convention
+    double length;
+    /// The number of coils that make up the solenoid
     size_t nCoils;
+    /// The target magnetic field strength at the center
+    /// This will be used to scale coefficients
     double bMagCenter;
   };
 
