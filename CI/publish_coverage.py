@@ -23,6 +23,7 @@ def main():
     p.add_argument("--coverage-commit-limit", default=int(os.getenv("COVERAGE_COMMIT_LIMIT", 10)), type=int)
     p.add_argument("--coverage-root", default=os.getenv("COVERAGE_WEBSITE_ROOT", "/eos/user/a/atsjenkins/www/ACTS/coverage"))
     p.add_argument("--website-public-url", default=os.getenv("COVERAGE_WEBSITE_URL", "https://acts.web.cern.ch/ACTS/coverage/"))
+    p.add_argument("--project-id", default=3031, type=int)
 
     args = p.parse_args()
 
@@ -39,7 +40,7 @@ def main():
         sys.exit(1)
 
     gl = gitlab.Gitlab("https://gitlab.cern.ch/")
-    project = gl.projects.get(3031) # acts/acts-core
+    project = gl.projects.get(args.project_id)
 
     commit_slug = args.commit_hash[:7]
     coverage_dest = os.path.join(args.coverage_root, commit_slug)

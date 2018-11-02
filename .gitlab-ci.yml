@@ -304,7 +304,7 @@ coverage_deploy:
     - apk --no-cache add python3 py3-pynacl py3-pip py3-cryptography py3-bcrypt
     - pip3 install -r CI/requirements.txt
   script:
-    - CI/publish_coverage.py --coverage-source=build/coverage
+    - CI/publish_coverage.py --coverage-source=build/coverage --project-id=$CI_PROJECT_ID
   only:
     - master
 
