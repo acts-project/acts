@@ -580,11 +580,6 @@ public:
       }
       error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     }
-    //~ double error_estimate = tryRungeKuttaStep(state.stepSize);
-    //~ while (error_estimate > 0.0002) {
-    //~ state.stepSize = state.stepSize * 0.5;
-    //~ error_estimate = tryRungeKuttaStep(state.stepSize);
-    //~ }
 
     // use the adjusted step size
     const double h = state.stepSize;
@@ -622,9 +617,9 @@ struct DefaultExtensionActor
 {
   // Configurations for Stepper
   /// Tolerance for the error of the integration
-  double m_tolerance = 1e-6;
+  double tolerance = 1e-6;
   /// Cut-off value for the step size
-  double m_stepSizeCutOff = 0.;
+  double stepSizeCutOff = 0.;
 
   /// @brief Main call operator for setting up stepper properties
   ///
@@ -643,8 +638,8 @@ struct DefaultExtensionActor
       state.stepping.pdg    = state.options.absPdgCode;
 
       // Initialize user defined parameters
-      state.stepping.tolerance      = m_tolerance;
-      state.stepping.stepSizeCutOff = m_stepSizeCutOff;
+      state.stepping.tolerance      = tolerance;
+      state.stepping.stepSizeCutOff = stepSizeCutOff;
     }
   }
 };

@@ -217,8 +217,6 @@ namespace detail {
         betheBlochDerivative = -kaz * lnDerivative;
       } else {
         // Parts of the mode derivative
-        //~ const double Xi = kaz / beta2;
-        //~ const double XiDerivative = kaz * 2. * m2 * qop1;
         const double lnCore   = std::log(2. * m * beta2 * gamma * gamma / I);
         const double lnCoreXi = std::log(kaz / (beta2 * I));
         const double lnCoreDerivative   = -2. * m * beta * gamma;
