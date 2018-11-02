@@ -47,7 +47,7 @@ namespace Test {
     double tol_B = 1e-6 * Acts::units::_T;
     size_t steps = 20;
     for (size_t i = 0; i < steps; i++) {
-      double r = 1.5 * cfg.R / steps * i;
+      double r = 1.5 * cfg.radius / steps * i;
       BOOST_TEST_CONTEXT("r=" << r)
       {
         Vector3D B1 = bField.getField({r, 0, 0}, cache);
@@ -61,7 +61,7 @@ namespace Test {
         // at this point in r, go along the length
         for (size_t j = 0; j <= steps; j++) {
           // double z = cfg.L/steps * j - (cfg.L/2.);
-          double z = (1.5 * cfg.L / 2.) / steps * j;
+          double z = (1.5 * cfg.length / 2.) / steps * j;
           BOOST_TEST_CONTEXT("z=" << z)
           {
             Vector3D B_zp_rp = bField.getField({r, 0, z}, cache);
