@@ -508,9 +508,10 @@ namespace IntegrationTest {
         : createCylindricTransform(
               tp_c->position(), 0.05 * rand1, 0.05 * rand2);
 
-    StartSurface_type startSurface(ssTransform, nullptr);
-    BoundParameters   start(std::move(covPtr), pos, mom, q, startSurface);
-    BoundParameters   start_wo_c(nullptr, pos, mom, q, startSurface);
+    auto startSurface
+        = Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
+    BoundParameters start(std::move(covPtr), pos, mom, q, startSurface);
+    BoundParameters start_wo_c(nullptr, pos, mom, q, startSurface);
 
     // increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;

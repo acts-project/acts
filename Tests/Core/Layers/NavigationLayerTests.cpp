@@ -40,13 +40,14 @@ namespace Test {
     BOOST_AUTO_TEST_CASE(NavigationLayerConstruction)
     {
       // default constructor, copy and assignment are all deleted
-      auto pSurface         = std::unique_ptr<const Surface>(new SurfaceStub());
+      std::shared_ptr<const Surface> pSurface
+          = Surface::makeShared<SurfaceStub>();
       auto pNavigationLayer = NavigationLayer::create(std::move(pSurface));
       BOOST_TEST(pNavigationLayer->layerType() == LayerType::navigation);
       // next level: with thickness
       const double thickness = 0.1;
-      auto pSurface2 = std::unique_ptr<const Surface>(new SurfaceStub());
-      auto pThickNavigationLayer
+      auto         pSurface2 = Surface::makeShared<SurfaceStub>();
+      auto         pThickNavigationLayer
           = NavigationLayer::create(std::move(pSurface2), thickness);
       BOOST_TEST(pThickNavigationLayer->layerType() == LayerType::navigation);
     }
@@ -54,10 +55,11 @@ namespace Test {
     /// Unit test for testing NavigationLayer properties
     BOOST_AUTO_TEST_CASE(NavigationLayerProperties, *utf::expected_failures(1))
     {
-      const double thickness = 0.1;
-      auto         pSurface = std::unique_ptr<const Surface>(new SurfaceStub());
-      auto         rawSurfacePtr = pSurface.get();
-      auto         pNavigationLayer
+      const double                   thickness = 0.1;
+      std::shared_ptr<const Surface> pSurface
+          = Surface::makeShared<SurfaceStub>();
+      auto rawSurfacePtr = pSurface.get();
+      auto pNavigationLayer
           = NavigationLayer::create(std::move(pSurface), thickness);
       BinningValue b{BinningValue::binZ};
       Vector3D     origin{0., 0., 0.};
@@ -80,7 +82,8 @@ namespace Test {
       double       w = 5, h = 10;
       auto         rbounds = std::make_shared<const RectangleBounds>(w, h);
       auto trf = std::make_shared<const Transform3D>(Translation3D(0, 0, 5));
-      auto pSurface = std::make_unique<const PlaneSurface>(trf, rbounds);
+      std::shared_ptr<const Surface> pSurface
+          = Surface::makeShared<PlaneSurface>(trf, rbounds);
       auto pNavigationLayer = std::dynamic_pointer_cast<const NavigationLayer>(
           NavigationLayer::create(std::move(pSurface), thickness));
 

@@ -70,7 +70,6 @@ namespace Test {
     PerigeeSurface perigeeSurfaceObject(unitXYZ);
     auto           pClonedPerigeeSurface = perigeeSurfaceObject.clone();
     BOOST_TEST(pClonedPerigeeSurface->type() == Surface::Perigee);
-    delete pClonedPerigeeSurface;
     //
     /// Test type (redundant)
     BOOST_TEST(perigeeSurfaceObject.type() == Surface::Perigee);

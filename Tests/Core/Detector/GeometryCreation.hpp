@@ -40,27 +40,25 @@ constructCylinderVolume(double             surfaceHalfLengthZ,
   auto sfpTransform
       = std::make_shared<const Transform3D>(Translation3D(sfpPosition));
   ///  the surfaces
-  auto sfn = new CylinderSurface(
+  auto sfn = Surface::makeShared<CylinderSurface>(
       sfnTransform, surfaceRadius - 0.5 * surfaceRstagger, surfaceHalfLengthZ);
-  auto sfc = new CylinderSurface(
+  auto sfc = Surface::makeShared<CylinderSurface>(
       sfcTransform, surfaceRadius + 0.5 * surfaceRstagger, surfaceHalfLengthZ);
-  auto sfp = new CylinderSurface(
+  auto sfp = Surface::makeShared<CylinderSurface>(
       sfpTransform, surfaceRadius - 0.5 * surfaceRstagger, surfaceHalfLengthZ);
 
   ///  prepare the surfaces
-  typedef std::pair<const Surface*, Vector3D> TAP;
-  std::vector<TAP> surfaces = {{sfn, sfn->binningPosition(binZ)},
-                               {sfc, sfc->binningPosition(binZ)},
-                               {sfp, sfp->binningPosition(binZ)}};
 
   ///  make the binned array
   double bUmin = sfnPosition.z() - surfaceHalfLengthZ;
   double bUmax = sfpPosition.z() + surfaceHalfLengthZ;
 
-  std::vector<const Surface*> surfaces_only = {{sfn, sfc, sfp}};
+  std::vector<std::shared_ptr<const Surface>> surfaces_only = {{sfn, sfc, sfp}};
+  std::vector<const Surface*>                 surfaces_only_raw
+      = {{sfn.get(), sfc.get(), sfp.get()}};
 
   detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
-       axis(bUmin, bUmax, surfaces.size());
+       axis(bUmin, bUmax, surfaces_only.size());
   auto g2l = [](const Vector3D& glob) {
     return std::array<double, 1>({{glob.z()}});
   };
@@ -68,7 +66,7 @@ constructCylinderVolume(double             surfaceHalfLengthZ,
       = [](const std::array<double, 1>& loc) { return Vector3D(0, 0, loc[0]); };
   auto sl = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(axis)>>(
       g2l, l2g, std::make_tuple(axis));
-  sl->fill(surfaces_only);
+  sl->fill(surfaces_only_raw);
   auto bArray = std::make_unique<SurfaceArray>(std::move(sl), surfaces_only);
 
   ///  now create the Layer

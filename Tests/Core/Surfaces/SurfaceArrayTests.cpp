@@ -21,6 +21,7 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -34,10 +35,10 @@ namespace Acts {
 
 namespace Test {
 
-  using SrfVec = std::vector<const Surface*>;
+  using SrfVec = std::vector<std::shared_ptr<const Surface>>;
   struct SurfaceArrayFixture
   {
-    std::vector<std::unique_ptr<const Surface>> m_surfaces;
+    std::vector<std::shared_ptr<const Surface>> m_surfaces;
 
     SurfaceArrayFixture() { BOOST_TEST_MESSAGE("setup fixture"); }
     ~SurfaceArrayFixture() { BOOST_TEST_MESSAGE("teardown fixture"); }
@@ -64,11 +65,12 @@ namespace Test {
         auto bounds = std::make_shared<const RectangleBounds>(2, 1);
 
         auto transptr = std::make_shared<const Transform3D>(trans);
-        auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
+        std::shared_ptr<const Surface> srf
+            = Surface::makeShared<PlaneSurface>(transptr, bounds);
 
-        res.push_back(srf.get());  // use raw pointer
+        res.push_back(srf);
         m_surfaces.push_back(
-            std::move(srf));  // keep unique, will get destroyed at the end
+            std::move(srf));  // keep shared, will get destroyed at the end
       }
 
       return res;
@@ -100,11 +102,12 @@ namespace Test {
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
 
         auto transptr = std::make_shared<const Transform3D>(trans);
-        auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
+        std::shared_ptr<const Surface> srf
+            = Surface::makeShared<PlaneSurface>(transptr, bounds);
 
-        res.push_back(srf.get());  // use raw pointer
+        res.push_back(srf);
         m_surfaces.push_back(
-            std::move(srf));  // keep unique, will get destroyed at the end
+            std::move(srf));  // keep shared, will get destroyed at the end
       }
 
       return res;
@@ -129,11 +132,12 @@ namespace Test {
         auto bounds = std::make_shared<const RectangleBounds>(2, 1.5);
 
         auto transptr = std::make_shared<const Transform3D>(trans);
-        auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
+        std::shared_ptr<const Surface> srf
+            = Surface::makeShared<PlaneSurface>(transptr, bounds);
 
-        res.push_back(srf.get());  // use raw pointer
+        res.push_back(srf);
         m_surfaces.push_back(
-            std::move(srf));  // keep unique, will get destroyed at the end
+            std::move(srf));  // keep shared, will get destroyed at the end
       }
 
       return res;
@@ -156,7 +160,7 @@ namespace Test {
     }
 
     void
-    draw_surfaces(SrfVec surfaces, const std::string& fname)
+    draw_surfaces(const SrfVec& surfaces, const std::string& fname)
     {
 
       std::ofstream os;
@@ -166,7 +170,8 @@ namespace Test {
 
       size_t nVtx = 0;
       for (const auto& srfx : surfaces) {
-        const PlaneSurface* srf = dynamic_cast<const PlaneSurface*>(srfx);
+        std::shared_ptr<const PlaneSurface> srf
+            = std::dynamic_pointer_cast<const PlaneSurface>(srfx);
         const PlanarBounds* bounds
             = dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
@@ -193,7 +198,8 @@ namespace Test {
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture)
   {
-    SrfVec brl = makeBarrel(30, 7, 2, 1);
+    SrfVec                      brl    = makeBarrel(30, 7, 2, 1);
+    std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
     draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
 
     detail::Axis<detail::AxisType::Equidistant,
@@ -219,18 +225,18 @@ namespace Test {
             transform,
             itransform,
             std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl->fill(brl);
+    sl->fill(brlRaw);
     SurfaceArray sa(std::move(sl), brl);
 
     // let's see if we can access all surfaces
     sa.dump(std::cout);
 
     for (const auto& srf : brl) {
-      Vector3D ctr        = srf->binningPosition(binR);
-      SrfVec   binContent = sa.at(ctr);
+      Vector3D                    ctr        = srf->binningPosition(binR);
+      std::vector<const Surface*> binContent = sa.at(ctr);
 
       BOOST_TEST(binContent.size() == 1);
-      BOOST_TEST(srf == binContent.at(0));
+      BOOST_TEST(srf.get() == binContent.at(0));
     }
 
     std::vector<const Surface*> neighbors
@@ -244,15 +250,15 @@ namespace Test {
             itransform,
             std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     // do NOT fill, only completebinning
-    sl2->completeBinning(brl);
+    sl2->completeBinning(brlRaw);
     SurfaceArray sa2(std::move(sl2), brl);
     sa.dump(std::cout);
     for (const auto& srf : brl) {
-      Vector3D ctr        = srf->binningPosition(binR);
-      SrfVec   binContent = sa2.at(ctr);
+      Vector3D                    ctr        = srf->binningPosition(binR);
+      std::vector<const Surface*> binContent = sa2.at(ctr);
 
       BOOST_TEST(binContent.size() == 1);
-      BOOST_TEST(srf == binContent.at(0));
+      BOOST_TEST(srf.get() == binContent.at(0));
     }
   }
 
@@ -262,9 +268,9 @@ namespace Test {
     auto   bounds = std::make_shared<const RectangleBounds>(w, h);
     auto   transptr
         = std::make_shared<const Transform3D>(Transform3D::Identity());
-    auto srf = std::make_unique<const PlaneSurface>(transptr, bounds);
+    auto srf = Surface::makeShared<PlaneSurface>(transptr, bounds);
 
-    SurfaceArray sa(srf.get());
+    SurfaceArray sa(srf);
 
     auto binContent = sa.at(Vector3D(42, 42, 42));
     BOOST_TEST(binContent.size() == 1);
@@ -275,7 +281,8 @@ namespace Test {
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArray_toVariantData, SurfaceArrayFixture)
   {
-    SrfVec brl = makeBarrel(30, 7, 2, 1);
+    SrfVec                      brl    = makeBarrel(30, 7, 2, 1);
+    std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
 
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>
@@ -300,7 +307,7 @@ namespace Test {
             transform,
             itransform,
             std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl->fill(brl);
+    sl->fill(brlRaw);
     SurfaceArray sa(std::move(sl), brl);
     sa.dump(std::cout);
 
@@ -364,8 +371,9 @@ namespace Test {
             transform, itransform, std::make_tuple(zAxis));
 
     // same thing in 1D
-    SrfVec line = straightLineSurfaces();
-    sl->fill(line);
+    SrfVec                      line    = straightLineSurfaces();
+    std::vector<const Surface*> lineRaw = unpack_shared_vector(line);
+    sl->fill(lineRaw);
     SurfaceArray sa(std::move(sl), line);
 
     sa.dump(std::cout);

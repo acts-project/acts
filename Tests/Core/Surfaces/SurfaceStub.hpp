@@ -32,16 +32,9 @@ public:
 
   ~SurfaceStub() override { /*nop */}
 
-  /// Conditional Implicit constructor
-  const Surface*
-  cloneIfFree() const final
-  {
-    return nullptr;
-  }
-
   /// Implicit constructor
   Surface*
-  clone(const Transform3D* /*shift = nullptr*/) const final
+  clone(const Transform3D* /*shift = nullptr*/) const
   {
     return nullptr;
   }
@@ -152,5 +145,11 @@ public:
 private:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
+
+  SurfaceStub*
+  clone_impl(const Transform3D* /* shift */) const override
+  {
+    return nullptr;
+  }
 };
 }

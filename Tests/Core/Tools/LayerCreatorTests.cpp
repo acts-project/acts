@@ -42,10 +42,10 @@ namespace Test {
     BOOST_CHECK_SMALL(VectorHelpers::phi(v) - (a), tolerance);                 \
   }
 
-  using SrfVec = std::vector<const Surface*>;
+  using SrfVec = std::vector<std::shared_ptr<const Surface>>;
 
   void
-  draw_surfaces(SrfVec surfaces, const std::string& fname)
+  draw_surfaces(const SrfVec& surfaces, const std::string& fname)
   {
 
     std::ofstream os;
@@ -55,7 +55,8 @@ namespace Test {
 
     size_t nVtx = 0;
     for (const auto& srfx : surfaces) {
-      const PlaneSurface* srf = dynamic_cast<const PlaneSurface*>(srfx);
+      std::shared_ptr<const PlaneSurface> srf
+          = std::dynamic_pointer_cast<const PlaneSurface>(srfx);
       const PlanarBounds* bounds
           = dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
@@ -81,7 +82,7 @@ namespace Test {
   {
     std::shared_ptr<const SurfaceArrayCreator>  p_SAC;
     std::shared_ptr<LayerCreator>               p_LC;
-    std::vector<std::unique_ptr<const Surface>> m_surfaces;
+    std::vector<std::shared_ptr<const Surface>> m_surfaces;
 
     LayerCreatorFixture()
     {
@@ -111,7 +112,7 @@ namespace Test {
         if (!sArray->isValidBin(i)) {
           continue;
         }
-        SrfVec binContent = sArray->at(i);
+        std::vector<const Surface*> binContent = sArray->at(i);
         BOOST_TEST_INFO("Bin: " << i);
         BOOST_TEST(binContent.size() == n);
         result = result && binContent.size() == n;
@@ -142,11 +143,12 @@ namespace Test {
         auto bounds = std::make_shared<const RectangleBounds>(2, 1);
 
         auto transptr = std::make_shared<const Transform3D>(trans);
-        auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
+        std::shared_ptr<PlaneSurface> srf
+            = Surface::makeShared<PlaneSurface>(transptr, bounds);
 
-        res.push_back(srf.get());  // use raw pointer
+        res.push_back(srf);
         m_surfaces.push_back(
-            std::move(srf));  // keep unique, will get destroyed at the end
+            std::move(srf));  // keep shared, will get destroyed at the end
       }
 
       return res;
@@ -178,11 +180,12 @@ namespace Test {
         auto bounds = std::make_shared<const RectangleBounds>(w, h);
 
         auto transptr = std::make_shared<const Transform3D>(trans);
-        auto srf      = std::make_unique<const PlaneSurface>(transptr, bounds);
+        std::shared_ptr<PlaneSurface> srf
+            = Surface::makeShared<PlaneSurface>(transptr, bounds);
 
-        res.push_back(srf.get());  // use raw pointer
+        res.push_back(srf);
         m_surfaces.push_back(
-            std::move(srf));  // keep unique, will get destroyed at the end
+            std::move(srf));  // keep shared, will get destroyed at the end
       }
 
       return res;
@@ -235,18 +238,20 @@ namespace Test {
 
           auto transAptr = std::make_shared<const Transform3D>(trans);
 
-          auto srfA = std::make_unique<const PlaneSurface>(transAptr, bounds);
+          std::shared_ptr<PlaneSurface> srfA
+              = Surface::makeShared<PlaneSurface>(transAptr, bounds);
 
           Vector3D    nrm    = srfA->normal();
           Transform3D transB = trans;
           transB.pretranslate(nrm * 0.1);
           auto transBptr = std::make_shared<const Transform3D>(transB);
-          auto srfB = std::make_unique<const PlaneSurface>(transBptr, bounds);
+          std::shared_ptr<PlaneSurface> srfB
+              = Surface::makeShared<PlaneSurface>(transBptr, bounds);
 
           pairs.push_back(std::make_pair(srfA.get(), srfB.get()));
 
-          res.push_back(srfA.get());
-          res.push_back(srfB.get());
+          res.push_back(srfA);
+          res.push_back(srfB);
           m_surfaces.push_back(std::move(srfA));
           m_surfaces.push_back(std::move(srfB));
         }
@@ -260,7 +265,7 @@ namespace Test {
 
   BOOST_FIXTURE_TEST_CASE(LayerCreator_createCylinderLayer, LayerCreatorFixture)
   {
-    std::vector<const Surface*> srf;
+    std::vector<std::shared_ptr<const Surface>> srf;
 
     srf = makeBarrel(30, 7, 2, 1.5);
     draw_surfaces(srf, "LayerCreator_createCylinderLayer_BRL_1.obj");
@@ -358,8 +363,8 @@ namespace Test {
 
   BOOST_FIXTURE_TEST_CASE(LayerCreator_createDiscLayer, LayerCreatorFixture)
   {
-    std::vector<const Surface*> surfaces;
-    auto                        ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
+    std::vector<std::shared_ptr<const Surface>> surfaces;
+    auto ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
     surfaces.insert(surfaces.end(), ringa.begin(), ringa.end());
     auto ringb = fullPhiTestSurfacesEC(30, 0, 0, 15);
     surfaces.insert(surfaces.end(), ringb.begin(), ringb.end());
@@ -478,7 +483,7 @@ namespace Test {
       // std::endl;
 
       Vector3D ctr        = A->binningPosition(binR);
-      SrfVec   binContent = layer->surfaceArray()->at(ctr);
+      auto     binContent = layer->surfaceArray()->at(ctr);
       BOOST_TEST(binContent.size() == 2);
       std::set<const Surface*> act;
       act.insert(binContent[0]);
@@ -487,6 +492,7 @@ namespace Test {
       std::set<const Surface*> exp;
       exp.insert(A);
       exp.insert(B);
+      BOOST_TEST(exp == act);
     }
 
     // checkBinning should also report everything is fine
@@ -549,8 +555,8 @@ namespace Test {
 
   BOOST_FIXTURE_TEST_CASE(LayerCreator_Disc_toVariantData, LayerCreatorFixture)
   {
-    std::vector<const Surface*> surfaces;
-    auto                        ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
+    std::vector<std::shared_ptr<const Surface>> surfaces;
+    auto ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
     surfaces.insert(surfaces.end(), ringa.begin(), ringa.end());
     auto ringb = fullPhiTestSurfacesEC(30, 0, 0, 15);
     surfaces.insert(surfaces.end(), ringb.begin(), ringb.end());

@@ -77,8 +77,8 @@ namespace Test {
     transform->prerotate(rot);
     transform->pretranslate(center);
     // create the surfacex
-    auto         bounds = std::make_shared<RectangleBounds>(100., 100.);
-    PlaneSurface pSurface(transform, bounds);
+    auto bounds   = std::make_shared<RectangleBounds>(100., 100.);
+    auto pSurface = Surface::makeShared<PlaneSurface>(transform, bounds);
 
     // now create parameters on this surface
     // l_x, l_y, phi, theta, q/p (1/p)
@@ -106,12 +106,17 @@ namespace Test {
     NeutralBoundParameters n_ataPlane_from_pars(nullptr, pars, pSurface);
     consistencyCheck(n_ataPlane_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
-    NeutralBoundParameters n_ataPlane_from_global(nullptr, pars, pSurface);
+    NeutralBoundParameters n_ataPlane_from_global(nullptr, pos, mom, pSurface);
     consistencyCheck(n_ataPlane_from_global, pos, mom, 0., pars_array);
 
-    // check that indeed the surfaces are copied
-    BOOST_CHECK(&(ataPlane_from_pars.referenceSurface())
-                != &(ataPlane_from_global.referenceSurface()));
+    // check shared ownership of same surface
+    BOOST_TEST(&ataPlane_from_pars.referenceSurface() == pSurface.get());
+    BOOST_TEST(&ataPlane_from_pars.referenceSurface()
+               == &ataPlane_from_global.referenceSurface());
+    BOOST_TEST(&n_ataPlane_from_pars.referenceSurface() == pSurface.get());
+    BOOST_TEST(&n_ataPlane_from_pars.referenceSurface()
+               == &n_ataPlane_from_global.referenceSurface());
+    BOOST_TEST(pSurface.use_count() == 5);
 
     // check that the reference frame is the rotation matrix
     BOOST_CHECK(ataPlane_from_pars.referenceFrame().isApprox(rot));
@@ -183,8 +188,8 @@ namespace Test {
     transform->prerotate(rot);
     transform->pretranslate(center);
 
-    auto        bounds = std::make_shared<RadialBounds>(100., 1200.);
-    DiscSurface dSurface(transform, bounds);
+    auto bounds   = std::make_shared<RadialBounds>(100., 1200.);
+    auto dSurface = Surface::makeShared<DiscSurface>(transform, bounds);
 
     // now create parameters on this surface
     // r, phi, phi, theta, q/p (1/p)
@@ -211,17 +216,22 @@ namespace Test {
     NeutralBoundParameters n_ataDisc_from_pars(nullptr, pars, dSurface);
     consistencyCheck(n_ataDisc_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
-    NeutralBoundParameters n_ataDisc_from_global(nullptr, pars, dSurface);
+    NeutralBoundParameters n_ataDisc_from_global(nullptr, pos, mom, dSurface);
     consistencyCheck(n_ataDisc_from_global, pos, mom, 0., pars_array);
 
-    // check that indeed the surfaces are copied
-    BOOST_CHECK(&(ataDisc_from_pars.referenceSurface())
-                != &(ataDisc_from_global.referenceSurface()));
+    // check shared ownership of same surface
+    BOOST_TEST(&ataDisc_from_pars.referenceSurface() == dSurface.get());
+    BOOST_TEST(&ataDisc_from_pars.referenceSurface()
+               == &ataDisc_from_global.referenceSurface());
+    BOOST_TEST(&n_ataDisc_from_pars.referenceSurface() == dSurface.get());
+    BOOST_TEST(&n_ataDisc_from_pars.referenceSurface()
+               == &n_ataDisc_from_global.referenceSurface());
+    BOOST_TEST(dSurface.use_count() == 5);
 
     // check that the reference frame is the
     // rotation matrix of the surface
     BOOST_CHECK(ataDisc_from_pars.referenceFrame().isApprox(
-        dSurface.transform().matrix().block<3, 3>(0, 0)));
+        dSurface->transform().matrix().block<3, 3>(0, 0)));
   }
 
   /// @brief Unit test for parameters at a cylinder
@@ -266,8 +276,9 @@ namespace Test {
     transform->prerotate(rot);
     transform->pretranslate(center);
 
-    auto            bounds = std::make_shared<CylinderBounds>(100., 1200.);
-    CylinderSurface cSurface(transform, bounds);
+    auto bounds = std::make_shared<CylinderBounds>(100., 1200.);
+    std::shared_ptr<const Surface> cSurface
+        = Surface::makeShared<CylinderSurface>(transform, bounds);
 
     // now create parameters on this surface
     // rPhi, a, phi, theta, q/p (1/p)
@@ -299,17 +310,23 @@ namespace Test {
     NeutralBoundParameters n_ataCylinder_from_pars(nullptr, pars, cSurface);
     consistencyCheck(n_ataCylinder_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
-    NeutralBoundParameters n_ataCylinder_from_global(nullptr, pars, cSurface);
+    NeutralBoundParameters n_ataCylinder_from_global(
+        nullptr, pos, mom, cSurface);
     consistencyCheck(n_ataCylinder_from_global, pos, mom, 0., pars_array);
 
-    // check that indeed the surfaces are copied
-    BOOST_CHECK(&(ataCylinder_from_pars.referenceSurface())
-                != &(ataCylinder_from_global.referenceSurface()));
+    // check shared ownership of same surface
+    BOOST_TEST(&ataCylinder_from_pars.referenceSurface() == cSurface.get());
+    BOOST_TEST(&ataCylinder_from_pars.referenceSurface()
+               == &ataCylinder_from_global.referenceSurface());
+    BOOST_TEST(&n_ataCylinder_from_pars.referenceSurface() == cSurface.get());
+    BOOST_TEST(&n_ataCylinder_from_pars.referenceSurface()
+               == &n_ataCylinder_from_global.referenceSurface());
+    BOOST_TEST(cSurface.use_count() == 5);
 
     auto pPosition = ataCylinder_from_pars.position();
     // the reference frame is
     // transverse plane to the cylinder at the intersect
-    Vector3D         normal_at_intersect = cSurface.normal(pPosition);
+    Vector3D         normal_at_intersect = cSurface->normal(pPosition);
     Vector3D         transverse_y        = rot.col(2);
     Vector3D         transverse_x = transverse_y.cross(normal_at_intersect);
     RotationMatrix3D refframe;
@@ -357,7 +374,9 @@ namespace Test {
     transform->pretranslate(center);
 
     // the straw surface
-    PerigeeSurface pSurface(std::make_shared<const Transform3D>(*transform));
+    std::shared_ptr<const Surface> pSurface
+        = Surface::makeShared<PerigeeSurface>(
+            std::make_shared<const Transform3D>(*transform));
 
     // now create parameters on this surface
     // d0, z0, phi, theta, q/p (1/p)
@@ -377,12 +396,18 @@ namespace Test {
     NeutralBoundParameters n_ataPerigee_from_pars(nullptr, pars, pSurface);
     consistencyCheck(n_ataPerigee_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
-    NeutralBoundParameters n_ataPerigee_from_global(nullptr, pars, pSurface);
+    NeutralBoundParameters n_ataPerigee_from_global(
+        nullptr, pos, mom, pSurface);
     consistencyCheck(n_ataPerigee_from_global, pos, mom, 0., pars_array);
 
-    // check that indeed the surfaces are copied
-    BOOST_CHECK(&(n_ataPerigee_from_pars.referenceSurface())
-                != &(n_ataPerigee_from_global.referenceSurface()));
+    // check shared ownership of same surface
+    BOOST_TEST(&ataPerigee_from_pars.referenceSurface() == pSurface.get());
+    BOOST_TEST(&ataPerigee_from_pars.referenceSurface()
+               == &ataPerigee_from_global.referenceSurface());
+    BOOST_TEST(&n_ataPerigee_from_pars.referenceSurface() == pSurface.get());
+    BOOST_TEST(&n_ataPerigee_from_pars.referenceSurface()
+               == &n_ataPerigee_from_global.referenceSurface());
+    BOOST_TEST(pSurface.use_count() == 5);
   }
 
   /// @brief Unit test for parameters at a line
@@ -428,7 +453,7 @@ namespace Test {
     transform->pretranslate(center);
 
     // the straw surface
-    StrawSurface sSurface(
+    auto sSurface = Surface::makeShared<StrawSurface>(
         transform, 2. * Acts::units::_mm, 1. * Acts::units::_m);
 
     // now create parameters on this surface
@@ -450,12 +475,17 @@ namespace Test {
     NeutralBoundParameters n_ataLine_from_pars(nullptr, pars, sSurface);
     consistencyCheck(n_ataLine_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
-    NeutralBoundParameters n_ataLine_from_global(nullptr, pars, sSurface);
+    NeutralBoundParameters n_ataLine_from_global(nullptr, pos, mom, sSurface);
     consistencyCheck(n_ataLine_from_global, pos, mom, 0., pars_array);
 
-    // check that indeed the surfaces are copied
-    BOOST_CHECK(&(n_ataLine_from_pars.referenceSurface())
-                != &(n_ataLine_from_global.referenceSurface()));
+    // check shared ownership of same surface
+    BOOST_TEST(&ataLine_from_pars.referenceSurface() == sSurface.get());
+    BOOST_TEST(&ataLine_from_pars.referenceSurface()
+               == &ataLine_from_global.referenceSurface());
+    BOOST_TEST(&n_ataLine_from_pars.referenceSurface() == sSurface.get());
+    BOOST_TEST(&n_ataLine_from_pars.referenceSurface()
+               == &n_ataLine_from_global.referenceSurface());
+    BOOST_TEST(sSurface.use_count() == 5);
   }
 }
 }

@@ -27,14 +27,14 @@ namespace Acts {
 
 namespace Test {
 
-  std::vector<const Surface*>
+  std::vector<std::shared_ptr<const Surface>>
   fullPhiTestSurfacesEC(size_t n     = 10,
                         double shift = 0,
                         double zbase = 0,
                         double r     = 10)
   {
 
-    std::vector<const Surface*> res;
+    std::vector<std::shared_ptr<const Surface>> res;
 
     double phiStep = 2 * M_PI / n;
     for (size_t i = 0; i < n; ++i) {
@@ -48,10 +48,11 @@ namespace Test {
 
       auto bounds = std::make_shared<const RectangleBounds>(2, 1);
 
-      auto           transptr = std::make_shared<const Transform3D>(trans);
-      const Surface* srf      = new PlaneSurface(transptr, bounds);
+      auto transptr = std::make_shared<const Transform3D>(trans);
+      std::shared_ptr<const Surface> srf
+          = Surface::makeShared<PlaneSurface>(transptr, bounds);
 
-      res.push_back(srf);  // use raw pointer
+      res.push_back(srf);
     }
 
     return res;
@@ -131,8 +132,8 @@ namespace Test {
     using json = nlohmann::json;
     using namespace std::string_literals;
 
-    std::vector<const Surface*> surfaces;
-    auto                        ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
+    std::vector<std::shared_ptr<const Surface>> surfaces;
+    auto ringa = fullPhiTestSurfacesEC(30, 0, 0, 10);
     surfaces.insert(surfaces.end(), ringa.begin(), ringa.end());
     auto ringb = fullPhiTestSurfacesEC(30, 0, 0, 15);
     surfaces.insert(surfaces.end(), ringb.begin(), ringb.end());

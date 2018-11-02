@@ -35,35 +35,37 @@ namespace Test {
     /// object
     BOOST_AUTO_TEST_CASE(GenericApproachDescriptorConstruction)
     {
-      typedef std::vector<const Surface*> SurfaceVector_t;
-      //
-      const SurfaceVector_t someSurfaces{new SurfaceStub(), new SurfaceStub()};
+      std::vector<std::shared_ptr<const Surface>> someSurfaces{
+          Surface::makeShared<SurfaceStub>(),
+          Surface::makeShared<SurfaceStub>()};
       BOOST_CHECK_NO_THROW(
-          GenericApproachDescriptor<Surface>
-              minimallyConstructedApproachDescriptor(someSurfaces));
+          GenericApproachDescriptor minimallyConstructedApproachDescriptor(
+              someSurfaces));
       //
       std::vector<std::shared_ptr<const Layer>> sharedLayers{
           std::make_shared<LayerStub>(nullptr),
           std::make_shared<LayerStub>(nullptr)};
       BOOST_CHECK_NO_THROW(
-          GenericApproachDescriptor<Layer> sharedLayerApproachDescriptor(
-              sharedLayers));
+          GenericApproachDescriptor sharedLayerApproachDescriptor(
+              {sharedLayers.at(0)->surfaceRepresentation().getSharedPtr(),
+               sharedLayers.at(1)->surfaceRepresentation().getSharedPtr()}));
     }
 
     /// Unit test for testing GenericApproachDescriptor properties
     BOOST_AUTO_TEST_CASE(GenericApproachDescriptorProperties,
                          *utf::expected_failures(1))
     {
-      typedef std::vector<const Surface*> SurfaceVector_t;
-      Vector3D                            origin{
+      Vector3D origin{
           0., 0., 0.,
       };
       Vector3D      zDir{0., 0., 1.};
       BoundaryCheck bcheck{true};
       //
-      const SurfaceVector_t someSurfaces{new SurfaceStub(), new SurfaceStub()};
-      GenericApproachDescriptor<Surface> approachDescriptor(someSurfaces);
-      LayerStub                          aLayer(nullptr);
+      std::vector<std::shared_ptr<const Surface>> someSurfaces{
+          Surface::makeShared<SurfaceStub>(),
+          Surface::makeShared<SurfaceStub>()};
+      GenericApproachDescriptor approachDescriptor(someSurfaces);
+      LayerStub                 aLayer(nullptr);
       // registerLayer()
       BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
       // approachSurface
@@ -73,7 +75,15 @@ namespace Test {
       BOOST_CHECK(surfIntersection.intersection.pathLength
                   == expectedIntersection);
       // containedSurfaces()
-      BOOST_CHECK(&(approachDescriptor.containedSurfaces()) == &someSurfaces);
+      BOOST_TEST(approachDescriptor.containedSurfaces().size()
+                 == someSurfaces.size());
+
+      for (size_t i = 0; i < someSurfaces.size(); i++) {
+        BOOST_TEST(approachDescriptor.containedSurfaces().at(i)
+                   == someSurfaces.at(i).get());
+      }
+      // BOOST_CHECK(&(approachDescriptor.containedSurfaces()) ==
+      // &someSurfaces);
     }
 
     BOOST_AUTO_TEST_SUITE_END()

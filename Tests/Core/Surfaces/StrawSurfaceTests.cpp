@@ -82,7 +82,6 @@ namespace Test {
     //
     auto pClonedStrawSurface = strawSurfaceObject.clone();
     BOOST_TEST(pClonedStrawSurface->type() == Surface::Straw);
-    delete pClonedStrawSurface;
     //
     /// Test type (redundant)
     BOOST_TEST(strawSurfaceObject.type() == Surface::Straw);

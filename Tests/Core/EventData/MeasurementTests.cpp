@@ -23,7 +23,7 @@ namespace Test {
   ///
   BOOST_AUTO_TEST_CASE(measurement_initialization)
   {
-    CylinderSurface   cylinder(nullptr, 3, 10);
+    auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
     Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1> m(

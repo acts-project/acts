@@ -50,8 +50,9 @@ namespace Test {
       auto   pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
       BOOST_TEST(pCylinderLayer->layerType() == LayerType::passive);
       // next level: need an array of Surfaces;
-      const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
-                                                  new SurfaceStub()};
+      std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          Surface::makeShared<SurfaceStub>(),
+          Surface::makeShared<SurfaceStub>()};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
       size_t              binsX(2), binsY(4);
@@ -67,7 +68,7 @@ namespace Test {
           pCylinderLayerWithThickness->thickness(), thickness, 1e-6);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
-          new GenericApproachDescriptor<Surface>(aSurfaces));
+          new GenericApproachDescriptor(aSurfaces));
       auto adPtr = ad.get();
       auto pCylinderLayerWithApproachDescriptor
           = CylinderLayer::create(pTransform,

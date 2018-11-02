@@ -35,7 +35,8 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(track_state_initialization)
   {
     // The plane surface
-    PlaneSurface plane(Vector3D{0., 0., 0.}, Vector3D{1., 0., 0.});
+    auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
+                                                   Vector3D{1., 0., 0.});
 
     // Construct the 1D measurement
     ActsSymMatrixD<1> cov1D;
@@ -64,13 +65,10 @@ namespace Test {
     // The parametric track state from the parameters
     VariantState pts = ParametricState(std::move(ataPlane));
 
-    // The parametric track state from the surface only
-    VariantState sts = ParametricState(&plane);
-
     std::vector<VariantState> trackStates
-        = {std::move(m1D), std::move(m2D), std::move(pts), std::move(sts)};
+        = {std::move(m1D), std::move(m2D), std::move(pts)};
 
-    BOOST_CHECK(trackStates.size() == 4);
+    BOOST_CHECK(trackStates.size() == 3);
   }
 
 }  // namespace Test

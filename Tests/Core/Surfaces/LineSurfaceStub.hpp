@@ -54,11 +54,12 @@ public:
   { /* nop */
   }
   /// pure virtual functions of baseclass implemented here
-  Surface*
-  clone(const Transform3D* /*shift = nullptr*/) const final
+  std::shared_ptr<LineSurfaceStub>
+  clone(const Transform3D* /*shift = nullptr*/) const
   {
     return nullptr;
   }
+
   /// Return method for the Surface type to avoid dynamic casts
   SurfaceType
   type() const final
@@ -73,13 +74,13 @@ public:
     return true;
   }
 
-  /// Conditional Implicit constructor
-  const Surface*
-  cloneIfFree() const final
+  using Surface::normal;
+
+private:
+  Surface*
+  clone_impl(const Transform3D* /*shift*/) const
   {
     return nullptr;
   }
-
-  using Surface::normal;
 };
 }  // end of ns

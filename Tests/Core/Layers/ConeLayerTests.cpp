@@ -51,8 +51,9 @@ namespace Test {
       // auto         pConeLayer = ConeLayer::create(pTransform, pCone);
       // BOOST_TEST(pConeLayer->layerType() == LayerType::passive);
       // next level: need an array of Surfaces;
-      const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
-                                                  new SurfaceStub()};
+      std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          Surface::makeShared<SurfaceStub>(),
+          Surface::makeShared<SurfaceStub>()};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
       size_t              binsX(2), binsY(4);
@@ -67,7 +68,7 @@ namespace Test {
       BOOST_TEST(pConeLayerWithThickness->thickness() == thickness);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
-          new GenericApproachDescriptor<Surface>(aSurfaces));
+          new GenericApproachDescriptor(aSurfaces));
       auto adPtr = ad.get();
       auto pConeLayerWithApproachDescriptor
           = ConeLayer::create(pTransform,
@@ -95,8 +96,9 @@ namespace Test {
       double     alpha(M_PI / 8.0);
       const bool symmetric(false);
       auto       pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
-      const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
-                                                  new SurfaceStub()};
+      std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          Surface::makeShared<SurfaceStub>(),
+          Surface::makeShared<SurfaceStub>()};
       // const double        thickness(1.0);
       SurfaceArrayCreator sac;
       size_t              binsX(2), binsY(4);

@@ -78,7 +78,6 @@ namespace Test {
     //
     auto pClonedPlaneSurface = PlaneSurfaceObject.clone();
     BOOST_TEST(pClonedPlaneSurface->type() == Surface::Plane);
-    delete pClonedPlaneSurface;
     // Test clone method with translation
     auto pClonedShiftedPlaneSurface
         = PlaneSurfaceObject.clone(pTransform.get());
