@@ -104,14 +104,6 @@ public:
   CylinderSurface&
   operator=(const CylinderSurface& other);
 
-  /// Conditional Implicit constructor
-  /// uses the copy constructor (if needed)
-  ///
-  /// Checks if a surface is free and either clones or returns
-  /// the pointer to itself - the return object ist a const pointer
-  const CylinderSurface*
-  cloneIfFree() const final;
-
   /// Clone method. Uses the copy constructor a new position can optionally be given
   /// a shift.
   ///

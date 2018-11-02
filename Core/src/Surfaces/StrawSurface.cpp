@@ -106,15 +106,6 @@ Acts::StrawSurface::clone_impl(const Transform3D* shift) const
   return new StrawSurface(*this);
 }
 
-const Acts::StrawSurface*
-Acts::StrawSurface::cloneIfFree() const
-{
-  if (isFree()) {
-    return new StrawSurface(*this);
-  }
-  return (this);
-}
-
 Acts::variant_data
 Acts::StrawSurface::toVariantData() const
 {

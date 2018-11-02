@@ -108,15 +108,6 @@ Acts::CylinderSurface::operator=(const CylinderSurface& other)
   return *this;
 }
 
-const Acts::CylinderSurface*
-Acts::CylinderSurface::cloneIfFree() const
-{
-  if (isFree()) {
-    return new CylinderSurface(*this);
-  }
-  return (this);
-}
-
 // return the binning position for ordering in the BinnedArray
 const Acts::Vector3D
 Acts::CylinderSurface::binningPosition(BinningValue bValue) const
