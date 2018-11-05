@@ -59,8 +59,8 @@ public:
 
   ~PerigeeSurface() override;
 
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   std::shared_ptr<PerigeeSurface>
@@ -92,8 +92,8 @@ public:
   toVariantData() const override;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   PerigeeSurface*

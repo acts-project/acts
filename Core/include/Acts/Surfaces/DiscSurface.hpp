@@ -120,8 +120,8 @@ public:
   DiscSurface&
   operator=(const DiscSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   std::shared_ptr<DiscSurface>
@@ -323,8 +323,8 @@ public:
 protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   DiscSurface*

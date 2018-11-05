@@ -96,7 +96,8 @@ public:
   virtual ~Surface();
 
   /// Factory for producing memory managed instances of Surface.
-  /// Will forward all parameters and will attempt to find a suitable constructor.
+  /// Will forward all parameters and will attempt to find a suitable
+  /// constructor.
   template <class T, typename... Args>
   static std::shared_ptr<T>
   makeShared(Args&&... args)
@@ -107,11 +108,11 @@ public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
   /// @note Will error if this was not created through the @c makeShared factory
-  ///       since it needs access to the original reference. In C++14 this is undefined
-  ///       behavior (but most likely implemented as a @c bad_weak_ptr exception), in 
-  ///       C++17 it is defined as that exception.
+  ///       since it needs access to the original reference. In C++14 this is
+  ///       undefined behavior (but most likely implemented as a @c bad_weak_ptr
+  ///       exception), in C++17 it is defined as that exception.
   /// @note Only call this if you need shared ownership of this object.
-  /// 
+  ///
   /// @return The shared pointer
   std::shared_ptr<Surface>
   getSharedPtr();
@@ -119,11 +120,11 @@ public:
   /// Retrieve a @c std::shared_ptr for this surface (const version)
   ///
   /// @note Will error if this was not created through the @c makeShared factory
-  ///       since it needs access to the original reference. In C++14 this is undefined
-  ///       behavior (but most likely implemented as a @c bad_weak_ptr exception), in 
-  ///       C++17 it is defined as that exception.
+  ///       since it needs access to the original reference. In C++14 this is
+  ///       undefined behavior (but most likely implemented as a @c bad_weak_ptr
+  ///       exception), in C++17 it is defined as that exception.
   /// @note Only call this if you need shared ownership of this object.
-  /// 
+  ///
   /// @return The shared pointer
   std::shared_ptr<const Surface>
   getSharedPtr() const;
@@ -163,7 +164,8 @@ public:
   virtual bool
   operator!=(const Surface& sf) const;
 
-  /// Clone method. Uses the copy constructor a new position can optionally be given
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given
   /// a shift.
   ///
   /// @param shift additional, optional shift
@@ -174,8 +176,8 @@ public:
   }
 
 private:
-  /// Implementation method for clone. Returns a bare pointer that is 
-  /// wrapped into a shared pointer by ::clone(). This is needed for 
+  /// Implementation method for clone. Returns a bare pointer that is
+  /// wrapped into a shared pointer by ::clone(). This is needed for
   /// covariant overload of this method.
   virtual Surface*
   clone_impl(const Transform3D* shift = nullptr) const = 0;

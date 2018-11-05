@@ -90,8 +90,8 @@ public:
   ConeSurface&
   operator=(const ConeSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   std::shared_ptr<ConeSurface>
@@ -239,8 +239,8 @@ protected:
   std::shared_ptr<const ConeBounds> m_bounds;  ///< bounds (shared)
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   ConeSurface*

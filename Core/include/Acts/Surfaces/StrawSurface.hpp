@@ -86,8 +86,8 @@ public:
   StrawSurface&
   operator=(const StrawSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   std::shared_ptr<StrawSurface>
@@ -113,8 +113,8 @@ public:
   polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   StrawSurface*

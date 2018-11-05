@@ -83,8 +83,8 @@ public:
   PlaneSurface&
   operator=(const PlaneSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   std::shared_ptr<PlaneSurface>
@@ -220,8 +220,8 @@ protected:
   std::shared_ptr<const PlanarBounds> m_bounds;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be given
-  /// a shift.
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   PlaneSurface*

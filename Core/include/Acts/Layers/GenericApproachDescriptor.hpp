@@ -86,5 +86,4 @@ private:
   std::vector<const Surface*> m_surfaceCache;
 };
 
-
 }  // namespace Acts
