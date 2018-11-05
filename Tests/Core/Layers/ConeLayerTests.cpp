@@ -56,15 +56,12 @@ namespace Test {
           Surface::makeShared<SurfaceStub>()};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto                pSurfaceArray
-          = sac.surfaceArrayOnPlane(aSurfaces, 10, 20, binsX, binsY);
       auto pConeLayerFromSurfaces
-          = ConeLayer::create(pTransform, pCone, std::move(pSurfaceArray));
+          = ConeLayer::create(pTransform, pCone, nullptr);
       BOOST_TEST(pConeLayerFromSurfaces->layerType() == LayerType::active);
       // construct with thickness:
       auto pConeLayerWithThickness = ConeLayer::create(
-          pTransform, pCone, std::move(pSurfaceArray), thickness);
+          pTransform, pCone, nullptr, thickness);
       BOOST_TEST(pConeLayerWithThickness->thickness() == thickness);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
@@ -73,7 +70,7 @@ namespace Test {
       auto pConeLayerWithApproachDescriptor
           = ConeLayer::create(pTransform,
                               pCone,
-                              std::move(pSurfaceArray),
+                              nullptr,
                               thickness,
                               std::move(ad));
       BOOST_TEST(pConeLayerWithApproachDescriptor->approachDescriptor()
@@ -81,7 +78,7 @@ namespace Test {
       // with the layerType specified...
       auto pConeLayerWithLayerType = ConeLayer::create(pTransform,
                                                        pCone,
-                                                       std::move(pSurfaceArray),
+                                                       nullptr,
                                                        thickness,
                                                        std::move(ad),
                                                        LayerType::passive);
@@ -101,11 +98,8 @@ namespace Test {
           Surface::makeShared<SurfaceStub>()};
       // const double        thickness(1.0);
       SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto                pSurfaceArray
-          = sac.surfaceArrayOnPlane(aSurfaces, 10, 20, binsX, binsY);
       auto pConeLayerFromSurfaces
-          = ConeLayer::create(pTransform, pCone, std::move(pSurfaceArray));
+          = ConeLayer::create(pTransform, pCone, nullptr);
       // auto planeSurface = pConeLayer->surfaceRepresentation();
       BOOST_TEST(pConeLayerFromSurfaces->surfaceRepresentation().name()
                  == std::string("Acts::ConeSurface"));

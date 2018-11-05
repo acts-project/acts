@@ -55,15 +55,12 @@ namespace Test {
           Surface::makeShared<SurfaceStub>()};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto                pSurfaceArray
-          = sac.surfaceArrayOnPlane(aSurfaces, 10, 20, binsX, binsY);
       auto pCylinderLayerFromSurfaces = CylinderLayer::create(
-          pTransform, pCylinder, std::move(pSurfaceArray));
+          pTransform, pCylinder, nullptr);
       BOOST_TEST(pCylinderLayerFromSurfaces->layerType() == LayerType::passive);
       // construct with thickness:
       auto pCylinderLayerWithThickness = CylinderLayer::create(
-          pTransform, pCylinder, std::move(pSurfaceArray), thickness);
+          pTransform, pCylinder, nullptr, thickness);
       BOOST_CHECK_CLOSE_FRACTION(
           pCylinderLayerWithThickness->thickness(), thickness, 1e-6);
       // with an approach descriptor...
@@ -73,7 +70,7 @@ namespace Test {
       auto pCylinderLayerWithApproachDescriptor
           = CylinderLayer::create(pTransform,
                                   pCylinder,
-                                  std::move(pSurfaceArray),
+                                  nullptr,
                                   thickness,
                                   std::move(ad));
       BOOST_TEST(pCylinderLayerWithApproachDescriptor->approachDescriptor()
@@ -82,7 +79,7 @@ namespace Test {
       auto pCylinderLayerWithLayerType
           = CylinderLayer::create(pTransform,
                                   pCylinder,
-                                  std::move(pSurfaceArray),
+                                  nullptr,
                                   thickness,
                                   std::move(ad),
                                   LayerType::passive);
