@@ -122,7 +122,6 @@ public:
   setField(double Bx, double By, double Bz)
   {
     m_BField << Bx, By, Bz;
-    m_fieldCell = FieldCell(Bx, By, Bz);
   }
 
   /// @brief update magnetic field vector
@@ -132,7 +131,6 @@ public:
   setField(const Vector3D& B)
   {
     m_BField    = B;
-    m_fieldCell = FieldCell(B.x(), B.y(), B.z());
   }
 
 private:
