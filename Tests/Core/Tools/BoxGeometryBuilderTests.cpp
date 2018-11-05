@@ -71,52 +71,53 @@ namespace Test {
   
   BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest)
   {
+	  
 	  // Construct builder
 	BoxGeometryBuilder bgb;
 	
 	// Create configurations for surfaces
-	std::vector<BoxGeometryBuilder::Config> config;
+	std::vector<BoxGeometryBuilder::SurfaceConfig> surfaceConfig;
 	for(unsigned int i = 1; i < 5; i++)
 	{
 		// Position of the surfaces
-		BoxGeometryBuilder::Config cfg;
-		cfg.surfaceCfg.position = {i * units::_m, 0., 0.};
+		BoxGeometryBuilder::SurfaceConfig cfg;
+		cfg.position = {i * units::_m, 0., 0.};
 				
 		// Rotation of the surfaces
 		double           rotationAngle = M_PI * 0.5;
 		Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
 		Vector3D         yPos(0., 1., 0.);
 		Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-		cfg.surfaceCfg.rotation.col(0) = xPos;
-		cfg.surfaceCfg.rotation.col(1) = yPos;
-		cfg.surfaceCfg.rotation.col(2) = zPos;
+		cfg.rotation.col(0) = xPos;
+		cfg.rotation.col(1) = yPos;
+		cfg.rotation.col(2) = zPos;
 		
 		// Boundaries of the surfaces
-		cfg.surfaceCfg.rBounds = std::make_shared<const RectangleBounds>(
+		cfg.rBounds = std::make_shared<const RectangleBounds>(
 			RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
 
 		// Material of the surfaces
 		MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-		cfg.surfaceCfg.surMat = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(matProp));
+		cfg.surMat = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(matProp));
 		
 		// Thickness of the detector element
-		cfg.surfaceCfg.thickness = 1. * units::_um;
-		
-		config.push_back(cfg);
+		cfg.thickness = 1. * units::_um;
+			
+		surfaceConfig.push_back(cfg);
 	}
 	
-   BOOST_TEST(config.size() == 4);
+   BOOST_TEST(surfaceConfig.size() == 4);
    
-   bgb.buildSensitiveSurfaces<DetElem>(config);
-   for(const auto& cfg : config)
-	BOOST_TEST(cfg.surface != nullptr);
-   bgb.buildPassiveSurfaces(config);
-   for(const auto& cfg : config)
-	BOOST_TEST(cfg.surface != nullptr);
+   for(const auto& cfg : surfaceConfig)
+	BOOST_TEST(bgb.buildSurface<DetElem>(cfg) != nullptr);
+
+   for(const auto& cfg : surfaceConfig)
+	BOOST_TEST(bgb.buildSurface<>(cfg) != nullptr);
+
 	
-	bgb.buildLayers(config);
-	for(const auto& cfg : config)
-		BOOST_TEST(cfg.layer != nullptr);
+	//~ bgb.buildLayers(config);
+	//~ for(const auto& cfg : config)
+		//~ BOOST_TEST(cfg.layer != nullptr);
   }
 }  // namespace Test
 }  // namespace Acts
