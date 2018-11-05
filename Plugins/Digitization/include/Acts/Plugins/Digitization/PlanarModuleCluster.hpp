@@ -37,14 +37,14 @@ public:
   /// @param [in] loc0 is the local position in the first coordinate
   /// @param [in] loc1 is the local position in the second coordinate
   /// @param [in] dCells is the vector of digitization cells
-  PlanarModuleCluster(const Surface&                mSurface,
+  PlanarModuleCluster(std::shared_ptr<const Surface> mSurface,
                       const Identifier&             cIdentifier,
                       ActsSymMatrixD<2>             cov,
                       double                        loc0,
                       double                        loc1,
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule*     dModule = nullptr)
-    : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(mSurface,
+    : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(std::move(mSurface),
                                                     cIdentifier,
                                                     std::move(cov),
                                                     loc0,

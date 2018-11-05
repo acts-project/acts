@@ -62,7 +62,7 @@ public:
     : DetectorElementBase()
     , m_elementIdentifier(std::move(identifier))
     , m_elementTransform(std::move(transform))
-    , m_elementSurface(new PlaneSurface(pBounds, *this))
+    , m_elementSurface(Surface::makeShared<PlaneSurface>(pBounds, *this))
     , m_elementThickness(thickness)
     , m_elementSurfaces({m_elementSurface})
     , m_elementPlanarBounds(std::move(pBounds))
