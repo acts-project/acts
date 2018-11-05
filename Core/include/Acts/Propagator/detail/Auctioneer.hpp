@@ -10,7 +10,8 @@
 
 namespace Acts {
 namespace detail {
-  /// The ExtensionList allows to add an arbitrary number of step evaluation
+  /// The StepperExtensionList allows to add an arbitrary number of step
+  /// evaluation
   /// algorithms for the RKN4 evaluation. These can be categorised in two
   /// general
   /// types:

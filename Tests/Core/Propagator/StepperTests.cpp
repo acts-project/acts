@@ -147,12 +147,13 @@ namespace Test {
     ConstantBField bField(Vector3D(0., 0., 0.));
     EigenStepper<ConstantBField,
                  VoidCorrector,
-                 ExtensionList<DefaultExtension, DenseEnvironmentExtension>>
+                 StepperExtensionList<DefaultExtension,
+                                      DenseEnvironmentExtension>>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
-                            ExtensionList<DefaultExtension,
-                                          DenseEnvironmentExtension>>,
+                            StepperExtensionList<DefaultExtension,
+                                                 DenseEnvironmentExtension>>,
                Navigator>
         prop(es, naviVac);
 
@@ -186,11 +187,13 @@ namespace Test {
     propOptsDef.maxSteps       = 1e6;
     propOptsDef.maxStepSize    = 0.5 * units::_m;
 
-    EigenStepper<ConstantBField, VoidCorrector, ExtensionList<DefaultExtension>>
+    EigenStepper<ConstantBField,
+                 VoidCorrector,
+                 StepperExtensionList<DefaultExtension>>
         esDef(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
-                            ExtensionList<DefaultExtension>>,
+                            StepperExtensionList<DefaultExtension>>,
                Navigator>
         propDef(esDef, naviVac);
 
@@ -252,12 +255,13 @@ namespace Test {
     ConstantBField bField(Vector3D(0., 0., 0.));
     EigenStepper<ConstantBField,
                  VoidCorrector,
-                 ExtensionList<DefaultExtension, DenseEnvironmentExtension>>
+                 StepperExtensionList<DefaultExtension,
+                                      DenseEnvironmentExtension>>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
-                            ExtensionList<DefaultExtension,
-                                          DenseEnvironmentExtension>>,
+                            StepperExtensionList<DefaultExtension,
+                                                 DenseEnvironmentExtension>>,
                Navigator>
         prop(es, naviMat);
 
@@ -302,11 +306,11 @@ namespace Test {
     // Build stepper and propagator
     EigenStepper<ConstantBField,
                  VoidCorrector,
-                 ExtensionList<DenseEnvironmentExtension>>
+                 StepperExtensionList<DenseEnvironmentExtension>>
         esDense(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
-                            ExtensionList<DenseEnvironmentExtension>>,
+                            StepperExtensionList<DenseEnvironmentExtension>>,
                Navigator>
         propDense(esDense, naviMat);
 
@@ -332,12 +336,13 @@ namespace Test {
     bField.setField(0., 1. * units::_T, 0.);
     EigenStepper<ConstantBField,
                  VoidCorrector,
-                 ExtensionList<DefaultExtension, DenseEnvironmentExtension>>
+                 StepperExtensionList<DefaultExtension,
+                                      DenseEnvironmentExtension>>
         esB(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
-                            ExtensionList<DefaultExtension,
-                                          DenseEnvironmentExtension>>,
+                            StepperExtensionList<DefaultExtension,
+                                                 DenseEnvironmentExtension>>,
                Navigator>
         propB(esB, naviMat);
 
@@ -411,12 +416,13 @@ namespace Test {
     ConstantBField bField(Vector3D(0., 1. * units::_T, 0.));
     EigenStepper<ConstantBField,
                  VoidCorrector,
-                 ExtensionList<DefaultExtension, DenseEnvironmentExtension>>
+                 StepperExtensionList<DefaultExtension,
+                                      DenseEnvironmentExtension>>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
-                            ExtensionList<DefaultExtension,
-                                          DenseEnvironmentExtension>>,
+                            StepperExtensionList<DefaultExtension,
+                                                 DenseEnvironmentExtension>>,
                Navigator>
         prop(es, naviDet);
 
@@ -469,11 +475,13 @@ namespace Test {
     propOptsDef.maxStepSize          = 0.5 * units::_m;
 
     // Build stepper and propagator
-    EigenStepper<ConstantBField, VoidCorrector, ExtensionList<DefaultExtension>>
+    EigenStepper<ConstantBField,
+                 VoidCorrector,
+                 StepperExtensionList<DefaultExtension>>
         esDef(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
-                            ExtensionList<DefaultExtension>>,
+                            StepperExtensionList<DefaultExtension>>,
                Navigator>
         propDef(esDef, naviDet);
 
@@ -512,11 +520,11 @@ namespace Test {
     // Build stepper and propagator
     EigenStepper<ConstantBField,
                  VoidCorrector,
-                 ExtensionList<DenseEnvironmentExtension>>
+                 StepperExtensionList<DenseEnvironmentExtension>>
         esDense(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
-                            ExtensionList<DenseEnvironmentExtension>>,
+                            StepperExtensionList<DenseEnvironmentExtension>>,
                Navigator>
         propDense(esDense, naviDet);
 

@@ -13,14 +13,14 @@ namespace Acts {
 namespace detail {
   /// The dummy list call implementation
   template <typename... extensions>
-  struct extension_list_impl;
+  struct stepper_extension_list_impl;
 
   /// The extension list call implementation
   /// - it calls 'validExtensionsForStep()' on the current entry of the tuple
   /// - it stores the result in @p validExtensions
   /// - then broadcasts the extension call to the remaining tuple
   template <typename first, typename... others>
-  struct extension_list_impl<first, others...>
+  struct stepper_extension_list_impl<first, others...>
   {
     template <typename T, typename stepper_state_t>
     static void
@@ -30,7 +30,7 @@ namespace detail {
     {
       auto& this_extension = std::get<first>(obs_tuple);
       validExtensions.push_back(this_extension.validExtensionForStep(state));
-      extension_list_impl<others...>::validExtensionForStep(
+      stepper_extension_list_impl<others...>::validExtensionForStep(
           obs_tuple, state, validExtensions);
     }
 
@@ -50,14 +50,14 @@ namespace detail {
     {
       // If element is invalid: continue
       if (!(*it)) {
-        return extension_list_impl<others...>::k(
+        return stepper_extension_list_impl<others...>::k(
             obs_tuple, state, knew, bField, ++it, i, h, kprev);
       }
 
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
       if (this_extension.k(state, knew, bField, i, h, kprev)) {
-        return extension_list_impl<others...>::k(
+        return stepper_extension_list_impl<others...>::k(
             obs_tuple, state, knew, bField, ++it, i, h, kprev);
       } else {
         // Break at false
@@ -79,13 +79,13 @@ namespace detail {
     {
       // If element is invalid: continue
       if (!(*it)) {
-        return extension_list_impl<others...>::finalize(
+        return stepper_extension_list_impl<others...>::finalize(
             obs_tuple, state, h, data, D, ++it);
       }
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
       if (this_extension.finalize(state, h, data, D)) {
-        return extension_list_impl<others...>::finalize(
+        return stepper_extension_list_impl<others...>::finalize(
             obs_tuple, state, h, data, D, ++it);
       } else {
         // Break at false
@@ -105,13 +105,13 @@ namespace detail {
     {
       // If element is invalid: continue
       if (!(*it)) {
-        return extension_list_impl<others...>::finalize(
+        return stepper_extension_list_impl<others...>::finalize(
             obs_tuple, state, h, ++it);
       }
       auto& this_extension = std::get<first>(obs_tuple);
       // Continue as long as evaluations are 'true'
       if (this_extension.finalize(state, h)) {
-        return extension_list_impl<others...>::finalize(
+        return stepper_extension_list_impl<others...>::finalize(
             obs_tuple, state, h, ++it);
       } else {
         // Break at false
@@ -121,7 +121,7 @@ namespace detail {
   };
 
   template <typename last>
-  struct extension_list_impl<last>
+  struct stepper_extension_list_impl<last>
   {
 
     /// The extension list call implementation
@@ -194,7 +194,7 @@ namespace detail {
 
   /// The empty extension list call implementation
   template <>
-  struct extension_list_impl<>
+  struct stepper_extension_list_impl<>
   {
 
     template <typename T, typename stepper_state_t>

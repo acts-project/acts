@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Propagator/detail/extension_list_implementation.hpp"
+#include "Acts/Propagator/detail/stepper_extension_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
@@ -19,7 +19,7 @@ namespace Acts {
 /// @brief Container of extensions used in the stepper of the propagation
 /// @tparam extensions Types of the extensions
 template <typename... extensions>
-struct ExtensionList : private detail::Extendable<extensions...>
+struct StepperExtensionList : private detail::Extendable<extensions...>
 {
 private:
   // Checkout for duplicates in the extensions
@@ -29,7 +29,7 @@ private:
   // Access to all extensions
   using detail::Extendable<extensions...>::tuple;
 
-  using impl = detail::extension_list_impl<extensions...>;
+  using impl = detail::stepper_extension_list_impl<extensions...>;
 
   // Vector of valid extensions for a step
   std::vector<bool> validExtensions;
