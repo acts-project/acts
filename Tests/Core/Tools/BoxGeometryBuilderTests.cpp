@@ -165,7 +165,6 @@ namespace Test {
       cfg.surface = nullptr;
     }
 
-    ////////////////////////////////////////////////////////////////////
     // Build volume configuration
     BoxGeometryBuilder::VolumeConfig volumeConfig;
     volumeConfig.position = {2.5 * units::_m, 0., 0.};
