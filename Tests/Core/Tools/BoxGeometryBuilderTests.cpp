@@ -160,6 +160,21 @@ namespace Test {
       BOOST_TEST(layer->surfaceArray()->size() == 1);
       BOOST_TEST(layer->layerType() == LayerType::passive);
     }
+
+    //////////////////////////////////////////////////////////////////////
+    // Build volume configuration
+    BoxGeometryBuilder::VolumeConfig volumeConfig;
+    volumeConfig.position = {2.5 * units::_m, 0., 0.};
+    volumeConfig.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
+    volumeConfig.layerCfg = layerConfig;
+    volumeConfig.binningValue = BinningValue::binX;
+    volumeConfig.name         = "Test volume";
+
+    std::shared_ptr<TrackingVolume> trVol = bgb.buildVolume(volumeConfig);
+    BOOST_TEST(volumeConfig.layers.size() == 4);
+    BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
+               == volumeConfig.layers.size());
+    BOOST_TEST(trVol->volumeName() == volumeConfig.name);
   }
 }  // namespace Test
 }  // namespace Acts
