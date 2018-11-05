@@ -64,7 +64,7 @@ public:
   ///
   /// @param shift additional, optional shift
   std::shared_ptr<PerigeeSurface>
-  clone(const Transform3D* shirt = nullptr) const;
+  clone(const Transform3D* shift = nullptr) const;
 
   /// Assignment operator
   ///

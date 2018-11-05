@@ -170,7 +170,7 @@ public:
 
   /// @brief desctructor - charged/neutral
   /// checks if the surface is free and in such a case deletes it
-  ~SingleBoundTrackParameters() override {}
+  ~SingleBoundTrackParameters() override = default;
 
   /// @brief copy assignment operator - charged/neutral
   /// checks if the surface is free and in such a case delete-clones it

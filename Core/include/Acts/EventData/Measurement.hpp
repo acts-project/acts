@@ -105,7 +105,7 @@ public:
   }
 
   /// @brief virtual destructor
-  virtual ~Measurement() {}
+  virtual ~Measurement() = default;
 
   /// @brief copy constructor
   ///
