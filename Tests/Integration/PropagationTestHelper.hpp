@@ -286,12 +286,12 @@ namespace IntegrationTest {
     // The transform at the destination
     auto seTransform = createCylindricTransform(
         Vector3D(0., 0., 0.), 0.05 * rand1, 0.05 * rand2);
-    CylinderSurface endSurface(
+    auto endSurface = Surface::makeShared<CylinderSurface>(
         seTransform, plimit * units::_m, std::numeric_limits<double>::max());
 
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
-    const auto  result = propagator.propagate(start, endSurface, options);
+    const auto  result = propagator.propagate(start, *endSurface, options);
     const auto& tp     = result.endParameters;
     // check for null pointer
     BOOST_CHECK(tp != nullptr);
@@ -359,7 +359,7 @@ namespace IntegrationTest {
         : createCylindricTransform(
               tp_s->position(), 0.05 * rand1, 0.05 * rand2);
 
-    Surface_type endSurface(seTransform, nullptr);
+    auto endSurface = Surface::makeShared<Surface_type>(seTransform, nullptr);
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
 
@@ -368,7 +368,7 @@ namespace IntegrationTest {
                 << options.pathLimit << std::endl;
     }
 
-    const auto  result = propagator.propagate(start, endSurface, options);
+    const auto  result = propagator.propagate(start, *endSurface, options);
     const auto& tp     = result.endParameters;
     // check the result for nullptr
     BOOST_CHECK(tp != nullptr);
@@ -516,9 +516,10 @@ namespace IntegrationTest {
     // increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
 
-    DestSurface_type endSurface(seTransform, nullptr);
-    const auto       result = propagator.propagate(start, endSurface, options);
-    const auto&      tp     = result.endParameters;
+    auto endSurface
+        = Surface::makeShared<DestSurface_type>(seTransform, nullptr);
+    const auto  result = propagator.propagate(start, *endSurface, options);
+    const auto& tp     = result.endParameters;
 
     // get obtained covariance matrix
     ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));
