@@ -11,10 +11,10 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <vector>
+#include "Acts/Material/Material.hpp"
 #include "Acts/Tools/BoxGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Material/Material.hpp"
 
 namespace Acts {
 namespace Test {
@@ -68,58 +68,98 @@ namespace Test {
     // Thickness of the detector element
     double m_thickness;
   };
-  
+
   BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest)
   {
-	  
-	  // Construct builder
-	BoxGeometryBuilder bgb;
-	
-	// Create configurations for surfaces
-	std::vector<BoxGeometryBuilder::SurfaceConfig> surfaceConfig;
-	for(unsigned int i = 1; i < 5; i++)
-	{
-		// Position of the surfaces
-		BoxGeometryBuilder::SurfaceConfig cfg;
-		cfg.position = {i * units::_m, 0., 0.};
-				
-		// Rotation of the surfaces
-		double           rotationAngle = M_PI * 0.5;
-		Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
-		Vector3D         yPos(0., 1., 0.);
-		Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
-		cfg.rotation.col(0) = xPos;
-		cfg.rotation.col(1) = yPos;
-		cfg.rotation.col(2) = zPos;
-		
-		// Boundaries of the surfaces
-		cfg.rBounds = std::make_shared<const RectangleBounds>(
-			RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
 
-		// Material of the surfaces
-		MaterialProperties matProp(352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-		cfg.surMat = std::shared_ptr<const SurfaceMaterial>(new HomogeneousSurfaceMaterial(matProp));
-		
-		// Thickness of the detector element
-		cfg.thickness = 1. * units::_um;
-			
-		surfaceConfig.push_back(cfg);
-	}
+    // Construct builder
+    BoxGeometryBuilder bgb;
 
-	// Test that there are actually 4 surface configurations
-   BOOST_TEST(surfaceConfig.size() == 4);
-   
-   // Test that 4 sensitive surfaces can be built
-   for(const auto& cfg : surfaceConfig)
-	BOOST_TEST(bgb.buildSurface<DetElem>(cfg) != nullptr);
+    // Create configurations for surfaces
+    std::vector<BoxGeometryBuilder::SurfaceConfig> surfaceConfig;
+    for (unsigned int i = 1; i < 5; i++) {
+      // Position of the surfaces
+      BoxGeometryBuilder::SurfaceConfig cfg;
+      cfg.position = {i * units::_m, 0., 0.};
 
-	// Test that 4 passive surfaces can be built
-   for(const auto& cfg : surfaceConfig)
-	BOOST_TEST(bgb.buildSurface<>(cfg) != nullptr);
-	
-	//~ bgb.buildLayers(config);
-	//~ for(const auto& cfg : config)
-		//~ BOOST_TEST(cfg.layer != nullptr);
+      // Rotation of the surfaces
+      double   rotationAngle = M_PI * 0.5;
+      Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
+      Vector3D yPos(0., 1., 0.);
+      Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+      cfg.rotation.col(0) = xPos;
+      cfg.rotation.col(1) = yPos;
+      cfg.rotation.col(2) = zPos;
+
+      // Boundaries of the surfaces
+      cfg.rBounds = std::make_shared<const RectangleBounds>(
+          RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+
+      // Material of the surfaces
+      MaterialProperties matProp(
+          352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
+      cfg.surMat = std::shared_ptr<const SurfaceMaterial>(
+          new HomogeneousSurfaceMaterial(matProp));
+
+      // Thickness of the detector element
+      cfg.thickness = 1. * units::_um;
+
+      surfaceConfig.push_back(cfg);
+    }
+
+    // Test that there are actually 4 surface configurations
+    BOOST_TEST(surfaceConfig.size() == 4);
+
+    // Test that 4 sensitive surfaces can be built
+    for (const auto& cfg : surfaceConfig) {
+      PlaneSurface* pSur = bgb.buildSurface<DetElem>(cfg);
+      BOOST_TEST(pSur != nullptr);
+      BOOST_TEST(pSur->center() == cfg.position);
+      BOOST_TEST(pSur->associatedMaterial() != nullptr);
+      BOOST_TEST(pSur->associatedDetectorElement() != nullptr);
+    }
+
+    // Test that 4 passive surfaces can be built
+    for (const auto& cfg : surfaceConfig) {
+      PlaneSurface* pSur = bgb.buildSurface<>(cfg);
+      BOOST_TEST(pSur != nullptr);
+      BOOST_TEST(pSur->center() == cfg.position);
+      BOOST_TEST(pSur->associatedMaterial() != nullptr);
+      BOOST_TEST(pSur->associatedDetectorElement() == nullptr);
+    }
+
+    ////////////////////////////////////////////////////////////////////
+    // Build layer configurations
+    std::vector<BoxGeometryBuilder::LayerConfig> layerConfig;
+    for (auto& sCfg : surfaceConfig) {
+      BoxGeometryBuilder::LayerConfig cfg;
+      cfg.layerThickness = 1. * units::_mm;
+      cfg.surfaceCfg     = sCfg;
+      layerConfig.push_back(cfg);
+    }
+
+    // Test that there are actually 4 layer configurations
+    BOOST_TEST(layerConfig.size() == 4);
+
+    // Test that 4 layers with sensitive surfaces can be built
+    for (auto& cfg : layerConfig) {
+      LayerPtr layer = bgb.buildLayer<DetElem>(cfg);
+      BOOST_TEST(layer != nullptr);
+      BOOST_TEST(layer->thickness() == 1. * units::_mm);
+      BOOST_TEST(cfg.surface != nullptr);
+      BOOST_TEST(layer->surfaceArray()->size() == 1);
+      BOOST_TEST(layer->layerType() == LayerType::active);
+    }
+
+    // Test that 4 layers with passive surfaces can be built
+    for (auto& cfg : layerConfig) {
+      LayerPtr layer = bgb.buildLayer<>(cfg);
+      BOOST_TEST(layer != nullptr);
+      BOOST_TEST(layer->thickness() == 1. * units::_mm);
+      BOOST_TEST(cfg.surface != nullptr);
+      BOOST_TEST(layer->surfaceArray()->size() == 1);
+      BOOST_TEST(layer->layerType() == LayerType::passive);
+    }
   }
 }  // namespace Test
 }  // namespace Acts
