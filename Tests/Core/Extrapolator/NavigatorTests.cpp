@@ -206,7 +206,6 @@ namespace Test {
 
     // Do the step towards the beam pipe
     step(state.stepping);
-    Vector3D onBeamPipe = state.stepping.position();
 
     // (2) re-entering navigator:
     // STATUS
@@ -231,7 +230,6 @@ namespace Test {
 
     // Do the step towards the boundary
     step(state.stepping);
-    Vector3D onBoundary = state.stepping.position();
 
     // (3) re-entering navigator:
     // STATUS
