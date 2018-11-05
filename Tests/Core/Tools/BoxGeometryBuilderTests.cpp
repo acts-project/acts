@@ -105,15 +105,17 @@ namespace Test {
 			
 		surfaceConfig.push_back(cfg);
 	}
-	
+
+	// Test that there are actually 4 surface configurations
    BOOST_TEST(surfaceConfig.size() == 4);
    
+   // Test that 4 sensitive surfaces can be built
    for(const auto& cfg : surfaceConfig)
 	BOOST_TEST(bgb.buildSurface<DetElem>(cfg) != nullptr);
 
+	// Test that 4 passive surfaces can be built
    for(const auto& cfg : surfaceConfig)
 	BOOST_TEST(bgb.buildSurface<>(cfg) != nullptr);
-
 	
 	//~ bgb.buildLayers(config);
 	//~ for(const auto& cfg : config)
