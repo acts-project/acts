@@ -66,15 +66,15 @@ namespace IntegrationTest {
   AtlasPropagator_type apropagator(std::move(astepper));
   auto                 bFieldPtr = std::make_shared<const BField_type>(bField);
   auto                 wConfig   = PropagationEngine_type::Config(bFieldPtr);
-  auto                 wegine    = std::make_shared<PropagationEngine_type>(
+  auto                 wengine   = std::make_shared<PropagationEngine_type>(
       wConfig,
       Acts::getDefaultLogger("RungeKuttaEngine", Acts::Logging::INFO));
-  WrappedPropagator_type wpropagator(wegine);
+  WrappedPropagator_type wpropagator(wengine);
 
   // The constant field test
   /// test forward propagation in constant magnetic field
   BOOST_DATA_TEST_CASE(
-      constant_bfieldorward_propagation_,
+      constant_bfieldforward_propagation_,
       bdata::random((bdata::seed = 0,
                      bdata::distribution
                      = std::uniform_real_distribution<>(0.4 * units::_GeV,

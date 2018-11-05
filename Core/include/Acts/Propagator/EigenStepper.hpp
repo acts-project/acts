@@ -323,12 +323,11 @@ public:
     ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
 
     /// Lazily initialized state of the field Cache
-    bool fieldCacheReady = false;
 
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
-    concept::AnyFieldCell<> fieldCache;
+    typename BField::Cache fieldCache;
 
     /// accummulated path length state
     double pathAccumulated = 0.;
@@ -405,12 +404,8 @@ public:
   Vector3D
   getField(State& state, const Vector3D& pos) const
   {
-    if (!state.fieldCacheReady || !state.fieldCache.isInside(pos)) {
-      state.fieldCacheReady = true;
-      state.fieldCache      = m_bField.getFieldCell(pos);
-    }
     // get the field from the cell
-    return std::move(state.fieldCache.getField(pos));
+    return m_bField.getField(pos, state.fieldCache);
   }
 
   /// Perform a Runge-Kutta track parameter propagation step

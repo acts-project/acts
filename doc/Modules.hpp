@@ -81,7 +81,7 @@
 /// policies) to also pipe this output to your framework.
 ///
 /// Changing the implementation of an already defined function is a non-trivial
-/// task C++. We recommend the following approach using the possibility to inject
+/// task in C++. We recommend the following approach using the possibility to inject
 /// custom code by pre-loading shared libraries with <tt>LD_PRELOAD</tt>. You
 /// need to provide an appropriate implementation for a function of the following
 /// signature into a separate source file and compile it in a shared library
@@ -148,14 +148,19 @@
 /// // retrieve field at given position
 /// Acts::Vector3D getField(const Acts::Vector3D& position) const
 /// // retrieve magnetic field cell at given position
-/// Acts::concept::AnyFieldCell<> getFieldCell(const Acts::Vector3D& position) const
+/// // where Cache is the specific Cache struct defined by the magnetic field implementation
+/// Acts::Vector3D getField(const Acts::Vector3D& position, Cache& cache) const
 /// // retrieve gradient of magnetic field value
 /// Acts::Vector3D getFieldGradient(const Acts::Vector3D& position, Acts::ActsMatrixD<3, 3>& derivative) const
 /// // check whether given 3D position is inside this field cell
 /// bool isInside(const Acts::Vector3D& position) const
 /// @endcode
 ///
-/// Acts provides two possible magnetic field implementations:
+/// Each magnetic field implementation expects to be passed a reference to an 
+/// implementation specific cache object. This can usually be achieved through
+/// <tt>typename BField::Cache cache</tt>, where @c BField is a template parameter.
+///
+/// Acts comes with these implementations of this (implicit) interface:
 ///
 /// <B>1. Constant magnetic field implementation</B>
 ///
@@ -165,7 +170,7 @@
 ///
 /// <B>2. Interpolated magnetic field  implementation</B>
 ///
-/// For more complex magnetic field implementations the Acts::InterpolatedBFieldMap should be used.
+/// For more complex magnetic field implementations the Acts::InterpolatedBFieldMap can be used.
 ///
 /// The Acts::InterpolatedBFieldMap internally uses a field mapper which follows
 /// the <a href="http://www.boost.org/doc/libs/1_55_0/doc/html/boost_typeerasure/basic.html">boost concept</a>
@@ -179,7 +184,7 @@
 /// 1. a function mapping cartesian global 3D coordinates onto the grid coordinates (of dimension N)
 /// 2. a function calculating cartesian global 3D coordinates of the magnetic field with the local N dimensional field and the global 3D position as an input
 ///
-/// A default Acts::detail::Grid implementations is provided following the Acts::concept::AnyNDimGrid,
+/// A default Acts::detail::Grid implementation is provided following the Acts::concept::AnyNDimGrid,
 /// which is flexible (using template parameters) on the dimension of the grid and the value stored in the grid.
 ///
 /// Two convenience functions in order ease the creation of an Acts::InterpolatedBFieldMap::FieldMapper e.g. when reading in a field map from a file,
@@ -187,6 +192,10 @@
 /// 1. Acts::InterpolatedBFieldMap::FieldMapper<2, 2> fieldMapperRZ()
 /// 2. Acts::InterpolatedBFieldMap::FieldMapper<3, 3> fieldMapperXYZ()
 ///
+/// <B>3. SharedBField</B>
+/// 
+/// Wraps another @c BField type, which it holds as a @c shared_ptr. The instance can then be copied without having to duplicate
+/// the underlying field implementation. This is useful in the case of a large B-Field map.
 
 /// @defgroup Material Material
 /// @ingroup Core

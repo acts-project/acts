@@ -16,6 +16,9 @@
 /// formats: rz and xyz.
 
 namespace Acts {
+
+class SolenoidBField;
+
 /// Method to setup the FieldMapper
 /// @param localToGlobalBin Function mapping the local bins of r,z to the global
 /// bin of the map magnetic field value
@@ -128,5 +131,21 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                double                      lengthUnit  = Acts::units::_mm,
                double                      BFieldUnit  = Acts::units::_T,
                bool                        firstOctant = false);
+
+/// Function which takes an existing SolenoidBField instance and
+/// creates a field mapper by sampling grid points from the analytical
+/// solenoid field.
+///
+/// @param rlim pair of r bounds
+/// @param zlim pair of z bounds
+/// @param nbins pair of bin counts
+/// @param field the solenoid field instance
+///
+/// @return A field mapper instance for use in interpolation.
+Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
+solenoidFieldMapper(std::pair<double, double> rlim,
+                    std::pair<double, double> zlim,
+                    std::pair<size_t, size_t> nbins,
+                    const SolenoidBField& field);
 
 }  // namespace Acts

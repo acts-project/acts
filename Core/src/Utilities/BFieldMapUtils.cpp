@@ -8,6 +8,7 @@
 
 #include "Acts/Utilities/BFieldMapUtils.hpp"
 #include <iostream>
+#include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
@@ -232,4 +233,72 @@ Acts::fieldMapperXYZ(
   // create field mapping
   return Acts::InterpolatedBFieldMap::FieldMapper<3, 3>(
       transformPos, transformBField, std::move(grid));
+}
+
+Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
+Acts::solenoidFieldMapper(std::pair<double, double> rlim,
+                          std::pair<double, double> zlim,
+                          std::pair<size_t, size_t> nbins,
+                          const SolenoidBField& field)
+{
+  double rMin, rMax, zMin, zMax;
+  std::tie(rMin, rMax) = rlim;
+  std::tie(zMin, zMax) = zlim;
+
+  size_t nBinsR, nBinsZ;
+  std::tie(nBinsR, nBinsZ) = nbins;
+
+  double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
+  double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
+
+  rMax += stepR;
+  zMax += stepZ;
+
+  // Create the axis for the grid
+  Acts::detail::EquidistantAxis rAxis(rMin, rMax, nBinsR);
+  Acts::detail::EquidistantAxis zAxis(zMin, zMax, nBinsZ);
+
+  // Create the grid
+  using Grid_t = Acts::detail::Grid<Acts::Vector2D,
+                                    Acts::detail::EquidistantAxis,
+                                    Acts::detail::EquidistantAxis>;
+  Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
+
+  // Create the transformation for the position
+  // map (x,y,z) -> (r,z)
+  auto transformPos = [](const Acts::Vector3D& pos) {
+    return Acts::Vector2D(perp(pos), pos.z());
+  };
+
+  // Create the transformation for the bfield
+  // map (Br,Bz) -> (Bx,By,Bz)
+  auto transformBField = [](const Acts::Vector2D& bfield,
+                            const Acts::Vector3D& pos) {
+    return Acts::Vector3D(
+        bfield.x() * cos(phi(pos)), bfield.x() * sin(phi(pos)), bfield.y());
+  };
+
+  // iterate over all bins, set their value to the solenoid value
+  // at their lower left position
+  for (size_t i = 0; i <= nBinsR + 1; i++) {
+    for (size_t j = 0; j <= nBinsZ + 1; j++) {
+      Grid_t::index_t index({i, j});
+      if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
+        // under or overflow bin, set zero
+        grid.at(index) = Grid_t::value_type(0, 0);
+      } else {
+        // regular bin, get lower left boundary
+        Grid_t::point_t lowerLeft = grid.getLowerLeftBinEdge(index);
+        // do lookup
+        Vector2D B     = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
+        grid.at(index) = B;
+      }
+    }
+  }
+
+  // Create the mapper & BField Service
+  // create field mapping
+  Acts::InterpolatedBFieldMap::FieldMapper<2, 2> mapper(
+      transformPos, transformBField, std::move(grid));
+  return mapper;
 }
