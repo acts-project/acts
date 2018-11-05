@@ -170,10 +170,11 @@ namespace Test {
     volumeConfig.binningValue = BinningValue::binX;
     volumeConfig.name         = "Test volume";
 
+	// Test the building
     std::shared_ptr<TrackingVolume> trVol = bgb.buildVolume(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
     BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
-               == volumeConfig.layers.size());
+               == volumeConfig.layers.size() * 2 + 1); // #layers = navigation + material layers
     BOOST_TEST(trVol->volumeName() == volumeConfig.name);
   }
 }  // namespace Test
