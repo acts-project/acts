@@ -27,7 +27,7 @@ class AtlasStepper
 
 public:
   using Jacobian = ActsMatrixD<5, 5>;
-  using cstep    = detail::ConstrainedStep;
+  using Cstep    = detail::ConstrainedStep;
 
   struct State
   {
@@ -59,7 +59,7 @@ public:
     double pathAccumulated = 0.;
 
     // adaptive step size of the runge-kutta integration
-    cstep stepSize = std::numeric_limits<double>::max();
+    Cstep stepSize = std::numeric_limits<double>::max();
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
@@ -492,7 +492,7 @@ public:
   /// @param [in] s Destination surface to which the conversion is done
   template <typename result_t, typename surface_t>
   void
-  convert(State& state, result_t& result, const surface_t& s) const
+  convert(State& state, result_t& result, const surface_t& surface) const
   {
 
     // the convert method invalidates the state (in case it's reused)
@@ -513,7 +513,7 @@ public:
       state.pVector[39] *= p;
       state.pVector[40] *= p;
 
-      const auto fFrame = s.referenceFrame(gp, mom);
+      const auto fFrame = surface.referenceFrame(gp, mom);
 
       double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
       double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
@@ -545,11 +545,12 @@ public:
       // in case of line-type surfaces - we need to take into account that
       // the reference frame changes with variations of all local
       // parameters
-      if (s.type() == Surface::Straw || s.type() == Surface::Perigee) {
+      if (surface.type() == Surface::Straw
+          || surface.type() == Surface::Perigee) {
         // vector from position to center
-        double x = state.pVector[0] - s.center().x();
-        double y = state.pVector[1] - s.center().y();
-        double z = state.pVector[2] - s.center().z();
+        double x = state.pVector[0] - surface.center().x();
+        double y = state.pVector[1] - surface.center().y();
+        double z = state.pVector[2] - surface.center().z();
 
         // this is the projection of the direction onto the local y axis
         double d = state.pVector[3] * Ay[0] + state.pVector[4] * Ay[1]
@@ -663,9 +664,9 @@ public:
       double MA[3] = {Ax[0], Ax[1], Ax[2]};
       double MB[3] = {Ay[0], Ay[1], Ay[2]};
       // Jacobian production of transport and to_local
-      if (s.type() == Surface::Disc) {
+      if (surface.type() == Surface::Disc) {
         // the vector from the disc surface to the p
-        const auto& sfc  = s.center();
+        const auto& sfc  = surface.center();
         double      d[3] = {state.pVector[0] - sfc(0),
                        state.pVector[1] - sfc(1),
                        state.pVector[2] - sfc(2)};
@@ -736,7 +737,7 @@ public:
 
     // Fill the end parameters
     result.endParameters = std::make_unique<const BoundParameters>(
-        std::move(cov), gp, mom, state.charge(), s.getSharedPtr());
+        std::move(cov), gp, mom, state.charge(), surface.getSharedPtr());
   }
 
   AtlasStepper(BField bField = BField()) : m_bField(std::move(bField)){};
