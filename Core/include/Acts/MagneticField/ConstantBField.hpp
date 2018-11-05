@@ -36,7 +36,10 @@ public:
   /// @param [in] Bx magnetic field component in global x-direction
   /// @param [in] By magnetic field component in global y-direction
   /// @param [in] Bz magnetic field component in global z-direction
-  ConstantBField(double Bx = 0., double By = 0., double Bz = 0.) : m_BField(Bx, By, Bz) {}
+  ConstantBField(double Bx = 0., double By = 0., double Bz = 0.)
+    : m_BField(Bx, By, Bz)
+  {
+  }
 
   /// @brief retrieve magnetic field value
   ///
@@ -130,7 +133,7 @@ public:
   void
   setField(const Vector3D& B)
   {
-    m_BField    = B;
+    m_BField = B;
   }
 
 private:
