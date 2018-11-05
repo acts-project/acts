@@ -282,7 +282,6 @@ Acts::solenoidFieldMapper(std::pair<double, double> rlim,
   // at their lower left position
   for (size_t i = 0; i <= nBinsR + 1; i++) {
     for (size_t j = 0; j <= nBinsZ + 1; j++) {
-      // std::cout << "(i,j) = " << i << "," << j << std::endl;
       Grid_t::index_t index({i, j});
       if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
         // under or overflow bin, set zero
