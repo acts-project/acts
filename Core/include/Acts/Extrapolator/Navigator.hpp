@@ -1,4 +1,3 @@
-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2016-2018 Acts project team
@@ -23,6 +22,7 @@
 namespace Acts {
 
 using Cstep = detail::ConstrainedStep;
+
 /// @breif struct for the Navigation options that are forwarded to
 ///        the geometry
 ///
