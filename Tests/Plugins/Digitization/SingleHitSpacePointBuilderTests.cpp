@@ -39,7 +39,7 @@ namespace Test {
         new RectangleBounds(35. * units::_um, 25. * units::_mm));
 
     // Build binning and segmentation
-    std::vector<float> boundariesX, boundariesY;
+    std::vector<double> boundariesX, boundariesY;
     boundariesX.push_back(-35. * units::_um);
     boundariesX.push_back(35. * units::_um);
     boundariesY.push_back(-25. * units::_mm);
