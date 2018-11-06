@@ -21,8 +21,8 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Tools/BoxGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "DetectorBuilder.hpp"
 
 // TODO: Testing of covariances in Integration test - requires N-layer box
 // detector for implementation of DenseEnvironmentExtension
@@ -32,6 +32,8 @@ namespace Acts {
 namespace Test {
 
   using cstep = detail::ConstrainedStep;
+
+  BoxGeometryBuilder bgb;
 
   ///
   /// @brief Aborter for the case that a particle leaves the detector or reaches
@@ -109,8 +111,16 @@ namespace Test {
   // valid in this case.
   BOOST_AUTO_TEST_CASE(step_extension_vacuum_test)
   {
+    BoxGeometryBuilder::VolumeConfig vConf;
+    vConf.position = {0.5 * units::_m, 0., 0.};
+    vConf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    BoxGeometryBuilder::Config conf;
+    conf.volumeCfg.push_back(vConf);
+    conf.position = {0.5 * units::_m, 0., 0.};
+    conf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+
     // Build detector
-    std::shared_ptr<TrackingGeometry> vacuum = buildVacDetector();
+    std::shared_ptr<TrackingGeometry> vacuum = bgb.buildTrackingGeometry(conf);
 
     // Build navigator
     Navigator naviVac(vacuum);
@@ -210,8 +220,19 @@ namespace Test {
   // Test case b). The DefaultExtension should state that it is invalid here.
   BOOST_AUTO_TEST_CASE(step_extension_material_test)
   {
+    BoxGeometryBuilder::VolumeConfig vConf;
+    vConf.position = {0.5 * units::_m, 0., 0.};
+    vConf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf.material = std::make_shared<const Material>(
+        Material(352.8, 394.133, 9.012, 4., 1.848e-3));
+    BoxGeometryBuilder::Config conf;
+    conf.volumeCfg.push_back(vConf);
+    conf.position = {0.5 * units::_m, 0., 0.};
+    conf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+
     // Build detector
-    std::shared_ptr<TrackingGeometry> material = buildMatDetector();
+    std::shared_ptr<TrackingGeometry> material
+        = bgb.buildTrackingGeometry(conf);
 
     // Build navigator
     Navigator naviMat(material);
@@ -366,8 +387,24 @@ namespace Test {
   // Test case c). Both should be involved in their part of the detector
   BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test)
   {
+    BoxGeometryBuilder::VolumeConfig vConfVac1;
+    vConfVac1.position = {0.5 * units::_m, 0., 0.};
+    vConfVac1.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    BoxGeometryBuilder::VolumeConfig vConfMat;
+    vConfMat.position = {1.5 * units::_m, 0., 0.};
+    vConfMat.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConfMat.material = std::make_shared<const Material>(
+        Material(352.8, 394.133, 9.012, 4., 1.848e-3));
+    BoxGeometryBuilder::VolumeConfig vConfVac2;
+    vConfVac2.position = {2.5 * units::_m, 0., 0.};
+    vConfVac2.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    BoxGeometryBuilder::Config conf;
+    conf.volumeCfg = {vConfVac1, vConfMat, vConfVac2};
+    conf.position  = {1.5 * units::_m, 0., 0.};
+    conf.length    = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+
     // Build detector
-    std::shared_ptr<TrackingGeometry> det = buildVacMatVacDetector();
+    std::shared_ptr<TrackingGeometry> det = bgb.buildTrackingGeometry(conf);
 
     // Build navigator
     Navigator naviDet(det);
@@ -475,6 +512,7 @@ namespace Test {
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
+    // Check the exit situation of the first volume
     std::pair<Vector3D, Vector3D> endParams, endParamsControl;
     for (unsigned int i = 0; i < stepResultDef.position.size(); i++) {
       if (1. * units::_m - stepResultDef.position[i].x() < 1e-4) {
