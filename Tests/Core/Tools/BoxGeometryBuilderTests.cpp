@@ -167,8 +167,7 @@ namespace Test {
     volumeConfig.position = {2.5 * units::_m, 0., 0.};
     volumeConfig.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
     volumeConfig.layerCfg = layerConfig;
-    volumeConfig.binningValue = BinningValue::binX;
-    volumeConfig.name         = "Test volume";
+    volumeConfig.name     = "Test volume";
 
     // Test the building
     std::shared_ptr<TrackingVolume> trVol = bgb.buildVolume(volumeConfig);
@@ -248,8 +247,7 @@ namespace Test {
     volumeConfig2.position = {-2.5 * units::_m, 0., 0.};
     volumeConfig2.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
     volumeConfig2.layerCfg = layerConfig2;
-    volumeConfig2.binningValue = BinningValue::binX;
-    volumeConfig2.name         = "Test volume2";
+    volumeConfig2.name     = "Test volume2";
 
     BoxGeometryBuilder::Config config;
     config.position  = {0., 0., 0.};
@@ -270,13 +268,13 @@ namespace Test {
                == volumeConfig2.name);
 
     //~ std::cout << "center: " << detector->trackingVolume("Test
-    //volume")->center() << std::endl;
+    // volume")->center() << std::endl;
     //~ std::cout << "center: " << detector->trackingVolume("Test
-    //volume2")->center() << std::endl;
+    // volume2")->center() << std::endl;
     //~ for(const auto bs : detector->lowestTrackingVolume({1., 0.,
-    //0.})->boundarySurfaces())
+    // 0.})->boundarySurfaces())
     //~ std::cout << "bs: " << bs->surfaceRepresentation().center() <<
-    //std::endl;
+    // std::endl;
   }
 }  // namespace Test
 }  // namespace Acts
