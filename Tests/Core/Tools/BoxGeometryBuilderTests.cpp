@@ -180,6 +180,7 @@ namespace Test {
     for (auto& lay : volumeConfig.layers) {
       BOOST_TEST(lay->layerType() == LayerType::passive);
     }
+    
     BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
                == volumeConfig.layers.size() * 2
                    + 1);  // #layers = navigation + material layers
@@ -202,6 +203,16 @@ namespace Test {
     for (auto& lay : volumeConfig.layerCfg) {
       lay.surface = nullptr;
       lay.active  = true;
+    }
+    trVol = bgb.buildVolume<DetElem>(volumeConfig);
+    BOOST_TEST(volumeConfig.layers.size() == 4);
+    for (auto& lay : volumeConfig.layers) {
+      BOOST_TEST(lay->layerType() == LayerType::active);
+    }
+
+    volumeConfig.layers.clear();
+    for (auto& lay : volumeConfig.layerCfg) {
+      lay.active = true;
     }
     trVol = bgb.buildVolume<DetElem>(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
