@@ -173,16 +173,42 @@ namespace Test {
     // Test the building
     std::shared_ptr<TrackingVolume> trVol = bgb.buildVolume(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
+    for (auto& lay : volumeConfig.layers) {
+      BOOST_TEST(lay->layerType() == LayerType::passive);
+    }
     BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
                == volumeConfig.layers.size() * 2
                    + 1);  // #layers = navigation + material layers
     BOOST_TEST(trVol->volumeName() == volumeConfig.name);
 
+    // Test the building
+    volumeConfig.layers.clear();
+    trVol = bgb.buildVolume<DetElem>(volumeConfig);
+    BOOST_TEST(volumeConfig.layers.size() == 4);
+    for (auto& lay : volumeConfig.layers) {
+      BOOST_TEST(lay->layerType() == LayerType::passive);
+    }
+    BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
+               == volumeConfig.layers.size() * 2
+                   + 1);  // #layers = navigation + material layers
+    BOOST_TEST(trVol->volumeName() == volumeConfig.name);
+
+    volumeConfig.layers.clear();
+    for (auto& lay : volumeConfig.layerCfg) {
+      lay.active = true;
+    }
+    trVol = bgb.buildVolume<DetElem>(volumeConfig);
+    BOOST_TEST(volumeConfig.layers.size() == 4);
+    for (auto& lay : volumeConfig.layers) {
+      BOOST_TEST(lay->layerType() == LayerType::active);
+    }
+
     ////////////////////////////////////////////////////////////////////
     // Build TrackingGeometry configuration
 
+    // Build second volume
     std::vector<BoxGeometryBuilder::SurfaceConfig> surfaceConfig2;
-    for (unsigned int i = 1; i < 5; i++) {
+    for (int i = 1; i < 5; i++) {
       // Position of the surfaces
       BoxGeometryBuilder::SurfaceConfig cfg;
       cfg.position = {-i * units::_m, 0., 0.};
@@ -208,7 +234,6 @@ namespace Test {
 
       // Thickness of the detector element
       cfg.thickness = 1. * units::_um;
-
       surfaceConfig2.push_back(cfg);
     }
 
@@ -222,16 +247,36 @@ namespace Test {
     BoxGeometryBuilder::VolumeConfig volumeConfig2;
     volumeConfig2.position = {-2.5 * units::_m, 0., 0.};
     volumeConfig2.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
-    volumeConfig2.layerCfg = layerConfig;
+    volumeConfig2.layerCfg = layerConfig2;
     volumeConfig2.binningValue = BinningValue::binX;
     volumeConfig2.name         = "Test volume2";
 
     BoxGeometryBuilder::Config config;
     config.position  = {0., 0., 0.};
     config.length    = {10. * units::_m, 1. * units::_m, 1. * units::_m};
-    config.volumeCfg = {volumeConfig, volumeConfig2};
+    config.volumeCfg = {volumeConfig2, volumeConfig};
 
-    bgb.buildTrackingGeometry(config);
+    std::shared_ptr<TrackingGeometry> detector
+        = bgb.buildTrackingGeometry(config);
+    BOOST_TEST(detector->lowestTrackingVolume({1., 0., 0.})->volumeName()
+               == volumeConfig.name);
+    BOOST_TEST(detector->lowestTrackingVolume({-1., 0., 0.})->volumeName()
+               == volumeConfig2.name);
+    config.volumes.clear();
+    detector = bgb.buildTrackingGeometry<DetElem>(config);
+    BOOST_TEST(detector->lowestTrackingVolume({1., 0., 0.})->volumeName()
+               == volumeConfig.name);
+    BOOST_TEST(detector->lowestTrackingVolume({-1., 0., 0.})->volumeName()
+               == volumeConfig2.name);
+
+    //~ std::cout << "center: " << detector->trackingVolume("Test
+    //volume")->center() << std::endl;
+    //~ std::cout << "center: " << detector->trackingVolume("Test
+    //volume2")->center() << std::endl;
+    //~ for(const auto bs : detector->lowestTrackingVolume({1., 0.,
+    //0.})->boundarySurfaces())
+    //~ std::cout << "bs: " << bs->surfaceRepresentation().center() <<
+    //std::endl;
   }
 }  // namespace Test
 }  // namespace Acts
