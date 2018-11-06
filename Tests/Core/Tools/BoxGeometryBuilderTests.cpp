@@ -161,7 +161,7 @@ namespace Test {
       BOOST_TEST(layer->layerType() == LayerType::passive);
     }
 
-    //////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////
     // Build volume configuration
     BoxGeometryBuilder::VolumeConfig volumeConfig;
     volumeConfig.position = {2.5 * units::_m, 0., 0.};
@@ -177,6 +177,61 @@ namespace Test {
                == volumeConfig.layers.size() * 2
                    + 1);  // #layers = navigation + material layers
     BOOST_TEST(trVol->volumeName() == volumeConfig.name);
+
+    ////////////////////////////////////////////////////////////////////
+    // Build TrackingGeometry configuration
+
+    std::vector<BoxGeometryBuilder::SurfaceConfig> surfaceConfig2;
+    for (unsigned int i = 1; i < 5; i++) {
+      // Position of the surfaces
+      BoxGeometryBuilder::SurfaceConfig cfg;
+      cfg.position = {-i * units::_m, 0., 0.};
+
+      // Rotation of the surfaces
+      double   rotationAngle = M_PI * 0.5;
+      Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
+      Vector3D yPos(0., 1., 0.);
+      Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+      cfg.rotation.col(0) = xPos;
+      cfg.rotation.col(1) = yPos;
+      cfg.rotation.col(2) = zPos;
+
+      // Boundaries of the surfaces
+      cfg.rBounds = std::make_shared<const RectangleBounds>(
+          RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+
+      // Material of the surfaces
+      MaterialProperties matProp(
+          352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
+      cfg.surMat = std::shared_ptr<const SurfaceMaterial>(
+          new HomogeneousSurfaceMaterial(matProp));
+
+      // Thickness of the detector element
+      cfg.thickness = 1. * units::_um;
+
+      surfaceConfig2.push_back(cfg);
+    }
+
+    std::vector<BoxGeometryBuilder::LayerConfig> layerConfig2;
+    for (auto& sCfg : surfaceConfig2) {
+      BoxGeometryBuilder::LayerConfig cfg;
+      cfg.layerThickness = 1. * units::_mm;
+      cfg.surfaceCfg     = sCfg;
+      layerConfig2.push_back(cfg);
+    }
+    BoxGeometryBuilder::VolumeConfig volumeConfig2;
+    volumeConfig2.position = {-2.5 * units::_m, 0., 0.};
+    volumeConfig2.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
+    volumeConfig2.layerCfg = layerConfig;
+    volumeConfig2.binningValue = BinningValue::binX;
+    volumeConfig2.name         = "Test volume2";
+
+    BoxGeometryBuilder::Config config;
+    config.position  = {0., 0., 0.};
+    config.length    = {10. * units::_m, 1. * units::_m, 1. * units::_m};
+    config.volumeCfg = {volumeConfig, volumeConfig2};
+
+    bgb.buildTrackingGeometry(config);
   }
 }  // namespace Test
 }  // namespace Acts
