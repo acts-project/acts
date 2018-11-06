@@ -171,6 +171,8 @@ namespace Test {
     volumeConfig.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
     volumeConfig.layerCfg = layerConfig;
     volumeConfig.name     = "Test volume";
+    volumeConfig.material = std::make_shared<const Material>(
+        Material(352.8, 407., 9.012, 4., 1.848e-3));
 
     // Test the building
     std::shared_ptr<TrackingVolume> trVol = bgb.buildVolume(volumeConfig);
