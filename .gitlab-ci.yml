@@ -7,7 +7,7 @@ stages:
 before_script:
   # CI executor uses fail on error by default
   # setup scripts do not like that
-  - set +e && source CI/setup_lcg91.sh; set -e
+  - set +e && source CI/setup_lcg94.sh; set -e
 
 # pre-build checks
 
@@ -52,7 +52,7 @@ clang_tidy:
     - mkdir report
     - mkdir build && cd build
     # contain LCG to only where needed
-    - /bin/sh -c "set +e && source ../CI/setup_lcg91.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on"
+    - /bin/sh -c "set +e && source ../CI/setup_lcg94.sh; set -e && cmake .. -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DACTS_BUILD_EXAMPLES=on -DACTS_BUILD_TESTS=on -DACTS_BUILD_INTEGRATION_TESTS=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_MATERIAL_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on -DACTS_BUILD_JSON_PLUGIN=on -DACTS_BUILD_DIGITIZATION_PLUGIN=on -DACTS_BUILD_IDENTIFICATION_PLUGIN=on"
     - cd ..
     - run-clang-tidy.py -p build -header-filter=.* -export-fixes report/clang-tidy-fixes.yml -j$(nproc) 1> report/clang-tidy.log || true
     - virtualenv civenv
@@ -117,83 +117,13 @@ clang_tidy:
   script:
     - cmake --build build -- integration_tests
 
-# SLC6, LCG91 (default build)
-
-build_slc6_lcg91:
-  <<: *template_build
-  variables:
-    BUILD_TYPE: Debug
-
-unit_tests_slc6_lcg91:
-  <<: *template_unit_tests
-  dependencies:
-    - build_slc6_lcg91
-  # replace script to also calculate code coverage
-  script:
-    - cmake --build build -- test
-    - cd build
-    - ../CI/test_coverage
-  coverage: '/^TOTAL.*\s+(\d+\%)$/'
-  artifacts:
-    paths:
-      - build/coverage
-
-integration_tests_slc6_lcg91:
-  <<: *template_integration_tests
-  dependencies:
-    - build_slc6_lcg91
-
-# SLC, LCG91, LLVM40
-
-build_slc6_lcg91_clang:
-  <<: *template_build
-  before_script:
-    - set +e && source CI/setup_lcg91.sh; set -e
-    - source CI/setup_clang.sh
-
-unit_tests_slc6_lcg91_clang:
-  <<: *template_unit_tests
-  dependencies:
-    - build_slc6_lcg91_clang
-  before_script:
-    - set +e && source CI/setup_lcg91.sh; set -e
-    - source CI/setup_clang.sh
-
-integration_tests_slc6_lcg91_clang:
-  <<: *template_integration_tests
-  dependencies:
-    - build_slc6_lcg91_clang
-  before_script:
-    - set +e && source CI/setup_lcg91.sh; set -e
-    - source CI/setup_clang.sh
-
-# SLC6, LCG92
-
-build_slc6_lcg92:
-  <<: *template_build
-  before_script:
-    - set +e && source CI/setup_lcg92.sh; set -e
-
-unit_tests_slc6_lcg92:
-  <<: *template_unit_tests
-  dependencies:
-    - build_slc6_lcg92
-  before_script:
-    - set +e && source CI/setup_lcg92.sh; set -e
-
-integration_tests_slc6_lcg92:
-  <<: *template_integration_tests
-  dependencies:
-    - build_slc6_lcg92
-  before_script:
-    - set +e && source CI/setup_lcg92.sh; set -e
 
 # BUILD WITH LEGACY DISABLED
 # ONLY THIS ONE JOB
-build_slc6_lcg92_no_legacy:
+build_slc6_lcg94_no_legacy:
   <<: *template_build
   before_script:
-    - set +e && source CI/setup_lcg92.sh; set -e
+    - set +e && source CI/setup_lcg94.sh; set -e
   script:
     - mkdir build
     - cd build
@@ -222,12 +152,14 @@ integration_tests_slc6_lcg93:
   before_script:
     - set +e && source CI/setup_lcg93.sh; set -e
 
-# SLC6, LCG94
+# SLC6, LCG94 (default build)
 
 build_slc6_lcg94:
   <<: *template_build
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
+  variables:
+    BUILD_TYPE: Debug
 
 unit_tests_slc6_lcg94:
   <<: *template_unit_tests
@@ -235,6 +167,15 @@ unit_tests_slc6_lcg94:
     - build_slc6_lcg94
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
+  # replace script to also calculate code coverage
+  script:
+    - cmake --build build -- test
+    - cd build
+    - ../CI/test_coverage
+  coverage: '/^TOTAL.*\s+(\d+\%)$/'
+  artifacts:
+    paths:
+      - build/coverage
 
 integration_tests_slc6_lcg94:
   <<: *template_integration_tests
@@ -243,47 +184,29 @@ integration_tests_slc6_lcg94:
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
 
-# CC7, LCG91
+# SLC, LCG94, LLVM40
 
-build_cc7_lcg91:
+build_slc6_lcg94_clang:
   <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+  before_script:
+    - set +e && source CI/setup_lcg94.sh; set -e
+    - source CI/setup_clang.sh
 
-unit_tests_cc7_lcg91:
+unit_tests_slc6_lcg94_clang:
   <<: *template_unit_tests
   dependencies:
-    - build_cc7_lcg91
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    - build_slc6_lcg94_clang
+  before_script:
+    - set +e && source CI/setup_lcg94.sh; set -e
+    - source CI/setup_clang.sh
 
-integration_tests_cc7_lcg91:
+integration_tests_slc6_lcg94_clang:
   <<: *template_integration_tests
   dependencies:
-    - build_cc7_lcg91
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-
-# CC7, LCG92
-
-build_cc7_lcg92:
-  <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
+    - build_slc6_lcg94_clang
   before_script:
-    - set +e && source CI/setup_lcg92.sh; set -e
-
-unit_tests_cc7_lcg92:
-  <<: *template_unit_tests
-  dependencies:
-    - build_cc7_lcg92
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg92.sh; set -e
-
-integration_tests_cc7_lcg92:
-  <<: *template_integration_tests
-  dependencies:
-    - build_cc7_lcg92
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg92.sh; set -e
+    - set +e && source CI/setup_lcg94.sh; set -e
+    - source CI/setup_clang.sh
 
 # CC7, LCG93
 
@@ -375,7 +298,7 @@ website_deploy:
 coverage_deploy:
   stage: deploy
   dependencies:
-    - unit_tests_slc6_lcg91
+    - unit_tests_slc6_lcg94
   script:
     - unset PYTHONHOME
     - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
