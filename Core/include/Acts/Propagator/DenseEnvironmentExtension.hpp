@@ -171,7 +171,7 @@ state.derivative(6) = -std::sqrt(state.mass * state.mass + newMomentum * newMome
 
     return true;
   }
-  
+
   /// @brief After a RKN4 step was accepted by the stepper this method has an
   /// additional veto on the quality of the step. The veto lies in the
   /// evaluation

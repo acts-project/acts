@@ -15,6 +15,7 @@
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
+// TODO: move things to a cpp
 namespace Acts {
 
 class TrackingVolume;
