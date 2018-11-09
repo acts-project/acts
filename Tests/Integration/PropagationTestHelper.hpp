@@ -428,7 +428,7 @@ namespace IntegrationTest {
     // do propagation of the start parameters
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     CurvilinearParameters start_wo_c(nullptr, pos, mom, q);
-
+    
     const auto  result = propagator.propagate(start, options);
     const auto& tp     = result.endParameters;
 
