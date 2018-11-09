@@ -152,6 +152,8 @@ struct DenseEnvironmentExtension {
     if (newMomentum < state.options.momentumCutOff) {
       return false;
     }
+    
+state.derivative(6) = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum) * units::SI2Nat<units::ENERGY>(eld.g) * eld.qop[3] * eld.qop[3] * eld.qop[3] / (conv * conv * conv);
 
     // Add derivative dlambda/ds = Lambda''
     state.stepping.derivative(7) =
@@ -169,7 +171,7 @@ struct DenseEnvironmentExtension {
 
     return true;
   }
-
+  
   /// @brief After a RKN4 step was accepted by the stepper this method has an
   /// additional veto on the quality of the step. The veto lies in the
   /// evaluation

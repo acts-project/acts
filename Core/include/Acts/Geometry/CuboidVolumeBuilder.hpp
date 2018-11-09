@@ -167,5 +167,4 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// Configuration of the world volume
   Config m_cfg;
 };
-
 }  // namespace Acts
