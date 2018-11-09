@@ -664,9 +664,6 @@ BOOST_DATA_TEST_CASE(
                    bdata::distribution
                    = std::uniform_real_distribution<>(3. * units::_GeV,
                                                       10. * units::_GeV)))
-        ^ bdata::random((bdata::seed = 2003,
-                         bdata::distribution
-                         = std::uniform_int_distribution<>(0, 1)))
         ^ bdata::random((bdata::seed = 2004,
                          bdata::distribution
                          = std::uniform_real_distribution<>(0.5, 1.)))
@@ -681,7 +678,6 @@ BOOST_DATA_TEST_CASE(
                          = std::uniform_real_distribution<>(-1., 1.)))
         ^ bdata::xrange(ntests),
     pT,
-    charge,
     plimit,
     rand1,
     rand2,
@@ -691,8 +687,6 @@ BOOST_DATA_TEST_CASE(
   if (index < skip) {
     return;
   }
-
-  double dcharge = -1 + 2 * charge;
 
   // covariance check for eigen stepper in dense environment
   DensePropagator_type dpropagator = setupDensePropagator();

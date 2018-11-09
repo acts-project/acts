@@ -331,7 +331,6 @@ namespace Test {
     PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 1500. * units::_mm;
-    options.maxSteps    = 1e6;
 
     const auto& status = epropagator.propagate(start, options);
     // this test assumes state.options.loopFraction = 0.5
