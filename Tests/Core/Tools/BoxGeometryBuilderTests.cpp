@@ -153,12 +153,16 @@ namespace Test {
 
     // Test that 4 layers with passive surfaces can be built
     for (auto& cfg : layerConfig) {
+      cfg.surface    = nullptr;
       LayerPtr layer = bgb.buildLayer<>(cfg);
       BOOST_TEST(layer != nullptr);
       BOOST_TEST(layer->thickness() == 1. * units::_mm);
       BOOST_TEST(cfg.surface != nullptr);
       BOOST_TEST(layer->surfaceArray()->size() == 1);
       BOOST_TEST(layer->layerType() == LayerType::passive);
+    }
+    for (auto& cfg : layerConfig) {
+      cfg.surface = nullptr;
     }
 
     ////////////////////////////////////////////////////////////////////
@@ -197,7 +201,8 @@ namespace Test {
 
     volumeConfig.layers.clear();
     for (auto& lay : volumeConfig.layerCfg) {
-      lay.active = true;
+      lay.surface = nullptr;
+      lay.active  = true;
     }
     trVol = bgb.buildVolume<DetElem>(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
