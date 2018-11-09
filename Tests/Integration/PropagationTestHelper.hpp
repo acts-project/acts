@@ -464,14 +464,15 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    PropagatorOptions<> options;
+   PropagatorOptions<ActionList<DefaultExtensionActor>> options;
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
     options.debug       = debug;
+    options.actionList.get<DefaultExtensionActor>().tolerance = 1e-7;
 
     // define start parameters
-    double            x  = 0.;
+    double            x  = 1.;
     double            y  = 0.;
     double            z  = 0.;
     double            px = pT * cos(phi);
