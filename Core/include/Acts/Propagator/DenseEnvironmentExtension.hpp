@@ -139,8 +139,11 @@ struct DenseEnvironmentExtension
       return false;
     }
 
-// Add derivative dlambda/ds = Lambda''
-state.derivative(6) = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum) * units::SI2Nat<units::ENERGY>(eld.g) / (newMomentum * newMomentum * newMomentum);
+    // Add derivative dlambda/ds = Lambda''
+    state.derivative(6)
+        = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum)
+        * units::SI2Nat<units::ENERGY>(eld.g)
+        / (newMomentum * newMomentum * newMomentum);
 
     // Add derivative dlambda/ds = Lambda''
     state.stepping.derivative(6)
@@ -153,7 +156,7 @@ state.derivative(6) = -std::sqrt(state.mass * state.mass + newMomentum * newMome
     state.stepping.p = newMomentum;
     return true;
   }
-  
+
   /// @brief After a RKN4 step was accepted by the stepper this method has an
   /// additional veto on the quality of the step. The veto lies in the
   /// evaluation
@@ -277,7 +280,7 @@ private:
     dGdT += h / 6. * (dk1dT + 2. * (dk2dT + dk3dT) + dk4dT);
 
     dGdL = conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
-    
+
     // Evaluation of the dLambda''/dlambda term
     D(6, 6) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
 
