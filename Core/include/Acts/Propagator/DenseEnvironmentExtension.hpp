@@ -151,7 +151,7 @@ struct DenseEnvironmentExtension {
     // Break propagation if momentum becomes below cut-off
     if (newMomentum < state.options.momentumCutOff) {
       return false;
-    }
+    }    
     
 state.derivative(6) = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum) * units::SI2Nat<units::ENERGY>(eld.g) * eld.qop[3] * eld.qop[3] * eld.qop[3] / (conv * conv * conv);
 
