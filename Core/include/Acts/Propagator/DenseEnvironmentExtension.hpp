@@ -138,8 +138,9 @@ struct DenseEnvironmentExtension
         < state.options.momentumCutOff) {
       return false;
     }
-    
-state.derivative(6) = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum) * units::SI2Nat<units::ENERGY>(eld.g) * eld.qop[3] * eld.qop[3] * eld.qop[3] / (conv * conv * conv);
+
+// Add derivative dlambda/ds = Lambda''
+state.derivative(6) = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum) * units::SI2Nat<units::ENERGY>(eld.g) / (newMomentum * newMomentum * newMomentum);
 
     // Add derivative dlambda/ds = Lambda''
     state.stepping.derivative(6)
