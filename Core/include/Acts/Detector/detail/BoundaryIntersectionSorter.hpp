@@ -27,10 +27,28 @@ using BoundaryIntersection
 // Typedef of the surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
 
+/// @brief This struct sorts the boundary surfaces of a tracking volume. The
+/// sorting is based on the intersection with a straight line along propagation
+/// direction.
 struct DefaultBoundaryIntersectionSorter
 {
+  /// @brief Default constructor
   DefaultBoundaryIntersectionSorter() = default;
 
+  /// @brief Main call operator. It tries to intersect every boundary surface by
+  /// a straight line and returns them sorted by intersecion probability.
+  ///
+  /// @tparam parameters_t Type of parameters used for the decomposition
+  /// @tparam options_t Type of navigation options object for decomposition
+  /// @tparam corrector_t Type of (optional) corrector for surface intersection
+  ///
+  /// @param boundaries Vector of boundaries of the volume
+  /// @param parameters The templated parameters for searching
+  /// @param options The templated navigation options
+  /// @param corrfnc is the corrector struct / function
+  ///
+  /// @return Vector of intersections with the boundaries ordered by the
+  /// intersection probability
   template <typename parameters_t, typename options_t, typename corrector_t>
   std::vector<BoundaryIntersection>
   operator()(std::vector<const BoundarySurfaceT<TrackingVolume>*>& boundaries,
@@ -67,7 +85,7 @@ struct DefaultBoundaryIntersectionSorter
 
 /// @brief This struct sorts the boundary surfaces of a tracking volume. The
 /// sorting is based on the probability of intersection from a given location in
-/// the phase space. The ordering itself is splitted into three part:
+/// the phase space. The ordering itself is split into three part:
 /// 1) Order all surfaces in the given direction based on their path length
 /// (most probable)
 /// 2) Add all non-intersecting surfaces (somewhat probable in e.g. scattering
@@ -83,10 +101,11 @@ struct BoundaryIntersectionSorter
   /// them according to their intersection probability (= path length). Beside
   /// the possible interactions in the given direction the surfaces in the
   /// opposite direction are ordered to receive the least probable surfaces.
-  /// This provides the possibility to navigate backwards. Every surface which
-  /// does not have an interaction is assumed to be (quite) orthogonal to the
-  /// current direction and therewith assumed to be somewhat likely to be
-  /// intersected. Therewith the navigation in magnetic fields can be ensured.
+  /// This provides the possibility to navigate backwards. Each surface without
+  /// a straight line intersection in forward or backward direction is assumed
+  /// to be (quite) orthogonal to the current direction and therewith assumed to
+  /// be somewhat likely to be intersected. Therewith the navigation in magnetic
+  /// fields can be ensured.
   ///
   /// @tparam parameters_t Type of parameters used for the decomposition
   /// @tparam options_t Type of navigation options object for decomposition
@@ -125,12 +144,9 @@ struct BoundaryIntersectionSorter
     // collected
     case anyDirection: {
       // Collect intersections
-      std::vector<const BoundarySurfaceT<TrackingVolume>*>::iterator
-          boundaryIter
-          = boundaries.begin();
-      for (; boundaryIter != boundaries.end(); boundaryIter++) {
+      for (const auto& boundary : boundaries) {
         bIntersections.push_back(
-            std::move(intersect(*boundaryIter, parameters, options, corrfnc)));
+            intersect(boundary, parameters, options, corrfnc));
       }
       // Fast exit for that case
       return bIntersections;
@@ -138,18 +154,16 @@ struct BoundaryIntersectionSorter
     }
 
     // Collect the boundary surfaces both directions
-    std::vector<const BoundarySurfaceT<TrackingVolume>*>::iterator boundaryIter
-        = boundaries.begin();
-    for (; boundaryIter != boundaries.end(); boundaryIter++) {
+    for (const auto& boundary : boundaries) {
       // If the intersection is valid it is pushed to the final vector otherwise
       // to a tmp storage
       BoundaryIntersection intersection
-          = intersect(*boundaryIter, parameters, options, corrfnc);
+          = intersect(boundary, parameters, options, corrfnc);
       if (intersection) {
         bIntersections.push_back(std::move(intersection));
       } else {
-        bIntersectionsOtherNavDir.push_back(std::move(
-            intersect(*boundaryIter, parameters, optionsOtherNavDir, corrfnc)));
+        bIntersectionsOtherNavDir.push_back(
+            intersect(boundary, parameters, optionsOtherNavDir, corrfnc));
       }
     }
 

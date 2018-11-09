@@ -348,7 +348,7 @@ namespace detail {
       energyLoss = -E * (meOverm * meOverm);
 
       // Calculate the energy loss due to direct e+e- pair production and
-      // photonuclear interaction (eq. 7, 8) if muons are present
+      // photonuclear interaction (eq. 7, 8) if the particle is a muon
       if ((pdg == 13 || pdg == -13) && E > 8. * units::_GeV) {
         if (E < 1. * units::_TeV) {
           energyLoss += 0.5345 - 6.803e-5 * E - 2.278e-11 * E * E
