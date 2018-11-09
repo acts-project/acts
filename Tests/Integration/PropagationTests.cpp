@@ -32,7 +32,6 @@
 #include "Acts/Tools/BoxGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
 #include "PropagationTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -44,9 +43,12 @@ namespace IntegrationTest {
 
   using BField_type       = ConstantBField;
   using EigenStepper_type = EigenStepper<BField_type>;
-  using DenseStepper_type      = EigenStepper<BField_type, VoidCorrector, StepperExtensionList<DenseEnvironmentExtension>>;
-  using AtlasStepper_type    = AtlasStepper<BField_type>;
-  using EigenPropagator_type = Propagator<EigenStepper_type>;
+  using DenseStepper_type
+      = EigenStepper<BField_type,
+                     VoidCorrector,
+                     StepperExtensionList<DenseEnvironmentExtension>>;
+  using AtlasStepper_type      = AtlasStepper<BField_type>;
+  using EigenPropagator_type   = Propagator<EigenStepper_type>;
   using DensePropagator_type   = Propagator<DenseStepper_type, Navigator>;
   using AtlasPropagator_type   = Propagator<AtlasStepper_type>;
 
@@ -65,22 +67,22 @@ namespace IntegrationTest {
   AtlasStepper_type    astepper(bField);
   AtlasPropagator_type apropagator(std::move(astepper));
 
-DensePropagator_type 
-setupDensePropagator()
-{
-  BoxGeometryBuilder bgb;
-  BoxGeometryBuilder::VolumeConfig vConf;
-  vConf.position = {1.5 * units::_m, 0., 0.};
-  vConf.length = {3. * units::_m, 1. * units::_m, 1. * units::_m};
-  vConf.material = std::make_shared<const Material>(
-  Material(352.8, 407., 9.012, 4., 1.848e-3));
-  BoxGeometryBuilder::Config conf;
-  conf.volumeCfg.push_back(vConf);
-  conf.position = {1.5 * units::_m, 0., 0.};
-  conf.length = {3. * units::_m, 1. * units::_m, 1. * units::_m};
-  Navigator navi(bgb.buildTrackingGeometry(conf));
-	return DensePropagator_type(dstepper, std::move(navi));
-}
+  DensePropagator_type
+  setupDensePropagator()
+  {
+    BoxGeometryBuilder               bgb;
+    BoxGeometryBuilder::VolumeConfig vConf;
+    vConf.position = {1.5 * units::_m, 0., 0.};
+    vConf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf.material = std::make_shared<const Material>(
+        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    BoxGeometryBuilder::Config conf;
+    conf.volumeCfg.push_back(vConf);
+    conf.position = {1.5 * units::_m, 0., 0.};
+    conf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+    Navigator navi(bgb.buildTrackingGeometry(conf));
+    return DensePropagator_type(dstepper, std::move(navi));
+  }
 
   // The constant field test
   /// test forward propagation in constant magnetic field

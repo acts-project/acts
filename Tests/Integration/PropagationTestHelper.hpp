@@ -400,11 +400,11 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-	PropagatorOptions<ActionList<DefaultExtensionActor>> options;
+    PropagatorOptions<ActionList<DefaultExtensionActor>> options;
     // setup propagation options
-    options.maxStepSize = plimit;
-    options.pathLimit   = plimit;
-    options.debug       = debug;
+    options.maxStepSize                                       = plimit;
+    options.pathLimit                                         = plimit;
+    options.debug                                             = debug;
     options.actionList.get<DefaultExtensionActor>().tolerance = 1e-7;
 
     // define start parameters
@@ -428,7 +428,7 @@ namespace IntegrationTest {
     // do propagation of the start parameters
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     CurvilinearParameters start_wo_c(nullptr, pos, mom, q);
-    
+
     const auto  result = propagator.propagate(start, options);
     const auto& tp     = result.endParameters;
 
@@ -464,11 +464,11 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-   PropagatorOptions<ActionList<DefaultExtensionActor>> options;
+    PropagatorOptions<ActionList<DefaultExtensionActor>> options;
     // setup propagation options
-    options.maxStepSize = plimit;
-    options.pathLimit   = plimit;
-    options.debug       = debug;
+    options.maxStepSize                                       = plimit;
+    options.pathLimit                                         = plimit;
+    options.debug                                             = debug;
     options.actionList.get<DefaultExtensionActor>().tolerance = 1e-7;
 
     // define start parameters
@@ -489,8 +489,8 @@ namespace IntegrationTest {
     //     0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
     //     1. / (10 * units::_GeV);
 
-    cov << 10. * units::_mm, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0, 0.1,
-        0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV);
+    cov << 10. * units::_mm, 0, 0, 0, 0, 0, 10. * units::_mm, 0, 0, 0, 0, 0,
+        0.1, 0, 0, 0, 0, 0, 0.1, 0, 0, 0, 0, 0, 1. / (10. * units::_GeV);
 
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
 

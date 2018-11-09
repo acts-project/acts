@@ -110,7 +110,7 @@ namespace IntegrationTest {
       qop_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
         StartParameters tp = startPars;
-        tp.template set<Acts::eQOP>(tp.template get<Acts::eQOP>() + h); 
+        tp.template set<Acts::eQOP>(tp.template get<Acts::eQOP>() + h);
         const auto& r = m_propagator.propagate(tp, dest, var_options);
         qop_derivatives.push_back((r.endParameters->parameters() - nominal)
                                   / h);

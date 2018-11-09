@@ -224,10 +224,6 @@ public:
   std::shared_ptr<const TrackingVolumeArray>
   confinedVolumes() const;
 
-  /// Return the confind volume array as a shared pointer - for glueing
-  std::shared_ptr<const TrackingVolumeArray>
-  confinedVolumesSharedPtr() const;
-
   /// Return detached subVolumes - not the ownership
   const DetachedVolumeVector
   confinedDetachedVolumes() const;
@@ -499,12 +495,6 @@ TrackingVolume::confinedArbitraryLayers() const
 
 inline std::shared_ptr<const TrackingVolumeArray>
 TrackingVolume::confinedVolumes() const
-{
-  return m_confinedVolumes;
-}
-
-inline std::shared_ptr<const TrackingVolumeArray>
-TrackingVolume::confinedVolumesSharedPtr() const
 {
   return m_confinedVolumes;
 }
