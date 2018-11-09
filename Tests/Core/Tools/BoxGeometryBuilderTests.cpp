@@ -269,15 +269,6 @@ namespace Test {
                == volumeConfig.name);
     BOOST_TEST(detector->lowestTrackingVolume({-1., 0., 0.})->volumeName()
                == volumeConfig2.name);
-
-    //~ std::cout << "center: " << detector->trackingVolume("Test
-    // volume")->center() << std::endl;
-    //~ std::cout << "center: " << detector->trackingVolume("Test
-    // volume2")->center() << std::endl;
-    //~ for(const auto bs : detector->lowestTrackingVolume({1., 0.,
-    // 0.})->boundarySurfaces())
-    //~ std::cout << "bs: " << bs->surfaceRepresentation().center() <<
-    // std::endl;
   }
 }  // namespace Test
 }  // namespace Acts

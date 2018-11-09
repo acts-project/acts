@@ -421,6 +421,7 @@ BOOST_DATA_TEST_CASE(
   // covariance check for eigen stepper
   covariance_curvilinear(
       epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
+  // covariance check for eigen stepper in dense environment
   // covariance check fo atlas stepper
   covariance_curvilinear(
       apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
@@ -652,4 +653,47 @@ BOOST_DATA_TEST_CASE(
       false,
       false,
       1e-1);
+}
+
+/// test correct covariance transport for curvilinear parameters
+/// this test only works within the
+/// s_curvilinearProjTolerance (in: Definitions.hpp)
+BOOST_DATA_TEST_CASE(
+    dense_covariance_transport_curvilinear_curvilinear_,
+    bdata::random((bdata::seed = 2000,
+                   bdata::distribution
+                   = std::uniform_real_distribution<>(3. * units::_GeV,
+                                                      10. * units::_GeV)))
+        ^ bdata::random((bdata::seed = 2001,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-M_PI, M_PI)))
+        ^ bdata::random((bdata::seed = 2002,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(0.10, M_PI - 0.10)))
+        ^ bdata::random((bdata::seed = 2003,
+                         bdata::distribution
+                         = std::uniform_int_distribution<>(0, 1)))
+        ^ bdata::random((bdata::seed = 2004,
+                         bdata::distribution
+                         //~ = std::uniform_real_distribution<>(0.5, 1.)))
+                         = std::uniform_real_distribution<>(5., 10.)))
+        ^ bdata::xrange(ntests),
+    pT,
+    phi,
+    theta,
+    charge,
+    plimit,
+    index)
+{
+  if (index < skip) {
+    return;
+  }
+
+  double dcharge = -1 + 2 * charge;
+
+  // covariance check for eigen stepper in dense environment
+  DensePropagator_type dpropagator = setupDensePropagator();
+  covariance_curvilinear(
+	  //~ dpropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
+	  dpropagator, pT, 0, M_PI / 2., 1, plimit * 10. * Acts::units::_cm, index);
 }
