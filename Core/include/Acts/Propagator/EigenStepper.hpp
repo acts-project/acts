@@ -538,7 +538,7 @@ public:
 
     // First Runge-Kutta point (at current position)
     sd.B_first = getField(state, state.pos);
-    if (!state.extension.k(state, sd.k1, sd.B_first)) {
+    if (!state.extension.k1(state, sd.k1, sd.B_first)) {
       return 0.;
     }
 
@@ -555,19 +555,19 @@ public:
       // Second Runge-Kutta point
       const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * sd.k1;
       sd.B_middle         = getField(state, pos1);
-      if (!state.extension.k(state, sd.k2, sd.B_middle, 1, half_h, sd.k1)) {
+      if (!state.extension.k2(state, sd.k2, sd.B_middle, half_h, sd.k1)) {
         return false;
       }
 
       // Third Runge-Kutta point
-      if (!state.extension.k(state, sd.k3, sd.B_middle, 2, half_h, sd.k2)) {
+      if (!state.extension.k3(state, sd.k3, sd.B_middle, half_h, sd.k2)) {
         return false;
       }
 
       // Last Runge-Kutta point
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * sd.k3;
       sd.B_last           = getField(state, pos2);
-      if (!state.extension.k(state, sd.k4, sd.B_last, 3, h, sd.k3)) {
+      if (!state.extension.k4(state, sd.k4, sd.B_last, h, sd.k3)) {
         return false;
       }
 

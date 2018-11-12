@@ -54,23 +54,62 @@ public:
   // Access to an extension
   using detail::Extendable<extensions...>::get;
 
-  /// @brief This functions broadcasts the call of the method k(). It collects
-  /// all extensions and arguments and passes them forward for evaluation and
-  /// returns a boolean.
+  /// @brief This functions broadcasts the call for evaluating k1. It collects
+  /// all arguments and extensions, test their validity for the evaluation and
+  /// passes them forward for evaluation and returns a boolean as indicator if
+  /// the evaluation is valid.
   template <typename stepper_state_t>
   bool
-  k(const stepper_state_t& state,
-    Vector3D&              knew,
-    const Vector3D&        bField,
-    const int              i     = 0,
-    const double           h     = 0,
-    const Vector3D&        kprev = Vector3D())
+  k1(const stepper_state_t& state, Vector3D& knew, const Vector3D& bField)
   {
-    if (i == 0) {
-      validExtensionForStep(state);
-    }
+    validExtensionForStep(state);
+
+    return impl::k(tuple(), state, knew, bField, validExtensions.cbegin());
+  }
+
+  /// @brief This functions broadcasts the call for evaluating k2. It collects
+  /// all arguments and extensions and passes them forward for evaluation and
+  /// returns a boolean as indicator if the evaluation is valid.
+  template <typename stepper_state_t>
+  bool
+  k2(const stepper_state_t& state,
+     Vector3D&              knew,
+     const Vector3D&        bField,
+     const double           h,
+     const Vector3D&        kprev)
+  {
     return impl::k(
-        tuple(), state, knew, bField, validExtensions.cbegin(), i, h, kprev);
+        tuple(), state, knew, bField, validExtensions.cbegin(), 1, h, kprev);
+  }
+
+  /// @brief This functions broadcasts the call for evaluating k3. It collects
+  /// all arguments and extensions and passes them forward for evaluation and
+  /// returns a boolean as indicator if the evaluation is valid.
+  template <typename stepper_state_t>
+  bool
+  k3(const stepper_state_t& state,
+     Vector3D&              knew,
+     const Vector3D&        bField,
+     const double           h,
+     const Vector3D&        kprev)
+  {
+    return impl::k(
+        tuple(), state, knew, bField, validExtensions.cbegin(), 2, h, kprev);
+  }
+
+  /// @brief This functions broadcasts the call for evaluating k4. It collects
+  /// all arguments and extensions and passes them forward for evaluation and
+  /// returns a boolean as indicator if the evaluation is valid.
+  template <typename stepper_state_t>
+  bool
+  k4(const stepper_state_t& state,
+     Vector3D&              knew,
+     const Vector3D&        bField,
+     const double           h,
+     const Vector3D&        kprev)
+  {
+    return impl::k(
+        tuple(), state, knew, bField, validExtensions.cbegin(), 3, h, kprev);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It
