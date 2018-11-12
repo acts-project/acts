@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <limits>
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
@@ -533,17 +534,19 @@ public:
     // Runge-Kutta integrator state
     StepData sd;
 
-    double h2, half_h;
+    double h2, half_h, error_estimate;
 
     // First Runge-Kutta point (at current position)
     sd.B_first = getField(state, state.pos);
-    state.extension.k(state, sd.k1, sd.B_first);
+    if (!state.extension.k(state, sd.k1, sd.B_first)) {
+      return 0.;
+    }
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
-    const auto tryRungeKuttaStep = [&](const double h) -> double {
+    const auto tryRungeKuttaStep = [&](const double h) -> bool {
 
       // State the square and half of the step size
       h2     = h * h;
@@ -552,24 +555,32 @@ public:
       // Second Runge-Kutta point
       const Vector3D pos1 = state.pos + half_h * state.dir + h2 * 0.125 * sd.k1;
       sd.B_middle         = getField(state, pos1);
-      state.extension.k(state, sd.k2, sd.B_middle, 1, half_h, sd.k1);
+      if (!state.extension.k(state, sd.k2, sd.B_middle, 1, half_h, sd.k1)) {
+        return false;
+      }
 
       // Third Runge-Kutta point
-      state.extension.k(state, sd.k3, sd.B_middle, 2, half_h, sd.k2);
+      if (!state.extension.k(state, sd.k3, sd.B_middle, 2, half_h, sd.k2)) {
+        return false;
+      }
 
       // Last Runge-Kutta point
       const Vector3D pos2 = state.pos + h * state.dir + h2 * 0.5 * sd.k3;
       sd.B_last           = getField(state, pos2);
-      state.extension.k(state, sd.k4, sd.B_last, 3, h, sd.k3);
+      if (!state.extension.k(state, sd.k4, sd.B_last, 3, h, sd.k3)) {
+        return false;
+      }
 
       // Return an estimate of the local integration error
-      return h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>();
+      error_estimate = std::max(
+          h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>(), 1e-20);
+      return true;
     };
 
     // Select and adjust the appropriate Runge-Kutta step size as given
     // ATL-SOFT-PUB-2009-001
-    double error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
-    while (error_estimate > state.tolerance) {
+    while (!tryRungeKuttaStep(state.stepSize)
+           || error_estimate > state.tolerance) {
       state.stepSize = state.stepSize
           * std::min(std::max(
                          0.25,
@@ -581,7 +592,6 @@ public:
       if (state.stepSize < state.stepSizeCutOff) {
         return 0.;  // Not moving due to too low momentum needs an aborter
       }
-      error_estimate = std::max(tryRungeKuttaStep(state.stepSize), 1e-20);
     }
 
     // use the adjusted step size
@@ -591,12 +601,16 @@ public:
     if (state.covTransport) {
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D;
-      state.extension.finalize(state, h, sd, D);
+      if (!state.extension.finalize(state, h, sd, D)) {
+        return 0.;
+      }
 
       // for moment, only update the transport part
       state.jacTransport = D * state.jacTransport;
     } else {
-      state.extension.finalize(state, h);
+      if (!state.extension.finalize(state, h)) {
+        return 0.;
+      }
     }
 
     // Update the track parameters according to the equations of motion

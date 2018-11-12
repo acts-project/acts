@@ -34,6 +34,11 @@ struct DefaultExtension
   bool
   validExtensionForStep(const stepper_state_t& state) const
   {
+    // Accept it if there is no charge or a zero mass
+    if (state.q == 0. || state.mass == 0.) {
+      return true;
+    }
+
     // Check existence of a volume with material
     if (state.volume && (*state.volume) && (*state.volume)->material()) {
       return false;

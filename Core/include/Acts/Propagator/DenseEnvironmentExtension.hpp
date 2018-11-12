@@ -69,7 +69,7 @@ struct DenseEnvironmentExtension
   validExtensionForStep(const stepper_state_t& state) const
   {
     // Check for valid particle properties
-    if (state.q == 0. || state.p < conv * momentumCutOff) {
+    if (state.q == 0. || state.mass == 0. || state.p < conv * momentumCutOff) {
       return false;
     }
 
