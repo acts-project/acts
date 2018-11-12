@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <algorithm>
+
 namespace Acts {
 namespace detail {
   /// The StepperExtensionList allows to add an arbitrary number of step
@@ -44,18 +46,22 @@ namespace detail {
     /// @brief Default constructor
     VoidAuctioneer() = default;
 
-    /// @brief Call operator that just returns the list of candidates as valids
+    /// @brief Call operator that returns the list of valid candidates as valids
     ///
     /// @param [in] vCandidates Candidates that are treated as valid extensions
     /// @return The to vCandidates identical list of valid extensions
     std::vector<bool>
-    operator()(std::vector<bool> vCandidates) const
+    operator()(std::vector<int> vCandidates) const
     {
-      return vCandidates;
+      std::vector<bool> valids;
+      valids.reserve(vCandidates.size());
+      for (const int& vc : vCandidates)
+        valids.push_back((vc > 0) ? true : false);
+      return valids;
     }
   };
 
-  /// @brief Auctioneer that states only the first valid extensions as indeed
+  /// @brief Auctioneer that states only the first valid extension as indeed
   /// valid extension
   struct FirstValidAuctioneer
   {
@@ -68,24 +74,42 @@ namespace detail {
     /// @param [in] vCandidates Candidates for a valid extension
     /// @return List with at most one valid extension
     std::vector<bool>
-    operator()(std::vector<bool> vCandidates) const
+    operator()(std::vector<int> vCandidates) const
     {
-      // Indicator if the first valid was already found
-      bool firstValidFound = false;
+      std::vector<bool> valids(vCandidates.size(), false);
+
       for (unsigned int i = 0; i < vCandidates.size(); i++) {
-        // If a valid extensions is already found, set all following to false
-        if (firstValidFound) {
-          vCandidates[i] = false;
-        }
-        // If the first valid isn't found yet, toggle the flag on the first
-        // found
-        else {
-          if (vCandidates[i]) {
-            firstValidFound = true;
-          }
+        if (vCandidates[i] > 0) {
+          valids[i] = true;
+          return valids;
         }
       }
-      return vCandidates;
+      return valids;
+    }
+  };
+
+  /// @brief Auctioneer that states only the highest bidding extension as indeed
+  /// valid extension
+  struct HighestValidAuctioneer
+  {
+    /// @brief Default constructor
+    HighestValidAuctioneer() = default;
+
+    /// @brief Call operator that states the highest bidding extension as the
+    /// only
+    /// valid extension
+    ///
+    /// @param [in] vCandidates Candidates for a valid extension
+    /// @return List with at most one valid extension
+    std::vector<bool>
+    operator()(std::vector<int> vCandidates) const
+    {
+      std::vector<bool> valids(vCandidates.size(), false);
+
+      auto highscore = std::max_element(vCandidates.begin(), vCandidates.end());
+      valids.at(std::distance(vCandidates.begin(), highscore)) = true;
+
+      return valids;
     }
   };
 

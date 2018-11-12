@@ -65,19 +65,19 @@ struct DenseEnvironmentExtension
   /// @param [in] state State of the stepper
   /// @return Boolean flag if the step would be valid
   template <typename stepper_state_t>
-  bool
+  int
   validExtensionForStep(const stepper_state_t& state) const
   {
     // Check for valid particle properties
     if (state.q == 0. || state.mass == 0. || state.p < conv * momentumCutOff) {
-      return false;
+      return 0;
     }
 
     // Check existence of a volume with material
     if (!state.volume || !(*state.volume) || !(*state.volume)->material()) {
-      return false;
+      return 0;
     }
-    return true;
+    return 2;
   }
 
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this

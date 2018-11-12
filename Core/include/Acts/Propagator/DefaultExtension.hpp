@@ -31,19 +31,10 @@ struct DefaultExtension
   /// @param [in] state State of the stepper
   /// @return Boolean flag if the step would be valid
   template <typename stepper_state_t>
-  bool
-  validExtensionForStep(const stepper_state_t& state) const
+  int
+  validExtensionForStep(const stepper_state_t& /*unused*/) const
   {
-    // Accept it if there is no charge or a zero mass
-    if (state.q == 0. || state.mass == 0.) {
-      return true;
-    }
-
-    // Check existence of a volume with material
-    if (state.volume && (*state.volume) && (*state.volume)->material()) {
-      return false;
-    }
-    return true;
+    return 1;
   }
 
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this

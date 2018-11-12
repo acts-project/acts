@@ -43,7 +43,7 @@ private:
   void
   validExtensionForStep(const stepper_state_t& state)
   {
-    std::vector<bool> validExtensionCandidates;
+    std::vector<int> validExtensionCandidates;
     // Ask all extensions for a boolean statement of their validity
     impl::validExtensionForStep(tuple(), state, validExtensionCandidates);
     // Post-process the vector in an auctioneer

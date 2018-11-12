@@ -26,7 +26,7 @@ namespace detail {
     static void
     validExtensionForStep(const T&               obs_tuple,
                           const stepper_state_t& state,
-                          std::vector<bool>&     validExtensions)
+                          std::vector<int>&      validExtensions)
     {
       auto& this_extension = std::get<first>(obs_tuple);
       validExtensions.push_back(this_extension.validExtensionForStep(state));
@@ -131,7 +131,7 @@ namespace detail {
     static void
     validExtensionForStep(const T&               obs_tuple,
                           const stepper_state_t& state,
-                          std::vector<bool>&     validExtensions)
+                          std::vector<int>&      validExtensions)
     {
       auto& this_extension = std::get<last>(obs_tuple);
       validExtensions.push_back(this_extension.validExtensionForStep(state));
@@ -201,7 +201,7 @@ namespace detail {
     static void
     validExtensionForStep(const T& /*unused*/,
                           const stepper_state_t& /*unused*/,
-                          std::vector<bool>& /*unused*/)
+                          std::vector<int>& /*unused*/)
     {
     }
 
