@@ -213,7 +213,7 @@ struct MaterialInteractor
           const double lgamma = E / m;
           // Energy loss and straggling - per unit length
           std::pair<double, double> eLoss
-              = ionisationloss(m, lbeta, lgamma, mat, 1. * units::_mm);
+              = ionisationloss.dEds(m, lbeta, lgamma, mat, 1. * units::_mm);
           // Apply the energy loss
           const double dEdl = state.stepping.navDir * eLoss.first;
           const double dE   = mProperties.thickness() * dEdl;

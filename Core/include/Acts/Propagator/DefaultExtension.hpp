@@ -23,7 +23,7 @@ struct DefaultExtension
   double qop = 0.;
 
   /// Local store for conversion of momentum from SI to natural units
-  const double m_conv = units::SI2Nat<units::MOMENTUM>(1);
+  const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
   /// @brief Control function if the step evaluation would be valid
   ///
@@ -193,11 +193,11 @@ protected:
     dFdT += h / 6. * (dk1dT + dk2dT + dk3dT);
     dFdT *= h;
 
-    dFdL = m_conv * (h * h) / 6. * (dk1dL + dk2dL + dk3dL);
+    dFdL = conv * (h * h) / 6. * (dk1dL + dk2dL + dk3dL);
 
     dGdT += h / 6. * (dk1dT + 2. * (dk2dT + dk3dT) + dk4dT);
 
-    dGdL = m_conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
+    dGdL = conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
     return true;
   }

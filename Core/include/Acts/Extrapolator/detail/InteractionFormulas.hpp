@@ -54,13 +54,13 @@ namespace detail {
     /// the sigma of the distribution.
     template <typename material_t>
     std::pair<double, double>
-    operator()(double            m,
-               double            lbeta,
-               double            lgamma,
-               const material_t& mat,
-               double            path    = 1.,
-               bool              mean    = true,
-               bool              siUnits = false) const
+    dEds(double            m,
+         double            lbeta,
+         double            lgamma,
+         const material_t& mat,
+         double            path    = 1.,
+         bool              mean    = true,
+         bool              siUnits = false) const
     {
 
       // the return value
@@ -323,12 +323,12 @@ namespace detail {
     /// @return Radiation energy loss
     template <typename material_t>
     double
-    operator()(double            E,
-               double            m,
-               const material_t& mat,
-               int               pdg,
-               double            path    = 1.,
-               bool              siUnits = false) const
+    dEds(double            E,
+         double            m,
+         const material_t& mat,
+         int               pdg,
+         double            path    = 1.,
+         bool              siUnits = false) const
     {
       // Easy exit
       if (mat.X0() == 0.) {
