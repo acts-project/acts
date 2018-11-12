@@ -108,7 +108,7 @@ struct DefaultExtension
     return transportMatrix(state.dir, h, data, D);
   }
 
-protected:
+private:
   /// @brief Calculates the transport matrix D for the jacobian
   ///
   /// @param [in] dir Direction of the particle

@@ -38,31 +38,26 @@ private:
   /// integration step
   ///
   /// @tparam stepper_state_t Type of the state of the stepper
-  /// @tparam auctioneer_t Type of the auctioneer for post-processing of valid
-  /// extension candidates
   /// @param [in] state State of the stepper
-  template <typename stepper_state_t,
-            typename auctioneer_t = detail::VoidAuctioneer>
+  template <typename stepper_state_t>
   void
   validExtensionForStep(const stepper_state_t& state)
   {
-    auctioneer_t      auctioneer;
     std::vector<bool> validExtensionCandidates;
     // Ask all extensions for a boolean statement of their validity
     impl::validExtensionForStep(tuple(), state, validExtensionCandidates);
     // Post-process the vector in an auctioneer
-    validExtensions = auctioneer(std::move(validExtensionCandidates));
+    validExtensions = state.auctioneer(std::move(validExtensionCandidates));
   }
 
 public:
   // Access to an extension
   using detail::Extendable<extensions...>::get;
 
-  /// @brief This functions implies the call of the method k(). It collects all
-  /// extensions and arguments and passes them forward for evaluation and
+  /// @brief This functions broadcasts the call of the method k(). It collects
+  /// all extensions and arguments and passes them forward for evaluation and
   /// returns a boolean.
-  template <typename stepper_state_t,
-            typename auctioneer_t = detail::VoidAuctioneer>
+  template <typename stepper_state_t>
   bool
   k(const stepper_state_t& state,
     Vector3D&              knew,
@@ -72,13 +67,13 @@ public:
     const Vector3D&        kprev = Vector3D())
   {
     if (i == 0) {
-      validExtensionForStep<stepper_state_t, auctioneer_t>(state);
+      validExtensionForStep(state);
     }
     return impl::k(
         tuple(), state, knew, bField, validExtensions.cbegin(), i, h, kprev);
   }
 
-  /// @brief This functions implies the call of the method finalize(). It
+  /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
   template <typename stepper_state_t, typename stepper_data_t>
@@ -91,7 +86,7 @@ public:
     return impl::finalize(tuple(), state, h, data, D, validExtensions.cbegin());
   }
 
-  /// @brief This functions implies the call of the method finalize(). It
+  /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
   template <typename stepper_state_t>

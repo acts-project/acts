@@ -11,15 +11,12 @@
 namespace Acts {
 namespace detail {
   /// The StepperExtensionList allows to add an arbitrary number of step
-  /// evaluation
-  /// algorithms for the RKN4 evaluation. These can be categorised in two
-  /// general
-  /// types:
-  /// a) Step evaluation that should not be evaluated along other extensions, or
-  /// at least would overwrite partial results. This means that in the best case
-  /// unnecessary/redundant calculation would be performed, in the worst case
-  /// the
-  /// evaluation would go wrong.
+  /// evaluation algorithms for the RKN4 evaluation. These can be categorised in
+  /// two general types:
+  /// a) Step evaluation that should not be evaluated along with other
+  /// extensions, or at least would overwrite partial results. This means that
+  /// in the best case unnecessary/redundant calculation would be performed, in
+  /// the worst case the evaluation would go wrong.
   /// b) The step evaluation remains untouched and only further calculations are
   /// performed (like additional features or data gathering) that can be treated
   /// as independent of the basic step evaluation in type a). These types can be
@@ -29,20 +26,16 @@ namespace detail {
   /// extension of category a) is the one to go. Although every extension can
   /// judge if it is valid based on the data given from the state of stepper,
   /// multiple extensions from type a) could fulfill their dependencies. Since
-  /// an
-  /// extension does not know about other extensions, the decision for the best
-  /// extension for the step can only be estimated on a global scope. This is
-  /// the
-  /// job of the auctioneers.
+  /// an extension does not know about other extensions, the decision for the
+  /// best extension for the step can only be estimated on a global scope. This
+  /// is the job of the auctioneers.
   ///
-  /// TODO: An anticipation of an optimal concept of the input (and maybe alos
-  /// the
-  /// output) of the call operator of an auctioneer cannot be performed at the
-  /// current stage but the concept of passing booblean vectors could be
-  /// extended
-  /// to vectors of ints or doubles (this is the equivalent to a bid which every
-  /// extension can make for the upcoming step). At the current stage, a
-  /// bid-system would be pure guessing.
+  /// TODO: An anticipation of an optimal concept of the input (and maybe also
+  /// the output) of the call operator of an auctioneer cannot be performed at
+  /// the current stage but the concept of passing booblean vectors could be
+  /// extended to vectors of ints or doubles (this is the equivalent to a bid
+  /// which every extension can make for the upcoming step). At the current
+  /// stage, a bid-system would be pure guessing.
 
   /// @brief Auctioneer that takes all extensions as valid that state to be
   /// valid

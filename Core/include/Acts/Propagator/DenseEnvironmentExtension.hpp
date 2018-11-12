@@ -174,7 +174,7 @@ struct DenseEnvironmentExtension
     return finalize(state, h) && transportMatrix(state.dir, h, data, D);
   }
 
-protected:
+private:
   /// @brief Evaluates the transport matrix D for the jacobian
   ///
   /// @param [in] dir Direction of the particle
