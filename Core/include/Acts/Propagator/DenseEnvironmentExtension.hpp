@@ -66,7 +66,7 @@ struct DenseEnvironmentExtension
   /// @return Boolean flag if the step would be valid
   template <typename stepper_state_t>
   int
-  validExtensionForStep(const stepper_state_t& state) const
+  bid(const stepper_state_t& state) const
   {
     // Check for valid particle properties
     if (state.q == 0. || state.mass == 0. || state.p < conv * momentumCutOff) {
@@ -144,6 +144,12 @@ struct DenseEnvironmentExtension
     if (units::Nat2SI<units::MOMENTUM>(newMomentum) < momentumCutOff) {
       return false;
     }
+
+    // Add derivative dlambda/ds = Lambda''
+    state.derivative(6)
+        = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum)
+        * units::SI2Nat<units::ENERGY>(g)
+        / (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
     state.p = newMomentum;
@@ -255,29 +261,27 @@ private:
     dk1dT *= qop[0];
 
     dk2dT += half_h * dk1dT;
-    dk2dT *= VectorHelpers::cross(dk2dT, sd.B_middle);
-    dk2dT *= qop[1];
+    dk2dT = qop[1] * VectorHelpers::cross(dk2dT, sd.B_middle);
 
     dk3dT += half_h * dk2dT;
-    dk3dT *= VectorHelpers::cross(dk3dT, sd.B_middle);
-    dk3dT *= qop[2];
+    dk3dT = qop[2] * VectorHelpers::cross(dk3dT, sd.B_middle);
 
     dk4dT += h * dk3dT;
-    dk4dT *= VectorHelpers::cross(dk4dT, sd.B_last);
-    dk4dT *= qop[3];
+    dk4dT = qop[3] * VectorHelpers::cross(dk4dT, sd.B_last);
 
     dFdT.setIdentity();
-    dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
+    dFdT += h / 6. * (dk1dT + dk2dT + dk3dT);
     dFdT *= h;
 
-    dFdL = conv * h * h / 6 * (dk1dL + dk2dL + dk3dL);
+    dFdL = conv * h * h / 6. * (dk1dL + dk2dL + dk3dL);
 
-    dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
+    dGdT += h / 6. * (dk1dT + 2. * (dk2dT + dk3dT) + dk4dT);
 
-    dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
+    dGdL = conv * h / 6. * (dk1dL + 2. * (dk2dL + dk3dL) + dk4dL);
 
     // Evaluation of the dLambda''/dlambda term
-    D(6, 6) += conv * (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
+    D(6, 6) += (h / 6.) * (jdL[0] + 2. * (jdL[1] + jdL[2]) + jdL[3]);
+
     return true;
   }
 
@@ -386,7 +390,7 @@ private:
                         - (initialMomentum * initialMomentum * units::_c2)
                             / (E * E))
                  - qop[0] * qop[0] * qop[0] * E * dgdqopValue)
-          / units::_c3;
+          / units::_c2;
     }
   }
 
@@ -415,7 +419,7 @@ private:
                         - (currentMomentum * currentMomentum * units::_c2)
                             / (E * E))
                  - qop[i] * qop[i] * qop[i] * E * dgdqopValue)
-          / units::_c3;
+          / units::_c2;
     }
   }
 };

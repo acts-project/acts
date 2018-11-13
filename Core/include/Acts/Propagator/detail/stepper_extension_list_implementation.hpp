@@ -17,9 +17,9 @@
 ///
 /// @param obs_tuple Extenable tuple of extensions
 /// @param state State of the stepper
-/// @param validExtensions List that either collects bids about validity of an
-/// extension for an upcoming step or a list of valid extensions that will be
-/// used
+/// @param bids List that collects bids about validity of an extension for an
+/// upcoming step
+/// @param validExtensions List of valid extensions that will be used
 /// @param knew k_1 - k_4 that is about to be evaluated in the upcoming call
 /// @param bField B-field at a certain point
 /// @param i Defines the calculation of knew=k_{i+1}
@@ -43,14 +43,12 @@ namespace detail {
   {
     template <typename stepper_state_t, typename... T>
     static void
-    validExtensionForStep(std::tuple<T...>&      obs_tuple,
-                          const stepper_state_t& state,
-                          std::array<int, sizeof...(T)>& validExtensions)
+    bid(const std::tuple<T...>& obs_tuple,
+        const stepper_state_t&  state,
+        std::array<int, sizeof...(T)>& bids)
     {
-      validExtensions.at(N - 1)
-          = std::get<N - 1>(obs_tuple).validExtensionForStep(state);
-      stepper_extension_list_impl<N - 1>::validExtensionForStep(
-          obs_tuple, state, validExtensions);
+      bids.at(N - 1) = std::get<N - 1>(obs_tuple).bid(state);
+      stepper_extension_list_impl<N - 1>::bid(obs_tuple, state, bids);
     }
 
     /// The extension list call implementation
@@ -145,9 +143,9 @@ namespace detail {
     /// The empty extension list call implementation
     template <typename stepper_state_t, typename... T>
     static void
-    validExtensionForStep(const std::tuple<T...>& /*unused*/,
-                          const stepper_state_t& /*unused*/,
-                          std::array<int, sizeof...(T)>& /*unused*/)
+    bid(const std::tuple<T...>& /*unused*/,
+        const stepper_state_t& /*unused*/,
+        std::array<int, sizeof...(T)>& /*unused*/)
     {
     }
 

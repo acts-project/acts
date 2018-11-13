@@ -32,7 +32,7 @@ struct DefaultExtension
   /// @return Boolean flag if the step would be valid
   template <typename stepper_state_t>
   int
-  validExtensionForStep(const stepper_state_t& /*unused*/) const
+  bid(const stepper_state_t& /*unused*/) const
   {
     return 1;
   }

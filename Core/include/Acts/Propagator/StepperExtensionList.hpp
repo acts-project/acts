@@ -51,11 +51,11 @@ public:
   bool
   validExtensionForStep(const stepper_state_t& state)
   {
-    std::array<int, nExtensions> validExtensionCandidates;
+    std::array<int, nExtensions> bids;
     // Ask all extensions for a boolean statement of their validity
-    impl::validExtensionForStep(tuple(), state, validExtensionCandidates);
+    impl::bid(tuple(), state, bids);
     // Post-process the vector in an auctioneer
-    validExtensions = state.auctioneer(std::move(validExtensionCandidates));
+    validExtensions = state.auctioneer(std::move(bids));
 
     return (std::find(validExtensions.begin(), validExtensions.end(), true)
             != validExtensions.end());
@@ -69,11 +69,6 @@ public:
   bool
   k1(const stepper_state_t& state, Vector3D& knew, const Vector3D& bField)
   {
-    //~ // Collect valid extensions, return if none were found
-    //~ if (!validExtensionForStep(state)) {
-    //~ return false;
-    //~ }
-
     return impl::k(tuple(), state, knew, bField, validExtensions);
   }
 
