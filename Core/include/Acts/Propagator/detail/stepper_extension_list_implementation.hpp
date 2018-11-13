@@ -9,6 +9,25 @@
 #pragma once
 #include "Acts/Utilities/Definitions.hpp"
 
+/// @note The used variables in this file are:
+///
+/// @tparam N Size of the tuple @p obs_tuple
+/// @tparam stepper_state_t Type of the state of the stepper
+/// @tparam T Types of the extensions
+///
+/// @param obs_tuple Extenable tuple of extensions
+/// @param state State of the stepper
+/// @param validExtensions List that either collects bids about validity of an
+/// extension for an upcoming step or a list of valid extensions that will be
+/// used
+/// @param knew k_1 - k_4 that is about to be evaluated in the upcoming call
+/// @param bField B-field at a certain point
+/// @param i Defines the calculation of knew=k_{i+1}
+/// @param h Distance to the starting point k_1
+/// @param kprev k_i that is used for the evaluation for knew
+/// @param data Collected data about all k's and B-fields
+/// @param D Transport matrix of the jacobian
+
 namespace Acts {
 namespace detail {
   /// The dummy list call implementation

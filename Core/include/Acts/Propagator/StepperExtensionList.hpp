@@ -26,10 +26,12 @@ private:
   static_assert(not detail::has_duplicates_v<extensions...>,
                 "same extension type specified several times");
 
+  static constexpr unsigned int nExtensions = sizeof...(extensions);
+
+  static_assert(nExtensions != 0, "no extension type specified");
+
   // Access to all extensions
   using detail::Extendable<extensions...>::tuple;
-
-  static constexpr unsigned int nExtensions = sizeof...(extensions);
 
   using impl = detail::stepper_extension_list_impl<nExtensions>;
 
