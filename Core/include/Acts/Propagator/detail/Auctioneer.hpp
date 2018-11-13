@@ -50,13 +50,15 @@ namespace detail {
     ///
     /// @param [in] vCandidates Candidates that are treated as valid extensions
     /// @return The to vCandidates identical list of valid extensions
-    std::vector<bool>
-    operator()(std::vector<int> vCandidates) const
+    template <long unsigned int N>
+    std::array<bool, N>
+    operator()(std::array<int, N> vCandidates) const
     {
-      std::vector<bool> valids;
-      valids.reserve(vCandidates.size());
-      for (const int& vc : vCandidates)
-        valids.push_back((vc > 0) ? true : false);
+      std::array<bool, N> valids;
+
+      for (unsigned int i = 0; i < vCandidates.size(); i++) {
+        valids[i] = (vCandidates[i] > 0) ? true : false;
+      }
       return valids;
     }
   };
@@ -73,10 +75,11 @@ namespace detail {
     ///
     /// @param [in] vCandidates Candidates for a valid extension
     /// @return List with at most one valid extension
-    std::vector<bool>
-    operator()(std::vector<int> vCandidates) const
+    template <long unsigned int N>
+    std::array<bool, N>
+    operator()(std::array<int, N> vCandidates) const
     {
-      std::vector<bool> valids(vCandidates.size(), false);
+      std::array<bool, N> valids = {};
 
       for (unsigned int i = 0; i < vCandidates.size(); i++) {
         if (vCandidates[i] > 0) {
@@ -89,7 +92,8 @@ namespace detail {
   };
 
   /// @brief Auctioneer that states only the highest bidding extension as indeed
-  /// valid extension
+  /// valid extension. If multiple elements have the same int, the first one
+  /// with this value is valid.
   struct HighestValidAuctioneer
   {
     /// @brief Default constructor
@@ -101,10 +105,11 @@ namespace detail {
     ///
     /// @param [in] vCandidates Candidates for a valid extension
     /// @return List with at most one valid extension
-    std::vector<bool>
-    operator()(std::vector<int> vCandidates) const
+    template <long unsigned int N>
+    std::array<bool, N>
+    operator()(std::array<int, N> vCandidates) const
     {
-      std::vector<bool> valids(vCandidates.size(), false);
+      std::array<bool, N> valids = {};
 
       auto highscore = std::max_element(vCandidates.begin(), vCandidates.end());
       valids.at(std::distance(vCandidates.begin(), highscore)) = true;

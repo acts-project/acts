@@ -29,10 +29,12 @@ private:
   // Access to all extensions
   using detail::Extendable<extensions...>::tuple;
 
-  using impl = detail::stepper_extension_list_impl<extensions...>;
+  static constexpr unsigned int nExtensions = sizeof...(extensions);
+
+  using impl = detail::stepper_extension_list_impl<nExtensions>;
 
   // Vector of valid extensions for a step
-  std::vector<bool> validExtensions;
+  std::array<bool, nExtensions> validExtensions;
 
   /// @brief Evaluation function to set valid extensions for an upcoming
   /// integration step
@@ -43,7 +45,7 @@ private:
   void
   validExtensionForStep(const stepper_state_t& state)
   {
-    std::vector<int> validExtensionCandidates;
+    std::array<int, nExtensions> validExtensionCandidates;
     // Ask all extensions for a boolean statement of their validity
     impl::validExtensionForStep(tuple(), state, validExtensionCandidates);
     // Post-process the vector in an auctioneer
@@ -64,7 +66,7 @@ public:
   {
     validExtensionForStep(state);
 
-    return impl::k(tuple(), state, knew, bField, validExtensions.cbegin());
+    return impl::k(tuple(), state, knew, bField, validExtensions);
   }
 
   /// @brief This functions broadcasts the call for evaluating k2. It collects
@@ -78,8 +80,7 @@ public:
      const double           h,
      const Vector3D&        kprev)
   {
-    return impl::k(
-        tuple(), state, knew, bField, validExtensions.cbegin(), 1, h, kprev);
+    return impl::k(tuple(), state, knew, bField, validExtensions, 1, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k3. It collects
@@ -93,8 +94,7 @@ public:
      const double           h,
      const Vector3D&        kprev)
   {
-    return impl::k(
-        tuple(), state, knew, bField, validExtensions.cbegin(), 2, h, kprev);
+    return impl::k(tuple(), state, knew, bField, validExtensions, 2, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k4. It collects
@@ -108,8 +108,7 @@ public:
      const double           h,
      const Vector3D&        kprev)
   {
-    return impl::k(
-        tuple(), state, knew, bField, validExtensions.cbegin(), 3, h, kprev);
+    return impl::k(tuple(), state, knew, bField, validExtensions, 3, h, kprev);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It
@@ -122,7 +121,7 @@ public:
            const stepper_data_t& data,
            ActsMatrixD<7, 7>& D)
   {
-    return impl::finalize(tuple(), state, h, data, D, validExtensions.cbegin());
+    return impl::finalize(tuple(), state, h, data, D, validExtensions);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It
@@ -132,7 +131,7 @@ public:
   bool
   finalize(stepper_state_t& state, const double h)
   {
-    return impl::finalize(tuple(), state, h, validExtensions.cbegin());
+    return impl::finalize(tuple(), state, h, validExtensions);
   }
 };
 
