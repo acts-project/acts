@@ -53,11 +53,8 @@ public:
   {
     std::array<int, nExtensions> bids;
     // Ask all extensions for a boolean statement of their validity
-<<<<<<< HEAD
     impl::bid(tuple(), state, bids);
-=======
-    impl::bid(tuple(), state, validExtensionCandidates);
->>>>>>> Changed naming to bid for Auctioneer
+
     // Post-process the vector in an auctioneer
     validExtensions = state.stepping.auctioneer(std::move(bids));
 
