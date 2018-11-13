@@ -153,12 +153,14 @@ namespace Test {
     EigenStepper<ConstantBField,
                  VoidCorrector,
                  StepperExtensionList<DefaultExtension,
-                                      DenseEnvironmentExtension>>
+                                      DenseEnvironmentExtension>,
+                 detail::HighestValidAuctioneer>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
                             StepperExtensionList<DefaultExtension,
-                                                 DenseEnvironmentExtension>>,
+                                                 DenseEnvironmentExtension>,
+                            detail::HighestValidAuctioneer>,
                Navigator>
         prop(es, naviVac);
 
@@ -266,12 +268,14 @@ namespace Test {
     EigenStepper<ConstantBField,
                  VoidCorrector,
                  StepperExtensionList<DefaultExtension,
-                                      DenseEnvironmentExtension>>
+                                      DenseEnvironmentExtension>,
+                 detail::HighestValidAuctioneer>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
                             VoidCorrector,
                             StepperExtensionList<DefaultExtension,
-                                                 DenseEnvironmentExtension>>,
+                                                 DenseEnvironmentExtension>,
+                            detail::HighestValidAuctioneer>,
                Navigator>
         prop(es, naviMat);
 
