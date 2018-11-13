@@ -38,13 +38,17 @@ private:
   // Vector of valid extensions for a step
   std::array<bool, nExtensions> validExtensions;
 
+public:
+  // Access to an extension
+  using detail::Extendable<extensions...>::get;
+
   /// @brief Evaluation function to set valid extensions for an upcoming
   /// integration step
   ///
   /// @tparam stepper_state_t Type of the state of the stepper
   /// @param [in] state State of the stepper
   template <typename stepper_state_t>
-  void
+  bool
   validExtensionForStep(const stepper_state_t& state)
   {
     std::array<int, nExtensions> validExtensionCandidates;
@@ -52,11 +56,10 @@ private:
     impl::validExtensionForStep(tuple(), state, validExtensionCandidates);
     // Post-process the vector in an auctioneer
     validExtensions = state.auctioneer(std::move(validExtensionCandidates));
-  }
 
-public:
-  // Access to an extension
-  using detail::Extendable<extensions...>::get;
+    return (std::find(validExtensions.begin(), validExtensions.end(), true)
+            != validExtensions.end());
+  }
 
   /// @brief This functions broadcasts the call for evaluating k1. It collects
   /// all arguments and extensions, test their validity for the evaluation and
@@ -66,7 +69,10 @@ public:
   bool
   k1(const stepper_state_t& state, Vector3D& knew, const Vector3D& bField)
   {
-    validExtensionForStep(state);
+    //~ // Collect valid extensions, return if none were found
+    //~ if (!validExtensionForStep(state)) {
+    //~ return false;
+    //~ }
 
     return impl::k(tuple(), state, knew, bField, validExtensions);
   }

@@ -538,7 +538,8 @@ public:
 
     // First Runge-Kutta point (at current position)
     sd.B_first = getField(state, state.pos);
-    if (!state.extension.k1(state, sd.k1, sd.B_first)) {
+    if (!state.extension.validExtensionForStep(state)
+        || !state.extension.k1(state, sd.k1, sd.B_first)) {
       return 0.;
     }
 
