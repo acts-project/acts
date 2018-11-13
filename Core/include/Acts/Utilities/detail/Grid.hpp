@@ -291,6 +291,19 @@ namespace detail {
       return grid_helper::getUpperRightBinEdge(localBins, m_axes);
     }
 
+    /// @brief set all overflow and underflow bins to a certain value
+    ///
+    /// @param [in] value value to be inserted in every overflow and underflow
+    ///                   bin of the grid.
+    ///
+    void
+    setExteriorBins(const value_type& value)
+    {
+      for (size_t index : grid_helper::exteriorBinIndices(m_axes)) {
+        at(index) = value;
+      }
+    }
+
     /// @brief interpolate grid values to given position
     ///
     /// @tparam Point type specifying geometric positions

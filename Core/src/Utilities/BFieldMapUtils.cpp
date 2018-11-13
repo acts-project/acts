@@ -69,8 +69,8 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                     Acts::detail::EquidistantAxis,
                                     Acts::detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
-  // [2] Set the bField values
 
+  // [2] Set the bField values
   for (size_t i = 1; i <= nBinsR; ++i) {
     for (size_t j = 1; j <= nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
@@ -95,6 +95,8 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
       }
     }
   }
+  grid.setExteriorBins(Acts::Vector2D::Zero());
+
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
   auto transformPos = [](const Acts::Vector3D& pos) {
@@ -221,9 +223,12 @@ Acts::fieldMapperXYZ(
       }
     }
   }
+  grid.setExteriorBins(Acts::Vector3D::Zero());
+
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
   auto transformPos = [](const Acts::Vector3D& pos) { return pos; };
+
   // [4] Create the transformation for the bfield
   // map (Bx,By,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Acts::Vector3D& field,
