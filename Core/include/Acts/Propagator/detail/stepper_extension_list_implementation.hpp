@@ -119,131 +119,58 @@ namespace detail {
     }
   };
 
+  /// Template specialized list call implementation
   template <>
   struct stepper_extension_list_impl<0u>
   {
-    /// The extension list call implementation
-    /// - it calls 'validExtensionsForStep()' on the last entry of the tuple
-    /// - it stores the result in @p validExtensions
+    /// The empty extension list call implementation
     template <typename stepper_state_t, typename... T>
     static void
-    validExtensionForStep(const std::tuple<T...>& obs_tuple,
-                          const stepper_state_t&  state,
-                          std::array<int, sizeof...(T)>& validExtensions)
+    validExtensionForStep(const std::tuple<T...>& /*unused*/,
+                          const stepper_state_t& /*unused*/,
+                          std::array<int, sizeof...(T)>& /*unused*/)
     {
-      validExtensions.at(0)
-          = std::get<0>(obs_tuple).validExtensionForStep(state);
     }
 
-    /// The extension list call implementation
-    /// - it calls 'k()' on the last entry of the tuple
+    /// The empty extension list call implementation
     template <typename stepper_state_t, typename... T>
     static bool
-    k(std::tuple<T...>&      obs_tuple,
-      const stepper_state_t& state,
-      Vector3D&              knew,
-      const Vector3D&        bField,
-      const std::array<bool, sizeof...(T)>& validExtensions,
-      const int       i     = 0,
-      const double    h     = 0,
-      const Vector3D& kprev = Vector3D())
+    k(std::tuple<T...>& /*unused*/,
+      const stepper_state_t& /*unused*/,
+      Vector3D& /*unused*/,
+      const Vector3D& /*unused*/,
+      const std::array<bool, sizeof...(T)>& /*unused*/,
+      const int /*unused*/,
+      const double /*unused*/,
+      const Vector3D& /*unused*/)
     {
-      if (!validExtensions.at(0)) {
-        return true;
-      }
-
-      return std::get<0>(obs_tuple).k(state, knew, bField, i, h, kprev);
+      return true;
     }
 
-    /// The extension list call implementation
-    /// - it calls 'finalize()' on the last entry of the tuple
+    /// The empty extension list call implementation
     template <typename stepper_state_t, typename stepper_data_t, typename... T>
     static bool
-    finalize(const std::tuple<T...>& obs_tuple,
-             stepper_state_t&        state,
-             const double            h,
-             const stepper_data_t&   data,
-             ActsMatrixD<7, 7>&                    D,
-             const std::array<bool, sizeof...(T)>& validExtensions)
+    finalize(const std::tuple<T...>& /*unused*/,
+             stepper_state_t& /*unused*/,
+             const double /*unused*/,
+             const stepper_data_t& /*unused*/,
+             ActsMatrixD<7, 7>& /*unused*/,
+             const std::array<bool, sizeof...(T)>& /*unused*/)
     {
-      if (!validExtensions.at(0)) {
-        return true;
-      }
-
-      return std::get<0>(obs_tuple).finalize(state, h, data, D);
+      return true;
     }
 
-    /// The extension list call implementation
-    /// - it calls 'finalize()' on the last entry of the tuple
+    /// The empty extension list call implementation
     template <typename stepper_state_t, typename... T>
     static bool
-    finalize(const std::tuple<T...>& obs_tuple,
-             stepper_state_t&        state,
-             const double            h,
-             const std::array<bool, sizeof...(T)>& validExtensions)
+    finalize(const std::tuple<T...>& /*unused*/,
+             stepper_state_t& /*unused*/,
+             const double /*unused*/,
+             const std::array<bool, sizeof...(T)>& /*unused*/)
     {
-      if (!validExtensions.at(0)) {
-        return true;
-      }
-
-      return std::get<0>(obs_tuple).finalize(state, h);
+      return true;
     }
   };
-
-  //~ /// The empty extension list call implementation
-  //~ template <>
-  //~ struct stepper_extension_list_impl<>
-  //~ {
-
-  //~ /// The empty extension list call implementation
-  //~ template <typename stepper_state_t, typename... T>
-  //~ static void
-  //~ validExtensionForStep(const std::tuple<T...>& /*unused*/,
-  //~ const stepper_state_t& /*unused*/,
-  //~ std::array<int, sizeof...(T)>& /*unused*/)
-  //~ {
-  //~ }
-
-  //~ /// The empty extension list call implementation
-  //~ template <typename stepper_state_t, typename... T>
-  //~ static bool
-  //~ k(std::tuple<T...>& /*unused*/,
-  //~ const stepper_state_t& /*unused*/,
-  //~ Vector3D& /*unused*/,
-  //~ const Vector3D& /*unused*/,
-  //~ std::array<bool, sizeof...(T)>& /*unused*/,
-  //~ const int /*unused*/,
-  //~ const double /*unused*/,
-  //~ const Vector3D& /*unused*/)
-  //~ {
-  //~ return true;
-  //~ }
-
-  //~ /// The empty extension list call implementation
-  //~ template <typename stepper_state_t, typename stepper_data_t, typename...
-  // T>
-  //~ static bool
-  //~ finalize(const std::tuple<T...>& /*unused*/,
-  //~ stepper_state_t& /*unused*/,
-  //~ const double /*unused*/,
-  //~ const stepper_data_t& /*unused*/,
-  //~ ActsMatrixD<7, 7>& /*unused*/,
-  //~ std::array<bool, sizeof...(T)>& /*unused*/)
-  //~ {
-  //~ return true;
-  //~ }
-
-  //~ /// The empty extension list call implementation
-  //~ template <typename stepper_state_t, typename... T>
-  //~ static bool
-  //~ finalize(const std::tuple<T...>& /*unused*/,
-  //~ stepper_state_t& /*unused*/,
-  //~ const double /*unused*/,
-  //~ std::array<bool, sizeof...(T)>& /*unused*/)
-  //~ {
-  //~ return true;
-  //~ }
-  //~ };
 
 }  // namespace detail
 }  // namespace Acts
