@@ -20,31 +20,40 @@ from codereport import CodeReport, ReportItem
 
 def parse_clang_tidy_item(itemstr):
 
-    m = re.match(r"([/.\-+\w]+):(\d+):(\d+): (.*?):(.*?)\n((?:.|\n)*)", itemstr)
-    if m is None:
+    try:
+        # m = re.match(r"([/.\-+\w]+):(\d+):(\d+): (.*?):(.*?)\n((?:.|\n)*)", itemstr)
+        # # keyword / category
+        # print(m)
+        # print("GRP5:", m.group(5), "END")
+        # mkey = re.match(r"(.*)\[(.*)\]$", m.group(5))
+        # if mkey is None:
+            # code = "unknown"
+        # else:
+            # code = mkey.group(2)
+        # msg = mkey.group(1).strip() +"\n"+ m.group(6)
+
+        m = re.match(r"(?P<file>[/.\-+\w]+):(?P<line>\d+):(?P<col>\d+): (?P<sev>.*?):(?P<msg>[\s\S]*?)\[(?P<code>.*)\]\n(?P<info>[\s\S]*)", itemstr)
+
+
+
+        item = ReportItem(
+            path=m.group("file"),
+            line=int(m.group("line")),
+            col=int(m.group("col")),
+            message=m.group("msg").strip(),
+            code=m.group("code"),
+            severity=m.group("sev")
+        )
+        
+        print(repr(item))
+
+        return item
+    except:
+        print("Failed parsing clang-tidy item:")
+        print("-"*20)
         print(itemstr)
-        sys.exit(1)
-    # keyword / category
-    mkey = re.match(r"(.*)\[(.*)\]$", m.group(5))
-    if mkey is None:
-        code = "unknown"
-    else:
-        code = mkey.group(2)
-    msg = mkey.group(1).strip() +"\n"+ m.group(6)
-
-    if m is None:
-        print(itemstr)
-
-    item = ReportItem(
-        path=m.group(1),
-        line=int(m.group(2)),
-        col=int(m.group(3)),
-        message=msg,
-        code=code,
-        severity=m.group(4)
-    )
-
-    return item
+        print("-"*20)
+        raise
 
 def parse_clang_tidy_output(output):
 
@@ -77,7 +86,7 @@ def parse_clang_tidy_output(output):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument("mode", choices=("clang-tidy"),
+    p.add_argument("mode", choices=("clang-tidy",),
                    help="Type of input warnings")
     p.add_argument("inputfile",
                    help="The input file containing the warnings")
@@ -107,6 +116,7 @@ def main():
 
 
         data = [i.dict() for i in items]
+        print("Write to", args.output)
         with open(args.output, "w+") as jf:
             json.dump(data, jf, indent=2)
 
