@@ -79,6 +79,9 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::vector<LayerConfig> layerCfg;
     // Stored layers
     std::vector<std::shared_ptr<const Layer>> layers;
+    
+    std::vector<VolumeConfig> volumeCfg;
+    std::vector<std::shared_ptr<const TrackingVolume>> trackingVolumes;
     // Name of the volume
     std::string name = "Volume";
     // Material

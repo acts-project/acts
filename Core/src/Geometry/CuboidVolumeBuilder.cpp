@@ -143,12 +143,16 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
       layArrCreator.layerArray(gctx, layVec, minMax.first, minMax.second,
                                BinningType::arbitrary, BinningValue::binX));
 
+	// Build confined volumes
+	for(VolumeConfig vc : cfg.volumeCfg)
+		cfg.trackingVolumes.push_back(buildVolume(vc));
+		
   // Build TrackingVolume
   auto trackVolume = TrackingVolume::create(
       std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
-      std::move(layArr), nullptr, cfg.name);
+      std::move(layArr), nullptr, cfg.trackingVolumes, cfg.name);
   trackVolume->sign(GeometrySignature::Global);
-
+  
   return trackVolume;
 }
 

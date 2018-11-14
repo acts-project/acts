@@ -233,5 +233,38 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
           ->volumeName(),
       volumeConfig2.name);
 }
+
+BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest_confinedVolumes)
+{
+	// Production factory
+	BoxGeometryBuilder bgb;
+	
+	// Build a volume that confines another volume
+	BoxGeometryBuilder::VolumeConfig vCfg;
+	vCfg.position = {1. * units::_m, 0., 0.};
+	vCfg.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+	vCfg.name = "Test volume";
+	// Build and add 2 confined volume
+	BoxGeometryBuilder::VolumeConfig cvCfg1;
+	cvCfg1.position = {1.1 * units::_m, 0., 0.};
+	cvCfg1.length = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
+	cvCfg1.name = "Confined volume1";
+	BoxGeometryBuilder::VolumeConfig cvCfg2;
+	cvCfg2.position = {0.9 * units::_m, 0., 0.};
+	cvCfg2.length = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
+	cvCfg2.name = "Confined volume2";
+	vCfg.volumeCfg = {cvCfg1, cvCfg2};
+	
+	// Build detector
+	BoxGeometryBuilder::Config config;
+	config.position = {1. * units::_m, 0., 0.};
+	config.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+	config.volumeCfg = {vCfg};
+	std::shared_ptr<TrackingGeometry> detector = bgb.buildTrackingGeometry(config);
+	
+	BOOST_TEST(detector->lowestTrackingVolume({1. * units::_m, 0., 0.})->volumeName() == vCfg.name);
+	BOOST_TEST(detector->lowestTrackingVolume({1.1 * units::_m, 0., 0.})->volumeName() == cvCfg1.name);
+	BOOST_TEST(detector->lowestTrackingVolume({0.9 * units::_m, 0., 0.})->volumeName() == cvCfg2.name);
+}
 }  // namespace Test
 }  // namespace Acts
