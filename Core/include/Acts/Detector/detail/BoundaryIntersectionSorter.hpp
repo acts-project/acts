@@ -36,7 +36,8 @@ struct DefaultBoundaryIntersectionSorter
   DefaultBoundaryIntersectionSorter() = default;
 
   /// @brief Main call operator. It tries to intersect every boundary surface by
-  /// a straight line and returns them sorted by intersecion probability.
+  /// a straight line along the propagation direction and returns them sorted by
+  /// intersecion probability.
   ///
   /// @tparam parameters_t Type of parameters used for the decomposition
   /// @tparam options_t Type of navigation options object for decomposition
