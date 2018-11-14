@@ -144,8 +144,9 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
                                BinningType::arbitrary, BinningValue::binX));
 
 	// Build confined volumes
-	for(VolumeConfig vc : cfg.volumeCfg)
-		cfg.trackingVolumes.push_back(buildVolume(vc));
+	if(cfg.trackingVolumes.empty())
+		for(VolumeConfig vc : cfg.volumeCfg)
+			cfg.trackingVolumes.push_back(buildVolume(vc));
 		
   // Build TrackingVolume
   auto trackVolume = TrackingVolume::create(
