@@ -55,8 +55,8 @@ std::vector<std::vector<const SpacePoint*> > readFile(std::string filename){
 }
 
 
-Acts::SeedmakerConfig createConfig(std::string configFile){
-  Acts::SeedmakerConfig config;
+Acts::SeedmakerConfig<SpacePoint> createConfig(std::string configFile){
+  Acts::SeedmakerConfig<SpacePoint> config;
   float rMax = 600;
   float rMin = 25;
 
@@ -144,7 +144,7 @@ Acts::SeedmakerConfig createConfig(std::string configFile){
   std::cout << "maxSeedsPerSpM:" << std::endl;
   std::cout << config.maxSeedsPerSpM << std::endl;
 
-  config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf));
+  config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint> >(Acts::SeedFilter<SpacePoint>(sfconf));
   return config;
 }
 
@@ -155,8 +155,8 @@ int main(int argc,  char** argv){
   }
   std::vector<std::vector<const SpacePoint*> > vectorOfTriplets = readFile(argv[2]);
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder>(Acts::BinFinder());
-  auto topBinFinder = std::make_shared<Acts::BinFinder>(Acts::BinFinder());
+  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint> >(Acts::BinFinder<SpacePoint>());
+  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint> >(Acts::BinFinder<SpacePoint>());
   // covariance tool, sets covariances per spacepoint as required
   std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> ct = []
     (const SpacePoint*,float,float,float s=1)
@@ -171,12 +171,12 @@ int main(int argc,  char** argv){
     return -1;
   }
   auto config = createConfig(argv[1]);
-  Acts::New_Seedmaker sm(config);
+  Acts::New_Seedmaker<SpacePoint> sm(config);
   for(auto& triplet : vectorOfTriplets){
-    std::shared_ptr<Acts::SeedmakerState> state = sm.initState<SpacePoint>(triplet, ct, bottomBinFinder, topBinFinder); 
-    Acts::SeedingStateIterator end = state->end(); 
+    std::shared_ptr<Acts::SeedmakerState<SpacePoint> > state = sm.initState(triplet.begin(), triplet.end(), ct, bottomBinFinder, topBinFinder); 
+    Acts::SeedingStateIterator<SpacePoint> end = state->end(); 
 
-    for(Acts::SeedingStateIterator it = state->begin(); !(it == end); ++it){ 
+    for(Acts::SeedingStateIterator<SpacePoint> it = state->begin(); !(it == end); ++it){ 
       sm.createSeedsForSP(it, state); 
     }
     for (int i=0; i< triplet.size()-1; i++){

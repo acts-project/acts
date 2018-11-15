@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Acts/Seeding/SeedSPGrid.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/IBinFinder.hpp"
@@ -12,6 +12,7 @@
 
 namespace Acts{
 
+    template<typename SpacePoint>
     class SeedingStateIterator{
     public:
       SeedingStateIterator&
@@ -58,7 +59,7 @@ namespace Acts{
         return (spIndex == otherState.spIndex && zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
       }
 
-      SeedingStateIterator(const SPGrid* spgrid, IBinFinder* botBinFinder, IBinFinder* tBinFinder):
+      SeedingStateIterator(const SpacePointGrid<SpacePoint>* spgrid, IBinFinder<SpacePoint>* botBinFinder, IBinFinder<SpacePoint>* tBinFinder):
                                                                  currentBin(&(spgrid->at({1,1}))){
         grid = spgrid;
         bottomBinFinder = botBinFinder;
@@ -79,7 +80,7 @@ namespace Acts{
         }
       }
       
-      SeedingStateIterator(const SPGrid* spgrid, IBinFinder* botBinFinder, IBinFinder* tBinFinder, size_t phiInd, size_t zInd, size_t spInd):
+      SeedingStateIterator(const SpacePointGrid<SpacePoint>* spgrid, IBinFinder<SpacePoint>* botBinFinder, IBinFinder<SpacePoint>* tBinFinder, size_t phiInd, size_t zInd, size_t spInd):
                                                                  currentBin(&(spgrid->at({phiInd,zInd}))){
         bottomBinFinder = botBinFinder;
         topBinFinder = tBinFinder;
@@ -93,41 +94,42 @@ namespace Acts{
       }
 
       // middle spacepoint bin
-      const std::vector<std::unique_ptr<const InternalSpacePoint > > * currentBin;
+      const std::vector<std::unique_ptr<const InternalSpacePoint<SpacePoint> > > * currentBin;
       std::set<size_t> bottomBinIndices;
       std::set<size_t> topBinIndices;
-      const SPGrid* grid;
+      const SpacePointGrid<SpacePoint>* grid;
       size_t phiIndex = 1;
       size_t zIndex = 1;
       size_t spIndex =0;
       std::array<long unsigned int,2ul> phiZbins;
-      IBinFinder* bottomBinFinder;
-      IBinFinder* topBinFinder;
+      IBinFinder<SpacePoint>* bottomBinFinder;
+      IBinFinder<SpacePoint>* topBinFinder;
     };
      
+    template <typename SpacePoint>
     struct SeedmakerState {
       // grid with ownership of all InternalSpacePoint
-      std::unique_ptr<Acts::SPGrid> binnedSP;
+      std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> binnedSP;
 
       // BinFinder must return std::vector<Acts::Seeding::Bin> with content of 
       // each bin sorted in r (ascending)
-      std::shared_ptr<IBinFinder> bottomBinFinder;
-      std::shared_ptr<IBinFinder> topBinFinder;
+      std::shared_ptr<IBinFinder<SpacePoint> > bottomBinFinder;
+      std::shared_ptr<IBinFinder<SpacePoint> > topBinFinder;
 
       // container with seeds created so far
-      std::queue<std::unique_ptr<const InternalSeed> > outputQueue;
+      std::queue<std::unique_ptr<const InternalSeed<SpacePoint> > > outputQueue;
       // mutex to protect output access
       std::mutex outputMutex;
 
-      SeedingStateIterator
+      SeedingStateIterator<SpacePoint>
       begin(){
-        return SeedingStateIterator(binnedSP.get(), bottomBinFinder.get(), topBinFinder.get());
+        return SeedingStateIterator<SpacePoint>(binnedSP.get(), bottomBinFinder.get(), topBinFinder.get());
       }
 
-      SeedingStateIterator
+      SeedingStateIterator<SpacePoint>
       end(){
         auto phiZbins = binnedSP->getNBins();
-        return SeedingStateIterator(binnedSP.get(), bottomBinFinder.get(), topBinFinder.get(), phiZbins[0], phiZbins[1], binnedSP->at(phiZbins).size());
+        return SeedingStateIterator<SpacePoint>(binnedSP.get(), bottomBinFinder.get(), topBinFinder.get(), phiZbins[0], phiZbins[1], binnedSP->at(phiZbins).size());
       }
 
     };

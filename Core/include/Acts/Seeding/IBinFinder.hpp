@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/SeedSPGrid.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 
 
 namespace Acts {
@@ -17,11 +17,11 @@ namespace Acts {
 /// IBinFinder is the interface for both bottom bin finder as well as top bin
 /// finder. It only contains one function that takes the indices of the bin
 /// that contains all middle space points for the three space point seeds.
+template <typename SpacePoint>
 class IBinFinder
 {
 public:
-  /// Virtual destructor
-    virtual
+  /// destructor
     ~IBinFinder() = default;
 
 /// Returns all global bin indices (1D binning) that could contain bottom
@@ -34,7 +34,6 @@ public:
 /// middle space points from the provided bin
     virtual
     std::set<size_t>
-    findBins(size_t phiBin,size_t zBin, const SPGrid* binnedSP) = 0;
-
+    findBins(size_t phiBin,size_t zBin, const SpacePointGrid<SpacePoint>* binnedSP) = 0;
 };
 }

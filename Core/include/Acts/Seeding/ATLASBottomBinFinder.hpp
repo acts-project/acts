@@ -15,18 +15,19 @@
 
 namespace Acts {
 
+// DEBUG: THIS IS JUST A TEST TO SEE IF RESULT DIFFERENCES BETWEEN ACTS AND ATLAS ARE DUE TO HARDCODED BINFINDING
 
-/// @class BinFinder
-/// The BinFinder is a simple implementation of the IBinFinder. It can be used
-/// to find both bins that could be bottom bins as well as bins that could be
-/// top bins, which are assumed to be the same bins. Does not take interaction
-/// region into account to limit z-bins.
+
+/// @class ATLASBinFinder
+/// The ATLASBinFinder is an implementation of the ATLAS bincombination behavior
+/// satisfying the IBinFinder interface. Assumes the grid has 11 bins filled by 
+/// the same logic as ATLAS bins.
 template <typename SpacePoint>
-class BinFinder : public IBinFinder<SpacePoint>
+class ATLASBottomBinFinder : public IBinFinder<SpacePoint>
 {
 public:
 /// destructor
-  ~BinFinder() = default;
+  ~ATLASBottomBinFinder() = default;
 
 /// Return all bins that could contain space points that can be used with the 
 /// space points in the bin with the provided indices to create seeds.
@@ -39,4 +40,4 @@ public:
 
 };
 }
-#include "Acts/Seeding/BinFinder.ipp"
+#include "Acts/Seeding/ATLASBottomBinFinder.ipp"

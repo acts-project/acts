@@ -54,7 +54,7 @@ int main(){
   std::vector<const SpacePoint*> spVec = readFile("sp.txt");
   std::cout << "size of read SP: " <<spVec.size() << std::endl;
 
-  Acts::SeedmakerConfig config;
+  Acts::SeedmakerConfig<SpacePoint> config;
 // silicon detector max
   config.rMax = 160.;
   config.deltaRMin = 5.;
@@ -74,12 +74,12 @@ int main(){
   config.beamPos={-.5,-.5};
   config.impactMax=10.;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder>(Acts::BinFinder());
-  auto topBinFinder = std::make_shared<Acts::BinFinder>(Acts::BinFinder());
+  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint> >(Acts::BinFinder<SpacePoint>());
+  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint> >(Acts::BinFinder<SpacePoint>());
   Acts::SeedFilterConfig sfconf;
-  Acts::ATLASCuts atlasCuts = Acts::ATLASCuts();
-  config.seedFilter = std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(sfconf, &atlasCuts));
-  Acts::New_Seedmaker a(config);
+  Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
+  config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint> >(Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
+  Acts::New_Seedmaker<SpacePoint> a(config);
 
   // covariance tool, sets covariances per spacepoint as required
   std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> ct = [=]
@@ -89,9 +89,9 @@ int main(){
       return {sp->covr,sp->covz};
     };
 
-  std::shared_ptr<Acts::SeedmakerState> state = a.initState(spVec, ct, bottomBinFinder, topBinFinder);
+  std::shared_ptr<Acts::SeedmakerState<SpacePoint> > state = a.initState(spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder);
   auto start = std::chrono::system_clock::now();
-  for(Acts::SeedingStateIterator it = state->begin(); !(it == state->end()); ++it){
+  for(Acts::SeedingStateIterator<SpacePoint> it = state->begin(); !(it == state->end()); ++it){
     a.createSeedsForSP(it, state);
   }
   auto end = std::chrono::system_clock::now();
@@ -99,16 +99,14 @@ int main(){
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
   std::cout << "Seeds created: "<<state->outputQueue.size() << std::endl;
   while(!(state->outputQueue.empty())){
-    std::unique_ptr<const Acts::InternalSeed> seed = std::move(state->outputQueue.front());
+    std::unique_ptr<const Acts::InternalSeed<SpacePoint> > seed = std::move(state->outputQueue.front());
     state->outputQueue.pop();
-    const Acts::InternalSpacePoint* spC = seed->spacepoint0();
-    const SpacePoint* sp = spVec[spC->spIndex()];
+    std::array<const Acts::InternalSpacePoint<SpacePoint> *,3> isp = seed->sp;
+    const SpacePoint* sp = isp[0]->sp();
     std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-    spC = seed->spacepoint1();
-    sp = spVec[spC->spIndex()];
+    sp = isp[1]->sp();
     std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-    spC = seed->spacepoint2();
-    sp = spVec[spC->spIndex()];
+    sp = isp[2]->sp();
     std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
     std::cout << std::endl;
   }

@@ -31,6 +31,7 @@ namespace Acts {
     float U;
     float V;
   };
+  template<typename SpacePoint>
   class New_Seedmaker 
     {
       ///////////////////////////////////////////////////////////////////
@@ -40,41 +41,42 @@ namespace Acts {
     public:
 /// The only constructor. Requires a config object.
 /// @param config the configuration for the Seedmaker
-      New_Seedmaker(const Acts::SeedmakerConfig& config);
+      New_Seedmaker(const Acts::SeedmakerConfig<SpacePoint>& config);
       ~New_Seedmaker() = default;
 
 /// converter function from internal seeds to external seeds. avoids templating all functions.
 /// @param intSeed the internal seed to be converted taken from a state
 /// @param inputSP the vector that has been used to call initState to generate intSeed
 /// @return the Seed return type with constructor Seed(SpacePoint, SpacePoint, Spacepoint, float z)
-      template <typename Seed, typename SpacePoint>
-      std::unique_ptr<Seed> nextSeed(Acts::SeedmakerState* state , std::vector<const SpacePoint*>& inputSP);
+      template <typename Seed>
+      std::unique_ptr<Seed> nextSeed(Acts::SeedmakerState<SpacePoint>* state );
 
 /// Create a new space point grid, fill all space points from input parameter
 /// into the grid and save grid in the state.
 /// @param spVec the unordered vector containing all input space points
 /// @param state the state of the object in which the space point grid will
 /// be stored
-      template <typename SpacePoint>
-      std::shared_ptr<Acts::SeedmakerState>
+      template <typename SpacePointIterator>
+      std::shared_ptr<Acts::SeedmakerState<SpacePoint> >
       initState
-        (const std::vector<const SpacePoint*>& spVec,
-         std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> covTool,
-         std::shared_ptr<Acts::IBinFinder> bottomBinFinder,
-         std::shared_ptr<Acts::IBinFinder> topBinFinder) const;
+        (SpacePointIterator spBegin,
+         SpacePointIterator spEnd,
+         std::function<Acts::Vector2D(const SpacePoint * const,float,float,float)> covTool,
+         std::shared_ptr<Acts::IBinFinder<SpacePoint> > bottomBinFinder,
+         std::shared_ptr<Acts::IBinFinder<SpacePoint> > topBinFinder) const;
 
 
 /// Create all seed from the space point referenced by it
       void
-      createSeedsForSP ( SeedingStateIterator it,
-                         std::shared_ptr<Acts::SeedmakerState> state) const;
+      createSeedsForSP ( SeedingStateIterator<SpacePoint> it,
+                         std::shared_ptr<Acts::SeedmakerState<SpacePoint> > state) const;
 
     private:
               /**    @name Disallow default instantiation, copy, assignment */
       //@{
       New_Seedmaker()                                = delete;
-      New_Seedmaker(const New_Seedmaker&)            = delete;
-      New_Seedmaker &operator=(const New_Seedmaker&) = delete;
+      New_Seedmaker(const New_Seedmaker<SpacePoint>&)            = delete;
+      New_Seedmaker<SpacePoint> &operator=(const New_Seedmaker<SpacePoint>&) = delete;
       //@}
 
       // Private methods
@@ -84,12 +86,12 @@ namespace Acts {
 //                            std::set<size_t > topBins,
 //                            std::shared_ptr<Acts::SeedmakerState> state) const ;
 
-      void transformCoordinates (std::vector< const InternalSpacePoint* >& vec,
-                                   const InternalSpacePoint* spM,
+      void transformCoordinates (std::vector< const InternalSpacePoint<SpacePoint>* >& vec,
+                                   const InternalSpacePoint<SpacePoint>* spM,
                                    bool bottom,
                                    std::vector<LinCircle>& linCircle) const ;
 
-        Acts::SeedmakerConfig m_config;
+        Acts::SeedmakerConfig<SpacePoint> m_config;
      };
 
 

@@ -6,31 +6,32 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-#include "Acts/Seeding/SeedFilter.hpp"
 #include <utility>
 
 namespace Acts{
   //constructor
-  SeedFilter::SeedFilter(SeedFilterConfig config,
-                         IExperimentCuts* expCuts /* = 0*/)
+  template<typename SpacePoint>
+  SeedFilter<SpacePoint>::SeedFilter(SeedFilterConfig config,
+                         IExperimentCuts<SpacePoint>* expCuts /* = 0*/)
                          :m_cfg (config),
                           m_experimentCuts (expCuts){}
 
   //destructor
-  SeedFilter::~SeedFilter(){}
+  template<typename SpacePoint>
+  SeedFilter<SpacePoint>::~SeedFilter(){}
 
   // function to filter seeds based on all seeds with same bottom- and middle-spacepoint.
   // return vector must contain weight of each seed 
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > >
-  SeedFilter::filterSeeds_2SpFixed(const InternalSpacePoint* bottomSP,
-                                   const InternalSpacePoint* middleSP,
-                                   std::vector<const InternalSpacePoint* >& topSpVec,
+  template<typename SpacePoint>
+  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint> > > >
+  SeedFilter<SpacePoint>::filterSeeds_2SpFixed(const InternalSpacePoint<SpacePoint>* bottomSP,
+                                   const InternalSpacePoint<SpacePoint>* middleSP,
+                                   std::vector<const InternalSpacePoint<SpacePoint>* >& topSpVec,
                                    std::vector<float>& invHelixDiameterVec,
                                    std::vector<float>& impactParametersVec,
                                    float zOrigin) const {
   
-    std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > > selectedSeeds;
+    std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint> > > > selectedSeeds;
 
     for(size_t i = 0; i < topSpVec.size(); i++){
   
@@ -75,7 +76,7 @@ namespace Acts{
         // discard seeds according to detector specific cuts (e.g.: weight)
         if (!m_experimentCuts->singleSeedCut(weight, bottomSP, middleSP, topSpVec[i])) continue;
       }
-      selectedSeeds.push_back(std::make_pair(weight, std::make_unique<const InternalSeed>(bottomSP,middleSP,topSpVec[i],zOrigin)));
+      selectedSeeds.push_back(std::make_pair(weight, std::make_unique<const InternalSeed<SpacePoint> >(bottomSP,middleSP,topSpVec[i],zOrigin)));
       }
     return selectedSeeds;
   }
@@ -83,13 +84,14 @@ namespace Acts{
 
 
   // after creating all seeds with a common middle space point, filter again
+  template<typename SpacePoint>
   void
-  SeedFilter::filterSeeds_1SpFixed(std::vector<std::pair<float,std::unique_ptr<const InternalSeed > > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed> >& queue, std::mutex& outputMutex) const {
+  SeedFilter<SpacePoint>::filterSeeds_1SpFixed(std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint>  > > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed<SpacePoint> > >& queue, std::mutex& outputMutex) const {
 
     //sort by weight and iterate only up to configured max number of seeds per middle SP
     std::sort((seedsPerSpM.begin()),(seedsPerSpM.end()),[]
-                   (const std::pair<float,std::unique_ptr<const Acts::InternalSeed>>& i1,
-                    const std::pair<float,std::unique_ptr<const Acts::InternalSeed>>& i2)
+                   (const std::pair<float,std::unique_ptr<const Acts::InternalSeed<SpacePoint> > >& i1,
+                    const std::pair<float,std::unique_ptr<const Acts::InternalSeed<SpacePoint> > >& i2)
                    {
                      return i1.first > i2.first;
                    });

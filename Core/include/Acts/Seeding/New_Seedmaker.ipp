@@ -8,17 +8,19 @@
 
 #include <cmath>
 #include <numeric>
+#include <type_traits>
 
 #include "Acts/Seeding/IBinFinder.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 
 namespace Acts{
 
-New_Seedmaker::New_Seedmaker(const Acts::SeedmakerConfig& config): m_config(config){
+template<typename SpacePoint> 
+New_Seedmaker<SpacePoint>::New_Seedmaker(const Acts::SeedmakerConfig<SpacePoint>& config): m_config(config){
 
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
-  m_config.highland =  13.6*sqrt(m_config.radLengthPerSeed)*(1+0.038*log(m_config.radLengthPerSeed));
+  m_config.highland =  13.6*std::sqrt(m_config.radLengthPerSeed)*(1+0.038*std::log(m_config.radLengthPerSeed));
   float maxScatteringAngle = m_config.highland/m_config.minPt;
   m_config.maxScatteringAngle2 = maxScatteringAngle*maxScatteringAngle;
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and millimeter
@@ -28,46 +30,48 @@ New_Seedmaker::New_Seedmaker(const Acts::SeedmakerConfig& config): m_config(conf
   m_config.pT2perRadius = std::pow(m_config.highland/m_config.pTPerHelixRadius,2);
 }
 
-template <typename Seed, typename SpacePoint>
 
-std::unique_ptr<Seed> New_Seedmaker::nextSeed(Acts::SeedmakerState* state,
-                             std::vector<const SpacePoint*>&     inputSP){
+template <typename SpacePoint>
+template <typename Seed>
+std::unique_ptr<Seed> New_Seedmaker<SpacePoint>::nextSeed(Acts::SeedmakerState<SpacePoint>* state){
   std::unique_ptr<Seed> seed;
   if(state->outputQueue.size()>0){
     state->outputMutex.lock();
     auto intSeed = std::move(state->outputQueue.front());
     state->outputQueue.pop();
     state->outputMutex.unlock();
-    seed = std::make_unique<Seed>(inputSP[intSeed->spacepoint0()->spIndex()],
-                                  inputSP[intSeed->spacepoint1()->spIndex()],
-                                  inputSP[intSeed->spacepoint2()->spIndex()],
+    seed = std::make_unique<Seed>(intSeed->sp[0]->sp(),
+                                  intSeed->sp[1]->sp(),
+                                  intSeed->sp[2]->sp(),
                                   intSeed->z());
     return seed;
   }
   return seed;
 }
 
-
 template <typename SpacePoint>
-std::shared_ptr<Acts::SeedmakerState>
-New_Seedmaker::initState
-(const std::vector<const SpacePoint* >& spVec,
+template <typename SpacePointIterator>
+std::shared_ptr<Acts::SeedmakerState<SpacePoint> >
+New_Seedmaker<SpacePoint>::initState
+(SpacePointIterator spBegin,
+ SpacePointIterator spEnd,
  std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> covTool,
- std::shared_ptr<Acts::IBinFinder> bottomBinFinder,
- std::shared_ptr<Acts::IBinFinder> topBinFinder) const
+ std::shared_ptr<Acts::IBinFinder<SpacePoint> > bottomBinFinder,
+ std::shared_ptr<Acts::IBinFinder<SpacePoint> > topBinFinder) const
 {
-  auto state = std::make_shared<Acts::SeedmakerState>();
+  static_assert(std::is_same<typename std::iterator_traits<SpacePointIterator>::value_type, const SpacePoint*>::value, "Iterator does not contain type this class was templated with");
+  auto state = std::make_shared<Acts::SeedmakerState<SpacePoint> >();
   // setup spacepoint grid config
-  SeedingGridConfig gridConf;
+  SpacePointGridConfig gridConf;
   gridConf.bFieldInZ = m_config.bFieldInZ;
-  gridConf.minPt = m_config.minPt;
-  gridConf.rMax = m_config.rMax;
-  gridConf.zMax = m_config.zMax;
-  gridConf.zMin = m_config.zMin;
+  gridConf.minPt     = m_config.minPt;
+  gridConf.rMax      = m_config.rMax;
+  gridConf.zMax      = m_config.zMax;
+  gridConf.zMin      = m_config.zMin;
   gridConf.deltaRMax = m_config.deltaRMax;
   gridConf.cotThetaMax = m_config.cotThetaMax;
   // create grid with bin sizes according to the configured geometry
-  std::unique_ptr<SPGrid> grid = SPGridCreator::createGrid(gridConf);
+  std::unique_ptr<SpacePointGrid<SpacePoint> > grid = SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
 
   // get region of interest (or full detector if configured accordingly)
   float phiMin = m_config.phiMin;
@@ -75,17 +79,14 @@ New_Seedmaker::initState
   float zMin = m_config.zMin;
   float zMax = m_config.zMax;
   
-  std::vector<size_t> indexVec(spVec.size());
-  std::iota(std::begin(indexVec),std::end(indexVec),0);
-
   // sort by radius
   // add magnitude of beamPos to rMax to avoid excluding measurements
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
   size_t numRBins = (m_config.rMax + m_config.beamPos.norm());
-  std::vector<std::vector<std::unique_ptr<const InternalSpacePoint> > >rBins(numRBins);
-  for (size_t spIndex : indexVec){
-    const SpacePoint* sp = spVec[spIndex];
+  std::vector<std::vector<std::unique_ptr<const InternalSpacePoint<SpacePoint> > > >rBins(numRBins);
+  for (SpacePointIterator it = spBegin; it != spEnd; it++){
+    const SpacePoint* sp = *it;
     float spX = sp->x();
     float spY = sp->y();
     float spZ = sp->z();
@@ -97,7 +98,7 @@ New_Seedmaker::initState
     // covariance tool provided by user
     Acts::Vector2D cov = covTool(sp,m_config.zAlign, m_config.rAlign, m_config.sigmaError);
     Acts::Vector3D spPosition(spX,spY,spZ);
-    auto isp = std::make_unique<const InternalSpacePoint>(spIndex, spPosition, m_config.beamPos, cov);
+    auto isp = std::make_unique<const InternalSpacePoint<SpacePoint> >(sp, spPosition, m_config.beamPos, cov);
     // calculate r-Bin index and protect against overflow (underflow not possible)
     int rIndex = isp->radius();
     // if index out of bounds, the SP is outside the region of interest
@@ -111,7 +112,7 @@ New_Seedmaker::initState
   for(auto& rbin : rBins){
     for(auto& isp : rbin){
       Acts::Vector2D spLocation(isp->phi(),isp->z());
-      std::vector<std::unique_ptr<const InternalSpacePoint> >& bin = grid->at(spLocation);
+      std::vector<std::unique_ptr<const InternalSpacePoint<SpacePoint> > >& bin = grid->at(spLocation);
       bin.push_back(std::move(isp));
     }
   }
@@ -121,13 +122,14 @@ New_Seedmaker::initState
   return state;
 }
 
+template <typename SpacePoint>
 void
-New_Seedmaker::createSeedsForSP
-( SeedingStateIterator it,
-  std::shared_ptr<Acts::SeedmakerState> state) const
+New_Seedmaker<SpacePoint>::createSeedsForSP
+( SeedingStateIterator<SpacePoint> it,
+  std::shared_ptr<Acts::SeedmakerState<SpacePoint> > state) const
 {
-  const std::vector<std::unique_ptr<const InternalSpacePoint > >* currentBin = it.currentBin;
-  const InternalSpacePoint* spM = (*currentBin)[it.spIndex].get();
+  const std::vector<std::unique_ptr<const InternalSpacePoint<SpacePoint> > >* currentBin = it.currentBin;
+  const InternalSpacePoint<SpacePoint>* spM = (*currentBin)[it.spIndex].get();
 
   float rM = spM->radius();
   float zM = spM->z();
@@ -136,7 +138,7 @@ New_Seedmaker::createSeedsForSP
 
   std::set<size_t>& bottomBinIndices = it.bottomBinIndices;
   std::set<size_t>& topBinIndices = it.topBinIndices;
-  std::vector<const InternalSpacePoint* > compatBottomSP;
+  std::vector<const InternalSpacePoint<SpacePoint>* > compatBottomSP;
 
   // bottom space point
   for(auto bottomBinIndex : bottomBinIndices){
@@ -160,7 +162,7 @@ New_Seedmaker::createSeedsForSP
   // no bottom SP found -> try next spM
   if(compatBottomSP.size()==0) return;
   
-  std::vector<const InternalSpacePoint* > compatTopSP;
+  std::vector<const InternalSpacePoint<SpacePoint>* > compatTopSP;
 
   for(auto topBinIndex : topBinIndices){ 
     auto& topBin = it.grid->at(topBinIndex);
@@ -188,12 +190,11 @@ New_Seedmaker::createSeedsForSP
   transformCoordinates(compatTopSP, spM, false, linCircleTop);
   
   // create vectors here to avoid reallocation in each loop
-  std::vector<const InternalSpacePoint* > topSpVec;
+  std::vector<const InternalSpacePoint<SpacePoint>* > topSpVec;
   std::vector<float > curvatures;
   std::vector<float > impactParameters;
 
-  // TODO: measure cost to reallocate seedsPerSpM each iteration
-  std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > seedsPerSpM;
+  std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint> > > > seedsPerSpM;
   size_t numBotSP = compatBottomSP.size();
   size_t numTopSP = compatTopSP.size();
 
@@ -246,7 +247,6 @@ New_Seedmaker::createSeedsForSP
 
         if(dCotThetaMinusError2 > scatteringInRegion2 ) continue;
       }
-      //TODO: did everything squared, taking root now. slows down by how much?
       //float dCotThetaCorrected = deltaCotTheta*deltaCotTheta - error;
       //if ( dCotThetaCorrected > scatteringInRegion2) continue;
 
@@ -264,7 +264,7 @@ New_Seedmaker::createSeedsForSP
       float iHelixDiameter2 = B2/S2;
       // calculate scattering for p(T) calculated from seed curvature
       float pT2scatter = 4*iHelixDiameter2 * m_config.pT2perRadius;
-      //FIXME: include upper pT limit for scatter calc
+      //TODO: include upper pT limit for scatter calc
       //convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta) from rad to deltaCotTheta
       float p2scatter = pT2scatter * iSinTheta2;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
@@ -281,7 +281,7 @@ New_Seedmaker::createSeedsForSP
       }
     }
     if(!topSpVec.empty()) {
-      std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > > sameTrackSeeds;
+      std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint> > > > sameTrackSeeds;
       sameTrackSeeds = std::move(m_config.seedFilter->filterSeeds_2SpFixed(compatBottomSP[b],
                                                              spM,
                                                              topSpVec,
@@ -294,10 +294,10 @@ New_Seedmaker::createSeedsForSP
   m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, state->outputQueue, state->outputMutex);
 }
   
-
-void New_Seedmaker::transformCoordinates
-( std::vector<const InternalSpacePoint* >& vec,
-  const InternalSpacePoint * spM,
+template<typename SpacePoint>
+void New_Seedmaker<SpacePoint>::transformCoordinates
+( std::vector<const InternalSpacePoint<SpacePoint>* >& vec,
+  const InternalSpacePoint<SpacePoint> * spM,
   bool bottom,
   std::vector<LinCircle>& linCircleVec) const
 {

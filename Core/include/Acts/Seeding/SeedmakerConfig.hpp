@@ -12,10 +12,13 @@
 
 namespace Acts{
       // forward declaration to avoid cyclic dependence
-      class IBinFinder;
+      template <typename T>
       class SeedFilter;
+
+      template <typename SpacePoint>
       struct SeedmakerConfig {
-        std::shared_ptr<SeedFilter> seedFilter;
+
+        std::shared_ptr<Acts::SeedFilter<SpacePoint> > seedFilter;
 
 // Algorithm settings
         // number of seeds to be produced before returning

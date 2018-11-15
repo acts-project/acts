@@ -37,10 +37,11 @@ namespace Acts{
 
 /// @class Filter seeds at various stages with the currently
 /// available information.
+  template <typename SpacePoint>
   class SeedFilter{
     public: 
     SeedFilter(SeedFilterConfig cfg,
-               IExperimentCuts* expCuts = 0);
+               IExperimentCuts<SpacePoint>* expCuts = 0);
 
     SeedFilter() = delete;
     ~SeedFilter();
@@ -54,11 +55,10 @@ namespace Acts{
 /// @param origin on the z axis as defined by bottom and middle space point
 /// @return vector of pairs containing seed weight and seed for all valid
 /// created seeds
-    virtual
-    std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > >
-    filterSeeds_2SpFixed(const InternalSpacePoint* bottomSP,
-                         const InternalSpacePoint* middleSP,
-                         std::vector<const InternalSpacePoint*>& topSpVec,
+    std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint> > > >
+    filterSeeds_2SpFixed(const InternalSpacePoint<SpacePoint> * bottomSP,
+                         const InternalSpacePoint<SpacePoint> * middleSP,
+                         std::vector<const InternalSpacePoint<SpacePoint> *>& topSpVec,
                          std::vector<float>& invHelixDiameterVec,
                          std::vector<float>& impactParametersVec,
                          float zOrigin) const;
@@ -69,10 +69,11 @@ namespace Acts{
 /// @return vector of all InternalSeeds that not filtered out
     virtual
     void
-    filterSeeds_1SpFixed(std::vector<std::pair<float, std::unique_ptr<const InternalSeed> > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed> >& queue, std::mutex& outputMutex) const;
+    filterSeeds_1SpFixed(std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint> > > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed<SpacePoint> > >& queue, std::mutex& outputMutex) const;
 
     private:
     const SeedFilterConfig m_cfg;
-    const IExperimentCuts* m_experimentCuts;
+    const IExperimentCuts<SpacePoint>* m_experimentCuts;
   };
 }
+#include "Acts/Seeding/SeedFilter.ipp"

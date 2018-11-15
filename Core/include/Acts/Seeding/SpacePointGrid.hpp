@@ -8,7 +8,7 @@
 
 namespace Acts{
 
-struct SeedingGridConfig{
+struct SpacePointGridConfig{
     // magnetic field in kTesla
     float bFieldInZ;
     // minimum pT to be found by seedfinder in MeV
@@ -24,15 +24,17 @@ struct SeedingGridConfig{
     // maximum forward direction expressed as cot(theta)
     float cotThetaMax;
 };
-
-using SPGrid = detail::Grid<std::vector<std::unique_ptr<const InternalSpacePoint> >,
+template<typename SpacePoint>
+using SpacePointGrid = detail::Grid<std::vector<std::unique_ptr<const InternalSpacePoint<SpacePoint> > >,
 detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed>,
 detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>>;
 
-class SPGridCreator{
+class SpacePointGridCreator{
 public:
 
-static std::unique_ptr<SPGrid> createGrid(const Acts::SeedingGridConfig& cfg);
+template< typename SpacePoint>
+static std::unique_ptr<SpacePointGrid<SpacePoint> > createGrid(const Acts::SpacePointGridConfig& cfg);
 
 };
 }
+#include "Acts/Seeding/SpacePointGrid.ipp"

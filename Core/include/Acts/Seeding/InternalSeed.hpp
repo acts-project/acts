@@ -6,6 +6,7 @@
 #include <memory>
 
 namespace Acts {
+  template<typename SpacePoint>
   class InternalSeed {
     
     /////////////////////////////////////////////////////////////////////////////////
@@ -15,21 +16,16 @@ namespace Acts {
   public:
     
     InternalSeed();
-    InternalSeed(const InternalSpacePoint*,const InternalSpacePoint*,const InternalSpacePoint*,float);
+    InternalSeed(const InternalSpacePoint<SpacePoint>*,const InternalSpacePoint<SpacePoint>*,const InternalSpacePoint<SpacePoint>*,float);
     InternalSeed(const InternalSeed&);
     virtual ~InternalSeed();
     InternalSeed& operator  = (const InternalSeed&);
 
-    const InternalSpacePoint* spacepoint0() const {return m_s0;}
-    const InternalSpacePoint* spacepoint1() const {return m_s1;}
-    const InternalSpacePoint* spacepoint2() const {return m_s2;}
+    const std::array<const InternalSpacePoint<SpacePoint> *, 3> sp;
     float                      z()          const {return m_z ;}
 
   protected:
     
-    const InternalSpacePoint* m_s0;
-    const InternalSpacePoint* m_s1;
-    const InternalSpacePoint* m_s2;
     float                      m_z ;
   };
 
@@ -38,50 +34,48 @@ namespace Acts {
   // Inline methods
   /////////////////////////////////////////////////////////////////////////////////
 
-  inline InternalSeed::InternalSeed ()
+  template <typename SpacePoint>
+  inline InternalSeed<SpacePoint>::InternalSeed ()
     {
-      m_s0 = 0 ;
-      m_s1 = 0 ;
-      m_s2 = 0 ;
+      sp={0,0,0};
       m_z  = 0.;
     }
 
-  inline InternalSeed& InternalSeed::operator = 
-    (const InternalSeed& sp) 
+  template <typename SpacePoint>
+  inline InternalSeed<SpacePoint>& InternalSeed<SpacePoint>::operator = 
+    (const InternalSeed<SpacePoint>& seed) 
     {
-      if(&sp!=this) {
+      if(&seed!=this) {
 
-    m_z   = sp.m_z ;
-    m_s0  = sp.m_s0;
-    m_s1  = sp.m_s1;
-    m_s2  = sp.m_s2;
+    m_z   = seed.m_z ;
+    sp    = seed.sp;
       }
       return(*this);
     }
  
-  inline InternalSeed::InternalSeed
-    (const InternalSpacePoint* s0,const InternalSpacePoint* s1,const InternalSpacePoint* s2,float z)
+  template <typename SpacePoint>
+  inline InternalSeed<SpacePoint>::InternalSeed
+    (const InternalSpacePoint<SpacePoint>* s0,const InternalSpacePoint<SpacePoint>* s1,const InternalSpacePoint<SpacePoint>* s2,float z):sp({s0,s1,s2})
     {
       m_z   = z ;
-      m_s0  = s0;
-      m_s1  = s1;
-      m_s2  = s2;
     }
 
   /////////////////////////////////////////////////////////////////////////////////
   // Copy constructor
   /////////////////////////////////////////////////////////////////////////////////
 
-  inline InternalSeed::InternalSeed (const InternalSeed& sp): m_s0(sp.m_s0),m_s1(sp.m_s1),m_s2(sp.m_s2)
+  template <typename SpacePoint>
+  inline InternalSeed<SpacePoint>::InternalSeed (const InternalSeed<SpacePoint>& seed): sp(seed.sp)
     {
-      *this = sp;
+      *this = seed;
     }
 
   /////////////////////////////////////////////////////////////////////////////////
   // Destructor
   /////////////////////////////////////////////////////////////////////////////////
 
-  inline InternalSeed::~InternalSeed() 
+  template <typename SpacePoint>
+  inline InternalSeed<SpacePoint>::~InternalSeed() 
   {
   }
 

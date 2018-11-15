@@ -15,6 +15,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
+  template<typename SpacePoint>
   class InternalSpacePoint {
     
     /////////////////////////////////////////////////////////////////////////////////
@@ -24,14 +25,15 @@ namespace Acts {
   public:
     
     InternalSpacePoint() = delete;
-    InternalSpacePoint(const size_t spIndex,
+    InternalSpacePoint(const SpacePoint* sp,
               const Acts::Vector3D& globalPos,
               const Acts::Vector2D& offsetXY,
               const Acts::Vector2D& cov)                    ;
 
-    InternalSpacePoint(const InternalSpacePoint&)                             ;
+    InternalSpacePoint(const InternalSpacePoint<SpacePoint>&)                             ;
     ~InternalSpacePoint() = default                                  ;
-    InternalSpacePoint& operator  = (const InternalSpacePoint&)               ;
+
+    InternalSpacePoint<SpacePoint>& operator  = (const InternalSpacePoint<SpacePoint>&)               ;
 
     const float&          x() const {return m_x;}
     const float&          y() const {return m_y;}
@@ -40,7 +42,7 @@ namespace Acts {
           float         phi() const {return atan2(m_y,m_x);}
     const float&       covr() const {return m_covr;}
     const float&       covz() const {return m_covz;}
-    const size_t&      spIndex() const{return m_spIndex;}
+    const SpacePoint*    sp() const {return m_sp;}
 
   protected:
     
@@ -50,7 +52,7 @@ namespace Acts {
     float m_r   ; // radius       in beam system coordinates
     float m_covr; //
     float m_covz; //
-    size_t m_spIndex; // index in given space point array
+    const SpacePoint* m_sp; // external space point
 
   };
 
@@ -59,10 +61,11 @@ namespace Acts {
   // Inline methods
   /////////////////////////////////////////////////////////////////////////////////
 
-  inline InternalSpacePoint::InternalSpacePoint
-    (const size_t spIndex, const Acts::Vector3D& globalPos, const Acts::Vector2D& offsetXY, const Acts::Vector2D& cov)
+  template<typename SpacePoint>
+  inline InternalSpacePoint<SpacePoint>::InternalSpacePoint
+    (const SpacePoint* const sp, const Acts::Vector3D& globalPos, const Acts::Vector2D& offsetXY, const Acts::Vector2D& cov)
     {
-      m_spIndex  = spIndex;
+      m_sp       = sp;
       m_x        = globalPos.x()-offsetXY.x();
       m_y        = globalPos.y()-offsetXY.y();
       m_z        = globalPos.z();
@@ -76,10 +79,10 @@ namespace Acts {
   // Copy constructor
   /////////////////////////////////////////////////////////////////////////////////
 
-  
-  inline InternalSpacePoint::InternalSpacePoint (const InternalSpacePoint& sp)
+  template<typename SpacePoint> 
+  inline InternalSpacePoint<SpacePoint>::InternalSpacePoint (const InternalSpacePoint<SpacePoint>& sp)
     {
-      m_spIndex   = sp.m_spIndex ;
+      m_sp        = sp.sp()      ;
       m_x         = sp.m_x       ;
       m_y         = sp.m_y       ;
       m_z         = sp.m_z       ;

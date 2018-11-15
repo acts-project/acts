@@ -3,47 +3,52 @@
 
 
 namespace Acts{
-    class ATLASCuts : public IExperimentCuts{
+    template <typename SpacePoint>
+    class ATLASCuts : public IExperimentCuts<SpacePoint>{
     public:
 /// Returns seed weight bonus/malus depending on detector considerations.
 /// @param bottom bottom space point of the current seed
 /// @param middle middle space point of the current seed
 /// @param top top space point of the current seed
 /// @return seed weight to be added to the seed's weight
-      float seedWeight(const InternalSpacePoint* bottom, const InternalSpacePoint* middle, const InternalSpacePoint* top) const;
+      float seedWeight(const InternalSpacePoint<SpacePoint>* bottom, const InternalSpacePoint<SpacePoint>* middle, const InternalSpacePoint<SpacePoint>* top) const;
 /// @param weight the current seed weight
 /// @param bottom bottom space point of the current seed
 /// @param middle middle space point of the current seed
 /// @param top top space point of the current seed
 /// @return true if the seed should be kept, false if the seed should be
 /// discarded
-      bool singleSeedCut(float weight, const InternalSpacePoint* bottom, const InternalSpacePoint* middle, const InternalSpacePoint* top) const;
+      bool singleSeedCut(float weight, const InternalSpacePoint<SpacePoint>* bottom, const InternalSpacePoint<SpacePoint>* middle, const InternalSpacePoint<SpacePoint>* top) const;
 
 /// @param seeds contains pairs of weight and seed created for one middle space
 /// point
 /// @return vector of seeds that pass the cut
-      std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > cutPerMiddleSP(std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > seeds) const;
+      std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint> > > > cutPerMiddleSP(std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint> > > > seeds) const;
 };
 
+template<typename SpacePoint>
 float
-ATLASCuts::seedWeight(const InternalSpacePoint* bottom, const InternalSpacePoint*, const InternalSpacePoint* top) const {
+ATLASCuts<SpacePoint>::seedWeight(const InternalSpacePoint<SpacePoint>* bottom, const InternalSpacePoint<SpacePoint>*, const InternalSpacePoint<SpacePoint>* top) const {
   float weight = 0;
   if( bottom->radius() > 150){ weight = 400;}
   if( top->radius() < 150){ weight = 200;}
   return weight;
 }
-bool ATLASCuts::singleSeedCut(float, const InternalSpacePoint*, const InternalSpacePoint*, const InternalSpacePoint*) const {
+
+template<typename SpacePoint>
+bool ATLASCuts<SpacePoint>::singleSeedCut(float, const InternalSpacePoint<SpacePoint>*, const InternalSpacePoint<SpacePoint>*, const InternalSpacePoint<SpacePoint>*) const {
   return true;
 }
 
-std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > >
-ATLASCuts::cutPerMiddleSP(std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > seeds) const {
-  std::vector<std::pair<float,std::unique_ptr<const InternalSeed> > > newSeedsVector;
+template<typename SpacePoint>
+std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint> > > >
+ATLASCuts<SpacePoint>::cutPerMiddleSP(std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint> > > > seeds) const {
+  std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint> > > > newSeedsVector;
   if (seeds.size()>1){
     newSeedsVector.push_back(std::move(seeds[0]));
     size_t itLength = std::min(seeds.size(),size_t(5));
     for(int i = 1; i < itLength; i++){
-      if (seeds[i].first > 200. || seeds[i].second->spacepoint0()->radius() > 43.){
+      if (seeds[i].first > 200. || seeds[i].second->sp[0]->radius() > 43.){
         newSeedsVector.push_back(std::move(seeds[i]));
       }
     }
