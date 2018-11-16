@@ -17,15 +17,6 @@ CylinderSurface::rotSymmetryAxis() const
   return transform().matrix().block<3, 1>(0, 2);
 }
 
-inline bool
-CylinderSurface::isOnSurface(const Vector3D&      gpos,
-                             const BoundaryCheck& bcheck) const
-{
-  Vector3D loc3Dframe
-      = Surface::m_transform ? (transform().inverse()) * gpos : gpos;
-  return (bcheck ? bounds().inside3D(loc3Dframe, bcheck) : true);
-}
-
 inline Intersection
 CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
                                       const Vector3D&      gdir,
@@ -80,7 +71,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
   }
   // update for inside if requested :
   // @todo fix this : fast inside bounds check needed
-  valid = bcheck ? (valid && isOnSurface(solution, bcheck)) : valid;
+  valid = bcheck ? (valid && isOnSurface(solution, gdir, bcheck)) : valid;
   // now return
   return Intersection(solution, path, valid);
 }

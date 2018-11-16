@@ -118,7 +118,7 @@ ConeSurface::intersectionEstimate(const Vector3D&      gpos,
     solution = transform() * solution;
   }
   // check validity
-  valid = bcheck ? (valid && isOnSurface(solution, bcheck)) : valid;
+  valid = bcheck ? (valid && isOnSurface(solution, gmom, bcheck)) : valid;
   // set the result navigation direction
   return Intersection(solution, path, valid);
 }

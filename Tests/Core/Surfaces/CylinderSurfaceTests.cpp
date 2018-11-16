@@ -156,8 +156,10 @@ namespace Test {
     //
     /// Test isOnSurface
     Vector3D offSurface{100, 1, 2};
-    BOOST_TEST(cylinderSurfaceObject.isOnSurface(globalPosition, true));
-    BOOST_TEST(cylinderSurfaceObject.isOnSurface(offSurface, true) == false);
+    BOOST_TEST(
+        cylinderSurfaceObject.isOnSurface(globalPosition, momentum, true));
+    BOOST_TEST(cylinderSurfaceObject.isOnSurface(offSurface, momentum, true)
+               == false);
     //
     /// intersectionEstimate
     Vector3D direction{-1., 0, 0};

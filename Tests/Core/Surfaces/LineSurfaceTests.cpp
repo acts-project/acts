@@ -117,9 +117,9 @@ namespace Test {
     // isOnSurface
     const Vector3D insidePosition{0., 2.5, 0.};
     BOOST_TEST(
-        line.isOnSurface(insidePosition, false));  // need better test here
+        line.isOnSurface(insidePosition, mom, false));  // need better test here
     const Vector3D outsidePosition{100., 100., 200.};
-    BOOST_TEST(!line.isOnSurface(outsidePosition, true));
+    BOOST_TEST(!line.isOnSurface(outsidePosition, mom, true));
     //
     // lineDirection
     const Vector3D zDirection{0., 0., 1.};

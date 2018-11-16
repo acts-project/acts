@@ -100,40 +100,6 @@ public:
   const Layer*
   associatedLayer(const Vector3D& gp) const;
 
-  /// check position at volume boundary
-  ///
-  /// @param gp is the global position fo the call
-  /// @param vol is the volume to be cheked
-  /// @param tol is the tolerance parameter
-  ///
-  /// @todo check if this concept is still used
-  ///
-  /// @return boolean indicating if this is at a volume boundary
-  bool
-  atVolumeBoundary(const Vector3D&       gp,
-                   const TrackingVolume* vol,
-                   double                tol) const;
-
-  /// Check position at volume boundary + navigation link
-  ///
-  /// @param gpos is the global position fo the call
-  /// @param mom is the momentum fo the call
-  /// @param vol is the volume to be cheked
-  /// @param nextVol is the next tracking volume (filled)
-  /// @param dir is the propagation direction
-  /// @param tol is the tolerance parameter
-  ///
-  /// @todo check if this concept is still used
-  ///
-  /// @return boolean indicating if this is at a volume boundary
-  bool
-  atVolumeBoundary(const Vector3D&        gp,
-                   const Vector3D&        mom,
-                   const TrackingVolume*  vol,
-                   const TrackingVolume*& nextVol,
-                   NavigationDirection    dir,
-                   double                 tol) const;
-
   /// Register the beam tube
   ///
   /// @param beam is the beam line surface

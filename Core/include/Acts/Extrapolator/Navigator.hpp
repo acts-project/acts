@@ -522,7 +522,8 @@ private:
     // Check if we are at a surface
     // If we are on the surface pointed at by the iterator, we can make
     // it the current one to pass it to the other actors
-    if (surface->isOnSurface(state.stepping.position(), true)) {
+    if (surface->isOnSurface(
+            state.stepping.position(), state.stepping.momentum(), true)) {
       debugLog(state, [&] {
         return std::string("Status Surface successfully hit, storing it.");
       });
@@ -1277,8 +1278,8 @@ private:
         return true;
       }
       // the only advance could have been to the target
-      if (state.navigation.targetSurface->isOnSurface(state.stepping.position(),
-                                                      true)) {
+      if (state.navigation.targetSurface->isOnSurface(
+              state.stepping.position(), state.stepping.momentum(), true)) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
 

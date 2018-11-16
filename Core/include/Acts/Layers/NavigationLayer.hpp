@@ -15,6 +15,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
@@ -145,7 +146,7 @@ inline bool
 NavigationLayer::isOnLayer(const Vector3D&      gp,
                            const BoundaryCheck& bcheck) const
 {
-  return m_surfaceRepresentation->isOnSurface(gp, bcheck);
+  return m_surfaceRepresentation->isOnSurface(gp, s_origin, bcheck);
 }
 
 inline bool

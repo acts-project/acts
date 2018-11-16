@@ -96,26 +96,6 @@ Acts::Surface::operator==(const Surface& other) const
   return true;
 }
 
-bool
-Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
-                           const BoundaryCheck&  bcheck) const
-{
-  // create the local position
-  Acts::Vector2D lpos;
-  // global to local transformation
-  bool g2L = globalToLocal(gpos, Acts::Vector3D::UnitX(), lpos);
-  if (g2L) {
-    // no boundary check, then return true
-    if (!bcheck) {
-      return true;
-    }
-    // return what ever the bounds tell you
-    return bounds().inside(lpos, bcheck);
-  }
-  // did not succeed
-  return false;
-}
-
 // overload dump for stream operator
 std::ostream&
 Acts::Surface::dump(std::ostream& sl) const

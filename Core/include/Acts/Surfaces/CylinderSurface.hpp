@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -184,15 +185,6 @@ public:
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const final;
-
-  /// Check for position on surface
-  ///
-  /// @param gpos is the global position to be checked
-  /// @param bcheck is the boundary check object
-  /// @return is a boolean indicating if the position is on surface
-  bool
-  isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const final;
 
   /// Fast straight line intersection schema - provides closest intersection
   ///  and (signed) path length

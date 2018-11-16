@@ -46,24 +46,6 @@ LineSurface::globalToLocal(const Vector3D& gpos,
   return true;
 }
 
-inline bool
-LineSurface::isOnSurface(const Vector3D&      gpos,
-                         const BoundaryCheck& bcheck) const
-{
-  using VectorHelpers::perp;
-  if (!bcheck) {
-    return true;
-  }
-  // check whether this is a boundless surface
-  if (!m_bounds && (Surface::m_associatedDetElement == nullptr)) {
-    return true;
-  }
-  // get the standard bounds
-  Vector3D loc3Dframe = (transform().inverse()) * gpos;
-  Vector2D locCand(perp(loc3Dframe), loc3Dframe.z());
-  return bounds().inside(locCand, bcheck);
-}
-
 inline std::string
 LineSurface::name() const
 {
@@ -157,7 +139,8 @@ LineSurface::intersectionEstimate(const Vector3D&      gpos,
       }
     }
     // it just needs to be a insideBounds() check
-    valid = bcheck ? (valid && isOnSurface(result, bcheck)) : valid;
+    // @todo there should be a faster check possible
+    valid = bcheck ? (valid && isOnSurface(result, gdir, bcheck)) : valid;
     // return the result with validity
     return Intersection(result, u, valid);
   }

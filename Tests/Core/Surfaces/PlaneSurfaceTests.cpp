@@ -137,8 +137,10 @@ namespace Test {
 
     /// Test isOnSurface
     Vector3D offSurface{0, 1, -2.};
-    BOOST_TEST(PlaneSurfaceObject.isOnSurface(globalPosition, true) == true);
-    BOOST_TEST(PlaneSurfaceObject.isOnSurface(offSurface, true) == false);
+    BOOST_TEST(PlaneSurfaceObject.isOnSurface(globalPosition, momentum, true)
+               == true);
+    BOOST_TEST(PlaneSurfaceObject.isOnSurface(offSurface, momentum, true)
+               == false);
     //
     /// intersectionEstimate
     Vector3D direction{0., 0., 1.};

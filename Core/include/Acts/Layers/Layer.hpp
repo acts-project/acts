@@ -21,6 +21,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryObject.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Volumes/AbstractVolume.hpp"
 

@@ -147,20 +147,6 @@ Acts::PlaneSurface::name() const
   return "Acts::PlaneSurface";
 }
 
-bool
-Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
-                                const BoundaryCheck& bcheck) const
-{
-  /// the chance that there is no transform is almost 0, let's apply it
-  Vector3D loc3Dframe = (transform().inverse()) * glopo;
-  if (std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) {
-    return false;
-  }
-  return (
-      bcheck ? bounds().inside(Vector2D(loc3Dframe.x(), loc3Dframe.y()), bcheck)
-             : true);
-}
-
 std::shared_ptr<Acts::PlaneSurface>
 Acts::PlaneSurface::clone(const Transform3D* shift) const
 {

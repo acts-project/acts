@@ -167,9 +167,14 @@ namespace detail {
 
       // Check if the cache filled the currentSurface - or if we are on the
       // surface
+      // @todo - do not apply the isOnSurface check here, but handle by the
+      // intersectionEstimate
       if ((state.navigation.currentSurface
-           && state.navigation.currentSurface == &targetSurface)
-          || targetSurface.isOnSurface(state.stepping.position(), true)) {
+           && state.navigation.currentSurface == &targetSurface)) {
+
+        std::cout << "currentSurface == targetSurface ?? "
+                  << (state.navigation.currentSurface == &targetSurface)
+                  << std::endl;
         targetDebugLog(state, "x", [&] {
           std::string ds("Target surface reached.");
           return ds;

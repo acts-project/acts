@@ -129,9 +129,9 @@ namespace Test {
     // isFree
     BOOST_CHECK(!surface.isFree());
     // isOnSurface
-    BOOST_CHECK(surface.isOnSurface(reference, false));
+    BOOST_CHECK(surface.isOnSurface(reference, mom, false));
     BOOST_CHECK(
-        surface.isOnSurface(reference, true));  // need to improve bounds()
+        surface.isOnSurface(reference, mom, true));  // need to improve bounds()
     // referenceFrame()
     RotationMatrix3D unitary;
     unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;

@@ -304,7 +304,7 @@ Layer::isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck) const
   if (m_representingVolume != nullptr) {
     return m_representingVolume->inside(gp);
   }
-  return (surfaceRepresentation()).isOnSurface(gp, bcheck);
+  return (surfaceRepresentation()).isOnSurface(gp, s_origin, bcheck);
 }
 
 }  // namespace Acts

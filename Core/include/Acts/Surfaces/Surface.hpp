@@ -274,13 +274,17 @@ public:
             const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// The geometric onSurface method
+  ///
   /// Geometrical check whether position is on Surface
   ///
   /// @param gpos global position to be evaludated
+  /// @param gmom global momentum (required for line-type surfaces)
   /// @param bcheck BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool
-  isOnSurface(const Vector3D& gpos, const BoundaryCheck& bcheck = true) const;
+  bool
+  isOnSurface(const Vector3D&      gpos,
+              const Vector3D&      gmom,
+              const BoundaryCheck& bcheck = true) const;
 
   /// The insideBounds method for local positions
   ///
