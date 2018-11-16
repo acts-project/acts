@@ -171,10 +171,6 @@ namespace detail {
       // intersectionEstimate
       if ((state.navigation.currentSurface
            && state.navigation.currentSurface == &targetSurface)) {
-
-        std::cout << "currentSurface == targetSurface ?? "
-                  << (state.navigation.currentSurface == &targetSurface)
-                  << std::endl;
         targetDebugLog(state, "x", [&] {
           std::string ds("Target surface reached.");
           return ds;
