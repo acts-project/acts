@@ -725,6 +725,12 @@ private:
         return true;
       }
     }
+    // Re-initialize target at last layer, only in case it is the target volume
+    // This avoids a wrong target volume estimation
+    if (state.navigation.currentVolume == state.navigation.targetVolume) {
+      initializeTarget(state, navCorr);
+    }
+    // Screen output
     debugLog(state, [&] {
       std::stringstream dstream;
       dstream << "Last layer";
@@ -791,7 +797,7 @@ private:
       return true;
     }
 
-    // Re-initialize target, because it's good to do so
+    // Re-initialize target at volume boundary
     initializeTarget(state, navCorr);
 
     // The navigation options
