@@ -453,6 +453,14 @@ void Acts::TrackingVolume::closeGeometry(
       mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
     }
   }
+  
+  if (!m_confinedDenseVolumes.empty()) {
+    for (auto& volumesIter : m_confinedDenseVolumes) {
+      auto mutableVolumesIter
+          = std::const_pointer_cast<TrackingVolume>(volumesIter);
+      mutableVolumesIter->closeGeometry(volumeMap, vol);
+    }
+  }
 }
 
 void Acts::TrackingVolume::visitSurfaces(

@@ -340,9 +340,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cvCfg2.position = {1.9 * units::_m, -0.4 * units::_m, -0.4 * units::_m};
     cvCfg2.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
     cvCfg2.name     = "Confined volume2";
-    // Volume that is hit but intersects the boundary of its mother
+    // Volume that is hit but with identical boundary as its mother
     BoxGeometryBuilder::VolumeConfig cvCfg3;
-    cvCfg3.position = {2.0 * units::_m, 0., 0.};
+    cvCfg3.position = {1.95 * units::_m, 0., 0.};
     cvCfg3.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
     cvCfg3.name     = "Confined volume3";
     // Volume to grind along the boundary
@@ -389,16 +389,25 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     // Check the identified volumes
     for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-      std::cout << stepResult.position[i].x() << "\t"
-                << stepResult.volume[i]->volumeName() << std::endl;
-      //~ if (stepResult.position[i].x() >= 0.85 * units::_m
-      //~ && stepResult.position[i].x() < 0.95 * units::_m)
-      //~ BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg2.name);
-      //~ else if (stepResult.position[i].x() >= 1.05 * units::_m
-      //~ && stepResult.position[i].x() < 1.15 * units::_m)
-      //~ BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg1.name);
-      //~ else if (stepResult.position[i].x() < 2. * units::_m)
-      //~ BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg.name);
+      if (i > 0) {
+        BOOST_TEST(stepResult.position[i].x() > 0.);
+      }
+      if (stepResult.position[i].x() >= 0.95 * units::_m
+          && stepResult.position[i].x() < 1.05 * units::_m) {
+        BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg4.name);
+      } else {
+        if (stepResult.position[i].x() >= 1.9 * units::_m
+            && stepResult.position[i].x() < 2. * units::_m) {
+          BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg3.name);
+        } else {
+          if (stepResult.position[i].x() < 2. * units::_m) {
+            BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg1.name);
+          } else {
+            if (stepResult.position[i].x() < 3. * units::_m)
+              BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg2.name);
+          }
+        }
+      }
     }
   }
 }  // namespace Test
