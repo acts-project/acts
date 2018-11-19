@@ -234,65 +234,172 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
       volumeConfig2.name);
 }
 
-	BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest_confinedVolumes)
-	{
-		// Production factory
-		BoxGeometryBuilder bgb;
-		
-		// Build a volume that confines another volume
-		BoxGeometryBuilder::VolumeConfig vCfg;
-		vCfg.position = {1. * units::_m, 0., 0.};
-		vCfg.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
-		vCfg.name = "Test volume";
-		// Build and add 2 confined volume
-		BoxGeometryBuilder::VolumeConfig cvCfg1;
-		cvCfg1.position = {1.1 * units::_m, 0., 0.};
-		cvCfg1.length = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
-		cvCfg1.name = "Confined volume1";
-		cvCfg1.material = std::make_shared<const Material>(
-			Material(352.8, 407., 9.012, 4., 1.848e-3));
-		BoxGeometryBuilder::VolumeConfig cvCfg2;
-		cvCfg2.position = {0.9 * units::_m, 0., 0.};
-		cvCfg2.length = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
-		cvCfg2.name = "Confined volume2";
-		vCfg.volumeCfg = {cvCfg1, cvCfg2};
-	
-		// Build detector
-		BoxGeometryBuilder::Config config;
-		config.position = {1. * units::_m, 0., 0.};
-		config.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
-		config.volumeCfg = {vCfg};
+  BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest_confinedVolumes)
+  {
+    // Production factory
+    BoxGeometryBuilder bgb;
 
-		std::shared_ptr<TrackingGeometry> detector = bgb.buildTrackingGeometry(config);
+    // Build a volume that confines another volume
+    BoxGeometryBuilder::VolumeConfig vCfg;
+    vCfg.position = {1. * units::_m, 0., 0.};
+    vCfg.length   = {2. * units::_m, 1. * units::_m, 1. * units::_m};
+    vCfg.name     = "Test volume";
+    // Build and add 2 confined volumes
+    BoxGeometryBuilder::VolumeConfig cvCfg1;
+    cvCfg1.position = {1.1 * units::_m, 0., 0.};
+    cvCfg1.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
+    cvCfg1.name     = "Confined volume1";
+    cvCfg1.material = std::make_shared<const Material>(
+        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    BoxGeometryBuilder::VolumeConfig cvCfg2;
+    cvCfg2.position = {0.9 * units::_m, 0., 0.};
+    cvCfg2.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
+    cvCfg2.name     = "Confined volume2";
+    vCfg.volumeCfg  = {cvCfg1, cvCfg2};
 
-		// Test that the right volume is selected
-		BOOST_TEST(detector->lowestTrackingVolume({1. * units::_m, 0., 0.})->volumeName() == vCfg.name);
-		BOOST_TEST(detector->lowestTrackingVolume({1.1 * units::_m, 0., 0.})->volumeName() == cvCfg1.name);
-		BOOST_TEST(detector->lowestTrackingVolume({0.9 * units::_m, 0., 0.})->volumeName() == cvCfg2.name);
-		
-		PropagatorOptions<ActionList<StepVolumeCollector>> propOpts;
-		propOpts.maxStepSize = 100. * units::_mm;
-		propOpts.debug = true;
-		StraightLineStepper sls;
-		Navigator navi(detector);
-		navi.resolvePassive   = true;
-		navi.resolveMaterial  = true;
-		navi.resolveSensitive = true;
-		
-		Propagator<StraightLineStepper, Navigator> prop(sls, navi);
+    // Build detector
+    BoxGeometryBuilder::Config config;
+    config.position  = {1. * units::_m, 0., 0.};
+    config.length    = {2. * units::_m, 1. * units::_m, 1. * units::_m};
+    config.volumeCfg = {vCfg};
+    std::shared_ptr<TrackingGeometry> detector
+        = bgb.buildTrackingGeometry(config);
 
-	    // Set initial parameters for the particle track
-		Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
-		SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(nullptr, startParams, startMom, 1.);
-  
-		const auto&                       result = prop.propagate(sbtp, propOpts);
-		const StepVolumeCollector::this_result& stepResult
-			= result.get<typename StepVolumeCollector::result_type>();
+    // Test that the right volume is selected
+    BOOST_TEST(
+        detector->lowestTrackingVolume({1. * units::_m, 0., 0.})->volumeName()
+        == vCfg.name);
+    BOOST_TEST(
+        detector->lowestTrackingVolume({1.1 * units::_m, 0., 0.})->volumeName()
+        == cvCfg1.name);
+    BOOST_TEST(
+        detector->lowestTrackingVolume({0.9 * units::_m, 0., 0.})->volumeName()
+        == cvCfg2.name);
 
-		for(unsigned int i = 0; i < stepResult.position.size(); i++)
-			std::cout << stepResult.position[i].x() << "\t" << stepResult.position[i].y() << "\t" << stepResult.position[i].z() << "\t" << stepResult.volume[i]->volumeName() << std::endl;
-		
-    
-	}
+    // Set propagator and navigator
+    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts;
+    propOpts.maxStepSize = 10. * units::_mm;
+    StraightLineStepper sls;
+    Navigator           navi(detector);
+    navi.resolvePassive   = true;
+    navi.resolveMaterial  = true;
+    navi.resolveSensitive = true;
+
+    Propagator<StraightLineStepper, Navigator> prop(sls, navi);
+
+    // Set initial parameters for the particle track
+    Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
+    SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+        nullptr, startParams, startMom, 1.);
+
+    // Launch and collect results
+    const auto& result = prop.propagate(sbtp, propOpts);
+    const StepVolumeCollector::this_result& stepResult
+        = result.get<typename StepVolumeCollector::result_type>();
+
+    // Check the identified volumes
+    for (unsigned int i = 0; i < stepResult.position.size(); i++) {
+      if (i > 0) {
+        BOOST_TEST(stepResult.position[i].x() > 0.);
+      }
+      if (stepResult.position[i].x() >= 0.85 * units::_m
+          && stepResult.position[i].x() < 0.95 * units::_m) {
+        BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg2.name);
+        BOOST_TEST(stepResult.volume[i]->material() == nullptr);
+      } else if (stepResult.position[i].x() >= 1.05 * units::_m
+                 && stepResult.position[i].x() < 1.15 * units::_m) {
+        BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg1.name);
+        BOOST_TEST(stepResult.volume[i]->material() != nullptr);
+      } else if (stepResult.position[i].x() < 2. * units::_m) {
+        BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg.name);
+        BOOST_TEST(stepResult.volume[i]->material() == nullptr);
+      }
+    }
+  }
+
+  BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest_confinedVolumes_edgecases)
+  {
+    // Production factory
+    BoxGeometryBuilder bgb;
+
+    // Build a volume that confines another volume
+    BoxGeometryBuilder::VolumeConfig vCfg1;
+    vCfg1.position = {1. * units::_m, 0., 0.};
+    vCfg1.length   = {2. * units::_m, 1. * units::_m, 1. * units::_m};
+    vCfg1.name     = "Test volume1";
+    // Build and add 4 confined volumes
+    // Volume that is missed and quite orthogonal to the starting position
+    BoxGeometryBuilder::VolumeConfig cvCfg1;
+    cvCfg1.position = {0.1 * units::_m, 0.4 * units::_m, 0.4 * units::_m};
+    cvCfg1.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
+    cvCfg1.name     = "Confined volume1";
+    cvCfg1.material = std::make_shared<const Material>(
+        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    // Volume that is missed but far away such that it may be hit
+    BoxGeometryBuilder::VolumeConfig cvCfg2;
+    cvCfg2.position = {1.9 * units::_m, -0.4 * units::_m, -0.4 * units::_m};
+    cvCfg2.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
+    cvCfg2.name     = "Confined volume2";
+    // Volume that is hit but intersects the boundary of its mother
+    BoxGeometryBuilder::VolumeConfig cvCfg3;
+    cvCfg3.position = {2.0 * units::_m, 0., 0.};
+    cvCfg3.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
+    cvCfg3.name     = "Confined volume3";
+    // Volume to grind along the boundary
+    BoxGeometryBuilder::VolumeConfig cvCfg4;
+    cvCfg4.position = {1. * units::_m, 5. * units::_cm, 0.};
+    cvCfg4.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
+    cvCfg4.name     = "Confined volume4";
+    vCfg1.volumeCfg = {cvCfg1, cvCfg2, cvCfg3, cvCfg4};
+
+    // Build a volume that confines another volume
+    BoxGeometryBuilder::VolumeConfig vCfg2;
+    vCfg2.position = {2.5 * units::_m, 0., 0.};
+    vCfg2.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vCfg2.name     = "Test volume2";
+
+    // Build detector
+    BoxGeometryBuilder::Config config;
+    config.position  = {1.5 * units::_m, 0., 0.};
+    config.length    = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+    config.volumeCfg = {vCfg1, vCfg2};
+    std::shared_ptr<TrackingGeometry> detector
+        = bgb.buildTrackingGeometry(config);
+
+    // Set propagator and navigator
+    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts;
+    propOpts.maxStepSize = 10. * units::_mm;
+    StraightLineStepper sls;
+    Navigator           navi(detector);
+    navi.resolvePassive   = true;
+    navi.resolveMaterial  = true;
+    navi.resolveSensitive = true;
+
+    Propagator<StraightLineStepper, Navigator> prop(sls, navi);
+
+    // Set initial parameters for the particle track
+    Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
+    SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+        nullptr, startParams, startMom, 1.);
+
+    // Launch and collect results
+    const auto& result = prop.propagate(sbtp, propOpts);
+    const StepVolumeCollector::this_result& stepResult
+        = result.get<typename StepVolumeCollector::result_type>();
+
+    // Check the identified volumes
+    for (unsigned int i = 0; i < stepResult.position.size(); i++) {
+      std::cout << stepResult.position[i].x() << "\t"
+                << stepResult.volume[i]->volumeName() << std::endl;
+      //~ if (stepResult.position[i].x() >= 0.85 * units::_m
+      //~ && stepResult.position[i].x() < 0.95 * units::_m)
+      //~ BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg2.name);
+      //~ else if (stepResult.position[i].x() >= 1.05 * units::_m
+      //~ && stepResult.position[i].x() < 1.15 * units::_m)
+      //~ BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg1.name);
+      //~ else if (stepResult.position[i].x() < 2. * units::_m)
+      //~ BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg.name);
+    }
+  }
 }  // namespace Test
 }  // namespace Acts

@@ -333,7 +333,6 @@ CuboidVolumeBuilder::buildVolume(VolumeConfig& cfg) const
                                  {},
                                  cfg.name);
   }
-  //~ trackVolume->sign(GeometrySignature::Global);
 
   return trackVolume;
 }

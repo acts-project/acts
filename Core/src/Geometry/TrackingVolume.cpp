@@ -150,13 +150,17 @@ Acts::TrackingVolume::connectDenseBoundarySurfaces(
         auto mutableBs
             = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
                 boundSur.at(i));
-        if (mutableBs->m_insideVolume && !mutableBs->m_outsideVolume)
+        if (mutableBs->m_insideVolume && !mutableBs->m_outsideVolume) {
           bo = BoundaryOrientation::outsideVolume;
-        else if (!mutableBs->m_insideVolume && mutableBs->m_outsideVolume)
-          bo = BoundaryOrientation::insideVolume;
+          mutableBs->attachVolume(this, bo);
+        } else {
+          if (!mutableBs->m_insideVolume && mutableBs->m_outsideVolume) {
+            bo = BoundaryOrientation::insideVolume;
+            mutableBs->attachVolume(this, bo);
+          }
+        }
 
         // Update the boundary
-        mutableBs->attachVolume(this, bo);
         confDenseVol->updateBoundarySurface((BoundarySurfaceFace)i, mutableBs);
       }
       // Store the volume
