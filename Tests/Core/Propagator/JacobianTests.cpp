@@ -132,13 +132,9 @@ namespace Test {
   testJacobianToGlobal(const Parameters& pars)
   {
     // Jacobian creation for Propagator/Steppers
-    //
-    // a) Original ATLAS code - using RungeKuttaUtils
-    const size_t PDIM = 64;
-    double       P[PDIM];
-    // b) ATLAS stepper
+    // a) ATLAS stepper
     AtlasStepperType::State astepState(pars);
-    // c) Eigen stepper
+    // b) Eigen stepper
     EigenStepperType::State estepState(pars);
 
     // create the matrices
