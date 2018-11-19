@@ -84,7 +84,7 @@ struct DefaultBoundaryIntersectionSorter {
 
 /// @brief This struct sorts the boundary surfaces of a tracking volume. The
 /// sorting is based on the probability of intersection from a given location in
-/// the phase space. The ordering itself is splitted into three part:
+/// the phase space. The ordering itself is split into three part:
 /// 1) Order all surfaces in the given direction based on their path length
 /// (most probable)
 /// 2) Add all non-intersecting surfaces (somewhat probable in e.g. scattering
@@ -99,10 +99,11 @@ struct BoundaryIntersectionSorter {
   /// them according to their intersection probability (= path length). Beside
   /// the possible interactions in the given direction the surfaces in the
   /// opposite direction are ordered to receive the least probable surfaces.
-  /// This provides the possibility to navigate backwards. Every surface which
-  /// does not have an interaction is assumed to be (quite) orthogonal to the
-  /// current direction and therewith assumed to be somewhat likely to be
-  /// intersected. Therewith the navigation in magnetic fields can be ensured.
+  /// This provides the possibility to navigate backwards. Each surface without
+  /// a straight line intersection in forward or backward direction is assumed
+  /// to be (quite) orthogonal to the current direction and therewith assumed to
+  /// be somewhat likely to be intersected. Therewith the navigation in magnetic
+  /// fields can be ensured.
   ///
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
@@ -151,9 +152,7 @@ struct BoundaryIntersectionSorter {
     }
 
     // Collect the boundary surfaces both directions
-    std::vector<const BoundarySurfaceT<TrackingVolume>*>::iterator boundaryIter
-        = boundaries.begin();
-    for (; boundaryIter != boundaries.end(); boundaryIter++) {
+    for (const auto& boundary : boundaries) {
       // If the intersection is valid it is pushed to the final vector otherwise
       // to a tmp storage
       BoundaryIntersection intersection =

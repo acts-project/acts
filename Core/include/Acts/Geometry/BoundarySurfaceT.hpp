@@ -127,17 +127,19 @@ class BoundarySurfaceT {
   /// Virtual Destructor
   virtual ~BoundarySurfaceT() = default;
 
-  /// Helper metho: attach a Volume to this BoundarySurfaceT
-  /// this si done during the geometry construction and only called by
+protected:
+  /// Helper method: attach a Volume to this BoundarySurfaceT
+  /// this is done during the geometry construction and only called by
   /// the friend templated volume
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to be attached
   /// @param inout The boundary orientation @todo update to along/opposite
-  void attachVolume(VolumePtr volume, BoundaryOrientation inout);
+  void
+  attachVolume(const T* volume, BoundaryOrientation inout);
 
-  /// Helper metho: attach a Volume to this BoundarySurfaceT
-  /// this si done during the geometry construction and only called by
+  /// Helper method: attach a Volume to this BoundarySurfaceT
+  /// this is done during the geometry construction and only called by
   /// the friend templated volume
   ///
   /// @param volumes The volume array to be attached
@@ -164,12 +166,13 @@ inline const Surface& BoundarySurfaceT<T>::surfaceRepresentation() const {
 }
 
 template <class T>
-void BoundarySurfaceT<T>::attachVolume(VolumePtr volume,
+void BoundarySurfaceT<T>::attachVolume(const T* volume,
                                        BoundaryOrientation inout) {
   if (inout == insideVolume) {
-    m_insideVolume = volume.get();
+    //~ m_insideVolume = volume.get();
+    m_insideVolume = volume;
   } else {
-    m_outsideVolume = volume.get();
+    m_outsideVolume = volume;
   }
 }
 

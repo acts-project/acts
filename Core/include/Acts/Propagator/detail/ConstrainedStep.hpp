@@ -23,7 +23,7 @@ namespace detail {
 struct ConstrainedStep {
   /// the types of constraints
   /// from accuracy - this can vary up and down given a good step estimator
-  /// form actor    - this would be a typical navigation step
+  /// from actor    - this would be a typical navigation step
   /// from aborter  - this would be a target condition
   /// from user     - this is user given for what reason ever
   enum Type : int { accuracy = 0, actor = 1, aborter = 2, user = 3 };

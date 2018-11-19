@@ -147,7 +147,35 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 	if(cfg.trackingVolumes.empty())
 		for(VolumeConfig vc : cfg.volumeCfg)
 			cfg.trackingVolumes.push_back(buildVolume(vc));
-		
+	
+	
+	std::shared_ptr<TrackingVolume> trackVolume;
+  if(layVec.empty())
+	{
+	  // Build TrackingVolume
+	  trackVolume
+		  = TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
+								   bounds,
+								   cfg.material,
+								   nullptr,
+								   {},
+								   cfg.trackingVolumes,
+								   {},
+								   cfg.name);
+	}
+	else
+	{
+		  // Build layer array
+	  std::pair<double, double> minMax = binningRange(cfg);
+	  LayerArrayCreator layArrCreator(
+		  getDefaultLogger("LayerArrayCreator", Logging::INFO));
+	  std::unique_ptr<const LayerArray>  layArr( 
+		  layArrCreator.layerArray(layVec,
+								   minMax.first,
+								   minMax.second,
+								   BinningType::arbitrary,
+								   BinningValue::binX));
+	
   // Build TrackingVolume
   auto trackVolume = TrackingVolume::create(
       std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,

@@ -45,6 +45,7 @@ using TrackingVolumeBoundaryPtr =
 // possible contained
 using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
 using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
+using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 using LayerArray = BinnedArray<LayerPtr>;
 using LayerVector = std::vector<LayerPtr>;
 
@@ -146,11 +147,12 @@ class TrackingVolume : public Volume {
       std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> containedLayers = nullptr,
-      std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
+      std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr;
+      MutableTrackingVolumeVector denseVolumes = {},
       const std::string& volumeName = "undefined") {
     return MutableTrackingVolumePtr(new TrackingVolume(
         std::move(htrans), std::move(volumeBounds), std::move(volumeMaterial),
-        std::move(containedLayers), std::move(containedVolumes), volumeName));
+        std::move(containedLayers), std::move(containedVolumes), std::move(denseVolumes), volumeName));
   }
 
   /// Return the associated Layer to the global position
@@ -334,7 +336,7 @@ class TrackingVolume : public Volume {
   /// @param bsfNeighbor is the boudnary surface of the neighbor
   void glueTrackingVolume(const GeometryContext& gctx,
                           BoundarySurfaceFace bsfMine,
-                          const MutableTrackingVolumePtr& neighbor,
+                          const TrackingVolume* neighbor,
                           BoundarySurfaceFace bsfNeighbor);
 
   /// Glue another tracking volume to this one
@@ -451,9 +453,14 @@ class TrackingVolume : public Volume {
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
       std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
       std::shared_ptr<const TrackingVolumeArray> containedVolumeArray = nullptr,
+      MutableTrackingVolumeVector denseVolumeVector    = {},
       const std::string& volumeName = "undefined");
 
- private:
+private:
+
+	void
+	connectDenseBoundarySurfaces(std::vector<std::shared_ptr<TrackingVolume>> m_confinedDenseVolumes);
+
   /// Create Boundary Surface
   void createBoundarySurfaces();
 
@@ -486,8 +493,8 @@ class TrackingVolume : public Volume {
   /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
 
-  /// Remember the mother volume
-  const TrackingVolume* m_motherVolume{nullptr};
+  //~ /// Remember the mother volume
+  //~ const TrackingVolume* m_motherVolume{nullptr};
 
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
@@ -498,6 +505,9 @@ class TrackingVolume : public Volume {
 
   /// Array of Volumes inside the Volume when actin as container
   std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes = nullptr;
+
+  /// confined dense
+  TrackingVolumeVector m_confinedDenseVolumes;
 
   /// Volumes to glue Volumes from the outside
   GlueVolumesDescriptor* m_glueVolumeDescriptor{nullptr};

@@ -743,7 +743,7 @@ void Acts::CylinderVolumeHelper::glueTrackingVolumes(
                                       << glueVolTwo->volumeName() << " @ "
                                       << faceTwo << " ]");
     // one to one is easy
-    mutableGlueVolOne->glueTrackingVolume(gctx, faceOne, mutableGlueVolTwo,
+    mutableGlueVolOne->glueTrackingVolume(gctx, faceOne, mutableGlueVolTwo.get(),
                                           faceTwo);
 
   } else if (volOneGlueVols <= 1) {
