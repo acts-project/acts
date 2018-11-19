@@ -559,8 +559,10 @@ private:
   targetSurfaces(propagator_state_t& state, const corrector_t& navCorr) const
   {
 
-    if (state.navigation.navigationBreak) return false;
-
+    if (state.navigation.navigationBreak) {
+      return false;
+    }
+    
     // Make sure resolve Surfaces is called on the start layer
     if (state.navigation.startLayer
         and not state.navigation.startLayerResolved) {
@@ -678,7 +680,9 @@ private:
   targetLayers(propagator_state_t& state, const corrector_t& navCorr) const
   {
 
-    if (state.navigation.navigationBreak) return false;
+    if (state.navigation.navigationBreak) {
+      return false;
+    }
 
     // if there are no layers, go back to the navigagor (not stepper yet)
     if (state.navigation.navLayers.empty()) {
@@ -777,7 +781,9 @@ private:
   bool
   targetBoundaries(propagator_state_t& state, const corrector_t& navCorr) const
   {
-    if (state.navigation.navigationBreak) return false;
+    if (state.navigation.navigationBreak) {
+      return false;
+    }
 
     if (!state.navigation.currentVolume) {
       debugLog(state, [&] {
