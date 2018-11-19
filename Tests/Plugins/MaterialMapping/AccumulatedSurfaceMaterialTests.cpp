@@ -42,7 +42,9 @@ namespace Test {
     AccumulatedSurfaceMaterial material2D{binUtility2D};
     auto                       accMat2D = material2D.accumulatedMaterial();
     BOOST_CHECK_EQUAL(accMat2D.size(), 20);
-    BOOST_CHECK_EQUAL(accMat2D[0].size(), 10);
+    for (size_t ib = 0; ib < accMat2D.size(); ++ib) {
+      BOOST_CHECK_EQUAL(accMat2D[ib].size(), 10);
+    }
   }
 
   /// Test the filling and conversion

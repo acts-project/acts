@@ -10,7 +10,6 @@
 #define BOOST_TEST_MODULE SurfaceMaterial Tests
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 

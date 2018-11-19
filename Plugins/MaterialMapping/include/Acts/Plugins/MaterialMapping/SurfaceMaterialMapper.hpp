@@ -46,7 +46,7 @@ struct MaterialSurface
 /// The process runs as such:
 ///
 ///  1) TrackingGeometry is parsed and for each Surface with
-///     with SurfaceMaterialProxy a local store is initialized
+///     SurfaceMaterialProxy a local store is initialized
 ///     the identification is done hereby through the Surface::GeometryID
 ///
 ///  2) A Cache is generated that is used to keep the filling thread local,
@@ -99,10 +99,12 @@ public:
 
   /// @struct State
   ///
-  /// Nested State struct
+  /// Nested State struct which is used for the mapping prococess
   struct State
   {
+    /// The accumulated material per geometry ID
     std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
+    /// The created surface material from it
     std::map<GeometryID, std::unique_ptr<const SurfaceMaterial>>
         surfaceMaterial;
   };
@@ -123,15 +125,17 @@ public:
 
   /// @brief helper method that creates the cache for the mapping
   ///
+  /// @param[in] tGeometry The geometry which should be mapped
+  ///
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
-  /// and returns you a Cache object ot be used
+  /// and returns you a Cache object tO be used
   State
   createState(const TrackingGeometry& tGeometry) const;
 
   /// @brief Method to finalize the maps
   ///
-  /// It calls the final run everaging and then transforms
+  /// It calls the final run averaging and then transforms
   /// the AccumulatedSurface material class to a surface material
   /// class type
   ///

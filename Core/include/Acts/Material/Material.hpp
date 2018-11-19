@@ -46,7 +46,7 @@ public:
     matL0   = 1,  ///< L0 - this is in mm
     matA    = 2,  ///< A - in au
     matZ    = 3,  ///< Z - in e
-    matrho  = 4,  ///< rho
+    matrho  = 4,  ///< rho - g/mm^3
     matZ_AR = 5   ///< Z/A*rho
   };
 

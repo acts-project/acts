@@ -25,7 +25,7 @@ namespace Acts {
 /// There are two stores for material averaging:
 /// - the event store collects material steps accumulated
 ///   during an event
-/// - the total store colles accumulated material properties
+/// - the total store collects accumulated material properties
 ///   of the run
 ///
 /// The averaging is always done to unit thickness
@@ -84,7 +84,7 @@ public:
   /// Average the information accumulated during the entire
   /// mapping process
   ///
-  /// The total average takes
+  /// The total average takesthe full run into account
   ///
   /// @returns the  total avarage material properties and the
   /// total events used for mapping these properties

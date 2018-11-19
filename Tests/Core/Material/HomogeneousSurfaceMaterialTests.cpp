@@ -48,7 +48,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_scaling_test)
   {
 
-    // Construct the material properties from argumnets
+    // Construct the material properties from arguments
     MaterialProperties mat(1., 2., 3., 4., 5., 0.1);
     MaterialProperties matHalf = mat;
     matHalf *= 0.5;
@@ -65,7 +65,7 @@ namespace Test {
   // Test the Access
   BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_access_test)
   {
-    // construct the material properties from argumnets
+    // construct the material properties from arguments
     MaterialProperties mat(1., 2., 3., 4., 5., 0.1);
     MaterialProperties matHalf = mat;
     matHalf *= 0.5;

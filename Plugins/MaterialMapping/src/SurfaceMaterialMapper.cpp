@@ -143,8 +143,7 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<MaterialSurfaceCollector, DebugOutput>;
   using AbortList  = AbortList<detail::EndOfWorldReached>;
 
-  typename StraightLinePropagator::template Options<ActionList, AbortList>
-      options;
+  PropagatorOptions<ActionList, AbortList> options;
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material layers by using the straight line propagator

@@ -105,7 +105,7 @@ namespace Test {
   // Test the Scaling
   BOOST_AUTO_TEST_CASE(MaterialProperties_scale_test)
   {
-    // construct the material properties from argumnets
+    // construct the material properties from arguments
     MaterialProperties mat(1., 2., 3., 4., 5., 0.1);
     MaterialProperties halfMat(1., 2., 3., 4., 5., 0.05);
     MaterialProperties halfScaled = mat;

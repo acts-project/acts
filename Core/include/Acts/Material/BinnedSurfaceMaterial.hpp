@@ -62,22 +62,22 @@ public:
 
   /// Copy Move Constructor
   ///
-  /// @param lmp is the source object to be copied
-  BinnedSurfaceMaterial(BinnedSurfaceMaterial&& lmp) = default;
+  /// @param bsm is the source object to be copied
+  BinnedSurfaceMaterial(BinnedSurfaceMaterial&& bsm) = default;
 
   /// Copy Constructor
   ///
-  /// @param lmp is the source object to be copied
-  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& lmp) = default;
+  /// @param bsm is the source object to be copied
+  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm) = default;
 
   /// Assignment Move operator
   BinnedSurfaceMaterial&
-  operator=(BinnedSurfaceMaterial&& lmp)
+  operator=(BinnedSurfaceMaterial&& bsm)
       = default;
 
   /// Assignment operator
   BinnedSurfaceMaterial&
-  operator=(const BinnedSurfaceMaterial& lmp)
+  operator=(const BinnedSurfaceMaterial& bsm)
       = default;
 
   /// Destructor

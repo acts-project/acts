@@ -76,7 +76,7 @@ struct MaterialInteractor
     double materialInX0 = 0.;
     /// The accumulated materialInL0
     double materialInL0 = 0.;
-    /// This one is only filled when  is switched on
+    /// This one is only filled when recordInteractions is switched on
     std::vector<MaterialInteraction> materialInteractions;
   };
 
@@ -143,7 +143,7 @@ struct MaterialInteractor
         auto sMaterial = state.navigation.currentSurface->associatedMaterial();
         MaterialProperties mProperties = sMaterial->materialProperties(
             state.stepping.position(), state.stepping.navDir, mStage);
-        // Material properties (non-zero) have been found for htis configuration
+        // Material properties (non-zero) have been found for this configuration
         if (mProperties) {
           // more debugging output to the screen
           debugLog(state, [&] {

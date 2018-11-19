@@ -10,7 +10,6 @@
 #define BOOST_TEST_MODULE SurfaceMaterialProxy Tests
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
-#include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Material/SurfaceMaterialProxy.hpp"
 
 namespace Acts {

@@ -45,7 +45,7 @@ public:
 
   /// Constructor direct data
   ///
-  /// @param ef is the element fraction source object
+  /// @param data is the element fraction source object
   ElementFraction(const std::array<unsigned char, 2>& data) : m_data(data) {}
 
   /// Copy constructor

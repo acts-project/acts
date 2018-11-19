@@ -36,9 +36,9 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
 Acts::BinnedSurfaceMaterial&
 Acts::BinnedSurfaceMaterial::operator*=(double scale)
 {
-  for (auto& matMatrixIter : m_fullMaterial) {
-    for (auto& matIter : matMatrixIter) {
-      (matIter) *= scale;
+  for (auto& materialVector : m_fullMaterial) {
+    for (auto& materialBin : materialVector) {
+      (materialBin) *= scale;
     }
   }
   return (*this);
@@ -71,11 +71,11 @@ Acts::BinnedSurfaceMaterial::dump(std::ostream& sl) const
   sl << "   - Parse full update material    : " << std::endl;  //
   // output  the full material
   unsigned int imat1 = 0;
-  for (auto& matMatrixIter : m_fullMaterial) {
+  for (auto& materialVector : m_fullMaterial) {
     unsigned int imat0 = 0;
     // the vector iterator
-    for (auto& matIter : matMatrixIter) {
-      sl << " Bin [" << imat1 << "][" << imat0 << "] - " << (matIter);
+    for (auto& materialBin : materialVector) {
+      sl << " Bin [" << imat1 << "][" << imat0 << "] - " << (materialBin);
       ++imat0;
     }
     ++imat1;
