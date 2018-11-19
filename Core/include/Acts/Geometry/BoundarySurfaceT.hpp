@@ -169,7 +169,6 @@ template <class T>
 void BoundarySurfaceT<T>::attachVolume(const T* volume,
                                        BoundaryOrientation inout) {
   if (inout == insideVolume) {
-    //~ m_insideVolume = volume.get();
     m_insideVolume = volume;
   } else {
     m_outsideVolume = volume;

@@ -58,8 +58,6 @@ Acts::TrackingVolume::TrackingVolume(
   createBoundarySurfaces();
   interlinkLayers();
   connectDenseBoundarySurfaces(denseVolumeVector);
-  if(!m_confinedDenseVolumes.empty())
-	std::cout << "constructor end " << m_confinedDenseVolumes.size() << "\t" << typeid(m_confinedDenseVolumes.front()).name() << "\t" << m_confinedDenseVolumes.front() << std::endl;
 }
 
 // constructor for arguments
@@ -133,32 +131,38 @@ Acts::TrackingVolume::boundarySurfaces() const {
 }
 
 void
-Acts::TrackingVolume::connectDenseBoundarySurfaces(MutableTrackingVolumeVector confinedDenseVolumes)
+Acts::TrackingVolume::connectDenseBoundarySurfaces(
+    MutableTrackingVolumeVector confinedDenseVolumes)
 {
-	if (!confinedDenseVolumes.empty()) {
-		BoundaryOrientation bo;
-		for(auto& confDenseVol : confinedDenseVolumes)
-		{
-			auto& boundSur = confDenseVol->boundarySurfaces();
-			for(unsigned int i = 0; i < boundSur.size(); i++)
-			{
-				if(boundSur.at(i) == nullptr)
-					continue;
-				auto mutableBs = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(boundSur.at(i));
-				
-				if(mutableBs->m_insideVolume && !mutableBs->m_outsideVolume)
-					bo = BoundaryOrientation::outsideVolume;
-				else
-					if(!mutableBs->m_insideVolume && mutableBs->m_outsideVolume)
-						bo = BoundaryOrientation::insideVolume;
-						
-				mutableBs->attachVolume(this, bo);
-				confDenseVol->updateBoundarySurface((BoundarySurfaceFace)i, mutableBs);
-			}
-			m_confinedDenseVolumes.push_back(std::move(confDenseVol));
-		}
-	}
+  if (!confinedDenseVolumes.empty()) {
+    BoundaryOrientation bo;
+    // Walk over each dense volume
+    for (auto& confDenseVol : confinedDenseVolumes) {
+      // Walk over each boundary surface of the volume
+      auto& boundSur = confDenseVol->boundarySurfaces();
+      for (unsigned int i = 0; i < boundSur.size(); i++) {
+        // Skip empty entries since we do not know the shape of the dense volume
+        // and therewith the used indices
+        if (boundSur.at(i) == nullptr) continue;
 
+        // Use mother volume as the opposite direction of the already used
+        // direction
+        auto mutableBs
+            = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
+                boundSur.at(i));
+        if (mutableBs->m_insideVolume && !mutableBs->m_outsideVolume)
+          bo = BoundaryOrientation::outsideVolume;
+        else if (!mutableBs->m_insideVolume && mutableBs->m_outsideVolume)
+          bo = BoundaryOrientation::insideVolume;
+
+        // Update the boundary
+        mutableBs->attachVolume(this, bo);
+        confDenseVol->updateBoundarySurface((BoundarySurfaceFace)i, mutableBs);
+      }
+      // Store the volume
+      m_confinedDenseVolumes.push_back(std::move(confDenseVol));
+    }
+  }
 }
 
 void

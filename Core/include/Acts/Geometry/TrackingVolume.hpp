@@ -457,9 +457,9 @@ class TrackingVolume : public Volume {
       const std::string& volumeName = "undefined");
 
 private:
-
-	void
-	connectDenseBoundarySurfaces(std::vector<std::shared_ptr<TrackingVolume>> m_confinedDenseVolumes);
+  void
+  connectDenseBoundarySurfaces(
+      std::vector<std::shared_ptr<TrackingVolume>> m_confinedDenseVolumes);
 
   /// Create Boundary Surface
   void createBoundarySurfaces();

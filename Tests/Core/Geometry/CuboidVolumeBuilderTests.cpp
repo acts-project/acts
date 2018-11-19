@@ -262,9 +262,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 		config.position = {1. * units::_m, 0., 0.};
 		config.length = {1. * units::_m, 1. * units::_m, 1. * units::_m};
 		config.volumeCfg = {vCfg};
-std::cout << "machett" << std::endl;
+
 		std::shared_ptr<TrackingGeometry> detector = bgb.buildTrackingGeometry(config);
-std::cout << "this is my detector" << std::endl;
+
 		// Test that the right volume is selected
 		BOOST_TEST(detector->lowestTrackingVolume({1. * units::_m, 0., 0.})->volumeName() == vCfg.name);
 		BOOST_TEST(detector->lowestTrackingVolume({1.1 * units::_m, 0., 0.})->volumeName() == cvCfg1.name);
