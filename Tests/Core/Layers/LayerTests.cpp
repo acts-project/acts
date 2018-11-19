@@ -32,7 +32,9 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
   namespace Layers {
+
     BOOST_AUTO_TEST_SUITE(Layers)
 
     /// Unit test for creating compliant/non-compliant Layer object
@@ -88,36 +90,8 @@ namespace Test {
       BOOST_TEST(layerStub.isOnLayer(pos2) == false);
       /// approachDescriptor(), retrieved as a pointer.
       BOOST_TEST(layerStub.approachDescriptor() == adPtr);
-      /// surfaceOnApproach()
       const Vector3D gpos{0., 0., 1.0};
       const Vector3D direction{0., 0., -1.};
-      auto           surfaceOnApproach
-          = layerStub.surfaceOnApproach(gpos,
-                                        direction,
-                                        NavigationDirection::forward,
-                                        true,
-                                        false,
-                                        false,
-                                        false);
-      auto surfaceOnApproachIntersect = surfaceOnApproach.intersection;
-      //(SurfaceStub uses hardcoded 20,20 dimensions)
-      BOOST_TEST(surfaceOnApproachIntersect.pathLength == 20.0);
-      // Need track parameters to test compatibleSurfaces
-      SingleCurvilinearTrackParameters<ChargedPolicy> par(
-          nullptr, {0., 0., 0.}, {0., 0., 1.}, -1);
-      // Need more meaningful test, but docs need updating also; this is not the
-      // signature in the doxygen documentation!
-      auto compatibleSurfaces
-          = layerStub.compatibleSurfaces(par,
-                                         NavigationDirection::forward,
-                                         true,
-                                         false,
-                                         false,
-                                         false,
-                                         0,
-                                         nullptr,
-                                         nullptr);
-      BOOST_TEST(compatibleSurfaces.size() == 0u);
       /// nextLayer()
       BOOST_TEST(!(layerStub.nextLayer(gpos, direction)));
       /// trackingVolume()

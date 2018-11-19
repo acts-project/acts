@@ -40,12 +40,11 @@ namespace Acts {
 
 namespace IntegrationTest {
 
-  using BFieldType            = ConstantBField;
-  using EigenStepperType      = EigenStepper<BFieldType>;
-  using AtlasStepperType      = AtlasStepper<BFieldType>;
-  using EigenPropagatorType   = Propagator<EigenStepperType>;
-  using AtlasPropagatorType   = Propagator<AtlasStepperType>;
-  using PropagationEngineType = RungeKuttaEngine<BFieldType>;
+  using BFieldType          = ConstantBField;
+  using EigenStepperType    = EigenStepper<BFieldType>;
+  using AtlasStepperType    = AtlasStepper<BFieldType>;
+  using EigenPropagatorType = Propagator<EigenStepperType>;
+  using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
   // number of tests
   const int  ntests = 100;
@@ -54,18 +53,12 @@ namespace IntegrationTest {
   const bool debug  = false;
 
   // setup propagator with constant B-field
-  const double         Bz = 2. * units::_T;
+  const double        Bz = 2. * units::_T;
   BFieldType          bField(0, 0, Bz);
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper));
   AtlasStepperType    astepper(bField);
   AtlasPropagatorType apropagator(std::move(astepper));
-  auto                 bFieldPtr = std::make_shared<const BFieldType>(bField);
-  auto                 wConfig   = PropagationEngineType::Config(bFieldPtr);
-  auto                 wengine   = std::make_shared<PropagationEngineType>(
-      wConfig,
-      Acts::getDefaultLogger("RungeKuttaEngine", Acts::Logging::INFO));
-  WrappedPropagatorType wpropagator(wengine);
 
   // The constant field test
   /// test forward propagation in constant magnetic field
@@ -102,12 +95,8 @@ namespace IntegrationTest {
     // constant field propagation eigen stepper
     auto eposition = constant_field_propagation(
         epropagator, pT, phi, theta, dcharge, index, Bz);
-    // constant field runge kutta engine - not yet at same accuracy
-    auto wposition = constant_field_propagation(
-        wpropagator, pT, phi, theta, dcharge, index, Bz, 10. * units::_um);
     // check consistency
     BOOST_CHECK(eposition.isApprox(aposition));
-    BOOST_CHECK(eposition.isApprox(wposition, 1e-3));
   }
 
 // The actual test - needs to be included to avoid

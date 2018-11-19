@@ -128,8 +128,8 @@ namespace IntegrationTest {
   using SharedField_type       = SharedBField<InterpolatedBFieldMap>;
   using EigenStepper_type      = EigenStepper<SharedField_type>;
   using AtlasStepper_type      = AtlasStepper<SharedField_type>;
-  using EigenPropagator_type   = Propagator<EigenStepper_type>;
-  using AtlasPropagator_type   = Propagator<AtlasStepper_type>;
+  using EigenPropagatorType    = Propagator<EigenStepper_type>;
+  using AtlasPropagatorType    = Propagator<AtlasStepper_type>;
   using PropagationEngine_type = RungeKuttaEngine<BField_type>;
   typedef PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>
       WrappedPropagator_type;
@@ -138,12 +138,12 @@ namespace IntegrationTest {
   auto bFieldSharedA = SharedField_type(bField);
   auto bFieldSharedE = SharedField_type(bField);
 
-  EigenStepper_type    estepper(bFieldSharedE);
-  EigenPropagator_type epropagator(std::move(estepper));
-  AtlasStepper_type    astepper(bFieldSharedA);
-  AtlasPropagator_type apropagator(std::move(astepper));
-  auto                 wConfig = PropagationEngine_type::Config(bField);
-  auto                 wegine  = std::make_shared<PropagationEngine_type>(
+  EigenStepper_type   estepper(bFieldSharedE);
+  EigenPropagatorType epropagator(std::move(estepper));
+  AtlasStepper_type   astepper(bFieldSharedA);
+  AtlasPropagatorType apropagator(std::move(astepper));
+  auto                wConfig = PropagationEngine_type::Config(bField);
+  auto                wegine  = std::make_shared<PropagationEngine_type>(
       wConfig,
       Acts::getDefaultLogger("RungeKuttaEngine", Acts::Logging::INFO));
   WrappedPropagator_type wpropagator(wegine);
