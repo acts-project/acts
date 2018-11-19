@@ -171,14 +171,14 @@ namespace Test {
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
-  using BField_type          = ConstantBField;
-  using EigenStepper_type    = EigenStepper<BField_type>;
-  using EigenPropagator_type = Propagator<EigenStepper_type>;
+  using BField_type         = ConstantBField;
+  using EigenStepper_type   = EigenStepper<BField_type>;
+  using EigenPropagatorType = Propagator<EigenStepper_type>;
 
-  const double         Bz = 2. * units::_T;
-  BField_type          bField(0, 0, Bz);
-  EigenStepper_type    estepper(bField);
-  EigenPropagator_type epropagator(std::move(estepper));
+  const double        Bz = 2. * units::_T;
+  BField_type         bField(0, 0, Bz);
+  EigenStepper_type   estepper(bField);
+  EigenPropagatorType epropagator(std::move(estepper));
 
   CylinderSurface mSurface(nullptr, 10., 1000. * units::_mm);
   CylinderSurface cSurface(nullptr, 150., 1000. * units::_mm);

@@ -61,9 +61,6 @@ BOOST_DATA_TEST_CASE(
                   1e-3,
                   Acts::units::_eV,
                   debug);
-  // foward backward runge kutta engine
-  // foward_backward(wpropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
-  // Acts::units::_eV, debug);
 }
 
 /// test consistency of propagators when approaching a cylinder
@@ -138,22 +135,8 @@ BOOST_DATA_TEST_CASE(
                                    rand3,
                                    covtpr,
                                    debug);
-  // the runge kutta engine
-  auto w_at_cylinder = to_cylinder(wpropagator,
-                                   pT,
-                                   phi,
-                                   theta,
-                                   dcharge,
-                                   r,
-                                   rand1,
-                                   rand2,
-                                   rand3,
-                                   covtpr,
-                                   debug);
   BOOST_CHECK(
       e_at_cylinder.first.isApprox(a_at_cylinder.first, 1 * units::_um));
-  BOOST_CHECK(
-      e_at_cylinder.first.isApprox(w_at_cylinder.first, 1 * units::_um));
 }
 
 /// test consistency of propagators to a plane
@@ -202,48 +185,34 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
   // to a plane with the atlas stepper
   auto a_at_plane
-      = to_surface<AtlasPropagator_type, PlaneSurface>(apropagator,
-                                                       pT,
-                                                       phi,
-                                                       theta,
-                                                       dcharge,
-                                                       pfrac * Acts::units::_m,
-                                                       rand1,
-                                                       rand2,
-                                                       rand3,
-                                                       true,
-                                                       covtpr);
+      = to_surface<AtlasPropagatorType, PlaneSurface>(apropagator,
+                                                      pT,
+                                                      phi,
+                                                      theta,
+                                                      dcharge,
+                                                      pfrac * Acts::units::_m,
+                                                      rand1,
+                                                      rand2,
+                                                      rand3,
+                                                      true,
+                                                      covtpr);
   // to a plane with the eigen stepper
   auto e_at_plane
-      = to_surface<EigenPropagator_type, PlaneSurface>(epropagator,
-                                                       pT,
-                                                       phi,
-                                                       theta,
-                                                       dcharge,
-                                                       pfrac * Acts::units::_m,
-                                                       rand1,
-                                                       rand2,
-                                                       rand3,
-                                                       true,
-                                                       covtpr);
-  // foward backward runge kutta engine
-  // to a plane with the runge kutta engine
-  auto w_at_plane = to_surface<WrappedPropagator_type, PlaneSurface>(
-      wpropagator,
-      pT,
-      phi,
-      theta,
-      dcharge,
-      pfrac * Acts::units::_m,
-      rand1,
-      rand2,
-      rand3,
-      true,
-      covtpr);
+      = to_surface<EigenPropagatorType, PlaneSurface>(epropagator,
+                                                      pT,
+                                                      phi,
+                                                      theta,
+                                                      dcharge,
+                                                      pfrac * Acts::units::_m,
+                                                      rand1,
+                                                      rand2,
+                                                      rand3,
+                                                      true,
+                                                      covtpr);
 
   BOOST_CHECK(e_at_plane.first.isApprox(a_at_plane.first, 1 * units::_um));
-  BOOST_CHECK(e_at_plane.first.isApprox(w_at_plane.first, 1 * units::_um));
 }
+
 /// test consistency of propagators to a disc
 BOOST_DATA_TEST_CASE(
     propagation_to_disc_,
@@ -290,47 +259,32 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
   // to a disc with the  atlas stepper
   auto a_at_disc
-      = to_surface<AtlasPropagator_type, DiscSurface>(apropagator,
-                                                      pT,
-                                                      phi,
-                                                      theta,
-                                                      dcharge,
-                                                      pfrac * Acts::units::_m,
-                                                      rand1,
-                                                      rand2,
-                                                      rand3,
-                                                      true,
-                                                      covtpr);
+      = to_surface<AtlasPropagatorType, DiscSurface>(apropagator,
+                                                     pT,
+                                                     phi,
+                                                     theta,
+                                                     dcharge,
+                                                     pfrac * Acts::units::_m,
+                                                     rand1,
+                                                     rand2,
+                                                     rand3,
+                                                     true,
+                                                     covtpr);
   // to a disc with the eigen stepper
   auto e_at_disc
-      = to_surface<EigenPropagator_type, DiscSurface>(epropagator,
-                                                      pT,
-                                                      phi,
-                                                      theta,
-                                                      dcharge,
-                                                      pfrac * Acts::units::_m,
-                                                      rand1,
-                                                      rand2,
-                                                      rand3,
-                                                      true,
-                                                      covtpr);
-  // foward backward runge kutta engine
-  // to a disc with the runge kutta engine
-  auto w_at_disc
-      = to_surface<WrappedPropagator_type, DiscSurface>(wpropagator,
-                                                        pT,
-                                                        phi,
-                                                        theta,
-                                                        dcharge,
-                                                        pfrac * Acts::units::_m,
-                                                        rand1,
-                                                        rand2,
-                                                        rand3,
-                                                        true,
-                                                        covtpr);
+      = to_surface<EigenPropagatorType, DiscSurface>(epropagator,
+                                                     pT,
+                                                     phi,
+                                                     theta,
+                                                     dcharge,
+                                                     pfrac * Acts::units::_m,
+                                                     rand1,
+                                                     rand2,
+                                                     rand3,
+                                                     true,
+                                                     covtpr);
 
   BOOST_CHECK(e_at_disc.first.isApprox(a_at_disc.first, 1 * units::_um));
-  BOOST_CHECK(e_at_disc.first.isApprox(w_at_disc.first, 1 * units::_um));
 }
 
 /// test consistency of propagators to a line
@@ -383,55 +337,37 @@ BOOST_DATA_TEST_CASE(
     std::cout << "[ >>>> Testing Atlas Propagator <<<< ]" << std::endl;
   }
   auto a_at_line
-      = to_surface<AtlasPropagator_type, StrawSurface>(apropagator,
-                                                       pT,
-                                                       phi,
-                                                       theta,
-                                                       dcharge,
-                                                       pfrac * Acts::units::_m,
-                                                       rand1,
-                                                       rand2,
-                                                       rand3,
-                                                       false,
-                                                       covtpr,
-                                                       debug);
+      = to_surface<AtlasPropagatorType, StrawSurface>(apropagator,
+                                                      pT,
+                                                      phi,
+                                                      theta,
+                                                      dcharge,
+                                                      pfrac * Acts::units::_m,
+                                                      rand1,
+                                                      rand2,
+                                                      rand3,
+                                                      false,
+                                                      covtpr,
+                                                      debug);
   // to a line with the eigen stepper
   if (debug) {
     std::cout << "[ >>>> Testing Eigen Propagator <<<< ]" << std::endl;
   }
   auto e_at_line
-      = to_surface<EigenPropagator_type, StrawSurface>(epropagator,
-                                                       pT,
-                                                       phi,
-                                                       theta,
-                                                       dcharge,
-                                                       pfrac * Acts::units::_m,
-                                                       rand1,
-                                                       rand2,
-                                                       rand3,
-                                                       false,
-                                                       covtpr,
-                                                       debug);
-  // to a line with the runge kutta engine
-  if (debug) {
-    std::cout << "[ >>>> Testing Legacy Propagator <<<< ]" << std::endl;
-  }
-  auto w_at_line = to_surface<WrappedPropagator_type, StrawSurface>(
-      wpropagator,
-      pT,
-      phi,
-      theta,
-      dcharge,
-      pfrac * Acts::units::_m,
-      rand1,
-      rand2,
-      rand3,
-      false,
-      covtpr,
-      debug);
+      = to_surface<EigenPropagatorType, StrawSurface>(epropagator,
+                                                      pT,
+                                                      phi,
+                                                      theta,
+                                                      dcharge,
+                                                      pfrac * Acts::units::_m,
+                                                      rand1,
+                                                      rand2,
+                                                      rand3,
+                                                      false,
+                                                      covtpr,
+                                                      debug);
 
   BOOST_CHECK(e_at_line.first.isApprox(a_at_line.first, 1 * units::_um));
-  BOOST_CHECK(e_at_line.first.isApprox(w_at_line.first, 1 * units::_um));
 }
 
 /// test correct covariance transport for curvilinear parameters
@@ -474,9 +410,6 @@ BOOST_DATA_TEST_CASE(
   // covariance check fo atlas stepper
   covariance_curvilinear(
       apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
-  // covariance check for wrapped engine
-  covariance_curvilinear(
-      wpropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
 }
 
 // test correct covariance transport from disc to disc
@@ -524,7 +457,7 @@ BOOST_DATA_TEST_CASE(
 
   double dcharge = -1 + 2 * charge;
   // covariance check for atlas stepper
-  covariance_bound<AtlasPropagator_type, DiscSurface, DiscSurface>(
+  covariance_bound<AtlasPropagatorType, DiscSurface, DiscSurface>(
       apropagator,
       pT,
       phi,
@@ -540,24 +473,8 @@ BOOST_DATA_TEST_CASE(
       1e-1);
 
   // covariance check for eigen stepper
-  covariance_bound<EigenPropagator_type, DiscSurface, DiscSurface>(
+  covariance_bound<EigenPropagatorType, DiscSurface, DiscSurface>(
       epropagator,
-      pT,
-      phi,
-      theta,
-      dcharge,
-      plimit * Acts::units::_m,
-      rand1,
-      rand2,
-      rand3,
-      index,
-      true,
-      true,
-      1e-1);
-
-  // covariance check fo the runge kutta engine
-  covariance_bound<WrappedPropagator_type, DiscSurface, DiscSurface>(
-      wpropagator,
       pT,
       phi,
       theta,
@@ -617,7 +534,7 @@ BOOST_DATA_TEST_CASE(
 
   double dcharge = -1 + 2 * charge;
   // covariance check for atlas stepper
-  covariance_bound<AtlasPropagator_type, PlaneSurface, PlaneSurface>(
+  covariance_bound<AtlasPropagatorType, PlaneSurface, PlaneSurface>(
       apropagator,
       pT,
       phi,
@@ -630,21 +547,8 @@ BOOST_DATA_TEST_CASE(
       index);
 
   // covariance check for eigen stepper
-  covariance_bound<EigenPropagator_type, PlaneSurface, PlaneSurface>(
+  covariance_bound<EigenPropagatorType, PlaneSurface, PlaneSurface>(
       epropagator,
-      pT,
-      phi,
-      theta,
-      dcharge,
-      plimit * Acts::units::_m,
-      rand1,
-      rand2,
-      rand3,
-      index);
-
-  // covariance check fo the runge kutta engine
-  covariance_bound<WrappedPropagator_type, PlaneSurface, PlaneSurface>(
-      wpropagator,
       pT,
       phi,
       theta,
@@ -704,7 +608,7 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
 
   // covariance check for atlas stepper
-  covariance_bound<AtlasPropagator_type, StrawSurface, StrawSurface>(
+  covariance_bound<AtlasPropagatorType, StrawSurface, StrawSurface>(
       apropagator,
       pT,
       phi,
@@ -720,24 +624,8 @@ BOOST_DATA_TEST_CASE(
       1e-1);
 
   // covariance check for eigen stepper
-  covariance_bound<EigenPropagator_type, StrawSurface, StrawSurface>(
+  covariance_bound<EigenPropagatorType, StrawSurface, StrawSurface>(
       epropagator,
-      pT,
-      phi,
-      theta,
-      dcharge,
-      plimit * Acts::units::_m,
-      rand1,
-      rand2,
-      rand3,
-      index,
-      false,
-      false,
-      1e-1);
-
-  // covariance check fo the runge kutta engine
-  covariance_bound<WrappedPropagator_type, StrawSurface, StrawSurface>(
-      wpropagator,
       pT,
       phi,
       theta,
