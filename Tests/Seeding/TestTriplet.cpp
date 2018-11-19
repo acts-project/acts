@@ -177,12 +177,16 @@ int main(int argc,  char** argv){
     Acts::SeedingStateIterator<SpacePoint> end = state->end(); 
 
     for(Acts::SeedingStateIterator<SpacePoint> it = state->begin(); !(it == end); ++it){ 
-      sm.createSeedsForSP(it, state); 
+      sm.createSeedsForRegion(it, state); 
     }
     for (int i=0; i< triplet.size()-1; i++){
       auto sp = triplet[i];
       outFile << sp->x()<< ","<< sp->y()<< ","<< sp->z()<< ","; 
     }
-    outFile << triplet[2]->x() << "," << triplet[2]->y() << "," << triplet[2]->z() << "," << state->outputQueue.size()<<"\n";
+    int numSeeds = 0;
+    for (auto& outVec : state->outputVec){
+      numSeeds += outVec.size();
+    }
+    outFile << triplet[2]->x() << "," << triplet[2]->y() << "," << triplet[2]->z() << "," << numSeeds<<"\n";
   }
 }

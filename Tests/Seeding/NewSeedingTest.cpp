@@ -92,23 +92,29 @@ int main(){
   std::shared_ptr<Acts::SeedmakerState<SpacePoint> > state = a.initState(spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder);
   auto start = std::chrono::system_clock::now();
   for(Acts::SeedingStateIterator<SpacePoint> it = state->begin(); !(it == state->end()); ++it){
-    a.createSeedsForSP(it, state);
+    a.createSeedsForRegion(it, state);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end-start;
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
-  std::cout << "Seeds created: "<<state->outputQueue.size() << std::endl;
-  while(!(state->outputQueue.empty())){
-    std::unique_ptr<const Acts::InternalSeed<SpacePoint> > seed = std::move(state->outputQueue.front());
-    state->outputQueue.pop();
-    std::array<const Acts::InternalSpacePoint<SpacePoint> *,3> isp = seed->sp;
-    const SpacePoint* sp = isp[0]->sp();
-    std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-    sp = isp[1]->sp();
-    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-    sp = isp[2]->sp();
-    std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-    std::cout << std::endl;
+  std::cout << "Number of regions: "<<state->outputVec.size() << std::endl;
+  int numSeeds = 0;
+  for (auto& outVec : state->outputVec){
+    numSeeds += outVec.size();
+  }
+  std::cout << "Number of seeds generated: " << numSeeds << std::endl;
+  for (auto& regionVec : state->outputVec){
+    for(int i =0; i< regionVec.size(); i++){
+      const Acts::InternalSeed<SpacePoint> * seed = regionVec[i].get();
+      std::array<const Acts::InternalSpacePoint<SpacePoint> *,3> isp = seed->sp;
+      const SpacePoint* sp = isp[0]->sp();
+      std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+      sp = isp[1]->sp();
+      std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+      sp = isp[2]->sp();
+      std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
+      std::cout << std::endl;
+    }
   }
   return 0;
 }

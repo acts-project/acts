@@ -86,7 +86,7 @@ namespace Acts{
   // after creating all seeds with a common middle space point, filter again
   template<typename SpacePoint>
   void
-  SeedFilter<SpacePoint>::filterSeeds_1SpFixed(std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint>  > > >& seedsPerSpM, std::queue<std::unique_ptr<const InternalSeed<SpacePoint> > >& queue, std::mutex& outputMutex) const {
+  SeedFilter<SpacePoint>::filterSeeds_1SpFixed(std::vector<std::pair<float,std::unique_ptr<const InternalSeed<SpacePoint>  > > >& seedsPerSpM, std::vector<std::unique_ptr<const InternalSeed<SpacePoint> > >& outVec) const {
 
     //sort by weight and iterate only up to configured max number of seeds per middle SP
     std::sort((seedsPerSpM.begin()),(seedsPerSpM.end()),[]
@@ -106,11 +106,9 @@ namespace Acts{
     auto it = seedsPerSpM.begin();
     // default filter removes the last seeds if maximum amount exceeded
     // ordering by weight by filterSeeds_2SpFixed means these are the lowest weight seeds
-    outputMutex.lock();
     for(; it<itBegin+maxSeeds; ++it) {
-      queue.push(std::move((*it).second));
+      outVec.push_back(std::move((*it).second));
     }
-    outputMutex.unlock();
   }
 
 }//namespace Acts

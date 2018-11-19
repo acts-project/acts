@@ -65,26 +65,20 @@ namespace Acts {
          std::shared_ptr<Acts::IBinFinder<SpacePoint> > bottomBinFinder,
          std::shared_ptr<Acts::IBinFinder<SpacePoint> > topBinFinder) const;
 
-
-/// Create all seed from the space point referenced by it
+/// Create all seeds from the grid bin referenced by "it"
       void
-      createSeedsForSP ( SeedingStateIterator<SpacePoint> it,
+      createSeedsForRegion ( SeedingStateIterator<SpacePoint> it,
                          std::shared_ptr<Acts::SeedmakerState<SpacePoint> > state) const;
 
     private:
               /**    @name Disallow default instantiation, copy, assignment */
       //@{
-      New_Seedmaker()                                = delete;
-      New_Seedmaker(const New_Seedmaker<SpacePoint>&)            = delete;
+      New_Seedmaker()                                                        = delete;
+      New_Seedmaker(const New_Seedmaker<SpacePoint>&)                        = delete;
       New_Seedmaker<SpacePoint> &operator=(const New_Seedmaker<SpacePoint>&) = delete;
       //@}
 
-      // Private methods
-//      void
-//      createSeedsInRegion (std::vector<std::unique_ptr<const InternalSpacePoint > >& currentBin,
-//                            std::set<size_t > bottomBins,
-//                            std::set<size_t > topBins,
-//                            std::shared_ptr<Acts::SeedmakerState> state) const ;
+
 
       void transformCoordinates (std::vector< const InternalSpacePoint<SpacePoint>* >& vec,
                                    const InternalSpacePoint<SpacePoint>* spM,

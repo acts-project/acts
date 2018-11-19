@@ -17,46 +17,29 @@ namespace Acts{
     public:
       SeedingStateIterator&
       operator++(){
-        if (spIndex < currentBin->size()-1){
-          spIndex++;
-          return *this;
-        }
         if(zIndex < phiZbins[1]){
-          spIndex = 0;
           zIndex++;
-        }else if(phiIndex < phiZbins[0]){
-          spIndex = 0;
+
+        }else{
           zIndex=1;
           phiIndex++;
-        }else{
-          spIndex++;
         }
-        // loop over all bins starting from current phiBin (i) and zBin (j) 
-        size_t j = zIndex;
-        for(size_t i = phiIndex; i <= phiZbins[0]; i++){
-          for(; j <= phiZbins[1]; j++){
-            currentBin = &(grid->at({i,j}));
-            if(currentBin->size() > 0){
-              phiIndex = i;
-              zIndex = j;
-              bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
-              topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
-              return *this;
-            }
-          }
-          j=1;
+        // set current & neighbor bins only if bin indices valid
+        if(phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]){
+          currentBin = &(grid->at({phiIndex,zIndex}));
+          bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
+          topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
+          outputIndex++;
+          return *this;
         }
         phiIndex = phiZbins[0];
-        zIndex   = phiZbins[1];
-        spIndex  = 0;
-        bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
-        topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
+        zIndex   = phiZbins[1]+1;
         return *this; 
       }
 
       bool
       operator==(const SeedingStateIterator& otherState){
-        return (spIndex == otherState.spIndex && zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
+        return (zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
       }
 
       SeedingStateIterator(const SpacePointGrid<SpacePoint>* spgrid, IBinFinder<SpacePoint>* botBinFinder, IBinFinder<SpacePoint>* tBinFinder):
@@ -65,30 +48,22 @@ namespace Acts{
         bottomBinFinder = botBinFinder;
         topBinFinder = tBinFinder;
         phiZbins = grid->getNBins();
+        phiIndex = 1;
+        zIndex = 1;
+        outputIndex = 0;
         bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
         topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
-        for(size_t i = 1; i <= phiZbins[0]; i++){
-          for(size_t j = 1; j <= phiZbins[1]; j++){
-            if ( currentBin->size()==0){
-              currentBin = &(spgrid->at({i,j}));
-              phiIndex = i;
-              zIndex = j;
-              bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
-              topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
-            }
-          }
-        }
       }
-      
-      SeedingStateIterator(const SpacePointGrid<SpacePoint>* spgrid, IBinFinder<SpacePoint>* botBinFinder, IBinFinder<SpacePoint>* tBinFinder, size_t phiInd, size_t zInd, size_t spInd):
+
+      SeedingStateIterator(const SpacePointGrid<SpacePoint>* spgrid, IBinFinder<SpacePoint>* botBinFinder, IBinFinder<SpacePoint>* tBinFinder, size_t phiInd, size_t zInd):
                                                                  currentBin(&(spgrid->at({phiInd,zInd}))){
         bottomBinFinder = botBinFinder;
         topBinFinder = tBinFinder;
         grid = spgrid;
         phiIndex = phiInd;
         zIndex = zInd;
-        spIndex = spInd;
         phiZbins = grid->getNBins();
+        outputIndex = (phiInd - 1)*phiZbins[1] + zInd-1;
         bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
         topBinIndices = topBinFinder->findBins(phiIndex, zIndex, grid);
       }
@@ -100,7 +75,7 @@ namespace Acts{
       const SpacePointGrid<SpacePoint>* grid;
       size_t phiIndex = 1;
       size_t zIndex = 1;
-      size_t spIndex =0;
+      size_t outputIndex = 0;
       std::array<long unsigned int,2ul> phiZbins;
       IBinFinder<SpacePoint>* bottomBinFinder;
       IBinFinder<SpacePoint>* topBinFinder;
@@ -117,9 +92,7 @@ namespace Acts{
       std::shared_ptr<IBinFinder<SpacePoint> > topBinFinder;
 
       // container with seeds created so far
-      std::queue<std::unique_ptr<const InternalSeed<SpacePoint> > > outputQueue;
-      // mutex to protect output access
-      std::mutex outputMutex;
+      std::vector< std::vector< std::unique_ptr<const InternalSeed<SpacePoint> > > >outputVec;
 
       SeedingStateIterator<SpacePoint>
       begin(){
@@ -129,9 +102,8 @@ namespace Acts{
       SeedingStateIterator<SpacePoint>
       end(){
         auto phiZbins = binnedSP->getNBins();
-        return SeedingStateIterator<SpacePoint>(binnedSP.get(), bottomBinFinder.get(), topBinFinder.get(), phiZbins[0], phiZbins[1], binnedSP->at(phiZbins).size());
+        return SeedingStateIterator<SpacePoint>(binnedSP.get(), bottomBinFinder.get(), topBinFinder.get(), phiZbins[0], phiZbins[1]+1);
       }
-
     };
 
 }
