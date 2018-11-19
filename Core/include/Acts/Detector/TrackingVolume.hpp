@@ -186,55 +186,6 @@ public:
                        const options_t&    options,
                        const corrector_t&  corrfnc = corrector_t()) const;
 
-  /// LEGACY method for old ExtrapolationEngine -------------------------------
-  ///
-  /// --------- to be deprecated with release 0.07.00
-  /// - it will be replace by compatibleLayers()
-  ///
-  /// Return the material layers ordered based on straight line intersections:
-  ///
-  /// - startObject and endLayer are included in the list
-  /// @param sLayer is the start layer for the search (@todo docu: check if
-  /// returned)
-  /// @param eLayer is the end layer for the search (@todo docu: check if
-  /// returned)
-  /// @param pars are the templated parameters for searching
-  /// @param pDir is an additional direction prescription
-  /// @param bcheck is a boundary check directive
-  /// @param resolveMaterial is the prescription how to deal with material
-  /// @param resolveSubSurfaces is the prescription on how to deal with
-  /// sensitive surfaces
-  ///
-  /// @return intersection wiht the layer
-  template <typename parameters_t>
-  std::vector<LayerIntersection>
-  layerCandidatesOrdered(const Layer*         sLayer,
-                         const Layer*         eLayer,
-                         const parameters_t&  pars,
-                         NavigationDirection  pDir             = forward,
-                         const BoundaryCheck& bcheck           = true,
-                         bool                 resolveSensitive = true,
-                         bool                 resolveMaterial  = true,
-                         bool                 resolvePassive   = false) const;
-
-  /// LEGACY method for old ExtrapolationEngine -------------------------------
-  ///
-  /// --------- to be deprecated with release 0.07.00
-  /// - it will be replace by compatibleBoundaries()
-  ///
-  /// Returns the boundary surfaces ordered in probability to hit them based
-  /// on straight line intersection
-  ///
-  /// @param pars are the templated tracking parameters
-  /// @param pDir is the additional direction presciprion
-  ///
-  /// @return is the templated boundary intersection
-  template <typename parameters_t>
-  std::vector<BoundaryIntersection>
-  boundarySurfacesOrdered(const parameters_t& pars,
-                          NavigationDirection pDir        = forward,
-                          bool                skipCurrent = false) const;
-
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
   /// @param gp is the global position associated with that search
