@@ -562,7 +562,7 @@ private:
     if (state.navigation.navigationBreak) {
       return false;
     }
-    
+
     // Make sure resolve Surfaces is called on the start layer
     if (state.navigation.startLayer
         and not state.navigation.startLayerResolved) {
