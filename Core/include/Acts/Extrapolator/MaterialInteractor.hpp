@@ -217,7 +217,7 @@ struct MaterialInteractor
           // Apply the energy loss
           const double dEdl = state.stepping.navDir * eLoss.first;
           const double dE   = mProperties.thickness() * dEdl;
-          // Screen output 
+          // Screen output
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Energy loss calculated to " << dE << " GeV";
