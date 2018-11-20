@@ -10,6 +10,7 @@
 
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 
 namespace Acts {
 
@@ -456,6 +457,20 @@ struct DenseEnvironmentExtensionActor
       ext.includeGgradient = includeGgradient;
     }
   }
+};
+
+template <typename action_list_t  = ActionList<>,
+          typename aborter_list_t = AbortList<>>
+struct DenseStepperPropagatorOptions : public PropagatorOptions<action_list_t, aborter_list_t>
+{
+  /// Toggle between mean and mode evaluation of energy loss
+  bool meanEnergyLoss = true;
+
+  /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
+  bool includeGgradient = true;
+
+  /// Cut-off value for the momentum in SI units
+  double momentumCutOff = 0.;
 };
 
 const detail::IonisationLoss DenseEnvironmentExtension::ionisationLoss;

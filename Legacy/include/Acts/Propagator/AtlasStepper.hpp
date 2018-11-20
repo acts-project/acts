@@ -764,27 +764,28 @@ public:
   /// Perform the actual step on the state
   ///
   /// @param state is the provided stepper state (caller keeps thread locality)
+  template<typename propagator_state_t>
   double
-  step(State& state) const
+  step(propagator_state_t& state) const
   {
     // we use h for keeping the nominclature with the original atlas code
-    double h   = state.stepSize;
-    bool   Jac = state.useJacobian;
+    double h   = state.stepping.stepSize;
+    bool   Jac = state.stepping.useJacobian;
 
-    double* R  = &(state.pVector[0]);  // Coordinates
-    double* A  = &(state.pVector[3]);  // Directions
-    double* sA = &(state.pVector[42]);
+    double* R  = &(state.stepping.pVector[0]);  // Coordinates
+    double* A  = &(state.stepping.pVector[3]);  // Directions
+    double* sA = &(state.stepping.pVector[42]);
     // Invert mometum/2.
-    double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.pVector[6]);
+    double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.stepping.pVector[6]);
     //    double dltm = 0.0002 * .03;
     Vector3D f0, f;
 
     // if new field is required get it
-    if (state.newfield) {
+    if (state.stepping.newfield) {
       const Vector3D pos(R[0], R[1], R[2]);
-      f0 = getField(state, pos);
+      f0 = getField(state.stepping, pos);
     } else {
-      f0 = state.field;
+      f0 = state.stepping.field;
     }
 
     bool Helix = false;
@@ -811,7 +812,7 @@ public:
       //
       if (!Helix) {
         const Vector3D pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
-        f = getField(state, pos);
+        f = getField(state.stepping, pos);
       } else {
         f = f0;
       }
@@ -831,7 +832,7 @@ public:
       //
       if (!Helix) {
         const Vector3D pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
-        f = getField(state, pos);
+        f = getField(state.stepping, pos);
       } else {
         f = f0;
       }
@@ -876,15 +877,15 @@ public:
       sA[1] = B6 * Sl;
       sA[2] = C6 * Sl;
 
-      state.field    = f;
-      state.newfield = false;
+      state.stepping.field    = f;
+      state.stepping.newfield = false;
 
       if (Jac) {
         // Jacobian calculation
         //
-        double* d2A  = &state.pVector[24];
-        double* d3A  = &state.pVector[31];
-        double* d4A  = &state.pVector[38];
+        double* d2A  = &state.stepping.pVector[24];
+        double* d3A  = &state.stepping.pVector[31];
+        double* d4A  = &state.stepping.pVector[38];
         double  d2A0 = H0[2] * d2A[1] - H0[1] * d2A[2];
         double  d2B0 = H0[0] * d2A[2] - H0[2] * d2A[0];
         double  d2C0 = H0[1] * d2A[0] - H0[0] * d2A[1];
@@ -943,7 +944,7 @@ public:
         double  d4B6 = d4C5 * H2[0] - d4A5 * H2[2];
         double  d4C6 = d4A5 * H2[1] - d4B5 * H2[0];
 
-        double* dR = &state.pVector[21];
+        double* dR = &state.stepping.pVector[21];
         dR[0] += (d2A2 + d2A3 + d2A4) * S3;
         dR[1] += (d2B2 + d2B3 + d2B4) * S3;
         dR[2] += (d2C2 + d2C3 + d2C4) * S3;
@@ -951,7 +952,7 @@ public:
         d2A[1] = ((d2B0 + 2. * d2B3) + (d2B5 + d2B6)) * (1. / 3.);
         d2A[2] = ((d2C0 + 2. * d2C3) + (d2C5 + d2C6)) * (1. / 3.);
 
-        dR = &state.pVector[28];
+        dR = &state.stepping.pVector[28];
         dR[0] += (d3A2 + d3A3 + d3A4) * S3;
         dR[1] += (d3B2 + d3B3 + d3B4) * S3;
         dR[2] += (d3C2 + d3C3 + d3C4) * S3;
@@ -959,7 +960,7 @@ public:
         d3A[1] = ((d3B0 + 2. * d3B3) + (d3B5 + d3B6)) * (1. / 3.);
         d3A[2] = ((d3C0 + 2. * d3C3) + (d3C5 + d3C6)) * (1. / 3.);
 
-        dR = &state.pVector[35];
+        dR = &state.stepping.pVector[35];
         dR[0] += (d4A2 + d4A3 + d4A4) * S3;
         dR[1] += (d4B2 + d4B3 + d4B4) * S3;
         dR[2] += (d4C2 + d4C3 + d4C4) * S3;
@@ -967,12 +968,12 @@ public:
         d4A[1] = ((d4B0 + 2. * d4B3) + (d4B5 + d4B6 + B6)) * (1. / 3.);
         d4A[2] = ((d4C0 + 2. * d4C3) + (d4C5 + d4C6 + C6)) * (1. / 3.);
       }
-      state.pathAccumulated += h;
+      state.stepping.pathAccumulated += h;
       return h;
     }
 
     // that exit path should actually not happen
-    state.pathAccumulated += h;
+    state.stepping.pathAccumulated += h;
     return h;
   }
 

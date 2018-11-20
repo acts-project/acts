@@ -244,15 +244,16 @@ public:
   ///                be modified by the stepper class during propagation.
   ///
   /// @return the step size taken
+  template<typename propagator_state_t>
   double
-  step(State& state) const
+  step(propagator_state_t& state) const
   {
     // use the adjusted step size
-    const double h = state.stepSize;
+    const double h = state.stepping.stepSize;
     // Update the track parameters according to the equations of motion
-    state.pos += h * state.dir;
+    state.stepping.pos += h * state.stepping.dir;
     // state the path length
-    state.pathAccumulated += h;
+    state.stepping.pathAccumulated += h;
     // return h
     return h;
   }
