@@ -10,32 +10,42 @@
 #define BOOST_TEST_MODULE SurfaceMaterial Tests
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
+#include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Utilities/BinUtility.hpp"
 
 namespace Acts {
 
 namespace Test {
 
   /// Test the constructors
-  BOOST_AUTO_TEST_CASE(MaterialProperties_construction_test)
+  BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test)
   {
-    // constructor only from argumnets
-    MaterialProperties a(1., 2., 3., 4., 5., 6.);
-    /// constructor with material
-    MaterialProperties b(Material(1., 2., 3., 4., 5.), 6.);
-    /// Check if they are equal
-    BOOST_CHECK_EQUAL(a, b);
 
-    /// Check the move construction
-    MaterialProperties bMoved(std::move(b));
-    /// Check if they are equal
-    BOOST_CHECK_EQUAL(a, bMoved);
+    BinUtility xyBinning(2, -1., 1., open, binX);
+    xyBinning += BinUtility(3, -3., 3., open, binY);
 
-    /// Check the move assignment
-    MaterialProperties bMovedAssigned = std::move(bMoved);
-    /// Check if they are equal
-    BOOST_CHECK_EQUAL(a, bMovedAssigned);
+    // Constructor a few material properties
+    MaterialProperties a00(1., 2., 3., 4., 5., 6.);
+    MaterialProperties a01(1., 2., 3., 4., 5., 6.);
+    MaterialProperties a02(1., 2., 3., 4., 5., 6.);
+    MaterialProperties a10(1., 2., 3., 4., 5., 6.);
+    MaterialProperties a11(1., 2., 3., 4., 5., 6.);
+    MaterialProperties a12(1., 2., 3., 4., 5., 6.);
+
+    // Prepare the matrix
+    std::vector<MaterialProperties> l0 = {std::move(a00), std::move(a10)};
+    std::vector<MaterialProperties> l1 = {std::move(a01), std::move(a11)};
+    std::vector<MaterialProperties> l2 = {std::move(a02), std::move(a12)};
+
+    // Build the matrix
+    std::vector<std::vector<MaterialProperties>> m
+        = {std::move(l0), std::move(l1), std::move(l2)};
+
+    // Create the material
+    BinnedSurfaceMaterial bsm(xyBinning, std::move(m));
   }
-}
-}
+
+}  // namespace Test
+}  // namespace Acts

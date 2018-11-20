@@ -21,7 +21,7 @@ namespace Test {
   /// Test the constructors
   BOOST_AUTO_TEST_CASE(HomogeneousSurfaceMaterial_construction_test)
   {
-    // construct the material properties from argumnets
+    // construct the material properties from arguments
     MaterialProperties mp(1., 2., 3., 4., 5., 0.1);
 
     // Constructor from arguments

@@ -20,7 +20,7 @@ namespace Test {
   /// Test the constructors
   BOOST_AUTO_TEST_CASE(MaterialProperties_construction_test)
   {
-    // constructor only from argumnets
+    // constructor only from arguments
     MaterialProperties a(1., 2., 3., 4., 5., 6.);
     /// constructor with material
     MaterialProperties b(Material(1., 2., 3., 4., 5.), 6.);

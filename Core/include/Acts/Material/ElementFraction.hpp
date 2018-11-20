@@ -28,6 +28,18 @@ namespace Acts {
 /// This is a simple pair of the fractional component of an element
 /// the first member is the element atomic charge to identify it uniquely
 /// the second member is the fractional component
+///
+///
+/// The elemnt fraction allows you to log with what fraction you have elements
+/// in a merged material bin with many many bins. This is "A LOT" of
+/// information, hence the data format has to be as small as possible
+/// this serves only one purpose: multiple scattering and ionization loss does
+/// not care about this at all, but nuclear interaction in the fast simulation
+/// does.
+///
+/// uint8_t gives you 256 Elements (more than we need), with an accuracy of
+/// 1./256, i.e. < 0.5 %. That's better than we can dream of parameterizing
+/// hadronic interactions.
 class ElementFraction
 {
 public:
@@ -39,14 +51,14 @@ public:
   /// @param iz is the z value of the element as an unsigned int
   /// @param ifrac is the associated fraction of that element
   ElementFraction(unsigned int iz, float ifrac)
-    : m_data{{(unsigned char)iz, (unsigned char)(ifrac * double(UCHAR_MAX))}}
+    : m_data{{(uint8_t)iz, (uint8_t)(ifrac * double(UCHAR_MAX))}}
   {
   }
 
   /// Constructor direct data
   ///
   /// @param data is the element fraction source object
-  ElementFraction(const std::array<unsigned char, 2>& data) : m_data(data) {}
+  ElementFraction(const std::array<uint8_t, 2>& data) : m_data(data) {}
 
   /// Copy constructor
   ///
@@ -73,7 +85,7 @@ public:
       = default;
 
   /// Access to the data itself
-  const std::array<unsigned char, 2>&
+  const std::array<uint8_t, 2>&
   data() const
   {
     return m_data;
@@ -115,6 +127,6 @@ public:
   }
 
 private:
-  std::array<unsigned char, 2> m_data = {{0, 0}};  //!< the data component
+  std::array<uint8_t, 2> m_data = {{0, 0}};  //!< the data component
 };
 }
