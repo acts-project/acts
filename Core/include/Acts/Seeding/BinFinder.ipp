@@ -7,6 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 template <typename SpacePoint>
 std::set<size_t>
-Acts::BinFinder<SpacePoint>::findBins(size_t i, size_t j,const Acts::SpacePointGrid<SpacePoint>* binnedSP){
-  return binnedSP->neighborHoodIndices({i,j});  
+Acts::BinFinder<SpacePoint>::findBins(
+    size_t                                  i,
+    size_t                                  j,
+    const Acts::SpacePointGrid<SpacePoint>* binnedSP)
+{
+  return binnedSP->neighborHoodIndices({i, j});
 }

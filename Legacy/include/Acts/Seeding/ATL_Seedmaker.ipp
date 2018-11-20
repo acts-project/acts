@@ -154,8 +154,8 @@ template <typename SpacePoint>
 template <class RandIter>
 void
 Acts::Legacy::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
-                                                   RandIter spBegin,
-                                                   RandIter spEnd)
+                                                  RandIter spBegin,
+                                                  RandIter spEnd)
 {
   iteration <= 0 ? m_iteration = 0 : m_iteration = iteration;
   erase();
@@ -683,13 +683,12 @@ Acts::Legacy::ATL_Seedmaker<SpacePoint>::production3Sp(
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rbe,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rt,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rte,
-    int                                                                  NB,
-    int                                                                  NT,
-    int&                                                                 nseed)
+    int                                                                 NB,
+    int                                                                 NT,
+    int&                                                                nseed)
 {
-  typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r0
-      = rb[0],
-      r;
+  typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r0 = rb[0],
+                                                                     r;
   if (!m_endlist) {
     r0        = m_rMin;
     m_endlist = true;
@@ -935,8 +934,8 @@ Acts::Legacy::ATL_Seedmaker<SpacePoint>::newOneSeed(
     Acts::Legacy::SPForSeed<SpacePoint>*& p1,
     Acts::Legacy::SPForSeed<SpacePoint>*& p2,
     Acts::Legacy::SPForSeed<SpacePoint>*& p3,
-    float                                  z,
-    float                                  q)
+    float                                 z,
+    float                                 q)
 {
   // if the number of seeds already in m_OneSeeds does not exceed m_maxOneSize
   // then insert the current SP into m_mapOneSeeds and m_OneSeeds.
@@ -986,7 +985,7 @@ void
 Acts::Legacy::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
     Acts::Legacy::SPForSeed<SpacePoint>*& SPb,
     Acts::Legacy::SPForSeed<SpacePoint>*& SP0,
-    float                                  Zob)
+    float                                 Zob)
 {
   // allowed (1/helixradius)-delta between 2 seeds
   const float dC = .00003;
@@ -996,9 +995,8 @@ Acts::Legacy::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
   float u0   = SP0->quality();
 
   std::sort(m_CmSp.begin(), m_CmSp.end(), Acts::Legacy::comCurvature());
-  typename std::
-      vector<std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>>::iterator
-          j,
+  typename std::vector<std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>>::
+      iterator j,
       jn, i = m_CmSp.begin(), ie = m_CmSp.end();
   jn = i;
 

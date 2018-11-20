@@ -47,9 +47,9 @@ runSeeding(std::vector<SpacePoint*> spVec)
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
   const Acts::Legacy::Seed<SpacePoint>*       seed     = seedMaker.next();
-  int                                          numSeeds = 0;
-  std::vector<Acts::Seeding::Seed<SpacePoint>> seedVec;
-  while (seed != nullptr) {
+  int                                         numSeeds = 0;
+  std::vector<Acts::Legacy::Seed<SpacePoint>> seedVec;
+  while (seed != 0) {
     numSeeds++;
     auto spIter = seed->spacePoints().begin();
     spIter++;

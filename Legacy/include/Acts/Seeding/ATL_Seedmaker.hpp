@@ -323,9 +323,8 @@ namespace Legacy {
   public:
     template <typename SpacePoint>
     bool
-    operator()(
-        const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i1,
-        const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i2)
+    operator()(const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i1,
+               const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i2)
     {
       return i1.first < i2.first;
     }

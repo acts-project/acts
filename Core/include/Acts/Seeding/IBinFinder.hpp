@@ -10,7 +10,6 @@
 
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
-
 namespace Acts {
 
 /// @class IBinFinder
@@ -22,18 +21,21 @@ class IBinFinder
 {
 public:
   /// destructor
-    ~IBinFinder() = default;
+  ~IBinFinder() = default;
 
-/// Returns all global bin indices (1D binning) that could contain bottom
-/// respectively top space points for the provided bin.
-/// @param phiBin the phi bin index of the bin containing the middle space points
-/// @param zBin the z bin index of the bin containing the middle space points
-/// @param binnedSP the grid containing all bins
-/// @return a set containing the global bin indices for all bins potentially
-/// containing bottom resp. top space points that can be combined with the
-/// middle space points from the provided bin
-    virtual
-    std::set<size_t>
-    findBins(size_t phiBin,size_t zBin, const SpacePointGrid<SpacePoint>* binnedSP) = 0;
+  /// Returns all global bin indices (1D binning) that could contain bottom
+  /// respectively top space points for the provided bin.
+  /// @param phiBin the phi bin index of the bin containing the middle space
+  /// points
+  /// @param zBin the z bin index of the bin containing the middle space points
+  /// @param binnedSP the grid containing all bins
+  /// @return a set containing the global bin indices for all bins potentially
+  /// containing bottom resp. top space points that can be combined with the
+  /// middle space points from the provided bin
+  virtual std::set<size_t>
+  findBins(size_t                            phiBin,
+           size_t                            zBin,
+           const SpacePointGrid<SpacePoint>* binnedSP)
+      = 0;
 };
 }

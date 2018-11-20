@@ -8,41 +8,48 @@
 
 #pragma once
 
-#include "Acts/Utilities/detail/Grid.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include <memory>
+#include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
+namespace Acts {
 
-namespace Acts{
-
-struct SpacePointGridConfig{
-    // magnetic field in kTesla
-    float bFieldInZ;
-    // minimum pT to be found by seedfinder in MeV
-    float minPt;
-    // maximum extension of sensitive detector layer relevant for seeding as distance from x=y=0 (i.e. in r) in mm
-    float rMax;
-    // maximum extension of sensitive detector layer relevant for seeding in positive direction in z in mm
-    float zMax;
-    // maximum extension of sensitive detector layer relevant for seeding in negative direction in z in mm
-    float zMin;
-    // maximum distance in r from middle space point to bottom or top spacepoint in mm
-    float deltaRMax;
-    // maximum forward direction expressed as cot(theta)
-    float cotThetaMax;
+struct SpacePointGridConfig
+{
+  // magnetic field in kTesla
+  float bFieldInZ;
+  // minimum pT to be found by seedfinder in MeV
+  float minPt;
+  // maximum extension of sensitive detector layer relevant for seeding as
+  // distance from x=y=0 (i.e. in r) in mm
+  float rMax;
+  // maximum extension of sensitive detector layer relevant for seeding in
+  // positive direction in z in mm
+  float zMax;
+  // maximum extension of sensitive detector layer relevant for seeding in
+  // negative direction in z in mm
+  float zMin;
+  // maximum distance in r from middle space point to bottom or top spacepoint
+  // in mm
+  float deltaRMax;
+  // maximum forward direction expressed as cot(theta)
+  float cotThetaMax;
 };
-template<typename SpacePoint>
-using SpacePointGrid = detail::Grid<std::vector<std::unique_ptr<const InternalSpacePoint<SpacePoint> > >,
-detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Closed>,
-detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>>;
+template <typename SpacePoint>
+using SpacePointGrid = detail::
+    Grid<std::vector<std::unique_ptr<const InternalSpacePoint<SpacePoint>>>,
+         detail::Axis<detail::AxisType::Equidistant,
+                      detail::AxisBoundaryType::Closed>,
+         detail::Axis<detail::AxisType::Equidistant,
+                      detail::AxisBoundaryType::Bound>>;
 
-class SpacePointGridCreator{
+class SpacePointGridCreator
+{
 public:
-
-template< typename SpacePoint>
-static std::unique_ptr<SpacePointGrid<SpacePoint> > createGrid(const Acts::SpacePointGridConfig& cfg);
-
+  template <typename SpacePoint>
+  static std::unique_ptr<SpacePointGrid<SpacePoint>>
+  createGrid(const Acts::SpacePointGridConfig& cfg);
 };
 }
 #include "Acts/Seeding/SpacePointGrid.ipp"

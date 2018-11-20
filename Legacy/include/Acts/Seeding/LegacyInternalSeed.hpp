@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "Acts/Seeding/SPForSeed.hpp"
 #include "Acts/Seeding/LegacySeed.hpp"
+#include "Acts/Seeding/SPForSeed.hpp"
 
 namespace Acts {
 namespace Legacy {
