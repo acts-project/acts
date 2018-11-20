@@ -28,11 +28,11 @@ namespace Test {
 
     // Constructor a few material properties
     MaterialProperties a00(1., 2., 3., 4., 5., 6.);
-    MaterialProperties a01(1., 2., 3., 4., 5., 6.);
-    MaterialProperties a02(1., 2., 3., 4., 5., 6.);
-    MaterialProperties a10(1., 2., 3., 4., 5., 6.);
-    MaterialProperties a11(1., 2., 3., 4., 5., 6.);
-    MaterialProperties a12(1., 2., 3., 4., 5., 6.);
+    MaterialProperties a01(2., 3., 4., 5., 6., 7.);
+    MaterialProperties a02(3., 4., 5., 6., 7., 8.);
+    MaterialProperties a10(4., 5., 6., 7., 8., 9.);
+    MaterialProperties a11(5., 6., 7., 8., 9., 10.);
+    MaterialProperties a12(6., 7., 8., 9., 10., 11.);
 
     // Prepare the matrix
     std::vector<MaterialProperties> l0 = {std::move(a00), std::move(a10)};
@@ -45,6 +45,18 @@ namespace Test {
 
     // Create the material
     BinnedSurfaceMaterial bsm(xyBinning, std::move(m));
+
+    // Copy the material
+    BinnedSurfaceMaterial bsmCopy(bsm);
+
+    // Assignment operation
+    BinnedSurfaceMaterial bsmAssigned = bsm;
+
+    // Move constructor
+    BinnedSurfaceMaterial bsmMoved(std::move(bsmCopy));
+
+    // Move assigned
+    BinnedSurfaceMaterial bsmMoveAssigned(std::move(bsmAssigned));
   }
 
 }  // namespace Test
