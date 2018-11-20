@@ -1,6 +1,7 @@
 PyYAML
-fs
+fs~=2.0.7
 fs.sshfs
 tabulate
 codereport==0.2.*
 python-gitlab
+python-dateutil
