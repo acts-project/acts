@@ -34,7 +34,31 @@ using namespace Acts::UnitLiterals;
 namespace Acts {
 namespace Test {
 
-BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
+  struct StepVolumeCollector
+  {
+    ///
+    /// @brief Data container for result analysis
+    ///
+    struct this_result
+    {
+      // Position of the propagator after each step
+      std::vector<Vector3D> position;
+
+      std::vector<TrackingVolume const*> volume;
+    };
+
+    using result_type = this_result;
+
+    template <typename propagator_state_t>
+    void
+    operator()(propagator_state_t& state, result_type& result) const
+    {
+      result.position.push_back(state.stepping.position());
+      result.volume.push_back(state.navigation.currentVolume);
+    }
+  };
+
+ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   // Construct builder
   CuboidVolumeBuilder cvb;
 
@@ -114,6 +138,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
     cfg.surface = nullptr;
   }
 
+<<<<<<< HEAD:Tests/Core/Geometry/CuboidVolumeBuilderTests.cpp
   // Build volume configuration
   CuboidVolumeBuilder::VolumeConfig volumeConfig;
   volumeConfig.position = {2.5_m, 0., 0.};
@@ -153,6 +178,57 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
   for (auto& lay : volumeConfig.layers) {
     BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
   }
+=======
+    // Build volume configuration
+    CuboidVolumeBuilder::VolumeConfig volumeConfig;
+    volumeConfig.position = {2.5 * units::_m, 0., 0.};
+    volumeConfig.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
+    volumeConfig.layerCfg = layerConfig;
+    volumeConfig.name     = "Test volume";
+    volumeConfig.volumeMaterial
+        = std::make_shared<const HomogeneousVolumeMaterial>(
+            Material(352.8, 407., 9.012, 4., 1.848e-3));
+
+    // Test the building
+    std::shared_ptr<TrackingVolume> trVol
+        = cvb.buildVolume(tgContext, volumeConfig);
+    BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+    BOOST_CHECK_EQUAL(trVol->confinedLayers()->arrayObjects().size(),
+                      volumeConfig.layers.size() * 2
+                          + 1);  // #layers = navigation + material layers
+    BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
+    BOOST_CHECK_NE(trVol->volumeMaterial(), nullptr);
+
+    // Test the building
+    volumeConfig.layers.clear();
+    trVol = cvb.buildVolume(tgContext, volumeConfig);
+    BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+    BOOST_CHECK_EQUAL(trVol->confinedLayers()->arrayObjects().size(),
+                      volumeConfig.layers.size() * 2
+                          + 1);  // #layers = navigation + material layers
+    BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
+
+    volumeConfig.layers.clear();
+    for (auto& lay : volumeConfig.layerCfg) {
+      lay.surface = nullptr;
+      lay.active  = true;
+    }
+    trVol = cvb.buildVolume(tgContext, volumeConfig);
+    BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+    for (auto& lay : volumeConfig.layers) {
+      BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
+    }
+
+    volumeConfig.layers.clear();
+    for (auto& lay : volumeConfig.layerCfg) {
+      lay.active = true;
+    }
+    trVol = cvb.buildVolume(tgContext, volumeConfig);
+    BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
+    for (auto& lay : volumeConfig.layers) {
+      BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
+    }
+>>>>>>> First draft of EigenStepper geometry:Tests/Core/Tools/CuboidVolumeBuilderTests.cpp
 
   volumeConfig.layers.clear();
   for (auto& lay : volumeConfig.layerCfg) {
@@ -234,7 +310,7 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
       volumeConfig2.name);
 }
 
-  BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest_confinedVolumes)
+  BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes)
   {
     // Production factory
     BoxGeometryBuilder bgb;
@@ -306,18 +382,22 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
           && stepResult.position[i].x() < 0.95 * units::_m) {
         BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg2.name);
         BOOST_TEST(stepResult.volume[i]->material() == nullptr);
-      } else if (stepResult.position[i].x() >= 1.05 * units::_m
-                 && stepResult.position[i].x() < 1.15 * units::_m) {
-        BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg1.name);
-        BOOST_TEST(stepResult.volume[i]->material() != nullptr);
-      } else if (stepResult.position[i].x() < 2. * units::_m) {
-        BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg.name);
-        BOOST_TEST(stepResult.volume[i]->material() == nullptr);
+      } else {
+        if (stepResult.position[i].x() >= 1.05 * units::_m
+            && stepResult.position[i].x() < 1.15 * units::_m) {
+          BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg1.name);
+          BOOST_TEST(stepResult.volume[i]->material() != nullptr);
+        } else {
+          if (stepResult.position[i].x() < 2. * units::_m) {
+            BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg.name);
+            BOOST_TEST(stepResult.volume[i]->material() == nullptr);
+          }
+        }
       }
     }
   }
 
-  BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest_confinedVolumes_edgecases)
+  BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest_confinedVolumes_edgecases)
   {
     // Production factory
     BoxGeometryBuilder bgb;
@@ -403,8 +483,9 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
           if (stepResult.position[i].x() < 2. * units::_m) {
             BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg1.name);
           } else {
-            if (stepResult.position[i].x() < 3. * units::_m)
+            if (stepResult.position[i].x() < 3. * units::_m) {
               BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg2.name);
+            }
           }
         }
       }

@@ -15,6 +15,7 @@
 #include <fstream>
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
@@ -611,5 +612,128 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1_um);
   CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1_um);
 }
+
+  // Test case a). The DenseEnvironmentExtension should state that it is not
+  // valid in this case.
+  BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test)
+  {
+    double             rotationAngle = M_PI * 0.5;
+    Vector3D           xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3D           yPos(0., 1., 0.);
+    Vector3D           zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    MaterialProperties matProp(
+        352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
+
+    BoxGeometryBuilder::SurfaceConfig sConf1;
+    sConf1.position        = Vector3D(0.3 * units::_m, 0., 0.);
+    sConf1.rotation.col(0) = xPos;
+    sConf1.rotation.col(1) = yPos;
+    sConf1.rotation.col(2) = zPos;
+    sConf1.rBounds         = std::make_shared<const RectangleBounds>(
+        RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+    sConf1.surMat = std::shared_ptr<const SurfaceMaterial>(
+        new HomogeneousSurfaceMaterial(matProp));
+    sConf1.thickness = 1. * units::_mm;
+    BoxGeometryBuilder::LayerConfig lConf1;
+    lConf1.surfaceCfg     = sConf1;
+    lConf1.layerThickness = 2. * units::_mm;
+
+    BoxGeometryBuilder::SurfaceConfig sConf2;
+    sConf2.position        = Vector3D(0.6 * units::_m, 0., 0.);
+    sConf2.rotation.col(0) = xPos;
+    sConf2.rotation.col(1) = yPos;
+    sConf2.rotation.col(2) = zPos;
+    sConf2.rBounds         = std::make_shared<const RectangleBounds>(
+        RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+    sConf2.surMat = std::shared_ptr<const SurfaceMaterial>(
+        new HomogeneousSurfaceMaterial(matProp));
+    sConf2.thickness = 1. * units::_mm;
+    BoxGeometryBuilder::LayerConfig lConf2;
+    lConf2.surfaceCfg     = sConf2;
+    lConf2.layerThickness = 2. * units::_mm;
+
+    BoxGeometryBuilder::VolumeConfig muConf1;
+    muConf1.position = {2.3 * units::_m, 0., 0.};
+    muConf1.length   = {20. * units::_cm, 20. * units::_cm, 20. * units::_cm};
+    muConf1.name     = "MDT1";
+    BoxGeometryBuilder::VolumeConfig muConf2;
+    muConf2.position = {2.7 * units::_m, 0., 0.};
+    muConf2.length   = {20. * units::_cm, 20. * units::_cm, 20. * units::_cm};
+    muConf2.name     = "MDT2";
+
+    BoxGeometryBuilder::VolumeConfig vConf1;
+    vConf1.position = {0.5 * units::_m, 0., 0.};
+    vConf1.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf1.layerCfg = {lConf1, lConf2};
+    vConf1.name     = "Tracker";
+    BoxGeometryBuilder::VolumeConfig vConf2;
+    vConf2.position = {1.5 * units::_m, 0., 0.};
+    vConf2.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf2.material = std::make_shared<const Material>(
+        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    vConf2.name = "Calorimeter";
+    BoxGeometryBuilder::VolumeConfig vConf3;
+    vConf3.position  = {2.5 * units::_m, 0., 0.};
+    vConf3.length    = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf3.volumeCfg = {muConf1, muConf2};
+    vConf3.name      = "Muon system";
+    BoxGeometryBuilder::Config conf;
+    conf.volumeCfg = {vConf1, vConf2, vConf3};
+    conf.position  = {1.5 * units::_m, 0., 0.};
+    conf.length    = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+
+    // Build detector
+    std::shared_ptr<TrackingGeometry> detector
+        = bgb.buildTrackingGeometry(conf);
+
+    // Build navigator
+    Navigator naviVac(detector);
+    naviVac.resolvePassive   = true;
+    naviVac.resolveMaterial  = true;
+    naviVac.resolveSensitive = true;
+
+    // Set initial parameters for the particle track
+    ActsSymMatrixD<5> cov    = ActsSymMatrixD<5>::Identity();
+    auto              covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    Vector3D startParams(0., 0., 0.), startMom(1. * units::_GeV, 0., 0.);
+    SingleCurvilinearTrackParameters<ChargedPolicy> sbtp(
+        std::move(covPtr), startParams, startMom, 1.);
+
+    // Set options for propagator
+    DenseStepperPropagatorOptions<ActionList<StepCollector,
+                                 MaterialInteractor>,
+                      AbortList<EndOfWorld>>
+        propOpts;
+    propOpts.stopConditions.get<EndOfWorld>().maxX = 3. * units::_m;
+
+    // Build stepper and propagator
+    ConstantBField bField(Vector3D(0., 0., 0.));
+    EigenStepper<ConstantBField,
+                 VoidCorrector,
+                 StepperExtensionList<DefaultExtension,
+                                      DenseEnvironmentExtension>,
+                 detail::HighestValidAuctioneer>
+        es(bField);
+    Propagator<EigenStepper<ConstantBField,
+                            VoidCorrector,
+                            StepperExtensionList<DefaultExtension,
+                                                 DenseEnvironmentExtension>,
+                            detail::HighestValidAuctioneer>,
+               Navigator>
+        prop(es, naviVac);
+
+    // Launch and collect results
+    const auto&                       result = prop.propagate(sbtp, propOpts);
+    const StepCollector::this_result& stepResult
+        = result.get<typename StepCollector::result_type>();
+
+    for (unsigned int i = 0; i < stepResult.position.size(); i++)
+      std::cout << stepResult.position[i].x() << "\t"
+                << stepResult.position[i].y() << "\t"
+                << stepResult.position[i].z() << "\t"
+                << stepResult.momentum[i].x() << "\t"
+                << stepResult.momentum[i].y() << "\t"
+                << stepResult.momentum[i].z() << std::endl;
+  }
 }  // namespace Test
 }  // namespace Acts
