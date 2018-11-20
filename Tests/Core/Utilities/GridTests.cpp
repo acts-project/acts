@@ -1166,18 +1166,6 @@ namespace Test {
      *   |------------------------|
      */
     // clang-format on
-
-    typedef Axis<AxisType::Equidistant, AxisBoundaryType::Bound> EAxisBound;
-    typedef Grid<double, EAxisClosed, EAxisBound> Grid2ClosedBound_t;
-    EAxisClosed   h(0.,3., 3u);
-    EAxisBound    i(0., 3.0, 3u);
-    Grid2ClosedBound_t g2ClB(std::make_tuple(std::move(h), std::move(i)));
-    BOOST_TEST(g2ClB.neighborHoodIndices({{1, 1}})
-               == bins_t({6,7,8,11,12,13}));
-    auto setofind = g2ClB.neighborHoodIndices({{1, 1}});
-    for(auto ind : setofind){
-      std::cout << "found neighbor index: " << ind << std::endl;
-    }
   }
 
   BOOST_AUTO_TEST_CASE(closestPoints)
