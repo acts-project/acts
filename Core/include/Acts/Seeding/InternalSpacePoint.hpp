@@ -1,4 +1,4 @@
-// This file is part of the ACTS project.
+// This file is part of the Acts project.
 //
 // Copyright (C) 2018 Acts project team
 //

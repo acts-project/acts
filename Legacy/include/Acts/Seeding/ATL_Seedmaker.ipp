@@ -203,7 +203,7 @@ Acts::Legacy::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
     if (!sps) {
       continue;
     }
-    int ir             = int(sps->radius() * irstep);
+    int ir = int(sps->radius() * irstep);
     if (ir > irmax) {
       ir = irmax;
     }
