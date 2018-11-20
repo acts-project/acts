@@ -58,8 +58,8 @@ namespace Test {
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
-  const int ntests    = 1;
-  bool      debugMode = true;
+  const int ntests    = 100;
+  bool      debugMode = false;
 
   // A plane selector for the SurfaceCollector
   struct PlaneSelector
@@ -249,7 +249,7 @@ namespace Test {
 
     using DebugOutput = detail::DebugOutputActor;
 
-    PropagatorOptions<ActionList<MaterialInteractor,DebugOutput>> options;
+    PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
     options.debug       = debugMode;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
@@ -257,15 +257,15 @@ namespace Test {
     const auto& result = epropagator.propagate(start, options);
     if (result.endParameters) {
       // test that you actually lost some energy
-      BOOST_TEST(result.endParameters->momentum().norm() < start.momentum().norm());
+      BOOST_TEST(result.endParameters->momentum().norm()
+                 < start.momentum().norm());
     }
-    
-    if (debugMode){
+
+    if (debugMode) {
       const auto& output = result.get<DebugOutput::result_type>();
       std::cout << ">>> Extrapolation output " << std::endl;
-      std::cout << output.debugString << std::endl;      
+      std::cout << output.debugString << std::endl;
     }
-    
   }
 
   // This test case checks that no segmentation fault appears
@@ -317,7 +317,7 @@ namespace Test {
     // Action list and abort list
     using DebugOutput = detail::DebugOutputActor;
 
-    PropagatorOptions<ActionList<MaterialInteractor,DebugOutput>> options;
+    PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 1500. * units::_mm;
 
