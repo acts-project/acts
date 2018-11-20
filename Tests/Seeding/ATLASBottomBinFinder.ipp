@@ -1,6 +1,12 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
-// THIS IS JUST A TEST TO SEE IF RESULT DIFFERENCES BETWEEN ACTS AND ATLAS ARE DUE TO HARDCODED BINFINDING
+// DEBUG: THIS REQUIRES THE BINS TO BE SET TO phi:41 z:11
 
 template <typename SpacePoint>
 std::set<size_t>

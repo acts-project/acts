@@ -1,6 +1,6 @@
 #pragma once
 
-#include <list>
+#include <vector>
 
 namespace Acts {
   template<typename SpacePoint>
@@ -14,21 +14,17 @@ namespace Acts {
     
     Seed();
     Seed
-      (const SpacePoint*&, const SpacePoint*&, const SpacePoint*&, const double&);
+      (const SpacePoint*, const SpacePoint*, const SpacePoint*, float);
     Seed(const Seed&) = default;
     Seed& operator = (const Seed&);
     virtual ~Seed();
+    const std::vector<const SpacePoint*>& sp() const {return m_spacepoints;}
+    double z()const { return m_zvertex;}
     
-    std::list<const SpacePoint*> m_spacepoints;
-    double                       m_zvertex    ;  
+  private: 
+    std::vector<const SpacePoint*> m_spacepoints;
+    float                       m_zvertex    ;
   };
-
-  /////////////////////////////////////////////////////////////////////////////////
-  // Inline methods
-  /////////////////////////////////////////////////////////////////////////////////
- 
-
-  
   
   ///////////////////////////////////////////////////////////////////////////////
   // Constructors
@@ -38,12 +34,11 @@ namespace Acts {
   Seed<SpacePoint>::Seed(){}
 
   template <typename SpacePoint>
-  Seed<SpacePoint>::Seed(const SpacePoint*& b, const SpacePoint*& m, const SpacePoint*& u, const double& vertex){
+  Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m, const SpacePoint* u, float vertex){
     m_zvertex = vertex;
     m_spacepoints.push_back(b);
     m_spacepoints.push_back(m);
     m_spacepoints.push_back(u);
-
   }
 
   template <typename SpacePoint>

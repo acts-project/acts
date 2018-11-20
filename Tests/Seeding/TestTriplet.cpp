@@ -1,3 +1,11 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 //Acts Core
 #include "Acts/Seeding/New_Seedmaker.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
@@ -14,6 +22,9 @@
 #include <algorithm>
 #include <string>
 
+// to feed triplets to the seedfinder.
+// input format is comma separated list of three x,y,z values per line
+// output format adds 1 or 0 to each line to tell if it has been found
 
 std::vector<std::vector<const SpacePoint*> > readFile(std::string filename){
 
@@ -159,7 +170,7 @@ int main(int argc,  char** argv){
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint> >(Acts::BinFinder<SpacePoint>());
   // covariance tool, sets covariances per spacepoint as required
   std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> ct = []
-    (const SpacePoint*,float,float,float s=1)
+    (const SpacePoint*,float,float,float)
     -> Acts::Vector2D
     {
       return {0,0};
@@ -179,7 +190,7 @@ int main(int argc,  char** argv){
     for(Acts::SeedingStateIterator<SpacePoint> it = state->begin(); !(it == end); ++it){ 
       sm.createSeedsForRegion(it, state); 
     }
-    for (int i=0; i< triplet.size()-1; i++){
+    for (size_t i=0; i< triplet.size()-1; i++){
       auto sp = triplet[i];
       outFile << sp->x()<< ","<< sp->y()<< ","<< sp->z()<< ","; 
     }

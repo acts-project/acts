@@ -1,3 +1,11 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include <algorithm>
 
@@ -47,7 +55,8 @@ ATLASCuts<SpacePoint>::cutPerMiddleSP(std::vector<std::pair<float,std::unique_pt
   if (seeds.size()>1){
     newSeedsVector.push_back(std::move(seeds[0]));
     size_t itLength = std::min(seeds.size(),size_t(5));
-    for(int i = 1; i < itLength; i++){
+    // don't cut first element
+    for(size_t i = 1; i < itLength; i++){
       if (seeds[i].first > 200. || seeds[i].second->sp[0]->radius() > 43.){
         newSeedsVector.push_back(std::move(seeds[i]));
       }

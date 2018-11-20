@@ -1,3 +1,11 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2018 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 #include "Acts/Seeding/New_Seedmaker.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
@@ -83,7 +91,7 @@ int main(){
 
   // covariance tool, sets covariances per spacepoint as required
   std::function<Acts::Vector2D(const SpacePoint*,float,float,float)> ct = [=]
-    (const SpacePoint* sp,float zAlign,float rAlign,float sigma=1)
+    (const SpacePoint* sp,float,float,float)
     -> Acts::Vector2D
     {
       return {sp->covr,sp->covz};
@@ -104,14 +112,13 @@ int main(){
   }
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
   for (auto& regionVec : state->outputVec){
-    for(int i =0; i< regionVec.size(); i++){
-      const Acts::InternalSeed<SpacePoint> * seed = regionVec[i].get();
-      std::array<const Acts::InternalSpacePoint<SpacePoint> *,3> isp = seed->sp;
-      const SpacePoint* sp = isp[0]->sp();
+    for(size_t i =0; i< regionVec.size(); i++){
+      const Acts::Seed<SpacePoint> * seed = regionVec[i].get();
+      const SpacePoint* sp = seed->sp()[0];
       std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-      sp = isp[1]->sp();
+      sp = seed->sp()[1];
       std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
-      sp = isp[2]->sp();
+      sp = seed->sp()[2];
       std::cout << sp->surface << " (" << sp->x() << ", " << sp->y() << ", " << sp->z() << ") ";
       std::cout << std::endl;
     }

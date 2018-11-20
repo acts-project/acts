@@ -30,25 +30,6 @@ New_Seedmaker<SpacePoint>::New_Seedmaker(const Acts::SeedmakerConfig<SpacePoint>
   m_config.pT2perRadius = std::pow(m_config.highland/m_config.pTPerHelixRadius,2);
 }
 
-
-template <typename SpacePoint>
-template <typename Seed>
-std::unique_ptr<Seed> New_Seedmaker<SpacePoint>::nextSeed(Acts::SeedmakerState<SpacePoint>* state){
-  std::unique_ptr<Seed> seed;
-  if(state->outputQueue.size()>0){
-    state->outputMutex.lock();
-    auto intSeed = std::move(state->outputQueue.front());
-    state->outputQueue.pop();
-    state->outputMutex.unlock();
-    seed = std::make_unique<Seed>(intSeed->sp[0]->sp(),
-                                  intSeed->sp[1]->sp(),
-                                  intSeed->sp[2]->sp(),
-                                  intSeed->z());
-    return seed;
-  }
-  return seed;
-}
-
 template <typename SpacePoint>
 template <typename SpacePointIterator>
 std::shared_ptr<Acts::SeedmakerState<SpacePoint> >
@@ -100,7 +81,7 @@ New_Seedmaker<SpacePoint>::initState
     Acts::Vector3D spPosition(spX,spY,spZ);
     auto isp = std::make_unique<const InternalSpacePoint<SpacePoint> >(sp, spPosition, m_config.beamPos, cov);
     // calculate r-Bin index and protect against overflow (underflow not possible)
-    int rIndex = isp->radius();
+    size_t rIndex = isp->radius();
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins){
       continue;
@@ -120,7 +101,7 @@ New_Seedmaker<SpacePoint>::initState
   state->bottomBinFinder= bottomBinFinder;
   state->topBinFinder= topBinFinder;
   std::array<size_t,2> numBins = state->binnedSP->getNBins();
-  for (int i = 0; i< numBins[0]*numBins[1]; i++){
+  for (size_t i = 0; i< numBins[0]*numBins[1]; i++){
     state->outputVec.push_back({});
   }
   return state;

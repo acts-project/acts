@@ -15,7 +15,7 @@
 
 namespace Acts {
 
-// DEBUG: THIS IS JUST A TEST TO SEE IF RESULT DIFFERENCES BETWEEN ACTS AND ATLAS ARE DUE TO HARDCODED BINFINDING
+// DEBUG: THIS REQUIRES THE BINS TO BE SET TO phi:41 z:11
 
 
 /// @class ATLASBinFinder
@@ -23,11 +23,11 @@ namespace Acts {
 /// satisfying the IBinFinder interface. Assumes the grid has 11 bins filled by 
 /// the same logic as ATLAS bins.
 template <typename SpacePoint>
-class ATLASBottomBinFinder : public IBinFinder<SpacePoint>
+class ATLASTopBinFinder : public IBinFinder<SpacePoint>
 {
 public:
-/// destructor
-  ~ATLASBottomBinFinder() = default;
+/// Virtual destructor
+  ~ATLASTopBinFinder() = default;
 
 /// Return all bins that could contain space points that can be used with the 
 /// space points in the bin with the provided indices to create seeds.
@@ -40,4 +40,5 @@ public:
 
 };
 }
-#include "Acts/Seeding/ATLASBottomBinFinder.ipp"
+
+#include "Acts/Seeding/ATLASTopBinFinder.ipp"
