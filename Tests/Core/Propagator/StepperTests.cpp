@@ -126,17 +126,12 @@ namespace Test {
         std::move(covPtr), startParams, startMom, 1.);
 
     // Create action list for surface collection
-    ActionList<StepCollector,
-               DefaultExtensionActor,
-               DenseEnvironmentExtensionActor>
-                          aList;
-    AbortList<EndOfWorld> abortList;
+    ActionList<StepCollector> aList;
+    AbortList<EndOfWorld>     abortList;
 
     // Set options for propagator
-    PropagatorOptions<ActionList<StepCollector,
-                                 DefaultExtensionActor,
-                                 DenseEnvironmentExtensionActor>,
-                      AbortList<EndOfWorld>>
+    DenseStepperPropagatorOptions<ActionList<StepCollector>,
+                                  AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
     propOpts.stopConditions = abortList;
@@ -176,11 +171,10 @@ namespace Test {
     }
 
     // Rebuild and check the choice of extension
-    ActionList<StepCollector, DefaultExtensionActor> aListDef;
+    ActionList<StepCollector> aListDef;
 
     // Set options for propagator
-    PropagatorOptions<ActionList<StepCollector, DefaultExtensionActor>,
-                      AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
         propOptsDef;
     propOptsDef.actionList     = aListDef;
     propOptsDef.stopConditions = abortList;
@@ -233,17 +227,12 @@ namespace Test {
         std::move(covPtr), startParams, startMom, 1.);
 
     // Create action list for surface collection
-    ActionList<StepCollector,
-               DefaultExtensionActor,
-               DenseEnvironmentExtensionActor>
-                          aList;
-    AbortList<EndOfWorld> abortList;
+    ActionList<StepCollector> aList;
+    AbortList<EndOfWorld>     abortList;
 
     // Set options for propagator
-    PropagatorOptions<ActionList<StepCollector,
-                                 DefaultExtensionActor,
-                                 DenseEnvironmentExtensionActor>,
-                      AbortList<EndOfWorld>>
+    DenseStepperPropagatorOptions<ActionList<StepCollector>,
+                                  AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
     propOpts.stopConditions = abortList;
@@ -292,10 +281,8 @@ namespace Test {
 
     // Rebuild and check the choice of extension
     // Set options for propagator
-    PropagatorOptions<ActionList<StepCollector,
-                                 DefaultExtensionActor,
-                                 DenseEnvironmentExtensionActor>,
-                      AbortList<EndOfWorld>>
+    DenseStepperPropagatorOptions<ActionList<StepCollector>,
+                                  AbortList<EndOfWorld>>
         propOptsDense;
     propOptsDense.actionList     = aList;
     propOptsDense.stopConditions = abortList;
@@ -348,7 +335,7 @@ namespace Test {
                Navigator>
         propB(esB, naviMat);
 
-    const auto&                       resultB = propB.propagate(sbtp, propOpts);
+    const auto& resultB = propB.propagate(sbtp, propOptsDense);
     const StepCollector::this_result& stepResultB
         = resultB.get<typename StepCollector::result_type>();
 
@@ -396,18 +383,13 @@ namespace Test {
         std::move(covPtr), startParams, startMom, 1.);
 
     // Create action list for surface collection
-    ActionList<StepCollector,
-               DefaultExtensionActor,
-               DenseEnvironmentExtensionActor>
-                          aList;
-    AbortList<EndOfWorld> abortList;
+    ActionList<StepCollector> aList;
+    AbortList<EndOfWorld>     abortList;
     abortList.get<EndOfWorld>().maxX = 3. * units::_m;
 
     // Set options for propagator
-    PropagatorOptions<ActionList<StepCollector,
-                                 DefaultExtensionActor,
-                                 DenseEnvironmentExtensionActor>,
-                      AbortList<EndOfWorld>>
+    DenseStepperPropagatorOptions<ActionList<StepCollector>,
+                                  AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
     propOpts.stopConditions = abortList;
@@ -467,10 +449,9 @@ namespace Test {
 
     // Build launcher through vacuum
     // Set options for propagator
-    ActionList<StepCollector, DefaultExtensionActor> aListDef;
+    ActionList<StepCollector> aListDef;
 
-    PropagatorOptions<ActionList<StepCollector, DefaultExtensionActor>,
-                      AbortList<EndOfWorld>>
+    PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
         propOptsDef;
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
@@ -510,16 +491,15 @@ namespace Test {
         std::move(covPtr), startParams, startMom, 1.);
 
     // Set options for propagator
-    PropagatorOptions<ActionList<StepCollector,
-                                 DefaultExtensionActor,
-                                 DenseEnvironmentExtensionActor>,
-                      AbortList<EndOfWorld>>
+    DenseStepperPropagatorOptions<ActionList<StepCollector>,
+                                  AbortList<EndOfWorld>>
         propOptsDense;
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
     propOptsDense.stopConditions     = abortList;
     propOptsDense.maxSteps           = 1e6;
     propOptsDense.maxStepSize        = 0.5 * units::_m;
+    propOptsDense.tolerance          = 1e-8;
 
     // Build stepper and propagator
     EigenStepper<ConstantBField,

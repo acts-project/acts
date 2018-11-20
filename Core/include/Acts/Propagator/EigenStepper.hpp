@@ -528,9 +528,8 @@ public:
   ///                      propagation,
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
-  template<typename propagator_state_t>
+  template <typename propagator_state_t>
   double
-  //~ step(State& state) const
   step(propagator_state_t& state) const
   {
     // Runge-Kutta integrator state
@@ -540,8 +539,8 @@ public:
 
     // First Runge-Kutta point (at current position)
     sd.B_first = getField(state.stepping, state.stepping.pos);
-    if (!state.stepping.extension.validExtensionForStep(state.stepping)
-        || !state.stepping.extension.k1(state.stepping, sd.k1, sd.B_first)) {
+    if (!state.stepping.extension.validExtensionForStep(state)
+        || !state.stepping.extension.k1(state, sd.k1, sd.B_first)) {
       return 0.;
     }
 
@@ -556,21 +555,25 @@ public:
       half_h = h * 0.5;
 
       // Second Runge-Kutta point
-      const Vector3D pos1 = state.stepping.pos + half_h * state.stepping.dir + h2 * 0.125 * sd.k1;
-      sd.B_middle         = getField(state.stepping, pos1);
-      if (!state.stepping.extension.k2(state.stepping, sd.k2, sd.B_middle, half_h, sd.k1)) {
+      const Vector3D pos1 = state.stepping.pos + half_h * state.stepping.dir
+          + h2 * 0.125 * sd.k1;
+      sd.B_middle = getField(state.stepping, pos1);
+      if (!state.stepping.extension.k2(
+              state, sd.k2, sd.B_middle, half_h, sd.k1)) {
         return false;
       }
 
       // Third Runge-Kutta point
-      if (!state.stepping.extension.k3(state.stepping, sd.k3, sd.B_middle, half_h, sd.k2)) {
+      if (!state.stepping.extension.k3(
+              state, sd.k3, sd.B_middle, half_h, sd.k2)) {
         return false;
       }
 
       // Last Runge-Kutta point
-      const Vector3D pos2 = state.stepping.pos + h * state.stepping.dir + h2 * 0.5 * sd.k3;
-      sd.B_last           = getField(state.stepping, pos2);
-      if (!state.stepping.extension.k4(state.stepping, sd.k4, sd.B_last, h, sd.k3)) {
+      const Vector3D pos2
+          = state.stepping.pos + h * state.stepping.dir + h2 * 0.5 * sd.k3;
+      sd.B_last = getField(state.stepping, pos2);
+      if (!state.stepping.extension.k4(state, sd.k4, sd.B_last, h, sd.k3)) {
         return false;
       }
 
@@ -583,16 +586,16 @@ public:
     // Select and adjust the appropriate Runge-Kutta step size as given
     // ATL-SOFT-PUB-2009-001
     while (!tryRungeKuttaStep(state.stepping.stepSize)
-           || error_estimate > state.stepping.tolerance) {
+           || error_estimate > state.options.tolerance) {
       state.stepping.stepSize = state.stepping.stepSize
-          * std::min(std::max(
-                         0.25,
-                         std::pow((state.stepping.tolerance / std::abs(error_estimate)),
-                                  0.25)),
+          * std::min(std::max(0.25,
+                              std::pow((state.options.tolerance
+                                        / std::abs(error_estimate)),
+                                       0.25)),
                      4.);
       // If step size becomes too small the particle remains at the initial
       // place
-      if (state.stepping.stepSize < state.stepping.stepSizeCutOff) {
+      if (state.stepping.stepSize < state.options.stepSizeCutOff) {
         return 0.;  // Not moving due to too low momentum needs an aborter
       }
     }
@@ -604,20 +607,21 @@ public:
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D;
-      if (!state.stepping.extension.finalize(state.stepping, h, sd, D)) {
+      if (!state.stepping.extension.finalize(state, h, sd, D)) {
         return 0.;
       }
 
       // for moment, only update the transport part
       state.stepping.jacTransport = D * state.stepping.jacTransport;
     } else {
-      if (!state.stepping.extension.finalize(state.stepping, h)) {
+      if (!state.stepping.extension.finalize(state, h)) {
         return 0.;
       }
     }
 
     // Update the track parameters according to the equations of motion
-    state.stepping.pos += h * state.stepping.dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);
+    state.stepping.pos
+        += h * state.stepping.dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);
     state.stepping.dir += h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
     state.stepping.dir /= state.stepping.dir.norm();
     state.stepping.derivative.template head<3>()     = state.stepping.dir;
@@ -630,38 +634,5 @@ public:
 private:
   /// Magnetic field inside of the detector
   BField m_bField;
-};
-
-/// @brief Actor as configurator of the Stepper for working with the default
-/// EigenStepper. It sets up steering properties by the user.
-struct DefaultExtensionActor
-{
-  // Configurations for Stepper
-  /// Tolerance for the error of the integration
-  double tolerance = 1e-6;
-  /// Cut-off value for the step size
-  double stepSizeCutOff = 0.;
-
-  /// @brief Main call operator for setting up stepper properties
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param [in, out] state State of the propagator
-  template <typename propagator_state_t>
-  void
-  operator()(propagator_state_t& state) const
-  {
-    // Initialize all parameters
-    if (state.stepping.pathAccumulated == 0.) {
-      // Let the stepper track the volume and particles mass
-      state.stepping.volume = &state.navigation.currentVolume;
-      state.stepping.mass   = state.options.mass;
-      state.stepping.pdg    = state.options.absPdgCode;
-
-      // Initialize user defined parameters
-      state.stepping.tolerance      = tolerance;
-      state.stepping.stepSizeCutOff = stepSizeCutOff;
-    }
-  }
 };
 }  // namespace Acts

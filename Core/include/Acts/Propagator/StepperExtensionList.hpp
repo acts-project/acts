@@ -45,17 +45,17 @@ public:
   /// @brief Evaluation function to set valid extensions for an upcoming
   /// integration step
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
-  /// @param [in] state State of the stepper
-  template <typename stepper_state_t>
+  /// @tparam propagator_state_t Type of the state of the propagator
+  /// @param [in] state State of the propagator
+  template <typename propagator_state_t>
   bool
-  validExtensionForStep(const stepper_state_t& state)
+  validExtensionForStep(const propagator_state_t& state)
   {
     std::array<int, nExtensions> bids;
     // Ask all extensions for a boolean statement of their validity
     impl::bid(tuple(), state, bids);
     // Post-process the vector in an auctioneer
-    validExtensions = state.auctioneer(std::move(bids));
+    validExtensions = state.stepping.auctioneer(std::move(bids));
 
     return (std::find(validExtensions.begin(), validExtensions.end(), true)
             != validExtensions.end());
@@ -65,9 +65,9 @@ public:
   /// all arguments and extensions, test their validity for the evaluation and
   /// passes them forward for evaluation and returns a boolean as indicator if
   /// the evaluation is valid.
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  k1(const stepper_state_t& state, Vector3D& knew, const Vector3D& bField)
+  k1(const propagator_state_t& state, Vector3D& knew, const Vector3D& bField)
   {
     return impl::k(tuple(), state, knew, bField, validExtensions);
   }
@@ -75,13 +75,13 @@ public:
   /// @brief This functions broadcasts the call for evaluating k2. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  k2(const stepper_state_t& state,
-     Vector3D&              knew,
-     const Vector3D&        bField,
-     const double           h,
-     const Vector3D&        kprev)
+  k2(const propagator_state_t& state,
+     Vector3D&                 knew,
+     const Vector3D&           bField,
+     const double              h,
+     const Vector3D&           kprev)
   {
     return impl::k(tuple(), state, knew, bField, validExtensions, 1, h, kprev);
   }
@@ -89,13 +89,13 @@ public:
   /// @brief This functions broadcasts the call for evaluating k3. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  k3(const stepper_state_t& state,
-     Vector3D&              knew,
-     const Vector3D&        bField,
-     const double           h,
-     const Vector3D&        kprev)
+  k3(const propagator_state_t& state,
+     Vector3D&                 knew,
+     const Vector3D&           bField,
+     const double              h,
+     const Vector3D&           kprev)
   {
     return impl::k(tuple(), state, knew, bField, validExtensions, 2, h, kprev);
   }
@@ -103,13 +103,13 @@ public:
   /// @brief This functions broadcasts the call for evaluating k4. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  k4(const stepper_state_t& state,
-     Vector3D&              knew,
-     const Vector3D&        bField,
-     const double           h,
-     const Vector3D&        kprev)
+  k4(const propagator_state_t& state,
+     Vector3D&                 knew,
+     const Vector3D&           bField,
+     const double              h,
+     const Vector3D&           kprev)
   {
     return impl::k(tuple(), state, knew, bField, validExtensions, 3, h, kprev);
   }
@@ -117,9 +117,9 @@ public:
   /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
-  template <typename stepper_state_t, typename stepper_data_t>
+  template <typename propagator_state_t, typename stepper_data_t>
   bool
-  finalize(stepper_state_t&      state,
+  finalize(propagator_state_t&   state,
            const double          h,
            const stepper_data_t& data,
            ActsMatrixD<7, 7>& D)
@@ -130,9 +130,9 @@ public:
   /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  finalize(stepper_state_t& state, const double h)
+  finalize(propagator_state_t& state, const double h)
   {
     return impl::finalize(tuple(), state, h, validExtensions);
   }

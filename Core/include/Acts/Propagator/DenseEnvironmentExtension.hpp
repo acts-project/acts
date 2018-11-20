@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
-#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {
 
@@ -21,7 +21,6 @@ namespace Acts {
 /// propagation is in a TrackingVolume with attached material.
 struct DenseEnvironmentExtension
 {
-
   /// Momentum at a certain point
   double currentMomentum = 0.;
   /// Particles momentum at k1
@@ -41,15 +40,6 @@ struct DenseEnvironmentExtension
   /// Derivative dEds at the initial point
   double g = 0.;
 
-  /// Toggle between mean and mode evaluation of energy loss
-  bool meanEnergyLoss = true;
-
-  /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
-  bool includeGgradient = true;
-
-  /// Cut-off value for the momentum in SI units
-  double momentumCutOff = 0.;
-
   /// Local store for conversion of momentum from SI to natural units
   const double conv = units::SI2Nat<units::MOMENTUM>(1);
 
@@ -62,20 +52,22 @@ struct DenseEnvironmentExtension
 
   /// @brief Control function if the step evaluation would be valid
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
-  /// @param [in] state State of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
+  /// @param [in] state State of the propagator
   /// @return Boolean flag if the step would be valid
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   int
-  bid(const stepper_state_t& state) const
+  bid(const propagator_state_t& state) const
   {
     // Check for valid particle properties
-    if (state.q == 0. || state.mass == 0. || state.p < conv * momentumCutOff) {
+    if (state.stepping.q == 0. || state.options.mass == 0.
+        || state.stepping.p < conv * state.options.momentumCutOff) {
       return 0;
     }
 
     // Check existence of a volume with material
-    if (!state.volume || !(*state.volume) || !(*state.volume)->material()) {
+    if (!state.navigation.currentVolume
+        || !state.navigation.currentVolume->material()) {
       return 0;
     }
     return 2;
@@ -84,42 +76,42 @@ struct DenseEnvironmentExtension
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up member parameters, too.
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
-  /// @param [in] state State of the stepper
+  /// @tparam stepper_state_t Type of the state of the propagator
+  /// @param [in] state State of the propagator
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
   /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   /// @return Boolean flag if the calculation is valid
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  k(const stepper_state_t& state,
-    Vector3D&              knew,
-    const Vector3D&        bField,
-    const int              i     = 0,
-    const double           h     = 0.,
-    const Vector3D&        kprev = Vector3D())
+  k(const propagator_state_t& state,
+    Vector3D&                 knew,
+    const Vector3D&           bField,
+    const int                 i     = 0,
+    const double              h     = 0.,
+    const Vector3D&           kprev = Vector3D())
   {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
-      massSI          = units::Nat2SI<units::MASS>(state.mass);
-      material        = (*state.volume)->material().get();
-      initialMomentum = units::Nat2SI<units::MOMENTUM>(state.p);
+      massSI          = units::Nat2SI<units::MASS>(state.options.mass);
+      material        = state.navigation.currentVolume->material().get();
+      initialMomentum = units::Nat2SI<units::MOMENTUM>(state.stepping.p);
       currentMomentum = initialMomentum;
-      qop[0]          = state.q / initialMomentum;
+      qop[0]          = state.stepping.q / initialMomentum;
       initializeEnergyLoss(state);
       // Evaluate k
-      knew = qop[0] * state.dir.cross(bField);
+      knew = qop[0] * state.stepping.dir.cross(bField);
     } else {
       // Update parameters and check for momentum condition
-      updateEnergyLoss(h, state, i);
-      if (currentMomentum < momentumCutOff) {
+      updateEnergyLoss(h, state.stepping, i);
+      if (currentMomentum < state.options.momentumCutOff) {
         return false;
       }
       // Evaluate k
-      knew = qop[i] * (state.dir + h * kprev).cross(bField);
+      knew = qop[i] * (state.stepping.dir + h * kprev).cross(bField);
     }
     return true;
   }
@@ -129,31 +121,33 @@ struct DenseEnvironmentExtension
   /// of the energy loss and the therewith constrained to keep the momentum
   /// after the step in reasonable values.
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
-  /// @param [in] state State of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
+  /// @param [in] state State of the propagator
   /// @param [in] h Step size
   /// @return Boolean flag if the calculation is valid
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  finalize(stepper_state_t& state, const double h) const
+  finalize(propagator_state_t& state, const double h) const
   {
     // Evaluate the new momentum
-    double newMomentum = state.p
+    double newMomentum = state.stepping.p
         + conv * (h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]);
 
     // Break propagation if momentum becomes below cut-off
-    if (units::Nat2SI<units::MOMENTUM>(newMomentum) < momentumCutOff) {
+    if (units::Nat2SI<units::MOMENTUM>(newMomentum)
+        < state.options.momentumCutOff) {
       return false;
     }
 
     // Add derivative dlambda/ds = Lambda''
-    state.derivative(6)
-        = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum)
+    state.stepping.derivative(6)
+        = -std::sqrt(state.options.mass * state.options.mass
+                     + newMomentum * newMomentum)
         * units::SI2Nat<units::ENERGY>(g)
         / (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
-    state.p = newMomentum;
+    state.stepping.p = newMomentum;
     return true;
   }
 
@@ -164,21 +158,22 @@ struct DenseEnvironmentExtension
   /// after the step in reasonable values and the evaluation of the transport
   /// matrix.
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_data_t Type of the data collected in the step
-  /// @param [in] state State of the stepper
+  /// @param [in] state State of the propagator
   /// @param [in] h Step size
   /// @param [in] data Data of B-field and k_i's
   /// @param [out] D Transport matrix
   /// @return Boolean flag if the calculation is valid
-  template <typename stepper_state_t, typename stepper_data_t>
+  template <typename propagator_state_t, typename stepper_data_t>
   bool
-  finalize(stepper_state_t&      state,
+  finalize(propagator_state_t&   state,
            const double          h,
            const stepper_data_t& data,
            ActsMatrixD<7, 7>& D) const
   {
-    return finalize(state, h) && transportMatrix(state.dir, h, data, D);
+    return finalize(state, h)
+        && transportMatrix(state.stepping.dir, h, data, D);
   }
 
 private:
@@ -295,9 +290,14 @@ private:
   /// @param [in] momentum Initial momentum of the particle
   /// @param [in] energy Initial energy of the particle
   /// @param [in] pdg PDG code of the particle
+  /// @param [in] meanEnergyLoss Boolean indicator if mean or mode of the energy
+  /// loss will be evaluated
   /// @return Infinitesimal energy loss
   double
-  dEds(const double momentum, const double energy, const int pdg) const
+  dEds(const double momentum,
+       const double energy,
+       const int    pdg,
+       const bool   meanEnergyLoss) const
   {
     // Easy exit if material is invalid
     if (material->X0() == 0 || material->Z() == 0) {
@@ -334,10 +334,12 @@ private:
   ///
   /// @param [in] energy Initial energy of the particle
   /// @param [in] pdg PDG code of the particle
+  /// @param [in] meanEnergyLoss Boolean indicator if mean or mode of the energy
+  /// loss will be evaluated
   /// @return Derivative evaluated at the point defined by the
   /// function parameters
   double
-  dgdqop(const double energy, const int pdg) const
+  dgdqop(const double energy, const int pdg, const bool meanEnergyLoss) const
   {
     // Fast exit if material is invalid
     if (material->X0() == 0. || material->Z() == 0.
@@ -365,25 +367,31 @@ private:
   /// @brief Initializer of all parameters related to a RKN4 step with energy
   /// loss of a particle in material
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @param [in] state Deliverer of configurations
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   void
-  initializeEnergyLoss(const stepper_state_t& state)
+  initializeEnergyLoss(const propagator_state_t& state)
   {
     double E = std::sqrt(initialMomentum * initialMomentum * units::_c2
                          + massSI * massSI * units::_c4);
     // Use the same energy loss throughout the step.
-    g = dEds(initialMomentum, E, state.pdg);
+    g = dEds(initialMomentum,
+             E,
+             state.options.absPdgCode,
+             state.options.meanEnergyLoss);
     // Change of the momentum per path length
     // dPds = dPdE * dEds
     dPds[0] = g * E / (initialMomentum * units::_c2);
-    if (state.covTransport) {
+    if (state.stepping.covTransport) {
       // Calculate the change of the energy loss per path length and
       // inverse momentum
-      if (includeGgradient) {
-        dgdqopValue = dgdqop(E,
-                             state.pdg);  // Use this value throughout the step.
+      if (state.options.includeGgradient) {
+        dgdqopValue = dgdqop(
+            E,
+            state.options.absPdgCode,
+            state.options
+                .meanEnergyLoss);  // Use this value throughout the step.
       }
       // Calculate term for later error propagation
       dLdl[0] = (-qop[0] * qop[0] * g * E
@@ -425,43 +433,10 @@ private:
   }
 };
 
-/// @brief Actor as configurator of the Stepper for working with the
-/// DenseEnvironmentExtension. It sets up steering properties by the user.
-struct DenseEnvironmentExtensionActor
-{
-  // Configurations for Stepper
-  /// Toggle between mean and mode evaluation of energy loss
-  bool meanEnergyLoss = true;
-  /// Boolean flag for inclusion of d(dEds)d(q/p) into energy loss
-  bool includeGgradient = true;
-  /// Cut-off value for the momentum in SI units
-  double momentumCutOff = 0.;
-
-  /// @brief Main call operator for setting up stepper properties
-  ///
-  /// @tparam propagator_state_t Type of the propagator state
-  ///
-  /// @param [in, out] state State of the propagator
-  template <typename propagator_state_t>
-  void
-  operator()(propagator_state_t& state) const
-  {
-    // Initialize all parameters
-    if (state.stepping.pathAccumulated == 0.) {
-      // Initialize user defined parameters
-      DenseEnvironmentExtension& ext
-          = state.stepping.extension
-                .template get<Acts::DenseEnvironmentExtension>();
-      ext.momentumCutOff   = momentumCutOff;
-      ext.meanEnergyLoss   = meanEnergyLoss;
-      ext.includeGgradient = includeGgradient;
-    }
-  }
-};
-
 template <typename action_list_t  = ActionList<>,
           typename aborter_list_t = AbortList<>>
-struct DenseStepperPropagatorOptions : public PropagatorOptions<action_list_t, aborter_list_t>
+struct DenseStepperPropagatorOptions
+    : public PropagatorOptions<action_list_t, aborter_list_t>
 {
   /// Toggle between mean and mode evaluation of energy loss
   bool meanEnergyLoss = true;

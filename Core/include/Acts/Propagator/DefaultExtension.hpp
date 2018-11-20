@@ -27,12 +27,11 @@ struct DefaultExtension
 
   /// @brief Control function if the step evaluation would be valid
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
-  /// @param [in] state State of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @return Boolean flag if the step would be valid
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   int
-  bid(const stepper_state_t& /*unused*/) const
+  bid(const propagator_state_t& /*unused*/) const
   {
     return 1;
   }
@@ -40,32 +39,32 @@ struct DefaultExtension
   /// @brief Evaluater of the k_i's of the RKN4. For the case of i = 0 this
   /// step sets up qop, too.
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
-  /// @param [in] state State of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
+  /// @param [in] state State of the propagator
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
   /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   /// @return Boolean flag if the calculation is valid
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  k(const stepper_state_t& state,
-    Vector3D&              knew,
-    const Vector3D&        bField,
-    const int              i     = 0,
-    const double           h     = 0.,
-    const Vector3D&        kprev = Vector3D())
+  k(const propagator_state_t& state,
+    Vector3D&                 knew,
+    const Vector3D&           bField,
+    const int                 i     = 0,
+    const double              h     = 0.,
+    const Vector3D&           kprev = Vector3D())
   {
     // First step does not rely on previous data
     if (i == 0) {
       // Store qop, it is always used if valid
-      qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
+      qop = state.stepping.q / units::Nat2SI<units::MOMENTUM>(state.stepping.p);
 
       // Evaluate the k_i
-      knew = qop * state.dir.cross(bField);
+      knew = qop * state.stepping.dir.cross(bField);
     } else {
-      knew = qop * (state.dir + h * kprev).cross(bField);
+      knew = qop * (state.stepping.dir + h * kprev).cross(bField);
     }
     return true;
   }
@@ -74,11 +73,11 @@ struct DefaultExtension
   /// error of the step. Since the textbook does not deliver further vetos,
   /// this is a dummy function.
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @return Boolean flag if the calculation is valid
-  template <typename stepper_state_t>
+  template <typename propagator_state_t>
   bool
-  finalize(stepper_state_t& /*unused*/, const double /*unused*/) const
+  finalize(propagator_state_t& /*unused*/, const double /*unused*/) const
   {
     return true;
   }
@@ -87,21 +86,21 @@ struct DefaultExtension
   /// error of the step. Since the textbook does not deliver further vetos,
   /// this is just for the evaluation of the transport matrix.
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_data_t Type of the data collected in the step
-  /// @param [in] state State of the stepper
+  /// @param [in] state State of the propagator
   /// @param [in] h Step size
   /// @param [in] data Data of B-field and k_i's
   /// @param [out] D Transport matrix
   /// @return Boolean flag if the calculation is valid
-  template <typename stepper_state_t, typename stepper_data_t>
+  template <typename propagator_state_t, typename stepper_data_t>
   bool
-  finalize(stepper_state_t&      state,
+  finalize(propagator_state_t&   state,
            const double          h,
            const stepper_data_t& data,
            ActsMatrixD<7, 7>& D) const
   {
-    return transportMatrix(state.dir, h, data, D);
+    return transportMatrix(state.stepping.dir, h, data, D);
   }
 
 private:
