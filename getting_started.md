@@ -33,7 +33,7 @@ components:
 
 Compatible versions of all dependencies are provided by **LCG releases**.
 The current recommended release for building Acts is the
-[LCG91 Release](http://lcginfo.cern.ch/release/91). This release is also used in the
+[LCG94 Release](http://lcginfo.cern.ch/release/94). This release is also used in the
 continous integration (CI) system to test the software. Setup scripts are provided
 in the repository that can be used to setup this release, and a few others, on
 lxplus machines at CERN (see [below](#installation)).
@@ -51,7 +51,7 @@ git clone https://gitlab.cern.ch/acts/acts-core.git <ACTS_DIR>
 You can then `cd <ACTS_DIR>` continue building Acts:
 
 ```bash
-source CI/setup_lcg91.sh
+source CI/setup_lcg94.sh
 mkdir build && cd build
 cmake ..
 cmake --build . -- install
@@ -66,23 +66,24 @@ and this nice [list of general cmake options](https://cmake.org/Wiki/CMake_Usefu
 Important options relevant for the Acts project are given below. They are set
 by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 
-| option                          | default | description                                             |
-|---------------------------------|---------|---------------------------------------------------------|
-| ACTS_BUILD_LEGACY               | ON      | build Legacy package                                    |
-| ACTS_BUILD_DOC                  | OFF     | build documentation                                     |
-| ACTS_BUILD_EXAMPLES             | OFF     | build examples                                          |
-| ACTS_BUILD_TESTS                | ON      | build unit tests                                        |
-| ACTS_BUILD_INTEGRATION_TESTS    | OFF     | build integration tests                                 |
-| ACTS_BUILD_DIGITIZATION_PLUGIN  | OFF     | build geometric digitization plugin                     |
-| ACTS_BUILD_DD4HEP_PLUGIN        | OFF     | build DD4HEP plugin for DD4hep geometry                 |
-| ACTS_BUILD_TGEO_PLUGIN          | OFF     | build TGeo plugin for ROOT geometry                     |
-| ACTS_BUILD_JSON_PLUGIN          | OFF     | build Json plugin for Json geometry input/output        |
-| ACTS_BUILD_MATERIAL_PLUGIN      | OFF     | build Material plugin                                   |
-| CMAKE_INSTALL_PREFIX            |         | target installation directory                           |
-| CMAKE_PREFIX_PATH               |         | search path for external packages                       |
-| CMAKE_CXX_COMPILER              |         | set C++ compiler (e.g. g++ or clang++)                  |
-| CMAKE_BUILD_TYPE                |         | build type (e.g. Debug, Release) affects compiler flags |
-| DD4hep_DIR                      |         | path to the DD4hep installation                         |
+| option                           | default | description                                             |
+|----------------------------------|---------|---------------------------------------------------------|
+| ACTS_BUILD_LEGACY                | ON      | build Legacy package                                    |
+| ACTS_BUILD_DOC                   | OFF     | build documentation                                     |
+| ACTS_BUILD_EXAMPLES              | OFF     | build examples                                          |
+| ACTS_BUILD_TESTS                 | ON      | build unit tests                                        |
+| ACTS_BUILD_INTEGRATION_TESTS     | OFF     | build integration tests                                 |
+| ACTS_BUILD_DIGITIZATION_PLUGIN   | OFF     | build geometric digitization plugin                     |
+| ACTS_BUILD_DD4HEP_PLUGIN         | OFF     | build DD4HEP plugin for DD4hep geometry                 |
+| ACTS_BUILD_TGEO_PLUGIN           | OFF     | build TGeo plugin for ROOT geometry                     |
+| ACTS_BUILD_JSON_PLUGIN           | OFF     | build Json plugin for Json geometry input/output        |
+| ACTS_BUILD_MATERIAL_PLUGIN       | OFF     | build Material plugin                                   |
+| ACTS_BUILD_IDENTIFICATION_PLUGIN | OFF     | build Identification plugin                             |
+| CMAKE_INSTALL_PREFIX             |         | target installation directory                           |
+| CMAKE_PREFIX_PATH                |         | search path for external packages                       |
+| CMAKE_CXX_COMPILER               |         | set C++ compiler (e.g. g++ or clang++)                  |
+| CMAKE_BUILD_TYPE                 |         | build type (e.g. Debug, Release) affects compiler flags |
+| DD4hep_DIR                       |         | path to the DD4hep installation                         |
 
 ## <a name="building-acts">Building Acts</a>
 
@@ -113,7 +114,7 @@ all plugins using the same dependency versions as in the continous integration
 system.
 
 ```bash
-source CI/setup_lcg91.sh # example, you can use any of the provided scripts.
+source CI/setup_lcg94.sh # example, you can use any of the provided scripts.
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
       -DACTS_BUILD_DD4HEP_PLUGIN=ON \
