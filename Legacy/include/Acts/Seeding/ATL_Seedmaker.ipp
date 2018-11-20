@@ -447,11 +447,11 @@ Acts::Legacy::ATL_Seedmaker<SpacePoint>::buildFrameWork()
     m_Zo = new float[m_maxsizeSP];
   }
   if (!m_OneSeeds) {
-    m_OneSeeds = new Acts::Seeding::InternalSeed<SpacePoint>[m_maxOneSize];
+    m_OneSeeds = new Acts::Legacy::InternalSeed<SpacePoint>[m_maxOneSize];
   }
 
   if (!m_seedOutput) {
-    m_seedOutput = new Acts::Seeding::Seed<SpacePoint>();
+    m_seedOutput = new Acts::Legacy::Seed<SpacePoint>();
   }
 
   i_seed  = l_seeds.begin();
