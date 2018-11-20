@@ -26,7 +26,7 @@ using RecordedMaterialProperties = std::pair<MaterialProperties, Vector3D>;
 ///
 /// The class RecordedMaterialTrack holds a collection of recorded material
 /// properties along a track through the detector, the three dimensional
-/// global starting position and start mommentum.
+/// global starting position and start momentum.
 ///
 ///
 /// @note the RecordedMaterialProperties of the track are assumed

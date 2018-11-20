@@ -75,7 +75,7 @@ public:
 
   /// Update pre factor
   ///
-  /// @param pDir is the navigaiton direction through the surface
+  /// @param pDir is the navigation direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
   double
   factor(NavigationDirection pDir, MaterialUpdateStage mStage) const;
@@ -84,27 +84,27 @@ public:
   /// - from local coordinate on the surface
   ///
   /// @param lp is the local position used for the (eventual) lookup
-  /// @param pDir is the navigaiton direction through the surface
+  /// @param pDir is the navigation direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialProperties
-  virtual MaterialProperties
+  MaterialProperties
   materialProperties(const Vector2D&     lp,
                      NavigationDirection pDir,
-                     MaterialUpdateStage mStage) const final;
+                     MaterialUpdateStage mStage) const;
 
   /// Return method for full material description of the Surface
   /// - from the global coordinates
   ///
   /// @param gp is the global position used for the (eventual) lookup
-  /// @param pDir is the navigaiton direction through the surface
+  /// @param pDir is the navigation direction through the surface
   /// @param mStage is the material update directive (onapproach, full, onleave)
   ///
   /// @return MaterialProperties
-  virtual MaterialProperties
+  MaterialProperties
   materialProperties(const Vector3D&     gp,
                      NavigationDirection pDir,
-                     MaterialUpdateStage mStage) const final;
+                     MaterialUpdateStage mStage) const;
 
   /// @brief output stream operator
   ///

@@ -57,7 +57,7 @@ struct NavigationOptions
   /// Constructor
   ///
   /// @param nDir Navigation direction prescription
-  /// @param bcheck Boundary check for the navigaiton action
+  /// @param bcheck Boundary check for the navigation action
   /// @param sobject Start object to check against
   /// @param eobject End object to check against
   /// @param maxStepLength Maximal step length to check against
@@ -642,7 +642,7 @@ struct Navigator
     // if you came until here, and you might not have boundaries
     // per definition, this is free of the self call
     if (state.navigation.navBoundaries.empty()) {
-      // create the navigaiton options - we could give the start surface here
+      // create the navigation options - we could give the start surface here
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       // get the navigation boundaries
       state.navigation.navBoundaries
@@ -736,7 +736,7 @@ struct Navigator
         debugLog(state, [&] {
           return std::string("No layers can be reached in the new volume.");
         });
-        // create the navigaiton options - we could give the start surface here
+        // create the navigation options - we could give the start surface here
         NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
         navOpts.startObject = boundarySurface;  // exclude the current boundary
         // re-evaluate the boundary surfaces
@@ -816,7 +816,7 @@ struct Navigator
     // we do not have layers yet, get the candidates
     auto startLayer = start ? state.navigation.startLayer : nullptr;
     auto endLayer   = nullptr;  // state.navigation.targetLayer;
-    // create the navigaiton options - and get the compatible layers
+    // create the navigation options - and get the compatible layers
     NavigationOptions<Layer> navOpts(state.stepping.navDir,
                                      true,
                                      resolveSensitive,

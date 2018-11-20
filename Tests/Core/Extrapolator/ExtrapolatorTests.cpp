@@ -27,6 +27,7 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -57,8 +58,8 @@ namespace Test {
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
-  const int ntests    = 10;
-  bool      debugMode = false;
+  const int ntests    = 1;
+  bool      debugMode = true;
 
   // A plane selector for the SurfaceCollector
   struct PlaneSelector
@@ -246,16 +247,25 @@ namespace Test {
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
-    PropagatorOptions<ActionList<MaterialInteractor>> options;
+    using DebugOutput = detail::DebugOutputActor;
 
+    PropagatorOptions<ActionList<MaterialInteractor,DebugOutput>> options;
+    options.debug       = debugMode;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
-    const auto& result = epropagator.propagate(start, options).endParameters;
-    if (result) {
+    const auto& result = epropagator.propagate(start, options);
+    if (result.endParameters) {
       // test that you actually lost some energy
-      BOOST_TEST(result->momentum().norm() < start.momentum().norm());
+      BOOST_TEST(result.endParameters->momentum().norm() < start.momentum().norm());
     }
+    
+    if (debugMode){
+      const auto& output = result.get<DebugOutput::result_type>();
+      std::cout << ">>> Extrapolation output " << std::endl;
+      std::cout << output.debugString << std::endl;      
+    }
+    
   }
 
   // This test case checks that no segmentation fault appears
@@ -305,13 +315,13 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
+    using DebugOutput = detail::DebugOutputActor;
 
-    PropagatorOptions<ActionList<MaterialInteractor>> options;
+    PropagatorOptions<ActionList<MaterialInteractor,DebugOutput>> options;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 1500. * units::_mm;
 
     const auto& status = epropagator.propagate(start, options);
-
     // this test assumes state.options.loopFraction = 0.5
     // maximum momentum allowed
     double pmax = units::SI2Nat<units::MOMENTUM>(

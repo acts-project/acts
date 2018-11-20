@@ -44,12 +44,12 @@ public:
 
   /// Copy Constructor
   ///
-  /// @param mc is the elment fraction vector
+  /// @param mc is the element fraction vector
   MaterialComposition(const MaterialComposition& mc) = default;
 
   /// Copy Move constructor
   ///
-  /// @param mc is the elment fraction vector
+  /// @param mc is the element fraction vector
   MaterialComposition(MaterialComposition&& mc) = default;
 
   /// Assignment operator

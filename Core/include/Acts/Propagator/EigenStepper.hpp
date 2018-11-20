@@ -141,7 +141,7 @@ public:
     ///
     /// @param uposition the updated position
     /// @param udirection the updated direction
-    /// @param p the updated momentum value
+    /// @param up the updated momentum value
     void
     update(const Vector3D& uposition, const Vector3D& udirection, double up)
     {

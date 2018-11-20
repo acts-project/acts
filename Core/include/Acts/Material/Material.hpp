@@ -67,10 +67,12 @@ public:
            float               iZ,
            float               iRho,
            MaterialComposition imc = {})
-    : m_store({iX0, iL0, iA, iZ, iRho}), m_composition(std::move(imc))
+    : m_vacuum(false)
+    , m_store({iX0, iL0, iA, iZ, iRho, 0.})
+    , m_composition(std::move(imc))
   {
     float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
-    m_store.push_back(zOaTr);
+    m_store[5]  = zOaTr;
   }
 
   /// @brief Copy Constructor
@@ -112,19 +114,15 @@ public:
   bool
   operator!=(const Material& mat) const;
 
-  /// @brief Boolean operator to check if this is
-  /// vacuum has 0 zero size and will indicate false
-  operator bool() const { return !m_store.empty(); }
+  /// @brief Boolean operator to check if this is vacuum
+  operator bool() const { return (!m_vacuum); }
 
   /// @brief Access to X0
   /// if it's vacuum, infinity
   float
   X0() const
   {
-    if (!m_store.empty()) {
-      return m_store[matX0];
-    }
-    return std::numeric_limits<float>::infinity();
+    return m_store[matX0];
   }
 
   /// @brief Access to L0
@@ -132,50 +130,34 @@ public:
   float
   L0() const
   {
-    if (!m_store.empty()) {
-      return m_store[matL0];
-    }
-    return std::numeric_limits<float>::infinity();
+    return m_store[matL0];
   }
 
   /// @brief Access to A
   float
   A() const
   {
-    if (!m_store.empty()) {
-      return m_store[matA];
-    }
-    return 0.;
+    return m_store[matA];
   }
 
   /// @brief Access to Z
   float
   Z() const
   {
-    if (!m_store.empty()) {
-      return m_store[matZ];
-    }
-    return 0.;
+    return m_store[matZ];
   }
   /// @brief Access to rho
   float
   rho() const
   {
-    if (!m_store.empty()) {
-      return m_store[matrho];
-    } else {
-      return 0.;
-    }
+    return m_store[matrho];
   }
 
   ///  @brief Access to z/A*tho
   float
   zOverAtimesRho() const
   {
-    if (m_store.size() > 4) {
-      return m_store[matZ_AR];
-    }
-    return 0.;
+    return m_store[matZ_AR];
   }
 
   /// spit out as a string
@@ -185,15 +167,27 @@ public:
     std::ostringstream sout;
     sout << std::setiosflags(std::ios::fixed) << std::setprecision(4);
     sout << " | ";
-    for (auto& mat : m_store) {
-      sout << mat << " | ";
+    if (m_vacuum) {
+      sout << " vacuum | ";
+    } else {
+      for (auto& mat : m_store) {
+        sout << mat << " | ";
+      }
     }
     return sout.str();
   }
 
 private:
+  /// define it is vacuum or not
+  bool m_vacuum = true;
+
   /// standard x0, l0, A, Z, rho description
-  std::vector<float> m_store = {};
+  std::array<float, 6> m_store = {std::numeric_limits<float>::infinity(),
+                                  std::numeric_limits<float>::infinity(),
+                                  0.,
+                                  0.,
+                                  0.,
+                                  0.};
 
   /// optional composition parameter
   MaterialComposition m_composition = MaterialComposition();

@@ -116,7 +116,7 @@ using Vector3D         = Eigen::Matrix<double, 3, 1>;
 using Vector2D         = Eigen::Matrix<double, 2, 1>;
 using RotationMatrix3D = Eigen::Matrix<double, 3, 3>;
 
-/// axis defintion elment for code readability
+/// axis defintion element for code readability
 /// - please use these for access to the member variables if needed, e.g.
 ///     double z  = position[Acts::eZ];
 ///     double px = momentum[Acts::ePX];
