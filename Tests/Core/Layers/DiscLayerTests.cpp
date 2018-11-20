@@ -56,23 +56,19 @@ namespace Test {
           Surface::makeShared<SurfaceStub>()};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
-      auto pDiscLayerFromSurfaces
+      auto                pDiscLayerFromSurfaces
           = DiscLayer::create(pTransform, pDisc, nullptr);
       BOOST_TEST(pDiscLayerFromSurfaces->layerType() == LayerType::passive);
       // construct with thickness:
-      auto pDiscLayerWithThickness = DiscLayer::create(
-          pTransform, pDisc, nullptr, thickness);
+      auto pDiscLayerWithThickness
+          = DiscLayer::create(pTransform, pDisc, nullptr, thickness);
       BOOST_TEST(pDiscLayerWithThickness->thickness() == thickness);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
-      auto adPtr = ad.get();
-      auto pDiscLayerWithApproachDescriptor
-          = DiscLayer::create(pTransform,
-                              pDisc,
-                              nullptr,
-                              thickness,
-                              std::move(ad));
+      auto adPtr                            = ad.get();
+      auto pDiscLayerWithApproachDescriptor = DiscLayer::create(
+          pTransform, pDisc, nullptr, thickness, std::move(ad));
       BOOST_TEST(pDiscLayerWithApproachDescriptor->approachDescriptor()
                  == adPtr);
       // with the layerType specified...

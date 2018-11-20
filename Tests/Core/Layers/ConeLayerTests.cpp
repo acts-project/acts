@@ -56,23 +56,19 @@ namespace Test {
           Surface::makeShared<SurfaceStub>()};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
-      auto pConeLayerFromSurfaces
+      auto                pConeLayerFromSurfaces
           = ConeLayer::create(pTransform, pCone, nullptr);
       BOOST_TEST(pConeLayerFromSurfaces->layerType() == LayerType::active);
       // construct with thickness:
-      auto pConeLayerWithThickness = ConeLayer::create(
-          pTransform, pCone, nullptr, thickness);
+      auto pConeLayerWithThickness
+          = ConeLayer::create(pTransform, pCone, nullptr, thickness);
       BOOST_TEST(pConeLayerWithThickness->thickness() == thickness);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
-      auto adPtr = ad.get();
-      auto pConeLayerWithApproachDescriptor
-          = ConeLayer::create(pTransform,
-                              pCone,
-                              nullptr,
-                              thickness,
-                              std::move(ad));
+      auto adPtr                            = ad.get();
+      auto pConeLayerWithApproachDescriptor = ConeLayer::create(
+          pTransform, pCone, nullptr, thickness, std::move(ad));
       BOOST_TEST(pConeLayerWithApproachDescriptor->approachDescriptor()
                  == adPtr);
       // with the layerType specified...
@@ -98,7 +94,7 @@ namespace Test {
           Surface::makeShared<SurfaceStub>()};
       // const double        thickness(1.0);
       SurfaceArrayCreator sac;
-      auto pConeLayerFromSurfaces
+      auto                pConeLayerFromSurfaces
           = ConeLayer::create(pTransform, pCone, nullptr);
       // auto planeSurface = pConeLayer->surfaceRepresentation();
       BOOST_TEST(pConeLayerFromSurfaces->surfaceRepresentation().name()
