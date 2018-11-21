@@ -140,12 +140,6 @@ struct DenseEnvironmentExtension
     }
 
     // Add derivative dlambda/ds = Lambda''
-    state.derivative(6)
-        = -std::sqrt(state.mass * state.mass + newMomentum * newMomentum)
-        * units::SI2Nat<units::ENERGY>(g)
-        / (newMomentum * newMomentum * newMomentum);
-
-    // Add derivative dlambda/ds = Lambda''
     state.stepping.derivative(6)
         = -std::sqrt(state.options.mass * state.options.mass
                      + newMomentum * newMomentum)

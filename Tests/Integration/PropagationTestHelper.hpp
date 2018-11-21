@@ -400,12 +400,12 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    PropagatorOptions<ActionList<DefaultExtensionActor>> options;
+    DenseStepperPropagatorOptions<> options;
     // setup propagation options
-    options.maxStepSize                                       = plimit;
-    options.pathLimit                                         = plimit;
-    options.debug                                             = debug;
-    options.actionList.get<DefaultExtensionActor>().tolerance = 1e-7;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
+    options.tolerance   = 1e-7;
 
     // define start parameters
     double   x  = 1.;
@@ -459,17 +459,17 @@ namespace IntegrationTest {
                    int /*index*/,
                    bool   startPlanar = true,
                    bool   destPlanar  = true,
-                   double reltol      = 1e-3,
+                   double reltol      = 1e-4,
                    bool   debug       = false)
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    PropagatorOptions<ActionList<DefaultExtensionActor>> options;
+    DenseStepperPropagatorOptions<> options;
     // setup propagation options
-    options.maxStepSize                                       = plimit;
-    options.pathLimit                                         = plimit;
-    options.debug                                             = debug;
-    options.actionList.get<DefaultExtensionActor>().tolerance = 1e-7;
+    options.maxStepSize = plimit;
+    options.pathLimit   = plimit;
+    options.debug       = debug;
+    options.tolerance   = 1e-7;
 
     // define start parameters
     double            x  = 1.;
