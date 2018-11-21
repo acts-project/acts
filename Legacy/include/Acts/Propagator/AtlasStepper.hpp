@@ -650,8 +650,7 @@ public:
       state.pVector[39] -= (s4 * state.pVector[43]);
       state.pVector[40] -= (s4 * state.pVector[44]);
 
-      double P3, P4,
-          C = state.pVector[3] * state.pVector[3]
+      double P3, P4, C = state.pVector[3] * state.pVector[3]
           + state.pVector[4] * state.pVector[4];
       if (C > 1.e-20) {
         C  = 1. / C;
@@ -764,7 +763,7 @@ public:
   /// Perform the actual step on the state
   ///
   /// @param state is the provided stepper state (caller keeps thread locality)
-  template<typename propagator_state_t>
+  template <typename propagator_state_t>
   double
   step(propagator_state_t& state) const
   {
@@ -776,7 +775,8 @@ public:
     double* A  = &(state.stepping.pVector[3]);  // Directions
     double* sA = &(state.stepping.pVector[42]);
     // Invert mometum/2.
-    double Pi = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.stepping.pVector[6]);
+    double Pi
+        = 0.5 / units::Nat2SI<units::MOMENTUM>(1. / state.stepping.pVector[6]);
     //    double dltm = 0.0002 * .03;
     Vector3D f0, f;
 
