@@ -475,18 +475,42 @@ namespace Test {
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
-    for (unsigned int i = 0; i < stepResultDef.position.size() - 1; i++) {
-      BOOST_TEST(stepResult.position[i] == stepResultDef.position[i]);
-      BOOST_TEST(stepResult.momentum[i] == stepResultDef.momentum[i]);
+    std::pair<Vector3D, Vector3D> endParams, endParamsControl;
+    for (unsigned int i = 0; i < stepResultDef.position.size(); i++) {
+      if (1. * units::_m - stepResultDef.position[i].x() < 1e-4) {
+        endParams = std::make_pair(stepResultDef.position[i],
+                                   stepResultDef.momentum[i]);
+        break;
+      }
     }
+    for (unsigned int i = 0; i < stepResult.position.size(); i++) {
+      if (1. * units::_m - stepResult.position[i].x() < 1e-4) {
+        endParamsControl
+            = std::make_pair(stepResult.position[i], stepResult.momentum[i]);
+        break;
+      }
+    }
+
+    BOOST_TEST(endParams.first.x() == endParamsControl.first.x(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.first.y() == endParamsControl.first.y(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.first.z() == endParamsControl.first.z(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.second.x() == endParamsControl.second.x(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.second.y() == endParamsControl.second.y(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.second.z() == endParamsControl.second.z(),
+               tt::tolerance(1e-5));
 
     // Build launcher through material
     // Set initial parameters for the particle track by using the result of the
     // first volume
     covPtr = std::make_unique<const ActsSymMatrixD<5>>(
         ActsSymMatrixD<5>::Identity());
-    startParams = stepResultDef.position[stepResultDef.position.size() - 2];
-    startMom    = stepResultDef.momentum[stepResultDef.momentum.size() - 2];
+    startParams = endParams.first;
+    startMom    = endParams.second;
     SingleCurvilinearTrackParameters<ChargedPolicy> sbtpPiecewise(
         std::move(covPtr), startParams, startMom, 1.);
 
@@ -518,26 +542,34 @@ namespace Test {
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 
-    for (unsigned int i = 1; i < stepResultDense.position.size() - 1; i++) {
-      BOOST_TEST(stepResult.position[stepResultDef.position.size() - 2 + i].x()
-                     == stepResultDense.position[i].x(),
-                 tt::tolerance(1e-5));
-      BOOST_TEST(stepResult.momentum[stepResultDef.position.size() - 2 + i].x()
-                     == stepResultDense.momentum[i].x(),
-                 tt::tolerance(1e-5));
-      BOOST_TEST(stepResult.position[stepResultDef.position.size() - 2 + i].y()
-                     == stepResultDense.position[i].y(),
-                 tt::tolerance(1e-5));
-      BOOST_TEST(stepResult.momentum[stepResultDef.position.size() - 2 + i].y()
-                     == stepResultDense.momentum[i].y(),
-                 tt::tolerance(1e-5));
-      BOOST_TEST(stepResult.position[stepResultDef.position.size() - 2 + i].z()
-                     == stepResultDense.position[i].z(),
-                 tt::tolerance(1e-5));
-      BOOST_TEST(stepResult.momentum[stepResultDef.position.size() - 2 + i].z()
-                     == stepResultDense.momentum[i].z(),
-                 tt::tolerance(1e-5));
+    // Check the exit situation of the second volume
+    for (unsigned int i = 0; i < stepResultDense.position.size(); i++) {
+      if (2. * units::_m - stepResultDense.position[i].x() < 1e-4) {
+        endParams = std::make_pair(stepResultDense.position[i],
+                                   stepResultDense.momentum[i]);
+        break;
+      }
     }
+    for (unsigned int i = 0; i < stepResult.position.size(); i++) {
+      if (2. * units::_m - stepResult.position[i].x() < 1e-4) {
+        endParamsControl
+            = std::make_pair(stepResult.position[i], stepResult.momentum[i]);
+        break;
+      }
+    }
+
+    BOOST_TEST(endParams.first.x() == endParamsControl.first.x(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.first.y() == endParamsControl.first.y(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.first.z() == endParamsControl.first.z(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.second.x() == endParamsControl.second.x(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.second.y() == endParamsControl.second.y(),
+               tt::tolerance(1e-5));
+    BOOST_TEST(endParams.second.z() == endParamsControl.second.z(),
+               tt::tolerance(1e-5));
   }
 }  // namespace Test
 }  // namespace Acts
