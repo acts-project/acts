@@ -180,7 +180,7 @@ namespace Test {
     for (auto& lay : volumeConfig.layers) {
       BOOST_TEST(lay->layerType() == LayerType::passive);
     }
-    
+
     BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
                == volumeConfig.layers.size() * 2
                    + 1);  // #layers = navigation + material layers
