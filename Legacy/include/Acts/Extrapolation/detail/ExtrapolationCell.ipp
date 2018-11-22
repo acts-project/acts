@@ -42,7 +42,7 @@ Acts::ExtrapolationCell<T>::stepTransport(
   extrapolationSteps.push_back(ExtrapolationStep<T>(std::move(stepParameters),
                                                     sSurface,
                                                     stepConfig,
-                                                    nullptr,
+                                                    MaterialProperties(),
                                                     std::move(stepJacobian),
                                                     stepLength));
 }
@@ -54,10 +54,10 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     const Vector3D&           stepPosition,
     const Surface&            stepSurface,
     double                    stepFactor,
-    const MaterialProperties* mprop)
+    const MaterialProperties& mprop)
 {
   // fast exit
-  if (mprop == nullptr) {
+  if (!mprop) {
     return;
   }
   // if this is on a new surface,
@@ -105,11 +105,9 @@ Acts::ExtrapolationCell<T>::stepMaterial(
     cstep.parameters = std::move(stepParameters);
   }
   // add material to the global counters
-  if (mprop != nullptr) {
-    // the overal material
-    materialX0 += stepFactor * mprop->thicknessInX0();
-    materialL0 += stepFactor * mprop->thicknessInL0();
-  }
+  // the overal material
+  materialX0 += stepFactor * mprop.thicknessInX0();
+  materialL0 += stepFactor * mprop.thicknessInL0();
   // simply add the material configuration
   cstep.configuration.addMode(ExtrapolationMode::CollectMaterial);
   // finalise the step information

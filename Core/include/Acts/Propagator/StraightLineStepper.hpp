@@ -50,11 +50,14 @@ public:
   struct State
   {
     /// Constructor from the initial track parameters
+    ///
+    /// @tparam parameters_t the Type of the track parameters
+    ///
     /// @param[in] par The track parameters at start
     /// @param[in] dir is the navigation direction
     /// @param[in] ssize is the (absolute) maximum step size
-    template <typename T>
-    explicit State(const T&            par,
+    template <typename parameters_t>
+    explicit State(const parameters_t& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
@@ -114,11 +117,52 @@ public:
       p   = up;
     }
 
+    /// Method for on-demand transport of the covariance
+    /// to a new curvilinear frame at current  position,
+    /// or direction of the state - for the moment a dummy method
+    ///
+    /// @param reinitialize is a flag to steer whether the
+    ///        state should be reinitialized at the new
+    ///        position
+    ///
+    /// @return the full transport jacobian
+    const ActsMatrixD<5, 5>
+    covarianceTransport(bool /*reinitialize = false*/)
+    {
+      return ActsMatrixD<5, 5>::Identity();
+    }
+
+    /// Method for on-demand transport of the covariance
+    /// to a new curvilinear frame at current  position,
+    /// or direction of the state - for the moment a dummy method
+    ///
+    /// @tparam surface_t the surface type - ignored here
+    ///
+    /// @param surface is the surface to which the covariance is
+    ///        forwarded to
+    /// @param reinitialize is a flag to steer whether the
+    ///        state should be reinitialized at the new
+    ///        position
+    /// @note no check is done if the position is actually on the surface
+    ///
+    /// @return the full transport jacobian
+    template <typename surface_t>
+    const ActsMatrixD<5, 5>
+    covarianceTransport(const surface_t& /*surface*/,
+                        bool /*reinitialize = false*/)
+    {
+      return ActsMatrixD<5, 5>::Identity();
+    }
+
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
 
     /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
+
+    /// Boolean to indiciate if you need covariance transport
+    bool              covTransport = false;
+    ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
 
     /// Momentum
     double p = 0.;
@@ -138,18 +182,18 @@ public:
 
   /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
-  template <typename T, typename S = int>
+  template <typename parameters_t, typename surface_t = int>
   using state_type = State;
 
   /// Intermediate track parameters are always in curvilinear parametrization
-  template <typename T>
+  template <typename parameters_t>
   using step_parameter_type = CurvilinearParameters;
 
   /// Return parameter types depend on the propagation mode:
   /// - when propagating to a surface we return BoundParameters
   /// - otherwise CurvilinearParameters
-  template <typename T, typename S = int>
-  using return_parameter_type = typename s<T, S>::type;
+  template <typename parameters_t, typename surface_t = int>
+  using return_parameter_type = typename s<parameters_t, surface_t>::type;
 
   /// Constructor
   StraightLineStepper() = default;
@@ -167,15 +211,15 @@ public:
 
   /// Convert the propagation state to track parameters at a certain surface
   ///
-  /// @tparam S The surface type
+  /// @tparam surface_t The surface type
   ///
   /// @param [in] state Propagation state used
   /// @param [in] surface Destination surface to which the conversion is done
   ///
   /// @return are parameters bound to the target surface
-  template <typename S>
+  template <typename surface_t>
   static BoundParameters
-  convert(State& state, const S& surface)
+  convert(State& state, const surface_t& surface)
   {
     // return the bound parameters
     return BoundParameters(

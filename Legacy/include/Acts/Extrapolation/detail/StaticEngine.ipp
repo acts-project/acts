@@ -165,7 +165,7 @@ Acts::StaticEngine::extrapolateT(Acts::ExtrapolationCell<T>& eCell,
   // ----- [3] now resolve the boundary situation, call includes information
   // wheather one is alreay at a boundary
   //
-  // the navigaiton engine ca trigger different return codes
+  // the navigation engine ca trigger different return codes
   // - InProgress                   : fine, boundary surface has been found
   // - SuccessWithPathLimit         : propagation towards boundary surface
   // exceeded path limit

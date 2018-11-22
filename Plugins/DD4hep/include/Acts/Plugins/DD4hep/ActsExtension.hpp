@@ -165,7 +165,7 @@ public:
   /// for digitization.
   /// Possibility to set the material of a sensitive dd4hep::DetElement
   /// (detector module). The average of the vector of materials will be
-  /// calculated using Acts::MaterialProperties::add().
+  /// calculated using Acts::MaterialProperties::average().
   /// In case several sensitive modules have the same segmentation the
   /// @param materials A vector of dd4hep::Material and their corresponding
   /// thickness in mm

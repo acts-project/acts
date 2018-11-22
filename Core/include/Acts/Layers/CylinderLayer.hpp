@@ -23,7 +23,6 @@
 namespace Acts {
 
 class CylinderBounds;
-class SurfaceMaterial;
 class ApproachDescriptor;
 
 /// @class CylinderLayer

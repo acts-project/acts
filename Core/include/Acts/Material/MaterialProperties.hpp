@@ -7,20 +7,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// MaterialProperties.h, Acts project
+// MaterialProperties.hpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-// Geometry module
-#include "Acts/Material/Material.hpp"
-// STD/STL
+
 #include <iostream>
+#include "Acts/Material/Material.hpp"
 
 namespace Acts {
 
 /// @class MaterialProperties
 ///
 /// Material with information associated to a thickness of material
+/// This class is targeted for surface based material description.
+/// A volume based material description is to be described by the
+/// Material class.
 ///
 /// the units are :
 ///  - thickness [mm] (only used for layer description)
@@ -33,7 +35,11 @@ class MaterialProperties
 {
 public:
   /// Default Constructor
-  MaterialProperties();
+  MaterialProperties() = default;
+
+  /// Constructor - for empty material (vacuum step)
+  /// @param thickness is the thickness of the material
+  MaterialProperties(float thickness);
 
   /// Constructor - for averaged material
   ///
@@ -58,61 +64,70 @@ public:
 
   /// Constructor - for different layers of Material
   ///
-  /// @param matLayers is the vector of pairs of material and associated
-  /// thickness
-  MaterialProperties(
-      const std::vector<std::pair<const Material, float>>& matLayers);
+  /// @param matLayers The vector of pairs of material and thickness
+  /// @param unitThickness Boolean to set compound is set to unit thickness
+  MaterialProperties(const std::vector<MaterialProperties>& matLayers,
+                     bool unitThickness = true);
 
   /// Copy Constructor
   ///
   /// @param mprop is the source material properties to be copied
-  MaterialProperties(const MaterialProperties& mprop);
+  MaterialProperties(const MaterialProperties& mprop) = default;
+
+  /// Copy Move Constructor
+  ///
+  /// @param mprop is the source material properties to be copied
+  MaterialProperties(MaterialProperties&& mprop) = default;
 
   /// Destructor
   virtual ~MaterialProperties() = default;
-
-  /// Pseudo-Constructor clone()
-  virtual MaterialProperties*
-  clone() const;
 
   /// Assignment Operator
   ///
   /// @param mprop is the source material properties object
   MaterialProperties&
-  operator=(const MaterialProperties& mprop);
+  operator=(const MaterialProperties& mprop)
+      = default;
+
+  /// Assignment Move Operator
+  ///
+  /// @param mprop is the source material properties object
+  MaterialProperties&
+  operator=(MaterialProperties&& mprop)
+      = default;
 
   /// Scale operator - scales the material thickness
   ///
-  /// @param sclae is the material scaling parameter
+  /// @param scale is the material scaling parameter
   MaterialProperties&
   operator*=(float scale);
 
-  /// Add material properties
+  /// Comparison operator
   ///
-  /// This method creates an averaged material properties out of the new and
-  /// the present material properties according to the following formulas:
+  /// @param mprop is the source material properties object
+  bool
+  operator==(const MaterialProperties& mprop) const;
+
+  /// Comparison operator
   ///
-  /// \f[
-  ///	\frac{t}{x_0} = \sum_{i=1}^n \frac{t_i}{x_i}
-  /// \f]
-  /// \f[
-  ///	\frac{t}{\Lambda_0} = \sum_{i=1}^n \frac{t_i}{\Lambda_i}
-  /// \f]
-  /// \f[
-  ///	\rho = \frac{\sum_{i=1}^n t_i \rho_i}{\sum_{i=1}^n t_i}
-  /// \f]
-  /// \f[
-  ///	A = \frac{\sum_{i=1}^n \rho_i A_i}{\sum_{i=1}^n \rho_i}
-  /// \f]
-  /// \f[
-  ///	Z = \frac{\sum_{i=1}^n \rho_i Z_i}{\sum_{i=1}^n \rho_i}
-  /// \f]
-  /// t...thickness, \f$x_0\f$...radiation length, \f$\Lambda_0\f$...interaction
-  /// length, \f$\rho\f$...density, A...mass number, Z...atomic number
+  /// @param mprop is the source material properties object
+  bool
+  operator!=(const MaterialProperties& mprop) const;
+
+  /// Scale to unit thickness
   ///
-  /// @param mprop are the material properties to be added
+  /// A helper method to allows to scale a material property
+  /// for unphysical/blended material to a unit thickness of 1.
+  /// This is safe for energy loss and multiple scattering
+  /// application in the material integration
+  ///
+  /// Scaling to unit thickness changes:
+  /// - X0,L0,rho of the material
+  ///
+  /// Leaves intact:
+  /// - tInX0, tInL0, A, Z
   void
-  add(const MaterialProperties& mprop);
+  scaleToUnitThickness();
 
   /// Boolean operator
   /// false indicates it's vacuum
@@ -160,9 +175,10 @@ public:
   zOverAtimesRho() const;
 
 protected:
-  Material m_material;   //!< the material
-  float    m_dInX0{0.};  //!< thickness in units of radiation length
-  float    m_dInL0{0.};  //!< thickness in units of nuclear interaction length
+  Material m_material{};     //!< the material description
+  float    m_thickness{0.};  //!< the thickness of material
+  float    m_dInX0{0.};      //!< thickness in units of radiation length
+  float    m_dInL0{0.};      //!< thickness in units of nucl. interaction length
 };
 
 inline const Material&
@@ -186,7 +202,7 @@ MaterialProperties::thicknessInL0() const
 inline float
 MaterialProperties::thickness() const
 {
-  return m_dInX0 * m_material.X0();
+  return m_thickness;
 }
 
 inline float
@@ -219,11 +235,23 @@ MaterialProperties::averageZ() const
   return m_material.Z();
 }
 
-// Return method for @f$ Z @f$
 inline float
 MaterialProperties::averageRho() const
 {
   return m_material.rho();
+}
+
+inline bool
+MaterialProperties::operator==(const MaterialProperties& mprop) const
+{
+  return (m_material == mprop.m_material && m_dInX0 == mprop.m_dInX0
+          && m_dInL0 == mprop.m_dInL0);
+}
+
+inline bool
+MaterialProperties::operator!=(const MaterialProperties& mprop) const
+{
+  return (!operator==(mprop));
 }
 
 // Overload of << operator for std::ostream for debug output
@@ -231,7 +259,7 @@ std::ostream&
 operator<<(std::ostream& sl, const MaterialProperties& mprop);
 
 // Useful typedefs
-using MaterialPropertiesVector = std::vector<MaterialProperties*>;
+using MaterialPropertiesVector = std::vector<MaterialProperties>;
 using MaterialPropertiesMatrix = std::vector<MaterialPropertiesVector>;
 
 }  // namespace

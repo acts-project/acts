@@ -1,3 +1,7 @@
+add_executable (MaterialCompositionTests MaterialCompositionTests.cpp)
+target_include_directories (MaterialCompositionTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (MaterialCompositionTests PRIVATE ActsCore)
+
 add_executable (MaterialTests MaterialTests.cpp)
 target_include_directories (MaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (MaterialTests PRIVATE ActsCore)
@@ -6,5 +10,17 @@ add_executable (MaterialPropertiesTests MaterialPropertiesTests.cpp)
 target_include_directories (MaterialPropertiesTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (MaterialPropertiesTests PRIVATE ActsCore)
 
-add_test (NAME MaterialUnitTest COMMAND MaterialTests MaterialPropertiesTests)
-acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialUnitTest TARGETS MaterialTests MaterialPropertiesTests)
+add_executable (HomogeneousSurfaceMaterialTests HomogeneousSurfaceMaterialTests.cpp)
+target_include_directories (HomogeneousSurfaceMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (HomogeneousSurfaceMaterialTests PRIVATE ActsCore)
+
+add_executable (BinnedSurfaceMaterialTests BinnedSurfaceMaterialTests.cpp)
+target_include_directories (BinnedSurfaceMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (BinnedSurfaceMaterialTests PRIVATE ActsCore)
+
+add_executable (SurfaceMaterialProxyTests SurfaceMaterialProxyTests.cpp)
+target_include_directories (SurfaceMaterialProxyTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (SurfaceMaterialProxyTests PRIVATE ActsCore)
+
+add_test (NAME MaterialUnitTest COMMAND MaterialCompositionTests MaterialTests MaterialPropertiesTests HomogeneousSurfaceMaterialTests BinnedSurfaceMaterialTests SurfaceMaterialProxyTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialUnitTest TARGETS MaterialCompositionTests MaterialTests MaterialPropertiesTests HomogeneousSurfaceMaterialTests BinnedSurfaceMaterialTests SurfaceMaterialProxyTests)

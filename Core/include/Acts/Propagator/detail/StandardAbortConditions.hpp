@@ -104,7 +104,7 @@ namespace detail {
           dstream << "Path limit reached at distance " << distance;
           return dstream.str();
         });
-        // reaching the target means navigaiton break
+        // reaching the target means navigation break
         state.navigation.targetReached = true;
       } else {
         targetDebugLog(state, "o", [&] {

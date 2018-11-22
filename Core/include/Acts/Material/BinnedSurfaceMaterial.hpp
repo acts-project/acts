@@ -30,7 +30,7 @@ public:
   /// Default Constructor - deleted
   BinnedSurfaceMaterial() = delete;
 
-  /// Explizit constructor with only full MaterialProperties,
+  /// Explicit constructor with only full MaterialProperties,
   /// for one-dimensional binning.
   ///
   /// The split factors:
@@ -38,16 +38,14 @@ public:
   ///    - 0. : alongPre
   ///  ===> 1 Dimensional array
   ///
-  /// @param binUtility defines the binning structure on the surface
-  /// @param fullProperties is the vector of properties as recorded
+  /// @param binUtility defines the binning structure on the surface (copied)
+  /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
-  /// @param entries is the (optional) number of mapping entries
-  BinnedSurfaceMaterial(const BinUtility&               binUtility,
-                        const MaterialPropertiesVector& fullProperties,
-                        double                          splitFactor = 0.,
-                        size_t                          entries     = 1);
+  BinnedSurfaceMaterial(const BinUtility&        binUtility,
+                        MaterialPropertiesVector fullProperties,
+                        double                   splitFactor = 0.);
 
-  /// Explizit constructor with only full MaterialProperties,
+  /// Explicit constructor with only full MaterialProperties,
   /// for two-dimensional binning.
   ///
   /// The split factors:
@@ -55,30 +53,35 @@ public:
   ///    - 0. : alongPre
   ///  ===> 1 Dimensional array
   ///
-  /// @param binUtility defines the binning structure on the surface
-  /// @param fullProperties is the vector of properties as recorded
+  /// @param binUtility defines the binning structure on the surface (copied)
+  /// @param fullProperties is the vector of properties as recorded (moved)
   /// @param splitFactor is the pre/post splitting directive
-  /// @param entries is the (optional) number of mapping entries
-  BinnedSurfaceMaterial(const BinUtility&               binUtility,
-                        const MaterialPropertiesMatrix& fullProperties,
-                        double                          splitFactor = 0.,
-                        size_t                          entries     = 1);
+  BinnedSurfaceMaterial(const BinUtility&        binUtility,
+                        MaterialPropertiesMatrix fullProperties,
+                        double                   splitFactor = 0.);
+
+  /// Copy Move Constructor
+  ///
+  /// @param bsm is the source object to be copied
+  BinnedSurfaceMaterial(BinnedSurfaceMaterial&& bsm) = default;
 
   /// Copy Constructor
   ///
-  /// @param lmp is the source object to be copied
-  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& lmp);
+  /// @param bsm is the source object to be copied
+  BinnedSurfaceMaterial(const BinnedSurfaceMaterial& bsm) = default;
 
-  /// Destructor
-  ~BinnedSurfaceMaterial() override;
-
-  /// Pseudo-Constructor clone()
-  BinnedSurfaceMaterial*
-  clone() const final;
+  /// Assignment Move operator
+  BinnedSurfaceMaterial&
+  operator=(BinnedSurfaceMaterial&& bsm)
+      = default;
 
   /// Assignment operator
   BinnedSurfaceMaterial&
-  operator=(const BinnedSurfaceMaterial& lmp);
+  operator=(const BinnedSurfaceMaterial& bsm)
+      = default;
+
+  /// Destructor
+  ~BinnedSurfaceMaterial() override = default;
 
   /// Scale operator
   ///
@@ -94,22 +97,17 @@ public:
   const MaterialPropertiesMatrix&
   fullMaterial() const;
 
-  /// @copydoc SurfaceMaterial::material(const Vector2D&)
-  const MaterialProperties*
-  material(const Vector2D& lp) const final;
+  /// @copydoc SurfaceMaterial::materialProperties(const Vector2D&)
+  const MaterialProperties&
+  materialProperties(const Vector2D& lp) const final;
 
-  /// @copydoc SurfaceMaterial::material(const Vector3D&)
-  const MaterialProperties*
-  material(const Vector3D& gp) const final;
+  /// @copydoc SurfaceMaterial::materialProperties(const Vector3D&)
+  const MaterialProperties&
+  materialProperties(const Vector3D& gp) const final;
 
-  /// @copydoc SurfaceMaterial::material(size_t, size_t)
-  const MaterialProperties*
-  material(size_t bin0, size_t bin1) const final;
-
-  /// access to the entries
-  /// this is needed for averageing mapps
-  size_t
-  entries() const;
+  /// @copydoc SurfaceMaterial::materialProperties(size_t, size_t)
+  const MaterialProperties&
+  materialProperties(size_t bin0, size_t bin1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream&
@@ -121,17 +119,6 @@ private:
 
   /// The five different MaterialProperties
   MaterialPropertiesMatrix m_fullMaterial;
-
-  /// The number of entries used
-  size_t m_entries;
-
-  /// helper method - to clear the material
-  void
-  clearMaterial();
-
-  /// helper method - to refill the material
-  void
-  fillMaterial(const MaterialPropertiesMatrix& matMatrix);
 };
 
 inline const BinUtility&
@@ -146,15 +133,9 @@ BinnedSurfaceMaterial::fullMaterial() const
   return m_fullMaterial;
 }
 
-inline const MaterialProperties*
-BinnedSurfaceMaterial::material(size_t bin0, size_t bin1) const
+inline const MaterialProperties&
+BinnedSurfaceMaterial::materialProperties(size_t bin0, size_t bin1) const
 {
   return m_fullMaterial[bin1][bin0];
-}
-
-inline size_t
-BinnedSurfaceMaterial::entries() const
-{
-  return m_entries;
 }
 }

@@ -259,7 +259,7 @@ public:
   /// the bitset configuration of this step
   ExtrapolationConfig configuration;
   /// the material properties found in this step
-  const MaterialProperties* material;
+  MaterialProperties material;
   /// the applied material scaling due to incident
   double materialScaling;
   /// uniquely associated transprt jacobian matrix
@@ -279,7 +279,7 @@ public:
   ExtrapolationStep(std::unique_ptr<const T>  pars    = nullptr,
                     const Surface*            sf      = nullptr,
                     ExtrapolationConfig       eConfig = ExtrapolationConfig(),
-                    const MaterialProperties* mprop   = nullptr,
+                    const MaterialProperties& mprop   = MaterialProperties(),
                     std::unique_ptr<const TransportJacobian> tjac    = nullptr,
                     double                                   pLength = 0.)
     : parameters(std::move(pars))
@@ -523,7 +523,7 @@ public:
                const Vector3D&           stepPosition,
                const Surface&            stepSurface,
                double                    stepFactor,
-               const MaterialProperties* mprop = nullptr);
+               const MaterialProperties& mprop = MaterialProperties());
 
   /// Check if this is the initial volume
   bool

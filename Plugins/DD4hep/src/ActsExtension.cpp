@@ -42,17 +42,19 @@ Acts::ActsExtension::ActsExtension(
   , m_material(nullptr)
   , m_digitizationModule(std::move(digiModule))
 {
-  Acts::MaterialProperties matprop;
+  std::vector<Acts::MaterialProperties> partialMaterial;
+  partialMaterial.reserve(materials.size());
   for (auto& mat : materials) {
-    matprop.add(
-        MaterialProperties(mat.first.radLength() * units::_cm,
-                           mat.first.intLength() * units::_cm,
-                           mat.first.A(),
-                           mat.first.Z(),
-                           mat.first.density() / pow(Acts::units::_cm, 3),
-                           mat.second * units::_mm));
+    Acts::Material pm{float(mat.first.radLength() * units::_cm),
+                      float(mat.first.intLength() * units::_cm),
+                      float(mat.first.A()),
+                      float(mat.first.Z()),
+                      float(mat.first.density() / pow(Acts::units::_cm, 3))};
+    partialMaterial.push_back(
+        Acts::MaterialProperties(pm, mat.second * units::_mm));
   }
   //  Create homogenous surface material with averaged material properties
+  Acts::MaterialProperties matprop(partialMaterial);
   m_material = std::make_shared<Acts::HomogeneousSurfaceMaterial>(matprop);
 }
 

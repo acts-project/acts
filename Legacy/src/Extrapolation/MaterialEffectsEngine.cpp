@@ -84,13 +84,13 @@ Acts::MaterialEffectsEngine::handleMaterial(
                    surfaceID,
                    "material update with corr factor = " << pathCorrection);
     // get the actual material bin
-    const MaterialProperties* materialProperties
-        = mSurface.associatedMaterial()->material(
+    const MaterialProperties& materialProperties
+        = mSurface.associatedMaterial()->materialProperties(
             eCell.leadParameters->position());
     // and let's check if there's acutally something to do
-    if (materialProperties != nullptr) {
+    if (materialProperties) {
       // thickness in X0
-      double thicknessInX0 = materialProperties->thicknessInX0();
+      double thicknessInX0 = materialProperties.thicknessInX0();
       EX_MSG_VERBOSE(eCell.navigationStep,
                      surfaceType,
                      surfaceID,
@@ -166,6 +166,7 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
   // path correction
   double pathCorrection = fabs(
       mSurface.pathCorrection(mParameters.position(), mParameters.momentum()));
+
   // screen output
   EX_MSG_VERBOSE(eCell.navigationStep,
                  surfaceType,
@@ -173,14 +174,15 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
                  "material update with corr factor = " << pathCorrection);
   // get the actual material bin
   // @todo - check consistency/speed for local 2D lookup rather than 3D
-  const MaterialProperties* materialProperties
-      = mSurface.associatedMaterial()->material(mParameters.position());
+  const MaterialProperties& materialProperties
+      = mSurface.associatedMaterial()->materialProperties(
+          mParameters.position());
   // check if anything should be done
   bool corrConfig
       = (m_cfg.eLossCorrection || m_cfg.mscCorrection
          || eCell.configurationMode(ExtrapolationMode::CollectMaterial));
   // and let's check if there's acutally something to do
-  if ((materialProperties != nullptr) && corrConfig) {
+  if ((materialProperties) && corrConfig) {
     // and add them
     int sign = int(eCell.materialUpdateMode);
     // a simple cross-check if the parameters are the initial ones
@@ -191,9 +193,9 @@ Acts::MaterialEffectsEngine::updateTrackParameters(
               *mParameters.covariance())
         : nullptr;
     // get the material itself & its parameters
-    const Material& material      = materialProperties->material();
-    double          thicknessInX0 = materialProperties->thicknessInX0();
-    double          thickness     = materialProperties->thickness();
+    const Material& material      = materialProperties.material();
+    double          thicknessInX0 = materialProperties.thicknessInX0();
+    double          thickness     = materialProperties.thickness();
     // calculate energy loss and multiple scattering
     const double p    = mParameters.momentum().norm();
     const double m    = m_particleMasses.mass.at(eCell.particleType);

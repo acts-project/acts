@@ -11,6 +11,7 @@
 #include <boost/test/included/unit_test.hpp>
 #include <climits>
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 
@@ -19,83 +20,51 @@ namespace Test {
   // the maximum tolerance is half the accuracy
   float elMaxTolerance = 0.5 / float(UCHAR_MAX);
 
-  BOOST_AUTO_TEST_CASE(ElementFraction_test)
-  {
-    // carbon parameters, atomic charge is Z
-    unsigned char carbonZ = 12;
-    // a fraction between 0 and 255
-    unsigned char carbonFractionCH    = 46;
-    float         carbonFractionFloat = float(46. / UCHAR_MAX);
+  namespace au = Acts::units;
 
-    // test the carbon fraction
-    ElementFraction carbonEFC(carbonZ, carbonFractionCH);
-    ElementFraction carbonEFF((unsigned int)carbonZ, carbonFractionFloat);
-
-    // check if you get the element and the fraction back
-    BOOST_CHECK_EQUAL(12ul, carbonEFC.element());
-    BOOST_CHECK_CLOSE(
-        carbonFractionFloat, carbonEFC.fraction(), elMaxTolerance);
-    BOOST_CHECK_EQUAL(12ul, carbonEFF.element());
-    BOOST_CHECK_CLOSE(
-        carbonFractionFloat, carbonEFF.fraction(), elMaxTolerance);
-  }
-
-  BOOST_AUTO_TEST_CASE(MaterialComposition_test)
-  {
-
-    // Carbon fraction
-    unsigned int    carbonZ        = 12;
-    float           carbonFraction = 0.45;
-    ElementFraction carbon(carbonZ, carbonFraction);
-
-    // Silicon fraction
-    unsigned int    siliconZ       = 14;
-    float           siliconFracton = 0.1;
-    ElementFraction silicon(siliconZ, siliconFracton);
-
-    // Titanium fraction
-    unsigned int    titantiumZ       = 22;
-    float           titaniumFraction = 0.25;
-    ElementFraction titanium(titantiumZ, titaniumFraction);
-
-    // Copper fraction
-    unsigned int    copperZ        = 29;
-    float           copperFraction = 0.2;
-    ElementFraction copper(copperZ, copperFraction);
-
-    std::vector<ElementFraction> elements = {silicon, carbon, titanium, copper};
-    std::vector<ElementFraction> shuffled = {carbon, silicon, titanium, copper};
-
-    /// create the material composition
-    MaterialComposition elementsC(elements);
-    MaterialComposition shuffledC(shuffled);
-    // check if the sorting worked
-    BOOST_CHECK_EQUAL(elementsC.size(), shuffledC.size());
-    BOOST_CHECK_EQUAL(elementsC[0].first, shuffledC[0].first);
-    BOOST_CHECK_EQUAL(elementsC[1].first, shuffledC[1].first);
-    BOOST_CHECK_EQUAL(elementsC[2].first, shuffledC[2].first);
-    BOOST_CHECK_EQUAL(elementsC[3].first, shuffledC[3].first);
-    BOOST_CHECK_EQUAL(elementsC[0].second, shuffledC[0].second);
-    BOOST_CHECK_EQUAL(elementsC[1].second, shuffledC[1].second);
-    BOOST_CHECK_EQUAL(elementsC[2].second, shuffledC[2].second);
-    BOOST_CHECK_EQUAL(elementsC[3].second, shuffledC[3].second);
-
-    /// @todo the fraction test will only work when re-scaling is implemented
-    /// check if the total fraction is one
-    // float totalFraction = 0.;
-    // for (auto& eFraction : elementsC)
-    //  totalFraction += eFraction.fraction();
-    // BOOST_CHECK_CLOSE(1., totalFraction, 2*elMaxTolerance);
-  }
-
+  // first test correct boolean behavior
   BOOST_AUTO_TEST_CASE(Material_boolean_test)
   {
-
     Material vacuum;
     BOOST_CHECK_EQUAL(bool(vacuum), false);
 
     Material something(1., 2., 3., 4., 5);
     BOOST_CHECK_EQUAL(bool(something), true);
+  }
+
+  // now test thge construction and units
+  BOOST_AUTO_TEST_CASE(Material_construction_and_units)
+  {
+
+    // density at room temperature
+    float X0  = 9.370 * au::_cm;
+    float L0  = 46.52 * au::_cm;
+    float Z   = 14.;
+    float A   = 28.0855;
+    float rho = 2.329 * au::_g / (au::_cm * au::_cm * au::_cm);
+
+    Material silicon(X0, L0, A, Z, rho);
+    BOOST_CHECK_CLOSE(silicon.X0(), 93.70 * au::_mm, 0.001);
+    BOOST_CHECK_CLOSE(silicon.L0(), 465.2 * au::_mm, 0.001);
+    BOOST_CHECK_CLOSE(silicon.Z(), 14., 0.001);
+    BOOST_CHECK_CLOSE(silicon.A(), 28.0855, 0.001);
+    BOOST_CHECK_CLOSE(silicon.rho(),
+                      0.002329 * au::_g / (au::_mm * au::_mm * au::_mm),
+                      0.001);
+    BOOST_CHECK_CLOSE(
+        silicon.zOverAtimesRho(), 14. / 28.0855 * 0.002329, 0.0001);
+
+    Material copiedSilicon(silicon);
+    BOOST_TEST(silicon == copiedSilicon);
+
+    Material moveCopiedSilicon(std::move(copiedSilicon));
+    BOOST_TEST(silicon == moveCopiedSilicon);
+
+    Material assignedSilicon = silicon;
+    BOOST_TEST(silicon == assignedSilicon);
+
+    Material moveAssignedSilicon = std::move(assignedSilicon);
+    BOOST_TEST(silicon == moveAssignedSilicon);
   }
 }
 }

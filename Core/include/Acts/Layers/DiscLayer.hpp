@@ -11,7 +11,6 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-class MsgStream;
 
 #include <algorithm>
 #include "Acts/Layers/Layer.hpp"
@@ -22,7 +21,6 @@ class MsgStream;
 namespace Acts {
 
 class DiscBounds;
-class SurfaceMaterial;
 class ApproachDescriptor;
 
 /// @class DiscLayer
