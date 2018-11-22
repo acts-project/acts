@@ -68,7 +68,7 @@ struct MaterialInteractor
   bool recordInteractions = false;
 
   /// Simple result struct to be returned
-  /// It mainly acts as an internal state state which is
+  /// It mainly acts as an internal state which is
   /// created for every propagation/extrapolation step
   struct this_result
   {

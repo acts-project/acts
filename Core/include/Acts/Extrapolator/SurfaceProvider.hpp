@@ -17,8 +17,8 @@ namespace Acts {
 /// (or external surfaces) to the Navigator
 ///
 /// This is implemented as an actor and should be provided
-/// to the Propagator::Options<ActionList,AbortList> as one
-/// of the abort list otions (ideally the first)
+/// to the PropagatorOptions<ActionList,AbortList> as one
+/// of the abort list options (ideally the first)
 ///
 /// It will then set the user surfaces in the navigation state
 /// and set itself to silent from then on.
@@ -58,7 +58,7 @@ struct SurfaceProvider
         // get the current layer pointer
         const auto cLayer = sf->associatedLayer();
         if (cLayer != nullptr) {
-          // th current surfaces
+          // the current surfaces
           auto cSurfaces = state.navigation.userSurfacesOnLayer.find(cLayer);
           // we already have an entry, add to it
           if (cSurfaces != state.navigation.userSurfacesOnLayer.end()) {

@@ -38,7 +38,7 @@ namespace detail {
     Vector3D startDir = Vector3D(0., 0., 0.);
     /// Path length where this corrector is created
     double pathLength = 0.;
-    /// Below here do only straighLine
+    /// Below here do only straight line estimate
     double straightLineStep = 100 * units::_um;
     /// Step modification factor
     double stepModification = 0.5;

@@ -63,14 +63,14 @@ namespace detail {
 
     /// Default move assignment operator
     ///
-    /// @param extendable The source Extendable lsit
+    /// @param extendable The source Extendable list
     Extendable<extensions_t...>&
     operator=(const Extendable<extensions_t...>& extendable)
         = default;
 
     /// Default move assignment operator
     ///
-    /// @param extendable The source Extendable lsit
+    /// @param extendable The source Extendable list
     Extendable<extensions_t...>&
     operator=(Extendable<extensions_t...>&& extendable)
         = default;

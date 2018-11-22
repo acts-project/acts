@@ -54,7 +54,7 @@ struct VoidKalmanUpdator
   /// @tpredicted_state_t Type of the (bound) predicted state
   ///
   /// @param m The measurement
-  /// @param pars The predicted parameters
+  /// @param predicted The predicted parameters
   ///
   /// @return The copied predicted parameters
   template <typename track_state_t, typename predicted_state_t>
@@ -70,7 +70,7 @@ struct VoidKalmanSmoother
 {
   /// @brief Public call mimicking an updator
   ///
-  /// @tparam track_states_t Type of thetrack states
+  /// @tparam track_states_t Type of the track states
   ///
   /// @param states The track states to be smoothed
   ///

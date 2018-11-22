@@ -422,7 +422,7 @@ private:
   ///
   /// @param[in,out] state is the propagation state object
   ///
-  /// boolean return triggers exit to stepper
+  /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t>
   void
   initialize(propagator_state_t& state) const
@@ -502,9 +502,9 @@ private:
   ///
   /// @param[in,out] state is the propagation state object
   /// @param[in] navSurfaces is the navigation status objects
-  /// @param[in] surface test surface fore the status test
+  /// @param[in] navIter test surface fore the status test
   ///
-  /// boolean return triggers exit to stepper
+  /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t,
             typename navigation_surfaces_t,
             typename navigation_iter_t>
@@ -663,7 +663,7 @@ private:
   /// Check if we are on the representing surface of the layer pointed
   /// at by navLayerIter. If so, we unpack the compatible surfaces
   /// (determined by straight line intersect), and set up the iterator
-  /// so that the next call to operator() will enter the surface
+  /// so that the next status() call will enter the surface
   /// check mode above. If no surfaces are found, we skip the layer.
   /// If we unpack a surface, the step size is set to the path length
   /// to the first surface, as determined by straight line intersect.
@@ -672,9 +672,9 @@ private:
   /// @tparam is a step corrector (can be void corrector)
   ///
   /// @param[in,out] state is the propagation state object
-  /// @param[in] navCorr is the navigation path corrector
+  /// @param[in] corrector_t navCorr is the navigation path corrector
   ///
-  /// boolean return triggers exit to stepper
+  /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename corrector_t>
   bool
   targetLayers(propagator_state_t& state, const corrector_t& navCorr) const
@@ -952,7 +952,7 @@ private:
   /// Volume, this will be called at:
   /// - initialization
   /// - attempted volume switch
-  /// Target findin by association will not be done again
+  /// Target finding by association will not be done again
   ///
   /// @tparam propagator_state_t The state type of the propagagor
   /// @tparam is a step corrector (can be void corrector)
@@ -1063,6 +1063,7 @@ private:
   ///
   /// @param[in,out] state is the propagation state object
   /// @param[in] navCorr is the navigation path corrector
+  /// @param[in] cLayer is the already assigned current layer, e.g. start layer
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename corrector_t>
@@ -1126,12 +1127,12 @@ private:
   /// or when entering a new volume
   ///
   /// @tparam propagator_state_t The state type of the propagagor
-  /// @tparam is a step corrector (can be void corrector)
+  /// @tparam corrector_t is a path step corrector (can be void corrector)
   ///
   /// @param[in,out] state is the propagation state object
   /// @param[in] navCorr is the navigation path corrector
   ///
-  /// boolean return triggers exit to stepper
+  /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename corrector_t>
   bool
   resolveLayers(propagator_state_t& state, const corrector_t& navCorr) const

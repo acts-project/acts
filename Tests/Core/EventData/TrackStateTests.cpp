@@ -93,7 +93,7 @@ namespace Test {
     pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
         pars_array[4];
 
-    // Make a varaint copy of the 2D TrackState
+    // Make a variant copy of the 2D TrackState
     VariantState m2DVariant(mts2D);
 
     // constructor from parameter vector: predicted filtered, smoothed
@@ -175,7 +175,7 @@ namespace Test {
     std::vector<VariantState> undorderedStates
         = {std::move(surfacePlaneAt2), std::move(ataPlaneState1)};
 
-    // Sort the varaint track state
+    // Sort the variant track state
     detail::path_length_sorter plSorter;
     std::sort(undorderedStates.begin(), undorderedStates.end(), plSorter);
 

@@ -328,7 +328,7 @@ public:
     /// to a new curvilinear frame at current  position,
     /// or direction of the state
     ///
-    /// @tparam S the Surfac type
+    /// @tparam surface_t the Surfac type
     ///
     /// @param surface is the surface to which the covariance is
     ///        forwarded to
@@ -336,8 +336,6 @@ public:
     ///        state should be reinitialized at the new
     ///        position
     /// @note no check is done if the position is actually on the surface
-    ///
-    /// @return the full transport jacobian
     template <typename surface_t>
     void
     covarianceTransport(const surface_t& surface, bool reinitialize = true)

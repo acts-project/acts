@@ -53,7 +53,7 @@ struct ParametricState
 ///
 /// @tparam identifier_t Type of the identifier
 /// @tparam parameters_t Type of the parameters on the surface
-/// @tparam parameters_t Type of the jacobian for the transport
+/// @tparam jacobian_t Type of the jacobian for the transport
 /// @tparam params Type list of the measurement type
 ///
 /// @note the Surface is only stored as a pointer, i.e. it is

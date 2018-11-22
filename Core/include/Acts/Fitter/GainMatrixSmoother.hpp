@@ -39,7 +39,7 @@ public:
     typename parameters_t::ParVector_t smoothedPars;
     typename parameters_t::CovMatrix_t smoothedCov;
 
-    // For the last state: smoothed is filtered - also: swicth to next
+    // For the last state: smoothed is filtered - also: switch to next
     auto& lState    = detail::getParametricState<ps_t>(*rit);
     lState.smoothed = lState.filtered.get();
 
@@ -47,7 +47,7 @@ public:
     using GMatrix = ActsMatrixD<Acts::NGlobalPars, Acts::NGlobalPars>;
     GMatrix G;
 
-    // Loop and smooth ofer the remaining
+    // Loop and smooth the remaining states
     for (++rit; rit != filteredStates.rend(); ++rit) {
 
       // The current state

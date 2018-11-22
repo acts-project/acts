@@ -47,24 +47,24 @@ public:
 
   /// Default copy constructor
   ///
-  /// @param aborters The source action lsit
+  /// @param aborters The source action list
   AbortList(const AbortList<aborters_t...>& aborters) = default;
 
   /// Default move constructor
   ///
-  /// @param aborters The source action lsit
+  /// @param aborters The source action list
   AbortList(AbortList<aborters_t...>&& aborters) = default;
 
   /// Default move assignment operator
   ///
-  /// @param aborters The source action lsit
+  /// @param aborters The source action list
   AbortList<aborters_t...>&
   operator=(const AbortList<aborters_t...>& aborters)
       = default;
 
   /// Default move assignment operator
   ///
-  /// @param aborters The source action lsit
+  /// @param aborters The source action list
   AbortList<aborters_t...>&
   operator=(AbortList<aborters_t...>&& aborters)
       = default;

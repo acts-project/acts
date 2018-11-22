@@ -46,24 +46,24 @@ public:
 
   /// Default copy constructor
   ///
-  /// @param actors The source action lsit
+  /// @param actors The source action list
   ActionList(const ActionList<actors_t...>& actors) = default;
 
   /// Default move constructor
   ///
-  /// @param actors The source action lsit
+  /// @param actors The source action list
   ActionList(ActionList<actors_t...>&& actors) = default;
 
   /// Default move assignment operator
   ///
-  /// @param actors The source action lsit
+  /// @param actors The source action list
   ActionList<actors_t...>&
   operator=(const ActionList<actors_t...>& actors)
       = default;
 
   /// Default move assignment operator
   ///
-  /// @param actors The source action lsit
+  /// @param actors The source action list
   ActionList<actors_t...>&
   operator=(ActionList<actors_t...>&& actors)
       = default;

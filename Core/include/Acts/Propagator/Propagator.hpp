@@ -191,7 +191,7 @@ public:
   /// Constructor from implementation object
   ///
   /// @param stepper The stepper implementation is moved to a private member
-  /// @param navigator The navigator implentiation, moved to a private member
+  /// @param navigator The navigator implementation, moved to a private member
   explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
     : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
   {
@@ -202,24 +202,22 @@ private:
   ///
   /// @tparam parameters_t Type of the track parameters
   /// @tparam propagator_options_t Type of the Objections object
-  /// @tparam target_aborter_list_t Type of the aborter list
   ///
   /// This struct holds the common state information for propagating
   /// which is independent of the actual stepper implementation.
-  template <typename parameters_t, typename propagator_option_t>
+  template <typename parameters_t, typename propagator_options_t>
   struct State
   {
 
     /// Create the propagator state from the options
     ///
     /// @tparam parameters_t the type of the start parameters
-    /// @tparam propagator_option_t the type of the propagator options
-    /// @tparam target_aborter_list_t the type of the target aborters
+    /// @tparam propagator_options_t the type of the propagator options
     ///
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param tabs The internal target aborters created in the call nethod
-    State(const parameters_t& start, const propagator_option_t& topts)
+    State(const parameters_t& start, const propagator_options_t& topts)
       : options(topts), stepping(start, options.direction, options.maxStepSize)
     {
       // Setting the start surface
@@ -227,7 +225,7 @@ private:
     }
 
     /// These are the options - provided for each propagation step
-    propagator_option_t options;
+    propagator_options_t options;
 
     /// Stepper state - internal state of the Stepper
     StepperState stepping;
@@ -263,12 +261,12 @@ private:
   /// @brief Short-hand type definition for propagation result derived from
   ///        an action list
   ///
-  /// @tparam T       Type of the final track parameters
+  /// @tparam parameters_t Type of the final track parameters
   /// @tparam action_list_t List of propagation action types
   ///
-  template <typename T, typename action_list_t>
+  template <typename parameters_t, typename action_list_t>
   using action_list_t_result_t =
-      typename result_type_helper<T, action_list_t>::type;
+      typename result_type_helper<parameters_t, action_list_t>::type;
 
   /// @brief Propagate track parameters
   /// Private method with propagator and stepper state
@@ -402,7 +400,7 @@ public:
     if (propagate_(result, state) != Status::IN_PROGRESS) {
       result.status = Status::FAILURE;
     } else {
-      /// Convert into to return type and fill the result object
+      /// Convert into return type and fill the result object
       m_stepper.convert(state.stepping, result);
       result.status = Status::SUCCESS;
     }

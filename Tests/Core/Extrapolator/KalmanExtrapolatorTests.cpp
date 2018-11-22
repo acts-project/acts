@@ -67,7 +67,7 @@ namespace Test {
         result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
         result.paths.push_back(std::get<double>(boundState));
       }
-      // Also store the
+      // Also store the jacobian and full path
       if ((state.navigation.navigationBreak or state.navigation.targetReached)
           and not result.finalized) {
         // Set the last stepping parameter
@@ -101,7 +101,7 @@ namespace Test {
     CubicTrackingGeometry cGeometry;
     auto                  detector = cGeometry();
 
-    // The Naivgator through the detector geometry
+    // The Navigator through the detector geometry
     Navigator navigator(detector);
     navigator.resolvePassive   = false;
     navigator.resolveMaterial  = true;

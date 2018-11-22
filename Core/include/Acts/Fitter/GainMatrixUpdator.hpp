@@ -19,6 +19,9 @@ namespace Acts {
 
 /// @brief Update step of Kalman Filter using gain matrix formalism
 ///
+/// @tparam parameters_t Type of the parameters to be updated
+/// @tparam jacobian_t Type of the Transport jacobian
+/// @tparam calibrator_t A measurement calibrator (can be void)  
 ///
 /// This is implemented as a boost vistor pattern for use of the
 /// boost variant container
@@ -46,6 +49,9 @@ public:
   /// @tparam track_state_t Type of the track state for the update
   /// @tparam predicted_state_t Type of the track state prediction
   ///
+  /// @param m the measured track state
+  /// @param predicted the predicted track state
+  ///
   /// @return The optional parameters - indicating if the update happened
   template <typename track_state_t>
   boost::optional<parameters_t>
@@ -56,7 +62,7 @@ public:
   }
 
 private:
-  /// The calibrator
+  /// The measurement calibrator
   calibrator_t m_mCalibrator;
 
   /// @brief GainMatrix updator implementation
@@ -75,7 +81,7 @@ private:
     {
     }
 
-    /// @brief Private call operator for the visitor pattern
+    /// @brief Call operator for the visitor pattern
     ///
     /// @tparam measurement_t Type of the measurement to be used
     /// @param rawMeasurement The measurement

@@ -160,7 +160,7 @@ private:
   public:
     using TrackState = typename track_states_t::value_type;
 
-    /// Explicit constructor with updagor and calibrator
+    /// Explicit constructor with updator and calibrator
     Actor(updator_t    pUpdator    = updator_t(),
           smoother_t   pSmoother   = smoother_t(),
           calibrator_t pCalibrator = calibrator_t())
@@ -171,14 +171,14 @@ private:
     }
 
     /// Simple result struct to be returned
-    /// It mainly acts as an internal state state which is
+    /// It mainly acts as an internal state which is
     /// created for every propagation/extrapolation step
     struct this_result
     {
       // Move the result into the fitted states
       track_states_t fittedStates = {};
 
-      // The optional Parameters at the
+      // The optional Parameters at the provided surface
       boost::optional<BoundParameters> fittedParameters;
 
       // Counter for handled states
