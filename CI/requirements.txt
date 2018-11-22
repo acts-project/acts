@@ -1,6 +1,6 @@
 PyYAML
 fs~=2.0.7
-fs.sshfs
+fs.sshfs==0.8.0
 tabulate
 codereport==0.2.*
 python-gitlab
