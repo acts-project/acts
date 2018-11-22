@@ -40,7 +40,7 @@ struct MaterialSurface
 /// @brief SurfaceMaterialMapper
 ///
 /// This is the main feature tool to map material information
-/// from a 3D geometry onto the TrackingGeometry with it's surface
+/// from a 3D geometry onto the TrackingGeometry with its surface
 /// material description.
 ///
 /// The process runs as such:
@@ -68,12 +68,25 @@ public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   /// @struct Assigned material
+  ///
+  /// The assgined material properties class is a helper struct.
+  /// It holds:
+  /// - all recorded material properties of one RecordedMaterialTrack that are
+  ///   uniquely assiged to one surface object
+  /// - the assgined position (i.e. the projected position onto the surface)
+  /// - the path correction factor respecting the incident angle into the
+  /// surface
+  ///
   struct AssignedMaterialProperties
   {
-    GeometryID                              geoID{0};
-    Vector3D                                assignedPosition{0., 0., 0.};
+    /// GeometryID of object were recorded material properties is assigned
+    GeometryID geoID{0};
+    /// Projected position of the assigned material
+    Vector3D assignedPosition{0., 0., 0.};
+    /// The material information that is assigned (can be multiple steps)
     std::vector<RecordedMaterialProperties> assignedProperties;
-    double                                  pathCorrection{0.};
+    /// The incident angle correction due to particle incident
+    double pathCorrection{0.};
 
     /// @brief Constructor for AssignedMaterialProperties
     ///

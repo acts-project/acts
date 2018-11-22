@@ -23,10 +23,16 @@ namespace Acts {
 /// Mapper.
 ///
 /// There are two stores for material averaging:
+///
 /// - the event store collects material steps accumulated
-///   during an event
+///   during an event. Material can be assigned to the same bin
+///   multiple time by one particle, e.g. if the simulation had created
+///   more than one step in the material, or if several components are
+///   compressed into one description
+///
 /// - the total store collects accumulated material properties
-///   of the run
+///   of the run, at the end of a run, an average over the material
+///   information from all mapped events per bin is taken.
 ///
 /// The averaging is always done to unit thickness
 class AccumulatedMaterialProperties
