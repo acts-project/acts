@@ -21,7 +21,7 @@ namespace Acts {
 ///
 /// @tparam parameters_t Type of the parameters to be updated
 /// @tparam jacobian_t Type of the Transport jacobian
-/// @tparam calibrator_t A measurement calibrator (can be void)  
+/// @tparam calibrator_t A measurement calibrator (can be void)
 ///
 /// This is implemented as a boost vistor pattern for use of the
 /// boost variant container
