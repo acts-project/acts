@@ -148,7 +148,7 @@ struct PropagatorOptions
 
   // Configurations for Stepper
   /// Tolerance for the error of the integration
-  double tolerance = 3e-7;
+  double tolerance = 1.3e-7;
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
 

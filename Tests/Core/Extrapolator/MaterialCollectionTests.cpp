@@ -95,7 +95,7 @@ namespace Test {
           int                 index)
   {
     double dcharge = -1 + 2 * charge;
-
+    
     if (index < skip) {
       return;
     }
