@@ -31,19 +31,17 @@ using RecordMatrix = std::vector<RecordVector>;
 ///
 /// The Acts::SurfaceRecordMatrix class is used as a cache during the material
 /// mapping process for the layers and hands back the final layer material.
-/// It stores the accumulated material of a certain
-/// layer in a matrix binned in a given Acts::BinUtility. Furthermore it also
-/// stores a collection of all added material steps per track which can be used
-/// to write out material maps of single layers.
+/// It stores the accumulated material of a certain layer in a matrix binned 
+/// in a given Acts::BinUtility. Furthermore it also stores a collection of all
+/// added material steps per track which can be used to write out material maps
+/// of single layers.
 ///
-/// The Acts::MaterialMapping class uses this class to add
-/// material at a certain position on the layer which is transformed into the
-/// corresponding bin of the grid. Furthermore it also uses it  to average the
-/// material for each bin of the layer during the mapping process whenever
-/// wanted
-/// (e.g. after each run, after every event). In the end before handing
-/// back the complete layer material an averaging needs to be done.
-///
+/// The MaterialMapping class uses this class to add material at a certain 
+/// position on the layer which is transformed into the corresponding bin of
+/// the grid. Furthermore it also uses it  to average the material for each bin
+/// of the layer during the mapping process whenever wanted (e.g. after each 
+/// run, after every event). In the end before handing back the complete layer
+/// material an averaging needs to be done.
 
 class SurfaceRecordMatrix
 {
@@ -52,32 +50,34 @@ public:
   SurfaceRecordMatrix() = default;
 
   /// Constructor with BinUtility input
-  /// @param surface is the according surface of this recrd
-  /// @param binUtility for the the grid in which the material is binned on the
-  /// layer
+  /// @param surface The according surface of this record
+  /// @param binUtility describes the binning on the surface 
   SurfaceRecordMatrix(const Surface& surface, const BinUtility& binUtility);
 
   /// Default destructor
   ~SurfaceRecordMatrix() = default;
 
   /// Copy Constructor
+  ///
+  /// @param lmrecord The source matrix record 
   SurfaceRecordMatrix(const SurfaceRecordMatrix& lmrecord);
 
   /// Assignment operator
+  ///
+  /// @param lmrecord The source matrix record 
   SurfaceRecordMatrix&
   operator=(const SurfaceRecordMatrix& lmrecord);
+  
 
-  /// Adds MaterialProperties and weighs them over the steplength at a given
-  /// position
+  /// Adds MaterialProperties and weights them over the steplength
+  /// at a given position
   ///
   /// @param mStep material step
-  /// @param pathCorrection is the path correction
-  /// added at the given position
+  /// @param pathCorrection The incidence angle correction
   void
   assignMaterialStep(const MaterialStep& mStep, double pathCorrection = 1.);
 
-  /// Associate an empty step
-  /// this is still needed, because the extrapolation
+  /// Associate an empty step this is still needed, because the extrapolation
   /// might hit a layer, but no material to access was there
   ///
   /// @param mPosition is where the extrapolation
