@@ -31,15 +31,15 @@ using RecordMatrix = std::vector<RecordVector>;
 ///
 /// The Acts::SurfaceRecordMatrix class is used as a cache during the material
 /// mapping process for the layers and hands back the final layer material.
-/// It stores the accumulated material of a certain layer in a matrix binned 
+/// It stores the accumulated material of a certain layer in a matrix binned
 /// in a given Acts::BinUtility. Furthermore it also stores a collection of all
 /// added material steps per track which can be used to write out material maps
 /// of single layers.
 ///
-/// The MaterialMapping class uses this class to add material at a certain 
+/// The MaterialMapping class uses this class to add material at a certain
 /// position on the layer which is transformed into the corresponding bin of
 /// the grid. Furthermore it also uses it  to average the material for each bin
-/// of the layer during the mapping process whenever wanted (e.g. after each 
+/// of the layer during the mapping process whenever wanted (e.g. after each
 /// run, after every event). In the end before handing back the complete layer
 /// material an averaging needs to be done.
 
@@ -51,7 +51,7 @@ public:
 
   /// Constructor with BinUtility input
   /// @param surface The according surface of this record
-  /// @param binUtility describes the binning on the surface 
+  /// @param binUtility describes the binning on the surface
   SurfaceRecordMatrix(const Surface& surface, const BinUtility& binUtility);
 
   /// Default destructor
@@ -59,15 +59,14 @@ public:
 
   /// Copy Constructor
   ///
-  /// @param lmrecord The source matrix record 
+  /// @param lmrecord The source matrix record
   SurfaceRecordMatrix(const SurfaceRecordMatrix& lmrecord);
 
   /// Assignment operator
   ///
-  /// @param lmrecord The source matrix record 
+  /// @param lmrecord The source matrix record
   SurfaceRecordMatrix&
   operator=(const SurfaceRecordMatrix& lmrecord);
-  
 
   /// Adds MaterialProperties and weights them over the steplength
   /// at a given position

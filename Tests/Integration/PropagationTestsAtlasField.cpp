@@ -122,22 +122,21 @@ namespace IntegrationTest {
 
   double Bz = 2. * units::_T;
 
-  using BFieldType            = InterpolatedBFieldMap;
-  using SharedFieldType       = SharedBField<InterpolatedBFieldMap>;
-  using EigenStepperType      = EigenStepper<SharedFieldType>;
-  using AtlasStepperType      = AtlasStepper<SharedFieldType>;
-  using EigenPropagatorType    = Propagator<EigenStepperType>;
-  using AtlasPropagatorType    = Propagator<AtlasStepperType>;
+  using BFieldType          = InterpolatedBFieldMap;
+  using SharedFieldType     = SharedBField<InterpolatedBFieldMap>;
+  using EigenStepperType    = EigenStepper<SharedFieldType>;
+  using AtlasStepperType    = AtlasStepper<SharedFieldType>;
+  using EigenPropagatorType = Propagator<EigenStepperType>;
+  using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
   auto bField        = atlasBField("Field.txt");
   auto bFieldSharedA = SharedFieldType(bField);
   auto bFieldSharedE = SharedFieldType(bField);
 
-  EigenStepperType   estepper(bFieldSharedE);
+  EigenStepperType    estepper(bFieldSharedE);
   EigenPropagatorType epropagator(std::move(estepper));
-  AtlasStepperType   astepper(bFieldSharedA);
+  AtlasStepperType    astepper(bFieldSharedA);
   AtlasPropagatorType apropagator(std::move(astepper));
-
 
 // The actual test - needs to be included to avoid
 // template inside template definition through boost
