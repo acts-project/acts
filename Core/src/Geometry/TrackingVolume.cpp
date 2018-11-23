@@ -132,7 +132,7 @@ Acts::TrackingVolume::boundarySurfaces() const {
 
 void
 Acts::TrackingVolume::connectDenseBoundarySurfaces(
-    MutableTrackingVolumeVector confinedDenseVolumes)
+    MutableTrackingVolumeVector& confinedDenseVolumes)
 {
   if (!confinedDenseVolumes.empty()) {
     BoundaryOrientation bo;
@@ -143,18 +143,22 @@ Acts::TrackingVolume::connectDenseBoundarySurfaces(
       for (unsigned int i = 0; i < boundSur.size(); i++) {
         // Skip empty entries since we do not know the shape of the dense volume
         // and therewith the used indices
-        if (boundSur.at(i) == nullptr) continue;
+        if (boundSur.at(i) == nullptr) {
+          continue;
+        }
 
         // Use mother volume as the opposite direction of the already used
         // direction
         auto mutableBs
             = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
                 boundSur.at(i));
-        if (mutableBs->m_insideVolume && !mutableBs->m_outsideVolume) {
+        if (mutableBs->m_insideVolume != nullptr
+            && mutableBs->m_outsideVolume == nullptr) {
           bo = BoundaryOrientation::outsideVolume;
           mutableBs->attachVolume(this, bo);
         } else {
-          if (!mutableBs->m_insideVolume && mutableBs->m_outsideVolume) {
+          if (mutableBs->m_insideVolume == nullptr
+              && mutableBs->m_outsideVolume != nullptr) {
             bo = BoundaryOrientation::insideVolume;
             mutableBs->attachVolume(this, bo);
           }
