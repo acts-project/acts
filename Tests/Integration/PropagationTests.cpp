@@ -59,9 +59,9 @@ namespace IntegrationTest {
   const bool debug  = false;
 
   // setup propagator with constant B-field
-  const double        Bz = 2. * units::_T;
-  BField_type       bField(0, 0, Bz);
-  EigenStepper_type estepper(bField);
+  const double         Bz = 2. * units::_T;
+  BField_type          bField(0, 0, Bz);
+  EigenStepper_type    estepper(bField);
   DenseStepper_type    dstepper(bField);
   EigenPropagator_type epropagator(std::move(estepper));
   AtlasStepper_type    astepper(bField);

@@ -37,7 +37,7 @@ namespace IntegrationTest {
                         const U&                 options) const
     {
       // steps for estimating derivatives
-      const std::array<double, 4> h_steps = {{-2e-6, -1e-6, 1e-6, 2e-6}};
+      const std::array<double, 4> h_steps = {{-2e-4, -1e-4, 1e-4, 2e-4}};
 
       // nominal propagation
       const auto&    nominal = endPars.parameters();

@@ -209,8 +209,6 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
 
-    //~ PropagatorOptions<ActionList<DefaultExtensionActor>> options;
-    //~ options.actionList.get<DefaultExtensionActor>().m_tolerance = 1e-6;
     PropagatorOptions<> options;
     const auto&         result = epropagator.propagate(start, options);
 
