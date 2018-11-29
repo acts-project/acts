@@ -23,13 +23,14 @@ target_include_directories (EigenStepperBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (EigenStepperBenchmark PRIVATE ActsCore)
 target_link_libraries (EigenStepperBenchmark PRIVATE ${Boost_LIBRARIES})
 
-add_executable (JacobianTests JacobianTests.cpp)
-target_link_libraries (JacobianTests PRIVATE ActsCore ActsLegacy)
-add_test(NAME JacobianUnitTests COMMAND JacobianTests)
 install (TARGETS EigenStepperBenchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Profiling)
 
 # these tests rely on the Legacy code
-if (ACTS_BUILD_LEGACY)  
+if (ACTS_BUILD_LEGACY)
+  add_executable (JacobianTests JacobianTests.cpp)
+  target_link_libraries (JacobianTests PRIVATE ActsCore ActsLegacy)
+  add_test(NAME JacobianUnitTests COMMAND JacobianTests)
+  
   add_executable (PropagatorTests PropagatorTests.cpp)
   target_link_libraries (PropagatorTests PRIVATE ActsCore ActsLegacy)
   add_test(NAME PropagatorUnitTests COMMAND PropagatorTests)
