@@ -18,6 +18,13 @@ add_executable (ConstrainedStepTests ConstrainedStepTests.cpp)
 target_link_libraries (ConstrainedStepTests PRIVATE ActsCore)
 add_test(NAME ConstrainedStepUnitTest COMMAND ConstrainedStepTests)
 
+add_executable (EigenStepperBenchmark EigenStepperBenchmark.cpp)
+target_include_directories (EigenStepperBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (EigenStepperBenchmark PRIVATE ActsCore)
+target_link_libraries (EigenStepperBenchmark PRIVATE ${Boost_LIBRARIES})
+
+install (TARGETS EigenStepperBenchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Profiling)
+
 # these tests rely on the Legacy code
 if (ACTS_BUILD_LEGACY)
   add_executable (JacobianTests JacobianTests.cpp)
@@ -28,28 +35,11 @@ if (ACTS_BUILD_LEGACY)
   target_link_libraries (PropagatorTests PRIVATE ActsCore ActsLegacy)
   add_test(NAME PropagatorUnitTests COMMAND PropagatorTests)
   
-  add_executable (RungeKuttaEngineTests RungeKuttaEngineTests.cpp)
-  target_link_libraries (RungeKuttaEngineTests PRIVATE ActsCore ActsLegacy)
-  add_test(NAME RungeKuttaEngineUnitTest COMMAND RungeKuttaEngineTests)
-
-  # Benchmark tests (only make sense when Legacy is built)
-  
   # define executables
   add_executable (AtlasStepperBenchmark AtlasStepperBenchmark.cpp)
   target_include_directories (AtlasStepperBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
   target_link_libraries (AtlasStepperBenchmark PRIVATE ActsCore ActsLegacy)
   target_link_libraries (AtlasStepperBenchmark PRIVATE ${Boost_LIBRARIES})
   
-  add_executable (EigenStepperBenchmark EigenStepperBenchmark.cpp)
-  target_include_directories (EigenStepperBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
-  target_link_libraries (EigenStepperBenchmark PRIVATE ActsCore)
-  target_link_libraries (EigenStepperBenchmark PRIVATE ${Boost_LIBRARIES})
-  
-  add_executable (AtlasPropagatorBenchmark AtlasPropagatorBenchmark.cpp)
-  target_include_directories (AtlasPropagatorBenchmark PRIVATE ${Boost_INCLUDE_DIRS})
-  target_link_libraries (AtlasPropagatorBenchmark PRIVATE ActsCore ActsLegacy)
-  target_link_libraries (AtlasPropagatorBenchmark PRIVATE ${Boost_LIBRARIES})
-  
-  install (TARGETS AtlasStepperBenchmark EigenStepperBenchmark AtlasPropagatorBenchmark
-  	     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Profiling)
+  install (TARGETS AtlasStepperBenchmark RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}/Profiling)
 endif()

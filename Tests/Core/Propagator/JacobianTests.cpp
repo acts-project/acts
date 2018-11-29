@@ -19,7 +19,6 @@
 // leave blank line
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Extrapolation/detail/RungeKuttaUtils.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -36,9 +35,9 @@ namespace Acts {
 
 namespace Test {
 
-  using BField_type       = ConstantBField;
-  using EigenStepper_type = EigenStepper<BField_type>;
-  using AtlasStepper_type = AtlasStepper<BField_type>;
+  using BFieldType       = ConstantBField;
+  using EigenStepperType = EigenStepper<BFieldType>;
+  using AtlasStepperType = AtlasStepper<BFieldType>;
 
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly
@@ -94,7 +93,7 @@ namespace Test {
   }
 
   /// Helper method : convert into Acts matrix
-  /// It takes the double array from AtlasStepper and RungeKuttaUtils
+  /// It takes the double array from AtlasStepper
   /// and transforms it into an ActsMatrixD
   ///
   /// @param P is the pointer to the array
@@ -133,29 +132,15 @@ namespace Test {
   testJacobianToGlobal(const Parameters& pars)
   {
     // Jacobian creation for Propagator/Steppers
-    //
-    // a) Original ATLAS code - using RungeKuttaUtils
-    const size_t PDIM = 64;
-    double       P[PDIM];
-    // initialize
-    RungeKuttaUtils rkUtils;
-    auto            tfl = rkUtils.transformLocalToGlobal(true, pars, P);
-    BOOST_CHECK(tfl);
-    // b) ATLAS stepper
-    AtlasStepper_type::State astepState(pars);
-    // c) Eigen stepper
-    EigenStepper_type::State estepState(pars);
+    // a) ATLAS stepper
+    AtlasStepperType::State astepState(pars);
+    // b) Eigen stepper
+    EigenStepperType::State estepState(pars);
 
     // create the matrices
-    auto rkMatrix = convertToMatrix(P);
     auto asMatrix = convertToMatrix(astepState.pVector);
-
-    bool rkas = rkMatrix.isApprox(asMatrix);
-    bool rkes = rkMatrix.isApprox(estepState.jacToGlobal);
-    bool ases = asMatrix.isApprox(estepState.jacToGlobal);
+    bool ases     = asMatrix.isApprox(estepState.jacToGlobal);
     // cross comparison checks
-    BOOST_CHECK(rkas);
-    BOOST_CHECK(rkes);
     BOOST_CHECK(ases);
   }
 

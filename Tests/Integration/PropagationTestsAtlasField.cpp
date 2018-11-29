@@ -14,8 +14,6 @@
 #include <boost/test/data/test_case.hpp>
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Extrapolation/RungeKuttaEngine.hpp"
-#include "Acts/Extrapolation/Wrapper.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SharedBFieldMap.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
@@ -124,29 +122,21 @@ namespace IntegrationTest {
 
   double Bz = 2. * units::_T;
 
-  using BField_type            = InterpolatedBFieldMap;
-  using SharedField_type       = SharedBField<InterpolatedBFieldMap>;
-  using EigenStepper_type      = EigenStepper<SharedField_type>;
-  using AtlasStepper_type      = AtlasStepper<SharedField_type>;
-  using EigenPropagator_type   = Propagator<EigenStepper_type>;
-  using AtlasPropagator_type   = Propagator<AtlasStepper_type>;
-  using PropagationEngine_type = RungeKuttaEngine<BField_type>;
-  typedef PropagatorWrapper<std::shared_ptr<PropagationEngine_type>>
-      WrappedPropagator_type;
+  using BFieldType          = InterpolatedBFieldMap;
+  using SharedFieldType     = SharedBField<InterpolatedBFieldMap>;
+  using EigenStepperType    = EigenStepper<SharedFieldType>;
+  using AtlasStepperType    = AtlasStepper<SharedFieldType>;
+  using EigenPropagatorType = Propagator<EigenStepperType>;
+  using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
   auto bField        = atlasBField("Field.txt");
-  auto bFieldSharedA = SharedField_type(bField);
-  auto bFieldSharedE = SharedField_type(bField);
+  auto bFieldSharedA = SharedFieldType(bField);
+  auto bFieldSharedE = SharedFieldType(bField);
 
-  EigenStepper_type    estepper(bFieldSharedE);
-  EigenPropagator_type epropagator(std::move(estepper));
-  AtlasStepper_type    astepper(bFieldSharedA);
-  AtlasPropagator_type apropagator(std::move(astepper));
-  auto                 wConfig = PropagationEngine_type::Config(bField);
-  auto                 wegine  = std::make_shared<PropagationEngine_type>(
-      wConfig,
-      Acts::getDefaultLogger("RungeKuttaEngine", Acts::Logging::INFO));
-  WrappedPropagator_type wpropagator(wegine);
+  EigenStepperType    estepper(bFieldSharedE);
+  EigenPropagatorType epropagator(std::move(estepper));
+  AtlasStepperType    astepper(bFieldSharedA);
+  AtlasPropagatorType apropagator(std::move(astepper));
 
 // The actual test - needs to be included to avoid
 // template inside template definition through boost
