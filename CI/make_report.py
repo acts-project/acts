@@ -21,20 +21,7 @@ from codereport import CodeReport, ReportItem
 def parse_clang_tidy_item(itemstr):
 
     try:
-        # m = re.match(r"([/.\-+\w]+):(\d+):(\d+): (.*?):(.*?)\n((?:.|\n)*)", itemstr)
-        # # keyword / category
-        # print(m)
-        # print("GRP5:", m.group(5), "END")
-        # mkey = re.match(r"(.*)\[(.*)\]$", m.group(5))
-        # if mkey is None:
-            # code = "unknown"
-        # else:
-            # code = mkey.group(2)
-        # msg = mkey.group(1).strip() +"\n"+ m.group(6)
-
         m = re.match(r"(?P<file>[/.\-+\w]+):(?P<line>\d+):(?P<col>\d+): (?P<sev>.*?):(?P<msg>[\s\S]*?)\[(?P<code>.*)\]\n(?P<info>[\s\S]*)", itemstr)
-
-
 
         item = ReportItem(
             path=m.group("file"),
