@@ -69,12 +69,6 @@ BOOST_DATA_TEST_CASE(
                   1e-3,
                   Acts::units::_eV,
                   debug);
-<<<<<<< HEAD
-=======
-  // foward backward runge kutta engine
-  // foward_backward(wpropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
-  // Acts::units::_eV, debug);
->>>>>>> Wrongly set * removed, step size adjustment fixed
 }
 
 /// test consistency of propagators when approaching a cylinder
@@ -690,11 +684,11 @@ BOOST_DATA_TEST_CASE(
   }
 
   // covariance check for eigen stepper in dense environment
-  DensePropagator_type dpropagator = setupDensePropagator();
+  DensePropagatorType dpropagator = setupDensePropagator();
   covariance_curvilinear(
       dpropagator, pT, 0., M_PI / 2., 1, plimit * Acts::units::_m, index);
 
-  covariance_bound<DensePropagator_type, DiscSurface, DiscSurface>(
+  covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
       dpropagator,
       pT,
       0.,
@@ -709,7 +703,7 @@ BOOST_DATA_TEST_CASE(
       true,
       1e-1);
 
-  covariance_bound<DensePropagator_type, PlaneSurface, PlaneSurface>(
+  covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
       dpropagator,
       pT,
       0.,

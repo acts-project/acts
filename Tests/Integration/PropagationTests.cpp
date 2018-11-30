@@ -33,6 +33,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "PropagationTestHelper.hpp"
+#include "Acts/Extrapolator/Navigator.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -41,16 +42,16 @@ namespace Acts {
 
 namespace IntegrationTest {
 
-  using BField_type       = ConstantBField;
-  using EigenStepper_type = EigenStepper<BField_type>;
-  using DenseStepper_type
-      = EigenStepper<BField_type,
+  using BFieldType       = ConstantBField;
+  using EigenStepperType = EigenStepper<BFieldType>;
+  using DenseStepperType
+      = EigenStepper<BFieldType,
                      VoidCorrector,
                      StepperExtensionList<DenseEnvironmentExtension>>;
-  using AtlasStepper_type      = AtlasStepper<BField_type>;
-  using EigenPropagator_type   = Propagator<EigenStepper_type>;
-  using DensePropagator_type   = Propagator<DenseStepper_type, Navigator>;
-  using AtlasPropagator_type   = Propagator<AtlasStepper_type>;
+  using AtlasStepperType      = AtlasStepper<BFieldType>;
+  using EigenPropagatorType   = Propagator<EigenStepperType>;
+  using DensePropagatorType   = Propagator<DenseStepperType, Navigator>;
+  using AtlasPropagatorType   = Propagator<AtlasStepperType>;
 
   // number of tests
   const int  ntests = 100;
@@ -60,14 +61,14 @@ namespace IntegrationTest {
 
   // setup propagator with constant B-field
   const double         Bz = 2. * units::_T;
-  BField_type          bField(0, 0, Bz);
-  EigenStepper_type    estepper(bField);
-  DenseStepper_type    dstepper(bField);
-  EigenPropagator_type epropagator(std::move(estepper));
-  AtlasStepper_type    astepper(bField);
-  AtlasPropagator_type apropagator(std::move(astepper));
+  BFieldType          bField(0, 0, Bz);
+  EigenStepperType    estepper(bField);
+  DenseStepperType    dstepper(bField);
+  EigenPropagatorType epropagator(std::move(estepper));
+  AtlasStepperType    astepper(bField);
+  AtlasPropagatorType apropagator(std::move(astepper));
 
-  DensePropagator_type
+  DensePropagatorType
   setupDensePropagator()
   {
     BoxGeometryBuilder               bgb;
@@ -81,7 +82,7 @@ namespace IntegrationTest {
     conf.position = {1.5 * units::_m, 0., 0.};
     conf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
     Navigator navi(bgb.buildTrackingGeometry(conf));
-    return DensePropagator_type(dstepper, std::move(navi));
+    return DensePropagatorType(dstepper, std::move(navi));
   }
 
   // The constant field test
