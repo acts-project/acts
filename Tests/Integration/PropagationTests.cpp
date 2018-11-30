@@ -20,6 +20,7 @@
 
 #include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -33,7 +34,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "PropagationTestHelper.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -48,10 +48,10 @@ namespace IntegrationTest {
       = EigenStepper<BFieldType,
                      VoidCorrector,
                      StepperExtensionList<DenseEnvironmentExtension>>;
-  using AtlasStepperType      = AtlasStepper<BFieldType>;
-  using EigenPropagatorType   = Propagator<EigenStepperType>;
-  using DensePropagatorType   = Propagator<DenseStepperType, Navigator>;
-  using AtlasPropagatorType   = Propagator<AtlasStepperType>;
+  using AtlasStepperType    = AtlasStepper<BFieldType>;
+  using EigenPropagatorType = Propagator<EigenStepperType>;
+  using DensePropagatorType = Propagator<DenseStepperType, Navigator>;
+  using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
   // number of tests
   const int  ntests = 100;
@@ -60,7 +60,7 @@ namespace IntegrationTest {
   const bool debug  = false;
 
   // setup propagator with constant B-field
-  const double         Bz = 2. * units::_T;
+  const double        Bz = 2. * units::_T;
   BFieldType          bField(0, 0, Bz);
   EigenStepperType    estepper(bField);
   DenseStepperType    dstepper(bField);
