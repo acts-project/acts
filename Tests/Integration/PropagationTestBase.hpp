@@ -68,7 +68,6 @@ BOOST_DATA_TEST_CASE(
                   1e-3,
                   Acts::units::_eV,
                   debug);
-
 }
 
 /// test consistency of propagators when approaching a cylinder
