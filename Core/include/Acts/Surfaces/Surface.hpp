@@ -94,7 +94,6 @@ protected:
   Surface(const DetectorElementBase& detelement);
 
 public:
-
   /// Destructor
   virtual ~Surface();
 
