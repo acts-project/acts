@@ -153,16 +153,3 @@ Acts::Surface::operator!=(const Acts::Surface& sf) const
 {
   return !(operator==(sf));
 }
-
-void*
-Acts::Surface::operator new(std::size_t size)
-{
-  void* p = malloc(size);
-  return p;
-}
-
-void
-Acts::Surface::operator delete(void* ptr)
-{
-  free(ptr);
-}

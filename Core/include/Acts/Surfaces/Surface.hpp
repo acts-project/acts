@@ -66,6 +66,7 @@ public:
   /// Typedef of the surface intersection
   using SurfaceIntersection = ObjectIntersection<Surface>;
 
+protected:
   /// Constructor with Transform3D as a shared object
   ///
   /// @param tform Transform3D positions the surface in 3D global space
@@ -91,6 +92,8 @@ public:
   ///
   /// @param detelement Detector element which is represented by this surface
   Surface(const DetectorElementBase& detelement);
+
+public:
 
   /// Destructor
   virtual ~Surface();
@@ -128,16 +131,6 @@ public:
   /// @return The shared pointer
   std::shared_ptr<const Surface>
   getSharedPtr() const;
-
-protected:
-  // deleted to prevent creation of unmanaged surfaces (except for on the stack)
-  void*
-  operator new(std::size_t size);
-
-public:
-  // needs to be defined since we overload operator new()
-  void
-  operator delete(void* ptr);
 
   /// Assignment operator is not allowed
   /// @note copy construction invalidates the association
