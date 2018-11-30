@@ -49,8 +49,6 @@ namespace Test {
   CylindricalTrackingGeometry cGeometry;
   auto                        tGeometry = cGeometry();
 
-  bool debugMode = true;
-
   // Get the navigator and provide the TrackingGeometry
   Navigator navigator(tGeometry);
 
@@ -63,12 +61,8 @@ namespace Test {
   EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper), std::move(navigator));
 
-<<<<<<< HEAD
   const int ntests    = 100;
   bool      debugMode = false;
-=======
-  const int ntests = 1;
->>>>>>> cfb3891a... clang-format
 
   // A plane selector for the SurfaceCollector
   struct PlaneSelector
@@ -313,48 +307,32 @@ namespace Test {
     (void)index;
 
     // define start parameters
-    double                x  = 0;
-    double                y  = 0;
-    double                z  = 0;
-    double                px = pT * cos(phi);
-    double                py = pT * sin(phi);
-    double                pz = pT / tan(theta);
-    double                q  = dcharge;
-    Vector3D              pos(x, y, z);
-    Vector3D              mom(px, py, pz);
-    CurvilinearParameters start(nullptr, pos, mom, q);
-
-    using DebugOutput = detail::DebugOutputActor;
+    double   x  = 0;
+    double   y  = 0;
+    double   z  = 0;
+    double   px = pT * cos(phi);
+    double   py = pT * sin(phi);
+    double   pz = pT / tan(theta);
+    double   q  = dcharge;
+    Vector3D pos(x, y, z);
+    Vector3D mom(px, py, pz);
+    /// a covariance matrix to transport
+    ActsSymMatrixD<5> cov;
+    // take some major correlations (off-diagonals)
+    cov << 10 * units::_mm, 0, 0.123, 0, 0.5, 0, 10 * units::_mm, 0, 0.162, 0,
+        0.123, 0, 0.1, 0, 0, 0, 0.162, 0, 0.1, 0, 0.5, 0, 0, 0,
+        1. / (10 * units::_GeV);
+    auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
+    CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
     // Action list and abort list
-<<<<<<< HEAD
-<<<<<<< HEAD
     using DebugOutput = detail::DebugOutputActor;
 
     PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
-=======
-    using ActionListType      = ActionList<MaterialInteractor, DebugOutput>;
-=======
-    using ActionListType = ActionList<MaterialInteractor, DebugOutput>;
->>>>>>> 72ec98ab... clang-format
-    PropagatorOptions<ActionListType> options;
->>>>>>> cfb3891a... clang-format
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 1500. * units::_mm;
-    options.debug       = debugMode;
 
     const auto& status = epropagator.propagate(start, options);
-<<<<<<< HEAD
-=======
-
-    // get the forward output to the screen
-    if (debugMode) {
-      const auto& debugOutput = status.template get<DebugOutput::result_type>();
-      std::cout << ">>> Loop Protection test output " << std::endl;
-      std::cout << debugOutput.debugString << std::endl;
-    }
-
->>>>>>> cfb3891a... clang-format
     // this test assumes state.options.loopFraction = 0.5
     // maximum momentum allowed
     double pmax = units::SI2Nat<units::MOMENTUM>(

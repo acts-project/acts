@@ -115,8 +115,8 @@ namespace Test {
     using DebugOutput = detail::DebugOutputActor;
 
     // Action list and abort list
-    using ActionList_type      = ActionList<MaterialInteractor, DebugOutput>;
-    using AbortConditions_type = AbortList<>;
+    using ActionListType = ActionList<MaterialInteractor, DebugOutput>;
+    using AbortListType  = AbortList<>;
 
     using Options = PropagatorOptions<ActionListType, AbortListType>;
     Options fwdOptions;

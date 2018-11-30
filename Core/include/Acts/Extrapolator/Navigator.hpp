@@ -813,9 +813,9 @@ private:
     // If you came until here, and you might not have boundaries
     // per definition, this is free of the self call
     if (state.navigation.navBoundaries.empty()) {
-      // create the navigation options - we could give the start surface here
-      NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-      // get the navigation boundaries
+      // Exclude the current surface in case it's a boundary
+      navOpts.startObject = state.navigation.currentSurface;
+      // Evaluate the boundary surfaces
       state.navigation.navBoundaries
           = state.navigation.currentVolume->compatibleBoundaries(
               state.stepping, navOpts, navCorr);
@@ -850,91 +850,14 @@ private:
         debugLog(state, [&] {
           return std::string("Boundary intersection not valid, skipping it.");
         });
-        // get the actual boundary for the navigation & the next volume
-        auto boundary = state.navigation.navBoundaryIter->object;
-        state.navigation.currentVolume
-            = boundary->attachedVolume(state.stepping.position(),
-                                       state.stepping.direction(),
-                                       state.stepping.navDir);
-        // no volume anymore : end of known world
-        if (!state.navigation.currentVolume) {
-          debugLog(state, [&] {
-            return std::string(
-                "No more volume to progress to, stopping navigation.");
-          });
-          return false;
-        }
-        // store the boundary for eventual actors to work on it
-        state.navigation.currentSurface = boundarySurface;
-        if (state.navigation.currentSurface) {
-          debugLog(state, [&] {
-            std::stringstream dstream;
-            dstream << "Current surface set to boundary surface ";
-            dstream << state.navigation.currentSurface->geoID().toString();
-            return dstream.str();
-          });
-        }
-        // resolve the new layer situation
-        if (resolveLayers(state, navCorr)) {
-          // positive layer resolving :
-          // - we can invalidate the boundary surfaces and return
-          state.navigation.navBoundaries.clear();
-          state.navigation.navBoundaryIter
-              = state.navigation.navBoundaries.end();
-          // return to the stepper
-          return true;
-        }
-        // return
-        debugLog(state, [&] {
-          return std::string("No layers can be reached in the new volume.");
-        });
-        // create the navigation options - we could give the start surface here
-        NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-        navOpts.startObject = boundarySurface;  // exclude the current boundary
-        // re-evaluate the boundary surfaces
-        state.navigation.navBoundaries
-            = state.navigation.currentVolume->compatibleBoundaries(
-                state.stepping, navOpts, navCorr);
-        state.navigation.navBoundaryIter
-            = state.navigation.navBoundaries.begin();
-      }
-      // (re-)evaluate the distance to the boundary
-      if (state.navigation.navBoundaryIter
-          != state.navigation.navBoundaries.end()) {
-        // we are not on the layer
-        debugLog(state, [&] {
-          std::stringstream dstream;
-          dstream << std::distance(state.navigation.navBoundaryIter,
-                                   state.navigation.navBoundaries.end());
-          dstream << " out of " << state.navigation.navBoundaries.size();
-          dstream << " boundaries remain to try.";
-          return dstream.str();
-        });
-
-        // update the boundary Surface (could have been switched)
-        boundarySurface = state.navigation.navBoundaryIter->representation;
-        // intersection with next layer
-        NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-        auto boundaryIntersect = boundarySurface->intersectionEstimate(
-            state.stepping, navOpts, navCorr);
-        // check if the intersect is invalid
-        auto step = boundaryIntersect.intersection.pathLength;
-        if (boundaryIntersect) {
-          if (step * step < s_onSurfaceTolerance * s_onSurfaceTolerance) {
-            // very unlikely edge-case
-            lastBoundary = boundarySurface;
-            continue;
-          } else {
-            // Update the navigation step size
-            // This is a new navigation stream, release the former first
-            updateStep(state, boundaryIntersect.intersection.pathLength, true);
-            return true;
-          }
-        } else {
-          // switch to new boundary and re-enter
-          ++state.navigation.navBoundaryIter;
-          continue;
-        }
+        // Increase the iterator to the next one
+        ++state.navigation.navBoundaryIter;
+      } else {
+        debugLog(state,
+                 [&] { return std::string("Boundary intersection valid."); });
+        // This is a new navigation stream, release the former first
+        updateStep(state, navCorr, distance, true);
+        return true;
       }
     }
     // Could not do anything
@@ -965,30 +888,7 @@ private:
   void
   initializeTarget(propagator_state_t& state, const corrector_t& navCorr) const
   {
-    debugLog(state, [&] {
-      return std::string("We do not have any layers yet, searching.");
-    });
-    // check if we are in the start volume
-    bool start
-        = (state.navigation.currentVolume == state.navigation.startVolume);
-    // we do not have layers yet, get the candidates
-    auto startLayer = start ? state.navigation.startLayer : nullptr;
-    auto endLayer   = nullptr;  // state.navigation.targetLayer;
-    // create the navigation options - and get the compatible layers
-    NavigationOptions<Layer> navOpts(state.stepping.navDir,
-                                     true,
-                                     resolveSensitive,
-                                     resolveMaterial,
-                                     resolvePassive,
-                                     startLayer,
-                                     endLayer);
-    // get a corrector associated with the stepper
-    state.navigation.navLayers
-        = state.navigation.currentVolume->compatibleLayers(
-            state.stepping, navOpts, navCorr);
-
-    // the number of layer candidates
-    if (!state.navigation.navLayers.empty()) {
+    if (state.navigation.targetVolume && state.stepping.pathAccumulated == 0.) {
       debugLog(state, [&] {
         return std::string("Re-initialzing cancelled as it is the first step.");
       });

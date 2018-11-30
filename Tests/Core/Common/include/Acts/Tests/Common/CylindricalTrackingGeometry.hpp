@@ -111,13 +111,14 @@ namespace Test {
           cvhConfig, getDefaultLogger("CylinderVolumeHelper", volumeLLevel));
 
       // ----------------- build a beam pipe -----------------------------------
+      MaterialProperties beamPipeMaterial{352.8, 407., 9.012, 4., 1.848e-3, 0.8};
       PassiveLayerBuilder::Config bplConfig;
       bplConfig.layerIdentification     = "BeamPipe";
       bplConfig.centralLayerRadii       = std::vector<double>(1, 19.);
       bplConfig.centralLayerHalflengthZ = std::vector<double>(1, 1000.);
       bplConfig.centralLayerThickness   = std::vector<double>(1, 0.8);
-      bplConfig.centralLayerMaterial
-          = {MaterialProperties(352.8, 407., 9.012, 4., 1.848e-3, 0.8)};
+      bplConfig.centralLayerMaterial    = {
+          std::make_shared<const HomogeneousSurfaceMaterial>(beamPipeMaterial)};
       auto beamPipeBuilder = std::make_shared<const PassiveLayerBuilder>(
           bplConfig, getDefaultLogger("BeamPipeLayerBuilder", layerLLevel));
       // create the volume for the beam pipe
@@ -128,10 +129,8 @@ namespace Test {
       bpvConfig.layerEnvelopeR       = {1. * units::_mm, 1. * units::_mm};
       bpvConfig.buildToRadiusZero    = true;
       bpvConfig.volumeSignature      = 0;
-      auto beamPipeVolumeBuilder
-          = std::make_shared<const CylinderVolumeBuilder>(
-              bpvConfig,
-              getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
+      auto beamPipeVolumeBuilder = std::make_shared<const CylinderVolumeBuilder>(
+          bpvConfig, getDefaultLogger("BeamPipeVolumeBuilder", volumeLLevel));
 
       // create the bounds and the volume
       auto beamPipeBounds
