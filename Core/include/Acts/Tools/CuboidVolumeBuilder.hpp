@@ -27,7 +27,10 @@
 namespace Acts {
 
 /// @brief This class builds a box detector with a configurable amount of
-/// surfaces in it.
+/// surfaces in it. The idea is to allow a quick configuration of a detector for
+/// mostly unit test applications. Therefore this class does not demand to be a
+/// universal construction factory but a raw first draft of the idea of factory
+/// that may be extended in the future.
 class CuboidVolumeBuilder : public ITrackingVolumeBuilder
 {
 public:
