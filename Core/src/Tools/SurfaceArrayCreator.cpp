@@ -323,15 +323,50 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 /// SurfaceArrayCreator interface method - create an array on a plane
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
-    const std::vector<std::shared_ptr<const Surface>>& /*surfaces*/,
-    double /*halflengthX*/,
-    double /*halflengthY*/,
-    size_t /*binsX*/,
-    size_t /*binsY*/,
-    const std::shared_ptr<const Transform3D>& /*transform*/) const
+    const std::vector<const Surface*>&        surfaces,
+    size_t                                    binsX,
+    size_t                                    binsY,
+    boost::optional<ProtoLayer>               protoLayerOpt,
+    const std::shared_ptr<const Transform3D>& transformOpt) const
 {
+  // check if we have proto layer, else build it
+  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
+
+  ACTS_VERBOSE("Creating a SurfaceArray on a plance");
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with X x Y  = " << binsX << " x " << binsY << " = "
+                                    << binsX * binsY
+                                    << " bins.");
+
+  Transform3D transform
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
+
+  ProtoAxis pAxisX
+      = createEquidistantAxis(surfaces, binX, protoLayer, transform, binsX);
+  ProtoAxis pAxisY
+      = createEquidistantAxis(surfaces, binY, protoLayer, transform, binsY);
+
+  Transform3D itransform = transform.inverse();
+  // transform lambda captures the transform matrix
+  auto globalToLocal = [transform](const Vector3D& pos) {
+    Vector3D loc = transform * pos;
+    return Vector2D(loc.x(), loc.y());
+  };
+  auto localToGlobal = [itransform](const Vector2D& loc) {
+    return itransform * Vector3D(loc.x(), loc.y(), 0.);
+  };
+
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl
+      = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                detail::AxisBoundaryType::Bound>(
+          globalToLocal, localToGlobal, pAxisX, pAxisY);
+
+  sl->fill(surfaces);
+  completeBinning(*sl, surfaces);
+
+  return std::make_unique<SurfaceArray>(
+      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
   //!< @todo implement - take from ATLAS complex TRT builder
-  return nullptr;
 }
 
 std::vector<const Acts::Surface*>

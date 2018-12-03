@@ -23,6 +23,7 @@
 //#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
@@ -49,15 +50,17 @@ namespace Test {
       auto pPlaneLayer = PlaneLayer::create(pTransform, pRectangle);
       BOOST_TEST(pPlaneLayer->layerType() == LayerType::active);
       // next level: need an array of Surfaces;
-      // will be copied below, but we don't care for this test
-      std::vector<std::shared_ptr<const Surface>> aSurfaces{
-          Surface::makeShared<SurfaceStub>(),
-          Surface::makeShared<SurfaceStub>()};
+      // bounds object, rectangle type
+      auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
+      /// Constructor with transform pointer
+      auto pNullTransform = std::make_shared<const Transform3D>();
+      const std::vector<const Surface*> aSurfaces{
+          new PlaneSurface(pNullTransform, rBounds),
+          new PlaneSurface(pNullTransform, rBounds)};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
       size_t              binsX(2), binsY(4);
-      auto                pSurfaceArray
-          = sac.surfaceArrayOnPlane(aSurfaces, halfX, halfY, binsX, binsY);
+      auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
       auto pPlaneLayerFromSurfaces = PlaneLayer::create(
           pTransform, pRectangle, std::move(pSurfaceArray));
       BOOST_TEST(pPlaneLayerFromSurfaces->layerType() == LayerType::active);
