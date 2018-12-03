@@ -324,8 +324,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     const std::vector<const Surface*>&        surfaces,
-    size_t                                    binsX,
-    size_t                                    binsY,
+    BinningValue                              bValue,
+    size_t                                    bins1,
+    size_t                                    bins2,
     boost::optional<ProtoLayer>               protoLayerOpt,
     const std::shared_ptr<const Transform3D>& transformOpt) const
 {
@@ -334,17 +335,11 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
 
   ACTS_VERBOSE("Creating a SurfaceArray on a plance");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
-  ACTS_VERBOSE(" -- with X x Y  = " << binsX << " x " << binsY << " = "
-                                    << binsX * binsY
-                                    << " bins.");
+  ACTS_VERBOSE(" -- with " << bins1 << " x " << bins2 << " = " << bins1 * bins2
+                           << " bins.");
   // Transformation
   Transform3D transform
       = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
-  // Axis along the binning
-  ProtoAxis pAxisX
-      = createEquidistantAxis(surfaces, binX, protoLayer, transform, binsX);
-  ProtoAxis pAxisY
-      = createEquidistantAxis(surfaces, binY, protoLayer, transform, binsY);
 
   Transform3D itransform = transform.inverse();
   // transform lambda captures the transform matrix
@@ -356,10 +351,40 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     return itransform * Vector3D(loc.x(), loc.y(), 0.);
   };
   // Build the grid
-  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl
-      = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
-                                detail::AxisBoundaryType::Bound>(
-          globalToLocal, localToGlobal, pAxisX, pAxisY);
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
+
+  // Axis along the binning
+  switch (bValue) {
+  case BinningValue::binX: {
+    ProtoAxis pAxis1
+        = createEquidistantAxis(surfaces, binY, protoLayer, transform, bins1);
+    ProtoAxis pAxis2
+        = createEquidistantAxis(surfaces, binZ, protoLayer, transform, bins2);
+    sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                 detail::AxisBoundaryType::Bound>(
+        globalToLocal, localToGlobal, pAxis1, pAxis2);
+    break;
+  }
+  case BinningValue::binY: {
+    ProtoAxis pAxis1
+        = createEquidistantAxis(surfaces, binX, protoLayer, transform, bins1);
+    ProtoAxis pAxis2
+        = createEquidistantAxis(surfaces, binZ, protoLayer, transform, bins2);
+    sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                 detail::AxisBoundaryType::Bound>(
+        globalToLocal, localToGlobal, pAxis1, pAxis2);
+    break;
+  }
+  default: {
+    ProtoAxis pAxis1
+        = createEquidistantAxis(surfaces, binX, protoLayer, transform, bins1);
+    ProtoAxis pAxis2
+        = createEquidistantAxis(surfaces, binY, protoLayer, transform, bins2);
+    sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                 detail::AxisBoundaryType::Bound>(
+        globalToLocal, localToGlobal, pAxis1, pAxis2);
+  }
+  }
 
   sl->fill(surfaces);
   completeBinning(*sl, surfaces);

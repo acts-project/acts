@@ -133,8 +133,7 @@ namespace Test {
     std::vector<BoxGeometryBuilder::LayerConfig> layerConfig;
     for (auto& sCfg : surfaceConfig) {
       BoxGeometryBuilder::LayerConfig cfg;
-      cfg.layerThickness = 1. * units::_mm;
-      cfg.surfaceCfg     = sCfg;
+      cfg.surfaceCfg = sCfg;
       layerConfig.push_back(cfg);
     }
 
@@ -145,7 +144,6 @@ namespace Test {
     for (auto& cfg : layerConfig) {
       LayerPtr layer = bgb.buildLayer<DetElem>(cfg);
       BOOST_TEST(layer != nullptr);
-      BOOST_TEST(layer->thickness() == 1. * units::_mm);
       BOOST_TEST(cfg.surface != nullptr);
       BOOST_TEST(layer->surfaceArray()->size() == 1);
       BOOST_TEST(layer->layerType() == LayerType::active);
@@ -156,10 +154,8 @@ namespace Test {
       cfg.surface    = nullptr;
       LayerPtr layer = bgb.buildLayer<>(cfg);
       BOOST_TEST(layer != nullptr);
-      BOOST_TEST(layer->thickness() == 1. * units::_mm);
       BOOST_TEST(cfg.surface != nullptr);
       BOOST_TEST(layer->surfaceArray()->size() == 1);
-      BOOST_TEST(layer->layerType() == LayerType::passive);
     }
     for (auto& cfg : layerConfig) {
       cfg.surface = nullptr;
@@ -177,10 +173,6 @@ namespace Test {
     // Test the building
     std::shared_ptr<TrackingVolume> trVol = bgb.buildVolume(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
-    for (auto& lay : volumeConfig.layers) {
-      BOOST_TEST(lay->layerType() == LayerType::passive);
-    }
-
     BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
                == volumeConfig.layers.size() * 2
                    + 1);  // #layers = navigation + material layers
@@ -191,9 +183,6 @@ namespace Test {
     volumeConfig.layers.clear();
     trVol = bgb.buildVolume<DetElem>(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
-    for (auto& lay : volumeConfig.layers) {
-      BOOST_TEST(lay->layerType() == LayerType::passive);
-    }
     BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
                == volumeConfig.layers.size() * 2
                    + 1);  // #layers = navigation + material layers
@@ -257,8 +246,7 @@ namespace Test {
     std::vector<BoxGeometryBuilder::LayerConfig> layerConfig2;
     for (auto& sCfg : surfaceConfig2) {
       BoxGeometryBuilder::LayerConfig cfg;
-      cfg.layerThickness = 1. * units::_mm;
-      cfg.surfaceCfg     = sCfg;
+      cfg.surfaceCfg = sCfg;
       layerConfig2.push_back(cfg);
     }
     BoxGeometryBuilder::VolumeConfig volumeConfig2;

@@ -364,8 +364,9 @@ Acts::LayerCreator::discLayer(
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::planeLayer(const std::vector<const Surface*>&  surfaces,
-                               size_t                              binsX,
-                               size_t                              binsY,
+                               BinningValue                        bValue,
+                               size_t                              bins1,
+                               size_t                              bins2,
                                boost::optional<ProtoLayer>         _protoLayer,
                                std::shared_ptr<const Transform3D>  transform,
                                std::unique_ptr<ApproachDescriptor> ad) const
@@ -373,21 +374,30 @@ Acts::LayerCreator::planeLayer(const std::vector<const Surface*>&  surfaces,
   ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
 
   // remaining layer parameters
-  double layerHalfX = 0.5 * (protoLayer.maxX - protoLayer.minX);
-  double layerHalfY = 0.5 * (protoLayer.maxY - protoLayer.minY);
+  double layerHalf1, layerHalf2, layerThickness;
+  switch (bValue) {
+  case BinningValue::binX: {
+    layerHalf1     = 0.5 * (protoLayer.maxY - protoLayer.minY);
+    layerHalf2     = 0.5 * (protoLayer.maxZ - protoLayer.minZ);
+    layerThickness = (protoLayer.maxX - protoLayer.minX);
+    break;
+  }
+  case BinningValue::binY: {
+    layerHalf1     = 0.5 * (protoLayer.maxX - protoLayer.minX);
+    layerHalf2     = 0.5 * (protoLayer.maxZ - protoLayer.minZ);
+    layerThickness = (protoLayer.maxY - protoLayer.minY);
+    break;
+  }
+  default: {
+    layerHalf1     = 0.5 * (protoLayer.maxX - protoLayer.minX);
+    layerHalf2     = 0.5 * (protoLayer.maxY - protoLayer.minY);
+    layerThickness = (protoLayer.maxZ - protoLayer.minZ);
+  }
+  }
 
   double centerX = 0.5 * (protoLayer.maxX + protoLayer.minX);
   double centerY = 0.5 * (protoLayer.maxY + protoLayer.minY);
   double centerZ = 0.5 * (protoLayer.maxZ + protoLayer.minZ);
-
-  //~ double binPosZ = 0.5 * (protoLayer.minZ + protoLayer.maxZ);
-
-  //~ double envZShift = 0.5 * (-protoLayer.envZ.first +
-  // protoLayer.envZ.second);
-  //~ double layerZ    = binPosZ + envZShift;
-  //~ double layerHalfZ
-  //~ = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
-  double layerThickness = (protoLayer.maxZ - protoLayer.minZ);
 
   ACTS_VERBOSE("Creating a plane Layer:");
   ACTS_VERBOSE(" - with layer center     = "
@@ -421,22 +431,17 @@ Acts::LayerCreator::planeLayer(const std::vector<const Surface*>&  surfaces,
                  << ")");
   }
 
-  ACTS_VERBOSE(" - # of modules     = " << surfaces.size() << " ordered in ( "
-                                        << binsX
-                                        << " x "
-                                        << binsY
-                                        << ")");
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
-        surfaces, binsX, binsY, protoLayer, nullptr);
+        surfaces, bValue, bins1, bins2, protoLayer, nullptr);
 
     checkBinning(*sArray);
   }
 
   // create the layer and push it back
   std::shared_ptr<const PlanarBounds> pBounds(
-      new RectangleBounds(layerHalfX, layerHalfY));
+      new RectangleBounds(layerHalf1, layerHalf2));
 
   // create the layer
   MutableLayerPtr pLayer = PlaneLayer::create(transform,
