@@ -102,7 +102,7 @@ Acts::TrapezoidBounds::dump(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::TrapezoidBounds:  (minHlenghtX, maxHlengthX, hlengthY) = "
+  sl << "Acts::TrapezoidBounds:  (minHlengthX, maxHlengthX, hlengthY) = "
      << "(" << minHalflengthX() << ", " << maxHalflengthX() << ", "
      << halflengthY() << ")";
   sl << std::setprecision(-1);

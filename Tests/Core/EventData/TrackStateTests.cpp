@@ -135,33 +135,33 @@ namespace Test {
     BoundParameters ataPlaneSmth(nullptr, pars, plane);
 
     // Get the predicted parameters back from the trackState
-    auto& ptsfList = trackStates[2];
-    auto  ataPlanefListPred
-        = detail::getParamaters<BoundParameters>(ptsfList, predicted);
+    auto& ptsfList          = trackStates[2];
+    auto  ataPlanefListPred = detail::getParamaters<BoundParameters>(
+        ptsfList, ParametricType::predicted);
     BOOST_TEST(ataPlanefListPred);
 
     // Check that the other parameters are empty
-    auto ataPlanefListUpdt
-        = detail::getParamaters<BoundParameters>(ptsfList, filtered);
+    auto ataPlanefListUpdt = detail::getParamaters<BoundParameters>(
+        ptsfList, ParametricType::filtered);
     BOOST_TEST(!ataPlanefListUpdt);
 
-    auto ataPlanefListSmthd
-        = detail::getParamaters<BoundParameters>(ptsfList, smoothed);
+    auto ataPlanefListSmthd = detail::getParamaters<BoundParameters>(
+        ptsfList, ParametricType::smoothed);
     BOOST_TEST(!ataPlanefListSmthd);
 
     // Get the track States from the list
     auto& m2DfList = trackStates[1];
 
     detail::setParameters<BoundParameters>(
-        m2DfList, std::move(ataPlaneUpdt), filtered);
-    auto ataPlanefListUpdtM2D
-        = detail::getParamaters<BoundParameters>(m2DfList, filtered);
+        m2DfList, std::move(ataPlaneUpdt), ParametricType::filtered);
+    auto ataPlanefListUpdtM2D = detail::getParamaters<BoundParameters>(
+        m2DfList, ParametricType::filtered);
     BOOST_TEST(ataPlanefListUpdtM2D);
 
     detail::setParameters<BoundParameters>(
-        m2DfList, std::move(ataPlanePred), predicted);
-    auto ataPlanefListPred2D
-        = detail::getParamaters<BoundParameters>(m2DfList, predicted);
+        m2DfList, std::move(ataPlanePred), ParametricType::predicted);
+    auto ataPlanefListPred2D = detail::getParamaters<BoundParameters>(
+        m2DfList, ParametricType::predicted);
     BOOST_TEST(ataPlanefListPred2D);
 
     // Test the sorting helper

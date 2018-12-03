@@ -92,7 +92,7 @@ Acts::RectangleBounds::dump(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::RectangleBounds:  (halflenghtX, halflengthY) = "
+  sl << "Acts::RectangleBounds:  (halflengthX, halflengthY) = "
      << "(" << halflengthX() << ", " << halflengthY() << ")";
   sl << std::setprecision(-1);
   return sl;

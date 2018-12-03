@@ -62,7 +62,7 @@ struct Intersection
     if (!valid) {
       return false;
     }
-    // now check the pathLenght
+    // now check the pathLength
     if (si.valid) {
       return (pathLength < si.pathLength);
     }
@@ -79,7 +79,7 @@ struct Intersection
     if (!valid) {
       return false;
     }
-    // now check the pathLenght
+    // now check the pathLength
     if (si.valid) {
       return (pathLength > si.pathLength);
     }

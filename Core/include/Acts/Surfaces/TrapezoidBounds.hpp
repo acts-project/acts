@@ -45,7 +45,7 @@ public:
 
   /// Constructor for symmetric Trapezoid
   ///
-  /// @param minhalex minimal half lenght X, definition at negative halflength Y
+  /// @param minhalex minimal half length X, definition at negative halflength Y
   /// @param maxhalex maximal half length X, definition at maximum halflength Y
   /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);

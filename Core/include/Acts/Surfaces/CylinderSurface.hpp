@@ -41,23 +41,23 @@ public:
   /// Deleted default constructor
   CylinderSurface() = delete;
 
-  /// Constructor from Transform3D, radius and halflenght
+  /// Constructor from Transform3D, radius and halflength
   ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param radius is the radius of the cylinder
-  /// @param hlength is the half lenght of the cylinder in z
+  /// @param hlength is the half length of the cylinder in z
   CylinderSurface(std::shared_ptr<const Transform3D> htrans,
                   double                             radius,
                   double                             hlength);
 
-  /// Constructor from Transform3D, radius halfphi, and halflenght
+  /// Constructor from Transform3D, radius halfphi, and halflength
   ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param radius is the radius of the cylinder
   /// @param hphi is the half length in phi of the cylinder
-  /// @param hlength is the half lenght of the cylinder in z
+  /// @param hlength is the half length of the cylinder in z
   CylinderSurface(std::shared_ptr<const Transform3D> htrans,
                   double                             radius,
                   double                             hphi,

@@ -20,10 +20,10 @@ namespace Acts {
 class Surface;
 
 // @brief enum of readability in parameter acces
-enum ParametericType : int { predicted = 0, filtered = 1, smoothed = 2 };
+enum class ParametricType : int { predicted = 0, filtered = 1, smoothed = 2 };
 
 // @brief enum of readability in measurement acces
-enum MeasurementType : int { uncalibrated = 0, calibrated = 1 };
+enum class MeasurementType : int { uncalibrated = 0, calibrated = 1 };
 
 /// @brief Parameteric part, non-type dependent.
 /// It reduces the number of visitor pattern calls

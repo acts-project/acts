@@ -34,7 +34,7 @@ namespace detail {
     }
   };
 
-  /// @brief vistor pattern path lenght sorter
+  /// @brief vistor pattern path length sorter
   struct path_length_sorter
   {
   public:

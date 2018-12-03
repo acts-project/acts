@@ -45,7 +45,7 @@ public:
 
   DiscTrapezoidalBounds() = delete;
 
-  /// Constructor for a symmetric Trapezoid giving min X lenght, max X lenght,
+  /// Constructor for a symmetric Trapezoid giving min X length, max X length,
   /// Rmin and R max
   /// @param minhalfx half length in X at min radius
   /// @param maxhalfx half length in X at maximum radius
