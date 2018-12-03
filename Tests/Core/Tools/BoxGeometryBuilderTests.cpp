@@ -145,7 +145,7 @@ namespace Test {
       LayerPtr layer = bgb.buildLayer<DetElem>(cfg);
       BOOST_TEST(layer != nullptr);
       BOOST_TEST(cfg.surface != nullptr);
-      BOOST_TEST(layer->surfaceArray()->size() == 1);
+      BOOST_TEST(layer->surfaceArray()->surfaces().size() == 1);
       BOOST_TEST(layer->layerType() == LayerType::active);
     }
 
@@ -155,7 +155,7 @@ namespace Test {
       LayerPtr layer = bgb.buildLayer<>(cfg);
       BOOST_TEST(layer != nullptr);
       BOOST_TEST(cfg.surface != nullptr);
-      BOOST_TEST(layer->surfaceArray()->size() == 1);
+      BOOST_TEST(layer->surfaceArray()->surfaces().size() == 1);
     }
     for (auto& cfg : layerConfig) {
       cfg.surface = nullptr;
