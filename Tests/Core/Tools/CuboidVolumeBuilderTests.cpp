@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#define BOOST_TEST_MODULE BoxGeometryBuilderTest
+#define BOOST_TEST_MODULE CuboidVolumeBuilderTest
 
 #include <boost/test/included/unit_test.hpp>
 
 #include <vector>
 #include "Acts/Material/Material.hpp"
-#include "Acts/Tools/BoxGeometryBuilder.hpp"
+#include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -69,17 +69,17 @@ namespace Test {
     double m_thickness;
   };
 
-  BOOST_AUTO_TEST_CASE(BoxGeometryBuilderTest)
+  BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest)
   {
 
     // Construct builder
-    BoxGeometryBuilder bgb;
+    CuboidVolumeBuilder bgb;
 
     // Create configurations for surfaces
-    std::vector<BoxGeometryBuilder::SurfaceConfig> surfaceConfig;
+    std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
     for (unsigned int i = 1; i < 5; i++) {
       // Position of the surfaces
-      BoxGeometryBuilder::SurfaceConfig cfg;
+      CuboidVolumeBuilder::SurfaceConfig cfg;
       cfg.position = {i * units::_m, 0., 0.};
 
       // Rotation of the surfaces
@@ -130,9 +130,9 @@ namespace Test {
 
     ////////////////////////////////////////////////////////////////////
     // Build layer configurations
-    std::vector<BoxGeometryBuilder::LayerConfig> layerConfig;
+    std::vector<CuboidVolumeBuilder::LayerConfig> layerConfig;
     for (auto& sCfg : surfaceConfig) {
-      BoxGeometryBuilder::LayerConfig cfg;
+      CuboidVolumeBuilder::LayerConfig cfg;
       cfg.surfaceCfg = sCfg;
       layerConfig.push_back(cfg);
     }
@@ -162,7 +162,7 @@ namespace Test {
     }
 
     // Build volume configuration
-    BoxGeometryBuilder::VolumeConfig volumeConfig;
+    CuboidVolumeBuilder::VolumeConfig volumeConfig;
     volumeConfig.position = {2.5 * units::_m, 0., 0.};
     volumeConfig.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
     volumeConfig.layerCfg = layerConfig;
@@ -213,10 +213,10 @@ namespace Test {
     // Build TrackingGeometry configuration
 
     // Build second volume
-    std::vector<BoxGeometryBuilder::SurfaceConfig> surfaceConfig2;
+    std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig2;
     for (int i = 1; i < 5; i++) {
       // Position of the surfaces
-      BoxGeometryBuilder::SurfaceConfig cfg;
+      CuboidVolumeBuilder::SurfaceConfig cfg;
       cfg.position = {-i * units::_m, 0., 0.};
 
       // Rotation of the surfaces
@@ -243,19 +243,19 @@ namespace Test {
       surfaceConfig2.push_back(cfg);
     }
 
-    std::vector<BoxGeometryBuilder::LayerConfig> layerConfig2;
+    std::vector<CuboidVolumeBuilder::LayerConfig> layerConfig2;
     for (auto& sCfg : surfaceConfig2) {
-      BoxGeometryBuilder::LayerConfig cfg;
+      CuboidVolumeBuilder::LayerConfig cfg;
       cfg.surfaceCfg = sCfg;
       layerConfig2.push_back(cfg);
     }
-    BoxGeometryBuilder::VolumeConfig volumeConfig2;
+    CuboidVolumeBuilder::VolumeConfig volumeConfig2;
     volumeConfig2.position = {-2.5 * units::_m, 0., 0.};
     volumeConfig2.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
     volumeConfig2.layerCfg = layerConfig2;
     volumeConfig2.name     = "Test volume2";
 
-    BoxGeometryBuilder::Config config;
+    CuboidVolumeBuilder::Config config;
     config.position  = {0., 0., 0.};
     config.length    = {10. * units::_m, 1. * units::_m, 1. * units::_m};
     config.volumeCfg = {volumeConfig2, volumeConfig};
@@ -263,7 +263,7 @@ namespace Test {
     bgb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const BoxGeometryBuilder>(bgb));
+        std::make_shared<const CuboidVolumeBuilder>(bgb));
     TrackingGeometryBuilder tgb(tgbCfg);
 
     std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();

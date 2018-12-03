@@ -30,7 +30,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
-#include "Acts/Tools/BoxGeometryBuilder.hpp"
+#include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "PropagationTestHelper.hpp"
@@ -71,13 +71,13 @@ namespace IntegrationTest {
   DensePropagatorType
   setupDensePropagator()
   {
-    BoxGeometryBuilder               bgb;
-    BoxGeometryBuilder::VolumeConfig vConf;
+    CuboidVolumeBuilder               bgb;
+    CuboidVolumeBuilder::VolumeConfig vConf;
     vConf.position = {1.5 * units::_m, 0., 0.};
     vConf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
     vConf.material = std::make_shared<const Material>(
         Material(352.8, 407., 9.012, 4., 1.848e-3));
-    BoxGeometryBuilder::Config conf;
+    CuboidVolumeBuilder::Config conf;
     conf.volumeCfg.push_back(vConf);
     conf.position = {1.5 * units::_m, 0., 0.};
     conf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
