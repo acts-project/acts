@@ -124,8 +124,7 @@ namespace Test {
     tgbCfg.trackingVolumeBuilders.push_back(
         std::make_shared<const BoxGeometryBuilder>(bgb));
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> vacuum
-        = std::move(tgb.trackingGeometry());
+    std::shared_ptr<const TrackingGeometry> vacuum = tgb.trackingGeometry();
 
     // Build navigator
     Navigator naviVac(vacuum);
@@ -244,8 +243,7 @@ namespace Test {
     tgbCfg.trackingVolumeBuilders.push_back(
         std::make_shared<const BoxGeometryBuilder>(bgb));
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> material
-        = std::move(tgb.trackingGeometry());
+    std::shared_ptr<const TrackingGeometry> material = tgb.trackingGeometry();
 
     // Build navigator
     Navigator naviMat(material);
@@ -425,8 +423,7 @@ namespace Test {
     tgbCfg.trackingVolumeBuilders.push_back(
         std::make_shared<const BoxGeometryBuilder>(bgb));
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> det
-        = std::move(tgb.trackingGeometry());
+    std::shared_ptr<const TrackingGeometry> det = tgb.trackingGeometry();
 
     // Build navigator
     Navigator naviDet(det);
