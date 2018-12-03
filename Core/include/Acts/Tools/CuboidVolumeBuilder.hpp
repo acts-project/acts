@@ -324,7 +324,7 @@ CuboidVolumeBuilder::buildVolume(VolumeConfig& cfg) const
 
 MutableTrackingVolumePtr
     CuboidVolumeBuilder::trackingVolume(TrackingVolumePtr /*unused*/,
-                                       VolumeBoundsPtr /*unused*/) const
+                                        VolumeBoundsPtr /*unused*/) const
 {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
