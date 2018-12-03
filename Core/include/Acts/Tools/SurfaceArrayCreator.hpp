@@ -201,21 +201,20 @@ public:
                      const std::shared_ptr<const Transform3D>& transformOpt
                      = nullptr) const;
 
-  //~ /// SurfaceArrayCreator interface method
-  //~ /// - create an array on a plane
-  //~ ///
-  //~ /// @param surfaces is the vector of pointers to sensitive surfaces
-  //~ /// to be ordered on the plane
-  //~ /// @pre the pointers to the sensitive surfaces in the surfaces vectors
-  //all
-  //~ /// need to be valid, since no check is performed
-  //~ /// @param halflengthX is the half length in X
-  //~ /// @param halflengthY is the half length in Y
-  //~ /// @param binsX is the number of bins in X
-  //~ /// @param binsY is the number of bins in Y
-  //~ /// @param transform is the (optional) additional transform applied
-  //~ ///
-  //~ /// @return a unique pointer a new SurfaceArray
+  /// SurfaceArrayCreator interface method
+  /// - create an array on a plane
+  ///
+  /// @param [in] surfaces is the vector of pointers to sensitive surfaces
+  /// to be ordered on the plane
+  /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
+  /// need to be valid, since no check is performed
+  /// @param [in] binsX is the number of bins in X
+  /// @param [in] binsY is the number of bins in Y
+  /// @param [in] bTypePhi the binning type in phi direction
+  /// (equidistant/aribtrary)
+  /// @param [in] transformOpt is the (optional) additional transform applied
+  ///
+  /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
                       size_t                             binsX,

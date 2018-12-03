@@ -175,24 +175,23 @@ public:
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param envelopeXY is the additional envelope applied in XY
-  /// @param envelopeZ is the additional envelope applied in Z
   /// @param binsX is number of bins the sensitive surfaces are ordered in X
   /// @param binsY is number of bins the sensitive surfaces are ordered in Y
   /// @param transform is the (optional) transform of the layer
+  /// @param _protoLayer (optional) proto layer specifying the dimensions and
+  /// envelopes
   /// @param ad possibility to hand over a specific ApproachDescriptor, which is
   /// needed for material mapping. Otherwise the default ApproachDescriptor will
   /// be taken used for this layer
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  planeLayer(const std::vector<std::shared_ptr<const Surface>>& surfaces,
-             double                                             envelopeXY,
-             double                                             envelopeZ,
-             size_t                                             binsX,
-             size_t                                             binsY,
-             const std::shared_ptr<const Transform3D>& transform = nullptr,
-             std::unique_ptr<ApproachDescriptor>       ad = nullptr) const;
+  planeLayer(const std::vector<const Surface*>&  surfaces,
+             size_t                              binsX,
+             size_t                              binsY,
+             boost::optional<ProtoLayer>         _protoLayer = boost::none,
+             std::shared_ptr<const Transform3D>  transform   = nullptr,
+             std::unique_ptr<ApproachDescriptor> ad          = nullptr) const;
 
   /// Set the configuration object
   /// @param lcConfig is the configuration struct

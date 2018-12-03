@@ -337,10 +337,10 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   ACTS_VERBOSE(" -- with X x Y  = " << binsX << " x " << binsY << " = "
                                     << binsX * binsY
                                     << " bins.");
-
+  // Transformation
   Transform3D transform
       = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
-
+  // Axis along the binning
   ProtoAxis pAxisX
       = createEquidistantAxis(surfaces, binX, protoLayer, transform, binsX);
   ProtoAxis pAxisY
@@ -355,7 +355,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   auto localToGlobal = [itransform](const Vector2D& loc) {
     return itransform * Vector3D(loc.x(), loc.y(), 0.);
   };
-
+  // Build the grid
   std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl
       = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                 detail::AxisBoundaryType::Bound>(
