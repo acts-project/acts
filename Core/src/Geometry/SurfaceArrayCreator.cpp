@@ -324,7 +324,6 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
   ACTS_VERBOSE(" -- with " << bins1 << " x " << bins2 << " = " << bins1 * bins2
                            << " bins.");
-
   // Transformation
   Transform3D transform =
       transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
