@@ -55,7 +55,7 @@ Acts::TrackingGeometryBuilder::trackingGeometry() const
     highestVolume = volumeBuilder->trackingVolume(highestVolume);
   }  // --------------------------------------------------------------------------------
 
-  // create the TrackingGeoemtry
+  // create the TrackingGeometry
   if (highestVolume) {
     trackingGeometry.reset(new TrackingGeometry(highestVolume));
   }

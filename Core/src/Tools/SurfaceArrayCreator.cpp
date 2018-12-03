@@ -324,9 +324,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     const std::vector<const Surface*>&        surfaces,
-    BinningValue                              bValue,
     size_t                                    bins1,
     size_t                                    bins2,
+    BinningValue                              bValue,
     boost::optional<ProtoLayer>               protoLayerOpt,
     const std::shared_ptr<const Transform3D>& transformOpt) const
 {

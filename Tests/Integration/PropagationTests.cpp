@@ -81,7 +81,14 @@ namespace IntegrationTest {
     conf.volumeCfg.push_back(vConf);
     conf.position = {1.5 * units::_m, 0., 0.};
     conf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
-    Navigator navi(bgb.buildTrackingGeometry(conf));
+    bgb.setConfig(conf);
+    TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.trackingVolumeBuilders.push_back(
+        std::shared_ptr<const ITrackingVolumeBuilder>(&bgb));
+    TrackingGeometryBuilder                 tgb(tgbCfg);
+    std::shared_ptr<const TrackingGeometry> detector(
+        tgb.trackingGeometry().get());
+    Navigator navi(detector);
     return DensePropagatorType(dstepper, std::move(navi));
   }
 

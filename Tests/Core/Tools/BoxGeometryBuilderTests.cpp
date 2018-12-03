@@ -260,14 +260,13 @@ namespace Test {
     config.length    = {10. * units::_m, 1. * units::_m, 1. * units::_m};
     config.volumeCfg = {volumeConfig2, volumeConfig};
 
-    std::shared_ptr<TrackingGeometry> detector
-        = bgb.buildTrackingGeometry(config);
-    BOOST_TEST(detector->lowestTrackingVolume({1., 0., 0.})->volumeName()
-               == volumeConfig.name);
-    BOOST_TEST(detector->lowestTrackingVolume({-1., 0., 0.})->volumeName()
-               == volumeConfig2.name);
-    config.volumes.clear();
-    detector = bgb.buildTrackingGeometry<DetElem>(config);
+    bgb.setConfig(config);
+    TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.trackingVolumeBuilders.push_back(
+        std::shared_ptr<const ITrackingVolumeBuilder>(&bgb));
+    TrackingGeometryBuilder tgb(tgbCfg);
+
+    std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
     BOOST_TEST(detector->lowestTrackingVolume({1., 0., 0.})->volumeName()
                == volumeConfig.name);
     BOOST_TEST(detector->lowestTrackingVolume({-1., 0., 0.})->volumeName()

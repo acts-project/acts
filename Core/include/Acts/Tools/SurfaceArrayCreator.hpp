@@ -208,11 +208,12 @@ public:
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] bValue Direction of the aligned surfaces
+
   /// @param [in] bins1 is the number of bins in the orthogonal direction to @p
   /// bValue
   /// @param [in] bins2 is the number of bins in the orthogonal direction to @p
   /// bValue
+  /// @param [in] bValue Direction of the aligned surfaces
   /// @param [in] bTypePhi the binning type in phi direction
   /// (equidistant/aribtrary)
   /// @param [in] transformOpt is the (optional) additional transform applied
@@ -220,9 +221,9 @@ public:
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
   surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
-                      BinningValue                       bValue,
                       size_t                             bins1,
                       size_t                             bins2,
+                      BinningValue                bValue = BinningValue::binX,
                       boost::optional<ProtoLayer> protoLayerOpt = boost::none,
                       const std::shared_ptr<const Transform3D>& transformOpt
                       = nullptr) const;

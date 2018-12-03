@@ -33,8 +33,6 @@ namespace Test {
 
   using cstep = detail::ConstrainedStep;
 
-  BoxGeometryBuilder bgb;
-
   ///
   /// @brief Aborter for the case that a particle leaves the detector or reaches
   /// a custom made threshold.
@@ -111,6 +109,7 @@ namespace Test {
   // valid in this case.
   BOOST_AUTO_TEST_CASE(step_extension_vacuum_test)
   {
+    BoxGeometryBuilder               bgb;
     BoxGeometryBuilder::VolumeConfig vConf;
     vConf.position = {0.5 * units::_m, 0., 0.};
     vConf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
@@ -120,7 +119,13 @@ namespace Test {
     conf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
 
     // Build detector
-    std::shared_ptr<TrackingGeometry> vacuum = bgb.buildTrackingGeometry(conf);
+    bgb.setConfig(conf);
+    TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.trackingVolumeBuilders.push_back(
+        std::shared_ptr<const ITrackingVolumeBuilder>(&bgb));
+    TrackingGeometryBuilder                 tgb(tgbCfg);
+    std::shared_ptr<const TrackingGeometry> vacuum(
+        tgb.trackingGeometry().get());
 
     // Build navigator
     Navigator naviVac(vacuum);
@@ -222,6 +227,7 @@ namespace Test {
   // Test case b). The DefaultExtension should state that it is invalid here.
   BOOST_AUTO_TEST_CASE(step_extension_material_test)
   {
+    BoxGeometryBuilder               bgb;
     BoxGeometryBuilder::VolumeConfig vConf;
     vConf.position = {0.5 * units::_m, 0., 0.};
     vConf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
@@ -233,8 +239,13 @@ namespace Test {
     conf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
 
     // Build detector
-    std::shared_ptr<TrackingGeometry> material
-        = bgb.buildTrackingGeometry(conf);
+    bgb.setConfig(conf);
+    TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.trackingVolumeBuilders.push_back(
+        std::shared_ptr<const ITrackingVolumeBuilder>(&bgb));
+    TrackingGeometryBuilder                 tgb(tgbCfg);
+    std::shared_ptr<const TrackingGeometry> material(
+        tgb.trackingGeometry().get());
 
     // Build navigator
     Navigator naviMat(material);
@@ -391,6 +402,7 @@ namespace Test {
   // Test case c). Both should be involved in their part of the detector
   BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test)
   {
+    BoxGeometryBuilder               bgb;
     BoxGeometryBuilder::VolumeConfig vConfVac1;
     vConfVac1.position = {0.5 * units::_m, 0., 0.};
     vConfVac1.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
@@ -408,7 +420,12 @@ namespace Test {
     conf.length    = {3. * units::_m, 1. * units::_m, 1. * units::_m};
 
     // Build detector
-    std::shared_ptr<TrackingGeometry> det = bgb.buildTrackingGeometry(conf);
+    bgb.setConfig(conf);
+    TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.trackingVolumeBuilders.push_back(
+        std::shared_ptr<const ITrackingVolumeBuilder>(&bgb));
+    TrackingGeometryBuilder                 tgb(tgbCfg);
+    std::shared_ptr<const TrackingGeometry> det(tgb.trackingGeometry().get());
 
     // Build navigator
     Navigator naviDet(det);

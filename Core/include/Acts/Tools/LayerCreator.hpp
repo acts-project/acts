@@ -175,11 +175,11 @@ public:
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param [in] bValue Direction of the aligned surfaces
   /// @param [in] bins1 is the number of bins in the orthogonal direction to @p
   /// bValue
   /// @param [in] bins2 is the number of bins in the orthogonal direction to @p
   /// bValue
+  /// @param [in] bValue Direction of the aligned surfaces
   /// @param [in] transform is the (optional) transform of the layer
   /// @param [in] _protoLayer (optional) proto layer specifying the dimensions
   /// and
@@ -191,9 +191,9 @@ public:
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
   planeLayer(const std::vector<const Surface*>&  surfaces,
-             BinningValue                        bins,
              size_t                              bins1,
              size_t                              bin2,
+             BinningValue                        bValue = BinningValue::binX,
              boost::optional<ProtoLayer>         _protoLayer = boost::none,
              std::shared_ptr<const Transform3D>  transform   = nullptr,
              std::unique_ptr<ApproachDescriptor> ad          = nullptr) const;
