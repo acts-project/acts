@@ -263,7 +263,7 @@ namespace Test {
     bgb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::shared_ptr<const ITrackingVolumeBuilder>(&bgb));
+        std::make_shared<const BoxGeometryBuilder>(bgb));
     TrackingGeometryBuilder tgb(tgbCfg);
 
     std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
