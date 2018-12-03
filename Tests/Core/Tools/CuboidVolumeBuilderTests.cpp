@@ -73,7 +73,7 @@ namespace Test {
   {
 
     // Construct builder
-    CuboidVolumeBuilder bgb;
+    CuboidVolumeBuilder cvb;
 
     // Create configurations for surfaces
     std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
@@ -112,7 +112,7 @@ namespace Test {
 
     // Test that 4 sensitive surfaces can be built
     for (const auto& cfg : surfaceConfig) {
-      PlaneSurface* pSur = bgb.buildSurface<DetElem>(cfg);
+      PlaneSurface* pSur = cvb.buildSurface<DetElem>(cfg);
       BOOST_TEST(pSur != nullptr);
       BOOST_TEST(pSur->center() == cfg.position);
       BOOST_TEST(pSur->associatedMaterial() != nullptr);
@@ -121,7 +121,7 @@ namespace Test {
 
     // Test that 4 passive surfaces can be built
     for (const auto& cfg : surfaceConfig) {
-      PlaneSurface* pSur = bgb.buildSurface<>(cfg);
+      PlaneSurface* pSur = cvb.buildSurface<>(cfg);
       BOOST_TEST(pSur != nullptr);
       BOOST_TEST(pSur->center() == cfg.position);
       BOOST_TEST(pSur->associatedMaterial() != nullptr);
@@ -142,7 +142,7 @@ namespace Test {
 
     // Test that 4 layers with sensitive surfaces can be built
     for (auto& cfg : layerConfig) {
-      LayerPtr layer = bgb.buildLayer<DetElem>(cfg);
+      LayerPtr layer = cvb.buildLayer<DetElem>(cfg);
       BOOST_TEST(layer != nullptr);
       BOOST_TEST(cfg.surface != nullptr);
       BOOST_TEST(layer->surfaceArray()->surfaces().size() == 1);
@@ -152,7 +152,7 @@ namespace Test {
     // Test that 4 layers with passive surfaces can be built
     for (auto& cfg : layerConfig) {
       cfg.surface    = nullptr;
-      LayerPtr layer = bgb.buildLayer<>(cfg);
+      LayerPtr layer = cvb.buildLayer<>(cfg);
       BOOST_TEST(layer != nullptr);
       BOOST_TEST(cfg.surface != nullptr);
       BOOST_TEST(layer->surfaceArray()->surfaces().size() == 1);
@@ -171,7 +171,7 @@ namespace Test {
         Material(352.8, 407., 9.012, 4., 1.848e-3));
 
     // Test the building
-    std::shared_ptr<TrackingVolume> trVol = bgb.buildVolume(volumeConfig);
+    std::shared_ptr<TrackingVolume> trVol = cvb.buildVolume(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
     BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
                == volumeConfig.layers.size() * 2
@@ -181,7 +181,7 @@ namespace Test {
 
     // Test the building
     volumeConfig.layers.clear();
-    trVol = bgb.buildVolume<DetElem>(volumeConfig);
+    trVol = cvb.buildVolume<DetElem>(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
     BOOST_TEST(trVol->confinedLayers()->arrayObjects().size()
                == volumeConfig.layers.size() * 2
@@ -193,7 +193,7 @@ namespace Test {
       lay.surface = nullptr;
       lay.active  = true;
     }
-    trVol = bgb.buildVolume<DetElem>(volumeConfig);
+    trVol = cvb.buildVolume<DetElem>(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
     for (auto& lay : volumeConfig.layers) {
       BOOST_TEST(lay->layerType() == LayerType::active);
@@ -203,7 +203,7 @@ namespace Test {
     for (auto& lay : volumeConfig.layerCfg) {
       lay.active = true;
     }
-    trVol = bgb.buildVolume<DetElem>(volumeConfig);
+    trVol = cvb.buildVolume<DetElem>(volumeConfig);
     BOOST_TEST(volumeConfig.layers.size() == 4);
     for (auto& lay : volumeConfig.layers) {
       BOOST_TEST(lay->layerType() == LayerType::active);
@@ -260,10 +260,10 @@ namespace Test {
     config.length    = {10. * units::_m, 1. * units::_m, 1. * units::_m};
     config.volumeCfg = {volumeConfig2, volumeConfig};
 
-    bgb.setConfig(config);
+    cvb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(bgb));
+        std::make_shared<const CuboidVolumeBuilder>(cvb));
     TrackingGeometryBuilder tgb(tgbCfg);
 
     std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();

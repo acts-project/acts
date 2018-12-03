@@ -71,7 +71,6 @@ namespace IntegrationTest {
   DensePropagatorType
   setupDensePropagator()
   {
-    CuboidVolumeBuilder               bgb;
     CuboidVolumeBuilder::VolumeConfig vConf;
     vConf.position = {1.5 * units::_m, 0., 0.};
     vConf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
@@ -81,14 +80,13 @@ namespace IntegrationTest {
     conf.volumeCfg.push_back(vConf);
     conf.position = {1.5 * units::_m, 0., 0.};
     conf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
-    bgb.setConfig(conf);
+    CuboidVolumeBuilder             cvb(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::shared_ptr<const ITrackingVolumeBuilder>(&bgb));
+        std::make_shared<const CuboidVolumeBuilder>(cvb));
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector(
-        tgb.trackingGeometry().get());
-    Navigator navi(detector);
+    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
+    Navigator                               navi(detector);
     return DensePropagatorType(dstepper, std::move(navi));
   }
 

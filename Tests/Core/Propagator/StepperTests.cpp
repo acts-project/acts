@@ -109,7 +109,7 @@ namespace Test {
   // valid in this case.
   BOOST_AUTO_TEST_CASE(step_extension_vacuum_test)
   {
-    CuboidVolumeBuilder               bgb;
+    CuboidVolumeBuilder               cvb;
     CuboidVolumeBuilder::VolumeConfig vConf;
     vConf.position = {0.5 * units::_m, 0., 0.};
     vConf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
@@ -119,10 +119,10 @@ namespace Test {
     conf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
 
     // Build detector
-    bgb.setConfig(conf);
+    cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(bgb));
+        std::make_shared<const CuboidVolumeBuilder>(cvb));
     TrackingGeometryBuilder                 tgb(tgbCfg);
     std::shared_ptr<const TrackingGeometry> vacuum = tgb.trackingGeometry();
 
@@ -226,7 +226,7 @@ namespace Test {
   // Test case b). The DefaultExtension should state that it is invalid here.
   BOOST_AUTO_TEST_CASE(step_extension_material_test)
   {
-    CuboidVolumeBuilder               bgb;
+    CuboidVolumeBuilder               cvb;
     CuboidVolumeBuilder::VolumeConfig vConf;
     vConf.position = {0.5 * units::_m, 0., 0.};
     vConf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
@@ -238,10 +238,10 @@ namespace Test {
     conf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
 
     // Build detector
-    bgb.setConfig(conf);
+    cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(bgb));
+        std::make_shared<const CuboidVolumeBuilder>(cvb));
     TrackingGeometryBuilder                 tgb(tgbCfg);
     std::shared_ptr<const TrackingGeometry> material = tgb.trackingGeometry();
 
@@ -400,7 +400,7 @@ namespace Test {
   // Test case c). Both should be involved in their part of the detector
   BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test)
   {
-    CuboidVolumeBuilder               bgb;
+    CuboidVolumeBuilder               cvb;
     CuboidVolumeBuilder::VolumeConfig vConfVac1;
     vConfVac1.position = {0.5 * units::_m, 0., 0.};
     vConfVac1.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
@@ -418,10 +418,10 @@ namespace Test {
     conf.length    = {3. * units::_m, 1. * units::_m, 1. * units::_m};
 
     // Build detector
-    bgb.setConfig(conf);
+    cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(bgb));
+        std::make_shared<const CuboidVolumeBuilder>(cvb));
     TrackingGeometryBuilder                 tgb(tgbCfg);
     std::shared_ptr<const TrackingGeometry> det = tgb.trackingGeometry();
 
