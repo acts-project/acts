@@ -110,6 +110,7 @@ public:
   ///
   /// - create an array in a cylinder, binned in phi, z when extremas and
   /// bin numbers are known
+  /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -134,6 +135,7 @@ public:
   /// - create an array in a cylinder, binned in phi, z when extremas and bin
   /// numbers are unknown - this method goes through the surfaces and finds out
   /// the needed information
+  /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -161,6 +163,7 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @warning This function requires the disc aligned with the z-axis
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
@@ -184,6 +187,7 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @warning This function requires the disc aligned with the z-axis
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
@@ -208,7 +212,8 @@ public:
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-
+  /// @warning This function requires the plane aligned with either the x-, y-
+  /// or z-axis
   /// @param [in] bins1 is the number of bins in the orthogonal direction to @p
   /// bValue
   /// @param [in] bins2 is the number of bins in the orthogonal direction to @p

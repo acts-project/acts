@@ -13,6 +13,7 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -376,7 +377,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
         globalToLocal, localToGlobal, pAxis1, pAxis2);
     break;
   }
-  default: {
+  case BinningValue::binZ: {
     ProtoAxis pAxis1
         = createEquidistantAxis(surfaces, binX, protoLayer, transform, bins1);
     ProtoAxis pAxis2
@@ -384,6 +385,12 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
     sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                  detail::AxisBoundaryType::Bound>(
         globalToLocal, localToGlobal, pAxis1, pAxis2);
+    break;
+  }
+  default: {
+    throw std::invalid_argument("Acts::SurfaceArrayCreator::"
+                                "surfaceArrayOnPlane: Invalid binning "
+                                "direction");
   }
   }
 
@@ -608,7 +615,8 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   auto matcher = m_cfg.surfaceMatcher;
 
   // now check the binning value
-  if (bValue == Acts::binPhi) {
+  switch (bValue) {
+  case Acts::binPhi: {
 
     if (m_cfg.doPhiBinningOptimization) {
       // Phi binning
@@ -656,22 +664,49 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
       minimum = -M_PI;
       maximum = M_PI;
     }
-
-  } else if (bValue == Acts::binZ) {
-    // Z binning
-
-    // just use maximum and minimum of all surfaces
-    // we do not need key surfaces here
-    maximum = protoLayer.maxZ;
-    minimum = protoLayer.minZ;
-
-  } else {
+    break;
+  }
+  case Acts::binR: {
     // R binning
 
     // just use maximum and minimum of all surfaces
     // we do not need key surfaces here
     maximum = protoLayer.maxR;
     minimum = protoLayer.minR;
+    break;
+  }
+  case Acts::binX: {
+    // X binning
+
+    // just use maximum and minimum of all surfaces
+    // we do not need key surfaces here
+    maximum = protoLayer.maxX;
+    minimum = protoLayer.minX;
+    break;
+  }
+  case Acts::binY: {
+    // Y binning
+
+    // just use maximum and minimum of all surfaces
+    // we do not need key surfaces here
+    maximum = protoLayer.maxY;
+    minimum = protoLayer.minY;
+    break;
+  }
+  case Acts::binZ: {
+    // Z binning
+
+    // just use maximum and minimum of all surfaces
+    // we do not need key surfaces here
+    maximum = protoLayer.maxZ;
+    minimum = protoLayer.minZ;
+    break;
+  }
+  default: {
+    throw std::invalid_argument("Acts::SurfaceArrayCreator::"
+                                "createEquidistantAxis: Invalid binning "
+                                "direction");
+  }
   }
   // assign the bin size
   ACTS_VERBOSE("Create equidistant binning Axis for binned SurfaceArray");
