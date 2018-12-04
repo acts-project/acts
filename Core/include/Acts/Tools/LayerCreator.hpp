@@ -192,7 +192,7 @@ public:
   MutableLayerPtr
   planeLayer(const std::vector<const Surface*>&  surfaces,
              size_t                              bins1,
-             size_t                              bin2,
+             size_t                              bins2,
              BinningValue                        bValue = BinningValue::binX,
              boost::optional<ProtoLayer>         _protoLayer = boost::none,
              std::shared_ptr<const Transform3D>  transform   = nullptr,
