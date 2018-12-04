@@ -48,7 +48,7 @@ public:
   SeedFilter(SeedFilterConfig cfg, IExperimentCuts<SpacePoint>* expCuts = 0);
 
   SeedFilter() = delete;
-  ~SeedFilter();
+  virtual ~SeedFilter();
 
   /// Create InternalSeeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
@@ -59,6 +59,7 @@ public:
   /// @param origin on the z axis as defined by bottom and middle space point
   /// @return vector of pairs containing seed weight and seed for all valid
   /// created seeds
+  virtual
   std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
   filterSeeds_2SpFixed(
       const InternalSpacePoint<SpacePoint>*               bottomSP,
@@ -72,7 +73,8 @@ public:
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
   /// for all seeds with the same middle space point
   /// @return vector of all InternalSeeds that not filtered out
-  virtual void
+  virtual
+  void
   filterSeeds_1SpFixed(
       std::vector<std::pair<float,
                             std::unique_ptr<const InternalSeed<SpacePoint>>>>&
