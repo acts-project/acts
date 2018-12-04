@@ -21,6 +21,7 @@ template <typename SpacePoint>
 class IExperimentCuts
 {
 public:
+  virtual ~IExperimentCuts() = default;
   /// Returns seed weight bonus/malus depending on detector considerations.
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed

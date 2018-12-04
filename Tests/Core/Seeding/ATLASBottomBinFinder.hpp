@@ -32,7 +32,7 @@ public:
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  virtual std::set<size_t>
+  std::set<size_t>
   findBins(size_t                            phiBin,
            size_t                            zBin,
            const SpacePointGrid<SpacePoint>* binnedSP);

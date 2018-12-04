@@ -24,7 +24,7 @@ class BinFinder : public IBinFinder<SpacePoint>
 {
 public:
   /// destructor
-  ~BinFinder() = default;
+  virtual ~BinFinder() = default;
 
   /// Return all bins that could contain space points that can be used with the
   /// space points in the bin with the provided indices to create seeds.

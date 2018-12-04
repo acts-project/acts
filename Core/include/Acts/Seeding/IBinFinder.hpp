@@ -21,7 +21,7 @@ class IBinFinder
 {
 public:
   /// destructor
-  ~IBinFinder() = default;
+  virtual ~IBinFinder() = default;
 
   /// Returns all global bin indices (1D binning) that could contain bottom
   /// respectively top space points for the provided bin.
@@ -32,7 +32,8 @@ public:
   /// @return a set containing the global bin indices for all bins potentially
   /// containing bottom resp. top space points that can be combined with the
   /// middle space points from the provided bin
-  virtual std::set<size_t>
+  virtual
+  std::set<size_t>
   findBins(size_t                            phiBin,
            size_t                            zBin,
            const SpacePointGrid<SpacePoint>* binnedSP)

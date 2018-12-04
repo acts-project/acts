@@ -13,7 +13,7 @@ class CovarianceTool
 {
 public:
   /// Virtual destructor
-  virtual ~CovarianceTool() = default;
+  ~CovarianceTool() = default;
 
   /// ICovarianceTool interface method
   /// returns squared errors in z and r for the passed SpacePoint
