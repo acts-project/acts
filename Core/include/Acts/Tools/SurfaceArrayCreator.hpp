@@ -216,13 +216,13 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnPlane(std::vector<std::shared_ptr<const Surface>> surfaces,
-                      double                                      halflengthX,
-                      double                                      halflengthY,
-                      size_t                                      binsX,
-                      size_t                                      binsY,
-                      const std::shared_ptr<const Transform3D>&   transform
-                      = nullptr) const;
+  surfaceArrayOnPlane(
+      const std::vector<std::shared_ptr<const Surface>>& surfaces,
+      double                                             halflengthX,
+      double                                             halflengthY,
+      size_t                                             binsX,
+      size_t                                             binsY,
+      const std::shared_ptr<const Transform3D>& transform = nullptr) const;
 
   static bool
   isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)

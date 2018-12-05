@@ -323,7 +323,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 /// SurfaceArrayCreator interface method - create an array on a plane
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
-    std::vector<std::shared_ptr<const Surface>> /*surfaces*/,
+    const std::vector<std::shared_ptr<const Surface>>& /*surfaces*/,
     double /*halflengthX*/,
     double /*halflengthY*/,
     size_t /*binsX*/,

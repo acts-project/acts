@@ -363,7 +363,7 @@ Acts::LayerCreator::discLayer(
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::planeLayer(
-    std::vector<std::shared_ptr<const Surface>> /**surfaces*/,
+    const std::vector<std::shared_ptr<const Surface>>& /**surfaces*/,
     double /**envelopeXY*/,
     double /**envelopeZ*/,
     size_t /**binsX*/,

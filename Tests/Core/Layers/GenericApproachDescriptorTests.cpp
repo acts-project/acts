@@ -82,8 +82,6 @@ namespace Test {
         BOOST_TEST(approachDescriptor.containedSurfaces().at(i)
                    == someSurfaces.at(i).get());
       }
-      // BOOST_CHECK(&(approachDescriptor.containedSurfaces()) ==
-      // &someSurfaces);
     }
 
     BOOST_AUTO_TEST_SUITE_END()
