@@ -97,13 +97,9 @@ Acts::SurfaceArray::SurfaceArray(
     std::shared_ptr<const Transform3D>          transform)
   : p_gridLookup(std::move(gridLookup))
   , m_surfaces(std::move(surfaces))
+  , m_surfacesRawPointers(unpack_shared_vector(m_surfaces))
   , m_transform(std::move(transform))
 {
-  // unpack const raw pointers from shared_ptrs
-  m_surfacesRawPointers.reserve(m_surfaces.size());
-  for (const auto& srf : m_surfaces) {
-    m_surfacesRawPointers.push_back(srf.get());
-  }
 }
 
 Acts::SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)

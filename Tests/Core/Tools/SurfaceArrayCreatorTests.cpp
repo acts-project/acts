@@ -303,9 +303,8 @@ namespace Test {
                           SurfaceArrayCreatorFixture)
   {
     // fail on empty srf vector
-    SrfVec                      empty;
     std::vector<const Surface*> emptyRaw;
-    ProtoLayer                  pl(empty);
+    ProtoLayer                  pl(emptyRaw);
     auto                        tr = Transform3D::Identity();
     BOOST_CHECK_THROW(
         createEquidistantAxis(emptyRaw, BinningValue::binPhi, pl, tr),

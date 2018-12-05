@@ -157,8 +157,7 @@ public:
   operator!=(const Surface& sf) const;
 
   /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given
-  /// a shift.
+  /// given a shift.
   ///
   /// @param shift additional, optional shift
   std::shared_ptr<Surface>

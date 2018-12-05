@@ -76,6 +76,8 @@ public:
   radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
 
 private:
+  /// Helper method which performs the actual min/max calculation
+  /// @param surfaces The surfaces to build this protolayer out of
   void
   measure(const std::vector<const Surface*>& surfaces);
 };
