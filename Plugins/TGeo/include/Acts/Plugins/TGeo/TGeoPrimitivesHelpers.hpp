@@ -14,7 +14,7 @@ namespace Acts {
 
 namespace TGeoPrimitivesHelpers {
 
-Transform3D makeTransform(const Eigen::Vector3d& rotationMatrixCol0,
+inline Transform3D makeTransform(const Eigen::Vector3d& rotationMatrixCol0,
                           const Eigen::Vector3d& rotationMatrixCol1,
                           const Eigen::Vector3d& rotationMatrixCol2,
                           const Eigen::Vector3d& translation) {
