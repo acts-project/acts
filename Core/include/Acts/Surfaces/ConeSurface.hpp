@@ -90,7 +90,7 @@ public:
   ConeSurface&
   operator=(const ConeSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// Clone method. Uses the copy constructor. A new position can optionally be
   /// given a shift.
   ///
   /// @param shift additional, optional shift

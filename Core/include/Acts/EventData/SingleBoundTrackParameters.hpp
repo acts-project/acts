@@ -173,7 +173,6 @@ public:
   ~SingleBoundTrackParameters() override = default;
 
   /// @brief copy assignment operator - charged/neutral
-  /// checks if the surface is free and in such a case delete-clones it
   SingleBoundTrackParameters<ChargePolicy>&
   operator=(const SingleBoundTrackParameters<ChargePolicy>& rhs)
   {
