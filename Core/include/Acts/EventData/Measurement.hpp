@@ -89,28 +89,23 @@ public:
   /// @param head,values consistent number of parameter values of the
   /// measurement
   template <typename... Tail>
-  Measurement(const Surface&      surface,
-              const identifier_t& id,
-              CovMatrix_t         cov,
+  Measurement(std::shared_ptr<const Surface> surface,
+              const identifier_t&            id,
+              CovMatrix_t                    cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
               Tail... values)
     : m_oParameters(std::make_unique<const CovMatrix_t>(std::move(cov)),
                     head,
                     values...)
-    , m_pSurface(surface.cloneIfFree())
+    , m_pSurface(std::move(surface))
     , m_oIdentifier(id)
   {
+    assert(m_pSurface);
   }
 
   /// @brief virtual destructor
-  virtual ~Measurement()
-  {
-    if (m_pSurface && m_pSurface->isFree()) {
-      delete m_pSurface;
-      m_pSurface = nullptr;
-    }
-  }
+  virtual ~Measurement() = default;
 
   /// @brief copy constructor
   ///
@@ -120,7 +115,7 @@ public:
   /// @param copy is the source for the copy
   Measurement(const Measurement<identifier_t, params...>& copy)
     : m_oParameters(copy.m_oParameters)
-    , m_pSurface(copy.m_pSurface->cloneIfFree())
+    , m_pSurface(copy.m_pSurface)
     , m_oIdentifier(copy.m_oIdentifier)
   {
   }
@@ -130,13 +125,12 @@ public:
   /// @tparam identifier_t The identifier type
   /// @tparam params...The local parameter pack
   ///
-  /// @param rhs is the source for the move
-  Measurement(Measurement<identifier_t, params...>&& rhs)
-    : m_oParameters(std::move(rhs.m_oParameters))
-    , m_pSurface(rhs.m_pSurface)
-    , m_oIdentifier(std::move(rhs.m_oIdentifier))
+  /// @param other is the source for the move
+  Measurement(Measurement<identifier_t, params...>&& other)
+    : m_oParameters(std::move(other.m_oParameters))
+    , m_pSurface(std::move(other.m_pSurface))
+    , m_oIdentifier(std::move(other.m_oIdentifier))
   {
-    rhs.m_pSurface = nullptr;
   }
 
   /// @brief copy assignment operator
@@ -165,7 +159,7 @@ public:
   operator=(Measurement<identifier_t, params...>&& rhs)
   {
     m_oParameters = std::move(rhs.m_oParameters);
-    m_pSurface    = rhs.m_pSurface;
+    m_pSurface    = std::move(rhs.m_pSurface);
     m_oIdentifier = std::move(rhs.m_oIdentifier);
 
     return *this;
@@ -335,9 +329,10 @@ protected:
   }
 
 private:
-  ParSet_t       m_oParameters;  ///< measured parameter set
-  const Surface* m_pSurface;  ///< surface at which the measurement took place
-  identifier_t   m_oIdentifier;  ///< identifier for this measurement
+  ParSet_t m_oParameters;  ///< measured parameter set
+  std::shared_ptr<const Surface>
+               m_pSurface;     ///< surface at which the measurement took place
+  identifier_t m_oIdentifier;  ///< identifier for this measurement
 };
 
 /// @brief FittableMeasurement boost_variant type

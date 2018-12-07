@@ -43,19 +43,20 @@ public:
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(CovPtr_t           cov,
-                             const ParVector_t& parValues,
-                             const Surface&     surface)
+  SingleBoundTrackParameters(CovPtr_t                       cov,
+                             const ParVector_t&             parValues,
+                             std::shared_ptr<const Surface> surface)
     : SingleTrackParameters<ChargePolicy>(
           std::move(cov),
           parValues,
           detail::coordinate_transformation::parameters2globalPosition(
               parValues,
-              surface),
+              *surface),
           detail::coordinate_transformation::parameters2globalMomentum(
               parValues))
-    , m_pSurface(surface.cloneIfFree())
+    , m_pSurface(std::move(surface))
   {
+    assert(m_pSurface);
   }
 
   /// @brief Constructor of track parameters bound to a surface
@@ -73,21 +74,22 @@ public:
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(CovPtr_t              cov,
-                             const ActsVectorD<3>& position,
-                             const ActsVectorD<3>& momentum,
-                             double                dCharge,
-                             const Surface&        surface)
+  SingleBoundTrackParameters(CovPtr_t                       cov,
+                             const ActsVectorD<3>&          position,
+                             const ActsVectorD<3>&          momentum,
+                             double                         dCharge,
+                             std::shared_ptr<const Surface> surface)
     : SingleTrackParameters<ChargePolicy>(
           std::move(cov),
           detail::coordinate_transformation::global2parameters(position,
                                                                momentum,
                                                                dCharge,
-                                                               surface),
+                                                               *surface),
           position,
           momentum)
-    , m_pSurface(surface.cloneIfFree())
+    , m_pSurface(std::move(surface))
   {
+    assert(m_pSurface);
   }
 
   /// @brief Constructor of track parameters bound to a surface
@@ -102,19 +104,20 @@ public:
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(CovPtr_t           cov,
-                             const ParVector_t& parValues,
-                             const Surface&     surface)
+  SingleBoundTrackParameters(CovPtr_t                       cov,
+                             const ParVector_t&             parValues,
+                             std::shared_ptr<const Surface> surface)
     : SingleTrackParameters<ChargePolicy>(
           std::move(cov),
           parValues,
           detail::coordinate_transformation::parameters2globalPosition(
               parValues,
-              surface),
+              *surface),
           detail::coordinate_transformation::parameters2globalMomentum(
               parValues))
-    , m_pSurface(surface.cloneIfFree())
+    , m_pSurface(std::move(surface))
   {
+    assert(m_pSurface);
   }
 
   /// @brief Constructor of track parameters bound to a surface
@@ -132,19 +135,19 @@ public:
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(CovPtr_t              cov,
-                             const ActsVectorD<3>& position,
-                             const ActsVectorD<3>& momentum,
-                             const Surface&        surface)
+  SingleBoundTrackParameters(CovPtr_t                       cov,
+                             const ActsVectorD<3>&          position,
+                             const ActsVectorD<3>&          momentum,
+                             std::shared_ptr<const Surface> surface)
     : SingleTrackParameters<ChargePolicy>(
           std::move(cov),
           detail::coordinate_transformation::global2parameters(position,
                                                                momentum,
                                                                0,
-                                                               surface),
+                                                               *surface),
           position,
           momentum)
-    , m_pSurface(surface.cloneIfFree())
+    , m_pSurface(std::move(surface))
   {
   }
 
@@ -153,41 +156,30 @@ public:
   SingleBoundTrackParameters(
       const SingleBoundTrackParameters<ChargePolicy>& copy)
     : SingleTrackParameters<ChargePolicy>(copy)
-    , m_pSurface(copy.m_pSurface->cloneIfFree())
+    , m_pSurface(copy.m_pSurface)  // copy shared_ptr
   {
   }
 
   /// @brief move constructor - charged/neutral
-  /// @param[in] copy The source parameters
-  SingleBoundTrackParameters(SingleBoundTrackParameters<ChargePolicy>&& copy)
-    : SingleTrackParameters<ChargePolicy>(std::move(copy))
-    , m_pSurface(copy.m_pSurface)
+  /// @param[in] other The source parameters
+  SingleBoundTrackParameters(SingleBoundTrackParameters<ChargePolicy>&& other)
+    : SingleTrackParameters<ChargePolicy>(std::move(other))
+    , m_pSurface(std::move(other.m_pSurface))
   {
-    copy.m_pSurface = nullptr;
   }
 
   /// @brief desctructor - charged/neutral
   /// checks if the surface is free and in such a case deletes it
-  ~SingleBoundTrackParameters() override
-  {
-    if (m_pSurface && m_pSurface->isFree()) {
-      delete m_pSurface;
-    }
-  }
+  ~SingleBoundTrackParameters() override = default;
 
   /// @brief copy assignment operator - charged/neutral
-  /// checks if the surface is free and in such a case delete-clones it
   SingleBoundTrackParameters<ChargePolicy>&
   operator=(const SingleBoundTrackParameters<ChargePolicy>& rhs)
   {
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
-
-      if (m_pSurface->isFree()) {
-        delete m_pSurface;
-      }
-      m_pSurface = rhs.m_pSurface->cloneIfFree();
+      m_pSurface                                   = rhs.m_pSurface;
     }
 
     return *this;
@@ -201,13 +193,7 @@ public:
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(std::move(rhs));
-
-      if (m_pSurface->isFree()) {
-        delete m_pSurface;
-      }
-
-      m_pSurface     = rhs.m_pSurface;
-      rhs.m_pSurface = nullptr;
+      m_pSurface                                   = std::move(rhs.m_pSurface);
     }
 
     return *this;
@@ -254,7 +240,7 @@ public:
   }
 
 private:
-  const Surface* m_pSurface;
+  std::shared_ptr<const Surface> m_pSurface;
 };
 
 }  // namespace Acts

@@ -222,8 +222,11 @@ public:
   convert(State& state, const surface_t& surface)
   {
     // return the bound parameters
-    return BoundParameters(
-        nullptr, state.pos, state.p * state.dir, state.q, surface);
+    return BoundParameters(nullptr,
+                           state.pos,
+                           state.p * state.dir,
+                           state.q,
+                           surface.getSharedPtr());
   }
 
   /// Perform a straight line propagation step

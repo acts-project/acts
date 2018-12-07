@@ -38,7 +38,7 @@ class Surface;
 template <class T>
 class BoundarySurfaceT
 {
-  /// delcare the TrackingVolume as friend
+  /// declare the TrackingVolume as friend
   friend T;
 
   using VolumePtr   = std::shared_ptr<const T>;
@@ -61,7 +61,7 @@ public:
   /// @param surface is the unqiue surface the boundary represents
   /// @param inside is the inside volume the bounday surface points to
   /// @param outside is the outside volume the boundary surface points to
-  BoundarySurfaceT(std::unique_ptr<const Surface> surface,
+  BoundarySurfaceT(std::shared_ptr<const Surface> surface,
                    const T*                       inside,
                    const T*                       outside)
     : m_surface(std::move(surface))
@@ -78,7 +78,7 @@ public:
   /// @param surface is the unqiue surface the boundary represents
   /// @param inside is the inside volume the bounday surface points to
   /// @param outside is the outside volume the boundary surface points to
-  BoundarySurfaceT(std::unique_ptr<const Surface> surface,
+  BoundarySurfaceT(std::shared_ptr<const Surface> surface,
                    VolumePtr                      inside,
                    VolumePtr                      outside)
     : m_surface(std::move(surface))
@@ -97,7 +97,7 @@ public:
   /// to
   /// @param outsideArray is the outside volume array the boundary surface
   /// points to
-  BoundarySurfaceT(std::unique_ptr<const Surface>     surface,
+  BoundarySurfaceT(std::shared_ptr<const Surface>     surface,
                    std::shared_ptr<const VolumeArray> insideArray,
                    std::shared_ptr<const VolumeArray> outsideArray)
     : m_surface(std::move(surface))
@@ -159,7 +159,7 @@ protected:
                     BoundaryOrientation                inout);
 
   /// the represented surface by this
-  std::unique_ptr<const Surface> m_surface;
+  std::shared_ptr<const Surface> m_surface;
   /// the inside (w.r.t. normal vector) volume to point to if only one exists
   const T* m_insideVolume;
   /// the outside (w.r.t. normal vector) volume to point to if only one exists

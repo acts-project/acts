@@ -20,9 +20,60 @@ using Acts::VectorHelpers::perp;
 
 namespace Acts {
 
-ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
+ProtoLayer::ProtoLayer(const std::vector<const Surface*>& surfaces)
 {
+  measure(surfaces);
+}
 
+ProtoLayer::ProtoLayer(
+    const std::vector<std::shared_ptr<const Surface>>& surfaces)
+{
+  measure(unpack_shared_vector(surfaces));
+}
+
+double
+ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
+{
+  Vector2D p1(pos1.x(), pos1.y());
+  Vector2D p2(pos2.x(), pos2.y());
+
+  Vector2D O(0, 0);
+  Vector2D p1p2 = (p2 - p1);
+  double   L    = p1p2.norm();
+  Vector2D p1O  = (O - p1);
+
+  // don't do division if L is very small
+  if (L < 1e-7) {
+    return std::numeric_limits<double>::max();
+  }
+  double f = p1p2.dot(p1O) / L;
+
+  // clamp to [0, |p1p2|]
+  f = std::min(L, std::max(0., f));
+
+  Vector2D closest = f * p1p2.normalized() + p1;
+  double   dist    = (closest - O).norm();
+
+  return dist;
+}
+
+std::ostream&
+ProtoLayer::dump(std::ostream& sl) const
+{
+  sl << "ProtoLayer with dimensions (min/max)" << std::endl;
+  sl << " - r : " << minR << " - " << envR.first << " / " << maxR << " + "
+     << envR.second << std::endl;
+  sl << " - z : " << minZ << " - " << envZ.first << " / " << maxZ << " + "
+     << envZ.second << std::endl;
+  sl << " - phi : " << minPhi << " - " << envPhi.first << " / " << maxPhi
+     << " + " << envPhi.second << std::endl;
+
+  return sl;
+}
+
+void
+ProtoLayer::measure(const std::vector<const Surface*>& surfaces)
+{
   minR   = std::numeric_limits<double>::max();
   maxR   = std::numeric_limits<double>::lowest();
   minX   = std::numeric_limits<double>::max();
@@ -169,46 +220,6 @@ ProtoLayer::ProtoLayer(std::vector<const Surface*> surfaces)
       }
     }
   }
-}
-
-double
-ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
-{
-  Vector2D p1(pos1.x(), pos1.y());
-  Vector2D p2(pos2.x(), pos2.y());
-
-  Vector2D O(0, 0);
-  Vector2D p1p2 = (p2 - p1);
-  double   L    = p1p2.norm();
-  Vector2D p1O  = (O - p1);
-
-  // don't do division if L is very small
-  if (L < 1e-7) {
-    return std::numeric_limits<double>::max();
-  }
-  double f = p1p2.dot(p1O) / L;
-
-  // clamp to [0, |p1p2|]
-  f = std::min(L, std::max(0., f));
-
-  Vector2D closest = f * p1p2.normalized() + p1;
-  double   dist    = (closest - O).norm();
-
-  return dist;
-}
-
-std::ostream&
-ProtoLayer::dump(std::ostream& sl) const
-{
-  sl << "ProtoLayer with dimensions (min/max)" << std::endl;
-  sl << " - r : " << minR << " - " << envR.first << " / " << maxR << " + "
-     << envR.second << std::endl;
-  sl << " - z : " << minZ << " - " << envZ.first << " / " << maxZ << " + "
-     << envZ.second << std::endl;
-  sl << " - phi : " << minPhi << " - " << envPhi.first << " / " << maxPhi
-     << " + " << envPhi.second << std::endl;
-
-  return sl;
 }
 
 }  // namespace Acts

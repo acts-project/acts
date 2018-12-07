@@ -91,7 +91,7 @@ private:
 
   /// Private helper method for creating a surface for
   /// the NavigationLayer
-  Surface*
+  std::shared_ptr<Surface>
   createNavigationSurface(const Layer& layer,
                           BinningValue bValue,
                           double       offset) const;

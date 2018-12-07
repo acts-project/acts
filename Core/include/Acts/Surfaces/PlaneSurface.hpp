@@ -83,20 +83,12 @@ public:
   PlaneSurface&
   operator=(const PlaneSurface& other);
 
-  /// Conditional Implicit constructor
-  /// uses the copy constructor (if needed)
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
-  /// Checks if a surface is free and either clones or returns
-  /// the pointer to itself - the return object ist a const pointer
-  const PlaneSurface*
-  cloneIfFree() const final;
-
-  /// Virtual constructor with optional shift
-  /// ownership of the shift transform is not given !!
-  ///
-  /// @param shift is a potential shift after cloning
-  PlaneSurface*
-  clone(const Transform3D* shift = nullptr) const override;
+  /// @param shift additional, optional shift
+  std::shared_ptr<PlaneSurface>
+  clone(const Transform3D* shift = nullptr) const;
 
   /// Normal vector return
   ///
@@ -226,6 +218,14 @@ public:
 protected:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
+
+private:
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
+  ///
+  /// @param shift additional, optional shift
+  PlaneSurface*
+  clone_impl(const Transform3D* shift = nullptr) const override;
 };
 
 #include "Acts/Surfaces/detail/PlaneSurface.ipp"

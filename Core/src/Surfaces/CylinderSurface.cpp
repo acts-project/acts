@@ -108,15 +108,6 @@ Acts::CylinderSurface::operator=(const CylinderSurface& other)
   return *this;
 }
 
-const Acts::CylinderSurface*
-Acts::CylinderSurface::cloneIfFree() const
-{
-  if (isFree()) {
-    return new CylinderSurface(*this);
-  }
-  return (this);
-}
-
 // return the binning position for ordering in the BinnedArray
 const Acts::Vector3D
 Acts::CylinderSurface::binningPosition(BinningValue bValue) const
@@ -211,8 +202,14 @@ Acts::CylinderSurface::name() const
   return "Acts::CylinderSurface";
 }
 
+std::shared_ptr<Acts::CylinderSurface>
+Acts::CylinderSurface::clone(const Transform3D* shift) const
+{
+  return std::shared_ptr<CylinderSurface>(this->clone_impl(shift));
+}
+
 Acts::CylinderSurface*
-Acts::CylinderSurface::clone(const Acts::Transform3D* shift) const
+Acts::CylinderSurface::clone_impl(const Transform3D* shift) const
 {
   if (shift != nullptr) {
     return new CylinderSurface(*this, *shift);

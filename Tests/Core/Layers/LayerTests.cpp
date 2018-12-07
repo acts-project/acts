@@ -47,10 +47,11 @@ namespace Test {
       LayerStub minallyConstructed(nullptr);
       BOOST_TEST(minallyConstructed.constructedOk());
       /// Need an approach descriptor for the next level of complexity:
-      const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
-                                                  new SurfaceStub()};
+      std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          Surface::makeShared<SurfaceStub>(),
+          Surface::makeShared<SurfaceStub>()};
       std::unique_ptr<ApproachDescriptor> ad(
-          new GenericApproachDescriptor<Surface>(aSurfaces));
+          new GenericApproachDescriptor(aSurfaces));
       const double thickness(1.0);
       LayerStub    approachDescriptorConstructed(
           nullptr, thickness, std::move(ad));
@@ -63,10 +64,11 @@ namespace Test {
     BOOST_AUTO_TEST_CASE(LayerProperties, *utf::expected_failures(1))
     {
       // Make a dummy layer to play with
-      const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
-                                                  new SurfaceStub()};
+      std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          Surface::makeShared<SurfaceStub>(),
+          Surface::makeShared<SurfaceStub>()};
       std::unique_ptr<ApproachDescriptor> ad(
-          new GenericApproachDescriptor<Surface>(aSurfaces));
+          new GenericApproachDescriptor(aSurfaces));
       auto                adPtr = ad.get();
       const double        thickness(1.0);
       SurfaceArrayCreator sac;

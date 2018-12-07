@@ -121,15 +121,6 @@ Acts::DiscSurface::operator=(const DiscSurface& other)
   return *this;
 }
 
-const Acts::DiscSurface*
-Acts::DiscSurface::cloneIfFree() const
-{
-  if (isFree()) {
-    return new DiscSurface(*this);
-  }
-  return (this);
-}
-
 Acts::Surface::SurfaceType
 Acts::DiscSurface::type() const
 {
@@ -218,8 +209,14 @@ Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
           : true);
 }
 
-Acts::DiscSurface*
+std::shared_ptr<Acts::DiscSurface>
 Acts::DiscSurface::clone(const Transform3D* shift) const
+{
+  return std::shared_ptr<DiscSurface>(this->clone_impl(shift));
+}
+
+Acts::DiscSurface*
+Acts::DiscSurface::clone_impl(const Transform3D* shift) const
 {
   if (shift != nullptr) {
     return new DiscSurface(*this, *shift);

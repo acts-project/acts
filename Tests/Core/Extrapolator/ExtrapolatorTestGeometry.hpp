@@ -94,7 +94,7 @@ namespace Test {
   //        for memory management
   template <typename Plane_type>
   std::shared_ptr<const TrackingGeometry>
-  testGeometry(std::vector<std::unique_ptr<const Surface>>& surface_cache)
+  testGeometry(std::vector<std::shared_ptr<const Surface>>& surface_cache)
   {
 
     Logging::Level surfaceLLevel = Logging::INFO;
@@ -177,7 +177,7 @@ namespace Test {
 
     for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
 
-      std::vector<const Surface*> layerModules;
+      std::vector<std::shared_ptr<const Surface>> layerModules;
 
       // Module material from input
       MaterialProperties moduleMaterialProperties(pcMaterial,
@@ -220,17 +220,18 @@ namespace Test {
             = std::make_shared<Transform3D>(Translation3D(mCenter)
                                             * moduleRotation);
 
-        Plane_type* mSurface = new Plane_type(mModuleTransform, mBounds);
+        std::shared_ptr<Plane_type> mSurface
+            = Surface::makeShared<Plane_type>(mModuleTransform, mBounds);
         // let's assign the material
         mSurface->setAssociatedMaterial(moduleMaterialPtr);
 
-        layerModules.push_back(mSurface);
-        surface_cache.push_back(std::unique_ptr<const Surface>(mSurface));
+        surface_cache.push_back(mSurface);            // copy
+        layerModules.push_back(std::move(mSurface));  // original
       }
       // create the layer and store it
       ProtoLayer protoLayer(layerModules);
       protoLayer.envR = {0.5, 0.5};
-      auto pLayer     = layerCreator->cylinderLayer(layerModules,
+      auto pLayer     = layerCreator->cylinderLayer(std::move(layerModules),
                                                 pLayerBinning[ilp].first,
                                                 pLayerBinning[ilp].second,
                                                 protoLayer);

@@ -120,19 +120,12 @@ public:
   DiscSurface&
   operator=(const DiscSurface& other);
 
-  /// Conditional Implicit constructor
-  /// uses the copy constructor (if needed)
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
   ///
-  /// Checks if a surface is free and either clones or returns
-  /// the pointer to itself - the return object ist a const pointer
-  const DiscSurface*
-  cloneIfFree() const final;
-
-  /// Virtual constructor - shift can be given optionally
-  ///
-  /// @param shift the otional transform applied after cloning
-  DiscSurface*
-  clone(const Transform3D* shift = nullptr) const final;
+  /// @param shift additional, optional shift
+  std::shared_ptr<DiscSurface>
+  clone(const Transform3D* shift = nullptr) const;
 
   /// Return the surface type
   SurfaceType
@@ -329,6 +322,13 @@ public:
 
 protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)
+private:
+  /// Clone method. Uses the copy constructor a new position can optionally be
+  /// given a shift.
+  ///
+  /// @param shift additional, optional shift
+  DiscSurface*
+  clone_impl(const Transform3D* shift = nullptr) const override;
 };
 
 #include "Acts/Surfaces/detail/DiscSurface.ipp"

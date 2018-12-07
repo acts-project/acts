@@ -121,10 +121,10 @@ public:
   ///
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
-                         size_t                             binsPhi,
-                         size_t                             binsZ,
-                         boost::optional<ProtoLayer>        protoLayerOpt
+  surfaceArrayOnCylinder(std::vector<std::shared_ptr<const Surface>> surfaces,
+                         size_t                                      binsPhi,
+                         size_t                                      binsZ,
+                         boost::optional<ProtoLayer> protoLayerOpt
                          = boost::none,
                          const std::shared_ptr<const Transform3D>& transformOpt
                          = nullptr) const;
@@ -145,7 +145,7 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnCylinder(const std::vector<const Surface*>& surfaces,
+  surfaceArrayOnCylinder(std::vector<std::shared_ptr<const Surface>> surfaces,
                          BinningType                 bTypePhi = equidistant,
                          BinningType                 bTypeZ   = equidistant,
                          boost::optional<ProtoLayer> protoLayerOpt
@@ -168,9 +168,9 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     size_t                             binsR,
-                     size_t                             binsPhi,
+  surfaceArrayOnDisc(std::vector<std::shared_ptr<const Surface>> surfaces,
+                     size_t                                      binsR,
+                     size_t                                      binsPhi,
                      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
                      const std::shared_ptr<const Transform3D>& transformOpt
                      = nullptr) const;
@@ -194,9 +194,9 @@ public:
   ///       will be set to lowest number of surfaces of any R-ring.
   ///       This ignores bTypePhi and produces equidistant binning in phi
   std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnDisc(const std::vector<const Surface*>& surfaces,
-                     BinningType                        bTypeR,
-                     BinningType                        bTypePhi,
+  surfaceArrayOnDisc(std::vector<std::shared_ptr<const Surface>> surfaces,
+                     BinningType                                 bTypeR,
+                     BinningType                                 bTypePhi,
                      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
                      const std::shared_ptr<const Transform3D>& transformOpt
                      = nullptr) const;
@@ -216,13 +216,13 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnPlane(const std::vector<const Surface*>&        surfaces,
-                      double                                    halflengthX,
-                      double                                    halflengthY,
-                      size_t                                    binsX,
-                      size_t                                    binsY,
-                      const std::shared_ptr<const Transform3D>& transform
-                      = nullptr) const;
+  surfaceArrayOnPlane(
+      const std::vector<std::shared_ptr<const Surface>>& surfaces,
+      double                                             halflengthX,
+      double                                             halflengthY,
+      size_t                                             binsX,
+      size_t                                             binsY,
+      const std::shared_ptr<const Transform3D>& transform = nullptr) const;
 
   static bool
   isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)

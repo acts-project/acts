@@ -87,7 +87,6 @@ namespace Test {
     //
     auto pClonedCylinderSurface = cylinderSurfaceObject.clone();
     BOOST_TEST(pClonedCylinderSurface->type() == Surface::Cylinder);
-    delete pClonedCylinderSurface;
     //
     /// Test type (redundant)
     BOOST_TEST(cylinderSurfaceObject.type() == Surface::Cylinder);

@@ -16,7 +16,7 @@
 #include "Acts/Utilities/VariantData.hpp"
 
 Acts::NavigationLayer::NavigationLayer(
-    std::unique_ptr<const Surface> surfaceRepresentation,
+    std::shared_ptr<const Surface> surfaceRepresentation,
     double                         thickness)
   : Acts::Layer(nullptr)
   , m_surfaceRepresentation(std::move(surfaceRepresentation))
@@ -40,13 +40,10 @@ Acts::NavigationLayer::create(const variant_data& vardata)
 
   const variant_map& var_surface
       = payload.get<variant_map>("surface_representation");
-  const Surface* surface_ptr
+  std::shared_ptr<const Surface> surface_ptr
       = factory.surface(var_surface.get<std::string>("type"), var_surface);
 
-  // wrap into unique!
-  std::unique_ptr<const Surface> surface(surface_ptr);
-
-  return NavigationLayer::create(std::move(surface), thickness);
+  return NavigationLayer::create(std::move(surface_ptr), thickness);
 }
 
 Acts::NavigationLayer::~NavigationLayer() = default;

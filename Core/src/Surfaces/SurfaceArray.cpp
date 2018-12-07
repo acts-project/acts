@@ -92,6 +92,25 @@ Acts::SurfaceArray::surfaceGridLookupToVariantData(
 }
 
 Acts::SurfaceArray::SurfaceArray(
+    std::unique_ptr<ISurfaceGridLookup>         gridLookup,
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    std::shared_ptr<const Transform3D>          transform)
+  : p_gridLookup(std::move(gridLookup))
+  , m_surfaces(std::move(surfaces))
+  , m_surfacesRawPointers(unpack_shared_vector(m_surfaces))
+  , m_transform(std::move(transform))
+{
+}
+
+Acts::SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
+  : p_gridLookup(
+        static_cast<ISurfaceGridLookup*>(new SingleElementLookup(srf.get())))
+  , m_surfaces({std::move(srf)})
+{
+  m_surfacesRawPointers.push_back(m_surfaces.at(0).get());
+}
+
+Acts::SurfaceArray::SurfaceArray(
     const variant_data&                             data_,
     const std::function<Vector2D(const Vector3D&)>& g2l,
     const std::function<Vector3D(const Vector2D&)>& l2g,
@@ -110,15 +129,16 @@ Acts::SurfaceArray::SurfaceArray(
 
   InstanceFactory factory;
 
-  std::vector<const Surface*> surfaces;
-  for (const auto& var_srf_ : var_surfaces) {
-    const variant_map& var_srf = boost::get<variant_map>(var_srf_);
-    const Surface*     surface
-        = factory.surface(var_srf.get<std::string>("type"), var_srf);
-    surfaces.push_back(surface);
-  }
+  m_surfaces.reserve(var_surfaces.size());
+  m_surfacesRawPointers.reserve(var_surfaces.size());
 
-  m_surfaces = surfaces;
+  for (const auto& var_srf_ : var_surfaces) {
+    const variant_map&       var_srf = boost::get<variant_map>(var_srf_);
+    std::shared_ptr<Surface> surface
+        = factory.surface(var_srf.get<std::string>("type"), var_srf);
+    m_surfacesRawPointers.push_back(surface.get());
+    m_surfaces.push_back(std::move(surface));
+  }
 
   // reproduce axes
   const variant_vector& var_axes
@@ -212,7 +232,7 @@ Acts::SurfaceArray::SurfaceArray(
             g2l, l2g, pAxisA, pAxisB);
   }
 
-  p_gridLookup->fill(surfaces);
+  p_gridLookup->fill(m_surfacesRawPointers);
 }
 
 Acts::SurfaceArray::SurfaceArray(
@@ -234,15 +254,15 @@ Acts::SurfaceArray::SurfaceArray(
 
   InstanceFactory factory;
 
-  std::vector<const Surface*> surfaces;
+  m_surfaces.reserve(var_surfaces.size());
+  m_surfacesRawPointers.reserve(var_surfaces.size());
   for (const auto& var_srf_ : var_surfaces) {
-    const variant_map& var_srf = boost::get<variant_map>(var_srf_);
-    const Surface*     surface
+    const variant_map&       var_srf = boost::get<variant_map>(var_srf_);
+    std::shared_ptr<Surface> surface
         = factory.surface(var_srf.get<std::string>("type"), var_srf);
-    surfaces.push_back(surface);
+    m_surfacesRawPointers.push_back(surface.get());
+    m_surfaces.push_back(std::move(surface));
   }
-
-  m_surfaces = surfaces;
 
   // reproduce axes
   const variant_vector& var_axes
@@ -309,7 +329,7 @@ Acts::SurfaceArray::SurfaceArray(
     }
   }
 
-  p_gridLookup->fill(surfaces);
+  p_gridLookup->fill(m_surfacesRawPointers);
 }
 
 std::ostream&

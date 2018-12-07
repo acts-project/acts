@@ -103,15 +103,6 @@ Acts::PlaneSurface::PlaneSurface(const variant_data& vardata)
 
 Acts::PlaneSurface::~PlaneSurface() = default;
 
-const Acts::PlaneSurface*
-Acts::PlaneSurface::cloneIfFree() const
-{
-  if (isFree()) {
-    return new PlaneSurface(*this);
-  }
-  return (this);
-}
-
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const PlaneSurface& other)
 {
@@ -172,8 +163,14 @@ Acts::PlaneSurface::isOnSurface(const Vector3D&      glopo,
              : true);
 }
 
-Acts::PlaneSurface*
+std::shared_ptr<Acts::PlaneSurface>
 Acts::PlaneSurface::clone(const Transform3D* shift) const
+{
+  return std::shared_ptr<PlaneSurface>(this->clone_impl(shift));
+}
+
+Acts::PlaneSurface*
+Acts::PlaneSurface::clone_impl(const Transform3D* shift) const
 {
   if (shift != nullptr) {
     return new PlaneSurface(*this, *shift);

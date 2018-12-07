@@ -91,22 +91,19 @@ Acts::StrawSurface::operator=(const StrawSurface& other)
   return *this;
 }
 
-Acts::StrawSurface*
+std::shared_ptr<Acts::StrawSurface>
 Acts::StrawSurface::clone(const Transform3D* shift) const
+{
+  return std::shared_ptr<StrawSurface>(this->clone_impl(shift));
+}
+
+Acts::StrawSurface*
+Acts::StrawSurface::clone_impl(const Transform3D* shift) const
 {
   if (shift != nullptr) {
     return new StrawSurface(*this, *shift);
   }
   return new StrawSurface(*this);
-}
-
-const Acts::StrawSurface*
-Acts::StrawSurface::cloneIfFree() const
-{
-  if (isFree()) {
-    return new StrawSurface(*this);
-  }
-  return (this);
 }
 
 Acts::variant_data

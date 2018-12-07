@@ -58,7 +58,7 @@ namespace Test {
     auto transformPtr
         = std::const_pointer_cast<const Transform3D>(mutableTransformPtr);
     // get the boundary surfaces
-    const std::vector<const Acts::Surface*> boundarySurfaces
+    std::vector<std::shared_ptr<const Acts::Surface>> boundarySurfaces
         = cylBounds.decomposeToSurfaces(transformPtr);
     // Test
 

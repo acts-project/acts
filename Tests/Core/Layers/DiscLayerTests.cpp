@@ -51,36 +51,30 @@ namespace Test {
       auto         pDiscLayer = DiscLayer::create(pTransform, pDisc);
       BOOST_TEST(pDiscLayer->layerType() == LayerType::passive);
       // next level: need an array of Surfaces;
-      const std::vector<const Surface*> aSurfaces{new SurfaceStub(),
-                                                  new SurfaceStub()};
+      std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          Surface::makeShared<SurfaceStub>(),
+          Surface::makeShared<SurfaceStub>()};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto                pSurfaceArray
-          = sac.surfaceArrayOnPlane(aSurfaces, minRad, maxRad, binsX, binsY);
-      auto pDiscLayerFromSurfaces
-          = DiscLayer::create(pTransform, pDisc, std::move(pSurfaceArray));
+      auto                pDiscLayerFromSurfaces
+          = DiscLayer::create(pTransform, pDisc, nullptr);
       BOOST_TEST(pDiscLayerFromSurfaces->layerType() == LayerType::passive);
       // construct with thickness:
-      auto pDiscLayerWithThickness = DiscLayer::create(
-          pTransform, pDisc, std::move(pSurfaceArray), thickness);
+      auto pDiscLayerWithThickness
+          = DiscLayer::create(pTransform, pDisc, nullptr, thickness);
       BOOST_TEST(pDiscLayerWithThickness->thickness() == thickness);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
-          new GenericApproachDescriptor<Surface>(aSurfaces));
-      auto adPtr = ad.get();
-      auto pDiscLayerWithApproachDescriptor
-          = DiscLayer::create(pTransform,
-                              pDisc,
-                              std::move(pSurfaceArray),
-                              thickness,
-                              std::move(ad));
+          new GenericApproachDescriptor(aSurfaces));
+      auto adPtr                            = ad.get();
+      auto pDiscLayerWithApproachDescriptor = DiscLayer::create(
+          pTransform, pDisc, nullptr, thickness, std::move(ad));
       BOOST_TEST(pDiscLayerWithApproachDescriptor->approachDescriptor()
                  == adPtr);
       // with the layerType specified...
       auto pDiscLayerWithLayerType = DiscLayer::create(pTransform,
                                                        pDisc,
-                                                       std::move(pSurfaceArray),
+                                                       nullptr,
                                                        thickness,
                                                        std::move(ad),
                                                        LayerType::passive);

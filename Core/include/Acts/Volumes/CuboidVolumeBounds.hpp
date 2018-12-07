@@ -90,7 +90,7 @@ public:
   /// for the memory management
   ///
   /// @param transformPtr is the transfrom of the volume
-  const std::vector<const Surface*>
+  std::vector<std::shared_ptr<const Surface>>
   decomposeToSurfaces(
       std::shared_ptr<const Transform3D> transformPtr) const override;
 

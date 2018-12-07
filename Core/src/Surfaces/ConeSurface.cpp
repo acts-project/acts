@@ -197,17 +197,14 @@ Acts::ConeSurface::name() const
   return "Acts::ConeSurface";
 }
 
-const Acts::ConeSurface*
-Acts::ConeSurface::cloneIfFree() const
+std::shared_ptr<Acts::ConeSurface>
+Acts::ConeSurface::clone(const Transform3D* shift) const
 {
-  if (isFree()) {
-    return new ConeSurface(*this);
-  }
-  return (this);
+  return std::shared_ptr<ConeSurface>(this->clone_impl(shift));
 }
 
 Acts::ConeSurface*
-Acts::ConeSurface::clone(const Acts::Transform3D* shift) const
+Acts::ConeSurface::clone_impl(const Transform3D* shift) const
 {
   if (shift != nullptr) {
     return new ConeSurface(*this, *shift);

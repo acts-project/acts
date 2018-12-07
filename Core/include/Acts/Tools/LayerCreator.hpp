@@ -90,9 +90,9 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  cylinderLayer(const std::vector<const Surface*>&  surfaces,
-                size_t                              binsPhi,
-                size_t                              binsZ,
+  cylinderLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+                size_t                                      binsPhi,
+                size_t                                      binsZ,
                 boost::optional<ProtoLayer>         _protoLayer = boost::none,
                 std::shared_ptr<const Transform3D>  transform   = nullptr,
                 std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
@@ -114,9 +114,9 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  cylinderLayer(const std::vector<const Surface*>&  surfaces,
-                BinningType                         bTypePhi,
-                BinningType                         bTypeZ,
+  cylinderLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+                BinningType                                 bTypePhi,
+                BinningType                                 bTypeZ,
                 boost::optional<ProtoLayer>         _protoLayer = boost::none,
                 std::shared_ptr<const Transform3D>  transform   = nullptr,
                 std::unique_ptr<ApproachDescriptor> ad = nullptr) const;
@@ -138,9 +138,9 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  discLayer(const std::vector<const Surface*>&  surfaces,
-            size_t                              binsR,
-            size_t                              binsPhi,
+  discLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+            size_t                                      binsR,
+            size_t                                      binsPhi,
             boost::optional<ProtoLayer>         _protoLayer = boost::none,
             std::shared_ptr<const Transform3D>  transform   = nullptr,
             std::unique_ptr<ApproachDescriptor> ad          = nullptr) const;
@@ -162,9 +162,9 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  discLayer(const std::vector<const Surface*>&  surfaces,
-            BinningType                         bTypeR,
-            BinningType                         bTypePhi,
+  discLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+            BinningType                                 bTypeR,
+            BinningType                                 bTypePhi,
             boost::optional<ProtoLayer>         _protoLayer = boost::none,
             std::shared_ptr<const Transform3D>  transform   = nullptr,
             std::unique_ptr<ApproachDescriptor> ad          = nullptr) const;
@@ -186,11 +186,11 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  planeLayer(const std::vector<const Surface*>&        surfaces,
-             double                                    envelopeXY,
-             double                                    envelopeZ,
-             size_t                                    binsX,
-             size_t                                    binsY,
+  planeLayer(const std::vector<std::shared_ptr<const Surface>>& surfaces,
+             double                                             envelopeXY,
+             double                                             envelopeZ,
+             size_t                                             binsX,
+             size_t                                             binsY,
              const std::shared_ptr<const Transform3D>& transform = nullptr,
              std::unique_ptr<ApproachDescriptor>       ad = nullptr) const;
 

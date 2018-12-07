@@ -47,7 +47,7 @@ namespace Test {
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
-  std::vector<std::unique_ptr<const Surface>> stepState;
+  std::vector<std::shared_ptr<const Surface>> stepState;
   auto tGeometry = testGeometry<ModuleSurface>(stepState);
 
   // create a navigator for this tracking geometry

@@ -169,7 +169,8 @@ namespace Test {
   {
     // the cylinder transform and surface
     auto cTransform = createCylindricTransform({10., -5., 0.}, 0.004, 0.03);
-    CylinderSurface cSurface(cTransform, 200., 1000.);
+    auto cSurface
+        = Surface::makeShared<CylinderSurface>(cTransform, 200., 1000.);
 
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
@@ -192,7 +193,7 @@ namespace Test {
     // the disc transform and surface
     auto dTransform = createPlanarTransform(
         {10., -5., 0.}, Vector3D(0.23, 0.07, 1.).normalized(), 0.004, 0.03);
-    DiscSurface dSurface(dTransform, 200., 1000.);
+    auto dSurface = Surface::makeShared<DiscSurface>(dTransform, 200., 1000.);
 
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
@@ -216,7 +217,7 @@ namespace Test {
     Vector3D sNormal = Vector3D(1.2, -0.3, 0.05).normalized();
 
     // Create a surface & parameters with covariance on the surface
-    PlaneSurface pSurface(sPosition, sNormal);
+    auto pSurface = Surface::makeShared<PlaneSurface>(sPosition, sNormal);
 
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
@@ -237,7 +238,7 @@ namespace Test {
   {
 
     // Create a surface & parameters with covariance on the surface
-    PerigeeSurface pSurface({0., 0., 0.});
+    auto pSurface = Surface::makeShared<PerigeeSurface>(Vector3D({0., 0., 0.}));
 
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,
@@ -258,7 +259,7 @@ namespace Test {
   {
     // Create a surface & parameters with covariance on the surface
     auto sTransform = createCylindricTransform({1019., -52., 382.}, 0.4, -0.3);
-    StrawSurface sSurface(sTransform, 10., 1000.);
+    auto sSurface   = Surface::makeShared<StrawSurface>(sTransform, 10., 1000.);
 
     ActsSymMatrixD<NGlobalPars> cov;
     cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 0.1,

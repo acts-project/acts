@@ -138,7 +138,7 @@ public:
   ///
   /// @param beam is the beam line surface
   void
-  registerBeamTube(std::unique_ptr<const PerigeeSurface> beam);
+  registerBeamTube(std::shared_ptr<const PerigeeSurface> beam);
 
   /// @brief surface representing the beam pipe
   ///
@@ -166,7 +166,7 @@ private:
 
   /// The known world - and the beamline
   TrackingVolumePtr                     m_world;
-  std::unique_ptr<const PerigeeSurface> m_beam;
+  std::shared_ptr<const PerigeeSurface> m_beam;
 
   /// The Volumes in a map for string based search
   std::map<std::string, const TrackingVolume*> m_trackingVolumes;

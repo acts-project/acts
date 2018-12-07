@@ -180,8 +180,10 @@ namespace Test {
   EigenStepper_type   estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper));
 
-  CylinderSurface mSurface(nullptr, 10., 1000. * units::_mm);
-  CylinderSurface cSurface(nullptr, 150., 1000. * units::_mm);
+  auto mSurface
+      = Surface::makeShared<CylinderSurface>(nullptr, 10., 1000. * units::_mm);
+  auto cSurface
+      = Surface::makeShared<CylinderSurface>(nullptr, 150., 1000. * units::_mm);
 
   const int ntests = 5;
 
@@ -238,7 +240,7 @@ namespace Test {
     options.maxStepSize = 1 * units::_cm;
 
     // set the surface to be passed by
-    options.actionList.get<CylinderObserver>().surface = &mSurface;
+    options.actionList.get<CylinderObserver>().surface = mSurface.get();
 
     using so_result = typename CylinderObserver::result_type;
 
@@ -254,7 +256,7 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
     // propagate to the cylinder surface
-    const auto& result = epropagator.propagate(start, cSurface, options);
+    const auto& result = epropagator.propagate(start, *cSurface, options);
     auto&       sor    = result.get<so_result>();
 
     BOOST_TEST(sor.surfaces_passed == 1);
@@ -383,10 +385,10 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a final surface with one stop in between
     const auto& mid_parameters
-        = epropagator.propagate(start, mSurface, options_2s).endParameters;
+        = epropagator.propagate(start, *mSurface, options_2s).endParameters;
 
     const auto& end_parameters_2s
-        = epropagator.propagate(*mid_parameters, cSurface, options_2s)
+        = epropagator.propagate(*mid_parameters, *cSurface, options_2s)
               .endParameters;
 
     // setup propagation options - one step options
@@ -395,7 +397,7 @@ namespace Test {
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a final surface in one stop
     const auto& end_parameters_1s
-        = epropagator.propagate(start, cSurface, options_1s).endParameters;
+        = epropagator.propagate(start, *cSurface, options_1s).endParameters;
 
     // test that the propagation is additive
     BOOST_TEST(end_parameters_1s->position().isApprox(

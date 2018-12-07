@@ -50,7 +50,15 @@ public:
   /// min/max values in one go. Also takes into account the thickness
   /// of an associated DetectorElement, if it exists.
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(std::vector<const Surface*> surfaces);
+  ProtoLayer(const std::vector<const Surface*>& surfaces);
+
+  /// Constructor
+  ///
+  /// Loops over a provided vector of surface and calculates the various
+  /// min/max values in one go. Also takes into account the thickness
+  /// of an associated DetectorElement, if it exists.
+  /// @param surfaces The vector of surfaces to consider
+  ProtoLayer(const std::vector<std::shared_ptr<const Surface>>& surfaces);
 
   // normal empty constructor
   ProtoLayer() = default;
@@ -66,5 +74,11 @@ public:
   /// @return is the closest distance
   double
   radialDistance(const Vector3D& pos1, const Vector3D& pos2) const;
+
+private:
+  /// Helper method which performs the actual min/max calculation
+  /// @param surfaces The surfaces to build this protolayer out of
+  void
+  measure(const std::vector<const Surface*>& surfaces);
 };
 }  // namespace Acts

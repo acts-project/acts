@@ -74,7 +74,7 @@ namespace Test {
         id,
         std::make_shared<const Transform3D>(t3d),
         std::make_shared<const DigitizationModule>(digMod));
-    PlaneSurface      pSur(recBounds, detElem);
+    auto pSur = Surface::makeShared<PlaneSurface>(recBounds, detElem);
     ActsSymMatrixD<2> cov;
     cov << 0., 0., 0., 0.;
     Vector2D local = {0.1, -0.1};

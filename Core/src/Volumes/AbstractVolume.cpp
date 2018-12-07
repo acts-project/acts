@@ -37,7 +37,7 @@ void
 Acts::AbstractVolume::createBoundarySurfaces()
 {
   // transform Surfaces To BoundarySurfaces
-  const std::vector<const Surface*> surfaces
+  std::vector<std::shared_ptr<const Surface>> surfaces
       = Volume::volumeBounds().decomposeToSurfaces(m_transform);
 
   // counter to flip the inner/outer position for Cylinders
@@ -54,7 +54,7 @@ Acts::AbstractVolume::createBoundarySurfaces()
     // create the boundary surface
     BoundarySurfacePtr bSurface
         = std::make_shared<const BoundarySurfaceT<AbstractVolume>>(
-            std::unique_ptr<const Surface>(sf), inner, outer);
+            std::move(sf), inner, outer);
     m_boundarySurfaces.push_back(bSurface);
   }
 }

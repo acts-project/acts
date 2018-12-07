@@ -501,14 +501,9 @@ public:
   /// @param surfaces The input vector of surfaces. This is only for
   /// bookkeeping, so we can ask
   /// @param transform Optional additional transform for this SurfaceArray
-  SurfaceArray(std::unique_ptr<ISurfaceGridLookup> gridLookup,
-               SurfaceVector                       surfaces,
-               std::shared_ptr<const Transform3D>  transform = nullptr)
-    : p_gridLookup(std::move(gridLookup))
-    , m_surfaces(std::move(surfaces))
-    , m_transform(std::move(transform))
-  {
-  }
+  SurfaceArray(std::unique_ptr<ISurfaceGridLookup>         gridLookup,
+               std::vector<std::shared_ptr<const Surface>> surfaces,
+               std::shared_ptr<const Transform3D>          transform = nullptr);
 
   /// @brief Constructor which takes concrete type SurfaceGridLookup
   /// @param gridLookup The grid storage. Is static casted to ISurfaceGridLookup
@@ -517,25 +512,11 @@ public:
   /// @param transform Optional additional transform for this SurfaceArray
   /// @note the transform parameter is ONLY used for the serialization.
   ///       Apart from that, the SGL handles the transforms.
-  template <class SGL>
-  SurfaceArray(std::unique_ptr<SGL>               gridLookup,
-               SurfaceVector                      surfaces,
-               std::shared_ptr<const Transform3D> transform = nullptr)
-    : p_gridLookup(static_cast<ISurfaceGridLookup*>(gridLookup.release()))
-    , m_surfaces(std::move(surfaces))
-    , m_transform(std::move(transform))
-  {
-  }
 
   /// @brief Convenience constructor for single element mode. Uses the @c
   /// SingleElementLookup
   /// @param srf The one and only surface
-  SurfaceArray(const Surface* srf)
-    : p_gridLookup(
-          static_cast<ISurfaceGridLookup*>(new SingleElementLookup(srf)))
-    , m_surfaces({srf})
-  {
-  }
+  SurfaceArray(std::shared_ptr<const Surface> srf);
 
   /// Constructor which accepts @c variant_data
   ///
@@ -633,7 +614,7 @@ public:
   const SurfaceVector&
   surfaces() const
   {
-    return m_surfaces;
+    return m_surfacesRawPointers;
   }
 
   /// @brief Get vector of axes spanning the grid as @c AnyAxis
@@ -674,7 +655,11 @@ public:
 
 private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;
-  SurfaceVector                       m_surfaces;
+  // this vector makes sure we have shared ownership over the surfaces
+  std::vector<std::shared_ptr<const Surface>> m_surfaces;
+  // this vector is returned, so that (expensive) copying of the shared_ptr
+  // vector does not happen by default
+  SurfaceVector m_surfacesRawPointers;
   // this is only used to keep info on transform applied
   // by l2g and g2l
   std::shared_ptr<const Transform3D> m_transform;

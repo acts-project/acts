@@ -134,7 +134,7 @@ namespace Test {
   }
 
   // the surface cache & the creation of the geometry
-  std::vector<std::unique_ptr<const Surface>> surfaceCache;
+  std::vector<std::shared_ptr<const Surface>> surfaceCache;
   auto tGeometry = testGeometry<PlaneSurface>(surfaceCache);
 
   // the debug boolean

@@ -93,7 +93,6 @@ namespace Test {
     //
     auto pClonedConeSurface = coneSurfaceObject.clone();
     BOOST_TEST(pClonedConeSurface->type() == Surface::Cone);
-    delete pClonedConeSurface;
     //
     /// Test type (redundant)
     BOOST_TEST(coneSurfaceObject.type() == Surface::Cone);
