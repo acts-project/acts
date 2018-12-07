@@ -47,23 +47,26 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const
   ACTS_VERBOSE("[L] Received layers for central volume -> creating "
                "cylindrical layers");
 
+  // Resulting volumes
   MutableTrackingVolumeVector volumes;
-  double                      rMin, rMax, dz;
-  // go through layers
-  for (auto& detElement : m_cfg.centralVolumes) {
+  // Inner/outer radius and half length of the barrel
+  double rMin, rMax, dz;
 
-    // access the extension of the layer
-    // at this stage all layer detElements have extension (checked in
+  // Go through volumes
+  for (auto& detElement : m_cfg.centralVolumes) {
+    // Access the extension of the volume
+    // At this stage all layer detElements have extension (checked in
     // ConvertDD4hepDetector)
     Acts::IActsExtension* detExtension
         = detElement.extension<Acts::IActsExtension>();
-    // access the axis orienation of the modules
-    std::string axes = detExtension->axes();
 
-    // access the global transformation matrix of the layer
+    //~ // Access the axis orienation of the modules
+    //~ std::string axes = detExtension->axes();
+
+    // Access the global transformation matrix of the volume
     auto transform
         = convertTransform(&(detElement.nominal().worldTransformation()));
-    // get the shape of the layer
+    // Get the shape of the volume
     TGeoShape* geoShape = detElement.placement().ptr()->GetVolume()->GetShape();
 
     if (geoShape != nullptr) {
@@ -72,7 +75,7 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const
         ACTS_ERROR(
             "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
 
-      // extract the boundaries
+      // Extract the boundaries
       rMin = tube->GetRmin() * units::_cm;
       rMax = tube->GetRmax() * units::_cm;
       dz   = tube->GetDz() * units::_cm;
@@ -84,9 +87,9 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const
                         "added to it¥s extension. Please check your detector "
                         "constructor!"));
     }
-
+    // Build boundaries
     CylinderVolumeBounds cvBounds(rMin, rMax, dz);
-
+    // Extract material if available
     dd4hep::Material ddmaterial = detElement.volume().material();
     if (!boost::iequals(ddmaterial.name(), "vacuum")) {
       Material volumeMaterial(ddmaterial.radLength() * Acts::units::_cm,
@@ -109,7 +112,7 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const
 std::shared_ptr<const Acts::Transform3D>
 Acts::DD4hepVolumeBuilder::convertTransform(const TGeoMatrix* tGeoTrans) const
 {
-  // get the placement and orientation in respect to its mother
+  // Get the placement and orientation in respect to its mother
   const Double_t* rotation    = tGeoTrans->GetRotationMatrix();
   const Double_t* translation = tGeoTrans->GetTranslation();
   auto            transform   = std::make_shared<const Transform3D>(

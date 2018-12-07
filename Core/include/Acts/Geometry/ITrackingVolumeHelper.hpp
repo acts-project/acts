@@ -32,6 +32,7 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 using LayerVector = std::vector<LayerPtr>;
 using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
+using MutableTrackingVolumeVector = std::vector<MutableTrackingVolumePtr>;
 
 ///  @class ITrackingVolumeHelper
 ///
@@ -56,6 +57,7 @@ class ITrackingVolumeHelper {
   /// together with the volume enevlope parameters
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param volumeBounds: confinement of this TrackingVolume
+  /// @param mtvVector (optional) Vector of confined TrackingVolumes
   /// @param transform (optional) placement of this TrackingVolume
   /// @param volumeName  volume name to be given
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
@@ -64,7 +66,7 @@ class ITrackingVolumeHelper {
   virtual MutableTrackingVolumePtr createTrackingVolume(
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-      VolumeBoundsPtr volumeBounds,
+      VolumeBoundsPtr volumeBounds, MutableTrackingVolumeVector mtvVector = {},
       std::shared_ptr<const Transform3D> transform = nullptr,
       const std::string& volumeName = "UndefinedVolume",
       BinningType btype = arbitrary) const = 0;
@@ -76,6 +78,7 @@ class ITrackingVolumeHelper {
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
   /// @param volumeMaterial material properties for this TrackingVolume
+  /// @param mtvVector Vector of confined TrackingVolumes
   /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
   /// @param volumeName  volume name to be given
@@ -83,7 +86,7 @@ class ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createTrackingVolume(
-      const GeometryContext& gctx, const LayerVector& layers,
+      const GeometryContext& gctx, const LayerVector& layers, MutableTrackingVolumeVector& mtvVector,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
       double loc0Max, double loc1Min, double loc1Max,
       const std::string& volumeName = "UndefinedVolume",
@@ -92,6 +95,7 @@ class ITrackingVolumeHelper {
   /// Create a gap volume from dimensions and
   ///
   /// @param gctx is the geometry context for witch the volume is built
+  /// @param mtvVector Vector of confined TrackingVolumes
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
@@ -101,7 +105,7 @@ class ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createGapTrackingVolume(
-      const GeometryContext& gctx,
+      const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
       double loc0Max, double loc1Min, double loc1Max,
       unsigned int materialLayers, bool cylinder = true,
@@ -110,6 +114,7 @@ class ITrackingVolumeHelper {
   /// Create a gap volume from dimensions and
   ///
   /// @param gctx is the geometry context for witch the volume is built
+  /// @param mtvVector Vector of confined TrackingVolumes
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param loc0Min, loc0Max, loc1Min, loc1Max local position in space,
   /// @param layerPositions custom layer positions
@@ -119,7 +124,7 @@ class ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createGapTrackingVolume(
-      const GeometryContext& gctx,
+      const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
       double loc0Max, double loc1Min, double loc1Max,
       const std::vector<double>& layerPositions, bool cylinder = true,

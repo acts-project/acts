@@ -17,6 +17,7 @@
 #include <string>
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/IConfinedTrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
@@ -60,6 +61,7 @@ struct VolumeConfig {
   double zMin;           ///< min parameter z
   double zMax;           ///< max parameter z
   LayerVector layers;    ///< the layers you have
+  MutableTrackingVolumeVector volumes;  ///< the confined volumes you have
 
   /// Default constructor
   VolumeConfig()
@@ -474,14 +476,15 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
     /// the string based indenfication
     std::string volumeName = "";
-    /// The dimensions of the manually created world
-    std::vector<double> volumeDimension = {};
     /// the world material
     std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
     /// build the volume to the beam line
     bool buildToRadiusZero = false;
     /// needed to build layers within the volume
     std::shared_ptr<const ILayerBuilder> layerBuilder = nullptr;
+    /// needed to build confined volumes within the volume
+    std::shared_ptr<const IConfinedTrackingVolumeBuilder> ctVolumeBuilder
+        = nullptr;
     /// the additional envelope in R to create rMin, rMax
     std::pair<double, double> layerEnvelopeR = {1. * UnitConstants::mm,
                                                 1. * UnitConstants::mm};
@@ -538,14 +541,13 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   /// @param [in] newLogger is the logging istance to be set
   void setLogger(std::unique_ptr<const Logger> newLogger);
 
-  /// Analyze the layer config to gather needed dimension
+  /// Analyze the config to gather needed dimension
   ///
   /// @param [in] gctx the geometry context for this building
   /// @param [in] lVector is the vector of layers that are parsed
   ///
   /// @return a VolumeConfig representing this layer
-  VolumeConfig analyzeLayers(const GeometryContext& gctx,
-                             const LayerVector& lVector) const;
+  VolumeConfig analyzeContent(const GeometryContext& gctx, const LayerVector& lVector, const MutableTrackingVolumeVector& mtvVector) const;
 
  private:
   /// Configuration struct

@@ -80,6 +80,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// together with the volume enevlope parameters
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param volumeBounds: confinement of this TrackingVolume
+  /// @param mtvVector (optiona) Vector of confined TrackingVolumes
   /// @param transform (optional) placement of this TrackingVolume
   /// @param volumeName  volume name to be given
   /// @param bType (optional) BinningType - arbitrary(default) or equidistant
@@ -88,7 +89,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   MutableTrackingVolumePtr createTrackingVolume(
       const GeometryContext& gctx, const LayerVector& layers,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial,
-      VolumeBoundsPtr volumeBounds,
+      VolumeBoundsPtr volumeBounds, MutableTrackingVolumeVector mtvVector = {},
       std::shared_ptr<const Transform3D> transform = nullptr,
       const std::string& volumeName = "UndefinedVolume",
       BinningType bType = arbitrary) const override;
@@ -100,6 +101,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
   /// @param volumeMaterial material properties for this TrackingVolume
+  /// @param mtvVector Vector of confined TrackingVolumes
   /// @param rMin minimum radius
   /// @param rMax maximum radius
   /// @param zMin minimum z
@@ -109,7 +111,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createTrackingVolume(
-      const GeometryContext& gctx, const LayerVector& layers,
+      const GeometryContext& gctx, const LayerVector& layers, MutableTrackingVolumeVector& mtvVector,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
       double rMax, double zMin, double zMax,
       const std::string& volumeName = "UndefinedVolume",
@@ -119,6 +121,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// @note this TrackingVolume is restricted to Translation only
   ///
   /// @param [in] gctx the geometry context for this building
+  /// @param mtvVector Vector of confined TrackingVolumes
   /// @param volumeMaterial dense material properties for this TrackingVolume
   /// @param rMin minimum radius
   /// @param rMax maximum radius
@@ -130,7 +133,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createGapTrackingVolume(
-      const GeometryContext& gctx,
+      const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
       double rMax, double zMin, double zMax, unsigned int materialLayers,
       bool cylinder = true,
@@ -139,6 +142,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   /// Create a gap volume from dimensions and
   ///
   /// @param [in] gctx the geometry context for this building
+  /// @param mtvVector Vector of confined TrackingVolumes
   /// @param volumeMaterial dense material properties for this TrackingVolume
   /// @param rMin minimum radius
   /// @param rMax maximum radius
@@ -151,7 +155,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createGapTrackingVolume(
-      const GeometryContext& gctx,
+      const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
       double rMax, double zMin, double zMax,
       const std::vector<double>& layerPositions, bool cylinder = true,
