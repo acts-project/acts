@@ -24,6 +24,7 @@
 #include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "TGeoManager.h"
 
@@ -132,6 +133,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     subDetExtension = subDetector.extension<Acts::ActsExtension>();
   } catch (std::runtime_error& e) {
   }
+std::cout << "sdtype: " << subDetector.type() << "\t" << subDetector.name() << std::endl;
   if (subDetector.type() == "compound") {
     ACTS_VERBOSE("Subdetector : '"
                  << subDetector.name()
@@ -424,9 +426,15 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                  << subDetector.name()
                  << " is a (sensitive) Barrel volume - building barrel.");
     /// the dd4hep::DetElements of the layers of the central volume
-    std::vector<dd4hep::DetElement> centralLayers;
+    std::vector<dd4hep::DetElement> centralLayers, centralVolumes;
     collectLayers_dd4hep(subDetector, centralLayers);
-
+std::cout << " vong " << centralLayers.size() << " lagigkeit her" << std::endl;
+for(std::vector<dd4hep::DetElement>::reverse_iterator rit = centralLayers.rbegin(); rit != centralLayers.rend(); rit++)
+{
+	if(rit->extension<Acts::IActsExtension>()->isVolume())
+		centralVolumes.push_back(std::move(*rit));
+}
+std::cout << "fass? new " << centralVolumes.size() << std::endl;
     // configure SurfaceArrayCreator
     auto surfaceArrayCreator =
         std::make_shared<const Acts::SurfaceArrayCreator>(
@@ -449,6 +457,13 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         Acts::getDefaultLogger(std::string("D2A_LB_") + subDetector.name(),
                                loggingLevel));
 
+	// Configure DD4hepVolumeBuilder
+	Acts::DD4hepVolumeBuilder::Config vbConfig;
+	vbConfig.configurationName = subDetector.name();
+	vbConfig.centralVolumes = centralVolumes;
+	auto dd4hepVolumeBuilder  = std::make_shared<const Acts::DD4hepVolumeBuilder>(
+        vbConfig, Acts::getDefaultLogger(std::string("D2A_VB_") + subDetector.name(), loggingLevel));
+        
     // the configuration object of the volume builder
     Acts::CylinderVolumeBuilder::Config cvbConfig;
     // get the dimensions of the volume
@@ -475,6 +490,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.volumeName = subDetector.name();
     cvbConfig.volumeMaterial = volumeMaterial;
     cvbConfig.layerBuilder = dd4hepLayerBuilder;
+    cvbConfig.ctVolumeBuilder = dd4hepVolumeBuilder;
     auto cylinderVolumeBuilder =
         std::make_shared<const Acts::CylinderVolumeBuilder>(
             cvbConfig,

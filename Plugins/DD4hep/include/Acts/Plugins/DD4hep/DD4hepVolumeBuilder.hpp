@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -56,21 +56,11 @@ public:
   /// Destructor
   ~DD4hepVolumeBuilder() override;
 
-  //~ /// LayerBuilder interface method
-  //~ /// @return  the layers at negative side
-  //~ const LayerVector
-  //~ negativeLayers() const final;
-
   /// @brief Builder method for cylindrical, confined volume
   ///
   /// @return The vector of TrackingVolumes at the central sector
   MutableTrackingVolumeVector
   centralVolumes() const final;
-
-  //~ /// LayerBuilder interface method
-  //~ /// @return  the layers at positive side
-  //~ const LayerVector
-  //~ positiveLayers() const final;
 
   /// Name identification
   /// @return The string based identification of this configuration

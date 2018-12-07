@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2018 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -54,14 +54,6 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const
 
   // Go through volumes
   for (auto& detElement : m_cfg.centralVolumes) {
-    // Access the extension of the volume
-    // At this stage all layer detElements have extension (checked in
-    // ConvertDD4hepDetector)
-    Acts::IActsExtension* detExtension
-        = detElement.extension<Acts::IActsExtension>();
-
-    //~ // Access the axis orienation of the modules
-    //~ std::string axes = detExtension->axes();
 
     // Access the global transformation matrix of the volume
     auto transform
