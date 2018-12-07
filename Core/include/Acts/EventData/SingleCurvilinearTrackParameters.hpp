@@ -87,11 +87,11 @@ public:
   }
 
   /// @brief move constructor - charged/neutral
-  /// @param[in] copy The source parameters
+  /// @param[in] other The source parameters
   SingleCurvilinearTrackParameters(
-      SingleCurvilinearTrackParameters<ChargePolicy>&& copy)
-    : SingleTrackParameters<ChargePolicy>(std::move(copy))
-    , m_upSurface(std::move(copy.m_upSurface))
+      SingleCurvilinearTrackParameters<ChargePolicy>&& other)
+    : SingleTrackParameters<ChargePolicy>(std::move(other))
+    , m_upSurface(std::move(other.m_upSurface))
   {
   }
 

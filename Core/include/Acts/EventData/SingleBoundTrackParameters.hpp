@@ -161,10 +161,10 @@ public:
   }
 
   /// @brief move constructor - charged/neutral
-  /// @param[in] copy The source parameters
-  SingleBoundTrackParameters(SingleBoundTrackParameters<ChargePolicy>&& copy)
-    : SingleTrackParameters<ChargePolicy>(std::move(copy))
-    , m_pSurface(std::move(copy.m_pSurface))
+  /// @param[in] other The source parameters
+  SingleBoundTrackParameters(SingleBoundTrackParameters<ChargePolicy>&& other)
+    : SingleTrackParameters<ChargePolicy>(std::move(other))
+    , m_pSurface(std::move(other.m_pSurface))
   {
   }
 

@@ -125,11 +125,11 @@ public:
   /// @tparam identifier_t The identifier type
   /// @tparam params...The local parameter pack
   ///
-  /// @param rhs is the source for the move
-  Measurement(Measurement<identifier_t, params...>&& rhs)
-    : m_oParameters(std::move(rhs.m_oParameters))
-    , m_pSurface(std::move(rhs.m_pSurface))
-    , m_oIdentifier(std::move(rhs.m_oIdentifier))
+  /// @param other is the source for the move
+  Measurement(Measurement<identifier_t, params...>&& other)
+    : m_oParameters(std::move(other.m_oParameters))
+    , m_pSurface(std::move(other.m_pSurface))
+    , m_oIdentifier(std::move(other.m_oIdentifier))
   {
   }
 
