@@ -80,10 +80,11 @@ namespace Test {
       SurfaceArrayCreator sac;
       size_t              binsX(2), binsY(4);
       auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
+      auto pSurfaceArrayAddress = pSurfaceArray.get();
       LayerStub layerStub(std::move(pSurfaceArray), thickness, std::move(ad));
       //
       /// surfaceArray()
-      BOOST_TEST(layerStub.surfaceArray() != nullptr);
+      BOOST_TEST(layerStub.surfaceArray() == pSurfaceArrayAddress);
       /// thickness()
       BOOST_TEST(layerStub.thickness() == thickness);
       // onLayer() is templated; can't find implementation!
