@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <functional>
 #include <limits>
 #include <vector>
 #include "Acts/Detector/TrackingGeometry.hpp"
@@ -24,7 +25,6 @@
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
-#include <functional>
 
 namespace Acts {
 
@@ -36,9 +36,11 @@ namespace Acts {
 class CuboidVolumeBuilder : public ITrackingVolumeBuilder
 {
 public:
-
-// Shorter naming of (Transformation, RectangleBounds, Thickness) as (optional) constructor arguments of a detector element
-using detElemParams = std::tuple<std::shared_ptr<const Transform3D>, std::shared_ptr<const RectangleBounds>, double>;
+  // Shorter naming of (Transformation, RectangleBounds, Thickness) as
+  // (optional) constructor arguments of a detector element
+  using detElemParams = std::tuple<std::shared_ptr<const Transform3D>,
+                                   std::shared_ptr<const RectangleBounds>,
+                                   double>;
 
   /// @brief This struct stores the data for the construction of a single
   /// PlaneSurface
@@ -54,9 +56,8 @@ using detElemParams = std::tuple<std::shared_ptr<const Transform3D>, std::shared
     std::shared_ptr<const SurfaceMaterial> surMat = nullptr;
     // Thickness
     double thickness = 0.;
-		// Constructor function for optional detector elements
-    std::function<DetectorElementBase*(detElemParams)> detElementConstructor; 
-		//~ = [](detElemParams){return nullptr;};
+    // Constructor function for optional detector elements
+    std::function<DetectorElementBase*(detElemParams)> detElementConstructor;
   };
 
   /// @brief This struct stores the data for the construction of a PlaneLayer
@@ -124,10 +125,8 @@ using detElemParams = std::tuple<std::shared_ptr<const Transform3D>, std::shared
   /// @brief This function creates a surface with a given configuration. A
   /// detector element is attached if the template parameter is non-void.
   ///
-  /// @tparam DetectorElement_t Type of the optional detector element
   /// @param [in] cfg Configuration of the surface
   /// @return Pointer to the created surface
-  //~ template <typename DetectorElement_t = void>
   PlaneSurface*
   buildSurface(const SurfaceConfig& cfg) const;
 
@@ -135,10 +134,8 @@ using detElemParams = std::tuple<std::shared_ptr<const Transform3D>, std::shared
   /// given configuration. The surface gets a detector element attached if the
   /// template parameter is non-void.
   ///
-  /// @tparam DetectorElement_t Type of the optional detector element
   /// @param [in, out] cfg Configuration of the layer and the surface
   /// @return Pointer to the created layer
-  //~ template <typename DetectorElement_t = void>
   std::shared_ptr<const Layer>
   buildLayer(LayerConfig& cfg) const;
 
@@ -146,10 +143,8 @@ using detElemParams = std::tuple<std::shared_ptr<const Transform3D>, std::shared
   /// of layers and surfaces. Each surface gets a detector element attached if
   /// the template parameter is non-void.
   ///
-  /// @tparam DetectorElement_t Type of the optional detector element
   /// @param [in, out] cfg Configuration of the TrackingVolume
   /// @return Pointer to the created TrackingVolume
-  //~ template <typename DetectorElement_t = void>
   std::shared_ptr<TrackingVolume>
   buildVolume(VolumeConfig& cfg) const;
 
@@ -176,9 +171,6 @@ private:
   Config m_cfg;
 };
 
-
-
-//~ template <typename DetectorElement_t>
 PlaneSurface*
 CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
 {
@@ -189,39 +181,20 @@ CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
   trafo.translation() = cfg.position;
 
   // Create and store surface
-	if(cfg.detElementConstructor)
-	{
-  surface = new PlaneSurface(
-      cfg.rBounds,
-      *(cfg.detElementConstructor(std::make_tuple(std::make_shared<const Transform3D>(trafo), cfg.rBounds, cfg.thickness))));
+  if (cfg.detElementConstructor) {
+    surface = new PlaneSurface(cfg.rBounds,
+                               *(cfg.detElementConstructor(std::make_tuple(
+                                   std::make_shared<const Transform3D>(trafo),
+                                   cfg.rBounds,
+                                   cfg.thickness))));
+  } else {
+    surface = new PlaneSurface(std::make_shared<const Transform3D>(trafo),
+                               cfg.rBounds);
   }
-  else
-  {
-	  surface = new PlaneSurface(std::make_shared<const Transform3D>(trafo),
-                             cfg.rBounds);
-	 }
   surface->setAssociatedMaterial(cfg.surMat);
   return surface;
 }
 
-//~ template <>
-//~ PlaneSurface*
-//~ CuboidVolumeBuilder::buildSurface<void>(const SurfaceConfig<void>& cfg) const
-//~ {
-  //~ PlaneSurface* surface;
-
-  //~ // Build transformation
-  //~ Transform3D trafo(Transform3D::Identity() * cfg.rotation);
-  //~ trafo.translation() = cfg.position;
-
-  //~ // Create and store surface
-  //~ surface = new PlaneSurface(std::make_shared<const Transform3D>(trafo),
-                             //~ cfg.rBounds);
-  //~ surface->setAssociatedMaterial(cfg.surMat);
-  //~ return surface;
-//~ }
-
-//~ template <typename DetectorElement_t>
 std::shared_ptr<const Layer>
 CuboidVolumeBuilder::buildLayer(LayerConfig& cfg) const
 {
@@ -264,7 +237,6 @@ CuboidVolumeBuilder::binningRange(const VolumeConfig& cfg) const
   return minMax;
 }
 
-//~ template <typename DetectorElement_t>
 std::shared_ptr<TrackingVolume>
 CuboidVolumeBuilder::buildVolume(VolumeConfig& cfg) const
 {
@@ -303,7 +275,7 @@ CuboidVolumeBuilder::buildVolume(VolumeConfig& cfg) const
     cfg.layers.reserve(cfg.layerCfg.size());
 
     for (auto& layerCfg : cfg.layerCfg) {
-        cfg.layers.push_back(buildLayer(layerCfg));
+      cfg.layers.push_back(buildLayer(layerCfg));
       layVec.push_back(cfg.layers.back());
     }
   } else {
@@ -339,7 +311,7 @@ CuboidVolumeBuilder::buildVolume(VolumeConfig& cfg) const
 }
 
 MutableTrackingVolumePtr
-CuboidVolumeBuilder::trackingVolume(TrackingVolumePtr /*unused*/,
+    CuboidVolumeBuilder::trackingVolume(TrackingVolumePtr /*unused*/,
                                         VolumeBoundsPtr /*unused*/) const
 {
   // Build volumes

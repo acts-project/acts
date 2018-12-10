@@ -27,12 +27,11 @@ namespace Test {
   public:
     /// @brief Constructor
     ///
-    //~ /// @param [in] trafo Transformation of the detector element
-    //~ /// @param [in] rBounds Rectangle boundaries of the plane surface
-    //~ /// @param [in] thickness Thickness of the detector element
+    /// @param [in] data Data container that carries information about
+    /// transformation, rectangle bounds and thickness of the detector element
     DetElem(std::tuple<std::shared_ptr<const Transform3D>,
-            std::shared_ptr<const RectangleBounds>,
-            double> data)
+                       std::shared_ptr<const RectangleBounds>,
+                       double> data)
       : DetectorElementBase()
       , m_trafo(std::get<0>(data))
       , m_surface(new PlaneSurface(std::get<1>(data), *this))
@@ -104,9 +103,10 @@ namespace Test {
       // Thickness of the detector element
       cfg.thickness = 1. * units::_um;
 
-		cfg.detElementConstructor = [](std::tuple<std::shared_ptr<const Transform3D>,
-            std::shared_ptr<const RectangleBounds>,
-            double> data){return new DetElem(data);};
+      cfg.detElementConstructor
+          = [](std::tuple<std::shared_ptr<const Transform3D>,
+                          std::shared_ptr<const RectangleBounds>,
+                          double> data) { return new DetElem(data); };
       surfaceConfig.push_back(cfg);
     }
 
@@ -121,15 +121,6 @@ namespace Test {
       BOOST_TEST(pSur->associatedMaterial() != nullptr);
       BOOST_TEST(pSur->associatedDetectorElement() != nullptr);
     }
-
-    //~ // Test that 4 passive surfaces can be built
-    //~ for (const auto& cfg : surfaceConfig) {
-      //~ PlaneSurface* pSur = cvb.buildSurface(cfg);
-      //~ BOOST_TEST(pSur != nullptr);
-      //~ BOOST_TEST(pSur->center() == cfg.position);
-      //~ BOOST_TEST(pSur->associatedMaterial() != nullptr);
-      //~ BOOST_TEST(pSur->associatedDetectorElement() == nullptr);
-    //~ }
 
     ////////////////////////////////////////////////////////////////////
     // Build layer configurations
@@ -152,14 +143,6 @@ namespace Test {
       BOOST_TEST(layer->layerType() == LayerType::active);
     }
 
-    //~ // Test that 4 layers with passive surfaces can be built
-    //~ for (auto& cfg : layerConfig) {
-      //~ cfg.surface    = nullptr;
-      //~ LayerPtr layer = cvb.buildLayer(cfg);
-      //~ BOOST_TEST(layer != nullptr);
-      //~ BOOST_TEST(cfg.surface != nullptr);
-      //~ BOOST_TEST(layer->surfaceArray()->surfaces().size() == 1);
-    //~ }
     for (auto& cfg : layerConfig) {
       cfg.surface = nullptr;
     }
