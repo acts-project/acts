@@ -76,7 +76,7 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const
       throw std::logic_error(
           std::string("Volume DetElement: ") + detElement.name()
           + std::string(" has not a shape "
-                        "added to it¥s extension. Please check your detector "
+                        "added to its extension. Please check your detector "
                         "constructor!"));
     }
     // Build boundaries
@@ -94,9 +94,10 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const
           transform,
           std::make_shared<const CylinderVolumeBounds>(cvBounds),
           std::make_shared<const Material>(volumeMaterial)));
-    } else
+    } else {
       volumes.push_back(TrackingVolume::create(
           transform, std::make_shared<const CylinderVolumeBounds>(cvBounds)));
+    }
   }
   return volumes;
 }

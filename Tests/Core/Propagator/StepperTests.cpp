@@ -710,18 +710,18 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
                                   AbortList<EndOfWorld>>
         propOpts;
-    propOpts.stopConditions.get<EndOfWorld>().maxX = 3. * units::_m;
+    propOpts.abortList.get<EndOfWorld>().maxX = 3. * units::_m;
 
     // Build stepper and propagator
     ConstantBField bField(Vector3D(0., 0., 0.));
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DefaultExtension,
                                       DenseEnvironmentExtension>,
                  detail::HighestValidAuctioneer>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DefaultExtension,
                                                  DenseEnvironmentExtension>,
                             detail::HighestValidAuctioneer>,
