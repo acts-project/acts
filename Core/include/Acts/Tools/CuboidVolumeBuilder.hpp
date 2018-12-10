@@ -10,6 +10,7 @@
 #include <vector>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Detector/detail/DefaultDetectorElementBase.hpp"
 #include "Acts/Layers/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -23,6 +24,7 @@
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
+#include <functional>
 
 namespace Acts {
 
@@ -34,6 +36,10 @@ namespace Acts {
 class CuboidVolumeBuilder : public ITrackingVolumeBuilder
 {
 public:
+
+// Shorter naming of (Transformation, RectangleBounds, Thickness) as (optional) constructor arguments of a detector element
+using detElemParams = std::tuple<std::shared_ptr<const Transform3D>, std::shared_ptr<const RectangleBounds>, double>;
+
   /// @brief This struct stores the data for the construction of a single
   /// PlaneSurface
   struct SurfaceConfig
@@ -48,6 +54,9 @@ public:
     std::shared_ptr<const SurfaceMaterial> surMat = nullptr;
     // Thickness
     double thickness = 0.;
+		// Constructor function for optional detector elements
+    std::function<DetectorElementBase*(detElemParams)> detElementConstructor; 
+		//~ = [](detElemParams){return nullptr;};
   };
 
   /// @brief This struct stores the data for the construction of a PlaneLayer
@@ -118,7 +127,7 @@ public:
   /// @tparam DetectorElement_t Type of the optional detector element
   /// @param [in] cfg Configuration of the surface
   /// @return Pointer to the created surface
-  template <typename DetectorElement_t = void>
+  //~ template <typename DetectorElement_t = void>
   PlaneSurface*
   buildSurface(const SurfaceConfig& cfg) const;
 
@@ -129,7 +138,7 @@ public:
   /// @tparam DetectorElement_t Type of the optional detector element
   /// @param [in, out] cfg Configuration of the layer and the surface
   /// @return Pointer to the created layer
-  template <typename DetectorElement_t = void>
+  //~ template <typename DetectorElement_t = void>
   std::shared_ptr<const Layer>
   buildLayer(LayerConfig& cfg) const;
 
@@ -140,7 +149,7 @@ public:
   /// @tparam DetectorElement_t Type of the optional detector element
   /// @param [in, out] cfg Configuration of the TrackingVolume
   /// @return Pointer to the created TrackingVolume
-  template <typename DetectorElement_t = void>
+  //~ template <typename DetectorElement_t = void>
   std::shared_ptr<TrackingVolume>
   buildVolume(VolumeConfig& cfg) const;
 
@@ -167,7 +176,9 @@ private:
   Config m_cfg;
 };
 
-template <typename DetectorElement_t>
+
+
+//~ template <typename DetectorElement_t>
 PlaneSurface*
 CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
 {
@@ -178,39 +189,45 @@ CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
   trafo.translation() = cfg.position;
 
   // Create and store surface
+	if(cfg.detElementConstructor)
+	{
   surface = new PlaneSurface(
       cfg.rBounds,
-      *(new DetectorElement_t(std::make_shared<const Transform3D>(trafo),
-                              cfg.rBounds,
-                              cfg.thickness)));
-  surface->setAssociatedMaterial(cfg.surMat);
-  return surface;
-}
-
-template <>
-Acts::PlaneSurface*
-Acts::CuboidVolumeBuilder::buildSurface<void>(const SurfaceConfig& cfg) const
-{
-  PlaneSurface* surface;
-
-  // Build transformation
-  Transform3D trafo(Transform3D::Identity() * cfg.rotation);
-  trafo.translation() = cfg.position;
-
-  // Create and store surface
-  surface = new PlaneSurface(std::make_shared<const Transform3D>(trafo),
+      *(cfg.detElementConstructor(std::make_tuple(std::make_shared<const Transform3D>(trafo), cfg.rBounds, cfg.thickness))));
+  }
+  else
+  {
+	  surface = new PlaneSurface(std::make_shared<const Transform3D>(trafo),
                              cfg.rBounds);
+	 }
   surface->setAssociatedMaterial(cfg.surMat);
   return surface;
 }
 
-template <typename DetectorElement_t>
+//~ template <>
+//~ PlaneSurface*
+//~ CuboidVolumeBuilder::buildSurface<void>(const SurfaceConfig<void>& cfg) const
+//~ {
+  //~ PlaneSurface* surface;
+
+  //~ // Build transformation
+  //~ Transform3D trafo(Transform3D::Identity() * cfg.rotation);
+  //~ trafo.translation() = cfg.position;
+
+  //~ // Create and store surface
+  //~ surface = new PlaneSurface(std::make_shared<const Transform3D>(trafo),
+                             //~ cfg.rBounds);
+  //~ surface->setAssociatedMaterial(cfg.surMat);
+  //~ return surface;
+//~ }
+
+//~ template <typename DetectorElement_t>
 std::shared_ptr<const Layer>
 CuboidVolumeBuilder::buildLayer(LayerConfig& cfg) const
 {
   // Build the surface
   if (cfg.surface == nullptr) {
-    cfg.surface = buildSurface<DetectorElement_t>(cfg.surfaceCfg);
+    cfg.surface = buildSurface(cfg.surfaceCfg);
   }
   // Build transformation centered at the surface position
   Transform3D trafo(Transform3D::Identity() * cfg.surfaceCfg.rotation);
@@ -247,7 +264,7 @@ CuboidVolumeBuilder::binningRange(const VolumeConfig& cfg) const
   return minMax;
 }
 
-template <typename DetectorElement_t>
+//~ template <typename DetectorElement_t>
 std::shared_ptr<TrackingVolume>
 CuboidVolumeBuilder::buildVolume(VolumeConfig& cfg) const
 {
@@ -286,11 +303,7 @@ CuboidVolumeBuilder::buildVolume(VolumeConfig& cfg) const
     cfg.layers.reserve(cfg.layerCfg.size());
 
     for (auto& layerCfg : cfg.layerCfg) {
-      if (layerCfg.active) {
-        cfg.layers.push_back(buildLayer<DetectorElement_t>(layerCfg));
-      } else {
         cfg.layers.push_back(buildLayer(layerCfg));
-      }
       layVec.push_back(cfg.layers.back());
     }
   } else {
@@ -326,7 +339,7 @@ CuboidVolumeBuilder::buildVolume(VolumeConfig& cfg) const
 }
 
 MutableTrackingVolumePtr
-    CuboidVolumeBuilder::trackingVolume(TrackingVolumePtr /*unused*/,
+CuboidVolumeBuilder::trackingVolume(TrackingVolumePtr /*unused*/,
                                         VolumeBoundsPtr /*unused*/) const
 {
   // Build volumes
