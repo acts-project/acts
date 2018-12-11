@@ -115,7 +115,7 @@ namespace Test {
 
     // Test that 4 surfaces can be built
     for (const auto& cfg : surfaceConfig) {
-      PlaneSurface* pSur = cvb.buildSurface(cfg);
+      std::shared_ptr<const PlaneSurface> pSur = cvb.buildSurface(cfg);
       BOOST_TEST(pSur != nullptr);
       BOOST_TEST(pSur->center() == cfg.position);
       BOOST_TEST(pSur->associatedMaterial() != nullptr);

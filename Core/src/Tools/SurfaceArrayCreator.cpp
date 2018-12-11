@@ -324,15 +324,17 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 /// SurfaceArrayCreator interface method - create an array on a plane
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
-    const std::vector<const Surface*>&        surfaces,
-    size_t                                    bins1,
-    size_t                                    bins2,
-    BinningValue                              bValue,
-    boost::optional<ProtoLayer>               protoLayerOpt,
-    const std::shared_ptr<const Transform3D>& transformOpt) const
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t                                      bins1,
+    size_t                                      bins2,
+    BinningValue                                bValue,
+    boost::optional<ProtoLayer>                 protoLayerOpt,
+    const std::shared_ptr<const Transform3D>&   transformOpt) const
 {
+  std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a plance");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -358,30 +360,30 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   // Axis along the binning
   switch (bValue) {
   case BinningValue::binX: {
-    ProtoAxis pAxis1
-        = createEquidistantAxis(surfaces, binY, protoLayer, transform, bins1);
-    ProtoAxis pAxis2
-        = createEquidistantAxis(surfaces, binZ, protoLayer, transform, bins2);
+    ProtoAxis pAxis1 = createEquidistantAxis(
+        surfacesRaw, binY, protoLayer, transform, bins1);
+    ProtoAxis pAxis2 = createEquidistantAxis(
+        surfacesRaw, binZ, protoLayer, transform, bins2);
     sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                  detail::AxisBoundaryType::Bound>(
         globalToLocal, localToGlobal, pAxis1, pAxis2);
     break;
   }
   case BinningValue::binY: {
-    ProtoAxis pAxis1
-        = createEquidistantAxis(surfaces, binX, protoLayer, transform, bins1);
-    ProtoAxis pAxis2
-        = createEquidistantAxis(surfaces, binZ, protoLayer, transform, bins2);
+    ProtoAxis pAxis1 = createEquidistantAxis(
+        surfacesRaw, binX, protoLayer, transform, bins1);
+    ProtoAxis pAxis2 = createEquidistantAxis(
+        surfacesRaw, binZ, protoLayer, transform, bins2);
     sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                  detail::AxisBoundaryType::Bound>(
         globalToLocal, localToGlobal, pAxis1, pAxis2);
     break;
   }
   case BinningValue::binZ: {
-    ProtoAxis pAxis1
-        = createEquidistantAxis(surfaces, binX, protoLayer, transform, bins1);
-    ProtoAxis pAxis2
-        = createEquidistantAxis(surfaces, binY, protoLayer, transform, bins2);
+    ProtoAxis pAxis1 = createEquidistantAxis(
+        surfacesRaw, binX, protoLayer, transform, bins1);
+    ProtoAxis pAxis2 = createEquidistantAxis(
+        surfacesRaw, binY, protoLayer, transform, bins2);
     sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
                                  detail::AxisBoundaryType::Bound>(
         globalToLocal, localToGlobal, pAxis1, pAxis2);
@@ -394,11 +396,13 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   }
   }
 
-  sl->fill(surfaces);
-  completeBinning(*sl, surfaces);
+  sl->fill(surfacesRaw);
+  completeBinning(*sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(
-      std::move(sl), surfaces, std::make_shared<const Transform3D>(transform));
+      std::move(sl),
+      std::move(surfaces),
+      std::make_shared<const Transform3D>(transform));
   //!< @todo implement - take from ATLAS complex TRT builder
 }
 

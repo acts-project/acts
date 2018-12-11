@@ -70,9 +70,11 @@ namespace Test {
       auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
       /// Constructor with transform pointer
       auto pNullTransform = std::make_shared<const Transform3D>();
-      const std::vector<const Surface*> aSurfaces{
-          new PlaneSurface(pNullTransform, rBounds),
-          new PlaneSurface(pNullTransform, rBounds)};
+      const std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          std::shared_ptr<const Surface>(
+              new PlaneSurface(pNullTransform, rBounds)),
+          std::shared_ptr<const Surface>(
+              new PlaneSurface(pNullTransform, rBounds))};
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
       auto                adPtr = ad.get();

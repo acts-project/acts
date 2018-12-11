@@ -225,9 +225,9 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnPlane(const std::vector<const Surface*>& surfaces,
-                      size_t                             bins1,
-                      size_t                             bins2,
+  surfaceArrayOnPlane(std::vector<std::shared_ptr<const Surface>> surfaces,
+                      size_t                                      bins1,
+                      size_t                                      bins2,
                       BinningValue                bValue = BinningValue::binX,
                       boost::optional<ProtoLayer> protoLayerOpt = boost::none,
                       const std::shared_ptr<const Transform3D>& transformOpt

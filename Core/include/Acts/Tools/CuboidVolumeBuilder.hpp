@@ -67,7 +67,7 @@ public:
     // Configuration of the surface
     SurfaceConfig surfaceCfg;
     // Encapsulated surface
-    PlaneSurface* surface = nullptr;
+    std::shared_ptr<const PlaneSurface> surface = nullptr;
     // Boolean flag if layer is active
     bool active = false;
     // Bins in Y direction
@@ -127,7 +127,7 @@ public:
   ///
   /// @param [in] cfg Configuration of the surface
   /// @return Pointer to the created surface
-  PlaneSurface*
+  std::shared_ptr<const PlaneSurface>
   buildSurface(const SurfaceConfig& cfg) const;
 
   /// @brief This function creates a layer with a surface encaspulated with a
@@ -171,7 +171,7 @@ private:
   Config m_cfg;
 };
 
-PlaneSurface*
+std::shared_ptr<const PlaneSurface>
 CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
 {
   PlaneSurface* surface;
@@ -192,7 +192,7 @@ CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
                                cfg.rBounds);
   }
   surface->setAssociatedMaterial(cfg.surMat);
-  return surface;
+  return std::shared_ptr<const PlaneSurface>(surface);
 }
 
 std::shared_ptr<const Layer>
