@@ -435,7 +435,7 @@ Acts::LayerCreator::planeLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
-        std::move(surfaces), bins1, bins2, bValue, protoLayer, nullptr);
+        std::move(surfaces), bins1, bins2, bValue, protoLayer, transform);
 
     checkBinning(*sArray);
   }
