@@ -5,5 +5,3 @@ tabulate==0.8.2
 codereport==0.2.*
 python-gitlab==1.6.0
 python-dateutil==2.7.5
-tqdm==4.28.1
-halo==0.0.22

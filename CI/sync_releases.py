@@ -9,13 +9,21 @@ import re
 import argparse
 import gitlab
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from tqdm import tqdm
 import dateutil.parser
-from halo import Halo
 import contextlib
 import sys
 import math
 
+
+# these are optional, but nice
+try:
+    from tqdm import tqdm
+except:
+    tqdm = None
+try:
+    from halo import Halo
+except:
+    Halo = None
 
 class JIRAException(Exception):
     def __init__(self, messages, *args, **kwargs):
@@ -42,14 +50,18 @@ class JIRA:
 
 @contextlib.contextmanager
 def spinner(text, *args, **kwargs):
-    if sys.stdout.isatty():
+    if sys.stdout.isatty() and Halo is not None:
         with Halo(text, *args, **kwargs):
             yield
     else:
         sys.stdout.write(text+"\n")
         yield
 
-if not sys.stdout.isatty():
+if sys.stdout.isatty() and tqdm is not None:
+    Progress = tqdm
+    prog_iter = tqdm
+    prog_write = tqdm.write
+else:
     class Progress():
         def __init__(self, total, desc, *args, **kwargs):
             self.total = total
@@ -74,11 +86,6 @@ if not sys.stdout.isatty():
     def prog_write(*args, **kwargs):
         sys.stdout.write(*args, **kwargs)
         sys.stdout.write("\n")
-
-else:
-    Progress = tqdm
-    prog_iter = tqdm
-    prog_write = tqdm.write
 
 def mtmap(tp, func, values, desc=None):
     prog = Progress(total=len(values), leave=False, desc=desc)
@@ -140,14 +147,15 @@ def main():
     p.add_argument("--dry-run", "-s", action="store_true")
 
     args = p.parse_args()
-    assert args.access_token is not None
 
     jira_url = "https://its.cern.ch/jira"
     cookies = cern_sso.krb_sign_on(jira_url)
     jira = JIRA(cookies=cookies, url=jira_url)
 
     gl = gitlab.Gitlab("https://gitlab.cern.ch", private_token=args.access_token)
-    gl.auth()
+    if not args.dry_run:
+        assert args.access_token is not None
+        gl.auth()
     project = gl.projects.get("acts/acts-core")
 
     with spinner(text="Loading tags"):
