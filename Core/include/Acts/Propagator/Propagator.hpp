@@ -13,7 +13,6 @@
 #include <memory>
 #include <type_traits>
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
