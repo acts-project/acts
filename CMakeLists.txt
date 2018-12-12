@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5)
 
-project (Acts VERSION 0.7.2 LANGUAGES CXX)
+project (Acts VERSION 0.7.3 LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
