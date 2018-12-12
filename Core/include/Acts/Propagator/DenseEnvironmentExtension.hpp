@@ -21,6 +21,7 @@ namespace Acts {
 /// propagation is in a TrackingVolume with attached material.
 struct DenseEnvironmentExtension
 {
+
   /// Momentum at a certain point
   double currentMomentum = 0.;
   /// Particles momentum at k1
@@ -447,8 +448,5 @@ struct DenseStepperPropagatorOptions
   /// Cut-off value for the momentum in SI units
   double momentumCutOff = 0.;
 };
-
-const detail::IonisationLoss DenseEnvironmentExtension::ionisationLoss;
-const detail::RadiationLoss  DenseEnvironmentExtension::radiationLoss;
 
 }  // namespace Acts
