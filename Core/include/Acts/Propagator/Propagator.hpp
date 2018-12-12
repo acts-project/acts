@@ -13,6 +13,7 @@
 #include <memory>
 #include <type_traits>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
@@ -20,7 +21,6 @@
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 
 namespace Acts {
 
