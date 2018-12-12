@@ -20,6 +20,7 @@
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 
 namespace Acts {
 
