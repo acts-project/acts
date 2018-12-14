@@ -80,9 +80,9 @@ Acts::PlaneLayer::buildApproachDescriptor()
       std::shared_ptr<const Transform3D>(appTransform),
       PlaneSurface::m_bounds));
   // set the layer and make TrackingGeometry
-  for (auto& sfPtr : m_approachDescriptor->containedSurfaces()) {
-    auto& mutableSf = *(const_cast<Surface*>(sfPtr));
-    mutableSf.associateLayer(*this);
+  for (auto& sfPtr : aSurfaces) {
+    auto mutableSf = const_cast<Surface*>(sfPtr.get());
+    mutableSf->associateLayer(*this);
   }
   // @todo check if we can provide the layer at surface creation
   m_approachDescriptor

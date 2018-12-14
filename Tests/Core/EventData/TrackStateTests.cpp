@@ -170,7 +170,12 @@ namespace Test {
     ParametricTrackState ataPlaneState1(std::move(ataPlaneAt1));
     ataPlaneState1.parametric.pathLength = 1.;
 
-    std::vector<VariantState> undorderedStates = {std::move(ataPlaneState1)};
+    BoundParameters      ataPlaneAt2(nullptr, pars, plane);
+    ParametricTrackState ataPlaneState2(std::move(ataPlaneAt2));
+    ataPlaneState2.parametric.pathLength = 2.;
+
+    std::vector<VariantState> undorderedStates
+        = {std::move(ataPlaneState2), std::move(ataPlaneState1)};
 
     // Sort the variant track state
     detail::path_length_sorter plSorter;

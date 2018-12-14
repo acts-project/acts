@@ -27,7 +27,9 @@ namespace Test {
   ///
   BOOST_AUTO_TEST_CASE(measurement_initialization)
   {
+
     auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
     MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(
@@ -64,16 +66,16 @@ namespace Test {
     std::vector<MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>> caMeasurements{
         std::move(mcCopy), std::move(mcAssigned)};
 
-    PlaneSurface      plane(Vector3D(0., 0., 0.), Vector3D(1., 0., 0.));
+    auto plane = Surface::makeShared<PlaneSurface>(Vector3D(0., 0., 0.),
+                                                   Vector3D(1., 0., 0.));
     ActsSymMatrixD<1> covp;
     covp << 0.01;
-    MeasurementType<ParDef::eLOC_0> mp(
-        plane.getSharedPtr(), 1, std::move(covp), 0.1);
+    MeasurementType<ParDef::eLOC_0> mp(plane, 1, std::move(covp), 0.1);
 
     ActsSymMatrixD<2> covpp;
     covpp << 0.01, 0., 0., 0.02;
     MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mpp(
-        plane.getSharedPtr(), 2, std::move(covpp), 0.1, 0.2);
+        plane, 2, std::move(covpp), 0.1, 0.2);
 
     std::vector<FittableMeasurement<Identifier>> measurements{
         std::move(mc), std::move(mp), std::move(mpp)};
