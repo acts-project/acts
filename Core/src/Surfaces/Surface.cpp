@@ -45,6 +45,22 @@ Acts::Surface::Surface(const Surface& other, const Transform3D& shift)
 
 Acts::Surface::~Surface() = default;
 
+bool
+Acts::Surface::isOnSurface(const Vector3D&      gpos,
+                           const Vector3D&      gmom,
+                           const BoundaryCheck& bcheck) const
+{
+  // create the local position
+  Vector2D lpos;
+  // global to local transformation
+  bool gtlSuccess = globalToLocal(gpos, gmom, lpos);
+  if (gtlSuccess) {
+    return bcheck ? bounds().inside(lpos, bcheck) : true;
+  }
+  // did not succeed
+  return false;
+}
+
 std::shared_ptr<Acts::Surface>
 Acts::Surface::getSharedPtr()
 {

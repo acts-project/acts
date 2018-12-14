@@ -166,7 +166,7 @@ namespace Test {
 
       for (size_t ilp = 0; ilp < pLayerRadii.size(); ++ilp) {
 
-        std::vector<const Surface*> layerModules;
+        std::vector<std::shared_ptr<const Surface>> layerModules;
 
         // Module material from input
         MaterialProperties moduleMaterialProperties(pcMaterial,
@@ -215,13 +215,13 @@ namespace Test {
                                                         pModuleThickness[ilp],
                                                         moduleMaterialPtr);
 
-          layerModules.push_back(&detElement->surface());
+          layerModules.push_back(detElement->surface().getSharedPtr());
           detectorStore.push_back(std::move(detElement));
         }
         // create the layer and store it
         ProtoLayer protoLayer(layerModules);
         protoLayer.envR = {0.5, 0.5};
-        auto pLayer     = layerCreator->cylinderLayer(layerModules,
+        auto pLayer     = layerCreator->cylinderLayer(std::move(layerModules),
                                                   pLayerBinning[ilp].first,
                                                   pLayerBinning[ilp].second,
                                                   protoLayer);

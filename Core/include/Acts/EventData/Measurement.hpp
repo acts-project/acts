@@ -15,7 +15,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceMemory.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -145,9 +144,8 @@ public:
   {
     // check for self-assignment
     if (&rhs != this) {
-      deletePtr<Surface>(m_pSurface);
       m_oParameters = rhs.m_oParameters;
-      m_pSurface    = createPtr<Surface>(*rhs.m_pSurface);
+      m_pSurface    = rhs.m_pSurface;
       m_oIdentifier = rhs.m_oIdentifier;
     }
     return *this;
@@ -162,7 +160,6 @@ public:
   Measurement<identifier_t, params...>&
   operator=(Measurement<identifier_t, params...>&& rhs)
   {
-    deletePtr<Surface>(m_pSurface);
     m_oParameters = std::move(rhs.m_oParameters);
     m_pSurface    = std::move(rhs.m_pSurface);
     m_oIdentifier = std::move(rhs.m_oIdentifier);
@@ -335,7 +332,7 @@ protected:
 private:
   ParSet_t m_oParameters;  ///< measured parameter set
   std::shared_ptr<const Surface>
-               m_pSurface;     ///< surface at which the measurement took place
+      m_pSurface;  ///< surface at which the measurement took place
 
   identifier_t m_oIdentifier;  ///< identifier for this measurement
 };

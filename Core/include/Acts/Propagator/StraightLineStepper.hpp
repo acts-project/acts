@@ -226,8 +226,12 @@ public:
   convert(State& state, result_t& result, const surface_t& surface) const
   {
     // Fill the end parameters
-    result.endParameters = std::make_unique<const BoundParameters>(
-        nullptr, state.pos, state.p * state.dir, state.q, surface.getSharedPtr());
+    result.endParameters
+        = std::make_unique<const BoundParameters>(nullptr,
+                                                  state.pos,
+                                                  state.p * state.dir,
+                                                  state.q,
+                                                  surface.getSharedPtr());
   }
 
   /// Perform a straight line propagation step

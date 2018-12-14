@@ -66,7 +66,7 @@ namespace Test {
       translations.push_back({2. * units::_m + eps, 0., 0.});
 
       // Construct surfaces
-      std::array<const Surface*, 6> surfaces;
+      std::array<std::shared_ptr<const Surface>, 6> surfaces;
       unsigned int i;
       for (i = 0; i < translations.size(); i++) {
         Transform3D trafo(Transform3D::Identity() * rotation);
@@ -78,7 +78,7 @@ namespace Test {
             1. * units::_um,
             surfaceMaterial);
         // And remember the surface
-        surfaces[i] = &detElement->surface();
+        surfaces[i] = detElement->surface().getSharedPtr();
         // Add it to the event store
         detectorStore.push_back(std::move(detElement));
       }
@@ -97,7 +97,7 @@ namespace Test {
                                  std::move(surArray),
                                  1. * units::_mm);
 
-        auto mutableSurface = const_cast<Surface*>(surfaces[i]);
+        auto mutableSurface = const_cast<Surface*>(surfaces[i].get());
         mutableSurface->associateLayer(*layers[i]);
       }
 

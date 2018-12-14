@@ -35,7 +35,7 @@ namespace Test {
                     = nullptr)
       : DetectorElementBase()
       , m_transformation(transformation)
-      , m_surface(std::make_unique<PlaneSurface>(pBounds, *this))
+      , m_surface(Surface::makeShared<PlaneSurface>(pBounds, *this))
       , m_thickness(thickness)
     {
       // Assign material if you have
@@ -55,7 +55,7 @@ namespace Test {
     virtual const Surface&
     surface() const
     {
-      return *m_surface;
+      return *(m_surface);
     }
 
     /// @brief Getter of the thickness
@@ -69,7 +69,7 @@ namespace Test {
     std::shared_ptr<const Transform3D> m_transformation = nullptr;
 
     // Surface related to the detector element
-    std::unique_ptr<Surface> m_surface = nullptr;
+    std::shared_ptr<Surface> m_surface = nullptr;
 
     // Thickness of the detector element
     double m_thickness = 0.;

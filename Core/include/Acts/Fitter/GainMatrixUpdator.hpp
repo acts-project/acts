@@ -126,7 +126,7 @@ private:
           std::make_unique<const typename parameters_t::CovMatrix_t>(
               std::move(newCov)),
           newParValues,
-          predicted.referenceSurface());
+          predicted.referenceSurface().getSharedPtr());
 
       // Set (and move) everything
       trackState.measurement.calibrated = std::move(cMeasurement);

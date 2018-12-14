@@ -12,7 +12,6 @@
 #include <boost/optional.hpp>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/detail/trackstate_type_generator.hpp"
-#include "Acts/Surfaces/SurfaceMemory.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -162,7 +161,7 @@ public:
   ///
   /// @param rhs is the source TrackState
   TrackState(TrackState&& rhs)
-    : surface(movePtr<Surface>(rhs.surface))
+    : surface(std::move(rhs.surface))
     , parametric(std::move(rhs.parametric))
     , measurement(std::move(rhs.measurement))
   {
@@ -186,7 +185,7 @@ public:
   TrackState&
   operator=(TrackState&& rhs)
   {
-    surface     = movePtr<Surface>(rhs.surface);
+    surface     = std::move(rhs.surface);
     parametric  = std::move(rhs.parametric);
     measurement = std::move(rhs.measurement);
     return (*this);

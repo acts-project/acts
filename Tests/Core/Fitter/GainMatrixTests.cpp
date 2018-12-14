@@ -35,7 +35,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {
     // Make dummy measurement
-    CylinderSurface cylinder(nullptr, 3, 10);
+    auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
 
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;

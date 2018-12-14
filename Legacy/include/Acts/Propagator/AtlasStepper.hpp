@@ -21,7 +21,8 @@
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
 
-template <typename BField>
+/// @brief the AtlasStepper implementation for the
+template <typename bfield_t>
 class AtlasStepper
 {
 
@@ -29,6 +30,7 @@ public:
   using Jacobian = ActsMatrixD<5, 5>;
   using Cstep    = detail::ConstrainedStep;
 
+  /// @brief Nested State struct for the local caching
   struct State
   {
 
@@ -53,7 +55,7 @@ public:
     /// Lazily initialized cache for the magnetic field
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
-    typename BField::Cache fieldCache{};
+    typename bfield_t::Cache fieldCache{};
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -498,13 +500,14 @@ public:
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
 
+    /// The transport of the position
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
     mom /= std::abs(state.pVector[6]);
 
+    // The transport of the covariance
     std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
     if (state.covariance) {
-
       double p = 1. / state.pVector[6];
       state.pVector[35] *= p;
       state.pVector[36] *= p;
@@ -734,13 +737,14 @@ public:
 
       cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
           J * (*state.covariance) * J.transpose());
+    }
 
     // Fill the end parameters
     result.endParameters = std::make_unique<const BoundParameters>(
         std::move(cov), gp, mom, state.charge(), surface.getSharedPtr());
   }
 
-  AtlasStepper(BField bField = BField()) : m_bField(std::move(bField)){};
+  AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};
 
   /// Get the field for the stepping
   /// It checks first if the access is still within the Cell,
@@ -973,7 +977,7 @@ public:
   }
 
 private:
-  BField m_bField;
+  bfield_t m_bField;
 };
 
 }  // namespace Acts

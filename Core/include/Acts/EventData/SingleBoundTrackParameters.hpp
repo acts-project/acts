@@ -9,7 +9,6 @@
 #pragma once
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Surfaces/SurfaceMemory.hpp"
 
 namespace Acts {
 

@@ -30,13 +30,12 @@ namespace Test {
     auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
-    Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1> m(
+    MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> m(
         cylinder, 0, std::move(cov), -0.1, 0.45);
 
     std::default_random_engine generator(42);
 
     // Create a measurement on a cylinder
-    CylinderSurface   cylinder(nullptr, 3, 10);
     ActsSymMatrixD<2> covc;
     covc << 0.04, 0, 0, 0.1;
     MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mc(
@@ -45,19 +44,20 @@ namespace Test {
     // Check the copy constructor
     auto mcCopy(mc);
 
-    // The surface should be not null and copied
+    // The surface should be not null and point to the same
     const Surface* sfCopy = &mcCopy.referenceSurface();
     BOOST_TEST(sfCopy != nullptr);
-    BOOST_TEST(sfCopy != &cylinder);
+    BOOST_TEST(sfCopy == cylinder.get());
     // The parameters should be identical though
     BOOST_TEST(mc.parameters() == mcCopy.parameters());
 
     // check the assignment operator
     auto mcAssigned = mc;
-    // The surface should be not null and copied
+
+    // The surface should be not null and point to the same
     const Surface* sfAssigned = &mcAssigned.referenceSurface();
     BOOST_TEST(sfAssigned != nullptr);
-    BOOST_TEST(sfAssigned != &cylinder);
+    BOOST_TEST(sfAssigned == cylinder.get());
     // The parameters should be identical though
     BOOST_TEST(mc.parameters() == mcAssigned.parameters());
 
@@ -67,12 +67,13 @@ namespace Test {
     PlaneSurface      plane(Vector3D(0., 0., 0.), Vector3D(1., 0., 0.));
     ActsSymMatrixD<1> covp;
     covp << 0.01;
-    MeasurementType<ParDef::eLOC_0> mp(plane, 1, std::move(covp), 0.1);
+    MeasurementType<ParDef::eLOC_0> mp(
+        plane.getSharedPtr(), 1, std::move(covp), 0.1);
 
     ActsSymMatrixD<2> covpp;
     covpp << 0.01, 0., 0., 0.02;
     MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1> mpp(
-        plane, 2, std::move(covpp), 0.1, 0.2);
+        plane.getSharedPtr(), 2, std::move(covpp), 0.1, 0.2);
 
     std::vector<FittableMeasurement<Identifier>> measurements{
         std::move(mc), std::move(mp), std::move(mpp)};

@@ -82,6 +82,5 @@ private:
   {
     return nullptr;
   }
-
 };
 }  // end of ns

@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #define BOOST_TEST_MODULE TrackState Tests
+#include <boost/optional/optional_io.hpp>
 #include <boost/test/included/unit_test.hpp>
 
 #include <random>
@@ -165,15 +166,11 @@ namespace Test {
     BOOST_TEST(ataPlanefListPred2D);
 
     // Test the sorting helper
-    ParametricTrackState surfacePlaneAt2(&plane);
-    surfacePlaneAt2.parametric.pathLength = 2.;
-
     BoundParameters      ataPlaneAt1(nullptr, pars, plane);
     ParametricTrackState ataPlaneState1(std::move(ataPlaneAt1));
     ataPlaneState1.parametric.pathLength = 1.;
 
-    std::vector<VariantState> undorderedStates
-        = {std::move(surfacePlaneAt2), std::move(ataPlaneState1)};
+    std::vector<VariantState> undorderedStates = {std::move(ataPlaneState1)};
 
     // Sort the variant track state
     detail::path_length_sorter plSorter;

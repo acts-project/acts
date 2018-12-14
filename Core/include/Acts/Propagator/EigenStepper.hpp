@@ -165,7 +165,8 @@ public:
         covPtr = std::make_unique<const Covariance>(cov);
       }
       // Create the bound parameters
-      BoundParameters parameters(std::move(covPtr), pos, p * dir, q, surface);
+      BoundParameters parameters(
+          std::move(covPtr), pos, p * dir, q, surface.getSharedPtr());
       // Create the bound state
       BoundState bState{std::move(parameters), jacobian, pathAccumulated};
       // Reset the jacobian to identity

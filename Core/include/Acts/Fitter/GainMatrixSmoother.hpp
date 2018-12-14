@@ -72,7 +72,7 @@ public:
       parameters_t smoothed(
           std::make_unique<const decltype(smoothedCov)>(std::move(smoothedCov)),
           smoothedPars,
-          cState.filtered.get().referenceSurface());
+          cState.filtered.get().referenceSurface().getSharedPtr());
 
       cState.smoothed = std::move(smoothed);
 

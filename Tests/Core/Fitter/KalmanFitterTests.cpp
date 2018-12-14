@@ -107,12 +107,12 @@ namespace Test {
               if (lResolution->second[0].first == eLOC_0) {
                 // push back & move a LOC_0 measurement
                 Measurement<Identifier, eLOC_0> m0(
-                    *surface, geoID, cov1D, lPos[eLOC_0] + dp);
+                    surface->getSharedPtr(), geoID, cov1D, lPos[eLOC_0] + dp);
                 result.push_back(MeasuredTrackState<eLOC_0>(std::move(m0)));
               } else {
                 // push back & move a LOC_1 measurement
                 Measurement<Identifier, eLOC_1> m1(
-                    *surface, geoID, cov1D, lPos[eLOC_1] + dp);
+                    surface->getSharedPtr(), geoID, cov1D, lPos[eLOC_1] + dp);
                 result.push_back(MeasuredTrackState<eLOC_1>(std::move(m1)));
               }
             } else if (lResolution->second.size() == 2) {
@@ -124,7 +124,11 @@ namespace Test {
               double dy = sy * gauss(generator);
               // push back & move a LOC_0, LOC_1 measurement
               Measurement<Identifier, eLOC_0, eLOC_1> m01(
-                  *surface, geoID, cov2D, lPos[eLOC_0] + dx, lPos[eLOC_1] + dy);
+                  surface->getSharedPtr(),
+                  geoID,
+                  cov2D,
+                  lPos[eLOC_0] + dx,
+                  lPos[eLOC_1] + dy);
               result.push_back(
                   MeasuredTrackState<eLOC_0, eLOC_1>(std::move(m01)));
             }
