@@ -344,7 +344,7 @@ sync_releases:
     - CI/sync_releases.py
   after_script:
     - kdestroy
-  #only:
-    #- tags
+  only:
+    - tags
 
 
