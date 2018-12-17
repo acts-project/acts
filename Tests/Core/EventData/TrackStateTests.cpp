@@ -107,7 +107,7 @@ namespace Test {
     ParametricTrackState ptsCopy(pts);
 
     // Test the copy move constructor for a parametric state
-    ParametricTrackState ptsCopyMove(ptsCopy);
+    ParametricTrackState ptsCopyMove(std::move(ptsCopy));
 
     // Test the copy assignment for a parametric state
     ParametricTrackState ptsCopyAssigned = ptsCopyMove;
