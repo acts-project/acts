@@ -38,6 +38,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
                                    const BoundaryCheck& bcheck,
                                    CorrFnc              correct) const
 {
+std::cout << "planecpp1" << std::endl;
   // minimize the call to transform()
   const auto&    tMatrix = transform().matrix();
   const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
@@ -56,8 +57,10 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
     // is valid if it goes into the right direction
     return ((navDir == anyDirection) || path * navDir >= 0.);
   };
+std::cout << "planecpp2" << std::endl;
   // solve first
   bool valid = solve(gpos, gdir);
+std::cout << "planecpp3" << std::endl;
   // if configured to correct, do it and solve again
   if (correct) {
     // copy as the corrector may change them
@@ -67,6 +70,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
       valid = solve(lposc, ldirc);
     }
   }
+std::cout << "planecpp4" << std::endl;
   // evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
   //  all we need is to check if it's inside bounds

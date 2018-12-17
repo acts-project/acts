@@ -412,12 +412,14 @@ public:
                        const options_t&    options,
                        const corrector_t&  correct = corrector_t()) const
   {
+std::cout << "surface" << std::endl;
     // get the intersection with the surface
     auto sIntersection = intersectionEstimate(parameters.position(),
                                               parameters.direction(),
                                               options.navDir,
                                               options.boundaryCheck,
                                               correct);
+std::cout << "surface2" << std::endl;
     // return a surface intersection with result direction
     return SurfaceIntersection(sIntersection, this);
   }

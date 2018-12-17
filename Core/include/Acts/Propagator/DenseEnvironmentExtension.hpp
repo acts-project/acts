@@ -447,6 +447,42 @@ struct DenseStepperPropagatorOptions
 
   /// Cut-off value for the momentum in SI units
   double momentumCutOff = 0.;
+  
+  /// @brief Expand the Options with extended aborters
+  ///
+  /// @tparam extended_aborter_list_t Type of the new aborter list
+  ///
+  /// @param aborters The new aborter list to be used (internally)
+  template <typename extended_aborter_list_t>
+  DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
+  extend(extended_aborter_list_t aborters) const
+  {
+    DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t> eoptions;
+    // Copy the options over
+    eoptions.direction       = this->direction;
+    eoptions.absPdgCode      = this->absPdgCode;
+    eoptions.mass            = this->mass;
+    eoptions.maxSteps        = this->maxSteps;
+    eoptions.maxStepSize     = this->maxStepSize;
+    eoptions.targetTolerance = this->targetTolerance;
+    eoptions.pathLimit       = this->pathLimit;
+    eoptions.loopProtection  = this->loopProtection;
+    eoptions.loopFraction    = this->loopFraction;
+    // Output option
+    eoptions.debug         = this->debug;
+    eoptions.debugString   = this->debugString;
+    eoptions.debugPfxWidth = this->debugPfxWidth;
+    eoptions.debugMsgWidth = this->debugMsgWidth;
+    // Action / abort list
+    eoptions.actionList = this->actionList;
+    eoptions.abortList  = std::move(aborters);
+    // Copy dense environment specific parameters
+    eoptions.meanEnergyLoss = meanEnergyLoss;
+    eoptions.includeGgradient = includeGgradient;
+    eoptions.momentumCutOff = momentumCutOff;
+    // And return the options
+    return eoptions;
+  }
 };
 
 }  // namespace Acts

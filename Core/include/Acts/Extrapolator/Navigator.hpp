@@ -818,7 +818,7 @@ private:
       navOpts.startObject = state.navigation.currentSurface;
       // Evaluate the boundary surfaces
       state.navigation.navBoundaries
-          = state.navigation.currentVolume->boundaries(
+          = state.navigation.currentVolume->compatibleBoundaries(
               state.stepping, navOpts, navCorr, BoundaryIntersectionSorter());
       // The number of boundary candidates
       debugLog(state, [&] {
@@ -1091,6 +1091,9 @@ private:
         return true;
       }
     }
+
+	// Set the iterator to the end of the list
+	state.navigation.navLayerIter = state.navigation.navLayers.end();
 
     // Screen output - no layer candidates found
     debugLog(state, [&] {

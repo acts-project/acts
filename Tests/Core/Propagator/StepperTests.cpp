@@ -148,7 +148,7 @@ namespace Test {
                                   AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
-    propOpts.stopConditions = abortList;
+    propOpts.abortList = abortList;
     propOpts.maxSteps       = 1e6;
     propOpts.maxStepSize    = 0.5 * units::_m;
 
@@ -193,7 +193,7 @@ namespace Test {
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
         propOptsDef;
     propOptsDef.actionList     = aListDef;
-    propOptsDef.stopConditions = abortList;
+    propOptsDef.abortList = abortList;
     propOptsDef.maxSteps       = 1e6;
     propOptsDef.maxStepSize    = 0.5 * units::_m;
 
@@ -267,7 +267,7 @@ namespace Test {
                                   AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
-    propOpts.stopConditions = abortList;
+    propOpts.abortList = abortList;
     propOpts.maxSteps       = 1e6;
     propOpts.maxStepSize    = 0.5 * units::_m;
     propOpts.debug          = true;
@@ -319,7 +319,7 @@ namespace Test {
                                   AbortList<EndOfWorld>>
         propOptsDense;
     propOptsDense.actionList     = aList;
-    propOptsDense.stopConditions = abortList;
+    propOptsDense.abortList = abortList;
     propOptsDense.maxSteps       = 1e6;
     propOptsDense.maxStepSize    = 0.5 * units::_m;
     propOptsDense.debug          = true;
@@ -448,7 +448,7 @@ namespace Test {
                                   AbortList<EndOfWorld>>
         propOpts;
     propOpts.actionList     = aList;
-    propOpts.stopConditions = abortList;
+    propOpts.abortList = abortList;
     propOpts.maxSteps       = 1e6;
     propOpts.maxStepSize    = 0.5 * units::_m;
 
@@ -467,12 +467,12 @@ namespace Test {
                             detail::HighestValidAuctioneer>,
                Navigator>
         prop(es, naviDet);
-
+std::cout << "6" << std::endl;
     // Launch and collect results
     const auto&                       result = prop.propagate(sbtp, propOpts);
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
-
+std::cout << "7" << std::endl;
     // Manually set the extensions for each step and propagate through each
     // volume by propagation to the boundaries
     // Collect boundaries
@@ -511,7 +511,7 @@ namespace Test {
         propOptsDef;
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
-    propOptsDef.stopConditions       = abortList;
+    propOptsDef.abortList       = abortList;
     propOptsDef.maxSteps             = 1e6;
     propOptsDef.maxStepSize          = 0.5 * units::_m;
 
@@ -577,7 +577,7 @@ namespace Test {
         propOptsDense;
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
-    propOptsDense.stopConditions     = abortList;
+    propOptsDense.abortList     = abortList;
     propOptsDense.maxSteps           = 1e6;
     propOptsDense.maxStepSize        = 0.5 * units::_m;
     propOptsDense.tolerance          = 1e-8;

@@ -317,7 +317,7 @@ private:
       // Propagation loop : stepping
       for (; result.steps < state.options.maxSteps; ++result.steps) {
         // Perform a propagation step - it only takes the stepping state
-        double s = m_stepper.step(state.stepping);
+        double s = m_stepper.step(state);
         // Accumulate the path length
         result.pathLength += s;
         // Call the actions, can (& will likely) modify the state
@@ -377,7 +377,7 @@ public:
             typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t,
-            typename path_arborter_t = detail::PathLimitReached>
+            typename path_aborter_t = detail::PathLimitReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
@@ -452,8 +452,8 @@ public:
             typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t,
-            typename target_aborter_t = detail::SurfaceReached
-            typename path_arborter_t  = detail::PathLimitReached>
+            typename target_aborter_t = detail::SurfaceReached,
+            typename path_aborter_t  = detail::PathLimitReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,
