@@ -147,10 +147,10 @@ namespace Test {
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
         propOpts;
-    propOpts.actionList     = aList;
-    propOpts.abortList = abortList;
-    propOpts.maxSteps       = 1e6;
-    propOpts.maxStepSize    = 0.5 * units::_m;
+    propOpts.actionList  = aList;
+    propOpts.abortList   = abortList;
+    propOpts.maxSteps    = 1e6;
+    propOpts.maxStepSize = 0.5 * units::_m;
 
     // Build stepper and propagator
     ConstantBField bField(Vector3D(0., 0., 0.));
@@ -192,10 +192,10 @@ namespace Test {
     // Set options for propagator
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
         propOptsDef;
-    propOptsDef.actionList     = aListDef;
-    propOptsDef.abortList = abortList;
-    propOptsDef.maxSteps       = 1e6;
-    propOptsDef.maxStepSize    = 0.5 * units::_m;
+    propOptsDef.actionList  = aListDef;
+    propOptsDef.abortList   = abortList;
+    propOptsDef.maxSteps    = 1e6;
+    propOptsDef.maxStepSize = 0.5 * units::_m;
 
     EigenStepper<ConstantBField,
                  VoidCorrector,
@@ -266,11 +266,11 @@ namespace Test {
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
         propOpts;
-    propOpts.actionList     = aList;
-    propOpts.abortList = abortList;
-    propOpts.maxSteps       = 1e6;
-    propOpts.maxStepSize    = 0.5 * units::_m;
-    propOpts.debug          = true;
+    propOpts.actionList  = aList;
+    propOpts.abortList   = abortList;
+    propOpts.maxSteps    = 1e6;
+    propOpts.maxStepSize = 0.5 * units::_m;
+    propOpts.debug       = true;
 
     // Build stepper and propagator
     ConstantBField bField(Vector3D(0., 0., 0.));
@@ -318,11 +318,11 @@ namespace Test {
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
         propOptsDense;
-    propOptsDense.actionList     = aList;
-    propOptsDense.abortList = abortList;
-    propOptsDense.maxSteps       = 1e6;
-    propOptsDense.maxStepSize    = 0.5 * units::_m;
-    propOptsDense.debug          = true;
+    propOptsDense.actionList  = aList;
+    propOptsDense.abortList   = abortList;
+    propOptsDense.maxSteps    = 1e6;
+    propOptsDense.maxStepSize = 0.5 * units::_m;
+    propOptsDense.debug       = true;
 
     // Build stepper and propagator
     EigenStepper<ConstantBField,
@@ -447,10 +447,10 @@ namespace Test {
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
         propOpts;
-    propOpts.actionList     = aList;
-    propOpts.abortList = abortList;
-    propOpts.maxSteps       = 1e6;
-    propOpts.maxStepSize    = 0.5 * units::_m;
+    propOpts.actionList  = aList;
+    propOpts.abortList   = abortList;
+    propOpts.maxSteps    = 1e6;
+    propOpts.maxStepSize = 0.5 * units::_m;
 
     // Build stepper and propagator
     ConstantBField bField(Vector3D(0., 1. * units::_T, 0.));
@@ -467,12 +467,12 @@ namespace Test {
                             detail::HighestValidAuctioneer>,
                Navigator>
         prop(es, naviDet);
-std::cout << "6" << std::endl;
+
     // Launch and collect results
     const auto&                       result = prop.propagate(sbtp, propOpts);
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
-std::cout << "7" << std::endl;
+
     // Manually set the extensions for each step and propagate through each
     // volume by propagation to the boundaries
     // Collect boundaries
@@ -511,7 +511,7 @@ std::cout << "7" << std::endl;
         propOptsDef;
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
-    propOptsDef.abortList       = abortList;
+    propOptsDef.abortList            = abortList;
     propOptsDef.maxSteps             = 1e6;
     propOptsDef.maxStepSize          = 0.5 * units::_m;
 
@@ -577,7 +577,7 @@ std::cout << "7" << std::endl;
         propOptsDense;
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
-    propOptsDense.abortList     = abortList;
+    propOptsDense.abortList          = abortList;
     propOptsDense.maxSteps           = 1e6;
     propOptsDense.maxStepSize        = 0.5 * units::_m;
     propOptsDense.tolerance          = 1e-8;

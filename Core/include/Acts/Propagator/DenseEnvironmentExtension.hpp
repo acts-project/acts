@@ -447,7 +447,7 @@ struct DenseStepperPropagatorOptions
 
   /// Cut-off value for the momentum in SI units
   double momentumCutOff = 0.;
-  
+
   /// @brief Expand the Options with extended aborters
   ///
   /// @tparam extended_aborter_list_t Type of the new aborter list
@@ -457,7 +457,8 @@ struct DenseStepperPropagatorOptions
   DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
   extend(extended_aborter_list_t aborters) const
   {
-    DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t> eoptions;
+    DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
+        eoptions;
     // Copy the options over
     eoptions.direction       = this->direction;
     eoptions.absPdgCode      = this->absPdgCode;
@@ -477,9 +478,9 @@ struct DenseStepperPropagatorOptions
     eoptions.actionList = this->actionList;
     eoptions.abortList  = std::move(aborters);
     // Copy dense environment specific parameters
-    eoptions.meanEnergyLoss = meanEnergyLoss;
+    eoptions.meanEnergyLoss   = meanEnergyLoss;
     eoptions.includeGgradient = includeGgradient;
-    eoptions.momentumCutOff = momentumCutOff;
+    eoptions.momentumCutOff   = momentumCutOff;
     // And return the options
     return eoptions;
   }

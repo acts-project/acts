@@ -149,7 +149,7 @@ struct PropagatorOptions
 
   // Configurations for Stepper
   /// Tolerance for the error of the integration
-  double tolerance = 1.3e-7;
+  double tolerance = 1e-4;
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
 
@@ -453,7 +453,7 @@ public:
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
-            typename path_aborter_t  = detail::PathLimitReached>
+            typename path_aborter_t   = detail::PathLimitReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,

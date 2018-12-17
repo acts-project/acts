@@ -211,7 +211,7 @@ namespace Test {
 
     PropagatorOptions<> options;
     options.maxSteps   = 1e6;
-    const auto&         result = epropagator.propagate(start, options);
+    const auto& result = epropagator.propagate(start, options);
 
     // this test assumes state.options.loopFraction = 0.5
     BOOST_CHECK_CLOSE(px, -result.endParameters->momentum().x(), 1e-2);

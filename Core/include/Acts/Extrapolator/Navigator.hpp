@@ -1092,8 +1092,8 @@ private:
       }
     }
 
-	// Set the iterator to the end of the list
-	state.navigation.navLayerIter = state.navigation.navLayers.end();
+    // Set the iterator to the end of the list
+    state.navigation.navLayerIter = state.navigation.navLayers.end();
 
     // Screen output - no layer candidates found
     debugLog(state, [&] {

@@ -9,30 +9,30 @@
 #define BOOST_TEST_MODULE KalmanFitter Tests
 #include <boost/test/included/unit_test.hpp>
 
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include <vector>
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 namespace Test {
 
-std::shared_ptr<TrackingGeometry>
-buildGeometry()
-{
-	// Construct the rotation
-	RotationMatrix3D rotation;
-	double rotationAngle = M_PI * 0.5;
-    Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
-    Vector3D yPos(0., 1., 0.);
-    Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+  std::shared_ptr<TrackingGeometry>
+  buildGeometry()
+  {
+    // Construct the rotation
+    RotationMatrix3D rotation;
+    double           rotationAngle = M_PI * 0.5;
+    Vector3D         xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    Vector3D         yPos(0., 1., 0.);
+    Vector3D         zPos(-sin(rotationAngle), 0., cos(rotationAngle));
     rotation.col(0) = xPos;
     rotation.col(1) = yPos;
     rotation.col(2) = zPos;
-    
+
     // Set translation vectors
-    double eps = 1. * units::_mm;
+    double                eps = 1. * units::_mm;
     std::vector<Vector3D> translations;
     translations.push_back({-2., 0., 0.});
     translations.push_back({-1., 0., 0.});
@@ -40,23 +40,22 @@ buildGeometry()
     translations.push_back({1. + eps, 0., 0.});
     translations.push_back({2. - eps, 0., 0.});
     translations.push_back({2. + eps, 0., 0.});
-    
-    // Boundaries of the surface
-	std::shared_ptr<const RectangleBounds> rBounds(new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
-	
-	// Construct surfaces
-	std::vector<PlaneSurface*> surfaces;
-	for(size_t i = 0; i < translations.size(); i++)
-	{
-		Transform3D trafo(Transform3D::Identity() * rotation);
-		trafo.translation() = translations[i];
-		surfaces.push_back(new PlaneSurface(std::make_shared<const Transform3D>(trafo), rBounds));
-	}
 
-	
-	
-	return nullptr;
-}
+    // Boundaries of the surface
+    std::shared_ptr<const RectangleBounds> rBounds(
+        new RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
+
+    // Construct surfaces
+    std::vector<PlaneSurface*> surfaces;
+    for (size_t i = 0; i < translations.size(); i++) {
+      Transform3D trafo(Transform3D::Identity() * rotation);
+      trafo.translation() = translations[i];
+      surfaces.push_back(new PlaneSurface(
+          std::make_shared<const Transform3D>(trafo), rBounds));
+    }
+
+    return nullptr;
+  }
 
   ///
   /// @brief Unit test for Kalman fitter
