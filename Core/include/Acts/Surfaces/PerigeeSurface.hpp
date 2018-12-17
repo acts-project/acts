@@ -28,9 +28,11 @@ namespace Acts {
 /// @image html LineSurface.png
 class PerigeeSurface : public LineSurface
 {
-public:
+  friend Surface;
+
   PerigeeSurface() = delete;
 
+protected:
   /// Constructor from GlobalPosition
   ///
   /// @param gp position where the perigee is centered
@@ -57,6 +59,7 @@ public:
   /// @param vardata the @c variant_data to build from
   PerigeeSurface(const variant_data& vardata);
 
+public:
   /// Destructor - defaulted
   ~PerigeeSurface() override = default;
 

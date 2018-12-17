@@ -35,7 +35,9 @@ class DetectorElementBase;
 ///
 class PlaneSurface : public Surface
 {
-public:
+  friend Surface;
+
+protected:
   /// Default Constructor - needed for persistency
   PlaneSurface();
 
@@ -76,6 +78,7 @@ public:
   /// @param vardata the @c variant_data to build from
   PlaneSurface(const variant_data& vardata);
 
+public:
   /// Destructor - defaulted
   ~PlaneSurface() override = default;
 

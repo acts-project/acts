@@ -34,9 +34,11 @@ namespace Acts {
 
 class ConeSurface : public Surface
 {
-public:
+  friend Surface;
+
   ConeSurface() = delete;
 
+protected:
   /// Constructor form HepTransform and an opening angle
   ///
   /// @param htrans is the transform to place to cone in a 3D frame
@@ -82,6 +84,7 @@ public:
   /// @param vardata the @c variant_data to build from
   ConeSurface(const variant_data& vardata);
 
+public:
   /// Destructor - defaulted
   ~ConeSurface() override = default;
 

@@ -105,6 +105,7 @@ public:
   makeShared(Args&&... args)
   {
     return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
+    // return std::make_shared<T>(std::forward<Args>(args)...);
   }
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
@@ -123,8 +124,8 @@ public:
   ///
   /// @note Will error if this was not created through the @c makeShared factory
   ///       since it needs access to the original reference. In C++14 this is
-  ///       undefined behavior (but most likely implemented as a @c bad_weak_ptr
-  ///       exception), in C++17 it is defined as that exception.
+  ///       undefined behavior, but most likely implemented as a @c bad_weak_ptr
+  ///       exception, in C++17 it is defined as that exception.
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer

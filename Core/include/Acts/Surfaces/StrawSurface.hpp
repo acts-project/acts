@@ -31,10 +31,12 @@ struct PolyhedronRepresentation;
 ///
 class StrawSurface : public LineSurface
 {
-public:
+  friend Surface;
+
   /// Default Constructor - deleted
   StrawSurface() = delete;
 
+protected:
   /// Constructor from Transform3D and bounds
   ///
   /// @param htrans is the transform that positions the surface in the global
@@ -78,6 +80,7 @@ public:
   /// @param vardata the @c variant_data to build from
   StrawSurface(const variant_data& vardata);
 
+public:
   /// Destructor - defaulted
   ~StrawSurface() override = default;
 

@@ -46,9 +46,12 @@ class DetectorElementBase;
 ///
 class DiscSurface : public Surface
 {
-public:
-  /// Default Constructor is deleted
+  friend Surface;
+
   DiscSurface() = delete;
+
+protected:
+  /// Default Constructor is deleted
 
   /// Constructor for Discs from Transform3D, \f$ r_{min}, r_{max} \f$
   ///
@@ -113,6 +116,7 @@ public:
   /// @param vardata the @c variant_data to build from
   DiscSurface(const variant_data& vardata);
 
+public:
   /// Destructor - defaulted
   ~DiscSurface() override = default;
 
