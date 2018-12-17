@@ -116,20 +116,17 @@ namespace Test {
     ParametricTrackState ptsMoveAssigned = std::move(ptsCopyAssigned);
 
     std::vector<VariantState> trackStates
-        = {std::move(m1D), std::move(m2D), std::move(pts)};
+        = {std::move(mts1DMoveAssigned), std::move(mts2D), std::move(pts)};
 
     BOOST_CHECK(trackStates.size() == 3);
-
-    std::vector<VariantState> unorderedStates{
-        trackStates[2], trackStates[1], trackStates[0], trackStates[3]};
 
     // Test is we can shuffle the track states
     // Test to extract the surface of these guys
     for (auto& ts : trackStates) {
       const Surface* sf = &(detail::getSurface(ts));
-      bool           surfaceExists(sf != nullptr);
-      BOOST_TEST(surfaceExists);
+      BOOST_TEST(sf == plane.get());
     }
+
     // Create predicted, filtered and smoothed parameters
     BoundParameters ataPlaneUpdt(nullptr, pars, plane);
     BoundParameters ataPlanePred(nullptr, pars, plane);
@@ -174,18 +171,18 @@ namespace Test {
     ParametricTrackState ataPlaneState2(std::move(ataPlaneAt2));
     ataPlaneState2.parametric.pathLength = 2.;
 
-    std::vector<VariantState> undorderedStates
+    std::vector<VariantState> unorderedStates
         = {std::move(ataPlaneState2), std::move(ataPlaneState1)};
 
     // Sort the variant track state
     detail::path_length_sorter plSorter;
-    std::sort(undorderedStates.begin(), undorderedStates.end(), plSorter);
+    std::sort(unorderedStates.begin(), unorderedStates.end(), plSorter);
 
-    auto   firstOrdered   = undorderedStates[0];
+    auto   firstOrdered   = unorderedStates[0];
     double fistPathLength = detail::getPathLength(firstOrdered);
     BOOST_TEST(fistPathLength == 1.);
 
-    auto   secondOrdered    = undorderedStates[1];
+    auto   secondOrdered    = unorderedStates[1];
     double secondPathLength = detail::getPathLength(secondOrdered);
     BOOST_TEST(secondPathLength == 2.);
 
@@ -194,11 +191,11 @@ namespace Test {
 
     BOOST_TEST(pState.pathLength == 1.);
 
-    std::shuffle(undorderedStates.begin(), undorderedStates.end(), generator);
+    std::shuffle(unorderedStates.begin(), unorderedStates.end(), generator);
 
     // Copy the TrackStates into a new vector
     std::vector<VariantState> copiedStates
-        = {undorderedStates[0], undorderedStates[1]};
+        = {unorderedStates[0], unorderedStates[1]};
 
     // Shuffle
     std::shuffle(copiedStates.begin(), copiedStates.end(), generator);
