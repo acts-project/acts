@@ -465,11 +465,9 @@ namespace IntegrationTest {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
     DenseStepperPropagatorOptions<> options;
-    // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
     options.debug       = debug;
-    options.tolerance   = 1e-7;
 
     // define start parameters
     double            x  = 1.;

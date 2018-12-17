@@ -583,16 +583,22 @@ public:
       return true;
     };
 
+    double stepSizeScaling;
+
     // Select and adjust the appropriate Runge-Kutta step size as given
     // ATL-SOFT-PUB-2009-001
     while (!tryRungeKuttaStep(state.stepping.stepSize)
            || error_estimate > state.options.tolerance) {
-      state.stepping.stepSize = state.stepping.stepSize
-          * std::min(std::max(0.25,
-                              std::pow((state.options.tolerance
-                                        / std::abs(error_estimate)),
-                                       0.25)),
-                     4.);
+      stepSizeScaling = std::min(std::max(0.25,
+                                          std::pow((state.options.tolerance
+                                                    / std::abs(error_estimate)),
+                                                   0.25)),
+                                 4.);
+      if (stepSizeScaling == 1.) {
+        break;
+      }
+      state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
+
       // If step size becomes too small the particle remains at the initial
       // place
       if (state.stepping.stepSize < state.options.stepSizeCutOff) {
