@@ -303,47 +303,47 @@ namespace Test {
     // Fit the track
     auto fittedTrack      = kFitter.fit(measurements, rStart, rSurface);
     auto fittedParameters = fittedTrack.fittedParameters.get();
-    /*
+
     // Make sure it is deterministic
-    auto fittedAgainTrack = kFitter.fit(measurements, rStart, rSurface);
+    auto fittedAgainTrack      = kFitter.fit(measurements, rStart, rSurface);
     auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
 
-    BOOST_TEST(fittedParameters.parameters().isApprox(fittedAgainParameters.parameters()));
+    BOOST_TEST(fittedParameters.parameters().isApprox(
+        fittedAgainParameters.parameters()));
 
     // Change the order of the measurements
-    std::vector<VariantTrackState>
-      shuffledMeasurements = {  measurements[3],
-                                measurements[2],
-                                measurements[1],
-                                measurements[4],
-                                measurements[5],
-                                measurements[0] };
+    std::vector<VariantTrackState> shuffledMeasurements = {measurements[3],
+                                                           measurements[2],
+                                                           measurements[1],
+                                                           measurements[4],
+                                                           measurements[5],
+                                                           measurements[0]};
 
     // Make sure it works for shuffled measurements as well
-    auto fittedShuffledTrack      = kFitter.fit(shuffledMeasurements, rStart,
-   rSurface);
+    auto fittedShuffledTrack
+        = kFitter.fit(shuffledMeasurements, rStart, rSurface);
     auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
 
-    BOOST_TEST(fittedParameters.parameters().isApprox(fittedShuffledParameters.parameters()));
+    BOOST_TEST(fittedParameters.parameters().isApprox(
+        fittedShuffledParameters.parameters()));
 
     // Remove one measurement and find a hole
-    std::vector<VariantTrackState>
-      measurementsWithHole = {  measurements[0],
-                                measurements[1],
-                                measurements[2],
-                                measurements[4],
-                                measurements[5] };
+    std::vector<VariantTrackState> measurementsWithHole = {measurements[0],
+                                                           measurements[1],
+                                                           measurements[2],
+                                                           measurements[4],
+                                                           measurements[5]};
 
-   // Make sure it works for shuffled measurements as well
-   auto fittedWithHoleTrack      = kFitter.fit(measurementsWithHole, rStart,
-   rSurface);
-   auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
+    // Make sure it works for shuffled measurements as well
+    auto fittedWithHoleTrack
+        = kFitter.fit(measurementsWithHole, rStart, rSurface);
+    auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
 
-   // Count one hole
-   BOOST_TEST(fittedWithHoleTrack.missedActiveSurfaces.size() == 1);
-   // And the parameters should be different
-   BOOST_TEST(!fittedParameters.parameters().isApprox(fittedWithHoleParameters.parameters()));
-   */
+    // Count one hole
+    BOOST_TEST(fittedWithHoleTrack.missedActiveSurfaces.size() == 1);
+    // And the parameters should be different
+    BOOST_TEST(!fittedParameters.parameters().isApprox(
+        fittedWithHoleParameters.parameters()));
   }
 
 }  // namespace Test
