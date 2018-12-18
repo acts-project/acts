@@ -41,84 +41,91 @@ namespace units {
 /// @name length units
 /// @{
 #ifdef DOXYGEN
-  const double _m = unspecified;
+  constexpr double _m = unspecified;
 #else
-  const double _m = 1e3;
+  constexpr double _m = 1e3;
 #endif  // DOXYGEN
-  const double _km = 1e3 * _m;
-  const double _cm = 1e-2 * _m;
-  const double _mm = 1e-3 * _m;
-  const double _um = 1e-6 * _m;
-  const double _nm = 1e-9 * _m;
-  const double _pm = 1e-12 * _m;
-  const double _fm = 1e-15 * _m;
+  constexpr double _km = 1e3 * _m;
+  constexpr double _cm = 1e-2 * _m;
+  constexpr double _mm = 1e-3 * _m;
+  constexpr double _um = 1e-6 * _m;
+  constexpr double _nm = 1e-9 * _m;
+  constexpr double _pm = 1e-12 * _m;
+  constexpr double _fm = 1e-15 * _m;
+  /// Higher orders
+  constexpr double _mm2 = _mm * _mm;
 /// @}
 
 /// @name mass units
 /// @{
 #ifdef DOXYGEN
-  const double _kg = unspecified;
+  constexpr double _kg = unspecified;
 #else
-  const double _kg  = 1e3;
+  constexpr double _kg  = 1e3;
 #endif  // DOXYGEN
-  const double _g  = 1e-3 * _kg;
-  const double _mg = 1e-6 * _kg;
+  constexpr double _g  = 1e-3 * _kg;
+  constexpr double _mg = 1e-6 * _kg;
   /// atomic mass unit
-  const double _u = 1.660539040e-27 * _kg;
+  constexpr double _u = 1.660539040e-27 * _kg;
 /// @}
 
 /// @name time units
 /// @{
 #ifdef DOXYGEN
-  const double _s = unspecified;
+  constexpr double _s = unspecified;
 #else
-  const double _s   = 1;
+  constexpr double _s   = 1;
 #endif  // DOXYGEN
-  const double _ms = 1e-3 * _s;
-  const double _h  = 3600 * _s;
+  constexpr double _ms = 1e-3 * _s;
+  constexpr double _h  = 3600 * _s;
 /// @}
 
 /// @name energy units
 /// @{
 #ifdef DOXYGEN
-  const double _MeV = unspecified;
+  constexpr double _MeV = unspecified;
 #else
-  const double _MeV = 1e-3;
+  constexpr double _MeV = 1e-3;
 #endif  // DOXYGEN
-  const double _GeV = 1e3 * _MeV;
-  const double _TeV = 1e6 * _MeV;
-  const double _keV = 1e-3 * _MeV;
-  const double _eV  = 1e-6 * _MeV;
+  constexpr double _GeV = 1e3 * _MeV;
+  constexpr double _TeV = 1e6 * _MeV;
+  constexpr double _keV = 1e-3 * _MeV;
+  constexpr double _eV  = 1e-6 * _MeV;
 /// @}
 
 /// @name charge units
 /// @{
 #ifdef DOXYGEN
-  const double _C = unspecified;
+  constexpr double _C = unspecified;
 #else
-  const double _C   = 1. / 1.60217733e-19;
+  constexpr double _C   = 1. / 1.60217733e-19;
 #endif  // DOXYGEN
-  const double _e = 1.60217733e-19 * _C;
+  constexpr double _e = 1.60217733e-19 * _C;
+  /// Higher orders
+  constexpr double _e2 = _e * _e;
   /// @}
 
   /// @name derived units
   /// @{
-  const double _N      = _kg * _m / (_s * _s);
-  const double _J      = _N * _m;
-  const double _T      = _kg / (_C * _s);
-  const double _Gauss  = 1e-4 * _T;
-  const double _kGauss = 1e-1 * _T;
+  constexpr double _N      = _kg * _m / (_s * _s);
+  constexpr double _J      = _N * _m;
+  constexpr double _T      = _kg / (_C * _s);
+  constexpr double _Gauss  = 1e-4 * _T;
+  constexpr double _kGauss = 1e-1 * _T;
   /// @}
 
   /// @name fundamental physical constants in SI units
   /// @{
-
   /// speed of light in vacuum
-  const double _c = 2.99792458e8 * _m / _s;
+  constexpr double _c = 2.99792458e8 * _m / _s;
   /// reduced Planck constant
-  const double _hbar = 1.05457266e-34 * _J * _s;
+  constexpr double _hbar = 1.05457266e-34 * _J * _s;
   /// value of elementary charge in Coulomb
-  const double _el_charge = _e / _C;
+  constexpr double _el_charge = _e / _C;
+  /// Higher orders
+  constexpr double _c2 = _c * _c;
+  constexpr double _c3 = _c * _c * _c;
+  constexpr double _c4 = _c2 * _c2;
   /// @}
 
   /// @cond
@@ -126,10 +133,10 @@ namespace units {
   namespace {
     // 1 GeV = 1e9 * e * 1 V = 1.60217733e-10 As * 1 V = 1.60217733e-10 J
     // ==> 1 J = 1 / 1.60217733e-10 GeV
-    const double _GeV_per_J = _GeV / (_el_charge * 1e9 * _J);
+    constexpr double _GeV_per_J = _GeV / (_el_charge * 1e9 * _J);
     // hbar * c = 3.161529298809983e-26 J * m
     // ==> hbar * c * _GeV_per_J = 1.973270523563071e-16 GeV * m
-    const double _mm_times_GeV = _c * _hbar * _GeV_per_J;
+    constexpr double _mm_times_GeV = _c * _hbar * _GeV_per_J;
   }
   /// @endcond
 

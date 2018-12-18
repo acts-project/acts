@@ -178,7 +178,7 @@ namespace Test {
       tapVec.push_back(
           std::make_pair(trackVolume2, Vector3D(1.5 * units::_m, 0., 0.)));
 
-      std::vector<double> binBoundaries = {-3. * units::_m, 0., 3. * units::_m};
+      std::vector<float> binBoundaries = {-3. * units::_m, 0., 3. * units::_m};
 
       BinningData binData(
           BinningOption::open, BinningValue::binX, binBoundaries);
