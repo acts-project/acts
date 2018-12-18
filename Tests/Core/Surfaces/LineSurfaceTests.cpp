@@ -24,8 +24,8 @@
 #include "Acts/Utilities/VariantData.hpp"
 //
 #include "../Utilities/TestHelper.hpp"
-#include "DetectorElementStub.hpp"
-#include "LineSurfaceStub.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/LineSurfaceStub.hpp"
 //
 #include <limits>
 
@@ -54,12 +54,10 @@ namespace Test {
     auto pLineBounds = std::make_shared<const LineBounds>(10.0);
     BOOST_CHECK(LineSurfaceStub(pTransform, pLineBounds).constructedOk());
     // ctor with LineBounds, detector element, Identifier
-    Identifier         identifier{2};
     MaterialProperties properties{1., 1., 1., 20., 10, 5.};
     auto               pMaterial
         = std::make_shared<const HomogeneousSurfaceMaterial>(properties);
-    DetectorElementStub detElement{
-        identifier, pTransform, pLineBounds, 0.2, pMaterial};
+    DetectorElementStub detElement{pTransform, pLineBounds, 0.2, pMaterial};
     BOOST_CHECK(LineSurfaceStub(pLineBounds, detElement).constructedOk());
     LineSurfaceStub lineToCopy(pTransform, 2.0, 20.);
     // Copy ctor

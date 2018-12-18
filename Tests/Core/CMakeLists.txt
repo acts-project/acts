@@ -1,4 +1,4 @@
-add_subdirectory (Common)
+add_subdirectory (CommonHelpers)
 add_subdirectory (Detector)
 add_subdirectory (EventData)
 add_subdirectory (Extrapolator)

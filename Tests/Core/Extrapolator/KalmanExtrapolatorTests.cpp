@@ -20,7 +20,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/Common/CubicTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {

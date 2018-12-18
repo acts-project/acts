@@ -15,7 +15,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tests/Common/DetectorElement.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tools/LayerArrayCreator.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
@@ -72,7 +72,7 @@ namespace Test {
         Transform3D trafo(Transform3D::Identity() * rotation);
         trafo.translation() = translations[i];
         // Create the detector element
-        auto detElement = std::make_unique<const DetectorElement>(
+        auto detElement = std::make_unique<const DetectorElementStub>(
             std::make_shared<const Transform3D>(trafo),
             rBounds,
             1. * units::_um,
@@ -204,7 +204,7 @@ namespace Test {
     std::shared_ptr<const RectangleBounds> rBounds         = nullptr;
     std::shared_ptr<const SurfaceMaterial> surfaceMaterial = nullptr;
 
-    std::vector<std::unique_ptr<const DetectorElement>> detectorStore = {};
+    std::vector<std::unique_ptr<const DetectorElementStub>> detectorStore = {};
   };
 }  // namespace Test
 }  // namespace Acts

@@ -29,7 +29,7 @@
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/Common/CubicTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryID.hpp"

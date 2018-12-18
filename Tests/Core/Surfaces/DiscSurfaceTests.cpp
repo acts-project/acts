@@ -25,7 +25,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 //
-#include "DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 //
 #include <limits>
 

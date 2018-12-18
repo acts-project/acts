@@ -18,7 +18,7 @@
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tests/Common/DetectorElement.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tools/CylinderVolumeBuilder.hpp"
 #include "Acts/Tools/CylinderVolumeHelper.hpp"
 #include "Acts/Tools/LayerArrayCreator.hpp"
@@ -41,7 +41,7 @@ namespace Test {
     CylindricalTrackingGeometry() = default;
 
     /// The detector store for memory management
-    std::vector<std::unique_ptr<const DetectorElement>> detectorStore = {};
+    std::vector<std::unique_ptr<const DetectorElementStub>> detectorStore = {};
 
     /// helper method for cylinder layer
     /// create the positions for module surfaces on a cylinder
@@ -209,11 +209,11 @@ namespace Test {
               = std::make_shared<Transform3D>(Translation3D(mCenter)
                                               * moduleRotation);
           // Create the detector element
-          auto detElement
-              = std::make_unique<const DetectorElement>(mModuleTransform,
-                                                        mBounds,
-                                                        pModuleThickness[ilp],
-                                                        moduleMaterialPtr);
+          auto detElement = std::make_unique<const DetectorElementStub>(
+              mModuleTransform,
+              mBounds,
+              pModuleThickness[ilp],
+              moduleMaterialPtr);
 
           layerModules.push_back(detElement->surface().getSharedPtr());
           detectorStore.push_back(std::move(detElement));

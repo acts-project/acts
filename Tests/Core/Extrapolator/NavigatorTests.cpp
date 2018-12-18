@@ -23,7 +23,7 @@
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Tests/Common/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -69,10 +69,10 @@ namespace Test {
       }
 
       /// Return a corrector
-      VoidCorrector
+      VoidIntersectionCorrector
       corrector() const
       {
-        return VoidCorrector();
+        return VoidIntersectionCorrector();
       }
 
       /// Position

@@ -11,8 +11,8 @@
 
 #include <boost/test/included/unit_test.hpp>
 #include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Tests/Common/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/Common/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 
 namespace Acts {
 namespace Test {

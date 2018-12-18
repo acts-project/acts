@@ -32,7 +32,7 @@
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Propagator/detail/RelativePathCorrector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Tests/Common/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
