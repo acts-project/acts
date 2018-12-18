@@ -270,8 +270,8 @@ public:
   /// @return boolean indication if operation was successful
   template <typename parameters_t>
   bool
-  onSurface(const parameters_t&  pars,
-            const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+  isOnSurface(const parameters_t&  pars,
+              const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// The geometric onSurface method
   ///
