@@ -143,7 +143,7 @@ public:
       , newfield(true)
       , field(0., 0., 0.)
       , covariance(nullptr)
-      , stepSize(ssize)
+      , stepSize(ndir * std::abs(ssize))
     {
       update(pars);
     }
