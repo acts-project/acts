@@ -152,7 +152,7 @@ public:
     ///
     /// @return A bound state:
     ///   - the parameters at the surface
-    ///   - the stepweise jacobian towards it (from last bound)
+    ///   - the stepwise jacobian towards it (from last bound)
     ///   - and the path length (from start - for ordering)
     template <typename surface_t>
     BoundState

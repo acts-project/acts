@@ -352,7 +352,8 @@ private:
         // Get the current VariantTrackState
         auto& trackState = result.fittedStates[cindexItr->second];
         // Perform the update and obtain the filtered parameters
-        const auto& filteredPars = m_updator(trackState, std::move(boundState));
+        // return optional parameters_t
+        const auto filteredPars = m_updator(trackState, std::move(boundState));
         // If the update is successful, set covariance and
         if (filteredPars) {
           // Update the stepping state

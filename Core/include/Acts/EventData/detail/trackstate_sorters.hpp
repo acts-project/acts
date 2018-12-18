@@ -24,14 +24,6 @@ namespace detail {
     {
       return (lhs.parametric.pathLength < rhs.parametric.pathLength);
     }
-
-    /// @brief compares the same type
-    template <typename type_a_t>
-    bool
-    operator()(const type_a_t& lhs, const type_a_t& rhs) const
-    {
-      return (lhs.parametric.pathLength < rhs.parametric.pathLength);
-    }
   };
 
   /// @brief vistor pattern path length sorter

@@ -279,7 +279,7 @@ public:
                       state.navigation.navLayerIter)) {
       debugLog(state,
                [&] { return std::string("Status: in layer handling."); });
-      if (state.navigation.currentSurface) {
+      if (state.navigation.currentSurface != nullptr) {
         debugLog(state, [&] {
           return std::string("On layer: update layer information.");
         });
@@ -302,7 +302,7 @@ public:
                [&] { return std::string("Stauts: in boundary handling."); });
 
       // Are we on the boundary - then overwrite the stage
-      if (state.navigation.currentSurface) {
+      if (state.navigation.currentSurface != nullptr) {
         // Set the navigation stage back to surface handling
         debugLog(state, [&] {
           return std::string("On boundary: update volume information.");
@@ -527,7 +527,7 @@ private:
       debugLog(state, [&] {
         return std::string("Status Surface successfully hit, storing it.");
       });
-      // Broadcast the surface to the actors and aborters
+      // Set in navigation state, so actors and aborters can access it
       state.navigation.currentSurface = surface;
       if (state.navigation.currentSurface) {
         debugLog(state, [&] {
@@ -684,7 +684,7 @@ private:
       return false;
     }
 
-    // if there are no layers, go back to the navigagor (not stepper yet)
+    // if there are no layers, go back to the navigator (not stepper yet)
     if (state.navigation.navLayers.empty()) {
       debugLog(state, [&] {
         return std::string("No layers present, resolve volume first.");

@@ -287,7 +287,7 @@ private:
   /// @return Propagation Status
   template <typename result_t, typename propagator_state_t>
   Status
-  propagate_(result_t& result, propagator_state_t& state) const
+  propagate_impl(result_t& result, propagator_state_t& state) const
   {
 
     // Pre-stepping call to the navigator and action list
@@ -397,7 +397,7 @@ public:
     }
 
     // Perform the actual propagation & check its outcome
-    if (propagate_(result, state) != Status::IN_PROGRESS) {
+    if (propagate_impl(result, state) != Status::IN_PROGRESS) {
       result.status = Status::FAILURE;
     } else {
       /// Convert into return type and fill the result object
@@ -476,7 +476,7 @@ public:
     lProtection(state, m_stepper);
 
     // Perform the actual propagation
-    if (propagate_(result, state) != Status::IN_PROGRESS) {
+    if (propagate_impl(result, state) != Status::IN_PROGRESS) {
       result.status = Status::FAILURE;
     } else {
       // Compute the final results and mark the propagation as successful

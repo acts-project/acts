@@ -26,7 +26,7 @@ struct VoidKalmanComponents
   measurement_t
   operator()(measurement_t m, const parameters_t& /*pars*/) const
   {
-    return std::move(m);
+    return m;
   }
 
   /// @brief void measurement converter only moves the

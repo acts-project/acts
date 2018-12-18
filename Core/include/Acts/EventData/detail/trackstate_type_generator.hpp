@@ -24,7 +24,7 @@ class TrackState;
 /// @cond detail
 namespace detail {
   ///
-  /// @brief generate boost::variant type for all possible Measurement's
+  /// @brief generate boost::variant type for all possible measurements
   ///
   template <typename identifier_t, typename parameters_t, typename jacobian_t>
   struct trackstate_type_generator;

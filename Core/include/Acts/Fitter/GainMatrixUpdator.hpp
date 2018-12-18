@@ -32,7 +32,7 @@ class GainMatrixUpdator
 {
 
 public:
-  // Shortand
+  // Shorthand
   using predicted_state_t = std::tuple<parameters_t, jacobian_t, double>;
 
   /// Explicit constructor
@@ -69,7 +69,6 @@ private:
   struct GainMatrixUpdatorImpl
       : public boost::static_visitor<boost::optional<parameters_t>>
   {
-  public:
     /// @brief Explicit constructor of the GainMatrix updator
     ///
     /// @param calibrator The calibration struct/class that converts
@@ -97,7 +96,7 @@ private:
       static const ActsSymMatrixD<Acts::NGlobalPars> unit
           = ActsSymMatrixD<Acts::NGlobalPars>::Identity();
 
-      // Predicated Parameters
+      // Predicted Parameters
       const auto& predicted = std::get<parameters_t>(m_pState);
 
       // Calibrate the measurement

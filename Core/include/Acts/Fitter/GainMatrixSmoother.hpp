@@ -34,10 +34,12 @@ public:
     // The reverse iteration
     auto rit = filteredStates.rbegin();
 
-    using ps_t = ParametricState<parameters_t, jacobian_t>;
+    using ps_t        = ParametricState<parameters_t, jacobian_t>;
+    using ParVector_t = typename parameters_t::ParVector_t;
+    using CovMatrix_t = typename parameters_t::CovMatrix_t;
     // smoothed parameter vector and covariance matrix
-    typename parameters_t::ParVector_t smoothedPars;
-    typename parameters_t::CovMatrix_t smoothedCov;
+    ParVector_t smoothedPars;
+    CovMatrix_t smoothedCov;
 
     // For the last state: smoothed is filtered - also: switch to next
     auto& lState    = detail::getParametricState<ps_t>(*rit);
@@ -70,7 +72,7 @@ public:
 
       // Create smoothed track parameters
       parameters_t smoothed(
-          std::make_unique<const decltype(smoothedCov)>(std::move(smoothedCov)),
+          std::make_unique<CovMatrix_t>(std::move(smoothedCov)),
           smoothedPars,
           cState.filtered.get().referenceSurface().getSharedPtr());
 

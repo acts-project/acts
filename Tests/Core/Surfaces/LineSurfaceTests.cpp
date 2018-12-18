@@ -60,7 +60,6 @@ namespace Test {
         = std::make_shared<const HomogeneousSurfaceMaterial>(properties);
     DetectorElementStub detElement{
         identifier, pTransform, pLineBounds, 0.2, pMaterial};
-    std::cout << "detelement build" << std::endl;
     BOOST_CHECK(LineSurfaceStub(pLineBounds, detElement).constructedOk());
     LineSurfaceStub lineToCopy(pTransform, 2.0, 20.);
     // Copy ctor
