@@ -43,9 +43,9 @@ public:
   BinningType   type;      ///< binning type: equidistant, arbitrary
   BinningOption option;    ///< binning option: open, closed
   BinningValue  binvalue;  ///< binning value: binX, binY, binZ, binR ...
-  double        min;       ///< minimum value
-  double        max;       ///< maximum value
-  double        step;      ///< binning step
+  float         min;       ///< minimum value
+  float         max;       ///< maximum value
+  float         step;      ///< binning step
   bool          zdim;      ///< zero dimensional binning : direct access
 
   /// sub structure: describe some sub binning
@@ -58,7 +58,7 @@ public:
   /// @param bValue is the binning value: binX, binY, etc.
   /// @param bMin is the minum value
   /// @param bMax is the maxmimum value
-  BinningData(BinningValue bValue, double bMin, double bMax)
+  BinningData(BinningValue bValue, float bMin, float bMax)
     : type(equidistant)
     , option(open)
     , binvalue(bValue)
@@ -71,7 +71,7 @@ public:
     , m_bins(1)
     , m_boundaries({{min, max}})
     , m_totalBins(1)
-    , m_totalBoundaries(std::vector<double>())
+    , m_totalBoundaries(std::vector<float>())
     , m_functionPtr(&searchEquidistantWithBoundary)
   {
   }
@@ -90,8 +90,8 @@ public:
   BinningData(BinningOption                      bOption,
               BinningValue                       bValue,
               size_t                             bBins,
-              double                             bMin,
-              double                             bMax,
+              float                              bMin,
+              float                              bMax,
               std::unique_ptr<const BinningData> sBinData     = nullptr,
               bool                               sBinAdditive = false)
     : type(equidistant)
@@ -104,9 +104,9 @@ public:
     , subBinningData(std::move(sBinData))
     , subBinningAdditive(sBinAdditive)
     , m_bins(bBins)
-    , m_boundaries(std::vector<double>())
+    , m_boundaries(std::vector<float>())
     , m_totalBins(bBins)
-    , m_totalBoundaries(std::vector<double>())
+    , m_totalBoundaries(std::vector<float>())
     , m_functionPtr(nullptr)
   {
     // set to equidistant search
@@ -128,7 +128,7 @@ public:
   /// @param sBinData is (optional) sub structure
   BinningData(BinningOption                      bOption,
               BinningValue                       bValue,
-              const std::vector<double>&         bBoundaries,
+              const std::vector<float>&          bBoundaries,
               std::unique_ptr<const BinningData> sBinData = nullptr)
     : type(arbitrary)
     , option(bOption)
@@ -257,8 +257,8 @@ public:
   }
 
   /// Return the boundaries  - including sub boundaries
-  /// @return vector of doubles indicating the boundary values
-  const std::vector<double>&
+  /// @return vector of floats indicating the boundary values
+  const std::vector<float>&
   boundaries() const
   {
     if (subBinningData) {
@@ -267,12 +267,12 @@ public:
     return m_boundaries;
   }
 
-  /// Take the right double value
+  /// Take the right float value
   ///
   /// @param lposition assumes the correct local position expression
   ///
-  /// @return double value according to the binning setup
-  double
+  /// @return float value according to the binning setup
+  float
   value(const Vector2D& lposition) const
   {
     // ordered after occurence
@@ -286,12 +286,12 @@ public:
     return lposition[1];
   }
 
-  /// Take the right double value
+  /// Take the right float value
   ///
   /// @param position is the global position
   ///
-  /// @return double value according to the binning setup
-  double
+  /// @return float value according to the binning setup
+  float
   value(const Vector3D& position) const
   {
     using VectorHelpers::phi;
@@ -318,14 +318,13 @@ public:
   ///
   /// @param bin is the bin for which the center value is requested
   ///
-  /// @return double value according to the bin center
-  double
+  /// @return float value according to the bin center
+  float
   center(size_t bin) const
   {
-    const std::vector<double>& bvals = boundaries();
+    const std::vector<float>& bvals = boundaries();
     // take the center between bin boundaries
-    double value
-        = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
+    float value = bin < bvals.size() ? 0.5 * (bvals[bin] + bvals[bin + 1]) : 0.;
     return value;
   }
 
@@ -343,7 +342,7 @@ public:
     }
     // all other options
     // @todo remove hard-coded tolerance parameters
-    double val = value(position);
+    float val = value(position);
     return (val > min - 0.001 && val < max + 0.001);
   }
 
@@ -361,7 +360,7 @@ public:
     }
     // all other options
     // @todo remove hard-coded tolerance parameters
-    double val = value(lposition);
+    float val = value(lposition);
     return (val > min - 0.001 && val < max + 0.001);
   }
 
@@ -395,11 +394,11 @@ public:
 
   /// Generic search - forwards to correct function pointer
   ///
-  /// @param value is the searchvalue as double
+  /// @param value is the searchvalue as float
   ///
   /// @return bin according tot this
   size_t
-  search(double value) const
+  search(float value) const
   {
     if (zdim) {
       return 0;
@@ -412,11 +411,11 @@ public:
   ///  Generic search with sub structure
   /// - forwards to correct function pointer
   ///
-  /// @param value is the searchvalue as double
+  /// @param value is the searchvalue as float
   ///
   /// @return bin according tot this
   size_t
-  searchWithSubStructure(double value) const
+  searchWithSubStructure(float value) const
   {
     // find the masterbin with the correct function pointer
     size_t masterbin = (*m_functionPtr)(value, *this);
@@ -426,7 +425,7 @@ public:
       return masterbin + subBinningData->search(value);
     }
     // gauge the value to the subBinData
-    double gvalue
+    float gvalue
         = value - masterbin * (subBinningData->max - subBinningData->min);
     // now go / additive or multiplicative
     size_t subbin = subBinningData->search(gvalue);
@@ -447,9 +446,9 @@ public:
     if (zdim) {
       return 0;
     }
-    double   val     = value(position);
+    float    val     = value(position);
     Vector3D probe   = position + dir.normalized();
-    double   nextval = value(probe);
+    float    nextval = value(probe);
     return (nextval > val) ? 1 : -1;
   }
 
@@ -460,14 +459,14 @@ public:
   /// it is set to max
   ///
   /// @return the center value of the bin is given
-  double
+  float
   centerValue(size_t bin) const
   {
     if (zdim) {
       return 0.5 * (min + max);
     }
-    double bmin = m_boundaries[bin];
-    double bmax = bin < m_boundaries.size() ? m_boundaries[bin + 1] : max;
+    float bmin = m_boundaries[bin];
+    float bmax = bin < m_boundaries.size() ? m_boundaries[bin + 1] : max;
     return 0.5 * (bmin + bmax);
   }
 
@@ -497,12 +496,12 @@ public:
   }
 
 private:
-  size_t              m_bins;        ///< number of bins
-  std::vector<double> m_boundaries;  ///< vector of holding the bin boundaries
-  size_t              m_totalBins;   ///< including potential substructure
-  std::vector<double> m_totalBoundaries;  ///< including potential substructure
+  size_t             m_bins;        ///< number of bins
+  std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
+  size_t             m_totalBins;   ///< including potential substructure
+  std::vector<float> m_totalBoundaries;  ///< including potential substructure
 
-  size_t (*m_functionPtr)(double, const BinningData&);  /// function pointer
+  size_t (*m_functionPtr)(float, const BinningData&);  /// function pointer
 
   /// helper method to set the sub structure
   void
@@ -518,11 +517,11 @@ private:
         // the tricky one - exchange one bin by many others
         m_totalBoundaries.reserve(m_totalBins + 1);
         // get the sub bin boundaries
-        const std::vector<double>& subBinBoundaries
+        const std::vector<float>& subBinBoundaries
             = subBinningData->boundaries();
-        double sBinMin = subBinBoundaries[0];
+        float sBinMin = subBinBoundaries[0];
         // get the min value of the sub bin boundaries
-        std::vector<double>::const_iterator mbvalue = m_boundaries.begin();
+        std::vector<float>::const_iterator mbvalue = m_boundaries.begin();
         for (; mbvalue != m_boundaries.end(); ++mbvalue) {
           // should define numerically stable
           if (std::abs((*mbvalue) - sBinMin) < 10e-10) {
@@ -540,12 +539,12 @@ private:
         m_totalBins = m_bins * subBinningData->bins();
         m_totalBoundaries.reserve(m_totalBins + 1);
         // get the sub bin boundaries if there are any
-        const std::vector<double>& subBinBoundaries
+        const std::vector<float>& subBinBoundaries
             = subBinningData->boundaries();
         // create the boundary vector
         m_totalBoundaries.push_back(min);
         for (size_t ib = 0; ib < m_bins; ++ib) {
-          double offset = ib * step;
+          float offset = ib * step;
           for (size_t isb = 1; isb < subBinBoundaries.size(); ++isb) {
             m_totalBoundaries.push_back(offset + subBinBoundaries[isb]);
           }
@@ -559,7 +558,7 @@ private:
   // Equidistant search
   // - fastest method
   static size_t
-  searchEquidistantWithBoundary(double value, const BinningData& bData)
+  searchEquidistantWithBoundary(float value, const BinningData& bData)
   {
 
     // vanilla
@@ -584,7 +583,7 @@ private:
   // Linear search in arbitrary vector
   // - superior in O(10) searches
   static size_t
-  searchInVectorWithBoundary(double value, const BinningData& bData)
+  searchInVectorWithBoundary(float value, const BinningData& bData)
   {
     // lower boundary
     if (value <= bData.m_boundaries[0]) {
@@ -608,7 +607,7 @@ private:
   // A binary search with in an arbitrary vector
   //    - faster than vector search for O(50) objects
   static size_t
-  binarySearchWithBoundary(double value, const BinningData& bData)
+  binarySearchWithBoundary(float value, const BinningData& bData)
   {
     // Binary search in an array of n values to locate value
     if (value <= bData.m_boundaries[0]) {
