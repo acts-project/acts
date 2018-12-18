@@ -1166,25 +1166,6 @@ private:
     // - If so & the target exists or was hit - it simply returns
     // - If a target exists and was not yet hit, it checks for it
     // -> return is always to the stepper
-    return navigationBreak(state);
-  }
-
-  /// --------------------------------------------------------------------
-  /// Navigation break handling
-  ///
-  /// This checks if a navigation break had been triggered
-  /// - If so & the target exists or was hit - it simply returns
-  /// - If a target exists and was not yet hit, it checks for it
-  ///
-  /// @tparam propagator_state_t The state type of the propagagor
-  ///
-  /// @param[in,out] state is the propagation state object
-  ///
-  /// boolean return triggers exit to stepper
-  template <typename propagator_state_t>
-  bool
-  navigationBreak(propagator_state_t& state) const
-  {
     if (state.navigation.navigationBreak) {
       // target exists and reached, or no target exists
       if (state.navigation.targetReached || !state.navigation.targetSurface) {
