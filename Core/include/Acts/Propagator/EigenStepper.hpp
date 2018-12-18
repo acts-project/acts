@@ -31,7 +31,7 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField, typename corrector_t = VoidCorrector>
+template <typename BField, typename corrector_t = VoidIntersectionCorrector>
 class EigenStepper
 {
 

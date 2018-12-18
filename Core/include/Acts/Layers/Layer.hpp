@@ -195,7 +195,7 @@ public:
   /// @return list of intersection of surfaces on the layer
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidCorrector>
+            typename corrector_t = VoidIntersectionCorrector>
   std::vector<SurfaceIntersection>
   compatibleSurfaces(const parameters_t& parameters,
                      const options_t&    options,
@@ -215,7 +215,7 @@ public:
   /// @return the Surface intersection of the approach surface
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidCorrector>
+            typename corrector_t = VoidIntersectionCorrector>
   const SurfaceIntersection
   surfaceOnApproach(const parameters_t& parameters,
                     const options_t&    options,

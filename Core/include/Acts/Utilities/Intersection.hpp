@@ -218,16 +218,16 @@ struct SameSurfaceIntersection
 ///
 /// This is used to evaluate a modified
 /// intersection (e.g. curvature updated)
-struct VoidCorrector
+struct VoidIntersectionCorrector
 {
 
   // Void Corrector default constructor
-  VoidCorrector() = default;
+  VoidIntersectionCorrector() = default;
 
   // Void Corrector parameter constructor
-  VoidCorrector(const Vector3D& /*unused*/,
-                const Vector3D& /*unused*/,
-                double /*unused*/)
+  VoidIntersectionCorrector(const Vector3D& /*unused*/,
+                            const Vector3D& /*unused*/,
+                            double /*unused*/)
   {
   }
 

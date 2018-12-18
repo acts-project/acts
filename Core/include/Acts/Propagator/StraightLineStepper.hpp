@@ -98,10 +98,10 @@ public:
     }
 
     /// Return a corrector
-    VoidCorrector
+    VoidIntersectionCorrector
     corrector() const
     {
-      return VoidCorrector();
+      return VoidIntersectionCorrector();
     }
 
     /// Method to update momentum, direction and p

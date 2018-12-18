@@ -116,10 +116,10 @@ public:
     }
 
     /// Return a corrector
-    VoidCorrector
+    VoidIntersectionCorrector
     corrector() const
     {
-      return VoidCorrector();
+      return VoidIntersectionCorrector();
     }
 
     /// Constructor

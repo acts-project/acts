@@ -406,7 +406,7 @@ public:
   /// @return SurfaceIntersection object (contains intersection & surface)
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidCorrector>
+            typename corrector_t = VoidIntersectionCorrector>
   SurfaceIntersection
   intersectionEstimate(const parameters_t& parameters,
                        const options_t&    options,
