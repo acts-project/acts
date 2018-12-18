@@ -297,6 +297,10 @@ private:
     m_navigator.status(state);
     // Pre-Stepping call to the action list
     state.options.actionList(state, result);
+    // assume negative outcome, only set to true later if we actually have
+    // a positive outcome.
+    // This is needed for correct error logging
+    bool terminatedNormally = false;
     // Pre-Stepping: abort condition check
     if (!state.options.abortList(result, state)) {
       // Pre-Stepping: target setting
@@ -322,11 +326,19 @@ private:
         m_navigator.status(state);
         state.options.actionList(state, result);
         if (state.options.abortList(result, state)) {
+          terminatedNormally = true;
           break;
         }
         m_navigator.target(state);
       }
     }
+
+    // if we didn't terminate normally (via aborters) set navigation break.
+    // this will trigger error output in the lines below
+    if (!terminatedNormally) {
+      state.navigation.navigationBreak = true;
+    }
+
     // Post-stepping call to the action list
     debugLog(state, [&] { return std::string("Stepping loop done."); });
     state.options.actionList(state, result);
