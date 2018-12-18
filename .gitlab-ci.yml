@@ -332,10 +332,15 @@ coverage_deploy:
 
 sync_releases:
   stage: deploy
+  image: alpine:3.8
+  before_script:
+    - apk --no-cache add krb5-dev python3 py3-cffi alpine-sdk python3-dev libffi-dev libxml2-dev libxslt-dev py3-lxml openssl-dev krb5 py3-pynacl
+    - pip3 install --upgrade pip
+    - pip3 install python-cern-sso-krb
+    - pip3 install -r CI/requirements.txt
   script:
     - unset PYTHONHOME
     - echo "$ATSJENKINS_PASSWORD" | kinit atsjenkins@CERN.CH 2>&1 >/dev/null
-    - pip install --user python-cern-sso-krb
     - CI/sync_releases.py
   after_script:
     - kdestroy
