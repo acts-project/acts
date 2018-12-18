@@ -105,7 +105,6 @@ public:
   makeShared(Args&&... args)
   {
     return std::shared_ptr<T>(new T(std::forward<Args>(args)...));
-    // return std::make_shared<T>(std::forward<Args>(args)...);
   }
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
