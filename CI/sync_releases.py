@@ -35,7 +35,7 @@ class JIRA:
         self.url = url
 
     def jql(self, q):
-        return requests.get(self.url + "/rest/api/2/search?jql={}&maxResults=100".format(q), cookies=self.cookies)
+        return requests.get(self.url + "/rest/api/2/search?jql={}&maxResults=500".format(q), cookies=self.cookies)
 
     def get_version_issues(self, version):
         res = self.jql("project= ACTS AND fixVersion = {} AND status = Closed".format(version)).json()
@@ -124,7 +124,6 @@ def make_release_notes(version, issues, mrs):
     markdown += "\n"*2
 
     for issue_type, issues in issues_by_type.items():
-            
 
         markdown += "## {}\n".format(issue_type)
 
@@ -165,7 +164,7 @@ def main():
         mrlist = project.mergerequests.list(state="merged", target_branch="master", all=True)
 
     with ThreadPoolExecutor(max_workers=15) as tp:
-        mrs = mtmap(tp, project.mergerequests.get, [mr.iid for mr in mrlist], desc="Loading detailed MR info")
+        mrs = mrlist
 
         for tag in tags:
             date = dateutil.parser.parse(tag.commit["created_at"])
@@ -207,29 +206,22 @@ def main():
 
 
     for tag in prog_iter(tags, desc="Updating tag release notes"):
-        try:
-            name = tag.name
-            version = parse_version(tag)
-            has_release = tag.release is not None
+        name = tag.name
+        version = parse_version(tag)
+        has_release = tag.release is not None
 
-            prog_write(name)
-            relnotes = make_release_notes(version, version_issues[tag], tag_mrs[tag])
+        prog_write(name)
+        relnotes = make_release_notes(version, version_issues[tag], tag_mrs[tag])
 
-            if not has_release:
-                prog_write("Creating release for tag %s"%name)
-            else:
-                prog_write("Updating release notes for tag %s"%name)
+        if not has_release:
+            prog_write("Creating release for tag %s"%name)
+        else:
+            prog_write("Updating release notes for tag %s"%name)
 
-            if not args.dry_run:
-                tag.set_release_description(relnotes)
+        if not args.dry_run:
+            tag.set_release_description(relnotes)
 
             prog_write("Release notes for %s set" % name)
-
-
-        except JIRAException as e:
-            prog_write("Skipping %s, reason:"%tag.name)
-            for m in e.messages:
-                prog_write(" -> %s"%m)
 
     print("Release note synchronization complete")
 
