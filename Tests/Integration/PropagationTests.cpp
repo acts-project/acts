@@ -46,7 +46,7 @@ namespace IntegrationTest {
   using EigenStepperType = EigenStepper<BFieldType>;
   using DenseStepperType
       = EigenStepper<BFieldType,
-                     VoidCorrector,
+                     VoidIntersectionCorrector,
                      StepperExtensionList<DenseEnvironmentExtension>>;
   using AtlasStepperType    = AtlasStepper<BFieldType>;
   using EigenPropagatorType = Propagator<EigenStepperType>;

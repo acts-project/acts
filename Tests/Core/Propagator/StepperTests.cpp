@@ -155,13 +155,13 @@ namespace Test {
     // Build stepper and propagator
     ConstantBField bField(Vector3D(0., 0., 0.));
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DefaultExtension,
                                       DenseEnvironmentExtension>,
                  detail::HighestValidAuctioneer>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DefaultExtension,
                                                  DenseEnvironmentExtension>,
                             detail::HighestValidAuctioneer>,
@@ -198,11 +198,11 @@ namespace Test {
     propOptsDef.maxStepSize = 0.5 * units::_m;
 
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DefaultExtension>>
         esDef(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DefaultExtension>>,
                Navigator>
         propDef(esDef, naviVac);
@@ -275,13 +275,13 @@ namespace Test {
     // Build stepper and propagator
     ConstantBField bField(Vector3D(0., 0., 0.));
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DefaultExtension,
                                       DenseEnvironmentExtension>,
                  detail::HighestValidAuctioneer>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DefaultExtension,
                                                  DenseEnvironmentExtension>,
                             detail::HighestValidAuctioneer>,
@@ -326,11 +326,11 @@ namespace Test {
 
     // Build stepper and propagator
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DenseEnvironmentExtension>>
         esDense(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DenseEnvironmentExtension>>,
                Navigator>
         propDense(esDense, naviMat);
@@ -356,13 +356,13 @@ namespace Test {
     // Re-launch the configuration with magnetic field
     bField.setField(0., 1. * units::_T, 0.);
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DefaultExtension,
                                       DenseEnvironmentExtension>,
                  detail::HighestValidAuctioneer>
         esB(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DefaultExtension,
                                                  DenseEnvironmentExtension>,
                             detail::HighestValidAuctioneer>,
@@ -455,13 +455,13 @@ namespace Test {
     // Build stepper and propagator
     ConstantBField bField(Vector3D(0., 1. * units::_T, 0.));
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DefaultExtension,
                                       DenseEnvironmentExtension>,
                  detail::HighestValidAuctioneer>
         es(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DefaultExtension,
                                                  DenseEnvironmentExtension>,
                             detail::HighestValidAuctioneer>,
@@ -517,11 +517,11 @@ namespace Test {
 
     // Build stepper and propagator
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DefaultExtension>>
         esDef(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DefaultExtension>>,
                Navigator>
         propDef(esDef, naviDet);
@@ -584,11 +584,11 @@ namespace Test {
 
     // Build stepper and propagator
     EigenStepper<ConstantBField,
-                 VoidCorrector,
+                 VoidIntersectionCorrector,
                  StepperExtensionList<DenseEnvironmentExtension>>
         esDense(bField);
     Propagator<EigenStepper<ConstantBField,
-                            VoidCorrector,
+                            VoidIntersectionCorrector,
                             StepperExtensionList<DenseEnvironmentExtension>>,
                Navigator>
         propDense(esDense, naviDet);

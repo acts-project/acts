@@ -183,7 +183,7 @@ public:
   /// @return is the templated boundary intersection
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+            typename corrector_t = VoidIntersectionCorrector,
             typename sorter_t    = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection>
   compatibleBoundaries(const parameters_t& parameters,
