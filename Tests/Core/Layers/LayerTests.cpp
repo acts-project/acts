@@ -77,16 +77,12 @@ namespace Test {
               new PlaneSurface(pNullTransform, rBounds))};
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
-      auto                adPtr = ad.get();
-      const double        thickness(1.0);
-      SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
-      auto pSurfaceArrayAddress = pSurfaceArray.get();
-      LayerStub layerStub(std::move(pSurfaceArray), thickness, std::move(ad));
+      auto         adPtr = ad.get();
+      const double thickness(1.0);
+      LayerStub    layerStub(nullptr, thickness, std::move(ad));
       //
       /// surfaceArray()
-      BOOST_TEST(layerStub.surfaceArray() == pSurfaceArrayAddress);
+      BOOST_TEST(layerStub.surfaceArray() == nullptr);
       /// thickness()
       BOOST_TEST(layerStub.thickness() == thickness);
       // onLayer() is templated; can't find implementation!

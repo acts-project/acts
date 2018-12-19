@@ -25,7 +25,6 @@
 /// @param i Defines the calculation of knew=k_{i+1}
 /// @param h Distance to the starting point k_1
 /// @param kprev k_i that is used for the evaluation for knew
-/// @param data Collected data about all k's and B-fields
 /// @param D Transport matrix of the jacobian
 
 namespace Acts {
@@ -47,7 +46,7 @@ namespace detail {
         const stepper_state_t&  state,
         std::array<int, sizeof...(T)>& bids)
     {
-      std::get<N-1>(bids) = std::get<N - 1>(obs_tuple).bid(state);
+      std::get<N - 1>(bids) = std::get<N - 1>(obs_tuple).bid(state);
       stepper_extension_list_impl<N - 1>::bid(obs_tuple, state, bids);
     }
 
@@ -66,7 +65,7 @@ namespace detail {
       const Vector3D& kprev = Vector3D())
     {
       // If element is invalid: continue
-      if (!std::get<N-1>(validExtensions)) {
+      if (!std::get<N - 1>(validExtensions)) {
         return stepper_extension_list_impl<N - 1>::k(
             obs_tuple, state, knew, bField, validExtensions, i, h, kprev);
       }
@@ -84,25 +83,24 @@ namespace detail {
     /// The extension list call implementation
     /// - it calls 'finalize()' on the current entry of the tuple
     /// - then broadcasts the extension call to the remaining tuple
-    template <typename stepper_state_t, typename stepper_data_t, typename... T>
+    template <typename stepper_state_t, typename... T>
     static bool
     finalize(const std::tuple<T...>& obs_tuple,
              stepper_state_t&        state,
              const double            h,
-             const stepper_data_t&   data,
              ActsMatrixD<7, 7>&                    D,
              const std::array<bool, sizeof...(T)>& validExtensions)
     {
       // If element is invalid: continue
-      if (!std::get<N-1>(validExtensions)) {
+      if (!std::get<N - 1>(validExtensions)) {
         return stepper_extension_list_impl<N - 1>::finalize(
-            obs_tuple, state, h, data, D, validExtensions);
+            obs_tuple, state, h, D, validExtensions);
       }
 
       // Continue as long as evaluations are 'true'
-      if (std::get<N - 1>(obs_tuple).finalize(state, h, data, D)) {
+      if (std::get<N - 1>(obs_tuple).finalize(state, h, D)) {
         return stepper_extension_list_impl<N - 1>::finalize(
-            obs_tuple, state, h, data, D, validExtensions);
+            obs_tuple, state, h, D, validExtensions);
       } else {
         // Break at false
         return false;
@@ -120,7 +118,7 @@ namespace detail {
              const std::array<bool, sizeof...(T)>& validExtensions)
     {
       // If element is invalid: continue
-      if (!std::get<N-1>(validExtensions)) {
+      if (!std::get<N - 1>(validExtensions)) {
         return stepper_extension_list_impl<N - 1>::finalize(
             obs_tuple, state, h, validExtensions);
       }
@@ -165,12 +163,11 @@ namespace detail {
     }
 
     /// The empty extension list call implementation
-    template <typename stepper_state_t, typename stepper_data_t, typename... T>
+    template <typename stepper_state_t, typename... T>
     static bool
     finalize(const std::tuple<T...>& /*unused*/,
              stepper_state_t& /*unused*/,
              const double /*unused*/,
-             const stepper_data_t& /*unused*/,
              ActsMatrixD<7, 7>& /*unused*/,
              const std::array<bool, sizeof...(T)>& /*unused*/)
     {

@@ -61,12 +61,9 @@ namespace Test {
               new PlaneSurface(pNullTransform, rBounds)),
           std::shared_ptr<const Surface>(
               new PlaneSurface(pNullTransform, rBounds))};
-      const double        thickness(1.0);
-      SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
-      auto pConeLayerFromSurfaces
-          = ConeLayer::create(pTransform, pCone, std::move(pSurfaceArray));
+      const double thickness(1.0);
+      auto         pConeLayerFromSurfaces
+          = ConeLayer::create(pTransform, pCone, nullptr);
       BOOST_TEST(pConeLayerFromSurfaces->layerType() == LayerType::active);
       // construct with thickness:
       auto pConeLayerWithThickness
@@ -108,11 +105,8 @@ namespace Test {
           std::shared_ptr<const Surface>(
               new PlaneSurface(pNullTransform, rBounds))};
       // const double        thickness(1.0);
-      SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
       auto pConeLayerFromSurfaces
-          = ConeLayer::create(pTransform, pCone, std::move(pSurfaceArray));
+          = ConeLayer::create(pTransform, pCone, nullptr);
       // auto planeSurface = pConeLayer->surfaceRepresentation();
       BOOST_TEST(pConeLayerFromSurfaces->surfaceRepresentation().name()
                  == std::string("Acts::ConeSurface"));

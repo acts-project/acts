@@ -427,15 +427,15 @@ public:
 
     /// Auctioneer for choosing the extension
     auctioneer_t auctioneer;
-    
-      /// @brief Storage of magnetic field and the sub steps during a RKN4 step
-     struct 
-	{
-    /// Magnetic fields
-    Vector3D B_first, B_middle, B_last;
-    /// k_i of the RKN4 algorithm
-    Vector3D k1, k2, k3, k4;
-  } stepData;
+
+    /// @brief Storage of magnetic field and the sub steps during a RKN4 step
+    struct
+    {
+      /// Magnetic fields
+      Vector3D B_first, B_middle, B_last;
+      /// k_i of the RKN4 algorithm
+      Vector3D k1, k2, k3, k4;
+    } stepData;
   };
 
   /// Always use the same propagation state type, independently of the initial

@@ -34,7 +34,8 @@ namespace detail {
   ///
   /// TODO: An anticipation of an optimal concept of the input (and maybe also
   /// the output) of the call operator of an auctioneer cannot be performed at
-  /// the current stage. At the current stage, a real bid-system would be pure guessing.
+  /// the current stage. At the current stage, a real bid-system would be pure
+  /// guessing.
 
   /// @brief Auctioneer that takes all extensions as valid that make a valid bid
   struct VoidAuctioneer
@@ -86,7 +87,9 @@ namespace detail {
     }
   };
 
-  /// @brief Auctioneer that makes only the highest bidding extension valid. If multiple elements have the same int, the first one with this value is picked.
+  /// @brief Auctioneer that makes only the highest bidding extension valid. If
+  /// multiple elements have the same int, the first one with this value is
+  /// picked.
   struct HighestValidAuctioneer
   {
     /// @brief Default constructor

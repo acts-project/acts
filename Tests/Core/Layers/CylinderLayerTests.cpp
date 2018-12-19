@@ -60,12 +60,9 @@ namespace Test {
               new PlaneSurface(pNullTransform, rBounds)),
           std::shared_ptr<const Surface>(
               new PlaneSurface(pNullTransform, rBounds))};
-      const double        thickness(1.0);
-      SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
-      auto pCylinderLayerFromSurfaces = CylinderLayer::create(
-          pTransform, pCylinder, std::move(pSurfaceArray));
+      const double thickness(1.0);
+      auto         pCylinderLayerFromSurfaces
+          = CylinderLayer::create(pTransform, pCylinder, nullptr);
       BOOST_TEST(pCylinderLayerFromSurfaces->layerType() == LayerType::passive);
       // construct with thickness:
       auto pCylinderLayerWithThickness

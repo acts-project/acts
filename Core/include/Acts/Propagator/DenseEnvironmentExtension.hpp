@@ -166,12 +166,11 @@ struct DenseEnvironmentExtension
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t>
   bool
-  finalize(propagator_state_t&   state,
-           const double          h,
+  finalize(propagator_state_t& state,
+           const double        h,
            ActsMatrixD<7, 7>& D) const
   {
-    return finalize(state, h)
-        && transportMatrix(state, h, D);
+    return finalize(state, h) && transportMatrix(state, h, D);
   }
 
 private:
@@ -185,7 +184,7 @@ private:
   template <typename propagator_state_t>
   bool
   transportMatrix(propagator_state_t& state,
-                  const double          h,
+                  const double        h,
                   ActsMatrixD<7, 7>& D) const
   {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
@@ -208,9 +207,9 @@ private:
     /// constant offset does not exist for rectangular matrix dFdu' (due to the
     /// missing Lambda part) and only exists for dGdu' in dlambda/dlambda.
 
-	auto& sd = state.stepping.stepData;
-	auto& dir = state.stepping.dir;
-	
+    auto& sd  = state.stepping.stepData;
+    auto& dir = state.stepping.dir;
+
     D                   = ActsMatrixD<7, 7>::Identity();
     const double half_h = h * 0.5;
 

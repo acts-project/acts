@@ -16,11 +16,19 @@
 
 namespace Acts {
 
-/// @brief Container of extensions used in the stepper of the propagation. This struct allows a broadcast of function calls for each element in the list. The broadcasts occur for a certain function at each step in a specific order.
-/// The first function is an evaluater if an extension is or how many extensions are applicable for an upcoming step.
-/// The next functions called are the evaluations of the k_1 - k_4 or the RKN4 integration.
-/// The last function call in a step is the finalize() method. This method is an overloaded function (optionally propagates the covariance).
-/// Each method has the possibility to break the evaluation of a given step if an extension reports that something went wrong (e.g. a particle lost too much momentum during the step)
+/// @brief Container of extensions used in the stepper of the propagation. This
+/// struct allows a broadcast of function calls for each element in the list.
+/// The broadcasts occur for a certain function at each step in a specific
+/// order.
+/// The first function is an evaluater if an extension is or how many extensions
+/// are applicable for an upcoming step.
+/// The next functions called are the evaluations of the k_1 - k_4 or the RKN4
+/// integration.
+/// The last function call in a step is the finalize() method. This method is an
+/// overloaded function (optionally propagates the covariance).
+/// Each method has the possibility to break the evaluation of a given step if
+/// an extension reports that something went wrong (e.g. a particle lost too
+/// much momentum during the step)
 /// @tparam extensions Types of the extensions
 template <typename... extensions>
 struct StepperExtensionList : private detail::Extendable<extensions...>
@@ -123,9 +131,7 @@ public:
   /// evaluation and returns a boolean.
   template <typename propagator_state_t>
   bool
-  finalize(propagator_state_t&   state,
-           const double          h,
-           ActsMatrixD<7, 7>& D)
+  finalize(propagator_state_t& state, const double h, ActsMatrixD<7, 7>& D)
   {
     return impl::finalize(tuple(), state, h, D, validExtensions);
   }

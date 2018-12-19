@@ -61,12 +61,9 @@ namespace Test {
               new PlaneSurface(pNullTransform, rBounds)),
           std::shared_ptr<const Surface>(
               new PlaneSurface(pNullTransform, rBounds))};
-      const double        thickness(1.0);
-      SurfaceArrayCreator sac;
-      size_t              binsX(2), binsY(4);
-      auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
-      auto pDiscLayerFromSurfaces
-          = DiscLayer::create(pTransform, pDisc, std::move(pSurfaceArray));
+      const double thickness(1.0);
+      auto         pDiscLayerFromSurfaces
+          = DiscLayer::create(pTransform, pDisc, nullptr);
       BOOST_TEST(pDiscLayerFromSurfaces->layerType() == LayerType::passive);
       // construct with thickness:
       auto pDiscLayerWithThickness

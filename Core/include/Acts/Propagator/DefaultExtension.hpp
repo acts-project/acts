@@ -93,8 +93,8 @@ struct DefaultExtension
   /// @return Boolean flag if the calculation is valid
   template <typename propagator_state_t>
   bool
-  finalize(propagator_state_t&   state,
-           const double          h,
+  finalize(propagator_state_t& state,
+           const double        h,
            ActsMatrixD<7, 7>& D) const
   {
     return transportMatrix(state, h, D);
@@ -111,7 +111,7 @@ private:
   template <typename propagator_state_t>
   bool
   transportMatrix(propagator_state_t& state,
-                  const double          h,
+                  const double        h,
                   ActsMatrixD<7, 7>& D) const
   {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
@@ -119,7 +119,11 @@ private:
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
     /// in the calculation. The matrix A from eq. 17 consists out of 3
     /// different parts. The first one is given by the upper left 3x3 matrix
-    /// that are calculated by the derivatives dF/dT (called dFdT) and dG/dT (calles dGdT). The second is given by the top 3 lines of the rightmost column. This is calculated by dFdL and dGdL. The remaining non-zero term is calculated directly. The naming of the variables is explained in eq. 11 and are directly related to the initial problem in eq. 7.
+    /// that are calculated by the derivatives dF/dT (called dFdT) and dG/dT
+    /// (calles dGdT). The second is given by the top 3 lines of the rightmost
+    /// column. This is calculated by dFdL and dGdL. The remaining non-zero term
+    /// is calculated directly. The naming of the variables is explained in eq.
+    /// 11 and are directly related to the initial problem in eq. 7.
     /// The evaluation is based by propagating the parameters T and lambda as
     /// given in eq. 16 and evaluating the derivations for matrix A.
     /// @note The translation for u_{n+1} in eq. 7 is in this case a
@@ -129,9 +133,9 @@ private:
     /// constant offset does not exist for rectangular matrix dGdu' (due to the
     /// missing Lambda part) and only exists for dFdu' in dlambda/dlambda.
 
-	auto& sd = state.stepping.stepData;
-	auto& dir = state.stepping.dir;
-	
+    auto& sd  = state.stepping.stepData;
+    auto& dir = state.stepping.dir;
+
     D = ActsMatrixD<7, 7>::Identity();
 
     double half_h = h * 0.5;
