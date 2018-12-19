@@ -147,24 +147,32 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(ObjectIntersectionTest)
   {
 
-    PlaneSurface psf6(Vector3D(6., 0., 0.), Vector3D(1., 0., 0.));
-    PlaneSurface psf7(Vector3D(7., 0., 0.), Vector3D(1., 0., 0.));
-    PlaneSurface psf8(Vector3D(8., 0., 0.), Vector3D(1., 0., 0.));
-    PlaneSurface psf9(Vector3D(9., 0., 0.), Vector3D(1., 0., 0.));
-    PlaneSurface psf10(Vector3D(10., 0., 0.), Vector3D(1., 0., 0.));
+    auto psf6 = Surface::makeShared<PlaneSurface>(Vector3D(6., 0., 0.),
+                                                  Vector3D(1., 0., 0.));
+    auto psf7 = Surface::makeShared<PlaneSurface>(Vector3D(7., 0., 0.),
+                                                  Vector3D(1., 0., 0.));
+    auto psf8 = Surface::makeShared<PlaneSurface>(Vector3D(8., 0., 0.),
+                                                  Vector3D(1., 0., 0.));
+    auto psf9 = Surface::makeShared<PlaneSurface>(Vector3D(9., 0., 0.),
+                                                  Vector3D(1., 0., 0.));
+    auto psf10 = Surface::makeShared<PlaneSurface>(Vector3D(10., 0., 0.),
+                                                   Vector3D(1., 0., 0.));
 
     using PlaneIntersection = ObjectIntersection<PlaneSurface>;
 
-    PlaneIntersection int6(Intersection(Vector3D(6., 0., 0.), 6., true), &psf6);
-    PlaneIntersection int7(Intersection(Vector3D(7., 0., 0.), 7., true), &psf7);
-    PlaneIntersection int8(Intersection(Vector3D(8., 0., 0.), 8., true), &psf8);
+    PlaneIntersection int6(Intersection(Vector3D(6., 0., 0.), 6., true),
+                           psf6.get());
+    PlaneIntersection int7(Intersection(Vector3D(7., 0., 0.), 7., true),
+                           psf7.get());
+    PlaneIntersection int8(Intersection(Vector3D(8., 0., 0.), 8., true),
+                           psf8.get());
     PlaneIntersection int9a(Intersection(Vector3D(9., 0., 0.), 9., true),
-                            &psf9);
+                            psf9.get());
     PlaneIntersection int9b(
         Intersection(Vector3D(9., 1., 0.), std::sqrt(9. * 9. + 1.), true),
-        &psf9);
+        psf9.get());
     PlaneIntersection int10(Intersection(Vector3D(10., 0., 0.), 10., true),
-                            &psf10);
+                            psf10.get());
 
     std::vector<PlaneIntersection> firstSet  = {int6, int7, int9b, int10};
     std::vector<PlaneIntersection> secondSet = {int8, int9a, int9b, int10};

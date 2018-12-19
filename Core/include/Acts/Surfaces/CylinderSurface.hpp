@@ -39,6 +39,7 @@ class CylinderSurface : public Surface
 {
   friend Surface;
 
+protected:
   /// Deleted default constructor
   CylinderSurface() = delete;
 

@@ -161,7 +161,7 @@ namespace Test {
     Vector3D offSurface{100, 1, 2};
     BOOST_TEST(coneSurfaceObject->isOnSurface(globalPosition, momentum, true)
                == true);
-    BOOST_TEST(coneSurfaceObjec->isOnSurface(offSurface, momentum, true)
+    BOOST_TEST(coneSurfaceObject->isOnSurface(offSurface, momentum, true)
                == false);
     //
     /// intersectionEstimate
