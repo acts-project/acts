@@ -23,6 +23,7 @@
 //#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
@@ -50,12 +51,17 @@ namespace Test {
       auto   pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
       BOOST_TEST(pCylinderLayer->layerType() == LayerType::passive);
       // next level: need an array of Surfaces;
-      std::vector<std::shared_ptr<const Surface>> aSurfaces{
-          Surface::makeShared<SurfaceStub>(),
-          Surface::makeShared<SurfaceStub>()};
-      const double        thickness(1.0);
-      SurfaceArrayCreator sac;
-      auto                pCylinderLayerFromSurfaces
+      // bounds object, rectangle type
+      auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
+      /// Constructor with transform pointer
+      auto pNullTransform = std::make_shared<const Transform3D>();
+      const std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          std::shared_ptr<const Surface>(
+              new PlaneSurface(pNullTransform, rBounds)),
+          std::shared_ptr<const Surface>(
+              new PlaneSurface(pNullTransform, rBounds))};
+      const double thickness(1.0);
+      auto         pCylinderLayerFromSurfaces
           = CylinderLayer::create(pTransform, pCylinder, nullptr);
       BOOST_TEST(pCylinderLayerFromSurfaces->layerType() == LayerType::passive);
       // construct with thickness:

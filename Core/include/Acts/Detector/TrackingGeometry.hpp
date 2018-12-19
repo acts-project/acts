@@ -62,7 +62,7 @@ public:
 
   /// return the lowest tracking Volume
   ///
-  /// @param gp is the global position fo the call
+  /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
@@ -70,7 +70,7 @@ public:
 
   /// return the vector of lowest detached tracking Volume(->overlaps)
   ///
-  /// @param gp is the global position fo the call
+  /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the the lowest DetachedTrackingVolume
   const DetachedVolumeVector*
@@ -78,7 +78,7 @@ public:
 
   /// return the lowest static volume
   ///
-  /// @param gp is the global position fo the call
+  /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the the lowest static tracking volume
   const TrackingVolume*
@@ -94,7 +94,7 @@ public:
 
   /// Forward the associated Layer information
   ///
-  /// @param gp is the global position fo the call
+  /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
   const Layer*

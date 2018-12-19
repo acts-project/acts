@@ -20,6 +20,7 @@
 
 #include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -29,6 +30,7 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "PropagationTestHelper.hpp"
@@ -40,10 +42,15 @@ namespace Acts {
 
 namespace IntegrationTest {
 
-  using BFieldType          = ConstantBField;
-  using EigenStepperType    = EigenStepper<BFieldType>;
+  using BFieldType       = ConstantBField;
+  using EigenStepperType = EigenStepper<BFieldType>;
+  using DenseStepperType
+      = EigenStepper<BFieldType,
+                     VoidIntersectionCorrector,
+                     StepperExtensionList<DenseEnvironmentExtension>>;
   using AtlasStepperType    = AtlasStepper<BFieldType>;
   using EigenPropagatorType = Propagator<EigenStepperType>;
+  using DensePropagatorType = Propagator<DenseStepperType, Navigator>;
   using AtlasPropagatorType = Propagator<AtlasStepperType>;
 
   // number of tests
@@ -56,9 +63,32 @@ namespace IntegrationTest {
   const double        Bz = 2. * units::_T;
   BFieldType          bField(0, 0, Bz);
   EigenStepperType    estepper(bField);
+  DenseStepperType    dstepper(bField);
   EigenPropagatorType epropagator(std::move(estepper));
   AtlasStepperType    astepper(bField);
   AtlasPropagatorType apropagator(std::move(astepper));
+
+  DensePropagatorType
+  setupDensePropagator()
+  {
+    CuboidVolumeBuilder::VolumeConfig vConf;
+    vConf.position = {1.5 * units::_m, 0., 0.};
+    vConf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf.material = std::make_shared<const Material>(
+        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    CuboidVolumeBuilder::Config conf;
+    conf.volumeCfg.push_back(vConf);
+    conf.position = {1.5 * units::_m, 0., 0.};
+    conf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+    CuboidVolumeBuilder             cvb(conf);
+    TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.trackingVolumeBuilders.push_back(
+        std::make_shared<const CuboidVolumeBuilder>(cvb));
+    TrackingGeometryBuilder                 tgb(tgbCfg);
+    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
+    Navigator                               navi(detector);
+    return DensePropagatorType(dstepper, std::move(navi));
+  }
 
   // The constant field test
   /// test forward propagation in constant magnetic field

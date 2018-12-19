@@ -22,6 +22,8 @@
 //#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
@@ -64,22 +66,23 @@ namespace Test {
     BOOST_AUTO_TEST_CASE(LayerProperties, *utf::expected_failures(1))
     {
       // Make a dummy layer to play with
-      std::vector<std::shared_ptr<const Surface>> aSurfaces{
-          Surface::makeShared<SurfaceStub>(),
-          Surface::makeShared<SurfaceStub>()};
+      // bounds object, rectangle type
+      auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
+      /// Constructor with transform pointer
+      auto pNullTransform = std::make_shared<const Transform3D>();
+      const std::vector<std::shared_ptr<const Surface>> aSurfaces{
+          std::shared_ptr<const Surface>(
+              new PlaneSurface(pNullTransform, rBounds)),
+          std::shared_ptr<const Surface>(
+              new PlaneSurface(pNullTransform, rBounds))};
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
-      auto                adPtr = ad.get();
-      const double        thickness(1.0);
-      SurfaceArrayCreator sac;
-      double              halfX(0.1), halfY(0.2);
-      size_t              binsX(2), binsY(4);
-      auto                pSurfaceArray
-          = sac.surfaceArrayOnPlane(aSurfaces, halfX, halfY, binsX, binsY);
-      LayerStub layerStub(std::move(pSurfaceArray), thickness, std::move(ad));
+      auto         adPtr = ad.get();
+      const double thickness(1.0);
+      LayerStub    layerStub(nullptr, thickness, std::move(ad));
       //
       /// surfaceArray()
-      BOOST_TEST(layerStub.surfaceArray() == pSurfaceArray.get());
+      BOOST_TEST(layerStub.surfaceArray() == nullptr);
       /// thickness()
       BOOST_TEST(layerStub.thickness() == thickness);
       // onLayer() is templated; can't find implementation!

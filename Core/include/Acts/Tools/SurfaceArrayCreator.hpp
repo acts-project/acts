@@ -110,6 +110,7 @@ public:
   ///
   /// - create an array in a cylinder, binned in phi, z when extremas and
   /// bin numbers are known
+  /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -134,6 +135,7 @@ public:
   /// - create an array in a cylinder, binned in phi, z when extremas and bin
   /// numbers are unknown - this method goes through the surfaces and finds out
   /// the needed information
+  /// @warning This function requires the cylinder aligned with the z-axis
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -161,6 +163,7 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @warning This function requires the disc aligned with the z-axis
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
@@ -184,6 +187,7 @@ public:
   /// to be ordered on the disc
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @warning This function requires the disc aligned with the z-axis
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
@@ -204,25 +208,30 @@ public:
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
   ///
-  /// @param surfaces is the vector of pointers to sensitive surfaces
+  /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
-  /// @param halflengthX is the half length in X
-  /// @param halflengthY is the half length in Y
-  /// @param binsX is the number of bins in X
-  /// @param binsY is the number of bins in Y
-  /// @param transform is the (optional) additional transform applied
+  /// @warning This function requires the plane aligned with either the x-, y-
+  /// or z-axis
+  /// @param [in] bins1 is the number of bins in the orthogonal direction to @p
+  /// bValue
+  /// @param [in] bins2 is the number of bins in the orthogonal direction to @p
+  /// bValue
+  /// @param [in] bValue Direction of the aligned surfaces
+  /// @param [in] bTypePhi the binning type in phi direction
+  /// (equidistant/aribtrary)
+  /// @param [in] transformOpt is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnPlane(
-      const std::vector<std::shared_ptr<const Surface>>& surfaces,
-      double                                             halflengthX,
-      double                                             halflengthY,
-      size_t                                             binsX,
-      size_t                                             binsY,
-      const std::shared_ptr<const Transform3D>& transform = nullptr) const;
+  surfaceArrayOnPlane(std::vector<std::shared_ptr<const Surface>> surfaces,
+                      size_t                                      bins1,
+                      size_t                                      bins2,
+                      BinningValue                bValue = BinningValue::binX,
+                      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+                      const std::shared_ptr<const Transform3D>& transformOpt
+                      = nullptr) const;
 
   static bool
   isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)

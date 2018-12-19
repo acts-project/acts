@@ -14,6 +14,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -167,24 +168,28 @@ public:
                    const options_t&    options,
                    const corrector_t&  corrfnc = corrector_t()) const;
 
-  /// @brief Returns the boundary surfaces ordered in probability
+  /// @brief Returns all boundary surfaces sorted by the user.
   ///
-  /// @param_t parameters_t Type of parameters used for the decomposition
-  /// @param_t options_t Type of navigation options object for decomposition
-  /// @param_t corrector_t Type of (optional) corrector for surface intersection
+  /// @tparam parameters_t Type of parameters used for the decomposition
+  /// @tparam options_t Type of navigation options object for decomposition
+  /// @tparam corrector_t Type of (optional) corrector for surface intersection
+  /// @tparam sorter_t Type of the boundary surface sorter
   ///
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
+  /// @param sorter Sorter of the boundary surfaces
   ///
   /// @return is the templated boundary intersection
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidIntersectionCorrector>
+            typename corrector_t = VoidIntersectionCorrector,
+            typename sorter_t    = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection>
   compatibleBoundaries(const parameters_t& parameters,
                        const options_t&    options,
-                       const corrector_t&  corrfnc = corrector_t()) const;
+                       const corrector_t&  corrfnc = corrector_t(),
+                       const sorter_t&     sorter  = sorter_t()) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
@@ -218,10 +223,6 @@ public:
   std::shared_ptr<const TrackingVolumeArray>
   confinedVolumes() const;
 
-  /// Return the confind volume array as a shared pointer - for glueing
-  std::shared_ptr<const TrackingVolumeArray>
-  confinedVolumesSharedPtr() const;
-
   /// Return detached subVolumes - not the ownership
   const DetachedVolumeVector
   confinedDetachedVolumes() const;
@@ -244,6 +245,10 @@ public:
   /// Method to return the BoundarySurfaces
   const std::vector<TrackingVolumeBoundaryPtr>&
   boundarySurfaces() const;
+
+  /// Return the material of the volume
+  std::shared_ptr<const Material>
+  material() const;
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -469,6 +474,12 @@ TrackingVolume::volumeName() const
   return m_name;
 }
 
+inline std::shared_ptr<const Material>
+TrackingVolume::material() const
+{
+  return m_material;
+}
+
 inline const LayerArray*
 TrackingVolume::confinedLayers() const
 {
@@ -483,12 +494,6 @@ TrackingVolume::confinedArbitraryLayers() const
 
 inline std::shared_ptr<const TrackingVolumeArray>
 TrackingVolume::confinedVolumes() const
-{
-  return m_confinedVolumes;
-}
-
-inline std::shared_ptr<const TrackingVolumeArray>
-TrackingVolume::confinedVolumesSharedPtr() const
 {
   return m_confinedVolumes;
 }

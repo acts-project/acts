@@ -9,8 +9,14 @@
 #pragma once
 
 #include <cmath>
+#include <limits>
+#include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/DefaultExtension.hpp"
+#include "Acts/Propagator/DenseEnvironmentExtension.hpp"
+#include "Acts/Propagator/StepperExtensionList.hpp"
+#include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -31,7 +37,10 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField, typename corrector_t = VoidIntersectionCorrector>
+template <typename BField,
+          typename corrector_t     = VoidIntersectionCorrector,
+          typename extensionlist_t = StepperExtensionList<DefaultExtension>,
+          typename auctioneer_t    = detail::VoidAuctioneer>
 class EigenStepper
 {
 
@@ -49,18 +58,6 @@ private:
   {
     using type = CurvilinearParameters;
   };
-
-  // internal cross product helper method
-  ActsMatrixD<3, 3>
-  cross(const ActsMatrixD<3, 3>& m, const Vector3D& v) const
-  {
-    ActsMatrixD<3, 3> r;
-    r.col(0) = m.col(0).cross(v);
-    r.col(1) = m.col(1).cross(v);
-    r.col(2) = m.col(2).cross(v);
-
-    return r;
-  }
 
 public:
   using cstep = detail::ConstrainedStep;
@@ -377,15 +374,14 @@ public:
     }
 
     /// Global particle position
-    Vector3D pos = Vector3D(0, 0, 0);
-
+    Vector3D pos = Vector3D(0., 0., 0.);
     /// Global start particle position
-    Vector3D startPos = Vector3D(0, 0, 0);
+    Vector3D startPos = Vector3D(0., 0., 0.);
 
     /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1, 0, 0);
+    Vector3D dir = Vector3D(1., 0., 0.);
     /// Momentum start direction (normalized)
-    Vector3D startDir = Vector3D(1, 0, 0);
+    Vector3D startDir = Vector3D(1., 0., 0.);
 
     /// Momentum
     double p = 0.;
@@ -425,6 +421,21 @@ public:
 
     /// adaptive step size of the runge-kutta integration
     cstep stepSize{std::numeric_limits<double>::max()};
+
+    /// List of algorithmic extensions
+    extensionlist_t extension;
+
+    /// Auctioneer for choosing the extension
+    auctioneer_t auctioneer;
+
+    /// @brief Storage of magnetic field and the sub steps during a RKN4 step
+    struct
+    {
+      /// Magnetic fields
+      Vector3D B_first, B_middle, B_last;
+      /// k_i of the RKN4 algorithm
+      Vector3D k1, k2, k3, k4;
+    } stepData;
   };
 
   /// Always use the same propagation state type, independently of the initial
@@ -517,128 +528,112 @@ public:
   ///                      propagation,
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
+  template <typename propagator_state_t>
   double
-  step(State& state) const
+  step(propagator_state_t& state) const
   {
-    // Charge-momentum ratio, in SI units
-    const double qop = state.q / units::Nat2SI<units::MOMENTUM>(state.p);
-
     // Runge-Kutta integrator state
-    double   h2, half_h;
-    Vector3D B_middle, B_last, k2, k3, k4;
+    auto& sd = state.stepping.stepData;
+
+    double h2, half_h, error_estimate;
 
     // First Runge-Kutta point (at current position)
-    const Vector3D B_first = getField(state, state.pos);
-    const Vector3D k1      = qop * state.dir.cross(B_first);
+    sd.B_first = getField(state.stepping, state.stepping.pos);
+    if (!state.stepping.extension.validExtensionForStep(state)
+        || !state.stepping.extension.k1(state, sd.k1, sd.B_first)) {
+      return 0.;
+    }
 
     // The following functor starts to perform a Runge-Kutta step of a certain
     // size, going up to the point where it can return an estimate of the local
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
-    const auto tryRungeKuttaStep = [&](const double h) -> double {
+    const auto tryRungeKuttaStep = [&](const double h) -> bool {
+
       // State the square and half of the step size
       h2     = h * h;
-      half_h = h / 2;
+      half_h = h * 0.5;
 
       // Second Runge-Kutta point
-      const Vector3D pos1 = state.pos + half_h * state.dir + h2 / 8 * k1;
-      B_middle            = getField(state, pos1);
-      k2                  = qop * (state.dir + half_h * k1).cross(B_middle);
+      const Vector3D pos1 = state.stepping.pos + half_h * state.stepping.dir
+          + h2 * 0.125 * sd.k1;
+      sd.B_middle = getField(state.stepping, pos1);
+      if (!state.stepping.extension.k2(
+              state, sd.k2, sd.B_middle, half_h, sd.k1)) {
+        return false;
+      }
 
       // Third Runge-Kutta point
-      k3 = qop * (state.dir + half_h * k2).cross(B_middle);
+      if (!state.stepping.extension.k3(
+              state, sd.k3, sd.B_middle, half_h, sd.k2)) {
+        return false;
+      }
 
       // Last Runge-Kutta point
-      const Vector3D pos2 = state.pos + h * state.dir + h2 / 2 * k3;
-      B_last              = getField(state, pos2);
-      k4                  = qop * (state.dir + h * k3).cross(B_last);
+      const Vector3D pos2
+          = state.stepping.pos + h * state.stepping.dir + h2 * 0.5 * sd.k3;
+      sd.B_last = getField(state.stepping, pos2);
+      if (!state.stepping.extension.k4(state, sd.k4, sd.B_last, h, sd.k3)) {
+        return false;
+      }
 
       // Return an estimate of the local integration error
-      return h * (k1 - k2 - k3 + k4).template lpNorm<1>();
+      error_estimate = std::max(
+          h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>(), 1e-20);
+      return true;
     };
 
-    // Select and adjust the appropriate Runge-Kutta step size
-    // @todo remove magic numbers and implement better step estimation
-    double error_estimate = tryRungeKuttaStep(state.stepSize);
-    while (error_estimate > 0.0002) {
-      state.stepSize = 0.5 * state.stepSize;
-      error_estimate = tryRungeKuttaStep(state.stepSize);
+    double stepSizeScaling;
+
+    // Select and adjust the appropriate Runge-Kutta step size as given
+    // ATL-SOFT-PUB-2009-001
+    while (!tryRungeKuttaStep(state.stepping.stepSize)
+           || error_estimate > state.options.tolerance) {
+      stepSizeScaling = std::min(std::max(0.25,
+                                          std::pow((state.options.tolerance
+                                                    / std::abs(error_estimate)),
+                                                   0.25)),
+                                 4.);
+      if (stepSizeScaling == 1.) {
+        break;
+      }
+      state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
+
+      // If step size becomes too small the particle remains at the initial
+      // place
+      if (state.stepping.stepSize < state.options.stepSizeCutOff) {
+        return 0.;  // Not moving due to too low momentum needs an aborter
+      }
     }
 
     // use the adjusted step size
-    const double h = state.stepSize;
+    const double h = state.stepping.stepSize;
 
     // When doing error propagation, update the associated Jacobian matrix
-    if (state.covTransport) {
+    if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
-      ActsMatrixD<7, 7> D = ActsMatrixD<7, 7>::Identity();
-      const double conv = units::SI2Nat<units::MOMENTUM>(1);
-
-      // This sets the reference to the sub matrices
-      // dFdx is already initialised as (3x3) idendity
-      auto dFdT = D.block<3, 3>(0, 3);
-      auto dFdL = D.block<3, 1>(0, 6);
-      // dGdx is already initialised as (3x3) zero
-      auto dGdT = D.block<3, 3>(3, 3);
-      auto dGdL = D.block<3, 1>(3, 6);
-
-      ActsMatrixD<3, 3> dk1dT = ActsMatrixD<3, 3>::Zero();
-      ActsMatrixD<3, 3> dk2dT = ActsMatrixD<3, 3>::Identity();
-      ActsMatrixD<3, 3> dk3dT = ActsMatrixD<3, 3>::Identity();
-      ActsMatrixD<3, 3> dk4dT = ActsMatrixD<3, 3>::Identity();
-
-      ActsVectorD<3> dk1dL = ActsVectorD<3>::Zero();
-      ActsVectorD<3> dk2dL = ActsVectorD<3>::Zero();
-      ActsVectorD<3> dk3dL = ActsVectorD<3>::Zero();
-      ActsVectorD<3> dk4dL = ActsVectorD<3>::Zero();
-
-      dk1dL = state.dir.cross(B_first);
-      dk2dL = (state.dir + half_h * k1).cross(B_middle)
-          + qop * half_h * dk1dL.cross(B_middle);
-      dk3dL = (state.dir + half_h * k2).cross(B_middle)
-          + qop * half_h * dk2dL.cross(B_middle);
-      dk4dL
-          = (state.dir + h * k3).cross(B_last) + qop * h * dk3dL.cross(B_last);
-
-      dk1dT(0, 1) = B_first.z();
-      dk1dT(0, 2) = -B_first.y();
-      dk1dT(1, 0) = -B_first.z();
-      dk1dT(1, 2) = B_first.x();
-      dk1dT(2, 0) = B_first.y();
-      dk1dT(2, 1) = -B_first.x();
-      dk1dT *= qop;
-
-      dk2dT += h / 2 * dk1dT;
-      dk2dT = qop * cross(dk2dT, B_middle);
-
-      dk3dT += h / 2 * dk2dT;
-      dk3dT = qop * cross(dk3dT, B_middle);
-
-      dk4dT += h * dk3dT;
-      dk4dT = qop * cross(dk4dT, B_last);
-
-      dFdT.setIdentity();
-      dFdT += h / 6 * (dk1dT + dk2dT + dk3dT);
-      dFdT *= h;
-
-      dFdL = conv * h2 / 6 * (dk1dL + dk2dL + dk3dL);
-
-      dGdT += h / 6 * (dk1dT + 2 * (dk2dT + dk3dT) + dk4dT);
-
-      dGdL = conv * h / 6 * (dk1dL + 2 * (dk2dL + dk3dL) + dk4dL);
+      ActsMatrixD<7, 7> D;
+      if (!state.stepping.extension.finalize(state, h, D)) {
+        return 0.;
+      }
 
       // for moment, only update the transport part
-      state.jacTransport = D * state.jacTransport;
+      state.stepping.jacTransport = D * state.stepping.jacTransport;
+    } else {
+      if (!state.stepping.extension.finalize(state, h)) {
+        return 0.;
+      }
     }
 
     // Update the track parameters according to the equations of motion
-    state.pos += h * state.dir + h2 / 6 * (k1 + k2 + k3);
-    state.dir += h / 6 * (k1 + 2 * k2 + 2 * k3 + k4);
-    state.dir /= state.dir.norm();
-    state.derivative.template head<3>()     = state.dir;
-    state.derivative.template segment<3>(3) = k4;
+    state.stepping.pos
+        += h * state.stepping.dir + h2 / 6. * (sd.k1 + sd.k2 + sd.k3);
+    state.stepping.dir += h / 6. * (sd.k1 + 2. * (sd.k2 + sd.k3) + sd.k4);
+    state.stepping.dir /= state.stepping.dir.norm();
+    state.stepping.derivative.template head<3>()     = state.stepping.dir;
+    state.stepping.derivative.template segment<3>(3) = sd.k4;
+    state.stepping.pathAccumulated += h;
 
-    state.pathAccumulated += h;
     return h;
   }
 
@@ -646,5 +641,4 @@ private:
   /// Magnetic field inside of the detector
   BField m_bField;
 };
-
 }  // namespace Acts

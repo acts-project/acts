@@ -415,6 +415,7 @@ BOOST_DATA_TEST_CASE(
   // covariance check for eigen stepper
   covariance_curvilinear(
       epropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
+  // covariance check for eigen stepper in dense environment
   // covariance check fo atlas stepper
   covariance_curvilinear(
       apropagator, pT, phi, theta, dcharge, plimit * Acts::units::_m, index);
@@ -646,4 +647,71 @@ BOOST_DATA_TEST_CASE(
       false,
       false,
       1e-1);
+}
+
+/// test correct covariance transport for curvilinear parameters in dense
+/// environment
+/// this test only works within the
+/// s_curvilinearProjTolerance (in: Definitions.hpp)
+BOOST_DATA_TEST_CASE(
+    dense_covariance_transport_curvilinear_curvilinear_,
+    bdata::random((bdata::seed = 2000,
+                   bdata::distribution
+                   = std::uniform_real_distribution<>(3. * units::_GeV,
+                                                      10. * units::_GeV)))
+        ^ bdata::random((bdata::seed = 2004,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(0.5, 1.)))
+        ^ bdata::random((bdata::seed = 3005,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::random((bdata::seed = 3006,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::random((bdata::seed = 3007,
+                         bdata::distribution
+                         = std::uniform_real_distribution<>(-1., 1.)))
+        ^ bdata::xrange(ntests),
+    pT,
+    plimit,
+    rand1,
+    rand2,
+    rand3,
+    index)
+{
+  if (index < skip) {
+    return;
+  }
+
+  // covariance check for eigen stepper in dense environment
+  DensePropagatorType dpropagator = setupDensePropagator();
+  covariance_curvilinear(
+      dpropagator, pT, 0., M_PI / 2., 1, plimit * Acts::units::_m, index);
+
+  covariance_bound<DensePropagatorType, DiscSurface, DiscSurface>(
+      dpropagator,
+      pT,
+      0.,
+      M_PI / 2.,
+      1,
+      plimit * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      index,
+      true,
+      true,
+      1e-1);
+
+  covariance_bound<DensePropagatorType, PlaneSurface, PlaneSurface>(
+      dpropagator,
+      pT,
+      0.,
+      M_PI / 2.,
+      1,
+      plimit * Acts::units::_m,
+      rand1,
+      rand2,
+      rand3,
+      index);
 }

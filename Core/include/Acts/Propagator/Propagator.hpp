@@ -12,6 +12,7 @@
 #include <cmath>
 #include <memory>
 #include <type_traits>
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
@@ -145,6 +146,12 @@ struct PropagatorOptions
   std::string debugString   = "";     ///< the string to collect msgs
   size_t      debugPfxWidth = 30;     ///< the prefix width
   size_t      debugMsgWidth = 50;     ///< the mesage width
+
+  // Configurations for Stepper
+  /// Tolerance for the error of the integration
+  double tolerance = 1e-4;
+  /// Cut-off value for the step size
+  double stepSizeCutOff = 0.;
 
   /// List of actions
   action_list_t actionList;
@@ -309,8 +316,8 @@ private:
       debugLog(state, [&] { return std::string("Starting stepping loop."); });
       // Propagation loop : stepping
       for (; result.steps < state.options.maxSteps; ++result.steps) {
-        // Perform a propagation step - it only takes the stepping state
-        double s = m_stepper.step(state.stepping);
+        // Perform a propagation step - it takes the propagation state
+        double s = m_stepper.step(state);
         // Accumulate the path length
         result.pathLength += s;
         // Call the actions, can (& will likely) modify the state
@@ -358,6 +365,7 @@ public:
   /// @tparam parameters_t Type of initial track parameters to propagate
   /// @tparam action_list_t Type list of actions, type ActionList<>
   /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
+  /// @tparam propagator_options_t Type of the propagator options
   ///
   /// @param [in] start  nitial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
@@ -368,15 +376,15 @@ public:
   template <typename parameters_t,
             typename action_list_t,
             typename aborter_list_t,
+            template <typename, typename> class propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
   action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
   propagate(
       const parameters_t& start,
-      const PropagatorOptions<action_list_t, aborter_list_t>& options) const
+      const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
-
     // Type of track parameters produced by the propagation
     using ReturnParameterType =
         typename stepper_t::template return_parameter_type<parameters_t>;
@@ -431,6 +439,7 @@ public:
   /// @tparam surface_t Type of target surface
   /// @tparam action_list_t Type list of actions
   /// @tparam aborter_list_t Type list of abort conditions
+  /// @tparam propagator_options_t Type of the propagator options
   ///
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
@@ -442,6 +451,7 @@ public:
             typename surface_t,
             typename action_list_t,
             typename aborter_list_t,
+            template <typename, typename> class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t   = detail::PathLimitReached>
   action_list_t_result_t<
@@ -451,7 +461,7 @@ public:
   propagate(
       const parameters_t& start,
       const surface_t&    target,
-      const PropagatorOptions<action_list_t, aborter_list_t>& options) const
+      const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
 
     // Type of track parameters produced at the end of the propagation

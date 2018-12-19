@@ -15,6 +15,7 @@
 #include <set>
 #include "Acts/Layers/CylinderLayer.hpp"
 #include "Acts/Layers/DiscLayer.hpp"
+#include "Acts/Layers/PlaneLayer.hpp"
 #include "Acts/Layers/ProtoLayer.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -363,16 +364,99 @@ Acts::LayerCreator::discLayer(
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::planeLayer(
-    const std::vector<std::shared_ptr<const Surface>>& /**surfaces*/,
-    double /**envelopeXY*/,
-    double /**envelopeZ*/,
-    size_t /**binsX*/,
-    size_t /**binsY*/,
-    const std::shared_ptr<const Transform3D>& /**transform*/,
-    std::unique_ptr<ApproachDescriptor> /**ad*/) const
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t                                      bins1,
+    size_t                                      bins2,
+    BinningValue                                bValue,
+    boost::optional<ProtoLayer>                 _protoLayer,
+    std::shared_ptr<const Transform3D>          transform,
+    std::unique_ptr<ApproachDescriptor>         ad) const
 {
-  //@todo implement
-  return nullptr;
+  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+
+  // remaining layer parameters
+  double layerHalf1, layerHalf2, layerThickness;
+  switch (bValue) {
+  case BinningValue::binX: {
+    layerHalf1     = 0.5 * (protoLayer.maxY - protoLayer.minY);
+    layerHalf2     = 0.5 * (protoLayer.maxZ - protoLayer.minZ);
+    layerThickness = (protoLayer.maxX - protoLayer.minX);
+    break;
+  }
+  case BinningValue::binY: {
+    layerHalf1     = 0.5 * (protoLayer.maxX - protoLayer.minX);
+    layerHalf2     = 0.5 * (protoLayer.maxZ - protoLayer.minZ);
+    layerThickness = (protoLayer.maxY - protoLayer.minY);
+    break;
+  }
+  default: {
+    layerHalf1     = 0.5 * (protoLayer.maxX - protoLayer.minX);
+    layerHalf2     = 0.5 * (protoLayer.maxY - protoLayer.minY);
+    layerThickness = (protoLayer.maxZ - protoLayer.minZ);
+  }
+  }
+
+  double centerX = 0.5 * (protoLayer.maxX + protoLayer.minX);
+  double centerY = 0.5 * (protoLayer.maxY + protoLayer.minY);
+  double centerZ = 0.5 * (protoLayer.maxZ + protoLayer.minZ);
+
+  ACTS_VERBOSE("Creating a plane Layer:");
+  ACTS_VERBOSE(" - with layer center     = "
+               << "("
+               << centerX
+               << ", "
+               << centerY
+               << ", "
+               << centerZ
+               << ")");
+  ACTS_VERBOSE(" - from X min/max   = " << protoLayer.minX << " / "
+                                        << protoLayer.maxX);
+  ACTS_VERBOSE(" - from Y min/max   = " << protoLayer.minY << " / "
+                                        << protoLayer.maxY);
+  ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
+
+  // create the layer transforms if not given
+  // we need to transform in case centerX/centerY/centerZ != 0, so that the
+  // layer will be correctly defined
+  if (!transform) {
+    // double shift = -(layerZ + envZShift);
+    transform = std::make_shared<const Transform3D>(
+        Translation3D(-centerX, -centerY, -centerZ));
+    ACTS_VERBOSE(" - layer shift  = "
+                 << "("
+                 << -centerX
+                 << ", "
+                 << -centerY
+                 << ", "
+                 << -centerZ
+                 << ")");
+  }
+
+  std::unique_ptr<SurfaceArray> sArray;
+  if (!surfaces.empty()) {
+    sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
+        std::move(surfaces), bins1, bins2, bValue, protoLayer, transform);
+
+    checkBinning(*sArray);
+  }
+
+  // create the layer and push it back
+  std::shared_ptr<const PlanarBounds> pBounds(
+      new RectangleBounds(layerHalf1, layerHalf2));
+
+  // create the layer
+  MutableLayerPtr pLayer = PlaneLayer::create(transform,
+                                              pBounds,
+                                              std::move(sArray),
+                                              layerThickness,
+                                              std::move(ad),
+                                              active);
+
+  if (!pLayer) ACTS_ERROR("Creation of plane layer did not succeed!");
+  associateSurfacesToLayer(*pLayer);
+
+  // now return
+  return pLayer;
 }
 
 void

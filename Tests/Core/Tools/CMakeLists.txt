@@ -18,3 +18,7 @@ target_link_libraries (SimpleGeometryTests PRIVATE ActsCore)
 add_test (NAME SimpleGeometryUnitTest COMMAND SimpleGeometryTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST SimpleGeometryUnitTest TARGETS SimpleGeometryTests)
 
+add_executable (CuboidVolumeBuilderTests CuboidVolumeBuilderTests.cpp)
+target_link_libraries (CuboidVolumeBuilderTests PRIVATE ActsCore)
+add_test (NAME CuboidVolumeBuilderUnitTest COMMAND CuboidVolumeBuilderTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST CuboidVolumeBuilderUnitTest TARGETS CuboidVolumeBuilderTests)

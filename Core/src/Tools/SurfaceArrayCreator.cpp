@@ -13,6 +13,7 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include <algorithm>
 #include <cmath>
+#include <stdexcept>
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
@@ -323,15 +324,86 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 /// SurfaceArrayCreator interface method - create an array on a plane
 std::unique_ptr<Acts::SurfaceArray>
 Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
-    const std::vector<std::shared_ptr<const Surface>>& /*surfaces*/,
-    double /*halflengthX*/,
-    double /*halflengthY*/,
-    size_t /*binsX*/,
-    size_t /*binsY*/,
-    const std::shared_ptr<const Transform3D>& /*transform*/) const
+    std::vector<std::shared_ptr<const Surface>> surfaces,
+    size_t                                      bins1,
+    size_t                                      bins2,
+    BinningValue                                bValue,
+    boost::optional<ProtoLayer>                 protoLayerOpt,
+    const std::shared_ptr<const Transform3D>&   transformOpt) const
 {
+  std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
+  // check if we have proto layer, else build it
+  ProtoLayer protoLayer
+      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
+
+  ACTS_VERBOSE("Creating a SurfaceArray on a plance");
+  ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
+  ACTS_VERBOSE(" -- with " << bins1 << " x " << bins2 << " = " << bins1 * bins2
+                           << " bins.");
+
+  // Transformation
+  Transform3D transform
+      = transformOpt != nullptr ? *transformOpt : Transform3D::Identity();
+
+  Transform3D itransform = transform.inverse();
+  // transform lambda captures the transform matrix
+  auto globalToLocal = [transform](const Vector3D& pos) {
+    Vector3D loc = transform * pos;
+    return Vector2D(loc.x(), loc.y());
+  };
+  auto localToGlobal = [itransform](const Vector2D& loc) {
+    return itransform * Vector3D(loc.x(), loc.y(), 0.);
+  };
+  // Build the grid
+  std::unique_ptr<SurfaceArray::ISurfaceGridLookup> sl;
+
+  // Axis along the binning
+  switch (bValue) {
+  case BinningValue::binX: {
+    ProtoAxis pAxis1 = createEquidistantAxis(
+        surfacesRaw, binY, protoLayer, transform, bins1);
+    ProtoAxis pAxis2 = createEquidistantAxis(
+        surfacesRaw, binZ, protoLayer, transform, bins2);
+    sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                 detail::AxisBoundaryType::Bound>(
+        globalToLocal, localToGlobal, pAxis1, pAxis2);
+    break;
+  }
+  case BinningValue::binY: {
+    ProtoAxis pAxis1 = createEquidistantAxis(
+        surfacesRaw, binX, protoLayer, transform, bins1);
+    ProtoAxis pAxis2 = createEquidistantAxis(
+        surfacesRaw, binZ, protoLayer, transform, bins2);
+    sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                 detail::AxisBoundaryType::Bound>(
+        globalToLocal, localToGlobal, pAxis1, pAxis2);
+    break;
+  }
+  case BinningValue::binZ: {
+    ProtoAxis pAxis1 = createEquidistantAxis(
+        surfacesRaw, binX, protoLayer, transform, bins1);
+    ProtoAxis pAxis2 = createEquidistantAxis(
+        surfacesRaw, binY, protoLayer, transform, bins2);
+    sl = makeSurfaceGridLookup2D<detail::AxisBoundaryType::Bound,
+                                 detail::AxisBoundaryType::Bound>(
+        globalToLocal, localToGlobal, pAxis1, pAxis2);
+    break;
+  }
+  default: {
+    throw std::invalid_argument("Acts::SurfaceArrayCreator::"
+                                "surfaceArrayOnPlane: Invalid binning "
+                                "direction");
+  }
+  }
+
+  sl->fill(surfacesRaw);
+  completeBinning(*sl, surfacesRaw);
+
+  return std::make_unique<SurfaceArray>(
+      std::move(sl),
+      std::move(surfaces),
+      std::make_shared<const Transform3D>(transform));
   //!< @todo implement - take from ATLAS complex TRT builder
-  return nullptr;
 }
 
 std::vector<const Acts::Surface*>
@@ -547,7 +619,8 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   auto matcher = m_cfg.surfaceMatcher;
 
   // now check the binning value
-  if (bValue == Acts::binPhi) {
+  switch (bValue) {
+  case Acts::binPhi: {
 
     if (m_cfg.doPhiBinningOptimization) {
       // Phi binning
@@ -595,22 +668,49 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
       minimum = -M_PI;
       maximum = M_PI;
     }
-
-  } else if (bValue == Acts::binZ) {
-    // Z binning
-
-    // just use maximum and minimum of all surfaces
-    // we do not need key surfaces here
-    maximum = protoLayer.maxZ;
-    minimum = protoLayer.minZ;
-
-  } else {
+    break;
+  }
+  case Acts::binR: {
     // R binning
 
     // just use maximum and minimum of all surfaces
     // we do not need key surfaces here
     maximum = protoLayer.maxR;
     minimum = protoLayer.minR;
+    break;
+  }
+  case Acts::binX: {
+    // X binning
+
+    // just use maximum and minimum of all surfaces
+    // we do not need key surfaces here
+    maximum = protoLayer.maxX;
+    minimum = protoLayer.minX;
+    break;
+  }
+  case Acts::binY: {
+    // Y binning
+
+    // just use maximum and minimum of all surfaces
+    // we do not need key surfaces here
+    maximum = protoLayer.maxY;
+    minimum = protoLayer.minY;
+    break;
+  }
+  case Acts::binZ: {
+    // Z binning
+
+    // just use maximum and minimum of all surfaces
+    // we do not need key surfaces here
+    maximum = protoLayer.maxZ;
+    minimum = protoLayer.minZ;
+    break;
+  }
+  default: {
+    throw std::invalid_argument("Acts::SurfaceArrayCreator::"
+                                "createEquidistantAxis: Invalid binning "
+                                "direction");
+  }
   }
   // assign the bin size
   ACTS_VERBOSE("Create equidistant binning Axis for binned SurfaceArray");
