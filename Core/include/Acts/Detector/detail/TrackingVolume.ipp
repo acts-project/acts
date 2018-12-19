@@ -28,41 +28,32 @@ TrackingVolume::compatibleLayers(const parameters_t& parameters,
     // start layer given or not - test layer
     const Layer* tLayer
         = options.startObject ? options.startObject : associatedLayer(pos);
-    if (tLayer) {
-      do {
-        // check if the layer needs resolving
-        // - resolveSensitive -> always take layer if it has a surface array
-        // - resolveMaterial -> always take layer if it has material
-        // - resolvePassive -> always take, unless it's a navigation layer
-        if (tLayer->resolve(options)) {
-          // if it's a resolveable start layer, you are by definition on it
-          if (tLayer == options.startObject) {
-            // create an intersection with path length 0.
-            Intersection   cIntersection(pos, 0., true);
-            const Surface* tSurface = &(tLayer->surfaceRepresentation());
-            lIntersections.push_back(
-                LayerIntersection(cIntersection, tLayer, tSurface));
-          } else {
-            // layer on approach intersection
-            auto atIntersection
-                = tLayer->surfaceOnApproach(parameters, options, corrfnc);
-            auto path = atIntersection.intersection.pathLength;
-
-            // Intersection is ok - take it (move to surface on appraoch)
-            if (atIntersection
-                && path * path <= options.pathLimit * options.pathLimit) {
-              // create a layer intersection
-              lIntersections.push_back(LayerIntersection(
-                  atIntersection.intersection, tLayer, atIntersection.object));
-            }
-          }
+    while (tLayer != nullptr) {
+      // check if the layer needs resolving
+      // - resolveSensitive -> always take layer if it has a surface array
+      // - resolveMaterial -> always take layer if it has material
+      // - resolvePassive -> always take, unless it's a navigation layer
+      // skip the start object
+      if (tLayer != options.startObject && tLayer->resolve(options)) {
+        // if it's a resolveable start layer, you are by definition on it
+        // layer on approach intersection
+        auto atIntersection
+            = tLayer->surfaceOnApproach(parameters, options, corrfnc);
+        auto path = atIntersection.intersection.pathLength;
+        bool withinLimit
+            = (path * path <= options.pathLimit * options.pathLimit);
+        // Intersection is ok - take it (move to surface on appraoch)
+        if (atIntersection && (atIntersection.object != options.targetSurface)
+            && withinLimit) {
+          // create a layer intersection
+          lIntersections.push_back(LayerIntersection(
+              atIntersection.intersection, tLayer, atIntersection.object));
         }
-        // move to next one or break because you reached the end layer
-        tLayer = (tLayer == options.endObject)
-            ? nullptr
-            : tLayer->nextLayer(pos, options.navDir * parameters.direction());
-
-      } while (tLayer);
+      }
+      // move to next one or break because you reached the end layer
+      tLayer = (tLayer == options.endObject)
+          ? nullptr
+          : tLayer->nextLayer(pos, options.navDir * parameters.direction());
     }
     // sort them accordingly to the navigation direction
     if (options.navDir == forward) {

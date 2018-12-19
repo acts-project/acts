@@ -25,7 +25,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 //
-#include "DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 //
 #include <limits>
 
@@ -102,20 +102,22 @@ namespace Test {
     /// Test bounds
     BOOST_TEST(discSurfaceObject.bounds().type() = SurfaceBounds::Disc);
     //
+    Vector3D ignoredMomentum{0., 0., 0.};
     /// Test isOnSurface()
     Vector3D point3DNotInSector{0.0, 1.2, 0};
     Vector3D point3DOnSurface{1.2, 0.0, 0};
-    BOOST_TEST(discSurfaceObject.isOnSurface(point3DNotInSector, true)
-               == false);  // passes
-    BOOST_TEST(discSurfaceObject.isOnSurface(point3DOnSurface, true)
-               == true);  // passes
+    BOOST_TEST(
+        discSurfaceObject.isOnSurface(point3DNotInSector, ignoredMomentum, true)
+        == false);  // passes
+    BOOST_TEST(
+        discSurfaceObject.isOnSurface(point3DOnSurface, ignoredMomentum, true)
+        == true);  // passes
     //
     /// Test localToGlobal
     Vector3D returnedPosition{10.9, 8.7, 6.5};
     Vector3D expectedPosition{1.2, 0, 0};
     Vector2D rPhiOnDisc{1.2, 0.0};
     Vector2D rPhiNotInSector{1.2, M_PI};  // outside sector at Phi=0, +/- pi/8
-    Vector3D ignoredMomentum{0., 0., 0.};
     discSurfaceObject.localToGlobal(
         rPhiOnDisc, ignoredMomentum, returnedPosition);
     BOOST_TEST(returnedPosition.isApprox(expectedPosition),

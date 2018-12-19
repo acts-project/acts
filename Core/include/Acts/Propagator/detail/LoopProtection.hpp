@@ -42,7 +42,7 @@ namespace detail {
         const double helixPath = 2 * M_PI * p / B;
         // now set the new loop limit
         auto& pathAborter
-            = state.targetAborters.template get<path_arborter_t>();
+            = state.options.abortList.template get<path_arborter_t>();
         pathAborter.internalLimit = state.options.loopFraction * helixPath;
       }
     }

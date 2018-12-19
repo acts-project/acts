@@ -59,7 +59,7 @@ public:
   /// @param corrfnc The actual Corrector object
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidCorrector>
+            typename corrector_t = VoidIntersectionCorrector>
   ObjectIntersection<Surface>
   approachSurface(const parameters_t& parameters,
                   const options_t&    options,

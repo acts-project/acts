@@ -1,12 +1,20 @@
 add_executable (NavigatorTests NavigatorTests.cpp)
-target_link_libraries (NavigatorTests PRIVATE ActsCore)
+target_link_libraries (NavigatorTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test(NAME NavigatorUnitTests COMMAND NavigatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST NavigatorUnitTests TARGETS NavigatorTests)
 
 add_executable (MaterialCollectionTests MaterialCollectionTests.cpp)
-target_link_libraries (MaterialCollectionTests PRIVATE ActsCore)
+target_link_libraries (MaterialCollectionTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test(NAME MaterialCollectionUnitTests COMMAND MaterialCollectionTests)
-  
+acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialCollectionUnitTests TARGETS MaterialCollectionTests)
+    
 add_executable (ExtrapolatorTests ExtrapolatorTests.cpp)
-target_link_libraries (ExtrapolatorTests PRIVATE ActsCore)
+target_link_libraries (ExtrapolatorTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test(NAME ExtrapolatorUnitTests COMMAND ExtrapolatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST ExtrapolatorUnitTests TARGETS ExtrapolatorTests)
+
+add_executable (KalmanExtrapolatorTests KalmanExtrapolatorTests.cpp)
+target_link_libraries (KalmanExtrapolatorTests PRIVATE ActsCore ActsTestsCommonHelpers)
+add_test(NAME KalmanExtrapolatorUnitTests COMMAND KalmanExtrapolatorTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanExtrapolatorUnitTests TARGETS KalmanExtrapolatorTests)
 

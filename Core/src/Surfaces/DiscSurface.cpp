@@ -109,8 +109,6 @@ Acts::DiscSurface::DiscSurface(const variant_data& vardata) : GeometryObject()
   }
 }
 
-Acts::DiscSurface::~DiscSurface() = default;
-
 Acts::DiscSurface&
 Acts::DiscSurface::operator=(const DiscSurface& other)
 {
@@ -193,20 +191,6 @@ std::string
 Acts::DiscSurface::name() const
 {
   return "Acts::DiscSurface";
-}
-
-bool
-Acts::DiscSurface::isOnSurface(const Vector3D&      glopo,
-                               const BoundaryCheck& bcheck) const
-{
-  Vector3D loc3Dframe = (transform().inverse()) * glopo;
-  if (std::abs(loc3Dframe.z()) > (s_onSurfaceTolerance)) {
-    return false;
-  }
-  return (
-      bcheck
-          ? bounds().inside(Vector2D(perp(loc3Dframe), phi(loc3Dframe)), bcheck)
-          : true);
 }
 
 std::shared_ptr<Acts::DiscSurface>

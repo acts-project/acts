@@ -48,8 +48,16 @@ BOOST_DATA_TEST_CASE(
   double dcharge = -1 + 2 * charge;
 
   // foward backward check atlas stepper
-  // foward_backward(apropagator, pT, phi, theta, dcharge, plimit, index, 1e-3,
-  // Acts::units::_eV, debug);
+  foward_backward(apropagator,
+                  pT,
+                  phi,
+                  theta,
+                  dcharge,
+                  plimit,
+                  index,
+                  1e-3,
+                  Acts::units::_eV,
+                  debug);
   // foward backward check eigen stepper
   foward_backward(epropagator,
                   pT,

@@ -24,46 +24,111 @@ namespace detail {
   ///   - move constructible
   ///
   /// This is needed in order to allow custom construction of objects
-  template <typename... Extensions>
+  template <typename... extensions_t>
   struct Extendable
   {
     // clang-format off
-    static_assert(detail::all_of_v<std::is_default_constructible<Extensions>::value...>,
+    static_assert(detail::all_of_v<std::is_default_constructible<extensions_t>::value...>,
                   "all extensions must be default constructible");
-    static_assert(detail::all_of_v<std::is_copy_constructible<Extensions>::value...>,
+    static_assert(detail::all_of_v<std::is_copy_constructible<extensions_t>::value...>,
                   "all extensions must be copy constructible");
-    static_assert(detail::all_of_v<std::is_move_constructible<Extensions>::value...>,
+    static_assert(detail::all_of_v<std::is_move_constructible<extensions_t>::value...>,
                   "all extensions must be move constructible");
     // clang-format on
 
-    template <typename R>
-    const R&
+    /// Default constructor
+    Extendable() = default;
+
+    /// Default copy constructor
+    Extendable(const Extendable<extensions_t...>& extendable) = default;
+
+    // Default move constructor
+    Extendable(Extendable<extensions_t...>&& extendable) = default;
+
+    /// Constructor from tuple
+    ///
+    /// @param extensions Source extensions tuple
+    Extendable(const std::tuple<extensions_t...>& extensions)
+      : m_extensions(extensions)
+    {
+    }
+
+    /// Constructor from tuple move
+    ///
+    /// @param extensions source extensions tuple
+    Extendable(std::tuple<extensions_t...>&& extensions)
+      : m_extensions(std::move(extensions))
+    {
+    }
+
+    /// Default move assignment operator
+    ///
+    /// @param extendable The source Extendable list
+    Extendable<extensions_t...>&
+    operator=(const Extendable<extensions_t...>& extendable)
+        = default;
+
+    /// Default move assignment operator
+    ///
+    /// @param extendable The source Extendable list
+    Extendable<extensions_t...>&
+    operator=(Extendable<extensions_t...>&& extendable)
+        = default;
+
+    /// Append new entries and return a new condition
+    ///
+    /// @tparam appendices_t Types of appended entries to the tuple
+    ///
+    /// @param aps The extensions to be appended to the new Extendable
+    template <typename... appendices_t>
+    Extendable<extensions_t..., appendices_t...>
+    append(appendices_t... aps) const
+    {
+      auto catTuple
+          = std::tuple_cat(m_extensions, std::tuple<appendices_t...>(aps...));
+      return Extendable<extensions_t..., appendices_t...>(std::move(catTuple));
+    }
+
+    /// Const retrieval of an extension of a specific type
+    ///
+    /// @tparam extension_t Type of the Extension to be retrieved
+    template <typename extension_t>
+    const extension_t&
     get() const
     {
-      return std::get<R>(m_tExtensions);
+      return std::get<extension_t>(m_extensions);
     }
 
-    template <typename R>
-    R&
+    /// Non-const retrieval of an extension of a specific type
+    ///
+    /// @tparam extension_t Type of the Extension to be retrieved
+    template <typename extension_t>
+    extension_t&
     get()
     {
-      return std::get<R>(m_tExtensions);
+      return std::get<extension_t>(m_extensions);
     }
 
-    const std::tuple<Extensions...>&
+    /// Const retrieval of the extension tuype
+    ///
+    /// @tparam extension_t Type of the Extension to be retrieved
+    const std::tuple<extensions_t...>&
     tuple() const
     {
-      return m_tExtensions;
+      return m_extensions;
     }
 
-    std::tuple<Extensions...>&
+    /// Non-Const retrieval of the extendsion tuype
+    ///
+    /// @tparam extension_t Type of the Extension to be retrieved
+    std::tuple<extensions_t...>&
     tuple()
     {
-      return m_tExtensions;
+      return m_extensions;
     }
 
   private:
-    std::tuple<Extensions...> m_tExtensions;
+    std::tuple<extensions_t...> m_extensions;
   };
 
 }  // namespace detail

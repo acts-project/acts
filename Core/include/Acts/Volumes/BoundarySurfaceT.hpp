@@ -128,7 +128,7 @@ public:
   bool
   onBoundary(const P& pars) const
   {
-    return surfaceRepresentation().onSurface(pars);
+    return surfaceRepresentation().isOnSurface(pars);
   }
 
   /// The Surface Representation of this

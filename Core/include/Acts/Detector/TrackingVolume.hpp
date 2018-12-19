@@ -161,7 +161,7 @@ public:
   /// @return vector of compatible intersections with layers
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidCorrector>
+            typename corrector_t = VoidIntersectionCorrector>
   std::vector<LayerIntersection>
   compatibleLayers(const parameters_t& parameters,
                    const options_t&    options,
@@ -180,7 +180,7 @@ public:
   /// @return is the templated boundary intersection
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidCorrector>
+            typename corrector_t = VoidIntersectionCorrector>
   std::vector<BoundaryIntersection>
   compatibleBoundaries(const parameters_t& parameters,
                        const options_t&    options,

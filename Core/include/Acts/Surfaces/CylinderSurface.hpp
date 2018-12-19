@@ -18,6 +18,7 @@
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -40,23 +41,23 @@ public:
   /// Deleted default constructor
   CylinderSurface() = delete;
 
-  /// Constructor from Transform3D, radius and halflenght
+  /// Constructor from Transform3D, radius and halflength
   ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param radius is the radius of the cylinder
-  /// @param hlength is the half lenght of the cylinder in z
+  /// @param hlength is the half length of the cylinder in z
   CylinderSurface(std::shared_ptr<const Transform3D> htrans,
                   double                             radius,
                   double                             hlength);
 
-  /// Constructor from Transform3D, radius halfphi, and halflenght
+  /// Constructor from Transform3D, radius halfphi, and halflength
   ///
   /// @param htrans transform to position the surface, can be nullptr
   /// @note if htrans == nullptr, the cylinder is positioned around (0.,0.,0.)
   /// @param radius is the radius of the cylinder
   /// @param hphi is the half length in phi of the cylinder
-  /// @param hlength is the half lenght of the cylinder in z
+  /// @param hlength is the half length of the cylinder in z
   CylinderSurface(std::shared_ptr<const Transform3D> htrans,
                   double                             radius,
                   double                             hphi,
@@ -95,8 +96,8 @@ public:
   /// @param vardata the @c variant_data to build from
   CylinderSurface(const variant_data& vardata);
 
-  /// Destructor
-  ~CylinderSurface() override;
+  /// Destructor - defaulted
+  ~CylinderSurface() override = default;
 
   /// Assignment operator
   ///
@@ -184,15 +185,6 @@ public:
   globalToLocal(const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const final;
-
-  /// Check for position on surface
-  ///
-  /// @param gpos is the global position to be checked
-  /// @param bcheck is the boundary check object
-  /// @return is a boolean indicating if the position is on surface
-  bool
-  isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const final;
 
   /// Fast straight line intersection schema - provides closest intersection
   ///  and (signed) path length

@@ -21,13 +21,16 @@
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
 namespace Acts {
 
-template <typename BField>
+/// @brief the AtlasStepper implementation for the
+template <typename bfield_t>
 class AtlasStepper
 {
 
 public:
-  using cstep = detail::ConstrainedStep;
+  using Jacobian = ActsMatrixD<5, 5>;
+  using Cstep    = detail::ConstrainedStep;
 
+  /// @brief Nested State struct for the local caching
   struct State
   {
 
@@ -52,13 +55,13 @@ public:
     /// Lazily initialized cache for the magnetic field
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
-    typename BField::Cache fieldCache{};
+    typename bfield_t::Cache fieldCache{};
 
     // accummulated path length cache
     double pathAccumulated = 0.;
 
     // adaptive step size of the runge-kutta integration
-    cstep stepSize = std::numeric_limits<double>::max();
+    Cstep stepSize = std::numeric_limits<double>::max();
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
@@ -113,10 +116,10 @@ public:
     }
 
     /// Return a corrector
-    VoidCorrector
+    VoidIntersectionCorrector
     corrector() const
     {
-      return VoidCorrector();
+      return VoidIntersectionCorrector();
     }
 
     /// Constructor
@@ -140,7 +143,7 @@ public:
       , newfield(true)
       , field(0., 0., 0.)
       , covariance(nullptr)
-      , stepSize(ssize)
+      , stepSize(ndir * std::abs(ssize))
     {
       update(pars);
     }
@@ -324,8 +327,16 @@ public:
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 
-  static CurvilinearParameters
-  convert(State& state)
+  /// Convert the propagation state (global) to curvilinear parameters
+  /// This is called by the propagator
+  ///
+  /// @tparam result_t Type of the propagator result to be filled
+  ///
+  /// @param[in,out] state The stepper state
+  /// @param[in,out] result The propagator result object to be filled
+  template <typename result_t>
+  void
+  convert(State& state, result_t& result) const
   {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
@@ -464,29 +475,39 @@ public:
 
       cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
           J * (*state.covariance) * J.transpose());
+      // Optionally : fill the jacobian
+      result.transportJacobian = std::make_unique<const Jacobian>(std::move(J));
     }
 
-    return CurvilinearParameters(std::move(cov), gp, mom, state.charge());
+    // Fill the result
+    result.endParameters = std::make_unique<const CurvilinearParameters>(
+        std::move(cov), gp, mom, state.charge());
   }
 
-  /// @brief convert method into bound parameters
+  /// Convert the propagation state to track parameters at a certain surface
   ///
-  /// @param state is the propagation state to be converted
-  /// @param s the target surface
-  static BoundParameters
-  convert(State& state, const Surface& s)
+  /// @tparam result_t Type of the propagator result to be filled
+  /// @tparam surface_t Type of the surface
+  ///
+  /// @param [in,out] state Propagation state used
+  /// @param [in,out] result Result object from the propagator
+  /// @param [in] s Destination surface to which the conversion is done
+  template <typename result_t, typename surface_t>
+  void
+  convert(State& state, result_t& result, const surface_t& surface) const
   {
 
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
 
+    /// The transport of the position
     Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
     Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
     mom /= std::abs(state.pVector[6]);
 
+    // The transport of the covariance
     std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
     if (state.covariance) {
-
       double p = 1. / state.pVector[6];
       state.pVector[35] *= p;
       state.pVector[36] *= p;
@@ -495,7 +516,7 @@ public:
       state.pVector[39] *= p;
       state.pVector[40] *= p;
 
-      const auto fFrame = s.referenceFrame(gp, mom);
+      const auto fFrame = surface.referenceFrame(gp, mom);
 
       double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
       double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
@@ -527,11 +548,12 @@ public:
       // in case of line-type surfaces - we need to take into account that
       // the reference frame changes with variations of all local
       // parameters
-      if (s.type() == Surface::Straw || s.type() == Surface::Perigee) {
+      if (surface.type() == Surface::Straw
+          || surface.type() == Surface::Perigee) {
         // vector from position to center
-        double x = state.pVector[0] - s.center().x();
-        double y = state.pVector[1] - s.center().y();
-        double z = state.pVector[2] - s.center().z();
+        double x = state.pVector[0] - surface.center().x();
+        double y = state.pVector[1] - surface.center().y();
+        double z = state.pVector[2] - surface.center().z();
 
         // this is the projection of the direction onto the local y axis
         double d = state.pVector[3] * Ay[0] + state.pVector[4] * Ay[1]
@@ -645,9 +667,9 @@ public:
       double MA[3] = {Ax[0], Ax[1], Ax[2]};
       double MB[3] = {Ay[0], Ay[1], Ay[2]};
       // Jacobian production of transport and to_local
-      if (s.type() == Surface::Disc) {
+      if (surface.type() == Surface::Disc) {
         // the vector from the disc surface to the p
-        const auto& sfc  = s.center();
+        const auto& sfc  = surface.center();
         double      d[3] = {state.pVector[0] - sfc(0),
                        state.pVector[1] - sfc(1),
                        state.pVector[2] - sfc(2)};
@@ -717,11 +739,12 @@ public:
           J * (*state.covariance) * J.transpose());
     }
 
-    return BoundParameters(
-        std::move(cov), gp, mom, state.charge(), s.getSharedPtr());
+    // Fill the end parameters
+    result.endParameters = std::make_unique<const BoundParameters>(
+        std::move(cov), gp, mom, state.charge(), surface.getSharedPtr());
   }
 
-  AtlasStepper(BField bField = BField()) : m_bField(std::move(bField)){};
+  AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};
 
   /// Get the field for the stepping
   /// It checks first if the access is still within the Cell,
@@ -954,7 +977,7 @@ public:
   }
 
 private:
-  BField m_bField;
+  bfield_t m_bField;
 };
 
 }  // namespace Acts

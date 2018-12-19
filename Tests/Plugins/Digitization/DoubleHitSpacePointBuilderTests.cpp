@@ -16,7 +16,7 @@
 #include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "DetectorElementStub.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -57,7 +57,6 @@ namespace Test {
         new CartesianSegmentation(buX, recBounds));
 
     // Build translation
-    const int id(0);
 
     double           rotation = 0.026;
     RotationMatrix3D rotationPos;
@@ -72,10 +71,7 @@ namespace Test {
 
     // Build Digitization
     const DigitizationModule digMod(segmentation, 1., 1., 0.);
-    DetectorElementStub      detElem(
-        id,
-        std::make_shared<const Transform3D>(t3d),
-        std::make_shared<const DigitizationModule>(digMod));
+    DetectorElementStub      detElem(std::make_shared<const Transform3D>(t3d));
     auto pSur = Surface::makeShared<PlaneSurface>(recBounds, detElem);
     ActsSymMatrixD<2> cov;
     cov << 0., 0., 0., 0.;
@@ -94,7 +90,6 @@ namespace Test {
     std::cout << "Create second hit" << std::endl;
 
     // Build second PlanarModuleCluster
-    const int id2(1);
 
     double           rotation2 = -0.026;
     RotationMatrix3D rotationNeg;
@@ -107,10 +102,8 @@ namespace Test {
     Transform3D t3d2(Transform3D::Identity() * rotationNeg);
     t3d2.translation() = Vector3D(0., 0., 10.005 * units::_m);
 
-    DetectorElementStub detElem2(
-        id2,
-        std::make_shared<const Transform3D>(t3d2),
-        std::make_shared<const DigitizationModule>(digMod));
+    DetectorElementStub detElem2(std::make_shared<const Transform3D>(t3d2));
+
     auto pSur2 = Surface::makeShared<PlaneSurface>(recBounds, detElem2);
 
     PlanarModuleCluster* pmc2
@@ -147,14 +140,10 @@ namespace Test {
     std::cout << "Create third hit" << std::endl;
 
     // Build third PlanarModuleCluster
-    const int   id3(2);
     Transform3D t3d3(Transform3D::Identity() * rotationNeg);
     t3d3.translation() = Vector3D(0., 0., 10.005 * units::_m);
 
-    DetectorElementStub detElem3(
-        id3,
-        std::make_shared<const Transform3D>(t3d3),
-        std::make_shared<const DigitizationModule>(digMod));
+    DetectorElementStub detElem3(std::make_shared<const Transform3D>(t3d3));
     auto pSur3 = Surface::makeShared<PlaneSurface>(recBounds, detElem3);
 
     PlanarModuleCluster* pmc3

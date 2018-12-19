@@ -62,7 +62,7 @@ struct Intersection
     if (!valid) {
       return false;
     }
-    // now check the pathLenght
+    // now check the pathLength
     if (si.valid) {
       return (pathLength < si.pathLength);
     }
@@ -79,7 +79,7 @@ struct Intersection
     if (!valid) {
       return false;
     }
-    // now check the pathLenght
+    // now check the pathLength
     if (si.valid) {
       return (pathLength > si.pathLength);
     }
@@ -88,13 +88,16 @@ struct Intersection
   }
 };
 
-/// class extensions to return also the object
+/// class extensions to return also the object - can be merged with
+/// FullIntersection
 template <typename object_t>
 class ObjectIntersection
 {
 public:
-  Intersection        intersection{};   ///< the intersection iself
-  const object_t*     object{nullptr};  ///< the object that was intersected
+  Intersection    intersection{};   ///< the intersection iself
+  const object_t* object{nullptr};  ///< the object that was intersected
+  const object_t* representation{
+      nullptr};  ///< the representation of the object
   NavigationDirection pDirection{
       anyDirection};  ///< the direction in which it was taken
 
@@ -109,14 +112,17 @@ public:
   ObjectIntersection(const Intersection& sInter,
                      const object_t*     sObject,
                      NavigationDirection dir = forward)
-    : intersection(sInter), object(sObject), pDirection(dir)
+    : intersection(sInter)
+    , object(sObject)
+    , representation(sObject)
+    , pDirection(dir)
   {
   }
 
   /// Bool() operator for validity checking
   explicit operator bool() const { return intersection.valid; }
 
-  /// smaller operator for ordering & sorting
+  /// @brief smaller operator for ordering & sorting
   ///
   /// @param oi is the source intersection for comparison
   bool
@@ -125,7 +131,7 @@ public:
     return (intersection < oi.intersection);
   }
 
-  /// greater operator for ordering & sorting
+  /// @brief greater operator for ordering & sorting
   ///
   /// @param oi is the source intersection for comparison
   bool
@@ -172,7 +178,7 @@ public:
   /// Bool() operator for validity checking
   explicit operator bool() const { return intersection.valid; }
 
-  /// Smaller operator for ordering & sorting
+  /// @brief smaller operator for ordering & sorting
   ///
   /// @param fi is the full intersection to be tested
   bool
@@ -181,7 +187,7 @@ public:
     return (intersection < fi.intersection);
   }
 
-  /// Greater operator for ordering & sorting
+  /// @brief greater operator for ordering & sorting
   ///
   /// @param fi is the full intersection to be tested
   bool
@@ -191,20 +197,37 @@ public:
   }
 };
 
+struct SameSurfaceIntersection
+{
+  /// @brief comparison operator
+  ///
+  /// This is a struct to pick out intersection with identical surfaces
+  ///
+  /// @tparam intersection_t Type of the intersection object
+  /// @param i1 First intersection to test
+  /// @param i2 Second intersection to test
+  template <typename intersection_t>
+  bool
+  operator()(const intersection_t& i1, const intersection_t& i2) const
+  {
+    return (i1.object == i2.object);
+  }
+};
+
 /// @brief Void Direction corrector
 ///
 /// This is used to evaluate a modified
 /// intersection (e.g. curvature updated)
-struct VoidCorrector
+struct VoidIntersectionCorrector
 {
 
   // Void Corrector default constructor
-  VoidCorrector() = default;
+  VoidIntersectionCorrector() = default;
 
   // Void Corrector parameter constructor
-  VoidCorrector(const Vector3D& /*unused*/,
-                const Vector3D& /*unused*/,
-                double /*unused*/)
+  VoidIntersectionCorrector(const Vector3D& /*unused*/,
+                            const Vector3D& /*unused*/,
+                            double /*unused*/)
   {
   }
 
@@ -214,6 +237,16 @@ struct VoidCorrector
   /// empty correction interface
   bool
   operator()(Vector3D& /*unused*/, Vector3D& /*unused*/, double /*unused*/)
+  {
+    return false;
+  }
+
+  /// Step modification call
+  ///
+  /// @stay put and don't do antyhing
+  template <typename step_t>
+  bool
+  operator()(step_t& /*unused*/) const
   {
     return false;
   }

@@ -6,43 +6,43 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-/**
- * @file GainMatrixTests.cpp
- */
-
-// STL include(s)
 #include <memory>
 
-// Boost include(s)
-#define BOOST_TEST_MODULE Measurement Tests
+#define BOOST_TEST_MODULE GainMatrix Tests
+#include <boost/optional/optional_io.hpp>
 #include <boost/test/included/unit_test.hpp>
 
-// ATS include(s)
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Fitter/KalmanUpdator.hpp"
+#include "Acts/EventData/TrackState.hpp"
+#include "Acts/Fitter/GainMatrixUpdator.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 namespace Test {
 
+  using Jacobian   = ActsMatrixD<5, 5>;
   using Identifier = unsigned long int;
 
   template <ParID_t... params>
-  using Measurement_t = Measurement<Identifier, params...>;
+  using MeasurementType = Measurement<Identifier, params...>;
+  template <ParID_t... params>
+  using MeasuredState
+      = MeasuredTrackState<Identifier, BoundParameters, Jacobian, params...>;
+  using VariantState = VariantTrackState<Identifier, BoundParameters, Jacobian>;
 
   BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {
-    // make dummy measurement
-    CylinderSurface   cylinder(nullptr, 3, 10);
+    // Make dummy measurement
+    auto cylinder = Surface::makeShared<CylinderSurface>(nullptr, 3, 10);
+
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
-    FittableMeasurement<Identifier> m
-        = Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(
-            cylinder, 0, std::move(cov), -0.1, 0.45);
+    VariantState mState = MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+        cylinder, 0, std::move(cov), -0.1, 0.45);
 
-    // make dummy track parameter
+    // Make dummy track parameter
     ActsSymMatrixD<Acts::NGlobalPars> covTrk;
     covTrk << 0.08, 0, 0, 0, 0, 0, 0.3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0,
         0, 0, 0, 0, 1;
@@ -52,12 +52,14 @@ namespace Test {
         std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
         parValues,
         cylinder);
-
-    GainMatrixUpdator                      g;
-    std::unique_ptr<const BoundParameters> filtered(g(m, pars));
-
-    std::cout << pars << std::endl;
-    if (filtered) std::cout << *filtered << std::endl;
+    // Create a Bound state
+    auto bState = std::make_tuple<BoundParameters, Jacobian, double>(
+        std::move(pars), ActsMatrixD<5, 5>::Identity(), 0.);
+    // Gain matrix update and filtered state
+    GainMatrixUpdator<BoundParameters, Jacobian> gmu;
+    auto filteredPars = gmu(mState, bState);
+    BOOST_TEST(filteredPars);
   }
+
 }  // namespace Test
 }  // namespace Acts

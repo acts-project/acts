@@ -20,7 +20,7 @@
 
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
-#include "Acts/Propagator/detail/StandardAbortConditions.hpp"
+#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
@@ -35,7 +35,11 @@ class Surface;
 namespace Test {
 
   // The path limit abort
-  using path_limit = detail::PathLimitReached;
+  using PathLimit = detail::PathLimitReached;
+
+  // The end of world abort
+  using EndOfWorld = detail::EndOfWorldReached;
+
   // the constrained step class
   using cstep = detail::ConstrainedStep;
 
@@ -115,27 +119,33 @@ namespace Test {
     state.options.pathLimit = 1. * units::_m;
     Result result;
 
-    AbortList<path_limit> abort_list;
+    AbortList<PathLimit> abortList;
 
     // It should not abort yet
-    BOOST_CHECK(!abort_list(result, state));
+    BOOST_CHECK(!abortList(result, state));
     // The step size should be adapted to 1 meter now
     BOOST_CHECK_EQUAL(state.stepping.stepSize, 1. * units::_m);
     // Let's do a step of 90 cm now
     state.stepping.pathAccumulated = 90. * units::_cm;
     // Still no abort yet
-    BOOST_CHECK(!abort_list(result, state));
+    BOOST_CHECK(!abortList(result, state));
     // 10 cm are left
     // The step size should be adapted to 10 cm now
     BOOST_CHECK_EQUAL(state.stepping.stepSize, 10. * units::_cm);
 
-    // approach the
-    while (!abort_list(result, state)) {
+    // Approach the target
+    while (!abortList(result, state)) {
       state.stepping.pathAccumulated += 0.5 * state.stepping.stepSize;
     }
 
     // now we need to be smaller than the tolerance
     BOOST_CHECK(state.stepping.stepSize < 1. * units::_um);
+
+    // Check if you can expand the AbortList
+    EndOfWorld eow;
+    AbortList<PathLimit, EndOfWorld> pathWorld = abortList.append(eow);
+    auto& path = pathWorld.get<PathLimit>();
+    BOOST_CHECK(path(result, state));
   }
 
 }  // namespace Test

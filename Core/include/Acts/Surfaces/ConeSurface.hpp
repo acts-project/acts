@@ -82,7 +82,8 @@ public:
   /// @param vardata the @c variant_data to build from
   ConeSurface(const variant_data& vardata);
 
-  ~ConeSurface() override;
+  /// Destructor - defaulted
+  ~ConeSurface() override = default;
 
   /// Assignment operator
   ///

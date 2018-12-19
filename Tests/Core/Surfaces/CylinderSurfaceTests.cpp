@@ -21,9 +21,9 @@
 #include <limits>
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-#include "DetectorElementStub.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -156,8 +156,10 @@ namespace Test {
     //
     /// Test isOnSurface
     Vector3D offSurface{100, 1, 2};
-    BOOST_TEST(cylinderSurfaceObject.isOnSurface(globalPosition, true));
-    BOOST_TEST(cylinderSurfaceObject.isOnSurface(offSurface, true) == false);
+    BOOST_TEST(
+        cylinderSurfaceObject.isOnSurface(globalPosition, momentum, true));
+    BOOST_TEST(cylinderSurfaceObject.isOnSurface(offSurface, momentum, true)
+               == false);
     //
     /// intersectionEstimate
     Vector3D direction{-1., 0, 0};

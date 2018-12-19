@@ -23,8 +23,8 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"   //to get s_noBounds
 #include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "DetectorElementStub.hpp"
 #include "SurfaceStub.hpp"
 
 using boost::test_tools::output_test_stream;
@@ -73,11 +73,10 @@ namespace Test {
     Transform3D   transform(translation);
     BOOST_TEST(Surface::Other == SurfaceStub(original, transform).type());
     // need some cruft to make the next one work
-    auto       pTransform = std::make_shared<const Transform3D>(translation);
-    Identifier identifier{1};
+    auto pTransform = std::make_shared<const Transform3D>(translation);
     std::shared_ptr<const Acts::PlanarBounds> p
         = std::make_shared<const RectangleBounds>(5., 10.);
-    DetectorElementStub detElement{identifier, pTransform, p, 0.2, nullptr};
+    DetectorElementStub detElement{pTransform, p, 0.2, nullptr};
     BOOST_TEST(Surface::Other == SurfaceStub(detElement).type());
   }
 
@@ -85,7 +84,6 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(SurfaceProperties, *utf::expected_failures(1))
   {
     // build a test object , 'surface'
-    Identifier                                identifier{1};
     std::shared_ptr<const Acts::PlanarBounds> pPlanarBound
         = std::make_shared<const RectangleBounds>(5., 10.);
     Vector3D      reference{0., 1., 2.};
@@ -95,9 +93,8 @@ namespace Test {
     MaterialProperties properties{0.2, 0.2, 0.2, 20., 10, 5.};
     auto               pMaterial
         = std::make_shared<const HomogeneousSurfaceMaterial>(properties);
-    DetectorElementStub detElement{
-        identifier, pTransform, pPlanarBound, 0.2, pMaterial};
-    SurfaceStub surface(detElement);
+    DetectorElementStub detElement{pTransform, pPlanarBound, 0.2, pMaterial};
+    SurfaceStub         surface(detElement);
     // associatedDetectorElement
     BOOST_TEST(surface.associatedDetectorElement() == &detElement);
     // test  associatelayer, associatedLayer
@@ -129,9 +126,9 @@ namespace Test {
     // isFree
     BOOST_CHECK(!surface.isFree());
     // isOnSurface
-    BOOST_CHECK(surface.isOnSurface(reference, false));
+    BOOST_CHECK(surface.isOnSurface(reference, mom, false));
     BOOST_CHECK(
-        surface.isOnSurface(reference, true));  // need to improve bounds()
+        surface.isOnSurface(reference, mom, true));  // need to improve bounds()
     // referenceFrame()
     RotationMatrix3D unitary;
     unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
@@ -163,8 +160,6 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(EqualityOperators)
   {
     // build some test objects
-    Identifier                                identifier{1};
-    Identifier                                identifier2{2};
     std::shared_ptr<const Acts::PlanarBounds> pPlanarBound
         = std::make_shared<const RectangleBounds>(5., 10.);
     Vector3D      reference{0., 1., 2.};
@@ -176,12 +171,9 @@ namespace Test {
     MaterialProperties properties{1., 1., 1., 20., 10, 5.};
     auto               pMaterial
         = std::make_shared<const HomogeneousSurfaceMaterial>(properties);
-    DetectorElementStub detElement1{
-        identifier, pTransform1, pPlanarBound, 0.2, pMaterial};
-    DetectorElementStub detElement2{
-        identifier, pTransform1, pPlanarBound, 0.3, pMaterial};
-    DetectorElementStub detElement3{
-        identifier2, pTransform2, pPlanarBound, 0.3, pMaterial};
+    DetectorElementStub detElement1{pTransform1, pPlanarBound, 0.2, pMaterial};
+    DetectorElementStub detElement2{pTransform1, pPlanarBound, 0.3, pMaterial};
+    DetectorElementStub detElement3{pTransform2, pPlanarBound, 0.3, pMaterial};
     //
     SurfaceStub surface1(detElement1);
     SurfaceStub surface2(detElement1);  // 1 and 2 are the same

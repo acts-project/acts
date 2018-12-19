@@ -21,9 +21,9 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TriangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-#include "DetectorElementStub.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -137,8 +137,10 @@ namespace Test {
 
     /// Test isOnSurface
     Vector3D offSurface{0, 1, -2.};
-    BOOST_TEST(PlaneSurfaceObject.isOnSurface(globalPosition, true) == true);
-    BOOST_TEST(PlaneSurfaceObject.isOnSurface(offSurface, true) == false);
+    BOOST_TEST(PlaneSurfaceObject.isOnSurface(globalPosition, momentum, true)
+               == true);
+    BOOST_TEST(PlaneSurfaceObject.isOnSurface(offSurface, momentum, true)
+               == false);
     //
     /// intersectionEstimate
     Vector3D direction{0., 0., 1.};

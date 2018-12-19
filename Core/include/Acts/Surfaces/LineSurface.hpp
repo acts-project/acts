@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
@@ -75,7 +76,8 @@ public:
   /// @param vardata the @c variant_data to build from
   LineSurface(const variant_data& vardata);
 
-  ~LineSurface() override;
+  /// Destructor - defaulted
+  ~LineSurface() override = default;
 
   /// Assignment operator
   ///
@@ -247,23 +249,10 @@ public:
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
   ///
-  /// input parameters are ignored
-  ///
+  /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
   double
   pathCorrection(const Vector3D& pos, const Vector3D& mom) const override;
-
-  /// This method checks if the provided GlobalPosition is inside the assigned
-  /// straw radius, but no check is done whether the GlobalPosition is
-  /// inside bounds or not. It overwrites isOnSurface from Base Class
-  /// as it saves the time of sign determination.
-  ///
-  /// @param gpos is the global position to be checked
-  /// @param bcheck is the boundary check directive
-  /// @return bollean that indicates if the position is on surface
-  bool
-  isOnSurface(const Vector3D&      gpos,
-              const BoundaryCheck& bcheck = true) const final;
 
   /// This method returns the bounds of the Surface by reference */
   const SurfaceBounds&

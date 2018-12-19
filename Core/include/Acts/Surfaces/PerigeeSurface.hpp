@@ -57,7 +57,8 @@ public:
   /// @param vardata the @c variant_data to build from
   PerigeeSurface(const variant_data& vardata);
 
-  ~PerigeeSurface() override;
+  /// Destructor - defaulted
+  ~PerigeeSurface() override = default;
 
   /// Clone method. Uses the copy constructor a new position can optionally be
   /// given a shift.

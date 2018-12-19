@@ -270,17 +270,21 @@ public:
   /// @return boolean indication if operation was successful
   template <typename parameters_t>
   bool
-  onSurface(const parameters_t&  pars,
-            const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+  isOnSurface(const parameters_t&  pars,
+              const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
 
   /// The geometric onSurface method
+  ///
   /// Geometrical check whether position is on Surface
   ///
   /// @param gpos global position to be evaludated
+  /// @param gmom global momentum (required for line-type surfaces)
   /// @param bcheck BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
-  virtual bool
-  isOnSurface(const Vector3D& gpos, const BoundaryCheck& bcheck = true) const;
+  bool
+  isOnSurface(const Vector3D&      gpos,
+              const Vector3D&      gmom,
+              const BoundaryCheck& bcheck = true) const;
 
   /// The insideBounds method for local positions
   ///
@@ -402,7 +406,7 @@ public:
   /// @return SurfaceIntersection object (contains intersection & surface)
   template <typename parameters_t,
             typename options_t,
-            typename corrector_t = VoidCorrector>
+            typename corrector_t = VoidIntersectionCorrector>
   SurfaceIntersection
   intersectionEstimate(const parameters_t& parameters,
                        const options_t&    options,

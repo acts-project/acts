@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
@@ -45,8 +46,8 @@ public:
 
   /// Copy Constructor with shift
   ///
-  /// @param psf is the source surface for the copy
-  /// @param transf is the transformation that positions the surface in space
+  /// @param other The source surface for the copy
+  /// @param transf The transformation that positions the surface in space
   PlaneSurface(const PlaneSurface& other, const Transform3D& transf);
 
   /// Dedicated Constructor with normal vector
@@ -75,11 +76,12 @@ public:
   /// @param vardata the @c variant_data to build from
   PlaneSurface(const variant_data& vardata);
 
-  ~PlaneSurface() override;
+  /// Destructor - defaulted
+  ~PlaneSurface() override = default;
 
   /// Assignment operator
   ///
-  /// @param psf source PlaneSurface for assignment
+  /// @param other The source PlaneSurface for assignment
   PlaneSurface&
   operator=(const PlaneSurface& other);
 
@@ -116,19 +118,6 @@ public:
   /// Return method for bounds object of this surfrace
   const SurfaceBounds&
   bounds() const override;
-
-  /// Geometrical on surface test
-  /// This method returns true if the GlobalPosition is on the Surface for both,
-  /// within or without check of whether the local position is inside boundaries
-  /// or not
-  ///
-  /// @param glopo global position to be checked
-  /// @param bcheck gboundary check directive
-  ///
-  /// @return is a boolean indicator if the position is on surface
-  bool
-  isOnSurface(const Vector3D&      glopo,
-              const BoundaryCheck& bcheck = true) const override;
 
   /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global

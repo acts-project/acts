@@ -101,7 +101,7 @@ namespace Test {
                == 10.);  // ok
     //
     /// Test dump
-    // Acts::DiamondBounds:  (minHlenghtX, medHlengthX, maxHlengthX, hlengthY1,
+    // Acts::DiamondBounds:  (minHlengthX, medHlengthX, maxHlengthX, hlengthY1,
     // hlengthY2 ) = (30.0000000, 10.0000000, 50.0000000, 10.0000000,
     // 20.0000000)
     diamondBoundsObject.dump(std::cout);

@@ -181,7 +181,6 @@ public:
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
       m_pSurface                                   = rhs.m_pSurface;
     }
-
     return *this;
   }
 

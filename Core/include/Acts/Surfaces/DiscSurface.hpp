@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
@@ -112,7 +113,8 @@ public:
   /// @param vardata the @c variant_data to build from
   DiscSurface(const variant_data& vardata);
 
-  ~DiscSurface() override;
+  /// Destructor - defaulted
+  ~DiscSurface() override = default;
 
   /// Assignement operator
   ///
@@ -152,17 +154,6 @@ public:
   /// This method returns the bounds by reference
   const SurfaceBounds&
   bounds() const final;
-
-  /// This method returns true if the GlobalPosition is on the Surface for both,
-  /// within or without check of whether the local position is inside boundaries
-  /// or not
-  ///
-  /// @param glopo The global position to be checked
-  /// @param bcheck The boundary check directive
-  /// @return bollean that indicates if the position is on surface
-  bool
-  isOnSurface(const Vector3D&      glopo,
-              const BoundaryCheck& bcheck = true) const final;
 
   /// Local to global transformation
   /// For planar surfaces the momentum is ignroed in the local to global

@@ -22,9 +22,9 @@
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
-#include "DetectorElementStub.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
@@ -52,11 +52,10 @@ namespace Test {
     auto pLineBounds = std::make_shared<const LineBounds>(radius, halfZ);
     BOOST_TEST(StrawSurface(pTransform, pLineBounds).type() == Surface::Straw);
     //
-    /// Constructor with LineBounds ptr, DetectorElement and Identifier
-    Identifier                                id{1};
+    /// Constructor with LineBounds ptr, DetectorElement
     std::shared_ptr<const Acts::PlanarBounds> p
         = std::make_shared<const RectangleBounds>(1., 10.);
-    DetectorElementStub detElement{id, pTransform, p, 1.0, nullptr};
+    DetectorElementStub detElement{pTransform, p, 1.0, nullptr};
     BOOST_TEST(StrawSurface(pLineBounds, detElement).type() == Surface::Straw);
     //
     /// Copy constructor

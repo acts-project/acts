@@ -63,8 +63,6 @@ Acts::PerigeeSurface::PerigeeSurface(const variant_data& vardata)
   }
 }
 
-Acts::PerigeeSurface::~PerigeeSurface() = default;
-
 Acts::PerigeeSurface&
 Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 {

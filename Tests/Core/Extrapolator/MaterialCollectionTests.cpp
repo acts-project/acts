@@ -30,11 +30,11 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/IntersectionCorrector.hpp"
+#include "Acts/Propagator/detail/RelativePathCorrector.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "ExtrapolatorTestGeometry.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -47,15 +47,15 @@ namespace Test {
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
-  std::vector<std::shared_ptr<const Surface>> stepState;
-  auto tGeometry = testGeometry<ModuleSurface>(stepState);
+  CylindricalTrackingGeometry cGeometry;
+  auto                        tGeometry = cGeometry();
 
   // create a navigator for this tracking geometry
   Navigator navigatorES(tGeometry);
   Navigator navigatorSL(tGeometry);
 
   using BField                 = ConstantBField;
-  using StepCorrector          = detail::IntersectionCorrector;
+  using StepCorrector          = detail::RelativePathCorrector;
   using EigenStepper           = EigenStepper<BField, StepCorrector>;
   using EigenPropagator        = Propagator<EigenStepper, Navigator>;
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
@@ -68,7 +68,6 @@ namespace Test {
   StraightLineStepper    slstepper;
   StraightLinePropagator slpropagator(std::move(slstepper),
                                       std::move(navigatorSL));
-
   const int ntests           = 500;
   const int skip             = 0;
   bool      debugModeFwd     = false;
@@ -78,7 +77,7 @@ namespace Test {
 
   /// the actual test nethod that runs the test
   /// can be used with several propagator types
-  /// @tparam Propagator_type is the actual propagator type
+  /// @tparam propagator_t is the actual propagator type
   ///
   /// @param prop is the propagator instance
   /// @param pT the transverse momentum
@@ -86,14 +85,14 @@ namespace Test {
   /// @param theta the polar angle of the track at creation
   /// @parm charge is the charge of the particle
   /// @param index is the run index from the test
-  template <typename Propagator_type>
+  template <typename propagator_t>
   void
-  runTest(const Propagator_type& prop,
-          double                 pT,
-          double                 phi,
-          double                 theta,
-          int                    charge,
-          int                    index)
+  runTest(const propagator_t& prop,
+          double              pT,
+          double              phi,
+          double              theta,
+          int                 charge,
+          int                 index)
   {
     double dcharge = -1 + 2 * charge;
 
@@ -116,10 +115,10 @@ namespace Test {
     using DebugOutput = detail::DebugOutputActor;
 
     // Action list and abort list
-    using ActionList_type      = ActionList<MaterialInteractor, DebugOutput>;
-    using AbortConditions_type = AbortList<>;
+    using ActionListType = ActionList<MaterialInteractor, DebugOutput>;
+    using AbortListType  = AbortList<>;
 
-    using Options = PropagatorOptions<ActionList_type, AbortConditions_type>;
+    using Options = PropagatorOptions<ActionListType, AbortListType>;
     Options fwdOptions;
 
     fwdOptions.maxStepSize = 25. * units::_cm;
@@ -133,6 +132,9 @@ namespace Test {
     fwdMaterialInteractor.energyLoss         = false;
     fwdMaterialInteractor.multipleScattering = false;
 
+    if (debugModeFwd) {
+      std::cout << ">>> Forward Propagation : start." << std::endl;
+    }
     // forward material test
     const auto& fwdResult = prop.propagate(start, fwdOptions);
     auto&       fwdMaterial
@@ -155,7 +157,7 @@ namespace Test {
     if (debugModeFwd) {
       const auto& fwdOutput
           = fwdResult.template get<DebugOutput::result_type>();
-      std::cout << ">>> Forward Propgation & Navigation output " << std::endl;
+      std::cout << ">>> Forward Propagation & Navigation output " << std::endl;
       std::cout << fwdOutput.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
@@ -180,8 +182,17 @@ namespace Test {
     bwdMaterialInteractor.multipleScattering = false;
 
     const auto& startSurface = start.referenceSurface();
-    const auto& bwdResult    = prop.propagate(
+
+    if (debugModeBwd) {
+      std::cout << ">>> Backward Propagation : start." << std::endl;
+    }
+    const auto& bwdResult = prop.propagate(
         *fwdResult.endParameters.template get(), startSurface, bwdOptions);
+
+    if (debugModeBwd) {
+      std::cout << ">>> Backward Propagation : end." << std::endl;
+    }
+
     auto& bwdMaterial
         = bwdResult.template get<MaterialInteractor::result_type>();
 
@@ -204,7 +215,7 @@ namespace Test {
     if (debugModeBwd) {
       const auto& bwd_output
           = bwdResult.template get<DebugOutput::result_type>();
-      std::cout << ">>> Backward Propgation & Navigation output " << std::endl;
+      std::cout << ">>> Backward Propagation & Navigation output " << std::endl;
       std::cout << bwd_output.debugString << std::endl;
       // check if the surfaces are free
       std::cout << ">>> Material steps found on ..." << std::endl;
@@ -224,7 +235,6 @@ namespace Test {
     // stepping from one surface to the next
     // now go from surface to surface and check
     Options fwdStepOptions;
-
     fwdStepOptions.maxStepSize = 25. * units::_cm;
     fwdStepOptions.pathLimit   = 25 * units::_cm;
     fwdStepOptions.debug       = debugModeFwdStep;
@@ -332,7 +342,7 @@ namespace Test {
 
     if (debugModeBwdStep) {
       // check if the surfaces are free
-      std::cout << ">>> Backeard steps to be processed sequentially ..."
+      std::cout << ">>> Backward steps to be processed sequentially ..."
                 << std::endl;
       for (auto& bwdStepsC : bwdMaterial.materialInteractions) {
         std::cout << "--> Surface with "
@@ -400,6 +410,7 @@ namespace Test {
       std::cout << bwdStepOutput.debugString << std::endl;
     }
   }
+
   // This test case checks that no segmentation fault appears
   // - this tests the collection of surfaces
   BOOST_DATA_TEST_CASE(

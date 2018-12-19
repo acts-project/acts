@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/detail/abort_condition_signature_check.hpp"
 #include "Acts/Propagator/detail/abort_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
@@ -25,22 +25,75 @@ namespace Acts {
 ///
 /// It can (optionally) depend on a result of an Actor from
 /// the actor list.
-template <typename... conditions>
-struct AbortList : private detail::Extendable<conditions...>
+template <typename... aborters_t>
+struct AbortList : public detail::Extendable<aborters_t...>
 {
 private:
-  static_assert(not detail::has_duplicates_v<conditions...>,
-                "same abort conditions type specified several times");
+  static_assert(not detail::has_duplicates_v<aborters_t...>,
+                "same aborter type specified several times");
 
   // clang-format off
-  using actions = detail::type_collector_t<detail::action_type_extractor, conditions...>;
+  using actions = detail::type_collector_t<detail::action_type_extractor, aborters_t...>;
   // clang-format on
 
-  using detail::Extendable<conditions...>::tuple;
+  using detail::Extendable<aborters_t...>::tuple;
 
 public:
-  using action_list_type = detail::boost_set_as_tparams_t<ActionList, actions>;
-  using detail::Extendable<conditions...>::get;
+  using action_list_type = detail::boost_set_as_tparams_t<AbortList, actions>;
+  using detail::Extendable<aborters_t...>::get;
+
+  /// Default constructor
+  AbortList() = default;
+
+  /// Default copy constructor
+  ///
+  /// @param aborters The source action list
+  AbortList(const AbortList<aborters_t...>& aborters) = default;
+
+  /// Default move constructor
+  ///
+  /// @param aborters The source action list
+  AbortList(AbortList<aborters_t...>&& aborters) = default;
+
+  /// Default move assignment operator
+  ///
+  /// @param aborters The source action list
+  AbortList<aborters_t...>&
+  operator=(const AbortList<aborters_t...>& aborters)
+      = default;
+
+  /// Default move assignment operator
+  ///
+  /// @param aborters The source action list
+  AbortList<aborters_t...>&
+  operator=(AbortList<aborters_t...>&& aborters)
+      = default;
+
+  /// Constructor from tuple
+  ///
+  /// @param extensions Source extensions tuple
+  AbortList(const std::tuple<aborters_t...>& aborters)
+    : detail::Extendable<aborters_t...>(aborters)
+  {
+  }
+
+  /// Constructor from tuple move
+  ///
+  /// @param extensions Source extensions tuple
+  AbortList(std::tuple<aborters_t...>&& aborters)
+    : detail::Extendable<aborters_t...>(std::move(aborters))
+  {
+  }
+
+  /// Append new entries and return a new condition
+  template <typename... appendices_t>
+  AbortList<aborters_t..., appendices_t...>
+  append(appendices_t... aps) const
+  {
+    auto catTuple
+        = std::tuple_cat(tuple(), std::tuple<appendices_t...>(aps...));
+    return AbortList<aborters_t..., appendices_t...>(std::move(catTuple));
+  }
 
   /// This is the call signature for the abort list, it broadcasts the call
   /// to the tuple() memembers of the list
@@ -56,12 +109,12 @@ public:
   {
     // clang-format off
     static_assert(detail::all_of_v<detail::abort_condition_signature_check_v<
-                        conditions, 
+                        aborters_t, 
                         propagator_state_t>...>,
-                  "not all abort conditions support the specified input");
+                  "not all aborters support the specified input");
     // clang-format on
 
-    return detail::abort_list_impl<conditions...>::check(
+    return detail::abort_list_impl<aborters_t...>::check(
         tuple(), result, state);
   }
 };

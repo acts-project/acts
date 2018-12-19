@@ -148,8 +148,10 @@ namespace Test {
     //
     /// Test isOnSurface
     Vector3D offSurface{100, 1, 2};
-    BOOST_TEST(coneSurfaceObject.isOnSurface(globalPosition, true) == true);
-    BOOST_TEST(coneSurfaceObject.isOnSurface(offSurface, true) == false);
+    BOOST_TEST(coneSurfaceObject.isOnSurface(globalPosition, momentum, true)
+               == true);
+    BOOST_TEST(coneSurfaceObject.isOnSurface(offSurface, momentum, true)
+               == false);
     //
     /// intersectionEstimate
     Vector3D direction{-1., 0, 0};

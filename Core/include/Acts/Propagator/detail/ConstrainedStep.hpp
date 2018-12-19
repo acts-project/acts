@@ -72,7 +72,7 @@ namespace detail {
 
     /// constructor from double
     /// @paramn value is the initial value for all steps
-    ConstrainedStep(const double& value)
+    ConstrainedStep(double value)
       : values({{value, value, value, value}})
       , direction(value > 0. ? forward : backward)
     {
@@ -93,7 +93,7 @@ namespace detail {
       return (*this);
     }
 
-    /// cast operator to double, returning the min/max value
+    /// Cast operator to double, returning the min/max value
     /// depending on the direction
     operator double() const
     {
@@ -103,11 +103,26 @@ namespace detail {
       return (*std::max_element(values.begin(), values.end()));
     }
 
-    /// access to a specific value
+    /// Access to a specific value
+    ///
+    /// @param type is the resquested parameter type
     double
     value(Type type) const
     {
       return values[type];
+    }
+
+    /// Access to currently leading min type
+    ///
+    Type
+    currentType() const
+    {
+      if (direction == forward) {
+        return Type(std::min_element(values.begin(), values.end())
+                    - values.begin());
+      }
+      return Type(std::max_element(values.begin(), values.end())
+                  - values.begin());
     }
 
     /// return the split value as string for debugging

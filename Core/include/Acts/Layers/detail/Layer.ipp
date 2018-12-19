@@ -289,7 +289,7 @@ Layer::surfaceOnApproach(const parameters_t& parameters,
   const Surface& rSurface = surfaceRepresentation();
 
   // if we have no approach descriptor - we have no sensitive surfaces
-  if (rSurface.onSurface(parameters, options.boundaryCheck)) {
+  if (rSurface.isOnSurface(parameters, options.boundaryCheck)) {
     Intersection nIntersection(parameters.position(), 0., true);
     return SurfaceIntersection(nIntersection, &rSurface, options.navDir);
   }
@@ -304,7 +304,7 @@ Layer::isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck) const
   if (m_representingVolume != nullptr) {
     return m_representingVolume->inside(gp);
   }
-  return (surfaceRepresentation()).isOnSurface(gp, bcheck);
+  return (surfaceRepresentation()).isOnSurface(gp, s_origin, bcheck);
 }
 
 }  // namespace Acts

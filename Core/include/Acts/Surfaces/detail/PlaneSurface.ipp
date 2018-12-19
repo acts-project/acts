@@ -54,7 +54,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
       solution = (lpos + path * ldir);
     }
     // is valid if it goes into the right direction
-    return ((navDir == 0) || path * navDir >= 0.);
+    return ((navDir == anyDirection) || path * navDir >= 0.);
   };
   // solve first
   bool valid = solve(gpos, gdir);
@@ -70,7 +70,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
   // evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
   //  all we need is to check if it's inside bounds
-  valid = bcheck ? (valid && isOnSurface(solution, bcheck)) : valid;
+  valid = bcheck ? (valid && isOnSurface(solution, gdir, bcheck)) : valid;
   // return the result
   return Intersection(solution, path, valid);
 }

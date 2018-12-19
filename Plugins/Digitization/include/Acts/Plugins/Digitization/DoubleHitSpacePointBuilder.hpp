@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Plugins/Digitization/SpacePointBuilder.hpp"
 #include "Acts/Utilities/Units.hpp"
 

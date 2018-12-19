@@ -20,26 +20,53 @@ namespace Acts {
 /// @brief ActionList implementation to be used with the propagator
 ///
 /// This is the ActionList struct that is used in the propagator
-/// to define a list of different actions that are eacch
+/// to define a list of different actors_t that are eacch
 /// executed during the stepping procedure
-template <typename... actions>
-struct ActionList : private detail::Extendable<actions...>
+template <typename... actors_t>
+struct ActionList : public detail::Extendable<actors_t...>
 {
 private:
-  static_assert(not detail::has_duplicates_v<actions...>,
+  static_assert(not detail::has_duplicates_v<actors_t...>,
                 "same action type specified several times");
 
   // clang-format off
-  using results = detail::type_collector_t<detail::result_type_extractor, actions...>;
+  using results = detail::type_collector_t<detail::result_type_extractor, actors_t...>;
   // clang-format on
 
-  using detail::Extendable<actions...>::tuple;
+  using detail::Extendable<actors_t...>::tuple;
 
 public:
   template <template <typename...> class R>
   using result_type = detail::boost_set_as_tparams_t<R, results>;
 
-  using detail::Extendable<actions...>::get;
+  using detail::Extendable<actors_t...>::get;
+
+  /// Default constructor
+  ActionList() = default;
+
+  /// Default copy constructor
+  ///
+  /// @param actors The source action list
+  ActionList(const ActionList<actors_t...>& actors) = default;
+
+  /// Default move constructor
+  ///
+  /// @param actors The source action list
+  ActionList(ActionList<actors_t...>&& actors) = default;
+
+  /// Default move assignment operator
+  ///
+  /// @param actors The source action list
+  ActionList<actors_t...>&
+  operator=(const ActionList<actors_t...>& actors)
+      = default;
+
+  /// Default move assignment operator
+  ///
+  /// @param actors The source action list
+  ActionList<actors_t...>&
+  operator=(ActionList<actors_t...>&& actors)
+      = default;
 
   /// Call operator that is that broadcasts the call to the tuple()
   /// members of the list
@@ -56,12 +83,12 @@ public:
   operator()(propagator_state_t& state, result_t& result) const
   {
     // clang-format off
-    static_assert(detail::all_of_v<detail::action_signature_check_v<actions, 
+    static_assert(detail::all_of_v<detail::action_signature_check_v<actors_t, 
                                       propagator_state_t>...>,
-                  "not all actions support the method signature");
+                  "not all actors support the method signature");
     // clang-format on
 
-    using impl = detail::action_list_impl<actions...>;
+    using impl = detail::action_list_impl<actors_t...>;
     impl::action(tuple(), state, result);
   }
 };

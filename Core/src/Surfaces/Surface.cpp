@@ -45,6 +45,22 @@ Acts::Surface::Surface(const Surface& other, const Transform3D& shift)
 
 Acts::Surface::~Surface() = default;
 
+bool
+Acts::Surface::isOnSurface(const Vector3D&      gpos,
+                           const Vector3D&      gmom,
+                           const BoundaryCheck& bcheck) const
+{
+  // create the local position
+  Vector2D lpos;
+  // global to local transformation
+  bool gtlSuccess = globalToLocal(gpos, gmom, lpos);
+  if (gtlSuccess) {
+    return bcheck ? bounds().inside(lpos, bcheck) : true;
+  }
+  // did not succeed
+  return false;
+}
+
 std::shared_ptr<Acts::Surface>
 Acts::Surface::getSharedPtr()
 {
@@ -94,26 +110,6 @@ Acts::Surface::operator==(const Surface& other) const
   }
   // we should be good
   return true;
-}
-
-bool
-Acts::Surface::isOnSurface(const Acts::Vector3D& gpos,
-                           const BoundaryCheck&  bcheck) const
-{
-  // create the local position
-  Acts::Vector2D lpos;
-  // global to local transformation
-  bool g2L = globalToLocal(gpos, Acts::Vector3D::UnitX(), lpos);
-  if (g2L) {
-    // no boundary check, then return true
-    if (!bcheck) {
-      return true;
-    }
-    // return what ever the bounds tell you
-    return bounds().inside(lpos, bcheck);
-  }
-  // did not succeed
-  return false;
 }
 
 // overload dump for stream operator

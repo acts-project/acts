@@ -68,53 +68,6 @@ Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
   return currentVolume;
 }
 
-//@todo change to BoundaryCheck
-bool
-Acts::TrackingGeometry::atVolumeBoundary(const Acts::Vector3D&       gp,
-                                         const Acts::TrackingVolume* vol,
-                                         double /*unused*/) const
-{
-  bool isAtBoundary = false;
-  if (vol == nullptr) {
-    return isAtBoundary;
-  }
-  for (auto& bSurface : vol->boundarySurfaces()) {
-    const Surface& surf = bSurface->surfaceRepresentation();
-    if (surf.isOnSurface(gp, true)) {
-      isAtBoundary = true;
-    }
-  }
-  return isAtBoundary;
-}
-
-//@todo change to BoundaryCheck
-bool
-Acts::TrackingGeometry::atVolumeBoundary(const Vector3D&        gp,
-                                         const Vector3D&        mom,
-                                         const TrackingVolume*  vol,
-                                         const TrackingVolume*& nextVol,
-                                         NavigationDirection    dir,
-                                         double /*unused*/) const
-{
-  bool isAtBoundary = false;
-  nextVol           = nullptr;
-  if (vol == nullptr) {
-    return isAtBoundary;
-  }
-  for (auto& bSurface : vol->boundarySurfaces()) {
-    const Surface& surf = bSurface->surfaceRepresentation();
-    if (surf.isOnSurface(gp, true)) {
-      isAtBoundary = true;
-      const TrackingVolume* attachedVol
-          = bSurface->attachedVolume(gp, mom, dir);
-      if ((nextVol == nullptr) && (attachedVol != nullptr)) {
-        nextVol = attachedVol;
-      }
-    }
-  }
-  return isAtBoundary;
-}
-
 const Acts::TrackingVolume*
 Acts::TrackingGeometry::highestTrackingVolume() const
 {
