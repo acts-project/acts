@@ -34,13 +34,9 @@ namespace detail {
   ///
   /// TODO: An anticipation of an optimal concept of the input (and maybe also
   /// the output) of the call operator of an auctioneer cannot be performed at
-  /// the current stage but the concept of passing booblean vectors could be
-  /// extended to vectors of ints or doubles (this is the equivalent to a bid
-  /// which every extension can make for the upcoming step). At the current
-  /// stage, a bid-system would be pure guessing.
+  /// the current stage. At the current stage, a real bid-system would be pure guessing.
 
-  /// @brief Auctioneer that takes all extensions as valid that state to be
-  /// valid
+  /// @brief Auctioneer that takes all extensions as valid that make a valid bid
   struct VoidAuctioneer
   {
     /// @brief Default constructor
@@ -63,8 +59,7 @@ namespace detail {
     }
   };
 
-  /// @brief Auctioneer that states only the first valid extension as indeed
-  /// valid extension
+  /// @brief Auctioneer that states only the first one that makes a valid bid
   struct FirstValidAuctioneer
   {
     /// @brief Default constructor
@@ -91,9 +86,7 @@ namespace detail {
     }
   };
 
-  /// @brief Auctioneer that states only the highest bidding extension as indeed
-  /// valid extension. If multiple elements have the same int, the first one
-  /// with this value is valid.
+  /// @brief Auctioneer that makes only the highest bidding extension valid. If multiple elements have the same int, the first one with this value is picked.
   struct HighestValidAuctioneer
   {
     /// @brief Default constructor

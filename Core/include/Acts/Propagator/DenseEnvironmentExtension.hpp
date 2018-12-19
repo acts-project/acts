@@ -160,36 +160,32 @@ struct DenseEnvironmentExtension
   /// matrix.
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
-  /// @tparam stepper_data_t Type of the data collected in the step
   /// @param [in] state State of the propagator
   /// @param [in] h Step size
-  /// @param [in] data Data of B-field and k_i's
   /// @param [out] D Transport matrix
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t, typename stepper_data_t>
+  template <typename propagator_state_t>
   bool
   finalize(propagator_state_t&   state,
            const double          h,
-           const stepper_data_t& data,
            ActsMatrixD<7, 7>& D) const
   {
     return finalize(state, h)
-        && transportMatrix(state.stepping.dir, h, data, D);
+        && transportMatrix(state, h, D);
   }
 
 private:
   /// @brief Evaluates the transport matrix D for the jacobian
   ///
-  /// @param [in] dir Direction of the particle
+  /// @tparam propagator_state_t Type of the state of the propagator
+  /// @param [in] state State of the propagator
   /// @param [in] h Step size
-  /// @param [in] sd Data of B-field and k_i's
   /// @param [out] D Transport matrix
   /// @return Boolean flag if evaluation is valid
-  template <typename stepper_data_t>
+  template <typename propagator_state_t>
   bool
-  transportMatrix(const Vector3D&       dir,
+  transportMatrix(propagator_state_t& state,
                   const double          h,
-                  const stepper_data_t& sd,
                   ActsMatrixD<7, 7>& D) const
   {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
@@ -212,6 +208,9 @@ private:
     /// constant offset does not exist for rectangular matrix dFdu' (due to the
     /// missing Lambda part) and only exists for dGdu' in dlambda/dlambda.
 
+	auto& sd = state.stepping.stepData;
+	auto& dir = state.stepping.dir;
+	
     D                   = ActsMatrixD<7, 7>::Identity();
     const double half_h = h * 0.5;
 

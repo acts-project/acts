@@ -316,7 +316,7 @@ private:
       debugLog(state, [&] { return std::string("Starting stepping loop."); });
       // Propagation loop : stepping
       for (; result.steps < state.options.maxSteps; ++result.steps) {
-        // Perform a propagation step - it only takes the stepping state
+        // Perform a propagation step - it takes the propagation state
         double s = m_stepper.step(state);
         // Accumulate the path length
         result.pathLength += s;

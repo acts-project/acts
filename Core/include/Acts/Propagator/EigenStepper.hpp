@@ -68,15 +68,6 @@ public:
   using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
-  /// @brief Storage of magnetic field and the sub steps during a RKN4 step
-  struct StepData
-  {
-    /// Magnetic fields
-    Vector3D B_first, B_middle, B_last;
-    /// k_i of the RKN4 algorithm
-    Vector3D k1, k2, k3, k4;
-  };
-
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local
@@ -436,6 +427,15 @@ public:
 
     /// Auctioneer for choosing the extension
     auctioneer_t auctioneer;
+    
+      /// @brief Storage of magnetic field and the sub steps during a RKN4 step
+     struct 
+	{
+    /// Magnetic fields
+    Vector3D B_first, B_middle, B_last;
+    /// k_i of the RKN4 algorithm
+    Vector3D k1, k2, k3, k4;
+  } stepData;
   };
 
   /// Always use the same propagation state type, independently of the initial
@@ -533,7 +533,7 @@ public:
   step(propagator_state_t& state) const
   {
     // Runge-Kutta integrator state
-    StepData sd;
+    auto& sd = state.stepping.stepData;
 
     double h2, half_h, error_estimate;
 
@@ -613,7 +613,7 @@ public:
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D;
-      if (!state.stepping.extension.finalize(state, h, sd, D)) {
+      if (!state.stepping.extension.finalize(state, h, D)) {
         return 0.;
       }
 

@@ -15,7 +15,7 @@
 /// @tparam stepper_state_t Type of the state of the stepper
 /// @tparam T Types of the extensions
 ///
-/// @param obs_tuple Extenable tuple of extensions
+/// @param obs_tuple Extendable tuple of extensions
 /// @param state State of the stepper
 /// @param bids List that collects bids about validity of an extension for an
 /// upcoming step
@@ -47,7 +47,7 @@ namespace detail {
         const stepper_state_t&  state,
         std::array<int, sizeof...(T)>& bids)
     {
-      bids.at(N - 1) = std::get<N - 1>(obs_tuple).bid(state);
+      std::get<N-1>(bids) = std::get<N - 1>(obs_tuple).bid(state);
       stepper_extension_list_impl<N - 1>::bid(obs_tuple, state, bids);
     }
 
@@ -66,7 +66,7 @@ namespace detail {
       const Vector3D& kprev = Vector3D())
     {
       // If element is invalid: continue
-      if (!validExtensions.at(N - 1)) {
+      if (!std::get<N-1>(validExtensions)) {
         return stepper_extension_list_impl<N - 1>::k(
             obs_tuple, state, knew, bField, validExtensions, i, h, kprev);
       }
@@ -94,7 +94,7 @@ namespace detail {
              const std::array<bool, sizeof...(T)>& validExtensions)
     {
       // If element is invalid: continue
-      if (!validExtensions.at(N - 1)) {
+      if (!std::get<N-1>(validExtensions)) {
         return stepper_extension_list_impl<N - 1>::finalize(
             obs_tuple, state, h, data, D, validExtensions);
       }
@@ -120,7 +120,7 @@ namespace detail {
              const std::array<bool, sizeof...(T)>& validExtensions)
     {
       // If element is invalid: continue
-      if (!validExtensions.at(N - 1)) {
+      if (!std::get<N-1>(validExtensions)) {
         return stepper_extension_list_impl<N - 1>::finalize(
             obs_tuple, state, h, validExtensions);
       }

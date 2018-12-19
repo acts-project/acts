@@ -18,4 +18,3 @@ target_link_libraries (KalmanExtrapolatorTests PRIVATE ActsCore ActsTestsCommonH
 add_test(NAME KalmanExtrapolatorUnitTests COMMAND KalmanExtrapolatorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST KalmanExtrapolatorUnitTests TARGETS KalmanExtrapolatorTests)
 
-

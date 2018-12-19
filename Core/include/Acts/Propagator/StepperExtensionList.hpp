@@ -16,7 +16,11 @@
 
 namespace Acts {
 
-/// @brief Container of extensions used in the stepper of the propagation
+/// @brief Container of extensions used in the stepper of the propagation. This struct allows a broadcast of function calls for each element in the list. The broadcasts occur for a certain function at each step in a specific order.
+/// The first function is an evaluater if an extension is or how many extensions are applicable for an upcoming step.
+/// The next functions called are the evaluations of the k_1 - k_4 or the RKN4 integration.
+/// The last function call in a step is the finalize() method. This method is an overloaded function (optionally propagates the covariance).
+/// Each method has the possibility to break the evaluation of a given step if an extension reports that something went wrong (e.g. a particle lost too much momentum during the step)
 /// @tparam extensions Types of the extensions
 template <typename... extensions>
 struct StepperExtensionList : private detail::Extendable<extensions...>
@@ -117,14 +121,13 @@ public:
   /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
-  template <typename propagator_state_t, typename stepper_data_t>
+  template <typename propagator_state_t>
   bool
   finalize(propagator_state_t&   state,
            const double          h,
-           const stepper_data_t& data,
            ActsMatrixD<7, 7>& D)
   {
-    return impl::finalize(tuple(), state, h, data, D, validExtensions);
+    return impl::finalize(tuple(), state, h, D, validExtensions);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It

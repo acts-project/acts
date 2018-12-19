@@ -212,7 +212,7 @@ private:
             const options_t&                        options,
             const corrector_t&                      corrfnc) const
   {
-    Surface const* surface = &(boundary->surfaceRepresentation());
+    const Surface* surface = &(boundary->surfaceRepresentation());
     // intersect the surface
     SurfaceIntersection bsIntersection
         = surface->intersectionEstimate(parameters, options, corrfnc);
