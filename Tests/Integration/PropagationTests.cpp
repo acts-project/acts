@@ -31,6 +31,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
+#include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "PropagationTestHelper.hpp"

@@ -22,6 +22,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
+#include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 // TODO: Testing of covariances in Integration test - requires N-layer box

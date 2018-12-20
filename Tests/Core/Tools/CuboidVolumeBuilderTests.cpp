@@ -11,9 +11,16 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <vector>
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
+#include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
