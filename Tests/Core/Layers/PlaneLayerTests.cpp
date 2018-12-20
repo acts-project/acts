@@ -55,10 +55,8 @@ namespace Test {
       /// Constructor with transform pointer
       auto pNullTransform = std::make_shared<const Transform3D>();
       const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds)),
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds))};
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
       size_t              binsX(2), binsY(4);

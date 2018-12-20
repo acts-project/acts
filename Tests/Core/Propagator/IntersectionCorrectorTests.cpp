@@ -34,9 +34,9 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(RelativePathCorrectorTests)
   {
     // construct the surface
-    Vector3D     pcenter(-4., 4., 0.);
-    Vector3D     pnormal = Vector3D(-1., 4., 0.).normalized();
-    PlaneSurface plane(pcenter, pnormal);
+    Vector3D pcenter(-4., 4., 0.);
+    Vector3D pnormal = Vector3D(-1., 4., 0.).normalized();
+    auto     plane   = Surface::makeShared<PlaneSurface>(pcenter, pnormal);
 
     // The current position - origin
     Vector3D position(0., 0., 0.);
@@ -54,7 +54,8 @@ namespace Test {
     double   pathp = 13.;
 
     auto intersect = [&position, &direction, &plane]() -> Intersection {
-      auto pi = plane.intersectionEstimate(position, direction, forward, false);
+      auto pi
+          = plane->intersectionEstimate(position, direction, forward, false);
       std::cout << "Interseciton it at " << toString(pi.position) << std::endl;
       return pi;
     };

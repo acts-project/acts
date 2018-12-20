@@ -123,8 +123,8 @@ public:
   ///
   /// @note Will error if this was not created through the @c makeShared factory
   ///       since it needs access to the original reference. In C++14 this is
-  ///       undefined behavior (but most likely implemented as a @c bad_weak_ptr
-  ///       exception), in C++17 it is defined as that exception.
+  ///       undefined behavior, but most likely implemented as a @c bad_weak_ptr
+  ///       exception, in C++17 it is defined as that exception.
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer

@@ -37,7 +37,9 @@ namespace Acts {
 
 class CylinderSurface : public Surface
 {
-public:
+  friend Surface;
+
+protected:
   /// Deleted default constructor
   CylinderSurface() = delete;
 
@@ -96,6 +98,7 @@ public:
   /// @param vardata the @c variant_data to build from
   CylinderSurface(const variant_data& vardata);
 
+public:
   /// Destructor - defaulted
   ~CylinderSurface() override = default;
 

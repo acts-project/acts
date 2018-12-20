@@ -33,9 +33,11 @@ class LineBounds;
 /// @image html LineSurface.png
 class LineSurface : public Surface
 {
-public:
+  friend Surface;
+
   LineSurface() = delete;
 
+protected:
   /// Constructor from Transform3D and bounds
   ///
   /// @param htrans The transform that positions the surface in the global frame
@@ -76,6 +78,7 @@ public:
   /// @param vardata the @c variant_data to build from
   LineSurface(const variant_data& vardata);
 
+public:
   /// Destructor - defaulted
   ~LineSurface() override = default;
 

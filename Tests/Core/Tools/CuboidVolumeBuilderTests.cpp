@@ -12,61 +12,13 @@
 
 #include <vector>
 #include "Acts/Material/Material.hpp"
+#include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
 namespace Test {
-
-  ///
-  /// @brief Stub implementation of the detector element
-  ///
-  class DetElem : public DetectorElementBase
-  {
-  public:
-    /// @brief Constructor
-    ///
-    /// @param [in] data Data container that carries information about
-    /// transformation, rectangle bounds and thickness of the detector element
-    DetElem(std::tuple<std::shared_ptr<const Transform3D>,
-                       std::shared_ptr<const RectangleBounds>,
-                       double> data)
-      : DetectorElementBase()
-      , m_trafo(std::get<0>(data))
-      , m_surface(new PlaneSurface(std::get<1>(data), *this))
-      , m_thickness(std::get<2>(data))
-    {
-    }
-
-    /// @brief Getter of the transformation
-    virtual const Transform3D&
-    transform() const
-    {
-      return *m_trafo;
-    }
-
-    /// @brief Getter of the surface
-    virtual const Surface&
-    surface() const
-    {
-      return *m_surface;
-    }
-
-    /// @brief Getter of the thickness
-    virtual double
-    thickness() const
-    {
-      return m_thickness;
-    }
-
-    // Pointer to the transformation
-    std::shared_ptr<const Transform3D> m_trafo;
-    // Surface related to the detector element
-    Surface const* m_surface;
-    // Thickness of the detector element
-    double m_thickness;
-  };
 
   BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest)
   {
@@ -106,7 +58,10 @@ namespace Test {
       cfg.detElementConstructor
           = [](std::tuple<std::shared_ptr<const Transform3D>,
                           std::shared_ptr<const RectangleBounds>,
-                          double> data) { return new DetElem(data); };
+                          double> data) {
+              return new DetectorElementStub(
+                  std::get<0>(data), std::get<1>(data), std::get<2>(data));
+            };
       surfaceConfig.push_back(cfg);
     }
 

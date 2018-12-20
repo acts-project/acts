@@ -57,10 +57,8 @@ namespace Test {
       /// Constructor with transform pointer
       auto pNullTransform = std::make_shared<const Transform3D>();
       const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds)),
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds))};
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
       const double thickness(1.0);
       auto         pConeLayerFromSurfaces
           = ConeLayer::create(pTransform, pCone, nullptr);
@@ -100,10 +98,8 @@ namespace Test {
       auto pNullTransform = std::make_shared<const Transform3D>();
       auto pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
       const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds)),
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds))};
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
       // const double        thickness(1.0);
       auto pConeLayerFromSurfaces
           = ConeLayer::create(pTransform, pCone, nullptr);

@@ -93,7 +93,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       m_thickness       = halfZ;
       auto radialBounds = std::make_shared<const RadialBounds>(rMin, rMax);
       m_bounds          = radialBounds;
-      surface           = std::make_shared<DiscSurface>(radialBounds, *this);
+      surface           = Surface::makeShared<DiscSurface>(radialBounds, *this);
     } else {
       // create a cylinder surface
       m_thickness   = std::fabs(rMax - rMin);
@@ -101,7 +101,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       auto   cylinderBounds
           = std::make_shared<const CylinderBounds>(radius, halfZ);
       m_bounds = cylinderBounds;
-      surface  = std::make_shared<CylinderSurface>(cylinderBounds, *this);
+      surface  = Surface::makeShared<CylinderSurface>(cylinderBounds, *this);
     }
   } else {
     if (boost::iequals(axes, "XYZ")) {
@@ -135,7 +135,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with x/y
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -145,7 +145,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     } else if (boost::iequals(axes, "XZY")) {
       // next possibility
@@ -180,7 +180,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with x/z
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -190,7 +190,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
 
     } else if (boost::iequals(axes, "YZX")) {
@@ -226,7 +226,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with y/z
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -236,7 +236,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     } else if (boost::iequals(axes, "YXZ")) {
       // next possibility
@@ -270,7 +270,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with y/x
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -280,7 +280,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     } else if (boost::iequals(axes, "ZYX")) {
       // next possibility
@@ -315,7 +315,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with z/y
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -325,7 +325,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     } else {
       // default is "ZXY"
@@ -361,7 +361,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with z/x
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -371,7 +371,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     }
   }
@@ -438,7 +438,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       m_thickness       = halfZ;
       auto radialBounds = std::make_shared<const RadialBounds>(rMin, rMax);
       m_bounds          = radialBounds;
-      surface           = std::make_shared<DiscSurface>(radialBounds, *this);
+      surface           = Surface::makeShared<DiscSurface>(radialBounds, *this);
     } else {
       // create a cylinder surface
       m_thickness   = std::fabs(rMax - rMin);
@@ -446,7 +446,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
       auto   cylinderBounds
           = std::make_shared<const CylinderBounds>(radius, halfZ);
       m_bounds = cylinderBounds;
-      surface  = std::make_shared<CylinderSurface>(cylinderBounds, *this);
+      surface  = Surface::makeShared<CylinderSurface>(cylinderBounds, *this);
     }
   } else {
     if (boost::iequals(axes, "XYZ")) {
@@ -480,7 +480,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with x/y
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -490,7 +490,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     } else if (boost::iequals(axes, "XZY")) {
       // next possibility
@@ -525,7 +525,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with x/z
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -535,7 +535,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
 
     } else if (boost::iequals(axes, "YZX")) {
@@ -571,7 +571,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with y/z
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -581,7 +581,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     } else if (boost::iequals(axes, "YXZ")) {
       // next possibility
@@ -615,7 +615,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with y/x
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -625,7 +625,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     } else if (boost::iequals(axes, "ZYX")) {
       // next possibility
@@ -660,7 +660,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with z/y
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -670,7 +670,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     } else {
       // default is "ZXY"
@@ -706,7 +706,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = trapezoidBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(trapezoidBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(trapezoidBounds, *this);
       } else {
         // bounds with z/x
         auto rectangleBounds = std::make_shared<const RectangleBounds>(
@@ -716,7 +716,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
         // assign them
         m_bounds = rectangleBounds;
         // create the surface
-        surface = std::make_shared<PlaneSurface>(rectangleBounds, *this);
+        surface = Surface::makeShared<PlaneSurface>(rectangleBounds, *this);
       }
     }
   }
