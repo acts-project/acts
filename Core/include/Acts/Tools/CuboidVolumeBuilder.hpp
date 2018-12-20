@@ -6,27 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include <functional>
-#include <limits>
+#include <memory>
 #include <vector>
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Detector/TrackingVolume.hpp"
-#include "Acts/Detector/detail/DefaultDetectorElementBase.hpp"
-#include "Acts/Layers/PlaneLayer.hpp"
-#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
-#include "Acts/Tools/LayerArrayCreator.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
-#include "Acts/Tools/TrackingGeometryBuilder.hpp"
-#include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Volumes/CuboidVolumeBounds.hpp"
 
 namespace Acts {
+
+class TrackingVolume;
+class VolumeBounds;
+class Material;
+class RectangleBounds;
+class SurfaceMaterial;
+class DetectorElementBase;
+class PlaneSurface;
 
 /// @brief This class builds a box detector with a configurable amount of
 /// surfaces in it. The idea is to allow a quick configuration of a detector for
