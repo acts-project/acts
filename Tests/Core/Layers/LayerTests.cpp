@@ -71,10 +71,8 @@ namespace Test {
       /// Constructor with transform pointer
       auto pNullTransform = std::make_shared<const Transform3D>();
       const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds)),
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds))};
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
       auto         adPtr = ad.get();

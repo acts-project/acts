@@ -174,7 +174,7 @@ private:
 std::shared_ptr<const PlaneSurface>
 CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
 {
-  PlaneSurface* surface;
+  std::shared_ptr<PlaneSurface> surface;
 
   // Build transformation
   Transform3D trafo(Transform3D::Identity() * cfg.rotation);
@@ -182,17 +182,18 @@ CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
 
   // Create and store surface
   if (cfg.detElementConstructor) {
-    surface = new PlaneSurface(cfg.rBounds,
-                               *(cfg.detElementConstructor(std::make_tuple(
-                                   std::make_shared<const Transform3D>(trafo),
-                                   cfg.rBounds,
-                                   cfg.thickness))));
+    surface = Surface::makeShared<PlaneSurface>(
+        cfg.rBounds,
+        *(cfg.detElementConstructor(
+            std::make_tuple(std::make_shared<const Transform3D>(trafo),
+                            cfg.rBounds,
+                            cfg.thickness))));
   } else {
-    surface = new PlaneSurface(std::make_shared<const Transform3D>(trafo),
-                               cfg.rBounds);
+    surface = Surface::makeShared<PlaneSurface>(
+        std::make_shared<const Transform3D>(trafo), cfg.rBounds);
   }
   surface->setAssociatedMaterial(cfg.surMat);
-  return std::shared_ptr<const PlaneSurface>(surface);
+  return surface;
 }
 
 std::shared_ptr<const Layer>
@@ -207,8 +208,7 @@ CuboidVolumeBuilder::buildLayer(LayerConfig& cfg) const
   trafo.translation() = cfg.surfaceCfg.position;
 
   LayerCreator::Config lCfg;
-  lCfg.surfaceArrayCreator
-      = std::shared_ptr<const SurfaceArrayCreator>(new SurfaceArrayCreator());
+  lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
 
   return layerCreator.planeLayer({cfg.surface},

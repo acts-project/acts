@@ -17,14 +17,13 @@
 #include <boost/test/output_test_stream.hpp>
 // leave blank line
 
-//#include <limits>
-#include "Acts/Layers/CylinderLayer.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
-//#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/Layers/CylinderLayer.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
@@ -56,10 +55,8 @@ namespace Test {
       /// Constructor with transform pointer
       auto pNullTransform = std::make_shared<const Transform3D>();
       const std::vector<std::shared_ptr<const Surface>> aSurfaces{
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds)),
-          std::shared_ptr<const Surface>(
-              new PlaneSurface(pNullTransform, rBounds))};
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds),
+          Surface::makeShared<PlaneSurface>(pNullTransform, rBounds)};
       const double thickness(1.0);
       auto         pCylinderLayerFromSurfaces
           = CylinderLayer::create(pTransform, pCylinder, nullptr);
