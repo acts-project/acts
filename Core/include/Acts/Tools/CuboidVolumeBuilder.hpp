@@ -32,12 +32,6 @@ class PlaneSurface;
 class CuboidVolumeBuilder : public ITrackingVolumeBuilder
 {
 public:
-  // Shorter naming of (Transformation, RectangleBounds, Thickness) as
-  // (optional) constructor arguments of a detector element
-  using detElemParams = std::tuple<std::shared_ptr<const Transform3D>,
-                                   std::shared_ptr<const RectangleBounds>,
-                                   double>;
-
   /// @brief This struct stores the data for the construction of a single
   /// PlaneSurface
   struct SurfaceConfig
@@ -53,7 +47,10 @@ public:
     // Thickness
     double thickness = 0.;
     // Constructor function for optional detector elements
-    std::function<DetectorElementBase*(detElemParams)> detElementConstructor;
+    std::function<DetectorElementBase*(std::shared_ptr<const Transform3D>,
+                                       std::shared_ptr<const RectangleBounds>,
+                                       double)>
+        detElementConstructor;
   };
 
   /// @brief This struct stores the data for the construction of a PlaneLayer
@@ -180,10 +177,9 @@ CuboidVolumeBuilder::buildSurface(const SurfaceConfig& cfg) const
   if (cfg.detElementConstructor) {
     surface = Surface::makeShared<PlaneSurface>(
         cfg.rBounds,
-        *(cfg.detElementConstructor(
-            std::make_tuple(std::make_shared<const Transform3D>(trafo),
-                            cfg.rBounds,
-                            cfg.thickness))));
+        *(cfg.detElementConstructor(std::make_shared<const Transform3D>(trafo),
+                                    cfg.rBounds,
+                                    cfg.thickness)));
   } else {
     surface = Surface::makeShared<PlaneSurface>(
         std::make_shared<const Transform3D>(trafo), cfg.rBounds);

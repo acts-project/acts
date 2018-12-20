@@ -56,11 +56,10 @@ namespace Test {
       cfg.thickness = 1. * units::_um;
 
       cfg.detElementConstructor
-          = [](std::tuple<std::shared_ptr<const Transform3D>,
-                          std::shared_ptr<const RectangleBounds>,
-                          double> data) {
-              return new DetectorElementStub(
-                  std::get<0>(data), std::get<1>(data), std::get<2>(data));
+          = [](std::shared_ptr<const Transform3D>     trans,
+               std::shared_ptr<const RectangleBounds> bounds,
+               double                                 thickness) {
+              return new DetectorElementStub(trans, bounds, thickness);
             };
       surfaceConfig.push_back(cfg);
     }
