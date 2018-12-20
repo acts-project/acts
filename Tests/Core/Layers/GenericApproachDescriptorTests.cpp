@@ -6,20 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Layer Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
+
+#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
 
 #include "../Surfaces/SurfaceStub.hpp"
-#include "Acts/Layers/GenericApproachDescriptor.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;
@@ -72,8 +70,8 @@ namespace Test {
       SurfaceIntersection surfIntersection
           = approachDescriptor.approachSurface(origin, zDir, forward, bcheck);
       double expectedIntersection = 20.0;  // property of SurfaceStub
-      BOOST_CHECK(surfIntersection.intersection.pathLength
-                  == expectedIntersection);
+      CHECK_CLOSE_REL(
+          surfIntersection.intersection.pathLength, expectedIntersection, 1e-6);
       // containedSurfaces()
       BOOST_TEST(approachDescriptor.containedSurfaces().size()
                  == someSurfaces.size());

@@ -56,7 +56,7 @@ namespace Test {
 
     /// test for clone
     auto pInfiniteBoundsClone = infiniteBoundsObject.clone();
-    BOOST_CHECK(pInfiniteBoundsClone != nullptr);
+    BOOST_CHECK_NE(pInfiniteBoundsClone, nullptr);
     delete pInfiniteBoundsClone;
 
     /// test for dump

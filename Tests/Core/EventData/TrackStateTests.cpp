@@ -56,7 +56,7 @@ namespace Test {
     // The 1D track state from the measurement
     BoundTrackState mts1D(std::move(m1D));
 
-    BOOST_CHECK(*mts1D.size() == 1);
+    BOOST_CHECK_EQUAL(*mts1D.size(), 1);
 
     // Test the copy construtor
     BoundTrackState mts1DCopy(mts1D);
@@ -76,7 +76,7 @@ namespace Test {
     // The 2D track state from the measurement
     BoundTrackState mts2D(std::move(m2D));
 
-    BOOST_CHECK(*mts2D.size() == 2);
+    BOOST_CHECK_EQUAL(*mts2D.size(), 2);
 
     // Construct the parameter
     std::array<double, 5> pars_array = {{-0.1234, 9.8765, 0.45, 0.888, 0.001}};
@@ -105,7 +105,7 @@ namespace Test {
     std::vector<BoundTrackState> trackStates
         = {std::move(mts1DMoveAssigned), std::move(mts2D), std::move(pts)};
 
-    BOOST_CHECK(trackStates.size() == 3);
+    BOOST_CHECK_EQUAL(trackStates.size(), 3);
 
     // Test is we can shuffle the track states
     // Test to extract the surface of these guys

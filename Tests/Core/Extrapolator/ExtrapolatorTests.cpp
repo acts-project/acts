@@ -334,7 +334,7 @@ namespace Test {
     double pmax = units::SI2Nat<units::MOMENTUM>(
         options.pathLimit * bField.getField(pos).norm() / M_PI);
     if (mom.norm() < pmax) {
-      BOOST_CHECK(status.pathLength < options.pathLimit);
+      BOOST_CHECK_LT(status.pathLength, options.pathLimit);
     } else {
       CHECK_CLOSE_REL(status.pathLength, options.pathLimit, 1e-3);
     }

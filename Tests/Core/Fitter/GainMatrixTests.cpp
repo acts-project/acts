@@ -61,16 +61,17 @@ namespace Test {
 
     BOOST_CHECK(!mState.parameter.filtered);
     BOOST_CHECK(!mState.measurement.calibrated);
-    BOOST_CHECK(gmu(mState) == true);
+    BOOST_CHECK(gmu(mState));
     // filtered is set now
     BOOST_CHECK(!!mState.parameter.filtered);
     // measurement was calibrated
     BOOST_CHECK(!!mState.measurement.calibrated);
     // ref surface is same on measurements and parameters
-    BOOST_CHECK(MeasurementHelpers::getSurface(*mState.measurement.calibrated)
-                == cylinder.get());
-    BOOST_CHECK(&(*mState.parameter.filtered).referenceSurface()
-                == cylinder.get());
+    BOOST_CHECK_EQUAL(
+        MeasurementHelpers::getSurface(*mState.measurement.calibrated),
+        cylinder.get());
+    BOOST_CHECK_EQUAL(&(*mState.parameter.filtered).referenceSurface(),
+                      cylinder.get());
 
     // assert contents of mState were updated
   }

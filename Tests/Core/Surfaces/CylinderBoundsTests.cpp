@@ -61,7 +61,7 @@ namespace Test {
         nominalRadius, averagePhi, halfphi, nominalHalfLength);
     /// test for clone
     auto pCylinderBoundsClone = cylinderBoundsObject.clone();
-    BOOST_CHECK(pCylinderBoundsClone != nullptr);
+    BOOST_CHECK_NE(pCylinderBoundsClone, nullptr);
     delete pCylinderBoundsClone;
 
     /// test for type()

@@ -84,22 +84,22 @@ namespace Test {
         pTransform, rMin, rMax, halfPhiSector);
     //
     /// Test type
-    BOOST_CHECK(discSurfaceObject->type() == Surface::Disc);
+    BOOST_CHECK_EQUAL(discSurfaceObject->type(), Surface::Disc);
     //
     /// Test normal, no local position specified
     Vector3D zAxis{0, 0, 1};
-    BOOST_CHECK(discSurfaceObject->normal() == zAxis);
+    BOOST_CHECK_EQUAL(discSurfaceObject->normal(), zAxis);
     //
     /// Test normal, local position specified
     Vector2D lpos(2.0, 0.05);
-    BOOST_CHECK(discSurfaceObject->normal(lpos) == zAxis);
+    BOOST_CHECK_EQUAL(discSurfaceObject->normal(lpos), zAxis);
     //
     /// Test binningPosition
     // auto binningPosition=
     // discSurfaceObject.binningPosition(BinningValue::binRPhi );
     // std::cout<<binningPosition<<std::endl;
-    BOOST_CHECK(discSurfaceObject->binningPosition(BinningValue::binRPhi)
-                == origin3D);
+    BOOST_CHECK_EQUAL(discSurfaceObject->binningPosition(BinningValue::binRPhi),
+                      origin3D);
     //
     /// Test bounds
     BOOST_TEST(discSurfaceObject->bounds().type() = SurfaceBounds::Disc);
@@ -212,7 +212,7 @@ namespace Test {
         = Surface::makeShared<DiscSurface>(nullptr, 2.2, 4.4, 0.07);
     //
     BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
-    BOOST_CHECK(*assignedDisc == *discSurfaceObject);
+    BOOST_CHECK_EQUAL(*assignedDisc, *discSurfaceObject);
   }
 
   BOOST_AUTO_TEST_CASE(DiscSurface_toVariantData)

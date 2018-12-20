@@ -55,7 +55,7 @@ namespace Test {
 
     /// test for clone
     auto pLineBoundsClone = lineBoundsObject.clone();
-    BOOST_CHECK(pLineBoundsClone != nullptr);
+    BOOST_CHECK_NE(pLineBoundsClone, nullptr);
     delete pLineBoundsClone;
 
     /// test for type()

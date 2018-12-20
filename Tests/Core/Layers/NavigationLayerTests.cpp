@@ -67,9 +67,9 @@ namespace Test {
       BOOST_CHECK(pNavigationLayer->isOnLayer(origin, true));
       // isOnLayer()
       Vector3D crazyPosition{1000., 10000., std::nan("")};
-      BOOST_CHECK(pNavigationLayer->isOnLayer(crazyPosition, true) == false);
+      BOOST_CHECK(!pNavigationLayer->isOnLayer(crazyPosition, true));
       // resolve()
-      BOOST_CHECK(pNavigationLayer->resolve(true, true, true) == false);
+      BOOST_CHECK(!pNavigationLayer->resolve(true, true, true));
     }
 
     BOOST_AUTO_TEST_CASE(NavigationLayer_toVariantData)

@@ -1,5 +1,5 @@
 add_executable (GenericApproachDescriptorTests GenericApproachDescriptorTests.cpp)
-target_link_libraries (GenericApproachDescriptorTests PRIVATE ActsCore)
+target_link_libraries (GenericApproachDescriptorTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME GenericApproachDescriptorUnitTests COMMAND GenericApproachDescriptorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST GenericApproachDescriptorUnitTests TARGETS GenericApproachDescriptorTests)
 
