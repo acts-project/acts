@@ -24,12 +24,13 @@ namespace Acts {
 
 using Cstep = detail::ConstrainedStep;
 
-/// @breif struct for the Navigation options that are forwarded to
+/// @brief struct for the Navigation options that are forwarded to
 ///        the geometry
 ///
 /// @tparam propagator_state_t Type of the object for navigation state
 /// @tparam object_t Type of the object for navigation to check against
-template <typename object_t>
+template <typename object_t, 
+          typename corrector_t     = VoidIntersectionCorrector>
 struct NavigationOptions
 {
 
@@ -549,7 +550,7 @@ private:
   ///  - if an intersect is not valid, switch to next
   ///
   /// @tparam propagator_state_t The state type of the propagagor
-  /// @tparam is a step corrector (can be void corrector)
+  /// @tparam corrector_t Is a step corrector (can be void corrector)
   ///
   /// @param[in,out] state is the propagation state object
   /// @param[in] navCorr is the navigation path corrector
@@ -1227,6 +1228,14 @@ private:
       }
     }
   }
+  
+    /// Return a corrector
+    template <typename propagator_state_t>
+    corrector_t
+    corrector(propagator_state_t& state) const
+    {
+      return corrector_t(state.stepping.startPos, state.stepping.startDir, state.stepping.pathAccumulated);
+    }
 };
 
 }  // namespace Acts

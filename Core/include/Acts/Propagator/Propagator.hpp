@@ -385,6 +385,7 @@ public:
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
+
     // Type of track parameters produced by the propagation
     using ReturnParameterType =
         typename stepper_t::template return_parameter_type<parameters_t>;
@@ -507,6 +508,13 @@ public:
     }
     return result;
   }
+
+//~ template<typename propagator_state_t>
+//~ auto
+//~ corrector(const propagator_state_t& state)
+//~ {
+	//~ return m_stepper.corrector(state.stepping);
+//~ }
 
 private:
   /// Implementation of propagation algorithm
