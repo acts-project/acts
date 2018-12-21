@@ -204,7 +204,7 @@ public:
   {
   }
 
-private:
+
   /// @brief private Propagator state for navigation and debugging
   ///
   /// @tparam parameters_t Type of the track parameters
@@ -212,7 +212,7 @@ private:
   ///
   /// This struct holds the common state information for propagating
   /// which is independent of the actual stepper implementation.
-  template <typename parameters_t, typename propagator_options_t>
+  template <typename propagator_options_t>
   struct State
   {
 
@@ -224,6 +224,7 @@ private:
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param tabs The internal target aborters created in the call nethod
+    template<typename parameters_t>
     State(const parameters_t& start, const propagator_options_t& topts)
       : options(topts), stepping(start, options.direction, options.maxStepSize)
     {
@@ -240,7 +241,7 @@ private:
     /// Navigation state - internal state of the Navigator
     NavigatorState navigation;
   };
-
+private:
   /// @brief Helper struct determining the result's type
   ///
   /// @tparam parameters_t Type of final track parameters
@@ -301,7 +302,7 @@ private:
     debugLog(state, [&] { return std::string("Entering propagation."); });
 
     // Navigator initialize state call
-    m_navigator.status(state);
+    m_navigator.template status<stepper_t, decltype(state.options)>(state);
     // Pre-Stepping call to the action list
     state.options.actionList(state, result);
     // assume negative outcome, only set to true later if we actually have
@@ -330,7 +331,7 @@ private:
         });
         // Post-step
         // navigator status call - action list - aborter list - target call
-        m_navigator.status(state);
+        m_navigator.template status<stepper_t, decltype(state.options)>(state);
         state.options.actionList(state, result);
         if (state.options.abortList(result, state)) {
           terminatedNormally = true;
@@ -408,7 +409,7 @@ public:
     auto eOptions     = options.extend(abortList);
     using OptionsType = decltype(eOptions);
     // Initialize the internal propagator state
-    using StateType = State<parameters_t, OptionsType>;
+    using StateType = State<OptionsType>;
     StateType state(start, eOptions);
 
     // Apply the loop protection - it resets the internal path limit
@@ -490,7 +491,7 @@ public:
                   "return track parameter type must be copy-constructible");
 
     // Initialize the internal propagator state
-    using StateType = State<parameters_t, OptionsType>;
+    using StateType = State<OptionsType>;
     StateType state(start, eOptions);
     state.navigation.targetSurface = &target;
 

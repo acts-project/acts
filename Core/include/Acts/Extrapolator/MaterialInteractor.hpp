@@ -94,9 +94,9 @@ struct MaterialInteractor
   ///
   /// @param state is the mutable propagator state object
   /// @param result is the mutable result state object
-  template <typename propagator_state_t>
+  template <template <typename, typename> class propagator_t, typename stepper_t, typename navigator_t, typename propagator_state_t>
   void
-  operator()(propagator_state_t& state, result_type& result) const
+  operator()(typename propagator_t<stepper_t, navigator_t>::propagator_state_t& state, result_type& result) const
   {
 
     // If we are on target, everything should have been done
@@ -139,7 +139,7 @@ struct MaterialInteractor
       const SurfaceMaterial* sMaterial
           = state.navigation.currentSurface->associatedMaterial();
       MaterialProperties mProperties = sMaterial->materialProperties(
-          state.stepping.position(), state.stepping.navDir, mStage);
+          state.stepping.pos, state.stepping.navDir, mStage);
       // Material properties (non-zero) have been found for this configuration
       if (mProperties) {
         // more debugging output to the screen

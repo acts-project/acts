@@ -38,6 +38,7 @@ namespace Acts {
 /// p its momentum and B the magnetic field
 ///
 template <typename BField,
+		  typename corrector_t = VoidIntersectionCorrector,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t    = detail::VoidAuctioneer>
 class EigenStepper
@@ -377,6 +378,13 @@ public:
       state.p   = up;
     }
 
+    /// Return a corrector
+    static corrector_t
+    corrector(State& state)
+    {
+      return corrector_t(state.startPos, state.startDir, state.pathAccumulated);
+    }
+    
     /// Method for on-demand transport of the covariance
     /// to a new curvilinear frame at current  position,
     /// or direction of the state

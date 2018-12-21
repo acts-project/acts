@@ -17,6 +17,7 @@
 #include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 
@@ -29,8 +30,7 @@ using Cstep = detail::ConstrainedStep;
 ///
 /// @tparam propagator_state_t Type of the object for navigation state
 /// @tparam object_t Type of the object for navigation to check against
-template <typename object_t, 
-          typename corrector_t     = VoidIntersectionCorrector>
+template <typename object_t>
 struct NavigationOptions
 {
 
@@ -232,9 +232,9 @@ public:
   /// @tparam propagator_state_t is the type of Propagatgor state
   ///
   /// @param[in,out] state is the mutable propagator state object
-  template <typename propagator_state_t>
+  template <typename stepper_t,  typename propagator_options_t>
   void
-  status(propagator_state_t& state) const
+  status(typename Propagator<stepper_t, Navigator>::template State<propagator_options_t>& state) const
   {
     // Check if the navigator is inactive
     if (inactive(state)) {
@@ -286,7 +286,7 @@ public:
           return std::string("On layer: update layer information.");
         });
         // Get a  navigation corrector associated to the stepper
-        auto navCorr = state.stepping.corrector();
+        auto navCorr = stepper_t::corrector(state.stepping);
         if (resolveSurfaces(state, navCorr)) {
           // Set the navigation stage back to surface handling
           state.navigation.navigationStage = Stage::surfaceTarget;
@@ -381,7 +381,7 @@ public:
     debugLog(state, [&] { return std::string("Entering navigator::target."); });
 
     // Get a  navigation corrector associated to the stepper
-    auto navCorr = state.stepping.corrector();
+    auto navCorr = corrector(state.stepping);
 
     // Initialize the target and target volume
     if (state.navigation.targetSurface and not state.navigation.targetVolume) {
@@ -1228,14 +1228,6 @@ private:
       }
     }
   }
-  
-    /// Return a corrector
-    template <typename propagator_state_t>
-    corrector_t
-    corrector(propagator_state_t& state) const
-    {
-      return corrector_t(state.stepping.startPos, state.stepping.startDir, state.stepping.pathAccumulated);
-    }
 };
 
 }  // namespace Acts
