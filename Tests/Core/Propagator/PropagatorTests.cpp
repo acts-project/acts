@@ -328,7 +328,7 @@ namespace Test {
     const auto& cov_1s = *(end_parameters_1s->covariance());
     const auto& cov_2s = *(end_parameters_2s->covariance());
 
-    CHECK_CLOSE_OR_SMALL(cov_1s, cov_2s, 0.001, 1e-9);
+    CHECK_CLOSE_COVARIANCE(cov_1s, cov_2s, 0.001);
   }
 
   BOOST_DATA_TEST_CASE(
@@ -402,7 +402,7 @@ namespace Test {
     const auto& cov_1s = *(end_parameters_1s->covariance());
     const auto& cov_2s = *(end_parameters_2s->covariance());
 
-    CHECK_CLOSE_OR_SMALL(cov_1s, cov_2s, 0.001, 1e-9);
+    CHECK_CLOSE_COVARIANCE(cov_1s, cov_2s, 0.001);
   }
 
 }  // namespace Test

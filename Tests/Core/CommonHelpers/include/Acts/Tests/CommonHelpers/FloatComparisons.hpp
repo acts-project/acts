@@ -45,6 +45,14 @@
 #define CHECK_CLOSE_OR_SMALL(val, ref, reltol, small)                          \
   BOOST_CHECK(Acts::Test::checkCloseOrSmall((val), (ref), (reltol), (small)))
 
+// Covariance matrices require special logic and care because while relative
+// comparisons are perfectly appropriate on diagonal terms, they become
+// inappropriate on off-diagonal terms, which represent correlations and are
+// therefore best compared with respect to the order of magnitude of the
+// corresponding diagonal elements.
+#define CHECK_CLOSE_COVARIANCE(val, ref, tol)                                  \
+  BOOST_CHECK(Acts::Test::checkCloseCovariance((val), (ref), (tol)))
+
 // The relevant infrastructure is implemented below
 
 namespace Acts {
@@ -249,6 +257,42 @@ namespace Test {
   {
     using namespace float_compare_internal;
     return compare(val, ref, closeOrSmall(reltol, small));
+  }
+
+  template <typename Scalar, int dim>
+  boost::test_tools::predicate_result
+  checkCloseCovariance(const ActsSymMatrix<Scalar, dim>& val,
+                       const ActsSymMatrix<Scalar, dim>& ref,
+                       double tol)
+  {
+    static_assert(dim != Eigen::Dynamic,
+                  "Dynamic-size matrices are currently unsupported.");
+
+    for (int row = 0; row < dim; ++row) {
+      for (int col = row; col < dim; ++col) {
+        // For diagonal elements, this is just a regular relative comparison.
+        // But for off-diagonal correlation terms, the tolerance scales with the
+        // geometric mean of the variance terms that are being correlated.
+        //
+        // This accounts for the fact that a relatively large correlation
+        // difference means little if the overall correlation has a tiny weight
+        // with respect to the diagonal variance elements anyway.
+        //
+        auto orderOfMagnitude = std::sqrt(ref(row, row) * ref(col, col));
+        if (std::abs(val(row, col) - ref(row, col)) >= tol * orderOfMagnitude) {
+          boost::test_tools::predicate_result res(false);
+          res.message() << "The difference between covariance matrix term "
+                        << val(row, col) << " and reference " << ref(row, col)
+                        << " is not within tolerance " << tol << ". "
+                        << "The covariance matrix being tested was\n"
+                        << val << '\n'
+                        << "and the reference covariance matrix was\n"
+                        << ref << '\n';
+          return res;
+        }
+      }
+    }
+    return true;
   }
 }
 }

@@ -397,7 +397,7 @@ namespace IntegrationTest {
                          double                 charge,
                          double                 plimit,
                          int /*index*/,
-                         double reltol = 1e-2,
+                         double reltol = 1e-4,
                          bool   debug  = false)
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
@@ -438,7 +438,7 @@ namespace IntegrationTest {
     ActsSymMatrixD<5> calculated_cov = fixture.calculateCovariance(
         start_wo_c, *(start.covariance()), *tp, options);
     ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));
-    CHECK_CLOSE_OR_SMALL(calculated_cov, obtained_cov, reltol, 1e-4);
+    CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
   }
 
   template <typename Propagator_type,
@@ -526,7 +526,7 @@ namespace IntegrationTest {
     ActsSymMatrixD<5> calculated_cov = fixture.calculateCovariance(
         start_wo_c, *(start.covariance()), *tp, options);
 
-    CHECK_CLOSE_OR_SMALL(calculated_cov, obtained_cov, reltol, 1e-4);
+    CHECK_CLOSE_COVARIANCE(calculated_cov, obtained_cov, reltol);
   }
 }
 }
