@@ -151,9 +151,8 @@ public:
     ///   - the parameters at the surface
     ///   - the stepwise jacobian towards it (from last bound)
     ///   - and the path length (from start - for ordering)
-    template <typename surface_t>
     BoundState
-    boundState(const surface_t& surface, bool reinitialize = true)
+    boundState(const Surface& surface, bool reinitialize = true)
     {
       // Transport the covariance to here
       std::unique_ptr<const Covariance> covPtr = nullptr;
