@@ -160,7 +160,7 @@ namespace Test {
     auto secondOrdered = unorderedStates[1];
     BOOST_TEST(secondOrdered.parametric.pathLength == 2.);
 
-    BoundTrackState::ParametricState& pState = firstOrdered.parametric;
+    auto& pState = firstOrdered.parametric;
 
     BOOST_TEST(pState.pathLength == 1.);
 

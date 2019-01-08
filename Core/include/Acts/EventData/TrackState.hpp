@@ -38,83 +38,6 @@ public:
   using Parameters = parameters_t;
   using Jacobian   = typename Parameters::CovMatrix_t;
 
-  /// @brief Parameteric part, non-type dependent.
-  /// It reduces the number of visitor pattern calls
-  ///
-  /// This is all the information that concerns the
-  /// the track parameterisation and the jacobian
-  /// It is enough to to run the track smoothing
-  struct ParametricState
-  {
-    /// The predicted state
-    boost::optional<Parameters> predicted{boost::none};
-    /// The filtered state
-    boost::optional<Parameters> filtered{boost::none};
-    /// The smoothed state
-    boost::optional<Parameters> smoothed{boost::none};
-    /// The transport jacobian matrix
-    boost::optional<Jacobian> jacobian{boost::none};
-    /// The path length along the track - will help sorting
-    double pathLength = 0.;
-  };
-
-  /// @brief Nested measurement part, dependent type.
-  /// It reduces the nubmer of vistor pattern calls
-  ///
-  /// This is the measurement and the calibratedMeasurement
-  /// (in case the latter is different)
-  struct MeasuredState
-  {
-    /// The default measured state initializes
-    MeasuredState() = default;
-
-    /// The copy constructor
-    ///
-    /// @param ms The source MeasuredState
-    MeasuredState(const MeasuredState& ms)
-      : uncalibrated(ms.uncalibrated), calibrated(ms.calibrated)
-    {
-    }
-
-    /// The move constructor
-    ///
-    /// @param ms The source MeasuredState
-    MeasuredState(MeasuredState&& ms)
-      : uncalibrated(std::move(ms.uncalibrated))
-      , calibrated(std::move(ms.calibrated))
-    {
-    }
-
-    /// The copy assignement operator
-    ///
-    /// @param ms The source MeasuredState
-    MeasuredState&
-    operator=(const MeasuredState& ms)
-    {
-      if (this != &ms) {
-        uncalibrated = ms.uncalibrated;
-        calibrated   = ms.calibrated;
-      }
-      return (*this);
-    }
-
-    /// The Move assignement operator
-    ///
-    /// @param ms The source MeasuredState
-    MeasuredState&
-    operator=(MeasuredState&& ms)
-    {
-      uncalibrated = std::move(ms.uncalibrated);
-      calibrated   = std::move(ms.calibrated);
-      return (*this);
-    }
-
-    /// The optional measurement
-    boost::optional<FittableMeasurement<identifier_t>> uncalibrated{
-        boost::none};
-    /// The optional calibrabed measurement
-    boost::optional<FittableMeasurement<identifier_t>> calibrated{boost::none};
-  };
 
   /// Constructor from (uncalibrated) measurement
   ///
@@ -202,11 +125,35 @@ public:
   /// The surface of this TrackState
   const Surface* surface = nullptr;
 
-  /// The parametric part
-  ParametricState parametric;
+  /// The parameter part
+  /// This is all the information that concerns the
+  /// the track parameterisation and the jacobian
+  /// It is enough to to run the track smoothing
+  struct
+  {
+    /// The predicted state
+    boost::optional<Parameters> predicted{boost::none};
+    /// The filtered state
+    boost::optional<Parameters> filtered{boost::none};
+    /// The smoothed state
+    boost::optional<Parameters> smoothed{boost::none};
+    /// The transport jacobian matrix
+    boost::optional<Jacobian> jacobian{boost::none};
+    /// The path length along the track - will help sorting
+    double pathLength = 0.;
+  } parametric;
 
-  /// The measurement part
-  MeasuredState measurement;
+  /// @brief Nested measurement part
+  /// This is the uncalibrated and calibrated measurement
+  /// (in case the latter is different)
+  struct
+  {
+    /// The optional (uncalibrated) measurement
+    boost::optional<FittableMeasurement<identifier_t>> uncalibrated{
+        boost::none};
+    /// The optional calibrabed measurement
+    boost::optional<FittableMeasurement<identifier_t>> calibrated{boost::none};
+  } measurement;
 
 private:
   /// Assign the surface from an optional parameter
