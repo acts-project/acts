@@ -11,39 +11,12 @@
 #include <boost/none.hpp>
 #include <boost/optional.hpp>
 #include "Acts/EventData/Measurement.hpp"
-#include "Acts/EventData/detail/trackstate_type_generator.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 
 class Surface;
-
-// @brief enum of readability in parameter acces
-enum class ParametricType : int { predicted = 0, filtered = 1, smoothed = 2 };
-
-// @brief enum of readability in measurement acces
-enum class MeasurementType : int { uncalibrated = 0, calibrated = 1 };
-
-/// @brief Parameteric part, non-type dependent.
-/// It reduces the number of visitor pattern calls
-///
-/// This is all the information that concerns the
-/// the track parameterisation and the jacobian
-/// It is enough to to run the track smoothing
-template <typename parameters_t, typename jacobian_t>
-struct ParametricState
-{
-  /// The predicted state
-  boost::optional<parameters_t> predicted{boost::none};
-  /// The filtered state
-  boost::optional<parameters_t> filtered{boost::none};
-  /// The smoothed state
-  boost::optional<parameters_t> smoothed{boost::none};
-  /// The transport jacobian matrix
-  boost::optional<jacobian_t> jacobian{boost::none};
-  /// The path length along the track - will help sorting
-  double pathLength = 0.;
-};
 
 /// @class TrackState
 ///
@@ -59,12 +32,35 @@ struct ParametricState
 /// assumed the surface lives longer than the TrackState
 template <typename identifier_t,
           typename parameters_t,
-          typename jacobian_t,
-          ParID_t... params>
+          typename jacobian_t>
 class TrackState
 {
 
 public:
+
+  using Identifier = identifier_t;
+  using Parameters = parameters_t;
+
+  /// @brief Parameteric part, non-type dependent.
+  /// It reduces the number of visitor pattern calls
+  ///
+  /// This is all the information that concerns the
+  /// the track parameterisation and the jacobian
+  /// It is enough to to run the track smoothing
+  struct ParametricState
+  {
+    /// The predicted state
+    boost::optional<Parameters> predicted{boost::none};
+    /// The filtered state
+    boost::optional<Parameters> filtered{boost::none};
+    /// The smoothed state
+    boost::optional<Parameters> smoothed{boost::none};
+    /// The transport jacobian matrix
+    boost::optional<jacobian_t> jacobian{boost::none};
+    /// The path length along the track - will help sorting
+    double pathLength = 0.;
+  };
+
   /// @brief Nested measurement part, dependent type.
   /// It reduces the nubmer of vistor pattern calls
   ///
@@ -117,21 +113,20 @@ public:
     }
 
     /// The optional measurement
-    boost::optional<Measurement<identifier_t, params...>> uncalibrated{
+    boost::optional<FittableMeasurement<identifier_t>> uncalibrated{
         boost::none};
     /// The optional calibrabed measurement
-    boost::optional<Measurement<identifier_t, params...>> calibrated{
-        boost::none};
+    boost::optional<FittableMeasurement<identifier_t>> calibrated{boost::none};
   };
 
   /// Constructor from (uncalibrated) measurement
   ///
   /// @tparam measurement_t Type of the measurement
   /// @param m The measurement object
-  TrackState(Measurement<identifier_t, params...> m)
+  TrackState(FittableMeasurement<identifier_t> m)
   {
+    this->surface            = MeasurementHelpers::getSurface(m);
     measurement.uncalibrated = std::move(m);
-    assignSurface(measurement.uncalibrated);
   }
 
   /// Constructor from parameters
@@ -140,8 +135,8 @@ public:
   /// @param p The parameters object
   TrackState(parameters_t p)
   {
+    surface              = &p.referenceSurface();
     parametric.predicted = std::move(p);
-    assignSurface(parametric.predicted);
   }
 
   /// Virtual destructor
@@ -204,14 +199,14 @@ public:
   static constexpr unsigned int
   size()
   {
-    return Measurement<identifier_t, params...>::size();
+    return FittableMeasurement<identifier_t>::size();
   }
 
   /// The surface of this TrackState
   const Surface* surface = nullptr;
 
   /// The parametric part
-  ParametricState<parameters_t, jacobian_t> parametric;
+  ParametricState parametric;
 
   /// The measurement part
   MeasuredState measurement;
@@ -227,24 +222,4 @@ private:
     surface = &(optional.template get().referenceSurface());
   }
 };
-
-/// @brief track state for measurements
-template <typename identifier_t,
-          typename parameters_t,
-          typename jacobian_t,
-          ParID_t... params>
-using MeasuredTrackState
-    = TrackState<identifier_t, parameters_t, jacobian_t, params...>;
-
-/// @brief track state for parametric description
-///
-/// @todo: investigate if we can move that to dim=0 description (Eigen allows)
-template <typename identifier_t, typename parameters_t, typename jacobian_t>
-using ParametricTrackState
-    = TrackState<identifier_t, parameters_t, jacobian_t, ParDef::eLOC_0>;
-
-/// @brief general type for any possible Measurement
-template <typename identifier_t, typename parameters_t, typename jacobian_t>
-using VariantTrackState = typename detail::
-    trackstate_type_generator<identifier_t, parameters_t, jacobian_t>::type;
 }

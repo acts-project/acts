@@ -11,7 +11,6 @@
 #include <boost/variant.hpp>
 #include <memory>
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/trackstate_manipulation.hpp"
 
 namespace Acts {
 
@@ -34,7 +33,6 @@ public:
     // The reverse iteration
     auto rit = filteredStates.rbegin();
 
-    using ps_t        = ParametricState<parameters_t, jacobian_t>;
     using ParVector_t = typename parameters_t::ParVector_t;
     using CovMatrix_t = typename parameters_t::CovMatrix_t;
     // smoothed parameter vector and covariance matrix
@@ -42,7 +40,7 @@ public:
     CovMatrix_t smoothedCov;
 
     // For the last state: smoothed is filtered - also: switch to next
-    auto& lState    = detail::getParametricState<ps_t>(*rit);
+    auto& lState    = rit->parametric;
     lState.smoothed = lState.filtered.get();
 
     // Smoothing gain matrix
@@ -53,7 +51,7 @@ public:
     for (++rit; rit != filteredStates.rend(); ++rit) {
 
       // The current state
-      auto& cState = detail::getParametricState<ps_t>(*rit);
+      auto& cState = rit->parametric;
 
       /// Gain smoothing matrix
       G = (*cState.filtered.get().covariance())

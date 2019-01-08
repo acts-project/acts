@@ -14,27 +14,15 @@
 namespace Acts {
 namespace detail {
   /// @brief  Sorter for boost_variant
-  struct variant_path_length_sorter : public boost::static_visitor<bool>
-  {
-  public:
-    /// @brief compares different types
-    template <typename type_a_t, typename type_b_t>
-    bool
-    operator()(const type_a_t& lhs, const type_b_t& rhs) const
-    {
-      return (lhs.parametric.pathLength < rhs.parametric.pathLength);
-    }
-  };
-
-  /// @brief vistor pattern path length sorter
   struct path_length_sorter
   {
   public:
-    template <typename variant_type_t>
+    template <typename identifier_t, typename parameters_t, typename jacobian_t>
     bool
-    operator()(const variant_type_t& lhs, const variant_type_t& rhs)
+    operator()(const TrackState<identifier_t, parameters_t, jacobian_t>& lhs,
+               const TrackState<identifier_t, parameters_t, jacobian_t>& rhs)
     {
-      return boost::apply_visitor(variant_path_length_sorter(), lhs, rhs);
+      return lhs.parametric.pathLength < rhs.parametric.pathLength;
     }
   };
 }

@@ -13,7 +13,6 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/surface_getter.hpp"
-#include "Acts/EventData/detail/trackstate_manipulation.hpp"
 #include "Acts/EventData/detail/trackstate_sorters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Propagator/AbortList.hpp"
@@ -283,16 +282,16 @@ private:
       size_t stateIndex = 0;
       for (auto& tState : result.fittedStates) {
         // Get the Surface
-        auto surface = &(detail::getSurface(tState));
+        const Surface& surface = tState.referenceSurface();
         // Get the associated Layer to this Surface
-        auto layer = surface->associatedLayer();
+        auto layer = surface.associatedLayer();
         if (layer == nullptr) {
           // Find the intersection to allocate the layer
           auto surfaceIntersection
-              = surface->intersectionEstimate(state.stepping.position(),
-                                              state.stepping.direction(),
-                                              state.stepping.navDir,
-                                              false);
+              = surface.intersectionEstimate(state.stepping.position(),
+                                             state.stepping.direction(),
+                                             state.stepping.navDir,
+                                             false);
           // Allocate the layer via the tracking geometry search
           if (surfaceIntersection and state.navigation.worldVolume) {
             auto intersection = surfaceIntersection.position;
@@ -305,9 +304,9 @@ private:
         // Insert the surface into the measurementsurfaces multimap
         if (layer) {
           measurementSurfaces.insert(
-              std::pair<const Layer*, const Surface*>(layer, surface));
+              std::pair<const Layer*, const Surface*>(layer, &surface));
           // Insert the fitted state into the fittedStates map
-          result.accessIndices[surface] = stateIndex;
+          result.accessIndices[&surface] = stateIndex;
         }
         ++stateIndex;
       }
@@ -347,23 +346,32 @@ private:
           dstream << " detected.";
           return dstream.str();
         });
+
+        // Get the current TrackState
+        TrackState& trackState = result.fittedStates[cindexItr->second];
+
         // Transport & bind the state to the current surface
-        auto boundState = state.stepping.boundState(*surface, true);
-        // Get the current VariantTrackState
-        auto& trackState = result.fittedStates[cindexItr->second];
-        // Perform the update and obtain the filtered parameters
-        // return optional parameters_t
-        const auto filteredPars = m_updator(trackState, std::move(boundState));
+        std::tuple<BoundParameters,
+                   typename TrackState::Parameters::CovMatrix_t,
+                   double>
+            boundState = state.stepping.boundState(*surface, true);
+
+        trackState.parametric.predicted  = std::get<0>(boundState);
+        trackState.parametric.jacobian   = std::get<1>(boundState);
+        trackState.parametric.pathLength = std::get<2>(boundState);
+
         // If the update is successful, set covariance and
-        if (filteredPars) {
+        if (m_updator(trackState)) {
           // Update the stepping state
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Filtering step successful, updated parameters are : ";
-            dstream << filteredPars.get();
+            dstream << *trackState.parametric.filtered;
             return dstream.str();
           });
-          state.stepping.update(filteredPars.get());
+          // update stepping state using filtered parameters
+          // after kalman update
+          state.stepping.update(*trackState.parametric.filtered);
         }
         // We count the processed state
         ++result.processedStates;

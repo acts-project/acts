@@ -13,6 +13,7 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/Fitter/GainMatrixUpdator.hpp"
@@ -22,15 +23,12 @@
 namespace Acts {
 namespace Test {
 
-  using Jacobian   = ActsMatrixD<5, 5>;
   using Identifier = unsigned long int;
+  using Jacobian   = BoundParameters::CovMatrix_t;
 
   template <ParID_t... params>
   using MeasurementType = Measurement<Identifier, params...>;
-  template <ParID_t... params>
-  using MeasuredState
-      = MeasuredTrackState<Identifier, BoundParameters, Jacobian, params...>;
-  using VariantState = VariantTrackState<Identifier, BoundParameters, Jacobian>;
+  using TrackState      = TrackState<Identifier, BoundParameters, Jacobian>;
 
   BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {
@@ -39,8 +37,8 @@ namespace Test {
 
     ActsSymMatrixD<2> cov;
     cov << 0.04, 0, 0, 0.1;
-    VariantState mState = MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
-        cylinder, 0, std::move(cov), -0.1, 0.45);
+    TrackState mState(MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>(
+        cylinder, 0, std::move(cov), -0.1, 0.45));
 
     // Make dummy track parameter
     ActsSymMatrixD<Acts::NGlobalPars> covTrk;
@@ -52,13 +50,29 @@ namespace Test {
         std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
         parValues,
         cylinder);
-    // Create a Bound state
-    auto bState = std::make_tuple<BoundParameters, Jacobian, double>(
-        std::move(pars), ActsMatrixD<5, 5>::Identity(), 0.);
+
+    // "update" track state with "prediction"
+    mState.parametric.predicted  = std::move(pars);
+    mState.parametric.jacobian   = Jacobian::Identity();
+    mState.parametric.pathLength = 0.;
+
     // Gain matrix update and filtered state
     GainMatrixUpdator<BoundParameters, Jacobian> gmu;
-    auto filteredPars = gmu(mState, bState);
-    BOOST_TEST(filteredPars);
+
+    BOOST_CHECK(!mState.parametric.filtered);
+    BOOST_CHECK(!mState.measurement.calibrated);
+    BOOST_CHECK(gmu(mState) == true);
+    // filtered is set now
+    BOOST_CHECK(!!mState.parametric.filtered);
+    // measurement was calibrated
+    BOOST_CHECK(!!mState.measurement.calibrated);
+    // ref surface is same on measurements and parameters
+    BOOST_CHECK(MeasurementHelpers::getSurface(*mState.measurement.calibrated)
+                == cylinder.get());
+    BOOST_CHECK(&(*mState.parametric.filtered).referenceSurface()
+                == cylinder.get());
+
+    // assert contents of mState were updated
   }
 
 }  // namespace Test
