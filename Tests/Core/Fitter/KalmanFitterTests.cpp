@@ -289,8 +289,8 @@ namespace Test {
 
     const Surface* rSurface = &rStart.referenceSurface();
 
-    using Updator      = GainMatrixUpdator<BoundParameters, Jacobian>;
-    using Smoother     = GainMatrixSmoother<BoundParameters, Jacobian>;
+    using Updator      = GainMatrixUpdator<BoundParameters>;
+    using Smoother     = GainMatrixSmoother<BoundParameters>;
     using KalmanFitter = KalmanFitter<RecoPropagator, Updator, Smoother>;
 
     KalmanFitter kFitter(rPropagator);

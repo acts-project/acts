@@ -19,10 +19,11 @@ namespace Acts {
 ///
 /// @tparam parameters_t Type of the track parameters
 /// @tparam jacobian_t Type of the Jacobian
-template <typename parameters_t, typename jacobian_t>
+template <typename parameters_t>
 class GainMatrixSmoother
 {
 
+  using jacobian_t = typename parameters_t::CovMatrix_t;
 public:
   /// @todo write documentation
 

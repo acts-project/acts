@@ -25,11 +25,11 @@ namespace Acts {
 ///
 /// This is implemented as a boost vistor pattern for use of the
 /// boost variant container
-template <typename parameters_t,
-          typename jacobian_t,
-          typename calibrator_t = VoidKalmanComponents>
+template <typename parameters_t, typename calibrator_t = VoidKalmanComponents>
 class GainMatrixUpdator
 {
+
+  using jacobian_t = typename parameters_t::CovMatrix_t;
 
 public:
   /// Explicit constructor

@@ -57,7 +57,7 @@ namespace Test {
     mState.parametric.pathLength = 0.;
 
     // Gain matrix update and filtered state
-    GainMatrixUpdator<BoundParameters, Jacobian> gmu;
+    GainMatrixUpdator<BoundParameters> gmu;
 
     BOOST_CHECK(!mState.parametric.filtered);
     BOOST_CHECK(!mState.measurement.calibrated);
