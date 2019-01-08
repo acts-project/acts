@@ -16,23 +16,17 @@ namespace Acts {
 class Surface;
 
 namespace MeasurementHelpers {
-  namespace detail {
-    struct get_surface_visitor : public boost::static_visitor<const Surface*>
-    {
-      template <typename measurement_t>
-      const Surface*
-      operator()(const measurement_t& meas) const
-      {
-        return &meas.referenceSurface();
-      }
-    };
-  }
 
+  /// @brief Extract surface from a type erased measurement object
+  /// @tparam M The FittableMeasurement type
+  /// @return const pointer to the extracted surface
   template <typename M>
   const Surface*
-  getSurface(const M& meas)
+  getSurface(const M& fittable_measurement)
   {
-    return boost::apply_visitor(detail::get_surface_visitor(), meas);
+    return boost::apply_visitor(
+        [](const auto& meas) { return &meas.referenceSurface(); },
+        fittable_measurement);
   }
 }
 }
