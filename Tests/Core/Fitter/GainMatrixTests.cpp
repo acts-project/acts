@@ -28,7 +28,7 @@ namespace Test {
 
   template <ParID_t... params>
   using MeasurementType = Measurement<Identifier, params...>;
-  using TrackState      = TrackState<Identifier, BoundParameters, Jacobian>;
+  using TrackState      = TrackState<Identifier, BoundParameters>;
 
   BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {

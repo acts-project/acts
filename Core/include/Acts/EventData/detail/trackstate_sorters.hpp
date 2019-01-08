@@ -17,10 +17,10 @@ namespace detail {
   struct path_length_sorter
   {
   public:
-    template <typename identifier_t, typename parameters_t, typename jacobian_t>
+    template <typename identifier_t, typename parameters_t>
     bool
-    operator()(const TrackState<identifier_t, parameters_t, jacobian_t>& lhs,
-               const TrackState<identifier_t, parameters_t, jacobian_t>& rhs)
+    operator()(const TrackState<identifier_t, parameters_t>& lhs,
+               const TrackState<identifier_t, parameters_t>& rhs)
     {
       return lhs.parametric.pathLength < rhs.parametric.pathLength;
     }

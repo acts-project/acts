@@ -25,21 +25,18 @@ class Surface;
 ///
 /// @tparam identifier_t Type of the identifier
 /// @tparam parameters_t Type of the parameters on the surface
-/// @tparam jacobian_t Type of the jacobian for the transport
 /// @tparam params Type list of the measurement type
 ///
 /// @note the Surface is only stored as a pointer, i.e. it is
 /// assumed the surface lives longer than the TrackState
-template <typename identifier_t,
-          typename parameters_t,
-          typename jacobian_t>
+template <typename identifier_t, typename parameters_t>
 class TrackState
 {
 
 public:
-
   using Identifier = identifier_t;
   using Parameters = parameters_t;
+  using Jacobian   = typename Parameters::CovMatrix_t;
 
   /// @brief Parameteric part, non-type dependent.
   /// It reduces the number of visitor pattern calls
@@ -56,7 +53,7 @@ public:
     /// The smoothed state
     boost::optional<Parameters> smoothed{boost::none};
     /// The transport jacobian matrix
-    boost::optional<jacobian_t> jacobian{boost::none};
+    boost::optional<Jacobian> jacobian{boost::none};
     /// The path length along the track - will help sorting
     double pathLength = 0.;
   };

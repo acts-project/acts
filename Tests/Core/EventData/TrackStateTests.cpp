@@ -27,8 +27,7 @@ namespace Test {
 
   template <ParID_t... params>
   using MeasurementType = Measurement<Identifier, params...>;
-  using BoundTrackState
-      = TrackState<Identifier, BoundParameters, Jacobian>;
+  using BoundTrackState = TrackState<Identifier, BoundParameters>;
   ///
   /// @brief Unit test for creation of Measurement object
   ///

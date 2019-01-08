@@ -39,9 +39,9 @@ namespace Test {
 
   // A few initialisations and definitionas
   using Identifier = GeometryID;
-  using Jacobian   = ActsMatrixD<5, 5>;
+  using Jacobian   = BoundParameters::CovMatrix_t;
 
-  using TrackState = TrackState<Identifier, BoundParameters, Jacobian>;
+  using TrackState         = TrackState<Identifier, BoundParameters>;
   using Resolution         = std::pair<ParID_t, double>;
   using ElementResolution  = std::vector<Resolution>;
   using VolumeResolution   = std::map<geo_id_value, ElementResolution>;
