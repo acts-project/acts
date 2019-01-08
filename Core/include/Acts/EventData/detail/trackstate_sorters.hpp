@@ -22,7 +22,7 @@ namespace detail {
     operator()(const TrackState<identifier_t, parameters_t>& lhs,
                const TrackState<identifier_t, parameters_t>& rhs)
     {
-      return lhs.parametric.pathLength < rhs.parametric.pathLength;
+      return lhs.parameter.pathLength < rhs.parameter.pathLength;
     }
   };
 }

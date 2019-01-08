@@ -52,24 +52,24 @@ namespace Test {
         cylinder);
 
     // "update" track state with "prediction"
-    mState.parametric.predicted  = std::move(pars);
-    mState.parametric.jacobian   = Jacobian::Identity();
-    mState.parametric.pathLength = 0.;
+    mState.parameter.predicted  = std::move(pars);
+    mState.parameter.jacobian   = Jacobian::Identity();
+    mState.parameter.pathLength = 0.;
 
     // Gain matrix update and filtered state
     GainMatrixUpdator<BoundParameters> gmu;
 
-    BOOST_CHECK(!mState.parametric.filtered);
+    BOOST_CHECK(!mState.parameter.filtered);
     BOOST_CHECK(!mState.measurement.calibrated);
     BOOST_CHECK(gmu(mState) == true);
     // filtered is set now
-    BOOST_CHECK(!!mState.parametric.filtered);
+    BOOST_CHECK(!!mState.parameter.filtered);
     // measurement was calibrated
     BOOST_CHECK(!!mState.measurement.calibrated);
     // ref surface is same on measurements and parameters
     BOOST_CHECK(MeasurementHelpers::getSurface(*mState.measurement.calibrated)
                 == cylinder.get());
-    BOOST_CHECK(&(*mState.parametric.filtered).referenceSurface()
+    BOOST_CHECK(&(*mState.parameter.filtered).referenceSurface()
                 == cylinder.get());
 
     // assert contents of mState were updated

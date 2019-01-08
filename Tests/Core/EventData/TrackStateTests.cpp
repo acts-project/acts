@@ -83,19 +83,19 @@ namespace Test {
     // constructor from parameter vector: predicted filtered, smoothed
     BoundParameters ataPlane(nullptr, pars, plane);
 
-    // The parametric track state from the parameters
+    // The parameter track state from the parameters
     BoundTrackState pts(std::move(ataPlane));
 
-    // Test the copy constructor for a parametric state
+    // Test the copy constructor for a parameter state
     BoundTrackState ptsCopy(pts);
 
-    // Test the copy move constructor for a parametric state
+    // Test the copy move constructor for a parameter state
     BoundTrackState ptsCopyMove(std::move(ptsCopy));
 
-    // Test the copy assignment for a parametric state
+    // Test the copy assignment for a parameter state
     BoundTrackState ptsCopyAssigned = ptsCopyMove;
 
-    // Test the move assignment for a parametric state
+    // Test the move assignment for a parameter state
     BoundTrackState ptsMoveAssigned = std::move(ptsCopyAssigned);
 
     std::vector<BoundTrackState> trackStates
@@ -117,35 +117,35 @@ namespace Test {
 
     // Get the predicted parameters back from the trackState
     auto& ptsfList          = trackStates[2];
-    auto& ataPlanefListPred = ptsfList.parametric.predicted;
+    auto& ataPlanefListPred = ptsfList.parameter.predicted;
     BOOST_TEST(ataPlanefListPred);
 
     // Check that the other parameters are empty
-    auto& ataPlanefListUpdt = ptsfList.parametric.filtered;
+    auto& ataPlanefListUpdt = ptsfList.parameter.filtered;
     BOOST_TEST(!ataPlanefListUpdt);
 
-    auto& ataPlanefListSmthd = ptsfList.parametric.smoothed;
+    auto& ataPlanefListSmthd = ptsfList.parameter.smoothed;
     BOOST_TEST(!ataPlanefListSmthd);
 
     // Get the track States from the list
     auto& m2DfList = trackStates[1];
 
-    m2DfList.parametric.filtered = std::move(ataPlaneUpdt);
-    auto& ataPlanefListUpdtM2D   = m2DfList.parametric.filtered;
+    m2DfList.parameter.filtered = std::move(ataPlaneUpdt);
+    auto& ataPlanefListUpdtM2D  = m2DfList.parameter.filtered;
     BOOST_TEST(ataPlanefListUpdtM2D);
 
-    m2DfList.parametric.predicted = std::move(ataPlanePred);
-    auto& ataPlanefListPred2D     = m2DfList.parametric.predicted;
+    m2DfList.parameter.predicted = std::move(ataPlanePred);
+    auto& ataPlanefListPred2D    = m2DfList.parameter.predicted;
     BOOST_TEST(ataPlanefListPred2D);
 
     // Test the sorting helper
     BoundParameters ataPlaneAt1(nullptr, pars, plane);
     BoundTrackState ataPlaneState1(std::move(ataPlaneAt1));
-    ataPlaneState1.parametric.pathLength = 1.;
+    ataPlaneState1.parameter.pathLength = 1.;
 
     BoundParameters ataPlaneAt2(nullptr, pars, plane);
     BoundTrackState ataPlaneState2(std::move(ataPlaneAt2));
-    ataPlaneState2.parametric.pathLength = 2.;
+    ataPlaneState2.parameter.pathLength = 2.;
 
     std::vector<BoundTrackState> unorderedStates
         = {std::move(ataPlaneState2), std::move(ataPlaneState1)};
@@ -155,12 +155,12 @@ namespace Test {
     std::sort(unorderedStates.begin(), unorderedStates.end(), plSorter);
 
     auto firstOrdered = unorderedStates[0];
-    BOOST_TEST(firstOrdered.parametric.pathLength == 1.);
+    BOOST_TEST(firstOrdered.parameter.pathLength == 1.);
 
     auto secondOrdered = unorderedStates[1];
-    BOOST_TEST(secondOrdered.parametric.pathLength == 2.);
+    BOOST_TEST(secondOrdered.parameter.pathLength == 2.);
 
-    auto& pState = firstOrdered.parametric;
+    auto& pState = firstOrdered.parameter;
 
     BOOST_TEST(pState.pathLength == 1.);
 

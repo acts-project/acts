@@ -38,7 +38,6 @@ public:
   using Parameters = parameters_t;
   using Jacobian   = typename Parameters::CovMatrix_t;
 
-
   /// Constructor from (uncalibrated) measurement
   ///
   /// @tparam measurement_t Type of the measurement
@@ -55,8 +54,8 @@ public:
   /// @param p The parameters object
   TrackState(parameters_t p)
   {
-    surface              = &p.referenceSurface();
-    parametric.predicted = std::move(p);
+    surface             = &p.referenceSurface();
+    parameter.predicted = std::move(p);
   }
 
   /// Virtual destructor
@@ -67,7 +66,7 @@ public:
   /// @param rhs is the source TrackState
   TrackState(const TrackState& rhs)
     : surface(rhs.surface)
-    , parametric(rhs.parametric)
+    , parameter(rhs.parameter)
     , measurement(rhs.measurement)
   {
   }
@@ -77,7 +76,7 @@ public:
   /// @param rhs is the source TrackState
   TrackState(TrackState&& rhs)
     : surface(std::move(rhs.surface))
-    , parametric(std::move(rhs.parametric))
+    , parameter(std::move(rhs.parameter))
     , measurement(std::move(rhs.measurement))
   {
   }
@@ -89,7 +88,7 @@ public:
   operator=(const TrackState& rhs)
   {
     surface     = rhs.surface;
-    parametric  = rhs.parametric;
+    parameter   = rhs.parameter;
     measurement = rhs.measurement;
     return (*this);
   }
@@ -101,7 +100,7 @@ public:
   operator=(TrackState&& rhs)
   {
     surface     = std::move(rhs.surface);
-    parametric  = std::move(rhs.parametric);
+    parameter   = std::move(rhs.parameter);
     measurement = std::move(rhs.measurement);
     return (*this);
   }
@@ -141,7 +140,7 @@ public:
     boost::optional<Jacobian> jacobian{boost::none};
     /// The path length along the track - will help sorting
     double pathLength = 0.;
-  } parametric;
+  } parameter;
 
   /// @brief Nested measurement part
   /// This is the uncalibrated and calibrated measurement

@@ -356,9 +356,9 @@ private:
                    double>
             boundState = state.stepping.boundState(*surface, true);
 
-        trackState.parametric.predicted  = std::get<0>(boundState);
-        trackState.parametric.jacobian   = std::get<1>(boundState);
-        trackState.parametric.pathLength = std::get<2>(boundState);
+        trackState.parameter.predicted  = std::get<0>(boundState);
+        trackState.parameter.jacobian   = std::get<1>(boundState);
+        trackState.parameter.pathLength = std::get<2>(boundState);
 
         // If the update is successful, set covariance and
         if (m_updator(trackState)) {
@@ -366,12 +366,12 @@ private:
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Filtering step successful, updated parameters are : ";
-            dstream << *trackState.parametric.filtered;
+            dstream << *trackState.parameter.filtered;
             return dstream.str();
           });
           // update stepping state using filtered parameters
           // after kalman update
-          state.stepping.update(*trackState.parametric.filtered);
+          state.stepping.update(*trackState.parameter.filtered);
         }
         // We count the processed state
         ++result.processedStates;

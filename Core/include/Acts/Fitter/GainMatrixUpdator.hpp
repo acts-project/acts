@@ -62,12 +62,12 @@ public:
     // there should be no calibrated measurement
     assert(!trackState.measurement.calibrated);
     // we should have predicted state set
-    assert(trackState.parametric.predicted);
+    assert(trackState.parameter.predicted);
     // filtring should not have happened yet
-    assert(!trackState.parametric.filtered);
+    assert(!trackState.parameter.filtered);
 
     // read-only prediction handle
-    const parameters_t& predicted = *trackState.parametric.predicted;
+    const parameters_t& predicted = *trackState.parameter.predicted;
 
     const CovMatrix_t& predicted_covariance = *predicted.covariance();
 
@@ -120,7 +120,7 @@ public:
         filtered_parameters,
         predicted.referenceSurface().getSharedPtr());
 
-    trackState.parametric.filtered = std::move(filtered);
+    trackState.parameter.filtered = std::move(filtered);
 
     // always succeed, no outlier logic yet
     return true;

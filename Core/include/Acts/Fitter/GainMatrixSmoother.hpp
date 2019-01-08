@@ -41,7 +41,7 @@ public:
     CovMatrix_t smoothedCov;
 
     // For the last state: smoothed is filtered - also: switch to next
-    auto& lState    = rit->parametric;
+    auto& lState    = rit->parameter;
     lState.smoothed = lState.filtered.get();
 
     // Smoothing gain matrix
@@ -52,7 +52,7 @@ public:
     for (++rit; rit != filteredStates.rend(); ++rit) {
 
       // The current state
-      auto& cState = rit->parametric;
+      auto& cState = rit->parameter;
 
       /// Gain smoothing matrix
       G = (*cState.filtered.get().covariance())
