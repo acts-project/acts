@@ -395,7 +395,7 @@ private:
       result.smoothed = true;
 
       // Sort the TrackStates according to the path length
-      detail::path_length_sorter plSorter;
+      TrackStatePathLengthSorter plSorter;
       std::sort(
           result.fittedStates.begin(), result.fittedStates.end(), plSorter);
       // Screen output for debugging

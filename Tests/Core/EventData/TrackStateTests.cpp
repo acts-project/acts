@@ -14,7 +14,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
-#include "Acts/EventData/detail/trackstate_sorters.hpp"
+#include "Acts/EventData/TrackStateSorters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
@@ -155,7 +155,7 @@ namespace Test {
         = {std::move(ataPlaneState2), std::move(ataPlaneState1)};
 
     // Sort the variant track state
-    detail::path_length_sorter plSorter;
+    TrackStatePathLengthSorter plSorter;
     std::sort(unorderedStates.begin(), unorderedStates.end(), plSorter);
 
     auto firstOrdered = unorderedStates[0];
