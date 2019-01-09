@@ -25,7 +25,6 @@ class Surface;
 ///
 /// @tparam identifier_t Type of the identifier
 /// @tparam parameters_t Type of the parameters on the surface
-/// @tparam params Type list of the measurement type
 ///
 /// @note the Surface is only stored as a pointer, i.e. it is
 /// assumed the surface lives longer than the TrackState
@@ -113,8 +112,10 @@ public:
   }
 
   /// @brief number of Measured parameters, forwarded
+  /// @note This only returns a value if either of the measurements
+  ///       are set. If not, this returns boost::none
   ///
-  /// @return number of measured parameters
+  /// @return number of measured parameters, or boost::none
   boost::optional<size_t>
   size()
   {
