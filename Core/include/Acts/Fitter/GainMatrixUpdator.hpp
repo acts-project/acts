@@ -44,12 +44,12 @@ public:
   /// @brief Public call operator for the boost visitor pattern
   ///
   /// @tparam track_state_t Type of the track state for the update
-  /// @tparam predicted_state_t Type of the track state prediction
   ///
-  /// @param m the measured track state
-  /// @param predicted the predicted track state
+  /// @param trackState the measured track state
   ///
-  /// @return The optional parameters - indicating if the update happened
+  /// @return Bool indicating whether this update was 'successful'
+  /// @note Non-'successful' updates could be holes or outliers,
+  ///       which need to be treated differently in calling code.
   template <typename track_state_t>
   bool
   operator()(track_state_t& trackState) const
