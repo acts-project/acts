@@ -11,9 +11,9 @@
 #include <boost/variant.hpp>
 #include <memory>
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/EventData/detail/surface_getter.hpp"
-#include "Acts/EventData/detail/trackstate_sorters.hpp"
+#include "Acts/EventData/TrackStateSorters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"

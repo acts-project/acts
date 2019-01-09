@@ -20,18 +20,20 @@ namespace MeasurementHelpers {
   /// @brief Extract surface from a type erased measurement object
   /// @tparam M The FittableMeasurement type
   /// @return const pointer to the extracted surface
-  template <typename M>
+  template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
   const Surface*
-  getSurface(const M& fittable_measurement)
+  getSurface(
+      const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& fittable_measurement)
   {
     return boost::apply_visitor(
         [](const auto& meas) { return &meas.referenceSurface(); },
         fittable_measurement);
   }
 
-  template <typename M>
+  template <BOOST_VARIANT_ENUM_PARAMS(typename T)>
   size_t
-  getSize(const M& fittable_measurement)
+  getSize(
+      const boost::variant<BOOST_VARIANT_ENUM_PARAMS(T)>& fittable_measurement)
   {
     return boost::apply_visitor([](const auto& meas) { return meas.size(); },
                                 fittable_measurement);
