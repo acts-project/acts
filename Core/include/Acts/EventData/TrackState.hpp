@@ -44,7 +44,7 @@ public:
   /// @param m The measurement object
   TrackState(FittableMeasurement<identifier_t> m)
   {
-    this->surface            = MeasurementHelpers::getSurface(m);
+    m_surface                = MeasurementHelpers::getSurface(m);
     measurement.uncalibrated = std::move(m);
   }
 
@@ -54,7 +54,7 @@ public:
   /// @param p The parameters object
   TrackState(parameters_t p)
   {
-    surface             = &p.referenceSurface();
+    m_surface           = &p.referenceSurface();
     parameter.predicted = std::move(p);
   }
 
@@ -65,9 +65,9 @@ public:
   ///
   /// @param rhs is the source TrackState
   TrackState(const TrackState& rhs)
-    : surface(rhs.surface)
-    , parameter(rhs.parameter)
+    : parameter(rhs.parameter)
     , measurement(rhs.measurement)
+    , m_surface(rhs.m_surface)
   {
   }
 
@@ -75,9 +75,9 @@ public:
   ///
   /// @param rhs is the source TrackState
   TrackState(TrackState&& rhs)
-    : surface(std::move(rhs.surface))
-    , parameter(std::move(rhs.parameter))
+    : parameter(std::move(rhs.parameter))
     , measurement(std::move(rhs.measurement))
+    , m_surface(std::move(rhs.m_surface))
   {
   }
 
@@ -87,9 +87,9 @@ public:
   TrackState&
   operator=(const TrackState& rhs)
   {
-    surface     = rhs.surface;
     parameter   = rhs.parameter;
     measurement = rhs.measurement;
+    m_surface   = rhs.m_surface;
     return (*this);
   }
 
@@ -99,9 +99,9 @@ public:
   TrackState&
   operator=(TrackState&& rhs)
   {
-    surface     = std::move(rhs.surface);
     parameter   = std::move(rhs.parameter);
     measurement = std::move(rhs.measurement);
+    m_surface   = std::move(rhs.m_surface);
     return (*this);
   }
 
@@ -109,20 +109,23 @@ public:
   const Surface&
   referenceSurface() const
   {
-    return (*surface);
+    return (*m_surface);
   }
 
   /// @brief number of Measured parameters, forwarded
   ///
-  /// @return number of measured parameters as a static const expression
-  static constexpr unsigned int
+  /// @return number of measured parameters
+  boost::optional<size_t>
   size()
   {
-    return FittableMeasurement<identifier_t>::size();
+    if (this->measurement.uncalibrated) {
+      return MeasurementHelpers::getSize(*this->measurement.uncalibrated);
+    }
+    if (this->measurement.calibrated) {
+      return MeasurementHelpers::getSize(*this->measurement.calibrated);
+    }
+    return boost::none;
   }
-
-  /// The surface of this TrackState
-  const Surface* surface = nullptr;
 
   /// The parameter part
   /// This is all the information that concerns the
@@ -155,14 +158,7 @@ public:
   } measurement;
 
 private:
-  /// Assign the surface from an optional parameter
-  ///
-  /// @tparam Type of the optional parameter
-  template <typename optional_type_t>
-  void
-  assignSurface(const optional_type_t& optional)
-  {
-    surface = &(optional.template get().referenceSurface());
-  }
+  /// The surface of this TrackState
+  const Surface* m_surface = nullptr;
 };
 }

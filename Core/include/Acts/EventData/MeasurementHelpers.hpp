@@ -28,5 +28,13 @@ namespace MeasurementHelpers {
         [](const auto& meas) { return &meas.referenceSurface(); },
         fittable_measurement);
   }
+
+  template <typename M>
+  size_t
+  getSize(const M& fittable_measurement)
+  {
+    return boost::apply_visitor([](const auto& meas) { return meas.size(); },
+                                fittable_measurement);
+  }
 }
 }
