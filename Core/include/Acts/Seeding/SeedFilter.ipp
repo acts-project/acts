@@ -18,12 +18,6 @@ SeedFilter<SpacePoint>::SeedFilter(
 {
 }
 
-// destructor
-template <typename SpacePoint>
-SeedFilter<SpacePoint>::~SeedFilter()
-{
-}
-
 // function to filter seeds based on all seeds with same bottom- and
 // middle-spacepoint.
 // return vector must contain weight of each seed
@@ -56,16 +50,24 @@ SeedFilter<SpacePoint>::filterSeeds_2SpFixed(
 
     float weight = -(impact * m_cfg.impactWeightFactor);
     for (size_t j = 0; j < topSpVec.size(); j++) {
-      if (i == j) continue;
+      if (i == j) {
+        continue;
+      }
       // compared top SP should have at least deltaRMin distance
       float otherTop_r = topSpVec[j]->radius();
       float deltaR     = currentTop_r - otherTop_r;
-      if (std::abs(deltaR) < m_cfg.deltaRMin) continue;
+      if (std::abs(deltaR) < m_cfg.deltaRMin) {
+        continue;
+      }
       // curvature difference within limits?
       // TODO: how much slower than sorting all vectors by curvature
       // and breaking out of loop? i.e. is vector size large (e.g. in jets?)
-      if (invHelixDiameterVec[j] < lowerLimitCurv) continue;
-      if (invHelixDiameterVec[j] > upperLimitCurv) continue;
+      if (invHelixDiameterVec[j] < lowerLimitCurv) {
+        continue;
+      }
+      if (invHelixDiameterVec[j] > upperLimitCurv) {
+        continue;
+      }
       bool newCompSeed = true;
       for (float previousDiameter : compatibleSeedR) {
         // original ATLAS code uses higher min distance for 2nd found compatible
@@ -81,15 +83,18 @@ SeedFilter<SpacePoint>::filterSeeds_2SpFixed(
         compatibleSeedR.push_back(otherTop_r);
         weight += m_cfg.compatSeedWeight;
       }
-      if (compatibleSeedR.size() >= m_cfg.compatSeedLimit) break;
+      if (compatibleSeedR.size() >= m_cfg.compatSeedLimit) {
+        break;
+      }
     }
     if (m_experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
       weight += m_experimentCuts->seedWeight(bottomSP, middleSP, topSpVec[i]);
       // discard seeds according to detector specific cuts (e.g.: weight)
       if (!m_experimentCuts->singleSeedCut(
-              weight, bottomSP, middleSP, topSpVec[i]))
+              weight, bottomSP, middleSP, topSpVec[i])){
         continue;
+      }
     }
     selectedSeeds.push_back(
         std::make_pair(weight,

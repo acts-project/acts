@@ -24,17 +24,17 @@ class BinFinder : public IBinFinder<SpacePoint>
 {
 public:
   /// destructor
-  virtual ~BinFinder() = default;
+  ~BinFinder() override = default;
 
   /// Return all bins that could contain space points that can be used with the
   /// space points in the bin with the provided indices to create seeds.
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  virtual std::set<size_t>
+  std::set<size_t>
   findBins(size_t                            phiBin,
            size_t                            zBin,
-           const SpacePointGrid<SpacePoint>* binnedSP);
+           const SpacePointGrid<SpacePoint>* binnedSP) override;
 };
 }
 #include "Acts/Seeding/BinFinder.ipp"

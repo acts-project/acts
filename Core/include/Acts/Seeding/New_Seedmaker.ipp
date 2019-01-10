@@ -87,9 +87,13 @@ New_Seedmaker<SpacePoint>::initState(
     float             spY = sp->y();
     float             spZ = sp->z();
 
-    if (spZ > zMax || spZ < zMin) continue;
+    if (spZ > zMax || spZ < zMin) {
+      continue;
+    }
     float spPhi = std::atan2(spY, spX);
-    if (spPhi > phiMax || spPhi < phiMin) continue;
+    if (spPhi > phiMax || spPhi < phiMin) {
+      continue;
+    }
 
     // covariance tool provided by user
     Acts::Vector2D cov
@@ -152,22 +156,31 @@ New_Seedmaker<SpacePoint>::createSeedsForRegion(
         float rB     = spB->radius();
         float deltaR = rM - rB;
         // if r-distance is too big, try next SP in r-sorted bin
-        if (deltaR > m_config.deltaRMax) continue;
+        if (deltaR > m_config.deltaRMax) {
+          continue;
+        }
         // if r-distance is too small, break because bins are r-sorted
-        if (deltaR < m_config.deltaRMin) break;
+        if (deltaR < m_config.deltaRMin) {
+          break;
+        }
         // ratio Z/R (forward angle) of space point duplet
         float cotTheta = (zM - spB->z()) / deltaR;
-        if (std::fabs(cotTheta) > m_config.cotThetaMax) continue;
+        if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+          continue;
+        }
         // check if duplet origin on z axis within collision region
         float zOrigin = zM - rM * cotTheta;
         if (zOrigin < m_config.collisionRegionMin
-            || zOrigin > m_config.collisionRegionMax)
+            || zOrigin > m_config.collisionRegionMax) {
           continue;
+        }
         compatBottomSP.push_back(spB.get());
       }
     }
     // no bottom SP found -> try next spM
-    if (compatBottomSP.size() == 0) continue;
+    if (compatBottomSP.empty()) {
+      continue;
+    }
 
     std::vector<const InternalSpacePoint<SpacePoint>*> compatTopSP;
 
@@ -177,19 +190,28 @@ New_Seedmaker<SpacePoint>::createSeedsForRegion(
         float rT     = spT->radius();
         float deltaR = rT - rM;
         // this condition is the opposite of the condition for bottom SP
-        if (deltaR < m_config.deltaRMin) continue;
-        if (deltaR > m_config.deltaRMax) break;
+        if (deltaR < m_config.deltaRMin) {
+          continue;
+        }
+        if (deltaR > m_config.deltaRMax) {
+          break;
+        }
 
         float cotTheta = (spT->z() - zM) / deltaR;
-        if (std::fabs(cotTheta) > m_config.cotThetaMax) continue;
+        if (std::fabs(cotTheta) > m_config.cotThetaMax) {
+          continue;
+        }
         float zOrigin = zM - rM * cotTheta;
         if (zOrigin < m_config.collisionRegionMin
-            || zOrigin > m_config.collisionRegionMax)
+            || zOrigin > m_config.collisionRegionMax) {
           continue;
+        }
         compatTopSP.push_back(spT.get());
       }
     }
-    if (compatTopSP.size() == 0) continue;
+    if (compatTopSP.empty()) {
+      continue;
+    }
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
@@ -266,14 +288,16 @@ New_Seedmaker<SpacePoint>::createSeedsForRegion(
           // squared
           // (scattering is always positive)
 
-          if (dCotThetaMinusError2 > scatteringInRegion2) continue;
+          if (dCotThetaMinusError2 > scatteringInRegion2) {
+            continue;
+          }
         }
-        // float dCotThetaCorrected = deltaCotTheta*deltaCotTheta - error;
-        // if ( dCotThetaCorrected > scatteringInRegion2) continue;
 
         // protects against division by 0
         float dU = lt.U - Ub;
-        if (dU == 0.) continue;
+        if (dU == 0.) {
+          continue;
+        }
         // A and B are evaluated as a function of the circumference parameters
         // x_0 and y_0
         float A  = (lt.V - Vb) / dU;
@@ -282,7 +306,9 @@ New_Seedmaker<SpacePoint>::createSeedsForRegion(
         float B2 = B * B;
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
-        if (S2 < B2 * m_config.minHelixDiameter2) continue;
+        if (S2 < B2 * m_config.minHelixDiameter2) {
+          continue;
+        }
         // 1/helixradius: (B/sqrt(S2))/2 (we leave everything squared)
         float iHelixDiameter2 = B2 / S2;
         // calculate scattering for p(T) calculated from seed curvature
@@ -294,8 +320,9 @@ New_Seedmaker<SpacePoint>::createSeedsForRegion(
         // if deltaTheta larger than allowed scattering for calculated pT, skip
         if (deltaCotTheta2 - error2 > 0
             && dCotThetaMinusError2 > p2scatter * m_config.sigmaScattering
-                    * m_config.sigmaScattering)
+                    * m_config.sigmaScattering) {
           continue;
+        }
         // A and B allow calculation of impact params in U/V plane with linear
         // function
         // (in contrast to having to solve a quadratic function in x/y plane)
@@ -360,7 +387,7 @@ New_Seedmaker<SpacePoint>::transformCoordinates(
     float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
     float iDeltaR  = std::sqrt(iDeltaR2);
     //
-    int bottomFactor = 1 * (!bottom) - 1 * bottom;
+    int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
     // cot_theta = (deltaZ/deltaR)
     float cot_theta = deltaZ * iDeltaR * bottomFactor;
     // VERY frequent (SP^3) access

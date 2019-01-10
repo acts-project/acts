@@ -30,7 +30,7 @@ public:
                      const Acts::Vector2D& offsetXY,
                      const Acts::Vector2D& cov);
 
-  InternalSpacePoint(const InternalSpacePoint<SpacePoint>&);
+  InternalSpacePoint(const InternalSpacePoint<SpacePoint>& sp);
   ~InternalSpacePoint() = default;
 
   InternalSpacePoint<SpacePoint>&
@@ -59,7 +59,7 @@ public:
   float
   phi() const
   {
-    return atan2(m_y, m_x);
+    return atan2f(m_y, m_x);
   }
   const float&
   covr() const

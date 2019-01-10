@@ -45,10 +45,10 @@ template <typename SpacePoint>
 class SeedFilter
 {
 public:
-  SeedFilter(SeedFilterConfig cfg, IExperimentCuts<SpacePoint>* expCuts = 0);
+  SeedFilter(SeedFilterConfig config, IExperimentCuts<SpacePoint>* expCuts = 0);
 
   SeedFilter() = delete;
-  virtual ~SeedFilter();
+  //virtual ~SeedFilter();
 
   /// Create InternalSeeds for the all seeds with the same bottom and middle
   /// space point and discard all others.

@@ -49,7 +49,7 @@ class SpacePointGridCreator
 public:
   template <typename SpacePoint>
   static std::unique_ptr<SpacePointGrid<SpacePoint>>
-  createGrid(const Acts::SpacePointGridConfig& cfg);
+  createGrid(const Acts::SpacePointGridConfig& config);
 };
 }
 #include "Acts/Seeding/SpacePointGrid.ipp"

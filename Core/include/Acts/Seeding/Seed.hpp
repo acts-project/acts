@@ -20,12 +20,13 @@ class Seed
   /////////////////////////////////////////////////////////////////////////////////
 
 public:
-  Seed();
-  Seed(const SpacePoint*, const SpacePoint*, const SpacePoint*, float);
+  Seed(const SpacePoint* b,
+       const SpacePoint* m,
+       const SpacePoint* u,
+       float             vertex);
   Seed(const Seed&) = default;
-  Seed&
-  operator=(const Seed&);
-  virtual ~Seed();
+  Seed& operator=(const Seed&);
+
   const std::vector<const SpacePoint*>&
   sp() const
   {
@@ -47,11 +48,6 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-Seed<SpacePoint>::Seed()
-{
-}
-
-template <typename SpacePoint>
 Seed<SpacePoint>::Seed(const SpacePoint* b,
                        const SpacePoint* m,
                        const SpacePoint* u,
@@ -63,8 +59,4 @@ Seed<SpacePoint>::Seed(const SpacePoint* b,
   m_spacepoints.push_back(u);
 }
 
-template <typename SpacePoint>
-Seed<SpacePoint>::~Seed()
-{
-}
 }  // end of Acts namespace

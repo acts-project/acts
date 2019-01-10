@@ -8,9 +8,9 @@
 template <typename SpacePoint>
 std::set<size_t>
 Acts::BinFinder<SpacePoint>::findBins(
-    size_t                                  i,
-    size_t                                  j,
+    size_t                                  phiBin,
+    size_t                                  zBin,
     const Acts::SpacePointGrid<SpacePoint>* binnedSP)
 {
-  return binnedSP->neighborHoodIndices({i, j});
+  return binnedSP->neighborHoodIndices({phiBin, zBin});
 }
