@@ -2,8 +2,3 @@ add_executable (NewSeedingTest NewSeedingTest.cpp)
 target_link_libraries (NewSeedingTest PRIVATE ActsCore)
 add_test (NAME NewSeedingTests COMMAND NewSeedingTest)
 acts_add_test_to_cdash_project (PROJECT ACore TEST NewSeedingTests TARGETS NewSeedingTest)
-
-add_executable (TestTriplet TestTriplet.cpp)
-target_link_libraries (TestTriplet PRIVATE ActsCore)
-add_test (NAME TestTripletTests COMMAND TestTriplet)
-acts_add_test_to_cdash_project (PROJECT ACore TEST TestTripletTests TARGETS TestTriplet)
