@@ -32,8 +32,7 @@ public:
   /// @return a set containing the global bin indices for all bins potentially
   /// containing bottom resp. top space points that can be combined with the
   /// middle space points from the provided bin
-  virtual
-  std::set<size_t>
+  virtual std::set<size_t>
   findBins(size_t                            phiBin,
            size_t                            zBin,
            const SpacePointGrid<SpacePoint>* binnedSP)

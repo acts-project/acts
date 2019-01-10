@@ -59,22 +59,21 @@ public:
   /// @param origin on the z axis as defined by bottom and middle space point
   /// @return vector of pairs containing seed weight and seed for all valid
   /// created seeds
-  virtual
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-  filterSeeds_2SpFixed(
-      const InternalSpacePoint<SpacePoint>*               bottomSP,
-      const InternalSpacePoint<SpacePoint>*               middleSP,
-      std::vector<const InternalSpacePoint<SpacePoint>*>& topSpVec,
-      std::vector<float>&                                 invHelixDiameterVec,
-      std::vector<float>&                                 impactParametersVec,
-      float                                               zOrigin) const;
+  virtual std::
+      vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+      filterSeeds_2SpFixed(
+          const InternalSpacePoint<SpacePoint>*               bottomSP,
+          const InternalSpacePoint<SpacePoint>*               middleSP,
+          std::vector<const InternalSpacePoint<SpacePoint>*>& topSpVec,
+          std::vector<float>& invHelixDiameterVec,
+          std::vector<float>& impactParametersVec,
+          float               zOrigin) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
   /// for all seeds with the same middle space point
   /// @return vector of all InternalSeeds that not filtered out
-  virtual
-  void
+  virtual void
   filterSeeds_1SpFixed(
       std::vector<std::pair<float,
                             std::unique_ptr<const InternalSeed<SpacePoint>>>>&
