@@ -309,7 +309,7 @@ namespace Test {
 
     CHECK_CLOSE_REL(fittedParameters.parameters(),
                     fittedAgainParameters.parameters(),
-                    1e-6);
+                    1e-5);
 
     // Change the order of the measurements
     std::vector<TrackState> shuffledMeasurements = {measurements[3],
@@ -326,7 +326,7 @@ namespace Test {
 
     CHECK_CLOSE_REL(fittedParameters.parameters(),
                     fittedShuffledParameters.parameters(),
-                    1e-6);
+                    1e-5);
 
     // Remove one measurement and find a hole
     std::vector<TrackState> measurementsWithHole = {measurements[0],
