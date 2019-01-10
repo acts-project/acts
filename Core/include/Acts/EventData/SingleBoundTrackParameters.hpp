@@ -15,9 +15,8 @@ namespace Acts {
 /// @brief Charged and Neutrial Track Parameterisation classes bound to
 /// to a reference surface. This is a single-component representation
 ///
-/// @note surfaces are dealt as plain pointers as they might represent
-/// actual detector elements with their respective changeing alignment.
-/// This might be reviewed at later stage in the context of data locality.
+/// @note This class holds shared ownership on the surface it is associated
+///       to.
 ///
 /// Currently, the following strategy is implemented:
 /// * surfaces with a lifetime longer than an event, i.e. detector elements,
