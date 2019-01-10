@@ -24,11 +24,11 @@ namespace detail {
   struct Step
   {
 
-    ConstrainedStep       stepSize = 0.;
-    Vector3D              position = Vector3D(0., 0., 0.);
-    Vector3D              momentum = Vector3D(0., 0., 0.);
-    const Surface*        surface  = nullptr;
-    const TrackingVolume* volume   = nullptr;
+    ConstrainedStep                stepSize = 0.;
+    Vector3D                       position = Vector3D(0., 0., 0.);
+    Vector3D                       momentum = Vector3D(0., 0., 0.);
+    std::shared_ptr<const Surface> surface  = nullptr;
+    const TrackingVolume*          volume   = nullptr;
   };
 
   /// @brief a step length logger for debugging the stepping
@@ -62,8 +62,13 @@ namespace detail {
       step.stepSize = state.stepping.stepSize;
       step.position = state.stepping.position();
       step.momentum = state.stepping.momentum();
-      step.surface  = state.navigation.currentSurface;
-      step.volume   = state.navigation.currentVolume;
+
+      if (state.navigation.currentSurface != nullptr) {
+        // hang on to surface
+        step.surface = state.navigation.currentSurface->getSharedPtr();
+      }
+
+      step.volume = state.navigation.currentVolume;
       result.steps.push_back(std::move(step));
     }
 
