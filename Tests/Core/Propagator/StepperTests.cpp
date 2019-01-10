@@ -158,7 +158,7 @@ namespace Test {
         propOpts;
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
-    propOpts.maxSteps    = 1e6;
+    propOpts.maxSteps    = 100;
     propOpts.maxStepSize = 0.5 * units::_m;
 
     // Build stepper and propagator
@@ -201,7 +201,7 @@ namespace Test {
         propOptsDef;
     propOptsDef.actionList  = aListDef;
     propOptsDef.abortList   = abortList;
-    propOptsDef.maxSteps    = 1e6;
+    propOptsDef.maxSteps    = 100;
     propOptsDef.maxStepSize = 0.5 * units::_m;
 
     EigenStepper<ConstantBField,
@@ -277,7 +277,7 @@ namespace Test {
         propOpts;
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
-    propOpts.maxSteps    = 1e6;
+    propOpts.maxSteps    = 100;
     propOpts.maxStepSize = 0.5 * units::_m;
     propOpts.debug       = true;
 
@@ -329,7 +329,7 @@ namespace Test {
         propOptsDense;
     propOptsDense.actionList  = aList;
     propOptsDense.abortList   = abortList;
-    propOptsDense.maxSteps    = 1e6;
+    propOptsDense.maxSteps    = 100;
     propOptsDense.maxStepSize = 0.5 * units::_m;
     propOptsDense.debug       = true;
 
@@ -457,7 +457,7 @@ namespace Test {
         propOpts;
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
-    propOpts.maxSteps    = 1e6;
+    propOpts.maxSteps    = 100;
     propOpts.maxStepSize = 0.5 * units::_m;
 
     // Build stepper and propagator
@@ -520,7 +520,7 @@ namespace Test {
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
     propOptsDef.abortList            = abortList;
-    propOptsDef.maxSteps             = 1e6;
+    propOptsDef.maxSteps             = 100;
     propOptsDef.maxStepSize          = 0.5 * units::_m;
 
     // Build stepper and propagator
@@ -576,7 +576,7 @@ namespace Test {
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
     propOptsDense.abortList          = abortList;
-    propOptsDense.maxSteps           = 1e6;
+    propOptsDense.maxSteps           = 100;
     propOptsDense.maxStepSize        = 0.5 * units::_m;
     propOptsDense.tolerance          = 1e-8;
 
