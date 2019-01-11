@@ -25,7 +25,8 @@ public:
        const SpacePoint* u,
        float             vertex);
   Seed(const Seed&) = default;
-  Seed& operator=(const Seed&);
+  Seed&
+  operator=(const Seed&);
 
   const std::vector<const SpacePoint*>&
   sp() const

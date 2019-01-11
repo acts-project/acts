@@ -92,7 +92,7 @@ SeedFilter<SpacePoint>::filterSeeds_2SpFixed(
       weight += m_experimentCuts->seedWeight(bottomSP, middleSP, topSpVec[i]);
       // discard seeds according to detector specific cuts (e.g.: weight)
       if (!m_experimentCuts->singleSeedCut(
-              weight, bottomSP, middleSP, topSpVec[i])){
+              weight, bottomSP, middleSP, topSpVec[i])) {
         continue;
       }
     }

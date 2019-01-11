@@ -26,7 +26,7 @@ public:
   InternalSeed(const InternalSpacePoint<SpacePoint>* s0,
                const InternalSpacePoint<SpacePoint>* s1,
                const InternalSpacePoint<SpacePoint>* s2,
-               float z);
+               float                                 z);
   InternalSeed&
   operator=(const InternalSeed& seed);
 
@@ -64,6 +64,5 @@ inline InternalSeed<SpacePoint>::InternalSeed(
 {
   m_z = z;
 }
-
 
 }  // end of Acts namespace
