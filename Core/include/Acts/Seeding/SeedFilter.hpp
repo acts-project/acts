@@ -48,6 +48,7 @@ public:
   SeedFilter(SeedFilterConfig config, IExperimentCuts<SpacePoint>* expCuts = 0);
 
   SeedFilter() = delete;
+  virtual ~SeedFilter() = default;
 
   /// Create InternalSeeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
