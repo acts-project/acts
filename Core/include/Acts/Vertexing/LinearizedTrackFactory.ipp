@@ -17,7 +17,7 @@ Acts::LinearizedTrack* Acts::LinearizedTrackFactory<BField>::linearizeTrack(cons
 {
 	if (!params) return nullptr;
 
-    const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface = std::make_shared<Acts::PerigeeSurface>(linPoint);
+    const std::shared_ptr<Acts::PerigeeSurface> perigeeSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(linPoint);
 
 	Acts::EigenStepper<BField> stepper(m_cfg.bField);
 	

@@ -262,7 +262,7 @@ Acts::Vertex Acts::FullVertexFitter<BField>::fit(const std::vector<Acts::BoundPa
 
 			std::vector<std::unique_ptr<Acts::TrackAtVertex>> tracksAtVertex;
 			
-			std::shared_ptr<Acts::PerigeeSurface> perigee = std::make_shared<Acts::PerigeeSurface>(vertexPos);
+			std::shared_ptr<Acts::PerigeeSurface> perigee = Acts::Surface::makeShared<Acts::PerigeeSurface>(vertexPos);
 
 			int i_track = 0;
 			for(auto& bTrack : billoirTracks){
