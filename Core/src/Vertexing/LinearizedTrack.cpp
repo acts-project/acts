@@ -20,18 +20,6 @@ Acts::LinearizedTrack::LinearizedTrack()
   m_ConstTerm.setZero();
 }
 
-Acts::LinearizedTrack::LinearizedTrack(const Acts::LinearizedTrack& other)
-  : m_ParamsAtPCA(other.m_ParamsAtPCA)
-  , m_ParCovarianceAtPCA(other.m_ParCovarianceAtPCA)
-  , m_LinPoint(other.m_LinPoint)
-  , m_PositionJacobian(other.m_PositionJacobian)
-  , m_MomentumJacobian(other.m_MomentumJacobian)
-  , m_PositionAtPCA(other.m_PositionAtPCA)
-  , m_MomentumAtPCA(other.m_MomentumAtPCA)
-  , m_ConstTerm(other.m_ConstTerm)
-{
-}
-
 Acts::LinearizedTrack::LinearizedTrack(
     const Acts::ActsVectorD<5>&    paramsAtPCA,
     const Acts::ActsSymMatrixD<5>& parCovarianceAtPCA,
@@ -66,8 +54,4 @@ Acts::LinearizedTrack::operator=(const Acts::LinearizedTrack& other)
     m_ConstTerm          = other.m_ConstTerm;
   }
   return *this;
-}
-
-Acts::LinearizedTrack::~LinearizedTrack()
-{
 }

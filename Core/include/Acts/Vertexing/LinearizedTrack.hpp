@@ -36,7 +36,7 @@ public:
   LinearizedTrack();
 
   /// Copy constructor
-  LinearizedTrack(const LinearizedTrack& other);
+  LinearizedTrack(const LinearizedTrack& other) = default;
 
   /**
    * Constructor taking perigee parameters and covariance matrix
@@ -54,10 +54,10 @@ public:
 
   /// Assignment operator
   LinearizedTrack&
-  operator=(const LinearizedTrack&);
+  operator=(const LinearizedTrack& other);
 
   /// Default constructor
-  virtual ~LinearizedTrack();
+  virtual ~LinearizedTrack() = default;
 
   const Acts::ActsVectorD<5>&
   parametersAtPCA() const
