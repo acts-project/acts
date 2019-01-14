@@ -8,7 +8,9 @@
 
 #include "Acts/Vertexing/Vertex.hpp"
 
-Acts::Vertex::Vertex(){}
+Acts::Vertex::Vertex()
+{
+}
 
 Acts::Vertex::Vertex(const Acts::Vector3D&          position,
                      const Acts::ActsSymMatrixD<3>& covariance,
