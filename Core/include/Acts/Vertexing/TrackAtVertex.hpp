@@ -10,41 +10,43 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 
-namespace Acts{
+namespace Acts {
 
-class TrackAtVertex{
+class TrackAtVertex
+{
 public:
+  /// Deleted default constructor
+  TrackAtVertex() = delete;
 
-	/// Deleted default constructor
-	TrackAtVertex() = delete;
+  /// Parameterized constructor
+  /// @param chi2perTrack Chi2 of track
+  /// @param paramsAtVertex Fitted perigee parameter
+  /// @param originalParams Original perigee parameter
+  TrackAtVertex(const double&                chi2perTrack,
+                const Acts::BoundParameters& paramsAtVertex,
+                const Acts::BoundParameters& originalParams);
 
-	/// Parameterized constructor
-	/// @param chi2perTrack Chi2 of track
-	/// @param paramsAtVertex Fitted perigee parameter
-	/// @param originalParams Original perigee parameter
-	TrackAtVertex(const double& chi2perTrack, 
-				  const Acts::BoundParameters& paramsAtVertex,
-				  const Acts::BoundParameters& originalParams);
+  /// Returns chi2 of track
+  double
+  chi2() const;
 
-	/// Returns chi2 of track
-	double chi2() const;
+  /// Returns fitted perigee
+  const Acts::BoundParameters&
+  fittedPerigee() const;
 
-	/// Returns fitted perigee
-	const Acts::BoundParameters& fittedPerigee() const;
-
-	/// Returns original perigee
-	const Acts::BoundParameters& originalPerigee() const;
+  /// Returns original perigee
+  const Acts::BoundParameters&
+  originalPerigee() const;
 
 private:
+  /// Chi2 of track
+  const double m_chi2Track;
 
-	/// Chi2 of track
-	const double m_chi2Track;
+  /// Fitted perigee
+  Acts::BoundParameters m_paramsAtVertex;
 
-	/// Fitted perigee
-	Acts::BoundParameters m_paramsAtVertex;
-
-	/// Original perigee
-	Acts::BoundParameters m_originalParams;
+  /// Original perigee
+  Acts::BoundParameters m_originalParams;
 };
 
-} // namespace Acts
+}  // namespace Acts

@@ -11,40 +11,43 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 
-namespace Acts{
+namespace Acts {
 
-class Vertex{
+class Vertex
+{
 
 public:
-	/// Default constructor
-	Vertex();
+  /// Default constructor
+  Vertex();
 
-	Vertex(const Acts::Vector3D& position,
-		   const Acts::ActsSymMatrixD<3>& covariance,
-		   std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks);
+  Vertex(const Acts::Vector3D&                              position,
+         const Acts::ActsSymMatrixD<3>&                     covariance,
+         std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks);
 
+  /// Return 3-position
+  const Acts::Vector3D&
+  position() const;
+  /// Return covariance
+  const Acts::ActsSymMatrixD<3>&
+  covariance() const;
 
-	/// Return 3-position
-	const Acts::Vector3D& position() const;
-	/// Return covariance
-	const Acts::ActsSymMatrixD<3>& covariance() const;
+  const std::vector<std::unique_ptr<Acts::TrackAtVertex>>&
+  tracks() const;
 
-	const std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks() const;
-
-
-	/// Set 3-position
-	void setPosition(const Acts::Vector3D& position);
-	/// Set covariance
-	void setCovariance(const Acts::ActsSymMatrixD<3>& covariance);
-	/// Set tracks at vertex
-	void setTracksAtVertex(
-		std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks);
+  /// Set 3-position
+  void
+  setPosition(const Acts::Vector3D& position);
+  /// Set covariance
+  void
+  setCovariance(const Acts::ActsSymMatrixD<3>& covariance);
+  /// Set tracks at vertex
+  void
+  setTracksAtVertex(std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks);
 
 private:
-	Acts::Vector3D 			m_position;
-	Acts::ActsSymMatrixD<3> m_covariance;
-	std::vector<std::unique_ptr<Acts::TrackAtVertex>> m_tracksAtVertex;
+  Acts::Vector3D                                    m_position;
+  Acts::ActsSymMatrixD<3>                           m_covariance;
+  std::vector<std::unique_ptr<Acts::TrackAtVertex>> m_tracksAtVertex;
 };
 
-} // namespace Acts
-
+}  // namespace Acts
