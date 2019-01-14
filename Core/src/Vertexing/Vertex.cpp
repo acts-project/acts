@@ -12,7 +12,7 @@ Acts::Vertex::Vertex() = default;
 
 Acts::Vertex::Vertex(const Acts::Vector3D&          position,
                      const Acts::ActsSymMatrixD<3>& covariance,
-                     std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks)
+                     std::vector<std::shared_ptr<Acts::TrackAtVertex>>& tracks)
   : m_position(position)
   , m_covariance(covariance)
   , m_tracksAtVertex(std::move(tracks))
@@ -31,7 +31,7 @@ Acts::Vertex::covariance() const
   return m_covariance;
 }
 
-const std::vector<std::unique_ptr<Acts::TrackAtVertex>>&
+const std::vector<std::shared_ptr<Acts::TrackAtVertex>>&
 Acts::Vertex::tracks() const
 {
   return m_tracksAtVertex;
@@ -51,7 +51,7 @@ Acts::Vertex::setCovariance(const Acts::ActsSymMatrixD<3>& covariance)
 
 void
 Acts::Vertex::setTracksAtVertex(
-    std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks)
+    std::vector<std::shared_ptr<Acts::TrackAtVertex>>& tracks)
 {
   m_tracksAtVertex = std::move(tracks);
 }

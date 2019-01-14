@@ -22,7 +22,7 @@ public:
 
   Vertex(const Acts::Vector3D&                              position,
          const Acts::ActsSymMatrixD<3>&                     covariance,
-         std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks);
+         std::vector<std::shared_ptr<Acts::TrackAtVertex>>& tracks);
 
   /// Return 3-position
   const Acts::Vector3D&
@@ -31,7 +31,7 @@ public:
   const Acts::ActsSymMatrixD<3>&
   covariance() const;
 
-  const std::vector<std::unique_ptr<Acts::TrackAtVertex>>&
+  const std::vector<std::shared_ptr<Acts::TrackAtVertex>>&
   tracks() const;
 
   /// Set 3-position
@@ -42,12 +42,12 @@ public:
   setCovariance(const Acts::ActsSymMatrixD<3>& covariance);
   /// Set tracks at vertex
   void
-  setTracksAtVertex(std::vector<std::unique_ptr<Acts::TrackAtVertex>>& tracks);
+  setTracksAtVertex(std::vector<std::shared_ptr<Acts::TrackAtVertex>>& tracks);
 
 private:
   Acts::Vector3D                                    m_position;
   Acts::ActsSymMatrixD<3>                           m_covariance;
-  std::vector<std::unique_ptr<Acts::TrackAtVertex>> m_tracksAtVertex;
+  std::vector<std::shared_ptr<Acts::TrackAtVertex>> m_tracksAtVertex;
 };
 
 }  // namespace Acts

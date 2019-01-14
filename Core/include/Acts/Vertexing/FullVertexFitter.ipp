@@ -287,7 +287,7 @@ Acts::FullVertexFitter<BField>::fit(
       fittedVertex.setPosition(vertexPos);
       fittedVertex.setCovariance(cov_delta_V_mat);
 
-      std::vector<std::unique_ptr<Acts::TrackAtVertex>> tracksAtVertex;
+      std::vector<std::shared_ptr<Acts::TrackAtVertex>> tracksAtVertex;
 
       std::shared_ptr<Acts::PerigeeSurface> perigee
           = Acts::Surface::makeShared<Acts::PerigeeSurface>(vertexPos);
@@ -303,8 +303,8 @@ Acts::FullVertexFitter<BField>::fit(
         Acts::BoundParameters refittedParams(
             std::move(cov_delta_P_mat[i_track]), paramVec, perigee);
 
-        std::unique_ptr<Acts::TrackAtVertex> trackVx
-            = std::make_unique<Acts::TrackAtVertex>(
+        std::shared_ptr<Acts::TrackAtVertex> trackVx
+            = std::make_shared<Acts::TrackAtVertex>(
                 bTrack.chi2, refittedParams, bTrack.originalParams);
         tracksAtVertex.push_back(std::move(trackVx));
         ++i_track;
