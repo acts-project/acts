@@ -189,6 +189,9 @@ template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final
 {
 public:
+  /// Type of the stepper in use for public scope
+  using Stepper = stepper_t;
+
   /// Type of state object used by the propagation implementation
   using StepperState = typename stepper_t::template state_type<TrackParameters>;
 
@@ -203,7 +206,6 @@ public:
     : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
   {
   }
-
 
   /// @brief private Propagator state for navigation and debugging
   ///
@@ -224,7 +226,7 @@ public:
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param tabs The internal target aborters created in the call nethod
-    template<typename parameters_t>
+    template <typename parameters_t>
     State(const parameters_t& start, const propagator_options_t& topts)
       : options(topts), stepping(start, options.direction, options.maxStepSize)
     {
@@ -241,6 +243,7 @@ public:
     /// Navigation state - internal state of the Navigator
     NavigatorState navigation;
   };
+
 private:
   /// @brief Helper struct determining the result's type
   ///
@@ -302,7 +305,7 @@ private:
     debugLog(state, [&] { return std::string("Entering propagation."); });
 
     // Navigator initialize state call
-    m_navigator.template status<stepper_t, decltype(state.options)>(state);
+    m_navigator.template status<propagator_state_t, stepper_t>(state);
     // Pre-Stepping call to the action list
     state.options.actionList(state, result);
     // assume negative outcome, only set to true later if we actually have
@@ -312,7 +315,7 @@ private:
     // Pre-Stepping: abort condition check
     if (!state.options.abortList(result, state)) {
       // Pre-Stepping: target setting
-      m_navigator.target(state);
+      m_navigator.template target<propagator_state_t, stepper_t>(state);
       // Stepping loop
       debugLog(state, [&] { return std::string("Starting stepping loop."); });
       // Propagation loop : stepping
@@ -331,13 +334,13 @@ private:
         });
         // Post-step
         // navigator status call - action list - aborter list - target call
-        m_navigator.template status<stepper_t, decltype(state.options)>(state);
+        m_navigator.template status<propagator_state_t, stepper_t>(state);
         state.options.actionList(state, result);
         if (state.options.abortList(result, state)) {
           terminatedNormally = true;
           break;
         }
-        m_navigator.target(state);
+        m_navigator.template target<propagator_state_t, stepper_t>(state);
       }
     }
 
@@ -509,13 +512,6 @@ public:
     }
     return result;
   }
-
-//~ template<typename propagator_state_t>
-//~ auto
-//~ corrector(const propagator_state_t& state)
-//~ {
-	//~ return m_stepper.corrector(state.stepping);
-//~ }
 
 private:
   /// Implementation of propagation algorithm

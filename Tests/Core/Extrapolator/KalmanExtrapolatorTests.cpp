@@ -35,6 +35,7 @@ namespace Test {
   ///
   /// @brief the bound state propagation
   ///
+  template <typename stepper_t>
   struct StepWiseActor
   {
 
@@ -67,7 +68,7 @@ namespace Test {
       auto surface = state.navigation.currentSurface;
       if (surface and surface->associatedDetectorElement()) {
         // Create a bound state and log the jacobian
-        auto boundState = state.stepping.boundState(*surface, true);
+        auto boundState = stepper_t::boundState(state.stepping, *surface, true);
         result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
         result.paths.push_back(std::get<double>(boundState));
       }
@@ -131,8 +132,8 @@ namespace Test {
         std::move(covPtr), pos, mom, 1.);
 
     // Create the ActionList and AbortList
-    using StepWiseResult = StepWiseActor::result_type;
-    using StepWiseActors = ActionList<StepWiseActor>;
+    using StepWiseResult = StepWiseActor<Stepper>::result_type;
+    using StepWiseActors = ActionList<StepWiseActor<Stepper>>;
     using Aborters       = AbortList<detail::EndOfWorldReached>;
 
     // Create some options

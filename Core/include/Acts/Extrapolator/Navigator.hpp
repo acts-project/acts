@@ -16,8 +16,8 @@
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Layers/Layer.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 
@@ -215,26 +215,26 @@ public:
   /// Unique typedef to publish to the Propagator
   using state_type = State;
 
-  /// @brief Navigator status call, will be called in two modes
-  ///
-  /// (a) It initializes the Navigation stream if start volume is
-  ///     not yet defined:
-  ///  - initialize the volume
-  ///  - establish the start layer and start volume
-  ///  - set the current surface to the start surface
-  ///
-  /// (b) It establishes the currentSurface status during
-  ///     the propagation flow, currentSurface can be
-  ///  - surfaces still to be handled within a layer
-  ///  - layers still to be handled within a volume
-  ///  - boundaries still to be handled to exit a volume
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  ///
-  /// @param[in,out] state is the mutable propagator state object
-  template <typename stepper_t,  typename propagator_options_t>
+  //~ /// @brief Navigator status call, will be called in two modes
+  //~ ///
+  //~ /// (a) It initializes the Navigation stream if start volume is
+  //~ ///     not yet defined:
+  //~ ///  - initialize the volume
+  //~ ///  - establish the start layer and start volume
+  //~ ///  - set the current surface to the start surface
+  //~ ///
+  //~ /// (b) It establishes the currentSurface status during
+  //~ ///     the propagation flow, currentSurface can be
+  //~ ///  - surfaces still to be handled within a layer
+  //~ ///  - layers still to be handled within a volume
+  //~ ///  - boundaries still to be handled to exit a volume
+  //~ ///
+  //~ /// @tparam propagator_state_t is the type of Propagatgor state
+  //~ ///
+  //~ /// @param[in,out] state is the mutable propagator state object
+  template <typename propagator_options_t, typename stepper_t>
   void
-  status(typename Propagator<stepper_t, Navigator>::template State<propagator_options_t>& state) const
+  status(propagator_options_t& state) const
   {
     // Check if the navigator is inactive
     if (inactive(state)) {
@@ -317,10 +317,8 @@ public:
         // Update volume information
         // get the attached volume information
         auto boundary = state.navigation.navBoundaryIter->object;
-        state.navigation.currentVolume
-            = boundary->attachedVolume(state.stepping.position(),
-                                       state.stepping.direction(),
-                                       state.stepping.navDir);
+        state.navigation.currentVolume = boundary->attachedVolume(
+            state.stepping.pos, state.stepping.dir, state.stepping.navDir);
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           debugLog(state, [&] {
@@ -358,19 +356,19 @@ public:
     return;
   }
 
-  /// @brief Navigator target call
-  ///
-  /// Call options
-  /// (a) there are still surfaces to be resolved: handle those
-  /// (b) there no surfaces but still layers to be resolved, handle those
-  /// (c) there are no surfaces nor layers to be resolved, handle boundary
-  ///
-  /// @tparam propagator_state_t is the type of Propagatgor state
-  ///
-  /// @param[in,out] state is the mutable propagator state object
-  template <typename propagator_state_t>
+  //~ /// @brief Navigator target call
+  //~ ///
+  //~ /// Call options
+  //~ /// (a) there are still surfaces to be resolved: handle those
+  //~ /// (b) there no surfaces but still layers to be resolved, handle those
+  //~ /// (c) there are no surfaces nor layers to be resolved, handle boundary
+  //~ ///
+  //~ /// @tparam propagator_state_t is the type of Propagatgor state
+  //~ ///
+  //~ /// @param[in,out] state is the mutable propagator state object
+  template <typename propagator_options_t, typename stepper_t>
   void
-  target(propagator_state_t& state) const
+  target(propagator_options_t& state) const
   {
     // Check if the navigator is inactive
     if (inactive(state)) {
@@ -381,7 +379,7 @@ public:
     debugLog(state, [&] { return std::string("Entering navigator::target."); });
 
     // Get a  navigation corrector associated to the stepper
-    auto navCorr = corrector(state.stepping);
+    auto navCorr = stepper_t::corrector(state.stepping);
 
     // Initialize the target and target volume
     if (state.navigation.targetSurface and not state.navigation.targetVolume) {
@@ -472,16 +470,14 @@ private:
       // current volume and layer search through global search
       debugLog(state, [&] {
         std::stringstream dstream;
-        dstream << "Starting from position "
-                << toString(state.stepping.position());
-        dstream << " and direction " << toString(state.stepping.direction());
+        dstream << "Starting from position " << toString(state.stepping.pos);
+        dstream << " and direction " << toString(state.stepping.dir);
         return dstream.str();
       });
       state.navigation.startVolume
-          = trackingGeometry->lowestTrackingVolume(state.stepping.position());
+          = trackingGeometry->lowestTrackingVolume(state.stepping.pos);
       state.navigation.startLayer = state.navigation.startVolume
-          ? state.navigation.startVolume->associatedLayer(
-                state.stepping.position())
+          ? state.navigation.startVolume->associatedLayer(state.stepping.pos)
           : nullptr;
       // Set the start volume as current volume
       state.navigation.currentVolume = state.navigation.startVolume;
@@ -525,7 +521,7 @@ private:
     // If we are on the surface pointed at by the iterator, we can make
     // it the current one to pass it to the other actors
     if (surface->isOnSurface(
-            state.stepping.position(), state.stepping.momentum(), true)) {
+            state.stepping.pos, state.stepping.momentum(), true)) {
       debugLog(state, [&] {
         return std::string("Status Surface successfully hit, storing it.");
       });
@@ -1178,7 +1174,7 @@ private:
       }
       // the only advance could have been to the target
       if (state.navigation.targetSurface->isOnSurface(
-              state.stepping.position(), state.stepping.momentum(), true)) {
+              state.stepping.pos, state.stepping.momentum(), true)) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
 

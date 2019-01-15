@@ -90,6 +90,7 @@ public:
   /// @tparam input_measurements_t Type of the fittable measurements
   /// @tparam parameters_t Type of the initial parameters
   /// @tparam surface_t Type of the reference surface
+  /// @tparam stepper_t Type of the stepper
   ///
   /// @param measurements The fittable measurements
   /// @param sParameters The initial track parameters
@@ -108,7 +109,8 @@ public:
     auto trackStates = m_inputConverter(measurements);
 
     // Create the ActionList and AbortList
-    using KalmanActor  = Actor<decltype(trackStates)>;
+    using KalmanActor
+        = Actor<decltype(trackStates), typename propagator_t::Stepper>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors       = ActionList<KalmanActor>;
     using Aborters     = AbortList<>;
@@ -145,6 +147,7 @@ private:
   ///
   /// @tparam track_states_t is any iterable std::container of
   /// boost::variant TrackState objects.
+  /// @tparam stepper_t Type of the stepper
   ///
   /// @tparam updator_t The Kalman updator used for this fitter
   ///
@@ -153,7 +156,7 @@ private:
   ///
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
-  template <typename track_states_t>
+  template <typename track_states_t, typename stepper_t>
   class Actor
   {
   public:
@@ -247,7 +250,8 @@ private:
       // parameters
       if (result.smoothed and targetReached(state, *targetSurface)) {
         // Transport & bind the parameter to the final surface
-        auto fittedState = state.stepping.boundState(*targetSurface, true);
+        auto fittedState
+            = stepper_t::boundState(state.stepping, *targetSurface, true);
         // Assign the fitted parameters
         result.fittedParameters = std::get<BoundParameters>(fittedState);
         // Break the navigation for stopping the Propagation
@@ -354,7 +358,7 @@ private:
         std::tuple<BoundParameters,
                    typename TrackState::Parameters::CovMatrix_t,
                    double>
-            boundState = state.stepping.boundState(*surface, true);
+            boundState = state.stepping.boundState(state.stepping, *surface, true);
 
         trackState.parameter.predicted  = std::get<0>(boundState);
         trackState.parameter.jacobian   = std::get<1>(boundState);
@@ -371,7 +375,7 @@ private:
           });
           // update stepping state using filtered parameters
           // after kalman update
-          state.stepping.update(*trackState.parameter.filtered);
+          state.stepping.update(state.stepping, *trackState.parameter.filtered);
         }
         // We count the processed state
         ++result.processedStates;
@@ -415,7 +419,7 @@ private:
           return std::string("Smoothing successful, updating stepping state, "
                              "set target surface.");
         });
-        state.stepping.update(smoothedPars.get());
+        stepper_t::update(state.stepping, smoothedPars.get());
         // Reverse the propagation direction
         state.stepping.stepSize
             = detail::ConstrainedStep(-1. * state.options.maxStepSize);

@@ -49,6 +49,7 @@ struct MaterialInteraction
 /// This is a plugin to the Propagator that
 /// performs material interaction on the currentSurface
 /// of the Propagagor state
+template <typename stepper_t>
 struct MaterialInteractor
 {
 
@@ -94,9 +95,9 @@ struct MaterialInteractor
   ///
   /// @param state is the mutable propagator state object
   /// @param result is the mutable result state object
-  template <template <typename, typename> class propagator_t, typename stepper_t, typename navigator_t, typename propagator_state_t>
+  template <typename propagator_state_t>
   void
-  operator()(typename propagator_t<stepper_t, navigator_t>::propagator_state_t& state, result_type& result) const
+  operator()(propagator_state_t& state, result_type& result) const
   {
 
     // If we are on target, everything should have been done
@@ -139,7 +140,7 @@ struct MaterialInteractor
       const SurfaceMaterial* sMaterial
           = state.navigation.currentSurface->associatedMaterial();
       MaterialProperties mProperties = sMaterial->materialProperties(
-          state.stepping.pos, state.stepping.navDir, mStage);
+          state.stepping.position(), state.stepping.navDir, mStage);
       // Material properties (non-zero) have been found for this configuration
       if (mProperties) {
         // more debugging output to the screen
@@ -155,7 +156,7 @@ struct MaterialInteractor
         // the covariance to the current position in space
         // the 'true' indicates re-initializaiton of the further transport
         if (state.stepping.covTransport) {
-          state.stepping.covarianceTransport(true);
+          stepper_t::covarianceTransport(state.stepping, true);
         }
 
         // Calculate the path correction

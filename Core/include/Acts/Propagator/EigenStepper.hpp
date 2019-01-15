@@ -38,7 +38,7 @@ namespace Acts {
 /// p its momentum and B the magnetic field
 ///
 template <typename BField,
-		  typename corrector_t = VoidIntersectionCorrector,
+          typename corrector_t     = VoidIntersectionCorrector,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t    = detail::VoidAuctioneer>
 class EigenStepper
@@ -106,33 +106,34 @@ public:
       }
     }
 
-    //~ /// Global particle position accessor
-    //~ Vector3D
-    //~ position() const
-    //~ {
-      //~ return pos;
-    //~ }
+    // TODO: These getter are mostly used by the detector description
+    /// Global particle position accessor
+    Vector3D
+    position() const
+    {
+      return pos;
+    }
 
-    //~ /// Momentum direction accessor
-    //~ Vector3D
-    //~ direction() const
-    //~ {
-      //~ return dir;
-    //~ }
+    /// Momentum direction accessor
+    Vector3D
+    direction() const
+    {
+      return dir;
+    }
 
-    //~ /// Actual momentum accessor
-    //~ Vector3D
-    //~ momentum() const
-    //~ {
-      //~ return p * dir;
-    //~ }
+    /// Actual momentum accessor
+    Vector3D
+    momentum() const
+    {
+      return p * dir;
+    }
 
-    //~ /// Charge access
-    //~ double
-    //~ charge() const
-    //~ {
-      //~ return q;
-    //~ }
+    /// Charge access
+    double
+    charge() const
+    {
+      return q;
+    }
 
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
@@ -253,7 +254,7 @@ public:
   void
   convert(State& state, result_t& result, const surface_t& surface) const
   {
-    auto  bs      = boundState(surface);
+    auto  bs              = boundState(state, surface);
     auto& boundParameters = std::get<BoundParameters>(bs);
     // Fill the end parameters, @todo error handling
     result.endParameters
@@ -318,204 +319,257 @@ public:
       return bState;
     }
 
-    /// Create and return a curvilinear state at the current position
-    ///
-    /// @brief This transports (if necessary) the covariance
-    /// to the current position and creates a curvilinear state.
-    ///
-    /// @param reinitialize Boolean flag whether reinitialization is needed
-    ///        i.e. if this is an intermediate state of a larger propagation
-    ///
-    /// @return A curvilinear state:
-    ///   - the curvilinear parameters at given position
-    ///   - the stepweise jacobian towards it (from last bound)
-    ///   - and the path length (from start - for ordering)
-    CurvilinearState
-    curvilinearState(State& state, bool reinitialize = true) const
-    {
-      // Transport the covariance to here
-      std::unique_ptr<const Covariance> covPtr = nullptr;
-      if (state.covTransport) {
-        covarianceTransport(reinitialize);
-        covPtr = std::make_unique<const Covariance>(state.cov);
-      }
-      // Create the curvilinear parameters
-      CurvilinearParameters parameters(std::move(covPtr), state.pos, state.p * state.dir, state.q);
-      // Create the bound state
-      CurvilinearState curvState{
-          std::move(parameters), state.jacobian, state.pathAccumulated};
-      // Reset the jacobian to identity
-      if (reinitialize) {
-        state.jacobian = Jacobian::Identity();
-      }
-      /// Return the State
-      return curvState;
+  /// Create and return the bound state at the current position
+  ///
+  /// @brief This transports (if necessary) the covariance
+  /// to the surface and creates a bound state. It does not check
+  /// if the transported state is at the surface, this needs to
+  /// be guaranteed by the propagator
+  ///
+  /// @tparam surface_t The Surface type where this is bound to
+  ///
+  /// @param surface The surface to which we bind the state
+  /// @param reinitialize Boolean flag whether reinitialization is needed,
+  ///        i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return A bound state:
+  ///   - the parameters at the surface
+  ///   - the stepwise jacobian towards it (from last bound)
+  ///   - and the path length (from start - for ordering)
+  template <typename surface_t>
+  static BoundState
+  boundState(State& state, const surface_t& surface, bool reinitialize = true)
+  {
+    // Transport the covariance to here
+    std::unique_ptr<const Covariance> covPtr = nullptr;
+    if (state.covTransport) {
+      covarianceTransport(state, surface, reinitialize);
+      covPtr = std::make_unique<const Covariance>(state.cov);
     }
+    // Create the bound parameters
+    BoundParameters parameters(std::move(covPtr),
+                               state.pos,
+                               state.p * state.dir,
+                               state.q,
+                               surface.getSharedPtr());
+    // Create the bound state
+    BoundState bState{
+        std::move(parameters), state.jacobian, state.pathAccumulated};
+    // Reset the jacobian to identity
+    if (reinitialize) {
+      state.jacobian = Jacobian::Identity();
+    }
+    /// Return the State
+    return bState;
+  }
 
-    /// Method to update the stepper to the some parameters
-    void
-    update(State& state, const BoundParameters& pars)
-    {
-      const auto& mom = pars.momentum();
-      state.pos             = pars.position();
-      state.dir             = mom.normalized();
-      state.p               = mom.norm();
-      if (pars.covariance() != nullptr) {
-        state.cov = (*(pars.covariance()));
-      }
+  /// Create and return a curvilinear state at the current position
+  ///
+  /// @brief This transports (if necessary) the covariance
+  /// to the current position and creates a curvilinear state.
+  ///
+  /// @param reinitialize Boolean flag whether reinitialization is needed
+  ///        i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return A curvilinear state:
+  ///   - the curvilinear parameters at given position
+  ///   - the stepweise jacobian towards it (from last bound)
+  ///   - and the path length (from start - for ordering)
+  CurvilinearState
+  curvilinearState(State& state, bool reinitialize = true) const
+  {
+    // Transport the covariance to here
+    std::unique_ptr<const Covariance> covPtr = nullptr;
+    if (state.covTransport) {
+      covarianceTransport(state, reinitialize);
+      covPtr = std::make_unique<const Covariance>(state.cov);
     }
+    // Create the curvilinear parameters
+    CurvilinearParameters parameters(
+        std::move(covPtr), state.pos, state.p * state.dir, state.q);
+    // Create the bound state
+    CurvilinearState curvState{
+        std::move(parameters), state.jacobian, state.pathAccumulated};
+    // Reset the jacobian to identity
+    if (reinitialize) {
+      state.jacobian = Jacobian::Identity();
+    }
+    /// Return the State
+    return curvState;
+  }
 
-    /// Method to update momentum, direction and p
-    ///
-    /// @param uposition the updated position
-    /// @param udirection the updated direction
-    /// @param up the updated momentum value
-    void
-    update(State& state, const Vector3D& uposition, const Vector3D& udirection, double up)
-    {
-      state.pos = uposition;
-      state.dir = udirection;
-      state.p   = up;
+  /// Method to update the stepper to the some parameters
+  static void
+  update(State& state, const BoundParameters& pars)
+  {
+    const auto& mom = pars.momentum();
+    state.pos       = pars.position();
+    state.dir       = mom.normalized();
+    state.p         = mom.norm();
+    if (pars.covariance() != nullptr) {
+      state.cov = (*(pars.covariance()));
     }
+  }
+  // TODO: comments update, also in other steppers
+  /// Method to update momentum, direction and p
+  ///
+  /// @param uposition the updated position
+  /// @param udirection the updated direction
+  /// @param up the updated momentum value
+  static void
+  update(State&          state,
+         const Vector3D& uposition,
+         const Vector3D& udirection,
+         double          up)
+  {
+    state.pos = uposition;
+    state.dir = udirection;
+    state.p   = up;
+  }
 
-    /// Return a corrector
-    static corrector_t
-    corrector(State& state)
-    {
-      return corrector_t(state.startPos, state.startDir, state.pathAccumulated);
-    }
-    
-    /// Method for on-demand transport of the covariance
-    /// to a new curvilinear frame at current  position,
-    /// or direction of the state
-    ///
-    /// @param reinitialize is a flag to steer whether the
-    ///        state should be reinitialized at the new
-    ///        position
-    ///
-    /// @return the full transport jacobian
-    void
-    covarianceTransport(State& state, bool reinitialize = false) const
-    {
-      // Optimized trigonometry on the propagation direction
-      const double x = state.dir(0);  // == cos(phi) * sin(theta)
-      const double y = state.dir(1);  // == sin(phi) * sin(theta)
-      const double z = state.dir(2);  // == cos(theta)
-      // can be turned into cosine/sine
-      const double cosTheta    = z;
-      const double sinTheta    = sqrt(x * x + y * y);
-      const double invSinTheta = 1. / sinTheta;
-      const double cosPhi      = x * invSinTheta;
-      const double sinPhi      = y * invSinTheta;
-      // prepare the jacobian to curvilinear
-      ActsMatrixD<5, 7> jacToCurv = ActsMatrixD<5, 7>::Zero();
-      if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
-        // We normally operate in curvilinear coordinates defined as follows
-        jacToCurv(0, 0) = -sinPhi;
-        jacToCurv(0, 1) = cosPhi;
-        jacToCurv(1, 0) = -cosPhi * cosTheta;
-        jacToCurv(1, 1) = -sinPhi * cosTheta;
-        jacToCurv(1, 2) = sinTheta;
-      } else {
-        // Under grazing incidence to z, the above coordinate system definition
-        // becomes numerically unstable, and we need to switch to another one
-        const double c    = sqrt(y * y + z * z);
-        const double invC = 1. / c;
-        jacToCurv(0, 1) = -z * invC;
-        jacToCurv(0, 2) = y * invC;
-        jacToCurv(1, 0) = c;
-        jacToCurv(1, 1) = -x * y * invC;
-        jacToCurv(1, 2) = -x * z * invC;
-      }
-      // Directional and momentum parameters for curvilinear
-      jacToCurv(2, 3) = -sinPhi * invSinTheta;
-      jacToCurv(2, 4) = cosPhi * invSinTheta;
-      jacToCurv(3, 5) = -invSinTheta;
-      jacToCurv(4, 6) = 1;
-      // Apply the transport from the steps on the jacobian
-      state.jacToGlobal = state.jacTransport * state.jacToGlobal;
-      // Transport the covariance
-      ActsRowVectorD<3>       normVec(state.dir);
-      const ActsRowVectorD<5> sfactors
-          = normVec * state.jacToGlobal.template topLeftCorner<3, 5>();
-      // The full jacobian is ([to local] jacobian) * ([transport] jacobian)
-      const ActsMatrixD<5, 5> jacFull
-          = jacToCurv * (state.jacToGlobal - state.derivative * sfactors);
-      // Apply the actual covariance transport
-      state.cov = (jacFull * state.cov * jacFull.transpose());
-      // Reinitialize if asked to do so
-      // this is useful for interruption calls
-      if (reinitialize) {
-        // reset the jacobians
-        state.jacToGlobal  = ActsMatrixD<7, 5>::Zero();
-        state.jacTransport = ActsMatrixD<7, 7>::Identity();
-        // fill the jacobian to global for next transport
-        state.jacToGlobal(0, eLOC_0) = -sinPhi;
-        state.jacToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
-        state.jacToGlobal(1, eLOC_0) = cosPhi;
-        state.jacToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
-        state.jacToGlobal(2, eLOC_1) = sinTheta;
-        state.jacToGlobal(3, ePHI)   = -sinTheta * sinPhi;
-        state.jacToGlobal(3, eTHETA) = cosTheta * cosPhi;
-        state.jacToGlobal(4, ePHI)   = sinTheta * cosPhi;
-        state.jacToGlobal(4, eTHETA) = cosTheta * sinPhi;
-        state.jacToGlobal(5, eTHETA) = -sinTheta;
-        state.jacToGlobal(6, eQOP)   = 1;
-      }
-      // Store The global and bound jacobian (duplication for the moment)
-      state.jacobian = jacFull * state.jacobian;
-    }
+  /// Return a corrector
+  static corrector_t
+  corrector(State& state)
+  {
+    return corrector_t(state.startPos, state.startDir, state.pathAccumulated);
+  }
 
-    /// Method for on-demand transport of the covariance
-    /// to a new curvilinear frame at current  position,
-    /// or direction of the state
-    ///
-    /// @tparam surface_t the Surfac type
-    ///
-    /// @param surface is the surface to which the covariance is
-    ///        forwarded to
-    /// @param reinitialize is a flag to steer whether the
-    ///        state should be reinitialized at the new
-    ///        position
-    /// @note no check is done if the position is actually on the surface
-    template <typename surface_t>
-    void
-    covarianceTransport(State& state, const surface_t& surface, bool reinitialize = true) const
-    {
-      using VectorHelpers::phi;
-      using VectorHelpers::theta;
-      // Initialize the transport final frame jacobian
-      ActsMatrixD<5, 7> jacToLocal = ActsMatrixD<5, 7>::Zero();
-      // initalize the jacobian to local, returns the transposed ref frame
-      auto rframeT = surface.initJacobianToLocal(jacToLocal, state.pos, state.dir);
-      // Update the jacobian with the transport from the steps
-      state.jacToGlobal = state.jacTransport * state.jacToGlobal;
-      // calculate the form factors for the derivatives
-      const ActsRowVectorD<5> sVec
-          = surface.derivativeFactors(state.pos, state.dir, rframeT, state.jacToGlobal);
-      // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
-      const ActsMatrixD<5, 5> jacFull
-          = jacToLocal * (state.jacToGlobal - state.derivative * sVec);
-      // Apply the actual covariance transport
-      state.cov = (jacFull * state.cov * jacFull.transpose());
-      // Reinitialize if asked to do so
-      // this is useful for interruption calls
-      if (reinitialize) {
-        // reset the jacobians
-        state.jacToGlobal  = ActsMatrixD<7, 5>::Zero();
-        state.jacTransport = ActsMatrixD<7, 7>::Identity();
-        // reset the derivative
-        state.derivative = ActsVectorD<7>::Zero();
-        // fill the jacobian to global for next transport
-        Vector2D loc{0., 0.};
-        surface.globalToLocal(state.pos, state.dir, loc);
-        ActsVectorD<5> pars;
-        pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir), state.q / state.p;
-        surface.initJacobianToGlobal(state.jacToGlobal, state.pos, state.dir, pars);
-      }
-      // Store The global and bound jacobian (duplication for the moment)
-      state.jacobian = jacFull * state.jacobian;
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state
+  ///
+  /// @param reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+  ///
+  /// @return the full transport jacobian
+  static void
+  covarianceTransport(State& state, bool reinitialize = false)
+  {
+    // Optimized trigonometry on the propagation direction
+    const double x = state.dir(0);  // == cos(phi) * sin(theta)
+    const double y = state.dir(1);  // == sin(phi) * sin(theta)
+    const double z = state.dir(2);  // == cos(theta)
+    // can be turned into cosine/sine
+    const double cosTheta    = z;
+    const double sinTheta    = sqrt(x * x + y * y);
+    const double invSinTheta = 1. / sinTheta;
+    const double cosPhi      = x * invSinTheta;
+    const double sinPhi      = y * invSinTheta;
+    // prepare the jacobian to curvilinear
+    ActsMatrixD<5, 7> jacToCurv = ActsMatrixD<5, 7>::Zero();
+    if (std::abs(cosTheta) < s_curvilinearProjTolerance) {
+      // We normally operate in curvilinear coordinates defined as follows
+      jacToCurv(0, 0) = -sinPhi;
+      jacToCurv(0, 1) = cosPhi;
+      jacToCurv(1, 0) = -cosPhi * cosTheta;
+      jacToCurv(1, 1) = -sinPhi * cosTheta;
+      jacToCurv(1, 2) = sinTheta;
+    } else {
+      // Under grazing incidence to z, the above coordinate system definition
+      // becomes numerically unstable, and we need to switch to another one
+      const double c    = sqrt(y * y + z * z);
+      const double invC = 1. / c;
+      jacToCurv(0, 1) = -z * invC;
+      jacToCurv(0, 2) = y * invC;
+      jacToCurv(1, 0) = c;
+      jacToCurv(1, 1) = -x * y * invC;
+      jacToCurv(1, 2) = -x * z * invC;
     }
+    // Directional and momentum parameters for curvilinear
+    jacToCurv(2, 3) = -sinPhi * invSinTheta;
+    jacToCurv(2, 4) = cosPhi * invSinTheta;
+    jacToCurv(3, 5) = -invSinTheta;
+    jacToCurv(4, 6) = 1;
+    // Apply the transport from the steps on the jacobian
+    state.jacToGlobal = state.jacTransport * state.jacToGlobal;
+    // Transport the covariance
+    ActsRowVectorD<3>       normVec(state.dir);
+    const ActsRowVectorD<5> sfactors
+        = normVec * state.jacToGlobal.template topLeftCorner<3, 5>();
+    // The full jacobian is ([to local] jacobian) * ([transport] jacobian)
+    const ActsMatrixD<5, 5> jacFull
+        = jacToCurv * (state.jacToGlobal - state.derivative * sfactors);
+    // Apply the actual covariance transport
+    state.cov = (jacFull * state.cov * jacFull.transpose());
+    // Reinitialize if asked to do so
+    // this is useful for interruption calls
+    if (reinitialize) {
+      // reset the jacobians
+      state.jacToGlobal  = ActsMatrixD<7, 5>::Zero();
+      state.jacTransport = ActsMatrixD<7, 7>::Identity();
+      // fill the jacobian to global for next transport
+      state.jacToGlobal(0, eLOC_0) = -sinPhi;
+      state.jacToGlobal(0, eLOC_1) = -cosPhi * cosTheta;
+      state.jacToGlobal(1, eLOC_0) = cosPhi;
+      state.jacToGlobal(1, eLOC_1) = -sinPhi * cosTheta;
+      state.jacToGlobal(2, eLOC_1) = sinTheta;
+      state.jacToGlobal(3, ePHI)   = -sinTheta * sinPhi;
+      state.jacToGlobal(3, eTHETA) = cosTheta * cosPhi;
+      state.jacToGlobal(4, ePHI)   = sinTheta * cosPhi;
+      state.jacToGlobal(4, eTHETA) = cosTheta * sinPhi;
+      state.jacToGlobal(5, eTHETA) = -sinTheta;
+      state.jacToGlobal(6, eQOP)   = 1;
+    }
+    // Store The global and bound jacobian (duplication for the moment)
+    state.jacobian = jacFull * state.jacobian;
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state
+  ///
+  /// @tparam surface_t the Surfac type
+  ///
+  /// @param surface is the surface to which the covariance is
+  ///        forwarded to
+  /// @param reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+  /// @note no check is done if the position is actually on the surface
+  template <typename surface_t>
+  static void
+  covarianceTransport(State&           state,
+                      const surface_t& surface,
+                      bool             reinitialize = true)
+  {
+    using VectorHelpers::phi;
+    using VectorHelpers::theta;
+    // Initialize the transport final frame jacobian
+    ActsMatrixD<5, 7> jacToLocal = ActsMatrixD<5, 7>::Zero();
+    // initalize the jacobian to local, returns the transposed ref frame
+    auto rframeT
+        = surface.initJacobianToLocal(jacToLocal, state.pos, state.dir);
+    // Update the jacobian with the transport from the steps
+    state.jacToGlobal = state.jacTransport * state.jacToGlobal;
+    // calculate the form factors for the derivatives
+    const ActsRowVectorD<5> sVec = surface.derivativeFactors(
+        state.pos, state.dir, rframeT, state.jacToGlobal);
+    // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
+    const ActsMatrixD<5, 5> jacFull
+        = jacToLocal * (state.jacToGlobal - state.derivative * sVec);
+    // Apply the actual covariance transport
+    state.cov = (jacFull * state.cov * jacFull.transpose());
+    // Reinitialize if asked to do so
+    // this is useful for interruption calls
+    if (reinitialize) {
+      // reset the jacobians
+      state.jacToGlobal  = ActsMatrixD<7, 5>::Zero();
+      state.jacTransport = ActsMatrixD<7, 7>::Identity();
+      // reset the derivative
+      state.derivative = ActsVectorD<7>::Zero();
+      // fill the jacobian to global for next transport
+      Vector2D loc{0., 0.};
+      surface.globalToLocal(state.pos, state.dir, loc);
+      ActsVectorD<5> pars;
+      pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
+          state.q / state.p;
+      surface.initJacobianToGlobal(
+          state.jacToGlobal, state.pos, state.dir, pars);
+    }
+    // Store The global and bound jacobian (duplication for the moment)
+    state.jacobian = jacFull * state.jacobian;
+  }
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///

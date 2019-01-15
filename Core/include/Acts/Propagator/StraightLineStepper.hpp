@@ -97,63 +97,6 @@ public:
       return q;
     }
 
-    /// Return a corrector
-    VoidIntersectionCorrector
-    corrector() const
-    {
-      return VoidIntersectionCorrector();
-    }
-
-    /// Method to update momentum, direction and p
-    ///
-    /// @param uposition the updated position
-    /// @param udirection the updated direction
-    /// @param p the updated momentum value
-    void
-    update(const Vector3D& uposition, const Vector3D& udirection, double up)
-    {
-      pos = uposition;
-      dir = udirection;
-      p   = up;
-    }
-
-    /// Method for on-demand transport of the covariance
-    /// to a new curvilinear frame at current  position,
-    /// or direction of the state - for the moment a dummy method
-    ///
-    /// @param reinitialize is a flag to steer whether the
-    ///        state should be reinitialized at the new
-    ///        position
-    ///
-    /// @return the full transport jacobian
-    const ActsMatrixD<5, 5>
-    covarianceTransport(bool /*reinitialize = false*/)
-    {
-      return ActsMatrixD<5, 5>::Identity();
-    }
-
-    /// Method for on-demand transport of the covariance
-    /// to a new curvilinear frame at current  position,
-    /// or direction of the state - for the moment a dummy method
-    ///
-    /// @tparam surface_t the surface type - ignored here
-    ///
-    /// @param surface is the surface to which the covariance is
-    ///        forwarded to
-    /// @param reinitialize is a flag to steer whether the
-    ///        state should be reinitialized at the new
-    ///        position
-    /// @note no check is done if the position is actually on the surface
-    ///
-    /// @return the full transport jacobian
-    template <typename surface_t>
-    const ActsMatrixD<5, 5>
-    covarianceTransport(const surface_t& /*surface*/,
-                        bool /*reinitialize = false*/)
-    {
-      return ActsMatrixD<5, 5>::Identity();
-    }
-
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
 
@@ -179,6 +122,67 @@ public:
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
   };
+
+  /// Return a corrector
+  static VoidIntersectionCorrector
+  corrector(State& /*unused*/)
+  {
+    return VoidIntersectionCorrector();
+  }
+
+  /// Method to update momentum, direction and p
+  ///
+  /// @param uposition the updated position
+  /// @param udirection the updated direction
+  /// @param p the updated momentum value
+  static void
+  update(State&          state,
+         const Vector3D& uposition,
+         const Vector3D& udirection,
+         double          up)
+  {
+    state.pos = uposition;
+    state.dir = udirection;
+    state.p   = up;
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state - for the moment a dummy method
+  ///
+  /// @param reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+  ///
+  /// @return the full transport jacobian
+  static const ActsMatrixD<5, 5>
+  covarianceTransport(State& /*unused*/, bool /*reinitialize = false*/)
+  {
+    return ActsMatrixD<5, 5>::Identity();
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state - for the moment a dummy method
+  ///
+  /// @tparam surface_t the surface type - ignored here
+  ///
+  /// @param surface is the surface to which the covariance is
+  ///        forwarded to
+  /// @param reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+  /// @note no check is done if the position is actually on the surface
+  ///
+  /// @return the full transport jacobian
+  template <typename surface_t>
+  static const ActsMatrixD<5, 5>
+  covarianceTransport(State& /*unused*/,
+                      const surface_t& /*surface*/,
+                      bool /*reinitialize = false*/)
+  {
+    return ActsMatrixD<5, 5>::Identity();
+  }
 
   /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface

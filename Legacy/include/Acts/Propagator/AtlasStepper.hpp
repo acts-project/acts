@@ -34,6 +34,32 @@ public:
   struct State
   {
 
+    /// Constructor
+    ///
+    /// @tparams Type of TrackParameters
+    ///
+    /// @param[in] pars Input parameters
+    /// @param[in] ndir The navigation direction w.r.t. parameters
+    /// @param[in] ssize the steps size limitation
+    template <typename Parameters>
+    State(const Parameters&   pars,
+          NavigationDirection ndir  = forward,
+          double              ssize = std::numeric_limits<double>::max())
+      : state_ready(false)
+      , navDir(ndir)
+      , useJacobian(false)
+      , step(0.)
+      , maxPathLength(0.)
+      , mcondition(false)
+      , needgradient(false)
+      , newfield(true)
+      , field(0., 0., 0.)
+      , covariance(nullptr)
+      , stepSize(ndir * std::abs(ssize))
+    {
+      AtlasStepper<bfield_t>::update(*this, pars);
+    }
+
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
@@ -71,13 +97,6 @@ public:
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
 
-    /// Dummy variables for compatibility
-    TrackingVolume const* const* volume         = nullptr;
-    double                       mass           = 0.;
-    int                          pdg            = 0.;
-    double                       tolerance      = 0.;
-    double                       stepSizeCutOff = 0.;
-
     Vector3D
     position() const
     {
@@ -103,213 +122,190 @@ public:
     {
       return pVector[6] > 0. ? 1. : -1.;
     }
-
-    /// Method to update momentum, direction and p
-    ///
-    /// @param uposition the updated position
-    /// @param udirection the updated direction
-    /// @param p the updated momentum value
-    void
-    update(const Vector3D& uposition, const Vector3D& udirection, double up)
-    {
-      // update the vector
-      pVector[0] = uposition[0];
-      pVector[1] = uposition[1];
-      pVector[2] = uposition[2];
-      pVector[3] = udirection[0];
-      pVector[4] = udirection[1];
-      pVector[5] = udirection[2];
-      pVector[6] = charge() / up;
-    }
-
-    /// Return a corrector
-    VoidIntersectionCorrector
-    corrector() const
-    {
-      return VoidIntersectionCorrector();
-    }
-
-    /// Constructor
-    ///
-    /// @tparams Type of TrackParameters
-    ///
-    /// @param[in] pars Input parameters
-    /// @param[in] ndir The navigation direction w.r.t. parameters
-    /// @param[in] ssize the steps size limitation
-    template <typename Parameters>
-    State(const Parameters&   pars,
-          NavigationDirection ndir  = forward,
-          double              ssize = std::numeric_limits<double>::max())
-      : state_ready(false)
-      , navDir(ndir)
-      , useJacobian(false)
-      , step(0.)
-      , maxPathLength(0.)
-      , mcondition(false)
-      , needgradient(false)
-      , newfield(true)
-      , field(0., 0., 0.)
-      , covariance(nullptr)
-      , stepSize(ndir * std::abs(ssize))
-    {
-      update(pars);
-    }
-
-    /// The state update method
-    ///
-    /// @param [in] pars The new track parameters at start
-    template <typename Parameters>
-    void
-    update(const Parameters& pars)
-    {
-      // state is ready - noting to do
-      if (state_ready) {
-        return;
-      }
-
-      const ActsVectorD<3> pos = pars.position();
-      const auto           Vp  = pars.parameters();
-
-      double Sf, Cf, Ce, Se;
-      Sf = sin(Vp(2));
-      Cf = cos(Vp(2));
-      Se = sin(Vp(3));
-      Ce = cos(Vp(3));
-
-      pVector[0] = pos(0);
-      pVector[1] = pos(1);
-      pVector[2] = pos(2);
-      pVector[3] = Cf * Se;
-      pVector[4] = Sf * Se;
-      pVector[5] = Ce;
-      pVector[6] = Vp[4];
-
-      // @todo: remove magic numbers - is that the charge ?
-      if (std::abs(pVector[6]) < .000000000000001) {
-        pVector[6] < 0. ? pVector[6] = -.000000000000001
-                        : pVector[6] = .000000000000001;
-      }
-
-      // prepare the jacobian if we have a covariance
-      if (pars.covariance()) {
-        // copy the covariance matrix
-        covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
-        useJacobian = true;
-        const auto transform = pars.referenceFrame();
-
-        pVector[7]  = transform(0, eLOC_0);
-        pVector[14] = transform(0, eLOC_1);
-        pVector[21] = 0.;
-        pVector[28] = 0.;
-        pVector[35] = 0.;  // dX /
-
-        pVector[8]  = transform(1, eLOC_0);
-        pVector[15] = transform(1, eLOC_1);
-        pVector[22] = 0.;
-        pVector[29] = 0.;
-        pVector[36] = 0.;  // dY /
-
-        pVector[9]  = transform(2, eLOC_0);
-        pVector[16] = transform(2, eLOC_1);
-        pVector[23] = 0.;
-        pVector[30] = 0.;
-        pVector[37] = 0.;  // dZ /
-
-        pVector[10] = 0.;
-        pVector[17] = 0.;
-        pVector[24] = -Sf * Se;  // - sin(phi) * cos(theta)
-        pVector[31] = Cf * Ce;   // cos(phi) * cos(theta)
-        pVector[38] = 0.;        // dAx/
-
-        pVector[11] = 0.;
-        pVector[18] = 0.;
-        pVector[25] = Cf * Se;  // cos(phi) * sin(theta)
-        pVector[32] = Sf * Ce;  // sin(phi) * cos(theta)
-        pVector[39] = 0.;       // dAy/
-
-        pVector[12] = 0.;
-        pVector[19] = 0.;
-        pVector[26] = 0.;
-        pVector[33] = -Se;  // - sin(theta)
-        pVector[40] = 0.;   // dAz/
-
-        pVector[13] = 0.;
-        pVector[20] = 0.;
-        pVector[27] = 0.;
-        pVector[34] = 0.;
-        pVector[41] = 1.;  // dCM/
-
-        pVector[42] = 0.;
-        pVector[43] = 0.;
-        pVector[44] = 0.;
-
-        // special treatment for surface types
-        const auto& surface = pars.referenceSurface();
-        // the disc needs polar coordinate adaptations
-        if (surface.type() == Surface::Disc) {
-          double lCf   = cos(Vp[1]);
-          double lSf   = sin(Vp[1]);
-          double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
-          double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
-          double d0    = lCf * Ax[0] + lSf * Ay[0];
-          double d1    = lCf * Ax[1] + lSf * Ay[1];
-          double d2    = lCf * Ax[2] + lSf * Ay[2];
-          pVector[7]   = d0;
-          pVector[8]   = d1;
-          pVector[9]   = d2;
-          pVector[14]  = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
-          pVector[15]  = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
-          pVector[16]  = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
-        }
-        // the line needs components that relate direction change
-        // with global frame change
-        if (surface.type() == Surface::Perigee
-            || surface.type() == Surface::Straw) {
-
-          // sticking to the nomenclature of the original RkPropagator
-          // - axis pointing along the drift/transverse direction
-          double B[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
-          // - axis along the straw
-          double A[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
-          // - normal vector of the reference frame
-          double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
-
-          // projection of direction onto normal vector of reference frame
-          double PC = pVector[3] * C[0] + pVector[4] * C[1] + pVector[5] * C[2];
-          double Bn = 1. / PC;
-
-          double Bx2 = -A[2] * pVector[25];
-          double Bx3 = A[1] * pVector[33] - A[2] * pVector[32];
-
-          double By2 = A[2] * pVector[24];
-          double By3 = A[2] * pVector[31] - A[0] * pVector[33];
-
-          double Bz2 = A[0] * pVector[25] - A[1] * pVector[24];
-          double Bz3 = A[0] * pVector[32] - A[1] * pVector[31];
-
-          double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
-          double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
-
-          Bx2 = (Bx2 - B[0] * B2) * Bn;
-          Bx3 = (Bx3 - B[0] * B3) * Bn;
-          By2 = (By2 - B[1] * B2) * Bn;
-          By3 = (By3 - B[1] * B3) * Bn;
-          Bz2 = (Bz2 - B[2] * B2) * Bn;
-          Bz3 = (Bz3 - B[2] * B3) * Bn;
-
-          //  /dPhi      |     /dThe       |
-          pVector[21] = Bx2 * Vp[0];
-          pVector[28] = Bx3 * Vp[0];  // dX/
-          pVector[22] = By2 * Vp[0];
-          pVector[29] = By3 * Vp[0];  // dY/
-          pVector[23] = Bz2 * Vp[0];
-          pVector[30] = Bz3 * Vp[0];  // dZ/
-        }
-      }
-      // now declare the state as ready
-      state_ready = true;
-    }
   };
+  /// Method to update momentum, direction and p
+  ///
+  /// @param uposition the updated position
+  /// @param udirection the updated direction
+  /// @param p the updated momentum value
+  static void
+  update(State&          state,
+         const Vector3D& uposition,
+         const Vector3D& udirection,
+         double          up)
+  {
+    // update the vector
+    state.pVector[0] = uposition[0];
+    state.pVector[1] = uposition[1];
+    state.pVector[2] = uposition[2];
+    state.pVector[3] = udirection[0];
+    state.pVector[4] = udirection[1];
+    state.pVector[5] = udirection[2];
+    state.pVector[6] = state.charge() / up;
+  }
+
+  /// Return a corrector
+  static VoidIntersectionCorrector
+  corrector(State& /*unused*/)
+  {
+    return VoidIntersectionCorrector();
+  }
+
+  /// The state update method
+  ///
+  /// @param [in] pars The new track parameters at start
+  template <typename Parameters>
+  static void
+  update(State& state, const Parameters& pars)
+  {
+    // state is ready - noting to do
+    if (state.state_ready) {
+      return;
+    }
+
+    const ActsVectorD<3> pos = pars.position();
+    const auto           Vp  = pars.parameters();
+
+    double Sf, Cf, Ce, Se;
+    Sf = sin(Vp(2));
+    Cf = cos(Vp(2));
+    Se = sin(Vp(3));
+    Ce = cos(Vp(3));
+
+    state.pVector[0] = pos(0);
+    state.pVector[1] = pos(1);
+    state.pVector[2] = pos(2);
+    state.pVector[3] = Cf * Se;
+    state.pVector[4] = Sf * Se;
+    state.pVector[5] = Ce;
+    state.pVector[6] = Vp[4];
+
+    // @todo: remove magic numbers - is that the charge ?
+    if (std::abs(state.pVector[6]) < .000000000000001) {
+      state.pVector[6] < 0. ? state.pVector[6] = -.000000000000001
+                            : state.pVector[6] = .000000000000001;
+    }
+
+    // prepare the jacobian if we have a covariance
+    if (pars.covariance()) {
+      // copy the covariance matrix
+      state.covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
+      state.useJacobian = true;
+      const auto transform = pars.referenceFrame();
+
+      state.pVector[7]  = transform(0, eLOC_0);
+      state.pVector[14] = transform(0, eLOC_1);
+      state.pVector[21] = 0.;
+      state.pVector[28] = 0.;
+      state.pVector[35] = 0.;  // dX /
+
+      state.pVector[8]  = transform(1, eLOC_0);
+      state.pVector[15] = transform(1, eLOC_1);
+      state.pVector[22] = 0.;
+      state.pVector[29] = 0.;
+      state.pVector[36] = 0.;  // dY /
+
+      state.pVector[9]  = transform(2, eLOC_0);
+      state.pVector[16] = transform(2, eLOC_1);
+      state.pVector[23] = 0.;
+      state.pVector[30] = 0.;
+      state.pVector[37] = 0.;  // dZ /
+
+      state.pVector[10] = 0.;
+      state.pVector[17] = 0.;
+      state.pVector[24] = -Sf * Se;  // - sin(phi) * cos(theta)
+      state.pVector[31] = Cf * Ce;   // cos(phi) * cos(theta)
+      state.pVector[38] = 0.;        // dAx/
+
+      state.pVector[11] = 0.;
+      state.pVector[18] = 0.;
+      state.pVector[25] = Cf * Se;  // cos(phi) * sin(theta)
+      state.pVector[32] = Sf * Ce;  // sin(phi) * cos(theta)
+      state.pVector[39] = 0.;       // dAy/
+
+      state.pVector[12] = 0.;
+      state.pVector[19] = 0.;
+      state.pVector[26] = 0.;
+      state.pVector[33] = -Se;  // - sin(theta)
+      state.pVector[40] = 0.;   // dAz/
+
+      state.pVector[13] = 0.;
+      state.pVector[20] = 0.;
+      state.pVector[27] = 0.;
+      state.pVector[34] = 0.;
+      state.pVector[41] = 1.;  // dCM/
+
+      state.pVector[42] = 0.;
+      state.pVector[43] = 0.;
+      state.pVector[44] = 0.;
+
+      // special treatment for surface types
+      const auto& surface = pars.referenceSurface();
+      // the disc needs polar coordinate adaptations
+      if (surface.type() == Surface::Disc) {
+        double lCf        = cos(Vp[1]);
+        double lSf        = sin(Vp[1]);
+        double Ax[3]      = {transform(0, 0), transform(1, 0), transform(2, 0)};
+        double Ay[3]      = {transform(0, 1), transform(1, 1), transform(2, 1)};
+        double d0         = lCf * Ax[0] + lSf * Ay[0];
+        double d1         = lCf * Ax[1] + lSf * Ay[1];
+        double d2         = lCf * Ax[2] + lSf * Ay[2];
+        state.pVector[7]  = d0;
+        state.pVector[8]  = d1;
+        state.pVector[9]  = d2;
+        state.pVector[14] = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
+        state.pVector[15] = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
+        state.pVector[16] = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
+      }
+      // the line needs components that relate direction change
+      // with global frame change
+      if (surface.type() == Surface::Perigee
+          || surface.type() == Surface::Straw) {
+
+        // sticking to the nomenclature of the original RkPropagator
+        // - axis pointing along the drift/transverse direction
+        double B[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+        // - axis along the straw
+        double A[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+        // - normal vector of the reference frame
+        double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
+
+        // projection of direction onto normal vector of reference frame
+        double PC = state.pVector[3] * C[0] + state.pVector[4] * C[1]
+            + state.pVector[5] * C[2];
+        double Bn = 1. / PC;
+
+        double Bx2 = -A[2] * state.pVector[25];
+        double Bx3 = A[1] * state.pVector[33] - A[2] * state.pVector[32];
+
+        double By2 = A[2] * state.pVector[24];
+        double By3 = A[2] * state.pVector[31] - A[0] * state.pVector[33];
+
+        double Bz2 = A[0] * state.pVector[25] - A[1] * state.pVector[24];
+        double Bz3 = A[0] * state.pVector[32] - A[1] * state.pVector[31];
+
+        double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
+        double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
+
+        Bx2 = (Bx2 - B[0] * B2) * Bn;
+        Bx3 = (Bx3 - B[0] * B3) * Bn;
+        By2 = (By2 - B[1] * B2) * Bn;
+        By3 = (By3 - B[1] * B3) * Bn;
+        Bz2 = (Bz2 - B[2] * B2) * Bn;
+        Bz3 = (Bz3 - B[2] * B3) * Bn;
+
+        //  /dPhi      |     /dThe       |
+        state.pVector[21] = Bx2 * Vp[0];
+        state.pVector[28] = Bx3 * Vp[0];  // dX/
+        state.pVector[22] = By2 * Vp[0];
+        state.pVector[29] = By3 * Vp[0];  // dY/
+        state.pVector[23] = Bz2 * Vp[0];
+        state.pVector[30] = Bz3 * Vp[0];  // dZ/
+      }
+    }
+    // now declare the state as ready
+    state.state_ready = true;
+  }
 
   template <typename T, typename S = int>
   using state_type = State;
@@ -657,8 +653,7 @@ public:
       state.pVector[39] -= (s4 * state.pVector[43]);
       state.pVector[40] -= (s4 * state.pVector[44]);
 
-      double P3, P4,
-          C = state.pVector[3] * state.pVector[3]
+      double P3, P4, C = state.pVector[3] * state.pVector[3]
           + state.pVector[4] * state.pVector[4];
       if (C > 1.e-20) {
         C  = 1. / C;
