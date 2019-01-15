@@ -14,17 +14,18 @@ string(SUBSTRING "${_git_hash}" 0 8 _git_hash_short)
 
 # all options must be defined here to keep the list directly visible and
 # make the option variables available everywhere
-option (ACTS_BUILD_LEGACY "Build legacy package" ON)
+option (ACTS_BUILD_LEGACY "Build legacy package" OFF)
 option (ACTS_BUILD_DOC "Build documentation" OFF)
 option (ACTS_BUILD_EXAMPLES "Build examples" OFF)
-option (ACTS_BUILD_TESTS "Build unit tests" ON)
-option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" ON)
+option (ACTS_BUILD_TESTS "Build unit tests" OFF)
+option (ACTS_BUILD_INTEGRATION_TESTS "Build integration tests" OFF)
 option (ACTS_BUILD_DIGITIZATION_PLUGIN "Build Digitization plugin" OFF)
 option (ACTS_BUILD_DD4HEP_PLUGIN "Build DD4HEP plugin" OFF)
+option (ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
+option (ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
 option (ACTS_BUILD_MATERIAL_PLUGIN "Build Material plugin" OFF)
 option (ACTS_BUILD_TGEO_PLUGIN "Build TGeo plugin" OFF)
-option (ACTS_BUILD_JSON_PLUGIN "Build Json plugin" OFF)
-option (ACTS_BUILD_IDENTIFICATION_PLUGIN "Build Identification plugin" OFF)
+
 # all other compile-time parameters must be defined here for clear visibility
 # and to avoid forgotten options somewhere deep in the hierarchy
 set (ACTS_PARAMETER_DEFINITIONS_PLUGIN "Acts/Utilities/detail/DefaultParameterDefinitions.hpp" CACHE FILEPATH "Default track parameter definition")
@@ -44,7 +45,6 @@ find_package(Boost 1.62 REQUIRED COMPONENTS program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
 
 # optional packages
-
 if(ACTS_BUILD_DOC)
   find_package(Doxygen 1.8.11 REQUIRED)
 endif()
@@ -56,14 +56,12 @@ if(ACTS_BUILD_TGEO_PLUGIN)
 endif()
 
 # additional configuration and tools
-
 include (GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
 include (ActsCompilerOptions) # default compile options
 include (ActsFunctions) # Acts-specific helper functions
 include (ActsComponentsHelpers) # handle components via add_..._if commands
 
 # core library and plugins
-
 add_component (Core Core)
 add_component_if (Legacy Legacy ACTS_BUILD_LEGACY)
 add_subdirectory (Plugins)
