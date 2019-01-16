@@ -130,16 +130,18 @@ namespace Test {
       static_assert(cols == cols2,
                     "Input matrices do not have the same number of columns");
 
-      const int m_size = rows * cols;
-      for (int i = 0; i < m_size; ++i) {
-        predicate_result res = compareImpl(val(i), ref(i));
-        if (!res) {
-          res.message() << " The failure occured during a matrix comparison,"
-                        << " where the value was\n"
-                        << val << '\n'
-                        << "and the reference was\n"
-                        << ref << '\n';
-          return res;
+      for (int col = 0; col < cols; ++col) {
+        for (int row = 0; row < rows; ++row) {
+          predicate_result res = compareImpl(val(row, col), ref(row, col));
+          if (!res) {
+            res.message() << " The failure occured during a matrix comparison,"
+                          << " at index (" << row << ", " << col << ")."
+                          << " The value was\n"
+                          << val << '\n'
+                          << "and the reference was\n"
+                          << ref << '\n';
+            return res;
+          }
         }
       }
       return true;
@@ -171,7 +173,8 @@ namespace Test {
 
       // Compare the container's contents, bubbling assertion results up. Sadly,
       // this means that we cannot use std::equal.
-      auto valIter = std::cbegin(val);
+      auto valBeg  = std::cbegin(val);
+      auto valIter = valBeg;
       auto valEnd  = std::cend(val);
       auto refIter = std::cbegin(ref);
       while (valIter != valEnd) {
@@ -179,7 +182,8 @@ namespace Test {
         if (!res) {
           // If content comparison failed, report the container's contents
           res.message() << " The failure occured during a container comparison,"
-                        << " where the value contained {";
+                        << " at index " << std::distance(valBeg, valIter) << '.'
+                        << " The value contained {";
           for (const auto& item : val) {
             res.message() << ' ' << item << ' ';
           }
@@ -268,8 +272,8 @@ namespace Test {
     static_assert(dim != Eigen::Dynamic,
                   "Dynamic-size matrices are currently unsupported.");
 
-    for (int row = 0; row < dim; ++row) {
-      for (int col = row; col < dim; ++col) {
+    for (int col = 0; col < dim; ++col) {
+      for (int row = col; row < dim; ++row) {
         // For diagonal elements, this is just a regular relative comparison.
         // But for off-diagonal correlation terms, the tolerance scales with the
         // geometric mean of the variance terms that are being correlated.
@@ -281,10 +285,12 @@ namespace Test {
         auto orderOfMagnitude = std::sqrt(ref(row, row) * ref(col, col));
         if (std::abs(val(row, col) - ref(row, col)) >= tol * orderOfMagnitude) {
           boost::test_tools::predicate_result res(false);
-          res.message() << "The difference between covariance matrix term "
-                        << val(row, col) << " and reference " << ref(row, col)
-                        << " is not within tolerance " << tol << ". "
-                        << "The covariance matrix being tested was\n"
+          res.message() << "The difference between the covariance matrix term "
+                        << val(row, col) << " and its reference "
+                        << ref(row, col) << ","
+                        << " at index (" << row << ", " << col << "),"
+                        << " is not within tolerance " << tol << '.'
+                        << " The covariance matrix being tested was\n"
                         << val << '\n'
                         << "and the reference covariance matrix was\n"
                         << ref << '\n';
