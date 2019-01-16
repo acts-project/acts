@@ -64,8 +64,8 @@ struct SurfaceCollector
       // create for recording
       SurfaceHit surface_hit;
       surface_hit.surface   = state.navigation.currentSurface;
-      surface_hit.position  = state.stepping.position();
-      surface_hit.direction = state.stepping.direction();
+      surface_hit.position  = state.stepping.pos;
+      surface_hit.direction = state.stepping.dir;
       // save if in the result
       result.collected.push_back(surface_hit);
     }

@@ -54,7 +54,7 @@ namespace Test {
     void
     operator()(propagator_state_t& state, result_type& result) const
     {
-      result.distance = perp(state.stepping.position());
+      result.distance = perp(state.stepping.pos);
     }
 
     template <typename propagator_state_t>
@@ -93,17 +93,15 @@ namespace Test {
         // calculate the distance to the surface
         const double distance
             = surface
-                  ->intersectionEstimate(state.stepping.position(),
-                                         state.stepping.direction(),
-                                         forward,
-                                         true)
+                  ->intersectionEstimate(
+                      state.stepping.pos, state.stepping.dir, forward, true)
                   .pathLength;
         // Adjust the step size so that we cannot cross the target surface
         state.stepping.stepSize.update(distance, cstep::actor);
         // return true if you fall below tolerance
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
-          result.surface_passed_r = perp(state.stepping.position());
+          result.surface_passed_r = perp(state.stepping.pos);
           // release the step size, will be re-adjusted
           state.stepping.stepSize.release(cstep::actor);
         }

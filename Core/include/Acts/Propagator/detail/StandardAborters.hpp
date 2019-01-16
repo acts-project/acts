@@ -182,7 +182,7 @@ namespace detail {
       // Calculate the distance to the surface
       const double tolerance    = state.options.targetTolerance;
       const auto   intersection = targetSurface.intersectionEstimate(
-          state.stepping.position(), state.stepping.direction(), anyDirection);
+          state.stepping.pos, state.stepping.dir, anyDirection);
       const double distance = intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance, ConstrainedStep::aborter);

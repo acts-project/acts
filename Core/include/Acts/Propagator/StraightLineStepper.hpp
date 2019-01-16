@@ -69,34 +69,6 @@ public:
     {
     }
 
-    /// Global particle position accessor
-    Vector3D
-    position() const
-    {
-      return pos;
-    }
-
-    /// Momentum direction accessor
-    Vector3D
-    direction() const
-    {
-      return dir;
-    }
-
-    /// Momentum accessor
-    Vector3D
-    momentum() const
-    {
-      return p * dir;
-    }
-
-    /// Charge access
-    double
-    charge() const
-    {
-      return q;
-    }
-
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
 

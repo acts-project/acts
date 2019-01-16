@@ -56,9 +56,9 @@ namespace Test {
     bool
     operator()(propagator_state_t& state) const
     {
-      if (std::abs(state.stepping.position().x()) >= maxX
-          || std::abs(state.stepping.position().y()) >= 0.5 * units::_m
-          || std::abs(state.stepping.position().z()) >= 0.5 * units::_m)
+      if (std::abs(state.stepping.pos.x()) >= maxX
+          || std::abs(state.stepping.pos.y()) >= 0.5 * units::_m
+          || std::abs(state.stepping.pos.z()) >= 0.5 * units::_m)
         return true;
       return false;
     }
@@ -93,8 +93,8 @@ namespace Test {
     void
     operator()(propagator_state_t& state, result_type& result) const
     {
-      result.position.push_back(state.stepping.position());
-      result.momentum.push_back(state.stepping.momentum());
+      result.position.push_back(state.stepping.pos);
+      result.momentum.push_back(state.stepping.p * state.stepping.dir);
     }
   };
 

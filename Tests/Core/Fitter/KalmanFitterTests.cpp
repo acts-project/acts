@@ -99,7 +99,7 @@ namespace Test {
             // Apply global to local
             Acts::Vector2D lPos;
             surface->globalToLocal(
-                state.stepping.position(), state.stepping.direction(), lPos);
+                state.stepping.pos, state.stepping.dir, lPos);
             if (lResolution->second.size() == 1) {
               double sp = lResolution->second[0].second;
               cov1D << sp * sp;
@@ -173,12 +173,11 @@ namespace Test {
         state.stepping.cov(eTHETA, eTHETA) += dTheta * dTheta;
 
         // Update the angles
-        double theta = std::acos(state.stepping.direction().z());
-        double phi   = std::atan2(state.stepping.direction().y(),
-                                state.stepping.direction().x());
+        double theta = std::acos(state.stepping.dir.z());
+        double phi = std::atan2(state.stepping.dir.y(), state.stepping.dir.x());
 
         state.stepping.update(
-            state.stepping.position(),
+            state.stepping.pos,
             {std::sin(theta + dTheta) * std::cos(phi + dPhi),
              std::sin(theta + dTheta) * std::sin(phi + dPhi),
              std::cos(theta + dTheta)},

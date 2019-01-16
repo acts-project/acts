@@ -140,7 +140,7 @@ struct MaterialInteractor
       const SurfaceMaterial* sMaterial
           = state.navigation.currentSurface->associatedMaterial();
       MaterialProperties mProperties = sMaterial->materialProperties(
-          state.stepping.position(), state.stepping.navDir, mStage);
+          state.stepping.pos, state.stepping.navDir, mStage);
       // Material properties (non-zero) have been found for this configuration
       if (mProperties) {
         // more debugging output to the screen
@@ -161,7 +161,7 @@ struct MaterialInteractor
 
         // Calculate the path correction
         double pCorrection = state.navigation.currentSurface->pathCorrection(
-            state.stepping.position(), state.stepping.direction());
+            state.stepping.pos, state.stepping.dir);
 
         // Scale the material properties
         mProperties *= pCorrection;
@@ -179,8 +179,7 @@ struct MaterialInteractor
           double tInX0 = mProperties.thicknessInX0();
           // Retrieve the scattering contribution
           double sigmaScat = scattering(p, lbeta, tInX0);
-          double sinTheta
-              = std::sin(VectorHelpers::theta(state.stepping.direction()));
+          double sinTheta  = std::sin(VectorHelpers::theta(state.stepping.dir));
           double sigmaDeltaPhiSq
               = sigmaScat * sigmaScat / (sinTheta * sinTheta);
           double sigmaDeltaThetaSq = sigmaScat * sigmaScat;
@@ -266,8 +265,8 @@ struct MaterialInteractor
 
         // Record the material interaction if configured to do so
         if (recordInteractions) {
-          mInteraction.position           = state.stepping.position();
-          mInteraction.direction          = state.stepping.direction();
+          mInteraction.position           = state.stepping.pos;
+          mInteraction.direction          = state.stepping.dir;
           mInteraction.materialProperties = mProperties;
           mInteraction.pathCorrection     = pCorrection;
           result.materialInteractions.push_back(std::move(mInteraction));

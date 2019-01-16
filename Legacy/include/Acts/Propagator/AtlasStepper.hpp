@@ -97,6 +97,10 @@ public:
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
 
+	Vector3D pos = {pVector[0], pVector[1], pVector[2]};
+	Vector3D dir = {pVector[3], pVector[4], pVector[5]};
+	double p = 1. / std::abs(pVector[6]);
+
     Vector3D
     position() const
     {

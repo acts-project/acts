@@ -521,7 +521,7 @@ private:
     // If we are on the surface pointed at by the iterator, we can make
     // it the current one to pass it to the other actors
     if (surface->isOnSurface(
-            state.stepping.pos, state.stepping.momentum(), true)) {
+            state.stepping.pos, state.stepping.p * state.stepping.dir, true)) {
       debugLog(state, [&] {
         return std::string("Status Surface successfully hit, storing it.");
       });
@@ -620,8 +620,8 @@ private:
         return dstream.str();
       });
       // Now intersect (should exclude punch-through)
-      auto surfaceIntersect
-          = surface->intersectionEstimate(state.stepping, navOpts, navCorr);
+      auto surfaceIntersect = surface->surfaceIntersectionEstimate(
+          state.stepping.pos, state.stepping.dir, navOpts, navCorr);
       double surfaceDistance = surfaceIntersect.intersection.pathLength;
       if (!surfaceIntersect) {
         debugLog(state, [&] {
@@ -712,8 +712,8 @@ private:
       }
       // Otherwise try to step towards it
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
-      auto layerIntersect = layerSurface->intersectionEstimate(
-          state.stepping, navOpts, navCorr);
+      auto layerIntersect = layerSurface->surfaceIntersectionEstimate(
+          state.stepping.pos, state.stepping.dir, navOpts, navCorr);
       // check if the intersect is invalid
       if (!layerIntersect) {
         debugLog(state, [&] {
@@ -816,7 +816,11 @@ private:
       // Evaluate the boundary surfaces
       state.navigation.navBoundaries
           = state.navigation.currentVolume->compatibleBoundaries(
-              state.stepping, navOpts, navCorr, BoundaryIntersectionSorter());
+              state.stepping.pos,
+              state.stepping.dir,
+              navOpts,
+              navCorr,
+              BoundaryIntersectionSorter());
       // The number of boundary candidates
       debugLog(state, [&] {
         std::stringstream dstream;
@@ -837,8 +841,8 @@ private:
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
       // Step towards the boundary surface
-      auto boundaryIntersect = boundarySurface->intersectionEstimate(
-          state.stepping, navOpts, navCorr);
+      auto boundaryIntersect = boundarySurface->surfaceIntersectionEstimate(
+          state.stepping.pos, state.stepping.dir, navOpts, navCorr);
       // Distance
       auto distance = boundaryIntersect.intersection.pathLength;
       // Check the boundary is properly intersected: we are in target mode
@@ -926,8 +930,8 @@ private:
                                          resolvePassive);
       // take the target intersection
       auto targetIntersection
-          = state.navigation.targetSurface->intersectionEstimate(
-              state.stepping, navOpts, navCorr);
+          = state.navigation.targetSurface->surfaceIntersectionEstimate(
+              state.stepping.pos, state.stepping.dir, navOpts, navCorr);
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Target estimate position (";
@@ -987,8 +991,8 @@ private:
     // Check the limit
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
     // get the surfaces
-    state.navigation.navSurfaces
-        = navLayer->compatibleSurfaces(state.stepping, navOpts, navCorr);
+    state.navigation.navSurfaces = navLayer->compatibleSurfaces(
+        state.stepping.pos, state.stepping.dir, navOpts, navCorr);
     // the number of layer candidates
     if (!state.navigation.navSurfaces.empty()) {
       debugLog(state, [&] {
@@ -1058,7 +1062,7 @@ private:
     // Request the compatible layers
     state.navigation.navLayers
         = state.navigation.currentVolume->compatibleLayers(
-            state.stepping, navOpts, navCorr);
+            state.stepping.pos, state.stepping.dir, navOpts, navCorr);
 
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {
@@ -1173,8 +1177,10 @@ private:
         return true;
       }
       // the only advance could have been to the target
-      if (state.navigation.targetSurface->isOnSurface(
-              state.stepping.pos, state.stepping.momentum(), true)) {
+      if (state.navigation.targetSurface->isOnSurface(state.stepping.pos,
+                                                      state.stepping.p
+                                                          * state.stepping.dir,
+                                                      true)) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
 

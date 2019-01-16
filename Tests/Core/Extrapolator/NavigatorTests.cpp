@@ -46,33 +46,17 @@ namespace Test {
       /// Stepper cache in the propagation
       struct StepperState
       {
-
-        /// Access method to position
-        const Vector3D&
-        position() const
-        {
-          return pos;
-        }
-
-        /// Access method to momentum
-        const Vector3D&
-        momentum() const
-        {
-          return dir;
-        }
-
-        /// Access method to direction
-        const Vector3D&
-        direction() const
-        {
-          return dir;
-        }
-
         /// Position
         Vector3D pos = Vector3D(0., 0., 0.);
 
-        /// and mumentum
+        /// Direction
         Vector3D dir = Vector3D(1., 0., 0.);
+
+        /// Momentum
+        double p;
+
+        /// Charge
+        double q;
 
         /// the navigation direction
         NavigationDirection navDir = forward;
@@ -198,7 +182,7 @@ namespace Test {
         state.stepping.stepSize, beamPipeRadius, s_onSurfaceTolerance);
     if (debug) {
       std::cout << "<<< Test 1a >>> initialize at "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       // Clear the debug string for the next test
       state.options.debugString = "";
@@ -223,7 +207,7 @@ namespace Test {
 
     if (debug) {
       std::cout << "<<< Test 1b >>> step to the BeamPipe at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -239,7 +223,7 @@ namespace Test {
 
     if (debug) {
       std::cout << "<<< Test 1c >>> step to the Boundary at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -254,7 +238,7 @@ namespace Test {
 
     if (debug) {
       std::cout << "<<< Test 1d >>> step to 1st layer at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -271,7 +255,7 @@ namespace Test {
 
       if (debug) {
         std::cout << "<<< Test 1e-1i >>> step within 1st layer at  "
-                  << toString(state.stepping.position()) << std::endl;
+                  << toString(state.stepping.pos) << std::endl;
         std::cout << state.options.debugString << std::endl;
         state.options.debugString = "";
       }
@@ -287,7 +271,7 @@ namespace Test {
 
     if (debug) {
       std::cout << "<<< Test 1j >>> step to 2nd layer at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -304,7 +288,7 @@ namespace Test {
 
       if (debug) {
         std::cout << "<<< Test 1k-1o >>> step within 2nd layer at  "
-                  << toString(state.stepping.position()) << std::endl;
+                  << toString(state.stepping.pos) << std::endl;
         std::cout << state.options.debugString << std::endl;
         state.options.debugString = "";
       }
@@ -320,7 +304,7 @@ namespace Test {
 
     if (debug) {
       std::cout << "<<< Test 1p >>> step to 3rd layer at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -337,7 +321,7 @@ namespace Test {
 
       if (debug) {
         std::cout << "<<< Test 1q-1s >>> step within 3rd layer at  "
-                  << toString(state.stepping.position()) << std::endl;
+                  << toString(state.stepping.pos) << std::endl;
         std::cout << state.options.debugString << std::endl;
         state.options.debugString = "";
       }
@@ -353,7 +337,7 @@ namespace Test {
 
     if (debug) {
       std::cout << "<<< Test 1t >>> step to 4th layer at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -370,7 +354,7 @@ namespace Test {
 
       if (debug) {
         std::cout << "<<< Test 1t-1v >>> step within 4th layer at  "
-                  << toString(state.stepping.position()) << std::endl;
+                  << toString(state.stepping.pos) << std::endl;
         std::cout << state.options.debugString << std::endl;
         state.options.debugString = "";
       }
@@ -386,7 +370,7 @@ namespace Test {
 
     if (debug) {
       std::cout << "<<< Test 1w >>> step to boundary at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }

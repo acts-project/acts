@@ -33,12 +33,10 @@ namespace detail {
       // Estimate the loop protection limit
       if (state.options.loopProtection) {
         // Get the field at the start position
-        Vector3D field
-            = stepper.getField(state.stepping, state.stepping.position());
+        Vector3D field = stepper.getField(state.stepping, state.stepping.pos);
         // Momentum in SI units and B field
-        const double p
-            = units::Nat2SI<units::MOMENTUM>(state.stepping.momentum().norm());
-        const double B         = field.norm();
+        const double p = units::Nat2SI<units::MOMENTUM>(state.stepping.p);
+        const double B = field.norm();
         const double helixPath = 2 * M_PI * p / B;
         // now set the new loop limit
         auto& pathAborter

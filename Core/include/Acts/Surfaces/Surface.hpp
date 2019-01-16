@@ -395,6 +395,34 @@ public:
   /// Straight line intersection schema from parameters
   ///
   /// Templated for :
+  /// @tparam options_t Type of the navigation options
+  /// @tparam corrector_t is the type of the corrector struct foer the direction
+  ///
+  /// @param position The position to start from
+  /// @param position The direction to start from
+  /// @param options Options object that holds additional navigation info
+  /// @param correct Corrector struct that can be used to refine the solution
+  ///
+  /// @return SurfaceIntersection object (contains intersection & surface)
+  template <typename options_t,
+            typename corrector_t = VoidIntersectionCorrector>
+  SurfaceIntersection
+  surfaceIntersectionEstimate(const Vector3D&    position,
+                              const Vector3D&    direction,
+                              const options_t&   options,
+                              const corrector_t& correct = corrector_t()) const
+
+  {
+    // get the intersection with the surface
+    auto sIntersection = intersectionEstimate(
+        position, direction, options.navDir, options.boundaryCheck, correct);
+    // return a surface intersection with result direction
+    return SurfaceIntersection(sIntersection, this);
+  }
+
+  /// Straight line intersection schema from parameters
+  ///
+  /// Templated for :
   /// @tparam parameters_t Type of track parameters
   /// @tparam options_t Type of the navigation options
   /// @tparam corrector_t is the type of the corrector struct foer the direction
@@ -408,18 +436,12 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   SurfaceIntersection
-  intersectionEstimate(const parameters_t& parameters,
-                       const options_t&    options,
-                       const corrector_t&  correct = corrector_t()) const
+  surfaceIntersectionEstimate(const parameters_t& parameters,
+                              const options_t&    options,
+                              const corrector_t&  correct = corrector_t()) const
   {
-    // get the intersection with the surface
-    auto sIntersection = intersectionEstimate(parameters.position(),
-                                              parameters.direction(),
-                                              options.navDir,
-                                              options.boundaryCheck,
-                                              correct);
-    // return a surface intersection with result direction
-    return SurfaceIntersection(sIntersection, this);
+    return surfaceIntersectionEstimate(
+        parameters.position(), parameters.direction(), options, correct);
   }
 
   /// Straight line intersection from position and momentum

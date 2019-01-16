@@ -39,21 +39,22 @@ struct DefaultBoundaryIntersectionSorter
   /// a straight line along the propagation direction and returns them sorted by
   /// intersecion probability.
   ///
-  /// @tparam parameters_t Type of parameters used for the decomposition
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param boundaries Vector of boundaries of the volume
-  /// @param parameters The templated parameters for searching
+  /// @param position The position for searching
+  /// @param direction The direction for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
   ///
   /// @return Vector of intersections with the boundaries ordered by the
   /// intersection probability
-  template <typename parameters_t, typename options_t, typename corrector_t>
+  template <typename options_t, typename corrector_t>
   std::vector<BoundaryIntersection>
   operator()(std::vector<const BoundarySurfaceT<TrackingVolume>*>& boundaries,
-             const parameters_t&                                   parameters,
+             const Vector3D&                                       position,
+             const Vector3D&                                       direction,
              const options_t&                                      options,
              const corrector_t& corrfnc) const
   {
@@ -62,7 +63,8 @@ struct DefaultBoundaryIntersectionSorter
       const auto& bSurfaceRep = bSurface->surfaceRepresentation();
       // intersect the surface
       SurfaceIntersection bsIntersection
-          = bSurfaceRep.intersectionEstimate(parameters, options, corrfnc);
+          = bSurfaceRep.surfaceIntersectionEstimate(
+              position, direction, options, corrfnc);
       // check if the intersection is valid, but exlude the on-surface case
       // when requested -- move to intersectionestimate
       if (bsIntersection) {
@@ -108,21 +110,22 @@ struct BoundaryIntersectionSorter
   /// be somewhat likely to be intersected. Therewith the navigation in magnetic
   /// fields can be ensured.
   ///
-  /// @tparam parameters_t Type of parameters used for the decomposition
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param boundaries Vector of boundaries of the volume
-  /// @param parameters The templated parameters for searching
+  /// @param position The position for searching
+  /// @param direction The direction for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
   ///
   /// @return Vector of intersections with the boundaries ordered by the
   /// intersection probability
-  template <typename parameters_t, typename options_t, typename corrector_t>
+  template <typename options_t, typename corrector_t>
   std::vector<BoundaryIntersection>
   operator()(std::vector<const BoundarySurfaceT<TrackingVolume>*>& boundaries,
-             const parameters_t&                                   parameters,
+             const Vector3D&                                       position,
+             const Vector3D&                                       direction,
              const options_t&                                      options,
              const corrector_t& corrfnc) const
   {
@@ -147,7 +150,7 @@ struct BoundaryIntersectionSorter
       // Collect intersections
       for (const auto& boundary : boundaries) {
         bIntersections.push_back(
-            intersect(boundary, parameters, options, corrfnc));
+            intersect(boundary, position, direction, options, corrfnc));
       }
       // Fast exit for that case
       return bIntersections;
@@ -159,12 +162,12 @@ struct BoundaryIntersectionSorter
       // If the intersection is valid it is pushed to the final vector otherwise
       // to a tmp storage
       BoundaryIntersection intersection
-          = intersect(boundary, parameters, options, corrfnc);
+          = intersect(boundary, position, direction, options, corrfnc);
       if (intersection) {
         bIntersections.push_back(std::move(intersection));
       } else {
-        bIntersectionsOtherNavDir.push_back(
-            intersect(boundary, parameters, optionsOtherNavDir, corrfnc));
+        bIntersectionsOtherNavDir.push_back(intersect(
+            boundary, position, direction, optionsOtherNavDir, corrfnc));
       }
     }
 
@@ -195,27 +198,28 @@ private:
   /// @brief This function constructs the intersection with a boundary surface
   /// and returns the intersection object
   ///
-  /// @tparam parameters_t Type of parameters used for the decomposition
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param boundary Boundary of the volume
-  /// @param parameters The templated parameters for searching
+  /// @param position The position for searching
+  /// @param direction The direction for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
   ///
   /// @return Intersection object of the boundary surface
-  template <typename parameters_t, typename options_t, typename corrector_t>
+  template <typename options_t, typename corrector_t>
   BoundaryIntersection
   intersect(const BoundarySurfaceT<TrackingVolume>* boundary,
-            const parameters_t&                     parameters,
+            const Vector3D&                         position,
+            const Vector3D&                         direction,
             const options_t&                        options,
             const corrector_t&                      corrfnc) const
   {
     const Surface* surface = &(boundary->surfaceRepresentation());
     // intersect the surface
-    SurfaceIntersection bsIntersection
-        = surface->intersectionEstimate(parameters, options, corrfnc);
+    SurfaceIntersection bsIntersection = surface->surfaceIntersectionEstimate(
+        position, direction, options, corrfnc);
     return BoundaryIntersection(
         bsIntersection.intersection, boundary, surface, options.navDir);
   }
