@@ -51,7 +51,7 @@ Acts::Vertex::setCovariance(const Acts::ActsSymMatrixD<3>& covariance)
 
 void
 Acts::Vertex::setTracksAtVertex(
-    std::vector<std::shared_ptr<Acts::TrackAtVertex>>& tracks)
+    const std::vector<std::shared_ptr<Acts::TrackAtVertex>>& tracks)
 {
   m_tracksAtVertex = std::move(tracks);
 }

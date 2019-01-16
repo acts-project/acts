@@ -62,60 +62,60 @@ public:
   const Acts::ActsVectorD<5>&
   parametersAtPCA() const
   {
-    return m_ParamsAtPCA;
+    return m_paramsAtPCA;
   }
 
   const Acts::ActsSymMatrixD<5>&
   covarianceAtPCA() const
   {
-    return m_ParCovarianceAtPCA;
+    return m_parCovarianceAtPCA;
   }
 
   const Acts::Vector3D&
   linearizationPoint() const
   {
-    return m_LinPoint;
+    return m_linPoint;
   }
 
   const Acts::ActsMatrixD<5, 3>&
   positionJacobian() const
   {
-    return m_PositionJacobian;
+    return m_positionJacobian;
   }
 
   const Acts::ActsMatrixD<5, 3>&
   momentumJacobian() const
   {
-    return m_MomentumJacobian;
+    return m_momentumJacobian;
   }
 
   const Acts::Vector3D&
   positionAtPCA() const
   {
-    return m_PositionAtPCA;
+    return m_positionAtPCA;
   }
 
   const Acts::Vector3D&
   momentumAtPCA() const
   {
-    return m_MomentumAtPCA;
+    return m_momentumAtPCA;
   }
 
   const Acts::ActsVectorD<5>&
   constantTerm() const
   {
-    return m_ConstTerm;
+    return m_constTerm;
   }
 
 private:
-  Acts::ActsVectorD<5>    m_ParamsAtPCA;
-  Acts::ActsSymMatrixD<5> m_ParCovarianceAtPCA;
-  Acts::Vector3D          m_LinPoint;
-  Acts::ActsMatrixD<5, 3> m_PositionJacobian;
-  Acts::ActsMatrixD<5, 3> m_MomentumJacobian;
-  Acts::Vector3D       m_PositionAtPCA;
-  Acts::Vector3D       m_MomentumAtPCA;
-  Acts::ActsVectorD<5> m_ConstTerm;
+  Acts::ActsVectorD<5>    m_paramsAtPCA;
+  Acts::ActsSymMatrixD<5> m_parCovarianceAtPCA;
+  Acts::Vector3D          m_linPoint;
+  Acts::ActsMatrixD<5, 3> m_positionJacobian;
+  Acts::ActsMatrixD<5, 3> m_momentumJacobian;
+  Acts::Vector3D       m_positionAtPCA;
+  Acts::Vector3D       m_momentumAtPCA;
+  Acts::ActsVectorD<5> m_constTerm;
 };
 
 }  // namespace Acts

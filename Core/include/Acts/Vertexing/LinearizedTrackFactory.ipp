@@ -82,7 +82,9 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
   double S2 = (X * X + Y * Y);
   double S  = sqrt(S2);
 
-  // F(V, p_i) at PCA (see Billoir paper)
+  /// F(V, p_i) at PCA in Billoir paper
+  /// (see FullVertexFitter.hpp for paper reference,
+  /// Page 140, Eq. (2) )
   Acts::ActsVectorD<5> predParamsAtPCA;
 
   int sgnX = (X < 0.) ? -1 : 1;

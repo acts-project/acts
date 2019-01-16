@@ -10,14 +10,14 @@
 
 Acts::LinearizedTrack::LinearizedTrack()
 {
-  m_ParamsAtPCA.setZero();
-  m_ParCovarianceAtPCA.setZero();
-  m_LinPoint.setZero();
-  m_PositionJacobian.setZero();
-  m_MomentumJacobian.setZero();
-  m_PositionAtPCA.setZero();
-  m_MomentumAtPCA.setZero();
-  m_ConstTerm.setZero();
+  m_paramsAtPCA.setZero();
+  m_parCovarianceAtPCA.setZero();
+  m_linPoint.setZero();
+  m_positionJacobian.setZero();
+  m_momentumJacobian.setZero();
+  m_positionAtPCA.setZero();
+  m_momentumAtPCA.setZero();
+  m_constTerm.setZero();
 }
 
 Acts::LinearizedTrack::LinearizedTrack(
@@ -29,14 +29,14 @@ Acts::LinearizedTrack::LinearizedTrack(
     const Acts::Vector3D&       positionAtPCA,
     const Acts::Vector3D&       momentumAtPCA,
     const Acts::ActsVectorD<5>& constTerm)
-  : m_ParamsAtPCA(paramsAtPCA)
-  , m_ParCovarianceAtPCA(parCovarianceAtPCA)
-  , m_LinPoint(linPoint)
-  , m_PositionJacobian(positionJacobian)
-  , m_MomentumJacobian(momentumJacobian)
-  , m_PositionAtPCA(positionAtPCA)
-  , m_MomentumAtPCA(momentumAtPCA)
-  , m_ConstTerm(constTerm)
+  : m_paramsAtPCA(paramsAtPCA)
+  , m_parCovarianceAtPCA(parCovarianceAtPCA)
+  , m_linPoint(linPoint)
+  , m_positionJacobian(positionJacobian)
+  , m_momentumJacobian(momentumJacobian)
+  , m_positionAtPCA(positionAtPCA)
+  , m_momentumAtPCA(momentumAtPCA)
+  , m_constTerm(constTerm)
 {
 }
 
@@ -44,14 +44,14 @@ Acts::LinearizedTrack&
 Acts::LinearizedTrack::operator=(const Acts::LinearizedTrack& other)
 {
   if (this != &other) {
-    m_ParamsAtPCA        = other.m_ParamsAtPCA;
-    m_ParCovarianceAtPCA = other.m_ParCovarianceAtPCA;
-    m_LinPoint           = other.m_LinPoint;
-    m_PositionJacobian   = other.m_PositionJacobian;
-    m_MomentumJacobian   = other.m_MomentumJacobian;
-    m_PositionAtPCA      = other.m_PositionAtPCA;
-    m_MomentumAtPCA      = other.m_MomentumAtPCA;
-    m_ConstTerm          = other.m_ConstTerm;
+    m_paramsAtPCA        = other.m_paramsAtPCA;
+    m_parCovarianceAtPCA = other.m_parCovarianceAtPCA;
+    m_linPoint           = other.m_linPoint;
+    m_positionJacobian   = other.m_positionJacobian;
+    m_momentumJacobian   = other.m_momentumJacobian;
+    m_positionAtPCA      = other.m_positionAtPCA;
+    m_momentumAtPCA      = other.m_momentumAtPCA;
+    m_constTerm          = other.m_constTerm;
   }
   return *this;
 }

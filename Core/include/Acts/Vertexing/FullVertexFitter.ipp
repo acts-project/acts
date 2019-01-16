@@ -182,8 +182,6 @@ Acts::FullVertexFitter<BField>::fit(
 
     std::vector<std::unique_ptr<Acts::ActsSymMatrixD<5>>> cov_delta_P_mat(
         nTracks);
-    std::vector<double> chi2PerTrack;
-    chi2PerTrack.clear();
 
     i_track = 0;
     for (auto& bTrack : billoirTracks) {

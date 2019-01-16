@@ -13,6 +13,17 @@
 
 namespace Acts {
 
+/// @class FullVertexFitter
+///
+/// @brief Vertex fitter class implementing the Billoir vertex fitter
+///
+/// This class implements the Billoir vertex fitter:
+///
+/// Fast vertex fitting with a local parametrization of tracks
+/// Author(s)	Billoir, P ; Qian, S
+/// In:	Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
+/// DOI	10.1016/0168-9002(92)90859-3
+
 template <typename BField>
 class FullVertexFitter
 {
