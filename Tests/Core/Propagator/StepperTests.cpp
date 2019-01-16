@@ -58,7 +58,8 @@ namespace Test {
     bool
     operator()(propagator_state_t& state, const stepper_t& stepper) const
     {
-      if (std::abs(stepper.position(state.stepping).x()) >= maxX
+      const double tolerance = state.options.targetTolerance;
+      if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance
           || std::abs(stepper.position(state.stepping).y()) >= 0.5 * units::_m
           || std::abs(stepper.position(state.stepping).z()) >= 0.5 * units::_m)
         return true;
