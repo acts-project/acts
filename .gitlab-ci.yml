@@ -115,6 +115,9 @@ integration_tests_slc6_lcg93:
 
 build_slc6_lcg94:
   <<: *template_build
+  variables:
+    BUILD_TYPE: Debug # for coverage check
+    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DACTS_BUILD_DD4HEP_PLUGIN=on -DACTS_BUILD_TGEO_PLUGIN=on
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
