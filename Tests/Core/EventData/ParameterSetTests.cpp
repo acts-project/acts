@@ -98,7 +98,6 @@ namespace Test {
       theta_2 = min - 2;
       bound1.setParameter<ParID_t::eTHETA>(theta_1);
       bound2.setParameter<ParID_t::eTHETA>(theta_2);
-      dTheta << 0;
       CHECK_SMALL(bound1.residual(bound2), tol);
 
       // both parameters outside bounds, both above
@@ -106,7 +105,6 @@ namespace Test {
       theta_2 = max + 2;
       bound1.setParameter<ParID_t::eTHETA>(theta_1);
       bound2.setParameter<ParID_t::eTHETA>(theta_2);
-      dTheta << 0;
       CHECK_SMALL(bound1.residual(bound2), tol);
 
       // both parameters outside bounds, one above, one below
