@@ -108,11 +108,10 @@ Acts::CuboidVolumeBuilder::buildVolume(
     // Build dummy layer if no layer is given (tmp solution)
     SurfaceConfig sCfg;
     sCfg.position = cfg.position;
-    // Rotation of the surfaces
-    double   rotationAngle = M_PI * 0.5;
-    Vector3D xPos(cos(rotationAngle), 0., sin(rotationAngle));
+    // Rotation of the surfaces: +pi/2 around axis y
+    Vector3D xPos(0., 0., 1.);
     Vector3D yPos(0., 1., 0.);
-    Vector3D zPos(-sin(rotationAngle), 0., cos(rotationAngle));
+    Vector3D zPos(-1., 0., 0.);
     sCfg.rotation.col(0) = xPos;
     sCfg.rotation.col(1) = yPos;
     sCfg.rotation.col(2) = zPos;
