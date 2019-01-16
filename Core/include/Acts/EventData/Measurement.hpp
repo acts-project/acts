@@ -53,7 +53,7 @@ class Measurement
                 "'Identifier' must be move-assignable");
 
 private:
-  // private typedef's
+  // private typedefs
 
   /// type of the underlying ParameterSet object
   using ParSet_t = ParameterSet<params...>;
@@ -65,6 +65,8 @@ public:
   using CovMatrix_t = typename ParSet_t::CovMatrix_t;
   /// matrix type for projecting full parameter vector onto local parameters
   using Projection_t = typename ParSet_t::Projection_t;
+
+  using Identifier_t = identifier_t;
 
   /// Delete the default constructor
   Measurement() = delete;

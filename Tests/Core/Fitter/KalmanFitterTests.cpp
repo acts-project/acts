@@ -39,13 +39,9 @@ namespace Test {
 
   // A few initialisations and definitionas
   using Identifier = GeometryID;
-  using Jacobian   = ActsMatrixD<5, 5>;
+  using Jacobian   = BoundParameters::CovMatrix_t;
 
-  template <ParID_t... params>
-  using MeasuredTrackState
-      = MeasuredTrackState<Identifier, BoundParameters, Jacobian, params...>;
-  using VariantTrackState
-      = VariantTrackState<Identifier, BoundParameters, Jacobian>;
+  using TrackState         = TrackState<Identifier, BoundParameters>;
   using Resolution         = std::pair<ParID_t, double>;
   using ElementResolution  = std::vector<Resolution>;
   using VolumeResolution   = std::map<geo_id_value, ElementResolution>;
@@ -72,7 +68,7 @@ namespace Test {
     /// The detector resolution
     DetectorResolution detectorResolution;
 
-    using result_type = std::vector<VariantTrackState>;
+    using result_type = std::vector<TrackState>;
 
     /// @brief Operater that is callable by an ActionList. The function collects
     /// the surfaces
@@ -108,12 +104,12 @@ namespace Test {
                 // push back & move a LOC_0 measurement
                 Measurement<Identifier, eLOC_0> m0(
                     surface->getSharedPtr(), geoID, cov1D, lPos[eLOC_0] + dp);
-                result.push_back(MeasuredTrackState<eLOC_0>(std::move(m0)));
+                result.push_back(TrackState(std::move(m0)));
               } else {
                 // push back & move a LOC_1 measurement
                 Measurement<Identifier, eLOC_1> m1(
                     surface->getSharedPtr(), geoID, cov1D, lPos[eLOC_1] + dp);
-                result.push_back(MeasuredTrackState<eLOC_1>(std::move(m1)));
+                result.push_back(TrackState(std::move(m1)));
               }
             } else if (lResolution->second.size() == 2) {
               // Create the measurment and move it
@@ -129,8 +125,7 @@ namespace Test {
                   cov2D,
                   lPos[eLOC_0] + dx,
                   lPos[eLOC_1] + dy);
-              result.push_back(
-                  MeasuredTrackState<eLOC_0, eLOC_1>(std::move(m01)));
+              result.push_back(TrackState(std::move(m01)));
             }
           }
         }
@@ -294,8 +289,8 @@ namespace Test {
 
     const Surface* rSurface = &rStart.referenceSurface();
 
-    using Updator      = GainMatrixUpdator<BoundParameters, Jacobian>;
-    using Smoother     = GainMatrixSmoother<BoundParameters, Jacobian>;
+    using Updator      = GainMatrixUpdator<BoundParameters>;
+    using Smoother     = GainMatrixSmoother<BoundParameters>;
     using KalmanFitter = KalmanFitter<RecoPropagator, Updator, Smoother>;
 
     KalmanFitter kFitter(rPropagator);
@@ -312,12 +307,12 @@ namespace Test {
         fittedAgainParameters.parameters()));
 
     // Change the order of the measurements
-    std::vector<VariantTrackState> shuffledMeasurements = {measurements[3],
-                                                           measurements[2],
-                                                           measurements[1],
-                                                           measurements[4],
-                                                           measurements[5],
-                                                           measurements[0]};
+    std::vector<TrackState> shuffledMeasurements = {measurements[3],
+                                                    measurements[2],
+                                                    measurements[1],
+                                                    measurements[4],
+                                                    measurements[5],
+                                                    measurements[0]};
 
     // Make sure it works for shuffled measurements as well
     auto fittedShuffledTrack
@@ -328,11 +323,11 @@ namespace Test {
         fittedShuffledParameters.parameters()));
 
     // Remove one measurement and find a hole
-    std::vector<VariantTrackState> measurementsWithHole = {measurements[0],
-                                                           measurements[1],
-                                                           measurements[2],
-                                                           measurements[4],
-                                                           measurements[5]};
+    std::vector<TrackState> measurementsWithHole = {measurements[0],
+                                                    measurements[1],
+                                                    measurements[2],
+                                                    measurements[4],
+                                                    measurements[5]};
 
     // Make sure it works for shuffled measurements as well
     auto fittedWithHoleTrack

@@ -25,16 +25,13 @@ namespace Acts {
 ///
 /// This is implemented as a boost vistor pattern for use of the
 /// boost variant container
-template <typename parameters_t,
-          typename jacobian_t,
-          typename calibrator_t = VoidKalmanComponents>
+template <typename parameters_t, typename calibrator_t = VoidKalmanComponents>
 class GainMatrixUpdator
 {
 
-public:
-  // Shorthand
-  using predicted_state_t = std::tuple<parameters_t, jacobian_t, double>;
+  using jacobian_t = typename parameters_t::CovMatrix_t;
 
+public:
   /// Explicit constructor
   ///
   /// @param calibrator is the calibration struct/class that converts
@@ -47,105 +44,91 @@ public:
   /// @brief Public call operator for the boost visitor pattern
   ///
   /// @tparam track_state_t Type of the track state for the update
-  /// @tparam predicted_state_t Type of the track state prediction
   ///
-  /// @param m the measured track state
-  /// @param predicted the predicted track state
+  /// @param trackState the measured track state
   ///
-  /// @return The optional parameters - indicating if the update happened
+  /// @return Bool indicating whether this update was 'successful'
+  /// @note Non-'successful' updates could be holes or outliers,
+  ///       which need to be treated differently in calling code.
   template <typename track_state_t>
-  boost::optional<parameters_t>
-  operator()(track_state_t& m, predicted_state_t predicted) const
+  bool
+  operator()(track_state_t& trackState) const
   {
-    GainMatrixUpdatorImpl impl(m_mCalibrator, std::move(predicted));
-    return boost::apply_visitor(impl, m);
+    using CovMatrix_t = typename parameters_t::CovMatrix_t;
+    using ParVector_t = typename parameters_t::ParVector_t;
+
+    // we should definitely have an uncalibrated measurement here
+    assert(trackState.measurement.uncalibrated);
+    // there should be no calibrated measurement
+    assert(!trackState.measurement.calibrated);
+    // we should have predicted state set
+    assert(trackState.parameter.predicted);
+    // filtring should not have happened yet
+    assert(!trackState.parameter.filtered);
+
+    // read-only prediction handle
+    const parameters_t& predicted = *trackState.parameter.predicted;
+
+    const CovMatrix_t& predicted_covariance = *predicted.covariance();
+
+    ParVector_t filtered_parameters;
+    CovMatrix_t filtered_covariance;
+
+    // we need to remove type-erasure on the measurement type
+    // to access its methods
+    boost::apply_visitor(
+        [&](const auto& uncalibrated) {
+          // type of measurement
+          using meas_t = typename std::remove_const<
+              typename std::remove_reference<decltype(uncalibrated)>::type>::
+              type;
+          // type of projection
+          using projection_t = typename meas_t::Projection_t;
+          // type of gain matrix (transposed projection)
+          using gain_matrix_t = ActsMatrixD<projection_t::ColsAtCompileTime,
+                                            projection_t::RowsAtCompileTime>;
+
+          // Calibrate the measurement
+          meas_t calibrated = m_mCalibrator(uncalibrated, predicted);
+
+          // Take the projector (measurement mapping function)
+          const projection_t& H = calibrated.projector();
+
+          // The Kalman gain matrix
+          gain_matrix_t K = predicted_covariance * H.transpose()
+              * (H * predicted_covariance * H.transpose()
+                 + calibrated.covariance())
+                    .inverse();
+
+          // filtered new parameters after update
+          filtered_parameters
+              = predicted.parameters() + K * calibrated.residual(predicted);
+
+          // updated covariance after filtering
+          filtered_covariance
+              = (CovMatrix_t::Identity() - K * H) * predicted_covariance;
+
+          // plug calibrated measurement back into track state
+          trackState.measurement.calibrated = std::move(calibrated);
+
+        },
+        *trackState.measurement.uncalibrated);
+
+    // Create new filtered parameters and covariance
+    parameters_t filtered(
+        std::make_unique<const CovMatrix_t>(std::move(filtered_covariance)),
+        filtered_parameters,
+        predicted.referenceSurface().getSharedPtr());
+
+    trackState.parameter.filtered = std::move(filtered);
+
+    // always succeed, no outlier logic yet
+    return true;
   }
 
 private:
   /// The measurement calibrator
   calibrator_t m_mCalibrator;
-
-  /// @brief GainMatrix updator implementation
-  struct GainMatrixUpdatorImpl
-      : public boost::static_visitor<boost::optional<parameters_t>>
-  {
-    /// @brief Explicit constructor of the GainMatrix updator
-    ///
-    /// @param calibrator The calibration struct/class that converts
-    /// uncalibrated measurements into calibrated ones
-    /// @param predictedState The tuple of predicted parameters, jacobian, path
-    explicit GainMatrixUpdatorImpl(const calibrator_t& calibrator,
-                                   predicted_state_t   predictedState)
-      : m_mCalibrator(&calibrator), m_pState(std::move(predictedState))
-    {
-    }
-
-    /// @brief Call operator for the visitor pattern
-    ///
-    /// @tparam measurement_t Type of the measurement to be used
-    /// @param rawMeasurement The measurement
-    ///
-    /// @todo Include the incremental chi-2 here or do some outlier steering ?
-    ///
-    /// @return The filtered parameters
-    template <typename track_state_t>
-    boost::optional<parameters_t>
-    operator()(track_state_t& trackState) const
-    {
-      // Covariance matrix initialization
-      static const ActsSymMatrixD<Acts::NGlobalPars> unit
-          = ActsSymMatrixD<Acts::NGlobalPars>::Identity();
-
-      // Predicted Parameters
-      const auto& predicted = std::get<parameters_t>(m_pState);
-
-      // Calibrate the measurement
-      auto cMeasurement = (*m_mCalibrator)(
-          trackState.measurement.uncalibrated.get(), predicted);
-      const auto* pCov_trk = predicted.covariance();
-
-      // Take the projector (measurement mapping function)
-      const auto& H = cMeasurement.projector();
-
-      // The Kalman gain matrix
-      ActsMatrixD<Acts::NGlobalPars, track_state_t::size()> K = (*pCov_trk)
-          * H.transpose()
-          * (H * (*pCov_trk) * H.transpose() + cMeasurement.covariance())
-                .inverse();
-
-      // New parameters after update
-      typename parameters_t::ParVector_t newParValues
-          = predicted.parameters() + K * cMeasurement.residual(predicted);
-
-      // New covaraincd after update
-      typename parameters_t::CovMatrix_t newCov = (unit - K * H) * (*pCov_trk);
-
-      // Create a new filtered parameters and covariance
-      parameters_t filtered(
-          std::make_unique<const typename parameters_t::CovMatrix_t>(
-              std::move(newCov)),
-          newParValues,
-          predicted.referenceSurface().getSharedPtr());
-
-      // Set (and move) everything
-      trackState.measurement.calibrated = std::move(cMeasurement);
-      trackState.parametric.predicted   = std::move(predicted);
-      trackState.parametric.filtered    = std::move(filtered);
-      trackState.parametric.jacobian
-          = std::move(std::get<jacobian_t>(m_pState));
-      trackState.parametric.pathLength = std::get<double>(m_pState);
-
-      // Return the optional filtered state
-      return trackState.parametric.filtered;
-    }
-
-  private:
-    /// The Calibator
-    const calibrator_t* m_mCalibrator;
-
-    /// Predicted state (parameters, jacobian, path)
-    predicted_state_t m_pState;
-  };
 };
 
 }  // namespace Acts
