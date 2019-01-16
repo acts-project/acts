@@ -184,32 +184,32 @@ build_slc6_lcg94_no_legacy:
     - cmake --build . -- -j${ACTS_NCPUS}
     - find . -name "*.o" -delete
 
-# SLC, LCG94, LLVM40
+# SLC, LCG94, LLVM60
 
-build_slc6_lcg94_clang:
+build_slc6_lcg94_llvm60:
   <<: *template_build
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_clang.sh
+    - source CI/setup_llvm60.sh
 
-unit_tests_slc6_lcg94_clang:
+unit_tests_slc6_lcg94_llvm60:
   <<: *template_unit_tests
   dependencies:
-    - build_slc6_lcg94_clang
+    - build_slc6_lcg94_llvm60
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_clang.sh
+    - source CI/setup_llvm60.sh
 
-integration_tests_slc6_lcg94_clang:
+integration_tests_slc6_lcg94_llvm60:
   <<: *template_integration_tests
   dependencies:
-    - build_slc6_lcg94_clang
+    - build_slc6_lcg94_llvm60
   image: gitlab-registry.cern.ch/acts/machines/slc6:latest
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_clang.sh
+    - source CI/setup_llvm60.sh
 
 # CC7, LCG93
 
