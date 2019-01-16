@@ -40,6 +40,12 @@ if (ACTS_BUILD_TGEO_PLUGIN)
   set (ACTS_BUILD_IDENTIFICATION_PLUGIN ON)
 endif()
 
+# additional configuration and tools
+include (GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
+include (ActsCompilerOptions) # default compile options
+include (ActsFunctions) # Acts-specific helper functions
+include (ActsComponentsHelpers) # handle components via add_..._if commands
+
 # required packages
 find_package(Boost 1.62 REQUIRED COMPONENTS program_options unit_test_framework)
 find_package(Eigen 3.2.9 REQUIRED)
@@ -54,12 +60,6 @@ endif()
 if(ACTS_BUILD_TGEO_PLUGIN)
   find_package(ROOT 6.10 REQUIRED COMPONENTS Geom)
 endif()
-
-# additional configuration and tools
-include (GNUInstallDirs) # GNU-like installation paths, e.g. lib/, include/, ...
-include (ActsCompilerOptions) # default compile options
-include (ActsFunctions) # Acts-specific helper functions
-include (ActsComponentsHelpers) # handle components via add_..._if commands
 
 # core library and plugins
 add_component (Core Core)
