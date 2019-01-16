@@ -42,7 +42,8 @@ public:
   setCovariance(const Acts::ActsSymMatrixD<3>& covariance);
   /// Set tracks at vertex
   void
-  setTracksAtVertex(const std::vector<std::shared_ptr<Acts::TrackAtVertex>>& tracks);
+  setTracksAtVertex(
+      const std::vector<std::shared_ptr<Acts::TrackAtVertex>>& tracks);
 
 private:
   Acts::Vector3D                                    m_position;
