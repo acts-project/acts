@@ -15,15 +15,8 @@ namespace Acts {
 /// @brief Charged and Neutrial Track Parameterisation classes bound to
 /// to a reference surface. This is a single-component representation
 ///
-/// @note surfaces are dealt as plain pointers as they might represent
-/// actual detector elements with their respective changeing alignment.
-/// This might be reviewed at later stage in the context of data locality.
-///
-/// Currently, the following strategy is implemented:
-/// * surfaces with a lifetime longer than an event, i.e. detector elements,
-///   or representing surfaces of the detector geometry are copied as plain
-///   pointers and hence not deleted as the geometry keeps ownership of them
-/// * (free) surfaces that have no registered ownership are cloned
+/// @note This class holds shared ownership on the surface it is associated
+///       to.
 template <class ChargePolicy>
 class SingleBoundTrackParameters : public SingleTrackParameters<ChargePolicy>
 {
