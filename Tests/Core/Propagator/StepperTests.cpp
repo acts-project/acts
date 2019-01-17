@@ -413,14 +413,17 @@ namespace Test {
     CuboidVolumeBuilder::VolumeConfig vConfVac1;
     vConfVac1.position = {0.5 * units::_m, 0., 0.};
     vConfVac1.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConfVac1.name     = "First vacuum volume";
     CuboidVolumeBuilder::VolumeConfig vConfMat;
     vConfMat.position = {1.5 * units::_m, 0., 0.};
     vConfMat.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
     vConfMat.material = std::make_shared<const Material>(
         Material(352.8, 394.133, 9.012, 4., 1.848e-3));
+    vConfMat.name = "Material volume";
     CuboidVolumeBuilder::VolumeConfig vConfVac2;
     vConfVac2.position = {2.5 * units::_m, 0., 0.};
     vConfVac2.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConfVac2.name     = "Second vacuum volume";
     CuboidVolumeBuilder::Config conf;
     conf.volumeCfg = {vConfVac1, vConfMat, vConfVac2};
     conf.position  = {1.5 * units::_m, 0., 0.};
