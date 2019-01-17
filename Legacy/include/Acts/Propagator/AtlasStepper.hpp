@@ -128,7 +128,7 @@ public:
   /// @param uposition the updated position
   /// @param udirection the updated direction
   /// @param p the updated momentum value
-  static void
+  void
   update(State&          state,
          const Vector3D& uposition,
          const Vector3D& udirection,
@@ -145,7 +145,7 @@ public:
   }
 
   /// Return a corrector
-  static VoidIntersectionCorrector
+  VoidIntersectionCorrector
   corrector(State& /*unused*/)
   {
     return VoidIntersectionCorrector();
@@ -155,7 +155,7 @@ public:
   ///
   /// @param [in] pars The new track parameters at start
   template <typename Parameters>
-  static void
+  void
   update(State& state, const Parameters& pars)
   {
     // state is ready - noting to do
@@ -653,7 +653,8 @@ public:
       state.pVector[39] -= (s4 * state.pVector[43]);
       state.pVector[40] -= (s4 * state.pVector[44]);
 
-      double P3, P4, C = state.pVector[3] * state.pVector[3]
+      double P3, P4,
+          C = state.pVector[3] * state.pVector[3]
           + state.pVector[4] * state.pVector[4];
       if (C > 1.e-20) {
         C  = 1. / C;
