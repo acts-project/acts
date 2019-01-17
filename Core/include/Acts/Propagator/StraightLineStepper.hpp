@@ -69,15 +69,16 @@ public:
     {
     }
 
+    /// Boolean to indiciate if you need covariance transport
+    bool              covTransport = false;
+    ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
+
+  private:
     /// Global particle position
     Vector3D pos = Vector3D(0, 0, 0);
 
     /// Momentum direction (normalized)
     Vector3D dir = Vector3D(1, 0, 0);
-
-    /// Boolean to indiciate if you need covariance transport
-    bool              covTransport = false;
-    ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
 
     /// Momentum
     double p = 0.;
@@ -85,6 +86,7 @@ public:
     /// Save the charge: neutral as default for SL stepper
     double q = 0.;
 
+  public:
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
@@ -94,6 +96,34 @@ public:
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
   };
+
+  /// Global particle position accessor
+  Vector3D
+  position(const State& state) const
+  {
+    return state.pos;
+  }
+
+  /// Momentum direction accessor
+  Vector3D
+  direction(const State& state) const
+  {
+    return state.dir;
+  }
+
+  /// Momentum accessor
+  double
+  momentum(const State& state) const
+  {
+    return state.p;
+  }
+
+  /// Charge access
+  double
+  charge(const State& state) const
+  {
+    return state.q;
+  }
 
   /// Return a corrector
   static VoidIntersectionCorrector

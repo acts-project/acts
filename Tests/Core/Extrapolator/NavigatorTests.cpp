@@ -68,6 +68,34 @@ namespace Test {
         Cstep stepSize = Cstep(100 * units::_cm);
       };
 
+      /// Global particle position accessor
+      Vector3D
+      position(const StepperState& state) const
+      {
+        return state.pos;
+      }
+
+      /// Momentum direction accessor
+      Vector3D
+      direction(const StepperState& state) const
+      {
+        return state.dir;
+      }
+
+      /// Momentum accessor
+      Vector3D
+      momentum(const StepperState& state) const
+      {
+        return state.p * state.dir;
+      }
+
+      /// Charge access
+      double
+      charge(const StepperState& state) const
+      {
+        return state.q;
+      }
+
       /// Return a corrector
       static VoidIntersectionCorrector
       corrector(StepperState& /*unused*/)
@@ -154,10 +182,13 @@ namespace Test {
                 << std::endl;
     }
 
+    // Stepper
+    PropagatorState::Stepper stepper;
+
     // (1) Initialization navigation from start point
     // - this will call resolveLayers() as well
     // - and thus should call a return to the stepper
-    navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.status(state, stepper);
     // Check that the currentVolume is set
     BOOST_CHECK_NE(state.navigation.currentVolume, nullptr);
     // Check that the currentVolume is the startVolume
@@ -168,7 +199,7 @@ namespace Test {
     // No layer has been found
     BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0);
     // ACTORS-ABORTERS-TARGET
-    navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.target(state, stepper);
     // A layer has been found
     BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1);
     // The iterator should points to the begin
@@ -193,7 +224,7 @@ namespace Test {
 
     // (2) re-entering navigator:
     // STATUS
-    navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.status(state, stepper);
     // Check that the currentVolume is the still startVolume
     BOOST_CHECK_EQUAL(state.navigation.currentVolume,
                       state.navigation.startVolume);
@@ -203,7 +234,7 @@ namespace Test {
     BOOST_CHECK(
         (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
     // ACTORS-ABORTERS-TARGET
-    navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1b >>> step to the BeamPipe at  "
@@ -217,9 +248,9 @@ namespace Test {
 
     // (3) re-entering navigator:
     // STATUS
-    navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1c >>> step to the Boundary at  "
@@ -232,9 +263,9 @@ namespace Test {
     step(state.stepping);
     // (4) re-entering navigator:
     // STATUS
-    navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1d >>> step to 1st layer at  "
@@ -249,9 +280,9 @@ namespace Test {
       step(state.stepping);
       // (5-9) re-entering navigator:
       // STATUS
-      navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+      navigator.status(state, stepper);
       // ACTORS-ABORTERS-TARGET
-      navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+      navigator.target(state, stepper);
 
       if (debug) {
         std::cout << "<<< Test 1e-1i >>> step within 1st layer at  "
@@ -265,9 +296,9 @@ namespace Test {
     step(state.stepping);
     // (10) re-entering navigator:
     // STATUS
-    navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1j >>> step to 2nd layer at  "
@@ -282,9 +313,9 @@ namespace Test {
       step(state.stepping);
       // (11-15) re-entering navigator:
       // STATUS
-      navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+      navigator.status(state, stepper);
       // ACTORS-ABORTERS-TARGET
-      navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+      navigator.target(state, stepper);
 
       if (debug) {
         std::cout << "<<< Test 1k-1o >>> step within 2nd layer at  "
@@ -298,9 +329,9 @@ namespace Test {
     step(state.stepping);
     // (16) re-entering navigator:
     // STATUS
-    navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1p >>> step to 3rd layer at  "
@@ -315,9 +346,9 @@ namespace Test {
       step(state.stepping);
       // (17-19) re-entering navigator:
       // STATUS
-      navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+      navigator.status(state, stepper);
       // ACTORS-ABORTERS-TARGET
-      navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+      navigator.target(state, stepper);
 
       if (debug) {
         std::cout << "<<< Test 1q-1s >>> step within 3rd layer at  "
@@ -331,9 +362,9 @@ namespace Test {
     step(state.stepping);
     // (20) re-entering navigator:
     // STATUS
-    navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1t >>> step to 4th layer at  "
@@ -348,9 +379,9 @@ namespace Test {
       step(state.stepping);
       // (21-23) re-entering navigator:
       // STATUS
-      navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+      navigator.status(state, stepper);
       // ACTORS-ABORTERS-TARGET
-      navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+      navigator.target(state, stepper);
 
       if (debug) {
         std::cout << "<<< Test 1t-1v >>> step within 4th layer at  "
@@ -364,9 +395,9 @@ namespace Test {
     step(state.stepping);
     // (24) re-entering navigator:
     // STATUS
-    navigator.status<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target<PropagatorState, PropagatorState::Stepper>(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1w >>> step to boundary at  "

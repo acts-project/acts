@@ -50,15 +50,17 @@ namespace Test {
     /// @brief Main call operator for the abort operation
     ///
     /// @tparam propagator_state_t State of the propagator
+    /// @tparam stepper_t Type of the stepper
     /// @param [in] state State of the propagation
+    /// @param [in] stepper Stepper of the propagation
     /// @return Boolean statement if the particle is still in the detector
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     bool
-    operator()(propagator_state_t& state) const
+    operator()(propagator_state_t& state, const stepper_t& stepper) const
     {
-      if (std::abs(state.stepping.pos.x()) >= maxX
-          || std::abs(state.stepping.pos.y()) >= 0.5 * units::_m
-          || std::abs(state.stepping.pos.z()) >= 0.5 * units::_m)
+      if (std::abs(stepper.position(state.stepping).x()) >= maxX
+          || std::abs(stepper.position(state.stepping).y()) >= 0.5 * units::_m
+          || std::abs(stepper.position(state.stepping).z()) >= 0.5 * units::_m)
         return true;
       return false;
     }
@@ -87,14 +89,19 @@ namespace Test {
     /// analysis afterwards
     ///
     /// @tparam propagator_state_t Type of the propagator state
+    /// @tparam stepper_t Type of the stepper
     /// @param [in] state State of the propagator
+    /// @param [in] stepper Stepper of the propagation
     /// @param [out] result Struct which is filled with the data
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
-      result.position.push_back(state.stepping.pos);
-      result.momentum.push_back(state.stepping.p * state.stepping.dir);
+      result.position.push_back(stepper.position(state.stepping));
+      result.momentum.push_back(stepper.momentum(state.stepping)
+                                * stepper.direction(state.stepping));
     }
   };
 

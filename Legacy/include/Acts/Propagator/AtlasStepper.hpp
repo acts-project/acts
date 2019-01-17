@@ -96,37 +96,33 @@ public:
     /// buffer & formatting for consistent output
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
-
-	Vector3D pos = {pVector[0], pVector[1], pVector[2]};
-	Vector3D dir = {pVector[3], pVector[4], pVector[5]};
-	double p = 1. / std::abs(pVector[6]);
-
-    Vector3D
-    position() const
-    {
-      return Vector3D(pVector[0], pVector[1], pVector[2]);
-    }
-
-    Vector3D
-    direction() const
-    {
-      return Vector3D(pVector[3], pVector[4], pVector[5]);
-    }
-
-    Vector3D
-    momentum() const
-    {
-      double p = 1. / std::abs(pVector[6]);
-      return p * direction();
-    }
-
-    /// Charge access
-    double
-    charge() const
-    {
-      return pVector[6] > 0. ? 1. : -1.;
-    }
   };
+
+  Vector3D
+  position(const State& state) const
+  {
+    return Vector3D(state.pVector[0], state.pVector[1], state.pVector[2]);
+  }
+
+  Vector3D
+  direction(const State& state) const
+  {
+    return Vector3D(state.pVector[3], state.pVector[4], state.pVector[5]);
+  }
+
+  double
+  momentum(const State& state) const
+  {
+    return 1. / std::abs(state.pVector[6]);
+  }
+
+  /// Charge access
+  double
+  charge(const State& state) const
+  {
+    return state.pVector[6] > 0. ? 1. : -1.;
+  }
+
   /// Method to update momentum, direction and p
   ///
   /// @param uposition the updated position
@@ -145,7 +141,7 @@ public:
     state.pVector[3] = udirection[0];
     state.pVector[4] = udirection[1];
     state.pVector[5] = udirection[2];
-    state.pVector[6] = state.charge() / up;
+    state.pVector[6] = charge(state) / up;
   }
 
   /// Return a corrector
@@ -488,7 +484,7 @@ public:
 
     // Fill the result
     result.endParameters = std::make_unique<const CurvilinearParameters>(
-        std::move(cov), gp, mom, state.charge());
+        std::move(cov), gp, mom, charge(state));
   }
 
   /// Convert the propagation state to track parameters at a certain surface
@@ -747,7 +743,7 @@ public:
 
     // Fill the end parameters
     result.endParameters = std::make_unique<const BoundParameters>(
-        std::move(cov), gp, mom, state.charge(), surface.getSharedPtr());
+        std::move(cov), gp, mom, charge(state), surface.getSharedPtr());
   }
 
   AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};

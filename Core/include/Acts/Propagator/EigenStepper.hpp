@@ -74,7 +74,10 @@ public:
   /// by the propagator
   struct State
   {
-
+    friend class EigenStepper<BField,
+                              corrector_t,
+                              extensionlist_t,
+                              auctioneer_t>;
     /// Constructor from the initial track parameters
     /// @param[in] par The track parameters at start
     /// @param[in] ndir The navigation direciton w.r.t momentum
@@ -106,15 +109,18 @@ public:
       }
     }
 
-    /// Global particle position
-    Vector3D pos = Vector3D(0., 0., 0.);
     /// Global start particle position
     Vector3D startPos = Vector3D(0., 0., 0.);
 
-    /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1., 0., 0.);
     /// Momentum start direction (normalized)
     Vector3D startDir = Vector3D(1., 0., 0.);
+
+  private:
+    /// Global particle position
+    Vector3D pos = Vector3D(0., 0., 0.);
+
+    /// Momentum direction (normalized)
+    Vector3D dir = Vector3D(1., 0., 0.);
 
     /// Momentum
     double p = 0.;
@@ -122,6 +128,7 @@ public:
     /// The charge
     double q = 1.;
 
+  public:
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
@@ -290,6 +297,34 @@ public:
       return bState;
     }
 
+  /// Global particle position accessor
+  Vector3D
+  position(const State& state) const
+  {
+    return state.pos;
+  }
+
+  /// Momentum direction accessor
+  Vector3D
+  direction(const State& state) const
+  {
+    return state.dir;
+  }
+
+  /// Actual momentum accessor
+  double
+  momentum(const State& state) const
+  {
+    return state.p;
+  }
+
+  /// Charge access
+  double
+  charge(const State& state) const
+  {
+    return state.q;
+  }
+
   /// Create and return the bound state at the current position
   ///
   /// @brief This transports (if necessary) the covariance
@@ -308,8 +343,10 @@ public:
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   template <typename surface_t>
-  static BoundState
-  boundState(State& state, const surface_t& surface, bool reinitialize = true)
+  BoundState
+  boundState(State&           state,
+             const surface_t& surface,
+             bool             reinitialize = true) const
   {
     // Transport the covariance to here
     std::unique_ptr<const Covariance> covPtr = nullptr;
@@ -369,9 +406,10 @@ public:
     return curvState;
   }
 
+  // TODO: comments update, also in other steppers
   /// Method to update the stepper to the some parameters
-  static void
-  update(State& state, const BoundParameters& pars)
+  void
+  update(State& state, const BoundParameters& pars) const
   {
     const auto& mom = pars.momentum();
     state.pos       = pars.position();
@@ -381,17 +419,17 @@ public:
       state.cov = (*(pars.covariance()));
     }
   }
-  // TODO: comments update, also in other steppers
+
   /// Method to update momentum, direction and p
   ///
   /// @param uposition the updated position
   /// @param udirection the updated direction
   /// @param up the updated momentum value
-  static void
+  void
   update(State&          state,
          const Vector3D& uposition,
          const Vector3D& udirection,
-         double          up)
+         double          up) const
   {
     state.pos = uposition;
     state.dir = udirection;
@@ -399,8 +437,8 @@ public:
   }
 
   /// Return a corrector
-  static corrector_t
-  corrector(State& state)
+  corrector_t
+  corrector(State& state) const
   {
     return corrector_t(state.startPos, state.startDir, state.pathAccumulated);
   }
@@ -414,8 +452,8 @@ public:
   ///        position
   ///
   /// @return the full transport jacobian
-  static void
-  covarianceTransport(State& state, bool reinitialize = false)
+  void
+  covarianceTransport(State& state, bool reinitialize = false) const
   {
     // Optimized trigonometry on the propagation direction
     const double x = state.dir(0);  // == cos(phi) * sin(theta)
@@ -499,10 +537,10 @@ public:
   ///        position
   /// @note no check is done if the position is actually on the surface
   template <typename surface_t>
-  static void
+  void
   covarianceTransport(State&           state,
                       const surface_t& surface,
-                      bool             reinitialize = true)
+                      bool             reinitialize = true) const
   {
     using VectorHelpers::phi;
     using VectorHelpers::theta;

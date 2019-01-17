@@ -105,6 +105,11 @@ namespace Test {
     NavigatorState navigation;
   };
 
+  /// This is a struct to mimic the stepper
+  struct Stepper
+  {
+  };
+
   /// This is a simple result struct to mimic the
   /// propagator result
   struct Result
@@ -117,24 +122,25 @@ namespace Test {
   {
     PropagatorState state;
     state.options.pathLimit = 1. * units::_m;
-    Result result;
+    Stepper stepper;
+    Result  result;
 
     AbortList<PathLimit> abortList;
 
     // It should not abort yet
-    BOOST_CHECK(!abortList(result, state));
+    BOOST_CHECK(!abortList(result, state, stepper));
     // The step size should be adapted to 1 meter now
     BOOST_CHECK_EQUAL(state.stepping.stepSize, 1. * units::_m);
     // Let's do a step of 90 cm now
     state.stepping.pathAccumulated = 90. * units::_cm;
     // Still no abort yet
-    BOOST_CHECK(!abortList(result, state));
+    BOOST_CHECK(!abortList(result, state, stepper));
     // 10 cm are left
     // The step size should be adapted to 10 cm now
     BOOST_CHECK_EQUAL(state.stepping.stepSize, 10. * units::_cm);
 
     // Approach the target
-    while (!abortList(result, state)) {
+    while (!abortList(result, state, stepper)) {
       state.stepping.pathAccumulated += 0.5 * state.stepping.stepSize;
     }
 
@@ -145,7 +151,7 @@ namespace Test {
     EndOfWorld eow;
     AbortList<PathLimit, EndOfWorld> pathWorld = abortList.append(eow);
     auto& path = pathWorld.get<PathLimit>();
-    BOOST_CHECK(path(result, state));
+    BOOST_CHECK(path(result, state, stepper));
   }
 
 }  // namespace Test

@@ -215,29 +215,31 @@ public:
   /// Unique typedef to publish to the Propagator
   using state_type = State;
 
-  //~ /// @brief Navigator status call, will be called in two modes
-  //~ ///
-  //~ /// (a) It initializes the Navigation stream if start volume is
-  //~ ///     not yet defined:
-  //~ ///  - initialize the volume
-  //~ ///  - establish the start layer and start volume
-  //~ ///  - set the current surface to the start surface
-  //~ ///
-  //~ /// (b) It establishes the currentSurface status during
-  //~ ///     the propagation flow, currentSurface can be
-  //~ ///  - surfaces still to be handled within a layer
-  //~ ///  - layers still to be handled within a volume
-  //~ ///  - boundaries still to be handled to exit a volume
-  //~ ///
-  //~ /// @tparam propagator_state_t is the type of Propagatgor state
-  //~ ///
-  //~ /// @param[in,out] state is the mutable propagator state object
+  /// @brief Navigator status call, will be called in two modes
+  ///
+  /// (a) It initializes the Navigation stream if start volume is
+  ///     not yet defined:
+  ///  - initialize the volume
+  ///  - establish the start layer and start volume
+  ///  - set the current surface to the start surface
+  ///
+  /// (b) It establishes the currentSurface status during
+  ///     the propagation flow, currentSurface can be
+  ///  - surfaces still to be handled within a layer
+  ///  - layers still to be handled within a volume
+  ///  - boundaries still to be handled to exit a volume
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t is the used type of the Stepper by the Propagator
+  ///
+  /// @param [in,out] state is the mutable propagator state object
+  /// @param [in] stepper Stepper in use
   template <typename propagator_options_t, typename stepper_t>
   void
-  status(propagator_options_t& state) const
+  status(propagator_options_t& state, const stepper_t& stepper) const
   {
     // Check if the navigator is inactive
-    if (inactive(state)) {
+    if (inactive(state, stepper)) {
       return;
     }
 
@@ -250,7 +252,7 @@ public:
     // (a) Pre-stepping call from propgator
     if (not state.navigation.startVolume) {
       // Initialize and return
-      initialize(state);
+      initialize(state, stepper);
       return;
     }
 
@@ -260,6 +262,7 @@ public:
     // (b) Status call within propagation loop
     // Try finding status of surfaces
     if (status(state,
+               stepper,
                state.navigation.navSurfaces,
                state.navigation.navSurfaceIter)) {
       debugLog(state,
@@ -277,6 +280,7 @@ public:
       state.navigation.navigationStage = Stage::surfaceTarget;
       // Try finding status of layer
     } else if (status(state,
+                      stepper,
                       state.navigation.navLayers,
                       state.navigation.navLayerIter)) {
       debugLog(state,
@@ -286,8 +290,8 @@ public:
           return std::string("On layer: update layer information.");
         });
         // Get a  navigation corrector associated to the stepper
-        auto navCorr = stepper_t::corrector(state.stepping);
-        if (resolveSurfaces(state, navCorr)) {
+        auto navCorr = stepper.corrector(state.stepping);
+        if (resolveSurfaces(state, stepper, navCorr)) {
           // Set the navigation stage back to surface handling
           state.navigation.navigationStage = Stage::surfaceTarget;
           return;
@@ -298,6 +302,7 @@ public:
       }
       // Try finding status of boundaries
     } else if (status(state,
+                      stepper,
                       state.navigation.navBoundaries,
                       state.navigation.navBoundaryIter)) {
       debugLog(state,
@@ -317,8 +322,10 @@ public:
         // Update volume information
         // get the attached volume information
         auto boundary = state.navigation.navBoundaryIter->object;
-        state.navigation.currentVolume = boundary->attachedVolume(
-            state.stepping.pos, state.stepping.dir, state.stepping.navDir);
+        state.navigation.currentVolume
+            = boundary->attachedVolume(stepper.position(state.stepping),
+                                       stepper.direction(state.stepping),
+                                       state.stepping.navDir);
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           debugLog(state, [&] {
@@ -356,22 +363,24 @@ public:
     return;
   }
 
-  //~ /// @brief Navigator target call
-  //~ ///
-  //~ /// Call options
-  //~ /// (a) there are still surfaces to be resolved: handle those
-  //~ /// (b) there no surfaces but still layers to be resolved, handle those
-  //~ /// (c) there are no surfaces nor layers to be resolved, handle boundary
-  //~ ///
-  //~ /// @tparam propagator_state_t is the type of Propagatgor state
-  //~ ///
-  //~ /// @param[in,out] state is the mutable propagator state object
+  /// @brief Navigator target call
+  ///
+  /// Call options
+  /// (a) there are still surfaces to be resolved: handle those
+  /// (b) there no surfaces but still layers to be resolved, handle those
+  /// (c) there are no surfaces nor layers to be resolved, handle boundary
+  ///
+  /// @tparam propagator_state_t is the type of Propagatgor state
+  /// @tparam stepper_t is the used type of the Stepper by the Propagator
+  ///
+  /// @param [in,out] state is the mutable propagator state object
+  /// @param [in] stepper Stepper in use
   template <typename propagator_options_t, typename stepper_t>
   void
-  target(propagator_options_t& state) const
+  target(propagator_options_t& state, const stepper_t& stepper) const
   {
     // Check if the navigator is inactive
-    if (inactive(state)) {
+    if (inactive(state, stepper)) {
       return;
     }
 
@@ -379,23 +388,23 @@ public:
     debugLog(state, [&] { return std::string("Entering navigator::target."); });
 
     // Get a  navigation corrector associated to the stepper
-    auto navCorr = stepper_t::corrector(state.stepping);
+    auto navCorr = stepper.corrector(state.stepping);
 
     // Initialize the target and target volume
     if (state.navigation.targetSurface and not state.navigation.targetVolume) {
       // Find out about the target as much as you can
-      initializeTarget(state, navCorr);
+      initializeTarget(state, stepper, navCorr);
     }
 
     // Try targeting the surfaces - then layers - then boundaries
     if (state.navigation.navigationStage <= Stage::surfaceTarget
-        and targetSurfaces(state, navCorr)) {
+        and targetSurfaces(state, stepper, navCorr)) {
       debugLog(state,
                [&] { return std::string("Target set to next surface."); });
     } else if (state.navigation.navigationStage <= Stage::layerTarget
-               and targetLayers(state, navCorr)) {
+               and targetLayers(state, stepper, navCorr)) {
       debugLog(state, [&] { return std::string("Target set to next layer."); });
-    } else if (targetBoundaries(state, navCorr)) {
+    } else if (targetBoundaries(state, stepper, navCorr)) {
       debugLog(state,
                [&] { return std::string("Target set to next boundary."); });
     } else {
@@ -419,13 +428,15 @@ private:
   /// Initialize call - start of propagation
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   ///
-  /// @param[in,out] state is the propagation state object
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
   ///
   /// @return boolean return triggers exit to stepper
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   void
-  initialize(propagator_state_t& state) const
+  initialize(propagator_state_t& state, const stepper_t& stepper) const
   {
     // Call the navigation helper prior to actual navigation
     debugLog(state, [&] { return std::string("Initialization."); });
@@ -470,14 +481,17 @@ private:
       // current volume and layer search through global search
       debugLog(state, [&] {
         std::stringstream dstream;
-        dstream << "Starting from position " << toString(state.stepping.pos);
-        dstream << " and direction " << toString(state.stepping.dir);
+        dstream << "Starting from position "
+                << toString(stepper.position(state.stepping));
+        dstream << " and direction "
+                << toString(stepper.direction(state.stepping));
         return dstream.str();
       });
-      state.navigation.startVolume
-          = trackingGeometry->lowestTrackingVolume(state.stepping.pos);
+      state.navigation.startVolume = trackingGeometry->lowestTrackingVolume(
+          stepper.position(state.stepping));
       state.navigation.startLayer = state.navigation.startVolume
-          ? state.navigation.startVolume->associatedLayer(state.stepping.pos)
+          ? state.navigation.startVolume->associatedLayer(
+                stepper.position(state.stepping))
           : nullptr;
       // Set the start volume as current volume
       state.navigation.currentVolume = state.navigation.startVolume;
@@ -495,19 +509,23 @@ private:
   /// state is on the surface
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   /// @tparam navigation_surfaces_t Type of the propagagor
   /// @tparam navigation_iter_t Type of the navigation iterator
   ///
-  /// @param[in,out] state is the propagation state object
-  /// @param[in] navSurfaces is the navigation status objects
-  /// @param[in] navIter test surface fore the status test
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
+  /// @param [in] navSurfaces is the navigation status objects
+  /// @param [in] navIter test surface fore the status test
   ///
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t,
+            typename stepper_t,
             typename navigation_surfaces_t,
             typename navigation_iter_t>
   bool
   status(propagator_state_t&      state,
+         const stepper_t&         stepper,
          navigation_surfaces_t&   navSurfaces,
          const navigation_iter_t& navIter) const
   {
@@ -520,8 +538,9 @@ private:
     // Check if we are at a surface
     // If we are on the surface pointed at by the iterator, we can make
     // it the current one to pass it to the other actors
-    if (surface->isOnSurface(
-            state.stepping.pos, state.stepping.p * state.stepping.dir, true)) {
+    if (surface->isOnSurface(stepper.position(state.stepping),
+                             stepper.direction(state.stepping),
+                             true)) {
       debugLog(state, [&] {
         return std::string("Status Surface successfully hit, storing it.");
       });
@@ -546,15 +565,21 @@ private:
   ///  - if an intersect is not valid, switch to next
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   /// @tparam corrector_t Is a step corrector (can be void corrector)
   ///
-  /// @param[in,out] state is the propagation state object
-  /// @param[in] navCorr is the navigation path corrector
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
+  /// @param [in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename corrector_t>
+  template <typename propagator_state_t,
+            typename stepper_t,
+            typename corrector_t>
   bool
-  targetSurfaces(propagator_state_t& state, const corrector_t& navCorr) const
+  targetSurfaces(propagator_state_t& state,
+                 const stepper_t&    stepper,
+                 const corrector_t&  navCorr) const
   {
 
     if (state.navigation.navigationBreak) {
@@ -568,8 +593,8 @@ private:
                [&] { return std::string("Start layer to be resolved."); });
       // We provide the layer to the resolve surface method in this case
       state.navigation.startLayerResolved = true;
-      bool startResolved
-          = resolveSurfaces(state, navCorr, state.navigation.startLayer);
+      bool startResolved                  = resolveSurfaces(
+          state, stepper, navCorr, state.navigation.startLayer);
       if (not startResolved
           and state.navigation.startLayer == state.navigation.targetLayer) {
         debugLog(state, [&] {
@@ -621,7 +646,10 @@ private:
       });
       // Now intersect (should exclude punch-through)
       auto surfaceIntersect = surface->surfaceIntersectionEstimate(
-          state.stepping.pos, state.stepping.dir, navOpts, navCorr);
+          stepper.position(state.stepping),
+          stepper.direction(state.stepping),
+          navOpts,
+          navCorr);
       double surfaceDistance = surfaceIntersect.intersection.pathLength;
       if (!surfaceIntersect) {
         debugLog(state, [&] {
@@ -667,15 +695,21 @@ private:
   /// to the first surface, as determined by straight line intersect.
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   /// @tparam is a step corrector (can be void corrector)
   ///
-  /// @param[in,out] state is the propagation state object
-  /// @param[in] corrector_t navCorr is the navigation path corrector
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
+  /// @param [in] corrector_t navCorr is the navigation path corrector
   ///
   /// @return boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename corrector_t>
+  template <typename propagator_state_t,
+            typename stepper_t,
+            typename corrector_t>
   bool
-  targetLayers(propagator_state_t& state, const corrector_t& navCorr) const
+  targetLayers(propagator_state_t& state,
+               const stepper_t&    stepper,
+               const corrector_t&  navCorr) const
   {
 
     if (state.navigation.navigationBreak) {
@@ -687,7 +721,7 @@ private:
       debugLog(state, [&] {
         return std::string("No layers present, resolve volume first.");
       });
-      if (resolveLayers(state, navCorr)) {
+      if (resolveLayers(state, stepper, navCorr)) {
         // The layer resolving worked
         return true;
       }
@@ -702,7 +736,7 @@ private:
           return std::string("We are on a layer, resolve Surfaces.");
         });
         // If you found surfaces return to the propagator
-        if (resolveSurfaces(state, navCorr)) {
+        if (resolveSurfaces(state, stepper, navCorr)) {
           return true;
         } else {
           // Try the next one
@@ -713,7 +747,10 @@ private:
       // Otherwise try to step towards it
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       auto layerIntersect = layerSurface->surfaceIntersectionEstimate(
-          state.stepping.pos, state.stepping.dir, navOpts, navCorr);
+          stepper.position(state.stepping),
+          stepper.direction(state.stepping),
+          navOpts,
+          navCorr);
       // check if the intersect is invalid
       if (!layerIntersect) {
         debugLog(state, [&] {
@@ -730,7 +767,7 @@ private:
     // Re-initialize target at last layer, only in case it is the target volume
     // This avoids a wrong target volume estimation
     if (state.navigation.currentVolume == state.navigation.targetVolume) {
-      initializeTarget(state, navCorr);
+      initializeTarget(state, stepper, navCorr);
     }
     // Screen output
     debugLog(state, [&] {
@@ -769,15 +806,21 @@ private:
   /// If we are out of boundary surfaces, the navigation is terminated.
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   /// @tparam is a step corrector (can be void corrector)
   ///
-  /// @param[in,out] state is the propagation state object
-  /// @param[in] navCorr is the navigation path corrector
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
+  /// @param [in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename corrector_t>
+  template <typename propagator_state_t,
+            typename stepper_t,
+            typename corrector_t>
   bool
-  targetBoundaries(propagator_state_t& state, const corrector_t& navCorr) const
+  targetBoundaries(propagator_state_t& state,
+                   const stepper_t&    stepper,
+                   const corrector_t&  navCorr) const
   {
     if (state.navigation.navigationBreak) {
       return false;
@@ -802,7 +845,7 @@ private:
     }
 
     // Re-initialize target at volume boundary
-    initializeTarget(state, navCorr);
+    initializeTarget(state, stepper, navCorr);
 
     // The navigation options
     NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
@@ -816,8 +859,8 @@ private:
       // Evaluate the boundary surfaces
       state.navigation.navBoundaries
           = state.navigation.currentVolume->compatibleBoundaries(
-              state.stepping.pos,
-              state.stepping.dir,
+              stepper.position(state.stepping),
+              stepper.direction(state.stepping),
               navOpts,
               navCorr,
               BoundaryIntersectionSorter());
@@ -842,7 +885,10 @@ private:
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
       // Step towards the boundary surface
       auto boundaryIntersect = boundarySurface->surfaceIntersectionEstimate(
-          state.stepping.pos, state.stepping.dir, navOpts, navCorr);
+          stepper.position(state.stepping),
+          stepper.direction(state.stepping),
+          navOpts,
+          navCorr);
       // Distance
       auto distance = boundaryIntersect.intersection.pathLength;
       // Check the boundary is properly intersected: we are in target mode
@@ -880,15 +926,21 @@ private:
   /// Target finding by association will not be done again
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   /// @tparam is a step corrector (can be void corrector)
   ///
-  /// @param[in,out] state is the propagation state object
-  /// @param[in] navCorr is the navigation path corrector
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
+  /// @param [in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename corrector_t>
+  template <typename propagator_state_t,
+            typename stepper_t,
+            typename corrector_t>
   void
-  initializeTarget(propagator_state_t& state, const corrector_t& navCorr) const
+  initializeTarget(propagator_state_t& state,
+                   const stepper_t&    stepper,
+                   const corrector_t&  navCorr) const
   {
     if (state.navigation.targetVolume && state.stepping.pathAccumulated == 0.) {
       debugLog(state, [&] {
@@ -931,7 +983,10 @@ private:
       // take the target intersection
       auto targetIntersection
           = state.navigation.targetSurface->surfaceIntersectionEstimate(
-              state.stepping.pos, state.stepping.dir, navOpts, navCorr);
+              stepper.position(state.stepping),
+              stepper.direction(state.stepping),
+              navOpts,
+              navCorr);
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Target estimate position (";
@@ -961,16 +1016,21 @@ private:
   /// @brief Resolve the surfaces of this layer
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   /// @tparam is a step corrector (can be void corrector)
   ///
-  /// @param[in,out] state is the propagation state object
-  /// @param[in] navCorr is the navigation path corrector
-  /// @param[in] cLayer is the already assigned current layer, e.g. start layer
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
+  /// @param [in] navCorr is the navigation path corrector
+  /// @param [in] cLayer is the already assigned current layer, e.g. start layer
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename corrector_t>
+  template <typename propagator_state_t,
+            typename stepper_t,
+            typename corrector_t>
   bool
   resolveSurfaces(propagator_state_t& state,
+                  const stepper_t&    stepper,
                   const corrector_t&  navCorr,
                   const Layer*        cLayer = nullptr) const
   {
@@ -991,8 +1051,11 @@ private:
     // Check the limit
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
     // get the surfaces
-    state.navigation.navSurfaces = navLayer->compatibleSurfaces(
-        state.stepping.pos, state.stepping.dir, navOpts, navCorr);
+    state.navigation.navSurfaces
+        = navLayer->compatibleSurfaces(stepper.position(state.stepping),
+                                       stepper.direction(state.stepping),
+                                       navOpts,
+                                       navCorr);
     // the number of layer candidates
     if (!state.navigation.navSurfaces.empty()) {
       debugLog(state, [&] {
@@ -1029,15 +1092,21 @@ private:
   /// or when entering a new volume
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   /// @tparam corrector_t is a path step corrector (can be void corrector)
   ///
-  /// @param[in,out] state is the propagation state object
-  /// @param[in] navCorr is the navigation path corrector
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
+  /// @param [in] navCorr is the navigation path corrector
   ///
   /// @return boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename corrector_t>
+  template <typename propagator_state_t,
+            typename stepper_t,
+            typename corrector_t>
   bool
-  resolveLayers(propagator_state_t& state, const corrector_t& navCorr) const
+  resolveLayers(propagator_state_t& state,
+                const stepper_t&    stepper,
+                const corrector_t&  navCorr) const
   {
     debugLog(state,
              [&] { return std::string("Searching for compatible layers."); });
@@ -1062,7 +1131,10 @@ private:
     // Request the compatible layers
     state.navigation.navLayers
         = state.navigation.currentVolume->compatibleLayers(
-            state.stepping.pos, state.stepping.dir, navOpts, navCorr);
+            stepper.position(state.stepping),
+            stepper.direction(state.stepping),
+            navOpts,
+            navCorr);
 
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {
@@ -1148,13 +1220,15 @@ private:
   /// is misconfigured
   ///
   /// @tparam propagator_state_t The state type of the propagagor
+  /// @tparam stepper_t The type of stepper used for the propagation
   ///
-  /// @param[in,out] state is the propagation state object
+  /// @param [in,out] state is the propagation state object
+  /// @param [in] stepper Stepper in use
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
-  inactive(propagator_state_t& state) const
+  inactive(propagator_state_t& state, const stepper_t& stepper) const
   {
     // Void behavior in case no tracking geometry is present
     if (!trackingGeometry) {
@@ -1177,10 +1251,10 @@ private:
         return true;
       }
       // the only advance could have been to the target
-      if (state.navigation.targetSurface->isOnSurface(state.stepping.pos,
-                                                      state.stepping.p
-                                                          * state.stepping.dir,
-                                                      true)) {
+      if (state.navigation.targetSurface->isOnSurface(
+              stepper.position(state.stepping),
+              stepper.direction(state.stepping),
+              true)) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
 

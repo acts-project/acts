@@ -49,7 +49,7 @@ namespace detail {
     /// Empty call, compiler should optise that
     template <typename propagator_state_t, typename stepper_t>
     void
-    status(propagator_state_t& /*state*/) const
+    status(propagator_state_t& /*state*/, const stepper_t& /*unused*/) const
     {
     }
 
@@ -61,7 +61,7 @@ namespace detail {
     /// Empty call, compiler should optise that
     template <typename propagator_state_t, typename stepper_t>
     void
-    target(propagator_state_t& /*state*/) const
+    target(propagator_state_t& /*state*/, const stepper_t& /*unused*/) const
     {
     }
 

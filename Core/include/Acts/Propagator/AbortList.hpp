@@ -99,23 +99,27 @@ public:
   /// to the tuple() memembers of the list
   ///
   /// @tparam propagator_state_t is the state type of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @tparam result_t is the result type from a certain action
   ///
-  /// @param result[in] is the result object from a certin action
-  /// @param propState[in,out] is the state object from the propagator
-  template <typename propagator_state_t, typename result_t>
+  /// @param [in] result is the result object from a certin action
+  /// @param [in,out] propState is the state object from the propagator
+  /// @param [in] stepper Stepper used for the propagation
+  template <typename propagator_state_t, typename stepper_t, typename result_t>
   bool
-  operator()(const result_t& result, propagator_state_t& state) const
+  operator()(const result_t&     result,
+             propagator_state_t& state,
+             const stepper_t&    stepper) const
   {
     // clang-format off
     static_assert(detail::all_of_v<detail::abort_condition_signature_check_v<
                         aborters_t, 
-                        propagator_state_t>...>,
+                        propagator_state_t, stepper_t>...>,
                   "not all aborters support the specified input");
     // clang-format on
 
     return detail::abort_list_impl<aborters_t...>::check(
-        tuple(), result, state);
+        tuple(), result, state, stepper);
   }
 };
 

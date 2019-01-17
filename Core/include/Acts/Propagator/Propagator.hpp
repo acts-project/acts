@@ -305,17 +305,17 @@ private:
     debugLog(state, [&] { return std::string("Entering propagation."); });
 
     // Navigator initialize state call
-    m_navigator.template status<propagator_state_t, stepper_t>(state);
+    m_navigator.status(state, m_stepper);
     // Pre-Stepping call to the action list
-    state.options.actionList(state, result);
+    state.options.actionList(state, m_stepper, result);
     // assume negative outcome, only set to true later if we actually have
     // a positive outcome.
     // This is needed for correct error logging
     bool terminatedNormally = false;
     // Pre-Stepping: abort condition check
-    if (!state.options.abortList(result, state)) {
+    if (!state.options.abortList(result, state, m_stepper)) {
       // Pre-Stepping: target setting
-      m_navigator.template target<propagator_state_t, stepper_t>(state);
+      m_navigator.target(state, m_stepper);
       // Stepping loop
       debugLog(state, [&] { return std::string("Starting stepping loop."); });
       // Propagation loop : stepping
@@ -334,13 +334,13 @@ private:
         });
         // Post-step
         // navigator status call - action list - aborter list - target call
-        m_navigator.template status<propagator_state_t, stepper_t>(state);
-        state.options.actionList(state, result);
-        if (state.options.abortList(result, state)) {
+        m_navigator.status(state, m_stepper);
+        state.options.actionList(state, m_stepper, result);
+        if (state.options.abortList(result, state, m_stepper)) {
           terminatedNormally = true;
           break;
         }
-        m_navigator.template target<propagator_state_t, stepper_t>(state);
+        m_navigator.target(state, m_stepper);
       }
     }
 
@@ -352,7 +352,7 @@ private:
 
     // Post-stepping call to the action list
     debugLog(state, [&] { return std::string("Stepping loop done."); });
-    state.options.actionList(state, result);
+    state.options.actionList(state, m_stepper, result);
 
     // return progress flag here, decide on SUCCESS later
     return Status::IN_PROGRESS;

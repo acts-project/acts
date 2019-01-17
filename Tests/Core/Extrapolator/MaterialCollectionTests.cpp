@@ -75,7 +75,6 @@ namespace Test {
   /// the actual test nethod that runs the test
   /// can be used with several propagator types
   /// @tparam propagator_t is the actual propagator type
-  /// @tparam stepper_t is the actual stepper type
   ///
   /// @param prop is the propagator instance
   /// @param pT the transverse momentum
@@ -83,7 +82,7 @@ namespace Test {
   /// @param theta the polar angle of the track at creation
   /// @param charge is the charge of the particle
   /// @param index is the run index from the test
-  template <typename propagator_t, typename stepper_t>
+  template <typename propagator_t>
   void
   runTest(const propagator_t& prop,
           double              pT,
@@ -113,9 +112,8 @@ namespace Test {
     using DebugOutput = detail::DebugOutputActor;
 
     // Action list and abort list
-    using ActionListType
-        = ActionList<MaterialInteractor<stepper_t>, DebugOutput>;
-    using AbortListType = AbortList<>;
+    using ActionListType = ActionList<MaterialInteractor, DebugOutput>;
+    using AbortListType  = AbortList<>;
 
     using Options = PropagatorOptions<ActionListType, AbortListType>;
     Options fwdOptions;
@@ -126,7 +124,7 @@ namespace Test {
 
     // get the material collector and configure it
     auto& fwdMaterialInteractor
-        = fwdOptions.actionList.template get<MaterialInteractor<stepper_t>>();
+        = fwdOptions.actionList.template get<MaterialInteractor>();
     fwdMaterialInteractor.recordInteractions = true;
     fwdMaterialInteractor.energyLoss         = false;
     fwdMaterialInteractor.multipleScattering = false;
@@ -135,9 +133,9 @@ namespace Test {
       std::cout << ">>> Forward Propagation : start." << std::endl;
     }
     // forward material test
-    const auto& fwdResult   = prop.propagate(start, fwdOptions);
-    auto&       fwdMaterial = fwdResult.template get<
-        typename MaterialInteractor<stepper_t>::result_type>();
+    const auto& fwdResult = prop.propagate(start, fwdOptions);
+    auto&       fwdMaterial
+        = fwdResult.template get<typename MaterialInteractor::result_type>();
 
     double fwdStepMaterialInX0 = 0.;
     double fwdStepMaterialInL0 = 0.;
@@ -175,7 +173,7 @@ namespace Test {
 
     // get the material collector and configure it
     auto& bwdMaterialInteractor
-        = bwdOptions.actionList.template get<MaterialInteractor<stepper_t>>();
+        = bwdOptions.actionList.template get<MaterialInteractor>();
     bwdMaterialInteractor.recordInteractions = true;
     bwdMaterialInteractor.energyLoss         = false;
     bwdMaterialInteractor.multipleScattering = false;
@@ -192,8 +190,8 @@ namespace Test {
       std::cout << ">>> Backward Propagation : end." << std::endl;
     }
 
-    auto& bwdMaterial = bwdResult.template get<
-        typename MaterialInteractor<stepper_t>::result_type>();
+    auto& bwdMaterial
+        = bwdResult.template get<typename MaterialInteractor::result_type>();
 
     double bwdStepMaterialInX0 = 0.;
     double bwdStepMaterialInL0 = 0.;
@@ -240,8 +238,7 @@ namespace Test {
 
     // get the material collector and configure it
     auto& fwdStepMaterialInteractor
-        = fwdStepOptions.actionList
-              .template get<MaterialInteractor<stepper_t>>();
+        = fwdStepOptions.actionList.template get<MaterialInteractor>();
     fwdStepMaterialInteractor.recordInteractions = true;
     fwdStepMaterialInteractor.energyLoss         = false;
     fwdStepMaterialInteractor.multipleScattering = false;
@@ -280,8 +277,8 @@ namespace Test {
         std::cout << fwdStepOutput.debugString << std::endl;
       }
 
-      auto& fwdStepMaterial = fwdStep.template get<
-          typename MaterialInteractor<stepper_t>::result_type>();
+      auto& fwdStepMaterial
+          = fwdStep.template get<typename MaterialInteractor::result_type>();
       fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
       fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
@@ -303,8 +300,8 @@ namespace Test {
     const auto& fwdStepFinal
         = prop.propagate(*sParameters, dSurface, fwdStepOptions);
 
-    auto& fwdStepMaterial = fwdStepFinal.template get<
-        typename MaterialInteractor<stepper_t>::result_type>();
+    auto& fwdStepMaterial
+        = fwdStepFinal.template get<typename MaterialInteractor::result_type>();
     fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
@@ -332,8 +329,7 @@ namespace Test {
 
     // get the material collector and configure it
     auto& bwdStepMaterialInteractor
-        = bwdStepOptions.actionList
-              .template get<MaterialInteractor<stepper_t>>();
+        = bwdStepOptions.actionList.template get<MaterialInteractor>();
     bwdStepMaterialInteractor.recordInteractions = true;
     bwdStepMaterialInteractor.multipleScattering = false;
     bwdStepMaterialInteractor.energyLoss         = false;
@@ -370,8 +366,8 @@ namespace Test {
         std::cout << bwdStepOutput.debugString << std::endl;
       }
 
-      auto& bwdStepMaterial = bwdStep.template get<
-          typename MaterialInteractor<stepper_t>::result_type>();
+      auto& bwdStepMaterial
+          = bwdStep.template get<typename MaterialInteractor::result_type>();
       bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
       bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
@@ -393,8 +389,8 @@ namespace Test {
     const auto& bwdStepFinal
         = prop.propagate(*sParameters, dbSurface, bwdStepOptions);
 
-    auto& bwdStepMaterial = bwdStepFinal.template get<
-        typename MaterialInteractor<stepper_t>::result_type>();
+    auto& bwdStepMaterial
+        = bwdStepFinal.template get<typename MaterialInteractor::result_type>();
     bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
@@ -436,10 +432,8 @@ namespace Test {
       charge,
       index)
   {
-    runTest<EigenPropagator, EigenStepper>(
-        epropagator, pT, phi, theta, charge, index);
-    runTest<StraightLinePropagator, StraightLineStepper>(
-        slpropagator, pT, phi, theta, charge, index);
+    runTest(epropagator, pT, phi, theta, charge, index);
+    runTest(slpropagator, pT, phi, theta, charge, index);
   }
 
 }  // namespace Test

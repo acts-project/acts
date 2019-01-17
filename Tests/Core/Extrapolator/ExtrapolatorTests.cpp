@@ -254,9 +254,7 @@ namespace Test {
 
     using DebugOutput = detail::DebugOutputActor;
 
-    PropagatorOptions<ActionList<MaterialInteractor<EigenStepperType>,
-                                 DebugOutput>>
-        options;
+    PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
     options.debug       = debugMode;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
@@ -324,9 +322,7 @@ namespace Test {
     // Action list and abort list
     using DebugOutput = detail::DebugOutputActor;
 
-    PropagatorOptions<ActionList<MaterialInteractor<EigenStepperType>,
-                                 DebugOutput>>
-        options;
+    PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 1500. * units::_mm;
 

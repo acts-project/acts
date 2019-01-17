@@ -50,16 +50,19 @@ namespace Test {
 
     PerpendicularMeasure() = default;
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
-      result.distance = perp(state.stepping.pos);
+      result.distance = perp(stepper.position(state.stepping));
     }
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& /*unused*/) const
+    operator()(propagator_state_t& /*unused*/,
+               const stepper_t& /*unused*/) const
     {
     }
   };
@@ -85,32 +88,37 @@ namespace Test {
 
     SurfaceObserver() = default;
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
       if (surface && !result.surfaces_passed) {
         // calculate the distance to the surface
         const double distance
             = surface
-                  ->intersectionEstimate(
-                      state.stepping.pos, state.stepping.dir, forward, true)
+                  ->intersectionEstimate(stepper.position(state.stepping),
+                                         stepper.direction(state.stepping),
+                                         forward,
+                                         true)
                   .pathLength;
         // Adjust the step size so that we cannot cross the target surface
         state.stepping.stepSize.update(distance, cstep::actor);
         // return true if you fall below tolerance
         if (std::abs(distance) <= tolerance) {
           ++result.surfaces_passed;
-          result.surface_passed_r = perp(state.stepping.pos);
+          result.surface_passed_r = perp(stepper.position(state.stepping));
           // release the step size, will be re-adjusted
           state.stepping.stepSize.release(cstep::actor);
         }
       }
     }
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& /*unused*/) const
+    operator()(propagator_state_t& /*unused*/,
+               const stepper_t& /*unused*/) const
     {
     }
   };
@@ -138,9 +146,11 @@ namespace Test {
 
     PathScatterer() = default;
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t& /*unused*/,
+               result_type& result) const
     {
       if (!result.scattered
           && std::abs(state.stepping.pathAccumulated - path_limit)
@@ -154,9 +164,10 @@ namespace Test {
       }
     }
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& /*unused*/) const
+    operator()(propagator_state_t& /*unused*/,
+               const stepper_t& /*unused*/) const
     {
     }
   };
