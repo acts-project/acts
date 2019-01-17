@@ -72,10 +72,9 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
   if (B_z == 0. || std::abs(q_ov_p) < 1.e-15) {
     rho = 1.e+15;
   } else
-    // signed(!) rho in _mm
+    // signed(!) rho
     rho = sin_th * Acts::units::Nat2SI<Acts::units::MOMENTUM>(
-                       1 / q_ov_p * Acts::units::_GeV)
-        / B_z * Acts::units::_mm;
+                       1 / q_ov_p) / B_z;
 
   double X  = positionAtPCA(0) - linPoint.x() + rho * sin_phi_v;
   double Y  = positionAtPCA(1) - linPoint.y() - rho * cos_phi_v;
