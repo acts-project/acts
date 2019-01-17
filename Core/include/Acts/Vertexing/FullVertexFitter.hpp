@@ -35,30 +35,12 @@ public:
     /// Starting point of vertex fit
     Acts::Vector3D startingPoint;
     /// Maximum number of interations in fitter
-    int maxIterations = 5;
-
-    Config(BField bIn, Acts::Vector3D startP, int maxIter)
-      : bField(std::move(bIn)), startingPoint(startP), maxIterations(maxIter)
-    {
-    }
-
-    /// Constructor with default number of iterations
-    Config(BField bIn, Acts::Vector3D startP)
-      : bField(std::move(bIn)), startingPoint(startP)
-    {
-    }
-
-    /// Constructor with default starting point
-    Config(BField bIn, int maxIter)
-      : bField(std::move(bIn))
-      , startingPoint(Acts::Vector3D(0, 0, 0))
-      , maxIterations(maxIter)
-    {
-    }
+    int maxIterations;
 
     /// Constructor with default number of iterations and starting point
     Config(BField bIn)
-      : bField(std::move(bIn)), startingPoint(Acts::Vector3D(0, 0, 0))
+      : bField(std::move(bIn)), startingPoint(Acts::Vector3D(0, 0, 0)),
+      	maxIterations(5)
     {
     }
   };

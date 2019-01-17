@@ -15,6 +15,9 @@
 
 namespace {
 
+/// @struct BilloirTrack
+///
+/// @brief Struct to cache track-specific matrix operations in Billoir fitter
 struct BilloirTrack
 {
   BilloirTrack(const Acts::BoundParameters& params,
@@ -38,6 +41,9 @@ struct BilloirTrack
   Acts::ActsVectorD<5>    delta_q;
 };
 
+/// @struct BilloirVertex
+///
+/// @brief Struct to cache vertex-specific matrix operations in Billoir fitter
 struct BilloirVertex
 {
   BilloirVertex()
@@ -61,9 +67,7 @@ Acts::Vertex
 Acts::FullVertexFitter<BField>::fit(
     const std::vector<Acts::BoundParameters>& paramVector) const
 {
-  bool debug = false;
-
-  double       chi2    = 1E10;
+  double       chi2    = std::numeric_limits<double>::max();
   double       newChi2 = 0;
   unsigned int nTracks = paramVector.size();
 
