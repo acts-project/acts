@@ -39,8 +39,9 @@ public:
 
     /// Constructor with default number of iterations and starting point
     Config(BField bIn)
-      : bField(std::move(bIn)), startingPoint(Acts::Vector3D(0, 0, 0)),
-      	maxIterations(5)
+      : bField(std::move(bIn))
+      , startingPoint(Acts::Vector3D(0, 0, 0))
+      , maxIterations(5)
     {
     }
   };
