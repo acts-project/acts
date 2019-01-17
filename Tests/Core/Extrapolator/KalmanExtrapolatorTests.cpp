@@ -163,7 +163,7 @@ namespace Test {
       }
       accPath += (*cpath) - 0.;
     }
-    BOOST_CHECK_EQUAL(swJacobianTest.fullPath, accPath);
+    CHECK_CLOSE_REL(swJacobianTest.fullPath, accPath, 1e-6);
 
     // (2) Jacobian test
     Jacobian accJacobian = Jacobian::Identity();
