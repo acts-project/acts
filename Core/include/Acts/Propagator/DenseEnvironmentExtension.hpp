@@ -54,15 +54,17 @@ struct DenseEnvironmentExtension
   /// @brief Control function if the step evaluation would be valid
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
   /// @return Boolean flag if the step would be valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   int
-  bid(const propagator_state_t& state) const
+  bid(const propagator_state_t& state, const stepper_t& stepper) const
   {
     // Check for valid particle properties
-    if (state.stepping.q == 0. || state.options.mass == 0.
-        || state.stepping.p < conv * state.options.momentumCutOff) {
+    if (stepper.charge(state.stepping) == 0. || state.options.mass == 0.
+        || stepper.momentum(state.stepping)
+            < conv * state.options.momentumCutOff) {
       return 0;
     }
 
@@ -78,6 +80,7 @@ struct DenseEnvironmentExtension
   /// step sets up member parameters, too.
   ///
   /// @tparam stepper_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
@@ -85,9 +88,10 @@ struct DenseEnvironmentExtension
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
   k(const propagator_state_t& state,
+    const stepper_t&          stepper,
     Vector3D&                 knew,
     const Vector3D&           bField,
     const int                 i     = 0,
@@ -97,22 +101,24 @@ struct DenseEnvironmentExtension
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
-      massSI          = units::Nat2SI<units::MASS>(state.options.mass);
-      material        = state.navigation.currentVolume->material().get();
-      initialMomentum = units::Nat2SI<units::MOMENTUM>(state.stepping.p);
+      massSI   = units::Nat2SI<units::MASS>(state.options.mass);
+      material = state.navigation.currentVolume->material().get();
+      initialMomentum
+          = units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
       currentMomentum = initialMomentum;
-      qop[0]          = state.stepping.q / initialMomentum;
+      qop[0]          = stepper.charge(state.stepping) / initialMomentum;
       initializeEnergyLoss(state);
       // Evaluate k
-      knew = qop[0] * state.stepping.dir.cross(bField);
+      knew = qop[0] * stepper.direction(state.stepping).cross(bField);
     } else {
       // Update parameters and check for momentum condition
-      updateEnergyLoss(h, state.stepping, i);
+      updateEnergyLoss(h, state.stepping, stepper, i);
       if (currentMomentum < state.options.momentumCutOff) {
         return false;
       }
       // Evaluate k
-      knew = qop[i] * (state.stepping.dir + h * kprev).cross(bField);
+      knew = qop[i]
+          * (stepper.direction(state.stepping) + h * kprev).cross(bField);
     }
     return true;
   }
@@ -123,15 +129,18 @@ struct DenseEnvironmentExtension
   /// after the step in reasonable values.
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
   /// @param [in] h Step size
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
-  finalize(propagator_state_t& state, const double h) const
+  finalize(propagator_state_t& state,
+           const stepper_t&    stepper,
+           const double        h) const
   {
     // Evaluate the new momentum
-    double newMomentum = state.stepping.p
+    double newMomentum = stepper.momentum(state.stepping)
         + conv * (h / 6.) * (dPds[0] + 2. * (dPds[1] + dPds[2]) + dPds[3]);
 
     // Break propagation if momentum becomes below cut-off
@@ -148,7 +157,10 @@ struct DenseEnvironmentExtension
         / (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
-    state.stepping.p = newMomentum;
+    stepper.update(state.stepping,
+                   stepper.position(state.stepping),
+                   stepper.direction(state.stepping),
+                   newMomentum);
     return true;
   }
 
@@ -160,30 +172,34 @@ struct DenseEnvironmentExtension
   /// matrix.
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
   finalize(propagator_state_t& state,
+           const stepper_t&    stepper,
            const double        h,
            ActsMatrixD<7, 7>& D) const
   {
-    return finalize(state, h) && transportMatrix(state, h, D);
+    return finalize(state, stepper, h) && transportMatrix(state, stepper, h, D);
   }
 
 private:
   /// @brief Evaluates the transport matrix D for the jacobian
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
   /// @return Boolean flag if evaluation is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
   transportMatrix(propagator_state_t& state,
+                  const stepper_t&    stepper,
                   const double        h,
                   ActsMatrixD<7, 7>& D) const
   {
@@ -208,7 +224,7 @@ private:
     /// missing Lambda part) and only exists for dGdu' in dlambda/dlambda.
 
     auto& sd  = state.stepping.stepData;
-    auto& dir = state.stepping.dir;
+    auto  dir = stepper.direction(state.stepping);
 
     D                   = ActsMatrixD<7, 7>::Identity();
     const double half_h = h * 0.5;
@@ -406,12 +422,16 @@ private:
   /// initialization with energy loss of a particle in material
   ///
   /// @tparam stepper_state_t Type of the state of the stepper
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] h Stepped distance of the sub-step (1-3)
   /// @param [in] state State of the stepper
   /// @param [in] i Index of the sub-step (1-3)
-  template <typename stepper_state_t>
+  template <typename stepper_state_t, typename stepper_t>
   void
-  updateEnergyLoss(const double h, const stepper_state_t& state, const int i)
+  updateEnergyLoss(const double           h,
+                   const stepper_state_t& state,
+                   const stepper_t&       stepper,
+                   const int              i)
   {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
@@ -419,7 +439,7 @@ private:
     double E = std::sqrt(currentMomentum * currentMomentum * units::_c2
                          + massSI * massSI * units::_c4);
     dPds[i] = g * E / (currentMomentum * units::_c2);
-    qop[i]  = state.q / currentMomentum;
+    qop[i]  = stepper.charge(state) / currentMomentum;
     // Calculate term for later error propagation
     if (state.covTransport) {
       dLdl[i] = (-qop[i] * qop[i] * g * E

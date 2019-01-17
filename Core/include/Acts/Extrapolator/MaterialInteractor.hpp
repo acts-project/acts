@@ -143,7 +143,7 @@ struct MaterialInteractor
       const SurfaceMaterial* sMaterial
           = state.navigation.currentSurface->associatedMaterial();
       MaterialProperties mProperties = sMaterial->materialProperties(
-          state.stepping.pos, state.stepping.navDir, mStage);
+          stepper.position(state.stepping), state.stepping.navDir, mStage);
       // Material properties (non-zero) have been found for this configuration
       if (mProperties) {
         // more debugging output to the screen
@@ -171,7 +171,7 @@ struct MaterialInteractor
         mProperties *= pCorrection;
 
         // The momentum at current position
-        const double p     = state.stepping.p;
+        const double p     = stepper.momentum(state.stepping);
         const double m     = state.options.mass;
         const double E     = std::sqrt(p * p + m * m);
         const double lbeta = p / E;
@@ -236,7 +236,11 @@ struct MaterialInteractor
             // Record the deltaP
             mInteraction.deltaP = p - newP;
             // Update the state/momentum
-            state.stepping.p = std::copysign(newP, state.stepping.p);
+            stepper.update(
+                state.stepping,
+                stepper.position(state.stepping),
+                stepper.direction(state.stepping),
+                std::copysign(newP, stepper.momentum(state.stepping)));
           }
           // Transfer this into energy loss straggling and apply to
           // covariance:

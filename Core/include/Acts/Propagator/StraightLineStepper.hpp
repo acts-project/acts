@@ -49,6 +49,9 @@ public:
   ///
   struct State
   {
+    // Only its stepper can access its private parts
+    friend class StraightLineStepper;
+
     /// Constructor from the initial track parameters
     ///
     /// @tparam parameters_t the Type of the track parameters

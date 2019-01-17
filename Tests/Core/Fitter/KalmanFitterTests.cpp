@@ -84,8 +84,8 @@ namespace Test {
     template <typename propagator_state_t, typename stepper_t>
     void
     operator()(propagator_state_t& state,
-               const stepper_t& /*unused*/,
-               result_type& result) const
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
       // monitor the current surface
       auto surface = state.navigation.currentSurface;
@@ -101,8 +101,9 @@ namespace Test {
           if (lResolution != vResolution->second.end()) {
             // Apply global to local
             Acts::Vector2D lPos;
-            surface->globalToLocal(
-                state.stepping.pos, state.stepping.dir, lPos);
+            surface->globalToLocal(stepper.position(state.stepping),
+                                   stepper.direction(state.stepping),
+                                   lPos);
             if (lResolution->second.size() == 1) {
               double sp = lResolution->second[0].second;
               cov1D << sp * sp;
@@ -187,7 +188,7 @@ namespace Test {
             {std::sin(theta + dTheta) * std::cos(phi + dPhi),
              std::sin(theta + dTheta) * std::sin(phi + dPhi),
              std::cos(theta + dTheta)},
-            std::max(state.stepping.p
+            std::max(stepper.momentum(state.stepping)
                          - std::abs(gauss(generator)) * units::_MeV,
                      0.));
       }

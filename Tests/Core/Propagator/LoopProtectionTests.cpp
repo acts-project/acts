@@ -63,21 +63,21 @@ namespace Test {
     }
 
     /// Access method - position
-    const Vector3D
+    Vector3D
     position(const SteppingState& state) const
     {
       return state.pos;
     }
 
     /// Access method - direction
-    const Vector3D
+    Vector3D
     direction(const SteppingState& state) const
     {
       return state.dir;
     }
 
     /// Access method - momentum
-    const double
+    double
     momentum(const SteppingState& state) const
     {
       return state.p;

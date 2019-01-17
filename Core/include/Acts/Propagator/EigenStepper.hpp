@@ -74,10 +74,12 @@ public:
   /// by the propagator
   struct State
   {
+    // Only its stepper can access its private parts
     friend class EigenStepper<BField,
                               corrector_t,
                               extensionlist_t,
                               auctioneer_t>;
+
     /// Constructor from the initial track parameters
     /// @param[in] par The track parameters at start
     /// @param[in] ndir The navigation direciton w.r.t momentum
@@ -601,8 +603,8 @@ public:
 
     // First Runge-Kutta point (at current position)
     sd.B_first = getField(state.stepping, state.stepping.pos);
-    if (!state.stepping.extension.validExtensionForStep(state)
-        || !state.stepping.extension.k1(state, sd.k1, sd.B_first)) {
+    if (!state.stepping.extension.validExtensionForStep(state, *this)
+        || !state.stepping.extension.k1(state, *this, sd.k1, sd.B_first)) {
       return 0.;
     }
 
@@ -621,13 +623,13 @@ public:
           + h2 * 0.125 * sd.k1;
       sd.B_middle = getField(state.stepping, pos1);
       if (!state.stepping.extension.k2(
-              state, sd.k2, sd.B_middle, half_h, sd.k1)) {
+              state, *this, sd.k2, sd.B_middle, half_h, sd.k1)) {
         return false;
       }
 
       // Third Runge-Kutta point
       if (!state.stepping.extension.k3(
-              state, sd.k3, sd.B_middle, half_h, sd.k2)) {
+              state, *this, sd.k3, sd.B_middle, half_h, sd.k2)) {
         return false;
       }
 
@@ -635,7 +637,8 @@ public:
       const Vector3D pos2
           = state.stepping.pos + h * state.stepping.dir + h2 * 0.5 * sd.k3;
       sd.B_last = getField(state.stepping, pos2);
-      if (!state.stepping.extension.k4(state, sd.k4, sd.B_last, h, sd.k3)) {
+      if (!state.stepping.extension.k4(
+              state, *this, sd.k4, sd.B_last, h, sd.k3)) {
         return false;
       }
 
@@ -675,14 +678,14 @@ public:
     if (state.stepping.covTransport) {
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D;
-      if (!state.stepping.extension.finalize(state, h, D)) {
+      if (!state.stepping.extension.finalize(state, *this, h, D)) {
         return 0.;
       }
 
       // for moment, only update the transport part
       state.stepping.jacTransport = D * state.stepping.jacTransport;
     } else {
-      if (!state.stepping.extension.finalize(state, h)) {
+      if (!state.stepping.extension.finalize(state, *this, h)) {
         return 0.;
       }
     }
