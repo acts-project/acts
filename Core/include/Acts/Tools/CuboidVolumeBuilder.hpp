@@ -47,6 +47,7 @@ public:
     // Thickness
     double thickness = 0.;
     // Constructor function for optional detector elements
+    // Arguments are transform, rectangle bounds and thickness.
     std::function<DetectorElementBase*(std::shared_ptr<const Transform3D>,
                                        std::shared_ptr<const RectangleBounds>,
                                        double)>
