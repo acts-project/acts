@@ -57,7 +57,151 @@ public:
       , covariance(nullptr)
       , stepSize(ndir * std::abs(ssize))
     {
-      AtlasStepper<bfield_t>::update(*this, pars);
+      // The rest of this constructor is copy&paste of AtlasStepper::update() -
+      // this is a nasty but working solution for the stepper state without
+      // functions
+
+      const ActsVectorD<3> pos = pars.position();
+      const auto           Vp  = pars.parameters();
+
+      double Sf, Cf, Ce, Se;
+      Sf = sin(Vp(2));
+      Cf = cos(Vp(2));
+      Se = sin(Vp(3));
+      Ce = cos(Vp(3));
+
+      pVector[0] = pos(0);
+      pVector[1] = pos(1);
+      pVector[2] = pos(2);
+      pVector[3] = Cf * Se;
+      pVector[4] = Sf * Se;
+      pVector[5] = Ce;
+      pVector[6] = Vp[4];
+
+      // @todo: remove magic numbers - is that the charge ?
+      if (std::abs(pVector[6]) < .000000000000001) {
+        pVector[6] < 0. ? pVector[6] = -.000000000000001
+                        : pVector[6] = .000000000000001;
+      }
+
+      // prepare the jacobian if we have a covariance
+      if (pars.covariance()) {
+        // copy the covariance matrix
+        covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
+        useJacobian = true;
+        const auto transform = pars.referenceFrame();
+
+        pVector[7]  = transform(0, eLOC_0);
+        pVector[14] = transform(0, eLOC_1);
+        pVector[21] = 0.;
+        pVector[28] = 0.;
+        pVector[35] = 0.;  // dX /
+
+        pVector[8]  = transform(1, eLOC_0);
+        pVector[15] = transform(1, eLOC_1);
+        pVector[22] = 0.;
+        pVector[29] = 0.;
+        pVector[36] = 0.;  // dY /
+
+        pVector[9]  = transform(2, eLOC_0);
+        pVector[16] = transform(2, eLOC_1);
+        pVector[23] = 0.;
+        pVector[30] = 0.;
+        pVector[37] = 0.;  // dZ /
+
+        pVector[10] = 0.;
+        pVector[17] = 0.;
+        pVector[24] = -Sf * Se;  // - sin(phi) * cos(theta)
+        pVector[31] = Cf * Ce;   // cos(phi) * cos(theta)
+        pVector[38] = 0.;        // dAx/
+
+        pVector[11] = 0.;
+        pVector[18] = 0.;
+        pVector[25] = Cf * Se;  // cos(phi) * sin(theta)
+        pVector[32] = Sf * Ce;  // sin(phi) * cos(theta)
+        pVector[39] = 0.;       // dAy/
+
+        pVector[12] = 0.;
+        pVector[19] = 0.;
+        pVector[26] = 0.;
+        pVector[33] = -Se;  // - sin(theta)
+        pVector[40] = 0.;   // dAz/
+
+        pVector[13] = 0.;
+        pVector[20] = 0.;
+        pVector[27] = 0.;
+        pVector[34] = 0.;
+        pVector[41] = 1.;  // dCM/
+
+        pVector[42] = 0.;
+        pVector[43] = 0.;
+        pVector[44] = 0.;
+
+        // special treatment for surface types
+        const auto& surface = pars.referenceSurface();
+        // the disc needs polar coordinate adaptations
+        if (surface.type() == Surface::Disc) {
+          double lCf   = cos(Vp[1]);
+          double lSf   = sin(Vp[1]);
+          double Ax[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+          double Ay[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+          double d0    = lCf * Ax[0] + lSf * Ay[0];
+          double d1    = lCf * Ax[1] + lSf * Ay[1];
+          double d2    = lCf * Ax[2] + lSf * Ay[2];
+          pVector[7]   = d0;
+          pVector[8]   = d1;
+          pVector[9]   = d2;
+          pVector[14]  = Vp[0] * (lCf * Ay[0] - lSf * Ax[0]);
+          pVector[15]  = Vp[0] * (lCf * Ay[1] - lSf * Ax[1]);
+          pVector[16]  = Vp[0] * (lCf * Ay[2] - lSf * Ax[2]);
+        }
+        // the line needs components that relate direction change
+        // with global frame change
+        if (surface.type() == Surface::Perigee
+            || surface.type() == Surface::Straw) {
+
+          // sticking to the nomenclature of the original RkPropagator
+          // - axis pointing along the drift/transverse direction
+          double B[3] = {transform(0, 0), transform(1, 0), transform(2, 0)};
+          // - axis along the straw
+          double A[3] = {transform(0, 1), transform(1, 1), transform(2, 1)};
+          // - normal vector of the reference frame
+          double C[3] = {transform(0, 2), transform(1, 2), transform(2, 2)};
+
+          // projection of direction onto normal vector of reference frame
+          double PC = pVector[3] * C[0] + pVector[4] * C[1] + pVector[5] * C[2];
+          double Bn = 1. / PC;
+
+          double Bx2 = -A[2] * pVector[25];
+          double Bx3 = A[1] * pVector[33] - A[2] * pVector[32];
+
+          double By2 = A[2] * pVector[24];
+          double By3 = A[2] * pVector[31] - A[0] * pVector[33];
+
+          double Bz2 = A[0] * pVector[25] - A[1] * pVector[24];
+          double Bz3 = A[0] * pVector[32] - A[1] * pVector[31];
+
+          double B2 = B[0] * Bx2 + B[1] * By2 + B[2] * Bz2;
+          double B3 = B[0] * Bx3 + B[1] * By3 + B[2] * Bz3;
+
+          Bx2 = (Bx2 - B[0] * B2) * Bn;
+          Bx3 = (Bx3 - B[0] * B3) * Bn;
+          By2 = (By2 - B[1] * B2) * Bn;
+          By3 = (By3 - B[1] * B3) * Bn;
+          Bz2 = (Bz2 - B[2] * B2) * Bn;
+          Bz3 = (Bz3 - B[2] * B3) * Bn;
+
+          //  /dPhi      |     /dThe       |
+          pVector[21] = Bx2 * Vp[0];
+          pVector[28] = Bx3 * Vp[0];  // dX/
+          pVector[22] = By2 * Vp[0];
+          pVector[29] = By3 * Vp[0];  // dY/
+          pVector[23] = Bz2 * Vp[0];
+          pVector[30] = Bz3 * Vp[0];  // dZ/
+        }
+      }
+      // now declare the state as ready
+      state_ready = true;
     }
 
     // optimisation that init is not called twice
@@ -653,8 +797,7 @@ public:
       state.pVector[39] -= (s4 * state.pVector[43]);
       state.pVector[40] -= (s4 * state.pVector[44]);
 
-      double P3, P4,
-          C = state.pVector[3] * state.pVector[3]
+      double P3, P4, C = state.pVector[3] * state.pVector[3]
           + state.pVector[4] * state.pVector[4];
       if (C > 1.e-20) {
         C  = 1. / C;

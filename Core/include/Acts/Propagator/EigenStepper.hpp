@@ -259,45 +259,51 @@ public:
     // get the field from the cell
     return m_bField.getField(pos, state.fieldCache);
   }
-  
-      /// Create and return the bound state at the current position
-    ///
-    /// @brief This transports (if necessary) the covariance
-    /// to the surface and creates a bound state. It does not check
-    /// if the transported state is at the surface, this needs to
-    /// be guaranteed by the propagator
-    ///
-    /// @tparam surface_t The Surface type where this is bound to
-    ///
-    /// @param surface The surface to which we bind the state
-    /// @param reinitialize Boolean flag whether reinitialization is needed,
-    ///        i.e. if this is an intermediate state of a larger propagation
-    ///
-    /// @return A bound state:
-    ///   - the parameters at the surface
-    ///   - the stepwise jacobian towards it (from last bound)
-    ///   - and the path length (from start - for ordering)
-    BoundState
-    boundState(State& state, const Surface_t& surface, bool reinitialize = true) const
-    {
-      // Transport the covariance to here
-      std::unique_ptr<const Covariance> covPtr = nullptr;
-      if (state.covTransport) {
-        covarianceTransport(surface, reinitialize);
-        covPtr = std::make_unique<const Covariance>(state.cov);
-      }
-      // Create the bound parameters
-      BoundParameters parameters(
-          std::move(covPtr), state.pos, state.p * state.dir, state.q, surface.getSharedPtr());
-      // Create the bound state
-      BoundState bState{std::move(parameters), state.jacobian, state.pathAccumulated};
-      // Reset the jacobian to identity
-      if (reinitialize) {
-        state.jacobian = Jacobian::Identity();
-      }
-      /// Return the State
-      return bState;
+
+  /// Create and return the bound state at the current position
+  ///
+  /// @brief This transports (if necessary) the covariance
+  /// to the surface and creates a bound state. It does not check
+  /// if the transported state is at the surface, this needs to
+  /// be guaranteed by the propagator
+  ///
+  /// @tparam surface_t The Surface type where this is bound to
+  ///
+  /// @param surface The surface to which we bind the state
+  /// @param reinitialize Boolean flag whether reinitialization is needed,
+  ///        i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return A bound state:
+  ///   - the parameters at the surface
+  ///   - the stepwise jacobian towards it (from last bound)
+  ///   - and the path length (from start - for ordering)
+  BoundState
+  boundState(State&         state,
+             const Surface& surface,
+             bool           reinitialize = true) const
+  {
+    // Transport the covariance to here
+    std::unique_ptr<const Covariance> covPtr = nullptr;
+    if (state.covTransport) {
+      covarianceTransport(state, surface, reinitialize);
+      covPtr = std::make_unique<const Covariance>(state.cov);
     }
+    // Create the bound parameters
+    BoundParameters parameters(std::move(covPtr),
+                               state.pos,
+                               state.p * state.dir,
+                               state.q,
+                               surface.getSharedPtr());
+    // Create the bound state
+    BoundState bState{
+        std::move(parameters), state.jacobian, state.pathAccumulated};
+    // Reset the jacobian to identity
+    if (reinitialize) {
+      state.jacobian = Jacobian::Identity();
+    }
+    /// Return the State
+    return bState;
+  }
 
   /// Global particle position accessor
   Vector3D

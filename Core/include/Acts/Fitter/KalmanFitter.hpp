@@ -298,9 +298,9 @@ private:
           // Find the intersection to allocate the layer
           auto surfaceIntersection
               = surface.intersectionEstimate(stepper.position(state.stepping),
-                                              stepper.direction(state.stepping),
-                                              state.stepping.navDir,
-                                              false);
+                                             stepper.direction(state.stepping),
+                                             state.stepping.navDir,
+                                             false);
           // Allocate the layer via the tracking geometry search
           if (surfaceIntersection and state.navigation.worldVolume) {
             auto intersection = surfaceIntersection.position;
