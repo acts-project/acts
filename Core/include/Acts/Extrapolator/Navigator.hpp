@@ -234,9 +234,9 @@ public:
   ///
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
-  template <typename propagator_options_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t>
   void
-  status(propagator_options_t& state, const stepper_t& stepper) const
+  status(propagator_state_t& state, const stepper_t& stepper) const
   {
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
@@ -375,9 +375,9 @@ public:
   ///
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
-  template <typename propagator_options_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t>
   void
-  target(propagator_options_t& state, const stepper_t& stepper) const
+  target(propagator_state_t& state, const stepper_t& stepper) const
   {
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
