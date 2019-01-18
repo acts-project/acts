@@ -568,7 +568,6 @@ public:
     // integration error. The results are stated in the local variables above,
     // allowing integration to continue once the error is deemed satisfactory
     const auto tryRungeKuttaStep = [&](const double h) -> bool {
-
       // State the square and half of the step size
       h2     = h * h;
       half_h = h * 0.5;
@@ -597,18 +596,17 @@ public:
         return false;
       }
 
-      // Return an estimate of the local integration error
+      // Compute and check the local integration error estimate
       error_estimate = std::max(
           h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>(), 1e-20);
-      return true;
+      return (error_estimate <= state.options.tolerance);
     };
 
     double stepSizeScaling;
 
     // Select and adjust the appropriate Runge-Kutta step size as given
     // ATL-SOFT-PUB-2009-001
-    while (!tryRungeKuttaStep(state.stepping.stepSize)
-           || error_estimate > state.options.tolerance) {
+    while (!tryRungeKuttaStep(state.stepping.stepSize)) {
       stepSizeScaling = std::min(std::max(0.25,
                                           std::pow((state.options.tolerance
                                                     / std::abs(error_estimate)),
