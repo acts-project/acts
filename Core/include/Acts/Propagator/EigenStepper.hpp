@@ -203,8 +203,8 @@ public:
   ///
   /// @tparam result_t Type of the propagator result to be filled
   ///
-  /// @param[in,out] state The stepper state
-  /// @param[in,out] result The propagator result object to be filled
+  /// @param [in,out] state The stepper state
+  /// @param [in,out] result The propagator result object to be filled
   template <typename result_t>
   void
   convert(State& state, result_t& result) const
@@ -260,51 +260,6 @@ public:
     return m_bField.getField(pos, state.fieldCache);
   }
 
-  /// Create and return the bound state at the current position
-  ///
-  /// @brief This transports (if necessary) the covariance
-  /// to the surface and creates a bound state. It does not check
-  /// if the transported state is at the surface, this needs to
-  /// be guaranteed by the propagator
-  ///
-  /// @tparam surface_t The Surface type where this is bound to
-  ///
-  /// @param surface The surface to which we bind the state
-  /// @param reinitialize Boolean flag whether reinitialization is needed,
-  ///        i.e. if this is an intermediate state of a larger propagation
-  ///
-  /// @return A bound state:
-  ///   - the parameters at the surface
-  ///   - the stepwise jacobian towards it (from last bound)
-  ///   - and the path length (from start - for ordering)
-  BoundState
-  boundState(State&         state,
-             const Surface& surface,
-             bool           reinitialize = true) const
-  {
-    // Transport the covariance to here
-    std::unique_ptr<const Covariance> covPtr = nullptr;
-    if (state.covTransport) {
-      covarianceTransport(state, surface, reinitialize);
-      covPtr = std::make_unique<const Covariance>(state.cov);
-    }
-    // Create the bound parameters
-    BoundParameters parameters(std::move(covPtr),
-                               state.pos,
-                               state.p * state.dir,
-                               state.q,
-                               surface.getSharedPtr());
-    // Create the bound state
-    BoundState bState{
-        std::move(parameters), state.jacobian, state.pathAccumulated};
-    // Reset the jacobian to identity
-    if (reinitialize) {
-      state.jacobian = Jacobian::Identity();
-    }
-    /// Return the State
-    return bState;
-  }
-
   /// Global particle position accessor
   Vector3D
   position(const State& state) const
@@ -340,21 +295,19 @@ public:
   /// if the transported state is at the surface, this needs to
   /// be guaranteed by the propagator
   ///
-  /// @tparam surface_t The Surface type where this is bound to
-  ///
-  /// @param surface The surface to which we bind the state
-  /// @param reinitialize Boolean flag whether reinitialization is needed,
-  ///        i.e. if this is an intermediate state of a larger propagation
+  /// @param [in] state State that will be presented as @c BoundState
+  /// @param [in] surface The surface to which we bind the state
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  template <typename surface_t>
   BoundState
-  boundState(State&           state,
-             const surface_t& surface,
-             bool             reinitialize = true) const
+  boundState(State&         state,
+             const Surface& surface,
+             bool           reinitialize = true) const
   {
     // Transport the covariance to here
     std::unique_ptr<const Covariance> covPtr = nullptr;
@@ -384,8 +337,9 @@ public:
   /// @brief This transports (if necessary) the covariance
   /// to the current position and creates a curvilinear state.
   ///
-  /// @param reinitialize Boolean flag whether reinitialization is needed
-  ///        i.e. if this is an intermediate state of a larger propagation
+  /// @param [in] state State that will be presented as @c CurvilinearState
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed
+  /// i.e. if this is an intermediate state of a larger propagation
   ///
   /// @return A curvilinear state:
   ///   - the curvilinear parameters at given position
@@ -414,8 +368,10 @@ public:
     return curvState;
   }
 
-  // TODO: comments update, also in other steppers
-  /// Method to update the stepper to the some parameters
+  /// Method to update a stepper state to the some parameters
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] pars Parameters that will be written into @p state
   void
   update(State& state, const BoundParameters& pars) const
   {
@@ -430,9 +386,10 @@ public:
 
   /// Method to update momentum, direction and p
   ///
-  /// @param uposition the updated position
-  /// @param udirection the updated direction
-  /// @param up the updated momentum value
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] uposition the updated position
+  /// @param [in] udirection the updated direction
+  /// @param [in] up the updated momentum value
   void
   update(State&          state,
          const Vector3D& uposition,
@@ -455,9 +412,9 @@ public:
   /// to a new curvilinear frame at current  position,
   /// or direction of the state
   ///
-  /// @param reinitialize is a flag to steer whether the
-  ///        state should be reinitialized at the new
-  ///        position
+  /// @param [in,out] state State of the stepper
+  /// @param [in] reinitialize is a flag to steer whether the state should be
+  /// reinitialized at the new position
   ///
   /// @return the full transport jacobian
   void
@@ -533,16 +490,15 @@ public:
   }
 
   /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
+  /// to a new curvilinear frame at current position,
   /// or direction of the state
   ///
-  /// @tparam surface_t the Surfac type
+  /// @tparam surface_t the Surface type
   ///
-  /// @param surface is the surface to which the covariance is
-  ///        forwarded to
-  /// @param reinitialize is a flag to steer whether the
-  ///        state should be reinitialized at the new
-  ///        position
+  /// @param [in,out] state State of the stepper
+  /// @param [in] surface is the surface to which the covariance is forwarded to
+  /// @param [in] reinitialize is a flag to steer whether the state should be
+  /// reinitialized at the new position
   /// @note no check is done if the position is actually on the surface
   template <typename surface_t>
   void
@@ -590,8 +546,8 @@ public:
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param[in,out] state is the propagation state associated with the track
-  ///                      parameters that are being propagated.
+  /// @param [in,out] state is the propagation state associated with the track
+  /// parameters that are being propagated.
   ///
   ///                      the state contains the desired step size.
   ///                      It can be negative during backwards track

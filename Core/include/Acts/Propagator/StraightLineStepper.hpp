@@ -56,9 +56,9 @@ public:
     ///
     /// @tparam parameters_t the Type of the track parameters
     ///
-    /// @param[in] par The track parameters at start
-    /// @param[in] dir is the navigation direction
-    /// @param[in] ssize is the (absolute) maximum step size
+    /// @param [in] par The track parameters at start
+    /// @param [in] dir is the navigation direction
+    /// @param [in] ssize is the (absolute) maximum step size
     template <typename parameters_t>
     explicit State(const parameters_t& par,
                    NavigationDirection ndir = forward,
@@ -78,10 +78,10 @@ public:
 
   private:
     /// Global particle position
-    Vector3D pos = Vector3D(0, 0, 0);
+    Vector3D pos = Vector3D(0., 0., 0.);
 
     /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1, 0, 0);
+    Vector3D dir = Vector3D(1., 0., 0.);
 
     /// Momentum
     double p = 0.;
@@ -130,16 +130,17 @@ public:
 
   /// Return a corrector
   static VoidIntersectionCorrector
-  corrector(State& /*unused*/)
+  corrector(State& /*state*/)
   {
     return VoidIntersectionCorrector();
   }
 
   /// Method to update momentum, direction and p
   ///
-  /// @param uposition the updated position
-  /// @param udirection the updated direction
-  /// @param p the updated momentum value
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] uposition the updated position
+  /// @param [in] udirection the updated direction
+  /// @param [in] up the updated momentum value
   static void
   update(State&          state,
          const Vector3D& uposition,
@@ -155,13 +156,14 @@ public:
   /// to a new curvilinear frame at current  position,
   /// or direction of the state - for the moment a dummy method
   ///
-  /// @param reinitialize is a flag to steer whether the
+  /// @param [in,out] state State of the stepper
+  /// @param [in] reinitialize is a flag to steer whether the
   ///        state should be reinitialized at the new
   ///        position
   ///
   /// @return the full transport jacobian
   static const ActsMatrixD<5, 5>
-  covarianceTransport(State& /*unused*/, bool /*reinitialize = false*/)
+  covarianceTransport(State& /*state*/, bool /*reinitialize = false*/)
   {
     return ActsMatrixD<5, 5>::Identity();
   }
@@ -172,9 +174,10 @@ public:
   ///
   /// @tparam surface_t the surface type - ignored here
   ///
-  /// @param surface is the surface to which the covariance is
+  /// @param [in,out] state The stepper state
+  /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
-  /// @param reinitialize is a flag to steer whether the
+  /// @param [in] reinitialize is a flag to steer whether the
   ///        state should be reinitialized at the new
   ///        position
   /// @note no check is done if the position is actually on the surface
@@ -211,8 +214,8 @@ public:
   ///
   /// @tparam result_t Type of the propagator result to be filled
   ///
-  /// @param[in,out] state The stepper state
-  /// @param[in,out] result The result object from the propagator
+  /// @param [in] state The stepper state
+  /// @param [in,out] result The result object from the propagator
   template <typename result_t>
   void
   convert(State& state, result_t& result) const
@@ -245,8 +248,8 @@ public:
 
   /// Perform a straight line propagation step
   ///
-  /// @param[in,out] state is the propagation state associated with the track
-  ///                parameters that are being propagated.
+  /// @param [in,out] state is the propagation state associated with the track
+  /// parameters that are being propagated.
   ///                The state contains the desired step size,
   ///                it can be negative during backwards track propagation,
   ///                and since we're using an adaptive algorithm, it can
