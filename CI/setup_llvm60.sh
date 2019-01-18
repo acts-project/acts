@@ -1,6 +1,6 @@
 #!/bin/sh -ex
 #
-# setup LLVM 4.0 compiler via CVMFS CLIC repository
+# setup LLVM compiler via CVMFS CLIC repository
 
 # determine os release
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"

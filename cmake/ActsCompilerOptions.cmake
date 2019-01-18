@@ -32,4 +32,3 @@ set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "Allow/Disallow compiler extensions")
 
 # silence warning about missing RPATH on Mac OSX
 set (CMAKE_MACOSX_RPATH 1)
-
