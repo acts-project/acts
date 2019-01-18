@@ -609,7 +609,7 @@ public:
     while (!tryRungeKuttaStep(state.stepping.stepSize)) {
       stepSizeScaling = std::min(std::max(0.25,
                                           std::pow((state.options.tolerance
-                                                    / std::abs(error_estimate)),
+                                                    / std::abs(2. * error_estimate)),
                                                    0.25)),
                                  4.);
       if (stepSizeScaling == 1.) {
