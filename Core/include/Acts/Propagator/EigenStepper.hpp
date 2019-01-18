@@ -553,8 +553,8 @@ public:
   {
     // Runge-Kutta integrator state
     auto& sd = state.stepping.stepData;
-
-    double h2, half_h, error_estimate;
+    double error_estimate = 0.;
+    double h2, half_h;
 
     // First Runge-Kutta point (at current position)
     sd.B_first = getField(state.stepping, state.stepping.pos);
