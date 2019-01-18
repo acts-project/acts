@@ -797,7 +797,8 @@ public:
       state.pVector[39] -= (s4 * state.pVector[43]);
       state.pVector[40] -= (s4 * state.pVector[44]);
 
-      double P3, P4, C = state.pVector[3] * state.pVector[3]
+      double P3, P4,
+          C = state.pVector[3] * state.pVector[3]
           + state.pVector[4] * state.pVector[4];
       if (C > 1.e-20) {
         C  = 1. / C;
