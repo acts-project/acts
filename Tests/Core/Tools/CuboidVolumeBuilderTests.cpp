@@ -11,9 +11,16 @@
 #include <boost/test/included/unit_test.hpp>
 
 #include <vector>
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/MaterialProperties.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
+#include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -56,11 +63,10 @@ namespace Test {
       cfg.thickness = 1. * units::_um;
 
       cfg.detElementConstructor
-          = [](std::tuple<std::shared_ptr<const Transform3D>,
-                          std::shared_ptr<const RectangleBounds>,
-                          double> data) {
-              return new DetectorElementStub(
-                  std::get<0>(data), std::get<1>(data), std::get<2>(data));
+          = [](std::shared_ptr<const Transform3D>     trans,
+               std::shared_ptr<const RectangleBounds> bounds,
+               double                                 thickness) {
+              return new DetectorElementStub(trans, bounds, thickness);
             };
       surfaceConfig.push_back(cfg);
     }
