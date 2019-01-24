@@ -9,13 +9,13 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
 
 namespace Acts {
 
 /// @class ImpactPoint3dEstimator
 ///
-/// @brief Calculates the distance between a 3D point
-///   and a track at its point of closest approach in 3D
+/// @brief Estimates point of closest approach in 3D
 class ImpactPoint3dEstimator {
  public:
   ImpactPoint3dEstimator() = default;
@@ -28,6 +28,22 @@ class ImpactPoint3dEstimator {
   /// @return Distance
   double calculateDistance(const BoundParameters& params,
                            const Vector3D& refPos) const;
+
+  /// @brief Creates track parameters bound to plane
+  /// at point of closest approach in 3d to given
+  /// reference position. The parameters and errors
+  /// are defined on the plane intersecting the track
+  /// at point of closest approach, with track ortogonal
+  /// to the plane and center of the plane defined as the
+  /// given reference point (vertex).
+  ///
+  /// @param trk Track at vertex
+  /// @param refPos Reference position (vertex)
+  ///
+  /// @return New track params
+  // BoundParameters paramsAtIP3d(const TrackAtVertex& trk,
+  //							const Vector3D& refPos)
+  // const;
 };
 
 }  // namespace Acts

@@ -117,4 +117,4 @@ class Vertex {
 
 }  // namespace Acts
 
-#include "Acts/Vertexing/Vertex.ipp"
+#include "Vertex.ipp"

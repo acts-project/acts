@@ -144,6 +144,7 @@ BOOST_AUTO_TEST_CASE(track_to_vertex_ip_estimator_test) {
     covMat << resD0 * resD0, 0., 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
         0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., 0., resTh * resTh, 0.,
         0., 0., 0., 0., 0., resQp * resQp, 0., 0., 0., 0., 0., 0., 1.;
+
     BoundParameters track =
         BoundParameters(tgContext, std::move(covMat), paramVec, perigeeSurface);
 
