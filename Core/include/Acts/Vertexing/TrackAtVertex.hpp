@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Vertexing/LinearizedTrack.hpp"
 
 namespace Acts {
 
@@ -33,12 +34,17 @@ struct TrackAtVertex {
   TrackAtVertex(double chi2perTrack, const BoundParameters& paramsAtVertex,
                 const input_track_t& originalParams)
       : chi2Track(chi2perTrack),
+        ndf(0),
         fittedParams(paramsAtVertex),
         originalTrack(originalParams),
-        trackWeight(1.) {}
+        trackWeight(1.),
+        vertexCompatibility(0.) {}
 
   /// Chi2 of track
   double chi2Track;
+
+  /// Number degrees of freedom
+  int ndf;
 
   /// Fitted perigee
   BoundParameters fittedParams;
@@ -48,6 +54,13 @@ struct TrackAtVertex {
 
   /// Weight of track in fit
   double trackWeight;
+
+  /// The linearized state of the track at vertex
+  LinearizedTrack linearizedState;
+
+  /// Value of the compatibility of the track to the actual vertex, based
+  /// on the estimation on the distance between the track and the vertex
+  double vertexCompatibility;
 };
 
 }  // namespace Acts
