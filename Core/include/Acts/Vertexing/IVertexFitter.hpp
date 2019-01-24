@@ -9,6 +9,7 @@
 #pragma once
 
 #include <functional>
+
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -18,8 +19,8 @@
 namespace Acts {
 
 /// @brief Vertex Fitter Options
-///
 template <typename input_track_t>
+
 struct VertexFitterOptions {
   /// Default contstructor is deleted
   VertexFitterOptions() = delete;
@@ -50,6 +51,7 @@ struct VertexFitterOptions {
 /// @tparam input_track_t Track object type
 /// @tparam propagator_t Propagator type
 template <typename input_track_t, typename propagator_t>
+
 class IVertexFitter {
  public:
   /// @brief Default virtual destructor

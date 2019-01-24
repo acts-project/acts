@@ -15,6 +15,13 @@ Acts::Vertex<input_track_t>::Vertex(const Vector3D& position)
 }
 
 template <typename input_track_t>
+Acts::Vertex<input_track_t>::Vertex(const SpacePointVector& position)
+
+{
+  m_position = position;
+}
+
+template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
     const Vector3D& position, const ActsSymMatrixD<3>& covariance,
     std::vector<TrackAtVertex<input_track_t>>& tracks)

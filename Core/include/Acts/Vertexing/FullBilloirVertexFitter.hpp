@@ -9,12 +9,11 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Vertexing/IVertexFitter.hpp"
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
-
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 
 namespace Acts {
 
@@ -79,7 +78,7 @@ class FullBilloirVertexFitter
   template <typename T = input_track_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
   FullBilloirVertexFitter(const Config& cfg)
-      : m_cfg(cfg), extractParameters([&](T params) { return params; }) {}
+      : m_cfg(cfg), extractParameters([](T params) { return params; }) {}
 
   /// @brief Constructor for user-defined input_track_t type =! BoundParameters
   ///

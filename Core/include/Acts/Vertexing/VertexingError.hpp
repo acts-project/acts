@@ -14,7 +14,11 @@
 
 namespace Acts {
 // This is the custom error code enum
-enum class VertexingError { NumericFailure = 1 };
+enum class VertexingError {
+  NumericFailure = 1,
+  EmptyInput = 2,
+  SeedingError = 3
+};
 
 namespace detail {
 // Define a custom error code category derived from std::error_category
@@ -27,6 +31,10 @@ class VertexingErrorCategory : public std::error_category {
     switch (static_cast<VertexingError>(c)) {
       case VertexingError::NumericFailure:
         return "Numeric failure in calculation.";
+      case VertexingError::EmptyInput:
+        return "Empty input provided.";
+      case VertexingError::SeedingError:
+        return "Error while finding vertex seed.";
       default:
         return "unknown";
     }
