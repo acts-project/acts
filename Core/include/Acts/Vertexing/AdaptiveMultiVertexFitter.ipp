@@ -179,7 +179,6 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::addVtxToFit(
   if (!fitRes.ok()) {
     return fitRes.error();
   }
-
   return {};
 }
 

@@ -68,6 +68,7 @@ Acts::Vertex<input_track_t>::tracks() const {
 }
 
 template <typename input_track_t>
+
 std::pair<double, double> Acts::Vertex<input_track_t>::fitQuality() const {
   return std::pair<double, double>(m_chiSquared, m_numberDoF);
 }
@@ -105,12 +106,14 @@ void Acts::Vertex<input_track_t>::setFullCovariance(
 }
 
 template <typename input_track_t>
+
 void Acts::Vertex<input_track_t>::setTracksAtVertex(
     const std::vector<TrackAtVertex<input_track_t>>& tracks) {
   m_tracksAtVertex = tracks;
 }
 
 template <typename input_track_t>
+
 void Acts::Vertex<input_track_t>::setFitQuality(double chiSquared,
                                                 double numberDoF) {
   m_chiSquared = chiSquared;

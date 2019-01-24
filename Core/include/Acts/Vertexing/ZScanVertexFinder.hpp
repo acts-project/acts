@@ -68,6 +68,7 @@ class ZScanVertexFinder {
     double expPt = 1.;
     // minimum required weight
     double minWeight = 0.01;
+
   };
 
   /// @struct State State struct for fulfilling interface
