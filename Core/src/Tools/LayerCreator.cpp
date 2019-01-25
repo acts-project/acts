@@ -68,7 +68,8 @@ Acts::LayerCreator::cylinderLayer(
   double envZShift = 0.5 * (-protoLayer.envZ.first + protoLayer.envZ.second);
   double layerZ    = binPosZ + envZShift;
   double layerHalfZ
-      = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
+      = 0.5 * std::abs(protoLayer.maxZ + protoLayer.envZ.second
+                       - (protoLayer.minZ - protoLayer.envZ.first));
   double layerThickness = (protoLayer.maxR - protoLayer.minR)
       + protoLayer.envR.first + protoLayer.envR.second;
 
@@ -89,6 +90,7 @@ Acts::LayerCreator::cylinderLayer(
                                         << ")");
 
   ACTS_VERBOSE(" - z center         = " << layerZ);
+  ACTS_VERBOSE(" - halflength z     = " << layerHalfZ);
 
   // create the layer transforms if not given
   // we need to transform in case layerZ != 0, so that the layer will be
@@ -96,7 +98,7 @@ Acts::LayerCreator::cylinderLayer(
   if (!transform) {
     // double shift = -(layerZ + envZShift);
     transform
-        = std::make_shared<const Transform3D>(Translation3D(0., 0., -layerZ));
+        = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
     ACTS_VERBOSE(" - layer z shift  = " << -layerZ);
   }
 
@@ -155,7 +157,8 @@ Acts::LayerCreator::cylinderLayer(
   double layerZ    = binPosZ + envZShift;
 
   double layerHalfZ
-      = std::abs(protoLayer.maxZ + protoLayer.envZ.second - layerZ);
+      = 0.5 * std::abs(protoLayer.maxZ + protoLayer.envZ.second
+                       - (protoLayer.minZ - protoLayer.envZ.first));
 
   double layerThickness = (protoLayer.maxR - protoLayer.minR)
       + protoLayer.envR.first + protoLayer.envR.second;
@@ -176,13 +179,14 @@ Acts::LayerCreator::cylinderLayer(
                                         << protoLayer.envZ.second
                                         << ")");
   ACTS_VERBOSE(" - z center         = " << layerZ);
+  ACTS_VERBOSE(" - halflength z     = " << layerHalfZ);
 
   // create the layer transforms if not given
   // we need to transform in case layerZ != 0, so that the layer will be
   // correctly defined using the halflength
   if (!transform && bTypeZ == equidistant) {
     transform
-        = std::make_shared<const Transform3D>(Translation3D(0., 0., -layerZ));
+        = std::make_shared<const Transform3D>(Translation3D(0., 0., layerZ));
     ACTS_VERBOSE(" - layer z shift    = " << -layerZ);
   }
 
@@ -419,16 +423,16 @@ Acts::LayerCreator::planeLayer(
   // we need to transform in case centerX/centerY/centerZ != 0, so that the
   // layer will be correctly defined
   if (!transform) {
-    // double shift = -(layerZ + envZShift);
+    // double shift = (layerZ + envZShift);
     transform = std::make_shared<const Transform3D>(
-        Translation3D(-centerX, -centerY, -centerZ));
+        Translation3D(centerX, centerY, centerZ));
     ACTS_VERBOSE(" - layer shift  = "
                  << "("
-                 << -centerX
+                 << centerX
                  << ", "
-                 << -centerY
+                 << centerY
                  << ", "
-                 << -centerZ
+                 << centerZ
                  << ")");
   }
 
