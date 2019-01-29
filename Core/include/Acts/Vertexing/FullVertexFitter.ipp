@@ -13,22 +13,25 @@
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 
+
 namespace {
 
 /// @struct BilloirTrack
 ///
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
+
+template<typename InputTrack>
 struct BilloirTrack
 {
-  BilloirTrack(const Acts::BoundParameters& params,
+  BilloirTrack(const InputTrack& params,
                Acts::LinearizedTrack*       lTrack)
-    : originalParams(params), linTrack(lTrack)
+    : originalTrack(params), linTrack(lTrack)
   {
   }
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  const Acts::BoundParameters originalParams;
+  const InputTrack originalTrack;
   Acts::LinearizedTrack*      linTrack;
   double                      chi2;
   Acts::ActsMatrixD<5, 3> Di_mat;
@@ -62,10 +65,10 @@ struct BilloirVertex
 
 }  // end anonymous namespace
 
-template <typename BField>
-Acts::Vertex
-Acts::FullVertexFitter<BField>::fit(
-    const std::vector<Acts::BoundParameters>& paramVector) const
+template <typename BField, typename InputTrack>
+Acts::Vertex<InputTrack>
+Acts::FullVertexFitter<BField, InputTrack>::fit(
+    const std::vector<InputTrack>& paramVector) const
 {
   double       chi2    = std::numeric_limits<double>::max();
   double       newChi2 = 0;
@@ -75,13 +78,13 @@ Acts::FullVertexFitter<BField>::fit(
   typename Acts::LinearizedTrackFactory<BField>::Config lt_config(m_cfg.bField);
   Acts::LinearizedTrackFactory<BField>                  linFactory(lt_config);
 
-  std::vector<BilloirTrack> billoirTracks;
+  std::vector<BilloirTrack<InputTrack>> billoirTracks;
 
   std::vector<Acts::Vector3D> trackMomenta;
 
   Acts::Vector3D linPoint(m_cfg.startingPoint);
 
-  Acts::Vertex fittedVertex;
+  Acts::Vertex<InputTrack> fittedVertex;
 
   for (int n_iter = 0; n_iter < m_cfg.maxIterations; ++n_iter) {
     billoirTracks.clear();
@@ -91,7 +94,8 @@ Acts::FullVertexFitter<BField>::fit(
     BilloirVertex billoirVertex;
     int           i_track = 0;
     // iterate over all tracks
-    for (const auto& trackParams : paramVector) {
+    for (const InputTrack& trackContainer : paramVector) {
+    	const auto& trackParams = trackContainer.parameters();
       if (n_iter == 0) {
         double phi   = trackParams.parameters()[Acts::ParID_t::ePHI];
         double theta = trackParams.parameters()[Acts::ParID_t::eTHETA];
@@ -110,7 +114,7 @@ Acts::FullVertexFitter<BField>::fit(
       double       f_phi    = trackMomenta[i_track][0];
       double       f_theta  = trackMomenta[i_track][1];
       double       f_qOverP = trackMomenta[i_track][2];
-      BilloirTrack currentBilloirTrack(trackParams, linTrack);
+      BilloirTrack<InputTrack> currentBilloirTrack(trackContainer, linTrack);
 
       // calculate delta_q[i]
       currentBilloirTrack.delta_q[0] = d0;
@@ -289,7 +293,7 @@ Acts::FullVertexFitter<BField>::fit(
       fittedVertex.setPosition(vertexPos);
       fittedVertex.setCovariance(cov_delta_V_mat);
 
-      std::vector<std::shared_ptr<Acts::TrackAtVertex>> tracksAtVertex;
+      std::vector<TrackAtVertex<InputTrack>> tracksAtVertex;
 
       std::shared_ptr<Acts::PerigeeSurface> perigee
           = Acts::Surface::makeShared<Acts::PerigeeSurface>(vertexPos);
@@ -305,9 +309,7 @@ Acts::FullVertexFitter<BField>::fit(
         Acts::BoundParameters refittedParams(
             std::move(cov_delta_P_mat[i_track]), paramVec, perigee);
 
-        std::shared_ptr<Acts::TrackAtVertex> trackVx
-            = std::make_shared<Acts::TrackAtVertex>(
-                bTrack.chi2, refittedParams, bTrack.originalParams);
+        Acts::TrackAtVertex<InputTrack> trackVx(bTrack.chi2, refittedParams, bTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackVx));
         ++i_track;
       }

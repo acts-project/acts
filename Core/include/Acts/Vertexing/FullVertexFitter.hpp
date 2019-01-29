@@ -24,7 +24,7 @@ namespace Acts {
 /// In:	Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
 /// DOI	10.1016/0168-9002(92)90859-3
 
-template <typename BField>
+template <typename BField, typename InputTrack>
 class FullVertexFitter
 {
 public:
@@ -52,8 +52,8 @@ public:
   /// Fit method, fitting vertex for provided tracks
   /// @param paramVector Vector of tracks to fit vertex to
   /// @return Fitted vertex
-  Acts::Vertex
-  fit(const std::vector<Acts::BoundParameters>& paramVector) const;
+  Acts::Vertex<InputTrack>
+  fit(const std::vector<InputTrack>& paramVector) const;
 
 private:
   /// Configuration object

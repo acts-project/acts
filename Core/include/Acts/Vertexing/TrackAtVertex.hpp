@@ -12,6 +12,7 @@
 
 namespace Acts {
 
+template<typename InputTrack>
 class TrackAtVertex
 {
 public:
@@ -23,8 +24,8 @@ public:
   /// @param paramsAtVertex Fitted perigee parameter
   /// @param originalParams Original perigee parameter
   TrackAtVertex(const double&                chi2perTrack,
-                const Acts::BoundParameters& paramsAtVertex,
-                const Acts::BoundParameters& originalParams);
+                const Acts::BoundParameters& fittedParams,
+                const InputTrack& originalTrack);
 
   /// Returns chi2 of track
   double
@@ -35,18 +36,20 @@ public:
   fittedPerigee() const;
 
   /// Returns original perigee
-  const Acts::BoundParameters&
-  originalPerigee() const;
+  const InputTrack&
+  originalTrack() const;
 
 private:
   /// Chi2 of track
-  const double m_chi2Track;
+  double m_chi2Track;
 
   /// Fitted perigee
-  Acts::BoundParameters m_paramsAtVertex;
+  Acts::BoundParameters m_fittedParams;
 
   /// Original perigee
-  Acts::BoundParameters m_originalParams;
+  InputTrack m_originalTrack;
 };
 
 }  // namespace Acts
+
+#include "Acts/Vertexing/TrackAtVertex.ipp"
