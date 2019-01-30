@@ -55,7 +55,7 @@ private:
   Acts::ActsSymMatrixD<3>                      m_covariance;
   std::vector<Acts::TrackAtVertex<InputTrack>> m_tracksAtVertex;
   double                                       m_chiSquared;  // chi2 of the fit
-  double                                       m_numberDoF;  // number of degrees of freedom
+  double m_numberDoF;  // number of degrees of freedom
 };
 
 }  // namespace Acts
