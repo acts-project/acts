@@ -10,6 +10,7 @@
 template<typename InputTrack>
 Acts::Vertex<InputTrack>::Vertex(const Acts::Vector3D& position)
 	: m_position(position)
+  , m_covariance(Acts::ActsSymMatrixD<3>::Zero())
 	{}
 
 template<typename InputTrack>
@@ -63,4 +64,12 @@ Acts::Vertex<InputTrack>::setTracksAtVertex(
     const std::vector<Acts::TrackAtVertex<InputTrack>>& tracks)
 {
   m_tracksAtVertex = std::move(tracks);
+}
+
+template<typename InputTrack>
+void
+Acts::Vertex<InputTrack>::setFitQuality(double chiSquared, double numberDoF)
+{
+  m_chiSquared = chiSquared;
+  m_numberDoF = numberDoF;
 }

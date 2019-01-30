@@ -41,7 +41,6 @@ public:
     /// Constructor with default number of iterations and starting point
     Config(BField bIn)
       : bField(std::move(bIn))
-      , startingPoint(Acts::Vector3D(0, 0, 0))
       , maxIterations(5)
     {
     }
@@ -50,7 +49,15 @@ public:
   /// Constructor with explicit config
   FullVertexFitter(const Config& cfg) : m_cfg(cfg) {}
 
-  /// Fit method, fitting vertex for provided tracks
+  /// Fit method, fitting vertex for provided tracks with constraint
+  /// @param paramVector Vector of tracks to fit vertex to
+  /// @param startingPoint Constraint of the fit, position of constraint is starting point
+  /// @return Fitted vertex
+  Acts::Vertex<InputTrack>
+  fit(const std::vector<InputTrack>& paramVector, Acts::Vertex<InputTrack> startingPoint) const;
+
+  /// Fit method, fitting vertex for provided tracks without constraint
+  /// with default starting point at (0,0,0)
   /// @param paramVector Vector of tracks to fit vertex to
   /// @return Fitted vertex
   Acts::Vertex<InputTrack>

@@ -19,6 +19,10 @@ class IVertexFitter
 {
 public:
 
+	virtual Acts::Vertex<InputTrack> fit(
+		const std::vector<InputTrack>& paramVector, Acts::Vertex<InputTrack> startingPoint) const = 0;
+
+
 	virtual Acts::Vertex<InputTrack> fit(const std::vector<InputTrack>& paramVector) const = 0;
 };
 

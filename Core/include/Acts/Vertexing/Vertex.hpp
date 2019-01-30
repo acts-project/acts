@@ -47,11 +47,16 @@ public:
   void
   setTracksAtVertex(
       const std::vector<Acts::TrackAtVertex<InputTrack>>& tracks);
+  /// Set fitQuality (chiSquared and numberDoF)
+  void
+  setFitQuality(double chiSquared, double numberDoF);
 
 private:
   Acts::Vector3D                                    m_position;
   Acts::ActsSymMatrixD<3>                           m_covariance;
   std::vector<Acts::TrackAtVertex<InputTrack>> m_tracksAtVertex;
+  double m_chiSquared; // chi2 of the fit
+  double m_numberDoF; // number of degrees of freedom
 };
 
 }  // namespace Acts
