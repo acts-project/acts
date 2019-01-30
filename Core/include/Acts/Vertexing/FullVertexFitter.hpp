@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
 
 namespace Acts {
 
@@ -25,7 +26,7 @@ namespace Acts {
 /// DOI	10.1016/0168-9002(92)90859-3
 
 template <typename BField, typename InputTrack>
-class FullVertexFitter
+class FullVertexFitter : public IVertexFitter<BField, InputTrack>
 {
 public:
   struct Config
