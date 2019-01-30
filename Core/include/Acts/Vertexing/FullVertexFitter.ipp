@@ -13,27 +13,25 @@
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 
-
 namespace {
 
 /// @struct BilloirTrack
 ///
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
 
-template<typename InputTrack>
+template <typename InputTrack>
 struct BilloirTrack
 {
-  BilloirTrack(const InputTrack& params,
-               Acts::LinearizedTrack*       lTrack)
+  BilloirTrack(const InputTrack& params, Acts::LinearizedTrack* lTrack)
     : originalTrack(params), linTrack(lTrack)
   {
   }
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  const InputTrack originalTrack;
-  Acts::LinearizedTrack*      linTrack;
-  double                      chi2;
+  const InputTrack       originalTrack;
+  Acts::LinearizedTrack* linTrack;
+  double                 chi2;
   Acts::ActsMatrixD<5, 3> Di_mat;
   Acts::ActsMatrixD<5, 3> Ei_mat;
   Acts::ActsSymMatrixD<3> Gi_mat;
@@ -65,41 +63,38 @@ struct BilloirVertex
 
 }  // end anonymous namespace
 
-
-template<typename BField, typename InputTrack>
+template <typename BField, typename InputTrack>
 Acts::Vertex<InputTrack>
-  Acts::FullVertexFitter<BField, InputTrack>::fit(
-  	const std::vector<InputTrack>& paramVector) const
+Acts::FullVertexFitter<BField, InputTrack>::fit(
+    const std::vector<InputTrack>& paramVector) const
 {
-	Acts::Vector3D startingPoint(0., 0., 0.);
-	return fit(paramVector, Acts::Vertex<InputTrack>(startingPoint));
+  Acts::Vector3D startingPoint(0., 0., 0.);
+  return fit(paramVector, Acts::Vertex<InputTrack>(startingPoint));
 }
-
 
 template <typename BField, typename InputTrack>
 Acts::Vertex<InputTrack>
 Acts::FullVertexFitter<BField, InputTrack>::fit(
-    const std::vector<InputTrack>& paramVector,  Acts::Vertex<InputTrack> startingPoint) const
+    const std::vector<InputTrack>& paramVector,
+    Acts::Vertex<InputTrack>       startingPoint) const
 {
   double       chi2    = std::numeric_limits<double>::max();
   double       newChi2 = 0;
   unsigned int nTracks = paramVector.size();
 
   // Set number of degrees of freedom
-  int ndf = nTracks * (5-3) - 3;
-  if(nTracks < 2){
-  	ndf = 1;
+  int ndf = nTracks * (5 - 3) - 3;
+  if (nTracks < 2) {
+    ndf = 1;
   }
 
   // Determine if we do contraint fit or not
   bool constraint = false;
-  if (startingPoint.covariance().trace() != 0)
-  {
-  	std::cout << "CONSTRAINT FIT!!" << std::endl;
-  	constraint = true;
-  	ndf += 3;
+  if (startingPoint.covariance().trace() != 0) {
+    std::cout << "CONSTRAINT FIT!!" << std::endl;
+    constraint = true;
+    ndf += 3;
   }
-
 
   // Factory for linearizing tracks
   typename Acts::LinearizedTrackFactory<BField>::Config lt_config(m_cfg.bField);
@@ -122,7 +117,7 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
     int           i_track = 0;
     // iterate over all tracks
     for (const InputTrack& trackContainer : paramVector) {
-    	const auto& trackParams = trackContainer.parameters();
+      const auto& trackParams = trackContainer.parameters();
       if (n_iter == 0) {
         double phi   = trackParams.parameters()[Acts::ParID_t::ePHI];
         double theta = trackParams.parameters()[Acts::ParID_t::eTHETA];
@@ -138,9 +133,9 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
       double qOverP = linTrack->parametersAtPCA()[Acts::ParID_t::eQOP];
 
       // calculate f(V_0,p_0)  f_d0 = f_z0 = 0
-      double       f_phi    = trackMomenta[i_track][0];
-      double       f_theta  = trackMomenta[i_track][1];
-      double       f_qOverP = trackMomenta[i_track][2];
+      double                   f_phi    = trackMomenta[i_track][0];
+      double                   f_theta  = trackMomenta[i_track][1];
+      double                   f_qOverP = trackMomenta[i_track][2];
       BilloirTrack<InputTrack> currentBilloirTrack(trackContainer, linTrack);
 
       // calculate delta_q[i]
@@ -204,20 +199,22 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
     Acts::ActsSymMatrixD<3> V_wgt_mat = billoirVertex.A_mat
         - billoirVertex.BCB_mat;  // V_wgt = A-sum{Bi*Ci^-1*Bi.T}
 
-    if ( constraint )
-			{
-				
-				Acts::Vector3D constraintPosInBilloirFrame;
-				constraintPosInBilloirFrame.setZero();
-				// this will be 0 for first iteration but != 0 from second on
-				constraintPosInBilloirFrame[0] = startingPoint.position()[0] - linPoint[0];
-				constraintPosInBilloirFrame[1] = startingPoint.position()[1] - linPoint[1];
-				constraintPosInBilloirFrame[2] = startingPoint.position()[2] - linPoint[2];
+    if (constraint) {
 
-				V_del     += startingPoint.covariance().inverse() * constraintPosInBilloirFrame;
-				V_wgt_mat += startingPoint.covariance().inverse();
-			}
+      Acts::Vector3D constraintPosInBilloirFrame;
+      constraintPosInBilloirFrame.setZero();
+      // this will be 0 for first iteration but != 0 from second on
+      constraintPosInBilloirFrame[0]
+          = startingPoint.position()[0] - linPoint[0];
+      constraintPosInBilloirFrame[1]
+          = startingPoint.position()[1] - linPoint[1];
+      constraintPosInBilloirFrame[2]
+          = startingPoint.position()[2] - linPoint[2];
 
+      V_del
+          += startingPoint.covariance().inverse() * constraintPosInBilloirFrame;
+      V_wgt_mat += startingPoint.covariance().inverse();
+    }
 
     // cov(delta_V) = V_wgt^-1
     Acts::ActsSymMatrixD<3> cov_delta_V_mat = V_wgt_mat.inverse().eval();
@@ -323,17 +320,17 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
       ++i_track;
     }
 
-    if ( constraint )
-			{
-				Acts::Vector3D deltaTrk;
-				deltaTrk.setZero();
-				// last term will also be 0 again but only in the first iteration
-				// = calc. vtx in billoir frame - (    constraint pos. in billoir frame    )
-				deltaTrk[0] = delta_V[0] - ( startingPoint.position()[0] - linPoint[0]);
-				deltaTrk[1] = delta_V[1] - ( startingPoint.position()[1] - linPoint[1]);
-				deltaTrk[2] = delta_V[2] - ( startingPoint.position()[2] - linPoint[2]);
-				newChi2  += ( deltaTrk.transpose() * startingPoint.covariance().inverse() * deltaTrk )[0];
-			}
+    if (constraint) {
+      Acts::Vector3D deltaTrk;
+      deltaTrk.setZero();
+      // last term will also be 0 again but only in the first iteration
+      // = calc. vtx in billoir frame - (    constraint pos. in billoir frame )
+      deltaTrk[0] = delta_V[0] - (startingPoint.position()[0] - linPoint[0]);
+      deltaTrk[1] = delta_V[1] - (startingPoint.position()[1] - linPoint[1]);
+      deltaTrk[2] = delta_V[2] - (startingPoint.position()[2] - linPoint[2]);
+      newChi2 += (deltaTrk.transpose() * startingPoint.covariance().inverse()
+                  * deltaTrk)[0];
+    }
 
     // assign new linearization point (= new vertex position in global frame)
     linPoint += delta_V;
@@ -362,7 +359,8 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
         Acts::BoundParameters refittedParams(
             std::move(cov_delta_P_mat[i_track]), paramVec, perigee);
 
-        Acts::TrackAtVertex<InputTrack> trackVx(bTrack.chi2, refittedParams, bTrack.originalTrack);
+        Acts::TrackAtVertex<InputTrack> trackVx(
+            bTrack.chi2, refittedParams, bTrack.originalTrack);
         tracksAtVertex.push_back(std::move(trackVx));
         ++i_track;
       }

@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/IVertexFitter.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 namespace Acts {
 
@@ -39,11 +39,7 @@ public:
     int maxIterations;
 
     /// Constructor with default number of iterations and starting point
-    Config(BField bIn)
-      : bField(std::move(bIn))
-      , maxIterations(5)
-    {
-    }
+    Config(BField bIn) : bField(std::move(bIn)), maxIterations(5) {}
   };
 
   /// Constructor with explicit config
@@ -51,10 +47,12 @@ public:
 
   /// Fit method, fitting vertex for provided tracks with constraint
   /// @param paramVector Vector of tracks to fit vertex to
-  /// @param startingPoint Constraint of the fit, position of constraint is starting point
+  /// @param startingPoint Constraint of the fit, position of constraint is
+  /// starting point
   /// @return Fitted vertex
   Acts::Vertex<InputTrack>
-  fit(const std::vector<InputTrack>& paramVector, Acts::Vertex<InputTrack> startingPoint) const;
+  fit(const std::vector<InputTrack>& paramVector,
+      Acts::Vertex<InputTrack>       startingPoint) const;
 
   /// Fit method, fitting vertex for provided tracks without constraint
   /// with default starting point at (0,0,0)

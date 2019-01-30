@@ -12,7 +12,7 @@
 
 namespace Acts {
 
-template<typename InputTrack>
+template <typename InputTrack>
 class TrackAtVertex
 {
 public:
@@ -25,7 +25,7 @@ public:
   /// @param originalParams Original perigee parameter
   TrackAtVertex(const double&                chi2perTrack,
                 const Acts::BoundParameters& fittedParams,
-                const InputTrack& originalTrack);
+                const InputTrack&            originalTrack);
 
   /// Returns chi2 of track
   double
