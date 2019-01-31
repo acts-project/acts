@@ -185,12 +185,32 @@ public:
 
   /// @brief Decompose Layer into (compatible) surfaces
   ///
-  /// @tparam parameters_t The Track parameters  type
   /// @tparam options_t The navigation options type
+  /// @tparam corrector_t is an (optional) intersection corrector type
+  ///
+  /// @param position Position parameter for searching
+  /// @param momentum Momentum parameter for searching
+  /// @param options The templated naivation options
   /// @tparam corrector_t is an (optional) intersection corrector
   ///
+  /// @return list of intersection of surfaces on the layer
+  template <typename options_t,
+            typename corrector_t = VoidIntersectionCorrector>
+  std::vector<SurfaceIntersection>
+  compatibleSurfaces(const Vector3D&    position,
+                     const Vector3D&    momentum,
+                     const options_t&   options,
+                     const corrector_t& corrfnc = corrector_t()) const;
+
+  /// @brief Decompose Layer into (compatible) surfaces
+  ///
+  /// @tparam parameters_t The Track parameters type
+  /// @tparam options_t The navigation options type
+  /// @tparam corrector_t is an (optional) intersection corrector type
+  ///
   /// @param parameters The templated parameters for searching
-  /// @param options The templated naivation options
+  /// @param options The templated navigation options
+  /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// @return list of intersection of surfaces on the layer
   template <typename parameters_t,
@@ -211,6 +231,7 @@ public:
   /// for layers with sub structure, this is the approachSurface
   /// @param parameters The templated parameters for searching
   /// @param options The templated naivation options
+  /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// @return the Surface intersection of the approach surface
   template <typename parameters_t,
@@ -220,6 +241,27 @@ public:
   surfaceOnApproach(const parameters_t& parameters,
                     const options_t&    options,
                     const corrector_t&  corrfnc = corrector_t()) const;
+
+  /// Surface seen on approach
+  ///
+  /// @tparam options_t The navigation options type
+  /// @tparam corrector_t is an (optional) intersection corrector
+  ///
+  /// for layers without sub structure, this is the surfaceRepresentation
+  /// for layers with sub structure, this is the approachSurface
+  /// @param position Position for searching
+  /// @param direction Direction for searching
+  /// @param options The templated naivation options
+  /// @tparam corrector_t is an (optional) intersection corrector
+  ///
+  /// @return the Surface intersection of the approach surface
+  template <typename options_t,
+            typename corrector_t = VoidIntersectionCorrector>
+  const SurfaceIntersection
+  surfaceOnApproach(const Vector3D&    position,
+                    const Vector3D&    direction,
+                    const options_t&   options,
+                    const corrector_t& corrfnc = corrector_t()) const;
 
   /// Fast navigation to next layer
   ///

@@ -108,11 +108,12 @@ Layer::onLayer(const parameters_t& pars, const BoundaryCheck& bcheck) const
   return isOnLayer(pars.position(), bcheck);
 }
 
-template <typename parameters_t, typename options_t, typename corrector_t>
+template <typename options_t, typename corrector_t>
 std::vector<SurfaceIntersection>
-Layer::compatibleSurfaces(const parameters_t& parameters,
-                          const options_t&    options,
-                          const corrector_t&  corrfnc) const
+Layer::compatibleSurfaces(const Vector3D&    position,
+                          const Vector3D&    momentum,
+                          const options_t&   options,
+                          const corrector_t& corrfnc) const
 {
   // the list of valid intersection
   std::vector<SurfaceIntersection> sIntersections;
@@ -135,8 +136,8 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
     // intersect the end surface
     // - it is the final one don't use the bounday check at all
     SurfaceIntersection endInter
-        = options.endObject->template intersectionEstimate(
-            parameters, options, corrfnc);
+        = options.endObject->template surfaceIntersectionEstimate(
+            position, momentum, options, corrfnc);
     // non-valid intersection with the end surface provided at this layer
     // indicates wrong direction or faulty setup
     // -> do not return compatible surfaces since they may lead you on a wrong
@@ -152,8 +153,8 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
     // i.e. the maximum path limit is given by the layer thickness times
     // path correction, we take a safety factor of 1.5
     // -> this avoids punch through for cylinders
-    double pCorrection = surfaceRepresentation().pathCorrection(
-        parameters.position(), parameters.momentum());
+    double pCorrection
+        = surfaceRepresentation().pathCorrection(position, momentum);
     maxPath = 1.5 * thickness() * pCorrection * options.navDir;
   }
 
@@ -189,7 +190,7 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
     }
     // the surface intersection
     SurfaceIntersection sfi
-        = sf.intersectionEstimate(parameters, options, corrfnc);
+        = sf.surfaceIntersectionEstimate(position, momentum, options, corrfnc);
     // check if intersection is valid and pathLimit has not been exceeded
     double sifPath = sfi.intersection.pathLength;
     // check the maximum path length
@@ -225,7 +226,7 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
                          || options.resolveSensitive)) {
     // get the canditates
     const std::vector<const Surface*>& sensitiveSurfaces
-        = m_surfaceArray->neighbors(parameters.position());
+        = m_surfaceArray->neighbors(position);
     // loop through and veto
     // - if the approach surface is the parameter surface
     // - if the surface is not compatible with the type(s) that are collected
@@ -251,10 +252,21 @@ Layer::compatibleSurfaces(const parameters_t& parameters,
 }
 
 template <typename parameters_t, typename options_t, typename corrector_t>
+std::vector<SurfaceIntersection>
+Layer::compatibleSurfaces(const parameters_t& parameters,
+                          const options_t&    options,
+                          const corrector_t&  corrfnc) const
+{
+  return compatibleSurfaces(
+      parameters.position(), parameters.momentum(), options, corrfnc);
+}
+
+template <typename options_t, typename corrector_t>
 const SurfaceIntersection
-Layer::surfaceOnApproach(const parameters_t& parameters,
-                         const options_t&    options,
-                         const corrector_t&  corrfnc) const
+Layer::surfaceOnApproach(const Vector3D&    position,
+                         const Vector3D&    direction,
+                         const options_t&   options,
+                         const corrector_t& corrfnc) const
 {
   // resolve directive based by options
   // - options.resolvePassive is on -> always
@@ -273,14 +285,14 @@ Layer::surfaceOnApproach(const parameters_t& parameters,
       // in a connected geometry this is only a pointer comparison
       if (options.startObject
           && asf == &(options.startObject->surfaceRepresentation())) {
-        Intersection nIntersection(parameters.position(), 0., true);
+        Intersection nIntersection(position, 0., true);
         return SurfaceIntersection(nIntersection, asf, options.navDir);
       }
     }
     // that's the collect trigger for always collecting
     // let's find the most suitable approach surface
-    SurfaceIntersection aSurface
-        = m_approachDescriptor->approachSurface(parameters, options, corrfnc);
+    SurfaceIntersection aSurface = m_approachDescriptor->approachSurface(
+        position, direction, options.navDir, options.boundaryCheck, corrfnc);
     if (aSurface.intersection.valid) {
       return (aSurface);
     }
@@ -289,13 +301,24 @@ Layer::surfaceOnApproach(const parameters_t& parameters,
   const Surface& rSurface = surfaceRepresentation();
 
   // if we have no approach descriptor - we have no sensitive surfaces
-  if (rSurface.isOnSurface(parameters, options.boundaryCheck)) {
-    Intersection nIntersection(parameters.position(), 0., true);
+  if (rSurface.isOnSurface(position, direction, options.boundaryCheck)) {
+    Intersection nIntersection(position, 0., true);
     return SurfaceIntersection(nIntersection, &rSurface, options.navDir);
   }
 
   // create the intersection with the surface representation
-  return rSurface.intersectionEstimate(parameters, options, corrfnc);
+  return rSurface.surfaceIntersectionEstimate(
+      position, direction, options, corrfnc);
+}
+
+template <typename parameters_t, typename options_t, typename corrector_t>
+const SurfaceIntersection
+Layer::surfaceOnApproach(const parameters_t& parameters,
+                         const options_t&    options,
+                         const corrector_t&  corrfnc) const
+{
+  return surfaceOnApproach(
+      parameters.position(), parameters.direction(), options, corrfnc);
 }
 
 inline bool

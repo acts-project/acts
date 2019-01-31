@@ -80,7 +80,7 @@ namespace Test {
   /// @param pT the transverse momentum
   /// @param phi the azimuthal angle of the track at creation
   /// @param theta the polar angle of the track at creation
-  /// @parm charge is the charge of the particle
+  /// @param charge is the charge of the particle
   /// @param index is the run index from the test
   template <typename propagator_t>
   void
@@ -191,7 +191,7 @@ namespace Test {
     }
 
     auto& bwdMaterial
-        = bwdResult.template get<MaterialInteractor::result_type>();
+        = bwdResult.template get<typename MaterialInteractor::result_type>();
 
     double bwdStepMaterialInX0 = 0.;
     double bwdStepMaterialInL0 = 0.;
@@ -278,7 +278,7 @@ namespace Test {
       }
 
       auto& fwdStepMaterial
-          = fwdStep.template get<MaterialInteractor::result_type>();
+          = fwdStep.template get<typename MaterialInteractor::result_type>();
       fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
       fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
@@ -301,7 +301,7 @@ namespace Test {
         = prop.propagate(*sParameters, dSurface, fwdStepOptions);
 
     auto& fwdStepMaterial
-        = fwdStepFinal.template get<MaterialInteractor::result_type>();
+        = fwdStepFinal.template get<typename MaterialInteractor::result_type>();
     fwdStepStepMaterialInX0 += fwdStepMaterial.materialInX0;
     fwdStepStepMaterialInL0 += fwdStepMaterial.materialInL0;
 
@@ -367,7 +367,7 @@ namespace Test {
       }
 
       auto& bwdStepMaterial
-          = bwdStep.template get<MaterialInteractor::result_type>();
+          = bwdStep.template get<typename MaterialInteractor::result_type>();
       bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
       bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 
@@ -390,7 +390,7 @@ namespace Test {
         = prop.propagate(*sParameters, dbSurface, bwdStepOptions);
 
     auto& bwdStepMaterial
-        = bwdStepFinal.template get<MaterialInteractor::result_type>();
+        = bwdStepFinal.template get<typename MaterialInteractor::result_type>();
     bwdStepStepMaterialInX0 += bwdStepMaterial.materialInX0;
     bwdStepStepMaterialInL0 += bwdStepMaterial.materialInL0;
 

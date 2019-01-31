@@ -50,12 +50,16 @@ struct SurfaceCollector
   /// - it records the surface given the configuration
   ///
   /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_t Type of the stepper used for the propagation
   ///
-  /// @param[in,out] state is the mutable stepper state object
-  /// @param[in,out] result is the mutable result object
-  template <typename propagator_state_t>
+  /// @param [in,out] state is the mutable stepper state object
+  /// @param [in] stepper The stepper in use
+  /// @param [in,out] result is the mutable result object
+  template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, result_type& result) const
+  operator()(propagator_state_t& state,
+             const stepper_t&    stepper,
+             result_type&        result) const
   {
     // a current surface has been assigned by the navigator
     //
@@ -64,8 +68,8 @@ struct SurfaceCollector
       // create for recording
       SurfaceHit surface_hit;
       surface_hit.surface   = state.navigation.currentSurface;
-      surface_hit.position  = state.stepping.position();
-      surface_hit.direction = state.stepping.direction();
+      surface_hit.position  = stepper.position(state.stepping);
+      surface_hit.direction = stepper.direction(state.stepping);
       // save if in the result
       result.collected.push_back(surface_hit);
     }
@@ -73,9 +77,9 @@ struct SurfaceCollector
 
   /// Pure observer interface
   /// - this does not apply to the surface collector
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& /*state*/) const
+  operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/) const
   {
   }
 };

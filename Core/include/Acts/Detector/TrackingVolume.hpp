@@ -151,9 +151,29 @@ public:
   /// @brief Resolves the volume into (compatible) Layers
   ///
   /// This is the method for the propagator/extrapolator
-  /// @param_t parameters_t Type of parameters used for the decomposition
-  /// @param_t options_t Type of navigation options object for decomposition
-  /// @param_t corrector_t Type of (optional) corrector for surface intersection
+  /// @tparam options_t Type of navigation options object for decomposition
+  /// @tparam corrector_t Type of (optional) corrector for surface intersection
+  ///
+  /// @param position Position for the search
+  /// @param direction Direction for the search
+  /// @param options The templated navigation options
+  /// @param corrfnc is the corrector struct / function
+  ///
+  /// @return vector of compatible intersections with layers
+  template <typename options_t,
+            typename corrector_t = VoidIntersectionCorrector>
+  std::vector<LayerIntersection>
+  compatibleLayers(const Vector3D&    position,
+                   const Vector3D&    direction,
+                   const options_t&   options,
+                   const corrector_t& corrfnc = corrector_t()) const;
+
+  /// @brief Resolves the volume into (compatible) Layers
+  ///
+  /// This is the method for the propagator/extrapolator
+  /// @tparam parameters_t Type of parameters used for the decomposition
+  /// @tparam options_t Type of navigation options object for decomposition
+  /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
@@ -167,6 +187,29 @@ public:
   compatibleLayers(const parameters_t& parameters,
                    const options_t&    options,
                    const corrector_t&  corrfnc = corrector_t()) const;
+
+  /// @brief Returns all boundary surfaces sorted by the user.
+  ///
+  /// @tparam options_t Type of navigation options object for decomposition
+  /// @tparam corrector_t Type of (optional) corrector for surface intersection
+  /// @tparam sorter_t Type of the boundary surface sorter
+  ///
+  /// @param position The position for searching
+  /// @param direction The direction for searching
+  /// @param options The templated navigation options
+  /// @param corrfnc is the corrector struct / function
+  /// @param sorter Sorter of the boundary surfaces
+  ///
+  /// @return is the templated boundary intersection
+  template <typename options_t,
+            typename corrector_t = VoidIntersectionCorrector,
+            typename sorter_t    = DefaultBoundaryIntersectionSorter>
+  std::vector<BoundaryIntersection>
+  compatibleBoundaries(const Vector3D&    position,
+                       const Vector3D&    direction,
+                       const options_t&   options,
+                       const corrector_t& corrfnc = corrector_t(),
+                       const sorter_t&    sorter  = sorter_t()) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///

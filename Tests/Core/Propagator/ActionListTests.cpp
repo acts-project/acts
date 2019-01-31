@@ -84,6 +84,11 @@ namespace Test {
     StepperState stepping;
   };
 
+  /// This is a simple struct to mimic the stepper
+  struct Stepper
+  {
+  };
+
   /// A distance observer struct as an actor
   struct DistanceObserver
   {
@@ -98,16 +103,19 @@ namespace Test {
 
     DistanceObserver(double ptg = 0.) : path_to_go(ptg) {}
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t& /*unused*/,
+               result_type& result) const
     {
       result.distance = path_to_go - state.stepping.pathAccumulated;
     }
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& /*unused*/) const
+    operator()(propagator_state_t& /*unused*/,
+               const stepper_t& /*unused*/) const
     {
     }
   };
@@ -125,16 +133,19 @@ namespace Test {
 
     CallCounter() = default;
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& /*unused*/, result_type& r) const
+    operator()(propagator_state_t& /*unused*/,
+               const stepper_t& /*unused*/,
+               result_type& r) const
     {
       ++r.calls;
     }
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& /*unused*/) const
+    operator()(propagator_state_t& /*unused*/,
+               const stepper_t& /*unused*/) const
     {
     }
   };
@@ -145,6 +156,7 @@ namespace Test {
   {
     // construct the (prop/step) cache and result
     PropagatorState state;
+    Stepper         stepper;
 
     // Type of track parameters produced at the end of the propagation
     using distance_result = typename DistanceObserver::result_type;
@@ -154,13 +166,13 @@ namespace Test {
     action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
 
     // observe and check
-    action_list(state, result);
+    action_list(state, stepper, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
                       100. * units::_mm);
 
     // now move the cache and check again
     state.stepping.pathAccumulated = 50. * units::_mm;
-    action_list(state, result);
+    action_list(state, stepper, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
   }
 
@@ -170,6 +182,7 @@ namespace Test {
   {
     // construct the (prop/step) cache and result
     PropagatorState state;
+    Stepper         stepper;
 
     // Type of track parameters produced at the end of the propagation
     using distance_result = typename DistanceObserver::result_type;
@@ -180,14 +193,14 @@ namespace Test {
     detail::Extendable<distance_result, caller_result> result;
 
     //// observe and check
-    action_list(state, result);
+    action_list(state, stepper, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
                       100. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
 
     // now move the cache and check again
     state.stepping.pathAccumulated = 50. * units::_mm;
-    action_list(state, result);
+    action_list(state, stepper, result);
     BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
     BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
   }

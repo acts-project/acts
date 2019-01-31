@@ -44,22 +44,24 @@ namespace detail {
     /// Navigation call - void
     ///
     /// @tparam propagator_state_t is the type of Propagatgor state
+    /// @tparam stepper_t Type of the Stepper
     ///
     /// Empty call, compiler should optise that
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    status(propagator_state_t& /*state*/) const
+    status(propagator_state_t& /*state*/, const stepper_t& /*unused*/) const
     {
     }
 
     /// Navigation call - void
     ///
     /// @tparam propagator_state_t is the type of Propagatgor state
+    /// @tparam stepper_t Type of the Stepper
     ///
     /// Empty call, compiler should optise that
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    target(propagator_state_t& /*state*/) const
+    target(propagator_state_t& /*state*/, const stepper_t& /*unused*/) const
     {
     }
 

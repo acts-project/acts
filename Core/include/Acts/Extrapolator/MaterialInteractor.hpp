@@ -91,12 +91,16 @@ struct MaterialInteractor
   /// configuration.
   ///
   /// @tparam propagator_state_t is the type of Propagagor state
+  /// @tparam stepper_t Type of the stepper of the propagation
   ///
   /// @param state is the mutable propagator state object
+  /// @param stepper The stepper in use
   /// @param result is the mutable result state object
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, result_type& result) const
+  operator()(propagator_state_t& state,
+             const stepper_t&    stepper,
+             result_type&        result) const
   {
 
     // If we are on target, everything should have been done
@@ -139,7 +143,7 @@ struct MaterialInteractor
       const SurfaceMaterial* sMaterial
           = state.navigation.currentSurface->associatedMaterial();
       MaterialProperties mProperties = sMaterial->materialProperties(
-          state.stepping.position(), state.stepping.navDir, mStage);
+          stepper.position(state.stepping), state.stepping.navDir, mStage);
       // Material properties (non-zero) have been found for this configuration
       if (mProperties) {
         // more debugging output to the screen
@@ -155,18 +159,19 @@ struct MaterialInteractor
         // the covariance to the current position in space
         // the 'true' indicates re-initializaiton of the further transport
         if (state.stepping.covTransport) {
-          state.stepping.covarianceTransport(true);
+          stepper.covarianceTransport(state.stepping, true);
         }
 
         // Calculate the path correction
         double pCorrection = state.navigation.currentSurface->pathCorrection(
-            state.stepping.position(), state.stepping.direction());
+            stepper.position(state.stepping),
+            stepper.direction(state.stepping));
 
         // Scale the material properties
         mProperties *= pCorrection;
 
         // The momentum at current position
-        const double p     = state.stepping.p;
+        const double p     = stepper.momentum(state.stepping);
         const double m     = state.options.mass;
         const double E     = std::sqrt(p * p + m * m);
         const double lbeta = p / E;
@@ -178,8 +183,8 @@ struct MaterialInteractor
           double tInX0 = mProperties.thicknessInX0();
           // Retrieve the scattering contribution
           double sigmaScat = scattering(p, lbeta, tInX0);
-          double sinTheta
-              = std::sin(VectorHelpers::theta(state.stepping.direction()));
+          double sinTheta  = std::sin(
+              VectorHelpers::theta(stepper.direction(state.stepping)));
           double sigmaDeltaPhiSq
               = sigmaScat * sigmaScat / (sinTheta * sinTheta);
           double sigmaDeltaThetaSq = sigmaScat * sigmaScat;
@@ -231,7 +236,11 @@ struct MaterialInteractor
             // Record the deltaP
             mInteraction.deltaP = p - newP;
             // Update the state/momentum
-            state.stepping.p = std::copysign(newP, state.stepping.p);
+            stepper.update(
+                state.stepping,
+                stepper.position(state.stepping),
+                stepper.direction(state.stepping),
+                std::copysign(newP, stepper.momentum(state.stepping)));
           }
           // Transfer this into energy loss straggling and apply to
           // covariance:
@@ -265,8 +274,8 @@ struct MaterialInteractor
 
         // Record the material interaction if configured to do so
         if (recordInteractions) {
-          mInteraction.position           = state.stepping.position();
-          mInteraction.direction          = state.stepping.direction();
+          mInteraction.position           = stepper.position(state.stepping);
+          mInteraction.direction          = stepper.direction(state.stepping);
           mInteraction.materialProperties = mProperties;
           mInteraction.pathCorrection     = pCorrection;
           result.materialInteractions.push_back(std::move(mInteraction));

@@ -17,6 +17,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
@@ -38,54 +39,69 @@ namespace Test {
   /// Propagator cache
   struct PropagatorState
   {
-
-    /// This is a simple cache struct to mimic the
-    /// Stepper cache in the propagation
-    struct StepperState
+    /// This is a simple cache struct to mimic a Stepper
+    struct Stepper
     {
-
-      /// Access method to position
-      const Vector3D&
-      position() const
+      /// This is a simple cache struct to mimic the
+      /// Stepper cache in the propagation
+      struct StepperState
       {
-        return pos;
+        /// Position
+        Vector3D pos = Vector3D(0., 0., 0.);
+
+        /// Direction
+        Vector3D dir = Vector3D(1., 0., 0.);
+
+        /// Momentum
+        double p;
+
+        /// Charge
+        double q;
+
+        /// the navigation direction
+        NavigationDirection navDir = forward;
+
+        // accummulated path length cache
+        double pathAccumulated = 0.;
+
+        // adaptive sep size of the runge-kutta integration
+        Cstep stepSize = Cstep(100 * units::_cm);
+      };
+
+      /// Global particle position accessor
+      Vector3D
+      position(const StepperState& state) const
+      {
+        return state.pos;
       }
 
-      /// Access method to momentum
-      const Vector3D&
-      momentum() const
+      /// Momentum direction accessor
+      Vector3D
+      direction(const StepperState& state) const
       {
-        return dir;
+        return state.dir;
       }
 
-      /// Access method to direction
-      const Vector3D&
-      direction() const
+      /// Momentum accessor
+      Vector3D
+      momentum(const StepperState& state) const
       {
-        return dir;
+        return state.p * state.dir;
+      }
+
+      /// Charge access
+      double
+      charge(const StepperState& state) const
+      {
+        return state.q;
       }
 
       /// Return a corrector
-      VoidIntersectionCorrector
-      corrector() const
+      static VoidIntersectionCorrector
+      corrector(StepperState& /*unused*/)
       {
         return VoidIntersectionCorrector();
       }
-
-      /// Position
-      Vector3D pos = Vector3D(0., 0., 0.);
-
-      /// and mumentum
-      Vector3D dir = Vector3D(1., 0., 0.);
-
-      /// the navigation direction
-      NavigationDirection navDir = forward;
-
-      // accummulated path length cache
-      double pathAccumulated = 0.;
-
-      // adaptive sep size of the runge-kutta integration
-      Cstep stepSize = Cstep(100 * units::_cm);
     };
 
     /// emulate the options template
@@ -114,7 +130,7 @@ namespace Test {
     Options options;
 
     /// The Stepper state - internal statew of the Stepper
-    StepperState stepping;
+    Stepper::StepperState stepping;
 
     /// Navigation state - internal state of the Navigator
     Navigator::state_type navigation;
@@ -166,10 +182,13 @@ namespace Test {
                 << std::endl;
     }
 
+    // Stepper
+    PropagatorState::Stepper stepper;
+
     // (1) Initialization navigation from start point
     // - this will call resolveLayers() as well
     // - and thus should call a return to the stepper
-    navigator.status(state);
+    navigator.status(state, stepper);
     // Check that the currentVolume is set
     BOOST_CHECK_NE(state.navigation.currentVolume, nullptr);
     // Check that the currentVolume is the startVolume
@@ -180,7 +199,7 @@ namespace Test {
     // No layer has been found
     BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0);
     // ACTORS-ABORTERS-TARGET
-    navigator.target(state);
+    navigator.target(state, stepper);
     // A layer has been found
     BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1);
     // The iterator should points to the begin
@@ -194,7 +213,7 @@ namespace Test {
         state.stepping.stepSize, beamPipeRadius, s_onSurfaceTolerance);
     if (debug) {
       std::cout << "<<< Test 1a >>> initialize at "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       // Clear the debug string for the next test
       state.options.debugString = "";
@@ -205,7 +224,7 @@ namespace Test {
 
     // (2) re-entering navigator:
     // STATUS
-    navigator.status(state);
+    navigator.status(state, stepper);
     // Check that the currentVolume is the still startVolume
     BOOST_CHECK_EQUAL(state.navigation.currentVolume,
                       state.navigation.startVolume);
@@ -215,11 +234,11 @@ namespace Test {
     BOOST_CHECK(
         (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
     // ACTORS-ABORTERS-TARGET
-    navigator.target(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1b >>> step to the BeamPipe at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -229,13 +248,13 @@ namespace Test {
 
     // (3) re-entering navigator:
     // STATUS
-    navigator.status(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1c >>> step to the Boundary at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -244,13 +263,13 @@ namespace Test {
     step(state.stepping);
     // (4) re-entering navigator:
     // STATUS
-    navigator.status(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1d >>> step to 1st layer at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -261,13 +280,13 @@ namespace Test {
       step(state.stepping);
       // (5-9) re-entering navigator:
       // STATUS
-      navigator.status(state);
+      navigator.status(state, stepper);
       // ACTORS-ABORTERS-TARGET
-      navigator.target(state);
+      navigator.target(state, stepper);
 
       if (debug) {
         std::cout << "<<< Test 1e-1i >>> step within 1st layer at  "
-                  << toString(state.stepping.position()) << std::endl;
+                  << toString(state.stepping.pos) << std::endl;
         std::cout << state.options.debugString << std::endl;
         state.options.debugString = "";
       }
@@ -277,13 +296,13 @@ namespace Test {
     step(state.stepping);
     // (10) re-entering navigator:
     // STATUS
-    navigator.status(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1j >>> step to 2nd layer at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -294,13 +313,13 @@ namespace Test {
       step(state.stepping);
       // (11-15) re-entering navigator:
       // STATUS
-      navigator.status(state);
+      navigator.status(state, stepper);
       // ACTORS-ABORTERS-TARGET
-      navigator.target(state);
+      navigator.target(state, stepper);
 
       if (debug) {
         std::cout << "<<< Test 1k-1o >>> step within 2nd layer at  "
-                  << toString(state.stepping.position()) << std::endl;
+                  << toString(state.stepping.pos) << std::endl;
         std::cout << state.options.debugString << std::endl;
         state.options.debugString = "";
       }
@@ -310,13 +329,13 @@ namespace Test {
     step(state.stepping);
     // (16) re-entering navigator:
     // STATUS
-    navigator.status(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1p >>> step to 3rd layer at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -327,13 +346,13 @@ namespace Test {
       step(state.stepping);
       // (17-19) re-entering navigator:
       // STATUS
-      navigator.status(state);
+      navigator.status(state, stepper);
       // ACTORS-ABORTERS-TARGET
-      navigator.target(state);
+      navigator.target(state, stepper);
 
       if (debug) {
         std::cout << "<<< Test 1q-1s >>> step within 3rd layer at  "
-                  << toString(state.stepping.position()) << std::endl;
+                  << toString(state.stepping.pos) << std::endl;
         std::cout << state.options.debugString << std::endl;
         state.options.debugString = "";
       }
@@ -343,13 +362,13 @@ namespace Test {
     step(state.stepping);
     // (20) re-entering navigator:
     // STATUS
-    navigator.status(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1t >>> step to 4th layer at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }
@@ -360,13 +379,13 @@ namespace Test {
       step(state.stepping);
       // (21-23) re-entering navigator:
       // STATUS
-      navigator.status(state);
+      navigator.status(state, stepper);
       // ACTORS-ABORTERS-TARGET
-      navigator.target(state);
+      navigator.target(state, stepper);
 
       if (debug) {
         std::cout << "<<< Test 1t-1v >>> step within 4th layer at  "
-                  << toString(state.stepping.position()) << std::endl;
+                  << toString(state.stepping.pos) << std::endl;
         std::cout << state.options.debugString << std::endl;
         state.options.debugString = "";
       }
@@ -376,13 +395,13 @@ namespace Test {
     step(state.stepping);
     // (24) re-entering navigator:
     // STATUS
-    navigator.status(state);
+    navigator.status(state, stepper);
     // ACTORS-ABORTERS-TARGET
-    navigator.target(state);
+    navigator.target(state, stepper);
 
     if (debug) {
       std::cout << "<<< Test 1w >>> step to boundary at  "
-                << toString(state.stepping.position()) << std::endl;
+                << toString(state.stepping.pos) << std::endl;
       std::cout << state.options.debugString << std::endl;
       state.options.debugString = "";
     }

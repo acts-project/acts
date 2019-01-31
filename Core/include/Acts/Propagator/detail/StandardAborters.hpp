@@ -76,21 +76,26 @@ namespace detail {
     double internalLimit = std::numeric_limits<double>::max();
 
     /// boolean operator for abort condition using the result
-    template <typename propagator_state_t, typename result_t>
+    template <typename propagator_state_t,
+              typename stepper_t,
+              typename result_t>
     bool
-    operator()(const result_t& /*r*/, propagator_state_t& state) const
+    operator()(const result_t& /*r*/,
+               propagator_state_t& state,
+               const stepper_t&    stepper) const
     {
-      return operator()(state);
+      return operator()(state, stepper);
     }
 
     /// boolean operator for abort condition without using the result
     ///
     /// @tparam propagator_state_t Type of the propagator state
+    /// @tparam stepper_t Type of the stepper
     ///
-    /// @param[in,out] state The propagation state object
-    template <typename propagator_state_t>
+    /// @param [in,out] state The propagation state object
+    template <typename propagator_state_t, typename stepper_t>
     bool
-    operator()(propagator_state_t& state) const
+    operator()(propagator_state_t& state, const stepper_t& /*unused*/) const
     {
       if (state.navigation.targetReached) {
         return true;
@@ -132,34 +137,44 @@ namespace detail {
     SurfaceReached() = default;
 
     /// boolean operator for abort condition using the result (ignored)
-    template <typename propagator_state_t, typename result_t>
+    template <typename propagator_state_t,
+              typename stepper_t,
+              typename result_t>
     bool
-    operator()(const result_t& /*result*/, propagator_state_t& state) const
+    operator()(const result_t& /*result*/,
+               propagator_state_t& state,
+               const stepper_t&    stepper) const
     {
-      return operator()(state);
+      return operator()(state, stepper);
     }
 
     /// boolean operator for abort condition without using the result
     ///
     /// @tparam propagator_state_t Type of the propagator state
+    /// @tparam stepper_t Type of the stepper
     ///
-    /// @param[in,out] state The propagation state object
-    template <typename propagator_state_t>
+    /// @param [in,out] state The propagation state object
+    /// @param [in] stepper Stepper used for propagation
+    template <typename propagator_state_t, typename stepper_t>
     bool
-    operator()(propagator_state_t& state) const
+    operator()(propagator_state_t& state, const stepper_t& stepper) const
     {
-      return (*this)(state, *state.navigation.targetSurface);
+      return (*this)(state, stepper, *state.navigation.targetSurface);
     }
 
     /// boolean operator for abort condition without using the result
     ///
     /// @tparam propagator_state_t Type of the propagator state
+    /// @tparam stepper_t Type of the stepper
     ///
-    /// @param[in,out] state The propagation state object
-    /// @param[in] targetSurface The target surface
-    template <typename propagator_state_t>
+    /// @param [in,out] state The propagation state object
+    /// @param [in] stepper Stepper used for the progation
+    /// @param [in] targetSurface The target surface
+    template <typename propagator_state_t, typename stepper_t>
     bool
-    operator()(propagator_state_t& state, const Surface& targetSurface) const
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               const Surface&      targetSurface) const
     {
       if (state.navigation.targetReached) {
         return true;
@@ -182,7 +197,9 @@ namespace detail {
       // Calculate the distance to the surface
       const double tolerance    = state.options.targetTolerance;
       const auto   intersection = targetSurface.intersectionEstimate(
-          state.stepping.position(), state.stepping.direction(), anyDirection);
+          stepper.position(state.stepping),
+          stepper.direction(state.stepping),
+          anyDirection);
       const double distance = intersection.pathLength;
       // Adjust the step size so that we cannot cross the target surface
       state.stepping.stepSize.update(distance, ConstrainedStep::aborter);
@@ -226,11 +243,15 @@ namespace detail {
     EndOfWorldReached() = default;
 
     /// boolean operator for abort condition using the result (ignored)
-    template <typename propagator_state_t, typename result_t>
+    template <typename propagator_state_t,
+              typename stepper_t,
+              typename result_t>
     bool
-    operator()(const result_t& /*result*/, propagator_state_t& state) const
+    operator()(const result_t& /*result*/,
+               propagator_state_t& state,
+               const stepper_t&    stepper) const
     {
-      return operator()(state);
+      return operator()(state, stepper);
     }
 
     /// boolean operator for abort condition without using the result
@@ -238,9 +259,9 @@ namespace detail {
     /// @tparam propagator_state_t Type of the propagator state
     ///
     /// @param[in,out] state The propagation state object
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     bool
-    operator()(propagator_state_t& state) const
+    operator()(propagator_state_t& state, const stepper_t& /*unused*/) const
     {
       if (state.navigation.currentVolume != nullptr) {
         return false;

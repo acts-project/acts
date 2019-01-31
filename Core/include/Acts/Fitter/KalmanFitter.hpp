@@ -205,19 +205,23 @@ private:
     /// @brief Kalman actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam stepper_t Type of the stepper
     ///
     /// @param state is the mutable propagator state object
+    /// @param stepper The stepper in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
       // Initialization:
       // - Only when track states are not set
       if (result.fittedStates.empty()) {
         // -> Move the TrackState vector
         // -> Feed the KalmanSequencer with the measurements to be fitted
-        initialize(state, result);
+        initialize(state, stepper, result);
       }
 
       // Update:
@@ -230,7 +234,7 @@ private:
         // -> Perform the kalman update
         // -> Check outlier behavior (@todo)
         // -> Fill strack state information & update stepper information
-        filter(surface, state, result);
+        filter(surface, state, stepper, result);
       }
 
       // Finalization:
@@ -240,14 +244,15 @@ private:
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
         // -> Set a stop condition when all track states have been handled
-        finalize(state, result);
+        finalize(state, stepper, result);
       }
       // Post-finalization:
       // - Progress to target/reference surface and built the final track
       // parameters
-      if (result.smoothed and targetReached(state, *targetSurface)) {
+      if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
         // Transport & bind the parameter to the final surface
-        auto fittedState = state.stepping.boundState(*targetSurface, true);
+        auto fittedState
+            = stepper.boundState(state.stepping, *targetSurface, true);
         // Assign the fitted parameters
         result.fittedParameters = std::get<BoundParameters>(fittedState);
         // Break the navigation for stopping the Propagation
@@ -259,12 +264,16 @@ private:
     /// @brief Kalman actor operation : initialize
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam stepper_t Type of the stepper
     ///
     /// @param state is the mutable propagator state object
+    /// @param stepper The stepper in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    initialize(propagator_state_t& state, result_type& result) const
+    initialize(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
       // Screen output message
       debugLog(state, [&] {
@@ -288,8 +297,8 @@ private:
         if (layer == nullptr) {
           // Find the intersection to allocate the layer
           auto surfaceIntersection
-              = surface.intersectionEstimate(state.stepping.position(),
-                                             state.stepping.direction(),
+              = surface.intersectionEstimate(stepper.position(state.stepping),
+                                             stepper.direction(state.stepping),
                                              state.stepping.navDir,
                                              false);
           // Allocate the layer via the tracking geometry search
@@ -325,14 +334,17 @@ private:
     /// @brief Kalman actor operation : update
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam stepper_t Type of the stepper
     ///
     /// @param surface The surface where the update happens
     /// @param state The mutable propagator state object
+    /// @param stepper The stepper in use
     /// @param result The mutable result state object
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
     filter(const Surface*      surface,
            propagator_state_t& state,
+           const stepper_t&    stepper,
            result_type&        result) const
     {
       // Try to find the surface in the measurement surfaces
@@ -354,7 +366,7 @@ private:
         std::tuple<BoundParameters,
                    typename TrackState::Parameters::CovMatrix_t,
                    double>
-            boundState = state.stepping.boundState(*surface, true);
+            boundState = stepper.boundState(state.stepping, *surface, true);
 
         trackState.parameter.predicted  = std::get<0>(boundState);
         trackState.parameter.jacobian   = std::get<1>(boundState);
@@ -371,7 +383,7 @@ private:
           });
           // update stepping state using filtered parameters
           // after kalman update
-          state.stepping.update(*trackState.parameter.filtered);
+          stepper.update(state.stepping, *trackState.parameter.filtered);
         }
         // We count the processed state
         ++result.processedStates;
@@ -384,12 +396,16 @@ private:
     /// @brief Kalman actor operation : finalize
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
+    /// @tparam stepper_t Type of the stepper
     ///
     /// @param state is the mutable propagator state object
+    /// @param stepper The stepper in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    finalize(propagator_state_t& state, result_type& result) const
+    finalize(propagator_state_t& state,
+             const stepper_t&    stepper,
+             result_type&        result) const
     {
       // Remember you smoothed the track states
       result.smoothed = true;
@@ -415,7 +431,7 @@ private:
           return std::string("Smoothing successful, updating stepping state, "
                              "set target surface.");
         });
-        state.stepping.update(smoothedPars.get());
+        stepper.update(state.stepping, smoothedPars.get());
         // Reverse the propagation direction
         state.stepping.stepSize
             = detail::ConstrainedStep(-1. * state.options.maxStepSize);

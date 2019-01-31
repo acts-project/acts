@@ -189,6 +189,9 @@ template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final
 {
 public:
+  /// Type of the stepper in use for public scope
+  using Stepper = stepper_t;
+
   /// Type of state object used by the propagation implementation
   using StepperState = typename stepper_t::template state_type<TrackParameters>;
 
@@ -204,7 +207,6 @@ public:
   {
   }
 
-private:
   /// @brief private Propagator state for navigation and debugging
   ///
   /// @tparam parameters_t Type of the track parameters
@@ -212,7 +214,7 @@ private:
   ///
   /// This struct holds the common state information for propagating
   /// which is independent of the actual stepper implementation.
-  template <typename parameters_t, typename propagator_options_t>
+  template <typename propagator_options_t>
   struct State
   {
 
@@ -224,6 +226,7 @@ private:
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param tabs The internal target aborters created in the call nethod
+    template <typename parameters_t>
     State(const parameters_t& start, const propagator_options_t& topts)
       : options(topts), stepping(start, options.direction, options.maxStepSize)
     {
@@ -241,6 +244,7 @@ private:
     NavigatorState navigation;
   };
 
+private:
   /// @brief Helper struct determining the result's type
   ///
   /// @tparam parameters_t Type of final track parameters
@@ -301,17 +305,17 @@ private:
     debugLog(state, [&] { return std::string("Entering propagation."); });
 
     // Navigator initialize state call
-    m_navigator.status(state);
+    m_navigator.status(state, m_stepper);
     // Pre-Stepping call to the action list
-    state.options.actionList(state, result);
+    state.options.actionList(state, m_stepper, result);
     // assume negative outcome, only set to true later if we actually have
     // a positive outcome.
     // This is needed for correct error logging
     bool terminatedNormally = false;
     // Pre-Stepping: abort condition check
-    if (!state.options.abortList(result, state)) {
+    if (!state.options.abortList(result, state, m_stepper)) {
       // Pre-Stepping: target setting
-      m_navigator.target(state);
+      m_navigator.target(state, m_stepper);
       // Stepping loop
       debugLog(state, [&] { return std::string("Starting stepping loop."); });
       // Propagation loop : stepping
@@ -330,13 +334,13 @@ private:
         });
         // Post-step
         // navigator status call - action list - aborter list - target call
-        m_navigator.status(state);
-        state.options.actionList(state, result);
-        if (state.options.abortList(result, state)) {
+        m_navigator.status(state, m_stepper);
+        state.options.actionList(state, m_stepper, result);
+        if (state.options.abortList(result, state, m_stepper)) {
           terminatedNormally = true;
           break;
         }
-        m_navigator.target(state);
+        m_navigator.target(state, m_stepper);
       }
     }
 
@@ -348,7 +352,7 @@ private:
 
     // Post-stepping call to the action list
     debugLog(state, [&] { return std::string("Stepping loop done."); });
-    state.options.actionList(state, result);
+    state.options.actionList(state, m_stepper, result);
 
     // return progress flag here, decide on SUCCESS later
     return Status::IN_PROGRESS;
@@ -385,6 +389,7 @@ public:
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
+
     // Type of track parameters produced by the propagation
     using ReturnParameterType =
         typename stepper_t::template return_parameter_type<parameters_t>;
@@ -407,7 +412,7 @@ public:
     auto eOptions     = options.extend(abortList);
     using OptionsType = decltype(eOptions);
     // Initialize the internal propagator state
-    using StateType = State<parameters_t, OptionsType>;
+    using StateType = State<OptionsType>;
     StateType state(start, eOptions);
 
     // Apply the loop protection - it resets the internal path limit
@@ -489,7 +494,7 @@ public:
                   "return track parameter type must be copy-constructible");
 
     // Initialize the internal propagator state
-    using StateType = State<parameters_t, OptionsType>;
+    using StateType = State<OptionsType>;
     StateType state(start, eOptions);
     state.navigation.targetSurface = &target;
 

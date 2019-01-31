@@ -28,10 +28,11 @@ struct DefaultExtension
   /// @brief Control function if the step evaluation would be valid
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @return Boolean flag if the step would be valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   int
-  bid(const propagator_state_t& /*unused*/) const
+  bid(const propagator_state_t& /*unused*/, const stepper_t& /*unused*/) const
   {
     return 1;
   }
@@ -40,16 +41,19 @@ struct DefaultExtension
   /// step sets up qop, too.
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagation
   /// @param [out] knew Next k_i that is evaluated
   /// @param [in] bField B-Field at the evaluation position
   /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
   k(const propagator_state_t& state,
+    const stepper_t&          stepper,
     Vector3D&                 knew,
     const Vector3D&           bField,
     const int                 i     = 0,
@@ -59,12 +63,14 @@ struct DefaultExtension
     // First step does not rely on previous data
     if (i == 0) {
       // Store qop, it is always used if valid
-      qop = state.stepping.q / units::Nat2SI<units::MOMENTUM>(state.stepping.p);
+      qop = stepper.charge(state.stepping)
+          / units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
 
       // Evaluate the k_i
-      knew = qop * state.stepping.dir.cross(bField);
+      knew = qop * stepper.direction(state.stepping).cross(bField);
     } else {
-      knew = qop * (state.stepping.dir + h * kprev).cross(bField);
+      knew
+          = qop * (stepper.direction(state.stepping) + h * kprev).cross(bField);
     }
     return true;
   }
@@ -74,10 +80,13 @@ struct DefaultExtension
   /// this is a dummy function.
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
-  finalize(propagator_state_t& /*unused*/, const double /*unused*/) const
+  finalize(propagator_state_t& /*unused*/,
+           const stepper_t& /*unused*/,
+           const double /*unused*/) const
   {
     return true;
   }
@@ -87,30 +96,36 @@ struct DefaultExtension
   /// this is just for the evaluation of the transport matrix.
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagation
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
   finalize(propagator_state_t& state,
+           const stepper_t&    stepper,
            const double        h,
            ActsMatrixD<7, 7>& D) const
   {
-    return transportMatrix(state, h, D);
+    return transportMatrix(state, stepper, h, D);
   }
 
 private:
   /// @brief Calculates the transport matrix D for the jacobian
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
+  /// @tparam stepper_t Type of the stepper
   /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagation
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
   /// @return Boolean flag if evaluation is valid
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   bool
   transportMatrix(propagator_state_t& state,
+                  const stepper_t&    stepper,
                   const double        h,
                   ActsMatrixD<7, 7>& D) const
   {
@@ -134,7 +149,7 @@ private:
     /// missing Lambda part) and only exists for dFdu' in dlambda/dlambda.
 
     auto& sd  = state.stepping.stepData;
-    auto& dir = state.stepping.dir;
+    auto  dir = stepper.direction(state.stepping);
 
     D = ActsMatrixD<7, 7>::Identity();
 

@@ -49,13 +49,14 @@ public:
   ///
   struct State
   {
+
     /// Constructor from the initial track parameters
     ///
     /// @tparam parameters_t the Type of the track parameters
     ///
-    /// @param[in] par The track parameters at start
-    /// @param[in] dir is the navigation direction
-    /// @param[in] ssize is the (absolute) maximum step size
+    /// @param [in] par The track parameters at start
+    /// @param [in] dir is the navigation direction
+    /// @param [in] ssize is the (absolute) maximum step size
     template <typename parameters_t>
     explicit State(const parameters_t& par,
                    NavigationDirection ndir = forward,
@@ -69,100 +70,15 @@ public:
     {
     }
 
-    /// Global particle position accessor
-    Vector3D
-    position() const
-    {
-      return pos;
-    }
-
-    /// Momentum direction accessor
-    Vector3D
-    direction() const
-    {
-      return dir;
-    }
-
-    /// Momentum accessor
-    Vector3D
-    momentum() const
-    {
-      return p * dir;
-    }
-
-    /// Charge access
-    double
-    charge() const
-    {
-      return q;
-    }
-
-    /// Return a corrector
-    VoidIntersectionCorrector
-    corrector() const
-    {
-      return VoidIntersectionCorrector();
-    }
-
-    /// Method to update momentum, direction and p
-    ///
-    /// @param uposition the updated position
-    /// @param udirection the updated direction
-    /// @param p the updated momentum value
-    void
-    update(const Vector3D& uposition, const Vector3D& udirection, double up)
-    {
-      pos = uposition;
-      dir = udirection;
-      p   = up;
-    }
-
-    /// Method for on-demand transport of the covariance
-    /// to a new curvilinear frame at current  position,
-    /// or direction of the state - for the moment a dummy method
-    ///
-    /// @param reinitialize is a flag to steer whether the
-    ///        state should be reinitialized at the new
-    ///        position
-    ///
-    /// @return the full transport jacobian
-    const ActsMatrixD<5, 5>
-    covarianceTransport(bool /*reinitialize = false*/)
-    {
-      return ActsMatrixD<5, 5>::Identity();
-    }
-
-    /// Method for on-demand transport of the covariance
-    /// to a new curvilinear frame at current  position,
-    /// or direction of the state - for the moment a dummy method
-    ///
-    /// @tparam surface_t the surface type - ignored here
-    ///
-    /// @param surface is the surface to which the covariance is
-    ///        forwarded to
-    /// @param reinitialize is a flag to steer whether the
-    ///        state should be reinitialized at the new
-    ///        position
-    /// @note no check is done if the position is actually on the surface
-    ///
-    /// @return the full transport jacobian
-    template <typename surface_t>
-    const ActsMatrixD<5, 5>
-    covarianceTransport(const surface_t& /*surface*/,
-                        bool /*reinitialize = false*/)
-    {
-      return ActsMatrixD<5, 5>::Identity();
-    }
-
-    /// Global particle position
-    Vector3D pos = Vector3D(0, 0, 0);
-
-    /// Momentum direction (normalized)
-    Vector3D dir = Vector3D(1, 0, 0);
-
     /// Boolean to indiciate if you need covariance transport
     bool              covTransport = false;
     ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
+
+    /// Global particle position
+    Vector3D pos = Vector3D(0., 0., 0.);
+
+    /// Momentum direction (normalized)
+    Vector3D dir = Vector3D(1., 0., 0.);
 
     /// Momentum
     double p = 0.;
@@ -179,6 +95,98 @@ public:
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
   };
+
+  /// Global particle position accessor
+  Vector3D
+  position(const State& state) const
+  {
+    return state.pos;
+  }
+
+  /// Momentum direction accessor
+  Vector3D
+  direction(const State& state) const
+  {
+    return state.dir;
+  }
+
+  /// Momentum accessor
+  double
+  momentum(const State& state) const
+  {
+    return state.p;
+  }
+
+  /// Charge access
+  double
+  charge(const State& state) const
+  {
+    return state.q;
+  }
+
+  /// Return a corrector
+  static VoidIntersectionCorrector
+  corrector(State& /*state*/)
+  {
+    return VoidIntersectionCorrector();
+  }
+
+  /// Method to update momentum, direction and p
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] uposition the updated position
+  /// @param [in] udirection the updated direction
+  /// @param [in] up the updated momentum value
+  static void
+  update(State&          state,
+         const Vector3D& uposition,
+         const Vector3D& udirection,
+         double          up)
+  {
+    state.pos = uposition;
+    state.dir = udirection;
+    state.p   = up;
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state - for the moment a dummy method
+  ///
+  /// @param [in,out] state State of the stepper
+  /// @param [in] reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+  ///
+  /// @return the full transport jacobian
+  static const ActsMatrixD<5, 5>
+  covarianceTransport(State& /*state*/, bool /*reinitialize = false*/)
+  {
+    return ActsMatrixD<5, 5>::Identity();
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state - for the moment a dummy method
+  ///
+  /// @tparam surface_t the surface type - ignored here
+  ///
+  /// @param [in,out] state The stepper state
+  /// @param [in] surface is the surface to which the covariance is
+  ///        forwarded to
+  /// @param [in] reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+  /// @note no check is done if the position is actually on the surface
+  ///
+  /// @return the full transport jacobian
+  template <typename surface_t>
+  static const ActsMatrixD<5, 5>
+  covarianceTransport(State& /*unused*/,
+                      const surface_t& /*surface*/,
+                      bool /*reinitialize = false*/)
+  {
+    return ActsMatrixD<5, 5>::Identity();
+  }
 
   /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
@@ -202,8 +210,8 @@ public:
   ///
   /// @tparam result_t Type of the propagator result to be filled
   ///
-  /// @param[in,out] state The stepper state
-  /// @param[in,out] result The result object from the propagator
+  /// @param [in] state The stepper state
+  /// @param [in,out] result The result object from the propagator
   template <typename result_t>
   void
   convert(State& state, result_t& result) const
@@ -236,8 +244,8 @@ public:
 
   /// Perform a straight line propagation step
   ///
-  /// @param[in,out] state is the propagation state associated with the track
-  ///                parameters that are being propagated.
+  /// @param [in,out] state is the propagation state associated with the track
+  /// parameters that are being propagated.
   ///                The state contains the desired step size,
   ///                it can be negative during backwards track propagation,
   ///                and since we're using an adaptive algorithm, it can

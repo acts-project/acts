@@ -78,11 +78,14 @@ namespace Test {
     /// the surfaces
     ///
     /// @tparam propagator_state_t Type of the propagator state
+    /// @tparam stepper_t Type of the stepper
     /// @param [in] state State of the propagator
     /// @param [out] result Vector of matching surfaces
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
       // monitor the current surface
       auto surface = state.navigation.currentSurface;
@@ -98,8 +101,9 @@ namespace Test {
           if (lResolution != vResolution->second.end()) {
             // Apply global to local
             Acts::Vector2D lPos;
-            surface->globalToLocal(
-                state.stepping.position(), state.stepping.direction(), lPos);
+            surface->globalToLocal(stepper.position(state.stepping),
+                                   stepper.direction(state.stepping),
+                                   lPos);
             if (lResolution->second.size() == 1) {
               double sp = lResolution->second[0].second;
               cov1D << sp * sp;
@@ -154,10 +158,12 @@ namespace Test {
     /// @todo deal momentum in a gaussian way properly
     ///
     /// @tparam propagator_state_t State of the propagator
+    /// @param stepper_t Type of the stepper
     /// @param [in] state State of the propagation
-    template <typename propagator_state_t>
+    /// @param [in] stepper Stepper of the propagation
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state) const
+    operator()(propagator_state_t& state, const stepper_t& stepper) const
     {
       // Check if there is a surface with material and a covariance is existing
       if (state.navigation.currentSurface
@@ -173,16 +179,16 @@ namespace Test {
         state.stepping.cov(eTHETA, eTHETA) += dTheta * dTheta;
 
         // Update the angles
-        double theta = std::acos(state.stepping.direction().z());
-        double phi   = std::atan2(state.stepping.direction().y(),
-                                state.stepping.direction().x());
+        auto   direction = stepper.direction(state.stepping);
+        double theta     = std::acos(direction.z());
+        double phi       = std::atan2(direction.y(), direction.x());
 
         state.stepping.update(
-            state.stepping.position(),
+            stepper.position(state.stepping),
             {std::sin(theta + dTheta) * std::cos(phi + dPhi),
              std::sin(theta + dTheta) * std::sin(phi + dPhi),
              std::cos(theta + dTheta)},
-            std::max(state.stepping.p
+            std::max(stepper.momentum(state.stepping)
                          - std::abs(gauss(generator)) * units::_MeV,
                      0.));
       }

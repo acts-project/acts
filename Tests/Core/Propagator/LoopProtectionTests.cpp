@@ -40,27 +40,6 @@ namespace Test {
     Vector3D pos = Vector3D(0., 0., 0.);
     Vector3D dir = Vector3D(0., 0., 1);
     double   p   = 100. * units::_MeV;
-
-    /// Access method - position
-    const Vector3D
-    position() const
-    {
-      return pos;
-    }
-
-    /// Access method - direction
-    const Vector3D
-    direction() const
-    {
-      return dir;
-    }
-
-    /// Access method - momentum
-    const Vector3D
-    momentum() const
-    {
-      return p * dir;
-    }
   };
 
   /// @brief mockup of stepping state
@@ -81,6 +60,27 @@ namespace Test {
     {
       // get the field from the cell
       return field;
+    }
+
+    /// Access method - position
+    Vector3D
+    position(const SteppingState& state) const
+    {
+      return state.pos;
+    }
+
+    /// Access method - direction
+    Vector3D
+    direction(const SteppingState& state) const
+    {
+      return state.dir;
+    }
+
+    /// Access method - momentum
+    double
+    momentum(const SteppingState& state) const
+    {
+      return state.p;
     }
   };
 
