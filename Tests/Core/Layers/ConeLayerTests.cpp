@@ -50,7 +50,7 @@ namespace Test {
       auto       pCone = std::make_shared<const ConeBounds>(alpha, symmetric);
       // for some reason, this one doesnt exist
       // auto         pConeLayer = ConeLayer::create(pTransform, pCone);
-      // BOOST_TEST(pConeLayer->layerType() == LayerType::passive);
+      // BOOST_CHECK_EQUAL(pConeLayer->layerType(), LayerType::passive);
       // next level: need an array of Surfaces;
       // bounds object, rectangle type
       auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
@@ -62,19 +62,19 @@ namespace Test {
       const double thickness(1.0);
       auto         pConeLayerFromSurfaces
           = ConeLayer::create(pTransform, pCone, nullptr);
-      BOOST_TEST(pConeLayerFromSurfaces->layerType() == LayerType::active);
+      BOOST_CHECK_EQUAL(pConeLayerFromSurfaces->layerType(), LayerType::active);
       // construct with thickness:
       auto pConeLayerWithThickness
           = ConeLayer::create(pTransform, pCone, nullptr, thickness);
-      BOOST_TEST(pConeLayerWithThickness->thickness() == thickness);
+      BOOST_CHECK_EQUAL(pConeLayerWithThickness->thickness(), thickness);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
           new GenericApproachDescriptor(aSurfaces));
       auto adPtr                            = ad.get();
       auto pConeLayerWithApproachDescriptor = ConeLayer::create(
           pTransform, pCone, nullptr, thickness, std::move(ad));
-      BOOST_TEST(pConeLayerWithApproachDescriptor->approachDescriptor()
-                 == adPtr);
+      BOOST_CHECK_EQUAL(pConeLayerWithApproachDescriptor->approachDescriptor(),
+                        adPtr);
       // with the layerType specified...
       auto pConeLayerWithLayerType = ConeLayer::create(pTransform,
                                                        pCone,
@@ -82,7 +82,8 @@ namespace Test {
                                                        thickness,
                                                        std::move(ad),
                                                        LayerType::passive);
-      BOOST_TEST(pConeLayerWithLayerType->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pConeLayerWithLayerType->layerType(),
+                        LayerType::passive);
     }
 
     /// Unit test for testing Layer properties
@@ -104,8 +105,8 @@ namespace Test {
       auto pConeLayerFromSurfaces
           = ConeLayer::create(pTransform, pCone, nullptr);
       // auto planeSurface = pConeLayer->surfaceRepresentation();
-      BOOST_TEST(pConeLayerFromSurfaces->surfaceRepresentation().name()
-                 == std::string("Acts::ConeSurface"));
+      BOOST_CHECK_EQUAL(pConeLayerFromSurfaces->surfaceRepresentation().name(),
+                        std::string("Acts::ConeSurface"));
     }
 
     BOOST_AUTO_TEST_SUITE_END()

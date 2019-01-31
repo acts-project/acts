@@ -48,20 +48,20 @@ namespace Test {
 
     // The surface should be not null and point to the same
     const Surface* sfCopy = &mcCopy.referenceSurface();
-    BOOST_TEST(sfCopy != nullptr);
-    BOOST_TEST(sfCopy == cylinder.get());
+    BOOST_CHECK_NE(sfCopy, nullptr);
+    BOOST_CHECK_EQUAL(sfCopy, cylinder.get());
     // The parameters should be identical though
-    BOOST_TEST(mc.parameters() == mcCopy.parameters());
+    BOOST_CHECK_EQUAL(mc.parameters(), mcCopy.parameters());
 
     // check the assignment operator
     auto mcAssigned = mc;
 
     // The surface should be not null and point to the same
     const Surface* sfAssigned = &mcAssigned.referenceSurface();
-    BOOST_TEST(sfAssigned != nullptr);
-    BOOST_TEST(sfAssigned == cylinder.get());
+    BOOST_CHECK_NE(sfAssigned, nullptr);
+    BOOST_CHECK_EQUAL(sfAssigned, cylinder.get());
     // The parameters should be identical though
-    BOOST_TEST(mc.parameters() == mcAssigned.parameters());
+    BOOST_CHECK_EQUAL(mc.parameters(), mcAssigned.parameters());
 
     std::vector<MeasurementType<ParDef::eLOC_0, ParDef::eLOC_1>> caMeasurements{
         std::move(mcCopy), std::move(mcAssigned)};

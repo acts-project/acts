@@ -6,21 +6,22 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE SurfaceArrayCreator
 #include <boost/test/included/unit_test.hpp>
-
 #include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
-
-#include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Utilities/BinningType.hpp"
-
-#include "Acts/Utilities/Definitions.hpp"
+// clang-format on
 
 #include <fstream>
 #include <random>
+
+#include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
@@ -32,23 +33,10 @@ namespace Acts {
 
 namespace Test {
 
-#define CHECK_CLOSE_COLLECTION(aa, bb, tolerance)                              \
-  {                                                                            \
-    using std::distance;                                                       \
-    using std::begin;                                                          \
-    using std::end;                                                            \
-    auto a = begin(aa), ae = end(aa);                                          \
-    auto b = begin(bb);                                                        \
-    BOOST_REQUIRE_EQUAL(distance(a, ae), distance(b, end(bb)));                \
-    for (; a != ae; ++a, ++b) {                                                \
-      BOOST_CHECK_CLOSE(*a, *b, tolerance);                                    \
-    }                                                                          \
-  }
-
 #define CHECK_ROTATION_ANGLE(t, a, tolerance)                                  \
   {                                                                            \
     Vector3D v = (*t) * Vector3D(1, 0, 0);                                     \
-    BOOST_CHECK_SMALL(phi(v) - (a), tolerance);                                \
+    CHECK_CLOSE_ABS(phi(v), (a), tolerance);                                   \
   }
 
   using SrfVec = std::vector<std::shared_ptr<const Surface>>;
@@ -332,11 +320,11 @@ namespace Test {
       auto axis
           = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
 
-      BOOST_TEST(axis.nBins == 30);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
+      BOOST_CHECK_EQUAL(axis.nBins, 30);
+      CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
+      CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
+      CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift  = 0.;
@@ -347,13 +335,12 @@ namespace Test {
       axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_2.obj");
-      BOOST_TEST(axis.nBins == 30);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
-      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_CHECK_CLOSE_FRACTION(
-          phi(tr * Vector3D::UnitX()), -0.5 * step, 1e-3);
+      BOOST_CHECK_EQUAL(axis.nBins, 30);
+      CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
+      CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
+      // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
+      CHECK_CLOSE_REL(phi(tr * Vector3D::UnitX()), -0.5 * step, 1e-3);
       // case 3: two modules sit asymmetrically around pi / -pi shifted up
       angleShift  = step / -4.;
       surfaces    = fullPhiTestSurfacesEC(30, angleShift, z);
@@ -363,11 +350,11 @@ namespace Test {
       axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_3.obj");
-      BOOST_TEST(axis.nBins == 30);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_CLOSE_FRACTION(phi(tr * Vector3D::UnitX()), step / -4., 1e-3);
+      BOOST_CHECK_EQUAL(axis.nBins, 30);
+      CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
+      CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
+      CHECK_CLOSE_REL(phi(tr * Vector3D::UnitX()), step / -4., 1e-3);
 
       // case 4: two modules sit asymmetrically around pi / -pi shifted down
       angleShift  = step / 4.;
@@ -380,11 +367,11 @@ namespace Test {
       surfacesRaw = unpack_shared_vector(surfaces);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_4.obj");
-      BOOST_TEST(axis.nBins == 30);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_CLOSE_FRACTION(phi(tr * Vector3D::UnitX()), step / 4., 1e-3);
+      BOOST_CHECK_EQUAL(axis.nBins, 30);
+      CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
+      CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
+      CHECK_CLOSE_REL(phi(tr * Vector3D::UnitX()), step / 4., 1e-3);
     }
 
     for (int i = -1; i <= 2; i += 2) {
@@ -399,11 +386,11 @@ namespace Test {
           = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_1.obj");
-      BOOST_TEST(axis.nBins == 30);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
-      BOOST_CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
+      BOOST_CHECK_EQUAL(axis.nBins, 30);
+      CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
+      CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
+      CHECK_SMALL(phi(tr * Vector3D::UnitX()), 1e-6);
 
       // case 2: two modules sit symmetrically around pi / -pi
       angleShift  = 0.;
@@ -414,13 +401,12 @@ namespace Test {
       axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_2.obj");
-      BOOST_TEST(axis.nBins == 30);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
-      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_CHECK_CLOSE_FRACTION(
-          phi(tr * Vector3D::UnitX()), -0.5 * step, 1e-3);
+      BOOST_CHECK_EQUAL(axis.nBins, 30);
+      CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
+      CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
+      // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
+      CHECK_CLOSE_REL(phi(tr * Vector3D::UnitX()), -0.5 * step, 1e-3);
 
       // case 3: two modules sit asymmetrically around pi / -pi shifted up
       angleShift  = step / -4.;
@@ -431,12 +417,12 @@ namespace Test {
       axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_3.obj");
-      BOOST_TEST(axis.nBins == 30);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
-      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_CHECK_CLOSE_FRACTION(phi(tr * Vector3D::UnitX()), step / -4., 1e-3);
+      BOOST_CHECK_EQUAL(axis.nBins, 30);
+      CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
+      CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
+      // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
+      CHECK_CLOSE_REL(phi(tr * Vector3D::UnitX()), step / -4., 1e-3);
 
       // case 4: two modules sit asymmetrically around pi / -pi shifted down
       angleShift  = step / 4.;
@@ -447,12 +433,12 @@ namespace Test {
       axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_4.obj");
-      BOOST_TEST(axis.nBins == 30);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, M_PI, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, -M_PI, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
-      // CHECK_CLOSE_COLLECTION(bdExp, axis.binEdges, 0.001);
-      BOOST_CHECK_CLOSE_FRACTION(phi(tr * Vector3D::UnitX()), step / 4., 1e-3);
+      BOOST_CHECK_EQUAL(axis.nBins, 30);
+      CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
+      CHECK_CLOSE_REL(axis.min, -M_PI, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
+      // CHECK_CLOSE_REL(bdExp, axis.binEdges, 0.001);
+      CHECK_CLOSE_REL(phi(tr * Vector3D::UnitX()), step / 4., 1e-3);
     }
 
     SrfVec surfaces;
@@ -467,11 +453,11 @@ namespace Test {
     tr = Transform3D::Identity();
     auto axis
         = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
-    BOOST_TEST(axis.nBins == 1);
+    BOOST_CHECK_EQUAL(axis.nBins, 1);
 
-    BOOST_CHECK_SMALL(axis.max - phi(Vector3D(8, 1, 0)), 1e-3);
-    BOOST_CHECK_SMALL(axis.min - phi(Vector3D(8, -1, 0)), 1e-3);
-    BOOST_TEST(axis.bType == equidistant);
+    CHECK_CLOSE_ABS(axis.max, phi(Vector3D(8, 1, 0)), 1e-3);
+    CHECK_CLOSE_ABS(axis.min, phi(Vector3D(8, -1, 0)), 1e-3);
+    BOOST_CHECK_EQUAL(axis.bType, equidistant);
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_Z,
@@ -486,10 +472,10 @@ namespace Test {
     auto axis = createEquidistantAxis(surfacesRaw, BinningValue::binZ, pl, trf);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_Z_1.obj");
-    BOOST_TEST(axis.nBins == 1);
-    BOOST_CHECK_CLOSE_FRACTION(axis.max, 3, 1e-6);
-    BOOST_CHECK_CLOSE_FRACTION(axis.min, 0, 1e-6);
-    BOOST_TEST(axis.bType == equidistant);
+    BOOST_CHECK_EQUAL(axis.nBins, 1);
+    CHECK_CLOSE_ABS(axis.max, 3, 1e-6);
+    CHECK_CLOSE_ABS(axis.min, 0, 1e-6);
+    BOOST_CHECK_EQUAL(axis.bType, equidistant);
 
     // z rows with varying starting point
     for (size_t i = 0; i <= 20; i++) {
@@ -505,10 +491,10 @@ namespace Test {
                "SurfaceArrayCreator_createEquidistantAxis_Z_2_%1%.obj")
            % i)
               .str());
-      BOOST_TEST(axis.nBins == 10);
-      BOOST_CHECK_CLOSE_FRACTION(axis.max, 30 + z0, 1e-6);
-      BOOST_CHECK_CLOSE_FRACTION(axis.min, z0, 1e-6);
-      BOOST_TEST(axis.bType == equidistant);
+      BOOST_CHECK_EQUAL(axis.nBins, 10);
+      CHECK_CLOSE_ABS(axis.max, 30 + z0, 1e-6);
+      CHECK_CLOSE_ABS(axis.min, z0, 1e-6);
+      BOOST_CHECK_EQUAL(axis.bType, equidistant);
     }
 
     // z row where elements are rotated around y
@@ -521,10 +507,10 @@ namespace Test {
     axis = createEquidistantAxis(surfacesRaw, BinningValue::binZ, pl, trf);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_Z_3.obj");
-    BOOST_TEST(axis.nBins == 10);
-    BOOST_CHECK_SMALL(axis.max - 30.9749, 1e-3);
-    BOOST_CHECK_SMALL(axis.min + 0.974873, 1e-3);
-    BOOST_TEST(axis.bType == equidistant);
+    BOOST_CHECK_EQUAL(axis.nBins, 10);
+    CHECK_CLOSE_ABS(axis.max, 30.9749, 1e-3);
+    CHECK_CLOSE_ABS(axis.min, -0.974873, 1e-3);
+    BOOST_CHECK_EQUAL(axis.bType, equidistant);
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_createEquidistantAxis_R,
@@ -539,10 +525,10 @@ namespace Test {
     auto       trf = Transform3D::Identity();
     ProtoLayer pl  = ProtoLayer(surfacesRaw);
     auto axis = createEquidistantAxis(surfacesRaw, BinningValue::binR, pl, trf);
-    BOOST_TEST(axis.nBins == 1);
-    BOOST_CHECK_SMALL(axis.max - perp(Vector3D(17, 1, 0)), 1e-3);
-    BOOST_CHECK_SMALL(axis.min - 13, 1e-3);
-    BOOST_TEST(axis.bType == equidistant);
+    BOOST_CHECK_EQUAL(axis.nBins, 1);
+    CHECK_CLOSE_ABS(axis.max, perp(Vector3D(17, 1, 0)), 1e-3);
+    CHECK_CLOSE_ABS(axis.min, 13, 1e-3);
+    BOOST_CHECK_EQUAL(axis.bType, equidistant);
 
     // multiple rings
     surfaces.resize(0);
@@ -560,11 +546,10 @@ namespace Test {
     trf         = Transform3D::Identity();
     axis = createEquidistantAxis(surfacesRaw, BinningValue::binR, pl, trf);
 
-    BOOST_TEST(axis.nBins == 3);
-    BOOST_CHECK_CLOSE_FRACTION(axis.max, perp(Vector3D(20 + 2, 1, 0)), 1e-3);
-    // BOOST_TEST(axis.min == 8, tt::tolerance(1e-3)); // fails for some reason
-    BOOST_CHECK_SMALL((axis.min - 8), 1e-3);
-    BOOST_TEST(axis.bType == equidistant);
+    BOOST_CHECK_EQUAL(axis.nBins, 3);
+    CHECK_CLOSE_REL(axis.max, perp(Vector3D(20 + 2, 1, 0)), 1e-3);
+    CHECK_CLOSE_ABS(axis.min, 8, 1e-3);
+    BOOST_CHECK_EQUAL(axis.bType, equidistant);
   }
 
   // if there are concentring disc or barrel modules, the bin count might be off
@@ -589,8 +574,8 @@ namespace Test {
         = m_SAC.surfaceArrayOnDisc(surfaces, equidistant, equidistant);
     std::cout << (*sArray) << std::endl;
     auto axes = sArray->getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == 3);
-    BOOST_TEST(axes.at(1)->getNBins() == 10);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 10);
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArrayCreator_completeBinning,
@@ -629,8 +614,8 @@ namespace Test {
       Vector3D ctr        = srf->binningPosition(binR);
       auto     binContent = sa.at(ctr);
 
-      BOOST_TEST(binContent.size() == 1);
-      BOOST_TEST(srf.get() == binContent.at(0));
+      BOOST_CHECK_EQUAL(binContent.size(), 1);
+      BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
     }
   }
 
@@ -669,8 +654,8 @@ namespace Test {
     sl->fill(brlRaw);
     SurfaceArray sa(std::move(sl), brl);
     auto         axes = sa.getAxes();
-    BOOST_TEST(axes.at(0)->getNBins() == 30);
-    BOOST_TEST(axes.at(1)->getNBins() == 7);
+    BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
+    BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
     std::cout << sa << std::endl;
 
     for (const auto& pr : barrel.second) {
@@ -679,7 +664,7 @@ namespace Test {
 
       Vector3D ctr        = A->binningPosition(binR);
       auto     binContent = sa.at(ctr);
-      BOOST_TEST(binContent.size() == 2);
+      BOOST_CHECK_EQUAL(binContent.size(), 2);
       std::set<const Surface*> act;
       act.insert(binContent[0]);
       act.insert(binContent[1]);
@@ -688,7 +673,7 @@ namespace Test {
       exp.insert(A);
       exp.insert(B);
 
-      BOOST_TEST(act == exp);
+      BOOST_CHECK(act == exp);
     }
 
     // VARIABLE
@@ -718,8 +703,8 @@ namespace Test {
       sl2->fill(brlRaw);
       SurfaceArray sa2(std::move(sl2), brl);
       axes = sa2.getAxes();
-      BOOST_TEST(axes.at(0)->getNBins() == 30);
-      BOOST_TEST(axes.at(1)->getNBins() == 7);
+      BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
+      BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
 
       // check bin edges
       std::vector<double> phiEdgesExp
@@ -734,17 +719,13 @@ namespace Test {
       for (const auto& edge : axes.at(0)->getBinEdges()) {
         BOOST_TEST_INFO("phi edge index " << i);
         auto phiEdge = phiEdgesExp.at(i);
-        if (std::abs(phiEdge) > 1e-10) {
-          BOOST_CHECK_CLOSE_FRACTION(edge, phiEdge, 1e-3);
-        } else {
-          BOOST_CHECK_SMALL(edge, 10 * phiEdge);
-        }
+        CHECK_CLOSE_ABS(edge, phiEdge, 1e-5 * M_PI);
         i++;
       }
       i = 0;
       for (const auto& edge : axes.at(1)->getBinEdges()) {
         BOOST_TEST_INFO("z edge index " << i);
-        BOOST_CHECK_CLOSE_FRACTION(edge, zEdgesExp.at(i), 1e-3);
+        CHECK_CLOSE_ABS(edge, zEdgesExp.at(i), 1e-6);
         i++;
       }
 
@@ -756,7 +737,7 @@ namespace Test {
 
         Vector3D ctr        = A->binningPosition(binR);
         auto     binContent = sa2.at(ctr);
-        BOOST_TEST(binContent.size() == 2);
+        BOOST_CHECK_EQUAL(binContent.size(), 2);
         std::set<const Surface*> act;
         act.insert(binContent[0]);
         act.insert(binContent[1]);
@@ -765,7 +746,7 @@ namespace Test {
         exp.insert(A);
         exp.insert(B);
 
-        BOOST_TEST(act == exp);
+        BOOST_CHECK(act == exp);
       }
     }
   }

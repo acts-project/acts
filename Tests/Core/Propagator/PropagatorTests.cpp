@@ -6,17 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Propagator Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -26,6 +21,7 @@
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -259,8 +255,8 @@ namespace Test {
     const auto& result = epropagator.propagate(start, *cSurface, options);
     auto&       sor    = result.get<so_result>();
 
-    BOOST_TEST(sor.surfaces_passed == 1);
-    BOOST_TEST(std::abs(sor.surface_passed_r - 10.) < 1e-5);
+    BOOST_CHECK_EQUAL(sor.surfaces_passed, 1);
+    CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);
   }
 
   BOOST_DATA_TEST_CASE(
@@ -326,13 +322,13 @@ namespace Test {
         = epropagator.propagate(start, options_1s).endParameters;
 
     // test that the propagation is additive
-    BOOST_TEST(end_parameters_1s->position().isApprox(
-        end_parameters_2s->position(), 0.001));
+    CHECK_CLOSE_REL(
+        end_parameters_1s->position(), end_parameters_2s->position(), 0.001);
 
     const auto& cov_1s = *(end_parameters_1s->covariance());
     const auto& cov_2s = *(end_parameters_2s->covariance());
 
-    BOOST_TEST(cov_1s.isApprox(cov_2s, 0.001));
+    CHECK_CLOSE_COVARIANCE(cov_1s, cov_2s, 0.001);
   }
 
   BOOST_DATA_TEST_CASE(
@@ -400,13 +396,13 @@ namespace Test {
         = epropagator.propagate(start, *cSurface, options_1s).endParameters;
 
     // test that the propagation is additive
-    BOOST_TEST(end_parameters_1s->position().isApprox(
-        end_parameters_2s->position(), 0.001));
+    CHECK_CLOSE_REL(
+        end_parameters_1s->position(), end_parameters_2s->position(), 0.001);
 
     const auto& cov_1s = *(end_parameters_1s->covariance());
     const auto& cov_2s = *(end_parameters_2s->covariance());
 
-    BOOST_TEST(cov_1s.isApprox(cov_2s, 0.001));
+    CHECK_CLOSE_COVARIANCE(cov_1s, cov_2s, 0.001);
   }
 
 }  // namespace Test

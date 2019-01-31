@@ -6,17 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-// Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Propagator Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank
 #include <boost/test/data/test_case.hpp>
+// clang-format on
 
 #include <cmath>
 #include <iostream>
-
-#include <boost/test/data/test_case.hpp>
 
 #include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -30,10 +27,12 @@
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+
 #include "PropagationTestHelper.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -127,7 +126,7 @@ namespace IntegrationTest {
     auto eposition = constant_field_propagation(
         epropagator, pT, phi, theta, dcharge, index, Bz);
     // check consistency
-    BOOST_CHECK(eposition.isApprox(aposition));
+    CHECK_CLOSE_REL(eposition, aposition, 1e-6);
   }
 
 // The actual test - needs to be included to avoid

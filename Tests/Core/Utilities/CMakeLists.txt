@@ -3,7 +3,7 @@ target_link_libraries (ExtendableTests PRIVATE ActsCore)
 add_test(NAME ExtendableUnitTests COMMAND ExtendableTests)
 
 add_executable (UnitConversionTests UnitConversionTests.cpp)
-target_link_libraries (UnitConversionTests PRIVATE ActsCore)
+target_link_libraries (UnitConversionTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME UnitConversionUnitTest COMMAND UnitConversionTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST UnitConversionUnitTest TARGETS UnitConversionTests)
 
@@ -18,7 +18,7 @@ add_test (NAME IntersectionUnitTests COMMAND IntersectionTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST IntersectionUnitTests TARGETS IntersectionTests)
 
 add_executable (BinningDataTests BinningDataTests.cpp)
-target_link_libraries (BinningDataTests PRIVATE ActsCore)
+target_link_libraries (BinningDataTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME BinningDataUnitTest COMMAND BinningDataTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST BinningDataUnitTest TARGETS BinningDataTests)
 
@@ -38,7 +38,7 @@ add_test (NAME MPLUnitTest COMMAND MPLTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST MPLUnitTest TARGETS MPLTests)
 
 add_executable (RealQuadraticEquationTests RealQuadraticEquationTests.cpp)
-target_link_libraries (RealQuadraticEquationTests PRIVATE ActsCore)
+target_link_libraries (RealQuadraticEquationTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME RealQuadraticEquationUnitTest COMMAND RealQuadraticEquationTests)
 
 add_executable (AxesTests AxesTests.cpp)
@@ -49,17 +49,17 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST AxesUnitTest TARGETS AxesTest
 
 add_executable (GridTests GridTests.cpp)
 target_include_directories (GridTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (GridTests PRIVATE ActsCore)
+target_link_libraries (GridTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME GridUnitTest COMMAND GridTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST GridUnitTest TARGETS GridTests)
 
 add_executable (InterpolationTests InterpolationTests.cpp)
 target_include_directories (InterpolationTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (InterpolationTests PRIVATE ActsCore)
+target_link_libraries (InterpolationTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME InterpolationUnitTest COMMAND InterpolationTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST InterpolationUnitTest TARGETS InterpolationTests)
 
 add_executable (BFieldMapUtilsTests BFieldMapUtilsTests.cpp)
-target_link_libraries (BFieldMapUtilsTests PRIVATE ActsCore)
+target_link_libraries (BFieldMapUtilsTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME BFieldMapUtilsTest COMMAND BFieldMapUtilsTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST BFieldMapUtilsTest TARGETS BFieldMapUtilsTests)

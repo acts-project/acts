@@ -127,15 +127,15 @@ namespace Test {
     SpacePointBuilder<DoubleHitSpacePoint> dhsp(dhsp_cfg);
     dhsp.makeClusterPairs({pmc}, {pmc2}, clusterPairs);
 
-    BOOST_TEST(clusterPairs.size() == 1, "Failed to add element");
-    BOOST_TEST(*(clusterPairs[0].first) == *pmc, "Failed to set hit");
-    BOOST_TEST(*(clusterPairs[0].second) == *pmc2, "Failed to set hit");
+    BOOST_CHECK_EQUAL(clusterPairs.size(), 1);
+    BOOST_CHECK_EQUAL(*(clusterPairs[0].first), *pmc);
+    BOOST_CHECK_EQUAL(*(clusterPairs[0].second), *pmc2);
 
     std::cout << "Calculate space point" << std::endl;
 
     dhsp.calculateSpacePoints(clusterPairs, resultSP);
 
-    BOOST_TEST(resultSP.size() == 1, "Failed to calculate space point");
+    BOOST_CHECK_EQUAL(resultSP.size(), 1);
 
     std::cout << "Create third hit" << std::endl;
 
@@ -161,7 +161,7 @@ namespace Test {
     dhsp.makeClusterPairs({pmc}, {pmc3}, clusterPairs);
 
     // Test for rejecting unconnected hits
-    BOOST_TEST(resultSP.size() == 1, "Failed to reject potential combination");
+    BOOST_CHECK_EQUAL(resultSP.size(), 1);
   }
 }  // end of namespace Test
 

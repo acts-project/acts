@@ -6,22 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE RealQuadraticEquation Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank
-
 #include <boost/test/data/test_case.hpp>
-// leave blank
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank
+// clang-format on
 
-//
+#include <limits>
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
-//
-#include <limits>
 
 using Acts::detail::RealQuadraticEquation;
 
@@ -55,9 +51,9 @@ namespace Test {
     RealQuadraticEquation equation(a, b, c);
     //
     /// Test for solutions
-    BOOST_TEST(equation.first == 2.);
-    BOOST_TEST(equation.second == 1.);
-    BOOST_TEST(equation.solutions == 2);
+    CHECK_CLOSE_REL(equation.first, 2., 1e-6);
+    CHECK_CLOSE_REL(equation.second, 1., 1e-6);
+    BOOST_CHECK_EQUAL(equation.solutions, 2);
   }
 
   /// Unit test for testing RealQuadraticEquation assignment
@@ -70,12 +66,12 @@ namespace Test {
     /// Test assignment (implicit)
     RealQuadraticEquation assignedRealQuadraticEquationObject(9., -3.5, 6.7);
     assignedRealQuadraticEquationObject = realQuadraticEquationObject;
-    BOOST_TEST(assignedRealQuadraticEquationObject.first == 2.);
-    BOOST_TEST(assignedRealQuadraticEquationObject.second == 1.);
-    BOOST_TEST(assignedRealQuadraticEquationObject.solutions == 2);
+    CHECK_CLOSE_REL(assignedRealQuadraticEquationObject.first, 2., 1e-6);
+    CHECK_CLOSE_REL(assignedRealQuadraticEquationObject.second, 1., 1e-6);
+    BOOST_CHECK_EQUAL(assignedRealQuadraticEquationObject.solutions, 2);
     /// equality not written and not implicit
-    // BOOST_TEST(assignedRealQuadraticEquationObject ==
-    // realQuadraticEquationObject);
+    // BOOST_CHECK_EQUAL(assignedRealQuadraticEquationObject,
+    //                   realQuadraticEquationObject);
   }
   BOOST_AUTO_TEST_SUITE_END()
 

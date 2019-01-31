@@ -6,24 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Navigator Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include <memory>
+
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -174,28 +171,27 @@ namespace Test {
     // - and thus should call a return to the stepper
     navigator.status(state);
     // Check that the currentVolume is set
-    BOOST_TEST((state.navigation.currentVolume != nullptr));
+    BOOST_CHECK_NE(state.navigation.currentVolume, nullptr);
     // Check that the currentVolume is the startVolume
-    BOOST_TEST(
-        (state.navigation.currentVolume == state.navigation.startVolume));
+    BOOST_CHECK_EQUAL(state.navigation.currentVolume,
+                      state.navigation.startVolume);
     // Check that the currentSurface is reset to:
-    BOOST_TEST((state.navigation.currentSurface == nullptr));
+    BOOST_CHECK_EQUAL(state.navigation.currentSurface, nullptr);
     // No layer has been found
-    BOOST_TEST((state.navigation.navLayers.size() == 0));
+    BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 0);
     // ACTORS-ABORTERS-TARGET
     navigator.target(state);
     // A layer has been found
-    BOOST_TEST((state.navigation.navLayers.size() == 1));
+    BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1);
     // The iterator should points to the begin
-    BOOST_TEST(
-        (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
+    BOOST_CHECK(state.navigation.navLayerIter
+                == state.navigation.navLayers.begin());
     // Cache the beam pipe radius
     double beamPipeRadius
         = perp(state.navigation.navLayerIter->intersection.position);
     // step size has been updated
-    BOOST_CHECK_CLOSE_FRACTION(static_cast<double>(state.stepping.stepSize),
-                               beamPipeRadius,
-                               s_onSurfaceTolerance);
+    CHECK_CLOSE_ABS(
+        state.stepping.stepSize, beamPipeRadius, s_onSurfaceTolerance);
     if (debug) {
       std::cout << "<<< Test 1a >>> initialize at "
                 << toString(state.stepping.position()) << std::endl;
@@ -211,12 +207,12 @@ namespace Test {
     // STATUS
     navigator.status(state);
     // Check that the currentVolume is the still startVolume
-    BOOST_TEST(
-        (state.navigation.currentVolume == state.navigation.startVolume));
+    BOOST_CHECK_EQUAL(state.navigation.currentVolume,
+                      state.navigation.startVolume);
     // The layer number has not changed
-    BOOST_TEST((state.navigation.navLayers.size() == 1));
+    BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1);
     // The iterator still points to the begin
-    BOOST_TEST(
+    BOOST_CHECK(
         (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
     // ACTORS-ABORTERS-TARGET
     navigator.target(state);

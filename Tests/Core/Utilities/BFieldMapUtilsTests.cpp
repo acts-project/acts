@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE bfield utils test
-
 #include <boost/test/included/unit_test.hpp>
-
 #include <boost/test/data/test_case.hpp>
+// clang-format on
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BFieldMapUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -50,13 +52,13 @@ namespace Test {
     std::vector<size_t> nBins_rz  = {rPos.size(), zPos.size()};
     std::vector<double> minima_rz = {0., 0.};
     std::vector<double> maxima_rz = {3., 3.};
-    BOOST_TEST(mapper_rz.getNBins() == nBins_rz);
+    BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_TEST(mapper_rz.getMin() == minima_rz);
+    BOOST_CHECK(mapper_rz.getMin() == minima_rz);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_TEST(mapper_rz.getMax() == maxima_rz);
+    BOOST_CHECK(mapper_rz.getMax() == maxima_rz);
 
     // create b field in xyz
     std::vector<Acts::Vector3D> bField_xyz;
@@ -78,13 +80,13 @@ namespace Test {
     std::vector<size_t> nBins_xyz  = {xPos.size(), yPos.size(), zPos.size()};
     std::vector<double> minima_xyz = {0., 0., 0.};
     std::vector<double> maxima_xyz = {3., 3., 3.};
-    BOOST_TEST(mapper_xyz.getNBins() == nBins_xyz);
+    BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_TEST(mapper_xyz.getMin() == minima_xyz);
+    BOOST_CHECK(mapper_xyz.getMin() == minima_xyz);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_TEST(mapper_xyz.getMax() == maxima_xyz);
+    BOOST_CHECK(mapper_xyz.getMax() == maxima_xyz);
 
     // check if filled value is expected value in rz
     Acts::Vector3D pos0_rz(0., 0., 0.);
@@ -105,12 +107,12 @@ namespace Test {
     Acts::Vector3D bField2_rz(0., b2_rz.x(), b2_rz.y());
     // check the value
     // in rz case field is phi symmetric (check radius)
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(bField0_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), bField0_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(perp(value1_rz), perp(bField1_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value1_rz.z(), bField1_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(perp(value2_rz), perp(bField2_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value2_rz.z(), bField2_rz.z(), 10e-10);
+    CHECK_CLOSE_ABS(perp(value0_rz), perp(bField0_rz), 1e-9);
+    CHECK_CLOSE_ABS(value0_rz.z(), bField0_rz.z(), 1e-9);
+    CHECK_CLOSE_ABS(perp(value1_rz), perp(bField1_rz), 1e-9);
+    CHECK_CLOSE_ABS(value1_rz.z(), bField1_rz.z(), 1e-9);
+    CHECK_CLOSE_ABS(perp(value2_rz), perp(bField2_rz), 1e-9);
+    CHECK_CLOSE_ABS(value2_rz.z(), bField2_rz.z(), 1e-9);
 
     // check if filled value is expected value in rz
     Acts::Vector3D pos0_xyz(0., 0., 0.);
@@ -127,23 +129,15 @@ namespace Test {
     auto b2_xyz = bField_xyz.at(localToGlobalBin_xyz(
         {{2, 2, 2}}, {{xPos.size(), yPos.size(), zPos.size()}}));
     // check the value
-    BOOST_TEST(value0_xyz == b0_xyz);
-    BOOST_TEST(value1_xyz == b1_xyz);
-    BOOST_TEST(value2_xyz == b2_xyz);
+    BOOST_CHECK_EQUAL(value0_xyz, b0_xyz);
+    BOOST_CHECK_EQUAL(value1_xyz, b1_xyz);
+    BOOST_CHECK_EQUAL(value2_xyz, b2_xyz);
 
     // checkx-,y-,z-symmetry - need to check close (because of interpolation
     // there can be small differences)
-    BOOST_CHECK_CLOSE(value0_xyz.x(), b0_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), b0_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), b0_xyz.z(), 10e-10);
-
-    BOOST_CHECK_CLOSE(value1_xyz.x(), b1_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value1_xyz.y(), b1_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value1_xyz.z(), b1_xyz.z(), 10e-10);
-
-    BOOST_CHECK_CLOSE(value2_xyz.x(), b2_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value2_xyz.y(), b2_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value2_xyz.z(), b2_xyz.z(), 10e-10);
+    CHECK_CLOSE_ABS(value0_xyz, b0_xyz, 1e-9);
+    CHECK_CLOSE_ABS(value1_xyz, b1_xyz, 1e-9);
+    CHECK_CLOSE_ABS(value2_xyz, b2_xyz, 1e-9);
   }
 
   BOOST_AUTO_TEST_CASE(bfield_symmetry)
@@ -174,15 +168,15 @@ namespace Test {
     std::vector<size_t> nBins_rz  = {rPos.size(), 2 * zPos.size() - 1};
     std::vector<double> minima_rz = {0., -2.};
     std::vector<double> maxima_rz = {3., 3.};
-    BOOST_TEST(mapper_rz.getNBins() == nBins_rz);
+    BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
     auto vec  = mapper_rz.getNBins();
     auto vec0 = mapper_rz.getMin();
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_TEST(mapper_rz.getMin() == minima_rz);
+    BOOST_CHECK(mapper_rz.getMin() == minima_rz);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_TEST(mapper_rz.getMax() == maxima_rz);
+    BOOST_CHECK(mapper_rz.getMax() == maxima_rz);
 
     // the bfield values in xyz
     std::vector<Acts::Vector3D> bField_xyz;
@@ -209,13 +203,13 @@ namespace Test {
         = {2 * xPos.size() - 1, 2 * yPos.size() - 1, 2 * zPos.size() - 1};
     std::vector<double> minima_xyz = {-2., -2., -2.};
     std::vector<double> maxima_xyz = {3., 3., 3.};
-    BOOST_TEST(mapper_xyz.getNBins() == nBins_xyz);
+    BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_TEST(mapper_xyz.getMin() == minima_xyz);
+    BOOST_CHECK(mapper_xyz.getMin() == minima_xyz);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_TEST(mapper_xyz.getMax() == maxima_xyz);
+    BOOST_CHECK(mapper_xyz.getMax() == maxima_xyz);
 
     Acts::Vector3D pos0(1.2, 1.3, 1.4);
     Acts::Vector3D pos1(1.2, 1.3, -1.4);
@@ -236,32 +230,21 @@ namespace Test {
     auto value4_xyz = mapper_xyz.getField(pos4);
 
     // check z- and phi-symmetry
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value1_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), value1_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value2_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), value2_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value3_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), value3_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value4_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), value4_rz.z(), 10e-10);
+    CHECK_CLOSE_REL(perp(value0_rz), perp(value1_rz), 1e-10);
+    CHECK_CLOSE_REL(value0_rz.z(), value1_rz.z(), 1e-10);
+    CHECK_CLOSE_REL(perp(value0_rz), perp(value2_rz), 1e-10);
+    CHECK_CLOSE_REL(value0_rz.z(), value2_rz.z(), 1e-10);
+    CHECK_CLOSE_REL(perp(value0_rz), perp(value3_rz), 1e-10);
+    CHECK_CLOSE_REL(value0_rz.z(), value3_rz.z(), 1e-10);
+    CHECK_CLOSE_REL(perp(value0_rz), perp(value4_rz), 1e-10);
+    CHECK_CLOSE_REL(value0_rz.z(), value4_rz.z(), 1e-10);
 
     // checkx-,y-,z-symmetry - need to check close (because of interpolation
     // there can be small differences)
-    BOOST_CHECK_CLOSE(value0_xyz.x(), value1_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), value1_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), value1_xyz.z(), 10e-10);
-
-    BOOST_CHECK_CLOSE(value0_xyz.x(), value2_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), value2_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), value2_xyz.z(), 10e-10);
-
-    BOOST_CHECK_CLOSE(value0_xyz.x(), value3_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), value3_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), value3_xyz.z(), 10e-10);
-
-    BOOST_CHECK_CLOSE(value0_xyz.x(), value4_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), value4_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), value4_xyz.z(), 10e-10);
+    CHECK_CLOSE_REL(value0_xyz, value1_xyz, 1e-10);
+    CHECK_CLOSE_REL(value0_xyz, value2_xyz, 1e-10);
+    CHECK_CLOSE_REL(value0_xyz, value3_xyz, 1e-10);
+    CHECK_CLOSE_REL(value0_xyz, value4_xyz, 1e-10);
   }
 
   /// Unit test for testing the decomposeToSurfaces() function
@@ -325,15 +308,13 @@ namespace Test {
     std::vector<size_t> nBins_rz  = {rPos.size(), 2 * zPos.size() - 1};
     std::vector<double> minima_rz = {0., -((nBins - 1) * stepZ)};
     std::vector<double> maxima_rz = {nBins * stepR, nBins * stepZ};
-    BOOST_TEST(mapper_rz.getNBins() == nBins_rz);
+    BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_CHECK_CLOSE(mapper_rz.getMin().at(0), minima_rz.at(0), 10e-10);
-    BOOST_CHECK_CLOSE(mapper_rz.getMin().at(1), minima_rz.at(1), 10e-10);
+    CHECK_CLOSE_ABS(mapper_rz.getMin(), minima_rz, 1e-10);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_CHECK_CLOSE(mapper_rz.getMax().at(0), maxima_rz.at(0), 10e-10);
-    BOOST_CHECK_CLOSE(mapper_rz.getMax().at(1), maxima_rz.at(1), 10e-10);
+    CHECK_CLOSE_ABS(mapper_rz.getMax(), maxima_rz, 1e-10);
 
     // bfield in xyz
     std::vector<Acts::Vector3D> bField_xyz;
@@ -361,15 +342,13 @@ namespace Test {
         -((nBins - 1) * stepR), -((nBins - 1) * stepR), -((nBins - 1) * stepZ)};
     std::vector<double> maxima_xyz
         = {nBins * stepR, nBins * stepR, nBins * stepZ};
-    BOOST_TEST(mapper_xyz.getNBins() == nBins_xyz);
+    BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
     // check minimum (should be first value because bin values are always
     // assigned to the left boundary)
-    BOOST_CHECK_CLOSE(mapper_xyz.getMin().at(0), minima_xyz.at(0), 10e-10);
-    BOOST_CHECK_CLOSE(mapper_xyz.getMin().at(1), minima_xyz.at(1), 10e-10);
+    CHECK_CLOSE_REL(mapper_xyz.getMin(), minima_xyz, 1e-10);
     // check maximum (should be last value + 1 step because bin values are
     // always assigned to the left boundary)
-    BOOST_CHECK_CLOSE(mapper_xyz.getMax().at(0), maxima_xyz.at(0), 10e-10);
-    BOOST_CHECK_CLOSE(mapper_xyz.getMax().at(1), maxima_xyz.at(1), 10e-10);
+    CHECK_CLOSE_REL(mapper_xyz.getMax(), maxima_xyz, 1e-10);
 
     Acts::Vector3D pos0(x, y, z);
     Acts::Vector3D pos1(x, y, -z);
@@ -384,14 +363,14 @@ namespace Test {
     auto value4_rz = mapper_rz.getField(pos4);
 
     // check z- and phi-symmetry
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value1_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), value1_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value2_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), value2_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value3_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), value3_rz.z(), 10e-10);
-    BOOST_CHECK_CLOSE(perp(value0_rz), perp(value4_rz), 10e-10);
-    BOOST_CHECK_CLOSE(value0_rz.z(), value4_rz.z(), 10e-10);
+    CHECK_CLOSE_REL(perp(value0_rz), perp(value1_rz), 1e-10);
+    CHECK_CLOSE_REL(value0_rz.z(), value1_rz.z(), 1e-10);
+    CHECK_CLOSE_REL(perp(value0_rz), perp(value2_rz), 1e-10);
+    CHECK_CLOSE_REL(value0_rz.z(), value2_rz.z(), 1e-10);
+    CHECK_CLOSE_REL(perp(value0_rz), perp(value3_rz), 1e-10);
+    CHECK_CLOSE_REL(value0_rz.z(), value3_rz.z(), 1e-10);
+    CHECK_CLOSE_REL(perp(value0_rz), perp(value4_rz), 1e-10);
+    CHECK_CLOSE_REL(value0_rz.z(), value4_rz.z(), 1e-10);
 
     auto value0_xyz = mapper_xyz.getField(pos0);
     auto value1_xyz = mapper_xyz.getField(pos1);
@@ -401,21 +380,10 @@ namespace Test {
 
     // checkx-,y-,z-symmetry - need to check close (because of interpolation
     // there can be small differences)
-    BOOST_CHECK_CLOSE(value0_xyz.x(), value1_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), value1_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), value1_xyz.z(), 10e-10);
-
-    BOOST_CHECK_CLOSE(value0_xyz.x(), value2_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), value2_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), value2_xyz.z(), 10e-10);
-
-    BOOST_CHECK_CLOSE(value0_xyz.x(), value3_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), value3_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), value3_xyz.z(), 10e-10);
-
-    BOOST_CHECK_CLOSE(value0_xyz.x(), value4_xyz.x(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.y(), value4_xyz.y(), 10e-10);
-    BOOST_CHECK_CLOSE(value0_xyz.z(), value4_xyz.z(), 10e-10);
+    CHECK_CLOSE_REL(value0_xyz, value1_xyz, 1e-10);
+    CHECK_CLOSE_REL(value0_xyz, value2_xyz, 1e-10);
+    CHECK_CLOSE_REL(value0_xyz, value3_xyz, 1e-10);
+    CHECK_CLOSE_REL(value0_xyz, value4_xyz, 1e-10);
   }
 }
 }

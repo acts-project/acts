@@ -139,7 +139,7 @@ namespace Test {
     }
 
     // now we need to be smaller than the tolerance
-    BOOST_CHECK(state.stepping.stepSize < 1. * units::_um);
+    BOOST_CHECK_LT(state.stepping.stepSize, 1. * units::_um);
 
     // Check if you can expand the AbortList
     EndOfWorld eow;

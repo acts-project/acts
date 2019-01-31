@@ -6,11 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Material Composition Tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include <climits>
+
 #include "Acts/Material/Material.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
@@ -37,11 +41,9 @@ namespace Test {
 
     // check if you get the element and the fraction back
     BOOST_CHECK_EQUAL(12ul, carbonEFC.element());
-    BOOST_CHECK_CLOSE(
-        carbonFractionFloat, carbonEFC.fraction(), elMaxTolerance);
+    CHECK_CLOSE_REL(carbonFractionFloat, carbonEFC.fraction(), elMaxTolerance);
     BOOST_CHECK_EQUAL(12ul, carbonEFF.element());
-    BOOST_CHECK_CLOSE(
-        carbonFractionFloat, carbonEFF.fraction(), elMaxTolerance);
+    CHECK_CLOSE_REL(carbonFractionFloat, carbonEFF.fraction(), elMaxTolerance);
   }
 
   BOOST_AUTO_TEST_CASE(ElementFraction_movable_test)
@@ -56,11 +58,11 @@ namespace Test {
     ElementFraction carbonMoved(std::move(carbon));
 
     BOOST_CHECK_EQUAL(12ul, carbonMoved.element());
-    BOOST_CHECK_CLOSE(carbonFraction, carbonMoved.fraction(), elMaxTolerance);
+    CHECK_CLOSE_REL(carbonFraction, carbonMoved.fraction(), elMaxTolerance);
 
     ElementFraction carbonMovedAssigned = std::move(carbonMoved);
     BOOST_CHECK_EQUAL(12ul, carbonMovedAssigned.element());
-    BOOST_CHECK_CLOSE(
+    CHECK_CLOSE_REL(
         carbonFraction, carbonMovedAssigned.fraction(), elMaxTolerance);
   }
 
@@ -118,8 +120,8 @@ namespace Test {
       totalFraction += eFraction.fraction();
     }
     // to better fit we need to implement some proper weight scaling
-    BOOST_TEST(std::abs(1. - totalFraction)
-               < elementsC.elements().size() * elMaxTolerance);
+    BOOST_CHECK_LT(std::abs(1. - totalFraction),
+                   elementsC.elements().size() * elMaxTolerance);
   }
 
   BOOST_AUTO_TEST_CASE(MaterialComposition_movable_test)

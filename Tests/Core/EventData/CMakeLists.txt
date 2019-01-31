@@ -1,6 +1,6 @@
 add_executable (ParameterSetTests ParameterSetTests.cpp)
 target_include_directories (ParameterSetTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (ParameterSetTests PRIVATE ActsCore)
+target_link_libraries (ParameterSetTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME ParameterSetUnitTest COMMAND ParameterSetTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST ParameterSetUnitTest TARGETS ParameterSetTests)
 
@@ -12,13 +12,13 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST MeasurementUnitTest TARGETS M
 
 add_executable (CurvilinearParametersTests CurvilinearParametersTests.cpp)
 target_include_directories (CurvilinearParametersTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (CurvilinearParametersTests PRIVATE ActsCore)
+target_link_libraries (CurvilinearParametersTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME CurvilinearParametersUnitTests COMMAND CurvilinearParametersTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST CurvilinearParametersUnitTests TARGETS CurvilinearParametersTests)
 
 add_executable (BoundParametersTests BoundParametersTests.cpp)
 target_include_directories (BoundParametersTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (BoundParametersTests PRIVATE ActsCore)
+target_link_libraries (BoundParametersTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME BoundParametersUnitTests COMMAND BoundParametersTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST BoundParametersUnitTests TARGETS BoundParametersTests)
 

@@ -235,13 +235,13 @@ namespace Test {
       Vector3D                    ctr        = srf->binningPosition(binR);
       std::vector<const Surface*> binContent = sa.at(ctr);
 
-      BOOST_TEST(binContent.size() == 1);
-      BOOST_TEST(srf.get() == binContent.at(0));
+      BOOST_CHECK_EQUAL(binContent.size(), 1);
+      BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
     }
 
     std::vector<const Surface*> neighbors
         = sa.neighbors(itransform(Vector2D(0, 0)));
-    BOOST_TEST(neighbors.size() == 9);
+    BOOST_CHECK_EQUAL(neighbors.size(), 9);
 
     auto sl2
         = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
@@ -257,8 +257,8 @@ namespace Test {
       Vector3D                    ctr        = srf->binningPosition(binR);
       std::vector<const Surface*> binContent = sa2.at(ctr);
 
-      BOOST_TEST(binContent.size() == 1);
-      BOOST_TEST(srf.get() == binContent.at(0));
+      BOOST_CHECK_EQUAL(binContent.size(), 1);
+      BOOST_CHECK_EQUAL(srf.get(), binContent.at(0));
     }
   }
 
@@ -273,10 +273,10 @@ namespace Test {
     SurfaceArray sa(srf);
 
     auto binContent = sa.at(Vector3D(42, 42, 42));
-    BOOST_TEST(binContent.size() == 1);
-    BOOST_TEST(binContent.at(0) == srf.get());
-    BOOST_TEST(sa.surfaces().size() == 1);
-    BOOST_TEST(sa.surfaces().at(0) == srf.get());
+    BOOST_CHECK_EQUAL(binContent.size(), 1);
+    BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
+    BOOST_CHECK_EQUAL(sa.surfaces().size(), 1);
+    BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArray_toVariantData, SurfaceArrayFixture)
@@ -315,31 +315,32 @@ namespace Test {
     // std::cout << data << std::endl;
 
     const variant_map& var_map = boost::get<variant_map>(data);
-    BOOST_TEST(var_map.get<std::string>("type") == "SurfaceArray");
+    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "SurfaceArray");
     const variant_map& sa_var_pl = var_map.get<variant_map>("payload");
-    BOOST_TEST(sa_var_pl.count("surfacegridlookup") == 1);
+    BOOST_CHECK_EQUAL(sa_var_pl.count("surfacegridlookup"), 1);
     const variant_map& sgl_var_pl
         = sa_var_pl.get<variant_map>("surfacegridlookup")
               .get<variant_map>("payload");
-    BOOST_TEST(sgl_var_pl.get<int>("dimensions") == 2);
+    BOOST_CHECK_EQUAL(sgl_var_pl.get<int>("dimensions"), 2);
     const variant_vector& axes = sgl_var_pl.get<variant_vector>("axes");
-    BOOST_TEST(axes.size() == 2);
+    BOOST_CHECK_EQUAL(axes.size(), 2);
 
     const variant_map& phiAxis_pl
         = axes.get<variant_map>(0).get<variant_map>("payload");
-    BOOST_TEST(phiAxis_pl.get<std::string>("axisboundarytype") == "closed");
-    BOOST_TEST(phiAxis_pl.get<std::string>("axistype") == "equidistant");
+    BOOST_CHECK_EQUAL(phiAxis_pl.get<std::string>("axisboundarytype"),
+                      "closed");
+    BOOST_CHECK_EQUAL(phiAxis_pl.get<std::string>("axistype"), "equidistant");
     BOOST_CHECK_EQUAL(phiAxis_pl.get<double>("min"), -M_PI);
     BOOST_CHECK_EQUAL(phiAxis_pl.get<double>("max"), M_PI);
-    BOOST_TEST(phiAxis_pl.get<int>("nbins") == 30);
+    BOOST_CHECK_EQUAL(phiAxis_pl.get<int>("nbins"), 30);
 
     const variant_map& zAxis_pl
         = axes.get<variant_map>(1).get<variant_map>("payload");
-    BOOST_TEST(zAxis_pl.get<std::string>("axisboundarytype") == "bound");
-    BOOST_TEST(zAxis_pl.get<std::string>("axistype") == "variable");
+    BOOST_CHECK_EQUAL(zAxis_pl.get<std::string>("axisboundarytype"), "bound");
+    BOOST_CHECK_EQUAL(zAxis_pl.get<std::string>("axistype"), "variable");
     const variant_vector& zAxis_bin_edges
         = zAxis_pl.get<variant_vector>("bin_edges");
-    BOOST_TEST(zAxis_bin_edges.size() == 6);
+    BOOST_CHECK_EQUAL(zAxis_bin_edges.size(), 6);
     for (size_t i = 0; i < zAxis_bin_edges.size(); i++) {
       BOOST_CHECK_EQUAL(zAxis_bin_edges.get<double>(i),
                         zAxis_bin_edges_exp.at(i));
@@ -353,7 +354,7 @@ namespace Test {
     std::string                           dumpExp = dumpExp_os.str();
     boost::test_tools::output_test_stream dumpAct;
     sa2.dump(dumpAct);
-    BOOST_TEST(dumpAct.is_equal(dumpExp));
+    BOOST_CHECK(dumpAct.is_equal(dumpExp));
   }
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArray_toVariantData_1D, SurfaceArrayFixture)
@@ -382,23 +383,23 @@ namespace Test {
     // std::cout << data << std::endl;
 
     const variant_map& var_map = boost::get<variant_map>(data);
-    BOOST_TEST(var_map.get<std::string>("type") == "SurfaceArray");
+    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "SurfaceArray");
     const variant_map& sa_var_pl = var_map.get<variant_map>("payload");
-    BOOST_TEST(sa_var_pl.count("surfacegridlookup") == 1);
+    BOOST_CHECK_EQUAL(sa_var_pl.count("surfacegridlookup"), 1);
     const variant_map& sgl_var_pl
         = sa_var_pl.get<variant_map>("surfacegridlookup")
               .get<variant_map>("payload");
-    BOOST_TEST(sgl_var_pl.get<int>("dimensions") == 1);
+    BOOST_CHECK_EQUAL(sgl_var_pl.get<int>("dimensions"), 1);
     const variant_vector& axes = sgl_var_pl.get<variant_vector>("axes");
-    BOOST_TEST(axes.size() == 1);
+    BOOST_CHECK_EQUAL(axes.size(), 1);
 
     const variant_map& zAxis_pl
         = axes.get<variant_map>(0).get<variant_map>("payload");
-    BOOST_TEST(zAxis_pl.get<std::string>("axisboundarytype") == "bound");
-    BOOST_TEST(zAxis_pl.get<std::string>("axistype") == "equidistant");
+    BOOST_CHECK_EQUAL(zAxis_pl.get<std::string>("axisboundarytype"), "bound");
+    BOOST_CHECK_EQUAL(zAxis_pl.get<std::string>("axistype"), "equidistant");
     BOOST_CHECK_EQUAL(zAxis_pl.get<double>("min"), 0);
     BOOST_CHECK_EQUAL(zAxis_pl.get<double>("max"), 30);
-    BOOST_TEST(zAxis_pl.get<int>("nbins") == 10);
+    BOOST_CHECK_EQUAL(zAxis_pl.get<int>("nbins"), 10);
 
     SurfaceArray sa2(data, transform, itransform);
     sa2.dump(std::cout);
@@ -408,7 +409,7 @@ namespace Test {
     std::string                           dumpExp = dumpExp_os.str();
     boost::test_tools::output_test_stream dumpAct;
     sa2.dump(dumpAct);
-    BOOST_TEST(dumpAct.is_equal(dumpExp));
+    BOOST_CHECK(dumpAct.is_equal(dumpExp));
   }
 
   BOOST_AUTO_TEST_SUITE_END()

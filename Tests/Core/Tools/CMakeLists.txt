@@ -4,12 +4,12 @@ add_test (NAME CylinderVolumeBuilderUnitTest COMMAND CylinderVolumeBuilderTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST CylinderVolumeBuilderUnitTest TARGETS CylinderVolumeBuilderTests)
 
 add_executable (SurfaceArrayCreatorTests SurfaceArrayCreatorTests.cpp)
-target_link_libraries (SurfaceArrayCreatorTests PRIVATE ActsCore)
+target_link_libraries (SurfaceArrayCreatorTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME SurfaceArrayCreatorUnitTest COMMAND SurfaceArrayCreatorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST SurfaceArrayCreatorUnitTest TARGETS SurfaceArrayCreatorTests)
 
 add_executable (LayerCreatorTests LayerCreatorTests.cpp)
-target_link_libraries (LayerCreatorTests PRIVATE ActsCore)
+target_link_libraries (LayerCreatorTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME LayerCreatorUnitTest COMMAND LayerCreatorTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST LayerCreatorUnitTest TARGETS LayerCreatorTests)
 

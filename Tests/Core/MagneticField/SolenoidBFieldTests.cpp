@@ -7,18 +7,19 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 /// @file SolenoidBFieldTests.cpp
-#define BOOST_TEST_MODULE Solenoid magnetic field tests
 
 // clang-format off
+#define BOOST_TEST_MODULE Solenoid magnetic field tests
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/floating_point_comparison.hpp>
-#include "Acts/MagneticField/SolenoidBField.hpp"
-#include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Units.hpp"
 // clang-format on
 
 #include <fstream>
+
+#include "Acts/MagneticField/SolenoidBField.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -37,8 +38,9 @@ namespace Test {
     SolenoidBField bField(cfg);
 
     SolenoidBField::Cache cache;
-    BOOST_TEST(bField.getField({0, 0, 0}, cache)
-                   .isApprox(Vector3D(0, 0, 2.0 * Acts::units::_T)));
+    CHECK_CLOSE_ABS(bField.getField({0, 0, 0}, cache),
+                    Vector3D(0, 0, 2.0 * Acts::units::_T),
+                    1e-6 * Acts::units::_T);
 
     // std::ofstream outf("solenoid.csv");
     // outf << "x;y;z;B_x;B_y;B_z" << std::endl;
@@ -52,11 +54,11 @@ namespace Test {
       {
         Vector3D B1 = bField.getField({r, 0, 0}, cache);
         Vector3D B2 = bField.getField({-r, 0, 0}, cache);
-        BOOST_CHECK_SMALL(B1.x(), tol);
-        BOOST_CHECK_SMALL(B1.y(), tol);
-        BOOST_TEST(std::abs(B1.z()) > tol_B);  // greater than zero
+        CHECK_SMALL(B1.x(), tol);
+        CHECK_SMALL(B1.y(), tol);
+        BOOST_CHECK_GT(std::abs(B1.z()), tol_B);  // greater than zero
         // check symmetry: at z=0 it should be exactly symmetric
-        BOOST_TEST(B1.isApprox(B2));
+        CHECK_CLOSE_ABS(B1, B2, tol_B);
 
         // at this point in r, go along the length
         for (size_t j = 0; j <= steps; j++) {
@@ -85,25 +87,25 @@ namespace Test {
             //}
 
             // non-zero z
-            BOOST_TEST(std::abs(B_zp_rp.z()) > tol_B);
-            BOOST_TEST(std::abs(B_zn_rp.z()) > tol_B);
-            BOOST_TEST(std::abs(B_zn_rn.z()) > tol_B);
-            BOOST_TEST(std::abs(B_zp_rn.z()) > tol_B);
+            BOOST_CHECK_GT(std::abs(B_zp_rp.z()), tol_B);
+            BOOST_CHECK_GT(std::abs(B_zn_rp.z()), tol_B);
+            BOOST_CHECK_GT(std::abs(B_zn_rn.z()), tol_B);
+            BOOST_CHECK_GT(std::abs(B_zp_rn.z()), tol_B);
             if (i > 0) {
               // z components should be the same for +- r
-              BOOST_CHECK_CLOSE(B_zp_rp.z(), B_zp_rn.z(), tol);
-              BOOST_CHECK_CLOSE(B_zn_rp.z(), B_zn_rn.z(), tol);
+              CHECK_CLOSE_ABS(B_zp_rp.z(), B_zp_rn.z(), tol_B);
+              CHECK_CLOSE_ABS(B_zn_rp.z(), B_zn_rn.z(), tol_B);
               // x components should be exactly opposite
-              BOOST_CHECK_CLOSE(B_zp_rp.x(), -B_zp_rn.x(), tol);
-              BOOST_CHECK_CLOSE(B_zn_rp.x(), -B_zn_rn.x(), tol);
+              CHECK_CLOSE_ABS(B_zp_rp.x(), -B_zp_rn.x(), tol_B);
+              CHECK_CLOSE_ABS(B_zn_rp.x(), -B_zn_rn.x(), tol_B);
             }
             if (j > 0) {
               // z components should be the same for +- z
-              BOOST_CHECK_CLOSE(B_zp_rp.z(), B_zn_rp.z(), tol);
-              BOOST_CHECK_CLOSE(B_zp_rn.z(), B_zn_rn.z(), tol);
+              CHECK_CLOSE_ABS(B_zp_rp.z(), B_zn_rp.z(), tol_B);
+              CHECK_CLOSE_ABS(B_zp_rn.z(), B_zn_rn.z(), tol_B);
               // x components should be exactly opposite
-              BOOST_CHECK_CLOSE(B_zp_rp.x(), -B_zn_rp.x(), tol);
-              BOOST_CHECK_CLOSE(B_zp_rn.x(), -B_zn_rn.x(), tol);
+              CHECK_CLOSE_ABS(B_zp_rp.x(), -B_zn_rp.x(), tol_B);
+              CHECK_CLOSE_ABS(B_zp_rn.x(), -B_zn_rn.x(), tol_B);
             }
           }
         }

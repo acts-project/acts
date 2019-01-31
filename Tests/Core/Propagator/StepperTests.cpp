@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-///  Boost include(s)
+// clang-format off
 #define BOOST_TEST_MODULE Stepper Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
+// clang-format on
 
 #include <fstream>
+
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
@@ -21,6 +21,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -176,15 +177,13 @@ namespace Test {
 
     // Check that the propagation happend without interactions
     for (const auto& pos : stepResult.position) {
-      BOOST_TEST(pos.y() == 0.);
-      BOOST_TEST(pos.z() == 0.);
+      CHECK_SMALL(pos.y(), 1. * units::_um);
+      CHECK_SMALL(pos.z(), 1. * units::_um);
       if (pos == stepResult.position.back())
-        BOOST_TEST(pos.x() == 1. * units::_m);
+        CHECK_CLOSE_ABS(pos.x(), 1. * units::_m, 1. * units::_um);
     }
     for (const auto& mom : stepResult.momentum) {
-      BOOST_TEST(mom.x() == 1. * units::_GeV);
-      BOOST_TEST(mom.y() == 0.);
-      BOOST_TEST(mom.z() == 0.);
+      CHECK_CLOSE_ABS(mom, startMom, 1. * units::_keV);
     }
 
     // Rebuild and check the choice of extension
@@ -217,11 +216,13 @@ namespace Test {
     // If chosen correctly, the number of elements should be identical
     BOOST_TEST(stepResult.position.size() == stepResultDef.position.size());
     for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-      BOOST_TEST(stepResult.position[i] == stepResultDef.position[i]);
+      CHECK_CLOSE_ABS(
+          stepResult.position[i], stepResultDef.position[i], 1. * units::_um);
     }
     BOOST_TEST(stepResult.momentum.size() == stepResultDef.momentum.size());
     for (unsigned int i = 0; i < stepResult.momentum.size(); i++) {
-      BOOST_TEST(stepResult.momentum[i] == stepResultDef.momentum[i]);
+      CHECK_CLOSE_ABS(
+          stepResult.momentum[i], stepResultDef.momentum[i], 1. * units::_keV);
     }
   }
   // Test case b). The DefaultExtension should state that it is invalid here.
@@ -296,21 +297,21 @@ namespace Test {
 
     // Check that there occured interaction
     for (const auto& pos : stepResult.position) {
-      BOOST_TEST(pos.y() == 0.);
-      BOOST_TEST(pos.z() == 0.);
+      CHECK_SMALL(pos.y(), 1. * units::_um);
+      CHECK_SMALL(pos.z(), 1. * units::_um);
       if (pos == stepResult.position.front()) {
-        BOOST_TEST(pos.x() == 0.);
+        CHECK_SMALL(pos.x(), 1. * units::_um);
       } else {
-        BOOST_TEST(pos.x() != 0.);
+        BOOST_CHECK_GT(std::abs(pos.x()), 1. * units::_um);
       }
     }
     for (const auto& mom : stepResult.momentum) {
-      BOOST_TEST(mom.y() == 0.);
-      BOOST_TEST(mom.z() == 0.);
+      CHECK_SMALL(mom.y(), 1. * units::_keV);
+      CHECK_SMALL(mom.z(), 1. * units::_keV);
       if (mom == stepResult.momentum.front()) {
-        BOOST_TEST(mom.x() == 5. * units::_GeV);
+        CHECK_CLOSE_ABS(mom.x(), 5. * units::_GeV, 1. * units::_keV);
       } else {
-        BOOST_TEST(mom.x() < 5. * units::_GeV);
+        BOOST_CHECK_LT(mom.x(), 5. * units::_GeV);
       }
     }
 
@@ -345,11 +346,14 @@ namespace Test {
     // If chosen correctly, the number of elements should be identical
     BOOST_TEST(stepResult.position.size() == stepResultDense.position.size());
     for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-      BOOST_TEST(stepResult.position[i] == stepResultDense.position[i]);
+      CHECK_CLOSE_ABS(
+          stepResult.position[i], stepResultDense.position[i], 1. * units::_um);
     }
     BOOST_TEST(stepResult.momentum.size() == stepResultDense.momentum.size());
     for (unsigned int i = 0; i < stepResult.momentum.size(); i++) {
-      BOOST_TEST(stepResult.momentum[i] == stepResultDense.momentum[i]);
+      CHECK_CLOSE_ABS(stepResult.momentum[i],
+                      stepResultDense.momentum[i],
+                      1. * units::_keV);
     }
 
     ////////////////////////////////////////////////////////////////////
@@ -377,24 +381,20 @@ namespace Test {
     // Check that there occured interaction
     for (const auto& pos : stepResultB.position) {
       if (pos == stepResultB.position.front()) {
-        BOOST_TEST(pos.x() == 0.);
-        BOOST_TEST(pos.y() == 0.);
-        BOOST_TEST(pos.z() == 0.);
+        CHECK_SMALL(pos, 1. * units::_um);
       } else {
-        BOOST_TEST(pos.x() != 0.);
-        BOOST_TEST(pos.y() == 0.);
-        BOOST_TEST(pos.z() != 0.);
+        BOOST_CHECK_GT(std::abs(pos.x()), 1. * units::_um);
+        CHECK_SMALL(pos.y(), 1. * units::_um);
+        BOOST_CHECK_GT(std::abs(pos.z()), 1. * units::_um);
       }
     }
     for (const auto& mom : stepResultB.momentum) {
       if (mom == stepResultB.momentum.front()) {
-        BOOST_TEST(mom.x() == 5. * units::_GeV);
-        BOOST_TEST(mom.y() == 0.);
-        BOOST_TEST(mom.z() == 0.);
+        CHECK_CLOSE_ABS(mom, startMom, 1. * units::_keV);
       } else {
-        BOOST_TEST(mom.x() != 5. * units::_GeV);
-        BOOST_TEST(mom.y() == 0.);
-        BOOST_TEST(mom.z() != 0.);
+        BOOST_CHECK_NE(mom.x(), 5. * units::_GeV);
+        CHECK_SMALL(mom.y(), 1. * units::_keV);
+        BOOST_CHECK_NE(mom.z(), 0.);
       }
     }
   }
@@ -549,18 +549,8 @@ namespace Test {
       }
     }
 
-    BOOST_TEST(endParams.first.x() == endParamsControl.first.x(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.first.y() == endParamsControl.first.y(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.first.z() == endParamsControl.first.z(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.second.x() == endParamsControl.second.x(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.second.y() == endParamsControl.second.y(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.second.z() == endParamsControl.second.z(),
-               tt::tolerance(1e-5));
+    CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1. * units::_um);
+    CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1. * units::_um);
 
     // Build launcher through material
     // Set initial parameters for the particle track by using the result of the
@@ -616,18 +606,8 @@ namespace Test {
       }
     }
 
-    BOOST_TEST(endParams.first.x() == endParamsControl.first.x(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.first.y() == endParamsControl.first.y(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.first.z() == endParamsControl.first.z(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.second.x() == endParamsControl.second.x(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.second.y() == endParamsControl.second.y(),
-               tt::tolerance(1e-5));
-    BOOST_TEST(endParams.second.z() == endParamsControl.second.z(),
-               tt::tolerance(1e-5));
+    CHECK_CLOSE_ABS(endParams.first, endParamsControl.first, 1. * units::_um);
+    CHECK_CLOSE_ABS(endParams.second, endParamsControl.second, 1. * units::_um);
   }
 }  // namespace Test
 }  // namespace Acts

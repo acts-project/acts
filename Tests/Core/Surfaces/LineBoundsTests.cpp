@@ -6,19 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Line Bounds Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
 #include "Acts/Surfaces/LineBounds.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -30,18 +26,16 @@ namespace Test {
   {
     /// test default construction
     LineBounds defaultConstructedLineBounds;  // implicit
-    BOOST_TEST(defaultConstructedLineBounds.type() == SurfaceBounds::Line,
-               "Test trivial method on default constructed object");
+    BOOST_CHECK_EQUAL(defaultConstructedLineBounds.type(), SurfaceBounds::Line);
     /// test LineBounds(double, double)
     double radius(0.5), halfz(10.);
-    BOOST_TEST(LineBounds(radius, halfz).type() == SurfaceBounds::Line);
+    BOOST_CHECK_EQUAL(LineBounds(radius, halfz).type(), SurfaceBounds::Line);
     //
     LineBounds s(1);  // would act as size_t cast to LineBounds
     /// test copy construction;
     LineBounds copyConstructedLineBounds(
         defaultConstructedLineBounds);  // implicit
-    BOOST_TEST(copyConstructedLineBounds.type() == SurfaceBounds::Line,
-               "Test trivial method on copy constructed object");
+    BOOST_CHECK_EQUAL(copyConstructedLineBounds.type(), SurfaceBounds::Line);
   }
 
   /// Unit tests for LineBounds properties
@@ -55,11 +49,11 @@ namespace Test {
 
     /// test for clone
     auto pLineBoundsClone = lineBoundsObject.clone();
-    BOOST_CHECK(pLineBoundsClone != nullptr);
+    BOOST_CHECK_NE(pLineBoundsClone, nullptr);
     delete pLineBoundsClone;
 
     /// test for type()
-    BOOST_TEST(lineBoundsObject.type() == SurfaceBounds::Line);
+    BOOST_CHECK_EQUAL(lineBoundsObject.type(), SurfaceBounds::Line);
 
     /// test for inside()
     const Vector2D      origin{0., 0.};
@@ -68,22 +62,24 @@ namespace Test {
     const Vector2D      unitZ{0.0, 1.0};
     const Vector2D      unitR{1.0, 0.0};
     const BoundaryCheck trueBoundaryCheckWithTolerance(true, true, 0.1, 0.1);
-    BOOST_TEST(lineBoundsObject.inside(atRadius, trueBoundaryCheckWithTolerance)
-               == true);
+    BOOST_CHECK(
+        lineBoundsObject.inside(atRadius, trueBoundaryCheckWithTolerance));
 
     /// test for distanceToBoundary
-    BOOST_TEST(lineBoundsObject.distanceToBoundary(unitR) == 1.);  // why?
+    CHECK_CLOSE_REL(lineBoundsObject.distanceToBoundary(unitR),
+                    1.,
+                    1e-6);  // why?
 
     /// test for r()
-    BOOST_TEST(lineBoundsObject.r() == nominalRadius);
+    BOOST_CHECK_EQUAL(lineBoundsObject.r(), nominalRadius);
 
     /// test for halflengthZ (NOTE: Naming violation)
-    BOOST_TEST(lineBoundsObject.halflengthZ() == nominalHalfLength);
+    BOOST_CHECK_EQUAL(lineBoundsObject.halflengthZ(), nominalHalfLength);
 
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
     lineBoundsObject.dump(dumpOuput);
-    BOOST_TEST(dumpOuput.is_equal(
+    BOOST_CHECK(dumpOuput.is_equal(
         "Acts::LineBounds: (radius, halflengthInZ) = (0.5000000, 20.0000000)"));
   }
   /// Unit test for testing LineBounds assignment
@@ -94,9 +90,9 @@ namespace Test {
     LineBounds lineBoundsObject(nominalRadius, nominalHalfLength);
     LineBounds assignedLineBounds;
     assignedLineBounds = lineBoundsObject;
-    BOOST_TEST(assignedLineBounds.r() == lineBoundsObject.r());
-    BOOST_TEST(assignedLineBounds.halflengthZ()
-               == lineBoundsObject.halflengthZ());
+    BOOST_CHECK_EQUAL(assignedLineBounds.r(), lineBoundsObject.r());
+    BOOST_CHECK_EQUAL(assignedLineBounds.halflengthZ(),
+                      lineBoundsObject.halflengthZ());
   }
   BOOST_AUTO_TEST_SUITE_END()
 

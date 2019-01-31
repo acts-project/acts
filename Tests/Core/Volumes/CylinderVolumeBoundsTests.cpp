@@ -6,11 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Cylinder Volume Bounds Tests
 #include <boost/test/included/unit_test.hpp>
-
 #include <boost/test/data/test_case.hpp>
+// clang-format on
+
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
@@ -63,12 +66,12 @@ namespace Test {
     // Test
 
     // check if difference is halfZ - sign and direction independent
-    BOOST_TEST((pos - boundarySurfaces.at(0)->center()).norm()
-                   == cylBounds.halflengthZ(),
-               tt::tolerance(10e-12));
-    BOOST_TEST((pos - boundarySurfaces.at(1)->center()).norm()
-                   == cylBounds.halflengthZ(),
-               tt::tolerance(10e-12));
+    CHECK_CLOSE_REL((pos - boundarySurfaces.at(0)->center()).norm(),
+                    cylBounds.halflengthZ(),
+                    1e-12);
+    CHECK_CLOSE_REL((pos - boundarySurfaces.at(1)->center()).norm(),
+                    cylBounds.halflengthZ(),
+                    1e-12);
     // transform to local
     double posDiscPosZ
         = (transformPtr->inverse() * boundarySurfaces.at(1)->center()).z();
@@ -76,32 +79,28 @@ namespace Test {
     double negDiscPosZ
         = (transformPtr->inverse() * boundarySurfaces.at(0)->center()).z();
     // check if center of disc boundaries lies in the middle in z
-    BOOST_TEST((centerPosZ < posDiscPosZ));
-    BOOST_TEST((centerPosZ > negDiscPosZ));
+    BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
+    BOOST_CHECK_GT(centerPosZ, negDiscPosZ);
     // check positions of disc boundarysurfaces
     // checks for zero value. double precision value is not exact.
-    // boost's equality test does a relative tolerance check  which
-    // fails b/c relative diff is large: Perform only abs distance test here
-    BOOST_CHECK_SMALL(negDiscPosZ + cylBounds.halflengthZ() - centerPosZ,
-                      10e-12);
-    BOOST_CHECK_SMALL(posDiscPosZ - cylBounds.halflengthZ() - centerPosZ,
-                      10e-12);
+    CHECK_CLOSE_ABS(negDiscPosZ + cylBounds.halflengthZ(), centerPosZ, 1e-12);
+    CHECK_CLOSE_ABS(posDiscPosZ - cylBounds.halflengthZ(), centerPosZ, 1e-12);
     // orientation of disc surfaces
     // positive disc durface should point in positive direction in the frame of
     // the volume
-    BOOST_TEST(transformPtr->rotation().col(2).dot(
-                   boundarySurfaces.at(1)->normal(Acts::Vector2D(0., 0.)))
-                   == 1.,
-               tt::tolerance(10e-12));
+    CHECK_CLOSE_REL(transformPtr->rotation().col(2).dot(
+                        boundarySurfaces.at(1)->normal(Acts::Vector2D(0., 0.))),
+                    1.,
+                    1e-12);
     // negative disc durface should point in negative direction in the frame of
     // the volume
-    BOOST_TEST(transformPtr->rotation().col(2).dot(
-                   boundarySurfaces.at(0)->normal(Acts::Vector2D(0., 0.)))
-                   == -1.,
-               tt::tolerance(10e-12));
+    CHECK_CLOSE_REL(transformPtr->rotation().col(2).dot(
+                        boundarySurfaces.at(0)->normal(Acts::Vector2D(0., 0.))),
+                    -1.,
+                    1e-12);
     // test in r
-    BOOST_TEST(boundarySurfaces.at(3)->center() == pos, tt::tolerance(10e-12));
-    BOOST_TEST(boundarySurfaces.at(2)->center() == pos, tt::tolerance(10e-12));
+    CHECK_CLOSE_REL(boundarySurfaces.at(3)->center(), pos, 1e-12);
+    CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(), pos, 1e-12);
   }
 
 }  // namespace Test

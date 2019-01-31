@@ -6,24 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE PerigeeSurface Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
-//
 #include <limits>
+
 #include "Acts/Layers/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 
@@ -42,28 +39,30 @@ namespace Test {
     /// Constructor with Vector3D
     Vector3D unitXYZ{1., 1., 1.};
     auto perigeeSurfaceObject = Surface::makeShared<PerigeeSurface>(unitXYZ);
-    BOOST_TEST(Surface::makeShared<PerigeeSurface>(unitXYZ)->type()
-               == Surface::Perigee);
+    BOOST_CHECK_EQUAL(Surface::makeShared<PerigeeSurface>(unitXYZ)->type(),
+                      Surface::Perigee);
     //
     /// Constructor with transform pointer, null or valid
     Translation3D translation{0., 1., 2.};
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     auto          pNullTransform = std::make_shared<const Transform3D>();
-    BOOST_TEST(Surface::makeShared<PerigeeSurface>(pNullTransform)->type()
-               == Surface::Perigee);
-    BOOST_TEST(Surface::makeShared<PerigeeSurface>(pTransform)->type()
-               == Surface::Perigee);
+    BOOST_CHECK_EQUAL(
+        Surface::makeShared<PerigeeSurface>(pNullTransform)->type(),
+        Surface::Perigee);
+    BOOST_CHECK_EQUAL(Surface::makeShared<PerigeeSurface>(pTransform)->type(),
+                      Surface::Perigee);
     //
     /// Copy constructor
     auto copiedPerigeeSurface
         = Surface::makeShared<PerigeeSurface>(*perigeeSurfaceObject);
-    BOOST_TEST(copiedPerigeeSurface->type() == Surface::Perigee);
-    BOOST_TEST(*copiedPerigeeSurface == *perigeeSurfaceObject);
+    BOOST_CHECK_EQUAL(copiedPerigeeSurface->type(), Surface::Perigee);
+    BOOST_CHECK_EQUAL(*copiedPerigeeSurface, *perigeeSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedPerigeeSurface = Surface::makeShared<PerigeeSurface>(
         *perigeeSurfaceObject, *pTransform);
-    BOOST_TEST(copiedTransformedPerigeeSurface->type() == Surface::Perigee);
+    BOOST_CHECK_EQUAL(copiedTransformedPerigeeSurface->type(),
+                      Surface::Perigee);
   }
   //
   /// Unit test for testing PerigeeSurface properties
@@ -73,19 +72,19 @@ namespace Test {
     Vector3D unitXYZ{1., 1., 1.};
     auto perigeeSurfaceObject  = Surface::makeShared<PerigeeSurface>(unitXYZ);
     auto pClonedPerigeeSurface = perigeeSurfaceObject->clone();
-    BOOST_TEST(pClonedPerigeeSurface->type() == Surface::Perigee);
+    BOOST_CHECK_EQUAL(pClonedPerigeeSurface->type(), Surface::Perigee);
     //
     /// Test type (redundant)
-    BOOST_TEST(perigeeSurfaceObject->type() == Surface::Perigee);
+    BOOST_CHECK_EQUAL(perigeeSurfaceObject->type(), Surface::Perigee);
     //
     /// Test name
-    BOOST_TEST(perigeeSurfaceObject->name()
-               == std::string("Acts::PerigeeSurface"));
+    BOOST_CHECK_EQUAL(perigeeSurfaceObject->name(),
+                      std::string("Acts::PerigeeSurface"));
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
     perigeeSurfaceObject->dump(dumpOuput);
-    BOOST_TEST(dumpOuput.is_equal("Acts::PerigeeSurface:\n\
+    BOOST_CHECK(dumpOuput.is_equal("Acts::PerigeeSurface:\n\
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
   }
 
@@ -98,11 +97,11 @@ namespace Test {
     auto assignedPerigeeSurface
         = Surface::makeShared<PerigeeSurface>(invalidPosition);
     /// Test equality operator
-    BOOST_TEST(*perigeeSurfaceObject == *perigeeSurfaceObject2);
+    BOOST_CHECK_EQUAL(*perigeeSurfaceObject, *perigeeSurfaceObject2);
     /// Test assignment
     *assignedPerigeeSurface = *perigeeSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_TEST(*assignedPerigeeSurface == *perigeeSurfaceObject);
+    BOOST_CHECK_EQUAL(*assignedPerigeeSurface, *perigeeSurfaceObject);
   }
 
   /// Unit test for testing PerigeeSurface properties
@@ -116,11 +115,13 @@ namespace Test {
 
     // const variant_map &var_pl =
     // boost::get<variant_map>(var_data).get<variant_map>("payload");
-    BOOST_TEST(boost::get<variant_map>(var_data).get<std::string>("type")
-               == "PerigeeSurface");
+    BOOST_CHECK_EQUAL(
+        boost::get<variant_map>(var_data).get<std::string>("type"),
+        "PerigeeSurface");
 
     auto perigee2 = Surface::makeShared<PerigeeSurface>(var_data);
-    BOOST_TEST(perigee->transform().isApprox(perigee2->transform()));
+    CHECK_CLOSE_OR_SMALL(
+        perigee->transform(), perigee2->transform(), 1e-6, 1e-9);
   }
   BOOST_AUTO_TEST_SUITE_END()
 

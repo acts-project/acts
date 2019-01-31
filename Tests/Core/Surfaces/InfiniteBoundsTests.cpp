@@ -29,40 +29,37 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(InfiniteBoundsConstruction)
   {
     InfiniteBounds u;
-    BOOST_TEST(u.type() == SurfaceBounds::Boundless,
-               "Test trivial method on default constructed object");
+    BOOST_CHECK_EQUAL(u.type(), SurfaceBounds::Boundless);
     // InfiniteBounds s(1);  // would act as size_t cast to InfiniteBounds
     // InfiniteBounds t(s);
     InfiniteBounds v(u);  // implicit
-    BOOST_TEST(v.type() == SurfaceBounds::Boundless,
-               "Test trivial method on copy constructed object");
+    BOOST_CHECK_EQUAL(v.type(), SurfaceBounds::Boundless);
   }
   /// Unit tests for InfiniteBounds properties
   BOOST_AUTO_TEST_CASE(InfiniteBoundsProperties)
   {
     InfiniteBounds infiniteBoundsObject;
     /// test for type()
-    BOOST_TEST(infiniteBoundsObject.type() == SurfaceBounds::Boundless);
+    BOOST_CHECK_EQUAL(infiniteBoundsObject.type(), SurfaceBounds::Boundless);
 
     /// test for inside()
     const Vector2D      anyVector{0., 1.};
     const BoundaryCheck anyBoundaryCheck(true);
-    BOOST_TEST(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck)
-               == true);
+    BOOST_CHECK(infiniteBoundsObject.inside(anyVector, anyBoundaryCheck));
 
     /// test for distanceToBoundary
     BOOST_TEST_MESSAGE("Perhaps the following should be inf?");
-    BOOST_TEST(infiniteBoundsObject.distanceToBoundary(anyVector) == 0.);
+    BOOST_CHECK_EQUAL(infiniteBoundsObject.distanceToBoundary(anyVector), 0.);
 
     /// test for clone
     auto pInfiniteBoundsClone = infiniteBoundsObject.clone();
-    BOOST_CHECK(pInfiniteBoundsClone != nullptr);
+    BOOST_CHECK_NE(pInfiniteBoundsClone, nullptr);
     delete pInfiniteBoundsClone;
 
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
     infiniteBoundsObject.dump(dumpOuput);
-    BOOST_TEST(
+    BOOST_CHECK(
         dumpOuput.is_equal("Acts::InfiniteBounds ... boundless surface\n"));
   }
 

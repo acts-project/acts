@@ -7,7 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include <boost/test/included/unit_test.hpp>
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -22,17 +25,14 @@ namespace Test {
                    std::array<double, 5> values)
   {
     // check parameter vector
-    BOOST_CHECK_CLOSE(
-        pars.parameters()[eLOC_0], values[0], s_onSurfaceTolerance);
-    BOOST_CHECK_CLOSE(
-        pars.parameters()[eLOC_1], values[1], s_onSurfaceTolerance);
-    BOOST_CHECK_CLOSE(pars.parameters()[ePHI], values[2], s_onSurfaceTolerance);
-    BOOST_CHECK_CLOSE(
-        pars.parameters()[eTHETA], values[3], s_onSurfaceTolerance);
-    BOOST_CHECK_CLOSE(pars.parameters()[eQOP], values[4], s_onSurfaceTolerance);
+    CHECK_CLOSE_ABS(pars.parameters()[eLOC_0], values[0], s_onSurfaceTolerance);
+    CHECK_CLOSE_ABS(pars.parameters()[eLOC_1], values[1], s_onSurfaceTolerance);
+    CHECK_CLOSE_REL(pars.parameters()[ePHI], values[2], 1e-6);
+    CHECK_CLOSE_REL(pars.parameters()[eTHETA], values[3], 1e-6);
+    CHECK_CLOSE_REL(pars.parameters()[eQOP], values[4], 1e-6);
     // check global parameters
-    BOOST_CHECK(pars.position().isApprox(position));
-    BOOST_CHECK(pars.momentum().isApprox(momentum));
+    CHECK_CLOSE_REL(pars.position(), position, 1e-6);
+    CHECK_CLOSE_REL(pars.momentum(), momentum, 1e-6);
     BOOST_CHECK_EQUAL(pars.charge(), charge);
   }
 }

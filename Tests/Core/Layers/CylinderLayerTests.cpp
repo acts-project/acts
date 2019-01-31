@@ -6,26 +6,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE Layer Tests
-
 #include <boost/test/included/unit_test.hpp>
-// leave blank line
-
 #include <boost/test/data/test_case.hpp>
-// leave blank line
-
 #include <boost/test/output_test_stream.hpp>
-// leave blank line
+// clang-format on
 
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Layers/CylinderLayer.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
+
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;
@@ -48,7 +46,7 @@ namespace Test {
       double radius(0.5), halfz(10.);
       auto   pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
       auto   pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
-      BOOST_TEST(pCylinderLayer->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pCylinderLayer->layerType(), LayerType::passive);
       // next level: need an array of Surfaces;
       // bounds object, rectangle type
       auto rBounds = std::make_shared<const RectangleBounds>(1., 1.);
@@ -60,11 +58,12 @@ namespace Test {
       const double thickness(1.0);
       auto         pCylinderLayerFromSurfaces
           = CylinderLayer::create(pTransform, pCylinder, nullptr);
-      BOOST_TEST(pCylinderLayerFromSurfaces->layerType() == LayerType::passive);
+      BOOST_CHECK_EQUAL(pCylinderLayerFromSurfaces->layerType(),
+                        LayerType::passive);
       // construct with thickness:
       auto pCylinderLayerWithThickness
           = CylinderLayer::create(pTransform, pCylinder, nullptr, thickness);
-      BOOST_CHECK_CLOSE_FRACTION(
+      CHECK_CLOSE_REL(
           pCylinderLayerWithThickness->thickness(), thickness, 1e-6);
       // with an approach descriptor...
       std::unique_ptr<ApproachDescriptor> ad(
@@ -72,8 +71,8 @@ namespace Test {
       auto adPtr                                = ad.get();
       auto pCylinderLayerWithApproachDescriptor = CylinderLayer::create(
           pTransform, pCylinder, nullptr, thickness, std::move(ad));
-      BOOST_TEST(pCylinderLayerWithApproachDescriptor->approachDescriptor()
-                 == adPtr);
+      BOOST_CHECK_EQUAL(
+          pCylinderLayerWithApproachDescriptor->approachDescriptor(), adPtr);
       // with the layerType specified...
       auto pCylinderLayerWithLayerType
           = CylinderLayer::create(pTransform,
@@ -82,8 +81,8 @@ namespace Test {
                                   thickness,
                                   std::move(ad),
                                   LayerType::passive);
-      BOOST_TEST(pCylinderLayerWithLayerType->layerType()
-                 == LayerType::passive);
+      BOOST_CHECK_EQUAL(pCylinderLayerWithLayerType->layerType(),
+                        LayerType::passive);
     }
 
     /// Unit test for testing Layer properties
@@ -96,8 +95,8 @@ namespace Test {
       auto   pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
       auto   pCylinderLayer = CylinderLayer::create(pTransform, pCylinder);
       // auto planeSurface = pCylinderLayer->surfaceRepresentation();
-      BOOST_TEST(pCylinderLayer->surfaceRepresentation().name()
-                 == std::string("Acts::CylinderSurface"));
+      BOOST_CHECK_EQUAL(pCylinderLayer->surfaceRepresentation().name(),
+                        std::string("Acts::CylinderSurface"));
     }
 
     BOOST_AUTO_TEST_CASE(CylinderLayer_toVariantData)
@@ -119,15 +118,17 @@ namespace Test {
       variant_map pl      = var_map.get<variant_map>("payload");
       BOOST_CHECK_EQUAL(pl.get<double>("thickness"), 0.4);
       Transform3D act = from_variant<Transform3D>(pl.at("transform"));
-      BOOST_TEST(pTransform->isApprox(act));
+      CHECK_CLOSE_OR_SMALL(*pTransform, act, 1e-6, 1e-9);
 
       auto pCylinderLayer2 = std::dynamic_pointer_cast<CylinderLayer>(
           CylinderLayer::create(var_data));
 
       BOOST_CHECK_EQUAL(pCylinderLayer->thickness(),
                         pCylinderLayer2->thickness());
-      BOOST_TEST(
-          pCylinderLayer->transform().isApprox(pCylinderLayer2->transform()));
+      CHECK_CLOSE_OR_SMALL(pCylinderLayer->transform(),
+                           pCylinderLayer2->transform(),
+                           1e-6,
+                           1e-9);
 
       auto cvBoundsExp = dynamic_cast<const CylinderVolumeBounds*>(
           &(pCylinderLayer->representingVolume()->volumeBounds()));

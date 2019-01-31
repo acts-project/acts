@@ -8,9 +8,13 @@
 
 /// @file InterpolatedBFieldMap_tests.cpp
 
+// clang-format off
 #define BOOST_TEST_MODULE Mapped magnetic field tests
 #include <boost/test/included/unit_test.hpp>
+// clang-format on
+
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
@@ -80,37 +84,40 @@ namespace Test {
     pos << -3, 2.5, 1.7;
     // test the cache interface
     InterpolatedBFieldMap::Cache bCache;
-    BOOST_TEST(b.getField(pos, bCache)
-                   .isApprox(BField::value({{perp(pos), pos.z()}})));
+    CHECK_CLOSE_REL(
+        b.getField(pos, bCache), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
-    BOOST_TEST(b.getField(pos, bCache)
-                   .isApprox(BField::value({{perp(pos), pos.z()}})));
+    CHECK_CLOSE_REL(
+        b.getField(pos, bCache), BField::value({{perp(pos), pos.z()}}), 1e-6);
     auto c = bCache.fieldCell;
-    BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
+    BOOST_CHECK(c.isInside(pos));
+    CHECK_CLOSE_REL(
+        c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     pos << 0, 1.5, -2.5;
     InterpolatedBFieldMap::Cache bCache2;
-    BOOST_TEST(b.getField(pos, bCache2)
-                   .isApprox(BField::value({{perp(pos), pos.z()}})));
+    CHECK_CLOSE_REL(
+        b.getField(pos, bCache2), BField::value({{perp(pos), pos.z()}}), 1e-6);
     c = bCache2.fieldCell;
-    BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
+    BOOST_CHECK(c.isInside(pos));
+    CHECK_CLOSE_REL(
+        c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     pos << 2, 3, -4;
     InterpolatedBFieldMap::Cache bCache3;
-    BOOST_TEST(b.getField(pos, bCache3)
-                   .isApprox(BField::value({{perp(pos), pos.z()}})));
+    CHECK_CLOSE_REL(
+        b.getField(pos, bCache3), BField::value({{perp(pos), pos.z()}}), 1e-6);
     c = bCache3.fieldCell;
-    BOOST_TEST(c.isInside(pos));
-    BOOST_TEST(c.getField(pos).isApprox(BField::value({{perp(pos), pos.z()}})));
+    BOOST_CHECK(c.isInside(pos));
+    CHECK_CLOSE_REL(
+        c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     // some field cell tests
-    BOOST_TEST(c.isInside((pos << 3, 2, -3.7).finished()));
-    BOOST_TEST(c.isInside((pos << -2, 3, -4.7).finished()));
-    BOOST_TEST(not c.isInside((pos << -2, 3, 4.7).finished()));
-    BOOST_TEST(not c.isInside((pos << 0, 2, -4.7).finished()));
-    BOOST_TEST(not c.isInside((pos << 5, 2, 14.).finished()));
+    BOOST_CHECK(c.isInside((pos << 3, 2, -3.7).finished()));
+    BOOST_CHECK(c.isInside((pos << -2, 3, -4.7).finished()));
+    BOOST_CHECK(not c.isInside((pos << -2, 3, 4.7).finished()));
+    BOOST_CHECK(not c.isInside((pos << 0, 2, -4.7).finished()));
+    BOOST_CHECK(not c.isInside((pos << 5, 2, 14.).finished()));
   }
 }  // namespace Test
 

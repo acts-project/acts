@@ -56,13 +56,13 @@ namespace Test {
 
       ConstantBField::Cache bCache;
 
-      BOOST_TEST(Btrue == BField.getField(pos));
-      BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
-      BOOST_TEST(Btrue == BField.getField(-2 * pos));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
 
-      BOOST_TEST(Btrue == BField.getField(pos, bCache));
-      BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0), bCache));
-      BOOST_TEST(Btrue == BField.getField(-2 * pos, bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0), bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
     }
 
     BOOST_TEST_CONTEXT("C-array initialised - Eigen retrieved")
@@ -73,13 +73,13 @@ namespace Test {
 
       ConstantBField::Cache bCache;
 
-      BOOST_TEST(Btrue == BField.getField(pos));
-      BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
-      BOOST_TEST(Btrue == BField.getField(-2 * pos));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
 
-      BOOST_TEST(Btrue == BField.getField(pos, bCache));
-      BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0), bCache));
-      BOOST_TEST(Btrue == BField.getField(-2 * pos, bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0), bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
     }
   }
 
@@ -117,13 +117,13 @@ namespace Test {
 
       ConstantBField::Cache bCache;
 
-      BOOST_TEST(Btrue == BField.getField(pos));
-      BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
-      BOOST_TEST(Btrue == BField.getField(-2 * pos));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
 
-      BOOST_TEST(Btrue == BField.getField(pos, bCache));
-      BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0), bCache));
-      BOOST_TEST(Btrue == BField.getField(-2 * pos, bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0), bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
     }
 
     BOOST_TEST_CONTEXT("C-array initialised - Eigen retrieved")
@@ -134,13 +134,13 @@ namespace Test {
 
       ConstantBField::Cache bCache;
 
-      BOOST_TEST(Btrue == BField.getField(pos));
-      BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0)));
-      BOOST_TEST(Btrue == BField.getField(-2 * pos));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos));
 
-      BOOST_TEST(Btrue == BField.getField(pos, bCache));
-      BOOST_TEST(Btrue == BField.getField(Vector3D(0, 0, 0), bCache));
-      BOOST_TEST(Btrue == BField.getField(-2 * pos, bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(pos, bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0), bCache));
+      BOOST_CHECK_EQUAL(Btrue, BField.getField(-2 * pos, bCache));
     }
   }
 }  // namespace Test

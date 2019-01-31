@@ -78,7 +78,7 @@ namespace Test {
     corrFncp(position, direction, ointersect.pathLength);
     auto pintersect = intersect();
 
-    BOOST_TEST(nintersect.pathLength < pintersect.pathLength);
+    BOOST_CHECK_LT(nintersect.pathLength, pintersect.pathLength);
   }
 
 }  // namespace Test

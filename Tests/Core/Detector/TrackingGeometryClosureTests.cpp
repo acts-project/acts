@@ -204,7 +204,7 @@ namespace Test {
     size_t nSurfaces = 0;
     tGeometry.visitSurfaces([&nSurfaces](const auto*) { nSurfaces++; });
 
-    BOOST_TEST(nSurfaces == 9);
+    BOOST_CHECK_EQUAL(nSurfaces, 9);
   }
 
 }  //  end of namespace Test
