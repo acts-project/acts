@@ -209,7 +209,7 @@ public:
   /// @tparam corrector_t is an (optional) intersection corrector type
   ///
   /// @param parameters The templated parameters for searching
-  /// @param options The templated naivation options
+  /// @param options The templated navigation options
   /// @tparam corrector_t is an (optional) intersection corrector
   ///
   /// @return list of intersection of surfaces on the layer
