@@ -74,12 +74,7 @@ public:
   /// by the propagator
   struct State
   {
-    // Only its stepper can access its private parts
-    friend class EigenStepper<BField,
-                              corrector_t,
-                              extensionlist_t,
-                              auctioneer_t>;
-
+	  
     /// Constructor from the initial track parameters
     /// @param[in] par The track parameters at start
     /// @param[in] ndir The navigation direciton w.r.t momentum
@@ -117,7 +112,6 @@ public:
     /// Momentum start direction (normalized)
     Vector3D startDir = Vector3D(1., 0., 0.);
 
-  private:
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
 
@@ -130,7 +124,6 @@ public:
     /// The charge
     double q = 1.;
 
-  public:
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 

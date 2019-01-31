@@ -49,8 +49,6 @@ public:
   ///
   struct State
   {
-    // Only its stepper can access its private parts
-    friend class StraightLineStepper;
 
     /// Constructor from the initial track parameters
     ///
@@ -76,7 +74,6 @@ public:
     bool              covTransport = false;
     ActsSymMatrixD<5> cov          = ActsSymMatrixD<5>::Zero();
 
-  private:
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
 
@@ -89,7 +86,6 @@ public:
     /// Save the charge: neutral as default for SL stepper
     double q = 0.;
 
-  public:
     /// Navigation direction, this is needed for searching
     NavigationDirection navDir;
 
