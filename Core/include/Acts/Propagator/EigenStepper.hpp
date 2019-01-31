@@ -74,7 +74,7 @@ public:
   /// by the propagator
   struct State
   {
-	  
+
     /// Constructor from the initial track parameters
     /// @param[in] par The track parameters at start
     /// @param[in] ndir The navigation direciton w.r.t momentum

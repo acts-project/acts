@@ -101,3 +101,19 @@ TrackingVolume::compatibleBoundaries(const Vector3D&    position,
   }
   return sorter(nonExcludedBoundaries, position, direction, options, corrfnc);
 }
+
+// Returns the boundary surfaces ordered in probability to hit them based on
+// straight line intersection @todo change hard-coded default
+template <typename parameters_t,
+          typename options_t,
+          typename corrector_t,
+          typename sorter_t>
+std::vector<BoundaryIntersection>
+TrackingVolume::compatibleBoundaries(const parameters_t& parameters,
+                                     const options_t&    options,
+                                     const corrector_t&  corrfnc,
+                                     const sorter_t&     sorter) const
+{
+  return compatibleBoundaries(
+      parameters.position(), parameters.direction(), options, corrfnc, sorter);
+}

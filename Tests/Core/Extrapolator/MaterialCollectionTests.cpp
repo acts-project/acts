@@ -135,7 +135,7 @@ namespace Test {
     // forward material test
     const auto& fwdResult = prop.propagate(start, fwdOptions);
     auto&       fwdMaterial
-        = fwdResult.template get<typename MaterialInteractor::result_type>();
+        = fwdResult.template get<MaterialInteractor::result_type>();
 
     double fwdStepMaterialInX0 = 0.;
     double fwdStepMaterialInL0 = 0.;

@@ -157,10 +157,8 @@ struct DenseEnvironmentExtension
         / (newMomentum * newMomentum * newMomentum);
 
     // Update momentum
-    stepper.update(state.stepping,
-                   stepper.position(state.stepping),
-                   stepper.direction(state.stepping),
-                   newMomentum);
+    state.stepping.p = newMomentum;
+
     return true;
   }
 
