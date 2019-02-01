@@ -8,8 +8,8 @@
 
 template <typename InputTrack>
 Acts::TrackAtVertex<InputTrack>::TrackAtVertex(
-    const double&                chi2perTrack,
-    const Acts::BoundParameters& paramsAtVertex,
+    double              chi2perTrack,
+    const BoundParameters& paramsAtVertex,
     const InputTrack&            originalTrack)
   : m_chi2Track(chi2perTrack)
   , m_fittedParams(paramsAtVertex)

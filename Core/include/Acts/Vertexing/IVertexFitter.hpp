@@ -8,22 +8,22 @@
 
 #pragma once
 
+#include "Acts/Vertexing/Vertex.hpp"
+
 namespace Acts {
 
 /// @class IVertexFitter
 ///
 /// @brief Virtual base class for VertexFitters
 
-template <typename BField, typename InputTrack>
+template <typename InputTrack>
 class IVertexFitter
 {
 public:
-  virtual Acts::Vertex<InputTrack>
+  virtual Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
-      Acts::Vertex<InputTrack>       startingPoint) const = 0;
+      Vertex<InputTrack>       startingPoint) const = 0;
 
-  virtual Acts::Vertex<InputTrack>
-  fit(const std::vector<InputTrack>& paramVector) const = 0;
 };
 
 }  // namespace Acts

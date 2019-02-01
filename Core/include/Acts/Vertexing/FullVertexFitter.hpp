@@ -26,7 +26,7 @@ namespace Acts {
 /// DOI	10.1016/0168-9002(92)90859-3
 
 template <typename BField, typename InputTrack>
-class FullVertexFitter : public IVertexFitter<BField, InputTrack>
+class FullVertexFitter : public IVertexFitter<InputTrack>
 {
 public:
   struct Config
@@ -34,9 +34,11 @@ public:
     /// Magnetic field
     BField bField;
     /// Starting point of vertex fit
-    Acts::Vector3D startingPoint;
+    Vector3D startingPoint;
     /// Maximum number of interations in fitter
     int maxIterations;
+
+    //std::function<parameters_t(InputTrack)> extractor = [](auto& t) {return t;};
 
     /// Constructor with default number of iterations and starting point
     Config(BField bIn) : bField(std::move(bIn)), maxIterations(5) {}
@@ -50,16 +52,9 @@ public:
   /// @param startingPoint Constraint of the fit, position of constraint is
   /// starting point
   /// @return Fitted vertex
-  Acts::Vertex<InputTrack>
+  Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
-      Acts::Vertex<InputTrack>       startingPoint) const;
-
-  /// Fit method, fitting vertex for provided tracks without constraint
-  /// with default starting point at (0,0,0)
-  /// @param paramVector Vector of tracks to fit vertex to
-  /// @return Fitted vertex
-  Acts::Vertex<InputTrack>
-  fit(const std::vector<InputTrack>& paramVector) const;
+      Vertex<InputTrack>       startingPoint  ) const;
 
 private:
   /// Configuration object

@@ -23,8 +23,8 @@ public:
   /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
   /// @param originalParams Original perigee parameter
-  TrackAtVertex(const double&                chi2perTrack,
-                const Acts::BoundParameters& fittedParams,
+  TrackAtVertex(double                chi2perTrack,
+                const BoundParameters& fittedParams,
                 const InputTrack&            originalTrack);
 
   /// Returns chi2 of track
@@ -32,7 +32,7 @@ public:
   chi2() const;
 
   /// Returns fitted perigee
-  const Acts::BoundParameters&
+  const BoundParameters&
   fittedPerigee() const;
 
   /// Returns original perigee
@@ -44,7 +44,7 @@ private:
   double m_chi2Track;
 
   /// Fitted perigee
-  Acts::BoundParameters m_fittedParams;
+  BoundParameters m_fittedParams;
 
   /// Original perigee
   InputTrack m_originalTrack;

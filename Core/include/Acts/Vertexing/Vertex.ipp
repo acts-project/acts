@@ -7,16 +7,16 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 template <typename InputTrack>
-Acts::Vertex<InputTrack>::Vertex(const Acts::Vector3D& position)
-  : m_position(position), m_covariance(Acts::ActsSymMatrixD<3>::Zero())
+Acts::Vertex<InputTrack>::Vertex(const Vector3D& position)
+  : m_position(position), m_covariance(ActsSymMatrixD<3>::Zero())
 {
 }
 
 template <typename InputTrack>
 Acts::Vertex<InputTrack>::Vertex(
-    const Acts::Vector3D&                         position,
-    const Acts::ActsSymMatrixD<3>&                covariance,
-    std::vector<Acts::TrackAtVertex<InputTrack>>& tracks)
+    const Vector3D&                         position,
+    const ActsSymMatrixD<3>&                covariance,
+    std::vector<TrackAtVertex<InputTrack>>& tracks)
   : m_position(position)
   , m_covariance(covariance)
   , m_tracksAtVertex(std::move(tracks))
@@ -46,7 +46,7 @@ Acts::Vertex<InputTrack>::tracks() const
 
 template <typename InputTrack>
 void
-Acts::Vertex<InputTrack>::setPosition(const Acts::Vector3D& position)
+Acts::Vertex<InputTrack>::setPosition(const Vector3D& position)
 {
   m_position = position;
 }
@@ -54,7 +54,7 @@ Acts::Vertex<InputTrack>::setPosition(const Acts::Vector3D& position)
 template <typename InputTrack>
 void
 Acts::Vertex<InputTrack>::setCovariance(
-    const Acts::ActsSymMatrixD<3>& covariance)
+    const ActsSymMatrixD<3>& covariance)
 {
   m_covariance = covariance;
 }
@@ -62,7 +62,7 @@ Acts::Vertex<InputTrack>::setCovariance(
 template <typename InputTrack>
 void
 Acts::Vertex<InputTrack>::setTracksAtVertex(
-    const std::vector<Acts::TrackAtVertex<InputTrack>>& tracks)
+    const std::vector<TrackAtVertex<InputTrack>>& tracks)
 {
   m_tracksAtVertex = std::move(tracks);
 }

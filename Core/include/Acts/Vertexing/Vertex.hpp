@@ -21,39 +21,39 @@ public:
   /// Default constructor
   Vertex() = default;
 
-  Vertex(const Acts::Vector3D& position);
+  Vertex(const Vector3D& position);
 
-  Vertex(const Acts::Vector3D&                         position,
-         const Acts::ActsSymMatrixD<3>&                covariance,
-         std::vector<Acts::TrackAtVertex<InputTrack>>& tracks);
+  Vertex(const Vector3D&                         position,
+         const ActsSymMatrixD<3>&                covariance,
+         std::vector<TrackAtVertex<InputTrack>>& tracks);
 
   /// Return 3-position
-  const Acts::Vector3D&
+  const Vector3D&
   position() const;
   /// Return covariance
-  const Acts::ActsSymMatrixD<3>&
+  const ActsSymMatrixD<3>&
   covariance() const;
 
-  const std::vector<Acts::TrackAtVertex<InputTrack>>&
+  const std::vector<TrackAtVertex<InputTrack>>&
   tracks() const;
 
   /// Set 3-position
   void
-  setPosition(const Acts::Vector3D& position);
+  setPosition(const Vector3D& position);
   /// Set covariance
   void
-  setCovariance(const Acts::ActsSymMatrixD<3>& covariance);
+  setCovariance(const ActsSymMatrixD<3>& covariance);
   /// Set tracks at vertex
   void
-  setTracksAtVertex(const std::vector<Acts::TrackAtVertex<InputTrack>>& tracks);
+  setTracksAtVertex(const std::vector<TrackAtVertex<InputTrack>>& tracks);
   /// Set fitQuality (chiSquared and numberDoF)
   void
   setFitQuality(double chiSquared, double numberDoF);
 
 private:
-  Acts::Vector3D                               m_position;
-  Acts::ActsSymMatrixD<3>                      m_covariance;
-  std::vector<Acts::TrackAtVertex<InputTrack>> m_tracksAtVertex;
+  Vector3D                               m_position;
+  ActsSymMatrixD<3>                      m_covariance;
+  std::vector<TrackAtVertex<InputTrack>> m_tracksAtVertex;
   double                                       m_chiSquared;  // chi2 of the fit
   double m_numberDoF;  // number of degrees of freedom
 };

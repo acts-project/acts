@@ -52,8 +52,8 @@ public:
   ~LinearizedTrackFactory() = default;
 
   LinearizedTrack*
-  linearizeTrack(const Acts::BoundParameters* params,
-                 const Acts::Vector3D&        linPoint) const;
+  linearizeTrack(const BoundParameters* params,
+                 const Vector3D&        linPoint) const;
 
 private:
   // Configuration object
