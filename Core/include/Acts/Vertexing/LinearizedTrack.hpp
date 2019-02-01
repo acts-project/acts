@@ -29,93 +29,32 @@ namespace Acts {
  * respectively.
  */
 
-class LinearizedTrack
+struct LinearizedTrack
 {
-public:
-  /// Default constructor
-  LinearizedTrack();
-
-  /// Copy constructor
-  LinearizedTrack(const LinearizedTrack& other) = default;
 
   /**
    * Constructor taking perigee parameters and covariance matrix
    * of track propagated to closest approach (PCA) of linearization point,
    * position and momentum Jacobian and const term.
    */
-  LinearizedTrack(const Acts::ActsVectorD<5>&    paramsAtPCA,
-                  const Acts::ActsSymMatrixD<5>& parCovarianceAtPCA,
-                  const Acts::Vector3D&          linPoint,
-                  const Acts::ActsMatrixD<5, 3>& positionJacobian,
-                  const Acts::ActsMatrixD<5, 3>& momentumJacobian,
-                  const Acts::Vector3D&       positionAtPCA,
-                  const Acts::Vector3D&       momentumAtPCA,
-                  const Acts::ActsVectorD<5>& constTerm);
+  LinearizedTrack(const ActsVectorD<5>&    paramsAtPCA,
+                  const ActsSymMatrixD<5>& parCovarianceAtPCA,
+                  const Vector3D&          linPoint,
+                  const ActsMatrixD<5, 3>& positionJacobian,
+                  const ActsMatrixD<5, 3>& momentumJacobian,
+                  const Vector3D&       positionAtPCA,
+                  const Vector3D&       momentumAtPCA,
+                  const ActsVectorD<5>& constTerm);
 
-  /// Assignment operator
-  LinearizedTrack&
-  operator=(const LinearizedTrack& other);
 
-  /// Default constructor
-  virtual ~LinearizedTrack() = default;
-
-  const Acts::ActsVectorD<5>&
-  parametersAtPCA() const
-  {
-    return m_paramsAtPCA;
-  }
-
-  const Acts::ActsSymMatrixD<5>&
-  covarianceAtPCA() const
-  {
-    return m_parCovarianceAtPCA;
-  }
-
-  const Acts::Vector3D&
-  linearizationPoint() const
-  {
-    return m_linPoint;
-  }
-
-  const Acts::ActsMatrixD<5, 3>&
-  positionJacobian() const
-  {
-    return m_positionJacobian;
-  }
-
-  const Acts::ActsMatrixD<5, 3>&
-  momentumJacobian() const
-  {
-    return m_momentumJacobian;
-  }
-
-  const Acts::Vector3D&
-  positionAtPCA() const
-  {
-    return m_positionAtPCA;
-  }
-
-  const Acts::Vector3D&
-  momentumAtPCA() const
-  {
-    return m_momentumAtPCA;
-  }
-
-  const Acts::ActsVectorD<5>&
-  constantTerm() const
-  {
-    return m_constTerm;
-  }
-
-private:
-  Acts::ActsVectorD<5>    m_paramsAtPCA;
-  Acts::ActsSymMatrixD<5> m_parCovarianceAtPCA;
-  Acts::Vector3D          m_linPoint;
-  Acts::ActsMatrixD<5, 3> m_positionJacobian;
-  Acts::ActsMatrixD<5, 3> m_momentumJacobian;
-  Acts::Vector3D       m_positionAtPCA;
-  Acts::Vector3D       m_momentumAtPCA;
-  Acts::ActsVectorD<5> m_constTerm;
+  Acts::ActsVectorD<5>    parametersAtPCA;
+  Acts::ActsSymMatrixD<5> covarianceAtPCA;
+  Acts::Vector3D          linearizationPoint;
+  Acts::ActsMatrixD<5, 3> positionJacobian;
+  Acts::ActsMatrixD<5, 3> momentumJacobian;
+  Acts::Vector3D       positionAtPCA;
+  Acts::Vector3D       momentumAtPCA;
+  Acts::ActsVectorD<5> constantTerm;
 };
 
 }  // namespace Acts
