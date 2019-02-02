@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,40 +13,57 @@
 
 namespace Acts {
 
+/// @class Vertex
+/// 
+/// @brief Class for storing vertex objects
+///
 template <typename InputTrack>
 class Vertex
 {
 
 public:
-  /// Default constructor
+  /// @brief Default constructor
   Vertex() = default;
 
+  /// @brief Construct for vertex at given position, sets covariance to zero
+  ///
+  /// @param position Vertex position
   Vertex(const Vector3D& position);
 
+  /// @brief Vertex constructor
+  ///
+  /// @param position Vertex position
+  /// @param covariance Position covariance matrix
+  /// @param tracks Vector of tracks associated with the vertex
   Vertex(const Vector3D&                         position,
          const ActsSymMatrixD<3>&                covariance,
          std::vector<TrackAtVertex<InputTrack>>& tracks);
 
-  /// Return 3-position
+  /// @return Returns 3-position
   const Vector3D&
   position() const;
-  /// Return covariance
+  /// @return Returns position covariance
   const ActsSymMatrixD<3>&
   covariance() const;
 
+  /// @return Returns vector of tracks associated with the vertex
   const std::vector<TrackAtVertex<InputTrack>>&
   tracks() const;
 
-  /// Set 3-position
+  /// @param position Vertex position
   void
   setPosition(const Vector3D& position);
-  /// Set covariance
+
+  /// @param covariance Position covariance matrix
   void
   setCovariance(const ActsSymMatrixD<3>& covariance);
-  /// Set tracks at vertex
+
+  /// @param tracks Vector of tracks at vertex
   void
   setTracksAtVertex(const std::vector<TrackAtVertex<InputTrack>>& tracks);
-  /// Set fitQuality (chiSquared and numberDoF)
+
+  /// @param chiSquared Chi2 of fit
+  /// @param numberDoF Number of degrees of freedom
   void
   setFitQuality(double chiSquared, double numberDoF);
 

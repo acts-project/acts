@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,43 +13,33 @@
 namespace Acts {
 
 template <typename InputTrack>
-class TrackAtVertex
+struct TrackAtVertex
 {
-public:
   /// Deleted default constructor
   TrackAtVertex() = delete;
 
-  /// Parameterized constructor
+  /// @brief Parameterized constructor
+  ///
   /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
   /// @param originalParams Original perigee parameter
-  TrackAtVertex(double                chi2perTrack,
-                const BoundParameters& fittedParams,
-                const InputTrack&            originalTrack);
+  TrackAtVertex(double              chi2perTrack,
+                const BoundParameters& paramsAtVertex,
+                const InputTrack&            originalTrack)
+  : m_chi2Track(chi2perTrack)
+  , m_fittedParams(paramsAtVertex)
+  , m_originalTrack(originalTrack)
+{
+}
 
-  /// Returns chi2 of track
-  double
-  chi2() const;
-
-  /// Returns fitted perigee
-  const BoundParameters&
-  fittedPerigee() const;
-
-  /// Returns original perigee
-  const InputTrack&
-  originalTrack() const;
-
-private:
   /// Chi2 of track
   double m_chi2Track;
 
   /// Fitted perigee
   BoundParameters m_fittedParams;
 
-  /// Original perigee
+  /// Original input track
   InputTrack m_originalTrack;
 };
 
 }  // namespace Acts
-
-#include "Acts/Vertexing/TrackAtVertex.ipp"

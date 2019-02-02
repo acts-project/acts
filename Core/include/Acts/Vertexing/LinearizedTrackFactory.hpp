@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,25 +14,22 @@
 
 namespace Acts {
 
-/**
- * @class LinearizedTrackFactory
- * From ATHENA:
- * Linearizes the measurement equation (dependance of track
- * parameters on the vertex position and track mometum at vertex)
- * at the vicinity of the user-provided linearization point.
- *
- * The measurement equation is linearized in the following way:
- *
- * q_k= A_k (x_k - x_0k) + B_k (p_k - p_0k) + c_k
- *
- * where q_k are the parameters at perigee nearest to the lin point,
- * x_k is the position of the vertex, p_k the track momentum at the vertex,
- * and c_k is the constant term of expansion. A_k and B_k are matrices
- * of derivatives, denoted hereafter as "positionJacobian" and
- * "momentumJacobian"
- * respectively.
- *
- */
+/// @class LinearizedTrackFactory
+/// From ATHENA:
+/// Linearizes the measurement equation (dependance of track
+/// parameters on the vertex position and track momentum at vertex)
+/// at the vicinity of the user-provided linearization point.
+///
+/// The measurement equation is linearized in the following way:
+///
+/// q_k= A_k (x_k - x_0k) + B_k (p_k - p_0k) + c_k
+///
+/// where q_k are the parameters at perigee nearest to the lin point,
+/// x_k is the position of the vertex, p_k the track momentum at the vertex,
+/// and c_k is the constant term of expansion. A_k and B_k are matrices
+/// of derivatives, denoted hereafter as "positionJacobian" and
+/// "momentumJacobian" respectively.
+///
 
 template <typename BField>
 class LinearizedTrackFactory
@@ -45,13 +42,18 @@ public:
     Config(BField bIn) : bField(std::move(bIn)){};
   };
 
-  /// Constructor with BField
+  /// @brief Constructor with BField
+  /// 
+  /// @param config Configuration object
   LinearizedTrackFactory(const Config& config) : m_cfg(config) {}
 
-  /// Default destructor
-  ~LinearizedTrackFactory() = default;
-
-  LinearizedTrack*
+  /// @brief Function that linearizes BoundParameters and given linearization point
+  ///
+  /// @param params Parameters to linearize
+  /// @param linPoint Linearization point
+  ///
+  /// @return Linearized track
+  LinearizedTrack
   linearizeTrack(const BoundParameters* params,
                  const Vector3D&        linPoint) const;
 

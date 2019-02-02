@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,7 +14,7 @@
 
 namespace Acts {
 
-/// @class FullVertexFitter
+/// @class FullBilloirVertexFitter
 ///
 /// @brief Vertex fitter class implementing the Billoir vertex fitter
 ///
@@ -26,7 +26,7 @@ namespace Acts {
 /// DOI	10.1016/0168-9002(92)90859-3
 
 template <typename BField, typename InputTrack>
-class FullVertexFitter : public IVertexFitter<InputTrack>
+class FullBilloirVertexFitter : public IVertexFitter<InputTrack>
 {
 public:
   struct Config
@@ -38,23 +38,23 @@ public:
     /// Maximum number of interations in fitter
     int maxIterations;
 
-    //std::function<parameters_t(InputTrack)> extractor = [](auto& t) {return t;};
-
     /// Constructor with default number of iterations and starting point
     Config(BField bIn) : bField(std::move(bIn)), maxIterations(5) {}
   };
 
   /// Constructor with explicit config
-  FullVertexFitter(const Config& cfg) : m_cfg(cfg) {}
+  FullBilloirVertexFitter(const Config& cfg) : m_cfg(cfg) {}
 
-  /// Fit method, fitting vertex for provided tracks with constraint
-  /// @param paramVector Vector of tracks to fit vertex to
+  /// @brief Fit method, fitting vertex for provided tracks with constraint
+  ///
+  /// @param paramVector Vector of track objects to fit vertex to
   /// @param startingPoint Constraint of the fit, position of constraint is
   /// starting point
+  ///
   /// @return Fitted vertex
   Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
-      Vertex<InputTrack>       startingPoint  ) const;
+      Vertex<InputTrack>       constraint  ) const;
 
 private:
   /// Configuration object
@@ -63,4 +63,4 @@ private:
 
 }  // namespace Acts
 
-#include "FullVertexFitter.ipp"
+#include "FullBilloirVertexFitter.ipp"

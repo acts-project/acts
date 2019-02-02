@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,7 +9,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Vertexing/FullVertexFitter.hpp"
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 
@@ -18,7 +17,6 @@ namespace {
 /// @struct BilloirTrack
 ///
 /// @brief Struct to cache track-specific matrix operations in Billoir fitter
-
 template <typename InputTrack>
 struct BilloirTrack
 {
@@ -47,18 +45,12 @@ struct BilloirTrack
 /// @brief Struct to cache vertex-specific matrix operations in Billoir fitter
 struct BilloirVertex
 {
-  BilloirVertex()
-  {
-    A_mat.setZero();
-    T_vec.setZero();
-    BCB_mat.setZero();
-    BCU_vec.setZero();
-  };
+  BilloirVertex() = default;
 
-  Acts::ActsSymMatrixD<3> A_mat;    // T  = sum{Di.T * Wi * Di}
-  Acts::Vector3D          T_vec;    // A  = sum{Di.T * Wi * dqi}
-  Acts::ActsSymMatrixD<3> BCB_mat;  // BCB = sum{Bi * Ci^-1 * Bi.T}
-  Acts::Vector3D          BCU_vec;  // BCU = sum{Bi * Ci^-1 * Ui}
+  Acts::ActsSymMatrixD<3> A_mat{Acts::ActsSymMatrixD<3>::Zero()};    // T  = sum{Di.T * Wi * Di}
+  Acts::Vector3D          T_vec{Acts::Vector3D::Zero()};    // A  = sum{Di.T * Wi * dqi}
+  Acts::ActsSymMatrixD<3> BCB_mat{Acts::ActsSymMatrixD<3>::Zero()};  // BCB = sum{Bi * Ci^-1 * Bi.T}
+  Acts::Vector3D          BCU_vec{Acts::Vector3D::Zero()};  // BCU = sum{Bi * Ci^-1 * Ui}
 };
 
 }  // end anonymous namespace
@@ -66,9 +58,9 @@ struct BilloirVertex
 
 template <typename BField, typename InputTrack>
 Acts::Vertex<InputTrack>
-Acts::FullVertexFitter<BField, InputTrack>::fit(
+Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
     const std::vector<InputTrack>& paramVector,
-    Vertex<InputTrack>       startingPoint) const
+    Vertex<InputTrack>       constraint) const
 {
   double       chi2    = std::numeric_limits<double>::max();
   double       newChi2 = 0;
@@ -81,9 +73,9 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
   }
 
   // Determine if we do contraint fit or not
-  bool constraint = false;
-  if (startingPoint.covariance().trace() != 0) {
-    constraint = true;
+  bool isConstraintFit = false;
+  if (constraint.covariance().trace() != 0) {
+    isConstraintFit = true;
     ndf += 3;
   }
 
@@ -95,7 +87,7 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
 
   std::vector<Vector3D> trackMomenta;
 
-  Vector3D linPoint(startingPoint.position());
+  Vector3D linPoint(constraint.position());
 
   Vertex<InputTrack> fittedVertex;
 
@@ -115,19 +107,19 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
         double qop   = trackParams.parameters()[ParID_t::eQOP];
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
-      LinearizedTrack* linTrack
+      LinearizedTrack linTrack
           = linFactory.linearizeTrack(&trackParams, linPoint);
-      double d0     = linTrack->parametersAtPCA[ParID_t::eLOC_D0];
-      double z0     = linTrack->parametersAtPCA[ParID_t::eLOC_Z0];
-      double phi    = linTrack->parametersAtPCA[ParID_t::ePHI];
-      double theta  = linTrack->parametersAtPCA[ParID_t::eTHETA];
-      double qOverP = linTrack->parametersAtPCA[ParID_t::eQOP];
+      double d0     = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
+      double z0     = linTrack.parametersAtPCA[ParID_t::eLOC_Z0];
+      double phi    = linTrack.parametersAtPCA[ParID_t::ePHI];
+      double theta  = linTrack.parametersAtPCA[ParID_t::eTHETA];
+      double qOverP = linTrack.parametersAtPCA[ParID_t::eQOP];
 
       // calculate f(V_0,p_0)  f_d0 = f_z0 = 0
       double                   f_phi    = trackMomenta[i_track][0];
       double                   f_theta  = trackMomenta[i_track][1];
       double                   f_qOverP = trackMomenta[i_track][2];
-      BilloirTrack<InputTrack> currentBilloirTrack(trackContainer, linTrack);
+      BilloirTrack<InputTrack> currentBilloirTrack(trackContainer, &linTrack);
 
       // calculate delta_q[i]
       currentBilloirTrack.delta_q[0] = d0;
@@ -138,20 +130,20 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
 
       // position jacobian (D matrix)
       ActsMatrixD<5, 3> D_mat;
-      D_mat = linTrack->positionJacobian;
+      D_mat = linTrack.positionJacobian;
 
       // momentum jacobian (E matrix)
       ActsMatrixD<5, 3> E_mat;
-      E_mat = linTrack->momentumJacobian;
+      E_mat = linTrack.momentumJacobian;
       // cache some matrix multiplications
       ActsMatrixD<3, 5> Dt_W_mat;
       Dt_W_mat.setZero();
       ActsMatrixD<3, 5> Et_W_mat;
       Et_W_mat.setZero();
       Dt_W_mat
-          = D_mat.transpose() * (linTrack->covarianceAtPCA.inverse().eval());
+          = D_mat.transpose() * (linTrack.covarianceAtPCA.inverse());
       Et_W_mat
-          = E_mat.transpose() * (linTrack->covarianceAtPCA.inverse().eval());
+          = E_mat.transpose() * (linTrack.covarianceAtPCA.inverse());
 
       // compute billoir tracks
       currentBilloirTrack.Di_mat = D_mat;
@@ -161,7 +153,7 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
       currentBilloirTrack.Ui_vec
           = Et_W_mat * currentBilloirTrack.delta_q;  // Ei.T * Wi * dqi
       currentBilloirTrack.Ci_inv
-          = (Et_W_mat * E_mat).inverse().eval();  // (Ei.T * Wi * Ei)^-1
+          = (Et_W_mat * E_mat).inverse();  // (Ei.T * Wi * Ei)^-1
 
       // sum up over all tracks
       billoirVertex.T_vec
@@ -190,25 +182,25 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
     ActsSymMatrixD<3> V_wgt_mat = billoirVertex.A_mat
         - billoirVertex.BCB_mat;  // V_wgt = A-sum{Bi*Ci^-1*Bi.T}
 
-    if (constraint) {
+    if (isConstraintFit) {
 
-      Vector3D constraintPosInBilloirFrame;
-      constraintPosInBilloirFrame.setZero();
+      Vector3D isConstraintFitPosInBilloirFrame;
+      isConstraintFitPosInBilloirFrame.setZero();
       // this will be 0 for first iteration but != 0 from second on
-      constraintPosInBilloirFrame[0]
-          = startingPoint.position()[0] - linPoint[0];
-      constraintPosInBilloirFrame[1]
-          = startingPoint.position()[1] - linPoint[1];
-      constraintPosInBilloirFrame[2]
-          = startingPoint.position()[2] - linPoint[2];
+      isConstraintFitPosInBilloirFrame[0]
+          = constraint.position()[0] - linPoint[0];
+      isConstraintFitPosInBilloirFrame[1]
+          = constraint.position()[1] - linPoint[1];
+      isConstraintFitPosInBilloirFrame[2]
+          = constraint.position()[2] - linPoint[2];
 
       V_del
-          += startingPoint.covariance().inverse() * constraintPosInBilloirFrame;
-      V_wgt_mat += startingPoint.covariance().inverse();
+          += constraint.covariance().inverse() * isConstraintFitPosInBilloirFrame;
+      V_wgt_mat += constraint.covariance().inverse();
     }
 
     // cov(delta_V) = V_wgt^-1
-    ActsSymMatrixD<3> cov_delta_V_mat = V_wgt_mat.inverse().eval();
+    ActsSymMatrixD<3> cov_delta_V_mat = V_wgt_mat.inverse();
 
     // delta_V = cov_(delta_V) * V_del;
     Vector3D delta_V = cov_delta_V_mat * V_del;
@@ -303,7 +295,7 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
       bTrack.chi2
           = ((bTrack.delta_q - bTrack.Di_mat * delta_V - bTrack.Ei_mat * deltaP)
                  .transpose()
-             * bTrack.linTrack->covarianceAtPCA.inverse().eval()
+             * bTrack.linTrack->covarianceAtPCA.inverse()
              * (bTrack.delta_q - bTrack.Di_mat * delta_V
                 - bTrack.Ei_mat * deltaP))[0];
       newChi2 += bTrack.chi2;
@@ -311,15 +303,15 @@ Acts::FullVertexFitter<BField, InputTrack>::fit(
       ++i_track;
     }
 
-    if (constraint) {
+    if (isConstraintFit) {
       Vector3D deltaTrk;
       deltaTrk.setZero();
       // last term will also be 0 again but only in the first iteration
-      // = calc. vtx in billoir frame - (    constraint pos. in billoir frame )
-      deltaTrk[0] = delta_V[0] - (startingPoint.position()[0] - linPoint[0]);
-      deltaTrk[1] = delta_V[1] - (startingPoint.position()[1] - linPoint[1]);
-      deltaTrk[2] = delta_V[2] - (startingPoint.position()[2] - linPoint[2]);
-      newChi2 += (deltaTrk.transpose() * startingPoint.covariance().inverse()
+      // = calc. vtx in billoir frame - (    isConstraintFit pos. in billoir frame )
+      deltaTrk[0] = delta_V[0] - (constraint.position()[0] - linPoint[0]);
+      deltaTrk[1] = delta_V[1] - (constraint.position()[1] - linPoint[1]);
+      deltaTrk[2] = delta_V[2] - (constraint.position()[2] - linPoint[2]);
+      newChi2 += (deltaTrk.transpose() * constraint.covariance().inverse()
                   * deltaTrk)[0];
     }
 

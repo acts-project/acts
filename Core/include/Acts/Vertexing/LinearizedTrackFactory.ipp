@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,12 +12,12 @@
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 
 template <typename BField>
-Acts::LinearizedTrack*
+Acts::LinearizedTrack
 Acts::LinearizedTrackFactory<BField>::linearizeTrack(
     const BoundParameters* params,
     const Vector3D&        linPoint) const
 {
-  if (!params) return nullptr;
+  if (params == nullptr) return LinearizedTrack();
 
   const std::shared_ptr<PerigeeSurface> perigeeSurface
       = Surface::makeShared<PerigeeSurface>(linPoint);
@@ -40,9 +40,11 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
     paramsAtPCA        = result.endParameters->parameters();
     positionAtPCA      = result.endParameters->position();
     parCovarianceAtPCA = *result.endParameters->covariance();
-  } else {
-    // *params are already perigeeParameters at linPoint (no propagation to
-    // linPoint needed)
+    
+  // *params are already perigeeParameters at linPoint (no propagation to
+  // linPoint needed)
+  } 
+  else {
     paramsAtPCA        = params->parameters();
     positionAtPCA      = params->position();
     parCovarianceAtPCA = *params->covariance();
@@ -154,7 +156,7 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
   ActsVectorD<5> constTerm = predParamsAtPCA
       - positionJacobian * positionAtPCA - momentumJacobian * momentumAtPCA;
 
-  return new LinearizedTrack(paramsAtPCA,
+  return LinearizedTrack(paramsAtPCA,
                                    parCovarianceAtPCA,
                                    linPoint,
                                    positionJacobian,
