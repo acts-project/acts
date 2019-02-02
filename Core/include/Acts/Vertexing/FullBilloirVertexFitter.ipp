@@ -47,20 +47,21 @@ struct BilloirVertex
 {
   BilloirVertex() = default;
 
-  Acts::ActsSymMatrixD<3> A_mat{Acts::ActsSymMatrixD<3>::Zero()};    // T  = sum{Di.T * Wi * Di}
-  Acts::Vector3D          T_vec{Acts::Vector3D::Zero()};    // A  = sum{Di.T * Wi * dqi}
-  Acts::ActsSymMatrixD<3> BCB_mat{Acts::ActsSymMatrixD<3>::Zero()};  // BCB = sum{Bi * Ci^-1 * Bi.T}
-  Acts::Vector3D          BCU_vec{Acts::Vector3D::Zero()};  // BCU = sum{Bi * Ci^-1 * Ui}
+  Acts::ActsSymMatrixD<3> A_mat{
+      Acts::ActsSymMatrixD<3>::Zero()};          // T  = sum{Di.T * Wi * Di}
+  Acts::Vector3D T_vec{Acts::Vector3D::Zero()};  // A  = sum{Di.T * Wi * dqi}
+  Acts::ActsSymMatrixD<3> BCB_mat{
+      Acts::ActsSymMatrixD<3>::Zero()};  // BCB = sum{Bi * Ci^-1 * Bi.T}
+  Acts::Vector3D BCU_vec{Acts::Vector3D::Zero()};  // BCU = sum{Bi * Ci^-1 * Ui}
 };
 
 }  // end anonymous namespace
-
 
 template <typename BField, typename InputTrack>
 Acts::Vertex<InputTrack>
 Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
     const std::vector<InputTrack>& paramVector,
-    Vertex<InputTrack>       constraint) const
+    Vertex<InputTrack>             constraint) const
 {
   double       chi2    = std::numeric_limits<double>::max();
   double       newChi2 = 0;
@@ -140,10 +141,8 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
       Dt_W_mat.setZero();
       ActsMatrixD<3, 5> Et_W_mat;
       Et_W_mat.setZero();
-      Dt_W_mat
-          = D_mat.transpose() * (linTrack.covarianceAtPCA.inverse());
-      Et_W_mat
-          = E_mat.transpose() * (linTrack.covarianceAtPCA.inverse());
+      Dt_W_mat = D_mat.transpose() * (linTrack.covarianceAtPCA.inverse());
+      Et_W_mat = E_mat.transpose() * (linTrack.covarianceAtPCA.inverse());
 
       // compute billoir tracks
       currentBilloirTrack.Di_mat = D_mat;
@@ -194,8 +193,8 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
       isConstraintFitPosInBilloirFrame[2]
           = constraint.position()[2] - linPoint[2];
 
-      V_del
-          += constraint.covariance().inverse() * isConstraintFitPosInBilloirFrame;
+      V_del += constraint.covariance().inverse()
+          * isConstraintFitPosInBilloirFrame;
       V_wgt_mat += constraint.covariance().inverse();
     }
 
@@ -208,8 +207,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
     //--------------------------------------------------------------------------------------
     // start momentum related calculations
 
-    std::vector<std::unique_ptr<ActsSymMatrixD<5>>> cov_delta_P_mat(
-        nTracks);
+    std::vector<std::unique_ptr<ActsSymMatrixD<5>>> cov_delta_P_mat(nTracks);
 
     i_track = 0;
     for (auto& bTrack : billoirTracks) {
@@ -307,7 +305,8 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
       Vector3D deltaTrk;
       deltaTrk.setZero();
       // last term will also be 0 again but only in the first iteration
-      // = calc. vtx in billoir frame - (    isConstraintFit pos. in billoir frame )
+      // = calc. vtx in billoir frame - (    isConstraintFit pos. in billoir
+      // frame )
       deltaTrk[0] = delta_V[0] - (constraint.position()[0] - linPoint[0]);
       deltaTrk[1] = delta_V[1] - (constraint.position()[1] - linPoint[1]);
       deltaTrk[2] = delta_V[2] - (constraint.position()[2] - linPoint[2]);

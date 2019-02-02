@@ -35,7 +35,8 @@ struct LinearizedTrack
   /// position and momentum Jacobian and const term.
   ///
   /// @param paramsAtPCA Parameters at point of closest approach
-  /// @param parCovarianceAtPCA Parameter covariance matrix at point of closest approach
+  /// @param parCovarianceAtPCA Parameter covariance matrix at point of closest
+  /// approach
   /// @param linPoint Linearization point
   /// @param positionJacobian Position jacobian
   /// @param momentumJacobian Momentum jacobian
@@ -45,26 +46,24 @@ struct LinearizedTrack
 
   LinearizedTrack() = default;
 
-  LinearizedTrack(
-    const ActsVectorD<5>&    paramsAtPCA,
-    const ActsSymMatrixD<5>& parCovarianceAtPCA,
-    const Vector3D&          linPoint,
-    const ActsMatrixD<5, 3>& positionJacobian,
-    const ActsMatrixD<5, 3>& momentumJacobian,
-    const Vector3D&       positionAtPCA,
-    const Vector3D&       momentumAtPCA,
-    const ActsVectorD<5>& constTerm)
-  : parametersAtPCA(paramsAtPCA)
-  , covarianceAtPCA(parCovarianceAtPCA)
-  , linearizationPoint(linPoint)
-  , positionJacobian(positionJacobian)
-  , momentumJacobian(momentumJacobian)
-  , positionAtPCA(positionAtPCA)
-  , momentumAtPCA(momentumAtPCA)
-  , constantTerm(constTerm)
-{
-}
-
+  LinearizedTrack(const ActsVectorD<5>&    paramsAtPCA,
+                  const ActsSymMatrixD<5>& parCovarianceAtPCA,
+                  const Vector3D&          linPoint,
+                  const ActsMatrixD<5, 3>& positionJacobian,
+                  const ActsMatrixD<5, 3>& momentumJacobian,
+                  const Vector3D&       positionAtPCA,
+                  const Vector3D&       momentumAtPCA,
+                  const ActsVectorD<5>& constTerm)
+    : parametersAtPCA(paramsAtPCA)
+    , covarianceAtPCA(parCovarianceAtPCA)
+    , linearizationPoint(linPoint)
+    , positionJacobian(positionJacobian)
+    , momentumJacobian(momentumJacobian)
+    , positionAtPCA(positionAtPCA)
+    , momentumAtPCA(momentumAtPCA)
+    , constantTerm(constTerm)
+  {
+  }
 
   ActsVectorD<5>    parametersAtPCA{ActsVectorD<5>::Zero()};
   ActsSymMatrixD<5> covarianceAtPCA{ActsSymMatrixD<5>::Zero()};

@@ -43,19 +43,19 @@ public:
   };
 
   /// @brief Constructor with BField
-  /// 
+  ///
   /// @param config Configuration object
   LinearizedTrackFactory(const Config& config) : m_cfg(config) {}
 
-  /// @brief Function that linearizes BoundParameters and given linearization point
+  /// @brief Function that linearizes BoundParameters at
+  /// given linearization point
   ///
   /// @param params Parameters to linearize
   /// @param linPoint Linearization point
   ///
   /// @return Linearized track
   LinearizedTrack
-  linearizeTrack(const BoundParameters* params,
-                 const Vector3D&        linPoint) const;
+  linearizeTrack(const BoundParameters* params, const Vector3D& linPoint) const;
 
 private:
   // Configuration object

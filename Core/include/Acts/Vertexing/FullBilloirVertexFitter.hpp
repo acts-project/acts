@@ -54,7 +54,7 @@ public:
   /// @return Fitted vertex
   Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
-      Vertex<InputTrack>       constraint  ) const;
+      Vertex<InputTrack>             constraint) const;
 
 private:
   /// Configuration object

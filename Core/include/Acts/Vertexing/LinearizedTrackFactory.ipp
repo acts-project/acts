@@ -40,11 +40,10 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
     paramsAtPCA        = result.endParameters->parameters();
     positionAtPCA      = result.endParameters->position();
     parCovarianceAtPCA = *result.endParameters->covariance();
-    
-  // *params are already perigeeParameters at linPoint (no propagation to
-  // linPoint needed)
-  } 
-  else {
+
+    // *params are already perigeeParameters at linPoint (no propagation to
+    // linPoint needed)
+  } else {
     paramsAtPCA        = params->parameters();
     positionAtPCA      = params->position();
     parCovarianceAtPCA = *params->covariance();
@@ -99,9 +98,8 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
   }
 
   predParamsAtPCA[0] = rho - sgn_h * S;
-
-  predParamsAtPCA[1] = positionAtPCA[eZ] - linPoint.z()
-      + rho * (phi_v - phiAtPCA) / tan_th;
+  predParamsAtPCA[1]
+      = positionAtPCA[eZ] - linPoint.z() + rho * (phi_v - phiAtPCA) / tan_th;
   predParamsAtPCA[2] = phiAtPCA;
   predParamsAtPCA[3] = th;
   predParamsAtPCA[4] = q_ov_p;
@@ -153,15 +151,15 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
   momentumJacobian(4, 2) = 1.;
 
   // const term F(V_0, p_0) in Talyor expansion
-  ActsVectorD<5> constTerm = predParamsAtPCA
-      - positionJacobian * positionAtPCA - momentumJacobian * momentumAtPCA;
+  ActsVectorD<5> constTerm = predParamsAtPCA - positionJacobian * positionAtPCA
+      - momentumJacobian * momentumAtPCA;
 
   return LinearizedTrack(paramsAtPCA,
-                                   parCovarianceAtPCA,
-                                   linPoint,
-                                   positionJacobian,
-                                   momentumJacobian,
-                                   positionAtPCA,
-                                   momentumAtPCA,
-                                   constTerm);
+                         parCovarianceAtPCA,
+                         linPoint,
+                         positionJacobian,
+                         momentumJacobian,
+                         positionAtPCA,
+                         momentumAtPCA,
+                         constTerm);
 }

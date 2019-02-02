@@ -13,10 +13,9 @@ Acts::Vertex<InputTrack>::Vertex(const Vector3D& position)
 }
 
 template <typename InputTrack>
-Acts::Vertex<InputTrack>::Vertex(
-    const Vector3D&                         position,
-    const ActsSymMatrixD<3>&                covariance,
-    std::vector<TrackAtVertex<InputTrack>>& tracks)
+Acts::Vertex<InputTrack>::Vertex(const Vector3D&          position,
+                                 const ActsSymMatrixD<3>& covariance,
+                                 std::vector<TrackAtVertex<InputTrack>>& tracks)
   : m_position(position)
   , m_covariance(covariance)
   , m_tracksAtVertex(std::move(tracks))
@@ -53,8 +52,7 @@ Acts::Vertex<InputTrack>::setPosition(const Vector3D& position)
 
 template <typename InputTrack>
 void
-Acts::Vertex<InputTrack>::setCovariance(
-    const ActsSymMatrixD<3>& covariance)
+Acts::Vertex<InputTrack>::setCovariance(const ActsSymMatrixD<3>& covariance)
 {
   m_covariance = covariance;
 }

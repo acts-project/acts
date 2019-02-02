@@ -14,7 +14,7 @@
 namespace Acts {
 
 /// @class Vertex
-/// 
+///
 /// @brief Class for storing vertex objects
 ///
 template <typename InputTrack>
@@ -71,7 +71,7 @@ private:
   Vector3D                               m_position;
   ActsSymMatrixD<3>                      m_covariance;
   std::vector<TrackAtVertex<InputTrack>> m_tracksAtVertex;
-  double                                       m_chiSquared;  // chi2 of the fit
+  double                                 m_chiSquared;  // chi2 of the fit
   double m_numberDoF;  // number of degrees of freedom
 };
 

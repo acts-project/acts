@@ -20,16 +20,14 @@ template <typename InputTrack>
 class IVertexFitter
 {
 public:
-
-	/// @param paramVector Vector of track objects to fit vertex to
-	/// @param startingPoint Constraint of the fit, position of constraint is
-	/// starting point
-	///
-	/// @return Fitted vertex
-	virtual Vertex<InputTrack>
-	fit(const std::vector<InputTrack>& paramVector,
-		Vertex<InputTrack>       constraint) const = 0;
-
+  /// @param paramVector Vector of track objects to fit vertex to
+  /// @param startingPoint Constraint of the fit, position of constraint is
+  /// starting point
+  ///
+  /// @return Fitted vertex
+  virtual Vertex<InputTrack>
+  fit(const std::vector<InputTrack>& paramVector,
+      Vertex<InputTrack>             constraint) const = 0;
 };
 
 }  // namespace Acts
