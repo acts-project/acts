@@ -330,7 +330,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
       std::shared_ptr<PerigeeSurface> perigee
           = Surface::makeShared<PerigeeSurface>(vertexPos);
 
-      int i_track = 0;
+      i_track = 0;
       for (auto& bTrack : billoirTracks) {
 
         // new refitted trackparameters
