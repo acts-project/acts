@@ -47,21 +47,25 @@ namespace detail {
 
     /// SteppingLogger action for the ActionList of the Propagator
     ///
+    /// @tparam stepper_t is the type of the Stepper
     /// @tparam propagator_state_t is the type of Propagator state
     ///
-    /// @param[in,out] state is the mutable stepper state object
-    /// @param[in,out] result is the mutable result object
-    template <typename propagator_state_t>
+    /// @param [in,out] state is the mutable stepper state object
+    /// @param [in,out] result is the mutable result object
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
       // don't log if you have reached the target
       if (state.navigation.targetReached) return;
       // record the propagation state
       Step step;
       step.stepSize = state.stepping.stepSize;
-      step.position = state.stepping.position();
-      step.momentum = state.stepping.momentum();
+      step.position = stepper.position(state.stepping);
+      step.momentum = stepper.momentum(state.stepping)
+          * stepper.direction(state.stepping);
 
       if (state.navigation.currentSurface != nullptr) {
         // hang on to surface
@@ -74,9 +78,10 @@ namespace detail {
 
     /// Pure observer interface
     /// - this does not apply to the logger
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t&) const
+    operator()(propagator_state_t& /*unused*/,
+               const stepper_t& /*unused*/) const
     {
     }
   };
