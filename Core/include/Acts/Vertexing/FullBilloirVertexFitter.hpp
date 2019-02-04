@@ -54,7 +54,7 @@ public:
   /// @return Fitted vertex
   Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
-      Vertex<InputTrack>             constraint) const;
+      Vertex<InputTrack>             constraint = Vertex<InputTrack>(Vector3D(0.,0.,0.))) const;
 
 private:
   /// Configuration object
