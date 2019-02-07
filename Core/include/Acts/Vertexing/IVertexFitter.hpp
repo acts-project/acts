@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Vertexing/Vertex.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -27,7 +28,7 @@ public:
   /// @return Fitted vertex
   virtual Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
-      Vertex<InputTrack>             constraint) const = 0;
+      Vertex<InputTrack>             constraint = Vertex<InputTrack>(Vector3D(0.,0.,0.))) const = 0;
 };
 
 }  // namespace Acts
