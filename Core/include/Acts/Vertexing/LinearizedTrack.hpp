@@ -49,18 +49,18 @@ struct LinearizedTrack
   LinearizedTrack(const ActsVectorD<5>&    paramsAtPCA,
                   const ActsSymMatrixD<5>& parCovarianceAtPCA,
                   const Vector3D&          linPoint,
-                  const ActsMatrixD<5, 3>& positionJacobian,
-                  const ActsMatrixD<5, 3>& momentumJacobian,
-                  const Vector3D&       positionAtPCA,
-                  const Vector3D&       momentumAtPCA,
+                  const ActsMatrixD<5, 3>& posJacobian,
+                  const ActsMatrixD<5, 3>& momJacobian,
+                  const Vector3D&       position,
+                  const Vector3D&       momentum,
                   const ActsVectorD<5>& constTerm)
     : parametersAtPCA(paramsAtPCA)
     , covarianceAtPCA(parCovarianceAtPCA)
     , linearizationPoint(linPoint)
-    , positionJacobian(positionJacobian)
-    , momentumJacobian(momentumJacobian)
-    , positionAtPCA(positionAtPCA)
-    , momentumAtPCA(momentumAtPCA)
+    , positionJacobian(posJacobian)
+    , momentumJacobian(momJacobian)
+    , positionAtPCA(position)
+    , momentumAtPCA(momentum)
     , constantTerm(constTerm)
   {
   }
