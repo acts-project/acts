@@ -7,84 +7,89 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #define BOOST_TEST_MODULE FullBilloirVertexFitter Tests
-#include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/test/output_test_stream.hpp>
 
-
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/MagneticField/ConstantBField.hpp"
-#include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
 #include "Acts/Vertexing/IVertexFitter.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 
 namespace bdata = boost::unit_test::data;
 
 namespace Acts {
 namespace Test {
 
-struct InputTrack
+  struct InputTrack
+  {
+    InputTrack(const BoundParameters& params) : m_parameters(params) {}
+
+    const BoundParameters&
+    parameters() const
     {
-      InputTrack(const BoundParameters& params)
-        : m_parameters(params) {}
+      return m_parameters;
+    }
 
-       const BoundParameters& parameters() const {return m_parameters;}
+  private:
+    BoundParameters m_parameters;
+  };
 
-    private:
-       BoundParameters m_parameters;
-    };
-
-
-Vertex<InputTrack> myFitWrapper(IVertexFitter<InputTrack>* fitter, std::vector<InputTrack>& tracks, Vertex<InputTrack>* constraint = nullptr)
-{
-  if(constraint != nullptr){
-    return fitter->fit(tracks, *constraint);
+  Vertex<InputTrack>
+  myFitWrapper(IVertexFitter<InputTrack>* fitter,
+               std::vector<InputTrack>&   tracks,
+               Vertex<InputTrack>*        constraint = nullptr)
+  {
+    if (constraint != nullptr) {
+      return fitter->fit(tracks, *constraint);
+    } else {
+      return fitter->fit(tracks);
+    }
   }
-  else{
-    return fitter->fit(tracks);
-  }
-}
 
   ///
   /// @brief Unit test for FullBilloirVertexFitter
   ///
   BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test)
   {
-    
-  	// Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
 
-  // Set up Billoir Vertex Fitter
- 	FullBilloirVertexFitter<ConstantBField, InputTrack>::Config vertexFitterCfg(bField);
- 	FullBilloirVertexFitter<ConstantBField, InputTrack> billoirFitter(vertexFitterCfg);
+    // Set up constant B-Field
+    ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
 
- 	// Constraint for vertex fit
- 	Vertex<InputTrack> myConstraint;
- 	// Some abitrary values
-  ActsSymMatrixD<3> myCovMat;
-	myCovMat(0,0) = 30.;
-	myCovMat(1,1) = 30.;
-	myCovMat(2,2) = 30.;
-	myConstraint.setCovariance(std::move(myCovMat));
-	myConstraint.setPosition(Vector3D(0,0,0));
+    // Set up Billoir Vertex Fitter
+    FullBilloirVertexFitter<ConstantBField, InputTrack>::Config vertexFitterCfg(
+        bField);
+    FullBilloirVertexFitter<ConstantBField, InputTrack> billoirFitter(
+        vertexFitterCfg);
 
- 	std::vector<InputTrack> emptyVector;
+    // Constraint for vertex fit
+    Vertex<InputTrack> myConstraint;
+    // Some abitrary values
+    ActsSymMatrixD<3> myCovMat;
+    myCovMat(0, 0) = 30.;
+    myCovMat(1, 1) = 30.;
+    myCovMat(2, 2) = 30.;
+    myConstraint.setCovariance(std::move(myCovMat));
+    myConstraint.setPosition(Vector3D(0, 0, 0));
 
-	Vertex<InputTrack> fittedVertex = billoirFitter.fit(emptyVector, myConstraint);
-	Vector3D origin(0., 0., 0.);
-  BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
+    std::vector<InputTrack> emptyVector;
 
-  ActsSymMatrixD<3> zeroMat = ActsSymMatrixD<3>::Zero();
-  BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
+    Vertex<InputTrack> fittedVertex
+        = billoirFitter.fit(emptyVector, myConstraint);
+    Vector3D origin(0., 0., 0.);
+    BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
 
-  fittedVertex = billoirFitter.fit(emptyVector);
-  BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
-  BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
-    
+    ActsSymMatrixD<3> zeroMat = ActsSymMatrixD<3>::Zero();
+    BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
+
+    fittedVertex = billoirFitter.fit(emptyVector);
+    BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
+    BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
   }
 
   const int ntests = 10;
@@ -94,18 +99,19 @@ Vertex<InputTrack> myFitWrapper(IVertexFitter<InputTrack>* fitter, std::vector<I
   ///
   BOOST_DATA_TEST_CASE(
       billoir_vertex_fitter_test,
-            bdata::random((bdata::seed = 0,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(-0.1 * units::_mm,
+      bdata::random((bdata::seed = 0,
+                     bdata::distribution
+                     = std::uniform_real_distribution<>(-0.1 * units::_mm,
                                                         0.1 * units::_mm)))
-          ^ bdata::random((bdata::seed = 1,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(-0.1 * units::_mm,
-                                                        0.1 * units::_mm)))
+          ^ bdata::random(
+                (bdata::seed = 1,
+                 bdata::distribution
+                 = std::uniform_real_distribution<>(-0.1 * units::_mm,
+                                                    0.1 * units::_mm)))
           ^ bdata::random((bdata::seed = 2,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-20 * units::_mm,
-                                                        20 * units::_mm)))
+                                                              20 * units::_mm)))
           ^ bdata::random((bdata::seed = 3,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.01, 0.01)))
@@ -130,18 +136,26 @@ Vertex<InputTrack> myFitWrapper(IVertexFitter<InputTrack>* fitter, std::vector<I
           ^ bdata::random((bdata::seed = 10,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.2, 0.2)))
-          ^ bdata::random((bdata::seed = 11,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(0.4 * units::_GeV, 10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 12,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(0.4 * units::_GeV, 10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 13,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(0.4 * units::_GeV, 10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 14,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(0.4 * units::_GeV, 10. * units::_GeV)))
+          ^ bdata::random(
+                (bdata::seed = 11,
+                 bdata::distribution
+                 = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                    10. * units::_GeV)))
+          ^ bdata::random(
+                (bdata::seed = 12,
+                 bdata::distribution
+                 = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                    10. * units::_GeV)))
+          ^ bdata::random(
+                (bdata::seed = 13,
+                 bdata::distribution
+                 = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                    10. * units::_GeV)))
+          ^ bdata::random(
+                (bdata::seed = 14,
+                 bdata::distribution
+                 = std::uniform_real_distribution<>(0.4 * units::_GeV,
+                                                    10. * units::_GeV)))
           ^ bdata::random((bdata::seed = 15,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
@@ -178,12 +192,14 @@ Vertex<InputTrack> myFitWrapper(IVertexFitter<InputTrack>* fitter, std::vector<I
           ^ bdata::random((bdata::seed = 26,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-1, 1)))
-          ^ bdata::random((bdata::seed = 27,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(0., 100. * units::_um)))
-          ^ bdata::random((bdata::seed = 28,
-                           bdata::distribution
-                           = std::uniform_real_distribution<>(0., 100. * units::_um)))
+          ^ bdata::random(
+                (bdata::seed = 27,
+                 bdata::distribution
+                 = std::uniform_real_distribution<>(0., 100. * units::_um)))
+          ^ bdata::random(
+                (bdata::seed = 28,
+                 bdata::distribution
+                 = std::uniform_real_distribution<>(0., 100. * units::_um)))
           ^ bdata::random((bdata::seed = 29,
                            bdata::distribution
                            = std::uniform_real_distribution<>(0., 0.1)))
@@ -227,92 +243,91 @@ Vertex<InputTrack> myFitWrapper(IVertexFitter<InputTrack>* fitter, std::vector<I
       res_ph,
       res_th,
       res_qp,
-  
+
       index)
   {
 
-  (void) index;
+    (void)index;
 
-  // Store parameters for 4 tracks
-  std::vector<double> d0Vec = {d0_1, d0_2, d0_3, d0_4};
-  std::vector<double> z0Vec = {z0_1, z0_2, z0_3, z0_4};
-  std::vector<double> pTVec = {pT_1, pT_2, pT_3, pT_4};
-  std::vector<double> phiVec = {phi_1, phi_2, phi_3, phi_4};
-  std::vector<double> thetaVec = {theta_1, theta_2, theta_3, theta_4};
+    // Store parameters for 4 tracks
+    std::vector<double> d0Vec    = {d0_1, d0_2, d0_3, d0_4};
+    std::vector<double> z0Vec    = {z0_1, z0_2, z0_3, z0_4};
+    std::vector<double> pTVec    = {pT_1, pT_2, pT_3, pT_4};
+    std::vector<double> phiVec   = {phi_1, phi_2, phi_3, phi_4};
+    std::vector<double> thetaVec = {theta_1, theta_2, theta_3, theta_4};
 
-  // Construct random vector of positive or negaitve charges
-  std::vector<double> qTemp = {q_1, q_2, q_3, q_4};
-  std::vector<int>  qVec;
-  for(auto q : qTemp){
-    qVec.push_back(q < 0 ? - 1. : 1.);
-  }
+    // Construct random vector of positive or negaitve charges
+    std::vector<double> qTemp = {q_1, q_2, q_3, q_4};
+    std::vector<int>    qVec;
+    for (auto q : qTemp) {
+      qVec.push_back(q < 0 ? -1. : 1.);
+    }
 
-  // Set up constant B-Field
-  ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
+    // Set up constant B-Field
+    ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
 
-  // Set up Billoir Vertex Fitter
-  FullBilloirVertexFitter<ConstantBField, InputTrack>::Config vertexFitterCfg(bField);
-  FullBilloirVertexFitter<ConstantBField, InputTrack> billoirFitter(vertexFitterCfg);
+    // Set up Billoir Vertex Fitter
+    FullBilloirVertexFitter<ConstantBField, InputTrack>::Config vertexFitterCfg(
+        bField);
+    FullBilloirVertexFitter<ConstantBField, InputTrack> billoirFitter(
+        vertexFitterCfg);
 
-  // Constraint for vertex fit
-  Vertex<InputTrack> myConstraint;
-  // Some abitrary values
-  ActsSymMatrixD<3> myCovMat;
-  myCovMat(0,0) = 30.;
-  myCovMat(1,1) = 30.;
-  myCovMat(2,2) = 30.;
-  myConstraint.setCovariance(std::move(myCovMat));
-  myConstraint.setPosition(Vector3D(0,0,0));
+    // Constraint for vertex fit
+    Vertex<InputTrack> myConstraint;
+    // Some abitrary values
+    ActsSymMatrixD<3> myCovMat;
+    myCovMat(0, 0) = 30.;
+    myCovMat(1, 1) = 30.;
+    myCovMat(2, 2) = 30.;
+    myConstraint.setCovariance(std::move(myCovMat));
+    myConstraint.setPosition(Vector3D(0, 0, 0));
 
-  // Vector to store track objects used for vertex fit
-  std::vector<InputTrack> tracks;
+    // Vector to store track objects used for vertex fit
+    std::vector<InputTrack> tracks;
 
-  // Create position of vertex and perigee surface
-  Vector3D vertexPosition(x, y, z);
-  std::shared_ptr<PerigeeSurface> perigeeSurface
-       = Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
+    // Create position of vertex and perigee surface
+    Vector3D                        vertexPosition(x, y, z);
+    std::shared_ptr<PerigeeSurface> perigeeSurface
+        = Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
-  // Calculate d0 and z0 corresponding to vertex position
-  double d0_v = sqrt(x*x + y*y);
-  double z0_v = z;
- 
-  // Start constructing 4 tracks in the following
-  // Construct random track emerging from vicinity of vertex position
-  for(unsigned int iTrack = 0; iTrack < d0Vec.size(); iTrack++)
-  {
-    TrackParametersBase::ParVector_t paramVec;
-    paramVec << d0_v + d0Vec[iTrack], z0_v + z0Vec[iTrack],
-             phiVec[iTrack], thetaVec[iTrack], ((double)qVec[iTrack])/pTVec[iTrack];
+    // Calculate d0 and z0 corresponding to vertex position
+    double d0_v = sqrt(x * x + y * y);
+    double z0_v = z;
 
-    /// Fill vector of track objects with simple covariance matrix
-    std::unique_ptr<ActsSymMatrixD<5>> covMat
-        = std::make_unique<ActsSymMatrixD<5>>();
-    (*covMat)<< res_d0*res_d0, 0., 0., 0., 0.,
-              0., res_z0*res_z0, 0., 0., 0.,
-              0., 0., res_ph*res_ph, 0., 0.,
-              0., 0., 0., res_th*res_th, 0.,
-              0., 0., 0., 0., res_qp*res_qp;
-    tracks.push_back(InputTrack(BoundParameters(std::move(covMat), paramVec, perigeeSurface)));
+    // Start constructing 4 tracks in the following
+    // Construct random track emerging from vicinity of vertex position
+    for (unsigned int iTrack = 0; iTrack < d0Vec.size(); iTrack++) {
+      TrackParametersBase::ParVector_t paramVec;
+      paramVec << d0_v + d0Vec[iTrack], z0_v + z0Vec[iTrack], phiVec[iTrack],
+          thetaVec[iTrack], ((double)qVec[iTrack]) / pTVec[iTrack];
 
-  }
+      /// Fill vector of track objects with simple covariance matrix
+      std::unique_ptr<ActsSymMatrixD<5>> covMat
+          = std::make_unique<ActsSymMatrixD<5>>();
+      (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
+          0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., res_th * res_th, 0.,
+          0., 0., 0., 0., res_qp * res_qp;
+      tracks.push_back(InputTrack(
+          BoundParameters(std::move(covMat), paramVec, perigeeSurface)));
+    }
 
-  // Do the actual fit with 4 tracks without constraint
-  Vertex<InputTrack>fittedVertex = billoirFitter.fit(tracks);
-  std::cout << "No constraint, fitted vertex: " << fittedVertex.position() << std::endl;
-  std::cout << "True vertex: " << vertexPosition << std::endl;
-  CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1*units::_mm);
-  
-  // Do the fit with a constraint
-  fittedVertex = billoirFitter.fit(tracks, myConstraint);
-  std::cout << "Constraint fit, fittedVertex: " << fittedVertex.position() << std::endl;
-  std::cout << "True vertex: " << vertexPosition << std::endl;
-  CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1*units::_mm);
+    // Do the actual fit with 4 tracks without constraint
+    Vertex<InputTrack> fittedVertex = billoirFitter.fit(tracks);
+    std::cout << "No constraint, fitted vertex: " << fittedVertex.position()
+              << std::endl;
+    std::cout << "True vertex: " << vertexPosition << std::endl;
+    CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
 
-  Vertex<InputTrack> testVertex = myFitWrapper(&billoirFitter, tracks);
+    // Do the fit with a constraint
+    fittedVertex = billoirFitter.fit(tracks, myConstraint);
+    std::cout << "Constraint fit, fittedVertex: " << fittedVertex.position()
+              << std::endl;
+    std::cout << "True vertex: " << vertexPosition << std::endl;
+    CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
 
-  CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1*units::_mm);
+    Vertex<InputTrack> testVertex = myFitWrapper(&billoirFitter, tracks);
 
-
+    CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
   }
 
 }  // namespace Test

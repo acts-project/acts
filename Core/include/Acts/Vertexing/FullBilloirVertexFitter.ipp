@@ -67,8 +67,8 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
   double       newChi2 = 0;
   unsigned int nTracks = paramVector.size();
 
-  if(nTracks == 0){
-    return Vertex<InputTrack>(Vector3D(0.,0.,0.));
+  if (nTracks == 0) {
+    return Vertex<InputTrack>(Vector3D(0., 0., 0.));
   }
 
   // Set number of degrees of freedom
