@@ -215,8 +215,7 @@ namespace Test {
     // Vector to store track objects used for vertex fit
     std::vector<InputTrack> tracks;
 
-    // Create position of vertex and perigee surface
-    Vector3D                        vertexPosition(x, y, z);
+    // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface
         = Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
 
