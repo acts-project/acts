@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+// clang-format off
 #define BOOST_TEST_MODULE FullBilloirVertexFitter Tests
-#include <boost/test/data/test_case.hpp>
 #include <boost/test/included/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
 #include <boost/test/output_test_stream.hpp>
+// clang-format on
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
