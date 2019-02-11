@@ -42,8 +42,13 @@ public:
     Config(BField bIn) : bField(std::move(bIn)), maxIterations(5) {}
   };
 
-  /// Constructor with explicit config
-  FullBilloirVertexFitter(const Config& cfg) : m_cfg(cfg) {}
+  /// @brief Constructor with explicit config
+  ///
+  /// @param cfg Configuration object
+  FullBilloirVertexFitter(const Config& cfg)
+    : m_cfg(cfg), extractParameters([&](InputTrack params) { return params; })
+  {
+  }
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
@@ -60,6 +65,13 @@ public:
 private:
   /// Configuration object
   Config m_cfg;
+
+  /// @brief Function to extract track parameters,
+  /// InputTrack objects are BoundParameters by default, function to be
+  /// overwritten to return BoundParameters for other InputTrack objects.
+  ///
+  /// @param params InputTrack object to extract track parameters from
+  std::function<BoundParameters(InputTrack)> extractParameters;
 };
 
 }  // namespace Acts

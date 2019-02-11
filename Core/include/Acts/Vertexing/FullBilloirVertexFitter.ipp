@@ -105,7 +105,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
     int           i_track = 0;
     // iterate over all tracks
     for (const InputTrack& trackContainer : paramVector) {
-      const auto& trackParams = trackContainer.parameters();
+      const auto& trackParams = extractParameters(trackContainer);
       if (n_iter == 0) {
         double phi   = trackParams.parameters()[ParID_t::ePHI];
         double theta = trackParams.parameters()[ParID_t::eTHETA];

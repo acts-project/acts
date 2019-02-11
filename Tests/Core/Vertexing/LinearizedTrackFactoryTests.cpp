@@ -26,20 +26,6 @@ namespace bdata = boost::unit_test::data;
 namespace Acts {
 namespace Test {
 
-  struct InputTrack
-  {
-    InputTrack(const Acts::BoundParameters& params) : m_parameters(params) {}
-
-    const Acts::BoundParameters&
-    parameters() const
-    {
-      return m_parameters;
-    }
-
-  private:
-    Acts::BoundParameters m_parameters;
-  };
-
   const int ntests = 1;
 
   ///
@@ -215,7 +201,7 @@ namespace Test {
     ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
 
     // Vector to store track objects used for vertex fit
-    std::vector<InputTrack> tracks;
+    std::vector<BoundParameters> tracks;
 
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface
@@ -238,8 +224,8 @@ namespace Test {
       (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
           0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., res_th * res_th, 0.,
           0., 0., 0., 0., res_qp * res_qp;
-      tracks.push_back(InputTrack(
-          BoundParameters(std::move(covMat), paramVec, perigeeSurface)));
+      tracks.push_back(
+          BoundParameters(std::move(covMat), paramVec, perigeeSurface));
     }
 
     LinearizedTrackFactory<ConstantBField>::Config lt_config(bField);
@@ -250,10 +236,9 @@ namespace Test {
     Vector3D          vec3Zero = Vector3D::Zero();
     ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
 
-    for (const InputTrack& track : tracks) {
-      const auto&     trackParams = track.parameters();
+    for (const BoundParameters& parameters : tracks) {
       LinearizedTrack linTrack
-          = linFactory.linearizeTrack(&trackParams, Vector3D(0., 0., 0.));
+          = linFactory.linearizeTrack(&parameters, Vector3D(0., 0., 0.));
 
       BOOST_CHECK_NE(linTrack.parametersAtPCA, vec5Zero);
       BOOST_CHECK_NE(linTrack.covarianceAtPCA, mat5Zero);
