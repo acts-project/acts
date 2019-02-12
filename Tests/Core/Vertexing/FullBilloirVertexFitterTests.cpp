@@ -159,28 +159,28 @@ namespace Test {
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
           ^ bdata::random((bdata::seed = 19,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+                           = std::uniform_real_distribution<>(1., M_PI - 1.)))
           ^ bdata::random((bdata::seed = 20,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+                           = std::uniform_real_distribution<>(1., M_PI - 1.)))
           ^ bdata::random((bdata::seed = 21,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+                           = std::uniform_real_distribution<>(1., M_PI - 1.)))
           ^ bdata::random((bdata::seed = 22,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
+                           = std::uniform_real_distribution<>(1., M_PI - 1.)))
           ^ bdata::random((bdata::seed = 23,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(-1, 1)))
+                           = std::uniform_real_distribution<>(-1., 1.)))
           ^ bdata::random((bdata::seed = 24,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(-1, 1)))
+                           = std::uniform_real_distribution<>(-1., 1.)))
           ^ bdata::random((bdata::seed = 25,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(-1, 1)))
+                           = std::uniform_real_distribution<>(-1., 1.)))
           ^ bdata::random((bdata::seed = 26,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(-1, 1)))
+                           = std::uniform_real_distribution<>(-1., 1.)))
           ^ bdata::random(
                 (bdata::seed = 27,
                  bdata::distribution
@@ -336,114 +336,114 @@ namespace Test {
   ///
   BOOST_DATA_TEST_CASE(
       billoir_vertex_fitter_usertrack_test,
-      bdata::random((bdata::seed = 0,
+      bdata::random((bdata::seed = 70,
                      bdata::distribution
                      = std::uniform_real_distribution<>(-0.1 * units::_mm,
                                                         0.1 * units::_mm)))
           ^ bdata::random(
-                (bdata::seed = 1,
+                (bdata::seed = 71,
                  bdata::distribution
                  = std::uniform_real_distribution<>(-0.1 * units::_mm,
                                                     0.1 * units::_mm)))
-          ^ bdata::random((bdata::seed = 2,
+          ^ bdata::random((bdata::seed = 72,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-20 * units::_mm,
                                                               20 * units::_mm)))
-          ^ bdata::random((bdata::seed = 3,
+          ^ bdata::random((bdata::seed = 73,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.01, 0.01)))
-          ^ bdata::random((bdata::seed = 4,
+          ^ bdata::random((bdata::seed = 74,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.01, 0.01)))
-          ^ bdata::random((bdata::seed = 5,
+          ^ bdata::random((bdata::seed = 75,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.01, 0.01)))
-          ^ bdata::random((bdata::seed = 6,
+          ^ bdata::random((bdata::seed = 76,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.01, 0.01)))
-          ^ bdata::random((bdata::seed = 7,
+          ^ bdata::random((bdata::seed = 77,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.2, 0.2)))
-          ^ bdata::random((bdata::seed = 8,
+          ^ bdata::random((bdata::seed = 78,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.2, 0.2)))
-          ^ bdata::random((bdata::seed = 9,
+          ^ bdata::random((bdata::seed = 79,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.2, 0.2)))
-          ^ bdata::random((bdata::seed = 10,
+          ^ bdata::random((bdata::seed = 710,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.2, 0.2)))
           ^ bdata::random(
-                (bdata::seed = 11,
+                (bdata::seed = 711,
                  bdata::distribution
                  = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                     10. * units::_GeV)))
           ^ bdata::random(
-                (bdata::seed = 12,
+                (bdata::seed = 712,
                  bdata::distribution
                  = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                     10. * units::_GeV)))
           ^ bdata::random(
-                (bdata::seed = 13,
+                (bdata::seed = 713,
                  bdata::distribution
                  = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                     10. * units::_GeV)))
           ^ bdata::random(
-                (bdata::seed = 14,
+                (bdata::seed = 714,
                  bdata::distribution
                  = std::uniform_real_distribution<>(0.4 * units::_GeV,
                                                     10. * units::_GeV)))
-          ^ bdata::random((bdata::seed = 15,
+          ^ bdata::random((bdata::seed = 715,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((bdata::seed = 16,
+          ^ bdata::random((bdata::seed = 716,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((bdata::seed = 17,
+          ^ bdata::random((bdata::seed = 717,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((bdata::seed = 18,
+          ^ bdata::random((bdata::seed = 718,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-M_PI, M_PI)))
-          ^ bdata::random((bdata::seed = 19,
+          ^ bdata::random((bdata::seed = 719,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
-          ^ bdata::random((bdata::seed = 20,
+                           = std::uniform_real_distribution<>(1., M_PI - 1.)))
+          ^ bdata::random((bdata::seed = 720,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
-          ^ bdata::random((bdata::seed = 21,
+                           = std::uniform_real_distribution<>(1., M_PI - 1.)))
+          ^ bdata::random((bdata::seed = 721,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
-          ^ bdata::random((bdata::seed = 22,
+                           = std::uniform_real_distribution<>(1., M_PI - 1.)))
+          ^ bdata::random((bdata::seed = 722,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(1.0, M_PI - 1.0)))
-          ^ bdata::random((bdata::seed = 23,
+                           = std::uniform_real_distribution<>(1., M_PI - 1.)))
+          ^ bdata::random((bdata::seed = 723,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(-1, 1)))
-          ^ bdata::random((bdata::seed = 24,
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 724,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(-1, 1)))
-          ^ bdata::random((bdata::seed = 25,
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 725,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(-1, 1)))
-          ^ bdata::random((bdata::seed = 26,
+                           = std::uniform_real_distribution<>(-1., 1.)))
+          ^ bdata::random((bdata::seed = 726,
                            bdata::distribution
-                           = std::uniform_real_distribution<>(-1, 1)))
+                           = std::uniform_real_distribution<>(-1., 1.)))
           ^ bdata::random(
-                (bdata::seed = 27,
+                (bdata::seed = 727,
                  bdata::distribution
                  = std::uniform_real_distribution<>(0., 100. * units::_um)))
           ^ bdata::random(
-                (bdata::seed = 28,
+                (bdata::seed = 728,
                  bdata::distribution
                  = std::uniform_real_distribution<>(0., 100. * units::_um)))
-          ^ bdata::random((bdata::seed = 29,
+          ^ bdata::random((bdata::seed = 729,
                            bdata::distribution
                            = std::uniform_real_distribution<>(0., 0.1)))
-          ^ bdata::random((bdata::seed = 30,
+          ^ bdata::random((bdata::seed = 730,
                            bdata::distribution
                            = std::uniform_real_distribution<>(0., 0.1)))
-          ^ bdata::random((bdata::seed = 31,
+          ^ bdata::random((bdata::seed = 731,
                            bdata::distribution
                            = std::uniform_real_distribution<>(-0.1, 0.1)))
 
