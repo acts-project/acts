@@ -42,10 +42,9 @@ public:
     Config(BField bIn) : bField(std::move(bIn)), maxIterations(5) {}
   };
 
-  /// @brief Constructor with explicit config
+  /// @brief Constructor used if InputTrack type == BoundParameters
   ///
   /// @param cfg Configuration object
-
   template <typename T = InputTrack,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
   FullBilloirVertexFitter(const Config& cfg)
@@ -53,6 +52,10 @@ public:
   {
   }
 
+  /// @brief Constructor for user-defined InputTrack type =! BoundParameters
+  ///
+  /// @param cfg Configuration object
+  /// @param func Function extracting BoundParameters from InputTrack object
   FullBilloirVertexFitter(const Config&                              cfg,
                           std::function<BoundParameters(InputTrack)> func)
     : m_cfg(cfg), extractParameters(func)
