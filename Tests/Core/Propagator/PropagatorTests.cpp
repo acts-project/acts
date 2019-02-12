@@ -124,55 +124,6 @@ namespace Test {
     }
   };
 
-  /// An observer that scatters at a given pathlength
-  /// with a fixed sigma(phi) and sigma(theta)
-  struct PathScatterer
-  {
-
-    // the surface to be intersected
-    double path_limit = std::numeric_limits<double>::max();
-    // scattering deltas
-    double sigma_phi   = 0.05;
-    double sigma_theta = 0.05;
-    // the tolerance for intersection
-    double tolerance = 1.e-5;
-
-    /// Simple result struct to be returned
-    struct this_result
-    {
-      bool scattered = false;
-    };
-
-    using result_type = this_result;
-
-    PathScatterer() = default;
-
-    template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& state,
-               const stepper_t& /*unused*/,
-               result_type& result) const
-    {
-      if (!result.scattered
-          && std::abs(state.stepping.pathAccumulated - path_limit)
-              < tolerance) {
-        // now here we should apply the scattering
-        result.scattered = true;
-        // do the update and reinitialize the jacobians
-        state.stepping.covarianceTransport(true);
-        state.stepping.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
-        state.stepping.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
-      }
-    }
-
-    template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& /*unused*/,
-               const stepper_t& /*unused*/) const
-    {
-    }
-  };
-
   // Global definitions
   // The path limit abort
   using path_limit = detail::PathLimitReached;

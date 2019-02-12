@@ -15,6 +15,7 @@
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
+#include "Acts/Propagator/StepperBase.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
@@ -41,7 +42,10 @@ template <typename BField,
           typename corrector_t     = VoidIntersectionCorrector,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t    = detail::VoidAuctioneer>
-class EigenStepper
+class EigenStepper : public StepperBase<EigenStepper<BField,
+                                                     corrector_t,
+                                                     extensionlist_t,
+                                                     auctioneer_t>>
 {
 
 private:

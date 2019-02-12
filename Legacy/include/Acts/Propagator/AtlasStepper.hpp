@@ -12,6 +12,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/StepperBase.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -23,7 +24,7 @@ namespace Acts {
 
 /// @brief the AtlasStepper implementation for the
 template <typename bfield_t>
-class AtlasStepper
+class AtlasStepper : public StepperBase<AtlasStepper<bfield_t>>
 {
 
 public:

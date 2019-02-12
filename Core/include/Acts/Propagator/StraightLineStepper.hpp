@@ -11,6 +11,7 @@
 #include <cmath>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/StepperBase.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -24,7 +25,7 @@ namespace Acts {
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
-class StraightLineStepper
+class StraightLineStepper : public StepperBase<StraightLineStepper>
 {
 
 private:
@@ -125,8 +126,8 @@ public:
   }
 
   /// Return a corrector
-  static VoidIntersectionCorrector
-  corrector(State& /*state*/)
+  VoidIntersectionCorrector
+  corrector(State& /*state*/) const
   {
     return VoidIntersectionCorrector();
   }
@@ -168,12 +169,9 @@ public:
   /// @param [in] reinitialize is a flag to steer whether the
   ///        state should be reinitialized at the new
   ///        position
-  ///
-  /// @return the full transport jacobian
-  const ActsMatrixD<5, 5>
+  void
   covarianceTransport(State& /*state*/, bool /*reinitialize = false*/) const
   {
-    return ActsMatrixD<5, 5>::Identity();
   }
 
   /// Method for on-demand transport of the covariance
@@ -189,15 +187,12 @@ public:
   ///        state should be reinitialized at the new
   ///        position
   /// @note no check is done if the position is actually on the surface
-  ///
-  /// @return the full transport jacobian
   template <typename surface_t>
-  const ActsMatrixD<5, 5>
+  void
   covarianceTransport(State& /*unused*/,
                       const surface_t& /*surface*/,
                       bool /*reinitialize = false*/) const
   {
-    return ActsMatrixD<5, 5>::Identity();
   }
 
   /// Always use the same propagation state type, independently of the initial
