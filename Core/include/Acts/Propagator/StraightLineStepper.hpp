@@ -131,17 +131,29 @@ public:
     return VoidIntersectionCorrector();
   }
 
+  /// Tests if the state reached a surface
+  ///
+  /// @param [in] state State that is tests
+  /// @param [in] surface Surface that is tested
+  ///
+  /// @return Boolean statement if surface is reached by state
+  bool
+  surfaceReached(const State& state, const Surface* surface) const
+  {
+    return surface->isOnSurface(position(state), direction(state), true);
+  }
+
   /// Method to update momentum, direction and p
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
-  static void
+  void
   update(State&          state,
          const Vector3D& uposition,
          const Vector3D& udirection,
-         double          up)
+         double          up) const
   {
     state.pos = uposition;
     state.dir = udirection;
@@ -158,8 +170,8 @@ public:
   ///        position
   ///
   /// @return the full transport jacobian
-  static const ActsMatrixD<5, 5>
-  covarianceTransport(State& /*state*/, bool /*reinitialize = false*/)
+  const ActsMatrixD<5, 5>
+  covarianceTransport(State& /*state*/, bool /*reinitialize = false*/) const
   {
     return ActsMatrixD<5, 5>::Identity();
   }
@@ -180,10 +192,10 @@ public:
   ///
   /// @return the full transport jacobian
   template <typename surface_t>
-  static const ActsMatrixD<5, 5>
+  const ActsMatrixD<5, 5>
   covarianceTransport(State& /*unused*/,
                       const surface_t& /*surface*/,
-                      bool /*reinitialize = false*/)
+                      bool /*reinitialize = false*/) const
   {
     return ActsMatrixD<5, 5>::Identity();
   }

@@ -267,6 +267,18 @@ public:
     return state.pVector[6] > 0. ? 1. : -1.;
   }
 
+  /// Tests if the state reached a surface
+  ///
+  /// @param [in] state State that is tests
+  /// @param [in] surface Surface that is tested
+  ///
+  /// @return Boolean statement if surface is reached by state
+  bool
+  surfaceReached(const State& state, const Surface* surface) const
+  {
+    return surface->isOnSurface(position(state), direction(state), true);
+  }
+
   /// Method to update momentum, direction and p
   ///
   /// @param uposition the updated position
@@ -797,8 +809,7 @@ public:
       state.pVector[39] -= (s4 * state.pVector[43]);
       state.pVector[40] -= (s4 * state.pVector[44]);
 
-      double P3, P4,
-          C = state.pVector[3] * state.pVector[3]
+      double P3, P4, C = state.pVector[3] * state.pVector[3]
           + state.pVector[4] * state.pVector[4];
       if (C > 1.e-20) {
         C  = 1. / C;

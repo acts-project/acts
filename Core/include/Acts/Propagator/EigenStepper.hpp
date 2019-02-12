@@ -281,6 +281,18 @@ public:
     return state.q;
   }
 
+  /// Tests if the state reached a surface
+  ///
+  /// @param [in] state State that is tests
+  /// @param [in] surface Surface that is tested
+  ///
+  /// @return Boolean statement if surface is reached by state
+  bool
+  surfaceReached(const State& state, const Surface* surface) const
+  {
+    return surface->isOnSurface(position(state), direction(state), true);
+  }
+
   /// Create and return the bound state at the current position
   ///
   /// @brief This transports (if necessary) the covariance
