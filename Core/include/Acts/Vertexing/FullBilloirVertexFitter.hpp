@@ -45,8 +45,17 @@ public:
   /// @brief Constructor with explicit config
   ///
   /// @param cfg Configuration object
+
+  template <typename T = InputTrack,
+            std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
   FullBilloirVertexFitter(const Config& cfg)
-    : m_cfg(cfg), extractParameters([&](InputTrack params) { return params; })
+    : m_cfg(cfg), extractParameters([&](T params) { return params; })
+  {
+  }
+
+  FullBilloirVertexFitter(const Config&                              cfg,
+                          std::function<BoundParameters(InputTrack)> func)
+    : m_cfg(cfg), extractParameters(func)
   {
   }
 

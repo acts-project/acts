@@ -290,7 +290,7 @@ namespace Test {
       paramVec << d0_v + d0Vec[iTrack], z0_v + z0Vec[iTrack], phiVec[iTrack],
           thetaVec[iTrack], ((double)qVec[iTrack]) / pTVec[iTrack];
 
-      /// Fill vector of track objects with simple covariance matrix
+      // Fill vector of track objects with simple covariance matrix
       std::unique_ptr<ActsSymMatrixD<5>> covMat
           = std::make_unique<ActsSymMatrixD<5>>();
       (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
@@ -302,26 +302,18 @@ namespace Test {
 
     // Do the actual fit with 4 tracks without constraint
     Vertex<BoundParameters> fittedVertex = billoirFitter.fit(tracks);
-    std::cout << "No constraint, fitted vertex: " << fittedVertex.position()
-              << std::endl;
-    std::cout << "True vertex: " << vertexPosition << std::endl;
     CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
 
     // Do the fit with a constraint
     fittedVertex = billoirFitter.fit(tracks, myConstraint);
-    std::cout << "Constraint fit, fittedVertex: " << fittedVertex.position()
-              << std::endl;
-    std::cout << "True vertex: " << vertexPosition << std::endl;
     CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
 
+    // Test the IVertexFitter interface
     Vertex<BoundParameters> testVertex = myFitWrapper(&billoirFitter, tracks);
-
     CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
   }
 
-  typedef BoundParameters InputTrack;
-
-#if 0
+  // Dummy user-defined InputTrack type
   struct InputTrack
   {
     InputTrack(const BoundParameters& params) : m_parameters(params) {}
@@ -332,13 +324,14 @@ namespace Test {
       return m_parameters;
     }
 
+    // store e.g. link to original objects here
+
   private:
     BoundParameters m_parameters;
   };
-#endif
 
   ///
-  /// @brief Unit test for FullBilloirVertexFitter with user-defined track input
+  /// @brief Unit test for FullBilloirVertexFitter with user-defined InputTrack
   /// type
   ///
   BOOST_DATA_TEST_CASE(
@@ -510,14 +503,16 @@ namespace Test {
     // Set up constant B-Field
     ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
 
+    // Create a custom std::function to extract BoundParameters from
+    // user-defined InputTrack
+    std::function<BoundParameters(InputTrack)> extractParameters
+        = [](InputTrack params) { return params.parameters(); };
+
     // Set up Billoir Vertex Fitter
     FullBilloirVertexFitter<ConstantBField, InputTrack>::Config vertexFitterCfg(
         bField);
     FullBilloirVertexFitter<ConstantBField, InputTrack> billoirFitter(
-        vertexFitterCfg);
-
-    // billoirFitter.extractParameters = [&](InputTrack params){return
-    // params.parameters();};
+        vertexFitterCfg, extractParameters);
 
     // Constraint for vertex fit
     Vertex<InputTrack> myConstraint;
@@ -548,32 +543,26 @@ namespace Test {
       paramVec << d0_v + d0Vec[iTrack], z0_v + z0Vec[iTrack], phiVec[iTrack],
           thetaVec[iTrack], ((double)qVec[iTrack]) / pTVec[iTrack];
 
-      /// Fill vector of track objects with simple covariance matrix
+      // Fill vector of track objects with simple covariance matrix
       std::unique_ptr<ActsSymMatrixD<5>> covMat
           = std::make_unique<ActsSymMatrixD<5>>();
       (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
           0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., res_th * res_th, 0.,
           0., 0., 0., 0., res_qp * res_qp;
-      tracks.push_back(
-          BoundParameters(std::move(covMat), paramVec, perigeeSurface));
+      tracks.push_back(InputTrack(
+          BoundParameters(std::move(covMat), paramVec, perigeeSurface)));
     }
 
     // Do the actual fit with 4 tracks without constraint
     Vertex<InputTrack> fittedVertex = billoirFitter.fit(tracks);
-    std::cout << "No constraint, fitted vertex: " << fittedVertex.position()
-              << std::endl;
-    std::cout << "True vertex: " << vertexPosition << std::endl;
     CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
 
     // Do the fit with a constraint
     fittedVertex = billoirFitter.fit(tracks, myConstraint);
-    std::cout << "Constraint fit, fittedVertex: " << fittedVertex.position()
-              << std::endl;
-    std::cout << "True vertex: " << vertexPosition << std::endl;
     CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
 
+    // Test the IVertexFitter interface
     Vertex<InputTrack> testVertex = myFitWrapper(&billoirFitter, tracks);
-
     CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
   }
 
