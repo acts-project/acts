@@ -81,25 +81,25 @@ namespace Test {
     BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
   }
 
-
   // Vertex x/y position distribution
-  std::uniform_real_distribution<>   vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);
+  std::uniform_real_distribution<> vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);
   // Vertex z position distribution
-  std::uniform_real_distribution<>    vZDist(-20 * units::_mm, 20 * units::_mm);
+  std::uniform_real_distribution<> vZDist(-20 * units::_mm, 20 * units::_mm);
   // Track d0 distribution
-  std::uniform_real_distribution<>    d0Dist(-0.01 * units::_mm, 0.01 * units::_mm);
+  std::uniform_real_distribution<> d0Dist(-0.01 * units::_mm,
+                                          0.01 * units::_mm);
   // Track z0 distribution
-  std::uniform_real_distribution<>    z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
+  std::uniform_real_distribution<> z0Dist(-0.2 * units::_mm, 0.2 * units::_mm);
   // Track pT distribution
-  std::uniform_real_distribution<>    pTDist(0.4 * units::_GeV, 10. * units::_GeV);
+  std::uniform_real_distribution<> pTDist(0.4 * units::_GeV, 10. * units::_GeV);
   // Track phi distribution
-  std::uniform_real_distribution<>   phiDist(-M_PI, M_PI);
+  std::uniform_real_distribution<> phiDist(-M_PI, M_PI);
   // Track theta distribution
   std::uniform_real_distribution<> thetaDist(1.0, M_PI - 1.0);
   // Track charge helper distribution
-  std::uniform_real_distribution<>     qDist(-1, 1);
+  std::uniform_real_distribution<> qDist(-1, 1);
   // Track IP resolution distribution
-  std::uniform_real_distribution<>  resIPDist(0., 100. * units::_um);
+  std::uniform_real_distribution<> resIPDist(0., 100. * units::_um);
   // Track angular distribution
   std::uniform_real_distribution<> resAngDist(0., 0.1);
   // Track q/p resolution distribution
@@ -111,18 +111,21 @@ namespace Test {
   /// @brief Unit test for FullBilloirVertexFitter
   /// with default input track type (= BoundParameters)
   ///
-  BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test){
+  BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test)
+  {
 
-  bool debugMode = true;
+    bool debugMode = true;
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
+    // Set up RNG
+    std::random_device rd;
+    std::mt19937       gen(rd());
 
-  const int nEvents = 10;
+    // Number of events
+    const int nEvents = 10;
 
-  for(int eventIdx = 0; eventIdx < nEvents; ++eventIdx){
+    for (int eventIdx = 0; eventIdx < nEvents; ++eventIdx) {
 
-
+      // Number of tracks
       unsigned int nTracks = nTracksDist(gen);
 
       // Set up constant B-Field
@@ -144,7 +147,6 @@ namespace Test {
       myConstraint.setCovariance(std::move(myCovMat));
       myConstraint.setPosition(Vector3D(0, 0, 0));
 
-
       // Create position of vertex and perigee surface
       double x = vXYDist(gen);
       double y = vXYDist(gen);
@@ -159,10 +161,10 @@ namespace Test {
       double z0_v = z;
 
       // Start constructing nTracks tracks in the following
-       std::vector<BoundParameters> tracks;
+      std::vector<BoundParameters> tracks;
 
       // Construct random track emerging from vicinity of vertex position
-      // Vector to store track objects used for vertex fit   
+      // Vector to store track objects used for vertex fit
       for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
         // Construct positive or negative charge randomly
         double q = qDist(gen) < 0 ? -1. : 1.;
@@ -170,7 +172,7 @@ namespace Test {
         // Construct random track parameters
         TrackParametersBase::ParVector_t paramVec;
         paramVec << d0_v + d0Dist(gen), z0_v + z0Dist(gen), phiDist(gen),
-            thetaDist(gen), q/pTDist(gen);
+            thetaDist(gen), q / pTDist(gen);
 
         // Fill vector of track objects with simple covariance matrix
         std::unique_ptr<ActsSymMatrixD<5>> covMat
@@ -183,9 +185,9 @@ namespace Test {
         double res_th = resAngDist(gen);
         double res_qp = resQoPDist(gen);
 
-        (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
-            0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., res_th * res_th, 0.,
-            0., 0., 0., 0., res_qp * res_qp;
+        (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0.,
+            0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0.,
+            res_th * res_th, 0., 0., 0., 0., 0., res_qp * res_qp;
         tracks.push_back(
             BoundParameters(std::move(covMat), paramVec, perigeeSurface));
       }
@@ -195,21 +197,23 @@ namespace Test {
       CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
 
       // Do the fit with a constraint
-      Vertex<BoundParameters> fittedVertexConstraint = billoirFitter.fit(tracks, myConstraint);
-      CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+      Vertex<BoundParameters> fittedVertexConstraint
+          = billoirFitter.fit(tracks, myConstraint);
+      CHECK_CLOSE_ABS(
+          fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
 
       // Test the IVertexFitter interface
       Vertex<BoundParameters> testVertex = myFitWrapper(&billoirFitter, tracks);
       CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
 
-      if(debugMode){
-        std::cout << "Fitting nTracks: " <<  nTracks << std::endl;
-        std::cout << "True Vertex: " << x << ", " << y << ", " << z << std::endl;
+      if (debugMode) {
+        std::cout << "Fitting nTracks: " << nTracks << std::endl;
+        std::cout << "True Vertex: " << x << ", " << y << ", " << z
+                  << std::endl;
         std::cout << "Fitted Vertex: " << fittedVertex.position() << std::endl;
       }
     }
   }
-
 
   // Dummy user-defined InputTrack type
   struct InputTrack
@@ -228,22 +232,21 @@ namespace Test {
     BoundParameters m_parameters;
   };
 
-
   ///
   /// @brief Unit test for FullBilloirVertexFitter with user-defined InputTrack
   /// type
   ///
-  BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test){
+  BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test)
+  {
 
-  bool debugMode = true;
+    bool debugMode = true;
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
+    std::random_device rd;
+    std::mt19937       gen(rd());
 
-  const int nEvents = 10;
+    const int nEvents = 10;
 
-  for(int eventIdx = 0; eventIdx < nEvents; ++eventIdx){
-
+    for (int eventIdx = 0; eventIdx < nEvents; ++eventIdx) {
 
       unsigned int nTracks = nTracksDist(gen);
 
@@ -254,7 +257,6 @@ namespace Test {
       // user-defined InputTrack
       std::function<BoundParameters(InputTrack)> extractParameters
           = [](InputTrack params) { return params.parameters(); };
-
 
       // Set up Billoir Vertex Fitter
       FullBilloirVertexFitter<ConstantBField, InputTrack>::Config
@@ -272,7 +274,6 @@ namespace Test {
       myConstraint.setCovariance(std::move(myCovMat));
       myConstraint.setPosition(Vector3D(0, 0, 0));
 
-
       // Create position of vertex and perigee surface
       double x = vXYDist(gen);
       double y = vXYDist(gen);
@@ -287,10 +288,10 @@ namespace Test {
       double z0_v = z;
 
       // Start constructing nTracks tracks in the following
-       std::vector<InputTrack> tracks;
+      std::vector<InputTrack> tracks;
 
       // Construct random track emerging from vicinity of vertex position
-      // Vector to store track objects used for vertex fit   
+      // Vector to store track objects used for vertex fit
       for (unsigned int iTrack = 0; iTrack < nTracks; iTrack++) {
         // Construct positive or negative charge randomly
         double q = qDist(gen) < 0 ? -1. : 1.;
@@ -298,7 +299,7 @@ namespace Test {
         // Construct random track parameters
         TrackParametersBase::ParVector_t paramVec;
         paramVec << d0_v + d0Dist(gen), z0_v + z0Dist(gen), phiDist(gen),
-            thetaDist(gen), q/pTDist(gen);
+            thetaDist(gen), q / pTDist(gen);
 
         // Fill vector of track objects with simple covariance matrix
         std::unique_ptr<ActsSymMatrixD<5>> covMat
@@ -311,9 +312,9 @@ namespace Test {
         double res_th = resAngDist(gen);
         double res_qp = resQoPDist(gen);
 
-        (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
-            0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., res_th * res_th, 0.,
-            0., 0., 0., 0., res_qp * res_qp;
+        (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0.,
+            0., 0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0.,
+            res_th * res_th, 0., 0., 0., 0., 0., res_qp * res_qp;
         tracks.push_back(InputTrack(
             BoundParameters(std::move(covMat), paramVec, perigeeSurface)));
       }
@@ -323,16 +324,19 @@ namespace Test {
       CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
 
       // Do the fit with a constraint
-      Vertex<InputTrack> fittedVertexConstraint = billoirFitter.fit(tracks, myConstraint);
-      CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+      Vertex<InputTrack> fittedVertexConstraint
+          = billoirFitter.fit(tracks, myConstraint);
+      CHECK_CLOSE_ABS(
+          fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
 
       // Test the IVertexFitter interface
       Vertex<InputTrack> testVertex = myFitWrapper(&billoirFitter, tracks);
       CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
 
-      if(debugMode){
-        std::cout << "Fitting nTracks: " <<  nTracks << std::endl;
-        std::cout << "True Vertex: " << x << ", " << y << ", " << z << std::endl;
+      if (debugMode) {
+        std::cout << "Fitting nTracks: " << nTracks << std::endl;
+        std::cout << "True Vertex: " << x << ", " << y << ", " << z
+                  << std::endl;
         std::cout << "Fitted Vertex: " << fittedVertex.position() << std::endl;
       }
     }
@@ -340,5 +344,3 @@ namespace Test {
 
 }  // namespace Test
 }  // namespace Acts
-
-
