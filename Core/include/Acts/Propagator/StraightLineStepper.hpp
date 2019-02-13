@@ -9,12 +9,9 @@
 #pragma once
 
 #include <cmath>
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/StepperBase.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -97,6 +94,36 @@ public:
     cstep stepSize = std::numeric_limits<double>::max();
   };
 
+  /// Always use the same propagation state type, independently of the initial
+  /// track parameter type and of the target surface
+  template <typename parameters_t, typename surface_t = int>
+  using state_type = State;
+
+  /// Intermediate track parameters are always in curvilinear parametrization
+  template <typename parameters_t>
+  using step_parameter_type = CurvilinearParameters;
+
+  /// Return parameter types depend on the propagation mode:
+  /// - when propagating to a surface we return BoundParameters
+  /// - otherwise CurvilinearParameters
+  template <typename parameters_t, typename surface_t = int>
+  using return_parameter_type = typename s<parameters_t, surface_t>::type;
+
+  /// Constructor
+  StraightLineStepper() = default;
+
+  /// Get the field for the stepping, this gives back a zero field
+  ///
+  /// @param [in,out] state is the propagation state associated with the track
+  ///                 the magnetic field cell is used (and potentially updated)
+  /// @param [in] pos is the field position
+  Vector3D
+  getField(State& /*state*/, const Vector3D& /*pos*/) const
+  {
+    // get the field from the cell
+    return Vector3D(0., 0., 0.);
+  }
+
   /// Global particle position accessor
   Vector3D
   position(const State& state) const
@@ -124,94 +151,6 @@ public:
   {
     return state.q;
   }
-
-  /// Return a corrector
-  VoidIntersectionCorrector
-  corrector(State& /*state*/) const
-  {
-    return VoidIntersectionCorrector();
-  }
-
-  /// Tests if the state reached a surface
-  ///
-  /// @param [in] state State that is tests
-  /// @param [in] surface Surface that is tested
-  ///
-  /// @return Boolean statement if surface is reached by state
-  bool
-  surfaceReached(const State& state, const Surface* surface) const
-  {
-    return surface->isOnSurface(position(state), direction(state), true);
-  }
-
-  /// Method to update momentum, direction and p
-  ///
-  /// @param [in,out] state State object that will be updated
-  /// @param [in] uposition the updated position
-  /// @param [in] udirection the updated direction
-  /// @param [in] up the updated momentum value
-  void
-  update(State&          state,
-         const Vector3D& uposition,
-         const Vector3D& udirection,
-         double          up) const
-  {
-    state.pos = uposition;
-    state.dir = udirection;
-    state.p   = up;
-  }
-
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
-  ///
-  /// @param [in,out] state State of the stepper
-  /// @param [in] reinitialize is a flag to steer whether the
-  ///        state should be reinitialized at the new
-  ///        position
-  void
-  covarianceTransport(State& /*state*/, bool /*reinitialize = false*/) const
-  {
-  }
-
-  /// Method for on-demand transport of the covariance
-  /// to a new curvilinear frame at current  position,
-  /// or direction of the state - for the moment a dummy method
-  ///
-  /// @tparam surface_t the surface type - ignored here
-  ///
-  /// @param [in,out] state The stepper state
-  /// @param [in] surface is the surface to which the covariance is
-  ///        forwarded to
-  /// @param [in] reinitialize is a flag to steer whether the
-  ///        state should be reinitialized at the new
-  ///        position
-  /// @note no check is done if the position is actually on the surface
-  template <typename surface_t>
-  void
-  covarianceTransport(State& /*unused*/,
-                      const surface_t& /*surface*/,
-                      bool /*reinitialize = false*/) const
-  {
-  }
-
-  /// Always use the same propagation state type, independently of the initial
-  /// track parameter type and of the target surface
-  template <typename parameters_t, typename surface_t = int>
-  using state_type = State;
-
-  /// Intermediate track parameters are always in curvilinear parametrization
-  template <typename parameters_t>
-  using step_parameter_type = CurvilinearParameters;
-
-  /// Return parameter types depend on the propagation mode:
-  /// - when propagating to a surface we return BoundParameters
-  /// - otherwise CurvilinearParameters
-  template <typename parameters_t, typename surface_t = int>
-  using return_parameter_type = typename s<parameters_t, surface_t>::type;
-
-  /// Constructor
-  StraightLineStepper() = default;
 
   /// Convert the propagation state (global) to curvilinear parameters
   ///
@@ -249,6 +188,142 @@ public:
                                                   surface.getSharedPtr());
   }
 
+  /// Tests if the state reached a surface
+  ///
+  /// @param [in] state State that is tests
+  /// @param [in] surface Surface that is tested
+  ///
+  /// @return Boolean statement if surface is reached by state
+  bool
+  surfaceReached(const State& state, const Surface* surface) const
+  {
+    return surface->isOnSurface(position(state), direction(state), true);
+  }
+
+  /// Create and return the bound state at the current position
+  ///
+  /// @brief It does not check if the transported state is at the surface, this
+  /// needs to be guaranteed by the propagator
+  ///
+  /// @param [in] state State that will be presented as @c BoundState
+  /// @param [in] surface The surface to which we bind the state
+  ///
+  /// @return A bound state:
+  ///   - the parameters at the surface
+  ///   - the stepwise jacobian towards it (from last bound)
+  ///   - and the path length (from start - for ordering)
+  BoundState
+  boundState(State& state, const Surface& surface, bool /*unused*/) const
+  {
+    // Create the bound parameters
+    BoundParameters parameters(nullptr,
+                               state.pos,
+                               state.p * state.dir,
+                               state.q,
+                               surface.getSharedPtr());
+    // Create the bound state
+    BoundState bState{std::move(parameters),
+                      ActsMatrixD<5, 5>::Identity(),
+                      state.pathAccumulated};
+    /// Return the State
+    return bState;
+  }
+
+  /// Create and return a curvilinear state at the current position
+  ///
+  /// @brief This creates a curvilinear state.
+  ///
+  /// @param [in] state State that will be presented as @c CurvilinearState
+  ///
+  /// @return A curvilinear state:
+  ///   - the curvilinear parameters at given position
+  ///   - the stepweise jacobian towards it (from last bound)
+  ///   - and the path length (from start - for ordering)
+  CurvilinearState
+  curvilinearState(State& state, bool /*unused*/) const
+  {
+    // Create the curvilinear parameters
+    CurvilinearParameters parameters(
+        nullptr, state.pos, state.p * state.dir, state.q);
+    // Create the bound state
+    CurvilinearState curvState{std::move(parameters),
+                               ActsMatrixD<5, 5>::Identity(),
+                               state.pathAccumulated};
+    /// Return the State
+    return curvState;
+  }
+
+  /// Method to update a stepper state to the some parameters
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] pars Parameters that will be written into @p state
+  void
+  update(State& state, const BoundParameters& pars) const
+  {
+    const auto& mom = pars.momentum();
+    state.pos       = pars.position();
+    state.dir       = mom.normalized();
+    state.p         = mom.norm();
+  }
+
+  /// Method to update momentum, direction and p
+  ///
+  /// @param [in,out] state State object that will be updated
+  /// @param [in] uposition the updated position
+  /// @param [in] udirection the updated direction
+  /// @param [in] up the updated momentum value
+  void
+  update(State&          state,
+         const Vector3D& uposition,
+         const Vector3D& udirection,
+         double          up) const
+  {
+    state.pos = uposition;
+    state.dir = udirection;
+    state.p   = up;
+  }
+
+  /// Return a corrector
+  VoidIntersectionCorrector
+  corrector(State& /*state*/) const
+  {
+    return VoidIntersectionCorrector();
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state - for the moment a dummy method
+  ///
+  /// @param [in,out] state State of the stepper
+  /// @param [in] reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+  void
+  covarianceTransport(State& /*state*/, bool /*reinitialize = false*/) const
+  {
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state - for the moment a dummy method
+  ///
+  /// @tparam surface_t the surface type - ignored here
+  ///
+  /// @param [in,out] state The stepper state
+  /// @param [in] surface is the surface to which the covariance is
+  ///        forwarded to
+  /// @param [in] reinitialize is a flag to steer whether the
+  ///        state should be reinitialized at the new
+  ///        position
+  /// @note no check is done if the position is actually on the surface
+  template <typename surface_t>
+  void
+  covarianceTransport(State& /*unused*/,
+                      const surface_t& /*surface*/,
+                      bool /*reinitialize = false*/) const
+  {
+  }
+
   /// Perform a straight line propagation step
   ///
   /// @param [in,out] state is the propagation state associated with the track
@@ -271,18 +346,6 @@ public:
     state.stepping.pathAccumulated += h;
     // return h
     return h;
-  }
-
-  /// Get the field for the stepping, this gives back a zero field
-  ///
-  /// @param [in,out] state is the propagation state associated with the track
-  ///                 the magnetic field cell is used (and potentially updated)
-  /// @param [in] pos is the field position
-  Vector3D
-  getField(State& /*state*/, const Vector3D& /*pos*/) const
-  {
-    // get the field from the cell
-    return Vector3D(0., 0., 0.);
   }
 };
 

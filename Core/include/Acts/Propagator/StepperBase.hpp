@@ -28,35 +28,6 @@ public:
   using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
-  /// Convert the propagation state (global) to curvilinear parameters
-  /// This is called by the propagator
-  ///
-  /// @tparam result_t Type of the propagator result to be filled
-  ///
-  /// @param [in,out] state The stepper state
-  /// @param [in,out] result The propagator result object to be filled
-  template <typename result_t>
-  void
-  convert(State& state, result_t& result) const
-  {
-    (static_cast<stepper_t*>(this))->convert(state, result);
-  }
-
-  /// Convert the propagation state to track parameters at a certain surface
-  ///
-  /// @tparam result_t Type of the propagator result to be filled
-  /// @tparam surface_t Type of the surface
-  ///
-  /// @param [in,out] state Propagation state used
-  /// @param [in,out] result Result object from the propagator
-  /// @param [in] surface Destination surface to which the conversion is done
-  template <typename result_t, typename surface_t>
-  void
-  convert(State& state, result_t& result, const surface_t& surface) const
-  {
-    (static_cast<stepper_t*>(this))->convert(state, result, surface);
-  }
-
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
   ///
@@ -95,6 +66,35 @@ public:
   charge(const State& state) const
   {
     return (static_cast<stepper_t*>(this))->charge(state);
+  }
+
+  /// Convert the propagation state (global) to curvilinear parameters
+  /// This is called by the propagator
+  ///
+  /// @tparam result_t Type of the propagator result to be filled
+  ///
+  /// @param [in,out] state The stepper state
+  /// @param [in,out] result The propagator result object to be filled
+  template <typename result_t>
+  void
+  convert(State& state, result_t& result) const
+  {
+    (static_cast<stepper_t*>(this))->convert(state, result);
+  }
+
+  /// Convert the propagation state to track parameters at a certain surface
+  ///
+  /// @tparam result_t Type of the propagator result to be filled
+  /// @tparam surface_t Type of the surface
+  ///
+  /// @param [in,out] state Propagation state used
+  /// @param [in,out] result Result object from the propagator
+  /// @param [in] surface Destination surface to which the conversion is done
+  template <typename result_t, typename surface_t>
+  void
+  convert(State& state, result_t& result, const surface_t& surface) const
+  {
+    (static_cast<stepper_t*>(this))->convert(state, result, surface);
   }
 
   /// Tests if the state reached a surface

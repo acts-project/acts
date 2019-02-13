@@ -215,12 +215,8 @@ public:
   ///
   /// @param stepper The stepper implementation is moved to a private member
   /// @param navigator The navigator implementation, moved to a private member
-  //~ template<stepper_t, navigator_t, template <stepper_t> class sb =
-  //StepperBase<stepper_t>>
   explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
-      //~ Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
-      : m_stepper(std::move(stepper)),
-        m_navigator(std::move(navigator))
+    : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
   {
   }
 

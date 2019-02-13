@@ -11,7 +11,6 @@
 #include <cmath>
 #include <limits>
 #include "Acts/Detector/TrackingVolume.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
@@ -19,8 +18,6 @@
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -195,6 +192,47 @@ public:
   /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
 
+  /// Get the field for the stepping, it checks first if the access is still
+  /// within the Cell, and updates the cell if necessary.
+  ///
+  /// @param [in,out] state is the propagation state associated with the track
+  ///                 the magnetic field cell is used (and potentially updated)
+  /// @param [in] pos is the field position
+  Vector3D
+  getField(State& state, const Vector3D& pos) const
+  {
+    // get the field from the cell
+    return m_bField.getField(pos, state.fieldCache);
+  }
+
+  /// Global particle position accessor
+  Vector3D
+  position(const State& state) const
+  {
+    return state.pos;
+  }
+
+  /// Momentum direction accessor
+  Vector3D
+  direction(const State& state) const
+  {
+    return state.dir;
+  }
+
+  /// Actual momentum accessor
+  double
+  momentum(const State& state) const
+  {
+    return state.p;
+  }
+
+  /// Charge access
+  double
+  charge(const State& state) const
+  {
+    return state.q;
+  }
+
   /// Convert the propagation state (global) to curvilinear parameters
   /// This is called by the propagator
   ///
@@ -242,47 +280,6 @@ public:
       result.transportJacobian
           = std::make_unique<const Jacobian>(std::move(tJacobian));
     }
-  }
-
-  /// Get the field for the stepping, it checks first if the access is still
-  /// within the Cell, and updates the cell if necessary.
-  ///
-  /// @param [in,out] state is the propagation state associated with the track
-  ///                 the magnetic field cell is used (and potentially updated)
-  /// @param [in] pos is the field position
-  Vector3D
-  getField(State& state, const Vector3D& pos) const
-  {
-    // get the field from the cell
-    return m_bField.getField(pos, state.fieldCache);
-  }
-
-  /// Global particle position accessor
-  Vector3D
-  position(const State& state) const
-  {
-    return state.pos;
-  }
-
-  /// Momentum direction accessor
-  Vector3D
-  direction(const State& state) const
-  {
-    return state.dir;
-  }
-
-  /// Actual momentum accessor
-  double
-  momentum(const State& state) const
-  {
-    return state.p;
-  }
-
-  /// Charge access
-  double
-  charge(const State& state) const
-  {
-    return state.q;
   }
 
   /// Tests if the state reached a surface
