@@ -34,7 +34,7 @@ public:
     /// Magnetic field
     BField bField;
     /// Starting point of vertex fit
-    Vector3D startingPoint = Vector3D(0, 0, 0);
+    Vector3D startingPoint = Vector3D(0., 0., 0.);
     /// Maximum number of interations in fitter
     int maxIterations = 5;
 
