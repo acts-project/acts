@@ -17,7 +17,6 @@
 #include "Acts/Propagator/StepperBase.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -39,10 +38,7 @@ template <typename BField,
           typename corrector_t     = VoidIntersectionCorrector,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t    = detail::VoidAuctioneer>
-class EigenStepper : public StepperBase<EigenStepper<BField,
-                                                     corrector_t,
-                                                     extensionlist_t,
-                                                     auctioneer_t>>
+class EigenStepper
 {
 
 private:
@@ -176,12 +172,7 @@ public:
 
   /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
-  template <typename T, typename S = int>
   using state_type = State;
-
-  /// Intermediate track parameters are always in curvilinear parametrization
-  template <typename T>
-  using step_parameter_type = CurvilinearParameters;
 
   /// Return parameter types depend on the propagation mode:
   /// - when propagating to a surface we usually return BoundParameters
@@ -231,55 +222,6 @@ public:
   charge(const State& state) const
   {
     return state.q;
-  }
-
-  /// Convert the propagation state (global) to curvilinear parameters
-  /// This is called by the propagator
-  ///
-  /// @tparam result_t Type of the propagator result to be filled
-  ///
-  /// @param [in,out] state The stepper state
-  /// @param [in,out] result The propagator result object to be filled
-  template <typename result_t>
-  void
-  convert(State& state, result_t& result) const
-  {
-    auto  curvState      = curvilinearState(state);
-    auto& curvParameters = std::get<CurvilinearParameters>(curvState);
-    // Fill the end parameters, @todo error handling
-    result.endParameters = std::make_unique<const CurvilinearParameters>(
-        std::move(curvParameters));
-    // Only fill the transport jacobian when covariance transport was done
-    if (state.covTransport) {
-      auto& tJacobian = std::get<Jacobian>(curvState);
-      result.transportJacobian
-          = std::make_unique<const Jacobian>(std::move(tJacobian));
-    }
-  }
-
-  /// Convert the propagation state to track parameters at a certain surface
-  ///
-  /// @tparam result_t Type of the propagator result to be filled
-  /// @tparam surface_t Type of the surface
-  ///
-  /// @param [in,out] state Propagation state used
-  /// @param [in,out] result Result object from the propagator
-  /// @param [in] surface Destination surface to which the conversion is done
-  template <typename result_t, typename surface_t>
-  void
-  convert(State& state, result_t& result, const surface_t& surface) const
-  {
-    auto  bs              = boundState(state, surface);
-    auto& boundParameters = std::get<BoundParameters>(bs);
-    // Fill the end parameters, @todo error handling
-    result.endParameters
-        = std::make_unique<const BoundParameters>(std::move(boundParameters));
-    // Only fill the transport jacobian when covariance transport was done
-    if (state.covTransport) {
-      auto& tJacobian = std::get<Jacobian>(bs);
-      result.transportJacobian
-          = std::make_unique<const Jacobian>(std::move(tJacobian));
-    }
   }
 
   /// Tests if the state reached a surface
@@ -506,11 +448,10 @@ public:
   /// @param [in] reinitialize is a flag to steer whether the state should be
   /// reinitialized at the new position
   /// @note no check is done if the position is actually on the surface
-  template <typename surface_t>
   void
-  covarianceTransport(State&           state,
-                      const surface_t& surface,
-                      bool             reinitialize = true) const
+  covarianceTransport(State&         state,
+                      const Surface& surface,
+                      bool           reinitialize = true) const
   {
     using VectorHelpers::phi;
     using VectorHelpers::theta;

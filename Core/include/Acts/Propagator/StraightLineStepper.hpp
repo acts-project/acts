@@ -11,7 +11,6 @@
 #include <cmath>
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/StepperBase.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -22,7 +21,7 @@ namespace Acts {
 /// The straight line stepper is a simple navigation stepper
 /// to be used to navigate through the tracking geometry. It can be
 /// used for simple material mapping, navigation validation
-class StraightLineStepper : public StepperBase<StraightLineStepper>
+class StraightLineStepper
 {
 
 private:
@@ -42,6 +41,10 @@ private:
 
 public:
   using cstep = detail::ConstrainedStep;
+
+  using Jacobian         = ActsMatrixD<5, 5>;
+  using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
+  using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
   /// State for track parameter propagation
   ///
@@ -96,12 +99,7 @@ public:
 
   /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
-  template <typename parameters_t, typename surface_t = int>
   using state_type = State;
-
-  /// Intermediate track parameters are always in curvilinear parametrization
-  template <typename parameters_t>
-  using step_parameter_type = CurvilinearParameters;
 
   /// Return parameter types depend on the propagation mode:
   /// - when propagating to a surface we return BoundParameters
@@ -150,42 +148,6 @@ public:
   charge(const State& state) const
   {
     return state.q;
-  }
-
-  /// Convert the propagation state (global) to curvilinear parameters
-  ///
-  /// @tparam result_t Type of the propagator result to be filled
-  ///
-  /// @param [in] state The stepper state
-  /// @param [in,out] result The result object from the propagator
-  template <typename result_t>
-  void
-  convert(State& state, result_t& result) const
-  {
-    // Fill the end parameters
-    result.endParameters = std::make_unique<const CurvilinearParameters>(
-        nullptr, state.pos, state.p * state.dir, state.q);
-  }
-
-  /// Convert the propagation state to track parameters at a certain surface
-  ///
-  /// @tparam result_t Type of the propagator result to be filled
-  /// @tparam surface_t Type of the surface
-  ///
-  /// @param [in,out] state Propagation state used
-  /// @param [in,out] result Result object from the propagator
-  /// @param [in] surface Destination surface to which the conversion is done
-  template <typename result_t, typename surface_t>
-  void
-  convert(State& state, result_t& result, const surface_t& surface) const
-  {
-    // Fill the end parameters
-    result.endParameters
-        = std::make_unique<const BoundParameters>(nullptr,
-                                                  state.pos,
-                                                  state.p * state.dir,
-                                                  state.q,
-                                                  surface.getSharedPtr());
   }
 
   /// Tests if the state reached a surface
@@ -316,10 +278,9 @@ public:
   ///        state should be reinitialized at the new
   ///        position
   /// @note no check is done if the position is actually on the surface
-  template <typename surface_t>
   void
   covarianceTransport(State& /*unused*/,
-                      const surface_t& /*surface*/,
+                      const Surface& /*surface*/,
                       bool /*reinitialize = false*/) const
   {
   }

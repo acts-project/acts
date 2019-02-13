@@ -24,7 +24,7 @@ namespace Acts {
 
 /// @brief the AtlasStepper implementation for the
 template <typename bfield_t>
-class AtlasStepper : public StepperBase<AtlasStepper<bfield_t>>
+class AtlasStepper
 {
 
 public:
@@ -464,11 +464,7 @@ public:
     state.state_ready = true;
   }
 
-  template <typename T, typename S = int>
   using state_type = State;
-
-  template <typename T>
-  using step_parameter_type = CurvilinearParameters;
 
   // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
