@@ -52,9 +52,7 @@ namespace Test {
 
     // Set up Billoir Vertex Fitter
     FullBilloirVertexFitter<ConstantBField, BoundParameters>::Config
-        vertexFitterCfg
-        = FullBilloirVertexFitter<ConstantBField, BoundParameters>::Config(
-            bField);
+        vertexFitterCfg(bField);
     FullBilloirVertexFitter<ConstantBField, BoundParameters> billoirFitter(
         vertexFitterCfg);
 
@@ -135,9 +133,7 @@ namespace Test {
 
       // Set up Billoir Vertex Fitter
       FullBilloirVertexFitter<ConstantBField, BoundParameters>::Config
-          vertexFitterCfg
-          = FullBilloirVertexFitter<ConstantBField, BoundParameters>::Config(
-              bField);
+          vertexFitterCfg(bField);
       FullBilloirVertexFitter<ConstantBField, BoundParameters> billoirFitter(
           vertexFitterCfg);
 
@@ -265,7 +261,7 @@ namespace Test {
       // Set up Billoir Vertex Fitter
       FullBilloirVertexFitter<ConstantBField, InputTrack>::Config
           vertexFitterCfg
-          = FullBilloirVertexFitter<ConstantBField, InputTrack>::Config(bField);
+          = (bField);
       FullBilloirVertexFitter<ConstantBField, InputTrack> billoirFitter(
           vertexFitterCfg, extractParameters);
 

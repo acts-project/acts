@@ -34,12 +34,12 @@ public:
     /// Magnetic field
     BField bField;
     /// Starting point of vertex fit
-    Vector3D startingPoint;
+    Vector3D startingPoint = Vector3D(0, 0, 0);
     /// Maximum number of interations in fitter
-    int maxIterations;
+    int maxIterations = 5;
 
     /// Constructor with default number of iterations and starting point
-    Config(BField bIn) : bField(std::move(bIn)), maxIterations(5) {}
+    Config(BField bIn) : bField(std::move(bIn)) {}
   };
 
   /// @brief Constructor used if InputTrack type == BoundParameters
