@@ -24,7 +24,6 @@
 // Acts include(s)
 #include "Definitions.hpp"
 
-#include <boost/tti/has_member_function.hpp>
 
 #ifndef ACTS_BIT_CODING
 #define ACTS_BIT_CODING 1
@@ -58,16 +57,57 @@ namespace Acts {
 
 namespace VectorHelpers {
 
+  // implementation of the detector idiom adapted from
+  // https://en.cppreference.com/w/cpp/experimental/is_detected
   namespace detail {
-    // helper to figure out if a type has a member called phi
-    BOOST_TTI_HAS_MEMBER_FUNCTION(phi)
-    template <typename T>
-    using has_phi_method
-        = has_member_function_phi<T,
-                                  double,
-                                  boost::mpl::vector<>,
-                                  boost::function_types::const_qualified>;
-  }
+
+    template <class... Ts>
+    using void_t = void;
+
+    template <class Default,
+              class AlwaysVoid,
+              template <class...> class Op,
+              class... Args>
+    struct detector
+    {
+      using value_t = std::false_type;
+      using type    = Default;
+    };
+
+    struct nonesuch
+    {
+      ~nonesuch()               = delete;
+      nonesuch(nonesuch const&) = delete;
+      void
+      operator=(nonesuch const&)
+          = delete;
+    };
+
+    template <class Default, template <class...> class Op, class... Args>
+    struct detector<Default, void_t<Op<Args...>>, Op, Args...>
+    {
+      using value_t = std::true_type;
+      using type    = Op<Args...>;
+    };
+
+    template <template <class...> class Op, class... Args>
+    using is_detected =
+        typename detail::detector<nonesuch, void, Op, Args...>::value_t;
+
+    template <template <class...> class Op, class... Args>
+    using detected_t =
+        typename detail::detector<nonesuch, void, Op, Args...>::type;
+
+    template <class Default, template <class...> class Op, class... Args>
+    using detected_or = detail::detector<Default, void, Op, Args...>;
+
+    template <class T>
+    using phi_method_t = decltype(std::declval<T>().phi());
+
+    template <class T>
+    using has_phi_method = is_detected<phi_method_t, T>;
+
+  }  // namespace detail
 
   // default call on Eigen types, calculate radius
   template <typename Derived>
@@ -82,7 +122,7 @@ namespace VectorHelpers {
 
   // if called-upon type has phi method, call that
   template <typename T,
-            std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
+            std::enable_if_t<detail::has_phi_method<T>::type, int> = 0>
   double
   phi(const T& v)
   {
