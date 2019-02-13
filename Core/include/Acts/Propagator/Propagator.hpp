@@ -15,6 +15,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/StepperBase.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
@@ -197,6 +198,9 @@ struct PropagatorOptions
 template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
 class Propagator final
 {
+  static_assert(std::is_base_of<StepperBase<stepper_t>, stepper_t>::value,
+                "Stepper requires to be inherit from Acts::StepperBase");
+
 public:
   /// Type of the stepper in use for public scope
   using Stepper = stepper_t;
@@ -211,8 +215,12 @@ public:
   ///
   /// @param stepper The stepper implementation is moved to a private member
   /// @param navigator The navigator implementation, moved to a private member
+  //~ template<stepper_t, navigator_t, template <stepper_t> class sb =
+  //StepperBase<stepper_t>>
   explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
-    : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
+      //~ Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
+      : m_stepper(std::move(stepper)),
+        m_navigator(std::move(navigator))
   {
   }
 
