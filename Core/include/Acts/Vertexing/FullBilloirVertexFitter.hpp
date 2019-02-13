@@ -33,7 +33,7 @@ public:
   {
     /// Magnetic field
     BField bField;
-    
+
     /// Maximum number of interations in fitter
     int maxIterations = 5;
 
