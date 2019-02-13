@@ -59,7 +59,7 @@ namespace Test {
     // Constraint for vertex fit
     Vertex<BoundParameters> myConstraint;
     // Some abitrary values
-    ActsSymMatrixD<3> myCovMat;
+    ActsSymMatrixD<3> myCovMat = ActsSymMatrixD<3>::Zero();
     myCovMat(0, 0) = 30.;
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
