@@ -7,9 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-// Acts includes
+
 #include <cmath>
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN
@@ -21,23 +22,47 @@
 namespace Acts {
 /// @cond detail
 namespace detail {
-  /**
-   * @brief helper structure summarizing coordinate transformations
-   */
+
+  /// @brief helper structure summarizing coordinate transformations
+  ///
   struct coordinate_transformation
   {
     using ParVector_t = ActsVector<ParValue_t, Acts::NGlobalPars>;
 
+    /// @brief static method to transform the local information in
+    /// the track parameterisation to a global position
+    ///
+    /// This transformation uses the surface and hence needs a context
+    /// object to guarantee the local to global transformation is done
+    /// within the right (alginment/conditions) context
+    ///
+    /// @param ctx The context object mentioned above
+    /// @param pars the parameter vector
+    /// @param s the surface for the local to global transform
+    ///
+    /// @return position in the global frame
     static ActsVectorD<3>
-    parameters2globalPosition(const ParVector_t& pars, const Surface& s)
+    parameters2globalPosition(Context            ctx,
+                              const ParVector_t& pars,
+                              const Surface&     s)
     {
       ActsVectorD<3> globalPosition;
-      s.localToGlobal(ActsVectorD<2>(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
+      s.localToGlobal(ctx,
+                      ActsVectorD<2>(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
                       parameters2globalMomentum(pars),
                       globalPosition);
       return globalPosition;
     }
 
+    /// @brief static method to transform the momentum parameterisation
+    /// into a global momentum vector
+    ///
+    /// This transformation does not use the surface and hence no context
+    /// object is needed
+    ///
+    /// @param pars the parameter vector
+    ///
+    /// @return momentum in the global frame
     static ActsVectorD<3>
     parameters2globalMomentum(const ParVector_t& pars)
     {
@@ -51,7 +76,18 @@ namespace detail {
       return momentum;
     }
 
-    static ParVector_t
+    /// @brief static method to transform a global representation into
+    /// a curvilinear represenation
+    ///
+    /// This transformation does not use the surface and hence no context
+    /// object is needed
+    ///
+    /// @param pos - ignored
+    /// @param mom the global momentum parameters
+    /// @param charge of the particle/track
+    ///
+    /// @return curvilinear parameter representation
+    static ActsVectorD<3> static ParVector_t
     global2curvilinear(const ActsVectorD<3>& /*pos*/,
                        const ActsVectorD<3>& mom,
                        double                charge)
@@ -65,8 +101,23 @@ namespace detail {
       return parameters;
     }
 
+    /// @brief static method to transform the global information into
+    /// the track parameterisation
+    ///
+    /// This transformation uses the surface and hence needs a context
+    /// object to guarantee the local to global transformation is done
+    /// within the right (alginment/conditions) context
+    ///
+    /// @param ctx The context object mentioned above
+    /// @param pos position of the parameterisation in global
+    /// @param mom position of the parameterisation in global
+    /// @param charge of the particle/track
+    /// @param s the surface for the global to local transform
+    ///
+    /// @return the track parameterisation
     static ParVector_t
-    global2parameters(const ActsVectorD<3>& pos,
+    global2parameters(Context               ctx,
+                      const ActsVectorD<3>& pos,
                       const ActsVectorD<3>& mom,
                       double                charge,
                       const Surface&        s)
@@ -74,13 +125,16 @@ namespace detail {
       using VectorHelpers::phi;
       using VectorHelpers::theta;
       ActsVectorD<2> localPosition;
-      s.globalToLocal(pos, mom, localPosition);
+      s.globalToLocal(ctx, pos, mom, localPosition);
       ParVector_t result;
       result << localPosition(0), localPosition(1), phi(mom), theta(mom),
           ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm();
       return result;
     }
 
+    /// @brief static calculate the charge from the track parameterisation
+    ///
+    /// @return the charge as a double
     static double
     parameters2charge(const ParVector_t& pars)
     {
@@ -90,4 +144,5 @@ namespace detail {
 }  // namespace detail
 /// @endcond
 }  // namespace Acts
+
 #endif  // ACTS_COORDINATE_TRANSFORM_PLUGIN

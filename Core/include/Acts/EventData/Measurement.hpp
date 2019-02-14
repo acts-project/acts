@@ -27,8 +27,8 @@ class Surface;
 /// This class describes the measurement of track parameters at a certain
 /// Surface in the TrackingGeometry.
 ///
-/// @note Identifier must be copy-constructible, move-constructible,
-/// copy-assignable and move-assignable.
+/// The measurement is in local parameters and will not provide localToGlobal
+/// information. It is thus free from any Context.
 ///
 /// @tparam source_link_t the templated class that allows to link back to
 /// the source used to create this measurement, this can simply be an identifier

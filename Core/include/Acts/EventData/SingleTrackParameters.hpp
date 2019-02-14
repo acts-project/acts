@@ -10,6 +10,7 @@
 #include <type_traits>
 #include "Acts/EventData/TrackParametersBase.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -19,14 +20,12 @@ namespace Acts {
 /// @brief base class for a single set of track parameters
 ///
 /// This class implements the interface for charged/neutral track parameters for
-/// the case that it
-/// represents a single set of track parameters (opposed to a list of different
-/// sets of track
-/// parameters as used by e.g. GSF or multi-track fitters).
+/// the case that it represents a single set of track parameters
+/// (opposed to a list of different sets of track parameters as used by
+/// e.g. GSF or multi-track fitters).
 ///
 /// The track parameters and their uncertainty are defined in local reference
-/// frame which depends on
-/// the associated surface of the track parameters.
+/// frame which depends on the associated surface of the track parameters.
 ///
 /// @tparam ChargePolicy type for distinguishing charged and neutral
 /// tracks/particles
@@ -196,14 +195,18 @@ protected:
 
   /// @brief update global momentum from current parameter values
   ///
+  ///
+  /// @param[in] ctx is the Context object that is forwarded to the surface
+  ///            for local to global coordinate transformation
+  ///
   /// @note This function is triggered when called with an argument of a type
   ///       different from Acts::local_parameter
   template <typename T>
   void
-  updateGlobalCoordinates(const T& /*unused*/)
+  updateGlobalCoordinates(Context ctx, const T& /*unused*/)
   {
     m_vMomentum = detail::coordinate_transformation::parameters2globalMomentum(
-        getParameterSet().getParameters());
+        ctx, getParameterSet().getParameters());
   }
 
   /// @brief update global position from current parameter values
@@ -211,10 +214,10 @@ protected:
   /// @note This function is triggered when called with an argument of a type
   /// Acts::local_parameter
   void
-  updateGlobalCoordinates(const local_parameter& /*unused*/)
+  updateGlobalCoordinates(Context ctx, const local_parameter& /*unused*/)
   {
     m_vPosition = detail::coordinate_transformation::parameters2globalPosition(
-        getParameterSet().getParameters(), this->referenceSurface());
+        ctx, getParameterSet().getParameters(), this->referenceSurface());
   }
 
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing
