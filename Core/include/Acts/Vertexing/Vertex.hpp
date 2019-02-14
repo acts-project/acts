@@ -68,11 +68,11 @@ public:
   setFitQuality(double chiSquared, double numberDoF);
 
 private:
-  Vector3D                               m_position;
-  ActsSymMatrixD<3>                      m_covariance;
+  Vector3D          m_position   = Vector3D(0., 0., 0.);
+  ActsSymMatrixD<3> m_covariance = ActsSymMatrixD<3>::Zero();
   std::vector<TrackAtVertex<InputTrack>> m_tracksAtVertex;
-  double                                 m_chiSquared;  // chi2 of the fit
-  double m_numberDoF;  // number of degrees of freedom
+  double m_chiSquared = std::numeric_limits<double>::max();  // chi2 of the fit
+  double m_numberDoF  = 0;  // number of degrees of freedom
 };
 
 }  // namespace Acts

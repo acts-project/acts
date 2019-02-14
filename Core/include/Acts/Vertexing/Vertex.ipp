@@ -8,7 +8,7 @@
 
 template <typename InputTrack>
 Acts::Vertex<InputTrack>::Vertex(const Vector3D& position)
-  : m_position(position), m_covariance(ActsSymMatrixD<3>::Zero())
+  : m_position(position)
 {
 }
 
