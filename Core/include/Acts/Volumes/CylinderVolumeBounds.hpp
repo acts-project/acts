@@ -104,6 +104,18 @@ public:
                        double haphi,
                        double halez);
 
+  /// Constructor - from cylinder bounds and thickness
+  ///
+  /// @param cbounds the cylinder bounds
+  /// @param thickness
+  CylinderVolumeBounds(const CylinderBounds& cBounds, double thickness);
+
+  /// Constructor - from radial bounds and thickness
+  ///
+  /// @param rbounds the Radial bounds
+  /// @param thickness
+  CylinderVolumeBounds(const RadialBounds& cBounds, double thickness);
+
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy

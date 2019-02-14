@@ -61,10 +61,13 @@ Acts::PlaneLayer::buildApproachDescriptor()
   // delete the surfaces
   std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
   // get the appropriate transform, the center and the normal vector
-  const Transform3D& lTransform = PlaneSurface::transform();
+
+  //@todo fix with representing volume
+  DefaultContext     dctx;
+  const Transform3D& lTransform = PlaneSurface::transform(dctx);
   RotationMatrix3D   lRotation  = lTransform.rotation();
-  const Vector3D&    lCenter    = PlaneSurface::center();
-  const Vector3D&    lVector    = Surface::normal(center());
+  const Vector3D&    lCenter    = PlaneSurface::center(dctx);
+  const Vector3D&    lVector    = Surface::normal(dctx, lCenter);
   // create new surfaces
   const Transform3D* apnTransform = new Transform3D(
       Translation3D(lCenter - 0.5 * Layer::m_layerThickness * lVector)

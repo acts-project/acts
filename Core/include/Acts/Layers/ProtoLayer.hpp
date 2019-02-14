@@ -10,6 +10,7 @@
 #include <iostream>
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -49,16 +50,21 @@ public:
   /// Loops over a provided vector of surface and calculates the various
   /// min/max values in one go. Also takes into account the thickness
   /// of an associated DetectorElement, if it exists.
+  ///
+  /// @param ctx the context for this request (e.g. alignment)
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(const std::vector<const Surface*>& surfaces);
+  ProtoLayer(Context ctx, const std::vector<const Surface*>& surfaces);
 
   /// Constructor
   ///
   /// Loops over a provided vector of surface and calculates the various
   /// min/max values in one go. Also takes into account the thickness
   /// of an associated DetectorElement, if it exists.
+  ///
+  /// @param ctx the context for this request (e.g. alignment)
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(const std::vector<std::shared_ptr<const Surface>>& surfaces);
+  ProtoLayer(Context                                            ctx,
+             const std::vector<std::shared_ptr<const Surface>>& surfaces);
 
   // normal empty constructor
   ProtoLayer() = default;
@@ -77,8 +83,10 @@ public:
 
 private:
   /// Helper method which performs the actual min/max calculation
+  ///
+  /// @param ctx the context for this request (e.g. alignment)
   /// @param surfaces The surfaces to build this protolayer out of
   void
-  measure(const std::vector<const Surface*>& surfaces);
+  measure(Context ctx, const std::vector<const Surface*>& surfaces);
 };
 }  // namespace Acts

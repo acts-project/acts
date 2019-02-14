@@ -87,7 +87,7 @@ namespace detail {
     /// @param charge of the particle/track
     ///
     /// @return curvilinear parameter representation
-    static ActsVectorD<3> static ParVector_t
+    static ParVector_t
     global2curvilinear(const ActsVectorD<3>& /*pos*/,
                        const ActsVectorD<3>& mom,
                        double                charge)

@@ -16,9 +16,10 @@
 #include <map>
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Layers/ApproachDescriptor.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/ApproachDescriptor.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryObject.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
@@ -32,7 +33,6 @@ class BinUtility;
 class Volume;
 class VolumeBounds;
 class TrackingVolume;
-class DetachedTrackingVolume;
 class ApproachDescriptor;
 
 // Simple surface intersection
@@ -85,9 +85,6 @@ class Layer : public virtual GeometryObject
   /// next and set the enclosing TrackingVolume
   friend class TrackingVolume;
 
-  /// Declare the DetachedTrackingVolume as a friend to be able to register it
-  friend class DetachedTrackingVolume;
-
 public:
   /// Default Constructor - deleted
   Layer() = delete;
@@ -131,23 +128,30 @@ public:
 
   /// templated onLayer() method
   ///
+  /// @param ctx the context (e.g. alignment) under which this is asked
   /// @param pars are the templated (charged/neutral) on layer check
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
   template <typename parameters_t>
   bool
-  onLayer(const parameters_t& pars, const BoundaryCheck& bcheck = true) const;
+  onLayer(Context              ctx,
+          const parameters_t&  pars,
+          const BoundaryCheck& bcheck = true) const;
 
   /// geometrical isOnLayer() method
   ///
   /// @note using isOnSurface() with Layer specific tolerance
+  ///
+  /// @param ctx the context (e.g. alignment) under which this is asked
   /// @param gp is the gobal position to be checked
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
   virtual bool
-  isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck = true) const;
+  isOnLayer(Context              ctx,
+            const Vector3D&      gp,
+            const BoundaryCheck& bcheck = true) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor*
@@ -188,6 +192,7 @@ public:
   /// @tparam options_t The navigation options type
   /// @tparam corrector_t is an (optional) intersection corrector type
   ///
+  /// @param ctx the context (e.g. alignment) for this call
   /// @param position Position parameter for searching
   /// @param momentum Momentum parameter for searching
   /// @param options The templated naivation options
@@ -197,7 +202,8 @@ public:
   template <typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   std::vector<SurfaceIntersection>
-  compatibleSurfaces(const Vector3D&    position,
+  compatibleSurfaces(Context            ctx,
+                     const Vector3D&    position,
                      const Vector3D&    momentum,
                      const options_t&   options,
                      const corrector_t& corrfnc = corrector_t()) const;
@@ -208,6 +214,7 @@ public:
   /// @tparam options_t The navigation options type
   /// @tparam corrector_t is an (optional) intersection corrector type
   ///
+  /// @param ctx the context (e.g. alignment) for this call
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
   /// @tparam corrector_t is an (optional) intersection corrector
@@ -217,7 +224,8 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   std::vector<SurfaceIntersection>
-  compatibleSurfaces(const parameters_t& parameters,
+  compatibleSurfaces(Context             ctx,
+                     const parameters_t& parameters,
                      const options_t&    options,
                      const corrector_t&  corrfnc = corrector_t()) const;
 
@@ -229,6 +237,8 @@ public:
   ///
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
+  ///
+  /// @param ctx the context (e.g. alignment) for this call
   /// @param parameters The templated parameters for searching
   /// @param options The templated naivation options
   /// @tparam corrector_t is an (optional) intersection corrector
@@ -238,7 +248,8 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   const SurfaceIntersection
-  surfaceOnApproach(const parameters_t& parameters,
+  surfaceOnApproach(Context             ctx,
+                    const parameters_t& parameters,
                     const options_t&    options,
                     const corrector_t&  corrfnc = corrector_t()) const;
 
@@ -249,6 +260,8 @@ public:
   ///
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
+  ///
+  /// @param ctx the context (e.g. alignment) for this call
   /// @param position Position for searching
   /// @param direction Direction for searching
   /// @param options The templated naivation options
@@ -258,7 +271,8 @@ public:
   template <typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   const SurfaceIntersection
-  surfaceOnApproach(const Vector3D&    position,
+  surfaceOnApproach(Context            ctx,
+                    const Vector3D&    position,
                     const Vector3D&    direction,
                     const options_t&   options,
                     const corrector_t& corrfnc = corrector_t()) const;
@@ -277,19 +291,6 @@ public:
   /// @return the pointer to the enclosing volume
   const TrackingVolume*
   trackingVolume() const;
-
-  /// get the confining DetachedTrackingVolume
-  ///
-  /// @return the pointer to the detached volume
-  const DetachedTrackingVolume*
-  enclosingDetachedTrackingVolume() const;
-
-  /// register Volume associated to the layer
-  /// - if you want to do that by hand: should be shared or unique ptr
-  ///
-  /// @param theVol is the provided volume
-  void
-  registerRepresentingVolume(const AbstractVolume* theVol);
 
   ///  return the abstract volume that represents the layer
   ///
@@ -325,54 +326,44 @@ protected:
   void
   encloseTrackingVolume(const TrackingVolume& tvol);
 
-  ///  private method to set the enclosed detached TV,
-  /// called by friend class only
-  ///
-  /// @param tvol is the detached tracking volume the layer is confined
-  void
-  encloseDetachedTrackingVolume(const DetachedTrackingVolume& tvol);
-
   /// the previous Layer according to BinGenUtils
   NextLayers m_nextLayers;
 
   /// A binutility to find the next layer
   /// @TODO check if this is needed
-  const BinUtility* m_nextLayerUtility;
+  const BinUtility* m_nextLayerUtility = nullptr;
 
   /// SurfaceArray on this layer Surface
   ///
   /// This array will be modified during signature and constant afterwards, but
   /// the C++ type system unfortunately cannot cleanly express this.
   ///
-  std::unique_ptr<const SurfaceArray> m_surfaceArray;
+  std::unique_ptr<const SurfaceArray> m_surfaceArray = nullptr;
 
   /// Thickness of the Layer
-  double m_layerThickness;
+  double m_layerThickness = 0.;
 
   /// descriptor for surface on approach
   ///
   /// The descriptor may need to be modified during geometry building, and will
   /// remain constant afterwards, but again C++ cannot currently express this.
   ///
-  std::unique_ptr<const ApproachDescriptor> m_approachDescriptor;
+  std::unique_ptr<const ApproachDescriptor> m_approachDescriptor = nullptr;
 
   /// the enclosing TrackingVolume
-  const TrackingVolume* m_trackingVolume;
-
-  /// the eventual enclosing detached Tracking volume
-  const DetachedTrackingVolume* m_enclosingDetachedTrackingVolume;
+  const TrackingVolume* m_trackingVolume = nullptr;
 
   /// Representing Volume
   /// can be used as approach surface sources
-  const AbstractVolume* m_representingVolume;
+  std::unique_ptr<AbstractVolume> m_representingVolume = nullptr;
 
   /// make a passive/active either way
   LayerType m_layerType;
 
   /// sub structure indication
-  int m_ssRepresentingSurface;
-  int m_ssSensitiveSurfaces;
-  int m_ssApproachSurfaces;
+  int m_ssRepresentingSurface = 0;
+  int m_ssSensitiveSurfaces   = 0;
+  int m_ssApproachSurfaces    = 0;
 
 private:
   /// Private helper method to close the geometry

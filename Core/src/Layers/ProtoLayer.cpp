@@ -20,15 +20,16 @@ using Acts::VectorHelpers::perp;
 
 namespace Acts {
 
-ProtoLayer::ProtoLayer(const std::vector<const Surface*>& surfaces)
+ProtoLayer::ProtoLayer(Context ctx, const std::vector<const Surface*>& surfaces)
 {
-  measure(surfaces);
+  measure(ctx, surfaces);
 }
 
 ProtoLayer::ProtoLayer(
+    Context                                            ctx,
     const std::vector<std::shared_ptr<const Surface>>& surfaces)
 {
-  measure(unpack_shared_vector(surfaces));
+  measure(ctx, unpack_shared_vector(surfaces));
 }
 
 double
@@ -72,7 +73,7 @@ ProtoLayer::dump(std::ostream& sl) const
 }
 
 void
-ProtoLayer::measure(const std::vector<const Surface*>& surfaces)
+ProtoLayer::measure(Context ctx, const std::vector<const Surface*>& surfaces)
 {
   minR   = std::numeric_limits<double>::max();
   maxR   = std::numeric_limits<double>::lowest();
@@ -102,6 +103,8 @@ ProtoLayer::measure(const std::vector<const Surface*>& surfaces)
         = dynamic_cast<const CylinderSurface*>(sf);
     if (pBounds != nullptr) {
 
+      const auto& sTransform = sf->transform(ctx);
+
       // get the vertices
       std::vector<Vector2D> vertices  = pBounds->vertices();
       size_t                nVertices = vertices.size();
@@ -114,12 +117,12 @@ ProtoLayer::measure(const std::vector<const Surface*>& surfaces)
           // thickness
           double locz = side != 0 ? 0.5 * thickness : -0.5 * thickness;
           // p1 & p2 vectors
-          Vector3D p2(sf->transform() * Vector3D(vertices.at(iv).x(),
-                                                 vertices.at(iv).y(),
-                                                 locz));
-          Vector3D p1(sf->transform() * Vector3D(vertices.at(ivp).x(),
-                                                 vertices.at(ivp).y(),
-                                                 locz));
+          Vector3D p2(sTransform * Vector3D(vertices.at(iv).x(),
+                                            vertices.at(iv).y(),
+                                            locz));
+          Vector3D p1(sTransform * Vector3D(vertices.at(ivp).x(),
+                                            vertices.at(ivp).y(),
+                                            locz));
 
           maxX = std::max(maxX, p2.x());
           minX = std::min(minX, p2.x());
@@ -144,7 +147,7 @@ ProtoLayer::measure(const std::vector<const Surface*>& surfaces)
       //        makes it into the Surface base class
       //        The envelopes might need special treatments though
 
-      PolyhedronRepresentation ph = cylSurface->polyhedronRepresentation();
+      PolyhedronRepresentation ph = cylSurface->polyhedronRepresentation(ctx);
       // evaluate at all vertices
       for (const auto& vtx : ph.vertices) {
         maxX = std::max(maxX, vtx.x());
@@ -180,7 +183,7 @@ ProtoLayer::measure(const std::vector<const Surface*>& surfaces)
       envR              = {env, env};
 
       // evaluate impact of r shift on phi
-      double cylPosR = perp(cylSurface->center());
+      double cylPosR = perp(cylSurface->center(ctx));
       double dPhi    = std::atan((cylBoundsR + env) / cylPosR)
           - std::atan(cylBoundsR / cylPosR);
 
@@ -194,7 +197,7 @@ ProtoLayer::measure(const std::vector<const Surface*>& surfaces)
       if (cBounds != nullptr) {
 
         double r    = cBounds->r();
-        double z    = sf->center().z();
+        double z    = sf->center(ctx).z();
         double hZ   = cBounds->halflengthZ();
         double phi  = cBounds->averagePhi();
         double hPhi = cBounds->halfPhiSector();

@@ -277,6 +277,7 @@ public:
 
 protected:
   std::shared_ptr<const CylinderBounds> m_bounds;  //!< bounds (shared)
+
 private:
   /// Clone method implementation
   CylinderSurface*

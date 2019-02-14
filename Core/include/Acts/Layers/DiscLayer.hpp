@@ -15,6 +15,7 @@
 #include <algorithm>
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {

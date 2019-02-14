@@ -13,6 +13,7 @@
 #pragma once
 
 #include <vector>
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
@@ -54,6 +55,7 @@ public:
   /// @tparam options_t Type of the Navigation options for the search
   /// @tparam corrector_t Type of the Corrector for the approach search
   ///
+  /// @param ctx the context object for the approach request
   /// @param parameters The actual parameters object
   /// @param options are the steering options for the search
   /// @param corrfnc The actual Corrector object
@@ -61,12 +63,14 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   ObjectIntersection<Surface>
-  approachSurface(const parameters_t& parameters,
+  approachSurface(Context             ctx,
+                  const parameters_t& parameters,
                   const options_t&    options,
                   const corrector_t&  corrfnc = corrector_t()) const;
 
   /// @brief Get the surface on approach
   ///
+  /// @param ctx the context object for the approach request
   /// @param gpos is the position from start of the search
   /// @param gdir is the direction at the start of the search
   /// @param bcheck is the boundary check directive
@@ -74,7 +78,8 @@ public:
   ///
   /// @return is a surface intersection
   virtual ObjectIntersection<Surface>
-  approachSurface(const Vector3D&      pos,
+  approachSurface(Context              ctx,
+                  const Vector3D&      pos,
                   const Vector3D&      gdir,
                   NavigationDirection  navDir,
                   const BoundaryCheck& bcheck,
@@ -93,12 +98,14 @@ public:
 
 template <typename parameters_t, typename options_t, typename corrector_t>
 ObjectIntersection<Surface>
-ApproachDescriptor::approachSurface(const parameters_t& parameters,
+ApproachDescriptor::approachSurface(Context             ctx,
+                                    const parameters_t& parameters,
                                     const options_t&    options,
                                     const corrector_t&  corrfnc) const
 {
   // calculate the actual intersection
-  return approachSurface(parameters.position(),
+  return approachSurface(ctx,
+                         parameters.position(),
                          parameters.direction(),
                          options.navDir,
                          options.boundaryCheck,

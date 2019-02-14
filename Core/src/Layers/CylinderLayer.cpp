@@ -33,12 +33,12 @@ Acts::CylinderLayer::CylinderLayer(
   , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {
   // create the representing volume
-  CylinderVolumeBounds* cvBounds
-      = new CylinderVolumeBounds(cBounds->r() - 0.5 * thickness,
-                                 cBounds->r() + 0.5 * thickness,
-                                 cBounds->halflengthZ());
+  auto cVolumeBounds = std::make_shared<const CylinderVolumeBounds>(
+      *CylinderSurface::m_bounds, thickness);
+  // @todo rotate around x for the avePhi if you have a sector
   m_representingVolume
-      = new AbstractVolume(transform, VolumeBoundsPtr(cvBounds));
+      = std::make_unique<AbstractVolume>(m_transform, cVolumeBounds);
+
   // associate the layer to the surface
   CylinderSurface::associateLayer(*this);
   // an approach descriptor is automatically created if there's a surface array
@@ -66,9 +66,9 @@ Acts::CylinderLayer::surfaceRepresentation()
 void
 Acts::CylinderLayer::buildApproachDescriptor()
 {
-  // delete it
+  // reset the pointers
   m_approachDescriptor.reset(nullptr);
-  // delete the surfaces
+
   // take the boundary surfaces of the representving volume if they exist
   if (m_representingVolume != nullptr) {
     // get the boundary surfaces
@@ -87,22 +87,8 @@ Acts::CylinderLayer::buildApproachDescriptor()
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor = std::make_unique<const GenericApproachDescriptor>(
         std::move(aSurfaces));
-  } else {
-    // create the new surfaces
-    std::vector<std::shared_ptr<const Acts::Surface>> aSurfaces;
-    aSurfaces.push_back(
-        Surface::makeShared<CylinderSurface>(m_transform,
-                                             m_bounds->r() - 0.5 * thickness(),
-                                             m_bounds->halflengthZ()));
-    aSurfaces.push_back(
-        Surface::makeShared<CylinderSurface>(m_transform,
-                                             m_bounds->r() + 0.5 * thickness(),
-                                             m_bounds->halflengthZ()));
-    // create an ApproachDescriptor with standard surfaces surfaces - these will
-    // be deleted by the approach descriptor
-    m_approachDescriptor = std::make_unique<const GenericApproachDescriptor>(
-        std::move(aSurfaces));
   }
+
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
     if (sfPtr != nullptr) {
       auto& mutableSf = *(const_cast<Surface*>(sfPtr));

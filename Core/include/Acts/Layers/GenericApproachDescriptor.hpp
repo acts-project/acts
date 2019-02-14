@@ -13,7 +13,8 @@
 #pragma once
 
 #include <algorithm>
-#include "Acts/Utilities/ApproachDescriptor.hpp"
+#include "Acts/Layers/ApproachDescriptor.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
@@ -45,7 +46,7 @@ public:
   /// A generic approach descriptor with n surfaces to test
   ~GenericApproachDescriptor() override = default;
 
-  /// register the Layer to the surfaces
+  /// @brief Register the Layer to the surfaces
   ///
   /// @param lay is the layer to be registerd
   void
@@ -53,6 +54,7 @@ public:
 
   /// get the compatible surfaces
   ///
+  /// @param ctx the context object for the approach request
   /// @param gpos is the global position to start the approach from
   /// @param gdir is the momentum vector
   /// @param bcheck is the boundary check prescription
@@ -60,7 +62,8 @@ public:
   ///
   /// @return : a boolean indicating if an actual intersection had been tried
   ObjectIntersection<Surface>
-  approachSurface(const Vector3D&      gpos,
+  approachSurface(Context              ctx,
+                  const Vector3D&      gpos,
                   const Vector3D&      gdir,
                   NavigationDirection  navDir,
                   const BoundaryCheck& bcheck,

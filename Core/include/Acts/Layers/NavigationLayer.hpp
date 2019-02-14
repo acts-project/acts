@@ -14,6 +14,7 @@
 
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
 
@@ -46,10 +47,14 @@ public:
   ~NavigationLayer() override;
 
   /// The binning position method
+  ///
+  /// @param ctx is the context (e.g. alignment) for this request
+  /// @param bValue is the value for which the binning position is requested
   ///  - as default the center is given, but may be overloaded
+  ///
   /// @return The return vector can be used for binning in a TrackingVolume
   const Vector3D
-  binningPosition(BinningValue bValue) const final;
+  binningPosition(Context ctx, BinningValue bValue) const final;
 
   /// Default Constructor - deleted
   NavigationLayer() = delete;
@@ -74,12 +79,15 @@ public:
   /// Geometric isOnLayer() method
   /// using isOnSurface() with Layer specific tolerance
   ///
+  /// @param ctx is the context (e.g. alignment) for this request
   /// @param gp is the global position for the check
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates if the position is on surface
   bool
-  isOnLayer(const Vector3D& gp, const BoundaryCheck& bcheck = true) const final;
+  isOnLayer(Context              ctx,
+            const Vector3D&      gp,
+            const BoundaryCheck& bcheck = true) const final;
 
   /// Accept layer according to the following colelction directives
   ///
@@ -126,16 +134,17 @@ NavigationLayer::surfaceRepresentation()
 }
 
 inline const Vector3D
-NavigationLayer::binningPosition(BinningValue bValue) const
+NavigationLayer::binningPosition(Context ctx, BinningValue bValue) const
 {
-  return m_surfaceRepresentation->binningPosition(bValue);
+  return m_surfaceRepresentation->binningPosition(ctx, bValue);
 }
 
 inline bool
-NavigationLayer::isOnLayer(const Vector3D&      gp,
+NavigationLayer::isOnLayer(Context              ctx,
+                           const Vector3D&      gp,
                            const BoundaryCheck& bcheck) const
 {
-  return m_surfaceRepresentation->isOnSurface(gp, s_origin, bcheck);
+  return m_surfaceRepresentation->isOnSurface(ctx, gp, s_origin, bcheck);
 }
 
 inline bool

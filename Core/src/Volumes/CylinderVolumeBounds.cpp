@@ -65,6 +65,32 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(
 {
 }
 
+Acts::CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cylbo,
+                                                 double thickness)
+  : VolumeBounds(), m_valueStore(4, 0.)
+{
+  m_valueStore.at(bv_innerRadius)   = cR - 0.5 * thickness;
+  m_valueStore.at(bv_outerRadius)   = cR + 0.5 * thickness;
+  m_valueStore.at(bv_halfPhiSector) = cylbo.halfPhiSector();
+  m_valueStore.at(bv_halfZ)         = cylbo.halflengthZ();
+}
+
+Acts::CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rbo,
+                                                 double              thickness)
+  : VolumeBounds(), m_valueStore(4, 0.)
+{
+  m_valueStore.at(bv_innerRadius)   = rbo.rMin();
+  m_valueStore.at(bv_outerRadius)   = rbo.rMax();
+  m_valueStore.at(bv_halfPhiSector) = rbo.halfPhiSector();
+  m_valueStore.at(bv_halfZ)         = 0.5 * thickness;
+}
+
+Acts::CylinderVolumeBounds::CylinderVolumeBounds(
+    const CylinderVolumeBounds& cylbo)
+  : VolumeBounds(), m_valueStore(cylbo.m_valueStore)
+{
+}
+
 Acts::CylinderVolumeBounds::~CylinderVolumeBounds() = default;
 
 Acts::CylinderVolumeBounds&
