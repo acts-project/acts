@@ -11,21 +11,13 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Acts::Layer*
-TrackingVolume::associatedLayer(Context ctx, const Vector3D& gp) const
+TrackingVolume::associatedLayer(Context /*ctx*/, const Vector3D& gp) const
 {
   // confined static layers - highest hierarchy
   if (m_confinedLayers) {
     return (m_confinedLayers->object(gp).get());
   }
 
-  // confined arbitrary
-  if (!m_confinedArbitraryLayers.empty()) {
-    for (auto& layer : m_confinedArbitraryLayers) {
-      if (layer->isOnLayer(ctx, gp)) {
-        return layer.get();
-      }
-    }
-  }
   // return the null pointer
   return nullptr;
 }
@@ -72,7 +64,7 @@ TrackingVolume::compatibleLayers(Context            ctx,
       // move to next one or break because you reached the end layer
       tLayer = (tLayer == options.endObject)
           ? nullptr
-          : tLayer->nextLayer(position, options.navDir * direction);
+          : tLayer->nextLayer(ctx, position, options.navDir * direction);
     }
     // sort them accordingly to the navigation direction
     if (options.navDir == forward) {
@@ -97,10 +89,10 @@ TrackingVolume::compatibleLayers(Context             ctx,
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
-// straight line intersection @todo change hard-coded default
 template <typename options_t, typename corrector_t, typename sorter_t>
 std::vector<BoundaryIntersection>
-TrackingVolume::compatibleBoundaries(const Vector3D&    position,
+TrackingVolume::compatibleBoundaries(Context /*ctx*/,
+                                     const Vector3D&    position,
                                      const Vector3D&    direction,
                                      const options_t&   options,
                                      const corrector_t& corrfnc,
@@ -131,11 +123,16 @@ template <typename parameters_t,
           typename corrector_t,
           typename sorter_t>
 std::vector<BoundaryIntersection>
-TrackingVolume::compatibleBoundaries(const parameters_t& parameters,
+TrackingVolume::compatibleBoundaries(Context             ctx,
+                                     const parameters_t& parameters,
                                      const options_t&    options,
                                      const corrector_t&  corrfnc,
                                      const sorter_t&     sorter) const
 {
-  return compatibleBoundaries(
-      parameters.position(), parameters.direction(), options, corrfnc, sorter);
+  return compatibleBoundaries(ctx,
+                              parameters.position(),
+                              parameters.direction(),
+                              options,
+                              corrfnc,
+                              sorter);
 }

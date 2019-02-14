@@ -495,7 +495,8 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
       radial = true;
       // get the raw data
       double currentR = cylBounds->r();
-      double centerZ  = (layerIter->surfaceRepresentation()).center().z();
+      double centerZ
+          = (layerIter->surfaceRepresentation()).center(DefaultContext()).z();
       // check for min/max in the cylinder bounds case
       currentRmin = currentR - (0.5 * (layerIter)->thickness());
       currentRmax = currentR + (0.5 * (layerIter)->thickness());

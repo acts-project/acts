@@ -53,7 +53,7 @@ Layer::representingVolume() const
 }
 
 inline const Layer*
-Layer::nextLayer(const Vector3D& gp, const Vector3D& mom) const
+Layer::nextLayer(Context /*ctx*/, const Vector3D& gp, const Vector3D& mom) const
 {
   // no binutility -> no chance to find out the direction
   if (m_nextLayerUtility == nullptr) {

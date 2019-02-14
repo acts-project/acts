@@ -147,8 +147,7 @@ Acts::Surface::toStream(Context ctx, std::ostream& sl) const
 std::ostream&
 Acts::operator<<(std::ostream& sl, const Acts::Surface& sf)
 {
-  DefaultContext dctx;
-  return sf.toStream(dctx, sl);
+  return sf.toStream(DefaultContext(), sl);
 }
 
 bool

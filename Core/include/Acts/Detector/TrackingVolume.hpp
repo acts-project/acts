@@ -27,9 +27,6 @@
 
 namespace Acts {
 
-// classes
-class TrackingVolume;
-class DetachedTrackingVolume;
 class GlueVolumesDescriptor;
 class VolumeBounds;
 class Material;
@@ -38,16 +35,14 @@ using TrackingVolumeBoundaryPtr
     = std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
 
 // master typedefs
-using TrackingVolumePtr         = std::shared_ptr<const TrackingVolume>;
-using MutableTrackingVolumePtr  = std::shared_ptr<TrackingVolume>;
-using DetachedTrackingVolumePtr = std::shared_ptr<const DetachedTrackingVolume>;
+using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 // possible contained
 using TrackingVolumeArray  = BinnedArray<TrackingVolumePtr>;
 using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
 using LayerArray           = BinnedArray<LayerPtr>;
 using LayerVector          = std::vector<LayerPtr>;
-using DetachedVolumeVector = std::vector<DetachedTrackingVolumePtr>;
 
 // full intersection with Layer
 using LayerIntersection = FullIntersection<Layer, Surface>;
@@ -113,36 +108,31 @@ public:
   /// @param htrans is the global 3D transform to position the volume in space
   /// @param volumeBounds is the description of the volume boundaries
   /// @param matprop is are materials of the tracking volume
-  /// @param cLayerArray is the confined layer array (optional)
-  /// @param cLayerVector is the confined arbitrary layer vector
-  /// @param cVolumeVector is the confined arbitrary volume vector
-  /// @param dVolumeVector is the confined arbeitrary detached volume vector
+  /// @param containedLayers is the confined layer array (optional)
+  /// @param containedVolumes is the confined volume array (optional)
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
   static MutableTrackingVolumePtr
-  create(std::shared_ptr<const Transform3D> htrans,
-         VolumeBoundsPtr                    volumeBounds,
-         std::shared_ptr<const Material>    matprop,
-         std::unique_ptr<const LayerArray>  cLayerArray   = nullptr,
-         const LayerVector&                 cLayerVector  = {},
-         const TrackingVolumeVector&        cVolumeVector = {},
-         const DetachedVolumeVector&        dVolumeVector = {},
-         const std::string&                 volumeName    = "undefined")
+  create(std::shared_ptr<const Transform3D>         htrans,
+         VolumeBoundsPtr                            volumeBounds,
+         std::shared_ptr<const Material>            matprop,
+         std::unique_ptr<const LayerArray>          containedLayers  = nullptr,
+         std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
+         const std::string&                         volumeName = "undefined")
   {
-    return MutableTrackingVolumePtr(new TrackingVolume(std::move(htrans),
-                                                       std::move(volumeBounds),
-                                                       std::move(matprop),
-                                                       std::move(cLayerArray),
-                                                       cLayerVector,
-                                                       nullptr,
-                                                       cVolumeVector,
-                                                       dVolumeVector,
-                                                       volumeName));
+    return MutableTrackingVolumePtr(
+        new TrackingVolume(std::move(htrans),
+                           std::move(volumeBounds),
+                           std::move(matprop),
+                           std::move(containedLayers),
+                           std::move(containedVolumes),
+                           volumeName));
   }
 
   /// Return the associated Layer to the global position
   ///
+  /// @param ctx is the context for this request (e.g. alignment)
   /// @param gp is the associated global position
   ///
   /// @return plain pointer to layer object
@@ -199,6 +189,7 @@ public:
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   /// @tparam sorter_t Type of the boundary surface sorter
   ///
+  /// @param ctx is the context for this request (e.g. alignment)
   /// @param position The position for searching
   /// @param direction The direction for searching
   /// @param options The templated navigation options
@@ -210,7 +201,8 @@ public:
             typename corrector_t = VoidIntersectionCorrector,
             typename sorter_t    = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection>
-  compatibleBoundaries(const Vector3D&    position,
+  compatibleBoundaries(Context            ctx,
+                       const Vector3D&    position,
                        const Vector3D&    direction,
                        const options_t&   options,
                        const corrector_t& corrfnc = corrector_t(),
@@ -223,6 +215,7 @@ public:
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   /// @tparam sorter_t Type of the boundary surface sorter
   ///
+  /// @param ctx is the context for this request (e.g. alignment)
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
@@ -234,46 +227,29 @@ public:
             typename corrector_t = VoidIntersectionCorrector,
             typename sorter_t    = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection>
-  compatibleBoundaries(const parameters_t& parameters,
+  compatibleBoundaries(Context             ctx,
+                       const parameters_t& parameters,
                        const options_t&    options,
                        const corrector_t&  corrfnc = corrector_t(),
                        const sorter_t&     sorter  = sorter_t()) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
+  /// @param ctx is the context for this request (e.g. alignment)
   /// @param gp is the global position associated with that search
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume*
-  trackingVolume(const Vector3D& gp) const;
-
-  /// Return the dynamically created vector of detached sub volumes
-  ///
-  /// @param gp is the glboal position associated with that search
-  /// @param tol is the absolute tolerance for the search
-  ///
-  /// @return the list of associated detached tracking volumes, nullptr if it
-  /// does not exist
-  const DetachedVolumeVector*
-  detachedTrackingVolumes(const Vector3D& gp, double tol) const;
+  trackingVolume(Context ctx, const Vector3D& gp) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists
   const LayerArray*
   confinedLayers() const;
 
-  /// Return the arbitrary layer array - if it exists
-  /// @return the vector of arbitrary layers
-  const LayerVector
-  confinedArbitraryLayers() const;
-
   /// Return the confined volumes of this container array - if it exists
   std::shared_ptr<const TrackingVolumeArray>
   confinedVolumes() const;
-
-  /// Return detached subVolumes - not the ownership
-  const DetachedVolumeVector
-  confinedDetachedVolumes() const;
 
   /// @brief Visit all sensitive surfaces
   ///
@@ -281,10 +257,6 @@ public:
   /// that is found
   void
   visitSurfaces(const std::function<void(const Acts::Surface*)>& visitor) const;
-
-  /// Return unordered subVolumes - not the ownership
-  const TrackingVolumeVector
-  confinedDenseVolumes() const;
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string&
@@ -411,33 +383,15 @@ protected:
   /// @param volbounds is the description of the volume boundaries
   /// @param matprop is are materials of the tracking volume
   /// @param staticLayerArray is the confined layer array (optional)
-  /// @param arbitraryLayerVector is the confined arbitrary layer vector
-  /// @param containedVolumeARray is the confined volume array
-  /// @param denseVolumeVector is the confined arbitrary volume vector
-  /// @param detachedVolumeVector is the confined arbeitrary detached volume
-  /// vector
+  /// @param containedVolumeArray is the confined volume array
   /// @param volumeName is a string identifier
   TrackingVolume(std::shared_ptr<const Transform3D> htrans,
                  VolumeBoundsPtr                    volbounds,
                  std::shared_ptr<const Material>    matprop,
                  std::unique_ptr<const LayerArray>  staticLayerArray = nullptr,
-                 const LayerVector&                 arbitraryLayerVector = {},
                  std::shared_ptr<const TrackingVolumeArray> containedVolumeArray
                  = nullptr,
-                 const TrackingVolumeVector& denseVolumeVector    = {},
-                 const DetachedVolumeVector& detachedVolumeVector = {},
-                 const std::string&          volumeName = "undefined");
-
-  /// Copy Constructor with a shift
-  ///
-  /// @param tvol is the source tracking volume
-  /// @param shift is the additional shift applied after copying
-  /// @param volumeName is a string identifier
-  ///
-  /// @return shared pointer to a new TrackingVolume
-  TrackingVolume(const TrackingVolume& tvol,
-                 const Transform3D&    shift,
-                 const std::string&    volumeName = "undefined");
+                 const std::string& volumeName = "undefined");
 
 private:
   /// Create Boundary Surface
@@ -485,20 +439,10 @@ private:
 
   ///(a) static configuration ordered by Binned arrays
   /// static layers
-  std::unique_ptr<const LayerArray> m_confinedLayers;
+  std::unique_ptr<const LayerArray> m_confinedLayers = nullptr;
 
-  /// Array of Volumes inside the Volume
-  std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes;
-
-  /// (b)  non-static setups
-  /// detacathd
-  const DetachedVolumeVector m_confinedDetachedVolumes;
-
-  /// confined dense
-  const TrackingVolumeVector m_confinedDenseVolumes;
-
-  /// confined arbitrary
-  const LayerVector m_confinedArbitraryLayers;
+  /// Array of Volumes inside the Volume when actin as container
+  std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes = nullptr;
 
   /// Volumes to glue Volumes from the outside
   GlueVolumesDescriptor* m_glueVolumeDescriptor{nullptr};
@@ -534,28 +478,10 @@ TrackingVolume::confinedLayers() const
   return m_confinedLayers.get();
 }
 
-inline const LayerVector
-TrackingVolume::confinedArbitraryLayers() const
-{
-  return m_confinedArbitraryLayers;
-}
-
 inline std::shared_ptr<const TrackingVolumeArray>
 TrackingVolume::confinedVolumes() const
 {
   return m_confinedVolumes;
-}
-
-inline const DetachedVolumeVector
-TrackingVolume::confinedDetachedVolumes() const
-{
-  return m_confinedDetachedVolumes;
-}
-
-inline const TrackingVolumeVector
-TrackingVolume::confinedDenseVolumes() const
-{
-  return m_confinedDenseVolumes;
 }
 
 inline GeometrySignature
@@ -596,4 +522,4 @@ TrackingVolume::setMotherVolume(const TrackingVolume* mvol)
 
 #include "detail/TrackingVolume.ipp"
 
-}  // namespace
+}  // namespace Acts

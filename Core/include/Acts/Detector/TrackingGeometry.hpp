@@ -23,15 +23,12 @@
 namespace Acts {
 
 class TrackingVolume;
-class DetachedTrackingVolume;
+class Layer;
 class Surface;
 class PerigeeSurface;
-class Layer;
 
-using TrackingVolumePtr         = std::shared_ptr<const TrackingVolume>;
-using MutableTrackingVolumePtr  = std::shared_ptr<TrackingVolume>;
-using DetachedTrackingVolumePtr = std::shared_ptr<const DetachedTrackingVolume>;
-using DetachedVolumeVector      = std::vector<DetachedTrackingVolumePtr>;
+using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 ///  @class TrackingGeometry
 ///
@@ -63,27 +60,12 @@ public:
 
   /// return the lowest tracking Volume
   ///
+  /// @param ctx is the context for this request (e.g. alignment)
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
-  lowestTrackingVolume(const Vector3D& gp) const;
-
-  /// return the vector of lowest detached tracking Volume(->overlaps)
-  ///
-  /// @param gp is the global position of the call
-  ///
-  /// @return plain pointer to the the lowest DetachedTrackingVolume
-  const DetachedVolumeVector*
-  lowestDetachedTrackingVolumes(const Vector3D& gp) const;
-
-  /// return the lowest static volume
-  ///
-  /// @param gp is the global position of the call
-  ///
-  /// @return plain pointer to the the lowest static tracking volume
-  const TrackingVolume*
-  lowestStaticTrackingVolume(const Vector3D& gp) const;
+  lowestTrackingVolume(Context ctx, const Vector3D& gp) const;
 
   /// return the lowest tracking Volume
   ///

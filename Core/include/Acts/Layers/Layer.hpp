@@ -279,12 +279,13 @@ public:
 
   /// Fast navigation to next layer
   ///
+  /// @param ctx the context (e.g. alignment) for this call
   /// @param gp is the start position for the search
   /// @param mom is the direction for the search
   ///
   /// @return the pointer to the next layer
   const Layer*
-  nextLayer(const Vector3D& gp, const Vector3D& mom) const;
+  nextLayer(Context ctx, const Vector3D& gp, const Vector3D& mom) const;
 
   /// get the confining TrackingVolume
   ///

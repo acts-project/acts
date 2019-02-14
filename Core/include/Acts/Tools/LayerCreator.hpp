@@ -13,8 +13,8 @@
 #pragma once
 
 #include <boost/optional.hpp>
+#include "Acts/Layers/ApproachDescriptor.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Utilities/ApproachDescriptor.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
