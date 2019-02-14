@@ -28,8 +28,12 @@ class AtlasStepper
 {
 
 public:
-  using Jacobian = ActsMatrixD<5, 5>;
-  using Cstep    = detail::ConstrainedStep;
+  using cstep = detail::ConstrainedStep;
+
+  using Jacobian         = ActsMatrixD<5, 5>;
+  using Covariance       = ActsSymMatrixD<5>;
+  using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
+  using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
   /// @brief Nested State struct for the local caching
   struct State
@@ -88,8 +92,9 @@ public:
       // prepare the jacobian if we have a covariance
       if (pars.covariance()) {
         // copy the covariance matrix
-        covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
-        useJacobian = true;
+        covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
+        covTransport = true;
+        useJacobian  = true;
         const auto transform = pars.referenceFrame();
 
         pVector[7]  = transform(0, eLOC_0);
@@ -221,6 +226,8 @@ public:
     // result
     double parameters[NGlobalPars] = {0., 0., 0., 0., 0.};
     const ActsSymMatrixD<NGlobalPars>* covariance;
+    Covariance                         cov          = Covariance::Zero();
+    bool                               covTransport = false;
     double                             jacobian[NGlobalPars * NGlobalPars];
 
     /// Lazily initialized cache for the magnetic field
@@ -232,7 +239,7 @@ public:
     double pathAccumulated = 0.;
 
     // adaptive step size of the runge-kutta integration
-    Cstep stepSize = std::numeric_limits<double>::max();
+    cstep stepSize = std::numeric_limits<double>::max();
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
@@ -289,7 +296,7 @@ public:
   update(State&          state,
          const Vector3D& uposition,
          const Vector3D& udirection,
-         double          up)
+         double          up) const
   {
     // update the vector
     state.pVector[0] = uposition[0];
@@ -303,7 +310,7 @@ public:
 
   /// Return a corrector
   VoidIntersectionCorrector
-  corrector(State& /*unused*/)
+  corrector(State& /*unused*/) const
   {
     return VoidIntersectionCorrector();
   }
@@ -311,9 +318,8 @@ public:
   /// The state update method
   ///
   /// @param [in] pars The new track parameters at start
-  template <typename Parameters>
   void
-  update(State& state, const Parameters& pars)
+  update(State& state, const BoundParameters& pars) const
   {
     // state is ready - noting to do
     if (state.state_ready) {
@@ -346,8 +352,9 @@ public:
     // prepare the jacobian if we have a covariance
     if (pars.covariance()) {
       // copy the covariance matrix
-      state.covariance  = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
-      state.useJacobian = true;
+      state.covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
+      state.covTransport = true;
+      state.useJacobian  = true;
       const auto transform = pars.referenceFrame();
 
       state.pVector[7]  = transform(0, eLOC_0);
@@ -483,16 +490,19 @@ public:
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 
-  /// Convert the propagation state (global) to curvilinear parameters
-  /// This is called by the propagator
+  /// Create and return a curvilinear state at the current position
   ///
-  /// @tparam result_t Type of the propagator result to be filled
   ///
-  /// @param[in,out] state The stepper state
-  /// @param[in,out] result The propagator result object to be filled
-  template <typename result_t>
-  void
-  convert(State& state, result_t& result) const
+  /// @param [in] state State that will be presented as @c CurvilinearState
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed
+  /// i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return A curvilinear state:
+  ///   - the curvilinear parameters at given position
+  ///   - the stepweise jacobian towards it
+  ///   - and the path length (from start - for ordering)
+  CurvilinearState
+  curvilinearState(State& state, bool /*unused*/) const
   {
     // the convert method invalidates the state (in case it's reused)
     state.state_ready = false;
@@ -501,156 +511,171 @@ public:
     Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
     mom /= std::abs(state.pVector[6]);
 
+    std::unique_ptr<const Covariance> cov = nullptr;
+    if (state.covTransport) {
+      covarianceTransport(state, true);
+      cov = std::make_unique<const Covariance>(state.cov);
+    }
+
+    CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state));
+
+    return CurvilinearState(
+        std::move(parameters), state.jacobian, state.pathAccumulated);
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current  position,
+  /// or direction of the state
+  ///
+  /// @param [in,out] state State of the stepper
+  /// @param [in] reinitialize is a flag to steer whether the state should be
+  /// reinitialized at the new position
+  ///
+  /// @return the full transport jacobian
+  void
+  covarianceTransport(State& state, bool /*unused*/) const
+  {
     double P[45];
     for (unsigned int i = 0; i < 45; ++i) {
       P[i] = state.pVector[i];
     }
 
-    std::unique_ptr<const ActsSymMatrixD<NGlobalPars>> cov = nullptr;
-    if (state.covariance) {
-      double p = 1. / P[6];
-      P[35] *= p;
-      P[36] *= p;
-      P[37] *= p;
-      P[38] *= p;
-      P[39] *= p;
-      P[40] *= p;
+    double p = 1. / P[6];
+    P[35] *= p;
+    P[36] *= p;
+    P[37] *= p;
+    P[38] *= p;
+    P[39] *= p;
+    P[40] *= p;
 
-      double An = sqrt(P[3] * P[3] + P[4] * P[4]);
-      double Ax[3];
-      if (An != 0.) {
-        Ax[0] = -P[4] / An;
-        Ax[1] = P[3] / An;
-        Ax[2] = 0.;
-      } else {
-        Ax[0] = 1.;
-        Ax[1] = 0.;
-        Ax[2] = 0.;
-      }
-
-      double Ay[3] = {-Ax[1] * P[5], Ax[0] * P[5], An};
-      double S[3]  = {P[3], P[4], P[5]};
-
-      double A = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
-      if (A != 0.) {
-        A = 1. / A;
-      }
-      S[0] *= A;
-      S[1] *= A;
-      S[2] *= A;
-
-      double s0 = P[7] * S[0] + P[8] * S[1] + P[9] * S[2];
-      double s1 = P[14] * S[0] + P[15] * S[1] + P[16] * S[2];
-      double s2 = P[21] * S[0] + P[22] * S[1] + P[23] * S[2];
-      double s3 = P[28] * S[0] + P[29] * S[1] + P[30] * S[2];
-      double s4 = P[35] * S[0] + P[36] * S[1] + P[37] * S[2];
-
-      P[7] -= (s0 * P[3]);
-      P[8] -= (s0 * P[4]);
-      P[9] -= (s0 * P[5]);
-      P[10] -= (s0 * P[42]);
-      P[11] -= (s0 * P[43]);
-      P[12] -= (s0 * P[44]);
-      P[14] -= (s1 * P[3]);
-      P[15] -= (s1 * P[4]);
-      P[16] -= (s1 * P[5]);
-      P[17] -= (s1 * P[42]);
-      P[18] -= (s1 * P[43]);
-      P[19] -= (s1 * P[44]);
-      P[21] -= (s2 * P[3]);
-      P[22] -= (s2 * P[4]);
-      P[23] -= (s2 * P[5]);
-      P[24] -= (s2 * P[42]);
-      P[25] -= (s2 * P[43]);
-      P[26] -= (s2 * P[44]);
-      P[28] -= (s3 * P[3]);
-      P[29] -= (s3 * P[4]);
-      P[30] -= (s3 * P[5]);
-      P[31] -= (s3 * P[42]);
-      P[32] -= (s3 * P[43]);
-      P[33] -= (s3 * P[44]);
-      P[35] -= (s4 * P[3]);
-      P[36] -= (s4 * P[4]);
-      P[37] -= (s4 * P[5]);
-      P[38] -= (s4 * P[42]);
-      P[39] -= (s4 * P[43]);
-      P[40] -= (s4 * P[44]);
-
-      double P3, P4, C = P[3] * P[3] + P[4] * P[4];
-      if (C > 1.e-20) {
-        C  = 1. / C;
-        P3 = P[3] * C;
-        P4 = P[4] * C;
-        C  = -sqrt(C);
-      } else {
-        C  = -1.e10;
-        P3 = 1.;
-        P4 = 0.;
-      }
-
-      // Jacobian production
-      //
-      state.jacobian[0] = Ax[0] * P[7] + Ax[1] * P[8];    // dL0/dL0
-      state.jacobian[1] = Ax[0] * P[14] + Ax[1] * P[15];  // dL0/dL1
-      state.jacobian[2] = Ax[0] * P[21] + Ax[1] * P[22];  // dL0/dPhi
-      state.jacobian[3] = Ax[0] * P[28] + Ax[1] * P[29];  // dL0/dThe
-      state.jacobian[4] = Ax[0] * P[35] + Ax[1] * P[36];  // dL0/dCM
-
-      state.jacobian[5]
-          = Ay[0] * P[7] + Ay[1] * P[8] + Ay[2] * P[9];  // dL1/dL0
-      state.jacobian[6]
-          = Ay[0] * P[14] + Ay[1] * P[15] + Ay[2] * P[16];  // dL1/dL1
-      state.jacobian[7]
-          = Ay[0] * P[21] + Ay[1] * P[22] + Ay[2] * P[23];  // dL1/dPhi
-      state.jacobian[8]
-          = Ay[0] * P[28] + Ay[1] * P[29] + Ay[2] * P[30];  // dL1/dThe
-      state.jacobian[9]
-          = Ay[0] * P[35] + Ay[1] * P[36] + Ay[2] * P[37];  // dL1/dCM
-
-      state.jacobian[10] = P3 * P[11] - P4 * P[10];  // dPhi/dL0
-      state.jacobian[11] = P3 * P[18] - P4 * P[17];  // dPhi/dL1
-      state.jacobian[12] = P3 * P[25] - P4 * P[24];  // dPhi/dPhi
-      state.jacobian[13] = P3 * P[32] - P4 * P[31];  // dPhi/dThe
-      state.jacobian[14] = P3 * P[39] - P4 * P[38];  // dPhi/dCM
-
-      state.jacobian[15] = C * P[12];  // dThe/dL0
-      state.jacobian[16] = C * P[19];  // dThe/dL1
-      state.jacobian[17] = C * P[26];  // dThe/dPhi
-      state.jacobian[18] = C * P[33];  // dThe/dThe
-      state.jacobian[19] = C * P[40];  // dThe/dCM
-
-      state.jacobian[20] = 0.;     // dCM /dL0
-      state.jacobian[21] = 0.;     // dCM /dL1
-      state.jacobian[22] = 0.;     // dCM /dPhi
-      state.jacobian[23] = 0.;     // dCM /dTheta
-      state.jacobian[24] = P[41];  // dCM /dCM
-
-      Eigen::
-          Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
-              J(state.jacobian);
-
-      cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
-          J * (*state.covariance) * J.transpose());
-      // Optionally : fill the jacobian
-      result.transportJacobian = std::make_unique<const Jacobian>(std::move(J));
+    double An = sqrt(P[3] * P[3] + P[4] * P[4]);
+    double Ax[3];
+    if (An != 0.) {
+      Ax[0] = -P[4] / An;
+      Ax[1] = P[3] / An;
+      Ax[2] = 0.;
+    } else {
+      Ax[0] = 1.;
+      Ax[1] = 0.;
+      Ax[2] = 0.;
     }
 
-    // Fill the result
-    result.endParameters = std::make_unique<const CurvilinearParameters>(
-        std::move(cov), gp, mom, charge(state));
+    double Ay[3] = {-Ax[1] * P[5], Ax[0] * P[5], An};
+    double S[3]  = {P[3], P[4], P[5]};
+
+    double A = P[3] * S[0] + P[4] * S[1] + P[5] * S[2];
+    if (A != 0.) {
+      A = 1. / A;
+    }
+    S[0] *= A;
+    S[1] *= A;
+    S[2] *= A;
+
+    double s0 = P[7] * S[0] + P[8] * S[1] + P[9] * S[2];
+    double s1 = P[14] * S[0] + P[15] * S[1] + P[16] * S[2];
+    double s2 = P[21] * S[0] + P[22] * S[1] + P[23] * S[2];
+    double s3 = P[28] * S[0] + P[29] * S[1] + P[30] * S[2];
+    double s4 = P[35] * S[0] + P[36] * S[1] + P[37] * S[2];
+
+    P[7] -= (s0 * P[3]);
+    P[8] -= (s0 * P[4]);
+    P[9] -= (s0 * P[5]);
+    P[10] -= (s0 * P[42]);
+    P[11] -= (s0 * P[43]);
+    P[12] -= (s0 * P[44]);
+    P[14] -= (s1 * P[3]);
+    P[15] -= (s1 * P[4]);
+    P[16] -= (s1 * P[5]);
+    P[17] -= (s1 * P[42]);
+    P[18] -= (s1 * P[43]);
+    P[19] -= (s1 * P[44]);
+    P[21] -= (s2 * P[3]);
+    P[22] -= (s2 * P[4]);
+    P[23] -= (s2 * P[5]);
+    P[24] -= (s2 * P[42]);
+    P[25] -= (s2 * P[43]);
+    P[26] -= (s2 * P[44]);
+    P[28] -= (s3 * P[3]);
+    P[29] -= (s3 * P[4]);
+    P[30] -= (s3 * P[5]);
+    P[31] -= (s3 * P[42]);
+    P[32] -= (s3 * P[43]);
+    P[33] -= (s3 * P[44]);
+    P[35] -= (s4 * P[3]);
+    P[36] -= (s4 * P[4]);
+    P[37] -= (s4 * P[5]);
+    P[38] -= (s4 * P[42]);
+    P[39] -= (s4 * P[43]);
+    P[40] -= (s4 * P[44]);
+
+    double P3, P4, C = P[3] * P[3] + P[4] * P[4];
+    if (C > 1.e-20) {
+      C  = 1. / C;
+      P3 = P[3] * C;
+      P4 = P[4] * C;
+      C  = -sqrt(C);
+    } else {
+      C  = -1.e10;
+      P3 = 1.;
+      P4 = 0.;
+    }
+
+    // Jacobian production
+    //
+    state.jacobian[0] = Ax[0] * P[7] + Ax[1] * P[8];    // dL0/dL0
+    state.jacobian[1] = Ax[0] * P[14] + Ax[1] * P[15];  // dL0/dL1
+    state.jacobian[2] = Ax[0] * P[21] + Ax[1] * P[22];  // dL0/dPhi
+    state.jacobian[3] = Ax[0] * P[28] + Ax[1] * P[29];  // dL0/dThe
+    state.jacobian[4] = Ax[0] * P[35] + Ax[1] * P[36];  // dL0/dCM
+
+    state.jacobian[5] = Ay[0] * P[7] + Ay[1] * P[8] + Ay[2] * P[9];  // dL1/dL0
+    state.jacobian[6]
+        = Ay[0] * P[14] + Ay[1] * P[15] + Ay[2] * P[16];  // dL1/dL1
+    state.jacobian[7]
+        = Ay[0] * P[21] + Ay[1] * P[22] + Ay[2] * P[23];  // dL1/dPhi
+    state.jacobian[8]
+        = Ay[0] * P[28] + Ay[1] * P[29] + Ay[2] * P[30];  // dL1/dThe
+    state.jacobian[9]
+        = Ay[0] * P[35] + Ay[1] * P[36] + Ay[2] * P[37];  // dL1/dCM
+
+    state.jacobian[10] = P3 * P[11] - P4 * P[10];  // dPhi/dL0
+    state.jacobian[11] = P3 * P[18] - P4 * P[17];  // dPhi/dL1
+    state.jacobian[12] = P3 * P[25] - P4 * P[24];  // dPhi/dPhi
+    state.jacobian[13] = P3 * P[32] - P4 * P[31];  // dPhi/dThe
+    state.jacobian[14] = P3 * P[39] - P4 * P[38];  // dPhi/dCM
+
+    state.jacobian[15] = C * P[12];  // dThe/dL0
+    state.jacobian[16] = C * P[19];  // dThe/dL1
+    state.jacobian[17] = C * P[26];  // dThe/dPhi
+    state.jacobian[18] = C * P[33];  // dThe/dThe
+    state.jacobian[19] = C * P[40];  // dThe/dCM
+
+    state.jacobian[20] = 0.;     // dCM /dL0
+    state.jacobian[21] = 0.;     // dCM /dL1
+    state.jacobian[22] = 0.;     // dCM /dPhi
+    state.jacobian[23] = 0.;     // dCM /dTheta
+    state.jacobian[24] = P[41];  // dCM /dCM
+
+    Eigen::Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
+        J(state.jacobian);
+
+    state.cov = J * (*state.covariance) * J.transpose();
   }
 
-  /// Convert the propagation state to track parameters at a certain surface
+  /// Create and return the bound state at the current position
   ///
-  /// @tparam result_t Type of the propagator result to be filled
-  /// @tparam surface_t Type of the surface
   ///
-  /// @param [in,out] state Propagation state used
-  /// @param [in,out] result Result object from the propagator
-  /// @param [in] s Destination surface to which the conversion is done
-  template <typename result_t, typename surface_t>
-  void
-  convert(State& state, result_t& result, const surface_t& surface) const
+  /// @param [in] state State that will be presented as @c BoundState
+  /// @param [in] surface The surface to which we bind the state
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+  /// i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return A bound state:
+  ///   - the parameters at the surface
+  ///   - the stepwise jacobian towards it
+  ///   - and the path length (from start - for ordering)
+  BoundState
+  boundState(State& state, const Surface& surface, bool /*unused*/) const
   {
 
     // the convert method invalidates the state (in case it's reused)
@@ -662,241 +687,265 @@ public:
     mom /= std::abs(state.pVector[6]);
 
     // The transport of the covariance
-    std::unique_ptr<const ActsSymMatrixD<5>> cov = nullptr;
-    if (state.covariance) {
-      double p = 1. / state.pVector[6];
-      state.pVector[35] *= p;
-      state.pVector[36] *= p;
-      state.pVector[37] *= p;
-      state.pVector[38] *= p;
-      state.pVector[39] *= p;
-      state.pVector[40] *= p;
-
-      const auto fFrame = surface.referenceFrame(gp, mom);
-
-      double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
-      double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
-      double S[3]  = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
-
-      // this is the projection of direction onto the local normal vector
-      double A = state.pVector[3] * S[0] + state.pVector[4] * S[1]
-          + state.pVector[5] * S[2];
-
-      if (A != 0.) {
-        A = 1. / A;
-      }
-
-      S[0] *= A;
-      S[1] *= A;
-      S[2] *= A;
-
-      double s0 = state.pVector[7] * S[0] + state.pVector[8] * S[1]
-          + state.pVector[9] * S[2];
-      double s1 = state.pVector[14] * S[0] + state.pVector[15] * S[1]
-          + state.pVector[16] * S[2];
-      double s2 = state.pVector[21] * S[0] + state.pVector[22] * S[1]
-          + state.pVector[23] * S[2];
-      double s3 = state.pVector[28] * S[0] + state.pVector[29] * S[1]
-          + state.pVector[30] * S[2];
-      double s4 = state.pVector[35] * S[0] + state.pVector[36] * S[1]
-          + state.pVector[37] * S[2];
-
-      // in case of line-type surfaces - we need to take into account that
-      // the reference frame changes with variations of all local
-      // parameters
-      if (surface.type() == Surface::Straw
-          || surface.type() == Surface::Perigee) {
-        // vector from position to center
-        double x = state.pVector[0] - surface.center().x();
-        double y = state.pVector[1] - surface.center().y();
-        double z = state.pVector[2] - surface.center().z();
-
-        // this is the projection of the direction onto the local y axis
-        double d = state.pVector[3] * Ay[0] + state.pVector[4] * Ay[1]
-            + state.pVector[5] * Ay[2];
-
-        // this is cos(beta)
-        double a = (1. - d) * (1. + d);
-        if (a != 0.) {
-          a = 1. / a;  // i.e. 1./(1-d^2)
-        }
-
-        // that's the modified norm vector
-        double X = d * Ay[0] - state.pVector[3];  //
-        double Y = d * Ay[1] - state.pVector[4];  //
-        double Z = d * Ay[2] - state.pVector[5];  //
-
-        // d0 to d1
-        double d0 = state.pVector[10] * Ay[0] + state.pVector[11] * Ay[1]
-            + state.pVector[12] * Ay[2];
-        double d1 = state.pVector[17] * Ay[0] + state.pVector[18] * Ay[1]
-            + state.pVector[19] * Ay[2];
-        double d2 = state.pVector[24] * Ay[0] + state.pVector[25] * Ay[1]
-            + state.pVector[26] * Ay[2];
-        double d3 = state.pVector[31] * Ay[0] + state.pVector[32] * Ay[1]
-            + state.pVector[33] * Ay[2];
-        double d4 = state.pVector[38] * Ay[0] + state.pVector[39] * Ay[1]
-            + state.pVector[40] * Ay[2];
-
-        s0 = (((state.pVector[7] * X + state.pVector[8] * Y
-                + state.pVector[9] * Z)
-               + x * (d0 * Ay[0] - state.pVector[10]))
-              + (y * (d0 * Ay[1] - state.pVector[11])
-                 + z * (d0 * Ay[2] - state.pVector[12])))
-            * (-a);
-
-        s1 = (((state.pVector[14] * X + state.pVector[15] * Y
-                + state.pVector[16] * Z)
-               + x * (d1 * Ay[0] - state.pVector[17]))
-              + (y * (d1 * Ay[1] - state.pVector[18])
-                 + z * (d1 * Ay[2] - state.pVector[19])))
-            * (-a);
-        s2 = (((state.pVector[21] * X + state.pVector[22] * Y
-                + state.pVector[23] * Z)
-               + x * (d2 * Ay[0] - state.pVector[24]))
-              + (y * (d2 * Ay[1] - state.pVector[25])
-                 + z * (d2 * Ay[2] - state.pVector[26])))
-            * (-a);
-        s3 = (((state.pVector[28] * X + state.pVector[29] * Y
-                + state.pVector[30] * Z)
-               + x * (d3 * Ay[0] - state.pVector[31]))
-              + (y * (d3 * Ay[1] - state.pVector[32])
-                 + z * (d3 * Ay[2] - state.pVector[33])))
-            * (-a);
-        s4 = (((state.pVector[35] * X + state.pVector[36] * Y
-                + state.pVector[37] * Z)
-               + x * (d4 * Ay[0] - state.pVector[38]))
-              + (y * (d4 * Ay[1] - state.pVector[39])
-                 + z * (d4 * Ay[2] - state.pVector[40])))
-            * (-a);
-      }
-
-      state.pVector[7] -= (s0 * state.pVector[3]);
-      state.pVector[8] -= (s0 * state.pVector[4]);
-      state.pVector[9] -= (s0 * state.pVector[5]);
-      state.pVector[10] -= (s0 * state.pVector[42]);
-      state.pVector[11] -= (s0 * state.pVector[43]);
-      state.pVector[12] -= (s0 * state.pVector[44]);
-
-      state.pVector[14] -= (s1 * state.pVector[3]);
-      state.pVector[15] -= (s1 * state.pVector[4]);
-      state.pVector[16] -= (s1 * state.pVector[5]);
-      state.pVector[17] -= (s1 * state.pVector[42]);
-      state.pVector[18] -= (s1 * state.pVector[43]);
-      state.pVector[19] -= (s1 * state.pVector[44]);
-
-      state.pVector[21] -= (s2 * state.pVector[3]);
-      state.pVector[22] -= (s2 * state.pVector[4]);
-      state.pVector[23] -= (s2 * state.pVector[5]);
-      state.pVector[24] -= (s2 * state.pVector[42]);
-      state.pVector[25] -= (s2 * state.pVector[43]);
-      state.pVector[26] -= (s2 * state.pVector[44]);
-
-      state.pVector[28] -= (s3 * state.pVector[3]);
-      state.pVector[29] -= (s3 * state.pVector[4]);
-      state.pVector[30] -= (s3 * state.pVector[5]);
-      state.pVector[31] -= (s3 * state.pVector[42]);
-      state.pVector[32] -= (s3 * state.pVector[43]);
-      state.pVector[33] -= (s3 * state.pVector[44]);
-
-      state.pVector[35] -= (s4 * state.pVector[3]);
-      state.pVector[36] -= (s4 * state.pVector[4]);
-      state.pVector[37] -= (s4 * state.pVector[5]);
-      state.pVector[38] -= (s4 * state.pVector[42]);
-      state.pVector[39] -= (s4 * state.pVector[43]);
-      state.pVector[40] -= (s4 * state.pVector[44]);
-
-      double P3, P4, C = state.pVector[3] * state.pVector[3]
-          + state.pVector[4] * state.pVector[4];
-      if (C > 1.e-20) {
-        C  = 1. / C;
-        P3 = state.pVector[3] * C;
-        P4 = state.pVector[4] * C;
-        C  = -sqrt(C);
-      } else {
-        C  = -1.e10;
-        P3 = 1.;
-        P4 = 0.;
-      }
-
-      double MA[3] = {Ax[0], Ax[1], Ax[2]};
-      double MB[3] = {Ay[0], Ay[1], Ay[2]};
-      // Jacobian production of transport and to_local
-      if (surface.type() == Surface::Disc) {
-        // the vector from the disc surface to the p
-        const auto& sfc  = surface.center();
-        double      d[3] = {state.pVector[0] - sfc(0),
-                       state.pVector[1] - sfc(1),
-                       state.pVector[2] - sfc(2)};
-        // this needs the transformation to polar coordinates
-        double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
-        double RS = d[0] * Ay[0] + d[1] * Ay[1] + d[2] * Ay[2];
-        double R2 = RC * RC + RS * RS;
-
-        // inverse radius
-        double Ri = 1. / sqrt(R2);
-        MA[0]     = (RC * Ax[0] + RS * Ay[0]) * Ri;
-        MA[1]     = (RC * Ax[1] + RS * Ay[1]) * Ri;
-        MA[2]     = (RC * Ax[2] + RS * Ay[2]) * Ri;
-        MB[0] = (RC * Ay[0] - RS * Ax[0]) * (Ri = 1. / R2);
-        MB[1] = (RC * Ay[1] - RS * Ax[1]) * Ri;
-        MB[2] = (RC * Ay[2] - RS * Ax[2]) * Ri;
-      }
-
-      state.jacobian[0] = MA[0] * state.pVector[7] + MA[1] * state.pVector[8]
-          + MA[2] * state.pVector[9];  // dL0/dL0
-      state.jacobian[1] = MA[0] * state.pVector[14] + MA[1] * state.pVector[15]
-          + MA[2] * state.pVector[16];  // dL0/dL1
-      state.jacobian[2] = MA[0] * state.pVector[21] + MA[1] * state.pVector[22]
-          + MA[2] * state.pVector[23];  // dL0/dPhi
-      state.jacobian[3] = MA[0] * state.pVector[28] + MA[1] * state.pVector[29]
-          + MA[2] * state.pVector[30];  // dL0/dThe
-      state.jacobian[4] = MA[0] * state.pVector[35] + MA[1] * state.pVector[36]
-          + MA[2] * state.pVector[37];  // dL0/dCM
-
-      state.jacobian[5] = MB[0] * state.pVector[7] + MB[1] * state.pVector[8]
-          + MB[2] * state.pVector[9];  // dL1/dL0
-      state.jacobian[6] = MB[0] * state.pVector[14] + MB[1] * state.pVector[15]
-          + MB[2] * state.pVector[16];  // dL1/dL1
-      state.jacobian[7] = MB[0] * state.pVector[21] + MB[1] * state.pVector[22]
-          + MB[2] * state.pVector[23];  // dL1/dPhi
-      state.jacobian[8] = MB[0] * state.pVector[28] + MB[1] * state.pVector[29]
-          + MB[2] * state.pVector[30];  // dL1/dThe
-      state.jacobian[9] = MB[0] * state.pVector[35] + MB[1] * state.pVector[36]
-          + MB[2] * state.pVector[37];  // dL1/dCM
-
-      state.jacobian[10]
-          = P3 * state.pVector[11] - P4 * state.pVector[10];  // dPhi/dL0
-      state.jacobian[11]
-          = P3 * state.pVector[18] - P4 * state.pVector[17];  // dPhi/dL1
-      state.jacobian[12]
-          = P3 * state.pVector[25] - P4 * state.pVector[24];  // dPhi/dPhi
-      state.jacobian[13]
-          = P3 * state.pVector[32] - P4 * state.pVector[31];  // dPhi/dThe
-      state.jacobian[14]
-          = P3 * state.pVector[39] - P4 * state.pVector[38];  // dPhi/dCM
-      state.jacobian[15] = C * state.pVector[12];             // dThe/dL0
-      state.jacobian[16] = C * state.pVector[19];             // dThe/dL1
-      state.jacobian[17] = C * state.pVector[26];             // dThe/dPhi
-      state.jacobian[18] = C * state.pVector[33];             // dThe/dThe
-      state.jacobian[19] = C * state.pVector[40];             // dThe/dCM
-      state.jacobian[20] = 0.;                                // dCM /dL0
-      state.jacobian[21] = 0.;                                // dCM /dL1
-      state.jacobian[22] = 0.;                                // dCM /dPhi
-      state.jacobian[23] = 0.;                                // dCM /dTheta
-      state.jacobian[24] = state.pVector[41];                 // dCM /dCM
-
-      Eigen::
-          Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
-              J(state.jacobian);
-
-      cov = std::make_unique<const ActsSymMatrixD<NGlobalPars>>(
-          J * (*state.covariance) * J.transpose());
+    std::unique_ptr<const Covariance> cov = nullptr;
+    if (state.covTransport) {
+      covarianceTransport(state, surface, true);
+      cov = std::make_unique<const Covariance>(state.cov);
     }
 
     // Fill the end parameters
-    result.endParameters = std::make_unique<const BoundParameters>(
+    BoundParameters parameters(
         std::move(cov), gp, mom, charge(state), surface.getSharedPtr());
+
+    return BoundState(
+        std::move(parameters), state.jacobian, state.pathAccumulated);
+  }
+
+  /// Method for on-demand transport of the covariance
+  /// to a new curvilinear frame at current position,
+  /// or direction of the state
+  ///
+  /// @tparam surface_t the Surface type
+  ///
+  /// @param [in,out] state State of the stepper
+  /// @param [in] surface is the surface to which the covariance is forwarded to
+  /// @param [in] reinitialize is a flag to steer whether the state should be
+  /// reinitialized at the new position
+  void
+  covarianceTransport(State&         state,
+                      const Surface& surface,
+                      bool /*unused*/) const
+  {
+    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
+    Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
+    mom /= std::abs(state.pVector[6]);
+
+    double p = 1. / state.pVector[6];
+    state.pVector[35] *= p;
+    state.pVector[36] *= p;
+    state.pVector[37] *= p;
+    state.pVector[38] *= p;
+    state.pVector[39] *= p;
+    state.pVector[40] *= p;
+
+    const auto fFrame = surface.referenceFrame(gp, mom);
+
+    double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
+    double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
+    double S[3]  = {fFrame(0, 2), fFrame(1, 2), fFrame(2, 2)};
+
+    // this is the projection of direction onto the local normal vector
+    double A = state.pVector[3] * S[0] + state.pVector[4] * S[1]
+        + state.pVector[5] * S[2];
+
+    if (A != 0.) {
+      A = 1. / A;
+    }
+
+    S[0] *= A;
+    S[1] *= A;
+    S[2] *= A;
+
+    double s0 = state.pVector[7] * S[0] + state.pVector[8] * S[1]
+        + state.pVector[9] * S[2];
+    double s1 = state.pVector[14] * S[0] + state.pVector[15] * S[1]
+        + state.pVector[16] * S[2];
+    double s2 = state.pVector[21] * S[0] + state.pVector[22] * S[1]
+        + state.pVector[23] * S[2];
+    double s3 = state.pVector[28] * S[0] + state.pVector[29] * S[1]
+        + state.pVector[30] * S[2];
+    double s4 = state.pVector[35] * S[0] + state.pVector[36] * S[1]
+        + state.pVector[37] * S[2];
+
+    // in case of line-type surfaces - we need to take into account that
+    // the reference frame changes with variations of all local
+    // parameters
+    if (surface.type() == Surface::Straw
+        || surface.type() == Surface::Perigee) {
+      // vector from position to center
+      double x = state.pVector[0] - surface.center().x();
+      double y = state.pVector[1] - surface.center().y();
+      double z = state.pVector[2] - surface.center().z();
+
+      // this is the projection of the direction onto the local y axis
+      double d = state.pVector[3] * Ay[0] + state.pVector[4] * Ay[1]
+          + state.pVector[5] * Ay[2];
+
+      // this is cos(beta)
+      double a = (1. - d) * (1. + d);
+      if (a != 0.) {
+        a = 1. / a;  // i.e. 1./(1-d^2)
+      }
+
+      // that's the modified norm vector
+      double X = d * Ay[0] - state.pVector[3];  //
+      double Y = d * Ay[1] - state.pVector[4];  //
+      double Z = d * Ay[2] - state.pVector[5];  //
+
+      // d0 to d1
+      double d0 = state.pVector[10] * Ay[0] + state.pVector[11] * Ay[1]
+          + state.pVector[12] * Ay[2];
+      double d1 = state.pVector[17] * Ay[0] + state.pVector[18] * Ay[1]
+          + state.pVector[19] * Ay[2];
+      double d2 = state.pVector[24] * Ay[0] + state.pVector[25] * Ay[1]
+          + state.pVector[26] * Ay[2];
+      double d3 = state.pVector[31] * Ay[0] + state.pVector[32] * Ay[1]
+          + state.pVector[33] * Ay[2];
+      double d4 = state.pVector[38] * Ay[0] + state.pVector[39] * Ay[1]
+          + state.pVector[40] * Ay[2];
+
+      s0 = (((state.pVector[7] * X + state.pVector[8] * Y
+              + state.pVector[9] * Z)
+             + x * (d0 * Ay[0] - state.pVector[10]))
+            + (y * (d0 * Ay[1] - state.pVector[11])
+               + z * (d0 * Ay[2] - state.pVector[12])))
+          * (-a);
+
+      s1 = (((state.pVector[14] * X + state.pVector[15] * Y
+              + state.pVector[16] * Z)
+             + x * (d1 * Ay[0] - state.pVector[17]))
+            + (y * (d1 * Ay[1] - state.pVector[18])
+               + z * (d1 * Ay[2] - state.pVector[19])))
+          * (-a);
+      s2 = (((state.pVector[21] * X + state.pVector[22] * Y
+              + state.pVector[23] * Z)
+             + x * (d2 * Ay[0] - state.pVector[24]))
+            + (y * (d2 * Ay[1] - state.pVector[25])
+               + z * (d2 * Ay[2] - state.pVector[26])))
+          * (-a);
+      s3 = (((state.pVector[28] * X + state.pVector[29] * Y
+              + state.pVector[30] * Z)
+             + x * (d3 * Ay[0] - state.pVector[31]))
+            + (y * (d3 * Ay[1] - state.pVector[32])
+               + z * (d3 * Ay[2] - state.pVector[33])))
+          * (-a);
+      s4 = (((state.pVector[35] * X + state.pVector[36] * Y
+              + state.pVector[37] * Z)
+             + x * (d4 * Ay[0] - state.pVector[38]))
+            + (y * (d4 * Ay[1] - state.pVector[39])
+               + z * (d4 * Ay[2] - state.pVector[40])))
+          * (-a);
+    }
+
+    state.pVector[7] -= (s0 * state.pVector[3]);
+    state.pVector[8] -= (s0 * state.pVector[4]);
+    state.pVector[9] -= (s0 * state.pVector[5]);
+    state.pVector[10] -= (s0 * state.pVector[42]);
+    state.pVector[11] -= (s0 * state.pVector[43]);
+    state.pVector[12] -= (s0 * state.pVector[44]);
+
+    state.pVector[14] -= (s1 * state.pVector[3]);
+    state.pVector[15] -= (s1 * state.pVector[4]);
+    state.pVector[16] -= (s1 * state.pVector[5]);
+    state.pVector[17] -= (s1 * state.pVector[42]);
+    state.pVector[18] -= (s1 * state.pVector[43]);
+    state.pVector[19] -= (s1 * state.pVector[44]);
+
+    state.pVector[21] -= (s2 * state.pVector[3]);
+    state.pVector[22] -= (s2 * state.pVector[4]);
+    state.pVector[23] -= (s2 * state.pVector[5]);
+    state.pVector[24] -= (s2 * state.pVector[42]);
+    state.pVector[25] -= (s2 * state.pVector[43]);
+    state.pVector[26] -= (s2 * state.pVector[44]);
+
+    state.pVector[28] -= (s3 * state.pVector[3]);
+    state.pVector[29] -= (s3 * state.pVector[4]);
+    state.pVector[30] -= (s3 * state.pVector[5]);
+    state.pVector[31] -= (s3 * state.pVector[42]);
+    state.pVector[32] -= (s3 * state.pVector[43]);
+    state.pVector[33] -= (s3 * state.pVector[44]);
+
+    state.pVector[35] -= (s4 * state.pVector[3]);
+    state.pVector[36] -= (s4 * state.pVector[4]);
+    state.pVector[37] -= (s4 * state.pVector[5]);
+    state.pVector[38] -= (s4 * state.pVector[42]);
+    state.pVector[39] -= (s4 * state.pVector[43]);
+    state.pVector[40] -= (s4 * state.pVector[44]);
+
+    double P3, P4, C = state.pVector[3] * state.pVector[3]
+        + state.pVector[4] * state.pVector[4];
+    if (C > 1.e-20) {
+      C  = 1. / C;
+      P3 = state.pVector[3] * C;
+      P4 = state.pVector[4] * C;
+      C  = -sqrt(C);
+    } else {
+      C  = -1.e10;
+      P3 = 1.;
+      P4 = 0.;
+    }
+
+    double MA[3] = {Ax[0], Ax[1], Ax[2]};
+    double MB[3] = {Ay[0], Ay[1], Ay[2]};
+    // Jacobian production of transport and to_local
+    if (surface.type() == Surface::Disc) {
+      // the vector from the disc surface to the p
+      const auto& sfc  = surface.center();
+      double      d[3] = {state.pVector[0] - sfc(0),
+                     state.pVector[1] - sfc(1),
+                     state.pVector[2] - sfc(2)};
+      // this needs the transformation to polar coordinates
+      double RC = d[0] * Ax[0] + d[1] * Ax[1] + d[2] * Ax[2];
+      double RS = d[0] * Ay[0] + d[1] * Ay[1] + d[2] * Ay[2];
+      double R2 = RC * RC + RS * RS;
+
+      // inverse radius
+      double Ri = 1. / sqrt(R2);
+      MA[0]     = (RC * Ax[0] + RS * Ay[0]) * Ri;
+      MA[1]     = (RC * Ax[1] + RS * Ay[1]) * Ri;
+      MA[2]     = (RC * Ax[2] + RS * Ay[2]) * Ri;
+      MB[0] = (RC * Ay[0] - RS * Ax[0]) * (Ri = 1. / R2);
+      MB[1]                                   = (RC * Ay[1] - RS * Ax[1]) * Ri;
+      MB[2]                                   = (RC * Ay[2] - RS * Ax[2]) * Ri;
+    }
+
+    state.jacobian[0] = MA[0] * state.pVector[7] + MA[1] * state.pVector[8]
+        + MA[2] * state.pVector[9];  // dL0/dL0
+    state.jacobian[1] = MA[0] * state.pVector[14] + MA[1] * state.pVector[15]
+        + MA[2] * state.pVector[16];  // dL0/dL1
+    state.jacobian[2] = MA[0] * state.pVector[21] + MA[1] * state.pVector[22]
+        + MA[2] * state.pVector[23];  // dL0/dPhi
+    state.jacobian[3] = MA[0] * state.pVector[28] + MA[1] * state.pVector[29]
+        + MA[2] * state.pVector[30];  // dL0/dThe
+    state.jacobian[4] = MA[0] * state.pVector[35] + MA[1] * state.pVector[36]
+        + MA[2] * state.pVector[37];  // dL0/dCM
+
+    state.jacobian[5] = MB[0] * state.pVector[7] + MB[1] * state.pVector[8]
+        + MB[2] * state.pVector[9];  // dL1/dL0
+    state.jacobian[6] = MB[0] * state.pVector[14] + MB[1] * state.pVector[15]
+        + MB[2] * state.pVector[16];  // dL1/dL1
+    state.jacobian[7] = MB[0] * state.pVector[21] + MB[1] * state.pVector[22]
+        + MB[2] * state.pVector[23];  // dL1/dPhi
+    state.jacobian[8] = MB[0] * state.pVector[28] + MB[1] * state.pVector[29]
+        + MB[2] * state.pVector[30];  // dL1/dThe
+    state.jacobian[9] = MB[0] * state.pVector[35] + MB[1] * state.pVector[36]
+        + MB[2] * state.pVector[37];  // dL1/dCM
+
+    state.jacobian[10]
+        = P3 * state.pVector[11] - P4 * state.pVector[10];  // dPhi/dL0
+    state.jacobian[11]
+        = P3 * state.pVector[18] - P4 * state.pVector[17];  // dPhi/dL1
+    state.jacobian[12]
+        = P3 * state.pVector[25] - P4 * state.pVector[24];  // dPhi/dPhi
+    state.jacobian[13]
+        = P3 * state.pVector[32] - P4 * state.pVector[31];  // dPhi/dThe
+    state.jacobian[14]
+        = P3 * state.pVector[39] - P4 * state.pVector[38];  // dPhi/dCM
+    state.jacobian[15] = C * state.pVector[12];             // dThe/dL0
+    state.jacobian[16] = C * state.pVector[19];             // dThe/dL1
+    state.jacobian[17] = C * state.pVector[26];             // dThe/dPhi
+    state.jacobian[18] = C * state.pVector[33];             // dThe/dThe
+    state.jacobian[19] = C * state.pVector[40];             // dThe/dCM
+    state.jacobian[20] = 0.;                                // dCM /dL0
+    state.jacobian[21] = 0.;                                // dCM /dL1
+    state.jacobian[22] = 0.;                                // dCM /dPhi
+    state.jacobian[23] = 0.;                                // dCM /dTheta
+    state.jacobian[24] = state.pVector[41];                 // dCM /dCM
+
+    Eigen::Map<Eigen::Matrix<double, NGlobalPars, NGlobalPars, Eigen::RowMajor>>
+        J(state.jacobian);
+
+    state.cov = J * (*state.covariance) * J.transpose();
   }
 
   AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};

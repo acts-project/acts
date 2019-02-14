@@ -244,18 +244,6 @@ class Propagator final
   static_assert(has_member_data_cov<typename stepper_t::state_type,
                                     ActsSymMatrixD<5>>::value,
                 "StepperState does not have a cov variable");
-  static_assert(
-      has_member_data_pos<typename stepper_t::state_type, Vector3D>::value,
-      "StepperState does not have a pos variable");
-  static_assert(
-      has_member_data_dir<typename stepper_t::state_type, Vector3D>::value,
-      "StepperState does not have a dir variable");
-  static_assert(
-      has_member_data_p<typename stepper_t::state_type, double>::value,
-      "StepperState does not have a p variable");
-  static_assert(
-      has_member_data_q<typename stepper_t::state_type, double>::value,
-      "StepperState does not have a q variable");
   static_assert(has_member_data_navDir<typename stepper_t::state_type,
                                        NavigationDirection>::value,
                 "StepperState does not have a navDir variable");
