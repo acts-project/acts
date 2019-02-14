@@ -17,7 +17,9 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
     const BoundParameters* params,
     const Vector3D&        linPoint) const
 {
-  if (params == nullptr) return LinearizedTrack();
+  if (params == nullptr) {
+    return LinearizedTrack();
+  }
 
   const std::shared_ptr<PerigeeSurface> perigeeSurface
       = Surface::makeShared<PerigeeSurface>(linPoint);
@@ -72,9 +74,10 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
   // Curvature is infinite w/o b field
   if (B_z == 0. || std::abs(q_ov_p) < 1.e-15) {
     rho = 1.e+15;
-  } else
+  } else {
     // signed(!) rho
     rho = sin_th * units::Nat2SI<units::MOMENTUM>(1 / q_ov_p) / B_z;
+  }
 
   double X  = positionAtPCA(0) - linPoint.x() + rho * sin_phi_v;
   double Y  = positionAtPCA(1) - linPoint.y() - rho * cos_phi_v;
@@ -90,11 +93,13 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
   int sgnY = (Y < 0.) ? -1 : 1;
 
   double phiAtPCA;
-  if (std::abs(X) > std::abs(Y))
+  if (std::abs(X) > std::abs(Y)) {
     phiAtPCA = sgn_h * sgnX * std::acos(-sgn_h * Y / S);
-  else {
-    phiAtPCA                         = std::asin(sgn_h * X / S);
-    if ((sgn_h * sgnY) > 0) phiAtPCA = sgn_h * sgnX * M_PI - phiAtPCA;
+  } else {
+    phiAtPCA = std::asin(sgn_h * X / S);
+    if ((sgn_h * sgnY) > 0) {
+      phiAtPCA = sgn_h * sgnX * M_PI - phiAtPCA;
+    }
   }
 
   predParamsAtPCA[0] = rho - sgn_h * S;

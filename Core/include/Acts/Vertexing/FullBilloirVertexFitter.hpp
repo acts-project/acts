@@ -71,7 +71,7 @@ public:
   Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
       Vertex<InputTrack>             constraint
-      = Vertex<InputTrack>(Vector3D(0., 0., 0.))) const;
+      = Vertex<InputTrack>(Vector3D(0., 0., 0.))) const override;
 
 private:
   /// Configuration object

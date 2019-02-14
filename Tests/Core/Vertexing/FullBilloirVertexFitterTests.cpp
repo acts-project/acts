@@ -117,8 +117,12 @@ namespace Test {
     bool debugMode = true;
 
     // Set up RNG
-    std::random_device rd;
-    std::mt19937       gen(rd());
+    // std::random_device rd;
+
+    // fixed seed for reproducibility
+    const int debugSeed = 31415;
+
+    std::mt19937 gen(debugSeed);
 
     // Number of events
     const int nEvents = 10;
@@ -216,6 +220,8 @@ namespace Test {
         std::cout << "True Vertex: " << x << ", " << y << ", " << z
                   << std::endl;
         std::cout << "Fitted Vertex: " << fittedVertex.position() << std::endl;
+        std::cout << "Fitted constraint Vertex: "
+                  << fittedVertexConstraint.position() << std::endl;
       }
     }
   }
@@ -246,8 +252,13 @@ namespace Test {
 
     bool debugMode = true;
 
-    std::random_device rd;
-    std::mt19937       gen(rd());
+    // Set up RNG
+    // std::random_device rd;
+
+    // fixed seed for reproducibility
+    const int debugSeed = 31415;
+
+    std::mt19937 gen(debugSeed);
 
     const int nEvents = 10;
 
