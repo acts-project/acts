@@ -26,6 +26,20 @@ template <typename bfield_t>
 class AtlasStepper
 {
 
+  // This struct is a meta-function which normally maps to BoundParameters...
+  template <typename T, typename S>
+  struct s
+  {
+    using type = BoundParameters;
+  };
+
+  // Unless S is int, then it maps to CurvilinearParameters ...
+  template <typename T>
+  struct s<T, int>
+  {
+    using type = CurvilinearParameters;
+  };
+
 public:
   using cstep = detail::ConstrainedStep;
 
@@ -249,6 +263,28 @@ public:
     size_t debugMsgWidth = 50;
   };
 
+  using state_type = State;
+
+  template <typename T, typename S = int>
+  using return_parameter_type = typename s<T, S>::type;
+
+  AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};
+
+  /// Get the field for the stepping
+  /// It checks first if the access is still within the Cell,
+  /// and updates the cell if necessary, then it takes the field
+  /// from the cell
+  /// @param [in,out] state is the stepper state associated with the track
+  ///                 the magnetic field cell is used (and potentially updated)
+  /// @param [in] pos is the field position
+  Vector3D
+  getField(State& state, const Vector3D& pos) const
+  {
+    // get the field from the cell
+    state.field = m_bField.getField(pos, state.fieldCache);
+    return state.field;
+  }
+
   Vector3D
   position(const State& state) const
   {
@@ -286,32 +322,76 @@ public:
     return surface->isOnSurface(position(state), direction(state), true);
   }
 
-  /// Method to update momentum, direction and p
+  /// Create and return the bound state at the current position
   ///
-  /// @param uposition the updated position
-  /// @param udirection the updated direction
-  /// @param p the updated momentum value
-  void
-  update(State&          state,
-         const Vector3D& uposition,
-         const Vector3D& udirection,
-         double          up) const
+  ///
+  /// @param [in] state State that will be presented as @c BoundState
+  /// @param [in] surface The surface to which we bind the state
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
+  /// i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return A bound state:
+  ///   - the parameters at the surface
+  ///   - the stepwise jacobian towards it
+  ///   - and the path length (from start - for ordering)
+  BoundState
+  boundState(State& state, const Surface& surface, bool /*unused*/) const
   {
-    // update the vector
-    state.pVector[0] = uposition[0];
-    state.pVector[1] = uposition[1];
-    state.pVector[2] = uposition[2];
-    state.pVector[3] = udirection[0];
-    state.pVector[4] = udirection[1];
-    state.pVector[5] = udirection[2];
-    state.pVector[6] = charge(state) / up;
+
+    // the convert method invalidates the state (in case it's reused)
+    state.state_ready = false;
+
+    /// The transport of the position
+    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
+    Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
+    mom /= std::abs(state.pVector[6]);
+
+    // The transport of the covariance
+    std::unique_ptr<const Covariance> cov = nullptr;
+    if (state.covTransport) {
+      covarianceTransport(state, surface, true);
+      cov = std::make_unique<const Covariance>(state.cov);
+    }
+
+    // Fill the end parameters
+    BoundParameters parameters(
+        std::move(cov), gp, mom, charge(state), surface.getSharedPtr());
+
+    return BoundState(
+        std::move(parameters), state.jacobian, state.pathAccumulated);
   }
 
-  /// Return a corrector
-  VoidIntersectionCorrector
-  corrector(State& /*unused*/) const
+  /// Create and return a curvilinear state at the current position
+  ///
+  ///
+  /// @param [in] state State that will be presented as @c CurvilinearState
+  /// @param [in] reinitialize Boolean flag whether reinitialization is needed
+  /// i.e. if this is an intermediate state of a larger propagation
+  ///
+  /// @return A curvilinear state:
+  ///   - the curvilinear parameters at given position
+  ///   - the stepweise jacobian towards it
+  ///   - and the path length (from start - for ordering)
+  CurvilinearState
+  curvilinearState(State& state, bool /*unused*/) const
   {
-    return VoidIntersectionCorrector();
+    // the convert method invalidates the state (in case it's reused)
+    state.state_ready = false;
+    //
+    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
+    Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
+    mom /= std::abs(state.pVector[6]);
+
+    std::unique_ptr<const Covariance> cov = nullptr;
+    if (state.covTransport) {
+      covarianceTransport(state, true);
+      cov = std::make_unique<const Covariance>(state.cov);
+    }
+
+    CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state));
+
+    return CurvilinearState(
+        std::move(parameters), state.jacobian, state.pathAccumulated);
   }
 
   /// The state update method
@@ -470,56 +550,32 @@ public:
     state.state_ready = true;
   }
 
-  using state_type = State;
-
-  // This struct is a meta-function which normally maps to BoundParameters...
-  template <typename T, typename S>
-  struct s
-  {
-    using type = BoundParameters;
-  };
-
-  // Unless S is int, then it maps to CurvilinearParameters ...
-  template <typename T>
-  struct s<T, int>
-  {
-    using type = CurvilinearParameters;
-  };
-
-  template <typename T, typename S = int>
-  using return_parameter_type = typename s<T, S>::type;
-
-  /// Create and return a curvilinear state at the current position
+  /// Method to update momentum, direction and p
   ///
-  ///
-  /// @param [in] state State that will be presented as @c CurvilinearState
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed
-  /// i.e. if this is an intermediate state of a larger propagation
-  ///
-  /// @return A curvilinear state:
-  ///   - the curvilinear parameters at given position
-  ///   - the stepweise jacobian towards it
-  ///   - and the path length (from start - for ordering)
-  CurvilinearState
-  curvilinearState(State& state, bool /*unused*/) const
+  /// @param uposition the updated position
+  /// @param udirection the updated direction
+  /// @param p the updated momentum value
+  void
+  update(State&          state,
+         const Vector3D& uposition,
+         const Vector3D& udirection,
+         double          up) const
   {
-    // the convert method invalidates the state (in case it's reused)
-    state.state_ready = false;
-    //
-    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
-    Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
-    mom /= std::abs(state.pVector[6]);
+    // update the vector
+    state.pVector[0] = uposition[0];
+    state.pVector[1] = uposition[1];
+    state.pVector[2] = uposition[2];
+    state.pVector[3] = udirection[0];
+    state.pVector[4] = udirection[1];
+    state.pVector[5] = udirection[2];
+    state.pVector[6] = charge(state) / up;
+  }
 
-    std::unique_ptr<const Covariance> cov = nullptr;
-    if (state.covTransport) {
-      covarianceTransport(state, true);
-      cov = std::make_unique<const Covariance>(state.cov);
-    }
-
-    CurvilinearParameters parameters(std::move(cov), gp, mom, charge(state));
-
-    return CurvilinearState(
-        std::move(parameters), state.jacobian, state.pathAccumulated);
+  /// Return a corrector
+  VoidIntersectionCorrector
+  corrector(State& /*unused*/) const
+  {
+    return VoidIntersectionCorrector();
   }
 
   /// Method for on-demand transport of the covariance
@@ -659,45 +715,6 @@ public:
         J(state.jacobian);
 
     state.cov = J * (*state.covariance) * J.transpose();
-  }
-
-  /// Create and return the bound state at the current position
-  ///
-  ///
-  /// @param [in] state State that will be presented as @c BoundState
-  /// @param [in] surface The surface to which we bind the state
-  /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
-  /// i.e. if this is an intermediate state of a larger propagation
-  ///
-  /// @return A bound state:
-  ///   - the parameters at the surface
-  ///   - the stepwise jacobian towards it
-  ///   - and the path length (from start - for ordering)
-  BoundState
-  boundState(State& state, const Surface& surface, bool /*unused*/) const
-  {
-
-    // the convert method invalidates the state (in case it's reused)
-    state.state_ready = false;
-
-    /// The transport of the position
-    Acts::Vector3D gp(state.pVector[0], state.pVector[1], state.pVector[2]);
-    Acts::Vector3D mom(state.pVector[3], state.pVector[4], state.pVector[5]);
-    mom /= std::abs(state.pVector[6]);
-
-    // The transport of the covariance
-    std::unique_ptr<const Covariance> cov = nullptr;
-    if (state.covTransport) {
-      covarianceTransport(state, surface, true);
-      cov = std::make_unique<const Covariance>(state.cov);
-    }
-
-    // Fill the end parameters
-    BoundParameters parameters(
-        std::move(cov), gp, mom, charge(state), surface.getSharedPtr());
-
-    return BoundState(
-        std::move(parameters), state.jacobian, state.pathAccumulated);
   }
 
   /// Method for on-demand transport of the covariance
@@ -861,8 +878,7 @@ public:
     state.pVector[39] -= (s4 * state.pVector[43]);
     state.pVector[40] -= (s4 * state.pVector[44]);
 
-    double P3, P4,
-        C = state.pVector[3] * state.pVector[3]
+    double P3, P4, C = state.pVector[3] * state.pVector[3]
         + state.pVector[4] * state.pVector[4];
     if (C > 1.e-20) {
       C  = 1. / C;
@@ -946,23 +962,6 @@ public:
         J(state.jacobian);
 
     state.cov = J * (*state.covariance) * J.transpose();
-  }
-
-  AtlasStepper(bfield_t bField = bfield_t()) : m_bField(std::move(bField)){};
-
-  /// Get the field for the stepping
-  /// It checks first if the access is still within the Cell,
-  /// and updates the cell if necessary, then it takes the field
-  /// from the cell
-  /// @param [in,out] state is the stepper state associated with the track
-  ///                 the magnetic field cell is used (and potentially updated)
-  /// @param [in] pos is the field position
-  Vector3D
-  getField(State& state, const Vector3D& pos) const
-  {
-    // get the field from the cell
-    state.field = m_bField.getField(pos, state.fieldCache);
-    return state.field;
   }
 
   /// Perform the actual step on the state
