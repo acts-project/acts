@@ -46,17 +46,19 @@ namespace Test {
     {
       // Position of the propagator after each step
       std::vector<Vector3D> position;
-
+      // Volume of the propagator after each step
       std::vector<TrackingVolume const*> volume;
     };
 
     using result_type = this_result;
 
-    template <typename propagator_state_t>
+    template <typename propagator_state_t, typename stepper_t>
     void
-    operator()(propagator_state_t& state, result_type& result) const
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
     {
-      result.position.push_back(state.stepping.position());
+      result.position.push_back(stepper.position(state.stepping));
       result.volume.push_back(state.navigation.currentVolume);
     }
   };
