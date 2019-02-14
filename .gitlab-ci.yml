@@ -87,30 +87,6 @@ include_guards:
   script:
     - cmake --build build -- integration_tests
 
-# SLC6, LCG93
-
-build_slc6_lcg93:
-  <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
-
-unit_tests_slc6_lcg93:
-  <<: *template_unit_tests
-  dependencies:
-    - build_slc6_lcg93
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
-
-integration_tests_slc6_lcg93:
-  <<: *template_integration_tests
-  dependencies:
-    - build_slc6_lcg93
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
-
 # SLC6, LCG94
 
 build_slc6_lcg94:
@@ -213,35 +189,6 @@ integration_tests_slc6_lcg94_llvm70:
   before_script:
     - set +e && source CI/setup_lcg94.sh; set -e
     - source CI/setup_llvm70.sh
-
-# CC7, LCG93
-
-build_cc7_lcg93:
-  <<: *template_build
-  # no DD4Hep and TGeo plugins due to C++17,ROOT,CMake incompatibilities
-  # need to set all variables again since we are overriding the template section
-  variables:
-    BUILD_TYPE: Release
-    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
-
-unit_tests_cc7_lcg93:
-  <<: *template_unit_tests
-  dependencies:
-    - build_cc7_lcg93
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
-
-integration_tests_cc7_lcg93:
-  <<: *template_integration_tests
-  dependencies:
-    - build_cc7_lcg93
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
 
 # CC7, LCG94
 
