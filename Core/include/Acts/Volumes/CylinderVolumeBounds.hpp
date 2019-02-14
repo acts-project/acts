@@ -21,6 +21,7 @@ namespace Acts {
 class Surface;
 class CylinderBounds;
 class DiscBounds;
+class RadialBounds;
 class PlanarBounds;
 
 /// @class CylinderVolumeBounds
@@ -114,7 +115,7 @@ public:
   ///
   /// @param rbounds the Radial bounds
   /// @param thickness
-  CylinderVolumeBounds(const RadialBounds& cBounds, double thickness);
+  CylinderVolumeBounds(const RadialBounds& rBounds, double thickness);
 
   /// Copy Constructor
   ///
