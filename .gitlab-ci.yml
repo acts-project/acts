@@ -133,7 +133,6 @@ unit_tests_slc6_lcg94:
     - cd build
     # we need a clean environment so we can install gcovr (pip), but we need to use gcov from lcg
     - env -i bash ../CI/coverage_environment.sh "../CI/test_coverage --gcov $(which gcov)"
-    #- ../CI/test_coverage
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
     paths:
