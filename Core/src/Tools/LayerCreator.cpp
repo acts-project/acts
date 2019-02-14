@@ -58,7 +58,8 @@ Acts::LayerCreator::cylinderLayer(
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
 
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(m_cfg.buildContext, surfaces);
 
   // remaining layer parameters
   double layerR
@@ -147,7 +148,8 @@ Acts::LayerCreator::cylinderLayer(
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
 
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(m_cfg.buildContext, surfaces);
 
   // remaining layer parameters
   double layerR
@@ -232,7 +234,8 @@ Acts::LayerCreator::discLayer(
     std::shared_ptr<const Transform3D>          transform,
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(m_cfg.buildContext, surfaces);
 
   double layerZ
       = 0.5 * (protoLayer.minZ - protoLayer.envZ.first + protoLayer.maxZ
@@ -307,7 +310,8 @@ Acts::LayerCreator::discLayer(
     std::shared_ptr<const Transform3D>          transform,
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(m_cfg.buildContext, surfaces);
 
   double layerZ
       = 0.5 * (protoLayer.minZ - protoLayer.envZ.first + protoLayer.maxZ
@@ -377,7 +381,8 @@ Acts::LayerCreator::planeLayer(
     std::shared_ptr<const Transform3D>          transform,
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(m_cfg.buildContext, surfaces);
 
   // remaining layer parameters
   double layerHalf1, layerHalf2, layerThickness;
@@ -536,7 +541,7 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
     ACTS_ERROR(" -- Inaccessible surfaces: ");
     for (const auto& srf : diff) {
       // have to choose BinningValue here
-      Vector3D ctr = srf->binningPosition(binR);
+      Vector3D ctr = srf->binningPosition(m_cfg.buildContext, binR);
       ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y() << ", z="
                                << ctr.z()
                                << ", r="

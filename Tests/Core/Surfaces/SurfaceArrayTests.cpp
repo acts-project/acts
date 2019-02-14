@@ -235,7 +235,7 @@ namespace Test {
     sa.dump(std::cout);
 
     for (const auto& srf : brl) {
-      Vector3D                    ctr        = srf->binningPosition(binR);
+      Vector3D ctr = srf->binningPosition(m_cfg.buildContext, binR);
       std::vector<const Surface*> binContent = sa.at(ctr);
 
       BOOST_CHECK_EQUAL(binContent.size(), 1);
@@ -257,7 +257,7 @@ namespace Test {
     SurfaceArray sa2(std::move(sl2), brl);
     sa.dump(std::cout);
     for (const auto& srf : brl) {
-      Vector3D                    ctr        = srf->binningPosition(binR);
+      Vector3D ctr = srf->binningPosition(m_cfg.buildContext, binR);
       std::vector<const Surface*> binContent = sa2.at(ctr);
 
       BOOST_CHECK_EQUAL(binContent.size(), 1);

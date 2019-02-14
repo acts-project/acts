@@ -34,7 +34,13 @@ Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
 {
 }
 
+Acts::PerigeeSurface::PerigeeSurface(Context               ctx,
+                                     const PerigeeSurface& other,
+                                     const Transform3D&    transf)
+  : GeometryObject(), LineSurface(ctx, other, transf)
+{
 }
+
 
 Acts::PerigeeSurface&
 Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
@@ -46,15 +52,15 @@ Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 }
 
 std::shared_ptr<Acts::PerigeeSurface>
-Acts::PerigeeSurface::clone() const
+Acts::PerigeeSurface::clone(Context ctx, const Transform3D& shift) const
 {
-  return std::shared_ptr<PerigeeSurface>(this->clone_impl());
+  return std::shared_ptr<PerigeeSurface>(this->clone_impl(ctx, shift));
 }
 
 Acts::PerigeeSurface*
-Acts::PerigeeSurface::clone_impl() const
+Acts::PerigeeSurface::clone_impl(Context ctx, const Transform3D& shift) const
 {
-  return new PerigeeSurface(*this);
+  return new PerigeeSurface(ctx, *this, shift);
 }
 
 Acts::Surface::SurfaceType

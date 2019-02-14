@@ -86,6 +86,15 @@ protected:
   /// @param other is the source cylinder for the copy
   CylinderSurface(const CylinderSurface& other);
 
+  /// Copy constructor - with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  CylinderSurface(Context                ctx,
+                  const CylinderSurface& other,
+                  const Transform3D&     transf);
 
 public:
   /// Destructor - defaulted
@@ -97,14 +106,18 @@ public:
   CylinderSurface&
   operator=(const CylinderSurface& other);
 
-  /// Clone method to clone into a concrete surface type.
+  /// Clone method into a concrete type of CylinderSurface with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   std::shared_ptr<CylinderSurface>
-  clone() const;
+  clone(Context ctx, const Transform3D& shift) const;
 
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param bValue is the type of global binning to be done
   ///
   /// @return is the global position to be used for binning
@@ -116,7 +129,7 @@ public:
   /// position
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the position where the measurement frame is defined
   /// @param mom is the momentum vector (ignored)
   /// @return rotation matrix that defines the measurement frame
@@ -134,7 +147,7 @@ public:
   /// vector
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos is the local postion for which the normal vector is requested
   /// @return normal vector at the local position
   const Vector3D
@@ -145,7 +158,7 @@ public:
   /// vector
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the global postion for which the normal vector is requested
   /// @return normal vector at the global position
   const Vector3D
@@ -157,7 +170,7 @@ public:
   /// Return method for the rotational symmetry axis
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   ///
   /// @return  the z-Axis of transform
   virtual const Vector3D
@@ -170,7 +183,7 @@ public:
   /// Local to global transformation
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param gpos is the global position shich is filled
@@ -183,7 +196,7 @@ public:
   /// Global to local transfomration
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
@@ -199,7 +212,7 @@ public:
   ///  and (signed) path length
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the global position as a starting point
   /// @param gdir is the global direction at the starting point, expected to
   ///  be normalized
@@ -250,7 +263,7 @@ public:
   /// Path correction due to incident of the track
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the global position as a starting point
   /// @param mom is the global momentum at the starting point
   ///
@@ -267,7 +280,7 @@ public:
   /// Return a PolyhedronRepresentation for this object
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param l0div Number of divisions along l0 (phi)
   /// @param l1div Number of divisions along l1 (z)
   virtual PolyhedronRepresentation
@@ -280,8 +293,12 @@ protected:
 
 private:
   /// Clone method implementation
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   CylinderSurface*
-  clone_impl() const override;
+  clone_impl(Context ctx, const Transform3D& shift) const override;
 };
 
 #include "Acts/Surfaces/detail/CylinderSurface.ipp"

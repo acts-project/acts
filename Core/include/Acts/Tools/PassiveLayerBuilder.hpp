@@ -15,6 +15,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -49,6 +50,9 @@ public:
     std::vector<double> posnegLayerThickness;  ///< p/n layer specs
     std::vector<std::shared_ptr<const SurfaceMaterial>>
         posnegLayerMaterial;  ///< p/n  layer specs
+
+    /// The building context
+    ContextType buildContext = DefaultContext();
   };
 
   /// Constructor

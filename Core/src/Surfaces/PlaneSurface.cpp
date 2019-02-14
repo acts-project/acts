@@ -25,6 +25,13 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
 {
 }
 
+Acts::PlaneSurface::PlaneSurface(Context             ctx,
+                                 const PlaneSurface& other,
+                                 const Transform3D&  transf)
+  : GeometryObject(), Surface(ctx, other, transf), m_bounds(other.m_bounds)
+{
+}
+
 Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   : Surface(), m_bounds(nullptr)
 {
@@ -112,15 +119,15 @@ Acts::PlaneSurface::name() const
 }
 
 std::shared_ptr<Acts::PlaneSurface>
-Acts::PlaneSurface::clone() const
+Acts::PlaneSurface::clone(Context ctx, const Transform3D& shift) const
 {
-  return std::shared_ptr<PlaneSurface>(this->clone_impl());
+  return std::shared_ptr<PlaneSurface>(this->clone_impl(ctx, shift));
 }
 
 Acts::PlaneSurface*
-Acts::PlaneSurface::clone_impl() const
+Acts::PlaneSurface::clone_impl(Context ctx, const Transform3D& shift) const
 {
-  return new PlaneSurface(*this);
+  return new PlaneSurface(ctx, *this, shift);
 }
 
 const Acts::SurfaceBounds&

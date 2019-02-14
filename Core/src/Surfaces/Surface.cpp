@@ -34,6 +34,17 @@ Acts::Surface::Surface(const Surface& other)
 {
 }
 
+Acts::Surface::Surface(Context            ctx,
+                       const Surface&     other,
+                       const Transform3D& shift)
+  : GeometryObject()
+  , m_transform(std::make_shared<const Transform3D>(
+        Transform3D(shift * other.transform(ctx))))
+  , m_associatedLayer(nullptr)
+  , m_associatedMaterial(other.m_associatedMaterial)
+{
+}
+
 Acts::Surface::~Surface() = default;
 
 bool

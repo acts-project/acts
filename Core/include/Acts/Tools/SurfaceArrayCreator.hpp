@@ -79,10 +79,14 @@ public:
     /// Type-erased function which determines whether two surfaces are supposed
     /// to be considered equivalent in terms of the binning
     SurfaceMatcher surfaceMatcher = SurfaceArrayCreator::isSurfaceEquivalent;
+
     /// Optimize the binning in phi for disc layers. Reduces the number
     /// of bins to the lowest number of non-equivalent phi surfaces
     /// of all r-bins. If false, this step is skipped.
     bool doPhiBinningOptimization = true;
+
+    /// The building context
+    ContextType buildContext = DefaultContext();
   };
 
   /// Constructor with default config
@@ -445,14 +449,13 @@ private:
   /// @param sl The @c SurfaceGridLookup
   /// @param surfaces the surfaces
   void
-  completeBinning(Context                            ctx,
-                  SurfaceArray::ISurfaceGridLookup&  sl,
+  completeBinning(SurfaceArray::ISurfaceGridLookup&  sl,
                   const std::vector<const Surface*>& surfaces) const
   {
     ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
                  "empty bins.");
 
-    size_t binCompleted = sl.completeBinning(ctx, surfaces);
+    size_t binCompleted = sl.completeBinning(m_cfg.buildContext, surfaces);
 
     ACTS_VERBOSE("       filled  : " << binCompleted
                                      << " (includes under/overflow)");

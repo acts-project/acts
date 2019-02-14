@@ -73,6 +73,13 @@ protected:
   /// @param other is the source cone surface
   ConeSurface(const ConeSurface& other);
 
+  /// Copy constructor - with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  ConeSurface(Context ctx, const ConeSurface& other, const Transform3D& transf);
 
 public:
   /// Destructor - defaulted
@@ -84,14 +91,17 @@ public:
   ConeSurface&
   operator=(const ConeSurface& other);
 
-  /// Clone method into a concrete type of ConeSurface
+  /// Clone method into a concrete type of ConeSurface with shift
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   std::shared_ptr<ConeSurface>
-  clone() const;
+  clone(Context ctx, const Transform3D& shift) const;
 
   /// The binning position method - is overloaded for r-type binning
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param bValue defines the type of binning applied in the global frame
   ///
   /// @return The return type is a vector for positioning in the global frame
@@ -107,7 +117,7 @@ public:
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param pos is the global position where the measurement frame is
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
@@ -120,7 +130,7 @@ public:
   /// Return method for surface normal information
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lp is the local position on the cone for which the normal vector
   /// is requested
   /// @return Vector3D normal vector in global frame
@@ -130,7 +140,7 @@ public:
   /// Return method for surface normal information
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the global position on the cone for which the normal vector
   /// is requested
   /// @return Vector3D normal vector in global frame
@@ -143,7 +153,7 @@ public:
   // Return method for the rotational symmetry axis
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   ///
   // @return This returns the local z axis
   virtual const Vector3D
@@ -156,7 +166,7 @@ public:
   /// Local to global transformation
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param gpos is the global position shich is filled
@@ -169,7 +179,7 @@ public:
   /// Global to local transfomration
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
@@ -184,7 +194,7 @@ public:
   /// and (signed) path length
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos The start position for the intersection
   /// @param gmom The start momentum for the intersection (will be normalized)
   /// @param navDir The navigation direction with respect to the momentum
@@ -235,7 +245,7 @@ public:
   /// the pathCorrection for derived classes with thickness
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the global potion at the correction point
   /// @param mom is the momentum at the correction point
   /// @return is the path correction due to incident angle
@@ -253,8 +263,12 @@ protected:
 
 private:
   /// Clone method implementation
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   ConeSurface*
-  clone_impl() const override;
+  clone_impl(Context ctx, const Transform3D& shift) const override;
 };
 
 #include "Acts/Surfaces/detail/ConeSurface.ipp"

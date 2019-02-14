@@ -32,6 +32,13 @@ Acts::DiscSurface::DiscSurface(const DiscSurface& other)
 {
 }
 
+Acts::DiscSurface::DiscSurface(Context            ctx,
+                               const DiscSurface& other,
+                               const Transform3D& transf)
+  : GeometryObject(), Surface(ctx, other, transf), m_bounds(other.m_bounds)
+{
+}
+
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             rmin,
                                double                             rmax,
@@ -162,15 +169,15 @@ Acts::DiscSurface::name() const
 }
 
 std::shared_ptr<Acts::DiscSurface>
-Acts::DiscSurface::clone() const
+Acts::DiscSurface::clone(Context ctx, const Transform3D& shift) const
 {
-  return std::shared_ptr<DiscSurface>(this->clone_impl());
+  return std::shared_ptr<DiscSurface>(this->clone_impl(ctx, shift));
 }
 
 Acts::DiscSurface*
-Acts::DiscSurface::clone_impl() const
+Acts::DiscSurface::clone_impl(Context ctx, const Transform3D& shift) const
 {
-  return new DiscSurface(*this);
+  return new DiscSurface(ctx, *this, shift);
 }
 
 const Acts::SurfaceBounds&

@@ -61,7 +61,8 @@ namespace Test {
       BinningValue b{BinningValue::binZ};
       Vector3D     origin{0., 0., 0.};
       // binningPosition(), needs a better test
-      BOOST_CHECK_EQUAL(pNavigationLayer->binningPosition(b), origin);
+      BOOST_CHECK_EQUAL(
+          pNavigationLayer->binningPosition(m_cfg.buildContext, b), origin);
       // surfaceRepresentation() [looks dangerous]
       BOOST_CHECK_EQUAL(rawSurfacePtr,
                         &(pNavigationLayer->surfaceRepresentation()));

@@ -47,14 +47,27 @@ protected:
   /// @param other is the source surface to be copied
   PerigeeSurface(const PerigeeSurface& other);
 
+  /// Copy constructor - with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  PerigeeSurface(Context               ctx,
+                 const PerigeeSurface& other,
+                 const Transform3D&    transf);
 
 public:
   /// Destructor - defaulted
   ~PerigeeSurface() override = default;
 
-  /// Clone method to concrete type of PerigeeSurface
+  /// Clone method into a concrete type of PerigeeSurface with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   std::shared_ptr<PerigeeSurface>
-  clone() const;
+  clone(Context ctx, const Transform3D& shift) const;
 
   /// Assignment operator
   ///
@@ -73,7 +86,7 @@ public:
   /// Output Method for std::ostream
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param sl is the ostream to be dumped into
   ///
   /// @return ostreamn obect which was streamed into
@@ -81,13 +94,13 @@ public:
   toStream(Context ctx, std::ostream& sl) const final;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
-  ///
-  /// @param shift additional, optional shift
   /// Clone method implementation
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   PerigeeSurface*
-  clone_impl() const override;
+  clone_impl(Context ctx, const Transform3D& shift) const override;
 };
 
 }  // namespace Acts

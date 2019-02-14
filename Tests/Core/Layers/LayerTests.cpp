@@ -100,8 +100,6 @@ namespace Test {
       BOOST_CHECK(!(layerStub.nextLayer(gpos, direction)));
       /// trackingVolume()
       BOOST_CHECK(!layerStub.trackingVolume());
-      /// enclosingDetachedTrackingVolume()
-      BOOST_CHECK(!layerStub.enclosingDetachedTrackingVolume());
       // BOOST_TEST_CHECKPOINT("Before ending test");
       // deletion results in "memory access violation at address: 0x00000071: no
       // mapping at fault address"

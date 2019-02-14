@@ -29,6 +29,13 @@ Acts::ConeSurface::ConeSurface(const ConeSurface& other)
 {
 }
 
+Acts::ConeSurface::ConeSurface(Context            ctx,
+                               const ConeSurface& other,
+                               const Transform3D& transf)
+  : GeometryObject(), Surface(ctx, other, transf), m_bounds(other.m_bounds)
+{
+}
+
 Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             alpha,
                                bool                               symmetric)
@@ -175,15 +182,15 @@ Acts::ConeSurface::name() const
 }
 
 std::shared_ptr<Acts::ConeSurface>
-Acts::ConeSurface::clone() const
+Acts::ConeSurface::clone(Context ctx, const Transform3D& shift) const
 {
-  return std::shared_ptr<ConeSurface>(this->clone_impl());
+  return std::shared_ptr<ConeSurface>(this->clone_impl(ctx, shift));
 }
 
 Acts::ConeSurface*
-Acts::ConeSurface::clone_impl() const
+Acts::ConeSurface::clone_impl(Context ctx, const Transform3D& shift) const
 {
-  return new ConeSurface(*this);
+  return new ConeSurface(ctx, *this, shift);
 }
 
 const Acts::Vector3D

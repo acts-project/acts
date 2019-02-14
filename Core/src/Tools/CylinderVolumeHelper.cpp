@@ -141,9 +141,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
                                    volBoundsFinal,
                                    matprop,
                                    std::move(layerArray),
-                                   {},
-                                   {},
-                                   {},
+                                   nullptr,
                                    volumeName);
   // screen output
   ACTS_VERBOSE(
@@ -508,11 +506,12 @@ Acts::CylinderVolumeHelper::estimateAndCheckDimension(
         &(layerIter->surfaceRepresentation()).bounds());
     if (discBounds != nullptr) {
       // check for min/max in the cylinder bounds case
-      double centerZ = (layerIter->surfaceRepresentation()).center().z();
-      currentRmin    = discBounds->rMin();
-      currentRmax    = discBounds->rMax();
-      currentZmin    = centerZ - (0.5 * (layerIter)->thickness());
-      currentZmax    = centerZ + (0.5 * (layerIter)->thickness());
+      double centerZ
+          = (layerIter->surfaceRepresentation()).center(m_cfg.buildContext).z();
+      currentRmin = discBounds->rMin();
+      currentRmax = discBounds->rMax();
+      currentZmin = centerZ - (0.5 * (layerIter)->thickness());
+      currentZmax = centerZ + (0.5 * (layerIter)->thickness());
     }
     // the raw data
     takeSmaller(rMinClean, currentRmin);

@@ -17,6 +17,7 @@
 #include "Acts/Tools/ITrackingGeometryBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeHelper.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -51,6 +52,9 @@ public:
 
     /// the tracking volume helper for detector construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
+
+    /// The building context
+    ContextType buildContext = DefaultContext();
   };
 
   /// Constructor

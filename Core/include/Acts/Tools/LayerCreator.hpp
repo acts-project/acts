@@ -16,6 +16,7 @@
 #include "Acts/Layers/ApproachDescriptor.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -57,8 +58,9 @@ public:
     double cylinderZtolerance{10.};
     /// cylinder module phi tolerance : it counts at same phi, if ...
     double cylinderPhiTolerance{0.1};
-
-    // standard constructor
+    /// The context for geometry building
+    ContextType buildContext = DefaultContext();
+    /// standard constructor
     Config() = default;
   };
 

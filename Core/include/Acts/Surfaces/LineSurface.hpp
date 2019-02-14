@@ -67,6 +67,13 @@ protected:
   /// @param other The source surface for copying
   LineSurface(const LineSurface& other);
 
+  /// Copy constructor - with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  LineSurface(Context ctx, const LineSurface& other, const Transform3D& transf);
 
 public:
   /// Destructor - defaulted
@@ -81,7 +88,7 @@ public:
   /// Normal vector return
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos is the local position is ignored
   ///
   /// @return a Vector3D by value
@@ -95,7 +102,7 @@ public:
   /// for a certain binning type
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
@@ -108,7 +115,7 @@ public:
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the global position where the measurement frame is
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
@@ -125,7 +132,7 @@ public:
   /// relevant entries are filled
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param jacobian is the jacobian to be initialized
   /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
@@ -143,7 +150,7 @@ public:
   /// reference frame does not depend on the direction
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param pos is the position of the paramters in global
   /// @param dir is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
@@ -162,7 +169,7 @@ public:
   /// radius
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (used to sign the closest approach)
   ///
@@ -202,7 +209,7 @@ public:
   /// \image html SignOfDriftCircleD0.gif
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param mom global 3D momentum representation (optionally ignored)
@@ -220,7 +227,7 @@ public:
   /// @brief Straight line intersection schema
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos The global position as a starting point
   /// @param gdir The global direction at the starting point
   ///        @note exptected to be normalized
@@ -289,7 +296,7 @@ private:
   /// helper function to apply the globalToLocal with out transform
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param pos is the global position
   /// @param mom is the momentum
   /// @param lpos is the local position to be filled

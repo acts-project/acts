@@ -181,9 +181,10 @@ public:
   ///
   /// @param bValue is the value in which the binning is done
   /// @param transform is an optional transform to be performed
-  GeometryObjectSorterT(BinningValue                       bValue,
+  GeometryObjectSorterT(Context                            ctx,
+                        BinningValue                       bValue,
                         std::shared_ptr<const Transform3D> transform = nullptr)
-    : m_objectSorter(bValue), m_transform(std::move(transform))
+    : m_context(ctx), m_objectSorter(bValue), m_transform(std::move(transform))
   {
   }
 
@@ -199,17 +200,18 @@ public:
     // get the pos one / pos two
     Vector3D posOne = m_transform
         ? m_transform->inverse()
-            * one->binningPosition(m_objectSorter.binningValue())
-        : one->binningPosition(m_objectSorter.binningValue());
+            * one->binningPosition(m_context, m_objectSorter.binningValue())
+        : one->binningPosition(m_context, m_objectSorter.binningValue());
     Vector3D posTwo = m_transform
         ? m_transform->inverse()
-            * two->binningPosition(m_objectSorter.binningValue())
-        : two->binningPosition(m_objectSorter.binningValue());
+            * two->binningPosition(m_context, m_objectSorter.binningValue())
+        : two->binningPosition(m_context, m_objectSorter.binningValue());
     // now call the distance sorter
     return m_objectSorter.operator()(posOne, posTwo);
   }
 
 protected:
+  ContextType                        m_context;
   ObjectSorterT<Vector3D>            m_objectSorter;
   std::shared_ptr<const Transform3D> m_transform;
 };

@@ -97,9 +97,10 @@ constructContainerVolume(TrackingVolumePtr  iVolume,
                          const std::string& name)
 {
   ///  create the volume array
-  using VAP                = std::pair<TrackingVolumePtr, Vector3D>;
-  std::vector<VAP> volumes = {{iVolume, iVolume->binningPosition(binR)},
-                              {oVolume, oVolume->binningPosition(binR)}};
+  using VAP = std::pair<TrackingVolumePtr, Vector3D>;
+  std::vector<VAP> volumes
+      = {{iVolume, iVolume->binningPosition(m_cfg.buildContext, binR)},
+         {oVolume, oVolume->binningPosition(m_cfg.buildContext, binR)}};
   ///  the bounds for the container
   auto hVolumeBounds = std::make_shared<const CylinderVolumeBounds>(
       0., hVolumeRadius, hVolumeHalflength);

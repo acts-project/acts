@@ -26,6 +26,7 @@
 #include "Acts/Tools/ILayerArrayCreator.hpp"
 #include "Acts/Tools/ITrackingVolumeArrayCreator.hpp"
 #include "Acts/Tools/ITrackingVolumeHelper.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Volumes/BoundarySurfaceFace.hpp"
 
@@ -60,6 +61,8 @@ public:
     int passiveLayerPhiBins = 1;
     /// bins in r/z for the passive layer
     int passiveLayerRzBins = 100;
+    /// The building context
+    ContextType buildContext = DefaultContext();
   };
 
   /// Constructor

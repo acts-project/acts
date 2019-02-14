@@ -14,6 +14,7 @@
 #include <algorithm>
 #include "Acts/Tools/ITrackingVolumeArrayCreator.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -33,13 +34,21 @@ using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3D>;
 class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator
 {
 public:
+  /// @brief This struct stores the configuration of the tracking geometry
+  struct Config
+  {
+    /// The building context
+    ContextType buildContext = DefaultContext();
+  };
+
   /// Constructor
   ///
   /// @param logger logging instance
-  TrackingVolumeArrayCreator(std::unique_ptr<const Logger> logger
+  TrackingVolumeArrayCreator(Config                        cfg,
+                             std::unique_ptr<const Logger> logger
                              = getDefaultLogger("LayerArrayCreator",
                                                 Logging::INFO))
-    : m_logger(std::move(logger))
+    : m_cfg(cfg), m_logger(std::move(logger))
   {
   }
 
@@ -72,6 +81,9 @@ private:
   {
     return *m_logger;
   }
+
+  /// The config class
+  Config m_cfg;
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;

@@ -76,7 +76,9 @@ namespace Test {
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub line(pTransform, 2.0, 20.);
     Vector3D        referencePosition{0., 1., 2.};
-    CHECK_CLOSE_ABS(referencePosition, line.binningPosition(binX), 1e-6);
+    CHECK_CLOSE_ABS(referencePosition,
+                    line.binningPosition(m_cfg.buildContext, binX),
+                    1e-6);
     //
     // bounds()
     auto              pLineBounds = std::make_shared<const LineBounds>(10.0);

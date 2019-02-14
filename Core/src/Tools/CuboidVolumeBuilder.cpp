@@ -142,8 +142,10 @@ Acts::CuboidVolumeBuilder::buildVolume(
 
   // Build layer array
   std::pair<double, double> minMax = binningRange(cfg);
+  LayerArrayCreator::Config lacCnf;
+  lacCnf.buildContext = m_cfg.buildContext;
   LayerArrayCreator layArrCreator(
-      getDefaultLogger("LayerArrayCreator", Logging::INFO));
+      lacCnf, getDefaultLogger("LayerArrayCreator", Logging::INFO));
   std::unique_ptr<const LayerArray> layArr(
       layArrCreator.layerArray(layVec,
                                minMax.first,
@@ -157,9 +159,7 @@ Acts::CuboidVolumeBuilder::buildVolume(
                                bounds,
                                cfg.material,
                                std::move(layArr),
-                               layVec,
-                               {},
-                               {},
+                               nullptr,
                                cfg.name);
   trackVolume->sign(GeometrySignature::Global);
 

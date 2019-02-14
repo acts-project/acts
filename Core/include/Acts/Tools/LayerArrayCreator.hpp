@@ -22,6 +22,7 @@
 
 #include <algorithm>
 #include "Acts/Tools/ILayerArrayCreator.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -43,12 +44,20 @@ class Layer;
 class LayerArrayCreator : public ILayerArrayCreator
 {
 public:
+  /// @brief This struct stores the configuration of the tracking geometry
+  struct Config
+  {
+    /// The building context
+    ContextType buildContext = DefaultContext();
+  };
+
   /// Constructor
   ///
   /// @param logger logging instance
-  LayerArrayCreator(std::unique_ptr<const Logger> logger
+  LayerArrayCreator(Config                        cfg,
+                    std::unique_ptr<const Logger> logger
                     = getDefaultLogger("LayerArrayCreator", Logging::INFO))
-    : m_logger(std::move(logger))
+    : m_cfg(cfg), m_logger(std::move(logger))
   {
   }
 
@@ -86,8 +95,10 @@ private:
     return *m_logger;
   }
 
+  Config m_cfg;
+
   /// logging instance
-  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger = nullptr;
 
   /// Private helper method for creating a surface for
   /// the NavigationLayer

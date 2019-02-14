@@ -46,6 +46,16 @@ protected:
   /// @param psf is the source surface for the copy
   PlaneSurface(const PlaneSurface& other);
 
+  /// Copy constructor - with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  PlaneSurface(Context             ctx,
+               const PlaneSurface& other,
+               const Transform3D&  transf);
+
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
   ///
@@ -77,14 +87,18 @@ public:
   PlaneSurface&
   operator=(const PlaneSurface& other);
 
-  /// Clone method to concrete PlaneSurface type
+  /// Clone method into a concrete type of PlaneSurface with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   std::shared_ptr<PlaneSurface>
-  clone() const;
+  clone(Context ctx, const Transform3D& shift) const;
 
   /// Normal vector return
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos is the local position is ignored
   ///
   /// return a Vector3D by value
@@ -98,7 +112,7 @@ public:
   /// for a certain binning type
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
@@ -118,7 +132,7 @@ public:
   /// transformation
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos local 2D posittion in specialized surface frame
   /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
@@ -134,7 +148,7 @@ public:
   /// transformation
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param mom global 3D momentum representation (optionally ignored)
@@ -166,7 +180,7 @@ public:
   /// @brief Straight line intersection schema
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos The start position of the intersection attempt
   /// @param gdir The direction of the interesection attempt,
   ///       @note expected to be normalized
@@ -210,8 +224,12 @@ protected:
 
 private:
   /// Clone method implementation
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   PlaneSurface*
-  clone_impl() const override;
+  clone_impl(Context ctx, const Transform3D& shift) const override;
 };
 
 #include "Acts/Surfaces/detail/PlaneSurface.ipp"

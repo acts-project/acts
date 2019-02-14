@@ -85,6 +85,17 @@ protected:
   /// @param detelement Detector element which is represented by this surface
   Surface(const DetectorElementBase& detelement);
 
+  /// Copy constructor with optional shift
+  ///
+  /// @note copy construction invalidates the association
+  /// to detector element or any other attachment
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param other Source surface for copy
+  /// @param shift Additional transform applied after copying from the source
+  Surface(Context ctx, const Surface& other, const Transform3D& shift);
+
 public:
   /// Destructor
   virtual ~Surface();
@@ -148,20 +159,27 @@ public:
   virtual bool
   operator!=(const Surface& sf) const;
 
-  /// Clone method: allows to be cloned to the concrete type
+  /// Clone method with shift - cloning without shift is not sensible
   ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   std::shared_ptr<Surface>
-  clone() const
+  clone(Context ctx, const Transform3D& shift) const
   {
-    return std::shared_ptr<Surface>(this->clone_impl());
+    return std::shared_ptr<Surface>(this->clone_impl(ctx, shift));
   }
 
 private:
   /// Implementation method for clone. Returns a bare pointer that is
   /// wrapped into a shared pointer by ::clone(). This is needed for
   /// covariant overload of this method.
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   virtual Surface*
-  clone_impl() const = 0;
+  clone_impl(Context ctx, const Transform3D& shift) const = 0;
 
 public:
   /// Return method for the Surface type to avoid dynamic casts
@@ -174,7 +192,7 @@ public:
   /// (mis-)alignment cache cetrally handled
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   virtual const Transform3D&
   transform(Context ctx) const;
 
@@ -182,7 +200,7 @@ public:
   /// @note the center is always recalculated in order to not keep a cache
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   ///
   /// @return center position by value
   virtual const Vector3D
@@ -193,7 +211,7 @@ public:
   /// It requires a local position to be given (in general)
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos is the local position where the normal verctor is constructed
   ///
   /// @return normal vector by value
@@ -206,7 +224,7 @@ public:
   ///
   /// @param pos is the global position where the normal vector is constructed
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   ///
   /// @return normal vector by value
   virtual const Vector3D
@@ -217,7 +235,7 @@ public:
   /// It will return a normal vector at the center() position
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   //
   /// @return normal vector by value
   virtual const Vector3D
@@ -271,7 +289,7 @@ public:
   /// @tparam parameters_t The parameters type
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param pars TrackParameters to be checked
   /// @param bcheck BoundaryCheck directive for this onSurface check
   ///
@@ -287,7 +305,7 @@ public:
   /// Geometrical check whether position is on Surface
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos global position to be evaludated
   /// @param gmom global momentum (required for line-type surfaces)
   /// @param bcheck BoundaryCheck directive for this onSurface check
@@ -313,7 +331,7 @@ public:
   /// ambiguity this is also provided
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos local 2D posittion in specialized surface frame
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
@@ -330,7 +348,7 @@ public:
   /// ambiguity this is also provided
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
@@ -350,7 +368,7 @@ public:
   /// by all surfaces)
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
@@ -370,7 +388,7 @@ public:
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param jacobian is the jacobian to be initialized
   /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
@@ -395,7 +413,7 @@ public:
   /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   ///
   /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D
@@ -414,7 +432,7 @@ public:
   /// "Acts/EventData/detail/coordinate_transformations.hpp"
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is the position of the paramters in global
   /// @param dir is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
@@ -431,7 +449,7 @@ public:
   /// Calucation of the path correction for incident
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation
@@ -449,7 +467,7 @@ public:
   /// @tparam corrector_t is the type of the corrector struct foer the direction
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param position The position to start from
   /// @param position The direction to start from
   /// @param options Options object that holds additional navigation info
@@ -485,7 +503,7 @@ public:
   /// @tparam corrector_t is the type of the corrector struct foer the direction
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param parameters The parameters to start from
   /// @param options Options object that holds additional navigation info
   /// @param correct Corrector struct that can be used to refine the solution
@@ -507,7 +525,7 @@ public:
   /// Straight line intersection from position and momentum
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   ///        inside bounds (check is done)
   /// @param 3D direction representation - expected to be normalized (no check
@@ -531,7 +549,7 @@ public:
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
   toStream(Context ctx, std::ostream& sl) const;

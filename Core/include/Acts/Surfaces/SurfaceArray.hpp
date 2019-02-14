@@ -43,7 +43,7 @@ public:
   {
     /// @brief Fill provided surfaces into the contained @c Grid.
     /// @param ctx Is the payload/context object to be used for
-    /// delegating the event or thread context
+    ///        delegating the event or thread context
     /// @param surfaces Input surface pointers
     virtual void
     fill(Context ctx, const SurfaceVector& surfaces)
@@ -53,7 +53,7 @@ public:
     ///        Surfaces into empty bin
     ///
     /// @param ctx Is the payload/context object to be used for
-    /// delegating the event or thread context
+    ///        delegating the event or thread context
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     virtual size_t
@@ -173,7 +173,7 @@ public:
     ///
     ///
     /// @param ctx Is the payload/context object to be used for
-    /// delegating the event or thread context
+    ///        delegating the event or thread context
     /// @param surfaces Input surface pointers
     void
     fill(Context ctx, const SurfaceVector& surfaces) override
@@ -191,7 +191,7 @@ public:
     /// @note This does not always do what you want.
     ///
     /// @param ctx Is the payload/context object to be used for
-    /// delegating the event or thread context
+    ///        delegating the event or thread context
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     size_t

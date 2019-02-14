@@ -37,8 +37,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer
-      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt
+      ? *protoLayerOpt
+      : ProtoLayer(m_cfg.buildContext, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a cylinder");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -72,7 +73,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                 detail::AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-  sl->fill(surfacesRaw);
+  sl->fill(m_cfg.buildContext, surfacesRaw);
   completeBinning(*sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(
@@ -91,8 +92,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
 {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer
-      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt
+      ? *protoLayerOpt
+      : ProtoLayer(m_cfg.buildContext, surfacesRaw);
 
   double      R = 0.5 * (protoLayer.maxR - protoLayer.minR);
   Transform3D transform
@@ -129,7 +131,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnCylinder(
                                 detail::AxisBoundaryType::Bound>(
           globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-  sl->fill(surfacesRaw);
+  sl->fill(m_cfg.buildContext, surfacesRaw);
   completeBinning(*sl, surfacesRaw);
 
   // get the number of bins
@@ -159,8 +161,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer
-      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt
+      ? *protoLayerOpt
+      : ProtoLayer(m_cfg.buildContext, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
@@ -200,7 +203,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
   ACTS_VERBOSE(" -- with r x phi  = " << bins0 << " x " << bins1 << " = "
                                       << bins0 * bins1
                                       << " bins.");
-  sl->fill(surfacesRaw);
+  sl->fill(m_cfg.buildContext, surfacesRaw);
   completeBinning(*sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(
@@ -219,8 +222,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer
-      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt
+      ? *protoLayerOpt
+      : ProtoLayer(m_cfg.buildContext, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a disc");
 
@@ -243,15 +247,16 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
     // this FORCES equidistant binning
     std::vector<std::vector<const Surface*>> phiModules(pAxisR.nBins);
     for (const auto& srf : surfacesRaw) {
-      Vector3D bpos = srf->binningPosition(binR);
+      Vector3D bpos = srf->binningPosition(m_cfg.buildContext, binR);
       size_t   bin  = pAxisR.getBin(perp(bpos));
       phiModules.at(bin).push_back(srf);
     }
 
     std::vector<size_t> nPhiModules;
     auto                matcher = m_cfg.surfaceMatcher;
-    auto equal = [&matcher](const Surface* a, const Surface* b) {
-      return matcher(binPhi, a, b);
+    auto                context = m_cfg.buildContext;
+    auto equal = [&context, &matcher](const Surface* a, const Surface* b) {
+      return matcher(context, binPhi, a, b);
     };
 
     std::transform(
@@ -312,7 +317,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
                                       << bins0 * bins1
                                       << " bins.");
 
-  sl->fill(surfacesRaw);
+  sl->fill(m_cfg.buildContext, surfacesRaw);
   completeBinning(*sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(
@@ -333,8 +338,9 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
 {
   std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
   // check if we have proto layer, else build it
-  ProtoLayer protoLayer
-      = protoLayerOpt ? *protoLayerOpt : ProtoLayer(surfacesRaw);
+  ProtoLayer protoLayer = protoLayerOpt
+      ? *protoLayerOpt
+      : ProtoLayer(m_cfg.buildContext, surfacesRaw);
 
   ACTS_VERBOSE("Creating a SurfaceArray on a plance");
   ACTS_VERBOSE(" -- with " << surfaces.size() << " surfaces.")
@@ -396,7 +402,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnPlane(
   }
   }
 
-  sl->fill(surfacesRaw);
+  sl->fill(m_cfg.buildContext, surfacesRaw);
   completeBinning(*sl, surfacesRaw);
 
   return std::make_unique<SurfaceArray>(
@@ -435,9 +441,11 @@ Acts::SurfaceArrayCreator::determineBinCount(
 {
 
   auto matcher = m_cfg.surfaceMatcher;
-  auto equal   = [&bValue, &matcher](const Surface* a, const Surface* b) {
-    return matcher(bValue, a, b);
-  };
+  auto context = m_cfg.buildContext;
+  auto equal
+      = [&context, &bValue, &matcher](const Surface* a, const Surface* b) {
+          return matcher(context, bValue, a, b);
+        };
   std::vector<const Surface*> keys = findKeySurfaces(surfaces, equal);
 
   return keys.size();
@@ -459,23 +467,26 @@ Acts::SurfaceArrayCreator::createVariableAxis(
 
   // bind matcher with binning type
   auto matcher = m_cfg.surfaceMatcher;
+  auto context = m_cfg.buildContext;
   // find the key surfaces
-  auto equal = [&bValue, &matcher](const Surface* a, const Surface* b) {
-    return matcher(bValue, a, b);
-  };
+  auto equal
+      = [&context, &bValue, &matcher](const Surface* a, const Surface* b) {
+          return matcher(context, bValue, a, b);
+        };
   std::vector<const Acts::Surface*> keys = findKeySurfaces(surfaces, equal);
 
   std::vector<double> bValues;
   if (bValue == Acts::binPhi) {
-    std::stable_sort(keys.begin(),
-                     keys.end(),
-                     [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (phi(a->binningPosition(binPhi))
-                               < phi(b->binningPosition(binPhi)));
-                     });
+    std::stable_sort(
+        keys.begin(),
+        keys.end(),
+        [&context](const Acts::Surface* a, const Acts::Surface* b) {
+          return (phi(a->binningPosition(context, binPhi))
+                  < phi(b->binningPosition(context, binPhi)));
+        });
 
-    double maxPhi = 0.5 * (phi(keys.at(0)->binningPosition(binPhi))
-                           + phi(keys.at(1)->binningPosition(binPhi)));
+    double maxPhi = 0.5 * (phi(keys.at(0)->binningPosition(context, binPhi))
+                           + phi(keys.at(1)->binningPosition(context, binPhi)));
 
     // create rotation, so that maxPhi is +pi
     double angle = -(M_PI + maxPhi);
@@ -484,7 +495,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     // iterate over all key surfaces, and use their mean position as bValues,
     // but
     // rotate using transform from before
-    double previous = phi(keys.at(0)->binningPosition(binPhi));
+    double previous = phi(keys.at(0)->binningPosition(context, binPhi));
     // go through key surfaces
     for (size_t i = 1; i < keys.size(); i++) {
       const Surface* surface = keys.at(i);
@@ -492,9 +503,10 @@ Acts::SurfaceArrayCreator::createVariableAxis(
       // positions in the binning direction of the current and previous
       // surface
       double edge
-          = 0.5 * (previous + phi(surface->binningPosition(binPhi))) + angle;
+          = 0.5 * (previous + phi(surface->binningPosition(context, binPhi)))
+          + angle;
       bValues.push_back(edge);
-      previous = phi(surface->binningPosition(binPhi));
+      previous = phi(surface->binningPosition(context, binPhi));
     }
 
     // get the bounds of the last surfaces
@@ -519,49 +531,51 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     bValues.push_back(M_PI);
 
   } else if (bValue == Acts::binZ) {
-    std::stable_sort(keys.begin(),
-                     keys.end(),
-                     [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (a->binningPosition(binZ).z()
-                               < b->binningPosition(binZ).z());
-                     });
+    std::stable_sort(
+        keys.begin(),
+        keys.end(),
+        [&context](const Acts::Surface* a, const Acts::Surface* b) {
+          return (a->binningPosition(context, binZ).z()
+                  < b->binningPosition(context, binZ).z());
+        });
 
     bValues.push_back(protoLayer.minZ);
     bValues.push_back(protoLayer.maxZ);
 
     // the z-center position of the previous surface
-    double previous = keys.front()->binningPosition(binZ).z();
+    double previous = keys.front()->binningPosition(context, binZ).z();
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
-      bValues.push_back(0.5
-                        * (previous + (*surface)->binningPosition(binZ).z()));
-      previous = (*surface)->binningPosition(binZ).z();
+      bValues.push_back(
+          0.5 * (previous + (*surface)->binningPosition(context, binZ).z()));
+      previous = (*surface)->binningPosition(context, binZ).z();
     }
   } else {  // binR
-    std::stable_sort(keys.begin(),
-                     keys.end(),
-                     [](const Acts::Surface* a, const Acts::Surface* b) {
-                       return (perp(a->binningPosition(binR))
-                               < perp(b->binningPosition(binR)));
-                     });
+    std::stable_sort(
+        keys.begin(),
+        keys.end(),
+        [&context](const Acts::Surface* a, const Acts::Surface* b) {
+          return (perp(a->binningPosition(context, binR))
+                  < perp(b->binningPosition(context, binR)));
+        });
 
     bValues.push_back(protoLayer.minR);
     bValues.push_back(protoLayer.maxR);
 
     // the r-center position of the previous surface
-    double previous = perp(keys.front()->binningPosition(binR));
+    double previous = perp(keys.front()->binningPosition(context, binR));
 
     // go through key surfaces
     for (auto surface = keys.begin() + 1; surface != keys.end(); surface++) {
       // create central binning values which is the mean of the center
       // positions in the binning direction of the current and previous
       // surface
-      bValues.push_back(0.5
-                        * (previous + perp((*surface)->binningPosition(binR))));
-      previous = perp((*surface)->binningPosition(binR));
+      bValues.push_back(
+          0.5 * (previous + perp((*surface)->binningPosition(context, binR))));
+      previous = perp((*surface)->binningPosition(context, binR));
     }
   }
   std::sort(bValues.begin(), bValues.end());
@@ -615,8 +629,9 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
     binNumber = nBins;
   }
 
-  // bind matcher with binning type
+  // bind matcher & context with binning type
   auto matcher = m_cfg.surfaceMatcher;
+  auto context = m_cfg.buildContext;
 
   // now check the binning value
   switch (bValue) {
@@ -629,15 +644,16 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
       const Acts::Surface* maxElem = *std::max_element(
           surfaces.begin(),
           surfaces.end(),
-          [](const Acts::Surface* a, const Acts::Surface* b) {
-            return phi(a->binningPosition(binR))
-                < phi(b->binningPosition(binR));
+          [&context](const Acts::Surface* a, const Acts::Surface* b) {
+            return phi(a->binningPosition(context, binR))
+                < phi(b->binningPosition(context, binR));
           });
 
       // get the key surfaces at the different phi positions
-      auto equal = [&bValue, &matcher](const Surface* a, const Surface* b) {
-        return matcher(bValue, a, b);
-      };
+      auto equal
+          = [&context, &bValue, &matcher](const Surface* a, const Surface* b) {
+              return matcher(context, bValue, a, b);
+            };
       keys = findKeySurfaces(surfaces, equal);
 
       // multiple surfaces, we bin from -pi to pi closed
@@ -652,7 +668,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
         // rotate to max phi module plus one half step
         // this should make sure that phi wrapping at +- pi
         // never falls on a module center
-        double max   = phi(maxElem->binningPosition(binR));
+        double max   = phi(maxElem->binningPosition(context, binR));
         double angle = M_PI - (max + 0.5 * step);
 
         // replace given transform ref
@@ -738,7 +754,8 @@ Acts::SurfaceArrayCreator::makeGlobalVertices(
   std::vector<Acts::Vector3D> globVertices;
   for (auto& vertex : locVertices) {
     Acts::Vector3D globVertex(0., 0., 0.);
-    surface.localToGlobal(vertex, Acts::Vector3D(), globVertex);
+    surface.localToGlobal(
+        m_cfg.buildContext, vertex, Acts::Vector3D(), globVertex);
     globVertices.push_back(globVertex);
   }
   return globVertices;

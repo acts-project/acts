@@ -480,7 +480,7 @@ namespace Test {
       // std::cout << "dPHi = " << A->center().phi() - B->center().phi() <<
       // std::endl;
 
-      Vector3D ctr        = A->binningPosition(binR);
+      Vector3D ctr        = A->binningPosition(m_cfg.buildContext, binR);
       auto     binContent = layer->surfaceArray()->at(ctr);
       BOOST_CHECK_EQUAL(binContent.size(), 2);
       std::set<const Surface*> act;

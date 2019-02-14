@@ -18,6 +18,7 @@
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -518,6 +519,10 @@ public:
         = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
     /// the additional envelope in Z to create zMin, zMax
     double layerEnvelopeZ = 10. * Acts::units::_mm;
+
+    /// The building context
+    ContextType buildContext = DefaultContext();
+
     /// the volume signature
     int volumeSignature = -1;
   };

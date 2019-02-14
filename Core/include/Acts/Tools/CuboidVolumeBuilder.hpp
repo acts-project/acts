@@ -12,6 +12,7 @@
 #include <memory>
 #include <vector>
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -92,11 +93,14 @@ public:
   struct Config
   {
     // Center position
-    Vector3D position;
+    Vector3D position = Vector3D(0., 0., 0.);
     // Length in x,y,z
-    Vector3D length;
+    Vector3D length = Vector3D(0., 0., 0.);
     // Configuration of its volumes
-    std::vector<VolumeConfig> volumeCfg;
+    std::vector<VolumeConfig> volumeCfg = {};
+
+    /// The building context
+    ContextType buildContext = DefaultContext();
   };
 
   /// @brief Default constructor without a configuration

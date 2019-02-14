@@ -105,6 +105,13 @@ protected:
   /// @param other The source surface for the copy
   DiscSurface(const DiscSurface& other);
 
+  /// Copy constructor - with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  DiscSurface(Context ctx, const DiscSurface& other, const Transform3D& transf);
 
 public:
   /// Destructor - defaulted
@@ -116,9 +123,13 @@ public:
   DiscSurface&
   operator=(const DiscSurface& other);
 
-  /// Clone method into concreate DiscSurface type
+  /// Clone method into a concrete type of DiscSurface with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   std::shared_ptr<DiscSurface>
-  clone() const;
+  clone(Context ctx, const Transform3D& shift) const;
 
   /// Return the surface type
   SurfaceType
@@ -127,7 +138,7 @@ public:
   /// Normal vector return
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos The local position is ignored
   ///
   /// @return a Vector3D by value
@@ -141,7 +152,7 @@ public:
   /// for a certain binning type
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param bValue The binning type to be used
   ///
   /// @return position that can beused for this binning
@@ -157,7 +168,7 @@ public:
   /// transformation
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos local 2D posittion in specialized surface frame
   /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
@@ -174,7 +185,7 @@ public:
   /// @note the momentum is ignored for Disc surfaces in this calculateion
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param mom global 3D momentum representation (optionally ignored)
@@ -211,7 +222,7 @@ public:
   /// cartesian
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param locpol is a local position in polar coordinates
   ///
   /// @return values is local 2D position in cartesian coordinates
@@ -222,7 +233,7 @@ public:
   /// provided cartesian coordinates
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param lpos is local 2D position in cartesian coordinates
   ///
   /// @return value is a global cartesian 3D position
@@ -232,7 +243,7 @@ public:
   /// Special method for DiscSurface : global<->local from cartesian coordinates
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos is a global cartesian 3D position
   /// @param tol The absoltue tolerance parameter
   ///
@@ -248,7 +259,7 @@ public:
   /// relevant entries are filled
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param jacobian The jacobian to be initialized
   /// @param gpos The global position of the parameters
   /// @param dir The direction at of the parameters
@@ -267,7 +278,7 @@ public:
   /// relevant entries are filled
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param jacobian The jacobian to be initialized
   /// @param gpos The global position of the parameters
   /// @param dir The direction at of the parameters
@@ -282,7 +293,7 @@ public:
   /// Path correction due to incident of the track
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos The global position as a starting point
   /// @param mom The global momentum at the starting point
   /// @return The correction factor due to incident
@@ -296,7 +307,7 @@ public:
   /// navDir=anyDirection is to provide the closest solution
   ///
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param gpos The global position as a starting point
   /// @param gdir The global direction at the starting point
   ///        @note expected to be normalized (no checking)
@@ -335,7 +346,7 @@ public:
 
   /// Return a PolyhedronRepresentation for this object
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param l0div Number of divisions along l0 (phi)
   /// @param l1div Number of divisions along l1 (r)
   virtual PolyhedronRepresentation
@@ -348,8 +359,12 @@ protected:
 
 private:
   /// Clone method implementation
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   DiscSurface*
-  clone_impl() const override;
+  clone_impl(Context ctx, const Transform3D& shift) const override;
 };
 
 #include "Acts/Surfaces/detail/DiscSurface.ipp"

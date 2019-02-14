@@ -69,6 +69,15 @@ protected:
   /// @param slsf is the source surface for copying
   StrawSurface(const StrawSurface& other);
 
+  /// Copy constructor - with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  StrawSurface(Context             ctx,
+               const StrawSurface& other,
+               const Transform3D&  transf);
 
 public:
   /// Destructor - defaulted
@@ -80,9 +89,13 @@ public:
   StrawSurface&
   operator=(const StrawSurface& other);
 
-  /// Clone method to concrete StrawSurface type
+  /// Clone method into a concrete type of StrawSurface with shift
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   std::shared_ptr<StrawSurface>
-  clone() const;
+  clone(Context ctx, const Transform3D& shift) const;
 
   /// Return the surface type
   SurfaceType
@@ -94,7 +107,7 @@ public:
 
   /// Return a PolyhedronRepresentation for this object
   /// @param ctx Is the payload/context object to be used for
-  /// delegating the event or thread context
+  ///        delegating the event or thread context
   /// @param l0div Number of divisions along l0 (phi)
   /// @param l1div Number of divisions along l1 (z)
   virtual PolyhedronRepresentation
@@ -104,8 +117,12 @@ public:
 
 private:
   /// Clone method implementation
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  ///        delegating the event or thread context
+  /// @param shift applied to the surface
   StrawSurface*
-  clone_impl() const override;
+  clone_impl(Context ctx, const Transform3D& shift) const override;
 };
 
 inline Surface::SurfaceType

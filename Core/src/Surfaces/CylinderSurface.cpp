@@ -29,6 +29,13 @@ Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
 {
 }
 
+Acts::CylinderSurface::CylinderSurface(Context                ctx,
+                                       const CylinderSurface& other,
+                                       const Transform3D&     transf)
+  : GeometryObject(), Surface(ctx, other, transf), m_bounds(other.m_bounds)
+{
+}
+
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const Transform3D> htrans,
     double                             radius,
@@ -168,15 +175,15 @@ Acts::CylinderSurface::name() const
 }
 
 std::shared_ptr<Acts::CylinderSurface>
-Acts::CylinderSurface::clone() const
+Acts::CylinderSurface::clone(Context ctx, const Transform3D& shift) const
 {
-  return std::shared_ptr<CylinderSurface>(this->clone_impl());
+  return std::shared_ptr<CylinderSurface>(this->clone_impl(ctx, shift));
 }
 
 Acts::CylinderSurface*
-Acts::CylinderSurface::clone_impl() const
+Acts::CylinderSurface::clone_impl(Context ctx, const Transform3D& shift) const
 {
-  return new CylinderSurface(*this);
+  return new CylinderSurface(ctx, *this, shift);
 }
 
 const Acts::Vector3D
