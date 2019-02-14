@@ -19,7 +19,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/StepperBase.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
@@ -324,7 +323,6 @@ class Propagator final
                                                const Vector3D&,
                                                double>>::value,
                 "Stepper has no update method");
-  /// corrector
   static_assert(has_member_function_covarianceTransport<const stepper_t,
                                                         void,
                                                         boost::mpl::vector<

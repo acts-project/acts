@@ -10,7 +10,6 @@
 
 #include <cmath>
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
-#include "Acts/Propagator/StepperBase.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
