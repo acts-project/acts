@@ -184,7 +184,7 @@ namespace Test {
       std::cout << ">>> Backward Propagation : start." << std::endl;
     }
     const auto& bwdResult = prop.propagate(
-        *fwdResult.endParameters.template get(), startSurface, bwdOptions);
+        *fwdResult.endParameters.get(), startSurface, bwdOptions);
 
     if (debugModeBwd) {
       std::cout << ">>> Backward Propagation : end." << std::endl;
@@ -348,7 +348,7 @@ namespace Test {
     }
 
     // move forward step by step through the surfaces
-    sParameters = fwdResult.endParameters.template get();
+    sParameters = fwdResult.endParameters.get();
     for (auto& bwdSteps : bwdMaterial.materialInteractions) {
       if (debugModeBwdStep) {
         std::cout << ">>> Backward step : "

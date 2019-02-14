@@ -380,10 +380,6 @@ namespace Test {
     assigned = other;
     BOOST_CHECK(assigned == other);
 
-    // check for self-assignment
-    assigned = assigned;
-    BOOST_CHECK(assigned == other);
-
     // check move assignment
     BOOST_CHECK(first != assigned);
     first = ParameterSet<ParID_t::eLOC_0, ParID_t::eLOC_1, ParID_t::ePHI>(
