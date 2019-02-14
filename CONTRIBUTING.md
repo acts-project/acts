@@ -139,18 +139,10 @@ As a first step, you need to create your own fork of the Acts project. For doing
 this, please go to the [Acts GitLab
 page](https://gitlab.cern.ch/acts/acts-core), click on the fork
 button, and follow the instructions ([GitLab Help "How to fork a
-project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project)). In a second
-step, you need to configure your fork to be compatible with the current CI
-setup:
+project"](https://gitlab.cern.ch/help/gitlab-basics/fork-project)).
 
-* add the user 'atsjenkins' as a developer to your fork
-* from your project page go to "Settings -> Integrations -> JIRA" clear the field
-"Username" and leave it empty
-
-**Important:** The second option is needed due to some limitations in the GitLab
-JIRA integration. If you fail to do so, the Acts JIRA project will be spammed
-with hundreds of duplicates comments and you will likely receive an angry email
-from the development team ;-).
+To enable the CI on your fork, go from your project page to "Settings -> CI / CD",
+expand the "Runners" menu and click on "Enable shared Runners" for this project. 
 
 ```bash
 # adding the central Acts repository as remote
