@@ -25,12 +25,6 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
 {
 }
 
-Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other,
-                                 const Transform3D&  transf)
-  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
-{
-}
-
 Acts::PlaneSurface::PlaneSurface(const Vector3D& center, const Vector3D& normal)
   : Surface(), m_bounds(nullptr)
 {
@@ -86,22 +80,24 @@ Acts::PlaneSurface::type() const
 }
 
 void
-Acts::PlaneSurface::localToGlobal(const Vector2D& lpos,
+Acts::PlaneSurface::localToGlobal(Context         ctx,
+                                  const Vector2D& lpos,
                                   const Vector3D& /*gmom*/,
                                   Vector3D& gpos) const
 {
   Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
   /// the chance that there is no transform is almost 0, let's apply it
-  gpos = transform() * loc3Dframe;
+  gpos = transform(ctx) * loc3Dframe;
 }
 
 bool
-Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
+Acts::PlaneSurface::globalToLocal(Context         ctx,
+                                  const Vector3D& gpos,
                                   const Vector3D& /*gmom*/,
                                   Acts::Vector2D& lpos) const
 {
   /// the chance that there is no transform is almost 0, let's apply it
-  Vector3D loc3Dframe = (transform().inverse()) * gpos;
+  Vector3D loc3Dframe = (transform(ctx).inverse()) * gpos;
   lpos                = Vector2D(loc3Dframe.x(), loc3Dframe.y());
   return ((loc3Dframe.z() * loc3Dframe.z()
            > s_onSurfaceTolerance * s_onSurfaceTolerance)
@@ -116,17 +112,14 @@ Acts::PlaneSurface::name() const
 }
 
 std::shared_ptr<Acts::PlaneSurface>
-Acts::PlaneSurface::clone(const Transform3D* shift) const
+Acts::PlaneSurface::clone() const
 {
-  return std::shared_ptr<PlaneSurface>(this->clone_impl(shift));
+  return std::shared_ptr<PlaneSurface>(this->clone_impl());
 }
 
 Acts::PlaneSurface*
-Acts::PlaneSurface::clone_impl(const Transform3D* shift) const
+Acts::PlaneSurface::clone_impl() const
 {
-  if (shift != nullptr) {
-    return new PlaneSurface(*this, *shift);
-  }
   return new PlaneSurface(*this);
 }
 

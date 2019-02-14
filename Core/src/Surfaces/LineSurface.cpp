@@ -46,12 +46,6 @@ Acts::LineSurface::LineSurface(const LineSurface& other)
 {
 }
 
-Acts::LineSurface::LineSurface(const LineSurface& other,
-                               const Transform3D& transf)
-  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
-{
-}
-
 Acts::LineSurface&
 Acts::LineSurface::operator=(const LineSurface& other)
 {

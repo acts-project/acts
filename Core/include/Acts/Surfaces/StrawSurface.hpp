@@ -14,6 +14,7 @@
 
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -68,11 +69,6 @@ protected:
   /// @param slsf is the source surface for copying
   StrawSurface(const StrawSurface& other);
 
-  /// Copy constructor with shift
-  ///
-  /// @param other is the source surface dor copying
-  /// @param htrans is the additional transform applied after copying
-  StrawSurface(const StrawSurface& other, const Transform3D& htrans);
 
 public:
   /// Destructor - defaulted
@@ -84,12 +80,9 @@ public:
   StrawSurface&
   operator=(const StrawSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
-  ///
-  /// @param shift additional, optional shift
+  /// Clone method to concrete StrawSurface type
   std::shared_ptr<StrawSurface>
-  clone(const Transform3D* shift = nullptr) const;
+  clone() const;
 
   /// Return the surface type
   SurfaceType
@@ -100,18 +93,19 @@ public:
   name() const final;
 
   /// Return a PolyhedronRepresentation for this object
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param l0div Number of divisions along l0 (phi)
   /// @param l1div Number of divisions along l1 (z)
   virtual PolyhedronRepresentation
-  polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
+  polyhedronRepresentation(Context ctx,
+                           size_t  l0div = 10,
+                           size_t  l1div = 1) const;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
-  ///
-  /// @param shift additional, optional shift
+  /// Clone method implementation
   StrawSurface*
-  clone_impl(const Transform3D* shift = nullptr) const override;
+  clone_impl() const override;
 };
 
 inline Surface::SurfaceType
@@ -126,4 +120,4 @@ Acts::StrawSurface::name() const
   return "Acts::StrawSurface";
 }
 
-}  // end of namespace Acts
+}  // namespace Acts

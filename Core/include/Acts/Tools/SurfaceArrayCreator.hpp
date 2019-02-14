@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -27,8 +28,8 @@ namespace Test {
   struct SurfaceArrayCreatorFixture;
 }
 
-using SurfaceMatcher
-    = std::function<bool(BinningValue, const Surface*, const Surface*)>;
+using SurfaceMatcher = std::
+    function<bool(Context ctx, BinningValue, const Surface*, const Surface*)>;
 
 using SurfaceVector = std::vector<const Surface*>;
 using SurfaceMatrix = std::vector<SurfaceVector>;
@@ -234,13 +235,17 @@ public:
                       = nullptr) const;
 
   static bool
-  isSurfaceEquivalent(BinningValue bValue, const Surface* a, const Surface* b)
+  isSurfaceEquivalent(Context        ctx,
+                      BinningValue   bValue,
+                      const Surface* a,
+                      const Surface* b)
   {
     using Acts::VectorHelpers::perp;
 
     if (bValue == Acts::binPhi) {
       // Take the two binning positions
-      auto pos1 = a->binningPosition(binR), pos2 = b->binningPosition(binR);
+      auto pos1 = a->binningPosition(ctx, binR),
+           pos2 = b->binningPosition(ctx, binR);
 
       // Project them on the (x, y) plane, where Phi angles are calculated
       auto proj1 = pos1.head<2>(), proj2 = pos2.head<2>();
@@ -256,14 +261,14 @@ public:
     }
 
     if (bValue == Acts::binZ) {
-      return (
-          std::abs(a->binningPosition(binR).z() - b->binningPosition(binR).z())
-          < Acts::units::_um);
+      return (std::abs(a->binningPosition(ctx, binR).z()
+                       - b->binningPosition(ctx, binR).z())
+              < Acts::units::_um);
     }
 
     if (bValue == Acts::binR) {
-      return (std::abs(perp(a->binningPosition(binR))
-                       - perp(b->binningPosition(binR)))
+      return (std::abs(perp(a->binningPosition(ctx, binR))
+                       - perp(b->binningPosition(ctx, binR)))
               < Acts::units::_um);
     }
 
@@ -440,13 +445,14 @@ private:
   /// @param sl The @c SurfaceGridLookup
   /// @param surfaces the surfaces
   void
-  completeBinning(SurfaceArray::ISurfaceGridLookup&  sl,
+  completeBinning(Context                            ctx,
+                  SurfaceArray::ISurfaceGridLookup&  sl,
                   const std::vector<const Surface*>& surfaces) const
   {
     ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
                  "empty bins.");
 
-    size_t binCompleted = sl.completeBinning(surfaces);
+    size_t binCompleted = sl.completeBinning(ctx, surfaces);
 
     ACTS_VERBOSE("       filled  : " << binCompleted
                                      << " (includes under/overflow)");

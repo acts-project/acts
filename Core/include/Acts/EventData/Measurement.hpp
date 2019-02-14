@@ -331,8 +331,7 @@ protected:
     out << parameters() << std::endl;
     out << "covariance matrix:" << std::endl;
     out << covariance() << std::endl;
-    out << "at " << (referenceSurface().isFree() ? "free" : "non-free")
-        << " surface:" << std::endl;
+    out << "at surface:" << std::endl;
     out << referenceSurface();
 
     return out;

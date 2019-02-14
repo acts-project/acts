@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
 
@@ -44,12 +45,6 @@ protected:
   ///
   /// @param psf is the source surface for the copy
   PlaneSurface(const PlaneSurface& other);
-
-  /// Copy Constructor with shift
-  ///
-  /// @param other The source surface for the copy
-  /// @param transf The transformation that positions the surface in space
-  PlaneSurface(const PlaneSurface& other, const Transform3D& transf);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -82,19 +77,19 @@ public:
   PlaneSurface&
   operator=(const PlaneSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
-  ///
-  /// @param shift additional, optional shift
+  /// Clone method to concrete PlaneSurface type
   std::shared_ptr<PlaneSurface>
-  clone(const Transform3D* shift = nullptr) const;
+  clone() const;
 
   /// Normal vector return
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param lpos is the local position is ignored
+  ///
   /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos) const final;
+  normal(Context ctx, const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -102,11 +97,13 @@ public:
   /// The binning position is the position calcualted
   /// for a certain binning type
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
   const Vector3D
-  binningPosition(BinningValue bValue) const final;
+  binningPosition(Context ctx, BinningValue bValue) const final;
 
   /// Return the surface type
   SurfaceType
@@ -120,12 +117,15 @@ public:
   /// For planar surfaces the momentum is ignroed in the local to global
   /// transformation
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param lpos local 2D posittion in specialized surface frame
   /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
   void
-  localToGlobal(const Vector2D& lpos,
+  localToGlobal(Context         ctx,
+                const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const override;
 
@@ -133,6 +133,8 @@ public:
   /// For planar surfaces the momentum is ignroed in the global to local
   /// transformation
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param mom global 3D momentum representation (optionally ignored)
@@ -142,7 +144,8 @@ public:
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   bool
-  globalToLocal(const Vector3D& gpos,
+  globalToLocal(Context         ctx,
+                const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const override;
 
@@ -156,10 +159,14 @@ public:
   ///
   /// @return a double representing the scaling factor
   double
-  pathCorrection(const Vector3D& pos, const Vector3D& mom) const final;
+  pathCorrection(Context         ctx,
+                 const Vector3D& pos,
+                 const Vector3D& mom) const final;
 
-  /// @brief Fast straight line intersection schema
+  /// @brief Straight line intersection schema
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos The start position of the intersection attempt
   /// @param gdir The direction of the interesection attempt,
   ///       @note expected to be normalized
@@ -186,7 +193,8 @@ public:
   ///
   /// @return the Intersection object
   Intersection
-  intersectionEstimate(const Vector3D&      gpos,
+  intersectionEstimate(Context              ctx,
+                       const Vector3D&      gpos,
                        const Vector3D&      gdir,
                        NavigationDirection  navDir  = forward,
                        const BoundaryCheck& bcheck  = false,
@@ -201,12 +209,9 @@ protected:
   std::shared_ptr<const PlanarBounds> m_bounds;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
-  ///
-  /// @param shift additional, optional shift
+  /// Clone method implementation
   PlaneSurface*
-  clone_impl(const Transform3D* shift = nullptr) const override;
+  clone_impl() const override;
 };
 
 #include "Acts/Surfaces/detail/PlaneSurface.ipp"

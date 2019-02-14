@@ -11,14 +11,15 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Vector3D
-CylinderSurface::rotSymmetryAxis() const
+CylinderSurface::rotSymmetryAxis(Context ctx) const
 {
   // fast access via tranform matrix (and not rotation())
-  return transform().matrix().block<3, 1>(0, 2);
+  return transform(ctx).matrix().block<3, 1>(0, 2);
 }
 
 inline Intersection
-CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
+CylinderSurface::intersectionEstimate(Context              ctx,
+                                      const Vector3D&      gpos,
                                       const Vector3D&      gdir,
                                       NavigationDirection  navDir,
                                       const BoundaryCheck& bcheck,
@@ -29,7 +30,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
   Vector3D lpos = gpos;
   Vector3D ldir = gdir;
   // minimize the call to transform()
-  const auto& tMatrix = transform().matrix();
+  const auto& tMatrix = transform(ctx).matrix();
   Vector3D    caxis   = tMatrix.block<3, 1>(0, 2).transpose();
   Vector3D    ccenter = tMatrix.block<3, 1>(0, 3).transpose();
   // what you need at the and
@@ -71,7 +72,7 @@ CylinderSurface::intersectionEstimate(const Vector3D&      gpos,
   }
   // update for inside if requested :
   // @todo fix this : fast inside bounds check needed
-  valid = bcheck ? (valid && isOnSurface(solution, gdir, bcheck)) : valid;
+  valid = bcheck ? (valid && isOnSurface(ctx, solution, gdir, bcheck)) : valid;
   // now return
   return Intersection(solution, path, valid);
 }

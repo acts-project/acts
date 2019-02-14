@@ -14,6 +14,7 @@
 
 #include <memory>
 #include <vector>
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -37,8 +38,11 @@ public:
   virtual ~DetectorElementBase() = default;
 
   /// Return the transform for the Element proxy mechanism
+  ///
+  /// @param ctx is the Context object that is forwarded to the
+  /// the connected geometry to transport the event/thread context
   virtual const Transform3D&
-  transform() const = 0;
+  transform(Context ctx) const = 0;
 
   /// Return surface association
   virtual const Surface&

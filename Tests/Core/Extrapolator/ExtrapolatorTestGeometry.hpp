@@ -44,13 +44,6 @@ namespace Test {
       : PlaneSurface(htrans, pbounds)
     {
     }
-
-    // causes pointer assignment
-    bool
-    isFree() const final
-    {
-      return false;
-    }
   };
 
   /// helper method for cylinder layer

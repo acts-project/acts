@@ -17,12 +17,13 @@
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryObject.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
-#include <memory>
+#include <any>
 
 namespace Acts {
 
@@ -78,14 +79,6 @@ protected:
   ///
   /// @param other Source surface for copy.
   Surface(const Surface& other);
-
-  /// Copy constructor with shift
-  /// @note copy construction invalidates the association
-  /// to detector element and identifier
-  ///
-  /// @param other Source surface for copy
-  /// @param shift Additional transform applied after copying from the source
-  Surface(const Surface& other, const Transform3D& shift);
 
   /// Constructor fromt DetectorElementBase: Element proxy
   ///
@@ -155,14 +148,12 @@ public:
   virtual bool
   operator!=(const Surface& sf) const;
 
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
+  /// Clone method: allows to be cloned to the concrete type
   ///
-  /// @param shift additional, optional shift
   std::shared_ptr<Surface>
-  clone(const Transform3D* shift = nullptr) const
+  clone() const
   {
-    return std::shared_ptr<Surface>(this->clone_impl(shift));
+    return std::shared_ptr<Surface>(this->clone_impl());
   }
 
 private:
@@ -170,7 +161,7 @@ private:
   /// wrapped into a shared pointer by ::clone(). This is needed for
   /// covariant overload of this method.
   virtual Surface*
-  clone_impl(const Transform3D* shift = nullptr) const = 0;
+  clone_impl() const = 0;
 
 public:
   /// Return method for the Surface type to avoid dynamic casts
@@ -181,43 +172,58 @@ public:
   /// In case a detector element is associated the surface transform
   /// is just forwarded to the detector element in order to keep the
   /// (mis-)alignment cache cetrally handled
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   virtual const Transform3D&
-  transform() const;
+  transform(Context ctx) const;
 
   /// Return method for the surface center by reference
   /// @note the center is always recalculated in order to not keep a cache
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
+  ///
   /// @return center position by value
   virtual const Vector3D
-  center() const;
+  center(Context ctx) const;
 
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
   /// It requires a local position to be given (in general)
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param lpos is the local position where the normal verctor is constructed
+  ///
   /// @return normal vector by value
   virtual const Vector3D
-  normal(const Vector2D& lpos) const = 0;
+  normal(Context ctx, const Vector2D& lpos) const = 0;
 
   /// Return method for the normal vector of the surface
   /// The normal vector can only be generally defined at a given local position
   /// It requires a local position to be given (in general)
   ///
   /// @param pos is the global position where the normal vector is constructed
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
+  ///
   /// @return normal vector by value
   virtual const Vector3D
-  normal(const Vector3D& pos) const;
+  normal(Context ctx, const Vector3D& pos) const;
 
   /// Return method for the normal vector of the surface
   ///
   /// It will return a normal vector at the center() position
   ///
-  /// @param pos is the global position where the normal vector is constructed
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
+  //
   /// @return normal vector by value
   virtual const Vector3D
-  normal() const
+  normal(Context ctx) const
   {
-    return normal(center());
+    return normal(ctx, center(ctx));
   }
 
   /// Return method for SurfaceBounds
@@ -264,24 +270,32 @@ public:
   ///
   /// @tparam parameters_t The parameters type
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param pars TrackParameters to be checked
   /// @param bcheck BoundaryCheck directive for this onSurface check
+  ///
   /// @return boolean indication if operation was successful
   template <typename parameters_t>
   bool
-  isOnSurface(const parameters_t&  pars,
-              const BoundaryCheck& bcheck = BoundaryCheck(true)) const;
+  isOnSurface(Context              ctx,
+              const parameters_t&  pars,
+              const BoundaryCheck& bcheck = true) const;
 
   /// The geometric onSurface method
   ///
   /// Geometrical check whether position is on Surface
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos global position to be evaludated
   /// @param gmom global momentum (required for line-type surfaces)
   /// @param bcheck BoundaryCheck directive for this onSurface check
+  ///
   /// @return boolean indication if operation was successful
   bool
-  isOnSurface(const Vector3D&      gpos,
+  isOnSurface(Context              ctx,
+              const Vector3D&      gpos,
               const Vector3D&      gmom,
               const BoundaryCheck& bcheck = true) const;
 
@@ -291,20 +305,22 @@ public:
   /// @param bcheck  BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
   virtual bool
-  insideBounds(const Vector2D&      locpos,
-               const BoundaryCheck& bcheck = true) const;
+  insideBounds(const Vector2D& locpos, const BoundaryCheck& bcheck) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since
   /// some surface types need the global momentum/direction to resolve sign
   /// ambiguity this is also provided
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param lpos local 2D posittion in specialized surface frame
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
   virtual void
-  localToGlobal(const Vector2D& lpos,
+  localToGlobal(Context         ctx,
+                const Vector2D& lpos,
                 const Vector3D& gmom,
                 Vector3D&       gpos) const = 0;
 
@@ -313,15 +329,19 @@ public:
   /// some surface types need the global momentum/direction to resolve sign
   /// ambiguity this is also provided
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
   /// @param lpos local 2D position to be filled (given by reference for method
   /// symmetry)
+  ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   virtual bool
-  globalToLocal(const Vector3D& gpos,
+  globalToLocal(Context         ctx,
+                const Vector3D& gpos,
                 const Vector3D& gmom,
                 Vector2D&       lpos) const = 0;
 
@@ -329,47 +349,72 @@ public:
   /// This is the frame in which the covariance matrix is defined (specialized
   /// by all surfaces)
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation (optionally ignored)
+  ///
   /// @return RotationMatrix3D which defines the three axes of the measurement
   /// frame
   virtual const Acts::RotationMatrix3D
-  referenceFrame(const Vector3D& gpos, const Vector3D& gmom) const;
+  referenceFrame(Context ctx, const Vector3D& gpos, const Vector3D& gmom) const;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
+  /// @todo this mixes track parameterisation and geometry
+  /// should move to :
+  /// "Acts/EventData/detail/coordinate_transformations.hpp"
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param jacobian is the jacobian to be initialized
   /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
   /// @param pars is the parameter vector
-  virtual void initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
-                                    const Vector3D&       gpos,
-                                    const Vector3D&       dir,
-                                    const ActsVectorD<5>& pars) const;
+  virtual void
+  initJacobianToGlobal(Context ctx,
+                       ActsMatrixD<7, 5>& jacobian,
+                       const Vector3D&       gpos,
+                       const Vector3D&       dir,
+                       const ActsVectorD<5>& pars) const;
 
   /// Initialize the jacobian from global to local
   /// the surface knows best, hence the calculation is done here.
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
+  /// @todo this mixes track parameterisation and geometry
+  /// should move to :
+  /// "Acts/EventData/detail/coordinate_transformations.hpp"
+  ///
   /// @param jacobian is the jacobian to be initialized
   /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   ///
   /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D
-      initJacobianToLocal(ActsMatrixD<5, 7>& jacobian,
-                          const Vector3D& gpos,
-                          const Vector3D& dir) const;
+  initJacobianToLocal(Context ctx,
+                      ActsMatrixD<5, 7>& jacobian,
+                      const Vector3D& gpos,
+                      const Vector3D& dir) const;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
   /// reference frame does not depend on the direction
   ///
+  ///
+  /// @todo this mixes track parameterisation and geometry
+  /// should move to :
+  /// "Acts/EventData/detail/coordinate_transformations.hpp"
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos is the position of the paramters in global
   /// @param dir is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
@@ -377,26 +422,34 @@ public:
   ///
   /// @return a five-dim vector
   virtual const ActsRowVectorD<5>
-  derivativeFactors(const Vector3D&         gpos,
+  derivativeFactors(Context                 ctx,
+                    const Vector3D&         gpos,
                     const Vector3D&         dir,
                     const RotationMatrix3D& rft,
                     const ActsMatrixD<7, 5>& jac) const;
 
   /// Calucation of the path correction for incident
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param gmom global 3D momentum representation
+  ///
   /// @return Path correction with respect to the nominal incident.
   virtual double
-  pathCorrection(const Vector3D& gpos, const Vector3D& gmom) const = 0;
+  pathCorrection(Context         ctx,
+                 const Vector3D& gpos,
+                 const Vector3D& gmom) const = 0;
 
-  /// Straight line intersection schema from parameters
+  /// Straight line intersection schema from position/direction
   ///
   /// Templated for :
   /// @tparam options_t Type of the navigation options
   /// @tparam corrector_t is the type of the corrector struct foer the direction
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param position The position to start from
   /// @param position The direction to start from
   /// @param options Options object that holds additional navigation info
@@ -406,15 +459,20 @@ public:
   template <typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   SurfaceIntersection
-  surfaceIntersectionEstimate(const Vector3D&    position,
+  surfaceIntersectionEstimate(Context            ctx,
+                              const Vector3D&    position,
                               const Vector3D&    direction,
                               const options_t&   options,
                               const corrector_t& correct = corrector_t()) const
 
   {
     // get the intersection with the surface
-    auto sIntersection = intersectionEstimate(
-        position, direction, options.navDir, options.boundaryCheck, correct);
+    auto sIntersection = intersectionEstimate(ctx,
+                                              position,
+                                              direction,
+                                              options.navDir,
+                                              options.boundaryCheck,
+                                              correct);
     // return a surface intersection with result direction
     return SurfaceIntersection(sIntersection, this);
   }
@@ -426,6 +484,8 @@ public:
   /// @tparam options_t Type of the navigation options
   /// @tparam corrector_t is the type of the corrector struct foer the direction
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param parameters The parameters to start from
   /// @param options Options object that holds additional navigation info
   /// @param correct Corrector struct that can be used to refine the solution
@@ -435,16 +495,19 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   SurfaceIntersection
-  surfaceIntersectionEstimate(const parameters_t& parameters,
+  surfaceIntersectionEstimate(Context             ctx,
+                              const parameters_t& parameters,
                               const options_t&    options,
                               const corrector_t&  correct = corrector_t()) const
   {
     return surfaceIntersectionEstimate(
-        parameters.position(), parameters.direction(), options, correct);
+        ctx, parameters.position(), parameters.direction(), options, correct);
   }
 
   /// Straight line intersection from position and momentum
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   ///        inside bounds (check is done)
   /// @param 3D direction representation - expected to be normalized (no check
@@ -457,24 +520,21 @@ public:
   ///
   /// @return Intersection object
   virtual Intersection
-  intersectionEstimate(const Vector3D&      gpos,
+  intersectionEstimate(Context              ctx,
+                       const Vector3D&      gpos,
                        const Vector3D&      gidr,
                        NavigationDirection  navDir = forward,
                        const BoundaryCheck& bcheck = false,
                        CorrFnc              corr = nullptr) const = 0;
   /// clang-format on
 
-  /// Returns 'true' if this surface is 'free'
-  /// i.e. it does not belong to a detector element, a layer or a tracking
-  /// volume
-  virtual bool
-  isFree() const;
-
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param sl is the ostream to be dumped into
   virtual std::ostream&
-  dump(std::ostream& sl) const;
+  toStream(Context ctx, std::ostream& sl) const;
 
   /// Return properly formatted class name
   virtual std::string

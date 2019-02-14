@@ -29,12 +29,6 @@ Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other)
 {
 }
 
-Acts::CylinderSurface::CylinderSurface(const CylinderSurface& other,
-                                       const Transform3D&     transf)
-  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
-{
-}
-
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const Transform3D> htrans,
     double                             radius,
@@ -85,31 +79,34 @@ Acts::CylinderSurface::operator=(const CylinderSurface& other)
 
 // return the binning position for ordering in the BinnedArray
 const Acts::Vector3D
-Acts::CylinderSurface::binningPosition(BinningValue bValue) const
+Acts::CylinderSurface::binningPosition(Context ctx, BinningValue bValue) const
 {
+
+  const Acts::Vector3D& sfCenter = center(ctx);
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     double R   = bounds().r();
     double phi = m_bounds ? m_bounds->averagePhi() : 0.;
     return Vector3D(
-        center().x() + R * cos(phi), center().y() + R * sin(phi), center().z());
+        sfCenter.x() + R * cos(phi), sfCenter.y() + R * sin(phi), sfCenter.z());
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return center();
+  return sfCenter;
 }
 
 // return the measurement frame: it's the tangential plane
 const Acts::RotationMatrix3D
-Acts::CylinderSurface::referenceFrame(const Vector3D& gpos,
-                                      const Vector3D& /*gmom*/) const
+Acts::CylinderSurface::referenceFrame(Context         ctx,
+                                      const Vector3D& gpos,
+                                      const Vector3D& /*unused*/) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
   // measured Y is the z axis
-  Vector3D measY = rotSymmetryAxis();
+  Vector3D measY = rotSymmetryAxis(ctx);
   // measured z is the position normalized transverse (in local)
-  Vector3D measDepth = normal(gpos);
+  Vector3D measDepth = normal(ctx, gpos);
   // measured X is what comoes out of it
   Vector3D measX(measY.cross(measDepth).normalized());
   // assign the columnes
@@ -127,24 +124,22 @@ Acts::CylinderSurface::type() const
 }
 
 void
-Acts::CylinderSurface::localToGlobal(const Vector2D& lpos,
-                                     const Vector3D& /*gmom*/,
+Acts::CylinderSurface::localToGlobal(Context         ctx,
+                                     const Vector2D& lpos,
+                                     const Vector3D& /*unused*/,
                                      Vector3D& gpos) const
 {
   // create the position in the local 3d frame
   double r   = bounds().r();
   double phi = lpos[Acts::eLOC_RPHI] / r;
   gpos       = Vector3D(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
-  // transform it to the globalframe: CylinderSurfaces are allowed to have 0
-  // if pointer transform exists -> port into frame
-  if (Surface::m_transform) {
-    gpos = transform() * gpos;
-  }
+  gpos       = transform(ctx) * gpos;
 }
 
 bool
-Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
-                                     const Vector3D& /*gmom*/,
+Acts::CylinderSurface::globalToLocal(Context         ctx,
+                                     const Vector3D& gpos,
+                                     const Vector3D& /*unused*/,
                                      Vector2D& lpos) const
 {
   // get the transform & transform global position into cylinder frame
@@ -156,17 +151,12 @@ Acts::CylinderSurface::globalToLocal(const Vector3D& gpos,
   if (inttol < 0.01) {
     inttol = 0.01;
   }
-  // do the transformation or not
-  if (Surface::m_transform) {
-    const Transform3D& surfaceTrans = transform();
-    Transform3D        inverseTrans(surfaceTrans.inverse());
-    Vector3D           loc3Dframe(inverseTrans * gpos);
-    lpos   = Vector2D(bounds().r() * phi(loc3Dframe), loc3Dframe.z());
-    radius = perp(loc3Dframe);
-  } else {
-    lpos   = Vector2D(bounds().r() * phi(gpos), gpos.z());
-    radius = perp(gpos);
-  }
+
+  const Transform3D& sfTransform = transform(ctx);
+  Transform3D        inverseTrans(sfTransform.inverse());
+  Vector3D           loc3Dframe(inverseTrans * gpos);
+  lpos   = Vector2D(bounds().r() * phi(loc3Dframe), loc3Dframe.z());
+  radius = perp(loc3Dframe);
   // return true or false
   return ((std::abs(radius - bounds().r()) > inttol) ? false : true);
 }
@@ -178,49 +168,43 @@ Acts::CylinderSurface::name() const
 }
 
 std::shared_ptr<Acts::CylinderSurface>
-Acts::CylinderSurface::clone(const Transform3D* shift) const
+Acts::CylinderSurface::clone() const
 {
-  return std::shared_ptr<CylinderSurface>(this->clone_impl(shift));
+  return std::shared_ptr<CylinderSurface>(this->clone_impl());
 }
 
 Acts::CylinderSurface*
-Acts::CylinderSurface::clone_impl(const Transform3D* shift) const
+Acts::CylinderSurface::clone_impl() const
 {
-  if (shift != nullptr) {
-    return new CylinderSurface(*this, *shift);
-  }
   return new CylinderSurface(*this);
 }
 
 const Acts::Vector3D
-Acts::CylinderSurface::normal(const Acts::Vector2D& lpos) const
+Acts::CylinderSurface::normal(Context ctx, const Acts::Vector2D& lpos) const
 {
   double   phi = lpos[Acts::eLOC_RPHI] / m_bounds->r();
   Vector3D localNormal(cos(phi), sin(phi), 0.);
-  return Vector3D(transform().matrix().block<3, 3>(0, 0) * localNormal);
+  return Vector3D(transform(ctx).matrix().block<3, 3>(0, 0) * localNormal);
 }
 
 const Acts::Vector3D
-Acts::CylinderSurface::normal(const Acts::Vector3D& gpos) const
+Acts::CylinderSurface::normal(Context ctx, const Acts::Vector3D& gpos) const
 {
-  // get it into the cylinder frame if needed
-  Vector3D pos3D      = gpos;
-  bool needsTransform = (m_transform || (m_associatedDetElement != nullptr));
-  if (needsTransform) {
-    pos3D = transform().inverse() * gpos;
-  }
+  const Transform3D& sfTransform = transform(ctx);
+  // get it into the cylinder frame
+  Vector3D pos3D = sfTransform.inverse() * gpos;
   // set the z coordinate to 0
   pos3D.z() = 0.;
   // normalize and rotate back into global if needed
-  return needsTransform ? transform().linear() * pos3D.normalized()
-                        : pos3D.normalized();
+  return sfTransform.linear() * pos3D.normalized();
 }
 
 double
-Acts::CylinderSurface::pathCorrection(const Acts::Vector3D& gpos,
+Acts::CylinderSurface::pathCorrection(Context               ctx,
+                                      const Acts::Vector3D& gpos,
                                       const Acts::Vector3D& mom) const
 {
-  Vector3D normalT  = normal(gpos);
+  Vector3D normalT  = normal(ctx, gpos);
   double   cosAlpha = normalT.dot(mom.normalized());
   return std::fabs(1. / cosAlpha);
 }
@@ -232,8 +216,9 @@ Acts::CylinderSurface::bounds() const
 }
 
 Acts::PolyhedronRepresentation
-Acts::CylinderSurface::polyhedronRepresentation(size_t l0div,
-                                                size_t /*l1div*/) const
+Acts::CylinderSurface::polyhedronRepresentation(Context ctx,
+                                                size_t  l0div,
+                                                size_t /*unused*/) const
 {
   std::vector<Vector3D>            vertices;
   std::vector<std::vector<size_t>> faces;
@@ -250,10 +235,12 @@ Acts::CylinderSurface::polyhedronRepresentation(size_t l0div,
   Vector3D left(r, 0, -hlZ);
   Vector3D right(r, 0, hlZ);
 
+  const Transform3D& sfTransform = transform(ctx);
+
   for (size_t i = 0; i < l0div; i++) {
     Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
-    vertices.push_back(transform() * rot * left);
-    vertices.push_back(transform() * rot * right);
+    vertices.push_back(sfTransform * rot * left);
+    vertices.push_back(sfTransform * rot * right);
   }
 
   for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {

@@ -14,6 +14,7 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
 
@@ -66,11 +67,6 @@ protected:
   /// @param other The source surface for copying
   LineSurface(const LineSurface& other);
 
-  /// Copy constructor with shift
-  ///
-  /// @param other The source surface dor copying
-  /// @param transf The additional transform applied after copying
-  LineSurface(const LineSurface& other, const Transform3D& transf);
 
 public:
   /// Destructor - defaulted
@@ -84,10 +80,13 @@ public:
 
   /// Normal vector return
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param lpos is the local position is ignored
-  /// return a Vector3D by value
+  ///
+  /// @return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos) const final;
+  normal(Context ctx, const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -95,41 +94,56 @@ public:
   /// The binning position is the position calcualted
   /// for a certain binning type
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param bValue is the binning type to be used
+  ///
   /// @return position that can beused for this binning
   const Vector3D
-  binningPosition(BinningValue bValue) const final;
+  binningPosition(Context ctx, BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
   /// for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos is the global position where the measurement frame is
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
+  ///
   /// @return is a rotation matrix that indicates the measurement frame
   const RotationMatrix3D
-  referenceFrame(const Vector3D& gpos, const Vector3D& mom) const final;
+  referenceFrame(Context         ctx,
+                 const Vector3D& gpos,
+                 const Vector3D& mom) const final;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
   /// The jacobian is assumed to be initialised, so only the
   /// relevant entries are filled
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param jacobian is the jacobian to be initialized
   /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
+  ///
   /// @param pars is the paranmeters vector
-  void initJacobianToGlobal(ActsMatrixD<7, 5>& jacobian,
-                            const Vector3D&       gpos,
-                            const Vector3D&       dir,
-                            const ActsVectorD<5>& pars) const final;
+  void
+  initJacobianToGlobal(Context ctx,
+                       ActsMatrixD<7, 5>& jacobian,
+                       const Vector3D&       gpos,
+                       const Vector3D&       dir,
+                       const ActsVectorD<5>& pars) const final;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
   /// reference frame does not depend on the direction
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param pos is the position of the paramters in global
   /// @param dir is the direction of the track
   /// @param rft is the transposed reference frame (avoids recalculation)
@@ -137,7 +151,8 @@ public:
   ///
   /// @return a five-dim vector
   const ActsRowVectorD<5>
-  derivativeFactors(const Vector3D&         pos,
+  derivativeFactors(Context                 ctx,
+                    const Vector3D&         pos,
                     const Vector3D&         dir,
                     const RotationMatrix3D& rft,
                     const ActsMatrixD<7, 5>& jac) const final;
@@ -146,11 +161,15 @@ public:
   /// for line surfaces the momentum is used in order to interpret the drift
   /// radius
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (used to sign the closest approach)
+  ///
   /// @param gpos is the global position shich is filled
   void
-  localToGlobal(const Vector2D& lpos,
+  localToGlobal(Context         ctx,
+                const Vector2D& lpos,
                 const Vector3D& mom,
                 Vector3D&       gpos) const final;
 
@@ -181,6 +200,9 @@ public:
   /// \f$ sign = -sign(\vec{d} \cdot \vec{measX}) \f$
   ///
   /// \image html SignOfDriftCircleD0.gif
+  ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param mom global 3D momentum representation (optionally ignored)
@@ -190,17 +212,15 @@ public:
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   bool
-  globalToLocal(const Vector3D& gpos,
+  globalToLocal(Context         ctx,
+                const Vector3D& gpos,
                 const Vector3D& mom,
                 Vector2D&       lpos) const final;
 
-  /// Special method for LineSurface
-  /// provides the Line direction from cache: speedup
-  const Vector3D
-  lineDirection() const;
-
-  /// @brief fast straight line intersection schema
+  /// @brief Straight line intersection schema
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param gpos The global position as a starting point
   /// @param gdir The global direction at the starting point
   ///        @note exptected to be normalized
@@ -237,7 +257,8 @@ public:
   ///
   /// @return is the intersection object
   Intersection
-  intersectionEstimate(const Vector3D&      gpos,
+  intersectionEstimate(Context              ctx,
+                       const Vector3D&      gpos,
                        const Vector3D&      gdir,
                        NavigationDirection  navDir  = forward,
                        const BoundaryCheck& bcheck  = false,
@@ -249,7 +270,9 @@ public:
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
   double
-  pathCorrection(const Vector3D& pos, const Vector3D& mom) const override;
+  pathCorrection(Context         ctx,
+                 const Vector3D& pos,
+                 const Vector3D& mom) const override;
 
   /// This method returns the bounds of the Surface by reference */
   const SurfaceBounds&
@@ -265,15 +288,18 @@ protected:
 private:
   /// helper function to apply the globalToLocal with out transform
   ///
+  /// @param ctx Is the payload/context object to be used for
+  /// delegating the event or thread context
   /// @param pos is the global position
   /// @param mom is the momentum
   /// @param lpos is the local position to be filled
   bool
-  globalToLocalPlain(const Vector3D& pos,
+  globalToLocalPlain(Context         ctx,
+                     const Vector3D& pos,
                      const Vector3D& mom,
                      Vector2D&       lpos) const;
 };
 
 #include "Acts/Surfaces/detail/LineSurface.ipp"
 
-}  // namespace
+}  // namespace Acts

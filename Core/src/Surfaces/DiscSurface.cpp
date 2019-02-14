@@ -32,12 +32,6 @@ Acts::DiscSurface::DiscSurface(const DiscSurface& other)
 {
 }
 
-Acts::DiscSurface::DiscSurface(const DiscSurface& other,
-                               const Transform3D& transf)
-  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
-{
-}
-
 Acts::DiscSurface::DiscSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             rmin,
                                double                             rmax,
@@ -96,7 +90,8 @@ Acts::DiscSurface::type() const
 }
 
 void
-Acts::DiscSurface::localToGlobal(const Vector2D& lpos,
+Acts::DiscSurface::localToGlobal(Context         ctx,
+                                 const Vector2D& lpos,
                                  const Vector3D& /*gmom*/,
                                  Vector3D& gpos) const
 {
@@ -105,16 +100,17 @@ Acts::DiscSurface::localToGlobal(const Vector2D& lpos,
                       lpos[Acts::eLOC_R] * sin(lpos[Acts::eLOC_PHI]),
                       0.);
   // transport it to the globalframe (very unlikely that this is not needed)
-  gpos = transform() * loc3Dframe;
+  gpos = transform(ctx) * loc3Dframe;
 }
 
 bool
-Acts::DiscSurface::globalToLocal(const Acts::Vector3D& gpos,
-                                 const Acts::Vector3D& /*gmom*/,
-                                 Acts::Vector2D& lpos) const
+Acts::DiscSurface::globalToLocal(Context         ctx,
+                                 const Vector3D& gpos,
+                                 const Vector3D& /*gmom*/,
+                                 Vector2D& lpos) const
 {
   // transport it to the globalframe (very unlikely that this is not needed)
-  Vector3D loc3Dframe = (transform().inverse()) * gpos;
+  Vector3D loc3Dframe = (transform(ctx).inverse()) * gpos;
   lpos                = Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
   return ((std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
 }
@@ -143,17 +139,19 @@ Acts::DiscSurface::localPolarToLocalCartesian(const Vector2D& locpol) const
 }
 
 const Acts::Vector3D
-Acts::DiscSurface::localCartesianToGlobal(const Vector2D& lpos) const
+Acts::DiscSurface::localCartesianToGlobal(Context         ctx,
+                                          const Vector2D& lpos) const
 {
   Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
-  return Vector3D(transform() * loc3Dframe);
+  return Vector3D(transform(ctx) * loc3Dframe);
 }
 
 const Acts::Vector2D
-Acts::DiscSurface::globalToLocalCartesian(const Vector3D& gpos,
+Acts::DiscSurface::globalToLocalCartesian(Context         ctx,
+                                          const Vector3D& gpos,
                                           double /*unused*/) const
 {
-  Vector3D loc3Dframe = (transform().inverse()) * gpos;
+  Vector3D loc3Dframe = (transform(ctx).inverse()) * gpos;
   return Vector2D(loc3Dframe.x(), loc3Dframe.y());
 }
 
@@ -164,17 +162,14 @@ Acts::DiscSurface::name() const
 }
 
 std::shared_ptr<Acts::DiscSurface>
-Acts::DiscSurface::clone(const Transform3D* shift) const
+Acts::DiscSurface::clone() const
 {
-  return std::shared_ptr<DiscSurface>(this->clone_impl(shift));
+  return std::shared_ptr<DiscSurface>(this->clone_impl());
 }
 
 Acts::DiscSurface*
-Acts::DiscSurface::clone_impl(const Transform3D* shift) const
+Acts::DiscSurface::clone_impl() const
 {
-  if (shift != nullptr) {
-    return new DiscSurface(*this, *shift);
-  }
   return new DiscSurface(*this);
 }
 
@@ -188,8 +183,9 @@ Acts::DiscSurface::bounds() const
 }
 
 Acts::PolyhedronRepresentation
-Acts::DiscSurface::polyhedronRepresentation(size_t l0div,
-                                            size_t /*l1div*/) const
+Acts::DiscSurface::polyhedronRepresentation(Context ctx,
+                                            size_t  l0div,
+                                            size_t /*unused*/) const
 {
   std::vector<Vector3D>            vertices;
   std::vector<std::vector<size_t>> faces;
@@ -211,10 +207,12 @@ Acts::DiscSurface::polyhedronRepresentation(size_t l0div,
   Vector3D inner(rMin, 0, 0);
   Vector3D outer(rMax, 0, 0);
 
+  const Transform3D& sfTransform = transform(ctx);
+
   for (size_t i = 0; i < l0div; i++) {
     Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
-    vertices.push_back(transform() * rot * inner);
-    vertices.push_back(transform() * rot * outer);
+    vertices.push_back(sfTransform * rot * inner);
+    vertices.push_back(sfTransform * rot * outer);
   }
 
   for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {

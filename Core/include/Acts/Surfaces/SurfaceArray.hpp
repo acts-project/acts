@@ -12,6 +12,7 @@
 #include <vector>
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
@@ -41,17 +42,22 @@ public:
   struct ISurfaceGridLookup
   {
     /// @brief Fill provided surfaces into the contained @c Grid.
+    /// @param ctx Is the payload/context object to be used for
+    /// delegating the event or thread context
     /// @param surfaces Input surface pointers
     virtual void
-    fill(const SurfaceVector& surfaces)
+    fill(Context ctx, const SurfaceVector& surfaces)
         = 0;
 
     /// @brief Attempts to fix sub-optimal binning by filling closest
-    ///        Surfaces into empty bins
+    ///        Surfaces into empty bin
+    ///
+    /// @param ctx Is the payload/context object to be used for
+    /// delegating the event or thread context
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     virtual size_t
-    completeBinning(const SurfaceVector& surfaces)
+    completeBinning(Context ctx, const SurfaceVector& surfaces)
         = 0;
 
     /// @brief Performs lookup at @c pos and returns bin content as reference
@@ -165,12 +171,15 @@ public:
     /// Also populates the neighbor map by combining the filled bins of
     /// all bins around a given one.
     ///
+    ///
+    /// @param ctx Is the payload/context object to be used for
+    /// delegating the event or thread context
     /// @param surfaces Input surface pointers
     void
-    fill(const SurfaceVector& surfaces) override
+    fill(Context ctx, const SurfaceVector& surfaces) override
     {
       for (const auto& srf : surfaces) {
-        Vector3D pos = srf->binningPosition(binR);
+        Vector3D pos = srf->binningPosition(ctx, binR);
         lookup(pos).push_back(srf);
       }
 
@@ -181,10 +190,12 @@ public:
     ///        Surfaces into empty bins
     /// @note This does not always do what you want.
     ///
+    /// @param ctx Is the payload/context object to be used for
+    /// delegating the event or thread context
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     size_t
-    completeBinning(const SurfaceVector& surfaces) override
+    completeBinning(Context ctx, const SurfaceVector& surfaces) override
     {
       size_t         binCompleted = 0;
       size_t         nBins        = size();
@@ -204,7 +215,7 @@ public:
         Vector3D binCtr = getBinCenter(b);
         minPath         = std::numeric_limits<double>::max();
         for (const auto& srf : surfaces) {
-          curPath = (binCtr - srf->binningPosition(binR)).norm();
+          curPath = (binCtr - srf->binningPosition(ctx, binR)).norm();
 
           if (curPath < minPath) {
             minPath = curPath;
@@ -471,14 +482,14 @@ public:
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
     void
-    fill(const SurfaceVector& /*surfaces*/) override
+    fill(Context /*ctx*/, const SurfaceVector& /*surfaces*/) override
     {
     }
 
     /// @brief Comply with concept and provide completeBinning method
     /// @note Does nothing
     size_t
-    completeBinning(const SurfaceVector& /*surfaces*/) override
+    completeBinning(Context /*ctx*/, const SurfaceVector& /*surfaces*/) override
     {
       return 0;
     }

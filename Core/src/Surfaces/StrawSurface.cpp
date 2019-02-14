@@ -44,10 +44,6 @@ Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
 {
 }
 
-Acts::StrawSurface::StrawSurface(const StrawSurface& other,
-                                 const Transform3D&  htrans)
-  : LineSurface(other, htrans)
-{
 }
 
 Acts::StrawSurface&
@@ -61,22 +57,20 @@ Acts::StrawSurface::operator=(const StrawSurface& other)
 }
 
 std::shared_ptr<Acts::StrawSurface>
-Acts::StrawSurface::clone(const Transform3D* shift) const
+Acts::StrawSurface::clone() const
 {
-  return std::shared_ptr<StrawSurface>(this->clone_impl(shift));
+  return std::shared_ptr<StrawSurface>(this->clone_impl());
 }
 
 Acts::StrawSurface*
-Acts::StrawSurface::clone_impl(const Transform3D* shift) const
+Acts::StrawSurface::clone_impl() const
 {
-  if (shift != nullptr) {
-    return new StrawSurface(*this, *shift);
-  }
   return new StrawSurface(*this);
 }
 
 Acts::PolyhedronRepresentation
-Acts::StrawSurface::polyhedronRepresentation(size_t l0div,
+Acts::StrawSurface::polyhedronRepresentation(Context ctx,
+                                             size_t  l0div,
                                              size_t /*l1div*/) const
 {
   std::vector<Vector3D>            vertices;
@@ -93,10 +87,12 @@ Acts::StrawSurface::polyhedronRepresentation(size_t l0div,
   Vector3D left(r, 0, -hlZ);
   Vector3D right(r, 0, hlZ);
 
+  const Transform3D& sfTransform = transform(ctx);
+
   for (size_t i = 0; i < l0div; i++) {
     Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
-    vertices.push_back(transform() * rot * left);
-    vertices.push_back(transform() * rot * right);
+    vertices.push_back(sfTransform * rot * left);
+    vertices.push_back(sfTransform * rot * right);
   }
 
   for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {

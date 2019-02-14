@@ -122,8 +122,6 @@ namespace Test {
         = surface.intersectionEstimate(reference, mom, forward, false);
     const Intersection ref{Vector3D{1, 1, 1}, 20., true};
     BOOST_CHECK_EQUAL(ref.position, intersectionEstimate.position);
-    // isFree
-    BOOST_CHECK(!surface.isFree());
     // isOnSurface
     BOOST_CHECK(surface.isOnSurface(reference, mom, false));
     BOOST_CHECK(
