@@ -11,9 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
-// STD
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -94,11 +95,12 @@ public:
 
   /// Forward the associated Layer information
   ///
+  /// @paramn ctx is the context for this request (e.g. alignment)
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
   const Layer*
-  associatedLayer(const Vector3D& gp) const;
+  associatedLayer(Context ctx, const Vector3D& gp) const;
 
   /// Register the beam tube
   ///

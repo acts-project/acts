@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
@@ -146,7 +147,7 @@ public:
   ///
   /// @return plain pointer to layer object
   const Layer*
-  associatedLayer(const Vector3D& gp) const;
+  associatedLayer(Context ctx, const Vector3D& gp) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///
@@ -154,6 +155,7 @@ public:
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
+  /// @param ctx is the context for this request (e.g. alignment)
   /// @param position Position for the search
   /// @param direction Direction for the search
   /// @param options The templated navigation options
@@ -163,7 +165,8 @@ public:
   template <typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   std::vector<LayerIntersection>
-  compatibleLayers(const Vector3D&    position,
+  compatibleLayers(Context            ctx,
+                   const Vector3D&    position,
                    const Vector3D&    direction,
                    const options_t&   options,
                    const corrector_t& corrfnc = corrector_t()) const;
@@ -175,6 +178,7 @@ public:
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
+  /// @param ctx is the context for this request (e.g. alignment)
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
@@ -184,7 +188,8 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   std::vector<LayerIntersection>
-  compatibleLayers(const parameters_t& parameters,
+  compatibleLayers(Context             ctx,
+                   const parameters_t& parameters,
                    const options_t&    options,
                    const corrector_t&  corrfnc = corrector_t()) const;
 

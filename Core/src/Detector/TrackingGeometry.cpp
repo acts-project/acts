@@ -93,10 +93,11 @@ Acts::TrackingGeometry::trackingVolume(const std::string& name) const
 }
 
 const Acts::Layer*
-Acts::TrackingGeometry::associatedLayer(const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::associatedLayer(Context               ctx,
+                                        const Acts::Vector3D& gp) const
 {
   const TrackingVolume* lowestVol = (lowestTrackingVolume(gp));
-  return lowestVol->associatedLayer(gp);
+  return lowestVol->associatedLayer(ctx, gp);
 }
 
 void

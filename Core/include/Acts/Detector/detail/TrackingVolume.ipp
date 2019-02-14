@@ -10,9 +10,30 @@
 // TrackingVolume.ipp, Acts project
 ///////////////////////////////////////////////////////////////////
 
+inline const Acts::Layer*
+TrackingVolume::associatedLayer(Context ctx, const Vector3D& gp) const
+{
+  // confined static layers - highest hierarchy
+  if (m_confinedLayers) {
+    return (m_confinedLayers->object(gp).get());
+  }
+
+  // confined arbitrary
+  if (!m_confinedArbitraryLayers.empty()) {
+    for (auto& layer : m_confinedArbitraryLayers) {
+      if (layer->isOnLayer(ctx, gp)) {
+        return layer.get();
+      }
+    }
+  }
+  // return the null pointer
+  return nullptr;
+}
+
 template <typename options_t, typename corrector_t>
 std::vector<LayerIntersection>
-TrackingVolume::compatibleLayers(const Vector3D&    position,
+TrackingVolume::compatibleLayers(Context            ctx,
+                                 const Vector3D&    position,
                                  const Vector3D&    direction,
                                  const options_t&   options,
                                  const corrector_t& corrfnc) const
@@ -24,8 +45,8 @@ TrackingVolume::compatibleLayers(const Vector3D&    position,
   // the confinedLayers
   if (m_confinedLayers) {
     // start layer given or not - test layer
-    const Layer* tLayer
-        = options.startObject ? options.startObject : associatedLayer(position);
+    const Layer* tLayer = options.startObject ? options.startObject
+                                              : associatedLayer(ctx, position);
     while (tLayer != nullptr) {
       // check if the layer needs resolving
       // - resolveSensitive -> always take layer if it has a surface array
@@ -35,8 +56,8 @@ TrackingVolume::compatibleLayers(const Vector3D&    position,
       if (tLayer != options.startObject && tLayer->resolve(options)) {
         // if it's a resolveable start layer, you are by definition on it
         // layer on approach intersection
-        auto atIntersection
-            = tLayer->surfaceOnApproach(position, direction, options, corrfnc);
+        auto atIntersection = tLayer->surfaceOnApproach(
+            ctx, position, direction, options, corrfnc);
         auto path = atIntersection.intersection.pathLength;
         bool withinLimit
             = (path * path <= options.pathLimit * options.pathLimit);
@@ -66,12 +87,13 @@ TrackingVolume::compatibleLayers(const Vector3D&    position,
 
 template <typename parameters_t, typename options_t, typename corrector_t>
 std::vector<LayerIntersection>
-TrackingVolume::compatibleLayers(const parameters_t& parameters,
+TrackingVolume::compatibleLayers(Context             ctx,
+                                 const parameters_t& parameters,
                                  const options_t&    options,
                                  const corrector_t&  corrfnc) const
 {
   return compatibleLayers(
-      parameters.position(), parameters.direction(), options, corrfnc);
+      ctx, parameters.position(), parameters.direction(), options, corrfnc);
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
