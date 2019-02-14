@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <any>
+#include <boost/any.hpp>
 
 namespace Acts {
 
@@ -14,7 +14,7 @@ namespace Acts {
 /// payload object that is propagated through the code
 /// to allow for event/thread context
 
-using Context        = std::any;
-using DefaultContext = std::any;
+using Context        = boost::any;
+using DefaultContext = boost::any;
 
 }  // namespace Acts
