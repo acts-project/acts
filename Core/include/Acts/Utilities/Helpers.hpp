@@ -123,7 +123,7 @@ namespace VectorHelpers {
 
   // if called-upon type has phi method, call that
   template <typename T,
-            std::enable_if_t<detail::has_phi_method<T>::type, int> = 0>
+            std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
   double
   phi(const T& v)
   {
