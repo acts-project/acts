@@ -8,12 +8,18 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-template <typename BField, typename Propagator_t>
+template <typename BField,
+          typename Propagator_t,
+          typename action_list_t,
+          typename aborter_list_t>
 Acts::LinearizedTrack
-Acts::LinearizedTrackFactory<BField, Propagator_t>::linearizeTrack(
-    const BoundParameters* params,
-    const Vector3D&        linPoint,
-    const Propagator_t&    propagator) const
+Acts::LinearizedTrackFactory<BField,
+                             Propagator_t,
+                             action_list_t,
+                             aborter_list_t>::
+    linearizeTrack(const BoundParameters* params,
+                   const Vector3D&        linPoint,
+                   const Propagator_t&    propagator) const
 {
   if (params == nullptr) {
     return LinearizedTrack();

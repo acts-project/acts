@@ -32,7 +32,10 @@ namespace Acts {
 /// "momentumJacobian" respectively.
 ///
 
-template <typename BField, typename Propagator_t>
+template <typename BField,
+          typename Propagator_t,
+          typename action_list_t  = ActionList<>,
+          typename aborter_list_t = AbortList<>>
 class LinearizedTrackFactory
 {
 public:
@@ -41,7 +44,7 @@ public:
     BField bField;
 
     /// Default propagator options
-    PropagatorOptions<> propagatorOptions;
+    PropagatorOptions<action_list_t, aborter_list_t> propagatorOptions;
 
     Config(BField bIn) : bField(std::move(bIn)){};
   };
