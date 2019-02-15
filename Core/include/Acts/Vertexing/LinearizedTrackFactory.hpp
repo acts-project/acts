@@ -16,7 +16,6 @@
 namespace Acts {
 
 /// @class LinearizedTrackFactory
-/// From ATHENA:
 /// Linearizes the measurement equation (dependance of track
 /// parameters on the vertex position and track momentum at vertex)
 /// at the vicinity of the user-provided linearization point.
@@ -30,6 +29,8 @@ namespace Acts {
 /// and c_k is the constant term of expansion. A_k and B_k are matrices
 /// of derivatives, denoted hereafter as "positionJacobian" and
 /// "momentumJacobian" respectively.
+///
+/// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
 
 template <typename BField,
