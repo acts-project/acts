@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.5)
 
-project (Acts VERSION 0.8.0 LANGUAGES CXX)
+# read version number from file
+file(READ version_number _acts_version)
+string(STRIP ${_acts_version} _acts_version)
+
+project (Acts VERSION ${_acts_version} LANGUAGES CXX)
 
 list (APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
