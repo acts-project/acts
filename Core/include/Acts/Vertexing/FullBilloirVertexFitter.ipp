@@ -30,9 +30,9 @@ struct BilloirTrack
   const InputTrack       originalTrack;
   Acts::LinearizedTrack* linTrack;
   double                 chi2;
-  Acts::ActsMatrixD<5, 3> Di_mat;  // position jacobian
-  Acts::ActsMatrixD<5, 3> Ei_mat;  // momentum jacobian
-  Acts::ActsSymMatrixD<3> Gi_mat;
+  Acts::ActsMatrixD<5, 3> Di_mat;   // position jacobian
+  Acts::ActsMatrixD<5, 3> Ei_mat;   // momentum jacobian
+  Acts::ActsSymMatrixD<3> Gi_mat;   // Gi = Et_W_mat * E_mat (see below)
   Acts::ActsSymMatrixD<3> Bi_mat;   // Bi = Di.T * Wi * Ei
   Acts::ActsSymMatrixD<3> Ci_inv;   // Ci = (Ei.T * Wi * Ei)^-1
   Acts::Vector3D          Ui_vec;   // Ui = Ei.T * Wi * dqi
