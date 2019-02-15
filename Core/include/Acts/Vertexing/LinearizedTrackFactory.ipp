@@ -77,13 +77,14 @@ Acts::LinearizedTrackFactory<BField,
     rho = sin_th * units::Nat2SI<units::MOMENTUM>(1 / q_ov_p) / B_z;
   }
 
+  // Eq. 5.34 in Ref(1) (see .hpp)
   double X  = positionAtPCA(0) - linPoint.x() + rho * sin_phi_v;
   double Y  = positionAtPCA(1) - linPoint.y() - rho * cos_phi_v;
   double S2 = (X * X + Y * Y);
   double S  = sqrt(S2);
 
   /// F(V, p_i) at PCA in Billoir paper
-  /// (see FullVertexFitter.hpp for paper reference,
+  /// (see FullBilloirVertexFitter.hpp for paper reference,
   /// Page 140, Eq. (2) )
   ActsVectorD<5> predParamsAtPCA;
 
@@ -100,6 +101,7 @@ Acts::LinearizedTrackFactory<BField,
     }
   }
 
+  // Eq. 5.33 in Ref(1) (see .hpp)
   predParamsAtPCA[0] = rho - sgn_h * S;
   predParamsAtPCA[1]
       = positionAtPCA[eZ] - linPoint.z() + rho * (phi_v - phiAtPCA) / tan_th;
@@ -107,7 +109,7 @@ Acts::LinearizedTrackFactory<BField,
   predParamsAtPCA[3] = th;
   predParamsAtPCA[4] = q_ov_p;
 
-  // Fill position jacobian (D_k matrix)
+  // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
   ActsMatrixD<5, 3> positionJacobian;
   positionJacobian.setZero();
   // First row
@@ -123,7 +125,7 @@ Acts::LinearizedTrackFactory<BField,
   positionJacobian(2, 0) = -Y / S2;
   positionJacobian(2, 1) = X / S2;
 
-  // Fill momentum jacobian (E_k matrix)
+  // Fill momentum jacobian (E_k matrix), Eq. 5.37 in Ref(1)
   ActsMatrixD<5, 3> momentumJacobian;
   momentumJacobian.setZero();
 
