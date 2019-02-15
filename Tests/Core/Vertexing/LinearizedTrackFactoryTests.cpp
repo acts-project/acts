@@ -20,6 +20,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 
 namespace bdata = boost::unit_test::data;
 
@@ -66,6 +68,12 @@ namespace Test {
     // Set up constant B-Field
     ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
 
+    // Set up Eigenstepper
+    EigenStepper<ConstantBField> stepper(bField);
+
+    // Set up propagator with void navigator
+    Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+
     // Create perigee surface
     std::shared_ptr<PerigeeSurface> perigeeSurface
         = Surface::makeShared<PerigeeSurface>(Vector3D(0., 0., 0.));
@@ -111,8 +119,12 @@ namespace Test {
           BoundParameters(std::move(covMat), paramVec, perigeeSurface));
     }
 
-    LinearizedTrackFactory<ConstantBField>::Config lt_config(bField);
-    LinearizedTrackFactory<ConstantBField>         linFactory(lt_config);
+    LinearizedTrackFactory<ConstantBField,
+                           Propagator<EigenStepper<ConstantBField>>>::Config
+        lt_config(bField);
+    LinearizedTrackFactory<ConstantBField,
+                           Propagator<EigenStepper<ConstantBField>>>
+        linFactory(lt_config);
 
     ActsVectorD<5>    vec5Zero = ActsVectorD<5>::Zero();
     ActsSymMatrixD<5> mat5Zero = ActsSymMatrixD<5>::Zero();
@@ -120,8 +132,8 @@ namespace Test {
     ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
 
     for (const BoundParameters& parameters : tracks) {
-      LinearizedTrack linTrack
-          = linFactory.linearizeTrack(&parameters, Vector3D(0., 0., 0.));
+      LinearizedTrack linTrack = linFactory.linearizeTrack(
+          &parameters, Vector3D(0., 0., 0.), propagator);
 
       BOOST_CHECK_NE(linTrack.parametersAtPCA, vec5Zero);
       BOOST_CHECK_NE(linTrack.covarianceAtPCA, mat5Zero);
@@ -135,8 +147,19 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(linearized_track_factory_empty_test)
   {
     ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
-    LinearizedTrackFactory<ConstantBField>::Config lt_config(bField);
-    LinearizedTrackFactory<ConstantBField>         linFactory(lt_config);
+
+    // Set up Eigenstepper
+    EigenStepper<ConstantBField> stepper(bField);
+
+    // Set up propagator with void navigator
+    Propagator<EigenStepper<ConstantBField>> propagator(stepper);
+
+    LinearizedTrackFactory<ConstantBField,
+                           Propagator<EigenStepper<ConstantBField>>>::Config
+        lt_config(bField);
+    LinearizedTrackFactory<ConstantBField,
+                           Propagator<EigenStepper<ConstantBField>>>
+        linFactory(lt_config);
 
     ActsVectorD<5>    vec5Zero = ActsVectorD<5>::Zero();
     ActsSymMatrixD<5> mat5Zero = ActsSymMatrixD<5>::Zero();
@@ -144,7 +167,7 @@ namespace Test {
     ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
 
     LinearizedTrack linTrack
-        = linFactory.linearizeTrack(nullptr, Vector3D(1., 2., 3.));
+        = linFactory.linearizeTrack(nullptr, Vector3D(1., 2., 3.), propagator);
 
     BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vec5Zero);
     BOOST_CHECK_EQUAL(linTrack.covarianceAtPCA, mat5Zero);

@@ -6,16 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Propagator/EigenStepper.hpp"
-#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 
-template <typename BField>
+template <typename BField, typename Propagator_t>
 Acts::LinearizedTrack
-Acts::LinearizedTrackFactory<BField>::linearizeTrack(
+Acts::LinearizedTrackFactory<BField, Propagator_t>::linearizeTrack(
     const BoundParameters* params,
-    const Vector3D&        linPoint) const
+    const Vector3D&        linPoint,
+    const Propagator_t&    propagator) const
 {
   if (params == nullptr) {
     return LinearizedTrack();
@@ -24,20 +22,14 @@ Acts::LinearizedTrackFactory<BField>::linearizeTrack(
   const std::shared_ptr<PerigeeSurface> perigeeSurface
       = Surface::makeShared<PerigeeSurface>(linPoint);
 
-  EigenStepper<BField> stepper(m_cfg.bField);
-
-  // Set up propagator with void navigator
-  Propagator<EigenStepper<BField>> propagator(stepper);
-
-  // Set up propagator options
-  PropagatorOptions<> options;
   // Variables to store track params and position at PCA to linPoint
   ActsVectorD<5>    paramsAtPCA;
   Vector3D          positionAtPCA;
   ActsSymMatrixD<5> parCovarianceAtPCA;
 
   // Do the propagation to linPoint
-  const auto& result = propagator.propagate(*params, *perigeeSurface, options);
+  const auto& result
+      = propagator.propagate(*params, *perigeeSurface, m_cfg.propagatorOptions);
   if (result.status == Status::SUCCESS) {
     paramsAtPCA        = result.endParameters->parameters();
     positionAtPCA      = result.endParameters->position();

@@ -25,8 +25,8 @@ namespace Acts {
 /// In:	Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
 /// DOI	10.1016/0168-9002(92)90859-3
 
-template <typename BField, typename InputTrack>
-class FullBilloirVertexFitter : public IVertexFitter<InputTrack>
+template <typename BField, typename InputTrack, typename Propagator_t>
+class FullBilloirVertexFitter : public IVertexFitter<InputTrack, Propagator_t>
 {
 public:
   struct Config
@@ -66,10 +66,12 @@ public:
   /// @param paramVector Vector of track objects to fit vertex to
   /// @param startingPoint Constraint of the fit, position of constraint is
   /// starting point
+  /// @param propagator Propagator
   ///
   /// @return Fitted vertex
   Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
+      const Propagator_t&            propagator,
       Vertex<InputTrack>             constraint
       = Vertex<InputTrack>(Vector3D(0., 0., 0.))) const override;
 

@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 
@@ -31,13 +32,16 @@ namespace Acts {
 /// "momentumJacobian" respectively.
 ///
 
-template <typename BField>
+template <typename BField, typename Propagator_t>
 class LinearizedTrackFactory
 {
 public:
   struct Config
   {
     BField bField;
+
+    /// Default propagator options
+    PropagatorOptions<> propagatorOptions;
 
     Config(BField bIn) : bField(std::move(bIn)){};
   };
@@ -52,10 +56,13 @@ public:
   ///
   /// @param params Parameters to linearize
   /// @param linPoint Linearization point
+  /// @param propagator Propagator
   ///
   /// @return Linearized track
   LinearizedTrack
-  linearizeTrack(const BoundParameters* params, const Vector3D& linPoint) const;
+  linearizeTrack(const BoundParameters* params,
+                 const Vector3D&        linPoint,
+                 const Propagator_t&    propagator) const;
 
 private:
   // Configuration object

@@ -57,10 +57,11 @@ struct BilloirVertex
 
 }  // end anonymous namespace
 
-template <typename BField, typename InputTrack>
+template <typename BField, typename InputTrack, typename Propagator_t>
 Acts::Vertex<InputTrack>
-Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
+Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
     const std::vector<InputTrack>& paramVector,
+    const Propagator_t&            propagator,
     Vertex<InputTrack>             constraint) const
 {
   double       chi2    = std::numeric_limits<double>::max();
@@ -85,8 +86,9 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
   }
 
   // Factory for linearizing tracks
-  typename LinearizedTrackFactory<BField>::Config lt_config(m_cfg.bField);
-  LinearizedTrackFactory<BField>                  linFactory(lt_config);
+  typename LinearizedTrackFactory<BField, Propagator_t>::Config lt_config(
+      m_cfg.bField);
+  LinearizedTrackFactory<BField, Propagator_t> linFactory(lt_config);
 
   std::vector<BilloirTrack<InputTrack>> billoirTracks;
 
@@ -113,7 +115,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
       LinearizedTrack linTrack
-          = linFactory.linearizeTrack(&trackParams, linPoint);
+          = linFactory.linearizeTrack(&trackParams, linPoint, propagator);
       double d0     = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
       double z0     = linTrack.parametersAtPCA[ParID_t::eLOC_Z0];
       double phi    = linTrack.parametersAtPCA[ParID_t::ePHI];

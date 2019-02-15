@@ -17,17 +17,19 @@ namespace Acts {
 ///
 /// @brief Virtual base class for VertexFitters
 
-template <typename InputTrack>
+template <typename InputTrack, typename Propagator_t>
 class IVertexFitter
 {
 public:
   /// @param paramVector Vector of track objects to fit vertex to
   /// @param startingPoint Constraint of the fit, position of constraint is
   /// starting point
+  /// @param propagator Propagator
   ///
   /// @return Fitted vertex
   virtual Vertex<InputTrack>
   fit(const std::vector<InputTrack>& paramVector,
+      const Propagator_t&            propagator,
       Vertex<InputTrack>             constraint
       = Vertex<InputTrack>(Vector3D(0., 0., 0.))) const = 0;
 };
