@@ -53,9 +53,9 @@ namespace Test {
   std::uniform_real_distribution<> resQoPDist(-0.1, 0.1);
 
   ///
-  /// @brief Unit test for FullBilloirVertexFitter
+  /// @brief Unit test for LinearizedTrackFactory
   ///
-  BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test)
+  BOOST_AUTO_TEST_CASE(linearized_track_factory_test)
   {
 
     // Number of tracks
