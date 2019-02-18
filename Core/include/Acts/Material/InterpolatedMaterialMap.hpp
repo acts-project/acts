@@ -41,12 +41,12 @@ class InterpolatedMaterialMap final
     {
     }
 
-    Vector3D
+    Material
     getMaterial(const Vector3D& position) const
     {
       // defined in Interpolation.hpp
-      return interpolate(
-          m_transformPos(position), m_lowerLeft, m_upperRight, m_fieldValues);
+      return Material(interpolate(
+          m_transformPos(position), m_lowerLeft, m_upperRight, m_fieldValues));
     }
 
     bool
@@ -76,7 +76,7 @@ class InterpolatedMaterialMap final
     ///
     /// @note These values must be order according to the prescription detailed
     ///       in Acts::interpolate.
-    std::array<Vector3D, N> m_fieldValues;
+    std::array<ActsVectorF<5>, N> m_fieldValues;
   };
 
 public:
@@ -100,9 +100,7 @@ public:
     Material
     getMaterial(const Vector3D& position) const
     {
-			  // TODO: make it better
-		ActsVectorF<5> mat = m_grid.interpolate(m_transformPos(position));
-      return Material(mat[0], mat[1], mat[2], mat[3], mat[4]); // TODO: interpolate must return the material - should be covered by the template parameter of the grid
+      return Material(m_grid.interpolate(m_transformPos(position)));
     }
 
     FieldCell<DIM_POS>
@@ -116,7 +114,7 @@ public:
 
       // loop through all corner points
       constexpr size_t nCorners = 1 << DIM_POS;
-      std::array<Vector3D, nCorners> neighbors;
+      std::array<ActsVectorF<5>, nCorners> neighbors;
       const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
 
       size_t i = 0;

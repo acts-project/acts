@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 #include "Acts/Material/MaterialComposition.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -74,6 +75,8 @@ public:
     float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
     m_store[5]  = zOaTr;
   }
+
+  Material(ActsVectorF<5> iMatData, MaterialComposition imc = {}) : Material(iMatData[0], iMatData[1], iMatData[2], iMatData[3], iMatData[4], imc) {}
 
   /// @brief Copy Constructor
   ///
