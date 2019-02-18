@@ -20,17 +20,14 @@ namespace Acts {
 
 class InterpolatedMaterialMap final
 {
-
-  template <typename T, class Point, size_t DIM>
-  using AnyGrid_t = concept::AnyNDimInterpGrid<T, Point, DIM>;
-
+	
   template <unsigned int DIM_POS>
-  struct FieldCell
+  struct MaterialCell
   {
     static constexpr unsigned int N = 1 << DIM_POS;
 
   public:
-    FieldCell(std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
+    MaterialCell(std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
               std::array<double, DIM_POS> lowerLeft,
               std::array<double, DIM_POS> upperRight,
               std::array<Vector3D, N>     fieldValues)
@@ -80,14 +77,13 @@ class InterpolatedMaterialMap final
   };
 
 public:
-// DIM_POS: Local frame for parameter look-up
-// DIM_BFIELD: Returning dimension of B-field after look-up
+
   template <unsigned int DIM_POS>
   struct FieldMapper
   {
   public:
     using Grid_t
-        = AnyGrid_t<ActsVectorF<5>, ActsVectorD<DIM_POS>, DIM_POS>;
+        = concept::AnyNDimInterpGrid<ActsVectorF<5>, ActsVectorD<DIM_POS>, DIM_POS>;
     
     FieldMapper(
         std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
@@ -103,7 +99,7 @@ public:
       return Material(m_grid.interpolate(m_transformPos(position)));
     }
 
-    FieldCell<DIM_POS>
+    MaterialCell<DIM_POS>
     getMaterialCell(const Vector3D& position) const
     {
       const auto& gridPosition = m_transformPos(position);
@@ -119,10 +115,10 @@ public:
 
       size_t i = 0;
       for (size_t index : cornerIndices) {
-        neighbors.at(i++) = m_grid.at(index); // TODO: this might work
+        neighbors.at(i++) = m_grid.at(index);
       }
 
-      return FieldCell<DIM_POS>(
+      return MaterialCell<DIM_POS>(
           m_transformPos, lowerLeft, upperRight, std::move(neighbors));
     }
 
@@ -132,7 +128,7 @@ public:
       auto nBinsArray = m_grid.getNBins();
       return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
     }
-// TODO: min/max should be working, but this might be checked
+
     std::vector<double>
     getMin() const
     {
@@ -166,52 +162,28 @@ public:
     Grid_t m_grid;
   };
 
-  /// @brief configuration object for magnetic field interpolation
-  struct Config
-  {
-// TODO: might be useless
-    //~ /// @brief global B-field scaling factor
-    //~ ///
-    //~ /// @note Negative values for @p scale are accepted and will invert the
-    //~ ///       direction of the magnetic field.
-    //~ double scale = 1.;
-
-    /// @brief object for global coordinate transformation and interpolation
-    ///
-    /// This object performs the mapping of the global 3D coordinates onto the
-    /// field grid and the interpolation of the field values on close-by grid
-    /// points.
-    concept::AnyFieldLookup<> mapper;
-  };
-
   struct Cache
   {
-    concept::AnyFieldCell<> fieldCell;
+    concept::AnyFieldCell<> MaterialCell;
     bool                    initialized = false;
   };
 
-  InterpolatedMaterialMap(Config config) : m_config(std::move(config)) {}
-
-  Config
-  getConfiguration() const
-  {
-    return m_config;
-  }
+  InterpolatedMaterialMap(concept::AnyFieldLookup<> mapper) : m_mapper(std::move(mapper)) {}
 
   Material
   getMaterial(const Vector3D& position) const
   {
-    return m_config.mapper.getMaterial(position);
+    return m_mapper.getMaterial(position);
   }
 
   Material
   getMaterial(const Vector3D& position, Cache& cache) const
   {
-    if (!cache.initialized || !cache.fieldCell.isInside(position)) {
-      cache.fieldCell   = getMaterialCell(position);
+    if (!cache.initialized || !cache.MaterialCell.isInside(position)) {
+      cache.MaterialCell   = getMaterialCell(position);
       cache.initialized = true;
     }
-    ActsVectorF<5> mat = cache.fieldCell.getMaterial(position);
+    ActsVectorF<5> mat = cache.MaterialCell.getMaterial(position);
     return Material(mat[0], mat[1], mat[2], mat[3], mat[4]);
   }
 
@@ -219,7 +191,7 @@ public:
   getMaterialGradient(const Vector3D& position,
                    ActsMatrixD<3, 3>& /*derivative*/) const
   {
-    return m_config.mapper.getMaterial(position);
+    return m_mapper.getMaterial(position);
   }
 
   Material
@@ -227,35 +199,33 @@ public:
                    ActsMatrixD<3, 3>& /*derivative*/,
                    Cache& /*cache*/) const
   {
-    return m_config.mapper.getMaterial(position);
+    return m_mapper.getMaterial(position);
   }
 
   concept::AnyFieldLookup<>
   getMapper() const
   {
-    return m_config.mapper;
+    return m_mapper;
   }
 
   bool
   isInside(const Vector3D& position) const
   {
-    return m_config.mapper.isInside(position);
-  }
-
-  void
-  setConfiguration(const Config& config)
-  {
-    m_config = config;
+    return m_mapper.isInside(position);
   }
 
 private:
   concept::AnyFieldCell<>
   getMaterialCell(const Vector3D& position) const
   {
-    return m_config.mapper.getMaterialCell(position);
+    return m_mapper.getMaterialCell(position);
   }
 
-  Config m_config;
+    /// @brief object for global coordinate transformation and interpolation
+    ///
+    /// This object performs the mapping of the global 3D coordinates onto the
+    /// field grid and the interpolation of the material component values on close-by grid points.
+    concept::AnyFieldLookup<> m_mapper;
 };
 
 }  // namespace Acts

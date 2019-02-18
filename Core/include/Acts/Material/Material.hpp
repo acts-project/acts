@@ -149,6 +149,7 @@ public:
   {
     return m_store[matZ];
   }
+  
   /// @brief Access to rho
   float
   rho() const
@@ -162,6 +163,15 @@ public:
   {
     return m_store[matZ_AR];
   }
+
+/// @brief Access to all classification numbers of the material
+ActsVectorF<5>
+decomposeIntoClassificationNumbers()
+{
+	ActsVectorF<5> numbers;
+	numbers << X0(), L0(), A(), Z(), rho();
+	return numbers;
+}
 
   /// spit out as a string
   std::string

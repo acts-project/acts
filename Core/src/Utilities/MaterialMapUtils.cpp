@@ -92,7 +92,7 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
       }
     }
   }
-  ActsVectorF<5> vec; vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), (float) 0., (float) 0., (float) 0.;
+  ActsVectorF<5> vec; vec << std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0., 0., 0.;
   grid.setExteriorBins(vec);
 
   // [3] Create the transformation for the position
@@ -101,12 +101,33 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
     return Vector2D(perp(pos), pos.z());
   };
 
-  // [5] Create the mapper & BField Service
+  // [4] Create the mapper & BField Service
   // create field mapping
   return InterpolatedMaterialMap::FieldMapper<2>(
       transformPos, std::move(grid));
 }
 
+Acts::InterpolatedMaterialMap::FieldMapper<2>
+Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+                                               std::array<size_t, 2> nBinsRZ)>&
+                                                localToGlobalBin,
+                    std::vector<double>         rPos,
+                    std::vector<double>         zPos,
+                    std::vector<Material>& material,
+                    double                      lengthUnit,
+                    bool                        firstQuadrant)
+{
+	std::vector<ActsVectorF<5>> materialVector;
+	
+	for(Material& mat : material)
+	{
+		materialVector.push_back(mat.decomposeIntoClassificationNumbers());
+	}
+	
+	return fieldMapperRZ(localToGlobalBin, rPos, zPos, materialVector, lengthUnit, firstQuadrant);
+}  
+                    
+                
 Acts::InterpolatedMaterialMap::FieldMapper<3>
 Acts::fieldMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
@@ -210,75 +231,37 @@ Acts::fieldMapperXYZ(
       }
     }
   }
-  ActsVectorF<5> vec; vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), (float) 0., (float) 0., (float) 0.;
+  ActsVectorF<5> vec; vec << std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0., 0., 0.;
   grid.setExteriorBins(vec);
 
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
   auto transformPos = [](const Vector3D& pos) { return pos; };
 
-  // [5] Create the mapper & BField Service
+  // [4] Create the mapper & BField Service
   // create field mapping
   return InterpolatedMaterialMap::FieldMapper<3>(
       transformPos, std::move(grid));
 }
 
-//~ Acts::InterpolatedMaterialMap::FieldMapper<2, 2>
-//~ Acts::solenoidFieldMapper(std::pair<double, double> rlim,
-                          //~ std::pair<double, double> zlim,
-                          //~ std::pair<size_t, size_t> nbins,
-                          //~ const SolenoidBField& field)
-//~ {
-  //~ double rMin, rMax, zMin, zMax;
-  //~ std::tie(rMin, rMax) = rlim;
-  //~ std::tie(zMin, zMax) = zlim;
-
-  //~ size_t nBinsR, nBinsZ;
-  //~ std::tie(nBinsR, nBinsZ) = nbins;
-
-  //~ double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
-  //~ double stepR = std::abs(rMax - rMin) / (nBinsR - 1);
-
-  //~ rMax += stepR;
-  //~ zMax += stepZ;
-
-  //~ // Create the axis for the grid
-  //~ Acts::detail::EquidistantAxis rAxis(rMin, rMax, nBinsR);
-  //~ Acts::detail::EquidistantAxis zAxis(zMin, zMax, nBinsZ);
-
-  //~ // Create the grid
-  //~ using Grid_t = Acts::detail::Grid<Acts::Vector2D,
-                                    //~ Acts::detail::EquidistantAxis,
-                                    //~ Acts::detail::EquidistantAxis>;
-  //~ Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
-
-  //~ // Create the transformation for the position
-  //~ // map (x,y,z) -> (r,z)
-  //~ auto transformPos = [](const Acts::Vector3D& pos) {
-    //~ return Acts::Vector2D(perp(pos), pos.z());
-  //~ };
-
-  //~ // iterate over all bins, set their value to the solenoid value
-  //~ // at their lower left position
-  //~ for (size_t i = 0; i <= nBinsR + 1; i++) {
-    //~ for (size_t j = 0; j <= nBinsZ + 1; j++) {
-      //~ Grid_t::index_t index({i, j});
-      //~ if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
-        //~ // under or overflow bin, set zero
-        //~ grid.at(index) = Grid_t::value_type(0, 0);
-      //~ } else {
-        //~ // regular bin, get lower left boundary
-        //~ Grid_t::point_t lowerLeft = grid.getLowerLeftBinEdge(index);
-        //~ // do lookup
-        //~ Vector2D B     = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
-        //~ grid.at(index) = B;
-      //~ }
-    //~ }
-  //~ }
-
-  //~ // Create the mapper & BField Service
-  //~ // create field mapping
-  //~ Acts::InterpolatedMaterialMap::FieldMapper<2, 2> mapper(
-      //~ transformPos, std::move(grid));
-  //~ return mapper;
-//~ }
+Acts::InterpolatedMaterialMap::FieldMapper<3>
+Acts::fieldMapperXYZ(
+    const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                               std::array<size_t, 3> nBinsXYZ)>&
+                                localToGlobalBin,
+    std::vector<double>         xPos,
+    std::vector<double>         yPos,
+    std::vector<double>         zPos,
+    std::vector<Material>& material,
+    double                      lengthUnit,
+    bool                        firstOctant)
+{
+	std::vector<ActsVectorF<5>> materialVector;
+	
+	for(Material& mat : material)
+	{
+		materialVector.push_back(mat.decomposeIntoClassificationNumbers());
+	}
+	
+	return fieldMapperXYZ(localToGlobalBin, xPos, yPos, zPos, materialVector, lengthUnit, firstOctant);
+}

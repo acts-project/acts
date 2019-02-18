@@ -12,7 +12,7 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 
-/// Convenience functions to ease creation of and Acts::InterpolatedBFieldMap
+/// Convenience functions to ease creation of and Acts::InterpolatedMaterialMap
 /// and to avoid code duplication. Currently implemented for the two most common
 /// formats: rz and xyz.
 
@@ -65,6 +65,17 @@ fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
               std::vector<double>         rPos,
               std::vector<double>         zPos,
               std::vector<ActsVectorF<5>> material,
+              double                      lengthUnit    = units::_mm,
+              bool                        firstQuadrant = false);
+              
+/// @brief Converts material and calls constructor of @c FieldMapper<2>
+InterpolatedMaterialMap::FieldMapper<2>
+fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+                                         std::array<size_t, 2> nBinsRZ)>&
+                                          localToGlobalBin,
+              std::vector<double>         rPos,
+              std::vector<double>         zPos,
+              std::vector<Material>& material,
               double                      lengthUnit    = units::_mm,
               bool                        firstQuadrant = false);
 
@@ -129,20 +140,14 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                double                      lengthUnit  = units::_mm,
                bool                        firstOctant = false);
 
-//~ /// Function which takes an existing SolenoidBField instance and
-//~ /// creates a field mapper by sampling grid points from the analytical
-//~ /// solenoid field.
-//~ ///
-//~ /// @param rlim pair of r bounds
-//~ /// @param zlim pair of z bounds
-//~ /// @param nbins pair of bin counts
-//~ /// @param field the solenoid field instance
-//~ ///
-//~ /// @return A field mapper instance for use in interpolation.
-//~ Acts::InterpolatedMaterialMap::FieldMapper<2, 2>
-//~ solenoidFieldMapper(std::pair<double, double> rlim,
-                    //~ std::pair<double, double> zlim,
-                    //~ std::pair<size_t, size_t> nbins,
-                    //~ const SolenoidBField& field);
-
-}  // namespace Acts
+/// @brief Converts material and calls constructor of @c FieldMapper<3>
+InterpolatedMaterialMap::FieldMapper<3>
+fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                                          std::array<size_t, 3> nBinsXYZ)>&
+                                           localToGlobalBin,
+               std::vector<double>         xPos,
+               std::vector<double>         yPos,
+               std::vector<double>         zPos,
+               std::vector<Material>& material,
+               double                      lengthUnit  = units::_mm,
+               bool                        firstOctant = false);
