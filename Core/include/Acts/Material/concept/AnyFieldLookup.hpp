@@ -37,7 +37,7 @@ namespace concept {
     namespace mpl = boost::mpl;
 
     using field_cell_concept
-        = mpl::vector<has_getMaterial<Vector3D(const Vector3D&), const bte::_self>,
+        = mpl::vector<has_getMaterial<ActsVectorF<5>(const Vector3D&), const bte::_self>,
                       has_isInside<bool(const Vector3D&), const bte::_self>,
                       bte::copy_constructible<>,
                       bte::relaxed>;

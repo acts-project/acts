@@ -87,7 +87,7 @@ public:
   {
   public:
     using Grid_t
-        = AnyGrid_t<Material, ActsVectorD<DIM_POS>, DIM_POS>;
+        = AnyGrid_t<ActsVectorF<5>, ActsVectorD<DIM_POS>, DIM_POS>;
     
     FieldMapper(
         std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
@@ -100,7 +100,9 @@ public:
     Material
     getMaterial(const Vector3D& position) const
     {
-      return m_grid.interpolate(m_transformPos(position)); // TODO: interpolate must return the material - should be covered by the template parameter of the grid
+			  // TODO: make it better
+		ActsVectorF<5> mat = m_grid.interpolate(m_transformPos(position));
+      return Material(mat[0], mat[1], mat[2], mat[3], mat[4]); // TODO: interpolate must return the material - should be covered by the template parameter of the grid
     }
 
     FieldCell<DIM_POS>
@@ -198,30 +200,31 @@ public:
     return m_config;
   }
 
-  Vector3D
+  Material
   getMaterial(const Vector3D& position) const
   {
     return m_config.mapper.getMaterial(position);
   }
 
-  Vector3D
+  Material
   getMaterial(const Vector3D& position, Cache& cache) const
   {
     if (!cache.initialized || !cache.fieldCell.isInside(position)) {
       cache.fieldCell   = getMaterialCell(position);
       cache.initialized = true;
     }
-    return cache.fieldCell.getMaterial(position);
+    ActsVectorF<5> mat = cache.fieldCell.getMaterial(position);
+    return Material(mat[0], mat[1], mat[2], mat[3], mat[4]);
   }
 
-  Vector3D
+  Material
   getMaterialGradient(const Vector3D& position,
                    ActsMatrixD<3, 3>& /*derivative*/) const
   {
     return m_config.mapper.getMaterial(position);
   }
 
-  Vector3D
+  Material
   getMaterialGradient(const Vector3D& position,
                    ActsMatrixD<3, 3>& /*derivative*/,
                    Cache& /*cache*/) const

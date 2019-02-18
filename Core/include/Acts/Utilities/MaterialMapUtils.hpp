@@ -64,7 +64,7 @@ fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                           localToGlobalBin,
               std::vector<double>         rPos,
               std::vector<double>         zPos,
-              std::vector<Material> material,
+              std::vector<ActsVectorF<5>> material,
               double                      lengthUnit    = units::_mm,
               bool                        firstQuadrant = false);
 
@@ -125,7 +125,7 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                std::vector<double>         xPos,
                std::vector<double>         yPos,
                std::vector<double>         zPos,
-               std::vector<Material> material,
+               std::vector<ActsVectorF<5>> material,
                double                      lengthUnit  = units::_mm,
                bool                        firstOctant = false);
 

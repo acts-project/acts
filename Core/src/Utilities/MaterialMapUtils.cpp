@@ -22,7 +22,7 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                                 localToGlobalBin,
                     std::vector<double>         rPos,
                     std::vector<double>         zPos,
-                    std::vector<Material> material,
+                    std::vector<ActsVectorF<5>> material, // TODO: replace again by material or even use both options
                     double                      lengthUnit,
                     bool                        firstQuadrant)
 {
@@ -64,7 +64,7 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
       zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  using Grid_t = detail::Grid<Material,
+  using Grid_t = detail::Grid<ActsVectorF<5>,
                                     detail::EquidistantAxis,
                                     detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
@@ -92,7 +92,8 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
       }
     }
   }
-  grid.setExteriorBins(Material(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0., 0., 0.));
+  ActsVectorF<5> vec; vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), (float) 0., (float) 0., (float) 0.;
+  grid.setExteriorBins(vec);
 
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
@@ -114,7 +115,7 @@ Acts::fieldMapperXYZ(
     std::vector<double>         xPos,
     std::vector<double>         yPos,
     std::vector<double>         zPos,
-    std::vector<Material> material,
+    std::vector<ActsVectorF<5>> material,
     double                      lengthUnit,
     bool                        firstOctant)
 {
@@ -173,7 +174,7 @@ Acts::fieldMapperXYZ(
   detail::EquidistantAxis zAxis(
       zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
-  using Grid_t = detail::Grid<Material,
+  using Grid_t = detail::Grid<ActsVectorF<5>,
                                     detail::EquidistantAxis,
                                     detail::EquidistantAxis,
                                     detail::EquidistantAxis>;
@@ -209,7 +210,8 @@ Acts::fieldMapperXYZ(
       }
     }
   }
-  grid.setExteriorBins(Material(std::numeric_limits<double>::max(), std::numeric_limits<double>::max(), 0., 0., 0.));
+  ActsVectorF<5> vec; vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), (float) 0., (float) 0., (float) 0.;
+  grid.setExteriorBins(vec);
 
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
