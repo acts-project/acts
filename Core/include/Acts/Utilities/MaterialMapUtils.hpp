@@ -18,7 +18,7 @@
 
 namespace Acts {
 
-/// Method to setup the FieldMapper
+/// Method to setup the MaterialMapper
 /// @param localToGlobalBin Function mapping the local bins of r,z to the global
 /// bin of the map magnetic field value
 ///
@@ -58,8 +58,8 @@ namespace Acts {
 /// e.g. we have the grid values r={0,1} with BFieldValues={2,3} on the r axis.
 /// If the flag is set to true the r-axis grid values will be set to {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-InterpolatedMaterialMap::FieldMapper<2>
-fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+InterpolatedMaterialMap::MaterialMapper<2>
+materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                          std::array<size_t, 2> nBinsRZ)>&
                                           localToGlobalBin,
               std::vector<double>         rPos,
@@ -68,9 +68,9 @@ fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
               double                      lengthUnit    = units::_mm,
               bool                        firstQuadrant = false);
               
-/// @brief Converts material and calls constructor of @c FieldMapper<2>
-InterpolatedMaterialMap::FieldMapper<2>
-fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+/// @brief Converts material and calls constructor of @c MaterialMapper<2>
+InterpolatedMaterialMap::MaterialMapper<2>
+materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                          std::array<size_t, 2> nBinsRZ)>&
                                           localToGlobalBin,
               std::vector<double>         rPos,
@@ -79,7 +79,7 @@ fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
               double                      lengthUnit    = units::_mm,
               bool                        firstQuadrant = false);
 
-/// Method to setup the FieldMapper
+/// Method to setup the MaterialMapper
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
 /// global bin of the map magnetic field value
 ///
@@ -129,8 +129,8 @@ fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 /// e.g. we have the grid values z={0,1} with BFieldValues={2,3} on the r axis.
 /// If the flag is set to true the z-axis grid values will be set to {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-InterpolatedMaterialMap::FieldMapper<3>
-fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
+InterpolatedMaterialMap::MaterialMapper<3>
+materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                           std::array<size_t, 3> nBinsXYZ)>&
                                            localToGlobalBin,
                std::vector<double>         xPos,
@@ -140,9 +140,9 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                double                      lengthUnit  = units::_mm,
                bool                        firstOctant = false);
 
-/// @brief Converts material and calls constructor of @c FieldMapper<3>
-InterpolatedMaterialMap::FieldMapper<3>
-fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
+/// @brief Converts material and calls constructor of @c MaterialMapper<3>
+InterpolatedMaterialMap::MaterialMapper<3>
+materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                           std::array<size_t, 3> nBinsXYZ)>&
                                            localToGlobalBin,
                std::vector<double>         xPos,
@@ -151,3 +151,4 @@ fieldMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                std::vector<Material>& material,
                double                      lengthUnit  = units::_mm,
                bool                        firstOctant = false);
+}

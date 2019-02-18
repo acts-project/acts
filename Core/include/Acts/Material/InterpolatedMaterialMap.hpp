@@ -9,7 +9,7 @@
 #pragma once
 
 #include <functional>
-#include "Acts/Material/concept/AnyFieldLookup.hpp"
+#include "Acts/Material/concept/AnyMaterialLookup.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 #include "Acts/Utilities/concept/AnyGrid.hpp"
@@ -30,11 +30,11 @@ class InterpolatedMaterialMap final
     MaterialCell(std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
               std::array<double, DIM_POS> lowerLeft,
               std::array<double, DIM_POS> upperRight,
-              std::array<Vector3D, N>     fieldValues)
+              std::array<ActsVectorF<5>, N>     materialValues)
       : m_transformPos(std::move(transformPos))
       , m_lowerLeft(std::move(lowerLeft))
       , m_upperRight(std::move(upperRight))
-      , m_fieldValues(std::move(fieldValues))
+      , m_materialValues(std::move(materialValues))
     {
     }
 
@@ -43,7 +43,7 @@ class InterpolatedMaterialMap final
     {
       // defined in Interpolation.hpp
       return Material(interpolate(
-          m_transformPos(position), m_lowerLeft, m_upperRight, m_fieldValues));
+          m_transformPos(position), m_lowerLeft, m_upperRight, m_materialValues));
     }
 
     bool
@@ -69,23 +69,23 @@ class InterpolatedMaterialMap final
     /// generalized upper-right corner of the confining hyper-box
     std::array<double, DIM_POS> m_upperRight;
 
-    /// @brief magnetic field vectors at the hyper-box corners
+    /// @brief material component vectors at the hyper-box corners
     ///
     /// @note These values must be order according to the prescription detailed
     ///       in Acts::interpolate.
-    std::array<ActsVectorF<5>, N> m_fieldValues;
+    std::array<ActsVectorF<5>, N> m_materialValues;
   };
 
 public:
 
   template <unsigned int DIM_POS>
-  struct FieldMapper
+  struct MaterialMapper
   {
   public:
     using Grid_t
         = concept::AnyNDimInterpGrid<ActsVectorF<5>, ActsVectorD<DIM_POS>, DIM_POS>;
     
-    FieldMapper(
+    MaterialMapper(
         std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
         Grid_t grid)
       : m_transformPos(std::move(transformPos))
@@ -158,17 +158,17 @@ public:
   private:
     /// geometric transformation applied to global 3D positions
     std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
-    /// grid storing magnetic field values
+    /// grid storing magnetic material values
     Grid_t m_grid;
   };
 
   struct Cache
   {
-    concept::AnyFieldCell<> MaterialCell;
+    concept::AnyMaterialCell<> MaterialCell;
     bool                    initialized = false;
   };
 
-  InterpolatedMaterialMap(concept::AnyFieldLookup<> mapper) : m_mapper(std::move(mapper)) {}
+  InterpolatedMaterialMap(concept::AnyMaterialLookup<> mapper) : m_mapper(std::move(mapper)) {}
 
   Material
   getMaterial(const Vector3D& position) const
@@ -202,7 +202,7 @@ public:
     return m_mapper.getMaterial(position);
   }
 
-  concept::AnyFieldLookup<>
+  concept::AnyMaterialLookup<>
   getMapper() const
   {
     return m_mapper;
@@ -215,7 +215,7 @@ public:
   }
 
 private:
-  concept::AnyFieldCell<>
+  concept::AnyMaterialCell<>
   getMaterialCell(const Vector3D& position) const
   {
     return m_mapper.getMaterialCell(position);
@@ -224,8 +224,8 @@ private:
     /// @brief object for global coordinate transformation and interpolation
     ///
     /// This object performs the mapping of the global 3D coordinates onto the
-    /// field grid and the interpolation of the material component values on close-by grid points.
-    concept::AnyFieldLookup<> m_mapper;
+    /// material grid and the interpolation of the material component values on close-by grid points.
+    concept::AnyMaterialLookup<> m_mapper;
 };
 
 }  // namespace Acts

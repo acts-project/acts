@@ -36,7 +36,7 @@ namespace concept {
 
     namespace mpl = boost::mpl;
 
-    using field_cell_concept
+    using material_cell_concept
         = mpl::vector<has_getMaterial<ActsVectorF<5>(const Vector3D&), const bte::_self>,
                       has_isInside<bool(const Vector3D&), const bte::_self>,
                       bte::copy_constructible<>,
@@ -44,8 +44,8 @@ namespace concept {
   }  // namespace afl_detail
   /// @endcond
 
-  /// @ingroup MagneticField
-  /// @brief any-type for field cell interface
+  /// @ingroup Material
+  /// @brief any-type for material cell interface
   ///
   /// @tparam T placeholder specifying how to store the underlying object
   ///
@@ -61,13 +61,13 @@ namespace concept {
   /// const) reference, pass <tt>(const) boost::type_erasure::_self&</tt> as
   /// template parameter.
   template <typename T = bte::_self>
-  using AnyFieldCell   = bte::any<afl_detail::field_cell_concept, T>;
+  using AnyMaterialCell   = bte::any<afl_detail::material_cell_concept, T>;
 
   /// @cond
   namespace afl_detail {
-    using field_lookup_concept
-        = mpl::vector<field_cell_concept,
-                      has_getMaterialCell<AnyFieldCell<>(const Vector3D&),
+    using material_lookup_concept
+        = mpl::vector<material_cell_concept,
+                      has_getMaterialCell<AnyMaterialCell<>(const Vector3D&),
                                        const bte::_self>,
                       has_getNBins<std::vector<size_t>(), const bte::_self>,
                       has_getMin<std::vector<double>(), const bte::_self>,
@@ -75,22 +75,22 @@ namespace concept {
   }  // namespace afl_detail
   /// @endcond
 
-  /// @ingroup MagneticField
-  /// @brief any-type for field look-up interface
+  /// @ingroup Material
+  /// @brief any-type for material look-up interface
   ///
   /// @tparam T placeholder specifying how to store the underlying object
   ///
-  /// This any-type is a specialization of the Acts::concept::AnyFieldCell
+  /// This any-type is a specialization of the Acts::concept::AnyMaterialCell
   /// concept. Every object of this type also implements the
-  /// Acts::concept::AnyFieldCell concept.
+  /// Acts::concept::AnyMaterialCell concept.
   ///
   /// The exact interface required for wrapped objects of type @c U is the one
-  /// specified in Acts::concept::AnyFieldCell augmented with the following
+  /// specified in Acts::concept::AnyMaterialCell augmented with the following
   /// methods:
   /// @code{.cpp}
   /// struct U {
-  ///   // access the field cell at a given global position
-  ///   Acts::concept::AnyFieldCell getMaterialCell(const Acts::Vector3D&) const;
+  ///   // access the material cell at a given global position
+  ///   Acts::concept::AnyMaterialCell getMaterialCell(const Acts::Vector3D&) const;
   ///
   ///  // access the number of bins of all axes of the grid
   ///   std::array<size_t, DIM> getNBins() const;
@@ -108,7 +108,7 @@ namespace concept {
   /// const) reference, pass <tt>(const) boost::type_erasure::_self&</tt> as
   /// template parameter.
   template <typename T = bte::_self>
-  using AnyFieldLookup = bte::any<afl_detail::field_lookup_concept, T>;
+  using AnyMaterialLookup = bte::any<afl_detail::material_lookup_concept, T>;
 
 }  // namespace concept
 }  // namespace Acts

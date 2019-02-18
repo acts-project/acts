@@ -16,8 +16,8 @@
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
 
-Acts::InterpolatedMaterialMap::FieldMapper<2>
-Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+Acts::InterpolatedMaterialMap::MaterialMapper<2>
+Acts::materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                                std::array<size_t, 2> nBinsRZ)>&
                                                 localToGlobalBin,
                     std::vector<double>         rPos,
@@ -102,13 +102,13 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   };
 
   // [4] Create the mapper & BField Service
-  // create field mapping
-  return InterpolatedMaterialMap::FieldMapper<2>(
+  // create material mapping
+  return InterpolatedMaterialMap::MaterialMapper<2>(
       transformPos, std::move(grid));
 }
 
-Acts::InterpolatedMaterialMap::FieldMapper<2>
-Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
+Acts::InterpolatedMaterialMap::MaterialMapper<2>
+Acts::materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                                std::array<size_t, 2> nBinsRZ)>&
                                                 localToGlobalBin,
                     std::vector<double>         rPos,
@@ -124,12 +124,12 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 		materialVector.push_back(mat.decomposeIntoClassificationNumbers());
 	}
 	
-	return fieldMapperRZ(localToGlobalBin, rPos, zPos, materialVector, lengthUnit, firstQuadrant);
+	return materialMapperRZ(localToGlobalBin, rPos, zPos, materialVector, lengthUnit, firstQuadrant);
 }  
                     
                 
-Acts::InterpolatedMaterialMap::FieldMapper<3>
-Acts::fieldMapperXYZ(
+Acts::InterpolatedMaterialMap::MaterialMapper<3>
+Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
                                 localToGlobalBin,
@@ -239,13 +239,13 @@ Acts::fieldMapperXYZ(
   auto transformPos = [](const Vector3D& pos) { return pos; };
 
   // [4] Create the mapper & BField Service
-  // create field mapping
-  return InterpolatedMaterialMap::FieldMapper<3>(
+  // create material mapping
+  return InterpolatedMaterialMap::MaterialMapper<3>(
       transformPos, std::move(grid));
 }
 
-Acts::InterpolatedMaterialMap::FieldMapper<3>
-Acts::fieldMapperXYZ(
+Acts::InterpolatedMaterialMap::MaterialMapper<3>
+Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
                                 localToGlobalBin,
@@ -263,5 +263,5 @@ Acts::fieldMapperXYZ(
 		materialVector.push_back(mat.decomposeIntoClassificationNumbers());
 	}
 	
-	return fieldMapperXYZ(localToGlobalBin, xPos, yPos, zPos, materialVector, lengthUnit, firstOctant);
+	return materialMapperXYZ(localToGlobalBin, xPos, yPos, zPos, materialVector, lengthUnit, firstOctant);
 }
