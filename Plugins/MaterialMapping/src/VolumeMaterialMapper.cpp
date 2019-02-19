@@ -10,15 +10,7 @@
 // VolumeMaterialMapper.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Plugins/MaterialMapping/SurfaceMaterialMapper.hpp"
-#include "Acts/EventData/NeutralParameters.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
-#include "Acts/Material/SurfaceMaterialProxy.hpp"
-#include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
-#include "Acts/Propagator/detail/DebugOutputActor.hpp"
-#include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Plugins/MaterialMapping/VolumeMaterialMapper.hpp"
 
 Acts::VolumeMaterialMapper::VolumeMaterialMapper(
     bool mapperDebugOutput                 dbg,
@@ -37,14 +29,17 @@ Acts::VolumeMaterialMapper::createState(
   
   unsigned int numEdges = edgeAxis1.size();
   mState.edgesPerAxis.push_back(edgeAxis1);
+  std::sort(mState.edgesPerAxis[0].begin(), mState.edgesPerAxis[0].end());
   if(!edgeAxis2.empty())
   {
 	mState.edgesPerAxis.push_back(edgeAxis2);
+	std::sort(mState.edgesPerAxis[1].begin(), mState.edgesPerAxis[1].end());
 	numEdges += edgeAxis2.size();
 	}
   if(!edgeAxis3.empty())
   {
 	mState.edgesPerAxis.push_back(edgeAxis3);
+	std::sort(mState.edgesPerAxis[2].begin(), mState.edgesPerAxis[2].end());
 	numEdges += edgeAxis3.size();
 	}
 
@@ -58,98 +53,31 @@ Acts::VolumeMaterialMapper::createState(
   return mState;
 }
 
-void
+std::vector<Acts::Material>
 Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const
 {
-  // iterate over the map to call the total average
-  for (auto& accMaterial : mState.accumulatedMaterial) {
-    mState.surfaceMaterial[accMaterial.first]
-        = accMaterial.second.totalAverage();
+	std::vector<Acts::Material> materialAtEdge;
+	materialAtEdge.reserve(mState.accumulatedMaterial.size());
+
+  for (auto& am : mState.accumulatedMaterial) {
+	  materialAtEdge.push_back(am.totalAverage().first.material());
   }
 }
 
+// TODO: note down that this function treats everything as if it would be ordered
 void
 Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State&                       mState,
-    const RecordedMaterialTrack& mTrack) const
+    const RecordedMaterialTrack& mTrack, const std::function<unsigned int(const Vector3D&, const State&)>& concatenateToEdge) const
 {
-  // Neutral curvilinear parameters
-  NeutralCurvilinearParameters start(
-      nullptr, mTrack.position(), mTrack.direction());
-
-  // Prepare Action list and abort list
-  using DebugOutput              = detail::DebugOutputActor;
-  using MaterialSurfaceCollector = SurfaceCollector<MaterialSurface>;
-  using ActionList = ActionList<MaterialSurfaceCollector, DebugOutput>;
-  using AbortList  = AbortList<detail::EndOfWorldReached>;
-
-  PropagatorOptions<ActionList, AbortList> options;
-  options.debug = m_mapperDebugOutput;
-
-  // Now collect the material layers by using the straight line propagator
-  const auto& result   = m_propagator.propagate(start, options);
-  auto        mcResult = result.get<MaterialSurfaceCollector::result_type>();
-  auto        mappingSurfaces = mcResult.collected;
-
-  // Retrieve the recorded material
-  const auto& rMaterial = mTrack.recordedMaterialProperties();
-
-  ACTS_VERBOSE("Retrieved " << rMaterial.size()
-                            << " recorded material properties to map.")
-
-  ACTS_VERBOSE("Found     " << mappingSurfaces.size()
-                            << " mapping surfaces for this track.");
-
-  // Prepare the assignment store
-  std::vector<AssignedMaterialProperties> assignedMaterial;
-  assignedMaterial.reserve(mappingSurfaces.size());
-  for (auto& mSurface : mappingSurfaces) {
-    Intersection msIntersection = mSurface.surface->intersectionEstimate(
-        mTrack.position(), mTrack.direction(), forward, true);
-    if (msIntersection) {
-      double pathCorrection = mSurface.surface->pathCorrection(
-          msIntersection.position, mTrack.direction());
-      AssignedMaterialProperties amp(
-          mSurface.surface->geoID(), msIntersection.position, pathCorrection);
-      assignedMaterial.push_back(std::move(amp));
-    }
+  for(const auto& rmp : mTrack)
+  {
+	unsigned int index = concatenateToEdge(rmp.second, mState);
+	mState.accumulatedMaterial[index].accumulate(rmp.second, rmp.first);
   }
-
-  ACTS_VERBOSE("Prepared  " << assignedMaterial.size()
-                            << " assignment stores for this event.");
-
-  if (!assignedMaterial.empty()) {
-    // Match the recorded material to the assigment stores
-    auto aStore = assignedMaterial.begin();
-    // This assumes ordered recorded material
-    for (auto rmp : rMaterial) {
-      // if it's not the last & the next one is closer : switch
-      if (aStore != assignedMaterial.end() - 1) {
-        if ((aStore->assignedPosition - rmp.second).norm()
-            > ((aStore + 1)->assignedPosition - rmp.second).norm()) {
-          ++aStore;
-        }
-      }
-      // Now assign
-      aStore->assignedProperties.push_back(rmp);
-    }
-
-    // Now move the assigned properties into accumulation map
-    for (auto aprop : assignedMaterial) {
-      /// get the according map
-      auto aSurfaceMaterial = mState.accumulatedMaterial.find(aprop.geoID);
-      // you have assigned material
-      if (!aprop.assignedProperties.empty()) {
-        aSurfaceMaterial->second.accumulate(aprop.assignedPosition,
-                                            aprop.assignedProperties,
-                                            1. / aprop.pathCorrection);
-      } else {
-        // assign a single vacuum step to regulate the (correct) averaging
-        aSurfaceMaterial->second.accumulate(aprop.assignedPosition,
-                                            MaterialProperties{1.});
-      }
-      // now average over the event
-      aSurfaceMaterial->second.eventAverage();
-    }
+  
+  for(auto& am : mState.accumulatedMaterial)
+  {
+	  am.eventAverage();
   }
 }

@@ -15,10 +15,8 @@
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/RecordedMaterialTrack.hpp"
-#include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Material/Material.hpp"
 
 namespace Acts {
 
@@ -28,28 +26,6 @@ class VolumeMaterialMapper
 {
 public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
-
-  struct AssignedMaterialProperties
-  {
-    /// GeometryID of object were recorded material properties is assigned
-    GeometryID geoID{0}; // TODO: should be replaced or removed (latter if the mapping is performed per volume)
-    /// Projected position of the assigned material
-    Vector3D assignedPosition{0., 0., 0.};
-    /// The material information that is assigned (can be multiple steps)
-    std::vector<RecordedMaterialProperties> assignedProperties; // TODO: The position stored in the values should just be mapped
-    /// The incident angle correction due to particle incident
-    double pathCorrection{0.}; // TODO: not sure if this can remain
-
-    /// @brief Constructor for AssignedMaterialProperties
-    ///
-    /// @param gid The GeometryID of the surface
-    /// @param pos The position of the assignment/intersection
-    /// @param pc The pathCorrection to be applied (inverse)
-    AssignedMaterialProperties(GeometryID gid, Vector3D pos, double pc)
-      : geoID(gid), assignedPosition(std::move(pos)), pathCorrection(pc)
-    {
-    }
-  };
 
   /// @struct State
   ///
@@ -88,6 +64,7 @@ public:
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
+  // TODO: Sorting inside of function
   State
   createState(const vector<double>& edgeAxis1, const vector<double>& edgeAxis2 = {}, const vector<double>& edgeAxis3 = {}) const;
 
@@ -98,7 +75,7 @@ public:
   /// class type
   ///
   /// @param mState
-  void
+  std::vector<Material>
   finalizeMaps(State& mState) const;
 
   /// Process/map a single track
@@ -108,16 +85,14 @@ public:
   ///
   /// @note the RecordedMaterialProperties of the track are assumed
   /// to be ordered from the starting position along the starting direction
+  // TODO: mTrack should become vector<material, vector3d>
   void
-  mapMaterialTrack(State& mState, const RecordedMaterialTrack& mTrack) const;
+  mapMaterialTrack(State& mState, const RecordedMaterialTrack& mTrack, const std::function<unsigned int(const Vector3D&, const State&)>& concatenateToEdge) const;
 
 private:
 
     /// Mapping output to debug stream
     bool m_mapperDebugOutput = false;
-
-  /// The straight line propagator
-  StraightLinePropagator m_propagator;
 
   /// The logging instance
   std::unique_ptr<const Logger> m_logger;
