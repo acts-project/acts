@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,9 +8,9 @@
 
 #pragma once
 #include <vector>
-#include "Acts/Utilities/Units.hpp"
-#include "Acts/Material/Material.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Units.hpp"
 
 /// Convenience functions to ease creation of and Acts::InterpolatedMaterialMap
 /// and to avoid code duplication. Currently implemented for the two most common
@@ -19,20 +19,18 @@
 namespace Acts {
 
 /// Method to setup the MaterialMapper
-/// @param localToGlobalBin Function mapping the local bins of r,z to the global
-/// bin of the map magnetic field value
+/// @param [in] materialVectorToGridMapper Function mapping the vector of
+/// material to the map of material values
 ///
-/// e.g.: we have small grid with the
-/// values: r={2,3}, z ={4,5}, the corresponding indices are i (belonging to r)
-/// and j (belonging to z), the
-/// globalIndex is M (belonging to the value of the magnetic field B(r,z)) and
-/// the field map is:
-///|   r |    i |    z |    j |   B(r,z) |   M |
-///|----:|:----:|:----:|:----:|:--------:|:----|
-///|   2 |    0 |    4 |    0 |  2.323   |   0 |
-///|   2 |    0 |    5 |    1 |  2.334   |   1 |
-///|   3 |    1 |    4 |    0 |  2.325   |   2 |
-///|   3 |    1 |    5 |    1 |  2.331   |   3 |
+/// e.g.: we have small grid with the values: r={2,3}, z ={4,5}, the
+/// corresponding indices are i (belonging to r) and j (belonging to z), the
+/// globalIndex is M (belonging to the values of the Material) and the map is:
+///|   r |    i |    z |    j |   M |
+///|----:|:----:|:----:|:----:|:----|
+///|   2 |    0 |    4 |    0 |   0 |
+///|   2 |    0 |    5 |    1 |   1 |
+///|   3 |    1 |    4 |    0 |   2 |
+///|   3 |    1 |    5 |    1 |   3 |
 ///
 /// In this case the function would look like:
 /// @code
@@ -40,65 +38,63 @@ namespace Acts {
 ///    return (binsRZ.at(0) * nBinsRZ.at(1) + binsRZ.at(1));
 /// }
 /// @endcode
-/// @param[in] rPos Values of the grid points in r
+/// @param [in] rPos Values of the grid points in r
 /// @note The values do not need to be sorted or unique (this will be done
 /// inside the function)
-/// @param[in] zPos Values of the grid points in z
+/// @param [in] zPos Values of the grid points in z
 /// @note The values do not need to be sorted or unique (this will be done
 /// inside the function)
-/// @param[in] bField The magnetic field values inr r and z for all given grid
-/// points stored in a vector
-/// @note The function localToGlobalBin determines how the magnetic field was
+/// @param [in] material The material classification values in r and z for all
+/// given grid points stored in a vector
+/// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
-/// @param[in] lengthUnit The unit of the grid points
-/// @param[in] BFieldUnit The unit of the magnetic field
-/// @param[in] firstQuadrant Flag if set to true indicating that only the first
-/// quadrant of the grid points and the BField values has been given and that
-/// the BFieldMap should be created symmetrically for all quadrants.
-/// e.g. we have the grid values r={0,1} with BFieldValues={2,3} on the r axis.
+/// @param [in] lengthUnit The unit of the grid points
+/// @param [in] firstQuadrant Flag if set to true indicating that only the first
+/// quadrant of the grid points and the material values has been given and that
+/// the MaterialMap should be created symmetrically for all quadrants.
+/// e.g. we have the grid values r={0,1} with MaterialValues={2,3} on the r
+/// axis.
 /// If the flag is set to true the r-axis grid values will be set to {-1,0,1}
-/// and the BFieldValues will be set to {3,2,3}.
+/// and the MaterialValues will be set to {3,2,3}.
 InterpolatedMaterialMap::MaterialMapper<2>
 materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                         std::array<size_t, 2> nBinsRZ)>&
-                                          localToGlobalBin,
-              std::vector<double>         rPos,
-              std::vector<double>         zPos,
-              std::vector<ActsVectorF<5>> material,
-              double                      lengthUnit    = units::_mm,
-              bool                        firstQuadrant = false);
-              
+                                            std::array<size_t, 2> nBinsRZ)>&
+                                             localToGlobalBin,
+                 std::vector<double>         rPos,
+                 std::vector<double>         zPos,
+                 std::vector<ActsVectorF<5>> material,
+                 double                      lengthUnit    = units::_mm,
+                 bool                        firstQuadrant = false);
+
 /// @brief Converts material and calls constructor of @c MaterialMapper<2>
 InterpolatedMaterialMap::MaterialMapper<2>
 materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                         std::array<size_t, 2> nBinsRZ)>&
-                                          localToGlobalBin,
-              std::vector<double>         rPos,
-              std::vector<double>         zPos,
-              std::vector<Material>& material,
-              double                      lengthUnit    = units::_mm,
-              bool                        firstQuadrant = false);
+                                            std::array<size_t, 2> nBinsRZ)>&
+                                       localToGlobalBin,
+                 std::vector<double>   rPos,
+                 std::vector<double>   zPos,
+                 std::vector<Material> material,
+                 double                lengthUnit    = units::_mm,
+                 bool                  firstQuadrant = false);
 
 /// Method to setup the MaterialMapper
-/// @param localToGlobalBin Function mapping the local bins of x,y,z to the
-/// global bin of the map magnetic field value
+/// @param [in] materialVectorToGridMapper Function mapping the vector of
+/// material to the map of material values
 ///
-/// e.g.: we have small grid with the
-/// values: x={2,3}, y={3,4}, z ={4,5}, the corresponding indices are i
-/// (belonging to x), j (belonging to y)
-/// and k (belonging to z), the globalIndex is M (belonging to the value of the
-/// magnetic field B(x,y,z)) and the field map is:
-///
-///| x   |    i |    y |    j |    z |    k | B(x,y,z) |   M |
-///|----:|:----:|:----:|:----:|:----:|:----:|:--------:|:----|
-///|   2 |    0 |    3 |    0 |    4 |    0 |  2.323   |   0 |
-///|   2 |    0 |    3 |    0 |    5 |    1 |  2.334   |   1 |
-///|   2 |    0 |    4 |    1 |    4 |    0 |  2.325   |   2 |
-///|   2 |    0 |    4 |    1 |    5 |    1 |  2.331   |   3 |
-///|   3 |    1 |    3 |    0 |    4 |    0 |  2.323   |   4 |
-///|   3 |    1 |    3 |    0 |    5 |    1 |  2.334   |   5 |
-///|   3 |    1 |    4 |    1 |    4 |    0 |  2.325   |   6 |
-///|   3 |    1 |    4 |    1 |    5 |    1 |  2.331   |   7 |
+/// e.g.: we have small grid with the values: x={2,3}, y={3,4}, z ={4,5}, the
+/// corresponding indices are i (belonging to x), j (belonging to y) and k
+/// (belonging to z), the globalIndex is M (belonging to the values of the
+/// Material) and the map is:
+///| x   |    i |    y |    j |    z |    k |   M |
+///|----:|:----:|:----:|:----:|:----:|:----:|:----|
+///|   2 |    0 |    3 |    0 |    4 |    0 |   0 |
+///|   2 |    0 |    3 |    0 |    5 |    1 |   1 |
+///|   2 |    0 |    4 |    1 |    4 |    0 |   2 |
+///|   2 |    0 |    4 |    1 |    5 |    1 |   3 |
+///|   3 |    1 |    3 |    0 |    4 |    0 |   4 |
+///|   3 |    1 |    3 |    0 |    5 |    1 |   5 |
+///|   3 |    1 |    4 |    1 |    4 |    0 |   6 |
+///|   3 |    1 |    4 |    1 |    5 |    1 |   7 |
 ///
 /// In this case the function would look like:
 /// @code
@@ -117,38 +113,38 @@ materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 /// @param[in] zPos Values of the grid points in z
 /// @note The values do not need to be sorted or unique (this will be done
 /// inside the function)
-/// @param[in] bField The magnetic field values inr r and z for all given grid
-/// points stored in a vector
-/// @note The function localToGlobalBin determines how the magnetic field was
+/// @param [in] material The material classification values in x, y and z for
+/// all given grid points stored in a vector
+/// @note The function localToGlobalBin determines how the material was
 /// stored in the vector in respect to the grid values
-/// @param[in] lengthUnit The unit of the grid points
-/// @param[in] BFieldUnit The unit of the magnetic field
-/// @param[in] firstOctant Flag if set to true indicating that only the first
-/// octant of the grid points and the BField values has been given and that
-/// the BFieldMap should be created symmetrically for all quadrants.
-/// e.g. we have the grid values z={0,1} with BFieldValues={2,3} on the r axis.
+/// @param [in] lengthUnit The unit of the grid points
+/// @param [in] firstOctant Flag if set to true indicating that only the first
+/// octant of the grid points and the material values has been given and that
+/// the MaterialMap should be created symmetrically for all quadrants.
+/// e.g. we have the grid values z={0,1} with MaterialValues={2,3} on the z
+/// axis.
 /// If the flag is set to true the z-axis grid values will be set to {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 InterpolatedMaterialMap::MaterialMapper<3>
 materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                                          std::array<size_t, 3> nBinsXYZ)>&
-                                           localToGlobalBin,
-               std::vector<double>         xPos,
-               std::vector<double>         yPos,
-               std::vector<double>         zPos,
-               std::vector<ActsVectorF<5>> material,
-               double                      lengthUnit  = units::_mm,
-               bool                        firstOctant = false);
+                                             std::array<size_t, 3> nBinsXYZ)>&
+                                              localToGlobalBin,
+                  std::vector<double>         xPos,
+                  std::vector<double>         yPos,
+                  std::vector<double>         zPos,
+                  std::vector<ActsVectorF<5>> material,
+                  double                      lengthUnit  = units::_mm,
+                  bool                        firstOctant = false);
 
 /// @brief Converts material and calls constructor of @c MaterialMapper<3>
 InterpolatedMaterialMap::MaterialMapper<3>
 materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                                          std::array<size_t, 3> nBinsXYZ)>&
-                                           localToGlobalBin,
-               std::vector<double>         xPos,
-               std::vector<double>         yPos,
-               std::vector<double>         zPos,
-               std::vector<Material>& material,
-               double                      lengthUnit  = units::_mm,
-               bool                        firstOctant = false);
+                                             std::array<size_t, 3> nBinsXYZ)>&
+                                        localToGlobalBin,
+                  std::vector<double>   xPos,
+                  std::vector<double>   yPos,
+                  std::vector<double>   zPos,
+                  std::vector<Material> material,
+                  double                lengthUnit  = units::_mm,
+                  bool                  firstOctant = false);
 }

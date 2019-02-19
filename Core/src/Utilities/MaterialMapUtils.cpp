@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 Acts project team
+// Copyright (C) 2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -17,14 +17,15 @@ using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
 
 Acts::InterpolatedMaterialMap::MaterialMapper<2>
-Acts::materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                               std::array<size_t, 2> nBinsRZ)>&
-                                                localToGlobalBin,
-                    std::vector<double>         rPos,
-                    std::vector<double>         zPos,
-                    std::vector<ActsVectorF<5>> material, // TODO: replace again by material or even use both options
-                    double                      lengthUnit,
-                    bool                        firstQuadrant)
+Acts::materialMapperRZ(
+    const std::function<size_t(std::array<size_t, 2> binsRZ,
+                               std::array<size_t, 2> nBinsRZ)>&
+                                localToGlobalBin,
+    std::vector<double>         rPos,
+    std::vector<double>         zPos,
+    std::vector<ActsVectorF<5>> material,
+    double                      lengthUnit,
+    bool                        firstQuadrant)
 {
   // [1] Create Grid
   // sort the values
@@ -58,15 +59,12 @@ Acts::materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   }
 
   // Create the axis for the grid
-  detail::EquidistantAxis rAxis(
-      rMin * lengthUnit, rMax * lengthUnit, nBinsR);
-  detail::EquidistantAxis zAxis(
-      zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+  detail::EquidistantAxis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
+  detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
 
   // Create the grid
-  using Grid_t = detail::Grid<ActsVectorF<5>,
-                                    detail::EquidistantAxis,
-                                    detail::EquidistantAxis>;
+  using Grid_t = detail::
+      Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
   // [2] Set the bField values
@@ -92,42 +90,43 @@ Acts::materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
       }
     }
   }
-  ActsVectorF<5> vec; vec << std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0., 0., 0.;
+  ActsVectorF<5> vec;
+  vec << std::numeric_limits<float>::infinity(),
+      std::numeric_limits<float>::infinity(), 0., 0., 0.;
   grid.setExteriorBins(vec);
 
   // [3] Create the transformation for the position
   // map (x,y,z) -> (r,z)
-  auto transformPos = [](const Vector3D& pos) {
-    return Vector2D(perp(pos), pos.z());
-  };
+  auto transformPos
+      = [](const Vector3D& pos) { return Vector2D(perp(pos), pos.z()); };
 
   // [4] Create the mapper & BField Service
   // create material mapping
-  return InterpolatedMaterialMap::MaterialMapper<2>(
-      transformPos, std::move(grid));
+  return InterpolatedMaterialMap::MaterialMapper<2>(transformPos,
+                                                    std::move(grid));
 }
 
 Acts::InterpolatedMaterialMap::MaterialMapper<2>
-Acts::materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                               std::array<size_t, 2> nBinsRZ)>&
-                                                localToGlobalBin,
-                    std::vector<double>         rPos,
-                    std::vector<double>         zPos,
-                    std::vector<Material>& material,
-                    double                      lengthUnit,
-                    bool                        firstQuadrant)
+Acts::materialMapperRZ(
+    const std::function<size_t(std::array<size_t, 2> binsRZ,
+                               std::array<size_t, 2> nBinsRZ)>&
+                          localToGlobalBin,
+    std::vector<double>   rPos,
+    std::vector<double>   zPos,
+    std::vector<Material> material,
+    double                lengthUnit,
+    bool                  firstQuadrant)
 {
-	std::vector<ActsVectorF<5>> materialVector;
-	
-	for(Material& mat : material)
-	{
-		materialVector.push_back(mat.decomposeIntoClassificationNumbers());
-	}
-	
-	return materialMapperRZ(localToGlobalBin, rPos, zPos, materialVector, lengthUnit, firstQuadrant);
-}  
-                    
-                
+  std::vector<ActsVectorF<5>> materialVector;
+
+  for (Material& mat : material) {
+    materialVector.push_back(mat.decomposeIntoClassificationNumbers());
+  }
+
+  return materialMapperRZ(
+      localToGlobalBin, rPos, zPos, materialVector, lengthUnit, firstQuadrant);
+}
+
 Acts::InterpolatedMaterialMap::MaterialMapper<3>
 Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
@@ -188,17 +187,14 @@ Acts::materialMapperXYZ(
     nBinsY = 2 * nBinsY - 1;
     nBinsZ = 2 * nBinsZ - 1;
   }
-  detail::EquidistantAxis xAxis(
-      xMin * lengthUnit, xMax * lengthUnit, nBinsX);
-  detail::EquidistantAxis yAxis(
-      yMin * lengthUnit, yMax * lengthUnit, nBinsY);
-  detail::EquidistantAxis zAxis(
-      zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
+  detail::EquidistantAxis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
+  detail::EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
+  detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
   // Create the grid
   using Grid_t = detail::Grid<ActsVectorF<5>,
-                                    detail::EquidistantAxis,
-                                    detail::EquidistantAxis,
-                                    detail::EquidistantAxis>;
+                              detail::EquidistantAxis,
+                              detail::EquidistantAxis,
+                              detail::EquidistantAxis>;
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 
@@ -225,13 +221,15 @@ Acts::materialMapperXYZ(
           // std::vectors begin with 0 and we do not want the user needing to
           // take underflow or overflow bins in account this is why we need to
           // subtract by one
-          grid.at(indices)
-              = material.at(localToGlobalBin({{i - 1, j - 1, k - 1}}, nIndices));
+          grid.at(indices) = material.at(
+              localToGlobalBin({{i - 1, j - 1, k - 1}}, nIndices));
         }
       }
     }
   }
-  ActsVectorF<5> vec; vec << std::numeric_limits<float>::infinity(), std::numeric_limits<float>::infinity(), 0., 0., 0.;
+  ActsVectorF<5> vec;
+  vec << std::numeric_limits<float>::infinity(),
+      std::numeric_limits<float>::infinity(), 0., 0., 0.;
   grid.setExteriorBins(vec);
 
   // [3] Create the transformation for the position
@@ -240,28 +238,33 @@ Acts::materialMapperXYZ(
 
   // [4] Create the mapper & BField Service
   // create material mapping
-  return InterpolatedMaterialMap::MaterialMapper<3>(
-      transformPos, std::move(grid));
+  return InterpolatedMaterialMap::MaterialMapper<3>(transformPos,
+                                                    std::move(grid));
 }
 
 Acts::InterpolatedMaterialMap::MaterialMapper<3>
 Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
-                                localToGlobalBin,
-    std::vector<double>         xPos,
-    std::vector<double>         yPos,
-    std::vector<double>         zPos,
-    std::vector<Material>& material,
-    double                      lengthUnit,
-    bool                        firstOctant)
+                          localToGlobalBin,
+    std::vector<double>   xPos,
+    std::vector<double>   yPos,
+    std::vector<double>   zPos,
+    std::vector<Material> material,
+    double                lengthUnit,
+    bool                  firstOctant)
 {
-	std::vector<ActsVectorF<5>> materialVector;
-	
-	for(Material& mat : material)
-	{
-		materialVector.push_back(mat.decomposeIntoClassificationNumbers());
-	}
-	
-	return materialMapperXYZ(localToGlobalBin, xPos, yPos, zPos, materialVector, lengthUnit, firstOctant);
+  std::vector<ActsVectorF<5>> materialVector;
+
+  for (Material& mat : material) {
+    materialVector.push_back(mat.decomposeIntoClassificationNumbers());
+  }
+
+  return materialMapperXYZ(localToGlobalBin,
+                           xPos,
+                           yPos,
+                           zPos,
+                           materialVector,
+                           lengthUnit,
+                           firstOctant);
 }

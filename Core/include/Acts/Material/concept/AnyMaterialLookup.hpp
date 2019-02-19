@@ -37,7 +37,8 @@ namespace concept {
     namespace mpl = boost::mpl;
 
     using material_cell_concept
-        = mpl::vector<has_getMaterial<ActsVectorF<5>(const Vector3D&), const bte::_self>,
+        = mpl::vector<has_getMaterial<ActsVectorF<5>(const Vector3D&),
+                                      const bte::_self>,
                       has_isInside<bool(const Vector3D&), const bte::_self>,
                       bte::copy_constructible<>,
                       bte::relaxed>;
@@ -51,7 +52,7 @@ namespace concept {
   ///
   /// @c any type for all copy-constructible types @c U providing the following
   /// interface:
-  /// @code{.cpp}
+  /// @code {.cpp}
   /// Acts::Vector3D U::getMaterial(const Acts::Vector3D&) const;
   /// bool U::isInside(const Acts::Vector3D&) const;
   /// @endcode
@@ -60,15 +61,15 @@ namespace concept {
   /// the @c boost::type_erasure::any object. In order to store the value by (@c
   /// const) reference, pass <tt>(const) boost::type_erasure::_self&</tt> as
   /// template parameter.
-  template <typename T = bte::_self>
-  using AnyMaterialCell   = bte::any<afl_detail::material_cell_concept, T>;
+  template <typename T  = bte::_self>
+  using AnyMaterialCell = bte::any<afl_detail::material_cell_concept, T>;
 
   /// @cond
   namespace afl_detail {
     using material_lookup_concept
         = mpl::vector<material_cell_concept,
                       has_getMaterialCell<AnyMaterialCell<>(const Vector3D&),
-                                       const bte::_self>,
+                                          const bte::_self>,
                       has_getNBins<std::vector<size_t>(), const bte::_self>,
                       has_getMin<std::vector<double>(), const bte::_self>,
                       has_getMax<std::vector<double>(), const bte::_self>>;
@@ -87,10 +88,11 @@ namespace concept {
   /// The exact interface required for wrapped objects of type @c U is the one
   /// specified in Acts::concept::AnyMaterialCell augmented with the following
   /// methods:
-  /// @code{.cpp}
+  /// @code {.cpp}
   /// struct U {
   ///   // access the material cell at a given global position
-  ///   Acts::concept::AnyMaterialCell getMaterialCell(const Acts::Vector3D&) const;
+  ///   Acts::concept::AnyMaterialCell getMaterialCell(const Acts::Vector3D&)
+  ///   const;
   ///
   ///  // access the number of bins of all axes of the grid
   ///   std::array<size_t, DIM> getNBins() const;
@@ -107,7 +109,7 @@ namespace concept {
   /// the @c boost::type_erasure::any object. In order to store the value by (@c
   /// const) reference, pass <tt>(const) boost::type_erasure::_self&</tt> as
   /// template parameter.
-  template <typename T = bte::_self>
+  template <typename T    = bte::_self>
   using AnyMaterialLookup = bte::any<afl_detail::material_lookup_concept, T>;
 
 }  // namespace concept
