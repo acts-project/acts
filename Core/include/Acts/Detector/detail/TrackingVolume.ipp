@@ -91,7 +91,7 @@ TrackingVolume::compatibleLayers(Context             ctx,
 // Returns the boundary surfaces ordered in probability to hit them based on
 template <typename options_t, typename corrector_t, typename sorter_t>
 std::vector<BoundaryIntersection>
-TrackingVolume::compatibleBoundaries(Context /*ctx*/,
+TrackingVolume::compatibleBoundaries(Context            ctx,
                                      const Vector3D&    position,
                                      const Vector3D&    direction,
                                      const options_t&   options,
@@ -113,7 +113,8 @@ TrackingVolume::compatibleBoundaries(Context /*ctx*/,
     }
     nonExcludedBoundaries.push_back(bSurface);
   }
-  return sorter(nonExcludedBoundaries, position, direction, options, corrfnc);
+  return sorter(
+      ctx, nonExcludedBoundaries, position, direction, options, corrfnc);
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on

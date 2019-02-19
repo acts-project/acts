@@ -77,7 +77,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
-      ProtoLayer pl(layerSurfaces);
+      ProtoLayer pl(m_cfg.buildingContext, layerSurfaces);
       if (detExtension->buildEnvelope()) {
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
@@ -306,7 +306,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
-      ProtoLayer pl(layerSurfaces);
+      ProtoLayer pl(m_cfg.buildingContext, layerSurfaces);
       if (detExtension->buildEnvelope()) {
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
@@ -514,7 +514,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
-      ProtoLayer pl(layerSurfaces);
+      ProtoLayer pl(m_cfg.buildingContext, layerSurfaces);
       if (detExtension->buildEnvelope()) {
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};

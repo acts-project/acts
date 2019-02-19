@@ -91,9 +91,11 @@ namespace Test {
 
     /// Return local to global transform associated with this identifier
     ///
+    /// @param ctx is the context of this request
+    ///
     /// @note this is called from the surface().transform() in the PROXY mode
     const Transform3D&
-    transform() const override;
+    transform(Context ctx) const override;
 
     /// Return surface associated with this detector element
     const Surface&
@@ -113,7 +115,7 @@ namespace Test {
   };
 
   inline const Transform3D&
-  DetectorElementStub::transform() const
+      DetectorElementStub::transform(Context /*ctx*/) const
   {
     return *m_elementTransform;
   }

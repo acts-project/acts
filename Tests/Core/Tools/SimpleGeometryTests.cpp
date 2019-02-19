@@ -35,20 +35,24 @@ namespace Test {
     Logging::Level volumeLLevel  = Logging::INFO;
 
     // configure surface array creator
+    SurfaceArrayCreator::Config sacConfig;
     auto surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>(
-        getDefaultLogger("SurfaceArrayCreator", surfaceLLevel));
+        sacConfig, getDefaultLogger("SurfaceArrayCreator", surfaceLLevel));
     // configure the layer creator that uses the surface array creator
     LayerCreator::Config lcConfig;
     lcConfig.surfaceArrayCreator = surfaceArrayCreator;
     auto layerCreator            = std::make_shared<const LayerCreator>(
         lcConfig, getDefaultLogger("LayerCreator", layerLLevel));
     // configure the layer array creator
+    LayerArrayCreator::Config lacConfig;
     auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(
-        getDefaultLogger("LayerArrayCreator", layerLLevel));
+        lacConfig, getDefaultLogger("LayerArrayCreator", layerLLevel));
 
     // tracking volume array creator
-    auto tVolumeArrayCreator
+    TrackingVolumeArrayCreator::Config tvacConfig;
+    auto                               tVolumeArrayCreator
         = std::make_shared<const TrackingVolumeArrayCreator>(
+            tvacConfig,
             getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
     // configure the cylinder volume helper
     CylinderVolumeHelper::Config cvhConfig;

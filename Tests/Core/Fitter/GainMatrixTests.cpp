@@ -31,6 +31,9 @@ namespace Test {
   using MeasurementType = Measurement<Identifier, params...>;
   using TrackState      = TrackState<Identifier, BoundParameters>;
 
+  // Create a test context
+  ContextType testContext = DefaultContext();
+
   BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {
     // Make dummy measurement
@@ -48,6 +51,7 @@ namespace Test {
     ActsVectorD<Acts::NGlobalPars> parValues;
     parValues << 0.3, 0.5, 0.5 * M_PI, 0.3 * M_PI, 0.01;
     BoundParameters pars(
+        testContext,
         std::make_unique<const BoundParameters::CovMatrix_t>(std::move(covTrk)),
         parValues,
         cylinder);
@@ -62,7 +66,7 @@ namespace Test {
 
     BOOST_CHECK(!mState.parameter.filtered);
     BOOST_CHECK(!mState.measurement.calibrated);
-    BOOST_CHECK(gmu(mState));
+    BOOST_CHECK(gmu(testContext, mState));
     // filtered is set now
     BOOST_CHECK(!!mState.parameter.filtered);
     // measurement was calibrated

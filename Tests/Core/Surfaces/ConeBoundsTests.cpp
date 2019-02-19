@@ -32,6 +32,7 @@
 namespace Acts {
 
 namespace Test {
+
   BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit test for creating compliant/non-compliant ConeBounds object
   BOOST_AUTO_TEST_CASE(ConeBoundsConstruction)
@@ -108,7 +109,7 @@ namespace Test {
     //
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
-    coneBoundsObject.dump(dumpOuput);
+    coneBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal(
         "Acts::ConeBounds: (tanAlpha, minZ, maxZ, averagePhi, halfPhiSector) = "
         "(0.4142136, 3.0000000, 6.0000000, 0.0000000, 0.7853982)"));

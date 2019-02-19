@@ -13,6 +13,7 @@
 #pragma once
 #include "Acts/Tools/ILayerBuilder.hpp"
 #include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -70,6 +71,8 @@ public:
     bool setVisibility;
     // layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
+    // The building context
+    ContextType buildingContext = DefaultContext();
     // configurations
     std::vector<LayerConfig> negativeLayerConfigs;
     std::vector<LayerConfig> centralLayerConfigs;

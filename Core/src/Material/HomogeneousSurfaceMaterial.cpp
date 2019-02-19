@@ -29,7 +29,7 @@ Acts::HomogeneousSurfaceMaterial::operator*=(double scale)
 }
 
 std::ostream&
-Acts::HomogeneousSurfaceMaterial::dump(std::ostream& sl) const
+Acts::HomogeneousSurfaceMaterial::toStream(std::ostream& sl) const
 {
   sl << "Acts::HomogeneousSurfaceMaterial : " << std::endl;
   sl << "   - fullMaterial : " << m_fullMaterial << std::endl;

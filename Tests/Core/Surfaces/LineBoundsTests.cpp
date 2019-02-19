@@ -79,7 +79,7 @@ namespace Test {
 
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
-    lineBoundsObject.dump(dumpOuput);
+    lineBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal(
         "Acts::LineBounds: (radius, halflengthInZ) = (0.5000000, 20.0000000)"));
   }

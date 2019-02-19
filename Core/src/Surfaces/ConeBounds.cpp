@@ -104,7 +104,7 @@ Acts::ConeBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 }
 
 std::ostream&
-Acts::ConeBounds::dump(std::ostream& sl) const
+Acts::ConeBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

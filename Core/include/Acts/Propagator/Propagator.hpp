@@ -22,6 +22,7 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -370,16 +371,23 @@ public:
     /// @tparam parameters_t the type of the start parameters
     /// @tparam propagator_options_t the type of the propagator options
     ///
+    /// @param ctx The context of this propagation, e.g. detector alignment
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
-    /// @param tabs The internal target aborters created in the call nethod
     template <typename parameters_t>
-    State(const parameters_t& start, const propagator_options_t& topts)
-      : options(topts), stepping(start, options.direction, options.maxStepSize)
+    State(Context                     ctx,
+          const parameters_t&         start,
+          const propagator_options_t& topts)
+      : context(ctx)
+      , options(topts)
+      , stepping(ctx, start, options.direction, options.maxStepSize)
     {
       // Setting the start surface
       navigation.startSurface = &start.referenceSurface();
     }
+
+    /// Context object
+    ContextType context;
 
     /// These are the options - provided for each propagation step
     propagator_options_t options;
@@ -518,7 +526,8 @@ public:
   /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
   /// @tparam propagator_options_t Type of the propagator options
   ///
-  /// @param [in] start  nitial track parameters to propagate
+  /// @param [in] ctx context of this call, e.g. alignment
+  /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
   ///
   /// @return Propagation result containing the propagation status, final
@@ -533,6 +542,7 @@ public:
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
   propagate(
+      Context             ctx,
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
@@ -560,7 +570,7 @@ public:
     using OptionsType = decltype(eOptions);
     // Initialize the internal propagator state
     using StateType = State<OptionsType>;
-    StateType state(start, eOptions);
+    StateType state(ctx, start, eOptions);
 
     static_assert(
         has_member_function_step<const stepper_t,
@@ -610,6 +620,7 @@ public:
   /// @tparam aborter_list_t Type list of abort conditions
   /// @tparam propagator_options_t Type of the propagator options
   ///
+  /// @param [in] ctx context of this call, e.g. alignment
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
   /// @param [in] options Propagation options
@@ -628,6 +639,7 @@ public:
                                                          surface_t>,
       action_list_t>
   propagate(
+      Context             ctx,
       const parameters_t& start,
       const surface_t&    target,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
@@ -659,7 +671,7 @@ public:
 
     // Initialize the internal propagator state
     using StateType = State<OptionsType>;
-    StateType state(start, eOptions);
+    StateType state(ctx, start, eOptions);
     state.navigation.targetSurface = &target;
 
     static_assert(
@@ -678,7 +690,7 @@ public:
       result.status = PropagatorStatus::FAILURE;
     } else {
       // Compute the final results and mark the propagation as successful
-      auto  bs = m_stepper.boundState(state.stepping, target, true);
+      auto  bs = m_stepper.boundState(state.context, state.stepping, target, true);
       auto& boundParameters = std::get<BoundParameters>(bs);
       // Fill the end parameters
       result.endParameters

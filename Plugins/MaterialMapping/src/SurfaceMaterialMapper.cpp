@@ -147,9 +147,10 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material layers by using the straight line propagator
-  const auto& result   = m_propagator.propagate(start, options);
-  auto        mcResult = result.get<MaterialSurfaceCollector::result_type>();
-  auto        mappingSurfaces = mcResult.collected;
+  const auto& result
+      = m_propagator.propagate(mState.mappingContext, start, options);
+  auto mcResult        = result.get<MaterialSurfaceCollector::result_type>();
+  auto mappingSurfaces = mcResult.collected;
 
   // Retrieve the recorded material
   const auto& rMaterial = mTrack.recordedMaterialProperties();
@@ -164,11 +165,16 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   std::vector<AssignedMaterialProperties> assignedMaterial;
   assignedMaterial.reserve(mappingSurfaces.size());
   for (auto& mSurface : mappingSurfaces) {
-    Intersection msIntersection = mSurface.surface->intersectionEstimate(
-        mTrack.position(), mTrack.direction(), forward, true);
+    // The material mapping intersection with the surface
+    Intersection msIntersection
+        = mSurface.surface->intersectionEstimate(mState.mappingContext,
+                                                 mTrack.position(),
+                                                 mTrack.direction(),
+                                                 forward,
+                                                 true);
     if (msIntersection) {
       double pathCorrection = mSurface.surface->pathCorrection(
-          msIntersection.position, mTrack.direction());
+          mState.mappingContext, msIntersection.position, mTrack.direction());
       AssignedMaterialProperties amp(
           mSurface.surface->geoID(), msIntersection.position, pathCorrection);
       assignedMaterial.push_back(std::move(amp));

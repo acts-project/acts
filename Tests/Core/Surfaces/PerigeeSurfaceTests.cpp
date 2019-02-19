@@ -30,6 +30,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  ContextType testContext = DefaultContext();
+
   BOOST_AUTO_TEST_SUITE(PerigeeSurfaces)
   /// Unit test for creating compliant/non-compliant PerigeeSurface object
   BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction)
@@ -60,7 +64,7 @@ namespace Test {
     //
     /// Copied and transformed
     auto copiedTransformedPerigeeSurface = Surface::makeShared<PerigeeSurface>(
-        *perigeeSurfaceObject, *pTransform);
+        testContext, *perigeeSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedPerigeeSurface->type(),
                       Surface::Perigee);
   }
@@ -70,8 +74,9 @@ namespace Test {
   {
     /// Test clone method
     Vector3D unitXYZ{1., 1., 1.};
-    auto perigeeSurfaceObject  = Surface::makeShared<PerigeeSurface>(unitXYZ);
-    auto pClonedPerigeeSurface = perigeeSurfaceObject->clone();
+    auto perigeeSurfaceObject = Surface::makeShared<PerigeeSurface>(unitXYZ);
+    auto pClonedPerigeeSurface
+        = perigeeSurfaceObject->clone(testContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedPerigeeSurface->type(), Surface::Perigee);
     //
     /// Test type (redundant)
@@ -83,7 +88,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    perigeeSurfaceObject->dump(dumpOuput);
+    perigeeSurfaceObject->toStream(testContext, dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal("Acts::PerigeeSurface:\n\
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
   }

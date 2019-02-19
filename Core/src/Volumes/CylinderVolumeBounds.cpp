@@ -191,7 +191,7 @@ Acts::CylinderVolumeBounds::sectorPlaneBounds() const
 }
 
 std::ostream&
-Acts::CylinderVolumeBounds::dump(std::ostream& sl) const
+Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
 }

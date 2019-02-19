@@ -33,6 +33,9 @@ using namespace detail;
 
 namespace Test {
 
+  // Create a test context
+  ContextType testContext = DefaultContext();
+
   /// @brief mockup of stepping state
   struct SteppingState
   {
@@ -208,7 +211,7 @@ namespace Test {
 
     PropagatorOptions<> options;
     options.maxSteps   = 1e6;
-    const auto& result = epropagator.propagate(start, options);
+    const auto& result = epropagator.propagate(testContext, start, options);
 
     // this test assumes state.options.loopFraction = 0.5
     CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);

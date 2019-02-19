@@ -105,7 +105,7 @@ def main():
         data = [i.dict() for i in items]
         print("Write to", args.output)
         with open(args.output, "w+") as jf:
-            json.dump(data, jf, indent=2)
+            json.toStream(data, jf, indent=2)
 
 
 if "__main__" == __name__:

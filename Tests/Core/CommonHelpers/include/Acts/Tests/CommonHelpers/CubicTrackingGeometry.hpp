@@ -108,8 +108,10 @@ namespace Test {
       auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
           1.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
-      LayerArrayCreator layArrCreator(
-          getDefaultLogger("LayerArrayCreator", Logging::INFO));
+      LayerArrayCreator::Config lacConfig;
+      LayerArrayCreator         layArrCreator(
+          lacConfig, getDefaultLogger("LayerArrayCreator", Logging::INFO));
+
       LayerVector layVec;
       layVec.push_back(layers[0]);
       layVec.push_back(layers[1]);
@@ -125,9 +127,7 @@ namespace Test {
           boundsVol,
           nullptr,
           std::move(layArr1),
-          layVec,
-          {},
-          {},
+          nullptr,
           "Volume 1");
       trackVolume1->sign(GeometrySignature::Global);
 
@@ -149,10 +149,9 @@ namespace Test {
           boundsVol,
           nullptr,
           std::move(layArr2),
-          layVec,
-          {},
-          {},
+          nullptr,
           "Volume 2");
+
       trackVolume2->sign(GeometrySignature::Global);
 
       // Glue volumes

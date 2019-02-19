@@ -26,6 +26,7 @@
 #include "Acts/Tools/PassiveLayerBuilder.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
@@ -96,12 +97,15 @@ namespace Test {
       auto layerCreator            = std::make_shared<const LayerCreator>(
           lcConfig, getDefaultLogger("LayerCreator", layerLLevel));
       // configure the layer array creator
+      LayerArrayCreator::Config lacConfig;
       auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(
-          getDefaultLogger("LayerArrayCreator", layerLLevel));
+          lacConfig, getDefaultLogger("LayerArrayCreator", layerLLevel));
 
       // tracking volume array creator
-      auto tVolumeArrayCreator
+      TrackingVolumeArrayCreator::Config tvacConfig;
+      auto                               tVolumeArrayCreator
           = std::make_shared<const TrackingVolumeArrayCreator>(
+              tvacConfig,
               getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
       // configure the cylinder volume helper
       CylinderVolumeHelper::Config cvhConfig;
@@ -219,7 +223,7 @@ namespace Test {
           detectorStore.push_back(std::move(detElement));
         }
         // create the layer and store it
-        ProtoLayer protoLayer(layerModules);
+        ProtoLayer protoLayer(DefaultContext(), layerModules);
         protoLayer.envR = {0.5, 0.5};
         auto pLayer     = layerCreator->cylinderLayer(std::move(layerModules),
                                                   pLayerBinning[ilp].first,
@@ -245,9 +249,7 @@ namespace Test {
                                             pVolumeBounds,
                                             nullptr,
                                             std::move(pLayerArray),
-                                            {},
-                                            {},
-                                            {},
+                                            nullptr,
                                             "Pixel::Barrel");
 
       // the combined volume

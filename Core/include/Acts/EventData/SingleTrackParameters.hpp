@@ -203,10 +203,10 @@ protected:
   ///       different from Acts::local_parameter
   template <typename T>
   void
-  updateGlobalCoordinates(Context ctx, const T& /*unused*/)
+  updateGlobalCoordinates(Context /*ctx*/, const T& /*unused*/)
   {
     m_vMomentum = detail::coordinate_transformation::parameters2globalMomentum(
-        ctx, getParameterSet().getParameters());
+        getParameterSet().getParameters());
   }
 
   /// @brief update global position from current parameter values

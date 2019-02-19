@@ -29,6 +29,7 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Context.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -36,6 +37,9 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  ContextType testContext = DefaultContext();
 
 #define CHECK_ROTATION_ANGLE(t, a, tolerance)                                  \
   {                                                                            \
@@ -62,7 +66,8 @@ namespace Test {
           = dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
       for (const auto& vtxloc : bounds->vertices()) {
-        Vector3D vtx = srf->transform() * Vector3D(vtxloc.x(), vtxloc.y(), 0);
+        Vector3D vtx
+            = srf->transform(testContext) * Vector3D(vtxloc.x(), vtxloc.y(), 0);
         os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
       }
 
@@ -242,7 +247,7 @@ namespace Test {
           std::shared_ptr<PlaneSurface> srfA
               = Surface::makeShared<PlaneSurface>(transAptr, bounds);
 
-          Vector3D    nrm    = srfA->normal();
+          Vector3D    nrm    = srfA->normal(testContext);
           Transform3D transB = trans;
           transB.pretranslate(nrm * 0.1);
           auto transBptr = std::make_shared<const Transform3D>(transB);
@@ -273,7 +278,7 @@ namespace Test {
 
     // CASE I
     double     envR = 0.1, envZ = 0.5;
-    ProtoLayer pl(srf);
+    ProtoLayer pl(testContext, srf);
     pl.envR = {envR, envR};
     pl.envZ = {envZ, envZ};
     std::shared_ptr<CylinderLayer> layer
@@ -297,7 +302,7 @@ namespace Test {
 
     // CASE II
 
-    ProtoLayer pl2(srf);
+    ProtoLayer pl2(testContext, srf);
     pl2.envR = {envR, envR};
     pl2.envZ = {envZ, envZ};
     layer    = std::dynamic_pointer_cast<CylinderLayer>(
@@ -370,7 +375,7 @@ namespace Test {
     surfaces.insert(surfaces.end(), ringc.begin(), ringc.end());
     draw_surfaces(surfaces, "LayerCreator_createDiscLayer_EC_1.obj");
 
-    ProtoLayer pl(surfaces);
+    ProtoLayer pl(testContext, surfaces);
     pl.minZ                          = -10;
     pl.maxZ                          = 10;
     pl.minR                          = 5;
@@ -400,7 +405,7 @@ namespace Test {
 
     double     envMinR = 1, envMaxR = 1, envZ = 5;
     size_t     nBinsR = 3, nBinsPhi = 30;
-    ProtoLayer pl2(surfaces);
+    ProtoLayer pl2(testContext, surfaces);
     pl2.envR = {envMinR, envMaxR};
     pl2.envZ = {envZ, envZ};
     layer    = std::dynamic_pointer_cast<DiscLayer>(
@@ -458,7 +463,7 @@ namespace Test {
     draw_surfaces(brl, "LayerCreator_barrelStagger.obj");
 
     double     envR = 0, envZ = 0;
-    ProtoLayer pl(brl);
+    ProtoLayer pl(testContext, brl);
     pl.envR = {envR, envR};
     pl.envZ = {envZ, envZ};
     std::shared_ptr<CylinderLayer> layer
@@ -480,7 +485,7 @@ namespace Test {
       // std::cout << "dPHi = " << A->center().phi() - B->center().phi() <<
       // std::endl;
 
-      Vector3D ctr        = A->binningPosition(m_cfg.buildContext, binR);
+      Vector3D ctr        = A->binningPosition(testContext, binR);
       auto     binContent = layer->surfaceArray()->at(ctr);
       BOOST_CHECK_EQUAL(binContent.size(), 2);
       std::set<const Surface*> act;

@@ -91,7 +91,7 @@ public:
   ///
   /// @param sl is the ostream in which it is dumped
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
   /// This method returns the halflength in X at minimal Y
   /// (first coordinate of local surface frame)

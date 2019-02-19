@@ -26,6 +26,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/Context.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -141,6 +142,9 @@ namespace Test {
 
     /// Navigation state - internal state of the Navigator
     Navigator::state_type navigation;
+
+    // The context cache for this propagation
+    ContextType context = DefaultContext();
   };
 
   template <typename stepper_state_t>

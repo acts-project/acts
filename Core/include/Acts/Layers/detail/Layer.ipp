@@ -299,7 +299,7 @@ Layer::surfaceOnApproach(Context            ctx,
 
   // create the intersection with the surface representation
   return rSurface.surfaceIntersectionEstimate(
-      position, direction, options, corrfnc);
+      ctx, position, direction, options, corrfnc);
 }
 
 template <typename parameters_t, typename options_t, typename corrector_t>

@@ -41,6 +41,9 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  ContextType testContext = DefaultContext();
+
   // Global definitions
   // The path limit abort
   using path_limit = detail::PathLimitReached;
@@ -134,7 +137,7 @@ namespace Test {
       std::cout << ">>> Forward Propagation : start." << std::endl;
     }
     // forward material test
-    const auto& fwdResult = prop.propagate(start, fwdOptions);
+    const auto& fwdResult = prop.propagate(testContext, start, fwdOptions);
     auto&       fwdMaterial
         = fwdResult.template get<MaterialInteractor::result_type>();
 
@@ -184,6 +187,7 @@ namespace Test {
     if (debugModeBwd) {
       std::cout << ">>> Backward Propagation : start." << std::endl;
     }
+
     const auto& bwdResult = prop.propagate(
         *fwdResult.endParameters.get(), startSurface, bwdOptions);
 
@@ -269,8 +273,8 @@ namespace Test {
       }
 
       // make a forward step
-      const auto& fwdStep
-          = prop.propagate(*sParameters, (*fwdSteps.surface), fwdStepOptions);
+      const auto& fwdStep = prop.propagate(
+          testContext, *sParameters, (*fwdSteps.surface), fwdStepOptions);
       // get the backward output to the screen
       if (debugModeFwdStep) {
         const auto& fwdStepOutput
@@ -299,7 +303,7 @@ namespace Test {
     }
 
     const auto& fwdStepFinal
-        = prop.propagate(*sParameters, dSurface, fwdStepOptions);
+        = prop.propagate(testContext, *sParameters, dSurface, fwdStepOptions);
 
     auto& fwdStepMaterial
         = fwdStepFinal.template get<typename MaterialInteractor::result_type>();
@@ -358,8 +362,8 @@ namespace Test {
                   << std::endl;
       }
       // make a forward step
-      const auto& bwdStep
-          = prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions);
+      const auto& bwdStep = prop.propagate(
+          testContext, *sParameters, (*bwdSteps.surface), bwdStepOptions);
       // get the backward output to the screen
       if (debugModeBwdStep) {
         const auto& bwdStepOutput
@@ -388,7 +392,7 @@ namespace Test {
     }
 
     const auto& bwdStepFinal
-        = prop.propagate(*sParameters, dbSurface, bwdStepOptions);
+        = prop.propagate(testContext, *sParameters, dbSurface, bwdStepOptions);
 
     auto& bwdStepMaterial
         = bwdStepFinal.template get<typename MaterialInteractor::result_type>();

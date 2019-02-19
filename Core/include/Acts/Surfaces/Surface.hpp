@@ -323,7 +323,8 @@ public:
   /// @param bcheck  BoundaryCheck directive for this onSurface check
   /// @return boolean indication if operation was successful
   virtual bool
-  insideBounds(const Vector2D& locpos, const BoundaryCheck& bcheck) const;
+  insideBounds(const Vector2D&      locpos,
+               const BoundaryCheck& bcheck = true) const;
 
   /// Local to global transformation
   /// Generalized local to global transformation for the surface types. Since

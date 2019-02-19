@@ -199,12 +199,13 @@ public:
   /// is described.
   ///
   /// @param ctx is the Context object, @note is it ignored for Curvilinear
-  /// parameters
+  /// parameters, it's defaulted here because curvilinear parameters can not
+  /// have any ohter context as their own
   ///
   /// For a curvilinear track parameterisation this is identical to the
   /// rotation matrix of the intrinsic planar surface.
   RotationMatrix3D
-  referenceFrame(Context ctx) const final
+  referenceFrame(Context ctx = DefaultContext()) const final
   {
     return m_upSurface->transform(ctx).linear();
   }

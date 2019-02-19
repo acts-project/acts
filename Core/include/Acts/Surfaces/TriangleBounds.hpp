@@ -87,7 +87,7 @@ public:
   ///
   /// @param sl is the ostream to be dumped into
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
 private:
   std::array<Vector2D, 3> m_vertices;

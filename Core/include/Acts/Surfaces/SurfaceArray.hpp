@@ -34,7 +34,7 @@ class SurfaceArray
   friend std::ostream&
   operator<<(std::ostream& sl, const SurfaceArray& sa)
   {
-    return sa.dump(sl);
+    return sa.toStream(DefaultContext(), sl);
   }
 
 public:
@@ -634,10 +634,12 @@ public:
   }
 
   /// @brief String representation of this @c SurfaceArray
+  /// @param ctx Is the payload/context ojbect to be used for
+  ///        for delegating the event or thread context
   /// @param sl Output stream to write to
   /// @return the output stream given as @p sl
   std::ostream&
-  dump(std::ostream& sl) const;
+  toStream(Context ctx, std::ostream& sl) const;
 
 private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;

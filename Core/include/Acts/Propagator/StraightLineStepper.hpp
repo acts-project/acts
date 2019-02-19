@@ -10,6 +10,10 @@
 
 #include <cmath>
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -54,11 +58,13 @@ public:
     ///
     /// @tparam parameters_t the Type of the track parameters
     ///
+    /// @param [in] ctx is the context object, ingored
     /// @param [in] par The track parameters at start
     /// @param [in] dir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     template <typename parameters_t>
-    explicit State(const parameters_t& par,
+    explicit State(Context /*ctx*/,
+                   const parameters_t& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
@@ -270,6 +276,7 @@ public:
   ///
   /// @tparam surface_t the surface type - ignored here
   ///
+  /// @param [in] ctx The context for thsi call - ingnored here
   /// @param [in,out] state The stepper state
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
@@ -277,11 +284,35 @@ public:
   ///        state should be reinitialized at the new
   ///        position
   /// @note no check is done if the position is actually on the surface
-  void
-  covarianceTransport(State& /*unused*/,
+  ///
+  /// @return the full transport jacobian
+  static const ActsMatrixD<5, 5>
+  covarianceTransport(Context /*ctx*/,
+                      State& /*unused*/,
                       const Surface& /*surface*/,
-                      bool /*reinitialize = false*/) const
+                      bool /*reinitialize = false*/)
   {
+    return ActsMatrixD<5, 5>::Identity();
+  }
+
+  /// Always use the same propagation state type, independently of the initial
+  /// track parameter type and of the target surface
+  template <typename parameters_t, typename surface_t = int>
+  using state_type = State;
+
+  /// Intermediate track parameters are always in curvilinear parametrization
+  template <typename parameters_t>
+  using step_parameter_type = CurvilinearParameters;
+
+  /// Return parameter types depend on the propagation mode:
+  /// - when propagating to a surface we return BoundParameters
+  /// - otherwise CurvilinearParameters
+  template <typename parameters_t, typename surface_t = int>
+  using return_parameter_type = typename s<parameters_t, surface_t>::type;
+
+  /// Constructor
+  StraightLineStepper() = default;
+
   }
 
   /// Perform a straight line propagation step

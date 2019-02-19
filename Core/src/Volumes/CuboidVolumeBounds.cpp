@@ -146,7 +146,7 @@ Acts::CuboidVolumeBounds::faceZXRectangleBounds() const
 
 // ostream operator overload
 std::ostream&
-Acts::CuboidVolumeBounds::dump(std::ostream& sl) const
+Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT(sl);
 }

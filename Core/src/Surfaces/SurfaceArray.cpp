@@ -36,7 +36,7 @@ Acts::SurfaceArray::SurfaceArray(std::shared_ptr<const Surface> srf)
 }
 
 std::ostream&
-Acts::SurfaceArray::dump(std::ostream& sl) const
+Acts::SurfaceArray::toStream(Context /*ctx*/, std::ostream& sl) const
 {
   sl << std::fixed << std::setprecision(4);
   sl << "SurfaceArray:" << std::endl;

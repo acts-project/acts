@@ -67,7 +67,7 @@ public:
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& os) const final
+  toStream(std::ostream& os) const final
   {
     os << "Acts::InfiniteBounds ... boundless surface" << std::endl;
     return os;

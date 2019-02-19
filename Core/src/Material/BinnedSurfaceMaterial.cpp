@@ -63,7 +63,7 @@ Acts::BinnedSurfaceMaterial::materialProperties(const Acts::Vector3D& gp) const
 }
 
 std::ostream&
-Acts::BinnedSurfaceMaterial::dump(std::ostream& sl) const
+Acts::BinnedSurfaceMaterial::toStream(std::ostream& sl) const
 {
   sl << "Acts::BinnedSurfaceMaterial : " << std::endl;
   sl << "   - Number of Material bins [0,1] : " << m_binUtility.max(0) + 1

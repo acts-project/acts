@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
@@ -56,11 +57,13 @@ public:
     ///
     /// @tparams Type of TrackParameters
     ///
+    /// @param[in] ctx The context of this call
     /// @param[in] pars Input parameters
     /// @param[in] ndir The navigation direction w.r.t. parameters
     /// @param[in] ssize the steps size limitation
     template <typename Parameters>
-    State(const Parameters&   pars,
+    State(Context             ctx,
+          const Parameters&   pars,
           NavigationDirection ndir  = forward,
           double              ssize = std::numeric_limits<double>::max())
       : state_ready(false)
@@ -108,7 +111,7 @@ public:
         covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
         covTransport = true;
         useJacobian  = true;
-        const auto transform = pars.referenceFrame();
+        const auto transform = pars.referenceFrame(ctx);
 
         pVector[7]  = transform(0, eLOC_0);
         pVector[14] = transform(0, eLOC_1);
@@ -396,9 +399,11 @@ public:
 
   /// The state update method
   ///
+  /// @param [in] ctx The context of this call
+  /// @param [in,out] state The stepper state for
   /// @param [in] pars The new track parameters at start
   void
-  update(State& state, const BoundParameters& pars) const
+  update(Context ctx, State& state, const Parameters& pars) const
   {
     // state is ready - noting to do
     if (state.state_ready) {
@@ -434,8 +439,7 @@ public:
       state.covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
       state.covTransport = true;
       state.useJacobian  = true;
-      const auto transform = pars.referenceFrame();
-
+      const auto transform = pars.referenceFrame(ctx);
       state.pVector[7]  = transform(0, eLOC_0);
       state.pVector[14] = transform(0, eLOC_1);
       state.pVector[21] = 0.;

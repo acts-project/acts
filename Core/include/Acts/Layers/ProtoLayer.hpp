@@ -70,7 +70,7 @@ public:
   ProtoLayer() = default;
 
   std::ostream&
-  dump(std::ostream& sl) const;
+  toStream(std::ostream& sl) const;
 
   /// Calculates the closest radial distance of a line
   ///

@@ -81,7 +81,7 @@ Acts::TriangleBounds::boundingBox() const
 
 // ostream operator overload
 std::ostream&
-Acts::TriangleBounds::dump(std::ostream& sl) const
+Acts::TriangleBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

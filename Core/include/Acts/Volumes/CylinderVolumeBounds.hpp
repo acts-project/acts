@@ -187,7 +187,7 @@ public:
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& sl) const override;
+  toStream(std::ostream& sl) const override;
 
 private:
   /// templated dumpT method

@@ -36,6 +36,9 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  ContextType testContext = DefaultContext();
+
   /// @brief Unit test for parameters at a plane
   ///
   BOOST_DATA_TEST_CASE(
@@ -97,16 +100,19 @@ namespace Test {
     Vector3D pos
         = center + pars_array[0] * rot.col(0) + pars_array[1] * rot.col(1);
     // constructor from parameter vector
-    BoundParameters ataPlane_from_pars(nullptr, pars, pSurface);
+    BoundParameters ataPlane_from_pars(testContext, nullptr, pars, pSurface);
     consistencyCheck(ataPlane_from_pars, pos, mom, 1., pars_array);
     // constructor from global parameters
-    BoundParameters ataPlane_from_global(nullptr, pos, mom, 1., pSurface);
+    BoundParameters ataPlane_from_global(
+        testContext, nullptr, pos, mom, 1., pSurface);
     consistencyCheck(ataPlane_from_global, pos, mom, 1., pars_array);
     // constructor for neutral parameters
-    NeutralBoundParameters n_ataPlane_from_pars(nullptr, pars, pSurface);
+    NeutralBoundParameters n_ataPlane_from_pars(
+        testContext, nullptr, pars, pSurface);
     consistencyCheck(n_ataPlane_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
-    NeutralBoundParameters n_ataPlane_from_global(nullptr, pos, mom, pSurface);
+    NeutralBoundParameters n_ataPlane_from_global(
+        testContext, nullptr, pos, mom, pSurface);
     consistencyCheck(n_ataPlane_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
@@ -119,14 +125,14 @@ namespace Test {
     BOOST_CHECK_EQUAL(pSurface.use_count(), 5);
 
     // check that the reference frame is the rotation matrix
-    CHECK_CLOSE_REL(ataPlane_from_pars.referenceFrame(), rot, 1e-6);
+    CHECK_CLOSE_REL(ataPlane_from_pars.referenceFrame(testContext), rot, 1e-6);
 
     /// modification test via setter functions
     double ux = 0.3;
     double uy = 0.4;
 
-    ataPlane_from_pars.set<Acts::eLOC_X>(ux);
-    ataPlane_from_pars.set<Acts::eLOC_Y>(uy);
+    ataPlane_from_pars.set<Acts::eLOC_X>(testContext, ux);
+    ataPlane_from_pars.set<Acts::eLOC_Y>(testContext, uy);
     // we should have a new updated position
     Vector3D lPosition3D(ux, uy, 0.);
     Vector3D uposition = rot * lPosition3D + center;
@@ -136,9 +142,9 @@ namespace Test {
     double utheta = 0.2;
     double uqop   = 0.025;
 
-    ataPlane_from_pars.set<Acts::ePHI>(uphi);
-    ataPlane_from_pars.set<Acts::eTHETA>(utheta);
-    ataPlane_from_pars.set<Acts::eQOP>(uqop);
+    ataPlane_from_pars.set<Acts::ePHI>(testContext, uphi);
+    ataPlane_from_pars.set<Acts::eTHETA>(testContext, utheta);
+    ataPlane_from_pars.set<Acts::eQOP>(testContext, uqop);
     // we should have a new updated momentum
     Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
                                         sin(uphi) * sin(utheta),
@@ -207,16 +213,19 @@ namespace Test {
     Vector3D pos = (pars_array[0] * cos(pars_array[1])) * rot.col(0)
         + (pars_array[0] * sin(pars_array[1])) * rot.col(1) + center;
     // constructor from parameter vector
-    BoundParameters ataDisc_from_pars(nullptr, pars, dSurface);
+    BoundParameters ataDisc_from_pars(testContext, nullptr, pars, dSurface);
     consistencyCheck(ataDisc_from_pars, pos, mom, 1., pars_array);
     // constructor from global parameters
-    BoundParameters ataDisc_from_global(nullptr, pos, mom, 1., dSurface);
+    BoundParameters ataDisc_from_global(
+        testContext, nullptr, pos, mom, 1., dSurface);
     consistencyCheck(ataDisc_from_global, pos, mom, 1., pars_array);
     // constructor for neutral parameters
-    NeutralBoundParameters n_ataDisc_from_pars(nullptr, pars, dSurface);
+    NeutralBoundParameters n_ataDisc_from_pars(
+        testContext, nullptr, pars, dSurface);
     consistencyCheck(n_ataDisc_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
-    NeutralBoundParameters n_ataDisc_from_global(nullptr, pos, mom, dSurface);
+    NeutralBoundParameters n_ataDisc_from_global(
+        testContext, nullptr, pos, mom, dSurface);
     consistencyCheck(n_ataDisc_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
@@ -230,8 +239,10 @@ namespace Test {
 
     // check that the reference frame is the
     // rotation matrix of the surface
-    const auto& dRotation = dSurface->transform().matrix().block<3, 3>(0, 0);
-    CHECK_CLOSE_REL(ataDisc_from_pars.referenceFrame(), dRotation, 1e-6);
+    const auto& dRotation
+        = dSurface->transform(testContext).matrix().block<3, 3>(0, 0);
+    CHECK_CLOSE_REL(
+        ataDisc_from_pars.referenceFrame(testContext), dRotation, 1e-6);
   }
 
   /// @brief Unit test for parameters at a cylinder
@@ -301,17 +312,19 @@ namespace Test {
         + center;
 
     // constructor from parameter vector
-    BoundParameters ataCylinder_from_pars(nullptr, pars, cSurface);
+    BoundParameters ataCylinder_from_pars(testContext, nullptr, pars, cSurface);
     consistencyCheck(ataCylinder_from_pars, pos, mom, 1., pars_array);
     // constructor from global parameters
-    BoundParameters ataCylinder_from_global(nullptr, pos, mom, 1., cSurface);
+    BoundParameters ataCylinder_from_global(
+        testContext, nullptr, pos, mom, 1., cSurface);
     consistencyCheck(ataCylinder_from_global, pos, mom, 1., pars_array);
     // constructor for neutral parameters
-    NeutralBoundParameters n_ataCylinder_from_pars(nullptr, pars, cSurface);
+    NeutralBoundParameters n_ataCylinder_from_pars(
+        testContext, nullptr, pars, cSurface);
     consistencyCheck(n_ataCylinder_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
     NeutralBoundParameters n_ataCylinder_from_global(
-        nullptr, pos, mom, cSurface);
+        testContext, nullptr, pos, mom, cSurface);
     consistencyCheck(n_ataCylinder_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
@@ -328,15 +341,16 @@ namespace Test {
     auto pPosition = ataCylinder_from_pars.position();
     // the reference frame is
     // transverse plane to the cylinder at the intersect
-    Vector3D         normal_at_intersect = cSurface->normal(pPosition);
-    Vector3D         transverse_y        = rot.col(2);
-    Vector3D         transverse_x = transverse_y.cross(normal_at_intersect);
+    Vector3D normal_at_intersect = cSurface->normal(testContext, pPosition);
+    Vector3D transverse_y        = rot.col(2);
+    Vector3D transverse_x        = transverse_y.cross(normal_at_intersect);
     RotationMatrix3D refframe;
     refframe.col(0) = transverse_x;
     refframe.col(1) = transverse_y;
     refframe.col(2) = normal_at_intersect;
     // check if the manually constructed reference frame is the provided one
-    CHECK_CLOSE_REL(ataCylinder_from_pars.referenceFrame(), refframe, 1e-6);
+    CHECK_CLOSE_REL(
+        ataCylinder_from_pars.referenceFrame(testContext), refframe, 1e-6);
   }
 
   /// @brief Unit test for parameters at the perigee
@@ -387,19 +401,21 @@ namespace Test {
     pars << pars_array[0], pars_array[1], pars_array[2], pars_array[3],
         pars_array[4];
 
-    BoundParameters ataPerigee_from_pars(nullptr, pars, pSurface);
+    BoundParameters ataPerigee_from_pars(testContext, nullptr, pars, pSurface);
     auto            pos = ataPerigee_from_pars.position();
     auto            mom = ataPerigee_from_pars.momentum();
     consistencyCheck(ataPerigee_from_pars, pos, mom, 1., pars_array);
     // constructor from global parameters
-    BoundParameters ataPerigee_from_global(nullptr, pos, mom, 1., pSurface);
+    BoundParameters ataPerigee_from_global(
+        testContext, nullptr, pos, mom, 1., pSurface);
     consistencyCheck(ataPerigee_from_global, pos, mom, 1., pars_array);
     // constructor for neutral parameters
-    NeutralBoundParameters n_ataPerigee_from_pars(nullptr, pars, pSurface);
+    NeutralBoundParameters n_ataPerigee_from_pars(
+        testContext, nullptr, pars, pSurface);
     consistencyCheck(n_ataPerigee_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
     NeutralBoundParameters n_ataPerigee_from_global(
-        nullptr, pos, mom, pSurface);
+        testContext, nullptr, pos, mom, pSurface);
     consistencyCheck(n_ataPerigee_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface
@@ -467,18 +483,21 @@ namespace Test {
         pars_array[4];
 
     // constructor from parameter vector
-    BoundParameters ataLine_from_pars(nullptr, pars, sSurface);
+    BoundParameters ataLine_from_pars(testContext, nullptr, pars, sSurface);
     auto            pos = ataLine_from_pars.position();
     auto            mom = ataLine_from_pars.momentum();
     consistencyCheck(ataLine_from_pars, pos, mom, 1., pars_array);
     // constructor from global parameters
-    BoundParameters ataLine_from_global(nullptr, pos, mom, 1., sSurface);
+    BoundParameters ataLine_from_global(
+        testContext, nullptr, pos, mom, 1., sSurface);
     consistencyCheck(ataLine_from_global, pos, mom, 1., pars_array);
     // constructor for neutral parameters
-    NeutralBoundParameters n_ataLine_from_pars(nullptr, pars, sSurface);
+    NeutralBoundParameters n_ataLine_from_pars(
+        testContext, nullptr, pars, sSurface);
     consistencyCheck(n_ataLine_from_pars, pos, mom, 0., pars_array);
     // constructor for neutral global parameters
-    NeutralBoundParameters n_ataLine_from_global(nullptr, pos, mom, sSurface);
+    NeutralBoundParameters n_ataLine_from_global(
+        testContext, nullptr, pos, mom, sSurface);
     consistencyCheck(n_ataLine_from_global, pos, mom, 0., pars_array);
 
     // check shared ownership of same surface

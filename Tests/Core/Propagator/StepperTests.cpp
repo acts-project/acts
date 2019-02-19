@@ -36,6 +36,8 @@ namespace Test {
 
   using cstep = detail::ConstrainedStep;
 
+  // Create a test context
+  ContextType testContext = DefaultContext();
   ///
   /// @brief Aborter for the case that a particle leaves the detector or reaches
   /// a custom made threshold.
@@ -182,7 +184,7 @@ namespace Test {
         prop(es, naviVac);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts);
+    const auto& result = prop.propagate(testContext, sbtp, propOpts);
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -219,7 +221,7 @@ namespace Test {
         propDef(esDef, naviVac);
 
     // Launch and collect results
-    const auto& resultDef = propDef.propagate(sbtp, propOptsDef);
+    const auto& resultDef = propDef.propagate(testContext, sbtp, propOptsDef);
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
@@ -304,7 +306,7 @@ namespace Test {
         prop(es, naviMat);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts);
+    const auto& result = prop.propagate(testContext, sbtp, propOpts);
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -351,7 +353,8 @@ namespace Test {
         propDense(esDense, naviMat);
 
     // Launch and collect results
-    const auto& resultDense = propDense.propagate(sbtp, propOptsDense);
+    const auto& resultDense
+        = propDense.propagate(testContext, sbtp, propOptsDense);
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 
@@ -387,7 +390,7 @@ namespace Test {
                Navigator>
         propB(esB, naviMat);
 
-    const auto& resultB = propB.propagate(sbtp, propOptsDense);
+    const auto& resultB = propB.propagate(testContext, sbtp, propOptsDense);
     const StepCollector::this_result& stepResultB
         = resultB.get<typename StepCollector::result_type>();
 
@@ -488,7 +491,7 @@ namespace Test {
         prop(es, naviDet);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts);
+    const auto& result = prop.propagate(testContext, sbtp, propOpts);
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -497,26 +500,29 @@ namespace Test {
     // Collect boundaries
     std::vector<Surface const*> surs;
     std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
-        boundaries = det->lowestTrackingVolume({0.5 * units::_m, 0., 0.})
+        boundaries = det->trackingVolume(testContext, {0.5 * units::_m, 0., 0.})
                          ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 1. * units::_m) {
+      if (b->surfaceRepresentation().center(testContext).x()
+          == 1. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->lowestTrackingVolume({1.5 * units::_m, 0., 0.})
+    boundaries = det->trackingVolume(testContext, {1.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 2. * units::_m) {
+      if (b->surfaceRepresentation().center(testContext).x()
+          == 2. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->lowestTrackingVolume({2.5 * units::_m, 0., 0.})
+    boundaries = det->trackingVolume(testContext, {2.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 3. * units::_m) {
+      if (b->surfaceRepresentation().center(testContext).x()
+          == 3. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
@@ -546,7 +552,8 @@ namespace Test {
         propDef(esDef, naviDet);
 
     // Launch and collect results
-    const auto& resultDef = propDef.propagate(sbtp, *(surs[0]), propOptsDef);
+    const auto& resultDef
+        = propDef.propagate(testContext, sbtp, *(surs[0]), propOptsDef);
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
@@ -603,8 +610,8 @@ namespace Test {
         propDense(esDense, naviDet);
 
     // Launch and collect results
-    const auto& resultDense
-        = propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense);
+    const auto& resultDense = propDense.propagate(
+        testContext, sbtpPiecewise, *(surs[1]), propOptsDense);
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 

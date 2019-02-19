@@ -117,9 +117,13 @@ public:
   {
     /// The accumulated material per geometry ID
     std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
+
     /// The created surface material from it
     std::map<GeometryID, std::unique_ptr<const SurfaceMaterial>>
         surfaceMaterial;
+
+    /// The context for the mapping
+    ContextType mappingContext = DefaultContext();
   };
 
   /// Delete the Default constructor

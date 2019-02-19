@@ -30,6 +30,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  ContextType testContext = DefaultContext();
+
   BOOST_AUTO_TEST_SUITE(PlaneSurfaces)
   /// Unit test for creating compliant/non-compliant PlaneSurface object
   BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction)
@@ -59,8 +63,8 @@ namespace Test {
     BOOST_CHECK_EQUAL(*copiedPlaneSurface, *planeSurfaceObject);
     //
     /// Copied and transformed
-    auto copiedTransformedPlaneSurface
-        = Surface::makeShared<PlaneSurface>(*planeSurfaceObject, *pTransform);
+    auto copiedTransformedPlaneSurface = Surface::makeShared<PlaneSurface>(
+        testContext, *planeSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedPlaneSurface->type(), Surface::Plane);
 
     /// Construct with nullptr bounds
@@ -82,11 +86,12 @@ namespace Test {
     auto planeSurfaceObject
         = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     //
-    auto pClonedPlaneSurface = planeSurfaceObject->clone();
+    auto pClonedPlaneSurface
+        = planeSurfaceObject->clone(testContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedPlaneSurface->type(), Surface::Plane);
     // Test clone method with translation
     auto pClonedShiftedPlaneSurface
-        = planeSurfaceObject->clone(pTransform.get());
+        = planeSurfaceObject->clone(testContext, *pTransform.get());
     // Does it exist at all in a decent state?
     BOOST_CHECK_EQUAL(pClonedShiftedPlaneSurface->type(), Surface::Plane);
     // Is it in the right place?
@@ -106,8 +111,9 @@ namespace Test {
     //
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
-    BOOST_CHECK_EQUAL(planeSurfaceObject->binningPosition(BinningValue::binX),
-                      binningPosition);
+    BOOST_CHECK_EQUAL(
+        planeSurfaceObject->binningPosition(testContext, BinningValue::binX),
+        binningPosition);
     //
     /// Test referenceFrame
     Vector3D         globalPosition{2.0, 2.0, 0.0};
@@ -115,15 +121,15 @@ namespace Test {
     RotationMatrix3D expectedFrame;
     expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
-    CHECK_CLOSE_OR_SMALL(
-        planeSurfaceObject->referenceFrame(globalPosition, momentum),
-        expectedFrame,
-        1e-6,
-        1e-9);
+    CHECK_CLOSE_OR_SMALL(planeSurfaceObject->referenceFrame(
+                             testContext, globalPosition, momentum),
+                         expectedFrame,
+                         1e-6,
+                         1e-9);
     //
     /// Test normal, given 3D position
     Vector3D normal3D(0., 0., 1.);
-    BOOST_CHECK_EQUAL(planeSurfaceObject->normal(), normal3D);
+    BOOST_CHECK_EQUAL(planeSurfaceObject->normal(testContext), normal3D);
     //
     /// Test bounds
     BOOST_CHECK_EQUAL(planeSurfaceObject->bounds().type(),
@@ -131,7 +137,8 @@ namespace Test {
 
     /// Test localToGlobal
     Vector2D localPosition{1.5, 1.7};
-    planeSurfaceObject->localToGlobal(localPosition, momentum, globalPosition);
+    planeSurfaceObject->localToGlobal(
+        testContext, localPosition, momentum, globalPosition);
     //
     // expected position is the translated one
     Vector3D expectedPosition{
@@ -140,21 +147,23 @@ namespace Test {
     CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
     //
     /// Testing globalToLocal
-    planeSurfaceObject->globalToLocal(globalPosition, momentum, localPosition);
+    planeSurfaceObject->globalToLocal(
+        testContext, globalPosition, momentum, localPosition);
     Vector2D expectedLocalPosition{1.5, 1.7};
 
     CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
 
     /// Test isOnSurface
     Vector3D offSurface{0, 1, -2.};
-    BOOST_CHECK(
-        planeSurfaceObject->isOnSurface(globalPosition, momentum, true));
-    BOOST_CHECK(!planeSurfaceObject->isOnSurface(offSurface, momentum, true));
+    BOOST_CHECK(planeSurfaceObject->isOnSurface(
+        testContext, globalPosition, momentum, true));
+    BOOST_CHECK(!planeSurfaceObject->isOnSurface(
+        testContext, offSurface, momentum, true));
     //
     /// intersectionEstimate
     Vector3D direction{0., 0., 1.};
     auto     intersect = planeSurfaceObject->intersectionEstimate(
-        offSurface, direction, forward, true);
+        testContext, offSurface, direction, forward, true);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 4., true, 0};
     BOOST_CHECK(intersect.valid);
     BOOST_CHECK_EQUAL(intersect.position, expectedIntersect.position);
@@ -173,7 +182,7 @@ namespace Test {
     /// Test dump
     // TODO 2017-04-12 msmk: check how to correctly check output
     //    boost::test_tools::output_test_stream dumpOuput;
-    //    planeSurfaceObject.dump(dumpOuput);
+    //    planeSurfaceObject.toStream(dumpOuput);
     //    BOOST_CHECK(dumpOuput.is_equal(
     //      "Acts::PlaneSurface\n"
     //      "    Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"

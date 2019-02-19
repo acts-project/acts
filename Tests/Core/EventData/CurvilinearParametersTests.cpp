@@ -29,6 +29,9 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(curvilinear_initialization)
   {
 
+    // Create a test context
+    ContextType testContext = DefaultContext();
+
     // some position and momentum
     Vector3D pos(1.34, 2.34, 3.45);
     Vector3D mom(1000., 1000., -0.100);
@@ -53,14 +56,22 @@ namespace Test {
         curvilinear_neut, pos, mom, 0., {{0., 0., fphi, ftheta, oOp}});
 
     // check that the created surface is at the position
-    CHECK_CLOSE_REL(curvilinear_pos.referenceSurface().center(), pos, 1e-6);
-    CHECK_CLOSE_REL(curvilinear_neg.referenceSurface().center(), pos, 1e-6);
-    CHECK_CLOSE_REL(curvilinear_neut.referenceSurface().center(), pos, 1e-6);
+    CHECK_CLOSE_REL(
+        curvilinear_pos.referenceSurface().center(testContext), pos, 1e-6);
+    CHECK_CLOSE_REL(
+        curvilinear_neg.referenceSurface().center(testContext), pos, 1e-6);
+    CHECK_CLOSE_REL(
+        curvilinear_neut.referenceSurface().center(testContext), pos, 1e-6);
 
     // check that the z-axis of the created surface is along momentum direction
-    CHECK_CLOSE_REL(curvilinear_pos.referenceSurface().normal(pos), dir, 1e-6);
-    CHECK_CLOSE_REL(curvilinear_neg.referenceSurface().normal(pos), dir, 1e-6);
-    CHECK_CLOSE_REL(curvilinear_neut.referenceSurface().normal(pos), dir, 1e-6);
+    CHECK_CLOSE_REL(
+        curvilinear_pos.referenceSurface().normal(testContext, pos), dir, 1e-6);
+    CHECK_CLOSE_REL(
+        curvilinear_neg.referenceSurface().normal(testContext, pos), dir, 1e-6);
+    CHECK_CLOSE_REL(
+        curvilinear_neut.referenceSurface().normal(testContext, pos),
+        dir,
+        1e-6);
 
     // check the reference frame of curvilinear parameters
     // it is the x-y frame of the created surface
@@ -87,37 +98,41 @@ namespace Test {
     /// modification test with set methods
     double ux = 0.1;
     double uy = 0.5;
-    curvilinear_pos_copy.set<eLOC_0>(ux);
-    curvilinear_pos_copy.set<eLOC_1>(uy);
+    curvilinear_pos_copy.set<eLOC_0>(testContext, ux);
+    curvilinear_pos_copy.set<eLOC_1>(testContext, uy);
     // the local parameter should still be (0,0) for Curvilinear
     BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_0], 0);
     BOOST_CHECK_EQUAL(curvilinear_pos_copy.parameters()[eLOC_1], 0);
     // the position should be updated though
-    Vector3D uposition = curvilinear_neg_copy.referenceSurface().transform()
+    Vector3D uposition
+        = curvilinear_neg_copy.referenceSurface().transform(testContext)
         * Vector3D(ux, uy, 0.);
     // the position should be updated
     CHECK_CLOSE_REL(curvilinear_pos_copy.position(), uposition, 1e-6);
     // it should be the position of the surface
-    CHECK_CLOSE_REL(
-        curvilinear_pos_copy.referenceSurface().center(), uposition, 1e-6);
+    CHECK_CLOSE_REL(curvilinear_pos_copy.referenceSurface().center(testContext),
+                    uposition,
+                    1e-6);
 
     double uphi   = 1.2;
     double utheta = 0.2;
     double uqop   = 0.025;
 
-    curvilinear_pos_copy.set<ePHI>(uphi);
-    curvilinear_pos_copy.set<eTHETA>(utheta);
-    curvilinear_pos_copy.set<eQOP>(uqop);
+    curvilinear_pos_copy.set<ePHI>(testContext, uphi);
+    curvilinear_pos_copy.set<eTHETA>(testContext, utheta);
+    curvilinear_pos_copy.set<eQOP>(testContext, uqop);
     // we should have a new updated momentum
     Vector3D umomentum = 40. * Vector3D(cos(uphi) * sin(utheta),
                                         sin(uphi) * sin(utheta),
                                         cos(utheta));
     CHECK_CLOSE_REL(umomentum, curvilinear_pos_copy.momentum(), 1e-6);
     // the updated momentum should be the col(2) of the transform
-    CHECK_CLOSE_REL(
-        umomentum.normalized(),
-        curvilinear_pos_copy.referenceSurface().transform().rotation().col(2),
-        1e-6);
+    CHECK_CLOSE_REL(umomentum.normalized(),
+                    curvilinear_pos_copy.referenceSurface()
+                        .transform(testContext)
+                        .rotation()
+                        .col(2),
+                    1e-6);
   }
 }  // namespace Test
 }  // namespace Acts

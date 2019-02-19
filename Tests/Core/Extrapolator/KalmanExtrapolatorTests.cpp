@@ -27,11 +27,15 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Context.hpp"
 
 namespace Acts {
 namespace Test {
 
   using Jacobian = ActsMatrixD<5, 5>;
+
+  // Create a test context
+  ContextType testContext = DefaultContext();
 
   ///
   /// @brief the bound state propagation
@@ -72,7 +76,8 @@ namespace Test {
       auto surface = state.navigation.currentSurface;
       if (surface and surface->associatedDetectorElement()) {
         // Create a bound state and log the jacobian
-        auto boundState = stepper.boundState(state.stepping, *surface, true);
+        auto boundState
+            = stepper.boundState(state.context, state.stepping, *surface, true);
         result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
         result.paths.push_back(std::get<double>(boundState));
       }
@@ -151,12 +156,12 @@ namespace Test {
     PlainOptions pOptions;
 
     // Run the standard propagation
-    const auto& pResult = propagator.propagate(start, pOptions);
+    const auto& pResult = propagator.propagate(testContext, start, pOptions);
     // Let's get the end parameters and jacobian matrix
     const auto& pJacobian = *(pResult.transportJacobian);
 
     // Run the stepwise propagation
-    const auto& swResult       = propagator.propagate(start, swOptions);
+    const auto& swResult = propagator.propagate(testContext, start, swOptions);
     auto        swJacobianTest = swResult.template get<StepWiseResult>();
 
     // (1) Path length test

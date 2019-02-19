@@ -103,9 +103,9 @@ namespace Test {
     // Acts::DiamondBounds:  (minHlengthX, medHlengthX, maxHlengthX, hlengthY1,
     // hlengthY2 ) = (30.0000000, 10.0000000, 50.0000000, 10.0000000,
     // 20.0000000)
-    diamondBoundsObject.dump(std::cout);
+    diamondBoundsObject.toStream(std::cout);
     boost::test_tools::output_test_stream dumpOuput;
-    diamondBoundsObject.dump(dumpOuput);
+    diamondBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(
         dumpOuput.is_equal("Acts::DiamondBounds:  (minHlengthX, medHlengthX, "
                            "maxHlengthX, hlengthY1, hlengthY2 ) = (10.0000000, "

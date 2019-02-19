@@ -19,13 +19,13 @@
 // leave blank line
 
 //#include <limits>
-#include "Acts/Layers/Layer.hpp"
-//#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
 
@@ -35,6 +35,9 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  ContextType testContext = DefaultContext();
 
   namespace Layers {
 
@@ -88,16 +91,16 @@ namespace Test {
       /// isOnLayer() (delegates to the Surface 'isOnSurface()')
       const Vector3D pos{0.0, 0.0, 0.0};
       const Vector3D pos2{100., 100., std::nan("")};
-      BOOST_CHECK(layerStub.isOnLayer(pos));
+      BOOST_CHECK(layerStub.isOnLayer(testContext, pos));
       // this should fail, but does not, but possibly my fault in SurfaceStub
       // implementation:
-      BOOST_CHECK(!layerStub.isOnLayer(pos2));
+      BOOST_CHECK(!layerStub.isOnLayer(testContext, pos2));
       /// approachDescriptor(), retrieved as a pointer.
       BOOST_CHECK_EQUAL(layerStub.approachDescriptor(), adPtr);
       const Vector3D gpos{0., 0., 1.0};
       const Vector3D direction{0., 0., -1.};
       /// nextLayer()
-      BOOST_CHECK(!(layerStub.nextLayer(gpos, direction)));
+      BOOST_CHECK(!(layerStub.nextLayer(testContext, gpos, direction)));
       /// trackingVolume()
       BOOST_CHECK(!layerStub.trackingVolume());
       // BOOST_TEST_CHECKPOINT("Before ending test");

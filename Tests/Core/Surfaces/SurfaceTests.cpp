@@ -58,6 +58,10 @@ private:
 };
 
 namespace Test {
+
+  // Create a test context
+  ContextType testContext = DefaultContext();
+
   BOOST_AUTO_TEST_SUITE(Surfaces)
 
   /// todo: make test fixture; separate out different cases
@@ -71,7 +75,8 @@ namespace Test {
     BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(original).type());
     Translation3D translation{0., 1., 2.};
     Transform3D   transform(translation);
-    BOOST_CHECK_EQUAL(Surface::Other, SurfaceStub(original, transform).type());
+    BOOST_CHECK_EQUAL(Surface::Other,
+                      SurfaceStub(testContext, original, transform).type());
     // need some cruft to make the next one work
     auto pTransform = std::make_shared<const Transform3D>(translation);
     std::shared_ptr<const Acts::PlanarBounds> p
@@ -104,7 +109,7 @@ namespace Test {
     // it is set to the detector element surface though
     BOOST_CHECK_NE(surface.associatedMaterial(), pMaterial.get());
     // center()
-    CHECK_CLOSE_OR_SMALL(reference, surface.center(), 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(reference, surface.center(testContext), 1e-6, 1e-9);
     // stream insertion operator <<
     output_test_stream output;
     output << surface;
@@ -118,22 +123,23 @@ namespace Test {
     // intersectionEstimate (should delegate to derived class method of same
     // name)
     Vector3D mom{100., 200., 300.};
-    auto     intersectionEstimate
-        = surface.intersectionEstimate(reference, mom, forward, false);
+    auto     intersectionEstimate = surface.intersectionEstimate(
+        testContext, reference, mom, forward, false);
     const Intersection ref{Vector3D{1, 1, 1}, 20., true};
     BOOST_CHECK_EQUAL(ref.position, intersectionEstimate.position);
     // isOnSurface
-    BOOST_CHECK(surface.isOnSurface(reference, mom, false));
-    BOOST_CHECK(
-        surface.isOnSurface(reference, mom, true));  // need to improve bounds()
+    BOOST_CHECK(surface.isOnSurface(testContext, reference, mom, false));
+    BOOST_CHECK(surface.isOnSurface(
+        testContext, reference, mom, true));  // need to improve bounds()
     // referenceFrame()
     RotationMatrix3D unitary;
     unitary << 1, 0, 0, 0, 1, 0, 0, 0, 1;
     auto referenceFrame = surface.referenceFrame(
-        reference, mom);  // need more complex case to test
+        testContext, reference, mom);  // need more complex case to test
     BOOST_CHECK_EQUAL(referenceFrame, unitary);
     // normal()
-    auto normal = surface.Surface::normal(reference);  // needs more complex
+    auto normal = surface.Surface::normal(testContext,
+                                          reference);  // needs more complex
                                                        // test
     Vector3D zero{0., 0., 0.};
     BOOST_CHECK_EQUAL(zero, normal);
@@ -146,7 +152,8 @@ namespace Test {
     BOOST_CHECK_EQUAL(surface.associatedMaterial(),
                       pNewMaterial.get());  // passes ??
     //
-    CHECK_CLOSE_OR_SMALL(surface.transform(), *pTransform, 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(
+        surface.transform(testContext), *pTransform, 1e-6, 1e-9);
     // type() is pure virtual
   }
 

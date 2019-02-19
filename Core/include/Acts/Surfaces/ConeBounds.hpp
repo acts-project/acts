@@ -100,7 +100,7 @@ public:
   /// @param sl is the ostrea into which the dump is done
   /// @return is the input obect
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
   /// Return the radius at a specific z values
   ///

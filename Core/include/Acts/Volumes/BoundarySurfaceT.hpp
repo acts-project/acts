@@ -13,6 +13,7 @@
 #pragma once
 #include <memory>
 #include "Acts/Utilities/BinnedArray.hpp"
+#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/BoundarySurfaceFace.hpp"
 #include "Acts/Volumes/Volume.hpp"
@@ -111,24 +112,29 @@ public:
   /// Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on
   /// the TrackParameters and the requested direction
   ///
+  /// @param ctx is the context for this call (e.g. alingment)
   /// @param pos is the global position on surface
   /// @param mom is the direction on the surface
   /// @param dir is an aditional direction corrective
   ///
   /// @return is the attached volume at that position
   virtual const T*
-  attachedVolume(const Vector3D&     pos,
+  attachedVolume(Context             ctx,
+                 const Vector3D&     pos,
                  const Vector3D&     mom,
                  NavigationDirection pdir) const;
 
   /// templated onBoundary method
   ///
   /// @tparam pars are the parameters to be checked
+  ///
+  /// @param ctx The context for this call (e.g. alignment)
+  /// @param pars The parameters used for this call
   template <class P>
   bool
-  onBoundary(const P& pars) const
+  onBoundary(Context ctx, const P& pars) const
   {
-    return surfaceRepresentation().isOnSurface(pars);
+    return surfaceRepresentation().isOnSurface(ctx, pars);
   }
 
   /// The Surface Representation of this
@@ -143,6 +149,7 @@ protected:
   /// this si done during the geometry construction and only called by
   /// the friend templated volume
   ///
+  /// @param ctx The context for this call (e.g. alignment)
   /// @param volume is the volume to be attached
   /// @param inout is the boundary orientation @todo update to along/opposite
   void
@@ -203,13 +210,14 @@ BoundarySurfaceT<T>::attachVolumeArray(
 
 template <class T>
 const T*
-BoundarySurfaceT<T>::attachedVolume(const Vector3D&     pos,
+BoundarySurfaceT<T>::attachedVolume(Context             ctx,
+                                    const Vector3D&     pos,
                                     const Vector3D&     mom,
                                     NavigationDirection pdir) const
 {
   const T* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(pos)).dot(pdir * mom) > 0.) {
+  if ((surfaceRepresentation().normal(ctx, pos)).dot(pdir * mom) > 0.) {
     attVolume = m_outsideVolumeArray ? m_outsideVolumeArray->object(pos).get()
                                      : m_outsideVolume;
   } else {

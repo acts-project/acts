@@ -110,7 +110,7 @@ public:
   ///
   /// @param sl is ostream operator to be dumped into
   std::ostream&
-  dump(std::ostream& sl) const override;
+  toStream(std::ostream& sl) const override;
 
 private:
   /// Templated dumpT method

@@ -35,6 +35,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  ContextType testContext = DefaultContext();
+
   namespace Layers {
     BOOST_AUTO_TEST_SUITE(Layers)
 

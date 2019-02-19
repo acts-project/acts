@@ -31,6 +31,8 @@ namespace Acts {
 
 namespace Test {
   // using boost::test_tools::output_test_stream;
+  // Create a test context
+  ContextType testContext = DefaultContext();
 
   BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit tests for creating DiscSurface object
@@ -64,8 +66,8 @@ namespace Test {
     BOOST_TEST_MESSAGE("Copy constructed DiscSurface ok");
     //
     /// Copied and transformed DiscSurface
-    BOOST_CHECK_NO_THROW(
-        Surface::makeShared<DiscSurface>(*anotherDiscSurface, *pTransform));
+    BOOST_CHECK_NO_THROW(Surface::makeShared<DiscSurface>(
+        testContext, *anotherDiscSurface, *pTransform));
 
     /// Construct with nullptr bounds
     DetectorElementStub detElem;
@@ -88,18 +90,19 @@ namespace Test {
     //
     /// Test normal, no local position specified
     Vector3D zAxis{0, 0, 1};
-    BOOST_CHECK_EQUAL(discSurfaceObject->normal(), zAxis);
+    BOOST_CHECK_EQUAL(discSurfaceObject->normal(testContext), zAxis);
     //
     /// Test normal, local position specified
     Vector2D lpos(2.0, 0.05);
-    BOOST_CHECK_EQUAL(discSurfaceObject->normal(lpos), zAxis);
+    BOOST_CHECK_EQUAL(discSurfaceObject->normal(testContext, lpos), zAxis);
     //
     /// Test binningPosition
     // auto binningPosition=
     // discSurfaceObject.binningPosition(BinningValue::binRPhi );
     // std::cout<<binningPosition<<std::endl;
-    BOOST_CHECK_EQUAL(discSurfaceObject->binningPosition(BinningValue::binRPhi),
-                      origin3D);
+    BOOST_CHECK_EQUAL(
+        discSurfaceObject->binningPosition(testContext, BinningValue::binRPhi),
+        origin3D);
     //
     /// Test bounds
     BOOST_CHECK_EQUAL(discSurfaceObject->bounds().type(), SurfaceBounds::Disc);
@@ -109,9 +112,9 @@ namespace Test {
     Vector3D point3DNotInSector{0.0, 1.2, 0};
     Vector3D point3DOnSurface{1.2, 0.0, 0};
     BOOST_CHECK(!discSurfaceObject->isOnSurface(
-        point3DNotInSector, ignoredMomentum, true));  // passes
+        testContext, point3DNotInSector, ignoredMomentum, true));  // passes
     BOOST_CHECK(discSurfaceObject->isOnSurface(
-        point3DOnSurface, ignoredMomentum, true));  // passes
+        testContext, point3DOnSurface, ignoredMomentum, true));  // passes
     //
     /// Test localToGlobal
     Vector3D returnedPosition{10.9, 8.7, 6.5};
@@ -119,29 +122,34 @@ namespace Test {
     Vector2D rPhiOnDisc{1.2, 0.0};
     Vector2D rPhiNotInSector{1.2, M_PI};  // outside sector at Phi=0, +/- pi/8
     discSurfaceObject->localToGlobal(
-        rPhiOnDisc, ignoredMomentum, returnedPosition);
+        testContext, rPhiOnDisc, ignoredMomentum, returnedPosition);
     CHECK_CLOSE_ABS(returnedPosition, expectedPosition, 1e-6);
     //
     discSurfaceObject->localToGlobal(
-        rPhiNotInSector, ignoredMomentum, returnedPosition);
+        testContext, rPhiNotInSector, ignoredMomentum, returnedPosition);
     Vector3D expectedNonPosition{-1.2, 0, 0};
     CHECK_CLOSE_ABS(returnedPosition, expectedNonPosition, 1e-6);
     //
     /// Test globalToLocal
     Vector2D returnedLocalPosition{33., 44.};
     Vector2D expectedLocalPosition{1.2, 0.0};
-    BOOST_CHECK(discSurfaceObject->globalToLocal(
-        point3DOnSurface, ignoredMomentum, returnedLocalPosition));  // pass
+    BOOST_CHECK(
+        discSurfaceObject->globalToLocal(testContext,
+                                         point3DOnSurface,
+                                         ignoredMomentum,
+                                         returnedLocalPosition));  // pass
     CHECK_CLOSE_ABS(returnedLocalPosition, expectedLocalPosition, 1e-6);
     //
     BOOST_CHECK(!discSurfaceObject->globalToLocal(
+        testContext,
         point3DNotInSector,
         ignoredMomentum,
         returnedLocalPosition));  // test fails
     //
     Vector3D pointOutsideRadius{0.0, 100., 0};
     BOOST_CHECK(
-        !discSurfaceObject->globalToLocal(pointOutsideRadius,
+        !discSurfaceObject->globalToLocal(testContext,
+                                          pointOutsideRadius,
                                           ignoredMomentum,
                                           returnedLocalPosition));  // fails
     //
@@ -162,24 +170,26 @@ namespace Test {
     //
     /// Test localCartesianToGlobal
     Vector3D cartesian3D1_1{1., 1., 0.};
-    CHECK_CLOSE_ABS(discSurfaceObject->localCartesianToGlobal(cartesian1_1),
-                    cartesian3D1_1,
-                    1e-6);
+    CHECK_CLOSE_ABS(
+        discSurfaceObject->localCartesianToGlobal(testContext, cartesian1_1),
+        cartesian3D1_1,
+        1e-6);
     //
     /// Test globalToLocalCartesian
-    CHECK_CLOSE_REL(discSurfaceObject->globalToLocalCartesian(cartesian3D1_1),
-                    cartesian1_1,
-                    1e-6);
+    CHECK_CLOSE_REL(
+        discSurfaceObject->globalToLocalCartesian(testContext, cartesian3D1_1),
+        cartesian1_1,
+        1e-6);
     //
     /// Test pathCorrection
     double   projected3DMomentum = std::sqrt(3.) * 1.e6;
     Vector3D momentum{
         projected3DMomentum, projected3DMomentum, projected3DMomentum};
     Vector3D ignoredPosition{1.1, 2.2, 3.3};
-    CHECK_CLOSE_REL(
-        discSurfaceObject->pathCorrection(ignoredPosition, momentum),
-        std::sqrt(3),
-        0.01);
+    CHECK_CLOSE_REL(discSurfaceObject->pathCorrection(
+                        testContext, ignoredPosition, momentum),
+                    std::sqrt(3),
+                    0.01);
     //
     /// intersectionEstimate
     Vector3D globalPosition{1.2, 0.0, -10.};
@@ -187,8 +197,8 @@ namespace Test {
     Vector3D expected{1.2, 0.0, 0.0};
     // intersect is a struct of (Vector3D) position, pathLength, distance and
     // (bool) valid
-    auto intersect
-        = discSurfaceObject->intersectionEstimate(globalPosition, direction);
+    auto intersect = discSurfaceObject->intersectionEstimate(
+        testContext, globalPosition, direction);
     Intersection expectedIntersect{Vector3D{1.2, 0., 0.}, 10., true, 0.0};
     BOOST_CHECK(intersect.valid);
     CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);

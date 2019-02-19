@@ -87,7 +87,7 @@ Acts::RadialBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 
 // ostream operator overload
 std::ostream&
-Acts::RadialBounds::dump(std::ostream& sl) const
+Acts::RadialBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

@@ -59,7 +59,7 @@ ProtoLayer::radialDistance(const Vector3D& pos1, const Vector3D& pos2) const
 }
 
 std::ostream&
-ProtoLayer::dump(std::ostream& sl) const
+ProtoLayer::toStream(std::ostream& sl) const
 {
   sl << "ProtoLayer with dimensions (min/max)" << std::endl;
   sl << " - r : " << minR << " - " << envR.first << " / " << maxR << " + "

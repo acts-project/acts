@@ -76,7 +76,7 @@ public:
   ///
   /// @param sl is the ostream to be dumped into
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
 private:
   double m_radius, m_halfZ;

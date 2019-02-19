@@ -37,6 +37,9 @@ namespace Test {
     // Construct builder
     CuboidVolumeBuilder cvb;
 
+    // Create a test context
+    ContextType testContext = DefaultContext();
+
     // Create configurations for surfaces
     std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
     for (unsigned int i = 1; i < 5; i++) {
@@ -82,7 +85,7 @@ namespace Test {
     for (const auto& cfg : surfaceConfig) {
       std::shared_ptr<const PlaneSurface> pSur = cvb.buildSurface(cfg);
       BOOST_CHECK_NE(pSur, nullptr);
-      CHECK_CLOSE_ABS(pSur->center(), cfg.position, 1e-9);
+      CHECK_CLOSE_ABS(pSur->center(testContext), cfg.position, 1e-9);
       BOOST_CHECK_NE(pSur->associatedMaterial(), nullptr);
       BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
     }
@@ -221,10 +224,12 @@ namespace Test {
 
     std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
     BOOST_CHECK_EQUAL(
-        detector->lowestTrackingVolume({1., 0., 0.})->volumeName(),
+        detector->trackingVolume(testContext, Vector3D(1., 0., 0.))
+            ->volumeName(),
         volumeConfig.name);
     BOOST_CHECK_EQUAL(
-        detector->lowestTrackingVolume({-1., 0., 0.})->volumeName(),
+        detector->trackingVolume(testContext, Vector3D(-1., 0., 0.))
+            ->volumeName(),
         volumeConfig2.name);
   }
 }  // namespace Test

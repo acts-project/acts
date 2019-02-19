@@ -34,6 +34,10 @@ namespace Test {
   // This tests the implementation of the Step corrector
   BOOST_AUTO_TEST_CASE(RelativePathCorrectorTests)
   {
+
+    // Create a test context
+    ContextType testContext = DefaultContext();
+
     // construct the surface
     Vector3D pcenter(-4., 4., 0.);
     Vector3D pnormal = Vector3D(-1., 4., 0.).normalized();
@@ -54,9 +58,10 @@ namespace Test {
     Vector3D d0p   = Vector3D(-2., 9., 0.).normalized();
     double   pathp = 13.;
 
-    auto intersect = [&position, &direction, &plane]() -> Intersection {
-      auto pi
-          = plane->intersectionEstimate(position, direction, forward, false);
+    auto intersect
+        = [&testContext, &position, &direction, &plane]() -> Intersection {
+      auto pi = plane->intersectionEstimate(
+          testContext, position, direction, forward, false);
       std::cout << "Interseciton it at " << toString(pi.position) << std::endl;
       return pi;
     };

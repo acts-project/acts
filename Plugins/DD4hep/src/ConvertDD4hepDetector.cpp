@@ -445,11 +445,14 @@ cylinderVolumeHelper_dd4hep(Logging::Level loggingLevel)
 {
   // create cylindervolumehelper which can be used by all instances
   // hand over LayerArrayCreator
+  Acts::LayerArrayCreator::Config lacConfig;
   auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(
-      Acts::getDefaultLogger("LayArrayCreator", loggingLevel));
+      lacConfig, Acts::getDefaultLogger("LayArrayCreator", loggingLevel));
   // tracking volume array creator
-  auto trackingVolumeArrayCreator
+  Acts::TrackingVolumeArrayCreator::Config tvacConfig;
+  auto                                     trackingVolumeArrayCreator
       = std::make_shared<const Acts::TrackingVolumeArrayCreator>(
+          tvacConfig,
           Acts::getDefaultLogger("TrkVolArrayCreator", loggingLevel));
   // configure the cylinder volume helper
   Acts::CylinderVolumeHelper::Config cvhConfig;

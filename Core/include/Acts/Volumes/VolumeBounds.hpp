@@ -91,7 +91,7 @@ public:
   ///
   /// @param sl is the output stream to be dumped into
   virtual std::ostream&
-  dump(std::ostream& sl) const = 0;
+  toStream(std::ostream& sl) const = 0;
 };
 
 /// Binning offset - overloaded for some R-binning types
