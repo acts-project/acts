@@ -24,7 +24,13 @@
 namespace Acts {
 
 /// Result status of track parameter propagation
-enum struct PropagatorStatus { SUCCESS, FAILURE, UNSET, IN_PROGRESS, WRONG_DIRECTION };
+enum struct PropagatorStatus {
+  SUCCESS,
+  FAILURE,
+  UNSET,
+  IN_PROGRESS,
+  WRONG_DIRECTION
+};
 
 /// @brief Simple class holding result of propagation call
 ///
@@ -65,7 +71,10 @@ struct Result : private detail::Extendable<result_list...>
   /// @return @c true if the final parameters are set and propagation status
   ///         is SUCCESS, otherwise @c false
   ///
-  operator bool() const { return (endParameters && status == PropagatorStatus::SUCCESS); }
+  operator bool() const
+  {
+    return (endParameters && status == PropagatorStatus::SUCCESS);
+  }
 };
 
 /// @brief Options for propagate() call
