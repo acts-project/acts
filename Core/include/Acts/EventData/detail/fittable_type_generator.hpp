@@ -8,9 +8,7 @@
 
 #pragma once
 
-// boost include(s)
-//#include <boost/mpl/vector.hpp>
-//#include <boost/variant.hpp>
+#include <variant>
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #include <type_traits>
