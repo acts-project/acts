@@ -12,6 +12,7 @@
 
 #pragma once
 
+#include <vector>
 #include "Acts/Material/Material.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -19,21 +20,23 @@
 
 namespace Acts {
 
-class TrackingVolume;
-
 /// @brief This class serves to concatenate material evaluated at arbitrary
 /// space points in a TrackingVolume on a provided set of grid points. The
 /// procedure creates mean material values at these points and can be used to
 /// create an interpolated grid of material.
+/// @note Since this class just associates an arbitrary cloud of space points
+/// with the material evaluated at these points to a user defined grid, this
+/// procedure is a pure pre-processing of an applicable material getter. This
+/// last step requires additional interpolation between the grid points.
 class VolumeMaterialMapper
 {
 public:
-  using RecordedMaterial = std::vector<std::pair<Material, Vector3D>>
+  using RecordedMaterial = std::vector<std::pair<Material, Vector3D>>;
 
-      /// @struct State
-      ///
-      /// State struct which is used for the mapping prococess
-      struct State
+  /// @struct State
+  ///
+  /// State struct which is used for the mapping prococess
+  struct State
   {
     /// Storage of the grid points in each dimension. The structure is
     /// gridPointsPerAxis[dimension][index]
@@ -43,15 +46,10 @@ public:
     std::vector<AccumulatedVolumeMaterial> accumulatedMaterial;
   };
 
-  /// Delete the Default constructor
-  VolumeMaterialMapper() = delete;
-
   /// Constructor with config object
   ///
   /// @param [in] log The logger
-  VolumeMaterialMapper(std::unique_ptr<const Logger> slogger
-                       = getDefaultLogger("SurfaceMaterialMapper",
-                                          Logging::INFO));
+  VolumeMaterialMapper() = default;
 
   /// @brief Helper method that creates the cache for the mapping.
   ///
@@ -72,9 +70,9 @@ public:
   /// vectors are sorted inside the function.
   /// @return State object
   State
-  createState(const vector<double>& gridAxis1,
-              const vector<double>& gridAxis2 = {},
-              const vector<double>& gridAxis3 = {}) const;
+  createState(const std::vector<double>& gridAxis1,
+              const std::vector<double>& gridAxis2 = {},
+              const std::vector<double>& gridAxis3 = {}) const;
 
   /// @brief Concatenate a set of material at arbitrary space points on a set of
   /// grid points
@@ -101,9 +99,5 @@ public:
   /// @return Vector of material at each grid point
   std::vector<Material>
   finalizeMaps(State& mState) const;
-
-private:
-  /// The logging instance
-  std::unique_ptr<const Logger> m_logger;
 };
 }

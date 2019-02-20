@@ -47,12 +47,12 @@ public:
   totalAverage();
 
 private:
-  float m_eventX0{0.};   //!< event: accumulate the contribution to X0
-  float m_eventL0{0.};   //!< event: accumulate the contribution to L0
-  float m_eventA{0.};    //!< event: accumulate the contribution to A
-  float m_eventZ{0.};    //!< event: accumulate the contribution to Z
-  float m_eventRho{0.};  //!< event: accumulate the contribution to rho
+  float m_totalX0{0.};   //!< accumulate the contribution to X0
+  float m_totalL0{0.};   //!< accumulate the contribution to L0
+  float m_totalA{0.};    //!< accumulate the contribution to A
+  float m_totalZ{0.};    //!< accumulate the contribution to Z
+  float m_totalRho{0.};  //!< accumulate the contribution to rho
 
-  unsigned int m_totalEntries{0};  //!< the number of events
+  unsigned int m_totalEntries{0};  //!< the number of totals
 };
 }

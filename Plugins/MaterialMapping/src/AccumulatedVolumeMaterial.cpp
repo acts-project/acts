@@ -15,28 +15,27 @@
 void
 Acts::AccumulatedVolumeMaterial::accumulate(const Material& mat)
 {
-  m_eventX0 += mat.X0();
-  m_eventL0 += mat.L0();
-  m_eventA += mat.A();
-  m_eventZ += mat.Z();
-  m_eventRho += mat.rho();
+  m_totalX0 += mat.X0();
+  m_totalL0 += mat.L0();
+  m_totalA += mat.A();
+  m_totalZ += mat.Z();
+  m_totalRho += mat.rho();
   m_totalEntries++;
 }
 
 Acts::Material
-Acts::AccumulatedVolumeMaterial::eventAverage()
+Acts::AccumulatedVolumeMaterial::totalAverage()
 {
-  if (m_totalEntires > 0) {
-    double eventScalor = 1. / (double)m_totalEntries;
-    m_totalX0 *= eventScalor;
-    m_totalL0 *= eventScalor;
-    m_totalA *= eventScalor;
-    m_totalZ *= eventScalor;
-    m_totalRho *= eventScalor;
+  if (m_totalEntries > 0) {
+    double totalScalor = 1. / (double)m_totalEntries;
+    m_totalX0 *= totalScalor;
+    m_totalL0 *= totalScalor;
+    m_totalA *= totalScalor;
+    m_totalZ *= totalScalor;
+    m_totalRho *= totalScalor;
     // Create the material
     return Material(m_totalX0, m_totalL0, m_totalA, m_totalZ, m_totalRho);
-  } else {
-    // Create vacuum
-    return Material();
   }
+  // Create vacuum
+  return Material();
 }
