@@ -20,7 +20,7 @@ Acts::InterpolatedMaterialMap::MaterialMapper<2>
 Acts::materialMapperRZ(
     const std::function<size_t(std::array<size_t, 2> binsRZ,
                                std::array<size_t, 2> nBinsRZ)>&
-                          localToGlobalBin,
+                          materialVectorToGridMapper,
     std::vector<double>   rPos,
     std::vector<double>   zPos,
     std::vector<Material> material,
@@ -88,13 +88,13 @@ Acts::materialMapperRZ(
         Grid_t::index_t indicesFirstQuadrant = {{i - 1, n}};
 
         grid.at(indices) = materialVector.at(
-            localToGlobalBin(indicesFirstQuadrant, nIndices));
+            materialVectorToGridMapper(indicesFirstQuadrant, nIndices));
       } else {
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
         grid.at(indices)
-            = materialVector.at(localToGlobalBin({{i - 1, j - 1}}, nIndices));
+            = materialVector.at(materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
       }
     }
   }
@@ -118,7 +118,7 @@ Acts::InterpolatedMaterialMap::MaterialMapper<3>
 Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
-                          localToGlobalBin,
+                          materialVectorToGridMapper,
     std::vector<double>   xPos,
     std::vector<double>   yPos,
     std::vector<double>   zPos,
@@ -210,14 +210,14 @@ Acts::materialMapperXYZ(
           Grid_t::index_t indicesFirstOctant = {{m, n, l}};
 
           grid.at(indices) = materialVector.at(
-              localToGlobalBin(indicesFirstOctant, nIndices));
+              materialVectorToGridMapper(indicesFirstOctant, nIndices));
 
         } else {
           // std::vectors begin with 0 and we do not want the user needing to
           // take underflow or overflow bins in account this is why we need to
           // subtract by one
           grid.at(indices) = materialVector.at(
-              localToGlobalBin({{i - 1, j - 1, k - 1}}, nIndices));
+              materialVectorToGridMapper({{i - 1, j - 1, k - 1}}, nIndices));
         }
       }
     }

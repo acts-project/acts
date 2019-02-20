@@ -59,7 +59,7 @@ namespace Acts {
 InterpolatedMaterialMap::MaterialMapper<2>
 materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                             std::array<size_t, 2> nBinsRZ)>&
-                                       localToGlobalBin,
+                                       materialVectorToGridMapper,
                  std::vector<double>   rPos,
                  std::vector<double>   zPos,
                  std::vector<Material> material,
@@ -117,7 +117,7 @@ materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 InterpolatedMaterialMap::MaterialMapper<3>
 materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                              std::array<size_t, 3> nBinsXYZ)>&
-                                        localToGlobalBin,
+                                        materialVectorToGridMapper,
                   std::vector<double>   xPos,
                   std::vector<double>   yPos,
                   std::vector<double>   zPos,
