@@ -44,7 +44,7 @@ public:
   ///
   /// @return Material consisting of the averaged values
   Material
-  totalAverage();
+  average();
 
 private:
   float m_totalX0{0.};   //!< accumulate the contribution to X0

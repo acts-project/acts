@@ -59,17 +59,6 @@ namespace Acts {
 InterpolatedMaterialMap::MaterialMapper<2>
 materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                             std::array<size_t, 2> nBinsRZ)>&
-                                             localToGlobalBin,
-                 std::vector<double>         rPos,
-                 std::vector<double>         zPos,
-                 std::vector<ActsVectorF<5>> material,
-                 double                      lengthUnit    = units::_mm,
-                 bool                        firstQuadrant = false);
-
-/// @brief Converts material and calls constructor of @c MaterialMapper<2>
-InterpolatedMaterialMap::MaterialMapper<2>
-materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                            std::array<size_t, 2> nBinsRZ)>&
                                        localToGlobalBin,
                  std::vector<double>   rPos,
                  std::vector<double>   zPos,
@@ -125,18 +114,6 @@ materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 /// axis.
 /// If the flag is set to true the z-axis grid values will be set to {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
-InterpolatedMaterialMap::MaterialMapper<3>
-materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                                             std::array<size_t, 3> nBinsXYZ)>&
-                                              localToGlobalBin,
-                  std::vector<double>         xPos,
-                  std::vector<double>         yPos,
-                  std::vector<double>         zPos,
-                  std::vector<ActsVectorF<5>> material,
-                  double                      lengthUnit  = units::_mm,
-                  bool                        firstOctant = false);
-
-/// @brief Converts material and calls constructor of @c MaterialMapper<3>
 InterpolatedMaterialMap::MaterialMapper<3>
 materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                              std::array<size_t, 3> nBinsXYZ)>&

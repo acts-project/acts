@@ -82,7 +82,7 @@ public:
                iMatData[2],
                iMatData[3],
                iMatData[4],
-               imc)
+               std::move(imc))
   {
   }
 

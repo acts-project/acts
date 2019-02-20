@@ -74,7 +74,7 @@ Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const
 
   // Average material and add it
   for (auto& am : mState.accumulatedMaterial) {
-    materialAtGridPoints.push_back(am.totalAverage());
+    materialAtGridPoints.push_back(am.average());
   }
   return materialAtGridPoints;
 }

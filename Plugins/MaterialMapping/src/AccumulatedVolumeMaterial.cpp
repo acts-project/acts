@@ -24,17 +24,16 @@ Acts::AccumulatedVolumeMaterial::accumulate(const Material& mat)
 }
 
 Acts::Material
-Acts::AccumulatedVolumeMaterial::totalAverage()
+Acts::AccumulatedVolumeMaterial::average()
 {
   if (m_totalEntries > 0) {
-    double totalScalor = 1. / (double)m_totalEntries;
-    m_totalX0 *= totalScalor;
-    m_totalL0 *= totalScalor;
-    m_totalA *= totalScalor;
-    m_totalZ *= totalScalor;
-    m_totalRho *= totalScalor;
+    double scalor = 1. / (double)m_totalEntries;
     // Create the material
-    return Material(m_totalX0, m_totalL0, m_totalA, m_totalZ, m_totalRho);
+    return Material(m_totalX0 * scalor,
+                    m_totalL0 * scalor,
+                    m_totalA * scalor,
+                    m_totalZ * scalor,
+                    m_totalRho * scalor);
   }
   // Create vacuum
   return Material();

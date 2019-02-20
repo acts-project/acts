@@ -20,14 +20,22 @@ Acts::InterpolatedMaterialMap::MaterialMapper<2>
 Acts::materialMapperRZ(
     const std::function<size_t(std::array<size_t, 2> binsRZ,
                                std::array<size_t, 2> nBinsRZ)>&
-                                localToGlobalBin,
-    std::vector<double>         rPos,
-    std::vector<double>         zPos,
-    std::vector<ActsVectorF<5>> material,
-    double                      lengthUnit,
-    bool                        firstQuadrant)
+                          localToGlobalBin,
+    std::vector<double>   rPos,
+    std::vector<double>   zPos,
+    std::vector<Material> material,
+    double                lengthUnit,
+    bool                  firstQuadrant)
 {
-  // [1] Create Grid
+  // [1] Decompose material
+  std::vector<ActsVectorF<5>> materialVector(material.size());
+  materialVector.resize(material.size());
+
+  for (Material& mat : material) {
+    materialVector.push_back(mat.decomposeIntoClassificationNumbers());
+  }
+
+  // [2] Create Grid
   // sort the values
   std::sort(rPos.begin(), rPos.end());
   std::sort(zPos.begin(), zPos.end());
@@ -67,7 +75,7 @@ Acts::materialMapperRZ(
       Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
-  // [2] Set the bField values
+  // [3] Set the bField values
   for (size_t i = 1; i <= nBinsR; ++i) {
     for (size_t j = 1; j <= nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
@@ -79,14 +87,14 @@ Acts::materialMapperRZ(
         size_t          n = std::abs(int(j) - int(zPos.size()));
         Grid_t::index_t indicesFirstQuadrant = {{i - 1, n}};
 
-        grid.at(indices)
-            = material.at(localToGlobalBin(indicesFirstQuadrant, nIndices));
+        grid.at(indices) = materialVector.at(
+            localToGlobalBin(indicesFirstQuadrant, nIndices));
       } else {
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
         grid.at(indices)
-            = material.at(localToGlobalBin({{i - 1, j - 1}}, nIndices));
+            = materialVector.at(localToGlobalBin({{i - 1, j - 1}}, nIndices));
       }
     }
   }
@@ -95,51 +103,38 @@ Acts::materialMapperRZ(
       std::numeric_limits<float>::infinity(), 0., 0., 0.;
   grid.setExteriorBins(vec);
 
-  // [3] Create the transformation for the position
+  // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)
   auto transformPos
       = [](const Vector3D& pos) { return Vector2D(perp(pos), pos.z()); };
 
-  // [4] Create the mapper & BField Service
+  // [5] Create the mapper & BField Service
   // create material mapping
   return InterpolatedMaterialMap::MaterialMapper<2>(transformPos,
                                                     std::move(grid));
-}
-
-Acts::InterpolatedMaterialMap::MaterialMapper<2>
-Acts::materialMapperRZ(
-    const std::function<size_t(std::array<size_t, 2> binsRZ,
-                               std::array<size_t, 2> nBinsRZ)>&
-                          localToGlobalBin,
-    std::vector<double>   rPos,
-    std::vector<double>   zPos,
-    std::vector<Material> material,
-    double                lengthUnit,
-    bool                  firstQuadrant)
-{
-  std::vector<ActsVectorF<5>> materialVector;
-
-  for (Material& mat : material) {
-    materialVector.push_back(mat.decomposeIntoClassificationNumbers());
-  }
-
-  return materialMapperRZ(
-      localToGlobalBin, rPos, zPos, materialVector, lengthUnit, firstQuadrant);
 }
 
 Acts::InterpolatedMaterialMap::MaterialMapper<3>
 Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
-                                localToGlobalBin,
-    std::vector<double>         xPos,
-    std::vector<double>         yPos,
-    std::vector<double>         zPos,
-    std::vector<ActsVectorF<5>> material,
-    double                      lengthUnit,
-    bool                        firstOctant)
+                          localToGlobalBin,
+    std::vector<double>   xPos,
+    std::vector<double>   yPos,
+    std::vector<double>   zPos,
+    std::vector<Material> material,
+    double                lengthUnit,
+    bool                  firstOctant)
 {
-  // [1] Create Grid
+  // [1] Decompose material
+  std::vector<ActsVectorF<5>> materialVector(material.size());
+  materialVector.resize(material.size());
+
+  for (Material& mat : material) {
+    materialVector.push_back(mat.decomposeIntoClassificationNumbers());
+  }
+
+  // [2] Create Grid
   // Sort the values
   std::sort(xPos.begin(), xPos.end());
   std::sort(yPos.begin(), yPos.end());
@@ -198,7 +193,7 @@ Acts::materialMapperXYZ(
   Grid_t grid(
       std::make_tuple(std::move(xAxis), std::move(yAxis), std::move(zAxis)));
 
-  // [2] Set the bField values
+  // [3] Set the bField values
   for (size_t i = 1; i <= nBinsX; ++i) {
     for (size_t j = 1; j <= nBinsY; ++j) {
       for (size_t k = 1; k <= nBinsZ; ++k) {
@@ -214,14 +209,14 @@ Acts::materialMapperXYZ(
           size_t          l = std::abs(int(k) - (int(zPos.size())));
           Grid_t::index_t indicesFirstOctant = {{m, n, l}};
 
-          grid.at(indices)
-              = material.at(localToGlobalBin(indicesFirstOctant, nIndices));
+          grid.at(indices) = materialVector.at(
+              localToGlobalBin(indicesFirstOctant, nIndices));
 
         } else {
           // std::vectors begin with 0 and we do not want the user needing to
           // take underflow or overflow bins in account this is why we need to
           // subtract by one
-          grid.at(indices) = material.at(
+          grid.at(indices) = materialVector.at(
               localToGlobalBin({{i - 1, j - 1, k - 1}}, nIndices));
         }
       }
@@ -232,39 +227,12 @@ Acts::materialMapperXYZ(
       std::numeric_limits<float>::infinity(), 0., 0., 0.;
   grid.setExteriorBins(vec);
 
-  // [3] Create the transformation for the position
+  // [4] Create the transformation for the position
   // map (x,y,z) -> (r,z)
   auto transformPos = [](const Vector3D& pos) { return pos; };
 
-  // [4] Create the mapper & BField Service
+  // [5] Create the mapper & BField Service
   // create material mapping
   return InterpolatedMaterialMap::MaterialMapper<3>(transformPos,
                                                     std::move(grid));
-}
-
-Acts::InterpolatedMaterialMap::MaterialMapper<3>
-Acts::materialMapperXYZ(
-    const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                               std::array<size_t, 3> nBinsXYZ)>&
-                          localToGlobalBin,
-    std::vector<double>   xPos,
-    std::vector<double>   yPos,
-    std::vector<double>   zPos,
-    std::vector<Material> material,
-    double                lengthUnit,
-    bool                  firstOctant)
-{
-  std::vector<ActsVectorF<5>> materialVector;
-
-  for (Material& mat : material) {
-    materialVector.push_back(mat.decomposeIntoClassificationNumbers());
-  }
-
-  return materialMapperXYZ(localToGlobalBin,
-                           xPos,
-                           yPos,
-                           zPos,
-                           materialVector,
-                           lengthUnit,
-                           firstOctant);
 }
