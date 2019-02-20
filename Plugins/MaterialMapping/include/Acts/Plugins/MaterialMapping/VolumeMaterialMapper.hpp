@@ -12,7 +12,6 @@
 
 #pragma once
 
-#include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/RecordedMaterialTrack.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -22,6 +21,7 @@ namespace Acts {
 
 class TrackingVolume;
 
+/// @brief This class serves to concatenate material evaluated at arbitrary space points in a TrackingVolume on a provided set of grid points. The procedure creates mean material values at these points and can be used to create an interpolated grid of material.
 class VolumeMaterialMapper
 {
 public:
@@ -29,19 +29,13 @@ public:
 
   /// @struct State
   ///
-  /// Nested State struct which is used for the mapping prococess
+  /// State struct which is used for the mapping prococess
   struct State
   {
-	  // TODO: Require a functional description for association of space point with anchor point
-	  std::vector<std::vector<double>> edgesPerAxis;
-	  
+	  /// Storage of the grid points in each dimension. The structure is gridPointsPerAxis[dimension][index]
+	  std::vector<std::vector<double>> gridPointsPerAxis;
+	  /// Storage of the accumulated material obtained at each of the grid points. The vector has the length of all combinatorial grid points. 
 	  std::vector<AccumulatedVolumeMaterial> accumulatedMaterial;
-	  
-    //~ /// The accumulated material per geometry ID
-    //~ std::map<GeometryID, AccumulatedVolumeMaterial> accumulatedMaterial; // TODO: GeoID should be something related to an axis construct
-    //~ /// The created surface material from it
-    //~ std::map<GeometryID, std::unique_ptr<const SurfaceMaterial>> // TODO: must become a look-up of the grid points or since this keeps the binning be removed
-        //~ surfaceMaterial;
   };
 
   /// Delete the Default constructor
@@ -49,50 +43,43 @@ public:
 
   /// Constructor with config object
   ///
-  /// @param cfg Configuration struct
-  /// @param propagator The straight line propagator
-  /// @param log The logger
-  VolumeMaterialMapper(bool mapperDebugOutput                 dpg,
-                        std::unique_ptr<const Logger> slogger
+  /// @param [in] log The logger
+  VolumeMaterialMapper(std::unique_ptr<const Logger> slogger
                         = getDefaultLogger("SurfaceMaterialMapper",
                                            Logging::INFO));
 
-  /// @brief helper method that creates the cache for the mapping
+  /// @brief Helper method that creates the cache for the mapping.
   ///
-  /// @param[in] tGeometry The geometry which should be mapped
+  /// @param [in] gridAxis1 Vector of grid points in the arbitrary first dimension
+  /// @param [in] gridAxis2 Vector of grid points in the arbitrary second dimension
+  /// @param [in] gridAxis3 Vector of grid points in the arbitrary third dimension
   ///
-  /// This method takes a TrackingGeometry,
-  /// finds all surfaces with material proxis
-  /// and returns you a Cache object tO be used
-  // TODO: Sorting inside of function
+  /// @note The number of filled vectors describe the dimension inside the space of the latter look-up grid of the material. The dimension of the mapping is not fix and can be 1-3 dimensional depending of the amount of non-empty vectors.
+  /// @note At this point there does not exist a connection of the entries of the vector to an axis. This connection becomes important in the VolumeMaterialMapper::mapMaterialPoints() function. Also the values in the vectors are sorted inside the function.
+  /// @return State object
   State
-  createState(const vector<double>& edgeAxis1, const vector<double>& edgeAxis2 = {}, const vector<double>& edgeAxis3 = {}) const;
+  createState(const vector<double>& gridAxis1, const vector<double>& gridAxis2 = {}, const vector<double>& gridAxis3 = {}) const;
 
   /// @brief Method to finalize the maps
   ///
   /// It calls the final run averaging and then transforms
-  /// the AccumulatedSurface material class to a surface material
-  /// class type
+  /// the AccumulatedSurface material class to a vector of materials with the same ordering as the mState.accumulatedMaterial vector.
   ///
-  /// @param mState
+  /// @param [in] mState State object
+  ///
+  /// @return Vector of material at each grid point
   std::vector<Material>
   finalizeMaps(State& mState) const;
 
-  /// Process/map a single track
+  /// @brief Concatenate a set of material at arbitrary space points on a set of grid points
   ///
-  /// @param mState The current state map
-  /// @param mTrack The material track to be mapped
-  ///
-  /// @note the RecordedMaterialProperties of the track are assumed
-  /// to be ordered from the starting position along the starting direction
-  // TODO: mTrack should become vector<material, vector3d>
+  /// @param [in] mState The current state map
+  /// @param [in] mPoints The set of material at the space points
+  /// @param [in] concatenateToGridPoints Function that assigns the space point of @p mPoints to the grid points
   void
-  mapMaterialTrack(State& mState, const RecordedMaterialTrack& mTrack, const std::function<unsigned int(const Vector3D&, const State&)>& concatenateToEdge) const;
+  mapMaterialPoints(State& mState, const RecordedMaterialTrack& mPoints, const std::function<unsigned int(const Vector3D&, const State&)>& concatenateToGridPoints) const;
 
 private:
-
-    /// Mapping output to debug stream
-    bool m_mapperDebugOutput = false;
 
   /// The logging instance
   std::unique_ptr<const Logger> m_logger;
