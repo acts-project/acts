@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include <boost/any.hpp>
+#include <any>
 
 namespace Acts {
 
@@ -16,7 +16,7 @@ namespace Acts {
 /// payload object that is propagated through the code
 /// to allow for event/thread context
 
-using GeometryContext        = boost::any;
+using GeometryContext        = std::any;
 using DefaultGeometryContext = GeometryContext;
 
 }  // namespace Acts
