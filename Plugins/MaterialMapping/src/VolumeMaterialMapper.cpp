@@ -19,56 +19,82 @@ Acts::VolumeMaterialMapper::VolumeMaterialMapper(
 }
 
 Acts::VolumeMaterialMapper::State
-Acts::VolumeMaterialMapper::createState(
-    const vector<double>& gridAxis1, const vector<double>& gridAxis2, const vector<double>& gridAxis3) const
+Acts::VolumeMaterialMapper::createState(const vector<double>& gridAxis1,
+                                        const vector<double>& gridAxis2,
+                                        const vector<double>& gridAxis3) const
 {
   // The Surface material mapping state
   State mState;
-  
-  unsigned int numGridPoints = gridAxis1.size();
-  mState.gridPointsPerAxis.push_back(gridAxis1);
-  std::sort(mState.gridPointsPerAxis[0].begin(), mState.gridPointsPerAxis[0].end());
-  if(!gridAxis2.empty())
-  {
-	mState.gridPointsPerAxis.push_back(gridAxis2);
-	std::sort(mState.gridPointsPerAxis[1].begin(), mState.gridPointsPerAxis[1].end());
-	numGridPoints *= gridAxis2.size();
-	}
-  if(!gridAxis3.empty())
-  {
-	mState.gridPointsPerAxis.push_back(gridAxis3);
-	std::sort(mState.gridPointsPerAxis[2].begin(), mState.gridPointsPerAxis[2].end());
-	numGridPoints *= gridAxis3.size();
-	}
 
-	mState.accumulatedMaterial.resize(numGridPoints);
+  // Add points and sort
+  mState.gridPointsPerAxis.push_back(gridAxis1);
+  std::sort(mState.gridPointsPerAxis[0].begin(),
+            mState.gridPointsPerAxis[0].end());
+
+  // Count the total amount of grid points
+  unsigned int numGridPoints = gridAxis1.size();
+
+  ACTS_DEBUG("Grid axis found containing " << gridAxis1.size() << " points");
+
+  // Perform it again if there is a second axis
+  if (!gridAxis2.empty()) {
+    mState.gridPointsPerAxis.push_back(gridAxis2);
+    std::sort(mState.gridPointsPerAxis[1].begin(),
+              mState.gridPointsPerAxis[1].end());
+    numGridPoints *= gridAxis2.size();
+
+    ACTS_DEBUG("Grid axis found containing " << gridAxis2.size() << " points");
+
+    // Perform it again if there is a third axis
+    if (!gridAxis3.empty()) {
+      mState.gridPointsPerAxis.push_back(gridAxis3);
+      std::sort(mState.gridPointsPerAxis[2].begin(),
+                mState.gridPointsPerAxis[2].end());
+      numGridPoints *= gridAxis3.size();
+
+      ACTS_DEBUG("Grid axis found containing " << gridAxis3.size()
+                                               << " points");
+    }
+  }
+  // Set the number of grid points
+  mState.accumulatedMaterial.resize(numGridPoints);
 
   ACTS_DEBUG(mState.accumulatedMaterial.size()
-             << " anchor points collected ... ");
-  ACTS_VERBOSE(numGridPoints << " anchor points found");
- 
+             << " grid points collected ... ");
+
   return mState;
+}
+
+void
+Acts::SurfaceMaterialMapper::mapMaterialPoints(
+    State&                  mState,
+    const RecordedMaterial& mPoints,
+    const std::function<unsigned int(const Vector3D&, const State&)>&
+        concatenateToGridPoints) const
+{
+  ACTS_DEBUG("Adding " << mPoints.size() << " material points to the record");
+
+  // Walk over each point
+  for (const auto& rm : mPoints) {
+    // Search for fitting grid point and accumulate
+    unsigned int index = concatenateToGridPoint(rm.second, mState);
+    mState.accumulatedMaterial[index].accumulate(rm.first);
+  }
 }
 
 std::vector<Acts::Material>
 Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const
 {
-	std::vector<Acts::Material> materialAtGridPoint;
-	materialAtGridPoint.reserve(mState.accumulatedMaterial.size());
+  ACTS_DEBUG("Starting finalization of maps");
 
+  // Returning material vector
+  std::vector<Acts::Material> materialAtGridPoint;
+  materialAtGridPoint.reserve(mState.accumulatedMaterial.size());
+
+  // Average material and add it
   for (auto& am : mState.accumulatedMaterial) {
-	  materialAtGridPoint.push_back(am.totalAverage().first.material());
+    materialAtGridPoint.push_back(am.totalAverage());
   }
-}
 
-void
-Acts::SurfaceMaterialMapper::mapMaterialPoints(
-    State&                       mState,
-    const RecordedMaterialTrack& mPoints, const std::function<unsigned int(const Vector3D&, const State&)>& concatenateToGridPoints) const
-{
-  for(const auto& rmp : mPoints)
-  {
-	unsigned int index = concatenateToGridPoint(rmp.second, mState);
-	mState.accumulatedMaterial[index].accumulate(rmp.second, rmp.first);
-  }
+  ACTS_VERBOSE("Map finalized");
 }

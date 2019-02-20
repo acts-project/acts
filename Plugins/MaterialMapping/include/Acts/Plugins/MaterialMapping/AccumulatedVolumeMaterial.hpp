@@ -18,9 +18,11 @@ namespace Acts {
 /// @class AccumulatedVolumeMaterial
 ///
 /// This class is used by the VolumeMaterialMapper in order to
-/// accumulate/collect material information during the mapping process. The object represents the collection of a single grid point.
+/// accumulate/collect material information during the mapping process. The
+/// object represents the collection of a single grid point.
 ///
-/// It calculates the average of the material classification values when called, and returns a material with the averaged properties.
+/// It calculates the average of the material classification values when called,
+/// and returns a material with the averaged properties.
 class AccumulatedVolumeMaterial
 {
 public:
@@ -30,24 +32,26 @@ public:
   /// @brief Default destructor
   ~AccumulatedVolumeMaterial() = default;
 
-  /// @brief This function collects the classification values of a material in the container
+  /// @brief This function collects the classification values of a material in
+  /// the container
   ///
   /// @param [in] mat Material that will be collected
   void
   accumulate(const Material& mat);
 
-  /// @brief Total average of each material classification value stored in the object independently
+  /// @brief Total average of each material classification value stored in the
+  /// object independently
   ///
   /// @return Material consisting of the averaged values
   Material
   totalAverage();
 
 private:
-  float m_eventX0{0.};  //!< event: accumulate the contribution to X0
-  float m_eventL0{0.};  //!< event: accumulate the contribution to L0
-  float m_eventA{0.};         //!< event: accumulate the contribution to A
-  float m_eventZ{0.};         //!< event: accumulate the contribution to Z
-  float m_eventRho{0.};       //!< event: accumulate the contribution to rho
+  float m_eventX0{0.};   //!< event: accumulate the contribution to X0
+  float m_eventL0{0.};   //!< event: accumulate the contribution to L0
+  float m_eventA{0.};    //!< event: accumulate the contribution to A
+  float m_eventZ{0.};    //!< event: accumulate the contribution to Z
+  float m_eventRho{0.};  //!< event: accumulate the contribution to rho
 
   unsigned int m_totalEntries{0};  //!< the number of events
 };
