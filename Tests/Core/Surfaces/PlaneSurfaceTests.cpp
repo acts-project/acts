@@ -32,7 +32,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   BOOST_AUTO_TEST_SUITE(PlaneSurfaces)
   /// Unit test for creating compliant/non-compliant PlaneSurface object
@@ -64,7 +64,7 @@ namespace Test {
     //
     /// Copied and transformed
     auto copiedTransformedPlaneSurface = Surface::makeShared<PlaneSurface>(
-        testContext, *planeSurfaceObject, *pTransform);
+        tgContext, *planeSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedPlaneSurface->type(), Surface::Plane);
 
     /// Construct with nullptr bounds
@@ -87,11 +87,11 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     //
     auto pClonedPlaneSurface
-        = planeSurfaceObject->clone(testContext, Transform3D::Identity());
+        = planeSurfaceObject->clone(tgContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedPlaneSurface->type(), Surface::Plane);
     // Test clone method with translation
     auto pClonedShiftedPlaneSurface
-        = planeSurfaceObject->clone(testContext, *pTransform.get());
+        = planeSurfaceObject->clone(tgContext, *pTransform.get());
     // Does it exist at all in a decent state?
     BOOST_CHECK_EQUAL(pClonedShiftedPlaneSurface->type(), Surface::Plane);
     // Is it in the right place?
@@ -112,7 +112,7 @@ namespace Test {
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
     BOOST_CHECK_EQUAL(
-        planeSurfaceObject->binningPosition(testContext, BinningValue::binX),
+        planeSurfaceObject->binningPosition(tgContext, BinningValue::binX),
         binningPosition);
     //
     /// Test referenceFrame
@@ -121,15 +121,15 @@ namespace Test {
     RotationMatrix3D expectedFrame;
     expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
-    CHECK_CLOSE_OR_SMALL(planeSurfaceObject->referenceFrame(
-                             testContext, globalPosition, momentum),
-                         expectedFrame,
-                         1e-6,
-                         1e-9);
+    CHECK_CLOSE_OR_SMALL(
+        planeSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
+        expectedFrame,
+        1e-6,
+        1e-9);
     //
     /// Test normal, given 3D position
     Vector3D normal3D(0., 0., 1.);
-    BOOST_CHECK_EQUAL(planeSurfaceObject->normal(testContext), normal3D);
+    BOOST_CHECK_EQUAL(planeSurfaceObject->normal(tgContext), normal3D);
     //
     /// Test bounds
     BOOST_CHECK_EQUAL(planeSurfaceObject->bounds().type(),
@@ -138,7 +138,7 @@ namespace Test {
     /// Test localToGlobal
     Vector2D localPosition{1.5, 1.7};
     planeSurfaceObject->localToGlobal(
-        testContext, localPosition, momentum, globalPosition);
+        tgContext, localPosition, momentum, globalPosition);
     //
     // expected position is the translated one
     Vector3D expectedPosition{
@@ -148,7 +148,7 @@ namespace Test {
     //
     /// Testing globalToLocal
     planeSurfaceObject->globalToLocal(
-        testContext, globalPosition, momentum, localPosition);
+        tgContext, globalPosition, momentum, localPosition);
     Vector2D expectedLocalPosition{1.5, 1.7};
 
     CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
@@ -156,14 +156,14 @@ namespace Test {
     /// Test isOnSurface
     Vector3D offSurface{0, 1, -2.};
     BOOST_CHECK(planeSurfaceObject->isOnSurface(
-        testContext, globalPosition, momentum, true));
+        tgContext, globalPosition, momentum, true));
     BOOST_CHECK(!planeSurfaceObject->isOnSurface(
-        testContext, offSurface, momentum, true));
+        tgContext, offSurface, momentum, true));
     //
     /// intersectionEstimate
     Vector3D direction{0., 0., 1.};
     auto     intersect = planeSurfaceObject->intersectionEstimate(
-        testContext, offSurface, direction, forward, true);
+        tgContext, offSurface, direction, forward, true);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 4., true, 0};
     BOOST_CHECK(intersect.valid);
     BOOST_CHECK_EQUAL(intersect.position, expectedIntersect.position);

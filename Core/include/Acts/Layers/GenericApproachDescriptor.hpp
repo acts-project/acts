@@ -14,7 +14,7 @@
 
 #include <algorithm>
 #include "Acts/Layers/ApproachDescriptor.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
@@ -54,7 +54,7 @@ public:
 
   /// get the compatible surfaces
   ///
-  /// @param ctx the context object for the approach request
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos is the global position to start the approach from
   /// @param gdir is the momentum vector
   /// @param bcheck is the boundary check prescription
@@ -62,12 +62,12 @@ public:
   ///
   /// @return : a boolean indicating if an actual intersection had been tried
   ObjectIntersection<Surface>
-  approachSurface(Context              ctx,
-                  const Vector3D&      gpos,
-                  const Vector3D&      gdir,
-                  NavigationDirection  navDir,
-                  const BoundaryCheck& bcheck,
-                  CorrFnc              corrfnc = nullptr) const override;
+  approachSurface(const GeometryContext& gctx,
+                  const Vector3D&        gpos,
+                  const Vector3D&        gdir,
+                  NavigationDirection    navDir,
+                  const BoundaryCheck&   bcheck,
+                  CorrFnc                corrfnc = nullptr) const override;
 
   /// return all contained surfaces of this approach descriptor
   const std::vector<const Surface*>&

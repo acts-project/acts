@@ -14,8 +14,8 @@
 #include <algorithm>
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 

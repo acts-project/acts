@@ -22,6 +22,9 @@ using units::Nat2SI;
 
 namespace IntegrationTest {
 
+  // Create a test context
+  GeometryContext tgContext = DefaultGeometryContext();
+
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly
   /// perpendicular to the track
@@ -91,7 +94,7 @@ namespace IntegrationTest {
     namespace VH = VectorHelpers;
 
     // setup propagation options
-    PropagatorOptions<> options;
+    PropagatorOptions<> options(tgContext);
     options.pathLimit   = 5 * units::_m;
     options.maxStepSize = 1 * units::_cm;
     options.debug       = debug;
@@ -184,12 +187,12 @@ namespace IntegrationTest {
     using DebugOutput = Acts::detail::DebugOutputActor;
     using ActionList  = Acts::ActionList<DebugOutput>;
 
-    PropagatorOptions<ActionList> fwdOptions;
+    PropagatorOptions<ActionList> fwdOptions(tgContext);
     fwdOptions.pathLimit   = plimit;
     fwdOptions.maxStepSize = 1 * units::_cm;
     fwdOptions.debug       = debug;
 
-    PropagatorOptions<ActionList> bwdOptions;
+    PropagatorOptions<ActionList> bwdOptions(tgContext);
     bwdOptions.direction   = backward;
     bwdOptions.pathLimit   = -plimit;
     bwdOptions.maxStepSize = 1 * units::_cm;
@@ -256,7 +259,7 @@ namespace IntegrationTest {
               bool debug        = false)
   {
     // setup propagation options
-    PropagatorOptions<> options;
+    PropagatorOptions<> options(tgContext);
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -321,7 +324,7 @@ namespace IntegrationTest {
     using DebugOutput = detail::DebugOutputActor;
 
     // setup propagation options
-    PropagatorOptions<ActionList<DebugOutput>> options;
+    PropagatorOptions<ActionList<DebugOutput>> options(tgContext);
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -402,7 +405,7 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    DenseStepperPropagatorOptions<> options;
+    DenseStepperPropagatorOptions<> options(tgContext);
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -462,7 +465,7 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    DenseStepperPropagatorOptions<> options;
+    DenseStepperPropagatorOptions<> options(tgContext);
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
     options.debug       = debug;
@@ -508,8 +511,9 @@ namespace IntegrationTest {
 
     auto startSurface
         = Surface::makeShared<StartSurface_type>(ssTransform, nullptr);
-    BoundParameters start(std::move(covPtr), pos, mom, q, startSurface);
-    BoundParameters start_wo_c(nullptr, pos, mom, q, startSurface);
+    BoundParameters start(
+        tgContext, std::move(covPtr), pos, mom, q, startSurface);
+    BoundParameters start_wo_c(tgContext, nullptr, pos, mom, q, startSurface);
 
     // increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;

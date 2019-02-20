@@ -23,8 +23,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::SpacePointBuilder(
 
 double
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClustersChecked(
-    const Acts::Vector3D& pos1,
-    const Acts::Vector3D& pos2) const
+    const Vector3D& pos1,
+    const Vector3D& pos2) const
 {
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > m_cfg.diffDist) {
@@ -56,7 +56,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::differenceOfClustersChecked(
 
 Acts::Vector2D
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::localCoords(
-    const Acts::PlanarModuleCluster& cluster) const
+    const PlanarModuleCluster& cluster) const
 {
   // Local position information
   auto           par = cluster.parameters();
@@ -66,25 +66,26 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::localCoords(
 
 Acts::Vector3D
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::globalCoords(
-    const Acts::PlanarModuleCluster& cluster) const
+    const GeometryContext&     gctx,
+    const PlanarModuleCluster& cluster) const
 {
   // Receive corresponding surface
   auto& clusterSurface = cluster.referenceSurface();
 
   // Transform local into global position information
   Acts::Vector3D pos, mom;
-  clusterSurface.localToGlobal(localCoords(cluster), mom, pos);
+  clusterSurface.localToGlobal(gctx, localCoords(cluster), mom, pos);
 
   return pos;
 }
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
+    const GeometryContext&                         gctx,
     const std::vector<const PlanarModuleCluster*>& clustersFront,
     const std::vector<const PlanarModuleCluster*>& clustersBack,
-    std::vector<std::pair<const Acts::PlanarModuleCluster*,
-                          const Acts::PlanarModuleCluster*>>& clusterPairs)
-    const
+    std::vector<std::pair<const PlanarModuleCluster*,
+                          const PlanarModuleCluster*>>& clusterPairs) const
 {
   // Return if no clusters are given in a vector
   if (clustersFront.empty() || clustersBack.empty()) {
@@ -107,8 +108,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
          iClustersBack++) {
       // Calculate the distances between the hits
       currentDiff = differenceOfClustersChecked(
-          globalCoords(*(clustersFront[iClustersFront])),
-          globalCoords(*(clustersBack[iClustersBack])));
+          globalCoords(gctx, *(clustersFront[iClustersFront])),
+          globalCoords(gctx, *(clustersBack[iClustersBack])));
       // Store the closest clusters (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {
         diffMin        = currentDiff;
@@ -130,6 +131,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::makeClusterPairs(
 
 std::pair<Acts::Vector3D, Acts::Vector3D>
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::endsOfStrip(
+    const GeometryContext&           gctx,
     const Acts::PlanarModuleCluster& cluster) const
 {
   // Calculate the local coordinates of the cluster
@@ -166,8 +168,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::endsOfStrip(
   // Calculate the global coordinates of the top and bottom end of the strip
   Acts::Vector3D topGlobal, bottomGlobal, mom;  // mom is a dummy variable
   const auto*    sur = &cluster.referenceSurface();
-  sur->localToGlobal(topLocal, mom, topGlobal);
-  sur->localToGlobal(bottomLocal, mom, bottomGlobal);
+  sur->localToGlobal(gctx, topLocal, mom, topGlobal);
+  sur->localToGlobal(gctx, bottomLocal, mom, bottomGlobal);
 
   // Return the top and bottom end of the strip in global coordinates
   return std::make_pair(topGlobal, bottomGlobal);
@@ -287,6 +289,7 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::recoverSpacePoint(
 
 void
 Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
+    const GeometryContext& gctx,
     const std::vector<std::pair<const Acts::PlanarModuleCluster*,
                                 const Acts::PlanarModuleCluster*>>&
                                             clusterPairs,
@@ -301,8 +304,8 @@ Acts::SpacePointBuilder<Acts::DoubleHitSpacePoint>::calculateSpacePoints(
   for (const auto& cp : clusterPairs) {
 
     // Calculate the ends of the SDEs
-    const auto& ends1 = endsOfStrip(*(cp.first));
-    const auto& ends2 = endsOfStrip(*(cp.second));
+    const auto& ends1 = endsOfStrip(gctx, *(cp.first));
+    const auto& ends2 = endsOfStrip(gctx, *(cp.second));
 
     /// The following algorithm is meant for finding the position on the first
     /// strip if there is a corresponding cluster on the second strip. The

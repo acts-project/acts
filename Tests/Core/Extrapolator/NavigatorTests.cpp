@@ -26,7 +26,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -144,7 +144,7 @@ namespace Test {
     Navigator::state_type navigation;
 
     // The context cache for this propagation
-    ContextType context = DefaultContext();
+    GeometryContext geoContext = DefaultGeometryContext();
   };
 
   template <typename stepper_state_t>

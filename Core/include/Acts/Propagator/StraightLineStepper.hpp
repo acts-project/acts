@@ -12,8 +12,8 @@
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -54,16 +54,19 @@ public:
   struct State
   {
 
+    /// Delete the default constructor
+    State() = delete;
+
     /// Constructor from the initial track parameters
     ///
     /// @tparam parameters_t the Type of the track parameters
     ///
-    /// @param [in] ctx is the context object, ingored
+    /// @param [in] gctx is the context object, ingored
     /// @param [in] par The track parameters at start
     /// @param [in] dir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     template <typename parameters_t>
-    explicit State(Context /*ctx*/,
+    explicit State(const GeometryContext& /*gctx*/,
                    const parameters_t& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
@@ -276,7 +279,7 @@ public:
   ///
   /// @tparam surface_t the surface type - ignored here
   ///
-  /// @param [in] ctx The context for thsi call - ingnored here
+  /// @param [in] gctx The context for thsi call - ingnored here
   /// @param [in,out] state The stepper state
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
@@ -287,7 +290,7 @@ public:
   ///
   /// @return the full transport jacobian
   static const ActsMatrixD<5, 5>
-  covarianceTransport(Context /*ctx*/,
+  covarianceTransport(const GeometryContext& /*gctx*/,
                       State& /*unused*/,
                       const Surface& /*surface*/,
                       bool /*reinitialize = false*/)

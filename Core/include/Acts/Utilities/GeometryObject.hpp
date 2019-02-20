@@ -12,8 +12,8 @@
 
 #pragma once
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
 
 namespace Acts {
@@ -61,23 +61,21 @@ public:
 
   /// Force a binning position method
   ///
-  /// @param ctx is the Context object to for resolving the
-  ///        relevent event/thread context of the geometry
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param bValue is the value in which you want to bin
   ///
   /// @return vector 3D used for the binning schema
   virtual const Vector3D
-  binningPosition(Context ctx, BinningValue bValue) const = 0;
+  binningPosition(const GeometryContext& gctx, BinningValue bValue) const = 0;
 
   /// Implement the binningValue
   ///
-  /// @param ctx is the Context object to for resolving the
-  ///        relevent event/thread context of the geometry
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param bValue is the dobule in which you want to bin
   ///
   /// @return float to be used for the binning schema
   double
-  binningPositionValue(Context ctx, BinningValue bValue) const;
+  binningPositionValue(const GeometryContext& gctx, BinningValue bValue) const;
 
   /// Set the value
   ///
@@ -102,26 +100,27 @@ GeometryObject::assignGeoID(const GeometryID& geoID)
 }
 
 inline double
-GeometryObject::binningPositionValue(Context ctx, BinningValue bValue) const
+GeometryObject::binningPositionValue(const GeometryContext& gctx,
+                                     BinningValue           bValue) const
 {
   using VectorHelpers::perp;
   // now switch
   switch (bValue) {
   // case x
   case Acts::binX: {
-    return binningPosition(ctx, bValue).x();
+    return binningPosition(gctx, bValue).x();
   } break;
   // case y
   case Acts::binY: {
-    return binningPosition(ctx, bValue).y();
+    return binningPosition(gctx, bValue).y();
   } break;
   // case z
   case Acts::binZ: {
-    return binningPosition(ctx, bValue).z();
+    return binningPosition(gctx, bValue).z();
   } break;
   // case
   case Acts::binR: {
-    return perp(binningPosition(ctx, bValue));
+    return perp(binningPosition(gctx, bValue));
   } break;
   // do nothing for the default
   default:

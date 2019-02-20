@@ -19,8 +19,8 @@
 #include "Acts/Layers/ApproachDescriptor.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometryObject.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -128,30 +128,30 @@ public:
 
   /// templated onLayer() method
   ///
-  /// @param ctx the context (e.g. alignment) under which this is asked
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param pars are the templated (charged/neutral) on layer check
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
   template <typename parameters_t>
   bool
-  onLayer(Context              ctx,
-          const parameters_t&  pars,
-          const BoundaryCheck& bcheck = true) const;
+  onLayer(const GeometryContext& gctx,
+          const parameters_t&    pars,
+          const BoundaryCheck&   bcheck = true) const;
 
   /// geometrical isOnLayer() method
   ///
   /// @note using isOnSurface() with Layer specific tolerance
   ///
-  /// @param ctx the context (e.g. alignment) under which this is asked
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the gobal position to be checked
   /// @param bcheck is the boundary check directive
   ///
   /// @return boolean that indicates success of the operation
   virtual bool
-  isOnLayer(Context              ctx,
-            const Vector3D&      gp,
-            const BoundaryCheck& bcheck = true) const;
+  isOnLayer(const GeometryContext& gctx,
+            const Vector3D&        gp,
+            const BoundaryCheck&   bcheck = true) const;
 
   /// Return method for the approach descriptor, can be nullptr
   const ApproachDescriptor*
@@ -192,7 +192,7 @@ public:
   /// @tparam options_t The navigation options type
   /// @tparam corrector_t is an (optional) intersection corrector type
   ///
-  /// @param ctx the context (e.g. alignment) for this call
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position parameter for searching
   /// @param momentum Momentum parameter for searching
   /// @param options The templated naivation options
@@ -202,11 +202,11 @@ public:
   template <typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   std::vector<SurfaceIntersection>
-  compatibleSurfaces(Context            ctx,
-                     const Vector3D&    position,
-                     const Vector3D&    momentum,
-                     const options_t&   options,
-                     const corrector_t& corrfnc = corrector_t()) const;
+  compatibleSurfaces(const GeometryContext& gctx,
+                     const Vector3D&        position,
+                     const Vector3D&        momentum,
+                     const options_t&       options,
+                     const corrector_t&     corrfnc = corrector_t()) const;
 
   /// @brief Decompose Layer into (compatible) surfaces
   ///
@@ -214,7 +214,7 @@ public:
   /// @tparam options_t The navigation options type
   /// @tparam corrector_t is an (optional) intersection corrector type
   ///
-  /// @param ctx the context (e.g. alignment) for this call
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
   /// @tparam corrector_t is an (optional) intersection corrector
@@ -224,10 +224,10 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   std::vector<SurfaceIntersection>
-  compatibleSurfaces(Context             ctx,
-                     const parameters_t& parameters,
-                     const options_t&    options,
-                     const corrector_t&  corrfnc = corrector_t()) const;
+  compatibleSurfaces(const GeometryContext& gctx,
+                     const parameters_t&    parameters,
+                     const options_t&       options,
+                     const corrector_t&     corrfnc = corrector_t()) const;
 
   /// Surface seen on approach
   ///
@@ -238,7 +238,7 @@ public:
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
   ///
-  /// @param ctx the context (e.g. alignment) for this call
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters The templated parameters for searching
   /// @param options The templated naivation options
   /// @tparam corrector_t is an (optional) intersection corrector
@@ -248,10 +248,10 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   const SurfaceIntersection
-  surfaceOnApproach(Context             ctx,
-                    const parameters_t& parameters,
-                    const options_t&    options,
-                    const corrector_t&  corrfnc = corrector_t()) const;
+  surfaceOnApproach(const GeometryContext& gctx,
+                    const parameters_t&    parameters,
+                    const options_t&       options,
+                    const corrector_t&     corrfnc = corrector_t()) const;
 
   /// Surface seen on approach
   ///
@@ -261,7 +261,7 @@ public:
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
   ///
-  /// @param ctx the context (e.g. alignment) for this call
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position for searching
   /// @param direction Direction for searching
   /// @param options The templated naivation options
@@ -271,21 +271,23 @@ public:
   template <typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   const SurfaceIntersection
-  surfaceOnApproach(Context            ctx,
-                    const Vector3D&    position,
-                    const Vector3D&    direction,
-                    const options_t&   options,
-                    const corrector_t& corrfnc = corrector_t()) const;
+  surfaceOnApproach(const GeometryContext& gctx,
+                    const Vector3D&        position,
+                    const Vector3D&        direction,
+                    const options_t&       options,
+                    const corrector_t&     corrfnc = corrector_t()) const;
 
   /// Fast navigation to next layer
   ///
-  /// @param ctx the context (e.g. alignment) for this call
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the start position for the search
   /// @param mom is the direction for the search
   ///
   /// @return the pointer to the next layer
   const Layer*
-  nextLayer(Context ctx, const Vector3D& gp, const Vector3D& mom) const;
+  nextLayer(const GeometryContext& gctx,
+            const Vector3D&        gp,
+            const Vector3D&        mom) const;
 
   /// get the confining TrackingVolume
   ///

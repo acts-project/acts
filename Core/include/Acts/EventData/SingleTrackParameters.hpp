@@ -10,8 +10,8 @@
 #include <type_traits>
 #include "Acts/EventData/TrackParametersBase.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -196,14 +196,14 @@ protected:
   /// @brief update global momentum from current parameter values
   ///
   ///
-  /// @param[in] ctx is the Context object that is forwarded to the surface
+  /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   ///
   /// @note This function is triggered when called with an argument of a type
   ///       different from Acts::local_parameter
   template <typename T>
   void
-  updateGlobalCoordinates(Context /*ctx*/, const T& /*unused*/)
+  updateGlobalCoordinates(const GeometryContext& /*gctx*/, const T& /*unused*/)
   {
     m_vMomentum = detail::coordinate_transformation::parameters2globalMomentum(
         getParameterSet().getParameters());
@@ -214,10 +214,11 @@ protected:
   /// @note This function is triggered when called with an argument of a type
   /// Acts::local_parameter
   void
-  updateGlobalCoordinates(Context ctx, const local_parameter& /*unused*/)
+  updateGlobalCoordinates(const GeometryContext& gctx,
+                          const local_parameter& /*unused*/)
   {
     m_vPosition = detail::coordinate_transformation::parameters2globalPosition(
-        ctx, getParameterSet().getParameters(), this->referenceSurface());
+        gctx, getParameterSet().getParameters(), this->referenceSurface());
   }
 
   ChargePolicy m_oChargePolicy;    ///< charge policy object distinguishing

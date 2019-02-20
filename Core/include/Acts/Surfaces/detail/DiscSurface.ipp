@@ -26,7 +26,7 @@ DiscSurface::localCartesianToPolar(const Vector2D& lcart) const
 }
 
 inline void
-DiscSurface::initJacobianToGlobal(Context ctx,
+DiscSurface::initJacobianToGlobal(const GeometryContext& gctx,
                                   ActsMatrixD<7, 5>& jacobian,
                                   const Vector3D&       gpos,
                                   const Vector3D&       dir,
@@ -49,7 +49,7 @@ DiscSurface::initJacobianToGlobal(Context ctx,
   const double cos_phi       = x * inv_sin_theta;
   const double sin_phi       = y * inv_sin_theta;
   // retrieve the reference frame
-  const auto rframe = referenceFrame(ctx, gpos, dir);
+  const auto rframe = referenceFrame(gctx, gpos, dir);
 
   // special polar coordinates for the Disc
   double lrad     = pars[eLOC_0];
@@ -72,7 +72,7 @@ DiscSurface::initJacobianToGlobal(Context ctx,
 }
 
 inline const RotationMatrix3D
-DiscSurface::initJacobianToLocal(Context ctx,
+DiscSurface::initJacobianToLocal(const GeometryContext& gctx,
                                  ActsMatrixD<5, 7>& jacobian,
                                  const Vector3D& gpos,
                                  const Vector3D& dir) const
@@ -88,9 +88,9 @@ DiscSurface::initJacobianToLocal(Context ctx,
   const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
   const double inv_sin_theta          = sqrt(inv_sin_theta_2);
   // The measurement frame of the surface
-  RotationMatrix3D rframeT = referenceFrame(ctx, gpos, dir).transpose();
+  RotationMatrix3D rframeT = referenceFrame(gctx, gpos, dir).transpose();
   // calculate the transformation to local coorinates
-  const Vector3D pos_loc = transform(ctx).inverse() * gpos;
+  const Vector3D pos_loc = transform(gctx).inverse() * gpos;
   const double   lr      = perp(pos_loc);
   const double   lphi    = phi(pos_loc);
   const double   lcphi   = cos(lphi);
@@ -110,15 +110,15 @@ DiscSurface::initJacobianToLocal(Context ctx,
 }
 
 inline Intersection
-DiscSurface::intersectionEstimate(Context              ctx,
-                                  const Vector3D&      gpos,
-                                  const Vector3D&      gdir,
-                                  NavigationDirection  navDir,
-                                  const BoundaryCheck& bcheck,
-                                  CorrFnc              correct) const
+DiscSurface::intersectionEstimate(const GeometryContext& gctx,
+                                  const Vector3D&        gpos,
+                                  const Vector3D&        gdir,
+                                  NavigationDirection    navDir,
+                                  const BoundaryCheck&   bcheck,
+                                  CorrFnc                correct) const
 {
   // minimize the call to transform()
-  const auto&    tMatrix = transform(ctx).matrix();
+  const auto&    tMatrix = transform(gctx).matrix();
   const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
   const Vector3D pcenter = tMatrix.block<3, 1>(0, 3).transpose();
   // return solution and path
@@ -149,30 +149,32 @@ DiscSurface::intersectionEstimate(Context              ctx,
   // evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
   //  all we need is to check if it's inside bounds in 3D space
-  valid = bcheck ? (valid && isOnSurface(ctx, solution, gdir, bcheck)) : valid;
+  valid = bcheck ? (valid && isOnSurface(gctx, solution, gdir, bcheck)) : valid;
   // return the result
   return Intersection(solution, path, valid);
 }
 
 inline const Vector3D
-DiscSurface::normal(Context ctx, const Vector2D& /*unused*/) const
+DiscSurface::normal(const GeometryContext& gctx,
+                    const Vector2D& /*unused*/) const
 {
   // fast access via tranform matrix (and not rotation())
-  const auto& tMatrix = transform(ctx).matrix();
+  const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
 inline const Vector3D
-DiscSurface::binningPosition(Context ctx, BinningValue /*unused*/) const
+DiscSurface::binningPosition(const GeometryContext& gctx,
+                             BinningValue /*unused*/) const
 {
-  return center(ctx);
+  return center(gctx);
 }
 
 inline double
-DiscSurface::pathCorrection(Context         ctx,
-                            const Vector3D& pos,
-                            const Vector3D& mom) const
+DiscSurface::pathCorrection(const GeometryContext& gctx,
+                            const Vector3D&        pos,
+                            const Vector3D&        mom) const
 {
   /// we can ignore the global position here
-  return 1. / std::abs(Surface::normal(ctx, pos).dot(mom.normalized()));
+  return 1. / std::abs(Surface::normal(gctx, pos).dot(mom.normalized()));
 }

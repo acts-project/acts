@@ -123,7 +123,7 @@ public:
         surfaceMaterial;
 
     /// The context for the mapping
-    ContextType mappingContext = DefaultContext();
+    GeometryContext mappingContext = DefaultGeometryContext();
   };
 
   /// Delete the Default constructor

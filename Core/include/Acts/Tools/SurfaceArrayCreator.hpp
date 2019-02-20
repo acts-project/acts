@@ -17,8 +17,8 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -28,8 +28,10 @@ namespace Test {
   struct SurfaceArrayCreatorFixture;
 }
 
-using SurfaceMatcher = std::
-    function<bool(Context ctx, BinningValue, const Surface*, const Surface*)>;
+using SurfaceMatcher = std::function<bool(const GeometryContext& gctx,
+                                          BinningValue,
+                                          const Surface*,
+                                          const Surface*)>;
 
 using SurfaceVector = std::vector<const Surface*>;
 using SurfaceMatrix = std::vector<SurfaceVector>;
@@ -86,7 +88,7 @@ public:
     bool doPhiBinningOptimization = true;
 
     /// The building context
-    ContextType buildContext = DefaultContext();
+    GeometryContext buildContext = DefaultGeometryContext();
   };
 
   /// Constructor with default config
@@ -239,17 +241,17 @@ public:
                       = nullptr) const;
 
   static bool
-  isSurfaceEquivalent(Context        ctx,
-                      BinningValue   bValue,
-                      const Surface* a,
-                      const Surface* b)
+  isSurfaceEquivalent(const GeometryContext& gctx,
+                      BinningValue           bValue,
+                      const Surface*         a,
+                      const Surface*         b)
   {
     using Acts::VectorHelpers::perp;
 
     if (bValue == Acts::binPhi) {
       // Take the two binning positions
-      auto pos1 = a->binningPosition(ctx, binR),
-           pos2 = b->binningPosition(ctx, binR);
+      auto pos1 = a->binningPosition(gctx, binR),
+           pos2 = b->binningPosition(gctx, binR);
 
       // Project them on the (x, y) plane, where Phi angles are calculated
       auto proj1 = pos1.head<2>(), proj2 = pos2.head<2>();
@@ -265,14 +267,14 @@ public:
     }
 
     if (bValue == Acts::binZ) {
-      return (std::abs(a->binningPosition(ctx, binR).z()
-                       - b->binningPosition(ctx, binR).z())
+      return (std::abs(a->binningPosition(gctx, binR).z()
+                       - b->binningPosition(gctx, binR).z())
               < Acts::units::_um);
     }
 
     if (bValue == Acts::binR) {
-      return (std::abs(perp(a->binningPosition(ctx, binR))
-                       - perp(b->binningPosition(ctx, binR)))
+      return (std::abs(perp(a->binningPosition(gctx, binR))
+                       - perp(b->binningPosition(gctx, binR)))
               < Acts::units::_um);
     }
 

@@ -12,8 +12,8 @@
 #include <vector>
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
@@ -34,7 +34,7 @@ class SurfaceArray
   friend std::ostream&
   operator<<(std::ostream& sl, const SurfaceArray& sa)
   {
-    return sa.toStream(DefaultContext(), sl);
+    return sa.toStream(DefaultGeometryContext(), sl);
   }
 
 public:
@@ -42,22 +42,22 @@ public:
   struct ISurfaceGridLookup
   {
     /// @brief Fill provided surfaces into the contained @c Grid.
-    /// @param ctx Is the payload/context object to be used for
-    ///        delegating the event or thread context
+    /// @param gctx The current geometry context object, e.g. alignment
+
     /// @param surfaces Input surface pointers
     virtual void
-    fill(Context ctx, const SurfaceVector& surfaces)
+    fill(const GeometryContext& gctx, const SurfaceVector& surfaces)
         = 0;
 
     /// @brief Attempts to fix sub-optimal binning by filling closest
     ///        Surfaces into empty bin
     ///
-    /// @param ctx Is the payload/context object to be used for
-    ///        delegating the event or thread context
+    /// @param gctx The current geometry context object, e.g. alignment
+
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     virtual size_t
-    completeBinning(Context ctx, const SurfaceVector& surfaces)
+    completeBinning(const GeometryContext& gctx, const SurfaceVector& surfaces)
         = 0;
 
     /// @brief Performs lookup at @c pos and returns bin content as reference
@@ -172,14 +172,14 @@ public:
     /// all bins around a given one.
     ///
     ///
-    /// @param ctx Is the payload/context object to be used for
-    ///        delegating the event or thread context
+    /// @param gctx The current geometry context object, e.g. alignment
+
     /// @param surfaces Input surface pointers
     void
-    fill(Context ctx, const SurfaceVector& surfaces) override
+    fill(const GeometryContext& gctx, const SurfaceVector& surfaces) override
     {
       for (const auto& srf : surfaces) {
-        Vector3D pos = srf->binningPosition(ctx, binR);
+        Vector3D pos = srf->binningPosition(gctx, binR);
         lookup(pos).push_back(srf);
       }
 
@@ -190,12 +190,13 @@ public:
     ///        Surfaces into empty bins
     /// @note This does not always do what you want.
     ///
-    /// @param ctx Is the payload/context object to be used for
-    ///        delegating the event or thread context
+    /// @param gctx The current geometry context object, e.g. alignment
+
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     size_t
-    completeBinning(Context ctx, const SurfaceVector& surfaces) override
+    completeBinning(const GeometryContext& gctx,
+                    const SurfaceVector&   surfaces) override
     {
       size_t         binCompleted = 0;
       size_t         nBins        = size();
@@ -215,7 +216,7 @@ public:
         Vector3D binCtr = getBinCenter(b);
         minPath         = std::numeric_limits<double>::max();
         for (const auto& srf : surfaces) {
-          curPath = (binCtr - srf->binningPosition(ctx, binR)).norm();
+          curPath = (binCtr - srf->binningPosition(gctx, binR)).norm();
 
           if (curPath < minPath) {
             minPath = curPath;
@@ -482,14 +483,16 @@ public:
     /// @brief Comply with concept and provide fill method
     /// @note Does nothing
     void
-    fill(Context /*ctx*/, const SurfaceVector& /*surfaces*/) override
+    fill(const GeometryContext& /*gctx*/,
+         const SurfaceVector& /*surfaces*/) override
     {
     }
 
     /// @brief Comply with concept and provide completeBinning method
     /// @note Does nothing
     size_t
-    completeBinning(Context /*ctx*/, const SurfaceVector& /*surfaces*/) override
+    completeBinning(const GeometryContext& /*gctx*/,
+                    const SurfaceVector& /*surfaces*/) override
     {
       return 0;
     }
@@ -634,12 +637,11 @@ public:
   }
 
   /// @brief String representation of this @c SurfaceArray
-  /// @param ctx Is the payload/context ojbect to be used for
-  ///        for delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param sl Output stream to write to
   /// @return the output stream given as @p sl
   std::ostream&
-  toStream(Context ctx, std::ostream& sl) const;
+  toStream(const GeometryContext& gctx, std::ostream& sl) const;
 
 private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;

@@ -26,6 +26,9 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  GeometryContext tgContext = DefaultGeometryContext();
+
   /// Unit test for testing the main functions of OneHitSpacePointBuilder
   /// 1) A resolved dummy hit gets created and added.
   /// 2) A hit gets added and resolved.
@@ -87,7 +90,7 @@ namespace Test {
 
     std::cout << "Hit added to storage" << std::endl;
 
-    shsp.calculateSpacePoints({pmc}, data);
+    shsp.calculateSpacePoints(tgContext, {pmc}, data);
     BOOST_CHECK_NE(data[0].spacePoint, Vector3D::Zero(3));
 
     std::cout << "Space point calculated" << std::endl;

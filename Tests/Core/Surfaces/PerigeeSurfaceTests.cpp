@@ -32,7 +32,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   BOOST_AUTO_TEST_SUITE(PerigeeSurfaces)
   /// Unit test for creating compliant/non-compliant PerigeeSurface object
@@ -64,7 +64,7 @@ namespace Test {
     //
     /// Copied and transformed
     auto copiedTransformedPerigeeSurface = Surface::makeShared<PerigeeSurface>(
-        testContext, *perigeeSurfaceObject, *pTransform);
+        tgContext, *perigeeSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedPerigeeSurface->type(),
                       Surface::Perigee);
   }
@@ -76,7 +76,7 @@ namespace Test {
     Vector3D unitXYZ{1., 1., 1.};
     auto perigeeSurfaceObject = Surface::makeShared<PerigeeSurface>(unitXYZ);
     auto pClonedPerigeeSurface
-        = perigeeSurfaceObject->clone(testContext, Transform3D::Identity());
+        = perigeeSurfaceObject->clone(tgContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedPerigeeSurface->type(), Surface::Perigee);
     //
     /// Test type (redundant)
@@ -88,7 +88,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    perigeeSurfaceObject->toStream(testContext, dumpOuput);
+    perigeeSurfaceObject->toStream(tgContext, dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal("Acts::PerigeeSurface:\n\
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
   }

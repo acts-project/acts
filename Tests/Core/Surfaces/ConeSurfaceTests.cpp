@@ -30,7 +30,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   BOOST_AUTO_TEST_SUITE(ConeSurfaces)
   /// Unit test for creating compliant/non-compliant ConeSurface object
@@ -80,7 +80,7 @@ namespace Test {
     //
     /// Copied and transformed
     auto copiedTransformedConeSurface = Surface::makeShared<ConeSurface>(
-        testContext, *coneSurfaceObject, *pTransform);
+        tgContext, *coneSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedConeSurface->type(), Surface::Cone);
 
     /// Construct with nullptr bounds
@@ -102,7 +102,7 @@ namespace Test {
         = Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
     //
     auto pClonedConeSurface
-        = coneSurfaceObject->clone(testContext, Transform3D::Identity());
+        = coneSurfaceObject->clone(tgContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedConeSurface->type(), Surface::Cone);
     //
     /// Test type (redundant)
@@ -111,7 +111,7 @@ namespace Test {
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
     CHECK_CLOSE_ABS(
-        coneSurfaceObject->binningPosition(testContext, BinningValue::binPhi),
+        coneSurfaceObject->binningPosition(tgContext, BinningValue::binPhi),
         binningPosition,
         1e-6);
     //
@@ -122,29 +122,31 @@ namespace Test {
     RotationMatrix3D expectedFrame;
     expectedFrame << -rootHalf, 0., rootHalf, rootHalf, 0., rootHalf, 0., 1.,
         0.;
-    CHECK_CLOSE_OR_SMALL(coneSurfaceObject->referenceFrame(
-                             testContext, globalPosition, momentum),
-                         expectedFrame,
-                         1e-6,
-                         1e-9);
+    CHECK_CLOSE_OR_SMALL(
+        coneSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
+        expectedFrame,
+        1e-6,
+        1e-9);
     //
     /// Test normal, given 3D position
     Vector3D origin{0., 0., 0.};
     Vector3D normal3D = {0., -1., 0.};
     CHECK_CLOSE_ABS(
-        coneSurfaceObject->normal(testContext, origin), normal3D, 1e-6);
+        coneSurfaceObject->normal(tgContext, origin), normal3D, 1e-6);
     //
     /// Test normal given 2D rphi position
     Vector2D positionPiBy2(1.0, M_PI / 2.);
     Vector3D normalAtPiBy2{0.0312768, 0.92335, -0.382683};
 
-    CHECK_CLOSE_OR_SMALL(
-        coneSurfaceObject->normal(positionPiBy2), normalAtPiBy2, 1e-2, 1e-9);
+    CHECK_CLOSE_OR_SMALL(coneSurfaceObject->normal(tgContext, positionPiBy2),
+                         normalAtPiBy2,
+                         1e-2,
+                         1e-9);
     //
     /// Test rotational symmetry axis
     Vector3D symmetryAxis{0., 0., 1.};
     CHECK_CLOSE_ABS(
-        coneSurfaceObject->rotSymmetryAxis(testContext), symmetryAxis, 1e-6);
+        coneSurfaceObject->rotSymmetryAxis(tgContext), symmetryAxis, 1e-6);
     //
     /// Test bounds
     BOOST_CHECK_EQUAL(coneSurfaceObject->bounds().type(), SurfaceBounds::Cone);
@@ -152,7 +154,7 @@ namespace Test {
     /// Test localToGlobal
     Vector2D localPosition{1.0, M_PI / 2.0};
     coneSurfaceObject->localToGlobal(
-        testContext, localPosition, momentum, globalPosition);
+        tgContext, localPosition, momentum, globalPosition);
     // std::cout<<globalPosition<<std::endl;
     Vector3D expectedPosition{0.0220268, 1.65027, 3.5708};
 
@@ -160,7 +162,7 @@ namespace Test {
     //
     /// Testing globalToLocal
     coneSurfaceObject->globalToLocal(
-        testContext, globalPosition, momentum, localPosition);
+        tgContext, globalPosition, momentum, localPosition);
     // std::cout<<localPosition<<std::endl;
     Vector2D expectedLocalPosition{1.0, M_PI / 2.0};
 
@@ -169,14 +171,14 @@ namespace Test {
     /// Test isOnSurface
     Vector3D offSurface{100, 1, 2};
     BOOST_CHECK(coneSurfaceObject->isOnSurface(
-        testContext, globalPosition, momentum, true));
-    BOOST_CHECK(!coneSurfaceObject->isOnSurface(
-        testContext, offSurface, momentum, true));
+        tgContext, globalPosition, momentum, true));
+    BOOST_CHECK(
+        !coneSurfaceObject->isOnSurface(tgContext, offSurface, momentum, true));
     //
     /// intersectionEstimate
     Vector3D direction{-1., 0, 0};
     auto     intersect = coneSurfaceObject->intersectionEstimate(
-        testContext, offSurface, direction, forward, false);
+        tgContext, offSurface, direction, forward, false);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 100., true, 0};
     BOOST_CHECK(intersect.valid);
     CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-6);
@@ -185,7 +187,7 @@ namespace Test {
     //
     /// Test pathCorrection
     CHECK_CLOSE_REL(
-        coneSurfaceObject->pathCorrection(testContext, offSurface, momentum),
+        coneSurfaceObject->pathCorrection(tgContext, offSurface, momentum),
         0.40218866453252877,
         0.01);
     //

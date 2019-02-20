@@ -70,7 +70,8 @@ Acts::TrackingVolume::~TrackingVolume()
 }
 
 const Acts::TrackingVolume*
-Acts::TrackingVolume::trackingVolume(Context /*ctx*/, const Vector3D& gp) const
+Acts::TrackingVolume::trackingVolume(const GeometryContext& /*gctx*/,
+                                     const Vector3D& gp) const
 {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
@@ -143,16 +144,16 @@ Acts::TrackingVolume::glueTrackingVolume(
 
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
-  Vector3D bPosition(binningPosition(DefaultContext(), binR));
-  Vector3D distance
-      = Vector3D(neighbor->binningPosition(DefaultContext(), binR) - bPosition);
+  Vector3D bPosition(binningPosition(DefaultGeometryContext(), binR));
+  Vector3D distance = Vector3D(
+      neighbor->binningPosition(DefaultGeometryContext(), binR) - bPosition);
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
   Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(
-      DefaultContext(), bPosition);
+      DefaultGeometryContext(), bPosition);
   // estimate the orientation
   BoundaryOrientation bOrientation
       = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
@@ -181,16 +182,16 @@ Acts::TrackingVolume::glueTrackingVolumes(
   std::shared_ptr<const TrackingVolume> nRefVolume
       = neighbors->arrayObjects().at(0);
   // get the distance
-  Vector3D bPosition(binningPosition(DefaultContext(), binR));
+  Vector3D bPosition(binningPosition(DefaultGeometryContext(), binR));
   Vector3D distance = Vector3D(
-      nRefVolume->binningPosition(DefaultContext(), binR) - bPosition);
+      nRefVolume->binningPosition(DefaultGeometryContext(), binR) - bPosition);
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
   Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(
-      DefaultContext(), bPosition);
+      DefaultGeometryContext(), bPosition);
   // estimate the orientation
   BoundaryOrientation bOrientation
       = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;

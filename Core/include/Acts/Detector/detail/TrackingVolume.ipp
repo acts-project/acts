@@ -11,7 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Acts::Layer*
-TrackingVolume::associatedLayer(Context /*ctx*/, const Vector3D& gp) const
+TrackingVolume::associatedLayer(const GeometryContext& /*gctx*/,
+                                const Vector3D& gp) const
 {
   // confined static layers - highest hierarchy
   if (m_confinedLayers) {
@@ -24,11 +25,11 @@ TrackingVolume::associatedLayer(Context /*ctx*/, const Vector3D& gp) const
 
 template <typename options_t, typename corrector_t>
 std::vector<LayerIntersection>
-TrackingVolume::compatibleLayers(Context            ctx,
-                                 const Vector3D&    position,
-                                 const Vector3D&    direction,
-                                 const options_t&   options,
-                                 const corrector_t& corrfnc) const
+TrackingVolume::compatibleLayers(const GeometryContext& gctx,
+                                 const Vector3D&        position,
+                                 const Vector3D&        direction,
+                                 const options_t&       options,
+                                 const corrector_t&     corrfnc) const
 {
 
   // the layer intersections which are valid
@@ -38,7 +39,7 @@ TrackingVolume::compatibleLayers(Context            ctx,
   if (m_confinedLayers) {
     // start layer given or not - test layer
     const Layer* tLayer = options.startObject ? options.startObject
-                                              : associatedLayer(ctx, position);
+                                              : associatedLayer(gctx, position);
     while (tLayer != nullptr) {
       // check if the layer needs resolving
       // - resolveSensitive -> always take layer if it has a surface array
@@ -49,7 +50,7 @@ TrackingVolume::compatibleLayers(Context            ctx,
         // if it's a resolveable start layer, you are by definition on it
         // layer on approach intersection
         auto atIntersection = tLayer->surfaceOnApproach(
-            ctx, position, direction, options, corrfnc);
+            gctx, position, direction, options, corrfnc);
         auto path = atIntersection.intersection.pathLength;
         bool withinLimit
             = (path * path <= options.pathLimit * options.pathLimit);
@@ -64,7 +65,7 @@ TrackingVolume::compatibleLayers(Context            ctx,
       // move to next one or break because you reached the end layer
       tLayer = (tLayer == options.endObject)
           ? nullptr
-          : tLayer->nextLayer(ctx, position, options.navDir * direction);
+          : tLayer->nextLayer(gctx, position, options.navDir * direction);
     }
     // sort them accordingly to the navigation direction
     if (options.navDir == forward) {
@@ -79,24 +80,24 @@ TrackingVolume::compatibleLayers(Context            ctx,
 
 template <typename parameters_t, typename options_t, typename corrector_t>
 std::vector<LayerIntersection>
-TrackingVolume::compatibleLayers(Context             ctx,
-                                 const parameters_t& parameters,
-                                 const options_t&    options,
-                                 const corrector_t&  corrfnc) const
+TrackingVolume::compatibleLayers(const GeometryContext& gctx,
+                                 const parameters_t&    parameters,
+                                 const options_t&       options,
+                                 const corrector_t&     corrfnc) const
 {
   return compatibleLayers(
-      ctx, parameters.position(), parameters.direction(), options, corrfnc);
+      gctx, parameters.position(), parameters.direction(), options, corrfnc);
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
 template <typename options_t, typename corrector_t, typename sorter_t>
 std::vector<BoundaryIntersection>
-TrackingVolume::compatibleBoundaries(Context            ctx,
-                                     const Vector3D&    position,
-                                     const Vector3D&    direction,
-                                     const options_t&   options,
-                                     const corrector_t& corrfnc,
-                                     const sorter_t&    sorter) const
+TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
+                                     const Vector3D&        position,
+                                     const Vector3D&        direction,
+                                     const options_t&       options,
+                                     const corrector_t&     corrfnc,
+                                     const sorter_t&        sorter) const
 {
   // Loop over boundarySurfaces and calculate the intersection
   auto  excludeObject = options.startObject;
@@ -114,7 +115,7 @@ TrackingVolume::compatibleBoundaries(Context            ctx,
     nonExcludedBoundaries.push_back(bSurface);
   }
   return sorter(
-      ctx, nonExcludedBoundaries, position, direction, options, corrfnc);
+      gctx, nonExcludedBoundaries, position, direction, options, corrfnc);
 }
 
 // Returns the boundary surfaces ordered in probability to hit them based on
@@ -124,13 +125,13 @@ template <typename parameters_t,
           typename corrector_t,
           typename sorter_t>
 std::vector<BoundaryIntersection>
-TrackingVolume::compatibleBoundaries(Context             ctx,
-                                     const parameters_t& parameters,
-                                     const options_t&    options,
-                                     const corrector_t&  corrfnc,
-                                     const sorter_t&     sorter) const
+TrackingVolume::compatibleBoundaries(const GeometryContext& gctx,
+                                     const parameters_t&    parameters,
+                                     const options_t&       options,
+                                     const corrector_t&     corrfnc,
+                                     const sorter_t&        sorter) const
 {
-  return compatibleBoundaries(ctx,
+  return compatibleBoundaries(gctx,
                               parameters.position(),
                               parameters.direction(),
                               options,

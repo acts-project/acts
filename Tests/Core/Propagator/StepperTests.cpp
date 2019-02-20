@@ -37,7 +37,7 @@ namespace Test {
   using cstep = detail::ConstrainedStep;
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
   ///
   /// @brief Aborter for the case that a particle leaves the detector or reaches
   /// a custom made threshold.
@@ -161,7 +161,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -184,7 +184,7 @@ namespace Test {
         prop(es, naviVac);
 
     // Launch and collect results
-    const auto& result = prop.propagate(testContext, sbtp, propOpts);
+    const auto&                       result = prop.propagate(sbtp, propOpts);
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -204,7 +204,7 @@ namespace Test {
 
     // Set options for propagator
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-        propOptsDef;
+        propOptsDef(tgContext);
     propOptsDef.actionList  = aListDef;
     propOptsDef.abortList   = abortList;
     propOptsDef.maxSteps    = 100;
@@ -221,7 +221,7 @@ namespace Test {
         propDef(esDef, naviVac);
 
     // Launch and collect results
-    const auto& resultDef = propDef.propagate(testContext, sbtp, propOptsDef);
+    const auto& resultDef = propDef.propagate(sbtp, propOptsDef);
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
@@ -282,7 +282,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -306,7 +306,7 @@ namespace Test {
         prop(es, naviMat);
 
     // Launch and collect results
-    const auto& result = prop.propagate(testContext, sbtp, propOpts);
+    const auto&                       result = prop.propagate(sbtp, propOpts);
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -334,7 +334,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOptsDense;
+        propOptsDense(tgContext);
     propOptsDense.actionList  = aList;
     propOptsDense.abortList   = abortList;
     propOptsDense.maxSteps    = 100;
@@ -353,8 +353,7 @@ namespace Test {
         propDense(esDense, naviMat);
 
     // Launch and collect results
-    const auto& resultDense
-        = propDense.propagate(testContext, sbtp, propOptsDense);
+    const auto& resultDense = propDense.propagate(sbtp, propOptsDense);
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 
@@ -390,7 +389,7 @@ namespace Test {
                Navigator>
         propB(esB, naviMat);
 
-    const auto& resultB = propB.propagate(testContext, sbtp, propOptsDense);
+    const auto& resultB = propB.propagate(sbtp, propOptsDense);
     const StepCollector::this_result& stepResultB
         = resultB.get<typename StepCollector::result_type>();
 
@@ -468,7 +467,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -491,7 +490,7 @@ namespace Test {
         prop(es, naviDet);
 
     // Launch and collect results
-    const auto& result = prop.propagate(testContext, sbtp, propOpts);
+    const auto&                       result = prop.propagate(sbtp, propOpts);
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -500,29 +499,26 @@ namespace Test {
     // Collect boundaries
     std::vector<Surface const*> surs;
     std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
-        boundaries = det->trackingVolume(testContext, {0.5 * units::_m, 0., 0.})
+        boundaries = det->trackingVolume(tgContext, {0.5 * units::_m, 0., 0.})
                          ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center(testContext).x()
-          == 1. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 1. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->trackingVolume(testContext, {1.5 * units::_m, 0., 0.})
+    boundaries = det->trackingVolume(tgContext, {1.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center(testContext).x()
-          == 2. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 2. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->trackingVolume(testContext, {2.5 * units::_m, 0., 0.})
+    boundaries = det->trackingVolume(tgContext, {2.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center(testContext).x()
-          == 3. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 3. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
@@ -533,7 +529,7 @@ namespace Test {
     ActionList<StepCollector> aListDef;
 
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-        propOptsDef;
+        propOptsDef(tgContext);
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
     propOptsDef.abortList            = abortList;
@@ -552,8 +548,7 @@ namespace Test {
         propDef(esDef, naviDet);
 
     // Launch and collect results
-    const auto& resultDef
-        = propDef.propagate(testContext, sbtp, *(surs[0]), propOptsDef);
+    const auto& resultDef = propDef.propagate(sbtp, *(surs[0]), propOptsDef);
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
@@ -590,7 +585,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOptsDense;
+        propOptsDense(tgContext);
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
     propOptsDense.abortList          = abortList;
@@ -610,8 +605,8 @@ namespace Test {
         propDense(esDense, naviDet);
 
     // Launch and collect results
-    const auto& resultDense = propDense.propagate(
-        testContext, sbtpPiecewise, *(surs[1]), propOptsDense);
+    const auto& resultDense
+        = propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense);
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 

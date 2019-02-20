@@ -74,7 +74,7 @@ public:
     ///            touching or overlapping with the next layer can happen.
     double defaultThickness = 10e-10 * Acts::units::_mm;
     /// Context for building of the geometry
-    ContextType buildingContext = DefaultContext();
+    GeometryContext buildingContext = DefaultGeometryContext();
   };
 
   /// Constructor

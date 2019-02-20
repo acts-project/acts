@@ -20,16 +20,17 @@ using Acts::VectorHelpers::perp;
 
 namespace Acts {
 
-ProtoLayer::ProtoLayer(Context ctx, const std::vector<const Surface*>& surfaces)
+ProtoLayer::ProtoLayer(const GeometryContext&             gctx,
+                       const std::vector<const Surface*>& surfaces)
 {
-  measure(ctx, surfaces);
+  measure(gctx, surfaces);
 }
 
 ProtoLayer::ProtoLayer(
-    Context                                            ctx,
+    const GeometryContext&                             gctx,
     const std::vector<std::shared_ptr<const Surface>>& surfaces)
 {
-  measure(ctx, unpack_shared_vector(surfaces));
+  measure(gctx, unpack_shared_vector(surfaces));
 }
 
 double
@@ -73,7 +74,8 @@ ProtoLayer::toStream(std::ostream& sl) const
 }
 
 void
-ProtoLayer::measure(Context ctx, const std::vector<const Surface*>& surfaces)
+ProtoLayer::measure(const GeometryContext&             gctx,
+                    const std::vector<const Surface*>& surfaces)
 {
   minR   = std::numeric_limits<double>::max();
   maxR   = std::numeric_limits<double>::lowest();
@@ -103,7 +105,7 @@ ProtoLayer::measure(Context ctx, const std::vector<const Surface*>& surfaces)
         = dynamic_cast<const CylinderSurface*>(sf);
     if (pBounds != nullptr) {
 
-      const auto& sTransform = sf->transform(ctx);
+      const auto& sTransform = sf->transform(gctx);
 
       // get the vertices
       std::vector<Vector2D> vertices  = pBounds->vertices();
@@ -147,7 +149,7 @@ ProtoLayer::measure(Context ctx, const std::vector<const Surface*>& surfaces)
       //        makes it into the Surface base class
       //        The envelopes might need special treatments though
 
-      PolyhedronRepresentation ph = cylSurface->polyhedronRepresentation(ctx);
+      PolyhedronRepresentation ph = cylSurface->polyhedronRepresentation(gctx);
       // evaluate at all vertices
       for (const auto& vtx : ph.vertices) {
         maxX = std::max(maxX, vtx.x());
@@ -183,7 +185,7 @@ ProtoLayer::measure(Context ctx, const std::vector<const Surface*>& surfaces)
       envR              = {env, env};
 
       // evaluate impact of r shift on phi
-      double cylPosR = perp(cylSurface->center(ctx));
+      double cylPosR = perp(cylSurface->center(gctx));
       double dPhi    = std::atan((cylBoundsR + env) / cylPosR)
           - std::atan(cylBoundsR / cylPosR);
 
@@ -197,7 +199,7 @@ ProtoLayer::measure(Context ctx, const std::vector<const Surface*>& surfaces)
       if (cBounds != nullptr) {
 
         double r    = cBounds->r();
-        double z    = sf->center(ctx).z();
+        double z    = sf->center(gctx).z();
         double hZ   = cBounds->halflengthZ();
         double phi  = cBounds->averagePhi();
         double hPhi = cBounds->halfPhiSector();

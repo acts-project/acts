@@ -24,7 +24,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   using Jacobian   = ActsMatrixD<5, 5>;
   using Identifier = unsigned long int;
@@ -89,7 +89,7 @@ namespace Test {
         pars_array[4];
 
     // constructor from parameter vector: predicted filtered, smoothed
-    BoundParameters ataPlane(testContext, nullptr, pars, plane);
+    BoundParameters ataPlane(tgContext, nullptr, pars, plane);
 
     // The parameter track state from the parameters
     BoundTrackState pts(std::move(ataPlane));
@@ -119,9 +119,9 @@ namespace Test {
     }
 
     // Create predicted, filtered and smoothed parameters
-    BoundParameters ataPlaneUpdt(testContext, nullptr, pars, plane);
-    BoundParameters ataPlanePred(testContext, nullptr, pars, plane);
-    BoundParameters ataPlaneSmth(testContext, nullptr, pars, plane);
+    BoundParameters ataPlaneUpdt(tgContext, nullptr, pars, plane);
+    BoundParameters ataPlanePred(tgContext, nullptr, pars, plane);
+    BoundParameters ataPlaneSmth(tgContext, nullptr, pars, plane);
 
     // Get the predicted parameters back from the trackState
     auto& ptsfList          = trackStates[2];
@@ -147,11 +147,11 @@ namespace Test {
     BOOST_CHECK(ataPlanefListPred2D);
 
     // Test the sorting helper
-    BoundParameters ataPlaneAt1(testContext, nullptr, pars, plane);
+    BoundParameters ataPlaneAt1(tgContext, nullptr, pars, plane);
     BoundTrackState ataPlaneState1(std::move(ataPlaneAt1));
     ataPlaneState1.parameter.pathLength = 1.;
 
-    BoundParameters ataPlaneAt2(testContext, nullptr, pars, plane);
+    BoundParameters ataPlaneAt2(tgContext, nullptr, pars, plane);
     BoundTrackState ataPlaneState2(std::move(ataPlaneAt2));
     ataPlaneState2.parameter.pathLength = 2.;
 

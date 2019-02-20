@@ -15,7 +15,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -52,7 +52,7 @@ public:
         posnegLayerMaterial;  ///< p/n  layer specs
 
     /// The building context
-    ContextType buildContext = DefaultContext();
+    GeometryContext buildContext = DefaultGeometryContext();
   };
 
   /// Constructor

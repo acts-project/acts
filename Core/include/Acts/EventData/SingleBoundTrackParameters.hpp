@@ -9,7 +9,7 @@
 #pragma once
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -36,7 +36,7 @@ public:
   ///
   /// The transformations declared in the coordinate_transformation
   /// yield the global parameters and momentum representation
-  /// @param[in] ctx is the Context object that is forwarded to the surface
+  /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
   ///            it is given in the measurement frame
@@ -44,7 +44,7 @@ public:
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(Context                        ctx,
+  SingleBoundTrackParameters(const GeometryContext&         gctx,
                              CovPtr_t                       cov,
                              const ParVector_t&             parValues,
                              std::shared_ptr<const Surface> surface)
@@ -52,7 +52,7 @@ public:
           std::move(cov),
           parValues,
           detail::coordinate_transformation::parameters2globalPosition(
-              ctx,
+              gctx,
               parValues,
               *surface),
           detail::coordinate_transformation::parameters2globalMomentum(
@@ -69,7 +69,7 @@ public:
   /// The transformations declared in the coordinate_transformation
   /// yield the local parameters
   ///
-  /// @param[in] ctx is the Context object that is forwarded to the surface
+  /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
   ///            it is given in the curvilinear frame
@@ -79,7 +79,7 @@ public:
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(Context                        ctx,
+  SingleBoundTrackParameters(const GeometryContext&         gctx,
                              CovPtr_t                       cov,
                              const ActsVectorD<3>&          position,
                              const ActsVectorD<3>&          momentum,
@@ -87,7 +87,7 @@ public:
                              std::shared_ptr<const Surface> surface)
     : SingleTrackParameters<ChargePolicy>(
           std::move(cov),
-          detail::coordinate_transformation::global2parameters(ctx,
+          detail::coordinate_transformation::global2parameters(gctx,
                                                                position,
                                                                momentum,
                                                                dCharge,
@@ -106,7 +106,7 @@ public:
   /// The transformations declared in the coordinate_transformation
   /// yield the global parameters and momentum representation
   ///
-  /// @param[in] ctx is the Context object that is forwarded to the surface
+  /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
   ///            it is given in the measurement frame
@@ -114,7 +114,7 @@ public:
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(Context                        ctx,
+  SingleBoundTrackParameters(const GeometryContext&         gctx,
                              CovPtr_t                       cov,
                              const ParVector_t&             parValues,
                              std::shared_ptr<const Surface> surface)
@@ -122,7 +122,7 @@ public:
           std::move(cov),
           parValues,
           detail::coordinate_transformation::parameters2globalPosition(
-              ctx,
+              gctx,
               parValues,
               *surface),
           detail::coordinate_transformation::parameters2globalMomentum(
@@ -140,7 +140,7 @@ public:
   /// yield the local parameters
   ///
   ///
-  /// @param[in] ctx is the Context object that is forwarded to the surface
+  /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   /// @param[in] cov The covaraniance matrix (optional, can be nullptr)
   ///            it is given in the curvilinear frame
@@ -150,14 +150,14 @@ public:
   /// @param[in] surface The reference surface the parameters are bound to
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleBoundTrackParameters(Context                        ctx,
+  SingleBoundTrackParameters(const GeometryContext&         gctx,
                              CovPtr_t                       cov,
                              const ActsVectorD<3>&          position,
                              const ActsVectorD<3>&          momentum,
                              std::shared_ptr<const Surface> surface)
     : SingleTrackParameters<ChargePolicy>(
           std::move(cov),
-          detail::coordinate_transformation::global2parameters(ctx,
+          detail::coordinate_transformation::global2parameters(gctx,
                                                                position,
                                                                momentum,
                                                                0,
@@ -226,14 +226,14 @@ public:
   /// @brief set method for parameter updates
   /// obviously only allowed on non-const objects
   //
-  /// @param[in] ctx is the Context object that is forwarded to the surface
+  /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   template <ParID_t par>
   void
-  set(Context ctx, ParValue_t newValue)
+  set(const GeometryContext& gctx, ParValue_t newValue)
   {
     this->getParameterSet().template setParameter<par>(newValue);
-    this->updateGlobalCoordinates(ctx, typename par_type<par>::type());
+    this->updateGlobalCoordinates(gctx, typename par_type<par>::type());
   }
 
   /// @brief access method to the reference surface
@@ -247,7 +247,7 @@ public:
   /// respect to the global coordinate system, in which the local error
   /// is described.
   ///
-  /// @param[in] ctx is the Context object that is forwarded to the surface
+  /// @param[in] gctx is the Context object that is forwarded to the surface
   ///            for local to global coordinate transformation
   ///
   /// For planar surface, this is identical to the rotation matrix of the
@@ -255,10 +255,10 @@ public:
   /// constructed by the point of clostest approach to the line, for
   /// cylindrical surfaces this is (by convention) the tangential plane.
   RotationMatrix3D
-  referenceFrame(Context ctx) const final
+  referenceFrame(const GeometryContext& gctx) const final
   {
     return std::move(
-        m_pSurface->referenceFrame(ctx, this->position(), this->momentum()));
+        m_pSurface->referenceFrame(gctx, this->position(), this->momentum()));
   }
 
 private:

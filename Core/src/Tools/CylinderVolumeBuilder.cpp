@@ -347,7 +347,7 @@ Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
       double thickness = layer->thickness();
       // get the center of the layer
       const Vector3D& center
-          = layer->surfaceRepresentation().center(DefaultContext());
+          = layer->surfaceRepresentation().center(DefaultGeometryContext());
       // check if it is a cylinder layer
       const CylinderLayer* cLayer
           = dynamic_cast<const CylinderLayer*>(layer.get());

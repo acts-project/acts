@@ -14,8 +14,8 @@
 
 #include <memory>
 #include <vector>
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -39,10 +39,9 @@ public:
 
   /// Return the transform for the Element proxy mechanism
   ///
-  /// @param ctx is the Context object that is forwarded to the
-  /// the connected geometry to transport the event/thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   virtual const Transform3D&
-  transform(Context ctx) const = 0;
+  transform(const GeometryContext& gctx) const = 0;
 
   /// Return surface association
   virtual const Surface&

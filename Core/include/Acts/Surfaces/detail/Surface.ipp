@@ -11,27 +11,27 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Vector3D
-Surface::center(Context ctx) const
+Surface::center(const GeometryContext& gctx) const
 {
   // fast access via tranform matrix (and not translation())
-  auto tMatrix = transform(ctx).matrix();
+  auto tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 3), tMatrix(1, 3), tMatrix(2, 3));
 }
 
 inline const Acts::Vector3D
-Surface::normal(Context ctx, const Vector3D& /*unused*/) const
+Surface::normal(const GeometryContext& gctx, const Vector3D& /*unused*/) const
 {
-  return normal(ctx, s_origin2D);
+  return normal(gctx, s_origin2D);
 }
 
 inline const Transform3D&
-Surface::transform(Context ctx) const
+Surface::transform(const GeometryContext& gctx) const
 {
   if (m_transform != nullptr) {
     return (*(m_transform.get()));
   }
   if (m_associatedDetElement != nullptr) {
-    return m_associatedDetElement->transform(ctx);
+    return m_associatedDetElement->transform(gctx);
   }
   return s_idTransform;
 }
@@ -43,15 +43,15 @@ Surface::insideBounds(const Vector2D& locpos, const BoundaryCheck& bcheck) const
 }
 
 inline const RotationMatrix3D
-Surface::referenceFrame(Context ctx,
+Surface::referenceFrame(const GeometryContext& gctx,
                         const Vector3D& /*unused*/,
                         const Vector3D& /*unused*/) const
 {
-  return transform(ctx).matrix().block<3, 3>(0, 0);
+  return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
 inline void
-Surface::initJacobianToGlobal(Context ctx,
+Surface::initJacobianToGlobal(const GeometryContext& gctx,
                               ActsMatrixD<7, 5>& jacobian,
                               const Vector3D& gpos,
                               const Vector3D& dir,
@@ -74,7 +74,7 @@ Surface::initJacobianToGlobal(Context ctx,
   const double cos_phi       = x * inv_sin_theta;
   const double sin_phi       = y * inv_sin_theta;
   // retrieve the reference frame
-  const auto rframe = referenceFrame(ctx, gpos, dir);
+  const auto rframe = referenceFrame(gctx, gpos, dir);
   // the local error components - given by reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the momentum components
@@ -87,7 +87,7 @@ Surface::initJacobianToGlobal(Context ctx,
 }
 
 inline const RotationMatrix3D
-Surface::initJacobianToLocal(Context ctx,
+Surface::initJacobianToLocal(const GeometryContext& gctx,
                              ActsMatrixD<5, 7>& jacobian,
                              const Vector3D& gpos,
                              const Vector3D& dir) const
@@ -101,7 +101,7 @@ Surface::initJacobianToLocal(Context ctx,
   const double sin_phi_over_sin_theta = y * inv_sin_theta_2;
   const double inv_sin_theta          = sqrt(inv_sin_theta_2);
   // The measurement frame of the surface
-  RotationMatrix3D rframeT = referenceFrame(ctx, gpos, dir).transpose();
+  RotationMatrix3D rframeT = referenceFrame(gctx, gpos, dir).transpose();
   // given by the refernece frame
   jacobian.block<2, 3>(0, 0) = rframeT.block<2, 3>(0, 0);
   // Directional and momentum elements for reference frame surface
@@ -114,7 +114,7 @@ Surface::initJacobianToLocal(Context ctx,
 }
 
 inline const ActsRowVectorD<5>
-Surface::derivativeFactors(Context /*unused*/,
+Surface::derivativeFactors(const GeometryContext& /*unused*/,
                            const Vector3D& /*unused*/,
                            const Vector3D&         dir,
                            const RotationMatrix3D& rft,
@@ -129,15 +129,15 @@ Surface::derivativeFactors(Context /*unused*/,
 
 template <typename parameters_t>
 bool
-Surface::isOnSurface(Context              ctx,
-                     const parameters_t&  pars,
-                     const BoundaryCheck& bcheck) const
+Surface::isOnSurface(const GeometryContext& gctx,
+                     const parameters_t&    pars,
+                     const BoundaryCheck&   bcheck) const
 {
   // surface pointer comparison as a first fast check (w/o transform)
   // @todo check if we can find a fast way that works for stepper state and
   // parameters
   // if ((&pars.referenceSurface() == this) && !bcheck) return true;
-  return isOnSurface(ctx, pars.position(), pars.momentum(), bcheck);
+  return isOnSurface(gctx, pars.position(), pars.momentum(), bcheck);
 }
 
 inline const DetectorElementBase*

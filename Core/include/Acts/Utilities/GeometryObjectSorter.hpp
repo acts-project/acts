@@ -181,10 +181,10 @@ public:
   ///
   /// @param bValue is the value in which the binning is done
   /// @param transform is an optional transform to be performed
-  GeometryObjectSorterT(Context                            ctx,
+  GeometryObjectSorterT(const GeometryContext&             gctx,
                         BinningValue                       bValue,
                         std::shared_ptr<const Transform3D> transform = nullptr)
-    : m_context(ctx), m_objectSorter(bValue), m_transform(std::move(transform))
+    : m_context(gctx), m_objectSorter(bValue), m_transform(std::move(transform))
   {
   }
 
@@ -211,7 +211,7 @@ public:
   }
 
 protected:
-  ContextType                        m_context;
+  GeometryContext                    m_context;
   ObjectSorterT<Vector3D>            m_objectSorter;
   std::shared_ptr<const Transform3D> m_transform;
 };

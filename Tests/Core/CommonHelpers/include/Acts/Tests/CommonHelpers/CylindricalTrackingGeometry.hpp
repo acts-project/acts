@@ -26,8 +26,8 @@
 #include "Acts/Tools/PassiveLayerBuilder.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
@@ -223,7 +223,7 @@ namespace Test {
           detectorStore.push_back(std::move(detElement));
         }
         // create the layer and store it
-        ProtoLayer protoLayer(DefaultContext(), layerModules);
+        ProtoLayer protoLayer(DefaultGeometryContext(), layerModules);
         protoLayer.envR = {0.5, 0.5};
         auto pLayer     = layerCreator->cylinderLayer(std::move(layerModules),
                                                   pLayerBinning[ilp].first,

@@ -32,10 +32,10 @@ Acts::DiscSurface::DiscSurface(const DiscSurface& other)
 {
 }
 
-Acts::DiscSurface::DiscSurface(Context            ctx,
-                               const DiscSurface& other,
-                               const Transform3D& transf)
-  : GeometryObject(), Surface(ctx, other, transf), m_bounds(other.m_bounds)
+Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
+                               const DiscSurface&     other,
+                               const Transform3D&     transf)
+  : GeometryObject(), Surface(gctx, other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -97,8 +97,8 @@ Acts::DiscSurface::type() const
 }
 
 void
-Acts::DiscSurface::localToGlobal(Context         ctx,
-                                 const Vector2D& lpos,
+Acts::DiscSurface::localToGlobal(const GeometryContext& gctx,
+                                 const Vector2D&        lpos,
                                  const Vector3D& /*gmom*/,
                                  Vector3D& gpos) const
 {
@@ -107,17 +107,17 @@ Acts::DiscSurface::localToGlobal(Context         ctx,
                       lpos[Acts::eLOC_R] * sin(lpos[Acts::eLOC_PHI]),
                       0.);
   // transport it to the globalframe (very unlikely that this is not needed)
-  gpos = transform(ctx) * loc3Dframe;
+  gpos = transform(gctx) * loc3Dframe;
 }
 
 bool
-Acts::DiscSurface::globalToLocal(Context         ctx,
-                                 const Vector3D& gpos,
+Acts::DiscSurface::globalToLocal(const GeometryContext& gctx,
+                                 const Vector3D&        gpos,
                                  const Vector3D& /*gmom*/,
                                  Vector2D& lpos) const
 {
   // transport it to the globalframe (very unlikely that this is not needed)
-  Vector3D loc3Dframe = (transform(ctx).inverse()) * gpos;
+  Vector3D loc3Dframe = (transform(gctx).inverse()) * gpos;
   lpos                = Acts::Vector2D(perp(loc3Dframe), phi(loc3Dframe));
   return ((std::abs(loc3Dframe.z()) > s_onSurfaceTolerance) ? false : true);
 }
@@ -146,19 +146,19 @@ Acts::DiscSurface::localPolarToLocalCartesian(const Vector2D& locpol) const
 }
 
 const Acts::Vector3D
-Acts::DiscSurface::localCartesianToGlobal(Context         ctx,
-                                          const Vector2D& lpos) const
+Acts::DiscSurface::localCartesianToGlobal(const GeometryContext& gctx,
+                                          const Vector2D&        lpos) const
 {
   Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
-  return Vector3D(transform(ctx) * loc3Dframe);
+  return Vector3D(transform(gctx) * loc3Dframe);
 }
 
 const Acts::Vector2D
-Acts::DiscSurface::globalToLocalCartesian(Context         ctx,
-                                          const Vector3D& gpos,
+Acts::DiscSurface::globalToLocalCartesian(const GeometryContext& gctx,
+                                          const Vector3D&        gpos,
                                           double /*unused*/) const
 {
-  Vector3D loc3Dframe = (transform(ctx).inverse()) * gpos;
+  Vector3D loc3Dframe = (transform(gctx).inverse()) * gpos;
   return Vector2D(loc3Dframe.x(), loc3Dframe.y());
 }
 
@@ -169,15 +169,17 @@ Acts::DiscSurface::name() const
 }
 
 std::shared_ptr<Acts::DiscSurface>
-Acts::DiscSurface::clone(Context ctx, const Transform3D& shift) const
+Acts::DiscSurface::clone(const GeometryContext& gctx,
+                         const Transform3D&     shift) const
 {
-  return std::shared_ptr<DiscSurface>(this->clone_impl(ctx, shift));
+  return std::shared_ptr<DiscSurface>(this->clone_impl(gctx, shift));
 }
 
 Acts::DiscSurface*
-Acts::DiscSurface::clone_impl(Context ctx, const Transform3D& shift) const
+Acts::DiscSurface::clone_impl(const GeometryContext& gctx,
+                              const Transform3D&     shift) const
 {
-  return new DiscSurface(ctx, *this, shift);
+  return new DiscSurface(gctx, *this, shift);
 }
 
 const Acts::SurfaceBounds&
@@ -190,8 +192,8 @@ Acts::DiscSurface::bounds() const
 }
 
 Acts::PolyhedronRepresentation
-Acts::DiscSurface::polyhedronRepresentation(Context ctx,
-                                            size_t  l0div,
+Acts::DiscSurface::polyhedronRepresentation(const GeometryContext& gctx,
+                                            size_t                 l0div,
                                             size_t /*unused*/) const
 {
   std::vector<Vector3D>            vertices;
@@ -214,7 +216,7 @@ Acts::DiscSurface::polyhedronRepresentation(Context ctx,
   Vector3D inner(rMin, 0, 0);
   Vector3D outer(rMax, 0, 0);
 
-  const Transform3D& sfTransform = transform(ctx);
+  const Transform3D& sfTransform = transform(gctx);
 
   for (size_t i = 0; i < l0div; i++) {
     Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));

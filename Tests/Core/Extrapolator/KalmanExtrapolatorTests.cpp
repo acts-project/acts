@@ -27,7 +27,7 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 namespace Test {
@@ -35,7 +35,7 @@ namespace Test {
   using Jacobian = ActsMatrixD<5, 5>;
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   ///
   /// @brief the bound state propagation
@@ -76,8 +76,8 @@ namespace Test {
       auto surface = state.navigation.currentSurface;
       if (surface and surface->associatedDetectorElement()) {
         // Create a bound state and log the jacobian
-        auto boundState
-            = stepper.boundState(state.context, state.stepping, *surface, true);
+        auto boundState = stepper.boundState(
+            state.geoContext, state.stepping, *surface, true);
         result.jacobians.push_back(std::move(std::get<Jacobian>(boundState)));
         result.paths.push_back(std::get<double>(boundState));
       }
@@ -149,19 +149,19 @@ namespace Test {
 
     // Create some options
     using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;
-    StepWiseOptions swOptions;
+    StepWiseOptions swOptions(tgContext);
 
     using PlainActors  = ActionList<>;
     using PlainOptions = PropagatorOptions<PlainActors, Aborters>;
-    PlainOptions pOptions;
+    PlainOptions pOptions(tgContext);
 
     // Run the standard propagation
-    const auto& pResult = propagator.propagate(testContext, start, pOptions);
+    const auto& pResult = propagator.propagate(start, pOptions);
     // Let's get the end parameters and jacobian matrix
     const auto& pJacobian = *(pResult.transportJacobian);
 
     // Run the stepwise propagation
-    const auto& swResult = propagator.propagate(testContext, start, swOptions);
+    const auto& swResult       = propagator.propagate(start, swOptions);
     auto        swJacobianTest = swResult.template get<StepWiseResult>();
 
     // (1) Path length test

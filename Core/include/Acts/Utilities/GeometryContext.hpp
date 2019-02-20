@@ -16,8 +16,7 @@ namespace Acts {
 /// payload object that is propagated through the code
 /// to allow for event/thread context
 
-using ContextType    = boost::any;
-using Context        = const ContextType&;
-using DefaultContext = ContextType;
+using GeometryContext        = boost::any;
+using DefaultGeometryContext = GeometryContext;
 
 }  // namespace Acts

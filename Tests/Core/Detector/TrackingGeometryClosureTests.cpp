@@ -11,7 +11,8 @@
 
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-#include "Acts/Utilities/Context.hpp"
+
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "TrackingVolumeCreation.hpp"
@@ -21,7 +22,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   /// we test a two-level hierarchy
   /// every deeper level hierarchy is a a derivate of this
@@ -50,7 +51,7 @@ namespace Test {
       + layerEnvelope + volumeEnvelope;
 
   ///  inner inner volume
-  auto iiVolume = constructCylinderVolume(testContext,
+  auto iiVolume = constructCylinderVolume(tgContext,
                                           surfaceHalfLengthZ,
                                           iiv_surfaceRadius,
                                           surfaceRstagger,
@@ -61,7 +62,7 @@ namespace Test {
                                           iiv_volumeRadius,
                                           "InnerInnerVolume");
   ///  inner outer volume
-  auto ioVolume = constructCylinderVolume(testContext,
+  auto ioVolume = constructCylinderVolume(tgContext,
                                           surfaceHalfLengthZ,
                                           iov_surfaceRadius,
                                           surfaceRstagger,
@@ -76,7 +77,7 @@ namespace Test {
   double volumeHalfZ
       = (4 * surfaceHalfLengthZ - surfaceZoverlap) + volumeEnvelope;
   /// the inner volume
-  auto iVolume = constructContainerVolume(testContext,
+  auto iVolume = constructContainerVolume(tgContext,
                                           iiVolume,
                                           ioVolume,
                                           iov_volumeRadius,
@@ -89,7 +90,7 @@ namespace Test {
       + layerEnvelope + volumeEnvelope;
 
   ///  inner outer volume
-  auto oVolume = constructCylinderVolume(testContext,
+  auto oVolume = constructCylinderVolume(tgContext,
                                          surfaceHalfLengthZ,
                                          ov_surfaceRadius,
                                          surfaceRstagger,
@@ -100,7 +101,7 @@ namespace Test {
                                          ov_volumeRadius,
                                          "OuterVolume");
   /// the inner volume
-  auto volume = constructContainerVolume(testContext,
+  auto volume = constructContainerVolume(tgContext,
                                          iVolume,
                                          oVolume,
                                          ov_volumeRadius,

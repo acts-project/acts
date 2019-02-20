@@ -14,8 +14,8 @@
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -57,15 +57,15 @@ public:
     ///
     /// @tparams Type of TrackParameters
     ///
-    /// @param[in] ctx The context of this call
+    /// @param[in] gctx The context of this call
     /// @param[in] pars Input parameters
     /// @param[in] ndir The navigation direction w.r.t. parameters
     /// @param[in] ssize the steps size limitation
     template <typename Parameters>
-    State(Context             ctx,
-          const Parameters&   pars,
-          NavigationDirection ndir  = forward,
-          double              ssize = std::numeric_limits<double>::max())
+    State(const GeometryContext& gctx,
+          const Parameters&      pars,
+          NavigationDirection    ndir  = forward,
+          double                 ssize = std::numeric_limits<double>::max())
       : state_ready(false)
       , navDir(ndir)
       , useJacobian(false)
@@ -111,7 +111,7 @@ public:
         covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
         covTransport = true;
         useJacobian  = true;
-        const auto transform = pars.referenceFrame(ctx);
+        const auto transform = pars.referenceFrame(gctx);
 
         pVector[7]  = transform(0, eLOC_0);
         pVector[14] = transform(0, eLOC_1);
@@ -399,11 +399,11 @@ public:
 
   /// The state update method
   ///
-  /// @param [in] ctx The context of this call
+  /// @param [in] gctx The context of this call
   /// @param [in,out] state The stepper state for
   /// @param [in] pars The new track parameters at start
   void
-  update(Context ctx, State& state, const Parameters& pars) const
+  update(const GeometryContext& gctx, State& state, const Parameters& pars) const
   {
     // state is ready - noting to do
     if (state.state_ready) {
@@ -439,7 +439,7 @@ public:
       state.covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
       state.covTransport = true;
       state.useJacobian  = true;
-      const auto transform = pars.referenceFrame(ctx);
+      const auto transform = pars.referenceFrame(gctx);
       state.pVector[7]  = transform(0, eLOC_0);
       state.pVector[14] = transform(0, eLOC_1);
       state.pVector[21] = 0.;
@@ -748,7 +748,7 @@ public:
     state.pVector[39] *= p;
     state.pVector[40] *= p;
 
-    const auto fFrame = surface.referenceFrame(gp, mom);
+    const auto fFrame = surface.referenceFrame(gctx, gp, mom);
 
     double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
     double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};

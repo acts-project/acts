@@ -49,13 +49,12 @@ protected:
 
   /// Copy constructor - with shift
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  PerigeeSurface(Context               ctx,
-                 const PerigeeSurface& other,
-                 const Transform3D&    transf);
+  PerigeeSurface(const GeometryContext& gctx,
+                 const PerigeeSurface&  other,
+                 const Transform3D&     transf);
 
 public:
   /// Destructor - defaulted
@@ -63,11 +62,10 @@ public:
 
   /// Clone method into a concrete type of PerigeeSurface with shift
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param shift applied to the surface
   std::shared_ptr<PerigeeSurface>
-  clone(Context ctx, const Transform3D& shift) const;
+  clone(const GeometryContext& gctx, const Transform3D& shift) const;
 
   /// Assignment operator
   ///
@@ -85,22 +83,21 @@ public:
 
   /// Output Method for std::ostream
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param sl is the ostream to be dumped into
   ///
   /// @return ostreamn obect which was streamed into
   std::ostream&
-  toStream(Context ctx, std::ostream& sl) const final;
+  toStream(const GeometryContext& gctx, std::ostream& sl) const final;
 
 private:
   /// Clone method implementation
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param shift applied to the surface
   PerigeeSurface*
-  clone_impl(Context ctx, const Transform3D& shift) const override;
+  clone_impl(const GeometryContext& gctx,
+             const Transform3D&     shift) const override;
 };
 
 }  // namespace Acts

@@ -46,15 +46,15 @@ namespace Test {
     { /* nop */
     }
     //
-    LineSurfaceStub(Context                ctx,
+    LineSurfaceStub(const GeometryContext& gctx,
                     const LineSurfaceStub& ls,
                     const Transform3D&     t)
-      : GeometryObject(), LineSurface(ctx, ls, t)
+      : GeometryObject(), LineSurface(gctx, ls, t)
     { /* nop */
     }
     /// pure virtual functions of baseclass implemented here
     std::shared_ptr<LineSurfaceStub>
-    clone(Context /*ctx*/, const Transform3D& /*unused*/) const
+    clone(const GeometryContext& /*gctx*/, const Transform3D& /*unused*/) const
     {
       return nullptr;
     }
@@ -77,7 +77,8 @@ namespace Test {
 
   private:
     Surface*
-    clone_impl(Context /*ctx*/, const Transform3D& /*unused*/) const
+    clone_impl(const GeometryContext& /*gctx*/,
+               const Transform3D& /*unused*/) const
     {
       return nullptr;
     }

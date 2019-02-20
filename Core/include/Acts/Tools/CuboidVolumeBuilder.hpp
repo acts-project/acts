@@ -12,8 +12,8 @@
 #include <memory>
 #include <vector>
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -100,7 +100,7 @@ public:
     std::vector<VolumeConfig> volumeCfg = {};
 
     /// The building context
-    ContextType buildContext = DefaultContext();
+    GeometryContext buildContext = DefaultGeometryContext();
   };
 
   /// @brief Default constructor without a configuration

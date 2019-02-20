@@ -42,7 +42,7 @@ struct DefaultBoundaryIntersectionSorter
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
-  /// @param ctx the Context object for this call
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param boundaries Vector of boundaries of the volume
   /// @param position The position for searching
   /// @param direction The direction for searching
@@ -53,7 +53,7 @@ struct DefaultBoundaryIntersectionSorter
   /// intersection probability
   template <typename options_t, typename corrector_t>
   std::vector<BoundaryIntersection>
-  operator()(Context                                               ctx,
+  operator()(const GeometryContext&                                gctx,
              std::vector<const BoundarySurfaceT<TrackingVolume>*>& boundaries,
              const Vector3D&                                       position,
              const Vector3D&                                       direction,
@@ -66,7 +66,7 @@ struct DefaultBoundaryIntersectionSorter
       // intersect the surface
       SurfaceIntersection bsIntersection
           = bSurfaceRep.surfaceIntersectionEstimate(
-              ctx, position, direction, options, corrfnc);
+              gctx, position, direction, options, corrfnc);
       // check if the intersection is valid, but exlude the on-surface case
       // when requested -- move to intersectionestimate
       if (bsIntersection) {
@@ -115,7 +115,7 @@ struct BoundaryIntersectionSorter
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
-  /// @param ctx The context for this call, e.g. alignment
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param boundaries Vector of boundaries of the volume
   /// @param position The position for searching
   /// @param direction The direction for searching
@@ -126,7 +126,7 @@ struct BoundaryIntersectionSorter
   /// intersection probability
   template <typename options_t, typename corrector_t>
   std::vector<BoundaryIntersection>
-  operator()(Context                                               ctx,
+  operator()(const GeometryContext&                                gctx,
              std::vector<const BoundarySurfaceT<TrackingVolume>*>& boundaries,
              const Vector3D&                                       position,
              const Vector3D&                                       direction,
@@ -154,7 +154,7 @@ struct BoundaryIntersectionSorter
       // Collect intersections
       for (const auto& boundary : boundaries) {
         bIntersections.push_back(
-            intersect(ctx, boundary, position, direction, options, corrfnc));
+            intersect(gctx, boundary, position, direction, options, corrfnc));
       }
       // Fast exit for that case
       return bIntersections;
@@ -166,12 +166,12 @@ struct BoundaryIntersectionSorter
       // If the intersection is valid it is pushed to the final vector otherwise
       // to a tmp storage
       BoundaryIntersection intersection
-          = intersect(ctx, boundary, position, direction, options, corrfnc);
+          = intersect(gctx, boundary, position, direction, options, corrfnc);
       if (intersection) {
         bIntersections.push_back(std::move(intersection));
       } else {
         bIntersectionsOtherNavDir.push_back(intersect(
-            ctx, boundary, position, direction, optionsOtherNavDir, corrfnc));
+            gctx, boundary, position, direction, optionsOtherNavDir, corrfnc));
       }
     }
 
@@ -205,7 +205,7 @@ private:
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
-  /// @param ctx the context obejct for this call, e.g. alignment
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param boundary Boundary of the volume
   /// @param position The position for searching
   /// @param direction The direction for searching
@@ -215,7 +215,7 @@ private:
   /// @return Intersection object of the boundary surface
   template <typename options_t, typename corrector_t>
   BoundaryIntersection
-  intersect(Context                                 ctx,
+  intersect(const GeometryContext&                  gctx,
             const BoundarySurfaceT<TrackingVolume>* boundary,
             const Vector3D&                         position,
             const Vector3D&                         direction,
@@ -225,7 +225,7 @@ private:
     const Surface* surface = &(boundary->surfaceRepresentation());
     // intersect the surface
     SurfaceIntersection bsIntersection = surface->surfaceIntersectionEstimate(
-        ctx, position, direction, options, corrfnc);
+        gctx, position, direction, options, corrfnc);
     return BoundaryIntersection(
         bsIntersection.intersection, boundary, surface, options.navDir);
   }

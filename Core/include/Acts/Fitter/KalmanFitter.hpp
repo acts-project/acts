@@ -19,8 +19,8 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -101,10 +101,10 @@ public:
             typename parameters_t,
             typename surface_t>
   auto
-  fit(Context              ctx,
-      input_measurements_t measurements,
-      const parameters_t&  sParameters,
-      const surface_t*     rSurface = nullptr) const
+  fit(const GeometryContext& gctx,
+      input_measurements_t   measurements,
+      const parameters_t&    sParameters,
+      const surface_t*       rSurface = nullptr) const
   {
     // Bring the measurements into Acts style
     auto trackStates = m_inputConverter(measurements);
@@ -116,7 +116,7 @@ public:
     using Aborters     = AbortList<>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> kalmanOptions;
+    PropagatorOptions<Actors, Aborters> kalmanOptions(gctx);
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.trackStates   = std::move(trackStates);
@@ -124,7 +124,7 @@ public:
 
     // Run the fitter
     const auto& result
-        = m_propagator.template propagate(ctx, sParameters, kalmanOptions);
+        = m_propagator.template propagate(sParameters, kalmanOptions);
 
     /// Get the result of the fit
     auto kalmanResult = result.template get<KalmanResult>();
@@ -254,7 +254,7 @@ private:
       if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
         // Transport & bind the parameter to the final surface
         auto fittedState = stepper.boundState(
-            state.context, state.stepping, *targetSurface, true);
+            state.geoContext, state.stepping, *targetSurface, true);
         // Assign the fitted parameters
         result.fittedParameters = std::get<BoundParameters>(fittedState);
         // Break the navigation for stopping the Propagation
@@ -299,7 +299,7 @@ private:
         if (layer == nullptr) {
           // Find the intersection to allocate the layer
           auto surfaceIntersection
-              = surface.intersectionEstimate(state.context,
+              = surface.intersectionEstimate(state.geoContext,
                                              stepper.position(state.stepping),
                                              stepper.direction(state.stepping),
                                              state.stepping.navDir,
@@ -308,9 +308,9 @@ private:
           if (surfaceIntersection and state.navigation.worldVolume) {
             auto intersection = surfaceIntersection.position;
             auto layerVolume  = state.navigation.worldVolume->trackingVolume(
-                state.context, intersection);
+                state.geoContext, intersection);
             layer = layerVolume
-                ? layerVolume->associatedLayer(state.context, intersection)
+                ? layerVolume->associatedLayer(state.geoContext, intersection)
                 : nullptr;
           }
         }
@@ -370,15 +370,15 @@ private:
         std::tuple<BoundParameters,
                    typename TrackState::Parameters::CovMatrix_t,
                    double>
-            boundState
-            = stepper.boundState(state.context, state.stepping, *surface, true);
+            boundState = stepper.boundState(
+                state.geoContext, state.stepping, *surface, true);
 
         trackState.parameter.predicted  = std::get<0>(boundState);
         trackState.parameter.jacobian   = std::get<1>(boundState);
         trackState.parameter.pathLength = std::get<2>(boundState);
 
         // If the update is successful, set covariance and
-        if (m_updator(state.context, trackState)) {
+        if (m_updator(state.geoContext, trackState)) {
           // Update the stepping state
           debugLog(state, [&] {
             std::stringstream dstream;
@@ -428,7 +428,8 @@ private:
         return dstream.str();
       });
       // Smooth the track states and obtain the last smoothed track parameters
-      const auto& smoothedPars = m_smoother(state.context, result.fittedStates);
+      const auto& smoothedPars
+          = m_smoother(state.geoContext, result.fittedStates);
       // Update the stepping parameters - in order to progress to destination
       if (smoothedPars) {
         // Update the stepping state

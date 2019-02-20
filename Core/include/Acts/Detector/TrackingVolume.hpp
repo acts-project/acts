@@ -19,8 +19,8 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 #include "Acts/Volumes/Volume.hpp"
@@ -132,12 +132,12 @@ public:
 
   /// Return the associated Layer to the global position
   ///
-  /// @param ctx is the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the associated global position
   ///
   /// @return plain pointer to layer object
   const Layer*
-  associatedLayer(Context ctx, const Vector3D& gp) const;
+  associatedLayer(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///
@@ -145,7 +145,7 @@ public:
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
-  /// @param ctx is the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position for the search
   /// @param direction Direction for the search
   /// @param options The templated navigation options
@@ -155,11 +155,11 @@ public:
   template <typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   std::vector<LayerIntersection>
-  compatibleLayers(Context            ctx,
-                   const Vector3D&    position,
-                   const Vector3D&    direction,
-                   const options_t&   options,
-                   const corrector_t& corrfnc = corrector_t()) const;
+  compatibleLayers(const GeometryContext& gctx,
+                   const Vector3D&        position,
+                   const Vector3D&        direction,
+                   const options_t&       options,
+                   const corrector_t&     corrfnc = corrector_t()) const;
 
   /// @brief Resolves the volume into (compatible) Layers
   ///
@@ -168,7 +168,7 @@ public:
   /// @tparam options_t Type of navigation options object for decomposition
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   ///
-  /// @param ctx is the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
@@ -178,10 +178,10 @@ public:
             typename options_t,
             typename corrector_t = VoidIntersectionCorrector>
   std::vector<LayerIntersection>
-  compatibleLayers(Context             ctx,
-                   const parameters_t& parameters,
-                   const options_t&    options,
-                   const corrector_t&  corrfnc = corrector_t()) const;
+  compatibleLayers(const GeometryContext& gctx,
+                   const parameters_t&    parameters,
+                   const options_t&       options,
+                   const corrector_t&     corrfnc = corrector_t()) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
@@ -189,7 +189,7 @@ public:
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   /// @tparam sorter_t Type of the boundary surface sorter
   ///
-  /// @param ctx is the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param position The position for searching
   /// @param direction The direction for searching
   /// @param options The templated navigation options
@@ -201,12 +201,12 @@ public:
             typename corrector_t = VoidIntersectionCorrector,
             typename sorter_t    = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection>
-  compatibleBoundaries(Context            ctx,
-                       const Vector3D&    position,
-                       const Vector3D&    direction,
-                       const options_t&   options,
-                       const corrector_t& corrfnc = corrector_t(),
-                       const sorter_t&    sorter  = sorter_t()) const;
+  compatibleBoundaries(const GeometryContext& gctx,
+                       const Vector3D&        position,
+                       const Vector3D&        direction,
+                       const options_t&       options,
+                       const corrector_t&     corrfnc = corrector_t(),
+                       const sorter_t&        sorter  = sorter_t()) const;
 
   /// @brief Returns all boundary surfaces sorted by the user.
   ///
@@ -215,7 +215,7 @@ public:
   /// @tparam corrector_t Type of (optional) corrector for surface intersection
   /// @tparam sorter_t Type of the boundary surface sorter
   ///
-  /// @param ctx is the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param parameters The templated parameters for searching
   /// @param options The templated navigation options
   /// @param corrfnc is the corrector struct / function
@@ -227,20 +227,20 @@ public:
             typename corrector_t = VoidIntersectionCorrector,
             typename sorter_t    = DefaultBoundaryIntersectionSorter>
   std::vector<BoundaryIntersection>
-  compatibleBoundaries(Context             ctx,
-                       const parameters_t& parameters,
-                       const options_t&    options,
-                       const corrector_t&  corrfnc = corrector_t(),
-                       const sorter_t&     sorter  = sorter_t()) const;
+  compatibleBoundaries(const GeometryContext& gctx,
+                       const parameters_t&    parameters,
+                       const options_t&       options,
+                       const corrector_t&     corrfnc = corrector_t(),
+                       const sorter_t&        sorter  = sorter_t()) const;
 
   /// Return the associated sub Volume, returns THIS if no subVolume exists
   ///
-  /// @param ctx is the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position associated with that search
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume*
-  trackingVolume(Context ctx, const Vector3D& gp) const;
+  trackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists

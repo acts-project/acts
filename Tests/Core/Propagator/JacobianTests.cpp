@@ -24,7 +24,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -38,7 +38,7 @@ namespace Test {
   using AtlasStepperType = AtlasStepper<BFieldType>;
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly
@@ -134,9 +134,9 @@ namespace Test {
   {
     // Jacobian creation for Propagator/Steppers
     // a) ATLAS stepper
-    AtlasStepperType::State astepState(testContext, pars);
+    AtlasStepperType::State astepState(tgContext, pars);
     // b) Eigen stepper
-    EigenStepperType::State estepState(testContext, pars);
+    EigenStepperType::State estepState(tgContext, pars);
 
     // create the matrices
     auto asMatrix = convertToMatrix(astepState.pVector);
@@ -182,7 +182,7 @@ namespace Test {
     pars << 182.34, -82., 0.134, 0.85, 1. / (100 * units::_GeV);
 
     BoundParameters atCylinder(
-        testContext, std::move(covPtr), std::move(pars), cSurface);
+        tgContext, std::move(covPtr), std::move(pars), cSurface);
 
     // run the test
     testJacobianToGlobal(atCylinder);
@@ -206,7 +206,7 @@ namespace Test {
     pars << 192.34, 1.823, 0.734, 0.235, 1. / (100 * units::_GeV);
 
     BoundParameters atDisc(
-        testContext, std::move(covPtr), std::move(pars), dSurface);
+        tgContext, std::move(covPtr), std::move(pars), dSurface);
 
     // run the test
     testJacobianToGlobal(atDisc);
@@ -231,7 +231,7 @@ namespace Test {
     pars << 12.34, -8722., 2.134, 0.85, 1. / (100 * units::_GeV);
 
     BoundParameters atPlane(
-        testContext, std::move(covPtr), std::move(pars), pSurface);
+        tgContext, std::move(covPtr), std::move(pars), pSurface);
 
     // run the test
     testJacobianToGlobal(atPlane);
@@ -253,7 +253,7 @@ namespace Test {
     pars << -3.34, -822., -0.734, 0.85, 1. / (100 * units::_GeV);
 
     BoundParameters perigee(
-        testContext, std::move(covPtr), std::move(pars), pSurface);
+        tgContext, std::move(covPtr), std::move(pars), pSurface);
 
     // run the test
     testJacobianToGlobal(perigee);
@@ -275,7 +275,7 @@ namespace Test {
     pars << -8.34, 812., 0.734, 0.25, 1. / (100 * units::_GeV);
 
     BoundParameters atStraw(
-        testContext, std::move(covPtr), std::move(pars), sSurface);
+        tgContext, std::move(covPtr), std::move(pars), sSurface);
 
     // run the test
     testJacobianToGlobal(atStraw);

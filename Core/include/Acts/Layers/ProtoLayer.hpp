@@ -10,8 +10,8 @@
 #include <iostream>
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -51,9 +51,10 @@ public:
   /// min/max values in one go. Also takes into account the thickness
   /// of an associated DetectorElement, if it exists.
   ///
-  /// @param ctx the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(Context ctx, const std::vector<const Surface*>& surfaces);
+  ProtoLayer(const GeometryContext&             gctx,
+             const std::vector<const Surface*>& surfaces);
 
   /// Constructor
   ///
@@ -61,9 +62,9 @@ public:
   /// min/max values in one go. Also takes into account the thickness
   /// of an associated DetectorElement, if it exists.
   ///
-  /// @param ctx the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(Context                                            ctx,
+  ProtoLayer(const GeometryContext&                             gctx,
              const std::vector<std::shared_ptr<const Surface>>& surfaces);
 
   // normal empty constructor
@@ -84,9 +85,10 @@ public:
 private:
   /// Helper method which performs the actual min/max calculation
   ///
-  /// @param ctx the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The surfaces to build this protolayer out of
   void
-  measure(Context ctx, const std::vector<const Surface*>& surfaces);
+  measure(const GeometryContext&             gctx,
+          const std::vector<const Surface*>& surfaces);
 };
 }  // namespace Acts

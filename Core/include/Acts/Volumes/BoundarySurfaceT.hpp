@@ -13,8 +13,8 @@
 #pragma once
 #include <memory>
 #include "Acts/Utilities/BinnedArray.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Volumes/BoundarySurfaceFace.hpp"
 #include "Acts/Volumes/Volume.hpp"
 
@@ -59,9 +59,9 @@ public:
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface is the unqiue surface the boundary represents
-  /// @param inside is the inside volume the bounday surface points to
-  /// @param outside is the outside volume the boundary surface points to
+  /// @param surface The unqiue surface the boundary represents
+  /// @param inside The inside volume the bounday surface points to
+  /// @param outside The outside volume the boundary surface points to
   BoundarySurfaceT(std::shared_ptr<const Surface> surface,
                    const T*                       inside,
                    const T*                       outside)
@@ -76,9 +76,9 @@ public:
   /// Constructor for a Boundary with exact two Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface is the unqiue surface the boundary represents
-  /// @param inside is the inside volume the bounday surface points to
-  /// @param outside is the outside volume the boundary surface points to
+  /// @param surface The unqiue surface the boundary represents
+  /// @param inside The inside volume the bounday surface points to
+  /// @param outside The outside volume the boundary surface points to
   BoundarySurfaceT(std::shared_ptr<const Surface> surface,
                    VolumePtr                      inside,
                    VolumePtr                      outside)
@@ -93,10 +93,9 @@ public:
   /// Constructor for a Boundary with exact multiple Volumes attached to it
   /// - usually used in a volume constructor
   ///
-  /// @param surface is the unqiue surface the boundary represents
-  /// @param insideArray is the inside volume array the bounday surface points
-  /// to
-  /// @param outsideArray is the outside volume array the boundary surface
+  /// @param surface The unqiue surface the boundary represents
+  /// @param insideArray The inside volume array the bounday surface points to
+  /// @param outsideArray The outside volume array the boundary surface
   /// points to
   BoundarySurfaceT(std::shared_ptr<const Surface>     surface,
                    std::shared_ptr<const VolumeArray> insideArray,
@@ -112,29 +111,29 @@ public:
   /// Get the next Volume depending on GlobalPosition, GlobalMomentum, dir on
   /// the TrackParameters and the requested direction
   ///
-  /// @param ctx is the context for this call (e.g. alingment)
-  /// @param pos is the global position on surface
-  /// @param mom is the direction on the surface
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param pos The global position on surface
+  /// @param mom The direction on the surface
   /// @param dir is an aditional direction corrective
   ///
-  /// @return is the attached volume at that position
+  /// @return The attached volume at that position
   virtual const T*
-  attachedVolume(Context             ctx,
-                 const Vector3D&     pos,
-                 const Vector3D&     mom,
-                 NavigationDirection pdir) const;
+  attachedVolume(const GeometryContext& gctx,
+                 const Vector3D&        pos,
+                 const Vector3D&        mom,
+                 NavigationDirection    pdir) const;
 
   /// templated onBoundary method
   ///
   /// @tparam pars are the parameters to be checked
   ///
-  /// @param ctx The context for this call (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param pars The parameters used for this call
   template <class P>
   bool
-  onBoundary(Context ctx, const P& pars) const
+  onBoundary(const GeometryContext& gctx, const P& pars) const
   {
-    return surfaceRepresentation().isOnSurface(ctx, pars);
+    return surfaceRepresentation().isOnSurface(gctx, pars);
   }
 
   /// The Surface Representation of this
@@ -149,9 +148,9 @@ protected:
   /// this si done during the geometry construction and only called by
   /// the friend templated volume
   ///
-  /// @param ctx The context for this call (e.g. alignment)
-  /// @param volume is the volume to be attached
-  /// @param inout is the boundary orientation @todo update to along/opposite
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param volume The volume to be attached
+  /// @param inout The boundary orientation @todo update to along/opposite
   void
   attachVolume(VolumePtr volume, BoundaryOrientation inout);
 
@@ -159,8 +158,8 @@ protected:
   /// this si done during the geometry construction and only called by
   /// the friend templated volume
   ///
-  /// @param volumes is the volume array to be attached
-  /// @param inout is the boundary orientation @todo update to along/opposite
+  /// @param volumes The volume array to be attached
+  /// @param inout The boundary orientation @todo update to along/opposite
   void
   attachVolumeArray(std::shared_ptr<const VolumeArray> volumes,
                     BoundaryOrientation                inout);
@@ -210,14 +209,14 @@ BoundarySurfaceT<T>::attachVolumeArray(
 
 template <class T>
 const T*
-BoundarySurfaceT<T>::attachedVolume(Context             ctx,
-                                    const Vector3D&     pos,
-                                    const Vector3D&     mom,
-                                    NavigationDirection pdir) const
+BoundarySurfaceT<T>::attachedVolume(const GeometryContext& gctx,
+                                    const Vector3D&        pos,
+                                    const Vector3D&        mom,
+                                    NavigationDirection    pdir) const
 {
   const T* attVolume = nullptr;
   // dot product with normal vector to distinguish inside/outside
-  if ((surfaceRepresentation().normal(ctx, pos)).dot(pdir * mom) > 0.) {
+  if ((surfaceRepresentation().normal(gctx, pos)).dot(pdir * mom) > 0.) {
     attVolume = m_outsideVolumeArray ? m_outsideVolumeArray->object(pos).get()
                                      : m_outsideVolume;
   } else {

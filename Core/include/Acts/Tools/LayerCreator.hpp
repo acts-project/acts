@@ -16,8 +16,8 @@
 #include "Acts/Layers/ApproachDescriptor.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
@@ -59,7 +59,7 @@ public:
     /// cylinder module phi tolerance : it counts at same phi, if ...
     double cylinderPhiTolerance{0.1};
     /// The context for geometry building
-    ContextType buildContext = DefaultContext();
+    GeometryContext buildContext = DefaultGeometryContext();
     /// standard constructor
     Config() = default;
   };

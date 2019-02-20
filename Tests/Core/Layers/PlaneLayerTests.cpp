@@ -37,7 +37,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   namespace Layers {
     BOOST_AUTO_TEST_SUITE(Layers)

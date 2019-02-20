@@ -30,7 +30,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   // using boost::test_tools::output_test_stream;
 
@@ -62,7 +62,7 @@ namespace Test {
     BOOST_CHECK(LineSurfaceStub(lineToCopy).constructedOk());
     // Copied and transformed ctor
     BOOST_CHECK(
-        LineSurfaceStub(testContext, lineToCopy, transform).constructedOk());
+        LineSurfaceStub(tgContext, lineToCopy, transform).constructedOk());
 
     /// Construct with nullptr bounds
     DetectorElementStub detElem;
@@ -82,7 +82,7 @@ namespace Test {
     LineSurfaceStub line(pTransform, 2.0, 20.);
     Vector3D        referencePosition{0., 1., 2.};
     CHECK_CLOSE_ABS(
-        referencePosition, line.binningPosition(testContext, binX), 1e-6);
+        referencePosition, line.binningPosition(tgContext, binX), 1e-6);
     //
     // bounds()
     auto              pLineBounds = std::make_shared<const LineBounds>(10.0);
@@ -95,7 +95,7 @@ namespace Test {
     Vector3D       gpos{0., 1., 0.};
     const Vector3D mom{20., 0., 0.};  // needs more realistic parameters
     Vector2D       localPosition;
-    BOOST_CHECK(line.globalToLocal(testContext, gpos, mom, localPosition));
+    BOOST_CHECK(line.globalToLocal(tgContext, gpos, mom, localPosition));
     const Vector2D expectedResult{0, -2};
     CHECK_CLOSE_ABS(expectedResult, localPosition, 1e-6);
     //
@@ -104,7 +104,7 @@ namespace Test {
     NavigationDirection navDir = anyDirection;
     BoundaryCheck       bcheck(false);
     auto                intersection = line.intersectionEstimate(
-        testContext, {0., 0., 0.}, direction.normalized(), navDir, bcheck);
+        tgContext, {0., 0., 0.}, direction.normalized(), navDir, bcheck);
     BOOST_CHECK(intersection.valid);
     Vector3D expectedIntersection(0, 1., 2.);
     CHECK_CLOSE_ABS(intersection.position,
@@ -114,23 +114,23 @@ namespace Test {
     // isOnSurface
     const Vector3D insidePosition{0., 2.5, 0.};
     BOOST_CHECK(line.isOnSurface(
-        testContext, insidePosition, mom, false));  // need better test here
+        tgContext, insidePosition, mom, false));  // need better test here
     const Vector3D outsidePosition{100., 100., 200.};
-    BOOST_CHECK(!line.isOnSurface(testContext, outsidePosition, mom, true));
+    BOOST_CHECK(!line.isOnSurface(tgContext, outsidePosition, mom, true));
     //
     // localToGlobal
     Vector3D returnedGlobalPosition{0., 0., 0.};
     // Vector2D localPosition{0., 0.};
     const Vector3D momentum{300., 200., 0.};  // find better values!
     line.localToGlobal(
-        testContext, localPosition, momentum, returnedGlobalPosition);
+        tgContext, localPosition, momentum, returnedGlobalPosition);
     const Vector3D expectedGlobalPosition{0, 1, 0};
     CHECK_CLOSE_ABS(returnedGlobalPosition, expectedGlobalPosition, 1e-6);
     //
     // referenceFrame
     Vector3D globalPosition{0., 0., 0.};
     auto     returnedRotationMatrix
-        = line.referenceFrame(testContext, globalPosition, momentum);
+        = line.referenceFrame(tgContext, globalPosition, momentum);
     double           v0 = std::cos(std::atan(2. / 3.));
     double           v1 = std::sin(std::atan(2. / 3.));
     RotationMatrix3D expectedRotationMatrix;
@@ -147,12 +147,12 @@ namespace Test {
     //
     // normal
     Vector3D normalVector{0., 0., 1.};  // line direction is same as normal????
-    CHECK_CLOSE_ABS(line.normal(testContext), normalVector, 1e-6);
+    CHECK_CLOSE_ABS(line.normal(tgContext), normalVector, 1e-6);
     //
     // pathCorrection
     auto any3DVector = normalVector;
     CHECK_CLOSE_REL(
-        line.pathCorrection(testContext, any3DVector, any3DVector), 1., 1e-6);
+        line.pathCorrection(tgContext, any3DVector, any3DVector), 1., 1e-6);
   }
   /// Unit test for testing LineSurface assignment
   BOOST_AUTO_TEST_CASE(LineSurface_assignment_test)

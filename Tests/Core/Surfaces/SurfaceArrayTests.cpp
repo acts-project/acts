@@ -22,8 +22,8 @@
 #include "Acts/Tools/LayerCreator.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -40,7 +40,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   using SrfVec = std::vector<std::shared_ptr<const Surface>>;
   struct SurfaceArrayFixture
@@ -183,8 +183,8 @@ namespace Test {
             = dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
         for (const auto& vtxloc : bounds->vertices()) {
-          Vector3D vtx = srf->transform(testContext)
-              * Vector3D(vtxloc.x(), vtxloc.y(), 0);
+          Vector3D vtx
+              = srf->transform(tgContext) * Vector3D(vtxloc.x(), vtxloc.y(), 0);
           os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
         }
 
@@ -207,7 +207,7 @@ namespace Test {
   BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture)
   {
 
-    ContextType testContext = DefaultContext();
+    GeometryContext tgContext = DefaultGeometryContext();
 
     SrfVec                      brl    = makeBarrel(30, 7, 2, 1);
     std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
@@ -236,14 +236,14 @@ namespace Test {
             transform,
             itransform,
             std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl->fill(testContext, brlRaw);
+    sl->fill(tgContext, brlRaw);
     SurfaceArray sa(std::move(sl), brl);
 
     // let's see if we can access all surfaces
-    sa.toStream(testContext, std::cout);
+    sa.toStream(tgContext, std::cout);
 
     for (const auto& srf : brl) {
-      Vector3D                    ctr = srf->binningPosition(testContext, binR);
+      Vector3D                    ctr = srf->binningPosition(tgContext, binR);
       std::vector<const Surface*> binContent = sa.at(ctr);
 
       BOOST_CHECK_EQUAL(binContent.size(), 1);
@@ -261,11 +261,11 @@ namespace Test {
             itransform,
             std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     // do NOT fill, only completebinning
-    sl2->completeBinning(testContext, brlRaw);
+    sl2->completeBinning(tgContext, brlRaw);
     SurfaceArray sa2(std::move(sl2), brl);
-    sa.toStream(testContext, std::cout);
+    sa.toStream(tgContext, std::cout);
     for (const auto& srf : brl) {
-      Vector3D                    ctr = srf->binningPosition(testContext, binR);
+      Vector3D                    ctr = srf->binningPosition(tgContext, binR);
       std::vector<const Surface*> binContent = sa2.at(ctr);
 
       BOOST_CHECK_EQUAL(binContent.size(), 1);

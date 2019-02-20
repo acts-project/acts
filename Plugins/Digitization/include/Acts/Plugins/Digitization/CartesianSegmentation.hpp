@@ -58,8 +58,7 @@ public:
   /// optimisation
   ///
   /// @note if both RectangleBounds and BinUtility are provided, no check is
-  /// done
-  /// for consitency
+  /// done for consitency
   CartesianSegmentation(std::shared_ptr<const BinUtility>   bUtility,
                         std::shared_ptr<const PlanarBounds> mBounds = nullptr);
 

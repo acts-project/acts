@@ -143,14 +143,13 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<MaterialSurfaceCollector, DebugOutput>;
   using AbortList  = AbortList<detail::EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options;
+  PropagatorOptions<ActionList, AbortList> options(mState.mappingContext);
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material layers by using the straight line propagator
-  const auto& result
-      = m_propagator.propagate(mState.mappingContext, start, options);
-  auto mcResult        = result.get<MaterialSurfaceCollector::result_type>();
-  auto mappingSurfaces = mcResult.collected;
+  const auto& result   = m_propagator.propagate(start, options);
+  auto        mcResult = result.get<MaterialSurfaceCollector::result_type>();
+  auto        mappingSurfaces = mcResult.collected;
 
   // Retrieve the recorded material
   const auto& rMaterial = mTrack.recordedMaterialProperties();

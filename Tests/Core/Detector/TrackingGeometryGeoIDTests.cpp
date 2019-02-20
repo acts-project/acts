@@ -20,7 +20,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   ///  create three cylinder surfaces
   ///  the surface radius (will also be the layer radius)
@@ -44,7 +44,7 @@ namespace Test {
       + oVlayerEnvelope + oVvolumeEnvelope;
 
   ///  inner volume
-  auto iVolume = constructCylinderVolume(testContext,
+  auto iVolume = constructCylinderVolume(tgContext,
                                          iVsurfaceHalfLengthZ,
                                          iVsurfaceRadius,
                                          iVsurfaceRstagger,
@@ -76,7 +76,7 @@ namespace Test {
   }
 
   ///  outer volume
-  auto oVolume = constructCylinderVolume(testContext,
+  auto oVolume = constructCylinderVolume(tgContext,
                                          oVsurfaceHalfLengthZ,
                                          oVsurfaceRadius,
                                          oVsurfaceRstagger,
@@ -110,7 +110,7 @@ namespace Test {
   double oVvolumeHalfZ
       = (4 * oVsurfaceHalfLengthZ - oVsurfaceZoverlap) + oVvolumeEnvelope;
   // now create the container volume
-  auto hVolume = constructContainerVolume(testContext,
+  auto hVolume = constructContainerVolume(tgContext,
                                           iVolume,
                                           oVolume,
                                           oVvolumeRadius,

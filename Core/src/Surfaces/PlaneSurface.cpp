@@ -25,10 +25,10 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
 {
 }
 
-Acts::PlaneSurface::PlaneSurface(Context             ctx,
-                                 const PlaneSurface& other,
-                                 const Transform3D&  transf)
-  : GeometryObject(), Surface(ctx, other, transf), m_bounds(other.m_bounds)
+Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
+                                 const PlaneSurface&    other,
+                                 const Transform3D&     transf)
+  : GeometryObject(), Surface(gctx, other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -87,24 +87,24 @@ Acts::PlaneSurface::type() const
 }
 
 void
-Acts::PlaneSurface::localToGlobal(Context         ctx,
-                                  const Vector2D& lpos,
+Acts::PlaneSurface::localToGlobal(const GeometryContext& gctx,
+                                  const Vector2D&        lpos,
                                   const Vector3D& /*gmom*/,
                                   Vector3D& gpos) const
 {
   Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
   /// the chance that there is no transform is almost 0, let's apply it
-  gpos = transform(ctx) * loc3Dframe;
+  gpos = transform(gctx) * loc3Dframe;
 }
 
 bool
-Acts::PlaneSurface::globalToLocal(Context         ctx,
-                                  const Vector3D& gpos,
+Acts::PlaneSurface::globalToLocal(const GeometryContext& gctx,
+                                  const Vector3D&        gpos,
                                   const Vector3D& /*gmom*/,
                                   Acts::Vector2D& lpos) const
 {
   /// the chance that there is no transform is almost 0, let's apply it
-  Vector3D loc3Dframe = (transform(ctx).inverse()) * gpos;
+  Vector3D loc3Dframe = (transform(gctx).inverse()) * gpos;
   lpos                = Vector2D(loc3Dframe.x(), loc3Dframe.y());
   return ((loc3Dframe.z() * loc3Dframe.z()
            > s_onSurfaceTolerance * s_onSurfaceTolerance)
@@ -119,15 +119,17 @@ Acts::PlaneSurface::name() const
 }
 
 std::shared_ptr<Acts::PlaneSurface>
-Acts::PlaneSurface::clone(Context ctx, const Transform3D& shift) const
+Acts::PlaneSurface::clone(const GeometryContext& gctx,
+                          const Transform3D&     shift) const
 {
-  return std::shared_ptr<PlaneSurface>(this->clone_impl(ctx, shift));
+  return std::shared_ptr<PlaneSurface>(this->clone_impl(gctx, shift));
 }
 
 Acts::PlaneSurface*
-Acts::PlaneSurface::clone_impl(Context ctx, const Transform3D& shift) const
+Acts::PlaneSurface::clone_impl(const GeometryContext& gctx,
+                               const Transform3D&     shift) const
 {
-  return new PlaneSurface(ctx, *this, shift);
+  return new PlaneSurface(gctx, *this, shift);
 }
 
 const Acts::SurfaceBounds&

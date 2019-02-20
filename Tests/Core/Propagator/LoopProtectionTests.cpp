@@ -34,7 +34,7 @@ using namespace detail;
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   /// @brief mockup of stepping state
   struct SteppingState
@@ -209,9 +209,9 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
 
-    PropagatorOptions<> options;
+    PropagatorOptions<> options(tgContext);
     options.maxSteps   = 1e6;
-    const auto& result = epropagator.propagate(testContext, start, options);
+    const auto& result = epropagator.propagate(start, options);
 
     // this test assumes state.options.loopFraction = 0.5
     CHECK_CLOSE_REL(px, -result.endParameters->momentum().x(), 1e-2);

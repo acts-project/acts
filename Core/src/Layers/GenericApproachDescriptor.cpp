@@ -21,11 +21,11 @@ Acts::GenericApproachDescriptor::registerLayer(const Layer& lay)
 }
 
 Acts::ObjectIntersection<Acts::Surface>
-Acts::GenericApproachDescriptor::approachSurface(Context              ctx,
-                                                 const Vector3D&      gpos,
-                                                 const Vector3D&      gdir,
-                                                 NavigationDirection  navDir,
-                                                 const BoundaryCheck& bcheck,
+Acts::GenericApproachDescriptor::approachSurface(const GeometryContext& gctx,
+                                                 const Vector3D&        gpos,
+                                                 const Vector3D&        gdir,
+                                                 NavigationDirection    navDir,
+                                                 const BoundaryCheck&   bcheck,
                                                  CorrFnc corrfnc) const
 {
   // the intersection estimates
@@ -34,7 +34,7 @@ Acts::GenericApproachDescriptor::approachSurface(Context              ctx,
   for (auto& sf : m_surfaceCache) {
     // intersect
     auto intersection
-        = sf->intersectionEstimate(ctx, gpos, gdir, navDir, bcheck, corrfnc);
+        = sf->intersectionEstimate(gctx, gpos, gdir, navDir, bcheck, corrfnc);
     sIntersections.push_back(
         ObjectIntersection<Surface>(intersection, sf, navDir));
   }

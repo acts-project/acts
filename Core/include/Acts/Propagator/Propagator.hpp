@@ -22,8 +22,8 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 BOOST_TTI_HAS_TYPE(state_type)
@@ -115,6 +115,12 @@ template <typename action_list_t  = ActionList<>,
 struct PropagatorOptions
 {
 
+  /// Delete default contructor
+  PropagatorOptions() = delete;
+
+  /// PropagatorOptions with context
+  PropagatorOptions(const GeometryContext& gctx) : geoContext(gctx) {}
+
   /// @brief Expand the Options with extended aborters
   ///
   /// @tparam extended_aborter_list_t Type of the new aborter list
@@ -124,7 +130,8 @@ struct PropagatorOptions
   PropagatorOptions<action_list_t, extended_aborter_list_t>
   extend(extended_aborter_list_t aborters) const
   {
-    PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions;
+    PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
+        geoContext);
     // Copy the options over
     eoptions.direction       = direction;
     eoptions.absPdgCode      = absPdgCode;
@@ -141,7 +148,7 @@ struct PropagatorOptions
     eoptions.debugPfxWidth = debugPfxWidth;
     eoptions.debugMsgWidth = debugMsgWidth;
     // Action / abort list
-    eoptions.actionList = actionList;
+    eoptions.actionList = std::move(actionList);
     eoptions.abortList  = std::move(aborters);
     // And return the options
     return eoptions;
@@ -184,6 +191,7 @@ struct PropagatorOptions
   // Configurations for Stepper
   /// Tolerance for the error of the integration
   double tolerance = 1e-4;
+
   /// Cut-off value for the step size
   double stepSizeCutOff = 0.;
 
@@ -192,6 +200,9 @@ struct PropagatorOptions
 
   /// List of abort conditions
   aborter_list_t abortList;
+
+  /// The context object for the geometry
+  const GeometryContext& geoContext;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -371,23 +382,17 @@ public:
     /// @tparam parameters_t the type of the start parameters
     /// @tparam propagator_options_t the type of the propagator options
     ///
-    /// @param ctx The context of this propagation, e.g. detector alignment
     /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     template <typename parameters_t>
-    State(Context                     ctx,
-          const parameters_t&         start,
-          const propagator_options_t& topts)
-      : context(ctx)
-      , options(topts)
-      , stepping(ctx, start, options.direction, options.maxStepSize)
+    State(const parameters_t& start, const propagator_options_t& topts)
+      : options(topts)
+      , stepping(topts.geoContext, start, topts.direction, topts.maxStepSize)
+      , geoContext(topts.geoContext)
     {
       // Setting the start surface
       navigation.startSurface = &start.referenceSurface();
     }
-
-    /// Context object
-    ContextType context;
 
     /// These are the options - provided for each propagation step
     propagator_options_t options;
@@ -397,6 +402,9 @@ public:
 
     /// Navigation state - internal state of the Navigator
     NavigatorState navigation;
+
+    /// Context object for the geometry
+    const GeometryContext& geoContext;
   };
 
 private:
@@ -526,7 +534,6 @@ public:
   /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
   /// @tparam propagator_options_t Type of the propagator options
   ///
-  /// @param [in] ctx context of this call, e.g. alignment
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
   ///
@@ -542,7 +549,6 @@ public:
       typename stepper_t::template return_parameter_type<parameters_t>,
       action_list_t>
   propagate(
-      Context             ctx,
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
   {
@@ -570,7 +576,7 @@ public:
     using OptionsType = decltype(eOptions);
     // Initialize the internal propagator state
     using StateType = State<OptionsType>;
-    StateType state(ctx, start, eOptions);
+    StateType state(start, eOptions);
 
     static_assert(
         has_member_function_step<const stepper_t,
@@ -620,7 +626,6 @@ public:
   /// @tparam aborter_list_t Type list of abort conditions
   /// @tparam propagator_options_t Type of the propagator options
   ///
-  /// @param [in] ctx context of this call, e.g. alignment
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
   /// @param [in] options Propagation options
@@ -639,7 +644,6 @@ public:
                                                          surface_t>,
       action_list_t>
   propagate(
-      Context             ctx,
       const parameters_t& start,
       const surface_t&    target,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
@@ -671,7 +675,7 @@ public:
 
     // Initialize the internal propagator state
     using StateType = State<OptionsType>;
-    StateType state(ctx, start, eOptions);
+    StateType state(start, eOptions);
     state.navigation.targetSurface = &target;
 
     static_assert(
@@ -690,7 +694,7 @@ public:
       result.status = PropagatorStatus::FAILURE;
     } else {
       // Compute the final results and mark the propagation as successful
-      auto  bs = m_stepper.boundState(state.context, state.stepping, target, true);
+      auto  bs = m_stepper.boundState(state.geoContext, state.stepping, target, true);
       auto& boundParameters = std::get<BoundParameters>(bs);
       // Fill the end parameters
       result.endParameters

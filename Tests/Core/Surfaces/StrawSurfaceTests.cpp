@@ -34,7 +34,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   BOOST_AUTO_TEST_SUITE(StrawSurfaces)
   /// Unit test for creating compliant/non-compliant StrawSurface object
@@ -79,7 +79,7 @@ namespace Test {
     //
     /// Copied and transformed
     auto copiedTransformedStrawSurface = Surface::makeShared<StrawSurface>(
-        testContext, *strawSurfaceObject, *pTransform);
+        tgContext, *strawSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedStrawSurface->type(), Surface::Straw);
   }
   //
@@ -95,7 +95,7 @@ namespace Test {
         = Surface::makeShared<StrawSurface>(pTransform, radius, halfZ);
     //
     auto pClonedStrawSurface
-        = strawSurfaceObject->clone(testContext, Transform3D::Identity());
+        = strawSurfaceObject->clone(tgContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedStrawSurface->type(), Surface::Straw);
     //
     /// Test type (redundant)
@@ -107,7 +107,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    strawSurfaceObject->toStream(testContext, dumpOuput);
+    strawSurfaceObject->toStream(tgContext, dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal("Acts::StrawSurface\n\
      Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n\
      Rotation:             colX = (1.000000, 0.000000, 0.000000)\n\

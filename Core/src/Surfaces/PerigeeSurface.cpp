@@ -34,10 +34,10 @@ Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other)
 {
 }
 
-Acts::PerigeeSurface::PerigeeSurface(Context               ctx,
-                                     const PerigeeSurface& other,
-                                     const Transform3D&    transf)
-  : GeometryObject(), LineSurface(ctx, other, transf)
+Acts::PerigeeSurface::PerigeeSurface(const GeometryContext& gctx,
+                                     const PerigeeSurface&  other,
+                                     const Transform3D&     transf)
+  : GeometryObject(), LineSurface(gctx, other, transf)
 {
 }
 
@@ -52,15 +52,17 @@ Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 }
 
 std::shared_ptr<Acts::PerigeeSurface>
-Acts::PerigeeSurface::clone(Context ctx, const Transform3D& shift) const
+Acts::PerigeeSurface::clone(const GeometryContext& gctx,
+                            const Transform3D&     shift) const
 {
-  return std::shared_ptr<PerigeeSurface>(this->clone_impl(ctx, shift));
+  return std::shared_ptr<PerigeeSurface>(this->clone_impl(gctx, shift));
 }
 
 Acts::PerigeeSurface*
-Acts::PerigeeSurface::clone_impl(Context ctx, const Transform3D& shift) const
+Acts::PerigeeSurface::clone_impl(const GeometryContext& gctx,
+                                 const Transform3D&     shift) const
 {
-  return new PerigeeSurface(ctx, *this, shift);
+  return new PerigeeSurface(gctx, *this, shift);
 }
 
 Acts::Surface::SurfaceType
@@ -76,12 +78,13 @@ Acts::PerigeeSurface::name() const
 }
 
 std::ostream&
-Acts::PerigeeSurface::toStream(Context ctx, std::ostream& sl) const
+Acts::PerigeeSurface::toStream(const GeometryContext& gctx,
+                               std::ostream&          sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
   sl << "Acts::PerigeeSurface:" << std::endl;
-  const Vector3D& sfCenter = center(ctx);
+  const Vector3D& sfCenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfCenter.x() << ", "
      << sfCenter.y() << ", " << sfCenter.z() << ")";
   sl << std::setprecision(-1);

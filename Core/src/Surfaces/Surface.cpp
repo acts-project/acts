@@ -34,12 +34,12 @@ Acts::Surface::Surface(const Surface& other)
 {
 }
 
-Acts::Surface::Surface(Context            ctx,
-                       const Surface&     other,
-                       const Transform3D& shift)
+Acts::Surface::Surface(const GeometryContext& gctx,
+                       const Surface&         other,
+                       const Transform3D&     shift)
   : GeometryObject()
   , m_transform(std::make_shared<const Transform3D>(
-        Transform3D(shift * other.transform(ctx))))
+        Transform3D(shift * other.transform(gctx))))
   , m_associatedLayer(nullptr)
   , m_associatedMaterial(other.m_associatedMaterial)
 {
@@ -48,15 +48,15 @@ Acts::Surface::Surface(Context            ctx,
 Acts::Surface::~Surface() = default;
 
 bool
-Acts::Surface::isOnSurface(Context              ctx,
-                           const Vector3D&      gpos,
-                           const Vector3D&      gmom,
-                           const BoundaryCheck& bcheck) const
+Acts::Surface::isOnSurface(const GeometryContext& gctx,
+                           const Vector3D&        gpos,
+                           const Vector3D&        gmom,
+                           const BoundaryCheck&   bcheck) const
 {
   // create the local position
   Vector2D lpos;
   // global to local transformation
-  bool gtlSuccess = globalToLocal(ctx, gpos, gmom, lpos);
+  bool gtlSuccess = globalToLocal(gctx, gpos, gmom, lpos);
   if (gtlSuccess) {
     return bcheck ? bounds().inside(lpos, bcheck) : true;
   }
@@ -109,11 +109,7 @@ Acts::Surface::operator==(const Surface& other) const
   if (m_associatedDetElement != other.m_associatedDetElement) {
     return false;
   }
-  // (e1) compare transform pointers
-  if (m_transform != other.m_transform) {
-    return false;
-  }
-  // (e2) compare transform values
+  // (e) compare transform values
   if (m_transform != nullptr && other.m_transform != nullptr) {
     if (!m_transform->isApprox(*other.m_transform, 1e-9)) {
       return false;
@@ -130,15 +126,15 @@ Acts::Surface::operator==(const Surface& other) const
 
 // overload dump for stream operator
 std::ostream&
-Acts::Surface::toStream(Context ctx, std::ostream& sl) const
+Acts::Surface::toStream(const GeometryContext& gctx, std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(4);
   sl << name() << std::endl;
-  const Vector3D& sfcenter = center(ctx);
+  const Vector3D& sfcenter = center(gctx);
   sl << "     Center position  (x, y, z) = (" << sfcenter.x() << ", "
      << sfcenter.y() << ", " << sfcenter.z() << ")" << std::endl;
-  Acts::RotationMatrix3D rot(transform(ctx).matrix().block<3, 3>(0, 0));
+  Acts::RotationMatrix3D rot(transform(gctx).matrix().block<3, 3>(0, 0));
   Acts::Vector3D         rotX(rot.col(0));
   Acts::Vector3D         rotY(rot.col(1));
   Acts::Vector3D         rotZ(rot.col(2));
@@ -158,7 +154,7 @@ Acts::Surface::toStream(Context ctx, std::ostream& sl) const
 std::ostream&
 Acts::operator<<(std::ostream& sl, const Acts::Surface& sf)
 {
-  return sf.toStream(DefaultContext(), sl);
+  return sf.toStream(DefaultGeometryContext(), sl);
 }
 
 bool

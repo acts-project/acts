@@ -14,8 +14,8 @@
 
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
@@ -75,11 +75,12 @@ protected:
 
   /// Copy constructor - with shift
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  ConeSurface(Context ctx, const ConeSurface& other, const Transform3D& transf);
+  ConeSurface(const GeometryContext& gctx,
+              const ConeSurface&     other,
+              const Transform3D&     transf);
 
 public:
   /// Destructor - defaulted
@@ -92,21 +93,19 @@ public:
   operator=(const ConeSurface& other);
 
   /// Clone method into a concrete type of ConeSurface with shift
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param shift applied to the surface
   std::shared_ptr<ConeSurface>
-  clone(Context ctx, const Transform3D& shift) const;
+  clone(const GeometryContext& gctx, const Transform3D& shift) const;
 
   /// The binning position method - is overloaded for r-type binning
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param bValue defines the type of binning applied in the global frame
   ///
   /// @return The return type is a vector for positioning in the global frame
   const Vector3D
-  binningPosition(Context ctx, BinningValue bValue) const final;
+  binningPosition(const GeometryContext& gctx, BinningValue bValue) const final;
 
   /// Return the surface type
   SurfaceType
@@ -116,48 +115,45 @@ public:
   ///  for StraightLine and Perigee Surface
   ///  - the default implementation is the the RotationMatrix3D of the transform
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos is the global position where the measurement frame is
   /// constructed
   /// @param mom is the momentum used for the measurement frame construction
   /// @return matrix that indicates the measurement frame
   const RotationMatrix3D
-  referenceFrame(Context         ctx,
-                 const Vector3D& pos,
-                 const Vector3D& mom) const final;
+  referenceFrame(const GeometryContext& gctx,
+                 const Vector3D&        pos,
+                 const Vector3D&        mom) const final;
 
   /// Return method for surface normal information
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param lp is the local position on the cone for which the normal vector
   /// is requested
   /// @return Vector3D normal vector in global frame
   const Vector3D
-  normal(Context ctx, const Vector2D& lp) const final;
+  normal(const GeometryContext& gctx, const Vector2D& lp) const final;
 
   /// Return method for surface normal information
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos is the global position on the cone for which the normal vector
   /// is requested
   /// @return Vector3D normal vector in global frame
   const Vector3D
-  normal(Context ctx, const Vector3D& gpos) const final;
+  normal(const GeometryContext& gctx, const Vector3D& gpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
 
   // Return method for the rotational symmetry axis
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
+
   ///
   // @return This returns the local z axis
   virtual const Vector3D
-  rotSymmetryAxis(Context ctx) const;
+  rotSymmetryAxis(const GeometryContext& gctx) const;
 
   /// This method returns the ConeBounds by reference
   const ConeBounds&
@@ -165,36 +161,33 @@ public:
 
   /// Local to global transformation
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param lpos is the local position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param gpos is the global position shich is filled
   void
-  localToGlobal(Context         ctx,
-                const Vector2D& lpos,
-                const Vector3D& mom,
-                Vector3D&       gpos) const final;
+  localToGlobal(const GeometryContext& gctx,
+                const Vector2D&        lpos,
+                const Vector3D&        mom,
+                Vector3D&              gpos) const final;
 
   /// Global to local transfomration
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos is the global position to be transformed
   /// @param mom is the global momentum (ignored in this operation)
   /// @param lpos is hte local position to be filled
   /// @return is a boolean indicating if the transformation succeeded
   bool
-  globalToLocal(Context         ctx,
-                const Vector3D& gpos,
-                const Vector3D& mom,
-                Vector2D&       lpos) const final;
+  globalToLocal(const GeometryContext& gctx,
+                const Vector3D&        gpos,
+                const Vector3D&        mom,
+                Vector2D&              lpos) const final;
 
   /// @brief Straight line intersection schema - provides closest intersection
   /// and (signed) path length
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos The start position for the intersection
   /// @param gmom The start momentum for the intersection (will be normalized)
   /// @param navDir The navigation direction with respect to the momentum
@@ -235,24 +228,23 @@ public:
   ///
   /// @return is the Intersection object
   Intersection
-  intersectionEstimate(Context              ctx,
-                       const Vector3D&      gpos,
-                       const Vector3D&      gmom,
-                       NavigationDirection  navDir,
-                       const BoundaryCheck& bcheck  = false,
-                       CorrFnc              correct = nullptr) const final;
+  intersectionEstimate(const GeometryContext& gctx,
+                       const Vector3D&        gpos,
+                       const Vector3D&        gmom,
+                       NavigationDirection    navDir,
+                       const BoundaryCheck&   bcheck  = false,
+                       CorrFnc                correct = nullptr) const final;
 
   /// the pathCorrection for derived classes with thickness
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos is the global potion at the correction point
   /// @param mom is the momentum at the correction point
   /// @return is the path correction due to incident angle
   double
-  pathCorrection(Context         ctx,
-                 const Vector3D& gpos,
-                 const Vector3D& mom) const final;
+  pathCorrection(const GeometryContext& gctx,
+                 const Vector3D&        gpos,
+                 const Vector3D&        mom) const final;
 
   /// Return properly formatted class name for screen output
   std::string
@@ -264,11 +256,11 @@ protected:
 private:
   /// Clone method implementation
   ///
-  /// @param ctx Is the payload/context object to be used for
-  ///        delegating the event or thread context
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param shift applied to the surface
   ConeSurface*
-  clone_impl(Context ctx, const Transform3D& shift) const override;
+  clone_impl(const GeometryContext& gctx,
+             const Transform3D&     shift) const override;
 };
 
 #include "Acts/Surfaces/detail/ConeSurface.ipp"

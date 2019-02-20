@@ -164,7 +164,7 @@ struct MaterialInteractor
 
         // Calculate the path correction
         double pCorrection = state.navigation.currentSurface->pathCorrection(
-            state.context,
+            state.geoContext,
             stepper.position(state.stepping),
             stepper.direction(state.stepping));
 

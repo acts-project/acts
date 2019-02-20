@@ -31,7 +31,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext testContext = DefaultGeometryContext();
 
   BOOST_AUTO_TEST_SUITE(CylinderSurfaces)
   /// Unit test for creating compliant/non-compliant CylinderSurface object

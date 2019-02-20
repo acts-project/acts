@@ -36,7 +36,7 @@ namespace Test {
   {
 
     // Create a test context
-    ContextType testContext = DefaultContext();
+    GeometryContext tgContext = DefaultGeometryContext();
 
     // construct the surface
     Vector3D pcenter(-4., 4., 0.);
@@ -59,9 +59,9 @@ namespace Test {
     double   pathp = 13.;
 
     auto intersect
-        = [&testContext, &position, &direction, &plane]() -> Intersection {
+        = [&tgContext, &position, &direction, &plane]() -> Intersection {
       auto pi = plane->intersectionEstimate(
-          testContext, position, direction, forward, false);
+          tgContext, position, direction, forward, false);
       std::cout << "Interseciton it at " << toString(pi.position) << std::endl;
       return pi;
     };

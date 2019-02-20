@@ -63,10 +63,11 @@ Acts::PlaneLayer::buildApproachDescriptor()
   // get the appropriate transform, the center and the normal vector
 
   //@todo fix with representing volume
-  const Transform3D& lTransform = PlaneSurface::transform(DefaultContext());
-  RotationMatrix3D   lRotation  = lTransform.rotation();
-  const Vector3D&    lCenter    = PlaneSurface::center(DefaultContext());
-  const Vector3D&    lVector    = Surface::normal(DefaultContext(), lCenter);
+  const Transform3D& lTransform
+      = PlaneSurface::transform(DefaultGeometryContext());
+  RotationMatrix3D lRotation = lTransform.rotation();
+  const Vector3D&  lCenter   = PlaneSurface::center(DefaultGeometryContext());
+  const Vector3D&  lVector = Surface::normal(DefaultGeometryContext(), lCenter);
   // create new surfaces
   const Transform3D* apnTransform = new Transform3D(
       Translation3D(lCenter - 0.5 * Layer::m_layerThickness * lVector)

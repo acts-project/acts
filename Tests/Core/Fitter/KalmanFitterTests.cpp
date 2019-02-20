@@ -38,7 +38,7 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 namespace Test {
@@ -64,7 +64,7 @@ namespace Test {
   bool debugMode = false;
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   /// @brief This struct creates FittableMeasurements on the
   /// detector surfaces, according to the given smearing xxparameters
@@ -106,7 +106,7 @@ namespace Test {
           if (lResolution != vResolution->second.end()) {
             // Apply global to local
             Acts::Vector2D lPos;
-            surface->globalToLocal(state.context,
+            surface->globalToLocal(state.geoContext,
                                    stepper.position(state.stepping),
                                    stepper.direction(state.stepping),
                                    lPos);
@@ -255,13 +255,14 @@ namespace Test {
     detRes[3] = stripVolumeRes;
 
     // Set options for propagator
-    PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions;
+    PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
+        tgContext);
     mOptions.debug              = debugMode;
     auto& mCreator              = mOptions.actionList.get<MeasurementCreator>();
     mCreator.detectorResolution = detRes;
 
     // Launch and collect - the measurements
-    auto mResult = mPropagator.propagate(testContext, mStart, mOptions);
+    auto mResult = mPropagator.propagate(mStart, mOptions);
     if (debugMode) {
       const auto debugString
           = mResult.template get<DebugOutput::result_type>().debugString;
@@ -312,12 +313,12 @@ namespace Test {
     KalmanFitter kFitter(rPropagator);
 
     // Fit the track
-    auto fittedTrack = kFitter.fit(testContext, measurements, rStart, rSurface);
+    auto fittedTrack = kFitter.fit(tgContext, measurements, rStart, rSurface);
     auto fittedParameters = fittedTrack.fittedParameters.get();
 
     // Make sure it is deterministic
     auto fittedAgainTrack
-        = kFitter.fit(testContext, measurements, rStart, rSurface);
+        = kFitter.fit(tgContext, measurements, rStart, rSurface);
     auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
 
     CHECK_CLOSE_REL(fittedParameters.parameters(),
@@ -334,7 +335,7 @@ namespace Test {
 
     // Make sure it works for shuffled measurements as well
     auto fittedShuffledTrack
-        = kFitter.fit(testContext, shuffledMeasurements, rStart, rSurface);
+        = kFitter.fit(tgContext, shuffledMeasurements, rStart, rSurface);
     auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
 
     CHECK_CLOSE_REL(fittedParameters.parameters(),
@@ -350,7 +351,7 @@ namespace Test {
 
     // Make sure it works for shuffled measurements as well
     auto fittedWithHoleTrack
-        = kFitter.fit(testContext, measurementsWithHole, rStart, rSurface);
+        = kFitter.fit(tgContext, measurementsWithHole, rStart, rSurface);
     auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
 
     // Count one hole

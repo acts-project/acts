@@ -11,13 +11,13 @@
 ///////////////////////////////////////////////////////////////////
 
 inline void
-LineSurface::localToGlobal(Context         ctx,
-                           const Vector2D& lpos,
-                           const Vector3D& mom,
-                           Vector3D&       gpos) const
+LineSurface::localToGlobal(const GeometryContext& gctx,
+                           const Vector2D&        lpos,
+                           const Vector3D&        mom,
+                           Vector3D&              gpos) const
 {
 
-  const auto& sTransform = transform(ctx);
+  const auto& sTransform = transform(gctx);
   const auto& tMatrix    = sTransform.matrix();
   Vector3D    lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 
@@ -29,14 +29,14 @@ LineSurface::localToGlobal(Context         ctx,
 }
 
 inline bool
-LineSurface::globalToLocal(Context         ctx,
-                           const Vector3D& gpos,
-                           const Vector3D& mom,
-                           Vector2D&       lpos) const
+LineSurface::globalToLocal(const GeometryContext& gctx,
+                           const Vector3D&        gpos,
+                           const Vector3D&        mom,
+                           Vector2D&              lpos) const
 {
   using VectorHelpers::perp;
 
-  const auto& sTransform = transform(ctx);
+  const auto& sTransform = transform(gctx);
   const auto& tMatrix    = sTransform.matrix();
   Vector3D    lineDirection(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
   // Bring the global position into the local frame
@@ -58,12 +58,12 @@ LineSurface::name() const
 }
 
 inline const RotationMatrix3D
-LineSurface::referenceFrame(Context ctx,
+LineSurface::referenceFrame(const GeometryContext& gctx,
                             const Vector3D& /*unused*/,
                             const Vector3D& mom) const
 {
   RotationMatrix3D mFrame;
-  const auto&      tMatrix = transform(ctx).matrix();
+  const auto&      tMatrix = transform(gctx).matrix();
   Vector3D         measY(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
   Vector3D         measX(measY.cross(mom).normalized());
   Vector3D         measDepth(measX.cross(measY));
@@ -76,7 +76,7 @@ LineSurface::referenceFrame(Context ctx,
 }
 
 inline double
-LineSurface::pathCorrection(Context /*unused*/,
+LineSurface::pathCorrection(const GeometryContext& /*unused*/,
                             const Vector3D& /*pos*/,
                             const Vector3D& /*mom*/) const
 {
@@ -84,15 +84,16 @@ LineSurface::pathCorrection(Context /*unused*/,
 }
 
 inline const Vector3D
-LineSurface::binningPosition(Context ctx, BinningValue /*bValue*/) const
+LineSurface::binningPosition(const GeometryContext& gctx,
+                             BinningValue /*bValue*/) const
 {
-  return center(ctx);
+  return center(gctx);
 }
 
 inline const Vector3D
-LineSurface::normal(Context ctx, const Vector2D& /*lpos*/) const
+LineSurface::normal(const GeometryContext& gctx, const Vector2D& /*lpos*/) const
 {
-  const auto& tMatrix = transform(ctx).matrix();
+  const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
@@ -106,19 +107,19 @@ LineSurface::bounds() const
 }
 
 inline Intersection
-LineSurface::intersectionEstimate(Context              ctx,
-                                  const Vector3D&      gpos,
-                                  const Vector3D&      gdir,
-                                  NavigationDirection  navDir,
-                                  const BoundaryCheck& bcheck,
-                                  CorrFnc              correct) const
+LineSurface::intersectionEstimate(const GeometryContext& gctx,
+                                  const Vector3D&        gpos,
+                                  const Vector3D&        gdir,
+                                  NavigationDirection    navDir,
+                                  const BoundaryCheck&   bcheck,
+                                  CorrFnc                correct) const
 {
   // following nominclature found in header file and doxygen documentation
   // line one is the straight track
   Vector3D ma = gpos;
   Vector3D ea = gdir;
   // line two is the line surface
-  const auto& tMatrix = transform(ctx).matrix();
+  const auto& tMatrix = transform(gctx).matrix();
   Vector3D    mb      = tMatrix.block<3, 1>(0, 3).transpose();
   Vector3D    eb      = tMatrix.block<3, 1>(0, 2).transpose();
   // now go ahead and solve for the closest approach
@@ -149,7 +150,7 @@ LineSurface::intersectionEstimate(Context              ctx,
     }
     // it just needs to be a insideBounds() check
     // @todo there should be a faster check possible
-    valid = bcheck ? (valid && isOnSurface(ctx, result, gdir, bcheck)) : valid;
+    valid = bcheck ? (valid && isOnSurface(gctx, result, gdir, bcheck)) : valid;
     // return the result with validity
     return Intersection(result, u, valid);
   }
@@ -158,7 +159,7 @@ LineSurface::intersectionEstimate(Context              ctx,
 }
 
 inline void
-LineSurface::initJacobianToGlobal(Context ctx,
+LineSurface::initJacobianToGlobal(const GeometryContext& gctx,
                                   ActsMatrixD<7, 5>& jacobian,
                                   const Vector3D&       gpos,
                                   const Vector3D&       dir,
@@ -181,7 +182,7 @@ LineSurface::initJacobianToGlobal(Context ctx,
   const double cos_phi       = x * inv_sin_theta;
   const double sin_phi       = y * inv_sin_theta;
   // retrieve the reference frame
-  const auto rframe = referenceFrame(ctx, gpos, dir);
+  const auto rframe = referenceFrame(gctx, gpos, dir);
   // the local error components - given by the reference frame
   jacobian.topLeftCorner<3, 2>() = rframe.topLeftCorner<3, 2>();
   // the momentum components
@@ -209,14 +210,14 @@ LineSurface::initJacobianToGlobal(Context ctx,
 }
 
 inline const ActsRowVectorD<5>
-LineSurface::derivativeFactors(Context                 ctx,
+LineSurface::derivativeFactors(const GeometryContext&  gctx,
                                const Vector3D&         pos,
                                const Vector3D&         dir,
                                const RotationMatrix3D& rft,
                                const ActsMatrixD<7, 5>& jac) const
 {
   // the vector between position and center
-  ActsRowVectorD<3> pc = (pos - center(ctx)).transpose();
+  ActsRowVectorD<3> pc = (pos - center(gctx)).transpose();
   // the longitudinal component vector (alogn local z)
   ActsRowVectorD<3> locz = rft.block<1, 3>(1, 0);
   // build the norm vector comonent by subtracting the longitudinal one

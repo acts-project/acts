@@ -10,7 +10,7 @@
 
 #include <cmath>
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN
@@ -36,18 +36,18 @@ namespace detail {
     /// object to guarantee the local to global transformation is done
     /// within the right (alginment/conditions) context
     ///
-    /// @param ctx The context object mentioned above
+    /// @param gctx The current geometry context object, e.g. alignment
     /// @param pars the parameter vector
     /// @param s the surface for the local to global transform
     ///
     /// @return position in the global frame
     static ActsVectorD<3>
-    parameters2globalPosition(Context            ctx,
-                              const ParVector_t& pars,
-                              const Surface&     s)
+    parameters2globalPosition(const GeometryContext& gctx,
+                              const ParVector_t&     pars,
+                              const Surface&         s)
     {
       ActsVectorD<3> globalPosition;
-      s.localToGlobal(ctx,
+      s.localToGlobal(gctx,
                       ActsVectorD<2>(pars(Acts::eLOC_0), pars(Acts::eLOC_1)),
                       parameters2globalMomentum(pars),
                       globalPosition);
@@ -108,7 +108,7 @@ namespace detail {
     /// object to guarantee the local to global transformation is done
     /// within the right (alginment/conditions) context
     ///
-    /// @param ctx The context object mentioned above
+    /// @param gctx The current geometry context object, e.g. alignment
     /// @param pos position of the parameterisation in global
     /// @param mom position of the parameterisation in global
     /// @param charge of the particle/track
@@ -116,16 +116,16 @@ namespace detail {
     ///
     /// @return the track parameterisation
     static ParVector_t
-    global2parameters(Context               ctx,
-                      const ActsVectorD<3>& pos,
-                      const ActsVectorD<3>& mom,
-                      double                charge,
-                      const Surface&        s)
+    global2parameters(const GeometryContext& gctx,
+                      const ActsVectorD<3>&  pos,
+                      const ActsVectorD<3>&  mom,
+                      double                 charge,
+                      const Surface&         s)
     {
       using VectorHelpers::phi;
       using VectorHelpers::theta;
       ActsVectorD<2> localPosition;
-      s.globalToLocal(ctx, pos, mom, localPosition);
+      s.globalToLocal(gctx, pos, mom, localPosition);
       ParVector_t result;
       result << localPosition(0), localPosition(1), phi(mom), theta(mom),
           ((std::abs(charge) < 1e-4) ? 1. : charge) / mom.norm();

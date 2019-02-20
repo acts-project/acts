@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
 
 #include <functional>
@@ -60,12 +60,12 @@ public:
 
   /// return the lowest tracking Volume
   ///
-  /// @param ctx is the context for this request (e.g. alignment)
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
-  trackingVolume(Context ctx, const Vector3D& gp) const;
+  trackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// return the lowest tracking Volume
   ///
@@ -77,12 +77,12 @@ public:
 
   /// Forward the associated Layer information
   ///
-  /// @paramn ctx is the context for this request (e.g. alignment)
+  /// @paramn gctx is the context for this request (e.g. alignment)
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
   const Layer*
-  associatedLayer(Context ctx, const Vector3D& gp) const;
+  associatedLayer(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// Register the beam tube
   ///

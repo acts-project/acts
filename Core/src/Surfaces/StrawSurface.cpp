@@ -44,10 +44,10 @@ Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
 {
 }
 
-Acts::StrawSurface::StrawSurface(Context             ctx,
-                                 const StrawSurface& other,
-                                 const Transform3D&  transf)
-  : GeometryObject(), LineSurface(ctx, other, transf)
+Acts::StrawSurface::StrawSurface(const GeometryContext& gctx,
+                                 const StrawSurface&    other,
+                                 const Transform3D&     transf)
+  : GeometryObject(), LineSurface(gctx, other, transf)
 {
 }
 
@@ -62,20 +62,22 @@ Acts::StrawSurface::operator=(const StrawSurface& other)
 }
 
 std::shared_ptr<Acts::StrawSurface>
-Acts::StrawSurface::clone(Context ctx, const Transform3D& shift) const
+Acts::StrawSurface::clone(const GeometryContext& gctx,
+                          const Transform3D&     shift) const
 {
-  return std::shared_ptr<StrawSurface>(this->clone_impl(ctx, shift));
+  return std::shared_ptr<StrawSurface>(this->clone_impl(gctx, shift));
 }
 
 Acts::StrawSurface*
-Acts::StrawSurface::clone_impl(Context ctx, const Transform3D& shift) const
+Acts::StrawSurface::clone_impl(const GeometryContext& gctx,
+                               const Transform3D&     shift) const
 {
-  return new StrawSurface(ctx, *this, shift);
+  return new StrawSurface(gctx, *this, shift);
 }
 
 Acts::PolyhedronRepresentation
-Acts::StrawSurface::polyhedronRepresentation(Context ctx,
-                                             size_t  l0div,
+Acts::StrawSurface::polyhedronRepresentation(const GeometryContext& gctx,
+                                             size_t                 l0div,
                                              size_t /*l1div*/) const
 {
   std::vector<Vector3D>            vertices;
@@ -92,7 +94,7 @@ Acts::StrawSurface::polyhedronRepresentation(Context ctx,
   Vector3D left(r, 0, -hlZ);
   Vector3D right(r, 0, hlZ);
 
-  const Transform3D& sfTransform = transform(ctx);
+  const Transform3D& sfTransform = transform(gctx);
 
   for (size_t i = 0; i < l0div; i++) {
     Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));

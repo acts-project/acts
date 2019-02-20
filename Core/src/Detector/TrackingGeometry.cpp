@@ -31,14 +31,14 @@ Acts::TrackingGeometry::TrackingGeometry(
 Acts::TrackingGeometry::~TrackingGeometry() = default;
 
 const Acts::TrackingVolume*
-Acts::TrackingGeometry::trackingVolume(Context               ctx,
-                                       const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::trackingVolume(const GeometryContext& gctx,
+                                       const Acts::Vector3D&  gp) const
 {
   const TrackingVolume* searchVolume  = m_world.get();
   const TrackingVolume* currentVolume = nullptr;
   while (currentVolume != searchVolume && (searchVolume != nullptr)) {
     currentVolume = searchVolume;
-    searchVolume  = searchVolume->trackingVolume(ctx, gp);
+    searchVolume  = searchVolume->trackingVolume(gctx, gp);
   }
   return currentVolume;
 }
@@ -68,11 +68,11 @@ Acts::TrackingGeometry::trackingVolume(const std::string& name) const
 }
 
 const Acts::Layer*
-Acts::TrackingGeometry::associatedLayer(Context               ctx,
-                                        const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::associatedLayer(const GeometryContext& gctx,
+                                        const Acts::Vector3D&  gp) const
 {
-  const TrackingVolume* lowestVol = (trackingVolume(ctx, gp));
-  return lowestVol->associatedLayer(ctx, gp);
+  const TrackingVolume* lowestVol = (trackingVolume(gctx, gp));
+  return lowestVol->associatedLayer(gctx, gp);
 }
 
 void

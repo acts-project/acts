@@ -12,7 +12,7 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -30,7 +30,7 @@ main(int argc, char* argv[])
   bool         withCov = true;
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   try {
     po::options_description desc("Allowed options");
@@ -73,7 +73,7 @@ main(int argc, char* argv[])
   Stepper_type    atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 
-  PropagatorOptions<> options;
+  PropagatorOptions<> options(tgContext);
   options.pathLimit = maxPath * units::_m;
 
   Vector3D          pos(0, 0, 0);
@@ -90,7 +90,7 @@ main(int argc, char* argv[])
 
   double totalPathLength = 0;
   for (unsigned int i = 0; i < toys; ++i) {
-    auto r = propagator.propagate(testContext, pars, options);
+    auto r = propagator.propagate(pars, options);
     ACTS_DEBUG("reached position (" << r.endParameters->position().x() << ", "
                                     << r.endParameters->position().y()
                                     << ", "

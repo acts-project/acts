@@ -455,6 +455,17 @@ template <typename action_list_t  = ActionList<>,
 struct DenseStepperPropagatorOptions
     : public PropagatorOptions<action_list_t, aborter_list_t>
 {
+
+  /// Delete Default contructor
+
+  /// Constructor with GeometryContext
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  DenseStepperPropagatorOptions(const GeometryContext& gctx)
+    : PropagatorOptions<action_list_t, aborter_list_t>(gctx)
+  {
+  }
+
   /// Toggle between mean and mode evaluation of energy loss
   bool meanEnergyLoss = true;
 
@@ -474,7 +485,7 @@ struct DenseStepperPropagatorOptions
   extend(extended_aborter_list_t aborters) const
   {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions;
+        eoptions(eoptions.geoContext);
     // Copy the options over
     eoptions.direction       = this->direction;
     eoptions.absPdgCode      = this->absPdgCode;

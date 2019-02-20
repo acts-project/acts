@@ -324,7 +324,7 @@ public:
         // get the attached volume information
         auto boundary = state.navigation.navBoundaryIter->object;
         state.navigation.currentVolume
-            = boundary->attachedVolume(state.context,
+            = boundary->attachedVolume(state.geoContext,
                                        stepper.position(state.stepping),
                                        stepper.direction(state.stepping),
                                        state.stepping.navDir);
@@ -490,10 +490,10 @@ private:
         return dstream.str();
       });
       state.navigation.startVolume = trackingGeometry->trackingVolume(
-          state.context, stepper.position(state.stepping));
+          state.geoContext, stepper.position(state.stepping));
       state.navigation.startLayer = state.navigation.startVolume
           ? state.navigation.startVolume->associatedLayer(
-                state.context, stepper.position(state.stepping))
+                state.geoContext, stepper.position(state.stepping))
           : nullptr;
       // Set the start volume as current volume
       state.navigation.currentVolume = state.navigation.startVolume;
@@ -646,7 +646,7 @@ private:
       });
       // Now intersect (should exclude punch-through)
       auto surfaceIntersect = surface->surfaceIntersectionEstimate(
-          state.context,
+          state.geoContext,
           stepper.position(state.stepping),
           stepper.direction(state.stepping),
           navOpts,
@@ -748,7 +748,7 @@ private:
       // Otherwise try to step towards it
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       auto layerIntersect = layerSurface->surfaceIntersectionEstimate(
-          state.context,
+          state.geoContext,
           stepper.position(state.stepping),
           stepper.direction(state.stepping),
           navOpts,
@@ -861,7 +861,7 @@ private:
       // Evaluate the boundary surfaces
       state.navigation.navBoundaries
           = state.navigation.currentVolume->compatibleBoundaries(
-              state.context,
+              state.geoContext,
               stepper.position(state.stepping),
               stepper.direction(state.stepping),
               navOpts,
@@ -888,7 +888,7 @@ private:
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
       // Step towards the boundary surface
       auto boundaryIntersect = boundarySurface->surfaceIntersectionEstimate(
-          state.context,
+          state.geoContext,
           stepper.position(state.stepping),
           stepper.direction(state.stepping),
           navOpts,
@@ -987,7 +987,7 @@ private:
       // take the target intersection
       auto targetIntersection
           = state.navigation.targetSurface->surfaceIntersectionEstimate(
-              state.context,
+              state.geoContext,
               stepper.position(state.stepping),
               stepper.direction(state.stepping),
               navOpts,
@@ -1003,9 +1003,9 @@ private:
       /// get the target volume from the intersection
       auto tPosition = targetIntersection.intersection.position;
       state.navigation.targetVolume
-          = trackingGeometry->trackingVolume(state.context, tPosition);
+          = trackingGeometry->trackingVolume(state.geoContext, tPosition);
       state.navigation.targetLayer = state.navigation.targetVolume
-          ? state.navigation.targetVolume->associatedLayer(state.context,
+          ? state.navigation.targetVolume->associatedLayer(state.geoContext,
                                                            tPosition)
           : nullptr;
       if (state.navigation.targetVolume) {
@@ -1058,7 +1058,7 @@ private:
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
     // get the surfaces
     state.navigation.navSurfaces
-        = navLayer->compatibleSurfaces(state.context,
+        = navLayer->compatibleSurfaces(state.geoContext,
                                        stepper.position(state.stepping),
                                        stepper.direction(state.stepping),
                                        navOpts,
@@ -1138,7 +1138,7 @@ private:
     // Request the compatible layers
     state.navigation.navLayers
         = state.navigation.currentVolume->compatibleLayers(
-            state.context,
+            state.geoContext,
             stepper.position(state.stepping),
             stepper.direction(state.stepping),
             navOpts,

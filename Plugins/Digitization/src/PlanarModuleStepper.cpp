@@ -23,7 +23,8 @@ Acts::PlanarModuleStepper::PlanarModuleStepper(
 }
 
 std::vector<Acts::DigitizationStep>
-Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
+Acts::PlanarModuleStepper::cellSteps(const GeometryContext&    gctx,
+                                     const DigitizationModule& dmodule,
                                      const Vector3D&           startPoint,
                                      const Vector3D&           endPoint) const
 {
@@ -44,7 +45,7 @@ Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
   for (auto& sSurface : stepSurfaces) {
     // try it out by intersecting, but do not force the direction
     Acts::Intersection sIntersection = sSurface->intersectionEstimate(
-        startPoint, trackDirection, forward, true);
+        gctx, startPoint, trackDirection, forward, true);
     if (sIntersection.valid) {
       // now record
       stepIntersections.push_back(sIntersection);
@@ -76,7 +77,8 @@ Acts::PlanarModuleStepper::cellSteps(const DigitizationModule& dmodule,
 
 // calculate the steps caused by this track - fast simulation interface
 std::vector<Acts::DigitizationStep>
-Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
+Acts::PlanarModuleStepper::cellSteps(const GeometryContext&          gctx,
+                                     const Acts::DigitizationModule& dmodule,
                                      const Vector2D& moduleIntersection,
                                      const Vector3D& trackDirection) const
 {
@@ -94,7 +96,7 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
     ++attempts;
     // try it out by intersecting, but do not force the direction
     Acts::Intersection bIntersection = bSurface->intersectionEstimate(
-        intersection3D, trackDirection, forward, true);
+        gctx, intersection3D, trackDirection, forward, true);
     if (bIntersection.valid) {
       // now record
       boundaryIntersections.push_back(bIntersection);
@@ -131,7 +133,8 @@ Acts::PlanarModuleStepper::cellSteps(const Acts::DigitizationModule& dmodule,
     return std::vector<Acts::DigitizationStep>();
   }
   // return
-  return cellSteps(dmodule,
+  return cellSteps(gctx,
+                   dmodule,
                    boundaryIntersections[0].position,
                    boundaryIntersections[1].position);
 }

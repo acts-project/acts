@@ -22,8 +22,8 @@
 
 #include <algorithm>
 #include "Acts/Tools/ILayerArrayCreator.hpp"
-#include "Acts/Utilities/Context.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -48,7 +48,7 @@ public:
   struct Config
   {
     /// The building context
-    ContextType buildContext = DefaultContext();
+    GeometryContext buildContext = DefaultGeometryContext();
   };
 
   /// Constructor

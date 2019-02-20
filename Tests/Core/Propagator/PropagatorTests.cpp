@@ -25,7 +25,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/Context.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -37,7 +37,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  ContextType testContext = DefaultContext();
+  GeometryContext tgContext = DefaultGeometryContext();
 
   using cstep = detail::ConstrainedStep;
 
@@ -103,7 +103,7 @@ namespace Test {
         // calculate the distance to the surface
         const double distance
             = surface
-                  ->intersectionEstimate(state.context,
+                  ->intersectionEstimate(state.geoContext,
                                          stepper.position(state.stepping),
                                          stepper.direction(state.stepping),
                                          forward,
@@ -154,7 +154,7 @@ namespace Test {
   {
 
     using null_options_type = PropagatorOptions<>;
-    null_options_type null_options;
+    null_options_type null_options(tgContext);
     // todo write null options test
 
     using ActionList_type      = ActionList<PerpendicularMeasure>;
@@ -163,7 +163,7 @@ namespace Test {
     using options_type
         = PropagatorOptions<ActionList_type, AbortConditions_type>;
 
-    options_type options;
+    options_type options(tgContext);
   }
 
   BOOST_DATA_TEST_CASE(
@@ -196,7 +196,7 @@ namespace Test {
     using AbortConditions_type = AbortList<>;
 
     // setup propagation options
-    PropagatorOptions<ActionList_type, AbortConditions_type> options;
+    PropagatorOptions<ActionList_type, AbortConditions_type> options(tgContext);
 
     options.pathLimit   = 20 * units::_m;
     options.maxStepSize = 1 * units::_cm;
@@ -218,9 +218,8 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
     // propagate to the cylinder surface
-    const auto& result
-        = epropagator.propagate(testContext, start, *cSurface, options);
-    auto& sor = result.get<so_result>();
+    const auto& result = epropagator.propagate(start, *cSurface, options);
+    auto&       sor    = result.get<so_result>();
 
     BOOST_CHECK_EQUAL(sor.surfaces_passed, 1);
     CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);
@@ -252,7 +251,7 @@ namespace Test {
     (void)index;
 
     // setup propagation options - the tow step options
-    PropagatorOptions<> options_2s;
+    PropagatorOptions<> options_2s(tgContext);
     options_2s.pathLimit   = 50 * units::_cm;
     options_2s.maxStepSize = 1 * units::_cm;
 
@@ -276,18 +275,17 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a path length of 100 with two steps of 50
     const auto& mid_parameters
-        = epropagator.propagate(testContext, start, options_2s).endParameters;
+        = epropagator.propagate(start, options_2s).endParameters;
     const auto& end_parameters_2s
-        = epropagator.propagate(testContext, *mid_parameters, options_2s)
-              .endParameters;
+        = epropagator.propagate(*mid_parameters, options_2s).endParameters;
 
     // setup propagation options - the one step options
-    PropagatorOptions<> options_1s;
+    PropagatorOptions<> options_1s(tgContext);
     options_1s.pathLimit   = 100 * units::_cm;
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a path length of 100 in one step
     const auto& end_parameters_1s
-        = epropagator.propagate(testContext, start, options_1s).endParameters;
+        = epropagator.propagate(start, options_1s).endParameters;
 
     // test that the propagation is additive
     CHECK_CLOSE_REL(
@@ -325,7 +323,7 @@ namespace Test {
     (void)index;
 
     // setup propagation options - 2 setp options
-    PropagatorOptions<> options_2s;
+    PropagatorOptions<> options_2s(tgContext);
     options_2s.pathLimit   = 10 * units::_m;
     options_2s.maxStepSize = 1 * units::_cm;
 
@@ -349,22 +347,19 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a final surface with one stop in between
     const auto& mid_parameters
-        = epropagator.propagate(testContext, start, *mSurface, options_2s)
-              .endParameters;
+        = epropagator.propagate(start, *mSurface, options_2s).endParameters;
 
     const auto& end_parameters_2s
-        = epropagator
-              .propagate(testContext, *mid_parameters, *cSurface, options_2s)
+        = epropagator.propagate(*mid_parameters, *cSurface, options_2s)
               .endParameters;
 
     // setup propagation options - one step options
-    PropagatorOptions<> options_1s;
+    PropagatorOptions<> options_1s(tgContext);
     options_1s.pathLimit   = 10 * units::_m;
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a final surface in one stop
     const auto& end_parameters_1s
-        = epropagator.propagate(testContext, start, *cSurface, options_1s)
-              .endParameters;
+        = epropagator.propagate(start, *cSurface, options_1s).endParameters;
 
     // test that the propagation is additive
     CHECK_CLOSE_REL(

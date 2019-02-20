@@ -30,7 +30,7 @@ public:
 
   template <typename track_states_t>
   boost::optional<parameters_t>
-  operator()(Context ctx, track_states_t& filteredStates) const
+  operator()(const GeometryContext& gctx, track_states_t& filteredStates) const
   {
     using namespace boost::adaptors;
 
@@ -85,7 +85,7 @@ public:
 
       // Create smoothed track parameters
       ts.parameter.smoothed
-          = parameters_t(ctx,
+          = parameters_t(gctx,
                          std::make_unique<CovMatrix_t>(std::move(smoothedCov)),
                          smoothedPars,
                          ts.referenceSurface().getSharedPtr());
