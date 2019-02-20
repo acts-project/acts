@@ -71,9 +71,4 @@ Acts::SurfaceMaterialMapper::mapMaterialPoints(
 	unsigned int index = concatenateToGridPoint(rmp.second, mState);
 	mState.accumulatedMaterial[index].accumulate(rmp.second, rmp.first);
   }
-  
-  for(auto& am : mState.accumulatedMaterial)
-  {
-	  am.eventAverage();
-  }
 }

@@ -78,7 +78,7 @@ public:
   /// @param [in] concatenateToGridPoints Function that assigns the space point of @p mPoints to the grid points
   void
   mapMaterialPoints(State& mState, const RecordedMaterialTrack& mPoints, const std::function<unsigned int(const Vector3D&, const State&)>& concatenateToGridPoints) const;
-
+// TODO: RecordedMaterialTrack -> std::pair<Material, Vector3D>
 private:
 
   /// The logging instance

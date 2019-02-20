@@ -1,24 +1,64 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// AccumulatedSurfaceMaterial.h, Acts project
+// AccumulatedVolumeMaterial.h, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
 
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedMaterialProperties.hpp"
-#include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
+
+// TODO: probably combine both classes into a single one
+struct AccumulatedMaterial
+{
+   void
+  accumulate(const Material& mat)
+  {
+	  m_eventX0 += mat.X0();
+	  m_eventL0 += mat.L0();
+	  m_eventA += mat.A();
+	  m_eventZ += mat.Z();
+	  m_eventRho += mat.rho();
+	  m_totalEntries++;
+	}
+
+  std::pair<Material, unsigned int>
+  totalAverage()
+  {
+	    if (m_totalEntires > 0) {
+		double eventScalor = 1. / (double) m_totalEntries;
+		m_totalX0 *= eventScalor;
+		m_totalL0 *= eventScalor;
+		m_totalA *= eventScalor;
+		m_totalZ *= eventScalor;
+		m_totalRho *= eventScalor;
+		// Create the material
+		Material mat(m_totalX0, m_totalL0, m_totalA, m_totalZ, m_totalRho);
+		return std::pair<Material, unsigned int>(std::move(mat), m_totalEntries);
+	}
+	else{
+	return std::pair<Material, unsigned int>(Material(), m_totalEntries);}
+  }
+
+private:
+  float m_eventX0{0.};  //!< event: accumulate the contribution to X0
+  float m_eventL0{0.};  //!< event: accumulate the contribution to L0
+  float m_eventA{0.};         //!< event: accumulate the contribution to A
+  float m_eventZ{0.};         //!< event: accumulate the contribution to Z
+  float m_eventRho{0.};       //!< event: accumulate the contribution to rho
+
+  unsigned int m_totalEntries{0};  //!< the number of events
+};
 
 /// @class AccumulatedSurfaceMaterial
 ///
@@ -27,7 +67,7 @@ namespace Acts {
 ///
 /// It performs event- and run-average when called, and returns
 /// a new SurfaceMaterial object as a unique_ptr after finalisation
-class AccumulatedSurfaceMaterial
+class AccumulatedVolumeMaterial
 {
 public:
   using AccumulatedVector = std::vector<AccumulatedMaterialProperties>;
