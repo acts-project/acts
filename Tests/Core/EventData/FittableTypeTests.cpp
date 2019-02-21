@@ -175,6 +175,44 @@ namespace Test {
         >;
       static_assert(std::is_same<actual, expected>::value, "Variant is not identical");
     }
+    {
+      using actual = detail::type_generator_t<meas_factory, 5>;
+      using expected
+          = std::variant<Measurement<Identifier, 0_p>,
+                         Measurement<Identifier, 1_p>,
+                         Measurement<Identifier, 0_p, 1_p>,
+                         Measurement<Identifier, 2_p>,
+                         Measurement<Identifier, 0_p, 2_p>,
+                         Measurement<Identifier, 1_p, 2_p>,
+                         Measurement<Identifier, 0_p, 1_p, 2_p>,
+                         Measurement<Identifier, 3_p>,
+                         Measurement<Identifier, 0_p, 3_p>,
+                         Measurement<Identifier, 1_p, 3_p>,
+                         Measurement<Identifier, 0_p, 1_p, 3_p>,
+                         Measurement<Identifier, 2_p, 3_p>,
+                         Measurement<Identifier, 0_p, 2_p, 3_p>,
+                         Measurement<Identifier, 1_p, 2_p, 3_p>,
+                         Measurement<Identifier, 0_p, 1_p, 2_p, 3_p>,
+                         Measurement<Identifier, 4_p>,
+                         Measurement<Identifier, 0_p, 4_p>,
+                         Measurement<Identifier, 1_p, 4_p>,
+                         Measurement<Identifier, 0_p, 1_p, 4_p>,
+                         Measurement<Identifier, 2_p, 4_p>,
+                         Measurement<Identifier, 0_p, 2_p, 4_p>,
+                         Measurement<Identifier, 1_p, 2_p, 4_p>,
+                         Measurement<Identifier, 0_p, 1_p, 2_p, 4_p>,
+                         Measurement<Identifier, 3_p, 4_p>,
+                         Measurement<Identifier, 0_p, 3_p, 4_p>,
+                         Measurement<Identifier, 1_p, 3_p, 4_p>,
+                         Measurement<Identifier, 0_p, 1_p, 3_p, 4_p>,
+                         Measurement<Identifier, 2_p, 3_p, 4_p>,
+                         Measurement<Identifier, 0_p, 2_p, 3_p, 4_p>,
+                         Measurement<Identifier, 1_p, 2_p, 3_p, 4_p>,
+                         Measurement<Identifier, 0_p, 1_p, 2_p, 3_p, 4_p>
+                         >;
+      static_assert(std::is_same<actual, expected>::value,
+                    "Variant is not identical");
+    }
   }
 }  // namespace Test
 }  // namespace Acts
