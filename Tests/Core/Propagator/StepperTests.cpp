@@ -58,7 +58,8 @@ namespace Test {
     bool
     operator()(propagator_state_t& state, const stepper_t& stepper) const
     {
-      if (std::abs(stepper.position(state.stepping).x()) >= maxX
+      const double tolerance = state.options.targetTolerance;
+      if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance
           || std::abs(stepper.position(state.stepping).y()) >= 0.5 * units::_m
           || std::abs(stepper.position(state.stepping).z()) >= 0.5 * units::_m)
         return true;
@@ -158,7 +159,7 @@ namespace Test {
         propOpts;
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
-    propOpts.maxSteps    = 1e6;
+    propOpts.maxSteps    = 100;
     propOpts.maxStepSize = 0.5 * units::_m;
 
     // Build stepper and propagator
@@ -201,7 +202,7 @@ namespace Test {
         propOptsDef;
     propOptsDef.actionList  = aListDef;
     propOptsDef.abortList   = abortList;
-    propOptsDef.maxSteps    = 1e6;
+    propOptsDef.maxSteps    = 100;
     propOptsDef.maxStepSize = 0.5 * units::_m;
 
     EigenStepper<ConstantBField,
@@ -277,7 +278,7 @@ namespace Test {
         propOpts;
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
-    propOpts.maxSteps    = 1e6;
+    propOpts.maxSteps    = 100;
     propOpts.maxStepSize = 0.5 * units::_m;
     propOpts.debug       = true;
 
@@ -329,7 +330,7 @@ namespace Test {
         propOptsDense;
     propOptsDense.actionList  = aList;
     propOptsDense.abortList   = abortList;
-    propOptsDense.maxSteps    = 1e6;
+    propOptsDense.maxSteps    = 100;
     propOptsDense.maxStepSize = 0.5 * units::_m;
     propOptsDense.debug       = true;
 
@@ -412,14 +413,17 @@ namespace Test {
     CuboidVolumeBuilder::VolumeConfig vConfVac1;
     vConfVac1.position = {0.5 * units::_m, 0., 0.};
     vConfVac1.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConfVac1.name     = "First vacuum volume";
     CuboidVolumeBuilder::VolumeConfig vConfMat;
     vConfMat.position = {1.5 * units::_m, 0., 0.};
     vConfMat.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
     vConfMat.material = std::make_shared<const Material>(
         Material(352.8, 394.133, 9.012, 4., 1.848e-3));
+    vConfMat.name = "Material volume";
     CuboidVolumeBuilder::VolumeConfig vConfVac2;
     vConfVac2.position = {2.5 * units::_m, 0., 0.};
     vConfVac2.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConfVac2.name     = "Second vacuum volume";
     CuboidVolumeBuilder::Config conf;
     conf.volumeCfg = {vConfVac1, vConfMat, vConfVac2};
     conf.position  = {1.5 * units::_m, 0., 0.};
@@ -457,7 +461,7 @@ namespace Test {
         propOpts;
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
-    propOpts.maxSteps    = 1e6;
+    propOpts.maxSteps    = 100;
     propOpts.maxStepSize = 0.5 * units::_m;
 
     // Build stepper and propagator
@@ -520,7 +524,7 @@ namespace Test {
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
     propOptsDef.abortList            = abortList;
-    propOptsDef.maxSteps             = 1e6;
+    propOptsDef.maxSteps             = 100;
     propOptsDef.maxStepSize          = 0.5 * units::_m;
 
     // Build stepper and propagator
@@ -576,7 +580,7 @@ namespace Test {
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
     propOptsDense.abortList          = abortList;
-    propOptsDense.maxSteps           = 1e6;
+    propOptsDense.maxSteps           = 100;
     propOptsDense.maxStepSize        = 0.5 * units::_m;
     propOptsDense.tolerance          = 1e-8;
 
