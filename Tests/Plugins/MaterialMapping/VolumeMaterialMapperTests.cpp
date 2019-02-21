@@ -9,6 +9,7 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE VolumeMaterialMapper Tests
 #include <boost/test/included/unit_test.hpp>
+#include <iostream>
 #include <limits>
 #include <vector>
 #include "Acts/Material/Material.hpp"
@@ -39,7 +40,7 @@ namespace Test {
       // Search the closest distance - elements are ordered
       if (std::abs(state.gridPointsPerAxis[0][i] - matPos.x()) < dist) {
         // Store distance and index
-        dist  = state.gridPointsPerAxis[0][i];
+        dist  = std::abs(state.gridPointsPerAxis[0][i] - matPos.x());
         index = i;
       } else {  // Break if distance becomes larger
         break;
@@ -57,7 +58,9 @@ namespace Test {
     std::vector<double> axis2 = {2., 3., 4.};
     std::vector<double> axis3 = {5., 6., 7.};
 
+    //
     // Test block for VolumeMaterialMapper::createState
+    //
     // Test that a single axis could be added
     VolumeMaterialMapper::State vmms = vmm.createState(axis1);
     BOOST_CHECK_EQUAL(vmms.gridPointsPerAxis.size(), 1);
@@ -83,7 +86,9 @@ namespace Test {
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial.size(),
                       axis1.size() * axis2.size() * axis3.size());
 
+    //
     // Test block for VolumeMaterialMapper::mapMaterialPoints
+    //
     Material mat1(1., 2., 3., 4., 5.);
     std::vector<std::pair<Material, Vector3D>> matRecord;
     matRecord.push_back(std::make_pair(mat1, Vector3D(0., 0., 0.)));
@@ -106,15 +111,15 @@ namespace Test {
 
     // Check that the first element now has both materials
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().X0(),
-                      0.5 * (mat1.X0() * mat2.X0()));
+                      0.5 * (mat1.X0() + mat2.X0()));
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().L0(),
-                      0.5 * (mat1.L0() * mat2.L0()));
+                      0.5 * (mat1.L0() + mat2.L0()));
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().A(),
-                      0.5 * (mat1.A() * mat2.A()));
+                      0.5 * (mat1.A() + mat2.A()));
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().Z(),
-                      0.5 * (mat1.Z() * mat2.Z()));
+                      0.5 * (mat1.Z() + mat2.Z()));
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().rho(),
-                      0.5 * (mat1.rho() * mat2.rho()));
+                      0.5 * (mat1.rho() + mat2.rho()));
     // Check that the second element has a single material
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[1].average().X0(), mat2.X0());
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[1].average().L0(), mat2.L0());
@@ -123,6 +128,35 @@ namespace Test {
     BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[1].average().rho(), mat2.rho());
 
     // Check that nothing was assigned to the other elements
+    for (unsigned int i = 2; i < vmms.accumulatedMaterial.size(); i++) {
+      BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[i].average(), Material());
+    }
+
+    //
+    // Test block for VolumeMaterialMapper::finalizeMaps
+    //
+    std::vector<Material> result = vmm.finalizeMaps(vmms);
+    // Test that the number of elements fits
+    BOOST_CHECK_EQUAL(result.size(), vmms.accumulatedMaterial.size());
+
+    // Check that the materials remain the same
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().X0(),
+                      0.5 * (mat1.X0() + mat2.X0()));
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().L0(),
+                      0.5 * (mat1.L0() + mat2.L0()));
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().A(),
+                      0.5 * (mat1.A() + mat2.A()));
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().Z(),
+                      0.5 * (mat1.Z() + mat2.Z()));
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[0].average().rho(),
+                      0.5 * (mat1.rho() + mat2.rho()));
+
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[1].average().X0(), mat2.X0());
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[1].average().L0(), mat2.L0());
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[1].average().A(), mat2.A());
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[1].average().Z(), mat2.Z());
+    BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[1].average().rho(), mat2.rho());
+
     for (unsigned int i = 2; i < vmms.accumulatedMaterial.size(); i++) {
       BOOST_CHECK_EQUAL(vmms.accumulatedMaterial[i].average(), Material());
     }

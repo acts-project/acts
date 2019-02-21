@@ -93,8 +93,8 @@ Acts::materialMapperRZ(
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
-        grid.at(indices)
-            = materialVector.at(materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
+        grid.at(indices) = materialVector.at(
+            materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
       }
     }
   }

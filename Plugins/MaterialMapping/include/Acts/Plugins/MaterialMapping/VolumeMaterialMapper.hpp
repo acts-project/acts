@@ -46,10 +46,11 @@ public:
     std::vector<AccumulatedVolumeMaterial> accumulatedMaterial;
   };
 
-  /// Constructor with config object
-  ///
-  /// @param [in] log The logger
+  /// @brief Default constructor
   VolumeMaterialMapper() = default;
+
+  /// @brief Default destructor
+  ~VolumeMaterialMapper() = default;
 
   /// @brief Helper method that creates the cache for the mapping.
   ///
