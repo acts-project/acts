@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 if [ $# -ne 1 ]; then
     echo "wrong number of arguments"
@@ -7,5 +8,14 @@ if [ $# -ne 1 ]; then
     exit 1
 fi
 
+# Setup some variables
 WD="$(cd "$(dirname "$1")"; pwd)/$(basename "$1")"
-docker run --rm -ti -v $WD:$WD:rw -w $WD gitlab-registry.cern.ch/acts/machines/check:latest CI/check_format .
+USER_ID=`id -u`
+GROUP_ID=`id -g`
+
+docker run --rm -ti \
+       -v ${WD}:/work_dir:rw \
+       --user "${USER_ID}:${GROUP_ID}" \
+       -w "/work_dir" \
+       gitlab-registry.cern.ch/acts/machines/check:latest \
+       CI/check_format .
