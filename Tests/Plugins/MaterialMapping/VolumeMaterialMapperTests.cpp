@@ -269,6 +269,46 @@ namespace Test {
       }
       BOOST_CHECK_EQUAL(grid3d.at(i).average(), Material());
     }
+
+    //
+    // Test the full production chain in 2D
+    //
+    matRecord.clear();
+    matRecord.push_back(std::make_pair(mat1, Vector3D(0., 0., 0.)));
+    matRecord.push_back(std::make_pair(mat2, Vector3D(0.4, 0., 0.)));
+    matRecord.push_back(std::make_pair(mat2, Vector3D(0.6, 0., 0.)));
+    auto tmpGrid2D = VolumeMaterialMapper::createGrid(axis1, axis2);
+    VolumeMaterialMapper::MaterialGrid2D mgrid2dStepChain
+        = VolumeMaterialMapper::mapMaterialPoints(
+            tmpGrid2D, matRecord, mapToBin2D);
+    VolumeMaterialMapper::MaterialGrid2D mgrid2dFullChain
+        = VolumeMaterialMapper::createMaterialGrid(
+            axis1, axis2, matRecord, mapToBin2D);
+
+    // Test sizes
+    BOOST_CHECK_EQUAL(mgrid2dFullChain.size(), mgrid2dStepChain.size());
+    for (size_t index = 0; index < mgrid2dFullChain.size(); index++) {
+      // Both should contain the same data
+      BOOST_CHECK_EQUAL(mgrid2dFullChain.at(index), mgrid2dStepChain.at(index));
+    }
+
+    //
+    // Test the full production chain in 3D
+    //
+    auto tmpGrid3D = VolumeMaterialMapper::createGrid(axis1, axis2, axis3);
+    VolumeMaterialMapper::MaterialGrid3D mgrid3dStepChain
+        = VolumeMaterialMapper::mapMaterialPoints(
+            tmpGrid3D, matRecord, mapToBin3D);
+    VolumeMaterialMapper::MaterialGrid3D mgrid3dFullChain
+        = VolumeMaterialMapper::createMaterialGrid(
+            axis1, axis2, axis3, matRecord, mapToBin3D);
+
+    // Test sizes
+    BOOST_CHECK_EQUAL(mgrid3dFullChain.size(), mgrid3dStepChain.size());
+    for (size_t index = 0; index < mgrid3dFullChain.size(); index++) {
+      // Both should contain the same data
+      BOOST_CHECK_EQUAL(mgrid3dFullChain.at(index), mgrid3dStepChain.at(index));
+    }
   }
 }  // namespace Test
 }  // namespace Acts
