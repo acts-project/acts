@@ -15,9 +15,11 @@
 void
 Acts::AccumulatedVolumeMaterial::accumulate(const Material& mat)
 {
+  // If nothing is set it is vacuum
   if (mat.A() == 0. || mat.Z() == 0. || mat.rho() == 0.) {
     m_vacuumEntries++;
   } else {
+    // Replace the vacuum by matter or add matter to matter
     if (m_totalX0 == std::numeric_limits<float>::infinity()) {
       m_totalX0 = mat.X0();
     } else {
@@ -47,10 +49,8 @@ Acts::AccumulatedVolumeMaterial::average()
     float scalor       = m_materialEntries * m_materialEntries;
     float totalEntries = (float)(m_vacuumEntries + m_materialEntries);
     // Create the material
-    return Material(m_totalX0 * totalEntries
-                        / (float)(m_materialEntries * m_materialEntries),
-                    m_totalL0 * totalEntries
-                        / (float)(m_materialEntries * m_materialEntries),
+    return Material(m_totalX0 * totalEntries / scalor,
+                    m_totalL0 * totalEntries / scalor,
                     m_totalA / totalEntries,
                     m_totalZ / totalEntries,
                     m_totalRho / totalEntries);

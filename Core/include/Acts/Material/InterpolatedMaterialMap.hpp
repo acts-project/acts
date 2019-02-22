@@ -50,7 +50,7 @@ class InterpolatedMaterialMap final
   template <unsigned int DIM_POS>
   struct MaterialCell
   {
-    /// number of corner points defining the confining hyper-box
+    /// Number of corner points defining the confining hyper-box
     static constexpr unsigned int N = 1 << DIM_POS;
 
     /// @brief Default constructor
