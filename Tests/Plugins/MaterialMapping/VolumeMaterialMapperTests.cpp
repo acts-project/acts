@@ -9,7 +9,6 @@
 ///  Boost include(s)
 #define BOOST_TEST_MODULE VolumeMaterialMapper Tests
 #include <boost/test/included/unit_test.hpp>
-#include <iostream>
 #include <limits>
 #include <vector>
 #include "Acts/Material/Material.hpp"
@@ -98,8 +97,6 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests)
   {
-    VolumeMaterialMapper vmm;
-
     // Define some axes and grid points
     std::vector<double> axis1 = {0., 1.};
     std::vector<double> axis2 = {3., 4., 2.};
@@ -109,7 +106,8 @@ namespace Test {
     // Test block for VolumeMaterialMapper::createState
     //
     // Test that a 2D grid could be created
-    VolumeMaterialMapper::Grid2D grid2d = vmm.createGrid(axis1, axis2);
+    VolumeMaterialMapper::Grid2D grid2d
+        = VolumeMaterialMapper::createGrid(axis1, axis2);
     BOOST_CHECK_EQUAL(grid2d.getAxes().size(), 2);
     // Test the number of bins
     VolumeMaterialMapper::Grid2D::index_t nBins2d = grid2d.getNBins();
@@ -124,7 +122,8 @@ namespace Test {
     BOOST_CHECK_EQUAL(max2d[1], axis2[1] + 1);
 
     // And again for 3 axes
-    VolumeMaterialMapper::Grid3D grid3d = vmm.createGrid(axis1, axis2, axis3);
+    VolumeMaterialMapper::Grid3D grid3d
+        = VolumeMaterialMapper::createGrid(axis1, axis2, axis3);
     BOOST_CHECK_EQUAL(grid3d.getAxes().size(), 3);
     // Test the number of bins
     VolumeMaterialMapper::Grid3D::index_t nBins3d = grid3d.getNBins();
@@ -150,7 +149,8 @@ namespace Test {
 
     // Check if material can be assigned by the function
     VolumeMaterialMapper::MaterialGrid2D mgrid2d
-        = vmm.mapMaterialPoints(grid2d, matRecord, mapToZero2D);
+        = VolumeMaterialMapper::mapMaterialPoints(
+            grid2d, matRecord, mapToZero2D);
     BOOST_CHECK_EQUAL(mgrid2d.getNBins()[0], nBins2d[0]);
     BOOST_CHECK_EQUAL(mgrid2d.getNBins()[1], nBins2d[1]);
     BOOST_CHECK_EQUAL(mgrid2d.getMin()[0], min2d[0]);
@@ -174,7 +174,8 @@ namespace Test {
     matRecord.clear();
     matRecord.push_back(std::make_pair(mat2, Vector3D(0.4, 0., 0.)));
     matRecord.push_back(std::make_pair(mat2, Vector3D(0.6, 0., 0.)));
-    mgrid2d = vmm.mapMaterialPoints(grid2d, matRecord, mapToBin2D);
+    mgrid2d = VolumeMaterialMapper::mapMaterialPoints(
+        grid2d, matRecord, mapToBin2D);
 
     // Check that the first element now has both materials
     BOOST_CHECK_EQUAL(grid2d.at((size_t)0).average().X0(),
@@ -213,7 +214,8 @@ namespace Test {
 
     // Check if material can be assigned by the function
     VolumeMaterialMapper::MaterialGrid3D mgrid3d
-        = vmm.mapMaterialPoints(grid3d, matRecord, mapToZero3D);
+        = VolumeMaterialMapper::mapMaterialPoints(
+            grid3d, matRecord, mapToZero3D);
     BOOST_CHECK_EQUAL(mgrid3d.getNBins()[0], nBins3d[0]);
     BOOST_CHECK_EQUAL(mgrid3d.getNBins()[1], nBins3d[1]);
     BOOST_CHECK_EQUAL(mgrid3d.getMin()[0], min3d[0]);
@@ -236,7 +238,8 @@ namespace Test {
     matRecord.clear();
     matRecord.push_back(std::make_pair(mat2, Vector3D(0.4, 0., 0.)));
     matRecord.push_back(std::make_pair(mat2, Vector3D(0.6, 0., 0.)));
-    mgrid3d = vmm.mapMaterialPoints(grid3d, matRecord, mapToBin3D);
+    mgrid3d = VolumeMaterialMapper::mapMaterialPoints(
+        grid3d, matRecord, mapToBin3D);
 
     // Check that the first element now has both materials
     BOOST_CHECK_EQUAL(grid3d.at((size_t)0).average().X0(),
