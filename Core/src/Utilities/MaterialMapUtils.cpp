@@ -75,7 +75,7 @@ Acts::materialMapperRZ(
       Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>;
   Grid_t grid(std::make_tuple(std::move(rAxis), std::move(zAxis)));
 
-  // [3] Set the bField values
+  // [3] Set the material values
   for (size_t i = 1; i <= nBinsR; ++i) {
     for (size_t j = 1; j <= nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};

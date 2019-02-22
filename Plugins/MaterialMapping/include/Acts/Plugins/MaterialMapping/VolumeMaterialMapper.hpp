@@ -16,7 +16,8 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
 namespace Acts {
 
@@ -32,19 +33,11 @@ class VolumeMaterialMapper
 {
 public:
   using RecordedMaterial = std::vector<std::pair<Material, Vector3D>>;
-
-  /// @struct State
-  ///
-  /// State struct which is used for the mapping prococess
-  struct State
-  {
-    /// Storage of the grid points in each dimension. The structure is
-    /// gridPointsPerAxis[dimension][index]
-    std::vector<std::vector<double>> gridPointsPerAxis;
-    /// Storage of the accumulated material obtained at each of the grid points.
-    /// The vector has the length of all combinatorial grid points.
-    std::vector<AccumulatedVolumeMaterial> accumulatedMaterial;
-  };
+  using EAxis            = detail::EquidistantAxis;
+  using Grid2D = detail::Grid<AccumulatedVolumeMaterial, EAxis, EAxis>;
+  using Grid3D = detail::Grid<AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
+  using MaterialGrid2D = detail::Grid<ActsVectorF<5>, EAxis, EAxis>;
+  using MaterialGrid3D = detail::Grid<ActsVectorF<5>, EAxis, EAxis, EAxis>;
 
   /// @brief Default constructor
   VolumeMaterialMapper() = default;
@@ -52,7 +45,21 @@ public:
   /// @brief Default destructor
   ~VolumeMaterialMapper() = default;
 
-  /// @brief Helper method that creates the cache for the mapping.
+  /// @brief Helper method that creates the cache grid for the mapping. This
+  /// grid allows the collection of material at a the anchro points.
+  ///
+  /// @param [in] gridAxis1 Vector of grid points in the arbitrary first
+  /// dimension
+  /// @param [in] gridAxis2 Vector of grid points in the arbitrary second
+  /// dimension
+  ///
+  /// @return The grid
+  Grid2D
+  createGrid(std::vector<double> gridAxis1,
+             std::vector<double> gridAxis2) const;
+
+  /// @brief Helper method that creates the cache grid for the mapping. This
+  /// grid allows the collection of material at a the anchro points.
   ///
   /// @param [in] gridAxis1 Vector of grid points in the arbitrary first
   /// dimension
@@ -61,44 +68,42 @@ public:
   /// @param [in] gridAxis3 Vector of grid points in the arbitrary third
   /// dimension
   ///
-  /// @note The number of filled vectors describe the dimension inside the space
-  /// of the latter look-up grid of the material. The dimension of the mapping
-  /// is not fix and can be 1-3 dimensional depending of the amount of non-empty
-  /// vectors.
-  /// @note At this point there does not exist a connection of the entries of
-  /// the vector to an axis. This connection becomes important in the
-  /// VolumeMaterialMapper::mapMaterialPoints() function. Also the values in the
-  /// vectors are sorted inside the function.
-  /// @return State object
-  State
-  createState(const std::vector<double>& gridAxis1,
-              const std::vector<double>& gridAxis2 = {},
-              const std::vector<double>& gridAxis3 = {}) const;
+  /// @return The grid
+  Grid3D
+  createGrid(std::vector<double> gridAxis1,
+             std::vector<double> gridAxis2,
+             std::vector<double> gridAxis3) const;
 
   /// @brief Concatenate a set of material at arbitrary space points on a set of
-  /// grid points
+  /// grid points and produces a grid containing the averaged material values.
   ///
-  /// @param [in] mState The current state map
+  /// @param [in] grid The material collecting grid
   /// @param [in] mPoints The set of material at the space points
   /// @param [in] concatenateToGridPoints Function that assigns the space point
-  /// of @p mPoints to the grid points
-  void
+  /// of @p mPoints to the grid points by its local index
+  ///
+  /// @return The average material grid decomposed into classification numbers
+  MaterialGrid2D
   mapMaterialPoints(
-      State&                  mState,
+      Grid2D&                 grid,
       const RecordedMaterial& mPoints,
-      const std::function<unsigned int(const Vector3D&, const State&)>&
+      const std::function<Grid2D::index_t(const Vector3D&, const Grid2D&)>&
           concatenateToGridPoints) const;
 
-  /// @brief Method to finalize the maps
+  /// @brief Concatenate a set of material at arbitrary space points on a set of
+  /// grid points and produces a grid containing the averaged material values.
   ///
-  /// It calls the final run averaging and then transforms
-  /// the AccumulatedSurface material class to a vector of materials with the
-  /// same ordering as the mState.accumulatedMaterial vector.
+  /// @param [in] grid The material collecting grid
+  /// @param [in] mPoints The set of material at the space points
+  /// @param [in] concatenateToGridPoints Function that assigns the space point
+  /// of @p mPoints to the grid points by its local index
   ///
-  /// @param [in] mState State object
-  ///
-  /// @return Vector of material at each grid point
-  std::vector<Material>
-  finalizeMaps(State& mState) const;
+  /// @return The average material grid decomposed into classification numbers
+  MaterialGrid3D
+  mapMaterialPoints(
+      Grid3D&                 grid,
+      const RecordedMaterial& mPoints,
+      const std::function<Grid3D::index_t(const Vector3D&, const Grid3D&)>&
+          concatenateToGridPoints) const;
 };
 }
