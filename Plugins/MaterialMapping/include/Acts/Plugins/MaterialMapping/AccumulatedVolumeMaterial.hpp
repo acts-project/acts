@@ -47,12 +47,17 @@ public:
   average();
 
 private:
-  float m_totalX0{0.};   //!< accumulate the contribution to X0
-  float m_totalL0{0.};   //!< accumulate the contribution to L0
+  float m_totalX0{std::numeric_limits<float>::infinity()};  //!< accumulate the
+                                                            //! contribution to
+  //! X0
+  float m_totalL0{std::numeric_limits<float>::infinity()};  //!< accumulate the
+                                                            //! contribution to
+  //! L0
   float m_totalA{0.};    //!< accumulate the contribution to A
   float m_totalZ{0.};    //!< accumulate the contribution to Z
   float m_totalRho{0.};  //!< accumulate the contribution to rho
 
-  unsigned int m_totalEntries{0};  //!< the number of totals
+  unsigned int m_materialEntries{0};  //!< the number of material points
+  unsigned int m_vacuumEntries{0};    //!< the number of vacuum points
 };
 }

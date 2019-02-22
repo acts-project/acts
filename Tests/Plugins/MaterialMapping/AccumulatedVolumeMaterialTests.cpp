@@ -50,6 +50,24 @@ namespace Test {
     avm2.accumulate(Material());
     result = avm2.average();
     BOOST_CHECK_EQUAL(result, Material());
+
+    // Add vacuum to the material and test it
+    avm.accumulate(Material());
+    result = avm.average();
+    BOOST_CHECK_EQUAL(result.X0(), 0.25 * (mat1.X0() + mat2.X0()) * 3);
+    BOOST_CHECK_EQUAL(result.L0(), 0.25 * (mat1.L0() + mat2.L0()) * 3);
+    BOOST_CHECK_EQUAL(result.A(), (mat1.A() + mat2.A()) / 3);
+    BOOST_CHECK_EQUAL(result.Z(), (mat1.Z() + mat2.Z()) / 3);
+    BOOST_CHECK_EQUAL(result.rho(), (mat1.rho() + mat2.rho()) / 3);
+
+    // Add material to the vacuum and test it
+    avm2.accumulate(mat1);
+    result = avm2.average();
+    BOOST_CHECK_EQUAL(result.X0(), mat1.X0() * 3);
+    BOOST_CHECK_EQUAL(result.L0(), mat1.L0() * 3);
+    BOOST_CHECK_EQUAL(result.A(), mat1.A() / 3);
+    BOOST_CHECK_EQUAL(result.Z(), mat1.Z() / 3);
+    BOOST_CHECK_EQUAL(result.rho(), mat1.rho() / 3);
   }
 }  // namespace Test
 }  // namespace Acts
