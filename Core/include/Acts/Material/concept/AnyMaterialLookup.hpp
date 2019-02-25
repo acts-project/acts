@@ -14,6 +14,7 @@
 #include <boost/type_erasure/member.hpp>
 #include <boost/type_erasure/relaxed.hpp>
 #include <vector>
+#include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 // clang-format off
@@ -36,12 +37,11 @@ namespace concept {
 
     namespace mpl = boost::mpl;
 
-    using material_cell_concept
-        = mpl::vector<has_getMaterial<ActsVectorF<5>(const Vector3D&),
-                                      const bte::_self>,
-                      has_isInside<bool(const Vector3D&), const bte::_self>,
-                      bte::copy_constructible<>,
-                      bte::relaxed>;
+    using material_cell_concept = mpl::
+        vector<has_getMaterial<Material(const Vector3D&), const bte::_self>,
+               has_isInside<bool(const Vector3D&), const bte::_self>,
+               bte::copy_constructible<>,
+               bte::relaxed>;
   }  // namespace afl_detail
   /// @endcond
 

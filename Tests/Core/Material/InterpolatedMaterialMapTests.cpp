@@ -120,6 +120,65 @@ namespace Test {
       CHECK_CLOSE_REL(grid.at(i), matMapGrid.at(i), 1e-4);
     }
   }
+
+  BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test)
+  {
+    // Create the axes for the grid
+    detail::EquidistantAxis axisX(0, 3, 3);
+    detail::EquidistantAxis axisY(0, 3, 3);
+
+    // The material mapping grid
+    auto grid = detail::
+        Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>(
+            std::make_tuple(std::move(axisX), std::move(axisY)));
+    ActsVectorF<5> mat;
+    mat << 1, 2, 3, 4, 5;
+
+    for (size_t i = 0; i < grid.size(); i++) {
+      grid.at(i) = mat;
+    }
+    InterpolatedMaterialMap::MaterialMapper<dim> matMap(trafoGlobalToLocal,
+                                                        grid);
+    InterpolatedMaterialMap ipolMatMap(matMap);
+
+    // Test the material getter
+    CHECK_CLOSE_REL(
+        ipolMatMap.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
+
+    // Test the material getter with a cache
+    // Build a material cell
+    std::array<double, dim>       lowerLeft{{0., 0.}};
+    std::array<double, dim>       upperRight{{1., 1.}};
+    std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
+
+    InterpolatedMaterialMap::MaterialCell<dim> materialCell(
+        trafoGlobalToLocal, lowerLeft, upperRight, matArray);
+    InterpolatedMaterialMap::Cache cache;
+    cache.MaterialCell = materialCell;
+    cache.initialized  = true;
+    CHECK_CLOSE_REL(ipolMatMap.getMaterial(Vector3D(0.5, 0.5, 0.5), cache),
+                    Material(mat),
+                    1e-4);
+
+    // Test the material map getter
+    auto mapper = ipolMatMap.getMapper();
+    BOOST_CHECK_EQUAL(mapper.getMaterial({0.5, 0.5, 0.5}),
+                      matMap.getMaterial({0.5, 0.5, 0.5}));
+    for (unsigned int i = 0; i < dim; i++) {
+      BOOST_CHECK_EQUAL(mapper.getNBins()[i], matMap.getNBins()[i]);
+      BOOST_CHECK_EQUAL(mapper.getMin()[i], matMap.getMin()[i]);
+      BOOST_CHECK_EQUAL(mapper.getMax()[i], matMap.getMax()[i]);
+    }
+
+    // Test the inside check
+    BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(1., 1., 1.)), true);
+    BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(-1., 0., 0.)), false);
+    BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(0., -1., 0.)), false);
+    BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(0., 0., -1.)), true);
+    BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(4., 0., 0.)), false);
+    BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(0., 4., 0.)), false);
+    BOOST_CHECK_EQUAL(ipolMatMap.isInside(Vector3D(0., 0., 4.)), true);
+  }
 }  // namespace Test
 
 }  // namespace Acts

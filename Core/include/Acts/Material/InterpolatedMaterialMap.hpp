@@ -297,8 +297,7 @@ public:
       cache.MaterialCell = getMaterialCell(position);
       cache.initialized  = true;
     }
-    ActsVectorF<5> mat = cache.MaterialCell.getMaterial(position);
-    return Material(mat[0], mat[1], mat[2], mat[3], mat[4]);
+    return cache.MaterialCell.getMaterial(position);
   }
 
   /// @brief Retrieve material value & its "gradient"
