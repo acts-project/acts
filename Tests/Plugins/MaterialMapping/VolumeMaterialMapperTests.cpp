@@ -116,7 +116,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(nBins2d[1], axis2.size());
     // Test the limits
     VolumeMaterialMapper::Grid2D::point_t min2d = grid2d.getMin();
-    CHECK_CLOSE_REL(min2d[0], axis1[0], 1e-4);
+    CHECK_CLOSE_ABS(min2d[0], axis1[0], 1e-4);
     CHECK_CLOSE_REL(min2d[1], axis2[2], 1e-4);
     VolumeMaterialMapper::Grid2D::point_t max2d = grid2d.getMax();
     CHECK_CLOSE_REL(max2d[0], axis1[1] + 1, 1e-4);
@@ -133,7 +133,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(nBins3d[2], axis3.size());
     // Test the limits
     VolumeMaterialMapper::Grid3D::point_t min3d = grid3d.getMin();
-    CHECK_CLOSE_REL(min3d[0], axis1[0], 1e-4);
+    CHECK_CLOSE_ABS(min3d[0], axis1[0], 1e-4);
     CHECK_CLOSE_REL(min3d[1], axis2[2], 1e-4);
     CHECK_CLOSE_REL(min3d[2], axis3[0], 1e-4);
     VolumeMaterialMapper::Grid3D::point_t max3d = grid3d.getMax();
@@ -154,7 +154,7 @@ namespace Test {
             grid2d, matRecord, mapToZero2D);
     BOOST_CHECK_EQUAL(mgrid2d.getNBins()[0], nBins2d[0]);
     BOOST_CHECK_EQUAL(mgrid2d.getNBins()[1], nBins2d[1]);
-    CHECK_CLOSE_REL(mgrid2d.getMin()[0], min2d[0], 1e-4);
+    CHECK_CLOSE_ABS(mgrid2d.getMin()[0], min2d[0], 1e-4);
     CHECK_CLOSE_REL(mgrid2d.getMin()[1], min2d[1], 1e-4);
     CHECK_CLOSE_REL(mgrid2d.getMax()[0], max2d[0], 1e-4);
     CHECK_CLOSE_REL(mgrid2d.getMax()[1], max2d[1], 1e-4);
@@ -165,9 +165,9 @@ namespace Test {
 
     // Check that it was only assigned to a single bin
     for (size_t i = 1; i < grid2d.size(); i++) {
-      CHECK_CLOSE_REL(grid2d.at(i).average(), Material(), 1e-4);
-      CHECK_CLOSE_REL(
-          mgrid2d.at(i), Material().decomposeIntoClassificationNumbers(), 1e-4);
+      BOOST_CHECK_EQUAL(grid2d.at(i).average(), Material());
+      BOOST_CHECK_EQUAL(mgrid2d.at(i),
+                        Material().decomposeIntoClassificationNumbers());
     }
 
     // Check if the assignment to a custom bin is possible
@@ -208,7 +208,7 @@ namespace Test {
       if (i == 5) {
         continue;
       }
-      CHECK_CLOSE_REL(grid2d.at(i).average(), Material(), 1e-4);
+      BOOST_CHECK_EQUAL(grid2d.at(i).average(), Material());
     }
 
     //
@@ -223,7 +223,7 @@ namespace Test {
             grid3d, matRecord, mapToZero3D);
     BOOST_CHECK_EQUAL(mgrid3d.getNBins()[0], nBins3d[0]);
     BOOST_CHECK_EQUAL(mgrid3d.getNBins()[1], nBins3d[1]);
-    CHECK_CLOSE_REL(mgrid3d.getMin()[0], min3d[0], 1e-4);
+    CHECK_CLOSE_ABS(mgrid3d.getMin()[0], min3d[0], 1e-4);
     CHECK_CLOSE_REL(mgrid3d.getMin()[1], min3d[1], 1e-4);
     CHECK_CLOSE_REL(mgrid3d.getMax()[0], max3d[0], 1e-4);
     CHECK_CLOSE_REL(mgrid3d.getMax()[1], max3d[1], 1e-4);
@@ -234,9 +234,9 @@ namespace Test {
 
     // Check that it was only assigned to a single bin
     for (size_t i = 1; i < grid3d.size(); i++) {
-      CHECK_CLOSE_REL(grid3d.at(i).average(), Material(), 1e-4);
-      CHECK_CLOSE_REL(
-          mgrid3d.at(i), Material().decomposeIntoClassificationNumbers(), 1e-4);
+      BOOST_CHECK_EQUAL(grid3d.at(i).average(), Material());
+      BOOST_CHECK_EQUAL(mgrid3d.at(i),
+                        Material().decomposeIntoClassificationNumbers());
     }
 
     // Check if the assignment to a custom bin is possible
@@ -276,7 +276,7 @@ namespace Test {
       if (i == 25) {
         continue;
       }
-      CHECK_CLOSE_REL(grid3d.at(i).average(), Material(), 1e-4);
+      BOOST_CHECK_EQUAL(grid3d.at(i).average(), Material());
     }
 
     //
@@ -298,8 +298,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(mgrid2dFullChain.size(), mgrid2dStepChain.size());
     for (size_t index = 0; index < mgrid2dFullChain.size(); index++) {
       // Both should contain the same data
-      CHECK_CLOSE_REL(
-          mgrid2dFullChain.at(index), mgrid2dStepChain.at(index), 1e-4);
+      BOOST_CHECK_EQUAL(mgrid2dFullChain.at(index), mgrid2dStepChain.at(index));
     }
 
     //
@@ -317,8 +316,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(mgrid3dFullChain.size(), mgrid3dStepChain.size());
     for (size_t index = 0; index < mgrid3dFullChain.size(); index++) {
       // Both should contain the same data
-      CHECK_CLOSE_REL(
-          mgrid3dFullChain.at(index), mgrid3dStepChain.at(index), 1e-4);
+      BOOST_CHECK_EQUAL(mgrid3dFullChain.at(index), mgrid3dStepChain.at(index));
     }
   }
 }  // namespace Test

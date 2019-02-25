@@ -23,7 +23,7 @@ namespace Test {
 
     // Try averaging without content
     Material result = avm.average();
-    CHECK_CLOSE_REL(result, Material(), 1e-4);
+    BOOST_CHECK_EQUAL(result, Material());
 
     // Test that the mean of a single material is the material itself
     Material mat1(1., 2., 3., 4., 5.);
@@ -50,7 +50,7 @@ namespace Test {
     avm2.accumulate(Material());
     avm2.accumulate(Material());
     result = avm2.average();
-    CHECK_CLOSE_REL(result, Material(), 1e-4);
+    BOOST_CHECK_EQUAL(result, Material());
 
     // Add vacuum to the material and test it
     avm.accumulate(Material());
