@@ -312,13 +312,14 @@ namespace Test {
 
     KalmanFitter kFitter(rPropagator);
 
+    KalmanFitterOptions kfOptions(tgContext, rSurface);
+
     // Fit the track
-    auto fittedTrack = kFitter.fit(tgContext, measurements, rStart, rSurface);
+    auto fittedTrack      = kFitter.fit(measurements, rStart, kfOptions);
     auto fittedParameters = fittedTrack.fittedParameters.get();
 
     // Make sure it is deterministic
-    auto fittedAgainTrack
-        = kFitter.fit(tgContext, measurements, rStart, rSurface);
+    auto fittedAgainTrack      = kFitter.fit(measurements, rStart, kfOptions);
     auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
 
     CHECK_CLOSE_REL(fittedParameters.parameters(),
@@ -335,7 +336,7 @@ namespace Test {
 
     // Make sure it works for shuffled measurements as well
     auto fittedShuffledTrack
-        = kFitter.fit(tgContext, shuffledMeasurements, rStart, rSurface);
+        = kFitter.fit(shuffledMeasurements, rStart, kfOptions);
     auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
 
     CHECK_CLOSE_REL(fittedParameters.parameters(),
@@ -351,7 +352,7 @@ namespace Test {
 
     // Make sure it works for shuffled measurements as well
     auto fittedWithHoleTrack
-        = kFitter.fit(tgContext, measurementsWithHole, rStart, rSurface);
+        = kFitter.fit(measurementsWithHole, rStart, kfOptions);
     auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
 
     // Count one hole

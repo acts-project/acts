@@ -24,6 +24,35 @@
 
 namespace Acts {
 
+/// @brief Options struct how the Fitter is called
+///
+/// It contains the context of the fitter call and the optional
+/// surface where to express the fit result
+///
+/// @note the context objects must be provided
+struct KalmanFitterOptions
+{
+
+  /// Deleted default constructor
+  KalmanFitterOptions() = delete;
+
+  /// PropagatorOptions with context
+  ///
+  /// @param gctx The goemetry context for this fit
+  /// @param rSurface The reference surface for the fit to be expressed at
+  KalmanFitterOptions(const GeometryContext& gctx,
+                      const Surface*         rSurface = nullptr)
+    : geoContext(gctx), referenceSurface(rSurface)
+  {
+  }
+
+  /// Context object for the geometry
+  const GeometryContext& geoContext;
+
+  /// The reference Surface
+  const Surface* referenceSurface = nullptr;
+};
+
 /// @brief Kalman fitter implementation of Acts as a plugin
 /// to the Propgator
 ///
@@ -94,17 +123,13 @@ public:
   /// @param context The context of this call
   /// @param measurements The fittable measurements
   /// @param sParameters The initial track parameters
-  /// @param rSurface The reference surface
   ///
   /// @return the output as an output track
-  template <typename input_measurements_t,
-            typename parameters_t,
-            typename surface_t>
+  template <typename input_measurements_t, typename parameters_t>
   auto
-  fit(const GeometryContext& gctx,
-      input_measurements_t   measurements,
-      const parameters_t&    sParameters,
-      const surface_t*       rSurface = nullptr) const
+  fit(input_measurements_t       measurements,
+      const parameters_t&        sParameters,
+      const KalmanFitterOptions& kfOptions) const
   {
     // Bring the measurements into Acts style
     auto trackStates = m_inputConverter(measurements);
@@ -116,11 +141,11 @@ public:
     using Aborters     = AbortList<>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> kalmanOptions(gctx);
+    PropagatorOptions<Actors, Aborters> kalmanOptions(kfOptions.geoContext);
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.trackStates   = std::move(trackStates);
-    kalmanActor.targetSurface = rSurface;
+    kalmanActor.targetSurface = kfOptions.referenceSurface;
 
     // Run the fitter
     const auto& result
