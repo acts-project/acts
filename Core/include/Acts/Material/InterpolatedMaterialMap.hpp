@@ -40,7 +40,7 @@ namespace Acts {
 /// collection of numbers.
 class InterpolatedMaterialMap final
 {
-
+public:
   /// @brief Struct representing smallest grid unit in material grid
   ///
   /// @tparam DIM_POS Dimensionality of the material map
@@ -128,7 +128,6 @@ class InterpolatedMaterialMap final
     std::array<ActsVectorF<5>, N> m_materialValues;
   };
 
-public:
   /// @brief Struct for mapping global 3D positions to material values
   ///
   /// @tparam DIM_POS Dimensionality of position in material map
