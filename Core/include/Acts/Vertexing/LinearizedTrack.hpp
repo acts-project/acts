@@ -38,10 +38,10 @@ struct LinearizedTrack
   /// @param parCovarianceAtPCA Parameter covariance matrix at point of closest
   /// approach
   /// @param linPoint Linearization point
-  /// @param positionJacobian Position jacobian
-  /// @param momentumJacobian Momentum jacobian
-  /// @param positionAtPCA Position at point of closest approach
-  /// @param momentumAtPCA Momentum at point of closest approach
+  /// @param posJacobian Position jacobian
+  /// @param momJacobian Momentum jacobian
+  /// @param position Position at point of closest approach
+  /// @param momentum Momentum at point of closest approach
   /// @param constTerm Constant term in taylor expansion
 
   LinearizedTrack() = default;
