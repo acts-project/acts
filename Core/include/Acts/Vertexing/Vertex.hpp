@@ -52,6 +52,9 @@ public:
   const std::vector<TrackAtVertex<InputTrack>>&
   tracks() const;
 
+  /// @return Returns pair of (chi2, numberDoF)
+  std::pair<double, double> fitQuality() const;
+
   /// @param position Vertex position
   void
   setPosition(const Vector3D& position);
@@ -79,4 +82,5 @@ private:
 
 }  // namespace Acts
 
-#include "Acts/Vertexing/Vertex.ipp"
+#include "Acts/Vertexing/VertexEventData/Vertex.ipp"
+

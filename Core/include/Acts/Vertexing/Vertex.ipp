@@ -44,6 +44,12 @@ Acts::Vertex<InputTrack>::tracks() const
 }
 
 template <typename InputTrack>
+std::pair<double, double> Acts::Vertex<InputTrack>::fitQuality() const
+{
+  return std::pair<double, double>(m_chiSquared, m_numberDoF);
+}
+
+template <typename InputTrack>
 void
 Acts::Vertex<InputTrack>::setPosition(const Vector3D& position)
 {
