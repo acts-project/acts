@@ -16,15 +16,18 @@ namespace Acts {
 /// @class IVertexFitter
 ///
 /// @brief Virtual base class for VertexFitters
+///
+/// @tparam InputTrack Track object type
+/// @tparam Propagator_t Propagator type
 
 template <typename InputTrack, typename Propagator_t>
 class IVertexFitter
 {
 public:
   /// @param paramVector Vector of track objects to fit vertex to
-  /// @param startingPoint Constraint of the fit, position of constraint is
-  /// starting point
   /// @param propagator Propagator
+  /// @param constraint Constraint of the fit, position of constraint is
+  /// starting point
   ///
   /// @return Fitted vertex
   virtual Vertex<InputTrack>

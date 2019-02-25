@@ -32,6 +32,10 @@ namespace Acts {
 ///
 /// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
+/// @tparam BField Magnetic field type
+/// @tparam Propagator_t Propagator type
+/// @tparam action_list_t Propagator action list type
+/// @tparam aborter_list_t Propagator aborter list type
 
 template <typename BField,
           typename Propagator_t,

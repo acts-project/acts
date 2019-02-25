@@ -12,6 +12,12 @@
 
 namespace Acts {
 
+/// @class TrackAtVertex
+///
+/// @brief Defines a track at vertex object
+///
+/// @tparam InputTrack Track object type
+
 template <typename InputTrack>
 struct TrackAtVertex
 {

@@ -71,7 +71,7 @@ Acts::LinearizedTrackFactory<BField,
   double rho;
   // Curvature is infinite w/o b field
   if (Bz == 0. || std::abs(qOvP) < 1.e-15) {
-    rho = 1.e+15;
+    rho = std::numeric_limits<double>::max();
   } else {
     // signed(!) rho
     rho = sinTh * units::Nat2SI<units::MOMENTUM>(1 / qOvP) / Bz;

@@ -24,6 +24,10 @@ namespace Acts {
 /// Author(s)	Billoir, P ; Qian, S
 /// In:	Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
 /// DOI	10.1016/0168-9002(92)90859-3
+///
+/// @tparam BField Magnetic field type
+/// @tparam InputTrack Track object type
+/// @tparam Propagator_t Propagator type
 
 template <typename BField, typename InputTrack, typename Propagator_t>
 class FullBilloirVertexFitter : public IVertexFitter<InputTrack, Propagator_t>

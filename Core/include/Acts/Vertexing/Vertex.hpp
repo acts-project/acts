@@ -17,6 +17,8 @@ namespace Acts {
 ///
 /// @brief Class for storing vertex objects
 ///
+/// @tparam InputTrack Track object type
+///
 template <typename InputTrack>
 class Vertex
 {
