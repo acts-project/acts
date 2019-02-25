@@ -44,7 +44,8 @@ Acts::Vertex<InputTrack>::tracks() const
 }
 
 template <typename InputTrack>
-std::pair<double, double> Acts::Vertex<InputTrack>::fitQuality() const
+std::pair<double, double>
+Acts::Vertex<InputTrack>::fitQuality() const
 {
   return std::pair<double, double>(m_chiSquared, m_numberDoF);
 }

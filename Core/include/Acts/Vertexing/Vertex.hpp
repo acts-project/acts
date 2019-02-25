@@ -53,7 +53,8 @@ public:
   tracks() const;
 
   /// @return Returns pair of (chi2, numberDoF)
-  std::pair<double, double> fitQuality() const;
+  std::pair<double, double>
+  fitQuality() const;
 
   /// @param position Vertex position
   void
@@ -82,5 +83,4 @@ private:
 
 }  // namespace Acts
 
-#include "Acts/Vertexing/VertexEventData/Vertex.ipp"
-
+#include "Acts/Vertexing/Vertex.ipp"

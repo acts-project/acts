@@ -127,7 +127,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test)
   {
 
-    bool debugMode = true;
+    bool debugMode = false;
 
     // Set up RNG
     std::random_device rd;
@@ -271,7 +271,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test)
   {
 
-    bool debugMode = true;
+    bool debugMode = false;
 
     // Set up RNG
     std::random_device rd;
