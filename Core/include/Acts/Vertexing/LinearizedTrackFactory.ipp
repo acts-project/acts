@@ -49,37 +49,37 @@ Acts::LinearizedTrackFactory<BField,
     parCovarianceAtPCA = *params->covariance();
   }
 
-  // phi_v and functions
-  double phi_v     = paramsAtPCA(ParID_t::ePHI);
-  double sin_phi_v = sin(phi_v);
-  double cos_phi_v = cos(phi_v);
+  // phiV and functions
+  double phiV    = paramsAtPCA(ParID_t::ePHI);
+  double sinPhiV = sin(phiV);
+  double cosPhiV = cos(phiV);
 
   // theta and functions
-  double th     = paramsAtPCA(ParID_t::eTHETA);
-  double sin_th = sin(th);
-  double tan_th = tan(th);
+  double th    = paramsAtPCA(ParID_t::eTHETA);
+  double sinTh = sin(th);
+  double tanTh = tan(th);
 
   // q over p
-  double q_ov_p = paramsAtPCA(ParID_t::eQOP);
-  double sgn_h  = (q_ov_p < 0.) ? -1 : 1;
+  double qOvP = paramsAtPCA(ParID_t::eQOP);
+  double sgnH = (qOvP < 0.) ? -1 : 1;
 
-  Vector3D momentumAtPCA(phi_v, th, q_ov_p);
+  Vector3D momentumAtPCA(phiV, th, qOvP);
 
   // get B-field z-component at current position
-  double B_z = m_cfg.bField.getField(linPoint)[eZ];
+  double Bz = m_cfg.bField.getField(linPoint)[eZ];
 
   double rho;
   // Curvature is infinite w/o b field
-  if (B_z == 0. || std::abs(q_ov_p) < 1.e-15) {
+  if (Bz == 0. || std::abs(qOvP) < 1.e-15) {
     rho = 1.e+15;
   } else {
     // signed(!) rho
-    rho = sin_th * units::Nat2SI<units::MOMENTUM>(1 / q_ov_p) / B_z;
+    rho = sinTh * units::Nat2SI<units::MOMENTUM>(1 / qOvP) / Bz;
   }
 
   // Eq. 5.34 in Ref(1) (see .hpp)
-  double X  = positionAtPCA(0) - linPoint.x() + rho * sin_phi_v;
-  double Y  = positionAtPCA(1) - linPoint.y() - rho * cos_phi_v;
+  double X  = positionAtPCA(0) - linPoint.x() + rho * sinPhiV;
+  double Y  = positionAtPCA(1) - linPoint.y() - rho * cosPhiV;
   double S2 = (X * X + Y * Y);
   double S  = sqrt(S2);
 
@@ -93,32 +93,32 @@ Acts::LinearizedTrackFactory<BField,
 
   double phiAtPCA;
   if (std::abs(X) > std::abs(Y)) {
-    phiAtPCA = sgn_h * sgnX * std::acos(-sgn_h * Y / S);
+    phiAtPCA = sgnH * sgnX * std::acos(-sgnH * Y / S);
   } else {
-    phiAtPCA = std::asin(sgn_h * X / S);
-    if ((sgn_h * sgnY) > 0) {
-      phiAtPCA = sgn_h * sgnX * M_PI - phiAtPCA;
+    phiAtPCA = std::asin(sgnH * X / S);
+    if ((sgnH * sgnY) > 0) {
+      phiAtPCA = sgnH * sgnX * M_PI - phiAtPCA;
     }
   }
 
   // Eq. 5.33 in Ref(1) (see .hpp)
-  predParamsAtPCA[0] = rho - sgn_h * S;
+  predParamsAtPCA[0] = rho - sgnH * S;
   predParamsAtPCA[1]
-      = positionAtPCA[eZ] - linPoint.z() + rho * (phi_v - phiAtPCA) / tan_th;
+      = positionAtPCA[eZ] - linPoint.z() + rho * (phiV - phiAtPCA) / tanTh;
   predParamsAtPCA[2] = phiAtPCA;
   predParamsAtPCA[3] = th;
-  predParamsAtPCA[4] = q_ov_p;
+  predParamsAtPCA[4] = qOvP;
 
   // Fill position jacobian (D_k matrix), Eq. 5.36 in Ref(1)
   ActsMatrixD<5, 3> positionJacobian;
   positionJacobian.setZero();
   // First row
-  positionJacobian(0, 0) = -sgn_h * X / S;
-  positionJacobian(0, 1) = -sgn_h * Y / S;
+  positionJacobian(0, 0) = -sgnH * X / S;
+  positionJacobian(0, 1) = -sgnH * Y / S;
 
   // Second row
-  positionJacobian(1, 0) = rho * Y / (tan_th * S2);
-  positionJacobian(1, 1) = -rho * X / (tan_th * S2);
+  positionJacobian(1, 0) = rho * Y / (tanTh * S2);
+  positionJacobian(1, 1) = -rho * X / (tanTh * S2);
   positionJacobian(1, 2) = 1.;
 
   // Third row
@@ -129,27 +129,27 @@ Acts::LinearizedTrackFactory<BField,
   ActsMatrixD<5, 3> momentumJacobian;
   momentumJacobian.setZero();
 
-  double R     = X * cos_phi_v + Y * sin_phi_v;
-  double Q     = X * sin_phi_v - Y * cos_phi_v;
-  double d_phi = phiAtPCA - phi_v;
+  double R    = X * cosPhiV + Y * sinPhiV;
+  double Q    = X * sinPhiV - Y * cosPhiV;
+  double dPhi = phiAtPCA - phiV;
 
   // First row
-  momentumJacobian(0, 0) = -sgn_h * rho * R / S;
+  momentumJacobian(0, 0) = -sgnH * rho * R / S;
 
-  double qOvS_red = 1 - sgn_h * Q / S;
+  double qOvSred = 1 - sgnH * Q / S;
 
-  momentumJacobian(0, 1) = qOvS_red * rho / tan_th;
-  momentumJacobian(0, 2) = -qOvS_red * rho / q_ov_p;
+  momentumJacobian(0, 1) = qOvSred * rho / tanTh;
+  momentumJacobian(0, 2) = -qOvSred * rho / qOvP;
 
   // Second row
-  momentumJacobian(1, 0) = (1 - rho * Q / S2) * rho / tan_th;
-  momentumJacobian(1, 1) = (d_phi + rho * R / (S2 * tan_th * tan_th)) * rho;
-  momentumJacobian(1, 2) = (d_phi - rho * R / S2) * rho / (q_ov_p * tan_th);
+  momentumJacobian(1, 0) = (1 - rho * Q / S2) * rho / tanTh;
+  momentumJacobian(1, 1) = (dPhi + rho * R / (S2 * tanTh * tanTh)) * rho;
+  momentumJacobian(1, 2) = (dPhi - rho * R / S2) * rho / (qOvP * tanTh);
 
   // Third row
   momentumJacobian(2, 0) = rho * Q / S2;
-  momentumJacobian(2, 1) = -rho * R / (S2 * tan_th);
-  momentumJacobian(2, 2) = rho * R / (q_ov_p * S2);
+  momentumJacobian(2, 1) = -rho * R / (S2 * tanTh);
+  momentumJacobian(2, 2) = rho * R / (qOvP * S2);
 
   // Last two rows:
   momentumJacobian(3, 1) = 1.;

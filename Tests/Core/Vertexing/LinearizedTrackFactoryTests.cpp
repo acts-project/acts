@@ -84,8 +84,8 @@ namespace Test {
     double z = vZDist(gen);
 
     // Calculate d0 and z0 corresponding to vertex position
-    double d0_v = sqrt(x * x + y * y);
-    double z0_v = z;
+    double d0v = sqrt(x * x + y * y);
+    double z0v = z;
 
     // Start constructing nTracks tracks in the following
     std::vector<BoundParameters> tracks;
@@ -98,7 +98,7 @@ namespace Test {
 
       // Construct random track parameters
       TrackParametersBase::ParVector_t paramVec;
-      paramVec << d0_v + d0Dist(gen), z0_v + z0Dist(gen), phiDist(gen),
+      paramVec << d0v + d0Dist(gen), z0v + z0Dist(gen), phiDist(gen),
           thetaDist(gen), q / pTDist(gen);
 
       // Fill vector of track objects with simple covariance matrix
@@ -106,25 +106,25 @@ namespace Test {
           = std::make_unique<ActsSymMatrixD<5>>();
 
       // Resolutions
-      double res_d0 = resIPDist(gen);
-      double res_z0 = resIPDist(gen);
-      double res_ph = resAngDist(gen);
-      double res_th = resAngDist(gen);
-      double res_qp = resQoPDist(gen);
+      double resD0 = resIPDist(gen);
+      double resZ0 = resIPDist(gen);
+      double resPh = resAngDist(gen);
+      double resTh = resAngDist(gen);
+      double resQp = resQoPDist(gen);
 
-      (*covMat) << res_d0 * res_d0, 0., 0., 0., 0., 0., res_z0 * res_z0, 0., 0.,
-          0., 0., 0., res_ph * res_ph, 0., 0., 0., 0., 0., res_th * res_th, 0.,
-          0., 0., 0., 0., res_qp * res_qp;
+      (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
+          0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0., 0., 0.,
+          0., 0., resQp * resQp;
       tracks.push_back(
           BoundParameters(std::move(covMat), paramVec, perigeeSurface));
     }
 
     LinearizedTrackFactory<ConstantBField,
                            Propagator<EigenStepper<ConstantBField>>>::Config
-        lt_config(bField);
+        ltConfig(bField);
     LinearizedTrackFactory<ConstantBField,
                            Propagator<EigenStepper<ConstantBField>>>
-        linFactory(lt_config);
+        linFactory(ltConfig);
 
     ActsVectorD<5>    vec5Zero = ActsVectorD<5>::Zero();
     ActsSymMatrixD<5> mat5Zero = ActsSymMatrixD<5>::Zero();
@@ -156,10 +156,10 @@ namespace Test {
 
     LinearizedTrackFactory<ConstantBField,
                            Propagator<EigenStepper<ConstantBField>>>::Config
-        lt_config(bField);
+        ltConfig(bField);
     LinearizedTrackFactory<ConstantBField,
                            Propagator<EigenStepper<ConstantBField>>>
-        linFactory(lt_config);
+        linFactory(ltConfig);
 
     ActsVectorD<5>    vec5Zero = ActsVectorD<5>::Zero();
     ActsSymMatrixD<5> mat5Zero = ActsSymMatrixD<5>::Zero();
