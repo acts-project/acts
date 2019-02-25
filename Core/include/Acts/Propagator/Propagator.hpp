@@ -120,7 +120,8 @@ struct PropagatorOptions
   PropagatorOptions() = delete;
 
   /// PropagatorOptions copy constructor
-  PropagatorOptions(const PropagatorOptions& po) = default;
+  PropagatorOptions(const PropagatorOptions<action_list_t, aborter_list_t>& po)
+      = default;
 
   /// PropagatorOptions with context
   PropagatorOptions(std::reference_wrapper<GeometryContext> gctx)
