@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 Acts project team
+// Copyright (C) 2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -64,9 +64,9 @@ public:
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to
-  /// @param startingPoint Constraint of the fit, position of constraint is
-  /// starting point
   /// @param propagator Propagator
+  /// @param constraint Constraint of the fit, position of constraint is
+  /// starting point
   ///
   /// @return Fitted vertex
   Vertex<InputTrack>

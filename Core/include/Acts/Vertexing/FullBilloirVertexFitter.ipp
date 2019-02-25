@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2019 Acts project team
+// Copyright (C) 2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -73,7 +73,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
   }
 
   // Set number of degrees of freedom
-  int ndf = nTracks * (5 - 3) - 3;
+  int ndf = 2 * nTracks - 3;
   if (nTracks < 2) {
     ndf = 1;
   }
