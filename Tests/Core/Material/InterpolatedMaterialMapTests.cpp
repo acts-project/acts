@@ -14,6 +14,8 @@
 // clang-format on
 
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include <array>
 
 namespace Acts {
@@ -28,14 +30,29 @@ namespace Test {
     return {global.x(), global.y()};
   }
 
-  BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_test)
+  BOOST_AUTO_TEST_CASE(InterpolatedMaterialMap_MaterialCell_test)
   {
+    // Build a material cell
     std::array<double, dim> lowerLeft{{0., 0.}};
     std::array<double, dim> upperRight{{1., 1.}};
-    Material mat(1., 2., 3., 4., 5.);
+    ActsVectorF<5> mat;
+    mat << 1, 2, 3, 4, 5;
+    std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
 
     InterpolatedMaterialMap::MaterialCell<dim> materialCell(
-        trafoGlobalToLocal, lowerLeft, upperRight, mat);
+        trafoGlobalToLocal, lowerLeft, upperRight, matArray);
+
+    // Test InterpolatedMaterialMap::MaterialCell<DIM>::isInside method
+    BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0.5, 0.5, 0.5)), true);
+    BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(-1., 0., 0.)), false);
+    BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., -1., 0.)), false);
+    BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., 0., -1.)), false);
+    BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(2., 0., 0.)), false);
+    BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., 2., 0.)), false);
+    BOOST_CHECK_EQUAL(materialCell.isInside(Vector3D(0., 0., 2.)), false);
+
+    CHECK_CLOSE_REL(
+        materialCell.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
   }
 }  // namespace Test
 

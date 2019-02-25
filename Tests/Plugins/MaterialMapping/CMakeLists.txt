@@ -12,7 +12,7 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST AccumulatedSurfaceMaterialUni
 
 add_executable (AccumulatedVolumeMaterialTests AccumulatedVolumeMaterialTests.cpp)
 target_include_directories (AccumulatedVolumeMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(AccumulatedVolumeMaterialTests PRIVATE ActsCore ActsMaterialMappingPlugin)
+target_link_libraries(AccumulatedVolumeMaterialTests PRIVATE ActsCore ActsMaterialMappingPlugin ActsTestsCommonHelpers)
 add_test (NAME AccumulatedVolumeMaterialUnitTest COMMAND AccumulatedVolumeMaterialTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST AccumulatedVolumeMaterialUnitTest TARGETS AccumulatedVolumeMaterialTests)
 
@@ -24,6 +24,6 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST SurfaceMaterialMapperUnitTest
 
 add_executable (VolumeMaterialMapperTests VolumeMaterialMapperTests.cpp)
 target_include_directories (VolumeMaterialMapperTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(VolumeMaterialMapperTests PRIVATE ActsCore ActsMaterialMappingPlugin)
+target_link_libraries(VolumeMaterialMapperTests PRIVATE ActsCore ActsMaterialMappingPlugin ActsTestsCommonHelpers)
 add_test (NAME VolumeMaterialMapperUnitTest COMMAND VolumeMaterialMapperTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST VolumeMaterialMapperUnitTest TARGETS VolumeMaterialMapperTests)

@@ -13,6 +13,7 @@
 #include <vector>
 #include "Acts/Material/Material.hpp"
 #include "Acts/Plugins/MaterialMapping/VolumeMaterialMapper.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -115,11 +116,11 @@ namespace Test {
     BOOST_CHECK_EQUAL(nBins2d[1], axis2.size());
     // Test the limits
     VolumeMaterialMapper::Grid2D::point_t min2d = grid2d.getMin();
-    BOOST_CHECK_EQUAL(min2d[0], axis1[0]);
-    BOOST_CHECK_EQUAL(min2d[1], axis2[2]);
+    CHECK_CLOSE_REL(min2d[0], axis1[0], 1e-4);
+    CHECK_CLOSE_REL(min2d[1], axis2[2], 1e-4);
     VolumeMaterialMapper::Grid2D::point_t max2d = grid2d.getMax();
-    BOOST_CHECK_EQUAL(max2d[0], axis1[1] + 1);
-    BOOST_CHECK_EQUAL(max2d[1], axis2[1] + 1);
+    CHECK_CLOSE_REL(max2d[0], axis1[1] + 1, 1e-4);
+    CHECK_CLOSE_REL(max2d[1], axis2[1] + 1, 1e-4);
 
     // And again for 3 axes
     VolumeMaterialMapper::Grid3D grid3d
@@ -132,13 +133,13 @@ namespace Test {
     BOOST_CHECK_EQUAL(nBins3d[2], axis3.size());
     // Test the limits
     VolumeMaterialMapper::Grid3D::point_t min3d = grid3d.getMin();
-    BOOST_CHECK_EQUAL(min3d[0], axis1[0]);
-    BOOST_CHECK_EQUAL(min3d[1], axis2[2]);
-    BOOST_CHECK_EQUAL(min3d[2], axis3[0]);
+    CHECK_CLOSE_REL(min3d[0], axis1[0], 1e-4);
+    CHECK_CLOSE_REL(min3d[1], axis2[2], 1e-4);
+    CHECK_CLOSE_REL(min3d[2], axis3[0], 1e-4);
     VolumeMaterialMapper::Grid3D::point_t max3d = grid3d.getMax();
-    BOOST_CHECK_EQUAL(max3d[0], axis1[1] + 1);
-    BOOST_CHECK_EQUAL(max3d[1], axis2[1] + 1);
-    BOOST_CHECK_EQUAL(max3d[2], axis3[2] + 1);
+    CHECK_CLOSE_REL(max3d[0], axis1[1] + 1, 1e-4);
+    CHECK_CLOSE_REL(max3d[1], axis2[1] + 1, 1e-4);
+    CHECK_CLOSE_REL(max3d[2], axis3[2] + 1, 1e-4);
 
     //
     // Test block for VolumeMaterialMapper::mapMaterialPoints in 2D
@@ -153,20 +154,20 @@ namespace Test {
             grid2d, matRecord, mapToZero2D);
     BOOST_CHECK_EQUAL(mgrid2d.getNBins()[0], nBins2d[0]);
     BOOST_CHECK_EQUAL(mgrid2d.getNBins()[1], nBins2d[1]);
-    BOOST_CHECK_EQUAL(mgrid2d.getMin()[0], min2d[0]);
-    BOOST_CHECK_EQUAL(mgrid2d.getMin()[1], min2d[1]);
-    BOOST_CHECK_EQUAL(mgrid2d.getMax()[0], max2d[0]);
-    BOOST_CHECK_EQUAL(mgrid2d.getMax()[1], max2d[1]);
+    CHECK_CLOSE_REL(mgrid2d.getMin()[0], min2d[0], 1e-4);
+    CHECK_CLOSE_REL(mgrid2d.getMin()[1], min2d[1], 1e-4);
+    CHECK_CLOSE_REL(mgrid2d.getMax()[0], max2d[0], 1e-4);
+    CHECK_CLOSE_REL(mgrid2d.getMax()[1], max2d[1], 1e-4);
 
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)0).average(), mat1);
-    BOOST_CHECK_EQUAL(mgrid2d.at((size_t)0),
-                      mat1.decomposeIntoClassificationNumbers());
+    CHECK_CLOSE_REL(grid2d.at((size_t)0).average(), mat1, 1e-4);
+    CHECK_CLOSE_REL(
+        mgrid2d.at((size_t)0), mat1.decomposeIntoClassificationNumbers(), 1e-4);
 
     // Check that it was only assigned to a single bin
     for (size_t i = 1; i < grid2d.size(); i++) {
-      BOOST_CHECK_EQUAL(grid2d.at(i).average(), Material());
-      BOOST_CHECK_EQUAL(mgrid2d.at(i),
-                        Material().decomposeIntoClassificationNumbers());
+      CHECK_CLOSE_REL(grid2d.at(i).average(), Material(), 1e-4);
+      CHECK_CLOSE_REL(
+          mgrid2d.at(i), Material().decomposeIntoClassificationNumbers(), 1e-4);
     }
 
     // Check if the assignment to a custom bin is possible
@@ -178,32 +179,36 @@ namespace Test {
         grid2d, matRecord, mapToBin2D);
 
     // Check that the first element now has both materials
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)0).average().X0(),
-                      0.5 * (mat1.X0() + mat2.X0()));
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)0).average().L0(),
-                      0.5 * (mat1.L0() + mat2.L0()));
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)0).average().A(),
-                      0.5 * (mat1.A() + mat2.A()));
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)0).average().Z(),
-                      0.5 * (mat1.Z() + mat2.Z()));
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)0).average().rho(),
-                      0.5 * (mat1.rho() + mat2.rho()));
-    BOOST_CHECK_EQUAL(
+    CHECK_CLOSE_REL(grid2d.at((size_t)0).average().X0(),
+                    0.5 * (mat1.X0() + mat2.X0()),
+                    1e-4);
+    CHECK_CLOSE_REL(grid2d.at((size_t)0).average().L0(),
+                    0.5 * (mat1.L0() + mat2.L0()),
+                    1e-4);
+    CHECK_CLOSE_REL(
+        grid2d.at((size_t)0).average().A(), 0.5 * (mat1.A() + mat2.A()), 1e-4);
+    CHECK_CLOSE_REL(
+        grid2d.at((size_t)0).average().Z(), 0.5 * (mat1.Z() + mat2.Z()), 1e-4);
+    CHECK_CLOSE_REL(grid2d.at((size_t)0).average().rho(),
+                    0.5 * (mat1.rho() + mat2.rho()),
+                    1e-4);
+    CHECK_CLOSE_REL(
         grid2d.at((size_t)0).average().decomposeIntoClassificationNumbers(),
-        mgrid2d.at((size_t)0));
+        mgrid2d.at((size_t)0),
+        1e-4);
     // Check that the second element has a single material
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)5).average().X0(), mat2.X0());
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)5).average().L0(), mat2.L0());
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)5).average().A(), mat2.A());
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)5).average().Z(), mat2.Z());
-    BOOST_CHECK_EQUAL(grid2d.at((size_t)5).average().rho(), mat2.rho());
+    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().X0(), mat2.X0(), 1e-4);
+    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().L0(), mat2.L0(), 1e-4);
+    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().A(), mat2.A(), 1e-4);
+    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().Z(), mat2.Z(), 1e-4);
+    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().rho(), mat2.rho(), 1e-4);
 
     // Check that nothing was assigned to the other elements
     for (size_t i = 1; i < grid2d.size(); i++) {
       if (i == 5) {
         continue;
       }
-      BOOST_CHECK_EQUAL(grid2d.at(i).average(), Material());
+      CHECK_CLOSE_REL(grid2d.at(i).average(), Material(), 1e-4);
     }
 
     //
@@ -218,20 +223,20 @@ namespace Test {
             grid3d, matRecord, mapToZero3D);
     BOOST_CHECK_EQUAL(mgrid3d.getNBins()[0], nBins3d[0]);
     BOOST_CHECK_EQUAL(mgrid3d.getNBins()[1], nBins3d[1]);
-    BOOST_CHECK_EQUAL(mgrid3d.getMin()[0], min3d[0]);
-    BOOST_CHECK_EQUAL(mgrid3d.getMin()[1], min3d[1]);
-    BOOST_CHECK_EQUAL(mgrid3d.getMax()[0], max3d[0]);
-    BOOST_CHECK_EQUAL(mgrid3d.getMax()[1], max3d[1]);
+    CHECK_CLOSE_REL(mgrid3d.getMin()[0], min3d[0], 1e-4);
+    CHECK_CLOSE_REL(mgrid3d.getMin()[1], min3d[1], 1e-4);
+    CHECK_CLOSE_REL(mgrid3d.getMax()[0], max3d[0], 1e-4);
+    CHECK_CLOSE_REL(mgrid3d.getMax()[1], max3d[1], 1e-4);
 
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)0).average(), mat1);
-    BOOST_CHECK_EQUAL(mgrid3d.at((size_t)0),
-                      mat1.decomposeIntoClassificationNumbers());
+    CHECK_CLOSE_REL(grid3d.at((size_t)0).average(), mat1, 1e-4);
+    CHECK_CLOSE_REL(
+        mgrid3d.at((size_t)0), mat1.decomposeIntoClassificationNumbers(), 1e-4);
 
     // Check that it was only assigned to a single bin
     for (size_t i = 1; i < grid3d.size(); i++) {
-      BOOST_CHECK_EQUAL(grid3d.at(i).average(), Material());
-      BOOST_CHECK_EQUAL(mgrid3d.at(i),
-                        Material().decomposeIntoClassificationNumbers());
+      CHECK_CLOSE_REL(grid3d.at(i).average(), Material(), 1e-4);
+      CHECK_CLOSE_REL(
+          mgrid3d.at(i), Material().decomposeIntoClassificationNumbers(), 1e-4);
     }
 
     // Check if the assignment to a custom bin is possible
@@ -242,32 +247,36 @@ namespace Test {
         grid3d, matRecord, mapToBin3D);
 
     // Check that the first element now has both materials
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)0).average().X0(),
-                      0.5 * (mat1.X0() + mat2.X0()));
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)0).average().L0(),
-                      0.5 * (mat1.L0() + mat2.L0()));
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)0).average().A(),
-                      0.5 * (mat1.A() + mat2.A()));
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)0).average().Z(),
-                      0.5 * (mat1.Z() + mat2.Z()));
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)0).average().rho(),
-                      0.5 * (mat1.rho() + mat2.rho()));
-    BOOST_CHECK_EQUAL(
+    CHECK_CLOSE_REL(grid3d.at((size_t)0).average().X0(),
+                    0.5 * (mat1.X0() + mat2.X0()),
+                    1e-4);
+    CHECK_CLOSE_REL(grid3d.at((size_t)0).average().L0(),
+                    0.5 * (mat1.L0() + mat2.L0()),
+                    1e-4);
+    CHECK_CLOSE_REL(
+        grid3d.at((size_t)0).average().A(), 0.5 * (mat1.A() + mat2.A()), 1e-4);
+    CHECK_CLOSE_REL(
+        grid3d.at((size_t)0).average().Z(), 0.5 * (mat1.Z() + mat2.Z()), 1e-4);
+    CHECK_CLOSE_REL(grid3d.at((size_t)0).average().rho(),
+                    0.5 * (mat1.rho() + mat2.rho()),
+                    1e-4);
+    CHECK_CLOSE_REL(
         grid3d.at((size_t)0).average().decomposeIntoClassificationNumbers(),
-        mgrid3d.at((size_t)0));
+        mgrid3d.at((size_t)0),
+        1e-4);
     // Check that the second element has a single material
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)25).average().X0(), mat2.X0());
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)25).average().L0(), mat2.L0());
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)25).average().A(), mat2.A());
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)25).average().Z(), mat2.Z());
-    BOOST_CHECK_EQUAL(grid3d.at((size_t)25).average().rho(), mat2.rho());
+    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().X0(), mat2.X0(), 1e-4);
+    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().L0(), mat2.L0(), 1e-4);
+    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().A(), mat2.A(), 1e-4);
+    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().Z(), mat2.Z(), 1e-4);
+    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().rho(), mat2.rho(), 1e-4);
 
     // Check that nothing was assigned to the other elements
     for (size_t i = 1; i < grid3d.size(); i++) {
       if (i == 25) {
         continue;
       }
-      BOOST_CHECK_EQUAL(grid3d.at(i).average(), Material());
+      CHECK_CLOSE_REL(grid3d.at(i).average(), Material(), 1e-4);
     }
 
     //
@@ -289,7 +298,8 @@ namespace Test {
     BOOST_CHECK_EQUAL(mgrid2dFullChain.size(), mgrid2dStepChain.size());
     for (size_t index = 0; index < mgrid2dFullChain.size(); index++) {
       // Both should contain the same data
-      BOOST_CHECK_EQUAL(mgrid2dFullChain.at(index), mgrid2dStepChain.at(index));
+      CHECK_CLOSE_REL(
+          mgrid2dFullChain.at(index), mgrid2dStepChain.at(index), 1e-4);
     }
 
     //
@@ -307,7 +317,8 @@ namespace Test {
     BOOST_CHECK_EQUAL(mgrid3dFullChain.size(), mgrid3dStepChain.size());
     for (size_t index = 0; index < mgrid3dFullChain.size(); index++) {
       // Both should contain the same data
-      BOOST_CHECK_EQUAL(mgrid3dFullChain.at(index), mgrid3dStepChain.at(index));
+      CHECK_CLOSE_REL(
+          mgrid3dFullChain.at(index), mgrid3dStepChain.at(index), 1e-4);
     }
   }
 }  // namespace Test

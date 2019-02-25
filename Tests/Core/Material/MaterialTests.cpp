@@ -44,8 +44,8 @@ namespace Test {
     // density at room temperature
     float X0  = 9.370 * au::_cm;
     float L0  = 46.52 * au::_cm;
-    float Z   = 14.;
     float A   = 28.0855;
+    float Z   = 14.;
     float rho = 2.329 * au::_g / (au::_cm * au::_cm * au::_cm);
 
     Material silicon(X0, L0, A, Z, rho);
@@ -58,6 +58,11 @@ namespace Test {
                     0.001);
     CHECK_CLOSE_REL(silicon.zOverAtimesRho(), 14. / 28.0855 * 0.002329, 0.0001);
 
+    ActsVectorF<5> siliconValues;
+    siliconValues << X0, L0, A, Z, rho;
+    Material siliconFromValues(siliconValues);
+    BOOST_CHECK_EQUAL(silicon, siliconFromValues);
+
     Material copiedSilicon(silicon);
     BOOST_CHECK_EQUAL(silicon, copiedSilicon);
 
@@ -69,6 +74,10 @@ namespace Test {
 
     Material moveAssignedSilicon = std::move(assignedSilicon);
     BOOST_CHECK_EQUAL(silicon, moveAssignedSilicon);
+
+    ActsVectorF<5> decomposedSilicon
+        = silicon.decomposeIntoClassificationNumbers();
+    CHECK_CLOSE_REL(decomposedSilicon, siliconValues, 1e-4);
   }
 }
 }
