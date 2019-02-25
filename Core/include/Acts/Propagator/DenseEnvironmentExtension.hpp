@@ -457,8 +457,6 @@ struct DenseStepperPropagatorOptions
     : public PropagatorOptions<action_list_t, aborter_list_t>
 {
 
-  /// Delete Default contructor
-
   /// Constructor with GeometryContext
   ///
   /// @param gctx The current geometry context object, e.g. alignment
@@ -486,7 +484,7 @@ struct DenseStepperPropagatorOptions
   extend(extended_aborter_list_t aborters) const
   {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions(eoptions.geoContext);
+        eoptions(this->geoContext);
     // Copy the options over
     eoptions.direction       = this->direction;
     eoptions.absPdgCode      = this->absPdgCode;

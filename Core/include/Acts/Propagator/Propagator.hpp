@@ -119,6 +119,9 @@ struct PropagatorOptions
   /// Delete default contructor
   PropagatorOptions() = delete;
 
+  /// PropagatorOptions copy constructor
+  PropagatorOptions(const PropagatorOptions& po) = default;
+
   /// PropagatorOptions with context
   PropagatorOptions(std::reference_wrapper<GeometryContext> gctx)
     : geoContext(gctx)
