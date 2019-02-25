@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <functional>
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -461,7 +462,7 @@ struct DenseStepperPropagatorOptions
   /// Constructor with GeometryContext
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  DenseStepperPropagatorOptions(const GeometryContext& gctx)
+  DenseStepperPropagatorOptions(std::reference_wrapper<GeometryContext> gctx)
     : PropagatorOptions<action_list_t, aborter_list_t>(gctx)
   {
   }

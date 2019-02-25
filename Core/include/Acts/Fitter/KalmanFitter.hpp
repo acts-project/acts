@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
@@ -40,14 +41,14 @@ struct KalmanFitterOptions
   ///
   /// @param gctx The goemetry context for this fit
   /// @param rSurface The reference surface for the fit to be expressed at
-  KalmanFitterOptions(const GeometryContext& gctx,
-                      const Surface*         rSurface = nullptr)
+  KalmanFitterOptions(std::reference_wrapper<GeometryContext> gctx,
+                      const Surface* rSurface = nullptr)
     : geoContext(gctx), referenceSurface(rSurface)
   {
   }
 
   /// Context object for the geometry
-  const GeometryContext& geoContext;
+  std::reference_wrapper<GeometryContext> geoContext;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;

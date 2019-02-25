@@ -14,6 +14,7 @@
 #include <boost/tti/has_template.hpp>
 #include <boost/tti/has_type.hpp>
 #include <cmath>
+#include <functional>
 #include <memory>
 #include <type_traits>
 #include "Acts/EventData/TrackParameters.hpp"
@@ -119,7 +120,10 @@ struct PropagatorOptions
   PropagatorOptions() = delete;
 
   /// PropagatorOptions with context
-  PropagatorOptions(const GeometryContext& gctx) : geoContext(gctx) {}
+  PropagatorOptions(std::reference_wrapper<GeometryContext> gctx)
+    : geoContext(gctx)
+  {
+  }
 
   /// @brief Expand the Options with extended aborters
   ///
@@ -151,7 +155,7 @@ struct PropagatorOptions
     eoptions.actionList = std::move(actionList);
     eoptions.abortList  = std::move(aborters);
     // And return the options
-    return std::move(eoptions);
+    return eoptions;
   }
 
   /// Propagation direction
@@ -202,7 +206,7 @@ struct PropagatorOptions
   aborter_list_t abortList;
 
   /// The context object for the geometry
-  const GeometryContext& geoContext;
+  std::reference_wrapper<GeometryContext> geoContext;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -404,7 +408,7 @@ public:
     NavigatorState navigation;
 
     /// Context object for the geometry
-    const GeometryContext& geoContext;
+    std::reference_wrapper<GeometryContext> geoContext;
   };
 
 private:
