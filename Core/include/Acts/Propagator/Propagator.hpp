@@ -151,7 +151,7 @@ struct PropagatorOptions
     eoptions.actionList = std::move(actionList);
     eoptions.abortList  = std::move(aborters);
     // And return the options
-    return eoptions;
+    return std::move(eoptions);
   }
 
   /// Propagation direction
