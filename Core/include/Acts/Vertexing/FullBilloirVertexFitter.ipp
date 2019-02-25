@@ -73,6 +73,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
   }
 
   // Set number of degrees of freedom
+  // ndf = (5-3) * nTracks - 3;
   int ndf = 2 * nTracks - 3;
   if (nTracks < 2) {
     ndf = 1;
