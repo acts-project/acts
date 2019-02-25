@@ -37,7 +37,7 @@ Acts::DiscLayer::DiscLayer(const std::shared_ptr<const Transform3D>& transform,
   // In case we have Radial bounds
   const RadialBounds* rBounds
       = dynamic_cast<const RadialBounds*>(DiscSurface::m_bounds.get());
-  if (rBounds) {
+  if (rBounds != nullptr) {
     // The volume bounds
     auto rVolumeBounds
         = std::make_shared<const CylinderVolumeBounds>(*rBounds, thickness);

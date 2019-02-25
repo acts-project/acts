@@ -93,7 +93,7 @@ public:
   Layer(const Layer&) = delete;
 
   /// Destructor
-  virtual ~Layer();
+  virtual ~Layer() = default;
 
   /// Assignment operator - forbidden, layer assignment must not be ambiguous
   ///

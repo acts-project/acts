@@ -54,7 +54,7 @@ public:
   /// Constructor
   ///
   /// @param logger logging instance
-  LayerArrayCreator(Config                        cfg,
+  LayerArrayCreator(const Config&                 cfg,
                     std::unique_ptr<const Logger> logger
                     = getDefaultLogger("LayerArrayCreator", Logging::INFO))
     : m_cfg(cfg), m_logger(std::move(logger))

@@ -44,7 +44,7 @@ public:
   /// Constructor
   ///
   /// @param logger logging instance
-  TrackingVolumeArrayCreator(Config                        cfg,
+  TrackingVolumeArrayCreator(const Config&                 cfg,
                              std::unique_ptr<const Logger> logger
                              = getDefaultLogger("LayerArrayCreator",
                                                 Logging::INFO))

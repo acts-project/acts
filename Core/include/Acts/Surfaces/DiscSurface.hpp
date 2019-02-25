@@ -285,12 +285,12 @@ public:
   /// Path correction due to incident of the track
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  /// @param gpos The global position as a starting point
+  /// @param pos The global position as a starting point
   /// @param mom The global momentum at the starting point
   /// @return The correction factor due to incident
   double
   pathCorrection(const GeometryContext& gctx,
-                 const Vector3D&        gpos,
+                 const Vector3D&        pos,
                  const Vector3D&        mom) const final;
 
   /// @brief Straight line intersection schema
