@@ -457,6 +457,11 @@ struct DenseStepperPropagatorOptions
     : public PropagatorOptions<action_list_t, aborter_list_t>
 {
 
+  /// Copy Constructor
+  DenseStepperPropagatorOptions(
+      const DenseStepperPropagatorOptions<action_list_t, aborter_list_t>& dspo)
+      = default;
+
   /// Constructor with GeometryContext
   ///
   /// @param gctx The current geometry context object, e.g. alignment
