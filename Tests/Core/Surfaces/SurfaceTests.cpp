@@ -110,10 +110,6 @@ namespace Test {
     BOOST_CHECK_NE(surface.associatedMaterial(), pMaterial.get());
     // center()
     CHECK_CLOSE_OR_SMALL(reference, surface.center(tgContext), 1e-6, 1e-9);
-    // stream insertion operator <<
-    output_test_stream output;
-    output << surface;
-    BOOST_CHECK(!output.is_empty(false));  // no check on contents
     // insideBounds
     Vector2D localPosition{0.1, 3.0};
     BOOST_CHECK(surface.insideBounds(localPosition));
@@ -179,7 +175,7 @@ namespace Test {
     SurfaceStub surface3(detElement2);  // 3 differs in thickness
     SurfaceStub surface4(detElement3);  // 4 has a different transform and id
     //
-    BOOST_CHECK_EQUAL(surface1, surface2);
+    BOOST_CHECK(surface1 == surface2);
     //
     // remove test for the moment,
     // surfaces do not have a concept of thickness (only detector elements have)
@@ -187,7 +183,7 @@ namespace Test {
     //
     // BOOST_CHECK_NE(surface1, surface3);  // will fail
     //
-    BOOST_CHECK_NE(surface1, surface4);
+    BOOST_CHECK(surface1 != surface4);
   }
   BOOST_AUTO_TEST_SUITE_END()
 

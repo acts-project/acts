@@ -223,7 +223,7 @@ namespace Test {
         = Surface::makeShared<DiscSurface>(nullptr, 2.2, 4.4, 0.07);
     //
     BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
-    BOOST_CHECK_EQUAL(*assignedDisc, *discSurfaceObject);
+    BOOST_CHECK((*assignedDisc) == (*discSurfaceObject));
   }
 
   BOOST_AUTO_TEST_SUITE_END()

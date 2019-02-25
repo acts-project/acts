@@ -31,12 +31,6 @@ using SurfaceVector = std::vector<const Surface*>;
 class SurfaceArray
 {
 
-  friend std::ostream&
-  operator<<(std::ostream& sl, const SurfaceArray& sa)
-  {
-    return sa.toStream(DefaultGeometryContext(), sl);
-  }
-
 public:
   /// @brief Base interface for all surface lookups.
   struct ISurfaceGridLookup

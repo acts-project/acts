@@ -60,7 +60,7 @@ namespace Test {
     auto copiedPlaneSurface
         = Surface::makeShared<PlaneSurface>(*planeSurfaceObject);
     BOOST_CHECK_EQUAL(copiedPlaneSurface->type(), Surface::Plane);
-    BOOST_CHECK_EQUAL(*copiedPlaneSurface, *planeSurfaceObject);
+    BOOST_CHECK(*copiedPlaneSurface == *planeSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedPlaneSurface = Surface::makeShared<PlaneSurface>(
@@ -101,10 +101,10 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
     // these two surfaces should be equivalent now (prematurely testing equality
     // also)
-    BOOST_CHECK_EQUAL(*pClonedShiftedPlaneSurface, *planeSurfaceObject2);
+    BOOST_CHECK(*pClonedShiftedPlaneSurface == *planeSurfaceObject2);
     // and, trivially, the shifted cloned surface should be different from the
     // original
-    BOOST_CHECK_NE(*pClonedShiftedPlaneSurface, *planeSurfaceObject);
+    BOOST_CHECK(*pClonedShiftedPlaneSurface != *planeSurfaceObject);
     //
     /// Test type (redundant)
     BOOST_CHECK_EQUAL(planeSurfaceObject->type(), Surface::Plane);
@@ -206,7 +206,7 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     //
     /// Test equality operator
-    BOOST_CHECK_EQUAL(*planeSurfaceObject, *planeSurfaceObject2);
+    BOOST_CHECK(*planeSurfaceObject == *planeSurfaceObject2);
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a PlaneSurface object to the existing one");
@@ -215,7 +215,7 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(nullptr, nullptr);
     *assignedPlaneSurface = *planeSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_CHECK_EQUAL(*assignedPlaneSurface, *planeSurfaceObject);
+    BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

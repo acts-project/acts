@@ -75,7 +75,7 @@ namespace Test {
     auto copiedStrawSurface
         = Surface::makeShared<StrawSurface>(*strawSurfaceObject);
     BOOST_CHECK_EQUAL(copiedStrawSurface->type(), Surface::Straw);
-    BOOST_CHECK_EQUAL(*copiedStrawSurface, *strawSurfaceObject);
+    BOOST_CHECK(*copiedStrawSurface == *strawSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedStrawSurface = Surface::makeShared<StrawSurface>(
@@ -128,7 +128,7 @@ namespace Test {
         = Surface::makeShared<StrawSurface>(pTransform, radius, halfZ);
     //
     /// Test equality operator
-    BOOST_CHECK_EQUAL(*strawSurfaceObject, *strawSurfaceObject2);
+    BOOST_CHECK(*strawSurfaceObject == *strawSurfaceObject2);
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a StrawSurface object to the existing one");
@@ -137,7 +137,7 @@ namespace Test {
         = Surface::makeShared<StrawSurface>(nullptr, 6.6, 33.33);
     *assignedStrawSurface = *strawSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_CHECK_EQUAL(*assignedStrawSurface, *strawSurfaceObject);
+    BOOST_CHECK(*assignedStrawSurface == *strawSurfaceObject);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

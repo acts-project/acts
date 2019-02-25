@@ -76,7 +76,7 @@ namespace Test {
     auto copiedConeSurface
         = Surface::makeShared<ConeSurface>(*coneSurfaceObject);
     BOOST_CHECK_EQUAL(copiedConeSurface->type(), Surface::Cone);
-    BOOST_CHECK_EQUAL(*copiedConeSurface, *coneSurfaceObject);
+    BOOST_CHECK(*copiedConeSurface == *coneSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedConeSurface = Surface::makeShared<ConeSurface>(
@@ -223,7 +223,7 @@ namespace Test {
         = Surface::makeShared<ConeSurface>(pTransform, alpha, symmetric);
     //
     /// Test equality operator
-    BOOST_CHECK_EQUAL(*coneSurfaceObject, *coneSurfaceObject2);
+    BOOST_CHECK(*coneSurfaceObject == *coneSurfaceObject2);
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a ConeSurface object to the existing one");
@@ -232,7 +232,7 @@ namespace Test {
         = Surface::makeShared<ConeSurface>(nullptr, 0.1, true);
     *assignedConeSurface = *coneSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_CHECK_EQUAL(*assignedConeSurface, *coneSurfaceObject);
+    BOOST_CHECK(*assignedConeSurface == *coneSurfaceObject);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

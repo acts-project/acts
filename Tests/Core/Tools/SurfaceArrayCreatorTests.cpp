@@ -578,7 +578,6 @@ namespace Test {
 
     std::unique_ptr<SurfaceArray> sArray
         = m_SAC.surfaceArrayOnDisc(surfaces, equidistant, equidistant);
-    std::cout << (*sArray) << std::endl;
     auto axes = sArray->getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 10);
@@ -662,7 +661,6 @@ namespace Test {
     auto         axes = sa.getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
-    std::cout << sa << std::endl;
 
     for (const auto& pr : barrel.second) {
       auto A = pr.first;
@@ -734,8 +732,6 @@ namespace Test {
         CHECK_CLOSE_ABS(edge, zEdgesExp.at(i), 1e-6);
         i++;
       }
-
-      std::cout << sa2 << std::endl;
 
       for (const auto& pr : barrel.second) {
         auto A = pr.first;

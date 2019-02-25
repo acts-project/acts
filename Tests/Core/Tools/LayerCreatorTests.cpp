@@ -470,7 +470,6 @@ namespace Test {
         = std::dynamic_pointer_cast<CylinderLayer>(
             p_LC->cylinderLayer(brl, equidistant, equidistant, pl));
 
-    std::cout << (*layer->surfaceArray()) << std::endl;
     auto axes = layer->surfaceArray()->getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);

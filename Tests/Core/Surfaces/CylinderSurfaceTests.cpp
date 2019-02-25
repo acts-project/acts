@@ -73,7 +73,7 @@ namespace Test {
     auto copiedCylinderSurface
         = Surface::makeShared<CylinderSurface>(*cylinderSurfaceObject);
     BOOST_CHECK_EQUAL(copiedCylinderSurface->type(), Surface::Cylinder);
-    BOOST_CHECK_EQUAL(*copiedCylinderSurface, *cylinderSurfaceObject);
+    BOOST_CHECK(*copiedCylinderSurface == *cylinderSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedCylinderSurface
@@ -234,7 +234,7 @@ namespace Test {
         = Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
     //
     /// Test equality operator
-    BOOST_CHECK_EQUAL(*cylinderSurfaceObject, *cylinderSurfaceObject2);
+    BOOST_CHECK(*cylinderSurfaceObject == *cylinderSurfaceObject2);
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a CylinderSurface object to the existing one");
@@ -243,7 +243,7 @@ namespace Test {
         = Surface::makeShared<CylinderSurface>(nullptr, 6.6, 5.4);
     *assignedCylinderSurface = *cylinderSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_CHECK_EQUAL(*assignedCylinderSurface, *cylinderSurfaceObject);
+    BOOST_CHECK(*assignedCylinderSurface == *cylinderSurfaceObject);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

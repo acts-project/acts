@@ -150,13 +150,6 @@ Acts::Surface::toStream(const GeometryContext& gctx, std::ostream& sl) const
   return sl;
 }
 
-/**Overload of << operator for std::ostream for debug output*/
-std::ostream&
-Acts::operator<<(std::ostream& sl, const Acts::Surface& sf)
-{
-  return sf.toStream(DefaultGeometryContext(), sl);
-}
-
 bool
 Acts::Surface::operator!=(const Acts::Surface& sf) const
 {

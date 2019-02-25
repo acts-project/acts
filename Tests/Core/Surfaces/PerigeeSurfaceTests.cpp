@@ -60,7 +60,7 @@ namespace Test {
     auto copiedPerigeeSurface
         = Surface::makeShared<PerigeeSurface>(*perigeeSurfaceObject);
     BOOST_CHECK_EQUAL(copiedPerigeeSurface->type(), Surface::Perigee);
-    BOOST_CHECK_EQUAL(*copiedPerigeeSurface, *perigeeSurfaceObject);
+    BOOST_CHECK(*copiedPerigeeSurface == *perigeeSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedPerigeeSurface = Surface::makeShared<PerigeeSurface>(
@@ -102,11 +102,11 @@ namespace Test {
     auto assignedPerigeeSurface
         = Surface::makeShared<PerigeeSurface>(invalidPosition);
     /// Test equality operator
-    BOOST_CHECK_EQUAL(*perigeeSurfaceObject, *perigeeSurfaceObject2);
+    BOOST_CHECK(*perigeeSurfaceObject == *perigeeSurfaceObject2);
     /// Test assignment
     *assignedPerigeeSurface = *perigeeSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_CHECK_EQUAL(*assignedPerigeeSurface, *perigeeSurfaceObject);
+    BOOST_CHECK(*assignedPerigeeSurface == *perigeeSurfaceObject);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

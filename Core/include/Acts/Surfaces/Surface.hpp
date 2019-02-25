@@ -569,7 +569,4 @@ protected:
 
 #include "Acts/Surfaces/detail/Surface.ipp"
 
-std::ostream&
-operator<<(std::ostream& sl, const Surface& sf);
-
 }  // namespace Acts

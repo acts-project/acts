@@ -162,9 +162,9 @@ namespace Test {
     auto          pTransform = std::make_shared<const Transform3D>(translation);
     LineSurfaceStub originalLine(pTransform, 2.0, 20.);
     LineSurfaceStub assignedLine(pTransform, 1.0, 1.0);
-    BOOST_CHECK_NE(assignedLine, originalLine);  // operator != from base
+    BOOST_CHECK(assignedLine != originalLine);  // operator != from base
     assignedLine = originalLine;
-    BOOST_CHECK_EQUAL(assignedLine, originalLine);  // operator == from base
+    BOOST_CHECK(assignedLine == originalLine);  // operator == from base
   }
 
   BOOST_AUTO_TEST_SUITE_END()
