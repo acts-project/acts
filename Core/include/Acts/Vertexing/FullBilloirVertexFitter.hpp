@@ -65,6 +65,9 @@ public:
   {
   }
 
+  /// @brief Default destructor
+  ~FullBilloirVertexFitter() = default;
+
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to

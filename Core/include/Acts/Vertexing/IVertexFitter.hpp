@@ -24,6 +24,9 @@ template <typename InputTrack, typename Propagator_t>
 class IVertexFitter
 {
 public:
+  /// @brief Default virtual destructor
+  virtual ~IVertexFitter() = default;
+
   /// @param paramVector Vector of track objects to fit vertex to
   /// @param propagator Propagator
   /// @param constraint Constraint of the fit, position of constraint is
