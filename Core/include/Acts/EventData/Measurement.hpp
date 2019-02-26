@@ -37,10 +37,8 @@ class Surface;
 /// circumstances where the pure mathematical view of a measurement is not
 /// sufficient.
 /// The name _link_ indicates that there is a relationship to a unique source
-/// object,
-/// i.e. if a measurement appears on several tracks, then there must be a
-/// uniquely
-/// identifyable common source for those.
+/// object, i.e. if a measurement appears on several tracks, then there must
+/// be a uniquely identifyable common source for those.
 ///
 /// @test The behavior of this class is tested in the following unit test:
 ///       - \link Acts::Test::BOOST_AUTO_TEST_CASE(measurement_initialization)
