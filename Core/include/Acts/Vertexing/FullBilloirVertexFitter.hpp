@@ -66,7 +66,7 @@ public:
   }
 
   /// @brief Default destructor
-  ~FullBilloirVertexFitter() = default;
+  ~FullBilloirVertexFitter() override = default;
 
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
