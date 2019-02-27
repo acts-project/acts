@@ -9,7 +9,7 @@
 #pragma once
 
 #include <cmath>
-
+#include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
@@ -57,15 +57,17 @@ public:
     ///
     /// @tparams Type of TrackParameters
     ///
-    /// @param[in] gctx The context of this call
+    /// @param[in] gctx The geometry contex tof this call
+    /// @param[in] mctx The magnetic field contex tof this call
     /// @param[in] pars Input parameters
     /// @param[in] ndir The navigation direction w.r.t. parameters
     /// @param[in] ssize the steps size limitation
     template <typename Parameters>
-    State(const GeometryContext& gctx,
-          const Parameters&      pars,
-          NavigationDirection    ndir  = forward,
-          double                 ssize = std::numeric_limits<double>::max())
+    State(std::reference_wrapper<const GeometryContext>      gctx,
+          std::reference_wrapper<const MagneticFieldContext> mctx,
+          const Parameters&                                  pars,
+          NavigationDirection                                ndir = forward,
+          double ssize = std::numeric_limits<double>::max())
       : state_ready(false)
       , navDir(ndir)
       , useJacobian(false)
@@ -77,6 +79,7 @@ public:
       , field(0., 0., 0.)
       , covariance(nullptr)
       , stepSize(ndir * std::abs(ssize))
+      , fieldCache(mctx)
     {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
       // this is a nasty but working solution for the stepper state without
@@ -246,16 +249,16 @@ public:
     bool                               covTransport = false;
     double                             jacobian[NGlobalPars * NGlobalPars];
 
-    /// Lazily initialized cache for the magnetic field
-    /// It caches the current magnetic field cell and stays (and interpolates)
-    ///  within as long as this is valid. See step() code for details.
-    typename bfield_t::Cache fieldCache{};
-
     // accummulated path length cache
     double pathAccumulated = 0.;
 
     // adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
+
+    /// Lazily initialized cache for the magnetic field
+    /// It caches the current magnetic field cell and stays (and interpolates)
+    ///  within as long as this is valid. See step() code for details.
+    typename bfield_t::Cache fieldCache;
 
     /// Debug output
     /// the string where debug messages are stored (optionally)

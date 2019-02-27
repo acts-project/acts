@@ -7,8 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -23,7 +25,8 @@ class ConstantBField final
 public:
   struct Cache
   {
-    // empty, we don't need a cache
+    /// @brief constructor with context
+    Cache(std::reference_wrapper<const MagneticFieldContext> /*mcfg*/) {}
   };
 
   /// @brief construct constant magnetic field from field vector

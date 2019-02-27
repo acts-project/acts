@@ -15,6 +15,7 @@
 #include <boost/test/data/test_case.hpp>
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 // clang-format on
 
@@ -24,6 +25,9 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
 
   /// @brief unit test for construction of constant magnetic field
   ///
@@ -55,7 +59,7 @@ namespace Test {
       const Vector3D       pos(x, y, z);
       const ConstantBField BField(Btrue);
 
-      ConstantBField::Cache bCache;
+      ConstantBField::Cache bCache(mfContext);
 
       BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
       BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
@@ -72,7 +76,7 @@ namespace Test {
       const Vector3D       Btrue(bx, by, bz);
       const Vector3D       pos(x, y, z);
 
-      ConstantBField::Cache bCache;
+      ConstantBField::Cache bCache(mfContext);
 
       BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
       BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
@@ -116,7 +120,7 @@ namespace Test {
       const Vector3D pos(x, y, z);
       BField.setField(Btrue);
 
-      ConstantBField::Cache bCache;
+      ConstantBField::Cache bCache(mfContext);
 
       BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
       BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));
@@ -133,7 +137,7 @@ namespace Test {
       const Vector3D pos(x, y, z);
       BField.setField(bx, by, bz);
 
-      ConstantBField::Cache bCache;
+      ConstantBField::Cache bCache(mfContext);
 
       BOOST_CHECK_EQUAL(Btrue, BField.getField(pos));
       BOOST_CHECK_EQUAL(Btrue, BField.getField(Vector3D(0, 0, 0)));

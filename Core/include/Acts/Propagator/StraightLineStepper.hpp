@@ -9,6 +9,8 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -61,12 +63,14 @@ public:
     ///
     /// @tparam parameters_t the Type of the track parameters
     ///
-    /// @param [in] gctx is the context object, ingored
+    /// @param [in] gctx is the context object for the geometery
+    /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
     /// @param [in] dir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     template <typename parameters_t>
-    explicit State(const GeometryContext& /*gctx*/,
+    explicit State(std::reference_wrapper<const GeometryContext> /*gctx*/,
+                   std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
                    const parameters_t& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())

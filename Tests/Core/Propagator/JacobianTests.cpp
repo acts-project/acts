@@ -25,6 +25,7 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -38,7 +39,8 @@ namespace Test {
   using AtlasStepperType = AtlasStepper<BFieldType>;
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext      tgContext = DefaultGeometryContext();
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
 
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly
@@ -134,9 +136,9 @@ namespace Test {
   {
     // Jacobian creation for Propagator/Steppers
     // a) ATLAS stepper
-    AtlasStepperType::State astepState(tgContext, pars);
+    AtlasStepperType::State astepState(tgContext, mfContext, pars);
     // b) Eigen stepper
-    EigenStepperType::State estepState(tgContext, pars);
+    EigenStepperType::State estepState(tgContext, mfContext, pars);
 
     // create the matrices
     auto asMatrix = convertToMatrix(astepState.pVector);

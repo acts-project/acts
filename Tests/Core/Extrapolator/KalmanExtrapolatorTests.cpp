@@ -28,6 +28,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 namespace Test {
@@ -35,8 +36,8 @@ namespace Test {
   using Jacobian = ActsMatrixD<5, 5>;
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
-
+  GeometryContext      tgContext = DefaultGeometryContext();
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
   ///
   /// @brief the bound state propagation
   ///
@@ -149,11 +150,11 @@ namespace Test {
 
     // Create some options
     using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;
-    StepWiseOptions swOptions(tgContext);
+    StepWiseOptions swOptions(tgContext, mfContext);
 
     using PlainActors  = ActionList<>;
     using PlainOptions = PropagatorOptions<PlainActors, Aborters>;
-    PlainOptions pOptions(tgContext);
+    PlainOptions pOptions(tgContext, mfContext);
 
     // Run the standard propagation
     const auto& pResult = propagator.propagate(start, pOptions);

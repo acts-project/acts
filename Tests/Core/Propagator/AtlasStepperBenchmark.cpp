@@ -14,6 +14,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace po = boost::program_options;
@@ -30,7 +31,8 @@ main(int argc, char* argv[])
   bool         withCov = true;
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext      tgContext = DefaultGeometryContext();
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
 
   try {
     po::options_description desc("Allowed options");
@@ -73,7 +75,7 @@ main(int argc, char* argv[])
   Stepper_type    atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 
-  PropagatorOptions<> options(tgContext);
+  PropagatorOptions<> options(tgContext, mfContext);
   options.pathLimit = maxPath * units::_m;
 
   Vector3D          pos(0, 0, 0);

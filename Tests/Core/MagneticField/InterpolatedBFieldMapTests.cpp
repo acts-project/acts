@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -27,6 +28,9 @@ using Acts::VectorHelpers::perp;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
 
   BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz)
   {
@@ -84,7 +88,8 @@ namespace Test {
     Vector3D pos;
     pos << -3, 2.5, 1.7;
     // test the cache interface
-    InterpolatedBFieldMap::Cache bCache;
+    InterpolatedBFieldMap::Cache bCache(mfContext);
+
     CHECK_CLOSE_REL(
         b.getField(pos, bCache), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
@@ -96,7 +101,7 @@ namespace Test {
         c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     pos << 0, 1.5, -2.5;
-    InterpolatedBFieldMap::Cache bCache2;
+    InterpolatedBFieldMap::Cache bCache2(mfContext);
     CHECK_CLOSE_REL(
         b.getField(pos, bCache2), BField::value({{perp(pos), pos.z()}}), 1e-6);
     c = bCache2.fieldCell;
@@ -105,7 +110,7 @@ namespace Test {
         c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     pos << 2, 3, -4;
-    InterpolatedBFieldMap::Cache bCache3;
+    InterpolatedBFieldMap::Cache bCache3(mfContext);
     CHECK_CLOSE_REL(
         b.getField(pos, bCache3), BField::value({{perp(pos), pos.z()}}), 1e-6);
     c = bCache3.fieldCell;

@@ -13,12 +13,12 @@
 namespace Acts {
 
 /// @brief This is the central definition of the Acts
-/// payload object regarding detector geometry status (e.g. alignment)
+/// payload object regarding magnetic field status
 ///
 /// It is propagated through the code to allow for event/thread
-/// dependent geometry changes
+/// dependent magnetic field changes
 
-using GeometryContext        = std::any;
-using DefaultGeometryContext = GeometryContext;
+using MagneticFieldContext        = std::any;
+using DefaultMagneticFieldContext = MagneticFieldContext;
 
 }  // namespace Acts

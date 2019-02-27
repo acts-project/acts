@@ -13,12 +13,12 @@
 namespace Acts {
 
 /// @brief This is the central definition of the Acts
-/// payload object regarding detector geometry status (e.g. alignment)
+/// payload object regarding detector calbiration
 ///
 /// It is propagated through the code to allow for event/thread
-/// dependent geometry changes
+/// dependent calibration
 
-using GeometryContext        = std::any;
-using DefaultGeometryContext = GeometryContext;
+using CalibrationContext        = std::any;
+using DefaultCalibrationContext = CalibrationContext;
 
 }  // namespace Acts

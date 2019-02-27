@@ -25,6 +25,7 @@
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 BOOST_TTI_HAS_TYPE(state_type)
@@ -124,8 +125,9 @@ struct PropagatorOptions
       = default;
 
   /// PropagatorOptions with context
-  PropagatorOptions(std::reference_wrapper<const GeometryContext> gctx)
-    : geoContext(gctx)
+  PropagatorOptions(std::reference_wrapper<const GeometryContext>      gctx,
+                    std::reference_wrapper<const MagneticFieldContext> mctx)
+    : geoContext(gctx), magFieldContext(mctx)
   {
   }
 
@@ -139,7 +141,7 @@ struct PropagatorOptions
   extend(extended_aborter_list_t aborters) const
   {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
-        geoContext);
+        geoContext, magFieldContext);
     // Copy the options over
     eoptions.direction       = direction;
     eoptions.absPdgCode      = absPdgCode;
@@ -211,6 +213,9 @@ struct PropagatorOptions
 
   /// The context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
+
+  /// The context object for the magnetic field
+  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -395,7 +400,11 @@ public:
     template <typename parameters_t>
     State(const parameters_t& start, const propagator_options_t& topts)
       : options(topts)
-      , stepping(topts.geoContext, start, topts.direction, topts.maxStepSize)
+      , stepping(topts.geoContext,
+                 topts.magFieldContext,
+                 start,
+                 topts.direction,
+                 topts.maxStepSize)
       , geoContext(topts.geoContext)
     {
       // Setting the start surface

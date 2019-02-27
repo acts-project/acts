@@ -10,7 +10,9 @@
 
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 #include "covariance_validation_fixture.hpp"
 
@@ -23,7 +25,8 @@ using units::Nat2SI;
 namespace IntegrationTest {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext      tgContext = DefaultGeometryContext();
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
 
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly
@@ -94,7 +97,7 @@ namespace IntegrationTest {
     namespace VH = VectorHelpers;
 
     // setup propagation options
-    PropagatorOptions<> options(tgContext);
+    PropagatorOptions<> options(tgContext, mfContext);
     options.pathLimit   = 5 * units::_m;
     options.maxStepSize = 1 * units::_cm;
     options.debug       = debug;
@@ -187,12 +190,12 @@ namespace IntegrationTest {
     using DebugOutput = Acts::detail::DebugOutputActor;
     using ActionList  = Acts::ActionList<DebugOutput>;
 
-    PropagatorOptions<ActionList> fwdOptions(tgContext);
+    PropagatorOptions<ActionList> fwdOptions(tgContext, mfContext);
     fwdOptions.pathLimit   = plimit;
     fwdOptions.maxStepSize = 1 * units::_cm;
     fwdOptions.debug       = debug;
 
-    PropagatorOptions<ActionList> bwdOptions(tgContext);
+    PropagatorOptions<ActionList> bwdOptions(tgContext, mfContext);
     bwdOptions.direction   = backward;
     bwdOptions.pathLimit   = -plimit;
     bwdOptions.maxStepSize = 1 * units::_cm;
@@ -259,7 +262,7 @@ namespace IntegrationTest {
               bool debug        = false)
   {
     // setup propagation options
-    PropagatorOptions<> options(tgContext);
+    PropagatorOptions<> options(tgContext, mfContext);
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -324,7 +327,7 @@ namespace IntegrationTest {
     using DebugOutput = detail::DebugOutputActor;
 
     // setup propagation options
-    PropagatorOptions<ActionList<DebugOutput>> options(tgContext);
+    PropagatorOptions<ActionList<DebugOutput>> options(tgContext, mfContext);
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -405,7 +408,7 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    DenseStepperPropagatorOptions<> options(tgContext);
+    DenseStepperPropagatorOptions<> options(tgContext, mfContext);
     // setup propagation options
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
@@ -465,7 +468,7 @@ namespace IntegrationTest {
   {
     covariance_validation_fixture<Propagator_type> fixture(propagator);
     // setup propagation options
-    DenseStepperPropagatorOptions<> options(tgContext);
+    DenseStepperPropagatorOptions<> options(tgContext, mfContext);
     options.maxStepSize = plimit;
     options.pathLimit   = plimit;
     options.debug       = debug;

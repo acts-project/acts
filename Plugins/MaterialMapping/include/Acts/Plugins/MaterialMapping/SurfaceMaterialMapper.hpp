@@ -20,8 +20,10 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -123,7 +125,8 @@ public:
         surfaceMaterial;
 
     /// The context for the mapping
-    GeometryContext mappingContext = DefaultGeometryContext();
+    GeometryContext      mappingContext  = DefaultGeometryContext();
+    MagneticFieldContext magFieldContext = DefaultMagneticFieldContext();
   };
 
   /// Delete the Default constructor

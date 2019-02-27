@@ -33,6 +33,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -42,7 +44,8 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext      tgContext = DefaultGeometryContext();
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
 
   // Global definitions
   // The path limit abort
@@ -120,7 +123,7 @@ namespace Test {
     using AbortListType  = AbortList<>;
 
     using Options = PropagatorOptions<ActionListType, AbortListType>;
-    Options fwdOptions(tgContext);
+    Options fwdOptions(tgContext, mfContext);
 
     fwdOptions.maxStepSize = 25. * units::_cm;
     fwdOptions.pathLimit   = 25 * units::_cm;
@@ -169,7 +172,7 @@ namespace Test {
     }
 
     // backward material test
-    Options bwdOptions(tgContext);
+    Options bwdOptions(tgContext, mfContext);
     bwdOptions.maxStepSize = -25 * units::_cm;
     bwdOptions.pathLimit   = -25 * units::_cm;
     bwdOptions.direction   = backward;
@@ -236,7 +239,7 @@ namespace Test {
 
     // stepping from one surface to the next
     // now go from surface to surface and check
-    Options fwdStepOptions(tgContext);
+    Options fwdStepOptions(tgContext, mfContext);
     fwdStepOptions.maxStepSize = 25. * units::_cm;
     fwdStepOptions.pathLimit   = 25 * units::_cm;
     fwdStepOptions.debug       = debugModeFwdStep;
@@ -325,7 +328,7 @@ namespace Test {
 
     // stepping from one surface to the next : backwards
     // now go from surface to surface and check
-    Options bwdStepOptions(tgContext);
+    Options bwdStepOptions(tgContext, mfContext);
 
     bwdStepOptions.maxStepSize = -25 * units::_cm;
     bwdStepOptions.pathLimit   = -25 * units::_cm;

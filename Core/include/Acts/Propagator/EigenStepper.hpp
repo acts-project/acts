@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
 #include <limits>
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
@@ -73,16 +74,18 @@ public:
 
     /// Constructor from the initial track parameters
     ///
-    /// @param [in] gctx is the context object, ingored
-    /// @param[in] par The track parameters at start
-    /// @param[in] ndir The navigation direciton w.r.t momentum
-    /// @param[in] ssize is the maximum step size
+    /// @param [in] gctx is the context object for the geometry
+    /// @param [in] mctx is the context object for the magnetic field
+    /// @param [in] par The track parameters at start
+    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
     template <typename parameters_t>
-    explicit State(const GeometryContext& gctx,
-                   const parameters_t&    par,
-                   NavigationDirection    ndir = forward,
+    explicit State(std::reference_wrapper<const GeometryContext>      gctx,
+                   std::reference_wrapper<const MagneticFieldContext> mctx,
+                   const parameters_t&                                par,
+                   NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
       , dir(par.momentum().normalized())
@@ -90,6 +93,7 @@ public:
       , q(par.charge())
       , navDir(ndir)
       , stepSize(ndir * std::abs(ssize))
+      , fieldCache(mctx)
     {
       // remember the start parameters
       startPos = pos;
@@ -144,18 +148,17 @@ public:
     bool       covTransport = false;
     Covariance cov          = Covariance::Zero();
 
-    /// Lazily initialized state of the field Cache
-
-    /// This caches the current magnetic field cell and stays
-    /// (and interpolates) within it as long as this is valid.
-    /// See step() code for details.
-    typename BField::Cache fieldCache;
-
     /// accummulated path length state
     double pathAccumulated = 0.;
 
     /// adaptive step size of the runge-kutta integration
     cstep stepSize{std::numeric_limits<double>::max()};
+
+    /// Lazily initialized state of the field Cache
+    /// This caches the current magnetic field cell and stays
+    /// (and interpolates) within it as long as this is valid.
+    /// See step() code for details.
+    typename BField::Cache fieldCache;
 
     /// List of algorithmic extensions
     extensionlist_t extension;

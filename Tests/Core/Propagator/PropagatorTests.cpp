@@ -26,6 +26,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -37,7 +38,8 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext      tgContext = DefaultGeometryContext();
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
 
   using cstep = detail::ConstrainedStep;
 
@@ -133,13 +135,13 @@ namespace Test {
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
-  using BField_type         = ConstantBField;
-  using EigenStepper_type   = EigenStepper<BField_type>;
-  using EigenPropagatorType = Propagator<EigenStepper_type>;
+  using BFieldType          = ConstantBField;
+  using EigenStepperType    = EigenStepper<BFieldType>;
+  using EigenPropagatorType = Propagator<EigenStepperType>;
 
   const double        Bz = 2. * units::_T;
-  BField_type         bField(0, 0, Bz);
-  EigenStepper_type   estepper(bField);
+  BFieldType          bField(0, 0, Bz);
+  EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper));
 
   auto mSurface
@@ -153,17 +155,16 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(PropagatorOptions_)
   {
 
-    using null_options_type = PropagatorOptions<>;
-    null_options_type null_options(tgContext);
+    using null_optionsType = PropagatorOptions<>;
+    null_optionsType null_options(tgContext, mfContext);
     // todo write null options test
 
-    using ActionList_type      = ActionList<PerpendicularMeasure>;
-    using AbortConditions_type = AbortList<>;
+    using ActionListType      = ActionList<PerpendicularMeasure>;
+    using AbortConditionsType = AbortList<>;
 
-    using options_type
-        = PropagatorOptions<ActionList_type, AbortConditions_type>;
+    using optionsType = PropagatorOptions<ActionListType, AbortConditionsType>;
 
-    options_type options(tgContext);
+    optionsType options(tgContext, mfContext);
   }
 
   BOOST_DATA_TEST_CASE(
@@ -191,12 +192,13 @@ namespace Test {
     double dcharge = -1 + 2 * charge;
     (void)index;
 
-    using CylinderObserver     = SurfaceObserver<CylinderSurface>;
-    using ActionList_type      = ActionList<CylinderObserver>;
-    using AbortConditions_type = AbortList<>;
+    using CylinderObserver    = SurfaceObserver<CylinderSurface>;
+    using ActionListType      = ActionList<CylinderObserver>;
+    using AbortConditionsType = AbortList<>;
 
     // setup propagation options
-    PropagatorOptions<ActionList_type, AbortConditions_type> options(tgContext);
+    PropagatorOptions<ActionListType, AbortConditionsType> options(tgContext,
+                                                                   mfContext);
 
     options.pathLimit   = 20 * units::_m;
     options.maxStepSize = 1 * units::_cm;
@@ -251,7 +253,7 @@ namespace Test {
     (void)index;
 
     // setup propagation options - the tow step options
-    PropagatorOptions<> options_2s(tgContext);
+    PropagatorOptions<> options_2s(tgContext, mfContext);
     options_2s.pathLimit   = 50 * units::_cm;
     options_2s.maxStepSize = 1 * units::_cm;
 
@@ -280,7 +282,7 @@ namespace Test {
         = epropagator.propagate(*mid_parameters, options_2s).endParameters;
 
     // setup propagation options - the one step options
-    PropagatorOptions<> options_1s(tgContext);
+    PropagatorOptions<> options_1s(tgContext, mfContext);
     options_1s.pathLimit   = 100 * units::_cm;
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a path length of 100 in one step
@@ -323,7 +325,7 @@ namespace Test {
     (void)index;
 
     // setup propagation options - 2 setp options
-    PropagatorOptions<> options_2s(tgContext);
+    PropagatorOptions<> options_2s(tgContext, mfContext);
     options_2s.pathLimit   = 10 * units::_m;
     options_2s.maxStepSize = 1 * units::_cm;
 
@@ -354,7 +356,7 @@ namespace Test {
               .endParameters;
 
     // setup propagation options - one step options
-    PropagatorOptions<> options_1s(tgContext);
+    PropagatorOptions<> options_1s(tgContext, mfContext);
     options_1s.pathLimit   = 10 * units::_m;
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a final surface in one stop

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,8 +20,10 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -40,15 +42,26 @@ struct KalmanFitterOptions
   /// PropagatorOptions with context
   ///
   /// @param gctx The goemetry context for this fit
+  /// @param mctx The magnetic context for this fit
+  /// @param cctx The calibration context for this fit
   /// @param rSurface The reference surface for the fit to be expressed at
-  KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
+  KalmanFitterOptions(std::reference_wrapper<const GeometryContext>      gctx,
+                      std::reference_wrapper<const MagneticFieldContext> mctx,
+                      std::reference_wrapper<const CalibrationContext>   cctx,
                       const Surface* rSurface = nullptr)
-    : geoContext(gctx), referenceSurface(rSurface)
+    : geoContext(gctx)
+    , magFieldContext(mctx)
+    , calibrationContext(cctx)
+    , referenceSurface(rSurface)
   {
   }
 
   /// Context object for the geometry
   std::reference_wrapper<const GeometryContext> geoContext;
+  /// Context object for the magnetic field
+  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
+  /// context object for the calibration
+  std::reference_wrapper<const CalibrationContext> calibrationContext;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;
@@ -142,7 +155,9 @@ public:
     using Aborters     = AbortList<>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> kalmanOptions(kfOptions.geoContext);
+    PropagatorOptions<Actors, Aborters> kalmanOptions(
+        kfOptions.geoContext, kfOptions.magFieldContext);
+
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.trackStates   = std::move(trackStates);

@@ -39,6 +39,8 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
 namespace Acts {
 namespace Test {
@@ -64,7 +66,9 @@ namespace Test {
   bool debugMode = false;
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext      tgContext  = DefaultGeometryContext();
+  MagneticFieldContext mfContext  = DefaultMagneticFieldContext();
+  CalibrationContext   calContext = DefaultCalibrationContext();
 
   /// @brief This struct creates FittableMeasurements on the
   /// detector surfaces, according to the given smearing xxparameters
@@ -256,7 +260,7 @@ namespace Test {
 
     // Set options for propagator
     PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
-        tgContext);
+        tgContext, mfContext);
     mOptions.debug              = debugMode;
     auto& mCreator              = mOptions.actionList.get<MeasurementCreator>();
     mCreator.detectorResolution = detRes;
@@ -312,7 +316,7 @@ namespace Test {
 
     KalmanFitter kFitter(rPropagator);
 
-    KalmanFitterOptions kfOptions(tgContext, rSurface);
+    KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, rSurface);
 
     // Fit the track
     auto fittedTrack      = kFitter.fit(measurements, rStart, kfOptions);

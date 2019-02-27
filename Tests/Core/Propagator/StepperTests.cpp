@@ -26,6 +26,8 @@
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 // TODO: Testing of covariances in Integration test - requires N-layer box
 // detector for implementation of DenseEnvironmentExtension
@@ -37,8 +39,9 @@ namespace Test {
   using cstep = detail::ConstrainedStep;
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
-  ///
+  GeometryContext      tgContext = DefaultGeometryContext();
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+
   /// @brief Aborter for the case that a particle leaves the detector or reaches
   /// a custom made threshold.
   ///
@@ -161,7 +164,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts(tgContext);
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -204,7 +207,7 @@ namespace Test {
 
     // Set options for propagator
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-        propOptsDef(tgContext);
+        propOptsDef(tgContext, mfContext);
     propOptsDef.actionList  = aListDef;
     propOptsDef.abortList   = abortList;
     propOptsDef.maxSteps    = 100;
@@ -282,7 +285,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts(tgContext);
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -334,7 +337,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOptsDense(tgContext);
+        propOptsDense(tgContext, mfContext);
     propOptsDense.actionList  = aList;
     propOptsDense.abortList   = abortList;
     propOptsDense.maxSteps    = 100;
@@ -467,7 +470,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts(tgContext);
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -529,7 +532,7 @@ namespace Test {
     ActionList<StepCollector> aListDef;
 
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-        propOptsDef(tgContext);
+        propOptsDef(tgContext, mfContext);
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
     propOptsDef.abortList            = abortList;
@@ -585,7 +588,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOptsDense(tgContext);
+        propOptsDense(tgContext, mfContext);
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
     propOptsDense.abortList          = abortList;

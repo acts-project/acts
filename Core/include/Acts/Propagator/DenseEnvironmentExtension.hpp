@@ -11,7 +11,9 @@
 #include <functional>
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -465,9 +467,11 @@ struct DenseStepperPropagatorOptions
   /// Constructor with GeometryContext
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  /// @param mctx The current magnetic fielc context object
   DenseStepperPropagatorOptions(
-      std::reference_wrapper<const GeometryContext> gctx)
-    : PropagatorOptions<action_list_t, aborter_list_t>(gctx)
+      std::reference_wrapper<const GeometryContext>      gctx,
+      std::reference_wrapper<const MagneticFieldContext> mctx)
+    : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx)
   {
   }
 
@@ -490,7 +494,7 @@ struct DenseStepperPropagatorOptions
   extend(extended_aborter_list_t aborters) const
   {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions(this->geoContext);
+        eoptions(this->geoContext, this->magFieldContext);
     // Copy the options over
     eoptions.direction       = this->direction;
     eoptions.absPdgCode      = this->absPdgCode;
