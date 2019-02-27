@@ -29,10 +29,10 @@ enum ParDef : unsigned int {
   eTHETA = 3,  ///< theta direction of momentum in global frame
   eQOP = 4,    ///< charge/momentum for charged tracks, for neutral tracks it is
                /// 1/momentum
-  NGlobalPars
+  TrackParsDim
 };
 
-using ParID_t = ParDef;
+using ParID_t    = ParDef;
 using ParValue_t = double;
 
 template <ParID_t>
