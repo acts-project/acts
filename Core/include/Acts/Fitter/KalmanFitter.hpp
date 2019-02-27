@@ -41,14 +41,14 @@ struct KalmanFitterOptions
   ///
   /// @param gctx The goemetry context for this fit
   /// @param rSurface The reference surface for the fit to be expressed at
-  KalmanFitterOptions(std::reference_wrapper<GeometryContext> gctx,
+  KalmanFitterOptions(std::reference_wrapper<const GeometryContext> gctx,
                       const Surface* rSurface = nullptr)
     : geoContext(gctx), referenceSurface(rSurface)
   {
   }
 
   /// Context object for the geometry
-  std::reference_wrapper<GeometryContext> geoContext;
+  std::reference_wrapper<const GeometryContext> geoContext;
 
   /// The reference Surface
   const Surface* referenceSurface = nullptr;

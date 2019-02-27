@@ -17,4 +17,8 @@
 #include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
 using Identifier = unsigned long long;
+namespace Identifier {
+using identifier_type = unsigned long long;
+using identifier_diff = long long;
+}  // namespace Identifier
 #endif

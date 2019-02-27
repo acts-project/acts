@@ -72,7 +72,7 @@ public:
     // layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     // The building context
-    GeometryContext buildingContext = DefaultGeometryContext();
+    GeometryContext buildContext = DefaultGeometryContext();
     // configurations
     std::vector<LayerConfig> negativeLayerConfigs;
     std::vector<LayerConfig> centralLayerConfigs;

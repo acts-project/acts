@@ -114,13 +114,13 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
           "- number of senstive sensors found : " << layerSurfaces.size());
       // create the layer  - either way
       if (type == 0) {
-        ProtoLayer pl(m_cfg.buildingContext, layerSurfaces);
+        ProtoLayer pl(m_cfg.buildContext, layerSurfaces);
         pl.envR = {layerCfg.envelope.first, layerCfg.envelope.second};
         pl.envZ = {layerCfg.envelope.second, layerCfg.envelope.second};
         layers.push_back(m_cfg.layerCreator->cylinderLayer(
             layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
       } else {
-        ProtoLayer pl(m_cfg.buildingContext, layerSurfaces);
+        ProtoLayer pl(m_cfg.buildContext, layerSurfaces);
         pl.envR = {layerCfg.envelope.first, layerCfg.envelope.second};
         pl.envZ = {layerCfg.envelope.second, layerCfg.envelope.second};
         layers.push_back(m_cfg.layerCreator->discLayer(

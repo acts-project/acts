@@ -465,7 +465,8 @@ struct DenseStepperPropagatorOptions
   /// Constructor with GeometryContext
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  DenseStepperPropagatorOptions(std::reference_wrapper<GeometryContext> gctx)
+  DenseStepperPropagatorOptions(
+      std::reference_wrapper<const GeometryContext> gctx)
     : PropagatorOptions<action_list_t, aborter_list_t>(gctx)
   {
   }

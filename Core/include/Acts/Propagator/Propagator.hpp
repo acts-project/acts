@@ -124,7 +124,7 @@ struct PropagatorOptions
       = default;
 
   /// PropagatorOptions with context
-  PropagatorOptions(std::reference_wrapper<GeometryContext> gctx)
+  PropagatorOptions(std::reference_wrapper<const GeometryContext> gctx)
     : geoContext(gctx)
   {
   }
@@ -210,7 +210,7 @@ struct PropagatorOptions
   aborter_list_t abortList;
 
   /// The context object for the geometry
-  std::reference_wrapper<GeometryContext> geoContext;
+  std::reference_wrapper<const GeometryContext> geoContext;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -412,7 +412,7 @@ public:
     NavigatorState navigation;
 
     /// Context object for the geometry
-    std::reference_wrapper<GeometryContext> geoContext;
+    std::reference_wrapper<const GeometryContext> geoContext;
   };
 
 private:

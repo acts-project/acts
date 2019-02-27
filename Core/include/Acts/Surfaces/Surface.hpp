@@ -199,7 +199,6 @@ public:
   /// @note the center is always recalculated in order to not keep a cache
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-
   ///
   /// @return center position by value
   virtual const Vector3D
@@ -233,7 +232,6 @@ public:
   /// It will return a normal vector at the center() position
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-
   //
   /// @return normal vector by value
   virtual const Vector3D
