@@ -131,7 +131,7 @@ class LineSurface : public Surface {
   ///
   /// @param pars is the paranmeters vector
   void initJacobianToGlobal(const GeometryContext& gctx,
-                            ActsMatrixD<7, 5>& jacobian, const Vector3D& gpos,
+                            ActsMatrixD<7, TrackParsDim>& jacobian, const Vector3D& gpos,
                             const Vector3D& dir,
                             const ActsVectorD<5>& pars) const final;
 
@@ -146,10 +146,10 @@ class LineSurface : public Surface {
   /// @param jac is the transport jacobian
   ///
   /// @return a five-dim vector
-  const ActsRowVectorD<5> derivativeFactors(
+  const ActsRowVectorD<TrackParsDim> derivativeFactors(
       const GeometryContext& gctx, const Vector3D& pos, const Vector3D& dir,
-      const RotationMatrix3D& rft, const ActsMatrixD<7, 5>& jac) const final;
-
+      const RotationMatrix3D& rft, const ActsMatrixD<7, TrackParsDim>& jac) const final;
+      
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
   /// radius

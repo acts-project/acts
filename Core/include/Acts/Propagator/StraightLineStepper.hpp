@@ -44,8 +44,8 @@ class StraightLineStepper {
   using cstep = detail::ConstrainedStep;
 
   using Corrector = VoidIntersectionCorrector;
-  using Jacobian = ActsMatrixD<5, 5>;
-  using Covariance = ActsMatrixD<5, 5>;
+  using Jacobian = ActsMatrixD<TrackParsDim, TrackParsDim>;
+  using Covariance = ActsMatrixD<TrackParsDim, TrackParsDim>;
   using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
@@ -79,7 +79,7 @@ class StraightLineStepper {
 
     /// Boolean to indiciate if you need covariance transport
     bool covTransport = false;
-    ActsSymMatrixD<5> cov = ActsSymMatrixD<5>::Zero();
+    ActsSymMatrixD<TrackParsDim> cov = ActsSymMatrixD<TrackParsDim>::Zero();
 
     /// Global particle position
     Vector3D pos = Vector3D(0., 0., 0.);
@@ -197,7 +197,7 @@ class StraightLineStepper {
                                      state.q);
     // Create the bound state
     CurvilinearState curvState{std::move(parameters),
-                               ActsMatrixD<5, 5>::Identity(),
+                               ActsMatrixD<TrackParsDim, TrackParsDim>::Identity(),
                                state.pathAccumulated};
     /// Return the State
     return curvState;

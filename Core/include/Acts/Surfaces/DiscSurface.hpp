@@ -237,7 +237,7 @@ class DiscSurface : public Surface {
   ///
   /// @param pars The paranmeters vector
   void initJacobianToGlobal(const GeometryContext& gctx,
-                            ActsMatrixD<7, 5>& jacobian, const Vector3D& gpos,
+                            ActsMatrixD<7, TrackParsDim>& jacobian, const Vector3D& gpos,
                             const Vector3D& dir,
                             const ActsVectorD<5>& pars) const final;
 
@@ -253,7 +253,7 @@ class DiscSurface : public Surface {
   ///
   /// @return the transposed reference frame (avoids recalculation)
   const RotationMatrix3D initJacobianToLocal(const GeometryContext& gctx,
-                                             ActsMatrixD<5, 7>& jacobian,
+                                             ActsMatrixD<TrackParsDim, 7>& jacobian,
                                              const Vector3D& gpos,
                                              const Vector3D& dir) const final;
 
