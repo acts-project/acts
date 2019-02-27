@@ -36,7 +36,7 @@ Acts::LinearizedTrackFactory<BField,
   // Do the propagation to linPoint
   const auto& result
       = propagator.propagate(*params, *perigeeSurface, m_cfg.propagatorOptions);
-  if (result.status == Status::SUCCESS) {
+  if (result.status == PropagatorStatus::SUCCESS) {
     paramsAtPCA        = result.endParameters->parameters();
     positionAtPCA      = result.endParameters->position();
     parCovarianceAtPCA = *result.endParameters->covariance();
