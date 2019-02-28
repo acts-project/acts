@@ -8,17 +8,24 @@
 
 #pragma once
 
+/// Set the GeometryContext PLUGIN
+#ifdef ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
+#include ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
+#else
+
 #include <any>
 
 namespace Acts {
 
-/// @brief This is the central definition of the Acts
-/// payload object regarding detector geometry status (e.g. alignment)
-///
-/// It is propagated through the code to allow for event/thread
-/// dependent geometry changes
-
-using GeometryContext        = std::any;
-using DefaultGeometryContext = GeometryContext;
+    /// @brief This is the central definition of the Acts
+    /// payload object regarding detector geometry status (e.g. alignment)
+    ///
+    /// It is propagated through the code to allow for event/thread
+    /// dependent geometry changes
+    
+    using GeometryContext        = std::any;
+    using DefaultGeometryContext = GeometryContext;
 
 }  // namespace Acts
+
+#endif
