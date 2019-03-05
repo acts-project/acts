@@ -6,7 +6,6 @@ elif [ "$(cat /etc/centos-release | grep 'CentOS Linux release 7')" ]; then
   export ACTS_COMPILER=gcc8-opt
 else
   echo "Unknown OS" 1>&2
-  exit 1
 fi
 
 echo "$ACTS_OS $ACTS_COMPILER"
