@@ -51,13 +51,13 @@ Acts::LinearizedTrackFactory<BField,
 
   // phiV and functions
   double phiV    = paramsAtPCA(ParID_t::ePHI);
-  double sinPhiV = sin(phiV);
-  double cosPhiV = cos(phiV);
+  double sinPhiV = std::sin(phiV);
+  double cosPhiV = std::cos(phiV);
 
   // theta and functions
   double th    = paramsAtPCA(ParID_t::eTHETA);
-  double sinTh = sin(th);
-  double tanTh = tan(th);
+  double sinTh = std::sin(th);
+  double tanTh = std::tan(th);
 
   // q over p
   double qOvP = paramsAtPCA(ParID_t::eQOP);
@@ -81,7 +81,7 @@ Acts::LinearizedTrackFactory<BField,
   double X  = positionAtPCA(0) - linPoint.x() + rho * sinPhiV;
   double Y  = positionAtPCA(1) - linPoint.y() - rho * cosPhiV;
   double S2 = (X * X + Y * Y);
-  double S  = sqrt(S2);
+  double S  = std::sqrt(S2);
 
   /// F(V, p_i) at PCA in Billoir paper
   /// (see FullBilloirVertexFitter.hpp for paper reference,
