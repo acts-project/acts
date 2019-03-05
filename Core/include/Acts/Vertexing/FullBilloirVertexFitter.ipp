@@ -187,19 +187,13 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
         - billoirVertex.BCBmat;  // VwgtMat = Amat-sum{BiMat*Ci^-1*BiMat^T}
 
     if (isConstraintFit) {
-
-      Vector3D isConstraintFitPosInBilloirFrame;
-      isConstraintFitPosInBilloirFrame.setZero();
+      Vector3D posInBilloirFrame;
       // this will be 0 for first iteration but != 0 from second on
-      isConstraintFitPosInBilloirFrame[0]
-          = constraint.position()[0] - linPoint[0];
-      isConstraintFitPosInBilloirFrame[1]
-          = constraint.position()[1] - linPoint[1];
-      isConstraintFitPosInBilloirFrame[2]
-          = constraint.position()[2] - linPoint[2];
+      posInBilloirFrame[0] = constraint.position()[0] - linPoint[0];
+      posInBilloirFrame[1] = constraint.position()[1] - linPoint[1];
+      posInBilloirFrame[2] = constraint.position()[2] - linPoint[2];
 
-      Vdel += constraint.covariance().inverse()
-          * isConstraintFitPosInBilloirFrame;
+      Vdel += constraint.covariance().inverse() * posInBilloirFrame;
       VwgtMat += constraint.covariance().inverse();
     }
 
@@ -249,17 +243,14 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
       // some intermediate calculations to get 5x5 matrix
       // cov(V,V)
       ActsSymMatrixD<3> VVmat;
-      VVmat.setZero();
       VVmat = covDeltaVmat;
 
       // cov(V,P)
       ActsSymMatrixD<3> VPmat;
-      VPmat.setZero();
       VPmat = -covDeltaVmat * bTrack.GiMat * bTrack.CiInv;
 
       // cov(P,P)
       ActsSymMatrixD<3> PPmat;
-      PPmat.setZero();
       PPmat = bTrack.CiInv
           + bTrack.BCiMat.transpose() * covDeltaVmat * bTrack.BCiMat;
 
@@ -287,7 +278,6 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
 
     if (isConstraintFit) {
       Vector3D deltaTrk;
-      deltaTrk.setZero();
       // last term will also be 0 again but only in the first iteration
       // = calc. vtx in billoir frame - (    isConstraintFit pos. in billoir
       // frame )
