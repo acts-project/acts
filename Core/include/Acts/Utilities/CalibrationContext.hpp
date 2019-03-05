@@ -17,14 +17,14 @@
 
 namespace Acts {
 
-    /// @brief This is the central definition of the Acts
-    /// payload object regarding detector calbiration
-    ///
-    /// It is propagated through the code to allow for event/thread
-    /// dependent calibration
-    
-    using CalibrationContext        = std::any;
-    using DefaultCalibrationContext = CalibrationContext;
+/// @brief This is the central definition of the Acts
+/// payload object regarding detector calbiration
+///
+/// It is propagated through the code to allow for event/thread
+/// dependent calibration
+
+using CalibrationContext        = std::any;
+using DefaultCalibrationContext = CalibrationContext;
 
 }  // namespace Acts
 
