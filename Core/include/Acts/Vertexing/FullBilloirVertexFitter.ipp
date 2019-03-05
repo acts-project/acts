@@ -32,11 +32,11 @@ struct BilloirTrack
   double                 chi2;
   Acts::ActsMatrixD<5, 3> DiMat;   // position jacobian
   Acts::ActsMatrixD<5, 3> EiMat;   // momentum jacobian
-  Acts::ActsSymMatrixD<3> GiMat;   // Gi = EtWmat * Emat (see below)
-  Acts::ActsSymMatrixD<3> BiMat;   // Bi = Di.T * Wi * Ei
-  Acts::ActsSymMatrixD<3> CiInv;   // Ci = (Ei.T * Wi * Ei)^-1
-  Acts::Vector3D          UiVec;   // Ui = Ei.T * Wi * dqi
-  Acts::ActsSymMatrixD<3> BCiMat;  // BCi = Bi * Ci^-1
+  Acts::ActsSymMatrixD<3> GiMat;   //  = EtWmat * Emat (see below)
+  Acts::ActsSymMatrixD<3> BiMat;   //  = DiMat^T * Wi * EiMat
+  Acts::ActsSymMatrixD<3> CiInv;   //  = (EiMat^T * Wi * EiMat)^-1
+  Acts::Vector3D          UiVec;   //  = EiMat^T * Wi * dqi
+  Acts::ActsSymMatrixD<3> BCiMat;  //  = BiMat * Ci^-1
   Acts::ActsVectorD<5>    deltaQ;
 };
 
@@ -48,11 +48,15 @@ struct BilloirVertex
   BilloirVertex() = default;
 
   Acts::ActsSymMatrixD<3> Amat{
-      Acts::ActsSymMatrixD<3>::Zero()};         // T  = sum{Di.T * Wi * Di}
-  Acts::Vector3D Tvec{Acts::Vector3D::Zero()};  // A  = sum{Di.T * Wi * dqi}
-  Acts::ActsSymMatrixD<3> BCBmat{
-      Acts::ActsSymMatrixD<3>::Zero()};  // BCB = sum{Bi * Ci^-1 * Bi.T}
-  Acts::Vector3D BCUvec{Acts::Vector3D::Zero()};  // BCU = sum{Bi * Ci^-1 * Ui}
+      Acts::ActsSymMatrixD<3>::Zero()};  // Amat  = sum{DiMat^T * Wi * dqi}
+  Acts::Vector3D Tvec{
+      Acts::Vector3D::Zero()};  // Tvec  = sum{DiMat^T * Wi * DiMat}
+  Acts::ActsSymMatrixD<3> BCBmat{Acts::ActsSymMatrixD<3>::Zero()};  // BCBmat =
+                                                                    // sum{BiMat
+                                                                    // * Ci^-1 *
+                                                                    // BiMat^T}
+  Acts::Vector3D BCUvec{
+      Acts::Vector3D::Zero()};  // BCUvec = sum{BiMat * Ci^-1 * UiVec}
 };
 
 }  // end anonymous namespace
@@ -155,26 +159,27 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
       currentBilloirTrack.DiMat = Dmat;
       currentBilloirTrack.EiMat = Emat;
       currentBilloirTrack.GiMat = EtWmat * Emat;
-      currentBilloirTrack.BiMat = DtWmat * Emat;  // Di.T * Wi * Ei
+      currentBilloirTrack.BiMat = DtWmat * Emat;  // DiMat^T * Wi * EiMat
       currentBilloirTrack.UiVec
-          = EtWmat * currentBilloirTrack.deltaQ;  // Ei.T * Wi * dqi
+          = EtWmat * currentBilloirTrack.deltaQ;  // EiMat^T * Wi * dqi
       currentBilloirTrack.CiInv
-          = (EtWmat * Emat).inverse();  // (Ei.T * Wi * Ei)^-1
+          = (EtWmat * Emat).inverse();  // (EiMat^T * Wi * EiMat)^-1
 
       // sum up over all tracks
       billoirVertex.Tvec
-          += DtWmat * currentBilloirTrack.deltaQ;  // sum{Di.T * Wi * dqi}
-      billoirVertex.Amat += DtWmat * Dmat;         // sum{Di.T * Wi * Di}
+          += DtWmat * currentBilloirTrack.deltaQ;  // sum{DiMat^T * Wi * dqi}
+      billoirVertex.Amat += DtWmat * Dmat;         // sum{DiMat^T * Wi * DiMat}
 
       // remember those results for all tracks
       currentBilloirTrack.BCiMat = currentBilloirTrack.BiMat
-          * currentBilloirTrack.CiInv;  // BCi = Bi * Ci^-1
+          * currentBilloirTrack.CiInv;  // BCi = BiMat * Ci^-1
 
       // and some summed results
       billoirVertex.BCUvec += currentBilloirTrack.BCiMat
-          * currentBilloirTrack.UiVec;  // sum{Bi * Ci^-1 * Ui}
+          * currentBilloirTrack.UiVec;  // sum{BiMat * Ci^-1 * UiVec}
       billoirVertex.BCBmat += currentBilloirTrack.BCiMat
-          * currentBilloirTrack.BiMat.transpose();  // sum{Bi * Ci^-1 * Bi.T}
+          * currentBilloirTrack.BiMat
+                .transpose();  // sum{BiMat * Ci^-1 * BiMat^T}
 
       billoirTracks.push_back(currentBilloirTrack);
       ++iTrack;
@@ -184,9 +189,9 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
     // calculate delta (billoirFrameOrigin-position), might be changed by the
     // beam-const
     Vector3D Vdel = billoirVertex.Tvec
-        - billoirVertex.BCUvec;  // Vdel = T-sum{Bi*Ci^-1*Ui}
+        - billoirVertex.BCUvec;  // Vdel = T-sum{BiMat*Ci^-1*UiVec}
     ActsSymMatrixD<3> VwgtMat = billoirVertex.Amat
-        - billoirVertex.BCBmat;  // VwgtMat = A-sum{Bi*Ci^-1*Bi.T}
+        - billoirVertex.BCBmat;  // VwgtMat = A-sum{BiMat*Ci^-1*BiMat^T}
 
     if (isConstraintFit) {
 
@@ -228,31 +233,11 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
       trackMomenta[iTrack][2] += deltaP[2];
 
       // correct for 2PI / PI periodicity
-      double tmpPhi = std::fmod(trackMomenta[iTrack][0], 2 * M_PI);  // temp phi
-      if (tmpPhi > M_PI) {
-        tmpPhi -= 2 * M_PI;
-      }
-      if (tmpPhi < -M_PI && tmpPhi > -2 * M_PI) {
-        tmpPhi += 2 * M_PI;
-      }
+      auto correctedPhiTheta = correctPhiThetaPeriodicity(
+          trackMomenta[iTrack][0], trackMomenta[iTrack][1]);
 
-      double tmpTht
-          = std::fmod(trackMomenta[iTrack][1], 2 * M_PI);  // temp theta
-      if (tmpTht < -M_PI) {
-        tmpTht = std::abs(tmpTht + 2 * M_PI);
-      } else if (tmpTht < 0) {
-        tmpTht *= -1;
-        tmpPhi += M_PI;
-        tmpPhi = tmpPhi > M_PI ? tmpPhi - 2 * M_PI : tmpPhi;
-      }
-      if (tmpTht > M_PI) {
-        tmpTht = 2 * M_PI - tmpTht;
-        tmpPhi += M_PI;
-        tmpPhi = tmpPhi > M_PI ? (tmpPhi - 2 * M_PI) : tmpPhi;
-      }
-
-      trackMomenta[iTrack][0] = tmpPhi;
-      trackMomenta[iTrack][1] = tmpTht;
+      trackMomenta[iTrack][0] = correctedPhiTheta.first;
+      trackMomenta[iTrack][1] = correctedPhiTheta.second;
 
       // calculate 5x5 covdelta_P matrix
       // d(d0,z0,phi,theta,qOverP)/d(x,y,z,phi,theta,qOverP)-transformation
@@ -356,4 +341,34 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
     }
   }  // end loop iterations
   return std::move(fittedVertex);
+}
+
+template <typename BField, typename InputTrack, typename Propagator_t>
+std::pair<double, double>
+Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::
+    correctPhiThetaPeriodicity(double phiIn, double thetaIn) const
+{
+  double tmpPhi = std::fmod(phiIn, 2 * M_PI);  // temp phi
+  if (tmpPhi > M_PI) {
+    tmpPhi -= 2 * M_PI;
+  }
+  if (tmpPhi < -M_PI && tmpPhi > -2 * M_PI) {
+    tmpPhi += 2 * M_PI;
+  }
+
+  double tmpTht = std::fmod(thetaIn, 2 * M_PI);  // temp theta
+  if (tmpTht < -M_PI) {
+    tmpTht = std::abs(tmpTht + 2 * M_PI);
+  } else if (tmpTht < 0) {
+    tmpTht *= -1;
+    tmpPhi += M_PI;
+    tmpPhi = tmpPhi > M_PI ? tmpPhi - 2 * M_PI : tmpPhi;
+  }
+  if (tmpTht > M_PI) {
+    tmpTht = 2 * M_PI - tmpTht;
+    tmpPhi += M_PI;
+    tmpPhi = tmpPhi > M_PI ? (tmpPhi - 2 * M_PI) : tmpPhi;
+  }
+
+  return std::pair<double, double>(tmpPhi, tmpTht);
 }
