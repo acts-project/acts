@@ -166,30 +166,27 @@ build_slc6_lcg94_no_legacy:
 
 # SLC, LCG94, LLVM60
 
-build_slc6_lcg94_llvm70:
+build_ubuntu1804_llvm70:
   <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_llvm70.sh
+    - source CI/env_info.sh
+  variables:
+    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DCMAKE_CXX_FLAGS="-stdlib=libc++"
 
-unit_tests_slc6_lcg94_llvm70:
+unit_tests_ubuntu1804_llvm70:
   <<: *template_unit_tests
   dependencies:
-    - build_slc6_lcg94_llvm70
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_llvm70.sh
+    - build_ubuntu1804_llvm70
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
+  before_script: []
 
-integration_tests_slc6_lcg94_llvm70:
+integration_tests_ubuntu1804_llvm70:
   <<: *template_integration_tests
   dependencies:
-    - build_slc6_lcg94_llvm70
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_llvm70.sh
+    - build_ubuntu1804_llvm70
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
+  before_script: []
 
 # CC7, LCG94
 
