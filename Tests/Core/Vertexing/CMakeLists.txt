@@ -1,0 +1,11 @@
+add_executable (FullBilloirVertexFitterTests FullBilloirVertexFitterTests.cpp)
+target_include_directories (FullBilloirVertexFitterTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (FullBilloirVertexFitterTests PRIVATE ActsCore ActsTestsCommonHelpers)
+add_test (NAME FullBilloirVertexFitterUnitTests COMMAND FullBilloirVertexFitterTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST FullBilloirVertexFitterUnitTests TARGETS FullBilloirVertexFitterTests)
+
+add_executable (LinearizedTrackFactoryTests LinearizedTrackFactoryTests.cpp)
+target_include_directories (LinearizedTrackFactoryTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (LinearizedTrackFactoryTests PRIVATE ActsCore ActsTestsCommonHelpers)
+add_test (NAME LinearizedTrackFactoryUnitTests COMMAND LinearizedTrackFactoryTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST LinearizedTrackFactoryUnitTests TARGETS LinearizedTrackFactoryTests)
