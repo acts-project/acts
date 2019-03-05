@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Vertexing/IVertexFitter.hpp"
+#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 namespace Acts {
@@ -41,8 +42,15 @@ public:
     /// Maximum number of interations in fitter
     int maxIterations = 5;
 
+    // Set up factory for linearizing tracks
+    typename LinearizedTrackFactory<BField, Propagator_t>::Config lt_config;
+    LinearizedTrackFactory<BField, Propagator_t>                  linFactory;
+
     /// Constructor with default number of iterations and starting point
-    Config(BField bIn) : bField(std::move(bIn)) {}
+    Config(BField bIn)
+      : bField(std::move(bIn)), lt_config(bField), linFactory(lt_config)
+    {
+    }
   };
 
   /// @brief Constructor used if InputTrack type == BoundParameters

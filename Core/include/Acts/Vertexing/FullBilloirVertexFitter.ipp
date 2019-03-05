@@ -9,7 +9,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
 
 namespace {
@@ -90,11 +89,6 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
     ndf += 3;
   }
 
-  // Factory for linearizing tracks
-  typename LinearizedTrackFactory<BField, Propagator_t>::Config lt_config(
-      m_cfg.bField);
-  LinearizedTrackFactory<BField, Propagator_t> linFactory(lt_config);
-
   std::vector<BilloirTrack<InputTrack>> billoirTracks;
 
   std::vector<Vector3D> trackMomenta;
@@ -120,7 +114,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
       LinearizedTrack linTrack
-          = linFactory.linearizeTrack(&trackParams, linPoint, propagator);
+          = m_cfg.linFactory.linearizeTrack(&trackParams, linPoint, propagator);
       double d0     = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
       double z0     = linTrack.parametersAtPCA[ParID_t::eLOC_Z0];
       double phi    = linTrack.parametersAtPCA[ParID_t::ePHI];
