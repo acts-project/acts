@@ -149,11 +149,10 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
       Emat = linTrack.momentumJacobian;
       // cache some matrix multiplications
       ActsMatrixD<3, 5> DtWmat;
-      DtWmat.setZero();
       ActsMatrixD<3, 5> EtWmat;
-      EtWmat.setZero();
-      DtWmat = Dmat.transpose() * (linTrack.covarianceAtPCA.inverse());
-      EtWmat = Emat.transpose() * (linTrack.covarianceAtPCA.inverse());
+      ActsSymMatrixD<5> Wi = linTrack.covarianceAtPCA.inverse();
+      DtWmat               = Dmat.transpose() * Wi;
+      EtWmat               = Emat.transpose() * Wi;
 
       // compute billoir tracks
       currentBilloirTrack.DiMat = Dmat;
@@ -189,9 +188,9 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
     // calculate delta (billoirFrameOrigin-position), might be changed by the
     // beam-const
     Vector3D Vdel = billoirVertex.Tvec
-        - billoirVertex.BCUvec;  // Vdel = T-sum{BiMat*Ci^-1*UiVec}
+        - billoirVertex.BCUvec;  // Vdel = Tvec-sum{BiMat*Ci^-1*UiVec}
     ActsSymMatrixD<3> VwgtMat = billoirVertex.Amat
-        - billoirVertex.BCBmat;  // VwgtMat = A-sum{BiMat*Ci^-1*BiMat^T}
+        - billoirVertex.BCBmat;  // VwgtMat = Amat-sum{BiMat*Ci^-1*BiMat^T}
 
     if (isConstraintFit) {
 
