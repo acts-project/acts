@@ -336,7 +336,7 @@ class TrackingVolume : public Volume {
   /// @param bsfNeighbor is the boudnary surface of the neighbor
   void glueTrackingVolume(const GeometryContext& gctx,
                           BoundarySurfaceFace bsfMine,
-                          const TrackingVolume* neighbor,
+                          TrackingVolume* neighbor,
                           BoundarySurfaceFace bsfNeighbor);
 
   /// Glue another tracking volume to this one

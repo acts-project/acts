@@ -202,7 +202,7 @@ Acts::TrackingVolume::createBoundarySurfaces()
 
 void Acts::TrackingVolume::glueTrackingVolume(
     const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
-    const TrackingVolume* neighbor,
+    TrackingVolume* neighbor,
     BoundarySurfaceFace bsfNeighbor) {
   // Find the connection of the two tracking volumes: binR returns the center
   // except for cylindrical volumes
