@@ -31,21 +31,10 @@ namespace bdata = boost::unit_test::data;
 namespace Acts {
 namespace Test {
 
-  template <typename InputTrack_t, typename Propagator_t>
-  Vertex<InputTrack_t>
-  myFitWrapper(IVertexFitter<InputTrack_t, Propagator_t>* fitter,
-               std::vector<InputTrack_t>& tracks,
-               const Propagator_t&        propagator,
-               Vertex<InputTrack_t>*      constraint = nullptr)
-  {
-    if (constraint != nullptr) {
-      return fitter->fit(tracks, propagator, *constraint);
-    } else {
-      return fitter->fit(tracks, propagator);
-    }
-  }
+  // Create a test context
+  GeometryContext      tgContext = DefaultGeometryContext();
+  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
 
-  ///
   /// @brief Unit test for FullBilloirVertexFitter
   ///
   BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test)
@@ -82,15 +71,18 @@ namespace Test {
 
     std::vector<BoundParameters> emptyVector;
 
+    VertexFitterOptions<BoundParameters> vfOptions(
+        tgContext, mfContext, myConstraint);
+
     Vertex<BoundParameters> fittedVertex
-        = billoirFitter.fit(emptyVector, propagator, myConstraint);
+        = billoirFitter.fit(emptyVector, propagator, vfOptions);
     Vector3D origin(0., 0., 0.);
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
 
     ActsSymMatrixD<3> zeroMat = ActsSymMatrixD<3>::Zero();
     BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
 
-    fittedVertex = billoirFitter.fit(emptyVector, propagator);
+    fittedVertex = billoirFitter.fit(emptyVector, propagator, vfOptions);
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
     BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
   }
@@ -171,6 +163,11 @@ namespace Test {
       myConstraint.setCovariance(std::move(myCovMat));
       myConstraint.setPosition(Vector3D(0, 0, 0));
 
+      VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext);
+
+      VertexFitterOptions<BoundParameters> vfOptionsConstr(
+          tgContext, mfContext, myConstraint);
+
       // Create position of vertex and perigee surface
       double x = vXYDist(gen);
       double y = vXYDist(gen);
@@ -212,28 +209,23 @@ namespace Test {
         (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
             0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0.,
             0., 0., 0., 0., resQp * resQp;
-        tracks.push_back(
-            BoundParameters(std::move(covMat), paramVec, perigeeSurface));
+        tracks.push_back(BoundParameters(
+            tgContext, std::move(covMat), paramVec, perigeeSurface));
       }
 
       // Do the actual fit with 4 tracks without constraint
       Vertex<BoundParameters> fittedVertex
-          = billoirFitter.fit(tracks, propagator);
-
-      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
-
+          = billoirFitter.fit(tracks, propagator, vfOptions);
+      if (fittedVertex.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(
+            fittedVertex.position(), vertexPosition, 1 * units::_mm);
+      }
       // Do the fit with a constraint
       Vertex<BoundParameters> fittedVertexConstraint
-          = billoirFitter.fit(tracks, propagator, myConstraint);
-
-      CHECK_CLOSE_ABS(
-          fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
-
-      // Test the IVertexFitter interface
-      Vertex<BoundParameters> testVertex
-          = myFitWrapper(&billoirFitter, tracks, propagator);
-      if (testVertex.tracks().size() > 0) {
-        CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
+          = billoirFitter.fit(tracks, propagator, vfOptionsConstr);
+      if (fittedVertexConstraint.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(
+            fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
       }
 
       if (debugMode) {
@@ -317,6 +309,11 @@ namespace Test {
       myConstraint.setCovariance(std::move(myCovMat));
       myConstraint.setPosition(Vector3D(0, 0, 0));
 
+      VertexFitterOptions<InputTrack> vfOptions(tgContext, mfContext);
+
+      VertexFitterOptions<InputTrack> vfOptionsConstr(
+          tgContext, mfContext, myConstraint);
+
       // Create position of vertex and perigee surface
       double x = vXYDist(gen);
       double y = vXYDist(gen);
@@ -358,27 +355,24 @@ namespace Test {
         (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
             0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0.,
             0., 0., 0., 0., resQp * resQp;
-        tracks.push_back(InputTrack(
-            BoundParameters(std::move(covMat), paramVec, perigeeSurface)));
+        tracks.push_back(InputTrack(BoundParameters(
+            tgContext, std::move(covMat), paramVec, perigeeSurface)));
       }
 
       // Do the actual fit with 4 tracks without constraint
-      Vertex<InputTrack> fittedVertex = billoirFitter.fit(tracks, propagator);
-
-      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
-
+      Vertex<InputTrack> fittedVertex
+          = billoirFitter.fit(tracks, propagator, vfOptions);
+      if (fittedVertex.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(
+            fittedVertex.position(), vertexPosition, 1 * units::_mm);
+      }
       // Do the fit with a constraint
       Vertex<InputTrack> fittedVertexConstraint
-          = billoirFitter.fit(tracks, propagator, myConstraint);
-
-      CHECK_CLOSE_ABS(
-          fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
-
-      // Test the IVertexFitter interface
-      Vertex<InputTrack> testVertex
-          = myFitWrapper(&billoirFitter, tracks, propagator);
-
-      CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
+          = billoirFitter.fit(tracks, propagator, vfOptionsConstr);
+      if (fittedVertexConstraint.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(
+            fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+      }
 
       if (debugMode) {
         std::cout << "Fitting nTracks: " << nTracks << std::endl;
