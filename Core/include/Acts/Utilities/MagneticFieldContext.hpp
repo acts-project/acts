@@ -17,14 +17,14 @@
 
 namespace Acts {
 
-/// @brief This is the central definition of the Acts
-/// payload object regarding magnetic field status
-///
-/// It is propagated through the code to allow for event/thread
-/// dependent magnetic field changes
-
-using MagneticFieldContext        = std::any;
-using DefaultMagneticFieldContext = MagneticFieldContext;
+    /// @brief This is the central definition of the Acts
+    /// payload object regarding magnetic field status
+    ///
+    /// It is propagated through the code to allow for event/thread
+    /// dependent magnetic field changes
+    
+    using MagneticFieldContext        = std::any;
+    using DefaultMagneticFieldContext = MagneticFieldContext;
 
 }  // namespace Acts
 

@@ -17,14 +17,14 @@
 
 namespace Acts {
 
-/// @brief This is the central definition of the Acts
-/// payload object regarding detector geometry status (e.g. alignment)
-///
-/// It is propagated through the code to allow for event/thread
-/// dependent geometry changes
-
-using GeometryContext        = std::any;
-using DefaultGeometryContext = GeometryContext;
+    /// @brief This is the central definition of the Acts
+    /// payload object regarding detector geometry status (e.g. alignment)
+    ///
+    /// It is propagated through the code to allow for event/thread
+    /// dependent geometry changes
+    
+    using GeometryContext        = std::any;
+    using DefaultGeometryContext = GeometryContext;
 
 }  // namespace Acts
 
