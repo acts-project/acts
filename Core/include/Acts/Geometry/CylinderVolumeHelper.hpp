@@ -111,7 +111,7 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr createTrackingVolume(
-      const GeometryContext& gctx, const LayerVector& layers, MutableTrackingVolumeVector& mtvVector,
+      const GeometryContext& gctx, const LayerVector& layers, MutableTrackingVolumeVector mtvVector,
       std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
       double rMax, double zMin, double zMax,
       const std::string& volumeName = "UndefinedVolume",

@@ -153,7 +153,7 @@ std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
     const GeometryContext&                 gctx,
     const LayerVector&                     layers,
-    MutableTrackingVolumeVector&           mtvVector,
+    MutableTrackingVolumeVector            mtvVector,
     std::shared_ptr<const IVolumeMaterial> volumeMaterial,
     double                                 rMin,
     double                                 rMax,

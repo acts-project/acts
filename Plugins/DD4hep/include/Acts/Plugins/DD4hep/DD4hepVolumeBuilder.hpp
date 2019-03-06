@@ -47,8 +47,8 @@ public:
   };
 
   /// Constructor
-  /// @param config is the configuration struct
-  /// @param logger is the logging instance
+  /// @param [in] config is the configuration struct
+  /// @param [in] logger is the logging instance
   DD4hepVolumeBuilder(const Acts::DD4hepVolumeBuilder::Config& config,
                       std::unique_ptr<const Logger>            logger);
 
@@ -67,15 +67,17 @@ public:
   identification() const final;
 
   /// Set the configuration object
-  /// @param Config is the configuration struct
+  /// @param [in] Config is the configuration struct
   void
   setConfiguration(const Config& config);
 
   /// Get the configuration object
+  /// @return The used configuration struct
   Config
   getConfiguration() const;
 
   /// Set logging instance
+  /// @param [in] logger Logger in use
   void
   setLogger(std::unique_ptr<const Logger> logger);
 
@@ -87,6 +89,7 @@ private:
   std::unique_ptr<const Logger> m_logger;
 
   /// Private access to the logger
+  /// @return Used logger
   const Logger&
   logger() const
   {
