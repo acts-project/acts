@@ -10,10 +10,18 @@
 #define BOOST_TEST_MODULE VolumeMaterialMapper Tests
 #include <boost/test/included/unit_test.hpp>
 #include <limits>
+#include <random>
 #include <vector>
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Plugins/MaterialMapping/VolumeMaterialMapper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tools/CuboidVolumeBuilder.hpp"
+#include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -32,7 +40,7 @@ namespace Test {
 
   /// @brief This function assigns all material points to the fith bin.
   ///
-  /// @return 5
+  /// @return 25
   VolumeMaterialMapper::Grid3D::index_t
   mapToZero3D(const Vector3D& /*unused*/,
               const VolumeMaterialMapper::Grid3D& /*unused*/)
@@ -96,6 +104,37 @@ namespace Test {
     return {{index, 0, 0}};
   }
 
+  VolumeMaterialMapper::Grid3D::index_t
+  mapMaterial3D(const Vector3D&                     matPos,
+                const VolumeMaterialMapper::Grid3D& grid)
+  {
+    double dist   = std::numeric_limits<double>::max();
+    size_t indexX = 0, indexY = 0, indexZ = 0;
+    // Loop through all elements
+    for (size_t i = 0; i < grid.getNBins()[0]; i++) {
+      for (size_t j = 0; j < grid.getNBins()[1]; j++) {
+        for (size_t k = 0; k < grid.getNBins()[2]; k++) {
+          // Search the closest distance - elements are ordered
+          double dX = grid.getUpperRightBinEdge({{i, j, k}})[0] - matPos.x();
+          double dY = grid.getUpperRightBinEdge({{i, j, k}})[1] - matPos.y();
+          double dZ = grid.getUpperRightBinEdge({{i, j, k}})[2] - matPos.z();
+
+          if (std::sqrt(dX * dX + dY * dY + dZ * dZ) < dist) {
+            // Store distance and index
+            dist   = std::sqrt(dX * dX + dY * dY + dZ * dZ);
+            indexX = i;
+            indexY = j;
+            indexZ = k;
+          } else {  // Break if distance becomes larger
+            break;
+          }
+        }
+      }
+    }
+    return {{indexX, indexY, indexZ}};
+  }
+
+  /// @brief Various test cases of the VolumeMaterialMapper functions
   BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests)
   {
     // Define some axes and grid points
@@ -165,7 +204,9 @@ namespace Test {
 
     // Check that it was only assigned to a single bin
     for (size_t i = 1; i < grid2d.size(); i++) {
-      BOOST_CHECK_EQUAL(grid2d.at(i).average(), Material());
+      BOOST_CHECK_EQUAL(
+          grid2d.at(i).average().decomposeIntoClassificationNumbers(),
+          Material().decomposeIntoClassificationNumbers());
       BOOST_CHECK_EQUAL(mgrid2d.at(i),
                         Material().decomposeIntoClassificationNumbers());
     }
@@ -208,7 +249,9 @@ namespace Test {
       if (i == 5) {
         continue;
       }
-      BOOST_CHECK_EQUAL(grid2d.at(i).average(), Material());
+      BOOST_CHECK_EQUAL(
+          grid2d.at(i).average().decomposeIntoClassificationNumbers(),
+          Material().decomposeIntoClassificationNumbers());
     }
 
     //
@@ -234,7 +277,9 @@ namespace Test {
 
     // Check that it was only assigned to a single bin
     for (size_t i = 1; i < grid3d.size(); i++) {
-      BOOST_CHECK_EQUAL(grid3d.at(i).average(), Material());
+      BOOST_CHECK_EQUAL(
+          grid3d.at(i).average().decomposeIntoClassificationNumbers(),
+          Material().decomposeIntoClassificationNumbers());
       BOOST_CHECK_EQUAL(mgrid3d.at(i),
                         Material().decomposeIntoClassificationNumbers());
     }
@@ -276,7 +321,9 @@ namespace Test {
       if (i == 25) {
         continue;
       }
-      BOOST_CHECK_EQUAL(grid3d.at(i).average(), Material());
+      BOOST_CHECK_EQUAL(
+          grid3d.at(i).average().decomposeIntoClassificationNumbers(),
+          Material().decomposeIntoClassificationNumbers());
     }
 
     //
@@ -318,6 +365,88 @@ namespace Test {
       // Both should contain the same data
       BOOST_CHECK_EQUAL(mgrid3dFullChain.at(index), mgrid3dStepChain.at(index));
     }
+  }
+
+  /// @brief Test case for comparison between the mapped material and the
+  /// associated material by propagation
+  BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests)
+  {
+    // Build a vacuum volume
+    CuboidVolumeBuilder::VolumeConfig vCfg1;
+    vCfg1.position = Vector3D(0.5 * units::_m, 0., 0.);
+    vCfg1.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
+    vCfg1.name     = "Vacuum volume";
+
+    // Build a material volume
+    CuboidVolumeBuilder::VolumeConfig vCfg2;
+    vCfg2.position = Vector3D(1.5 * units::_m, 0., 0.);
+    vCfg2.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
+    vCfg2.name     = "First material volume";
+    vCfg2.material = std::make_shared<const Material>(1., 2., 3., 4., 5.);
+
+    // Build another material volume with different material
+    CuboidVolumeBuilder::VolumeConfig vCfg3;
+    vCfg3.position = Vector3D(2.5 * units::_m, 0., 0.);
+    vCfg3.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
+    vCfg3.name     = "Second material volume";
+    vCfg3.material = std::make_shared<const Material>(6., 7., 8., 9., 10.);
+
+    // Configure world
+    CuboidVolumeBuilder::Config cfg;
+    cfg.position  = Vector3D(1.5 * units::_m, 0., 0.);
+    cfg.length    = Vector3D(3. * units::_m, 1. * units::_m, 1. * units::_m);
+    cfg.volumeCfg = {vCfg1, vCfg2, vCfg3};
+
+    // Build a detector
+    CuboidVolumeBuilder             cvb(cfg);
+    TrackingGeometryBuilder::Config tgbCfg;
+    tgbCfg.trackingVolumeBuilders.push_back(
+        std::make_shared<const CuboidVolumeBuilder>(cvb));
+    TrackingGeometryBuilder                 tgb(tgbCfg);
+    std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
+
+    // Set up the grid axes
+    unsigned int        nGridPoints = 9;
+    std::vector<double> xAxis(nGridPoints + 1,
+                              3. * units::_m / (double)nGridPoints);
+    std::vector<double> yAxis(nGridPoints + 1,
+                              1. * units::_m / (double)nGridPoints);
+    std::vector<double> zAxis(nGridPoints + 1,
+                              1. * units::_m / (double)nGridPoints);
+    for (unsigned int i = 0; i <= nGridPoints; i++) {
+      xAxis[i] *= i;
+      yAxis[i] *= i;
+      zAxis[i] *= i;
+    }
+
+    std::random_device               rd;
+    std::mt19937                     gen(rd());
+    std::uniform_real_distribution<> disX(0., 3. * units::_m);
+    std::uniform_real_distribution<> disYZ(-0.5 * units::_m, 0.5 * units::_m);
+
+    VolumeMaterialMapper::RecordedMaterial matRecord;
+    for (unsigned int i = 0; i < 1e4; i++) {
+      Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
+      Material tv = (detector->lowestTrackingVolume(pos)->material() != nullptr)
+          ? *(detector->lowestTrackingVolume(pos)->material())
+          : Material();
+      matRecord.push_back(std::make_pair(tv, pos));
+    }
+
+    VolumeMaterialMapper::MaterialGrid3D grid
+        = VolumeMaterialMapper::createMaterialGrid(
+            xAxis, yAxis, zAxis, matRecord, mapMaterial3D);
+
+    StraightLineStepper sls;
+    Propagator          prop(sls);
+    // TODO: navigator
+    // TODO: material collection
+    Vector3D pos(0., 0., 0.);
+    Vector3D mom(1. * units::_GeV, 0., 0.);
+    SingleCurvilinearTrackParameters<NeutralPolicy> sctp(nullptr, pos, mom);
+    PropagatorOptions                               po;
+
+    prop.propagate(sctp, po);
   }
 }  // namespace Test
 }  // namespace Acts
