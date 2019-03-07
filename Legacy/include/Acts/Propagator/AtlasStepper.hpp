@@ -57,7 +57,7 @@ public:
     ///
     /// @tparams Type of TrackParameters
     ///
-    /// @param[in] gctx The geometry contex tof this call
+    /// @param[in] gctx The geometry context of this call
     /// @param[in] mctx The magnetic field contex tof this call
     /// @param[in] pars Input parameters
     /// @param[in] ndir The navigation direction w.r.t. parameters
