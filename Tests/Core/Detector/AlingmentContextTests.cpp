@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 Acts project team
+// Copyright (C) 2017-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -161,7 +161,7 @@ namespace Test {
     std::shared_ptr<const std::array<Transform3D, 2>> alignmentStore
         = std::make_shared<const std::array<Transform3D, 2>>(alignmentArray);
 
-    // The detector element at nominal poistion
+    // The detector element at nominal position
     AlignableDetectorElement alignedElement(
         std::make_shared<const Transform3D>(Transform3D::Identity()),
         std::make_shared<const RectangleBounds>(100. * units::_cm,
