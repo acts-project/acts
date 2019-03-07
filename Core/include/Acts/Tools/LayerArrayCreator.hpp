@@ -47,6 +47,7 @@ public:
   /// @brief This struct stores the configuration of the tracking geometry
   struct Config
   {
+
     /// The building context
     GeometryContext buildContext = DefaultGeometryContext();
   };

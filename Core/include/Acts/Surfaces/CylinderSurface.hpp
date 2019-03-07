@@ -164,7 +164,6 @@ public:
   /// Return method for the rotational symmetry axis
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-
   ///
   /// @return  the z-Axis of transform
   virtual const Vector3D

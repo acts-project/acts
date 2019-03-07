@@ -167,7 +167,6 @@ public:
     ///
     ///
     /// @param gctx The current geometry context object, e.g. alignment
-
     /// @param surfaces Input surface pointers
     void
     fill(const GeometryContext& gctx, const SurfaceVector& surfaces) override
@@ -185,7 +184,6 @@ public:
     /// @note This does not always do what you want.
     ///
     /// @param gctx The current geometry context object, e.g. alignment
-
     /// @param surfaces The surface pointers to fill
     /// @return number of bins that were filled
     size_t
@@ -518,7 +516,6 @@ public:
   /// @param transform Optional additional transform for this SurfaceArray
   /// @note the transform parameter is ONLY used for the serialization.
   ///       Apart from that, the SGL handles the transforms.
-
   /// @brief Convenience constructor for single element mode. Uses the @c
   /// SingleElementLookup
   /// @param srf The one and only surface

@@ -74,8 +74,9 @@ protected:
   Surface(std::shared_ptr<const Transform3D> tform = nullptr);
 
   /// Copy constructor
+  ///
   /// @note copy construction invalidates the association
-  /// to detector element and identifier
+  /// to detector element and layer
   ///
   /// @param other Source surface for copy.
   Surface(const Surface& other);
@@ -88,7 +89,7 @@ protected:
   /// Copy constructor with optional shift
   ///
   /// @note copy construction invalidates the association
-  /// to detector element or any other attachment
+  /// to detector element and layer
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other Source surface for copy
@@ -135,9 +136,9 @@ public:
   std::shared_ptr<const Surface>
   getSharedPtr() const;
 
-  /// Assignment operator is not allowed
+  /// Assignment operator
   /// @note copy construction invalidates the association
-  /// to detector element and identifier
+  /// to detector element and layer
   ///
   /// @param other Source surface for the assignment
   Surface&
@@ -191,7 +192,8 @@ public:
   /// (mis-)alignment cache cetrally handled
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-
+  ///
+  /// @return the contextual transform
   virtual const Transform3D&
   transform(const GeometryContext& gctx) const;
 
@@ -406,7 +408,6 @@ public:
   /// @param gpos is the global position of the parameters
   /// @param dir is the direction at of the parameters
   /// @param gctx The current geometry context object, e.g. alignment
-
   ///
   /// @return the transposed reference frame (avoids recalculation)
   virtual const RotationMatrix3D
@@ -516,8 +517,8 @@ public:
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos global 3D position - considered to be on surface but not
   ///        inside bounds (check is done)
-  /// @param 3D direction representation - expected to be normalized (no check
-  /// done)
+  /// @param 3D direction representation - expected to be normalized
+  ///        (no check done)
   /// @param navDir The navigation direction : if you want to find the closest,
   ///        chose anyDirection and the closest will be chosen
   /// @param bcheck boundary check directive for this operation
