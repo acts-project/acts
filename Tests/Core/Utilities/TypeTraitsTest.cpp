@@ -153,7 +153,6 @@ namespace Test {
 
     // private member is not detected.
     static_assert(!exists<member_b_t, M5>, "!");
-
   }
   
   template <typename T>
