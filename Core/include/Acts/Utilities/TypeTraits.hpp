@@ -203,7 +203,7 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
  * ```
  * decltype(std::declval<T>().member_a)
  * ```
- * `std::declval<T>()` constructs as **pseudo-value** of type `T` which works
+ * `std::declval<T>()` constructs a **pseudo-value** of type `T` which works
  * even if `T` is not actually constructible. Then we access a member called
  * `member_a` inside and instruct the compiler to calculate the resulting type
  * using `decltype`. This will only work if the expression is valid. If not,
@@ -216,7 +216,7 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
  * ```
  * is_detected<decltype(std::declval<T>().member_a)>
  * ```
- * where decltype(std::declval<T>().member_a) is `Op`, and `Args` is empty, we
+ * where `decltype(std::declval<T>().member_a)` is `Op`, and `Args` is empty, we
  * still get a compilation error. This is because the compiler evaluates the
  * first argument before even passing it into `is_detected`, and that means
  * **outside** the overload resolution context. This is why we need to pass a
@@ -264,9 +264,7 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
  * will evaluate to true even if the actual arguments of that function are
  * references, as the compiler will figure that out behind the scenes and still
  * allow you to call it. That can be fine, if you're really only interested if
- * that specific call is allowed. It will also not tell you anything about the
- * constness of that method. This will evaluate to true whether `::foo()` is
- * const or not, and there is no way to assert it to be a const method. Remember
+ * that specific call is allowed. Remember
  * that `decltype` calculates the type of the expression. In this context, it
  * will evaluate to **the return type** of the called function. Using
  * `identical_to` you can therefore assert the return type to be a given value.
@@ -312,10 +310,20 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
   template <class T, typename R, typename... Arguments>                        \
   struct trait_name                                                            \
   {                                                                            \
+    /* Meta function to check if a type has a const qualifier*/                \
+    /* (by stripping it and seeing if something changed */                     \
     template <typename T_>                                                     \
     static constexpr bool is_const                                             \
         = not std::is_same_v<std::remove_const_t<T_>, T_>;                     \
                                                                                \
+    /*These following meta-functions basically to this: they check whether or  \
+     * not the actual function pointer extracted through `&T::method_name` can \
+     * be assigned to a prepared function pointer type with the given          \
+     * signature. This checks the exact signature, and not just callability    \
+     * nad validity of the expression. */                                      \
+                                                                               \
+    /* Meta function which constructs the right type to check a function       \
+     * pointer, non-const version*/                                            \
     template <typename T_, typename = int>                                     \
     struct fptr_meta                                                           \
     {                                                                          \
@@ -326,6 +334,10 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
           &T_::method_name>::value_type;                                       \
     };                                                                         \
                                                                                \
+    /* Meta function which constructs the right type to check a function       \
+     * pointer, const version*/                                                \
+    /* The `const` needs to be put in there in one specific spot, that's why   \
+     * the metafunction is needed*/                                            \
     template <typename T_>                                                     \
     struct fptr_meta<T_, std::enable_if_t<is_const<T_>, int>>                  \
     {                                                                          \
@@ -336,12 +348,24 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
           &T_::method_name>::value_type;                                       \
     };                                                                         \
                                                                                \
+    /* Helper on top of the function pointer metafunction */                   \
     template <typename T_, typename... Arguments_>                             \
     using fptr_meta_t = typename fptr_meta<T_>::template type<Arguments_...>;  \
+                                                                               \
+    /* Trait check for the qualifier and the return type of the function */    \
+    /* This does not check the const qualifier at all */                       \
     template <typename T_, typename... Arguments_>                             \
     using qual_ret = decltype(                                                 \
         std::declval<T_>().method_name(std::declval<Arguments_>()...));        \
                                                                                \
+    /* The problem is this: while the above is fine with and without const,    \
+     * and with and without exact argument type match, the assignment to the   \
+     * function pointer fails hard if there is no method at all with the given \
+     * name. That is undesirable. The following first uses the expression      \
+     * validity check to assert that there is in fact a method of the given    \
+     * name, and only if that is the case, try to compile the function pointer \
+     * based signature check. That way, there is no hard failures, only        \
+     * substitution failures and we're happy. */                               \
     template <typename T_, typename = int>                                     \
     struct tv                                                                  \
     {                                                                          \
@@ -353,6 +377,7 @@ constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
                   is_detected_exact<R, qual_ret, T_, Arguments...>::value,     \
                   int>>                                                        \
     {                                                                          \
+      /* This is only ever evaluate if the method exists!*/                    \
       static constexpr bool value                                              \
           = is_detected<fptr_meta_t, T, Arguments...>::value;                  \
     };                                                                         \
