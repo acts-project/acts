@@ -208,8 +208,7 @@ namespace Test {
                          Measurement<Identifier, 2_p, 3_p, 4_p>,
                          Measurement<Identifier, 0_p, 2_p, 3_p, 4_p>,
                          Measurement<Identifier, 1_p, 2_p, 3_p, 4_p>,
-                         Measurement<Identifier, 0_p, 1_p, 2_p, 3_p, 4_p>
-                         >;
+                         Measurement<Identifier, 0_p, 1_p, 2_p, 3_p, 4_p>>;
       static_assert(std::is_same<actual, expected>::value,
                     "Variant is not identical");
     }

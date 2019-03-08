@@ -355,6 +355,7 @@ struct fittable_measurement_helper {
 
 /// @brief FittableMeasurement variant type
 template <typename source_link_t>
-using FittableMeasurement = typename fittable_measurement_helper<source_link_t>::type;
+using FittableMeasurement =
+    typename fittable_measurement_helper<source_link_t>::type;
 
 }  // namespace Acts
