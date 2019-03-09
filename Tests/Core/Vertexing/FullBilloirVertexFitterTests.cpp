@@ -218,17 +218,16 @@ namespace Test {
       // Do the actual fit with 4 tracks without constraint
       Vertex<BoundParameters> fittedVertex
           = billoirFitter.fit(tracks, propagator);
-      if (fittedVertex.tracks().size() > 0) {
-        CHECK_CLOSE_ABS(
-            fittedVertex.position(), vertexPosition, 1 * units::_mm);
-      }
+
+      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
+
       // Do the fit with a constraint
       Vertex<BoundParameters> fittedVertexConstraint
           = billoirFitter.fit(tracks, propagator, myConstraint);
-      if (fittedVertexConstraint.tracks().size() > 0) {
-        CHECK_CLOSE_ABS(
-            fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
-      }
+
+      CHECK_CLOSE_ABS(
+          fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+
       // Test the IVertexFitter interface
       Vertex<BoundParameters> testVertex
           = myFitWrapper(&billoirFitter, tracks, propagator);
@@ -364,23 +363,22 @@ namespace Test {
 
       // Do the actual fit with 4 tracks without constraint
       Vertex<InputTrack> fittedVertex = billoirFitter.fit(tracks, propagator);
-      if (fittedVertex.tracks().size() > 0) {
-        CHECK_CLOSE_ABS(
-            fittedVertex.position(), vertexPosition, 1 * units::_mm);
-      }
+
+      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
+
       // Do the fit with a constraint
       Vertex<InputTrack> fittedVertexConstraint
           = billoirFitter.fit(tracks, propagator, myConstraint);
-      if (fittedVertexConstraint.tracks().size() > 0) {
-        CHECK_CLOSE_ABS(
-            fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
-      }
+
+      CHECK_CLOSE_ABS(
+          fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+
       // Test the IVertexFitter interface
       Vertex<InputTrack> testVertex
           = myFitWrapper(&billoirFitter, tracks, propagator);
-      if (testVertex.tracks().size() > 0) {
-        CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
-      }
+
+      CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
+
       if (debugMode) {
         std::cout << "Fitting nTracks: " << nTracks << std::endl;
         std::cout << "True Vertex: " << x << ", " << y << ", " << z

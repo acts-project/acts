@@ -19,16 +19,16 @@ namespace {
 template <typename InputTrack>
 struct BilloirTrack
 {
-  BilloirTrack(const InputTrack& params, Acts::LinearizedTrack* lTrack)
+  BilloirTrack(const InputTrack& params, Acts::LinearizedTrack lTrack)
     : originalTrack(params), linTrack(lTrack)
   {
   }
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  const InputTrack       originalTrack;
-  Acts::LinearizedTrack* linTrack;
-  double                 chi2;
+  const InputTrack      originalTrack;
+  Acts::LinearizedTrack linTrack;
+  double                chi2;
   Acts::ActsMatrixD<5, 3> DiMat;   // position jacobian
   Acts::ActsMatrixD<5, 3> EiMat;   // momentum jacobian
   Acts::ActsSymMatrixD<3> GiMat;   //  = EtWmat * Emat (see below)
@@ -125,7 +125,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
       double                   fPhi   = trackMomenta[iTrack][0];
       double                   fTheta = trackMomenta[iTrack][1];
       double                   fQOvP  = trackMomenta[iTrack][2];
-      BilloirTrack<InputTrack> currentBilloirTrack(trackContainer, &linTrack);
+      BilloirTrack<InputTrack> currentBilloirTrack(trackContainer, linTrack);
 
       // calculate deltaQ[i]
       currentBilloirTrack.deltaQ[0] = d0;
@@ -268,7 +268,7 @@ Acts::FullBilloirVertexFitter<BField, InputTrack, Propagator_t>::fit(
       bTrack.chi2
           = ((bTrack.deltaQ - bTrack.DiMat * deltaV - bTrack.EiMat * deltaP)
                  .transpose()
-             * bTrack.linTrack->covarianceAtPCA.inverse()
+             * bTrack.linTrack.covarianceAtPCA.inverse()
              * (bTrack.deltaQ - bTrack.DiMat * deltaV
                 - bTrack.EiMat * deltaP))[0];
       newChi2 += bTrack.chi2;
