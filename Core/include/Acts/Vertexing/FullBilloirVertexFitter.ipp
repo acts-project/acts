@@ -20,7 +20,7 @@ template <typename InputTrack>
 struct BilloirTrack
 {
   BilloirTrack(const InputTrack& params, Acts::LinearizedTrack lTrack)
-    : originalTrack(params), linTrack(lTrack)
+    : originalTrack(params), linTrack(std::move(lTrack))
   {
   }
 
