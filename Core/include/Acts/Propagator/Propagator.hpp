@@ -476,7 +476,8 @@ public:
   template <typename parameters_t,
             typename action_list_t,
             typename aborter_list_t,
-            template <typename, typename> class propagator_options_t,
+            template <typename, typename>
+            class propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
@@ -508,7 +509,8 @@ public:
             typename surface_t,
             typename action_list_t,
             typename aborter_list_t,
-            template <typename, typename> class propagator_options_t,
+            template <typename, typename>
+            class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t   = detail::PathLimitReached>
   Result<action_list_t_result_t<
