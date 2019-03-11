@@ -476,7 +476,8 @@ public:
   template <typename parameters_t,
             typename action_list_t,
             typename aborter_list_t,
-            template <typename, typename> class propagator_options_t,
+            template <typename, typename>
+            class propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
@@ -569,7 +570,8 @@ public:
             typename surface_t,
             typename action_list_t,
             typename aborter_list_t,
-            template <typename, typename> class propagator_options_t,
+            template <typename, typename>
+            class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t   = detail::PathLimitReached>
   Result<action_list_t_result_t<
@@ -667,7 +669,7 @@ private:
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
 Acts::PropagatorStatus
-Acts::Propagator<S, N>::propagate_impl(result_t& result,
+Acts::Propagator<S, N>::propagate_impl(result_t&           result,
                                        propagator_state_t& state) const
 {
 
@@ -716,9 +718,7 @@ Acts::Propagator<S, N>::propagate_impl(result_t& result,
 
   // if we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
-  if (!terminatedNormally) {
-    state.navigation.navigationBreak = true;
-  }
+  if (!terminatedNormally) { state.navigation.navigationBreak = true; }
 
   // Post-stepping call to the action list
   debugLog(state, [&] { return std::string("Stepping loop done."); });
@@ -732,14 +732,16 @@ template <typename S, typename N>
 template <typename parameters_t,
           typename action_list_t,
           typename aborter_list_t,
-          template <typename, typename> class propagator_options_t,
+          template <typename, typename>
+          class propagator_options_t,
           typename path_aborter_t>
-Acts::Propagator<S, N>::action_list_t_result_t<
-    typename S::template return_parameter_type<parameters_t>,
-    action_list_t>
+auto
 Acts::Propagator<S, N>::propagate(
-    const parameters_t& start,
+    const parameters_t&                                        start,
     const propagator_options_t<action_list_t, aborter_list_t>& options) const
+    -> action_list_t_result_t<
+        typename S::template return_parameter_type<parameters_t>,
+        action_list_t>
 {
 
   // Type of track parameters produced by the propagation
@@ -789,16 +791,18 @@ template <typename parameters_t,
           typename surface_t,
           typename action_list_t,
           typename aborter_list_t,
-          template <typename, typename> class propagator_options_t,
+          template <typename, typename>
+          class propagator_options_t,
           typename target_aborter_t,
           typename path_aborter_t>
-Acts::Propagator<S, N>::action_list_t_result_t<
-    typename S::template return_parameter_type<parameters_t, surface_t>,
-    action_list_t>
+auto
 Acts::Propagator<S, N>::propagate(
-    const parameters_t& start,
-    const surface_t&    target,
+    const parameters_t&                                        start,
+    const surface_t&                                           target,
     const propagator_options_t<action_list_t, aborter_list_t>& options) const
+    -> action_list_t_result_t<
+        typename S::template return_parameter_type<parameters_t, surface_t>,
+        action_list_t>
 {
 
   // Type of track parameters produced at the end of the propagation
