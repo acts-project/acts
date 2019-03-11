@@ -10,6 +10,7 @@
 
 #include <boost/variant.hpp>
 #include <memory>
+#include <variant>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
