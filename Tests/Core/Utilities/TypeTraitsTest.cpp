@@ -17,6 +17,8 @@
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
 
+using namespace Acts::concept;
+
 namespace Acts {
 
 namespace Test {
@@ -75,13 +77,13 @@ namespace Test {
     static_assert(!has_method<const E, int, bar_method_t, const double&>,
                   "failed");
     // E does not have a foo method
-    static_assert(!has_method<E, int, foo_method_t, const double&>,
-                  "failed");
+    static_assert(!has_method<E, int, foo_method_t, const double&>, "failed");
 
     // E2 doesnt have method like int bar()
     static_assert(!has_method<E2, int, bar_method_t>, "failed");
     // E2 does not have non-const method with signature int bar(const double&)
-    // This means that a const method won't fulfill a non-const method requirement
+    // This means that a const method won't fulfill a non-const method
+    // requirement
     static_assert(!has_method<E2, int, bar_method_t, const double&>, "failed");
     // E2 has method of signature int bar(const double&) const
     static_assert(has_method<const E2, int, bar_method_t, const double&>,
@@ -102,7 +104,7 @@ namespace Test {
     // E3 does have a method like int bar(const double&) but is private
     static_assert(!has_method<E3, int, bar_method_t, const double&>, "failed");
   }
-  
+
   // trait for member named "member_a"
   template <typename T>
   using member_a_t = decltype(std::declval<T>().member_a);
@@ -110,27 +112,31 @@ namespace Test {
   template <typename T>
   using member_b_t = decltype(std::declval<T>().member_b);
 
-  struct M {
-    int member_a;
+  struct M
+  {
+    int    member_a;
     double member_b;
   };
 
-  struct M2 {
+  struct M2
+  {
     double member_a;
   };
 
-  struct M3 {
+  struct M3
+  {
     char member_a;
   };
 
-  struct M4 {
-    char member_b;
-  };
-  
-  class M5 {
+  struct M4
+  {
     char member_b;
   };
 
+  class M5
+  {
+    char member_b;
+  };
 
   BOOST_AUTO_TEST_CASE(TypeTraitsMember)
   {
@@ -154,25 +160,28 @@ namespace Test {
     // private member is not detected.
     static_assert(!exists<member_b_t, M5>, "!");
   }
-  
+
   template <typename T>
   using nested_a_t = typename T::NestedA;
   template <typename T>
   using nested_b_t = typename T::NestedB;
 
-  struct N {
+  struct N
+  {
     struct NestedA;
     class NestedB;
   };
 
-  struct N2 {
+  struct N2
+  {
     struct NestedA;
   };
 
-  struct N3 {
+  struct N3
+  {
     class NestedB;
   };
-  
+
   BOOST_AUTO_TEST_CASE(TypeTraitsNestedType)
   {
     static_assert(exists<nested_a_t, N>, "!");

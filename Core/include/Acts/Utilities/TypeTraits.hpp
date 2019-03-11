@@ -12,220 +12,223 @@
 #include <string>
 #include <type_traits>
 
+namespace Acts {
+
 namespace detail {
 
-/**
- * This file contains an implementation of the detection idiom in C++.
- * It's not currently in the standard, but can be implemented using
- * standard features. This implementation is largely taken from the C++
- * [technical specifications, library fundamentals
- * v2(https://en.cppreference.com/w/cpp/experimental/is_detected)
- *
- * The detector pattern works like this: there is a default type, that
- * accepts an "operation" that can be basically anything. It also accepts
- * variadic arguments for that operation. The default type
- * has a member type that is std::false_type to indicate success or
- * failure. It also has a member type "type" which captures a type result.
- * Then there is a specialization which attempts to instantiate the operation
- * with the given parameters, and tries to assign it into std::void_t. If the
- * operation fails to instantiate (say, the checked for type does not exist),
- * the specialization will not be instantiated, and the compiler falls back to
- * the default type which contains std::false_type. Since it happens inside
- * while the compiler tries to find a better matching template specialization
- * than the default one (so basically overload resolution), a compile error
- * inside the operation is handled as a substitution failure, and is not an
- * error. If the instantiation succeeds, the specialization contains a
- * std::true_type, and an alias to the result of the operation.
- *
- * Essentially, it provides a convenient way to "lift" operations into this
- * overload resolution, allowing testing expressions and evaluating them into
- * compile time booleans (instead of compilation failures).
- */
+  /**
+   * This file contains an implementation of the detection idiom in C++.
+   * It's not currently in the standard, but can be implemented using
+   * standard features. This implementation is largely taken from the C++
+   * [technical specifications, library fundamentals
+   * v2](https://en.cppreference.com/w/cpp/experimental/is_detected)
+   *
+   * The detector pattern works like this: there is a default type, that
+   * accepts an "operation" that can be basically anything. It also accepts
+   * variadic arguments for that operation. The default type
+   * has a member type that is std::false_type to indicate success or
+   * failure. It also has a member type "type" which captures a type result.
+   * Then there is a specialization which attempts to instantiate the operation
+   * with the given parameters, and tries to assign it into std::void_t. If the
+   * operation fails to instantiate (say, the checked for type does not exist),
+   * the specialization will not be instantiated, and the compiler falls back to
+   * the default type which contains std::false_type. Since it happens inside
+   * while the compiler tries to find a better matching template specialization
+   * than the default one (so basically overload resolution), a compile error
+   * inside the operation is handled as a substitution failure, and is not an
+   * error. If the instantiation succeeds, the specialization contains a
+   * std::true_type, and an alias to the result of the operation.
+   *
+   * Essentially, it provides a convenient way to "lift" operations into this
+   * overload resolution, allowing testing expressions and evaluating them into
+   * compile time booleans (instead of compilation failures).
+   */
 
-/**
- * Helper struct which cannot be constructe (or destroyes)d at all.
- */
-struct nonesuch
-{
-  ~nonesuch()               = delete;
-  nonesuch(nonesuch const&) = delete;
-  void
-  operator=(nonesuch const&)
-      = delete;
-};
+  /**
+   * Helper struct which cannot be constructe (or destroyes)d at all.
+   */
+  struct nonesuch
+  {
+    ~nonesuch()               = delete;
+    nonesuch(nonesuch const&) = delete;
+    void
+    operator=(nonesuch const&)
+        = delete;
+  };
 
-/**
- * This is the default specialization.
- * It does not attempt to instantiate `Op<Args...>` at all.
- * @tparam Default The default type to set
- * @tparam AlwaysVoid Helper type that accepts the void instantiation
- * @tparam Op The operation to test
- * @tparam Args Arguments to the operation
- */
-template <class Default,
-          class AlwaysVoid,
-          template <class...>
-          class Op,
-          class... Args>
-struct detector
-{
-  using value_t = std::false_type;
-  using type    = Default;
-};
+  /**
+   * This is the default specialization.
+   * It does not attempt to instantiate `Op<Args...>` at all.
+   * @tparam Default The default type to set
+   * @tparam AlwaysVoid Helper type that accepts the void instantiation
+   * @tparam Op The operation to test
+   * @tparam Args Arguments to the operation
+   */
+  template <class Default,
+            class AlwaysVoid,
+            template <class...> class Op,
+            class... Args>
+  struct detector
+  {
+    using value_t = std::false_type;
+    using type    = Default;
+  };
 
-/**
- * This is the specialization which attempts to instantiate `Op<Args...`.
- * @tparam Default Default type to set if substitution fails
- * @tparam Op The operation to test
- * @tparam Args Arguments to the operation
- */
-template <class Default, template <class...> class Op, class... Args>
-struct detector<Default, std::void_t<Op<Args...>>, Op, Args...>
-{
-  // Note that std::void_t is a C++17 feature
-  using value_t = std::true_type;
-  using type    = Op<Args...>;
-};
+  /**
+   * This is the specialization which attempts to instantiate `Op<Args...`.
+   * @tparam Default Default type to set if substitution fails
+   * @tparam Op The operation to test
+   * @tparam Args Arguments to the operation
+   */
+  template <class Default, template <class...> class Op, class... Args>
+  struct detector<Default, std::void_t<Op<Args...>>, Op, Args...>
+  {
+    // Note that std::void_t is a C++17 feature
+    using value_t = std::true_type;
+    using type    = Op<Args...>;
+  };
 
 }  // namespace detail
 
 namespace concept {
 
-/**
- * This type ties together the detection idiom. It instantiates the `detector`
- * template with the `Op` and `Args` and resolves to the exact value type.
- * In essence, if `Op<Args...>` succeeds, this will evaluate to
- * `std::true_type`, and if not, it will evaluate to `std::false_type`.
- * @tparam Op The operation to test
- * @tparam Args The arguments to the operation
- */
-template <template <class...> class Op, class... Args>
-using is_detected =
-    typename detail::detector<detail::nonesuch, void, Op, Args...>::value_t;
+  /**
+   * This type ties together the detection idiom. It instantiates the `detector`
+   * template with the `Op` and `Args` and resolves to the exact value type.
+   * In essence, if `Op<Args...>` succeeds, this will evaluate to
+   * `std::true_type`, and if not, it will evaluate to `std::false_type`.
+   * @tparam Op The operation to test
+   * @tparam Args The arguments to the operation
+   */
+  template <template <class...> class Op, class... Args>
+  using is_detected =
+      typename detail::detector<detail::nonesuch, void, Op, Args...>::value_t;
 
-/**
- * This type calls into the detector (same as `is_detected`) but it extracts
- * the return type of `Op<Args...>`.
- * @tparam Op The operation
- * @tparam Args The arguments to the operation
- */
-template <template <class...> class Op, class... Args>
-using detected_t =
-    typename detail::detector<detail::nonesuch, void, Op, Args...>::type;
+  /**
+   * This type calls into the detector (same as `is_detected`) but it extracts
+   * the return type of `Op<Args...>`.
+   * @tparam Op The operation
+   * @tparam Args The arguments to the operation
+   */
+  template <template <class...> class Op, class... Args>
+  using detected_t =
+      typename detail::detector<detail::nonesuch, void, Op, Args...>::type;
 
-/**
- * This invokes `detected_t`, and checks whether its result matches `Expected`.
- * @tparam Expected The expected result of the operation.
- * @tparam Op The operation
- * @tparam Args The arguments to the operation
- */
-template <class Expected, template <class...> class Op, class... Args>
-using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
+  /**
+   * This invokes `detected_t`, and checks whether its result matches
+   * `Expected`.
+   * @tparam Expected The expected result of the operation.
+   * @tparam Op The operation
+   * @tparam Args The arguments to the operation
+   */
+  template <class Expected, template <class...> class Op, class... Args>
+  using is_detected_exact = std::is_same<Expected, detected_t<Op, Args...>>;
 
-/**
- * This evaluates `Op` inside the detector, and checks whether the resolved type
- * is convertible to `To`.
- * @tparam To The type to check convertibility to.
- * @tparam Op The operation
- * @tparam Args The arguments to the operation
- */
-template <class To, template <class...> class Op, class... Args>
-using is_detected_convertible
-    = std::is_convertible<detected_t<Op, Args...>, To>;
+  /**
+   * This evaluates `Op` inside the detector, and checks whether the resolved
+   * type
+   * is convertible to `To`.
+   * @tparam To The type to check convertibility to.
+   * @tparam Op The operation
+   * @tparam Args The arguments to the operation
+   */
+  template <class To, template <class...> class Op, class... Args>
+  using is_detected_convertible
+      = std::is_convertible<detected_t<Op, Args...>, To>;
 
-/**
- * Helper which invokes the detector with a default type, and resolves to the
- * type.
- * @tparam Default The type to resolve to if `Op<Args...>` does not resolve.
- * @tparam Op The operation
- * @tparam Args The argument to the operation
- */
-template <class Default, template <class...> class Op, class... Args>
-using detected_or = detail::detector<Default, void, Op, Args...>;
+  /**
+   * Helper which invokes the detector with a default type, and resolves to the
+   * type.
+   * @tparam Default The type to resolve to if `Op<Args...>` does not resolve.
+   * @tparam Op The operation
+   * @tparam Args The argument to the operation
+   */
+  template <class Default, template <class...> class Op, class... Args>
+  using detected_or = detail::detector<Default, void, Op, Args...>;
 
-/**
- * Define some sort of "Domain Specific Languagr" to declare concepts a little
- * more naturally. These are taken from
- * https://izzys.casa/2016/09/implementing-concepts-in-cxx/
- */
-/**
- * Helper which combines a set of predicates (constexpr bools) with a logical
- * AND. Converts to `std::bool_constant`.
- * @tparam Bs The booleans to combine
- */
-template <bool... Bs>
-constexpr bool require = std::conjunction<std::bool_constant<Bs>...>::value;
+  /**
+   * Define some sort of "Domain Specific Languagr" to declare concepts a little
+   * more naturally. These are taken from
+   * https://izzys.casa/2016/09/implementing-concepts-in-cxx/
+   */
+  /**
+   * Helper which combines a set of predicates (constexpr bools) with a logical
+   * AND. Converts to `std::bool_constant`.
+   * @tparam Bs The booleans to combine
+   */
+  template <bool... Bs>
+  constexpr bool require = std::conjunction<std::bool_constant<Bs>...>::value;
 
-/**
- * Helper which forms the logical OR of its arguments.
- * Converts to `std::bool_constant`.
- * @tparam Bs The booleans to combine.
- */
-template <bool... Bs>
-constexpr bool either = std::disjunction<std::bool_constant<Bs>...>::value;
+  /**
+   * Helper which forms the logical OR of its arguments.
+   * Converts to `std::bool_constant`.
+   * @tparam Bs The booleans to combine.
+   */
+  template <bool... Bs>
+  constexpr bool either = std::disjunction<std::bool_constant<Bs>...>::value;
 
-/**
- * Alias for the negation of a `require`. This is essentially a NOT ANY test.
- * @tparam Bs The booleans.
- */
-template <bool... Bs>
-constexpr bool disallow = not require<Bs...>;
+  /**
+   * Alias for the negation of a `require`. This is essentially a NOT ANY test.
+   * @tparam Bs The booleans.
+   */
+  template <bool... Bs>
+  constexpr bool disallow = not require<Bs...>;
 
-/**
- * Alias to `is_detected` which unpacks the constexpr boolean value.
- * @tparam Op The operation
- * @tparam Args The arguments to the operation.
- */
-template <template <class...> class Op, class... Args>
-constexpr bool exists = is_detected<Op, Args...>::value;
+  /**
+   * Alias to `is_detected` which unpacks the constexpr boolean value.
+   * @tparam Op The operation
+   * @tparam Args The arguments to the operation.
+   */
+  template <template <class...> class Op, class... Args>
+  constexpr bool exists = is_detected<Op, Args...>::value;
 
-/**
- * Alias to conversion check, which also extracts the constexpr boolean value.
- * @tparam To The type to check convertibility to.
- * @tparam Op The operation
- * @tparam Args The arguments to the operation.
- */
-template <class To, template <class...> class Op, class... Args>
-constexpr bool converts_to = is_detected_convertible<To, Op, Args...>::value;
+  /**
+   * Alias to conversion check, which also extracts the constexpr boolean value.
+   * @tparam To The type to check convertibility to.
+   * @tparam Op The operation
+   * @tparam Args The arguments to the operation.
+   */
+  template <class To, template <class...> class Op, class... Args>
+  constexpr bool converts_to = is_detected_convertible<To, Op, Args...>::value;
 
-/**
- * Unpacks the constexpr boolean value from `is_detected_exact`
- * @tparam Exact The type to check identity against
- * @tparam Op The operation
- * @tparam Args The arguments to the operation.
- */
-template <class Exact, template <class...> class Op, class... Args>
-constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
+  /**
+   * Unpacks the constexpr boolean value from `is_detected_exact`
+   * @tparam Exact The type to check identity against
+   * @tparam Op The operation
+   * @tparam Args The arguments to the operation.
+   */
+  template <class Exact, template <class...> class Op, class... Args>
+  constexpr bool identical_to = is_detected_exact<Exact, Op, Args...>::value;
 
-/**
- * Helper which evaluates whether the type `T` has a method with a given
- * signature.
- * @tparam T The type to check on. This can contain a const qualifier if you
- * want to check on that.
- * @tparam R The return type
- * @tparam M The method trait, as generated by METHOD_TRAIT
- * @tparam Arguments The argument types that make up the signature.
- */
-template <typename T,
-          typename R,
-          template <class...>
-          class M,
-          typename... Arguments>
-constexpr bool has_method = M<T, R, Arguments...>::template tv<T>::value;
+  /**
+   * Helper which evaluates whether the type `T` has a method with a given
+   * signature.
+   * @tparam T The type to check on. This can contain a const qualifier if you
+   * want to check on that.
+   * @tparam R The return type
+   * @tparam M The method trait, as generated by METHOD_TRAIT
+   * @tparam Arguments The argument types that make up the signature.
+   */
+  template <typename T,
+            typename R,
+            template <class...> class M,
+            typename... Arguments>
+  constexpr bool has_method = M<T, R, Arguments...>::template tv<T>::value;
 
-/**
- * Helper to assert if a member of a given type exists. Basically only calls
- * into `identical_to` but is nicer to read.
- * @tparam T The type to check existence of member on.
- * @tparam M The member type trait
- * @tparam V The type that the member is supposed to have.
- */
-template <typename T, template <class...> class M, typename V>
-constexpr bool has_member = identical_to<V, M, T>;
+  /**
+   * Helper to assert if a member of a given type exists. Basically only calls
+   * into `identical_to` but is nicer to read.
+   * @tparam T The type to check existence of member on.
+   * @tparam M The member type trait
+   * @tparam V The type that the member is supposed to have.
+   */
+  template <typename T, template <class...> class M, typename V>
+  constexpr bool has_member = identical_to<V, M, T>;
 
-/**
- * Have a look at `TypeTraitsTest.cpp` to see most of this in action.
- */
+  /**
+   * Have a look at `TypeTraitsTest.cpp` to see most of this in action.
+   */
+}
 }
 
 /**
@@ -365,10 +368,11 @@ constexpr bool has_member = identical_to<V, M, T>;
     struct fptr_meta                                                           \
     {                                                                          \
       template <typename... Arguments_>                                        \
-      using type = typename std::integral_constant<                            \
-          decltype(std::declval<T_>().method_name(                             \
-              std::declval<Arguments_>()...)) (T_::*)(Arguments_...),          \
-          &T_::method_name>::value_type;                                       \
+      using type = typename std::                                              \
+          integral_constant<decltype(std::declval<T_>().method_name(           \
+                                std::declval<Arguments_>()...)) (T_::*)(       \
+                                Arguments_...),                                \
+                            &T_::method_name>::value_type;                     \
     };                                                                         \
                                                                                \
     /* Meta function which constructs the right type to check a function       \
@@ -379,10 +383,11 @@ constexpr bool has_member = identical_to<V, M, T>;
     struct fptr_meta<T_, std::enable_if_t<is_const<T_>, int>>                  \
     {                                                                          \
       template <typename... Arguments_>                                        \
-      using type = typename std::integral_constant<                            \
-          decltype(std::declval<T_>().method_name(                             \
-              std::declval<Arguments_>()...)) (T_::*)(Arguments_...) const,    \
-          &T_::method_name>::value_type;                                       \
+      using type = typename std::                                              \
+          integral_constant<decltype(std::declval<T_>().method_name(           \
+                                std::declval<Arguments_>()...)) (T_::*)(       \
+                                Arguments_...) const,                          \
+                            &T_::method_name>::value_type;                     \
     };                                                                         \
                                                                                \
     /* Helper on top of the function pointer metafunction */                   \
@@ -410,13 +415,14 @@ constexpr bool has_member = identical_to<V, M, T>;
     };                                                                         \
     template <typename T_>                                                     \
     struct tv<T_,                                                              \
-              std::enable_if_t<                                                \
-                  is_detected_exact<R, qual_ret, T_, Arguments...>::value,     \
-                  int>>                                                        \
+              std::enable_if_t<is_detected_exact<R,                            \
+                                                 qual_ret,                     \
+                                                 T_,                           \
+                                                 Arguments...>::value,         \
+                               int>>                                           \
     {                                                                          \
       /* This is only ever evaluate if the method exists!*/                    \
       static constexpr bool value                                              \
           = is_detected<fptr_meta_t, T, Arguments...>::value;                  \
     };                                                                         \
   }
-
