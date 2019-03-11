@@ -9,10 +9,6 @@
 #pragma once
 
 #include <boost/algorithm/string.hpp>
-#include <boost/tti/has_member_data.hpp>
-#include <boost/tti/has_member_function.hpp>
-#include <boost/tti/has_template.hpp>
-#include <boost/tti/has_type.hpp>
 #include <cmath>
 #include <functional>
 #include <memory>
@@ -30,26 +26,7 @@
 
 #include "Acts/Propagator/PropagatorError.hpp"
 #include "Acts/Utilities/Result.hpp"
-
-BOOST_TTI_HAS_TYPE(state_type)
-BOOST_TTI_HAS_TEMPLATE(return_parameter_type, class, class)
-BOOST_TTI_HAS_TYPE(State)
-BOOST_TTI_HAS_MEMBER_DATA(covTransport)
-BOOST_TTI_HAS_MEMBER_DATA(cov)
-BOOST_TTI_HAS_MEMBER_DATA(navDir)
-BOOST_TTI_HAS_MEMBER_DATA(pathAccumulated)
-BOOST_TTI_HAS_MEMBER_DATA(stepSize)
-BOOST_TTI_HAS_MEMBER_FUNCTION(getField)
-BOOST_TTI_HAS_MEMBER_FUNCTION(position)
-BOOST_TTI_HAS_MEMBER_FUNCTION(direction)
-BOOST_TTI_HAS_MEMBER_FUNCTION(momentum)
-BOOST_TTI_HAS_MEMBER_FUNCTION(charge)
-BOOST_TTI_HAS_MEMBER_FUNCTION(surfaceReached)
-BOOST_TTI_HAS_MEMBER_FUNCTION(boundState)
-BOOST_TTI_HAS_MEMBER_FUNCTION(curvilinearState)
-BOOST_TTI_HAS_MEMBER_FUNCTION(update)
-BOOST_TTI_HAS_MEMBER_FUNCTION(covarianceTransport)
-BOOST_TTI_HAS_MEMBER_FUNCTION(step)
+#include "Acts/Propagator/StepperConcept.hpp"
 
 namespace Acts {
 
@@ -224,115 +201,10 @@ class Propagator final
   using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
-  // Namings
-  static_assert(has_type_state_type<stepper_t>::value,
-                "Stepper does not declare state_type");
-  static_assert(has_template_return_parameter_type<stepper_t>::value,
-                "Stepper does not declate return_parameter_type");
-  // State struct
-  static_assert(has_type_State<stepper_t>::value,
-                "Stepper does not have a state");
-  static_assert(
-      has_member_data_covTransport<typename stepper_t::state_type, bool>::value,
-      "StepperState does not have a covTransport variable");
-  static_assert(has_member_data_cov<typename stepper_t::state_type,
-                                    ActsSymMatrixD<5>>::value,
-                "StepperState does not have a cov variable");
-  static_assert(has_member_data_navDir<typename stepper_t::state_type,
-                                       NavigationDirection>::value,
-                "StepperState does not have a navDir variable");
-  static_assert(has_member_data_pathAccumulated<typename stepper_t::state_type,
-                                                double>::value,
-                "StepperState does not have a pathAccumulated variable");
-  static_assert(has_member_data_stepSize<typename stepper_t::state_type,
-                                         detail::ConstrainedStep>::value,
-                "StepperState does not have a stepSize variable");
-
-  // Functions
-  static_assert(
-      has_member_function_getField<const stepper_t,
-                                   Vector3D,
-                                   boost::mpl::vector<
-                                       typename stepper_t::state_type&,
-                                       const Vector3D&>>::value,
-      "Stepper has no getField method");
-  static_assert(
-      has_member_function_position<const stepper_t,
-                                   Vector3D,
-                                   boost::mpl::vector<const typename stepper_t::
-                                                          state_type&>>::value,
-      "Stepper has no position method");
-  static_assert(
-      has_member_function_direction<const stepper_t,
-                                    Vector3D,
-                                    boost::mpl::
-                                        vector<const typename stepper_t::
-                                                   state_type&>>::value,
-      "Stepper has no direction method");
-  static_assert(
-      has_member_function_momentum<const stepper_t,
-                                   double,
-                                   boost::mpl::vector<const typename stepper_t::
-                                                          state_type&>>::value,
-      "Stepper has no momentum method");
-  static_assert(
-      has_member_function_charge<const stepper_t,
-                                 double,
-                                 boost::mpl::vector<const typename stepper_t::
-                                                        state_type&>>::value,
-      "Stepper has no charge method");
-  static_assert(
-      has_member_function_surfaceReached<const stepper_t,
-                                         bool,
-                                         boost::mpl::
-                                             vector<const typename stepper_t::
-                                                        state_type&,
-                                                    const Surface*>>::value,
-      "Stepper has no surfaceReached method");
-  static_assert(
-      has_member_function_boundState<const stepper_t,
-                                     BoundState,
-                                     boost::mpl::vector<
-                                         typename stepper_t::state_type&,
-                                         const Surface&,
-                                         bool>>::value,
-      "Stepper has no boundState method");
-  static_assert(
-      has_member_function_curvilinearState<const stepper_t,
-                                           CurvilinearState,
-                                           boost::mpl::vector<
-                                               typename stepper_t::state_type&,
-                                               bool>>::value,
-      "Stepper has no curvilinearState method");
-  static_assert(has_member_function_update<const stepper_t,
-                                           void,
-                                           boost::mpl::vector<
-                                               typename stepper_t::state_type&,
-                                               const BoundParameters&>>::value,
-                "Stepper has no update method");
-  static_assert(has_member_function_update<const stepper_t,
-                                           void,
-                                           boost::mpl::vector<
-                                               typename stepper_t::state_type&,
-                                               const Vector3D&,
-                                               const Vector3D&,
-                                               double>>::value,
-                "Stepper has no update method");
-  static_assert(has_member_function_covarianceTransport<const stepper_t,
-                                                        void,
-                                                        boost::mpl::vector<
-                                                            typename stepper_t::
-                                                                state_type&,
-                                                            bool>>::value,
-                "Stepper has no covarianceTransport method");
-  static_assert(has_member_function_covarianceTransport<const stepper_t,
-                                                        void,
-                                                        boost::mpl::vector<
-                                                            typename stepper_t::
-                                                                state_type&,
-                                                            const Surface&,
-                                                            bool>>::value,
-                "Stepper has no covarianceTransport method");
+  static_assert(StepperStateConcept<typename stepper_t::State>,
+                "Stepper does not fulfill stepper concept.");
+  static_assert(StepperConcept<stepper_t>,
+                "Stepper does not fulfill stepper concept.");
 
 public:
   /// Type of the stepper in use for public scope
