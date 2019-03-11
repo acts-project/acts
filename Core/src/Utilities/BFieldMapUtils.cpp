@@ -13,19 +13,23 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
+using Acts::VectorHelpers::phi;
 
-Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
-Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
-                                               std::array<size_t, 2> nBinsRZ)>&
-                                                localToGlobalBin,
-                    std::vector<double>         rPos,
-                    std::vector<double>         zPos,
-                    std::vector<Acts::Vector2D> bField,
-                    double                      lengthUnit,
-                    double                      BFieldUnit,
-                    bool                        firstQuadrant)
+Acts::
+    InterpolatedBFieldMapper<Acts::detail::Grid<Acts::Vector2D,
+                                                Acts::detail::EquidistantAxis,
+                                                Acts::detail::EquidistantAxis>>
+    Acts::fieldMapperRZ(
+        const std::function<size_t(std::array<size_t, 2> binsRZ,
+                                   std::array<size_t, 2> nBinsRZ)>&
+                                    localToGlobalBin,
+        std::vector<double>         rPos,
+        std::vector<double>         zPos,
+        std::vector<Acts::Vector2D> bField,
+        double                      lengthUnit,
+        double                      BFieldUnit,
+        bool                        firstQuadrant)
 {
   // [1] Create Grid
   // sort the values
@@ -113,22 +117,26 @@ Acts::fieldMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
 
   // [5] Create the mapper & BField Service
   // create field mapping
-  return Acts::InterpolatedBFieldMap::FieldMapper<2, 2>(
+  return Acts::InterpolatedBFieldMapper<Grid_t>(
       transformPos, transformBField, std::move(grid));
 }
 
-Acts::InterpolatedBFieldMap::FieldMapper<3, 3>
-Acts::fieldMapperXYZ(
-    const std::function<size_t(std::array<size_t, 3> binsXYZ,
-                               std::array<size_t, 3> nBinsXYZ)>&
-                                localToGlobalBin,
-    std::vector<double>         xPos,
-    std::vector<double>         yPos,
-    std::vector<double>         zPos,
-    std::vector<Acts::Vector3D> bField,
-    double                      lengthUnit,
-    double                      BFieldUnit,
-    bool                        firstOctant)
+Acts::
+    InterpolatedBFieldMapper<Acts::detail::Grid<Acts::Vector3D,
+                                                Acts::detail::EquidistantAxis,
+                                                Acts::detail::EquidistantAxis,
+                                                Acts::detail::EquidistantAxis>>
+    Acts::fieldMapperXYZ(
+        const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                                   std::array<size_t, 3> nBinsXYZ)>&
+                                    localToGlobalBin,
+        std::vector<double>         xPos,
+        std::vector<double>         yPos,
+        std::vector<double>         zPos,
+        std::vector<Acts::Vector3D> bField,
+        double                      lengthUnit,
+        double                      BFieldUnit,
+        bool                        firstOctant)
 {
   // [1] Create Grid
   // Sort the values
@@ -236,15 +244,18 @@ Acts::fieldMapperXYZ(
 
   // [5] Create the mapper & BField Service
   // create field mapping
-  return Acts::InterpolatedBFieldMap::FieldMapper<3, 3>(
+  return Acts::InterpolatedBFieldMapper<Grid_t>(
       transformPos, transformBField, std::move(grid));
 }
 
-Acts::InterpolatedBFieldMap::FieldMapper<2, 2>
-Acts::solenoidFieldMapper(std::pair<double, double> rlim,
-                          std::pair<double, double> zlim,
-                          std::pair<size_t, size_t> nbins,
-                          const SolenoidBField& field)
+Acts::
+    InterpolatedBFieldMapper<Acts::detail::Grid<Acts::Vector2D,
+                                                Acts::detail::EquidistantAxis,
+                                                Acts::detail::EquidistantAxis>>
+    Acts::solenoidFieldMapper(std::pair<double, double> rlim,
+                              std::pair<double, double> zlim,
+                              std::pair<size_t, size_t> nbins,
+                              const SolenoidBField& field)
 {
   double rMin, rMax, zMin, zMax;
   std::tie(rMin, rMax) = rlim;
@@ -303,7 +314,7 @@ Acts::solenoidFieldMapper(std::pair<double, double> rlim,
 
   // Create the mapper & BField Service
   // create field mapping
-  Acts::InterpolatedBFieldMap::FieldMapper<2, 2> mapper(
+  Acts::InterpolatedBFieldMapper<Grid_t> mapper(
       transformPos, transformBField, std::move(grid));
   return mapper;
 }

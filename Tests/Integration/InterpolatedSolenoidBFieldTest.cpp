@@ -13,7 +13,6 @@
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 
-#include <boost/type_erasure/any_cast.hpp>
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -45,7 +44,7 @@ namespace IntegrationTest {
   const size_t nBinsR     = 150;
   const size_t nBinsZ     = 200;
 
-  InterpolatedBFieldMap
+  auto
   makeFieldMap(const SolenoidBField& field)
   {
 
@@ -68,10 +67,10 @@ namespace IntegrationTest {
     using Grid_t = Acts::detail::Grid<Acts::Vector2D,
                                       Acts::detail::EquidistantAxis,
                                       Acts::detail::EquidistantAxis>;
-    const Grid_t& grid
-        = boost::type_erasure::any_cast<const Grid_t>(mapper.getGrid());
-    using index_t = Grid_t::index_t;
-    using point_t = Grid_t::point_t;
+    const Grid_t& grid = mapper.getGrid();
+    using index_t      = Grid_t::index_t;
+    using point_t      = Grid_t::point_t;
+    using BField_t     = Acts::InterpolatedBFieldMap<decltype(mapper)>;
 
     for (size_t i = 0; i <= nBinsR + 1; i++) {
       for (size_t j = 0; j <= nBinsZ + 1; j++) {
@@ -88,13 +87,12 @@ namespace IntegrationTest {
       }
     }
 
-    Acts::InterpolatedBFieldMap::Config cfg;
-    cfg.mapper = std::move(mapper);
-    return Acts::InterpolatedBFieldMap(std::move(cfg));
+    BField_t::Config cfg(std::move(mapper));
+    return BField_t(std::move(cfg));
   }
 
-  Acts::SolenoidBField        bSolenoidField({R, L, nCoils, bMagCenter});
-  Acts::InterpolatedBFieldMap bFieldMap(makeFieldMap(bSolenoidField));
+  Acts::SolenoidBField bSolenoidField({R, L, nCoils, bMagCenter});
+  auto                 bFieldMap = makeFieldMap(bSolenoidField);
 
   struct StreamWrapper
   {

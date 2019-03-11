@@ -35,10 +35,10 @@ namespace detail {
   template <typename T, class... Axes>
   class Grid final
   {
+  public:
     /// number of dimensions of the grid
     static constexpr size_t DIM = sizeof...(Axes);
 
-  public:
     /// type of values stored
     using value_type = T;
     /// reference type to values stored

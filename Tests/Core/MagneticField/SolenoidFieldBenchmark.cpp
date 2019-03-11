@@ -43,9 +43,10 @@ main(int argc, char* argv[])
   std::cout << "building map" << std::endl;
   auto mapper = Acts::solenoidFieldMapper(
       {rMin, rMax}, {zMin, zMax}, {nBinsR, nBinsZ}, bSolenoidField);
-  Acts::InterpolatedBFieldMap::Config cfg;
-  cfg.mapper     = std::move(mapper);
-  auto bFieldMap = Acts::InterpolatedBFieldMap(std::move(cfg));
+  using BField_t = Acts::InterpolatedBFieldMap<decltype(mapper)>;
+
+  BField_t::Config cfg(std::move(mapper));
+  auto             bFieldMap = BField_t(std::move(cfg));
 
   std::mt19937                     rng;
   std::uniform_real_distribution<> zDist(1.5 * (-L / 2.), 1.5 * L / 2.);
