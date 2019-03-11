@@ -272,8 +272,6 @@ public:
     size_t debugMsgWidth = 50;
   };
 
-  using state_type = State;
-
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;
 

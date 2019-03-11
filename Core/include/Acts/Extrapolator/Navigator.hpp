@@ -213,9 +213,6 @@ public:
     Stage navigationStage = Stage::undefined;
   };
 
-  /// Unique typedef to publish to the Propagator
-  using state_type = State;
-
   /// @brief Navigator status call, will be called in two modes
   ///
   /// (a) It initializes the Navigation stream if start volume is
