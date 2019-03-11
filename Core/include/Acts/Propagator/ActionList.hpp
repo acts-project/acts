@@ -34,17 +34,10 @@ private:
   static_assert(not detail::has_duplicates_v<actors_t...>,
                 "same action type specified several times");
 
-  template <typename... Args>
-  struct result_type_helper
-  {
-    using tuple = std::tuple<Args...>;
-  };
-  template <typename T>
-  using result_extractor = typename T::result_type;
-
   using detail::Extendable<actors_t...>::tuple;
 
 public:
+  // This uses the type collector and unpacks using the `R` meta funciton
   template <template <typename...> class R>
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::result_type_extractor, actors_t...>,

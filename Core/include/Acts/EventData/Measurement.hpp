@@ -342,6 +342,10 @@ private:
   source_link_t m_sourceLink;  ///< link to the source for this measurement
 };
 
+/**
+ * Required factory metafunction which produces measurements.
+ * This encodes the source_link_t and hides it from the type generator.
+ */
 template <typename source_link_t>
 struct fittable_measurement_helper {
   template <Acts::ParID_t... pars>
@@ -353,7 +357,9 @@ struct fittable_measurement_helper {
   using type = typename detail::type_generator_t<meas_factory, Acts::NGlobalPars>;
 };
 
-/// @brief FittableMeasurement variant type
+/**
+ * @brief FittableMeasurement variant type
+ */
 template <typename source_link_t>
 using FittableMeasurement =
     typename fittable_measurement_helper<source_link_t>::type;

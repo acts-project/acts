@@ -11,7 +11,6 @@
 #include <cmath>
 #include <functional>
 #include <limits>
-#include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"

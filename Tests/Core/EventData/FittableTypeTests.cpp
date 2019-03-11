@@ -32,14 +32,9 @@ using namespace hana::literals;
 
 #define _T(...) hana::tuple_c<size_t, __VA_ARGS__>
 
-///
-/// @brief Ats namespace
-///
 namespace Acts {
-///
-/// @brief Namespace for ATS unit tests
-///
 namespace Test {
+
   BOOST_AUTO_TEST_CASE(index_combination_generation_test)
   {
     {

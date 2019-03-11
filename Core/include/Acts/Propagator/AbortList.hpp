@@ -21,21 +21,6 @@ namespace hana = boost::hana;
 
 namespace Acts {
 
-  namespace {
-  constexpr auto make_action_list = [](auto t_, auto extractor) {
-    constexpr auto has_action = hana::is_valid(
-        [](auto t) -> hana::type<typename decltype(t)::type::action_type>{});
-    constexpr auto have_action
-        = hana::filter(t_, [&](auto t) { return has_action(t); });
-
-    constexpr auto action_types
-        = hana::to_set(hana::transform(have_action, extractor));
-
-    return action_types;
-  };
-
-}
-
 /// @brief AbortList object to be used in the propagation
 ///
 /// The abort list is a list of structs or classes that
@@ -51,12 +36,10 @@ private:
   static_assert(not detail::has_duplicates_v<aborters_t...>,
                 "same aborter type specified several times");
 
-  template <typename T>
-  using action_extractor = typename T::action_type;
-
   using detail::Extendable<aborters_t...>::tuple;
 
 public:
+  // This uses the type collector
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::action_type_extractor, aborters_t...>,
           hana::template_<AbortList>))::type;
