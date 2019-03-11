@@ -13,49 +13,11 @@ Acts::EigenStepper<B, C, E, A>::EigenStepper(B bField)
 }
 
 template <typename B, typename C, typename E, typename A>
-template <typename result_t>
-void
-
-Acts::EigenStepper<B, C, E, A>::convert(State& state, result_t& result) const
-{
-  auto  curvState      = curvilinearState(state);
-  auto& curvParameters = std::get<CurvilinearParameters>(curvState);
-  // Fill the end parameters, @todo error handling
-  result.endParameters = std::make_unique<const CurvilinearParameters>(
-      std::move(curvParameters));
-  // Only fill the transport jacobian when covariance transport was done
-  if (state.covTransport) {
-    auto& tJacobian = std::get<Jacobian>(curvState);
-    result.transportJacobian
-        = std::make_unique<const Jacobian>(std::move(tJacobian));
-  }
-}
-
-template <typename B, typename C, typename E, typename A>
-template <typename result_t>
-void
-Acts::EigenStepper<B, C, E, A>::convert(State& state,
-                                        result_t&      result,
-                                        const Surface& surface) const
-{
-  auto  bs              = boundState(state, surface);
-  auto& boundParameters = std::get<BoundParameters>(bs);
-  // Fill the end parameters, @todo error handling
-  result.endParameters
-      = std::make_unique<const BoundParameters>(std::move(boundParameters));
-  // Only fill the transport jacobian when covariance transport was done
-  if (state.covTransport) {
-    auto& tJacobian = std::get<Jacobian>(bs);
-    result.transportJacobian
-        = std::make_unique<const Jacobian>(std::move(tJacobian));
-  }
-}
-
-template <typename B, typename C, typename E, typename A>
-typename Acts::EigenStepper<B, C, E, A>::BoundState
+auto
 Acts::EigenStepper<B, C, E, A>::boundState(State& state,
                                            const Surface& surface,
                                            bool           reinitialize) const
+    -> BoundState
 {
   // Transport the covariance to here
   std::unique_ptr<const Covariance> covPtr = nullptr;
@@ -82,9 +44,10 @@ Acts::EigenStepper<B, C, E, A>::boundState(State& state,
 }
 
 template <typename B, typename C, typename E, typename A>
-typename Acts::EigenStepper<B, C, E, A>::CurvilinearState
+auto
 Acts::EigenStepper<B, C, E, A>::curvilinearState(State& state,
                                                  bool reinitialize) const
+    -> CurvilinearState
 {
   // Transport the covariance to here
   std::unique_ptr<const Covariance> covPtr = nullptr;
@@ -118,6 +81,18 @@ Acts::EigenStepper<B, C, E, A>::update(State& state,
   if (pars.covariance() != nullptr) {
     state.cov = (*(pars.covariance()));
   }
+}
+
+template <typename B, typename C, typename E, typename A>
+void
+Acts::EigenStepper<B, C, E, A>::update(State& state,
+                                       const Vector3D& uposition,
+                                       const Vector3D& udirection,
+                                       double          up) const
+{
+  state.pos = uposition;
+  state.dir = udirection;
+  state.p   = up;
 }
 
 template <typename B, typename C, typename E, typename A>
@@ -205,12 +180,13 @@ Acts::EigenStepper<B, C, E, A>::covarianceTransport(State& state,
   // Initialize the transport final frame jacobian
   ActsMatrixD<5, 7> jacToLocal = ActsMatrixD<5, 7>::Zero();
   // initalize the jacobian to local, returns the transposed ref frame
-  auto rframeT = surface.initJacobianToLocal(jacToLocal, state.pos, state.dir);
+  auto rframeT = surface.initJacobianToLocal(
+      state.geoContext, jacToLocal, state.pos, state.dir);
   // Update the jacobian with the transport from the steps
   state.jacToGlobal = state.jacTransport * state.jacToGlobal;
   // calculate the form factors for the derivatives
   const ActsRowVectorD<5> sVec = surface.derivativeFactors(
-      state.pos, state.dir, rframeT, state.jacToGlobal);
+      state.geoContext, state.pos, state.dir, rframeT, state.jacToGlobal);
   // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
   const ActsMatrixD<5, 5> jacFull
       = jacToLocal * (state.jacToGlobal - state.derivative * sVec);
@@ -226,11 +202,12 @@ Acts::EigenStepper<B, C, E, A>::covarianceTransport(State& state,
     state.derivative = ActsVectorD<7>::Zero();
     // fill the jacobian to global for next transport
     Vector2D loc{0., 0.};
-    surface.globalToLocal(state.pos, state.dir, loc);
+    surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
     ActsVectorD<5> pars;
     pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
         state.q / state.p;
-    surface.initJacobianToGlobal(state.jacToGlobal, state.pos, state.dir, pars);
+    surface.initJacobianToGlobal(
+        state.geoContext, state.jacToGlobal, state.pos, state.dir, pars);
   }
   // Store The global and bound jacobian (duplication for the moment)
   state.jacobian = jacFull * state.jacobian;
@@ -238,7 +215,7 @@ Acts::EigenStepper<B, C, E, A>::covarianceTransport(State& state,
 
 template <typename B, typename C, typename E, typename A>
 template <typename propagator_state_t>
-Result<double>
+Acts::Result<double>
 Acts::EigenStepper<B, C, E, A>::step(propagator_state_t& state) const
 {
   // Runge-Kutta integrator state

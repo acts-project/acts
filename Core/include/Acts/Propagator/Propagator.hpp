@@ -451,8 +451,8 @@ private:
   ///
   /// @return Propagation PropagatorStatus
   template <typename result_t, typename propagator_state_t>
-  PropagatorStatus
-  propagate_impl(result_t& result, propagator_state_t& state) const;
+  Result<result_t>
+  propagate_impl(propagator_state_t& state) const;
 
 public:
   /// @brief Propagate track parameters
@@ -483,68 +483,7 @@ public:
       action_list_t>>
   propagate(
       const parameters_t& start,
-      const propagator_options_t<action_list_t, aborter_list_t>& options) const
-  {
-
-    // Type of track parameters produced by the propagation
-    using ReturnParameterType =
-        typename stepper_t::template return_parameter_type<parameters_t>;
-
-    // Type of the full propagation result, including output from actions
-    using ResultType
-        = action_list_t_result_t<ReturnParameterType, action_list_t>;
-
-    static_assert(std::is_copy_constructible<ReturnParameterType>::value,
-                  "return track parameter type must be copy-constructible");
-
-    // Initialize the propagation result object
-
-    // Expand the abort list with a path aborter
-    path_aborter_t pathAborter;
-    auto           abortList = options.abortList.append(pathAborter);
-
-    // The expanded options (including path limit)
-    auto eOptions     = options.extend(abortList);
-    using OptionsType = decltype(eOptions);
-    // Initialize the internal propagator state
-    using StateType = State<OptionsType>;
-    StateType state(start, eOptions);
-
-    static_assert(
-        has_member_function_step<const stepper_t,
-                                 Result<double>,
-                                 boost::mpl::vector<StateType&>>::value,
-        "Step method of the Stepper is not compatible with the propagator "
-        "state");
-
-    // Apply the loop protection - it resets the internal path limit
-    if (options.loopProtection) {
-      detail::LoopProtection<path_aborter_t> lProtection;
-      lProtection(state, m_stepper);
-    }
-
-    // Perform the actual propagation & check its outcome
-    auto result = propagate_impl<ResultType>(state);
-
-    if (result.ok()) {
-      auto& propRes = *result;
-      /// Convert into return type and fill the result object
-      auto  curvState      = m_stepper.curvilinearState(state.stepping, true);
-      auto& curvParameters = std::get<CurvilinearParameters>(curvState);
-      // Fill the end parameters
-      propRes.endParameters = std::make_unique<const CurvilinearParameters>(
-          std::move(curvParameters));
-      // Only fill the transport jacobian when covariance transport was done
-      if (state.stepping.covTransport) {
-        auto& tJacobian = std::get<Jacobian>(curvState);
-        propRes.transportJacobian
-            = std::make_unique<const Jacobian>(std::move(tJacobian));
-      }
-      return result;
-    } else {
-      return result.error();
-    }
-  }
+      const propagator_options_t<action_list_t, aborter_list_t>& options) const;
 
   /// @brief Propagate track parameters - User method
   ///
@@ -579,65 +518,7 @@ public:
   propagate(
       const parameters_t& start,
       const surface_t&    target,
-      const propagator_options_t<action_list_t, aborter_list_t>& options) const
-  {
-
-    // Type of track parameters produced at the end of the propagation
-    using return_parameter_type =
-        typename stepper_t::template return_parameter_type<parameters_t,
-                                                           surface_t>;
-
-    // Type of provided options
-    target_aborter_t targetAborter;
-    path_aborter_t   pathAborter;
-    auto abortList = options.abortList.append(targetAborter, pathAborter);
-
-    // Create the extended options and declare their type
-    auto eOptions     = options.extend(abortList);
-    using OptionsType = decltype(eOptions);
-
-    // Type of the full propagation result, including output from actions
-    using ResultType
-        = action_list_t_result_t<return_parameter_type, action_list_t>;
-
-    // Initialize the internal propagator state
-    using StateType = State<OptionsType>;
-    StateType state(start, eOptions);
-    state.navigation.targetSurface = &target;
-
-    static_assert(
-        has_member_function_step<const stepper_t,
-                                 Result<double>,
-                                 boost::mpl::vector<StateType&>>::value,
-        "Step method of the Stepper is not compatible with the propagator "
-        "state");
-
-    // Apply the loop protection, it resets the interal path limit
-    detail::LoopProtection<path_aborter_t> lProtection;
-    lProtection(state, m_stepper);
-
-    // Perform the actual propagation
-    auto result = propagate_impl<ResultType>(state);
-
-    if (result.ok()) {
-      auto& propRes = *result;
-      // Compute the final results and mark the propagation as successful
-      auto  bs = m_stepper.boundState(state.stepping, target, true);
-      auto& boundParameters = std::get<BoundParameters>(bs);
-      // Fill the end parameters
-      propRes.endParameters
-          = std::make_unique<const BoundParameters>(std::move(boundParameters));
-      // Only fill the transport jacobian when covariance transport was done
-      if (state.stepping.covTransport) {
-        auto& tJacobian = std::get<Jacobian>(bs);
-        propRes.transportJacobian
-            = std::make_unique<const Jacobian>(std::move(tJacobian));
-      }
-      return result;
-    } else {
-      return result.error();
-    }
-  }
+      const propagator_options_t<action_list_t, aborter_list_t>& options) const;
 
 private:
   /// Implementation of propagation algorithm

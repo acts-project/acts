@@ -303,12 +303,7 @@ public:
   update(State&          state,
          const Vector3D& uposition,
          const Vector3D& udirection,
-         double          up) const
-  {
-    state.pos = uposition;
-    state.dir = udirection;
-    state.p   = up;
-  }
+         double          up) const;
 
   /// Return a corrector
   corrector_t
@@ -343,45 +338,7 @@ public:
   void
   covarianceTransport(State&         state,
                       const Surface& surface,
-                      bool           reinitialize = true) const
-  {
-    using VectorHelpers::phi;
-    using VectorHelpers::theta;
-    // Initialize the transport final frame jacobian
-    ActsMatrixD<5, 7> jacToLocal = ActsMatrixD<5, 7>::Zero();
-    // initalize the jacobian to local, returns the transposed ref frame
-    auto rframeT = surface.initJacobianToLocal(
-        state.geoContext, jacToLocal, state.pos, state.dir);
-    // Update the jacobian with the transport from the steps
-    state.jacToGlobal = state.jacTransport * state.jacToGlobal;
-    // calculate the form factors for the derivatives
-    const ActsRowVectorD<5> sVec = surface.derivativeFactors(
-        state.geoContext, state.pos, state.dir, rframeT, state.jacToGlobal);
-    // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
-    const ActsMatrixD<5, 5> jacFull
-        = jacToLocal * (state.jacToGlobal - state.derivative * sVec);
-    // Apply the actual covariance transport
-    state.cov = (jacFull * state.cov * jacFull.transpose());
-    // Reinitialize if asked to do so
-    // this is useful for interruption calls
-    if (reinitialize) {
-      // reset the jacobians
-      state.jacToGlobal  = ActsMatrixD<7, 5>::Zero();
-      state.jacTransport = ActsMatrixD<7, 7>::Identity();
-      // reset the derivative
-      state.derivative = ActsVectorD<7>::Zero();
-      // fill the jacobian to global for next transport
-      Vector2D loc{0., 0.};
-      surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
-      ActsVectorD<5> pars;
-      pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
-          state.q / state.p;
-      surface.initJacobianToGlobal(
-          state.geoContext, state.jacToGlobal, state.pos, state.dir, pars);
-    }
-    // Store The global and bound jacobian (duplication for the moment)
-    state.jacobian = jacFull * state.jacobian;
-  }
+                      bool           reinitialize = true) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
@@ -402,11 +359,5 @@ private:
   BField m_bField;
 };
 }  // namespace Acts
-
-// extern template class
-// Acts::Propagator<Acts::EigenStepper<Acts::ConstantBField>, Acts::Navigator>;
-
-#include "Acts/MagneticField/ConstantBField.hpp"
-extern template class Acts::EigenStepper<Acts::ConstantBField>;
 
 #include "Acts/Propagator/EigenStepper.ipp"
