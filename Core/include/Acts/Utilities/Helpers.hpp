@@ -22,7 +22,8 @@
 #include "strings.h"
 
 // Acts include(s)
-#include "Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 
 
 #ifndef ACTS_BIT_CODING
@@ -55,60 +56,15 @@ namespace Acts {
 
  */
 
-// implementation of the detector idiom adapted from
-// https://en.cppreference.com/w/cpp/experimental/is_detected
-namespace detail {
-
-  template <class... Ts>
-  using void_t = void;
-
-  template <class Default,
-            class AlwaysVoid,
-            template <class...>
-            class Op,
-            class... Args>
-  struct detector
-  {
-    using value_t = std::false_type;
-    using type    = Default;
-  };
-
-  struct nonesuch
-  {
-    ~nonesuch()               = delete;
-    nonesuch(nonesuch const&) = delete;
-    void
-    operator=(nonesuch const&)
-        = delete;
-  };
-
-  template <class Default, template <class...> class Op, class... Args>
-  struct detector<Default, void_t<Op<Args...>>, Op, Args...>
-  {
-    using value_t = std::true_type;
-    using type    = Op<Args...>;
-  };
-
-  template <template <class...> class Op, class... Args>
-  using is_detected =
-      typename detail::detector<nonesuch, void, Op, Args...>::value_t;
-
-  template <template <class...> class Op, class... Args>
-  using detected_t =
-      typename detail::detector<nonesuch, void, Op, Args...>::type;
-
-  template <class Default, template <class...> class Op, class... Args>
-  using detected_or = detail::detector<Default, void, Op, Args...>;
-
-  template <class T>
-  using phi_method_t = decltype(std::declval<const T>().phi());
-
-  template <class T>
-  using has_phi_method = is_detected<phi_method_t, T>;
-
-}  // namespace detail
-
 namespace VectorHelpers {
+  namespace detail {
+    template <class T>
+    using phi_method_t = decltype(std::declval<const T>().phi());
+
+    template <class T>
+    using has_phi_method = concept::is_detected<phi_method_t, T>;
+
+  }  // namespace detail
 
   // default call on Eigen types, calculate radius
   template <typename Derived>
