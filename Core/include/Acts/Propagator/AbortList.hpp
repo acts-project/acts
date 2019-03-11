@@ -8,14 +8,33 @@
 
 #pragma once
 
-#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/detail/abort_condition_signature_check.hpp"
 #include "Acts/Propagator/detail/abort_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
-#include "Acts/Utilities/detail/MPL/boost_mpl_helper.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
+#include "Acts/Utilities/detail/MPL/type_collector.hpp"
+
+#include <boost/hana/unpack.hpp>
+#include <boost/hana/type.hpp>
+
+namespace hana = boost::hana;
 
 namespace Acts {
+
+  namespace {
+  constexpr auto make_action_list = [](auto t_, auto extractor) {
+    constexpr auto has_action = hana::is_valid(
+        [](auto t) -> hana::type<typename decltype(t)::type::action_type>{});
+    constexpr auto have_action
+        = hana::filter(t_, [&](auto t) { return has_action(t); });
+
+    constexpr auto action_types
+        = hana::to_set(hana::transform(have_action, extractor));
+
+    return action_types;
+  };
+
+}
 
 /// @brief AbortList object to be used in the propagation
 ///
@@ -32,14 +51,17 @@ private:
   static_assert(not detail::has_duplicates_v<aborters_t...>,
                 "same aborter type specified several times");
 
-  // clang-format off
-  using actions = detail::type_collector_t<detail::action_type_extractor, aborters_t...>;
-  // clang-format on
+  template <typename T>
+  using action_extractor = typename T::action_type;
 
   using detail::Extendable<aborters_t...>::tuple;
 
 public:
-  using action_list_type = detail::boost_set_as_tparams_t<AbortList, actions>;
+  using result_type = typename decltype(hana::unpack(
+      detail::type_collector_t<detail::action_type_extractor, aborters_t...>,
+          hana::template_<AbortList>))::type;
+  
+
   using detail::Extendable<aborters_t...>::get;
 
   /// Default constructor

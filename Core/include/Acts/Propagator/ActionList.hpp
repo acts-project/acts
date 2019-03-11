@@ -15,6 +15,11 @@
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
+#include <boost/hana/unpack.hpp>
+#include <boost/hana/type.hpp>
+
+namespace hana = boost::hana;
+
 namespace Acts {
 
 /// @brief ActionList implementation to be used with the propagator
@@ -29,15 +34,21 @@ private:
   static_assert(not detail::has_duplicates_v<actors_t...>,
                 "same action type specified several times");
 
-  // clang-format off
-  using results = detail::type_collector_t<detail::result_type_extractor, actors_t...>;
-  // clang-format on
+  template <typename... Args>
+  struct result_type_helper
+  {
+    using tuple = std::tuple<Args...>;
+  };
+  template <typename T>
+  using result_extractor = typename T::result_type;
 
   using detail::Extendable<actors_t...>::tuple;
 
 public:
   template <template <typename...> class R>
-  using result_type = detail::boost_set_as_tparams_t<R, results>;
+  using result_type = typename decltype(hana::unpack(
+      detail::type_collector_t<detail::result_type_extractor, actors_t...>,
+          hana::template_<R>))::type;
 
   using detail::Extendable<actors_t...>::get;
 

@@ -342,9 +342,19 @@ private:
   source_link_t m_sourceLink;  ///< link to the source for this measurement
 };
 
-/// @brief FittableMeasurement boost_variant type
 template <typename source_link_t>
-using FittableMeasurement =
-    typename detail::fittable_type_generator<source_link_t>::type;
+struct fittable_measurement_helper {
+  template <Acts::ParID_t... pars>
+  struct meas_factory
+  {
+    using type = Measurement<source_link_t, pars...>;
+  };
+
+  using type = typename detail::type_generator_t<meas_factory, Acts::NGlobalPars>;
+};
+
+/// @brief FittableMeasurement variant type
+template <typename source_link_t>
+using FittableMeasurement = typename fittable_measurement_helper<source_link_t>::type;
 
 }  // namespace Acts

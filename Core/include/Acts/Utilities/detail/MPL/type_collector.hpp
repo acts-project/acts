@@ -7,131 +7,60 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include <boost/mpl/set.hpp>
-#include <type_traits>
-#include "Acts/Utilities/detail/MPL/boost_mpl_helper.hpp"
-namespace bm = boost::mpl;
+#include <boost/hana/filter.hpp>
+#include <boost/hana/set.hpp>
+#include <boost/hana/type.hpp>
 
-#define HAS_TYPE(x)                                                            \
-  template <typename T, typename = void>                                       \
-  struct has_type : public std::false_type                                     \
-  {                                                                            \
-  };                                                                           \
-                                                                               \
-  template <typename T>                                                        \
-  struct has_type<T,                                                           \
-                  typename std::enable_if<(sizeof(typename T::x) > 0),         \
-                                          void>::type> : public std::true_type \
-  {                                                                            \
-  };
+namespace hana = boost::hana;
 
 namespace Acts {
 
 namespace detail {
 
-  namespace {
+  struct result_type_extractor
+  {
+    static constexpr auto predicate = hana::is_valid(
+        [](auto t) -> hana::type<typename decltype(t)::type::result_type>{});
+    template <typename T>
+    using extractor_impl            = typename T::result_type;
+    static constexpr auto extractor = hana::template_<extractor_impl>;
+  };
 
-    struct result_type_extractor
-    {
-    private:
-      template <typename T>
-      struct extractor
-      {
-        using type = typename T::result_type;
-      };
+  struct action_type_extractor
+  {
+    static constexpr auto predicate = hana::is_valid(
+        [](auto t) -> hana::type<typename decltype(t)::type::action_type>{});
+    template <typename T>
+    using extractor_impl            = typename T::action_type;
+    static constexpr auto extractor = hana::template_<extractor_impl>;
+  };
 
-    public:
-      HAS_TYPE(result_type)
+  constexpr auto type_collector = [](auto t_, auto predicate, auto extractor) {
+    constexpr auto have_result
+        = hana::filter(t_, [&](auto t) { return predicate(t); });
+    constexpr auto result_types
+        = hana::to_set(hana::transform(have_result, extractor));
+    return result_types;
+  };
 
-      template <typename T>
-      using type = typename extractor<T>::type;
-    };
-
-    struct action_type_extractor
-    {
-    private:
-      template <typename T>
-      struct extractor
-      {
-        using type = typename T::action_type;
-      };
-
-    public:
-      HAS_TYPE(action_type)
-
-      template <typename T>
-      using type = typename extractor<T>::type;
-    };
-
-    template <typename sequence, typename ex, typename T, bool has_type = false>
-    struct type_inserter
-    {
-      using type = sequence;
-    };
-
-    template <typename sequence, typename ex, typename T>
-    struct type_inserter<sequence, ex, T, true>
-    {
-      using type =
-          typename bm::insert<sequence, typename ex::template type<T>>::type;
-    };
-
-    template <typename sequence, typename ex, typename... traits>
-    struct type_collector_impl;
-
-    template <typename sequence, typename ex>
-    struct type_collector_impl<sequence, ex>
-    {
-      using type = sequence;
-    };
-
-    template <typename sequence,
-              typename ex,
-              typename first,
-              typename... others>
-    struct type_collector_impl<sequence, ex, first, others...>
-    {
-      using new_seq =
-          typename type_inserter<sequence,
-                                 ex,
-                                 first,
-                                 ex::template has_type<first>::value>::type;
-      using type = typename type_collector_impl<new_seq, ex, others...>::type;
-    };
-
-    template <typename sequence, typename ex, typename last>
-    struct type_collector_impl<sequence, ex, last>
-    {
-      using type =
-          typename type_inserter<sequence,
-                                 ex,
-                                 last,
-                                 ex::template has_type<last>::value>::type;
-    };
-
-    template <typename extractor, typename... traits>
-    struct type_collector
-    {
-      using found =
-          typename type_collector_impl<bm::set<>, extractor, traits...>::type;
-      using type = boost_set_merger_t<found, bm::set<>>;
-    };
-  }  // end of anonymous namespace
+  template <typename helper, typename... traits>
+  constexpr auto type_collector_t = type_collector(hana::tuple_t<traits...>,
+                                                   helper::predicate,
+                                                   helper::extractor);
 
   template <typename T>
-  constexpr bool has_result_type_v = result_type_extractor::has_type<T>::value;
+  constexpr bool has_result_type_v
+      = decltype(result_type_extractor::predicate(hana::type_c<T>))::value;
 
   template <typename T>
-  using result_type_t = typename result_type_extractor::type<T>;
+  using result_type_t = typename result_type_extractor::extractor_impl<T>;
 
   template <typename T>
-  constexpr bool has_action_type_v = action_type_extractor::has_type<T>::value;
+  constexpr bool has_action_type_v
+      = decltype(action_type_extractor::predicate(hana::type_c<T>))::value;
 
   template <typename T>
-  using action_type_t = typename action_type_extractor::type<T>;
-
-  template <typename extractor, typename... traits>
-  using type_collector_t = typename type_collector<extractor, traits...>::type;
+  using action_type_t = typename action_type_extractor::extractor_impl<T>;
 }  // namespace detail
 
 }  // namespace Acts
