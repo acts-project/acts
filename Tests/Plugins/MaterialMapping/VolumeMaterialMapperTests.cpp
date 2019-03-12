@@ -404,21 +404,24 @@ namespace Test {
     vCfg1.position = Vector3D(0.5 * units::_m, 0., 0.);
     vCfg1.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
     vCfg1.name     = "Vacuum volume";
-    vCfg1.material = std::make_shared<const Material>(1., 2., 3., 4., 5.);
+    vCfg1.material
+        = std::make_shared<const Material>(352.8, 407., 9.012, 4., 1.848e-3);
 
     // Build a material volume
     CuboidVolumeBuilder::VolumeConfig vCfg2;
     vCfg2.position = Vector3D(1.5 * units::_m, 0., 0.);
     vCfg2.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
     vCfg2.name     = "First material volume";
-    vCfg2.material = std::make_shared<const Material>(11., 12., 13., 14., 15.);
+    vCfg2.material
+        = std::make_shared<const Material>(95.7, 465.2, 28.03, 14., 2.32e-3);
 
     // Build another material volume with different material
     CuboidVolumeBuilder::VolumeConfig vCfg3;
     vCfg3.position = Vector3D(2.5 * units::_m, 0., 0.);
     vCfg3.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
     vCfg3.name     = "Second material volume";
-    vCfg3.material = std::make_shared<const Material>(6., 7., 8., 9., 10.);
+    vCfg3.material
+        = std::make_shared<const Material>(352.8, 407., 9.012, 4., 1.848e-3);
 
     // Configure world
     CuboidVolumeBuilder::Config cfg;
@@ -499,8 +502,8 @@ namespace Test {
       trueX0 += stepResult.matTrue[i].X0();
       trueL0 += stepResult.matTrue[i].L0();
     }
-    CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
-    CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
+    CHECK_CLOSE_REL(gridX0, trueX0, 5e-2);
+    CHECK_CLOSE_REL(gridL0, trueL0, 5e-3);
   }
 }  // namespace Test
 }  // namespace Acts
