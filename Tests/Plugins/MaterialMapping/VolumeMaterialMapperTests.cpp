@@ -15,10 +15,12 @@
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Plugins/MaterialMapping/VolumeMaterialMapper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
@@ -133,6 +135,32 @@ namespace Test {
     }
     return {{indexX, indexY, indexZ}};
   }
+
+  struct MaterialCollector
+  {
+    struct this_result
+    {
+      std::vector<Material> matTrue;
+      std::vector<Vector3D> position;
+    };
+    using result_type = this_result;
+
+    template <typename propagator_state_t, typename stepper_t>
+    void
+    operator()(propagator_state_t& state,
+               const stepper_t&    stepper,
+               result_type&        result) const
+    {
+      if (state.navigation.currentVolume != nullptr) {
+        result.matTrue.push_back(
+            (state.navigation.currentVolume->material() != nullptr)
+                ? *state.navigation.currentVolume->material()
+                : Material());
+
+        result.position.push_back(stepper.position(state.stepping));
+      }
+    }
+  };
 
   /// @brief Various test cases of the VolumeMaterialMapper functions
   BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests)
@@ -376,13 +404,14 @@ namespace Test {
     vCfg1.position = Vector3D(0.5 * units::_m, 0., 0.);
     vCfg1.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
     vCfg1.name     = "Vacuum volume";
+    vCfg1.material = std::make_shared<const Material>(1., 2., 3., 4., 5.);
 
     // Build a material volume
     CuboidVolumeBuilder::VolumeConfig vCfg2;
     vCfg2.position = Vector3D(1.5 * units::_m, 0., 0.);
     vCfg2.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
     vCfg2.name     = "First material volume";
-    vCfg2.material = std::make_shared<const Material>(1., 2., 3., 4., 5.);
+    vCfg2.material = std::make_shared<const Material>(11., 12., 13., 14., 15.);
 
     // Build another material volume with different material
     CuboidVolumeBuilder::VolumeConfig vCfg3;
@@ -419,11 +448,13 @@ namespace Test {
       zAxis[i] *= i;
     }
 
+    // Set up a random engine for sampling material
     std::random_device               rd;
     std::mt19937                     gen(rd());
     std::uniform_real_distribution<> disX(0., 3. * units::_m);
     std::uniform_real_distribution<> disYZ(-0.5 * units::_m, 0.5 * units::_m);
 
+    // Sample the Material in the detector
     VolumeMaterialMapper::RecordedMaterial matRecord;
     for (unsigned int i = 0; i < 1e4; i++) {
       Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
@@ -433,20 +464,43 @@ namespace Test {
       matRecord.push_back(std::make_pair(tv, pos));
     }
 
+    // Build the material grid
     VolumeMaterialMapper::MaterialGrid3D grid
         = VolumeMaterialMapper::createMaterialGrid(
             xAxis, yAxis, zAxis, matRecord, mapMaterial3D);
 
+    // Construct a simple propagation through the detector
     StraightLineStepper sls;
-    Propagator          prop(sls);
-    // TODO: navigator
-    // TODO: material collection
+    Navigator           nav(std::move(detector));
+    Propagator<StraightLineStepper, Navigator> prop(sls, nav);
+
+    // Set some start parameters
     Vector3D pos(0., 0., 0.);
     Vector3D mom(1. * units::_GeV, 0., 0.);
     SingleCurvilinearTrackParameters<NeutralPolicy> sctp(nullptr, pos, mom);
-    PropagatorOptions                               po;
 
-    prop.propagate(sctp, po);
+    // Launch propagation and gather result
+    PropagatorOptions<ActionList<MaterialCollector>,
+                      AbortList<detail::EndOfWorldReached>>
+        po;
+    po.maxStepSize                               = 1. * units::_mm;
+    po.maxSteps                                  = 1e6;
+    const auto&                           result = prop.propagate(sctp, po);
+    const MaterialCollector::this_result& stepResult
+        = result.get<typename MaterialCollector::result_type>();
+
+    // Collect the material as given by the grid and test it
+    std::vector<Material> matGrid;
+    double                gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
+    for (unsigned int i = 0; i < stepResult.position.size(); i++) {
+      matGrid.push_back(grid.at(stepResult.position[i]));
+      gridX0 += matGrid[i].X0();
+      gridL0 += matGrid[i].L0();
+      trueX0 += stepResult.matTrue[i].X0();
+      trueL0 += stepResult.matTrue[i].L0();
+    }
+    CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
+    CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
   }
 }  // namespace Test
 }  // namespace Acts
