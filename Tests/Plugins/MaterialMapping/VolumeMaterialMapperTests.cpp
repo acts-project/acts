@@ -502,8 +502,8 @@ namespace Test {
       trueX0 += stepResult.matTrue[i].X0();
       trueL0 += stepResult.matTrue[i].L0();
     }
-    CHECK_CLOSE_REL(gridX0, trueX0, 5e-2);
-    CHECK_CLOSE_REL(gridL0, trueL0, 5e-3);
+    CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
+    CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
   }
 }  // namespace Test
 }  // namespace Acts
