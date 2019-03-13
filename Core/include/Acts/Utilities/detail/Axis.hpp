@@ -223,7 +223,7 @@ namespace detail {
     /// @note Open varies given bin and allows 0 and NBins+1 (underflow,
     /// overflow)
     ///       as neighbors
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                 = bdt,
               std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     NeighborHoodIndices
     neighborHoodIndices(size_t idx,
@@ -245,7 +245,7 @@ namespace detail {
     /// @return Set of neighboring bin indices (global)
     /// @note Bound varies given bin and allows 1 and NBins (regular bins)
     ///       as neighbors
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                  = bdt,
               std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     NeighborHoodIndices
     neighborHoodIndices(size_t idx,
@@ -270,7 +270,7 @@ namespace detail {
     /// @return Set of neighboring bin indices (global)
     /// @note Closed varies given bin and allows bins on the opposite
     ///       side of the axis as neighbors. (excludes underflow / overflow)
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                   = bdt,
               std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     NeighborHoodIndices
     neighborHoodIndices(size_t idx,
@@ -313,7 +313,7 @@ namespace detail {
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                 = bdt,
               std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     size_t
     wrapBin(int bin) const
@@ -327,7 +327,7 @@ namespace detail {
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                  = bdt,
               std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     size_t
     wrapBin(int bin) const
@@ -341,7 +341,7 @@ namespace detail {
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                   = bdt,
               std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     size_t
     wrapBin(int bin) const
@@ -550,7 +550,7 @@ namespace detail {
     /// @note Open varies given bin and allows 0 and NBins+1 (underflow,
     /// overflow)
     ///       as neighbors
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                 = bdt,
               std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     NeighborHoodIndices
     neighborHoodIndices(size_t idx,
@@ -572,7 +572,7 @@ namespace detail {
     /// @return Set of neighboring bin indices (global)
     /// @note Bound varies given bin and allows 1 and NBins (regular bins)
     ///       as neighbors
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                  = bdt,
               std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     NeighborHoodIndices
     neighborHoodIndices(size_t idx,
@@ -597,7 +597,7 @@ namespace detail {
     /// @return Set of neighboring bin indices (global)
     /// @note Closed varies given bin and allows bins on the opposite
     ///       side of the axis as neighbors. (excludes underflow / overflow)
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                   = bdt,
               std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     NeighborHoodIndices
     neighborHoodIndices(size_t idx,
@@ -640,7 +640,7 @@ namespace detail {
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                 = bdt,
               std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
     size_t
     wrapBin(int bin) const
@@ -654,7 +654,7 @@ namespace detail {
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                  = bdt,
               std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
     size_t
     wrapBin(int bin) const
@@ -668,7 +668,7 @@ namespace detail {
     ///
     /// @param [in] bin The bin to wrap
     /// @return valid bin index
-    template <AxisBoundaryType T = bdt,
+    template <AxisBoundaryType T                                   = bdt,
               std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
     size_t
     wrapBin(int bin) const

@@ -251,4 +251,4 @@ struct VoidIntersectionCorrector
     return false;
   }
 };
-}
+}  // namespace Acts

@@ -60,4 +60,4 @@ private:
   unsigned int m_materialEntries{0};  //!< the number of material points
   unsigned int m_vacuumEntries{0};    //!< the number of vacuum points
 };
-}
+}  // namespace Acts

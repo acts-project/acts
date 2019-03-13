@@ -129,4 +129,4 @@ public:
 private:
   std::array<uint8_t, 2> m_data = {{0, 0}};  //!< the data component
 };
-}
+}  // namespace Acts

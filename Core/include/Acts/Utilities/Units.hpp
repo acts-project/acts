@@ -137,7 +137,7 @@ namespace units {
     // hbar * c = 3.161529298809983e-26 J * m
     // ==> hbar * c * _GeV_per_J = 1.973270523563071e-16 GeV * m
     constexpr double _mm_times_GeV = _c * _hbar * _GeV_per_J;
-  }
+  }  // namespace
   /// @endcond
 
   /// @brief physical quantities for selecting right conversion function

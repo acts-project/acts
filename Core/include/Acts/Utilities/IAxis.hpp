@@ -62,4 +62,4 @@ public:
   virtual size_t
   getNBins() const = 0;
 };
-}
+}  // namespace Acts

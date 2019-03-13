@@ -63,8 +63,10 @@ namespace detail {
         solutions = 0;
       } else {
         solutions = (discriminant == 0) ? 1 : 2;
-        double q  = -0.5 * (beta + (beta > 0 ? std::sqrt(discriminant)
-                                            : -std::sqrt(discriminant)));
+        double q  = -0.5
+            * (beta
+               + (beta > 0 ? std::sqrt(discriminant)
+                           : -std::sqrt(discriminant)));
         first  = q / alpha;
         second = gamma / q;
       }

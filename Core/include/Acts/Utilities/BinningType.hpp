@@ -58,4 +58,4 @@ static const std::vector<std::string> binningValueNames = {"binX",
                                                            "binH",
                                                            "binEta",
                                                            "binMag"};
-}
+}  // namespace Acts
