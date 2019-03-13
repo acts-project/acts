@@ -13,8 +13,8 @@
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
+using Acts::VectorHelpers::phi;
 
 Acts::InterpolatedMaterialMap::MaterialMapper<2>
 Acts::materialMapperRZ(
@@ -74,17 +74,17 @@ Acts::materialMapperRZ(
   for (size_t i = 1; i <= nBinsR; ++i) {
     for (size_t j = 1; j <= nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
-      Grid_t::index_t indices = {{i, j}};
-        // std::vectors begin with 0 and we do not want the user needing to
-        // take underflow or overflow bins in account this is why we need to
-        // subtract by one
-        grid.at(indices) = materialVector.at(
-            materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
+      Grid_t::index_t       indices  = {{i, j}};
+      // std::vectors begin with 0 and we do not want the user needing to
+      // take underflow or overflow bins in account this is why we need to
+      // subtract by one
+      grid.at(indices) = materialVector.at(
+          materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
     }
   }
   ActsVectorF<5> vec;
-  vec << std::numeric_limits<float>::max(),
-      std::numeric_limits<float>::max(), 0., 0., 0.;
+  vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
+      0., 0., 0.;
   grid.setExteriorBins(vec);
 
   // [4] Create the transformation for the position
@@ -171,20 +171,20 @@ Acts::materialMapperXYZ(
   for (size_t i = 1; i <= nBinsX; ++i) {
     for (size_t j = 1; j <= nBinsY; ++j) {
       for (size_t k = 1; k <= nBinsZ; ++k) {
-        Grid_t::index_t indices = {{i, j, k}};
+        Grid_t::index_t       indices = {{i, j, k}};
         std::array<size_t, 3> nIndices
             = {{xPos.size(), yPos.size(), zPos.size()}};
-          // std::vectors begin with 0 and we do not want the user needing to
-          // take underflow or overflow bins in account this is why we need to
-          // subtract by one
-          grid.at(indices) = materialVector.at(
-              materialVectorToGridMapper({{i - 1, j - 1, k - 1}}, nIndices));
+        // std::vectors begin with 0 and we do not want the user needing to
+        // take underflow or overflow bins in account this is why we need to
+        // subtract by one
+        grid.at(indices) = materialVector.at(
+            materialVectorToGridMapper({{i - 1, j - 1, k - 1}}, nIndices));
       }
     }
   }
   ActsVectorF<5> vec;
-  vec << std::numeric_limits<float>::max(),
-      std::numeric_limits<float>::max(), 0., 0., 0.;
+  vec << std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
+      0., 0., 0.;
   grid.setExteriorBins(vec);
 
   // [4] Create the transformation for the position
