@@ -24,12 +24,11 @@ Acts::materialMapperRZ(
     std::vector<double>   rPos,
     std::vector<double>   zPos,
     std::vector<Material> material,
-    double                lengthUnit,
-    bool                  firstQuadrant)
+    double                lengthUnit)
 {
   // [1] Decompose material
-  std::vector<ActsVectorF<5>> materialVector(material.size());
-  materialVector.resize(material.size());
+  std::vector<ActsVectorF<5>> materialVector;
+  materialVector.reserve(material.size());
 
   for (Material& mat : material) {
     materialVector.push_back(mat.decomposeIntoClassificationNumbers());
@@ -61,10 +60,6 @@ Acts::materialMapperRZ(
   double stepR = std::fabs(rMax - rMin) / (nBinsR - 1);
   rMax += stepR;
   zMax += stepZ;
-  if (firstQuadrant) {
-    zMin   = -(*minMaxZ.second);
-    nBinsZ = 2. * nBinsZ - 1;
-  }
 
   // Create the axis for the grid
   detail::EquidistantAxis rAxis(rMin * lengthUnit, rMax * lengthUnit, nBinsR);
@@ -80,27 +75,16 @@ Acts::materialMapperRZ(
     for (size_t j = 1; j <= nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
       Grid_t::index_t indices = {{i, j}};
-      if (firstQuadrant) {
-        // std::vectors begin with 0 and we do not want the user needing to
-        // take underflow or overflow bins in account this is why we need to
-        // subtract by one
-        size_t          n = std::abs(int(j) - int(zPos.size()));
-        Grid_t::index_t indicesFirstQuadrant = {{i - 1, n}};
-
-        grid.at(indices) = materialVector.at(
-            materialVectorToGridMapper(indicesFirstQuadrant, nIndices));
-      } else {
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
         grid.at(indices) = materialVector.at(
             materialVectorToGridMapper({{i - 1, j - 1}}, nIndices));
-      }
     }
   }
   ActsVectorF<5> vec;
-  vec << std::numeric_limits<float>::infinity(),
-      std::numeric_limits<float>::infinity(), 0., 0., 0.;
+  vec << std::numeric_limits<float>::max(),
+      std::numeric_limits<float>::max(), 0., 0., 0.;
   grid.setExteriorBins(vec);
 
   // [4] Create the transformation for the position
@@ -123,12 +107,11 @@ Acts::materialMapperXYZ(
     std::vector<double>   yPos,
     std::vector<double>   zPos,
     std::vector<Material> material,
-    double                lengthUnit,
-    bool                  firstOctant)
+    double                lengthUnit)
 {
   // [1] Decompose material
-  std::vector<ActsVectorF<5>> materialVector(material.size());
-  materialVector.resize(material.size());
+  std::vector<ActsVectorF<5>> materialVector;
+  materialVector.reserve(material.size());
 
   for (Material& mat : material) {
     materialVector.push_back(mat.decomposeIntoClassificationNumbers());
@@ -173,15 +156,6 @@ Acts::materialMapperXYZ(
   yMax += stepY;
   zMax += stepZ;
 
-  // If only the first octant is given
-  if (firstOctant) {
-    xMin   = -*minMaxX.second;
-    yMin   = -*minMaxY.second;
-    zMin   = -*minMaxZ.second;
-    nBinsX = 2 * nBinsX - 1;
-    nBinsY = 2 * nBinsY - 1;
-    nBinsZ = 2 * nBinsZ - 1;
-  }
   detail::EquidistantAxis xAxis(xMin * lengthUnit, xMax * lengthUnit, nBinsX);
   detail::EquidistantAxis yAxis(yMin * lengthUnit, yMax * lengthUnit, nBinsY);
   detail::EquidistantAxis zAxis(zMin * lengthUnit, zMax * lengthUnit, nBinsZ);
@@ -200,31 +174,17 @@ Acts::materialMapperXYZ(
         Grid_t::index_t indices = {{i, j, k}};
         std::array<size_t, 3> nIndices
             = {{xPos.size(), yPos.size(), zPos.size()}};
-        if (firstOctant) {
-          // std::vectors begin with 0 and we do not want the user needing to
-          // take underflow or overflow bins in account this is why we need to
-          // subtract by one
-          size_t          m = std::abs(int(i) - (int(xPos.size())));
-          size_t          n = std::abs(int(j) - (int(yPos.size())));
-          size_t          l = std::abs(int(k) - (int(zPos.size())));
-          Grid_t::index_t indicesFirstOctant = {{m, n, l}};
-
-          grid.at(indices) = materialVector.at(
-              materialVectorToGridMapper(indicesFirstOctant, nIndices));
-
-        } else {
           // std::vectors begin with 0 and we do not want the user needing to
           // take underflow or overflow bins in account this is why we need to
           // subtract by one
           grid.at(indices) = materialVector.at(
               materialVectorToGridMapper({{i - 1, j - 1, k - 1}}, nIndices));
-        }
       }
     }
   }
   ActsVectorF<5> vec;
-  vec << std::numeric_limits<float>::infinity(),
-      std::numeric_limits<float>::infinity(), 0., 0., 0.;
+  vec << std::numeric_limits<float>::max(),
+      std::numeric_limits<float>::max(), 0., 0., 0.;
   grid.setExteriorBins(vec);
 
   // [4] Create the transformation for the position

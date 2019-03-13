@@ -46,7 +46,7 @@ namespace VolumeMaterialMapper {
   /// dimension
   ///
   /// @return The grid
-  inline Grid2D
+  Grid2D
   createGrid(std::vector<double> gridAxis1, std::vector<double> gridAxis2)
   {
     // sort the values
@@ -97,7 +97,7 @@ namespace VolumeMaterialMapper {
   /// dimension
   ///
   /// @return The grid
-  inline Grid3D
+  Grid3D
   createGrid(std::vector<double> gridAxis1,
              std::vector<double> gridAxis2,
              std::vector<double> gridAxis3)
@@ -160,7 +160,7 @@ namespace VolumeMaterialMapper {
   /// of @p mPoints to the grid points by its local index
   ///
   /// @return The average material grid decomposed into classification numbers
-  inline MaterialGrid2D
+  MaterialGrid2D
   mapMaterialPoints(
       Grid2D&                 grid,
       const RecordedMaterial& mPoints,
@@ -202,7 +202,7 @@ namespace VolumeMaterialMapper {
   /// of @p mPoints to the grid points by its local index
   ///
   /// @return The average material grid decomposed into classification numbers
-  inline MaterialGrid3D
+  MaterialGrid3D
   mapMaterialPoints(
       Grid3D&                 grid,
       const RecordedMaterial& mPoints,
@@ -246,7 +246,7 @@ namespace VolumeMaterialMapper {
   /// of @p mPoints to the grid points by its local index
   ///
   /// @return The map
-  inline MaterialGrid2D
+  MaterialGrid2D
   createMaterialGrid(
       std::vector<double>     gridAxis1,
       std::vector<double>     gridAxis2,
@@ -271,7 +271,7 @@ namespace VolumeMaterialMapper {
   /// of @p mPoints to the grid points by its local index
   ///
   /// @return The map
-  inline MaterialGrid3D
+  MaterialGrid3D
   createMaterialGrid(
       std::vector<double>     gridAxis1,
       std::vector<double>     gridAxis2,
