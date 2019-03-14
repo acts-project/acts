@@ -6380,7 +6380,7 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
     @param[in] current_indent  the current indent level (only used internally)
     */
     void
-    toStream(const BasicJsonType& val,
+    dump(const BasicJsonType& val,
          const bool           pretty_print,
          const bool           ensure_ascii,
          const unsigned int   indent_step,
@@ -6410,7 +6410,7 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
             o->write_character('\"');
             dump_escaped(i->first, ensure_ascii);
             o->write_characters("\": ", 3);
-            toStream(i->second, true, ensure_ascii, indent_step, new_indent);
+            dump(i->second, true, ensure_ascii, indent_step, new_indent);
             o->write_characters(",\n", 2);
           }
 
@@ -6421,7 +6421,7 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
           o->write_character('\"');
           dump_escaped(i->first, ensure_ascii);
           o->write_characters("\": ", 3);
-          toStream(i->second, true, ensure_ascii, indent_step, new_indent);
+          dump(i->second, true, ensure_ascii, indent_step, new_indent);
 
           o->write_character('\n');
           o->write_characters(indent_string.c_str(), current_indent);
@@ -6436,7 +6436,7 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
             o->write_character('\"');
             dump_escaped(i->first, ensure_ascii);
             o->write_characters("\":", 2);
-            toStream(i->second, false, ensure_ascii, indent_step, current_indent);
+            dump(i->second, false, ensure_ascii, indent_step, current_indent);
             o->write_character(',');
           }
 
@@ -6446,7 +6446,7 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
           o->write_character('\"');
           dump_escaped(i->first, ensure_ascii);
           o->write_characters("\":", 2);
-          toStream(i->second, false, ensure_ascii, indent_step, current_indent);
+          dump(i->second, false, ensure_ascii, indent_step, current_indent);
 
           o->write_character('}');
         }
@@ -6474,14 +6474,14 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
                i != val.m_value.array->cend() - 1;
                ++i) {
             o->write_characters(indent_string.c_str(), new_indent);
-            toStream(*i, true, ensure_ascii, indent_step, new_indent);
+            dump(*i, true, ensure_ascii, indent_step, new_indent);
             o->write_characters(",\n", 2);
           }
 
           // last element
           assert(not val.m_value.array->empty());
           o->write_characters(indent_string.c_str(), new_indent);
-          toStream(val.m_value.array->back(),
+          dump(val.m_value.array->back(),
                true,
                ensure_ascii,
                indent_step,
@@ -6497,13 +6497,13 @@ contains a `mapped_type`, whereas `std::vector` fails the test.
           for (auto i = val.m_value.array->cbegin();
                i != val.m_value.array->cend() - 1;
                ++i) {
-            toStream(*i, false, ensure_ascii, indent_step, current_indent);
+            dump(*i, false, ensure_ascii, indent_step, current_indent);
             o->write_character(',');
           }
 
           // last element
           assert(not val.m_value.array->empty());
-          toStream(val.m_value.array->back(),
+          dump(val.m_value.array->back(),
                false,
                ensure_ascii,
                indent_step,
@@ -9357,7 +9357,7 @@ public:
          @a ensure_ascii and exceptions added in version 3.0.0
   */
   string_t
-  toStream(const int  indent       = -1,
+  dump(const int  indent       = -1,
        const char indent_char  = ' ',
        const bool ensure_ascii = false) const
   {
@@ -9365,9 +9365,9 @@ public:
     serializer s(detail::output_adapter<char>(result), indent_char);
 
     if (indent >= 0) {
-      s.toStream(*this, true, ensure_ascii, static_cast<unsigned int>(indent));
+      s.dump(*this, true, ensure_ascii, static_cast<unsigned int>(indent));
     } else {
-      s.toStream(*this, false, ensure_ascii, 0);
+      s.dump(*this, false, ensure_ascii, 0);
     }
 
     return result;
@@ -13299,7 +13299,7 @@ public:
   - The indentation of the output can be controlled with the member variable
     `width` of the output stream @a o. For instance, using the manipulator
     `std::setw(4)` on @a o sets the indentation level to `4` and the
-    serialization result is the same as calling `toStream(4)`.
+    serialization result is the same as calling `dump(4)`.
 
   - The indentation character can be controlled with the member variable
     `fill` of the output stream @a o. For instance, the manipulator
@@ -13333,7 +13333,7 @@ public:
 
     // do the actual serialization
     serializer s(detail::output_adapter<char>(o), o.fill());
-    s.toStream(j, pretty_print, false, static_cast<unsigned int>(indentation));
+    s.dump(j, pretty_print, false, static_cast<unsigned int>(indentation));
     return o;
   }
 
@@ -13749,7 +13749,7 @@ public:
         can be converted to a CBOR value.
 
   @note If NaN or Infinity are stored inside a JSON number, they are
-        serialized properly. This behavior differs from the @ref toStream()
+        serialized properly. This behavior differs from the @ref dump()
         function which serializes NaN or Infinity to `null`.
 
   @note The following CBOR types are not used in the conversion:
@@ -13871,7 +13871,7 @@ public:
         parsed by @ref from_msgpack.
 
   @note If NaN or Infinity are stored inside a JSON number, they are
-        serialized properly. This behavior differs from the @ref toStream()
+        serialized properly. This behavior differs from the @ref dump()
         function which serializes NaN or Infinity to `null`.
 
   @param[in] j  JSON value to serialize
@@ -14625,7 +14625,7 @@ public:
 
         // throw an exception if test fails
         if (JSON_UNLIKELY(not success)) {
-          JSON_THROW(other_error::create(501, "unsuccessful: " + val.toStream()));
+          JSON_THROW(other_error::create(501, "unsuccessful: " + val.dump()));
         }
 
         break;
@@ -15195,7 +15195,7 @@ struct hash<nlohmann::json>
   {
     // a naive hashing via the string representation
     const auto& h = hash<nlohmann::json::string_t>();
-    return h(j.toStream());
+    return h(j.dump());
   }
 };
 
