@@ -165,7 +165,7 @@ public:
 
     // Run the fitter
     const auto& result
-        = m_propagator.template propagate(sParameters, kalmanOptions);
+        = m_propagator.template propagate(sParameters, kalmanOptions).unwrap();
 
     /// Get the result of the fit
     auto kalmanResult = result.template get<KalmanResult>();

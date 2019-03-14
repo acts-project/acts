@@ -130,7 +130,7 @@ namespace Test {
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
-    BOOST_CHECK(epropagator.propagate(start, options).endParameters != nullptr);
+    BOOST_CHECK(epropagator.propagate(start, options).unwrap().endParameters != nullptr);
   }
 
   // This test case checks that no segmentation fault appears
@@ -189,7 +189,7 @@ namespace Test {
     options.pathLimit   = 25 * units::_cm;
     options.debug       = debugMode;
 
-    const auto& result           = epropagator.propagate(start, options);
+    const auto& result           = epropagator.propagate(start, options).unwrap();
     auto        collector_result = result.get<PlaneCollector::result_type>();
 
     // step through the surfaces and go step by step
@@ -207,7 +207,7 @@ namespace Test {
       }
       // Extrapolate & check
       const auto& cresult
-          = epropagator.propagate(start, *csurface, optionsEmpty).endParameters;
+          = epropagator.propagate(start, *csurface, optionsEmpty).unwrap().endParameters;
       BOOST_CHECK(cresult != nullptr);
     }
   }
@@ -267,7 +267,7 @@ namespace Test {
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
-    const auto& result = epropagator.propagate(start, options);
+    const auto& result = epropagator.propagate(start, options).unwrap();
     if (result.endParameters) {
       // test that you actually lost some energy
       BOOST_CHECK_LT(result.endParameters->momentum().norm(),
@@ -335,7 +335,7 @@ namespace Test {
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 1500. * units::_mm;
 
-    const auto& status = epropagator.propagate(start, options);
+    const auto& status = epropagator.propagate(start, options).unwrap();
     // this test assumes state.options.loopFraction = 0.5
     // maximum momentum allowed
     double pmax = units::SI2Nat<units::MOMENTUM>(

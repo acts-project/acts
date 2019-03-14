@@ -38,11 +38,12 @@ Acts::LinearizedTrackFactory<bfield_t,
   PropagatorOptions<action_list_t, aborter_list_t> pOptions(gctx, mctx);
 
   // Do the propagation to linPoint
-  const auto& result = propagator.propagate(*params, *perigeeSurface, pOptions);
-  if (result.status == PropagatorStatus::SUCCESS) {
-    paramsAtPCA        = result.endParameters->parameters();
-    positionAtPCA      = result.endParameters->position();
-    parCovarianceAtPCA = *result.endParameters->covariance();
+  auto result = propagator.propagate(*params, *perigeeSurface, pOptions);
+  if(result.ok()) {
+    const auto propRes = result.unwrap();
+    paramsAtPCA        = propRes.endParameters->parameters();
+    positionAtPCA      = propRes.endParameters->position();
+    parCovarianceAtPCA = *propRes.endParameters->covariance();
 
     // *params are already perigeeParameters at linPoint (no propagation to
     // linPoint needed)

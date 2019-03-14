@@ -115,7 +115,7 @@ namespace IntegrationTest {
     CurvilinearParameters pars(nullptr, pos, mom, q);
 
     // do propagation
-    const auto& tp = propagator.propagate(pars, options).endParameters;
+    const auto& tp = propagator.propagate(pars, options).unwrap().endParameters;
 
     // test propagation invariants
     // clang-format off
@@ -214,9 +214,9 @@ namespace IntegrationTest {
     CurvilinearParameters start(nullptr, pos, mom, q);
 
     // do forward-backward propagation
-    const auto& fwdResult = propagator.propagate(start, fwdOptions);
+    const auto& fwdResult = propagator.propagate(start, fwdOptions).unwrap();
     const auto& bwdResult
-        = propagator.propagate(*fwdResult.endParameters, bwdOptions);
+        = propagator.propagate(*fwdResult.endParameters, bwdOptions).unwrap();
 
     const Vector3D& bwdPosition = bwdResult.endParameters->position();
     const Vector3D& bwdMomentum = bwdResult.endParameters->momentum();
@@ -299,7 +299,7 @@ namespace IntegrationTest {
 
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
-    const auto  result = propagator.propagate(start, *endSurface, options);
+    const auto  result = propagator.propagate(start, *endSurface, options).unwrap();
     const auto& tp     = result.endParameters;
     // check for null pointer
     BOOST_CHECK(tp != nullptr);
@@ -355,7 +355,7 @@ namespace IntegrationTest {
     }
     // Create curvilinear start parameters
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
-    const auto            result_s = propagator.propagate(start, options);
+    const auto            result_s = propagator.propagate(start, options).unwrap();
     const auto&           tp_s     = result_s.endParameters;
 
     // The transform at the destination
@@ -376,22 +376,29 @@ namespace IntegrationTest {
                 << options.pathLimit << std::endl;
     }
 
-    const auto  result = propagator.propagate(start, *endSurface, options);
-    const auto& tp     = result.endParameters;
+    auto  result = propagator.propagate(start, *endSurface, options);
+    const auto& propRes = *result;
+    const auto& tp     = propRes.endParameters;
     // check the result for nullptr
     BOOST_CHECK(tp != nullptr);
 
     // screen output in case you are running in debug mode
     if (debug) {
-      const auto& debugOutput = result.template get<DebugOutput::result_type>();
+      const auto& debugOutput = propRes.template get<DebugOutput::result_type>();
       std::cout << ">>> Debug output of this propagation " << std::endl;
       std::cout << debugOutput.debugString << std::endl;
-      std::cout << ">>> Propagation status is : " << int(result.status)
-                << std::endl;
+      std::cout << ">>> Propagation status is : ";
+      if(result.ok()) {
+        std::cout << "success";
+      }
+      else {
+        std::cout << result.error();
+      }
+      std::cout << std::endl;
     }
 
     // The position and path length
-    return std::pair<Vector3D, double>(tp->position(), result.pathLength);
+    return std::pair<Vector3D, double>(tp->position(), propRes.pathLength);
   }
 
   template <typename Propagator_type>
@@ -437,7 +444,7 @@ namespace IntegrationTest {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     CurvilinearParameters start_wo_c(nullptr, pos, mom, q);
 
-    const auto  result = propagator.propagate(start, options);
+    const auto  result = propagator.propagate(start, options).unwrap();
     const auto& tp     = result.endParameters;
 
     // get numerically propagated covariance matrix
@@ -498,7 +505,7 @@ namespace IntegrationTest {
 
     // create curvilinear start parameters
     CurvilinearParameters start_c(nullptr, pos, mom, q);
-    const auto            result_c = propagator.propagate(start_c, options);
+    const auto            result_c = propagator.propagate(start_c, options).unwrap();
     const auto&           tp_c     = result_c.endParameters;
 
     auto ssTransform = startPlanar
@@ -523,7 +530,7 @@ namespace IntegrationTest {
 
     auto endSurface
         = Surface::makeShared<DestSurface_type>(seTransform, nullptr);
-    const auto  result = propagator.propagate(start, *endSurface, options);
+    const auto  result = propagator.propagate(start, *endSurface, options).unwrap();
     const auto& tp     = result.endParameters;
 
     // get obtained covariance matrix

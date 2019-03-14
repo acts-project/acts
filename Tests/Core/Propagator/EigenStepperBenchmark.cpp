@@ -92,7 +92,7 @@ main(int argc, char* argv[])
 
   double totalPathLength = 0;
   for (unsigned int i = 0; i < toys; ++i) {
-    auto r = propagator.propagate(pars, options);
+    auto r = propagator.propagate(pars, options).unwrap();
     ACTS_DEBUG("reached position (" << r.endParameters->position().x() << ", "
                                     << r.endParameters->position().y()
                                     << ", "
