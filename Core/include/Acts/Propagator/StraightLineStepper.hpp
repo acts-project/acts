@@ -69,7 +69,7 @@ public:
     /// @param [in] dir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     template <typename parameters_t>
-    explicit State(std::reference_wrapper<const GeometryContext> /*gctx*/,
+    explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
                    const parameters_t& par,
                    NavigationDirection ndir = forward,
@@ -80,6 +80,7 @@ public:
       , q(par.charge())
       , navDir(ndir)
       , stepSize(ssize)
+      , geoContext(gctx)
     {
     }
 
@@ -107,6 +108,9 @@ public:
 
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
+
+    // Cache the geometry context of this propagation
+    std::reference_wrapper<const GeometryContext> geoContext;
   };
 
   /// Always use the same propagation state type, independently of the initial
@@ -283,7 +287,6 @@ public:
   ///
   /// @tparam surface_t the surface type - ignored here
   ///
-  /// @param [in] gctx The context for thsi call - ingnored here
   /// @param [in,out] state The stepper state
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to

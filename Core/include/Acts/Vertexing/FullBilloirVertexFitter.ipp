@@ -277,7 +277,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       bTrack.chi2
           = ((bTrack.deltaQ - bTrack.DiMat * deltaV - bTrack.EiMat * deltaP)
                  .transpose()
-             * bTrack.linTrack.covarianceAtPCA.inverse()
+             * bTrack.linTrack->covarianceAtPCA.inverse()
              * (bTrack.deltaQ - bTrack.DiMat * deltaV
                 - bTrack.EiMat * deltaP))[0];
       newChi2 += bTrack.chi2;

@@ -94,6 +94,7 @@ public:
       , navDir(ndir)
       , stepSize(ndir * std::abs(ssize))
       , fieldCache(mctx)
+      , geoContext(gctx)
     {
       // remember the start parameters
       startPos = pos;
@@ -154,11 +155,13 @@ public:
     /// adaptive step size of the runge-kutta integration
     cstep stepSize{std::numeric_limits<double>::max()};
 
-    /// Lazily initialized state of the field Cache
     /// This caches the current magnetic field cell and stays
     /// (and interpolates) within it as long as this is valid.
     /// See step() code for details.
     typename BField::Cache fieldCache;
+
+    /// The geometry context
+    std::reference_wrapper<const GeometryContext> geoContext;
 
     /// List of algorithmic extensions
     extensionlist_t extension;
@@ -169,7 +172,7 @@ public:
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
     struct
     {
-      /// Magnetic fields
+      /// Magnetic field evaulations
       Vector3D B_first, B_middle, B_last;
       /// k_i of the RKN4 algorithm
       Vector3D k1, k2, k3, k4;
@@ -249,7 +252,6 @@ public:
   /// if the transported state is at the surface, this needs to
   /// be guaranteed by the propagator
   ///
-  /// @param [in] gctx the context of this call
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] reinitialize Boolean flag whether reinitialization is needed,
@@ -260,19 +262,18 @@ public:
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
   BoundState
-  boundState(const GeometryContext& gctx,
-             State&                 state,
-             const Surface&         surface,
-             bool                   reinitialize = true) const
+  boundState(State&         state,
+             const Surface& surface,
+             bool           reinitialize = true) const
   {
     // Transport the covariance to here
     std::unique_ptr<const Covariance> covPtr = nullptr;
     if (state.covTransport) {
-      covarianceTransport(gctx, state, surface, reinitialize);
+      covarianceTransport(state, surface, reinitialize);
       covPtr = std::make_unique<const Covariance>(state.cov);
     }
     // Create the bound parameters
-    BoundParameters parameters(gctx,
+    BoundParameters parameters(state.geoContext,
                                std::move(covPtr),
                                state.pos,
                                state.p * state.dir,
@@ -452,7 +453,6 @@ public:
   ///
   /// @tparam surface_t the Surface type
   ///
-  /// @param [in] gctx the context of this call
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
   /// @param [in] reinitialize is a flag to steer whether the state should be
@@ -469,13 +469,13 @@ public:
     // Initialize the transport final frame jacobian
     ActsMatrixD<5, 7> jacToLocal = ActsMatrixD<5, 7>::Zero();
     // initalize the jacobian to local, returns the transposed ref frame
-    auto rframeT
-        = surface.initJacobianToLocal(gctx, jacToLocal, state.pos, state.dir);
+    auto rframeT = surface.initJacobianToLocal(
+        state.geoContext, jacToLocal, state.pos, state.dir);
     // Update the jacobian with the transport from the steps
     state.jacToGlobal = state.jacTransport * state.jacToGlobal;
     // calculate the form factors for the derivatives
     const ActsRowVectorD<5> sVec = surface.derivativeFactors(
-        gctx, state.pos, state.dir, rframeT, state.jacToGlobal);
+        state.geoContext, state.pos, state.dir, rframeT, state.jacToGlobal);
     // the full jacobian is ([to local] jacobian) * ([transport] jacobian)
     const ActsMatrixD<5, 5> jacFull
         = jacToLocal * (state.jacToGlobal - state.derivative * sVec);
@@ -491,12 +491,12 @@ public:
       state.derivative = ActsVectorD<7>::Zero();
       // fill the jacobian to global for next transport
       Vector2D loc{0., 0.};
-      surface.globalToLocal(gctx, state.pos, state.dir, loc);
+      surface.globalToLocal(state.geoContext, state.pos, state.dir, loc);
       ActsVectorD<5> pars;
       pars << loc[eLOC_0], loc[eLOC_1], phi(state.dir), theta(state.dir),
           state.q / state.p;
       surface.initJacobianToGlobal(
-          gctx, state.jacToGlobal, state.pos, state.dir, pars);
+          state.geoContext, state.jacToGlobal, state.pos, state.dir, pars);
     }
     // Store The global and bound jacobian (duplication for the moment)
     state.jacobian = jacFull * state.jacobian;

@@ -294,8 +294,8 @@ private:
       // parameters
       if (result.smoothed and targetReached(state, stepper, *targetSurface)) {
         // Transport & bind the parameter to the final surface
-        auto fittedState = stepper.boundState(
-            state.geoContext, state.stepping, *targetSurface, true);
+        auto fittedState
+            = stepper.boundState(state.stepping, *targetSurface, true);
         // Assign the fitted parameters
         result.fittedParameters = std::get<BoundParameters>(fittedState);
         // Break the navigation for stopping the Propagation
@@ -411,9 +411,8 @@ private:
         std::tuple<BoundParameters,
                    typename TrackState::Parameters::CovMatrix_t,
                    double>
-            boundState = stepper.boundState(
-                state.geoContext, state.stepping, *surface, true);
-
+            boundState = stepper.boundState(state.stepping, *surface, true);
+        // Fill the track state
         trackState.parameter.predicted  = std::get<0>(boundState);
         trackState.parameter.jacobian   = std::get<1>(boundState);
         trackState.parameter.pathLength = std::get<2>(boundState);

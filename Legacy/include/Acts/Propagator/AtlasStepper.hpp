@@ -80,6 +80,7 @@ public:
       , covariance(nullptr)
       , stepSize(ndir * std::abs(ssize))
       , fieldCache(mctx)
+      , geoContext(gctx)
     {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
       // this is a nasty but working solution for the stepper state without
@@ -114,7 +115,7 @@ public:
         covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
         covTransport = true;
         useJacobian  = true;
-        const auto transform = pars.referenceFrame(gctx);
+        const auto transform = pars.referenceFrame(geoContext);
 
         pVector[7]  = transform(0, eLOC_0);
         pVector[14] = transform(0, eLOC_1);
@@ -255,10 +256,12 @@ public:
     // adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
 
-    /// Lazily initialized cache for the magnetic field
     /// It caches the current magnetic field cell and stays (and interpolates)
     ///  within as long as this is valid. See step() code for details.
     typename bfield_t::Cache fieldCache;
+
+    /// Cache the geometry context
+    std::reference_wrapper<const GeometryContext> geoContext;
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
@@ -402,11 +405,10 @@ public:
 
   /// The state update method
   ///
-  /// @param [in] gctx The context of this call
   /// @param [in,out] state The stepper state for
   /// @param [in] pars The new track parameters at start
   void
-  update(const GeometryContext& gctx, State& state, const Parameters& pars) const
+  update(State& state, const Parameters& pars)
   {
     // state is ready - noting to do
     if (state.state_ready) {
@@ -442,7 +444,7 @@ public:
       state.covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
       state.covTransport = true;
       state.useJacobian  = true;
-      const auto transform = pars.referenceFrame(gctx);
+      const auto transform = pars.referenceFrame(state.geoContext);
       state.pVector[7]  = transform(0, eLOC_0);
       state.pVector[14] = transform(0, eLOC_1);
       state.pVector[21] = 0.;
