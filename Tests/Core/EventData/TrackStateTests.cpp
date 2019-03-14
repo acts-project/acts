@@ -8,7 +8,8 @@
 
 #define BOOST_TEST_MODULE TrackState Tests
 #include <boost/optional/optional_io.hpp>
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
 #include <random>
 #include "Acts/EventData/Measurement.hpp"

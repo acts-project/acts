@@ -9,7 +9,8 @@
 // Boost include(s)
 #define BOOST_TEST_MODULE GeometryID Tests
 #include <algorithm>
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 

@@ -8,7 +8,8 @@
 
 #define BOOST_TEST_MODULE SimpleGeometryTest
 
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Tools/CylinderVolumeBuilder.hpp"
 #include "Acts/Tools/CylinderVolumeHelper.hpp"

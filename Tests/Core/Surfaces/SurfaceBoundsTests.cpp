@@ -8,7 +8,8 @@
 
 #define BOOST_TEST_MODULE Surface Bounds Tests
 
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 // leave blank line
 
 #include <boost/test/data/test_case.hpp>

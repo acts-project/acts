@@ -11,7 +11,8 @@
 #include <boost/mpl/equal.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/vector.hpp>
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 #include <type_traits>
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/any_of.hpp"

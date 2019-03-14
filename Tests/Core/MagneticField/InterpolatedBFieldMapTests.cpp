@@ -10,7 +10,8 @@
 
 // clang-format off
 #define BOOST_TEST_MODULE Mapped magnetic field tests
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 // clang-format on
 
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
