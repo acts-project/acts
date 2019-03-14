@@ -10,7 +10,8 @@
 
 // clang-format off
 #define BOOST_TEST_MODULE Solenoid magnetic field tests
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 

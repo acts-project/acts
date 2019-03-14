@@ -10,7 +10,8 @@
 
 #define BOOST_TEST_MODULE GainMatrix Tests
 #include <boost/optional/optional_io.hpp>
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"

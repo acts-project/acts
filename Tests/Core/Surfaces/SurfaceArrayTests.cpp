@@ -7,10 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #define BOOST_TEST_MODULE SurfaceArray
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
 #include <boost/format.hpp>
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
 
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
@@ -24,6 +26,8 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
+
+#include <fstream>
 
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;

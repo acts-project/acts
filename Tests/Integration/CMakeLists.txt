@@ -10,13 +10,13 @@ macro(add_integration_test)
 endmacro()
 
 add_executable (PropagationTests PropagationTests.cpp)
-target_link_libraries (PropagationTests PRIVATE ActsCore ActsLegacy ActsTestsCommonHelpers)
+target_link_libraries (PropagationTests PRIVATE ActsCore ActsLegacy ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_integration_test(PropagationTests)
 
 add_executable (SeedingTest ATLSeedingIntegrationTest.cpp)
-target_link_libraries (SeedingTest PRIVATE ActsLegacy)
+target_link_libraries (SeedingTest PRIVATE ActsLegacy ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_integration_test(SeedingTest)
 
 add_executable (InterpolatedSolenoidBFieldTest InterpolatedSolenoidBFieldTest.cpp)
-target_link_libraries (InterpolatedSolenoidBFieldTest PRIVATE ActsCore ActsTestsCommonHelpers)
+target_link_libraries (InterpolatedSolenoidBFieldTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_integration_test(InterpolatedSolenoidBFieldTest)

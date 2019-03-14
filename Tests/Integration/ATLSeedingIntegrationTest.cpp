@@ -10,7 +10,8 @@
 #include "Acts/Seeding/ATL_Seedmaker.hpp"
 
 #define BOOST_TEST_MODULE SeedmakerIntegrationTest
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
 // space point structure with the bare minimum and reasonable default
 // covariances. clusterList default is SCT (strip detector)
