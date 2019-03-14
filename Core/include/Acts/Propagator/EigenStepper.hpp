@@ -59,7 +59,8 @@ private:
   };
 
 public:
-  using cstep = detail::ConstrainedStep;
+  using cstep     = detail::ConstrainedStep;
+  using Corrector = corrector_t;
 
   /// Jacobian, Covariance and State defintions
   using Jacobian         = ActsMatrixD<5, 5>;

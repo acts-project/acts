@@ -25,6 +25,10 @@ namespace concept {
     using return_t = typename T::template return_parameter_type<void, void>;
 
     template <typename T>
+    using jacobian_t = typename T::Jacobian;
+    template <typename T>
+    using covariance_t = typename T::Covariance;
+    template <typename T>
     using bound_state_t = typename T::BoundState;
     template <typename T>
     using curvilinear_state_t = typename T::CurvilinearState;
@@ -40,6 +44,7 @@ namespace concept {
     METHOD_TRAIT(update_t, update);
     METHOD_TRAIT(covariance_transport_t, covarianceTransport);
     METHOD_TRAIT(step_t, step);
+    METHOD_TRAIT(corrector_t, corrector);
 
     template <typename T>
     using cov_transport_t = decltype(std::declval<T>().covTransport);
@@ -67,6 +72,8 @@ namespace concept {
     template <typename S, typename state = typename S::State>
     constexpr bool StepperConcept
       = require<exists<state_t, S>,
+                exists<jacobian_t, S>,
+                exists<covariance_t, S>,
                 exists<bound_state_t, S>,
                 exists<curvilinear_state_t, S>,
                 exists<return_t, S>,
@@ -80,6 +87,7 @@ namespace concept {
                 has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>,
                 has_method<const S, void, update_t, state&, const BoundParameters&>,
                 has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double>,
+                has_method<const S, typename S::Corrector, corrector_t, state&>, 
                 has_method<const S, void, covariance_transport_t, state&, bool>,
                 has_method<const S, void, covariance_transport_t, state&, const Surface&, bool>
                >;

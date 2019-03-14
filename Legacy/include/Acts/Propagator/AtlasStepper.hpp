@@ -49,6 +49,8 @@ public:
   using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
+  using Corrector = VoidIntersectionCorrector;
+
   /// @brief Nested State struct for the local caching
   struct State
   {
