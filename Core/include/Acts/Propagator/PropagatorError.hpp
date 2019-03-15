@@ -1,0 +1,64 @@
+#pragma once
+
+#include <iostream>
+#include <string>        // for string printing
+#include <system_error>  // bring in std::error_code et al
+
+namespace Acts {
+// This is the custom error code enum
+enum class PropagatorError { Failure = 1, WrongDirection = 2 };
+
+namespace detail {
+  // Define a custom error code category derived from std::error_category
+  class PropagatorErrorCategory : public std::error_category
+  {
+  public:
+    // Return a short descriptive name for the category
+    virtual const char*
+    name() const noexcept override final
+    {
+      return "PropagatorError";
+    }
+    // Return what each enum means in text
+    virtual std::string
+    message(int c) const override final
+    {
+      switch (static_cast<PropagatorError>(c)) {
+      case PropagatorError::Failure:
+        return "Propagation failed";
+      case PropagatorError::WrongDirection:
+        return "Propagation occurred in the wrong direction";
+      default:
+        return "unknown";
+      }
+    }
+  };
+}
+
+// Declare a global function returning a static instance of the custom category
+extern inline const detail::PropagatorErrorCategory&
+PropagatorErrorCategory()
+{
+  static detail::PropagatorErrorCategory c;
+  return c;
+}
+
+inline std::error_code
+make_error_code(Acts::PropagatorError e)
+{
+  return {static_cast<int>(e), Acts::PropagatorErrorCategory()};
+}
+
+
+}
+
+
+namespace std {
+// register with STL
+template <>
+struct is_error_code_enum<Acts::PropagatorError> : std::true_type
+{
+};
+
+
+}

@@ -39,7 +39,7 @@ Acts::LinearizedTrackFactory<bfield_t,
 
   // Do the propagation to linPoint
   auto result = propagator.propagate(*params, *perigeeSurface, pOptions);
-  if(result.ok()) {
+  if (result.ok()) {
     const auto propRes = result.unwrap();
     paramsAtPCA        = propRes.endParameters->parameters();
     positionAtPCA      = propRes.endParameters->position();

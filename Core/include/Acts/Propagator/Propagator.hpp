@@ -54,12 +54,6 @@ BOOST_TTI_HAS_MEMBER_FUNCTION(step)
 namespace Acts {
 
 /// Result status of track parameter propagation
-//enum struct PropagatorStatus {
-  //SUCCESS,
-  //FAILURE,
-  //UNSET,
-  //IN_PROGRESS,
-  //WRONG_DIRECTION
 //};
 
 /// @brief Simple class holding result of propagation call
@@ -70,13 +64,6 @@ namespace Acts {
 template <typename parameters_t, typename... result_list>
 struct PropagatorResult : private detail::Extendable<result_list...>
 {
-  /// Constructor from initial propagation status
-  ///
-  /// @param s is the current status of the Result object
-  //Result(PropagatorStatus s = PropagatorStatus::UNSET)
-    //: detail::Extendable<result_list...>(), status(s)
-  //{
-  //}
 
   /// Accessor to additional propagation quantities
   using detail::Extendable<result_list...>::get;
@@ -86,7 +73,6 @@ struct PropagatorResult : private detail::Extendable<result_list...>
 
   /// Full transport jacobian
   std::unique_ptr<const ActsMatrixD<5, 5>> transportJacobian = nullptr;
-
 
   /// Number of propagation steps that were carried out
   unsigned int steps = 0;
@@ -468,7 +454,7 @@ private:
   ///
   /// @return Propagation PropagatorStatus
   template <typename result_t, typename propagator_state_t>
-  Result<result_t, PropagatorError>
+  Result<result_t, std::error_code>
   propagate_impl(propagator_state_t& state) const
   {
     result_t result;
@@ -493,17 +479,28 @@ private:
       // Propagation loop : stepping
       for (; result.steps < state.options.maxSteps; ++result.steps) {
         // Perform a propagation step - it takes the propagation state
-        double s = m_stepper.step(state);
-        // Accumulate the path length
-        result.pathLength += s;
-        // Call the actions, can (& will likely) modify the state
-        debugLog(state, [&] {
-          std::stringstream dstream;
-          dstream << "Step with size = ";
-          dstream << s;
-          dstream << " performed.";
-          return dstream.str();
-        });
+        Result<double> res = m_stepper.step(state);
+        if(res.ok()) {
+          // Accumulate the path length
+          double s = *res;
+          result.pathLength += s;
+          debugLog(state, [&] {
+            std::stringstream dstream;
+            dstream << "Step with size = ";
+            dstream << s;
+            dstream << " performed.";
+            return dstream.str();
+          });
+        }
+        else {
+          debugLog(state, [&] {
+            std::stringstream dstream;
+            dstream << "Step failed: ";
+            dstream << res.error();
+            return dstream.str();
+          });
+
+        }
         // Post-step
         // navigator status call - action list - aborter list - target call
         m_navigator.status(state, m_stepper);
@@ -555,8 +552,9 @@ public:
             template <typename, typename> class propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
-      typename stepper_t::template return_parameter_type<parameters_t>,
-      action_list_t>, PropagatorError>
+             typename stepper_t::template return_parameter_type<parameters_t>,
+             action_list_t>,
+         std::error_code>
   propagate(
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
@@ -602,8 +600,7 @@ public:
     // Perform the actual propagation & check its outcome
     auto result = propagate_impl<ResultType>(state);
 
-    if(result.ok()) {
-      //ResultType propRes = std::move(*result);
+    if (result.ok()) {
       m_stepper.convert(state.stepping, *result);
       /// Convert into return type and fill the result object
       auto  curvState      = m_stepper.curvilinearState(state.stepping, true);
@@ -618,21 +615,10 @@ public:
             = std::make_unique<const Jacobian>(std::move(tJacobian));
       }
       return result;
-    }
-    else {
+    } else {
       return PropagatorError::Failure;
     }
 
-    //// Perform the actual propagation & check its outcome
-    //if (propagate_impl<ResultType>(result, state) != PropagatorStatus::IN_PROGRESS) {
-      //result.status = PropagatorStatus::FAILURE;
-    //} else {
-      ///// Convert into return type and fill the result object
-      //m_stepper.convert(state.stepping, result);
-      //result.status = PropagatorStatus::SUCCESS;
-    //}
-
-    //return result;
   }
 
   /// @brief Propagate track parameters - User method
@@ -661,11 +647,11 @@ public:
             template <typename, typename> class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t   = detail::PathLimitReached>
-  Result<
-  action_list_t_result_t<
-      typename stepper_t::template return_parameter_type<parameters_t,
-                                                         surface_t>,
-      action_list_t>, PropagatorError>
+  Result<action_list_t_result_t<
+             typename stepper_t::template return_parameter_type<parameters_t,
+                                                                surface_t>,
+             action_list_t>,
+         std::error_code>
   propagate(
       const parameters_t& start,
       const surface_t&    target,
@@ -690,7 +676,6 @@ public:
     using ResultType
         = action_list_t_result_t<return_parameter_type, action_list_t>;
 
-
     // Initialize the internal propagator state
     using StateType = State<OptionsType>;
     StateType state(start, eOptions);
@@ -711,34 +696,24 @@ public:
     auto result = propagate_impl<ResultType>(state);
 
     if(result.ok()) {
+      auto& propRes = *result;
       // Compute the final results and mark the propagation as successful
       auto  bs = m_stepper.boundState(state.stepping, target, true);
       auto& boundParameters = std::get<BoundParameters>(bs);
       // Fill the end parameters
-      result.endParameters
+      propRes.endParameters
           = std::make_unique<const BoundParameters>(std::move(boundParameters));
       // Only fill the transport jacobian when covariance transport was done
       if (state.stepping.covTransport) {
         auto& tJacobian = std::get<Jacobian>(bs);
-        result.transportJacobian
+        propRes.transportJacobian
             = std::make_unique<const Jacobian>(std::move(tJacobian));
       }
       return result;
-    }
-    else {
+    } else {
       return PropagatorError::Failure;
     }
 
-
-    //// Perform the actual propagation
-    //if (propagate_impl(result, state) != PropagatorStatus::IN_PROGRESS) {
-      //result.status = PropagatorStatus::FAILURE;
-    //} else {
-      //// Compute the final results and mark the propagation as successful
-      //m_stepper.convert(state.stepping, result, target);
-      //result.status = PropagatorStatus::SUCCESS;
-    //}
-    //return result;
   }
 
 private:
