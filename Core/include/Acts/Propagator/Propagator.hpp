@@ -480,7 +480,7 @@ private:
       for (; result.steps < state.options.maxSteps; ++result.steps) {
         // Perform a propagation step - it takes the propagation state
         Result<double> res = m_stepper.step(state);
-        if(res.ok()) {
+        if (res.ok()) {
           // Accumulate the path length
           double s = *res;
           result.pathLength += s;
@@ -491,15 +491,13 @@ private:
             dstream << " performed.";
             return dstream.str();
           });
-        }
-        else {
+        } else {
           debugLog(state, [&] {
             std::stringstream dstream;
             dstream << "Step failed: ";
             dstream << res.error();
             return dstream.str();
           });
-
         }
         // Post-step
         // navigator status call - action list - aborter list - target call
@@ -618,7 +616,6 @@ public:
     } else {
       return PropagatorError::Failure;
     }
-
   }
 
   /// @brief Propagate track parameters - User method
@@ -713,7 +710,6 @@ public:
     } else {
       return PropagatorError::Failure;
     }
-
   }
 
 private:

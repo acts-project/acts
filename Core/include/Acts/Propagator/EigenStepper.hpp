@@ -20,8 +20,8 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
-#include "Acts/Utilities/Result.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Utilities/Result.hpp"
 
 namespace Acts {
 

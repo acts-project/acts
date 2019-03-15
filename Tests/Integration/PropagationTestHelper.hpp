@@ -299,8 +299,9 @@ namespace IntegrationTest {
 
     // Increase the path limit - to be safe hitting the surface
     options.pathLimit *= 2;
-    const auto  result = propagator.propagate(start, *endSurface, options).unwrap();
-    const auto& tp     = result.endParameters;
+    const auto result
+        = propagator.propagate(start, *endSurface, options).unwrap();
+    const auto& tp = result.endParameters;
     // check for null pointer
     BOOST_CHECK(tp != nullptr);
     // The position and path length
@@ -355,8 +356,8 @@ namespace IntegrationTest {
     }
     // Create curvilinear start parameters
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
-    const auto            result_s = propagator.propagate(start, options).unwrap();
-    const auto&           tp_s     = result_s.endParameters;
+    const auto  result_s = propagator.propagate(start, options).unwrap();
+    const auto& tp_s     = result_s.endParameters;
 
     // The transform at the destination
     auto seTransform = planar
@@ -376,22 +377,22 @@ namespace IntegrationTest {
                 << options.pathLimit << std::endl;
     }
 
-    auto  result = propagator.propagate(start, *endSurface, options);
+    auto        result  = propagator.propagate(start, *endSurface, options);
     const auto& propRes = *result;
-    const auto& tp     = propRes.endParameters;
+    const auto& tp      = propRes.endParameters;
     // check the result for nullptr
     BOOST_CHECK(tp != nullptr);
 
     // screen output in case you are running in debug mode
     if (debug) {
-      const auto& debugOutput = propRes.template get<DebugOutput::result_type>();
+      const auto& debugOutput
+          = propRes.template get<DebugOutput::result_type>();
       std::cout << ">>> Debug output of this propagation " << std::endl;
       std::cout << debugOutput.debugString << std::endl;
       std::cout << ">>> Propagation status is : ";
-      if(result.ok()) {
+      if (result.ok()) {
         std::cout << "success";
-      }
-      else {
+      } else {
         std::cout << result.error();
       }
       std::cout << std::endl;
@@ -505,8 +506,8 @@ namespace IntegrationTest {
 
     // create curvilinear start parameters
     CurvilinearParameters start_c(nullptr, pos, mom, q);
-    const auto            result_c = propagator.propagate(start_c, options).unwrap();
-    const auto&           tp_c     = result_c.endParameters;
+    const auto  result_c = propagator.propagate(start_c, options).unwrap();
+    const auto& tp_c     = result_c.endParameters;
 
     auto ssTransform = startPlanar
         ? createPlanarTransform(pos, mom.normalized(), 0.1 * rand1, 0.1 * rand2)
@@ -530,8 +531,9 @@ namespace IntegrationTest {
 
     auto endSurface
         = Surface::makeShared<DestSurface_type>(seTransform, nullptr);
-    const auto  result = propagator.propagate(start, *endSurface, options).unwrap();
-    const auto& tp     = result.endParameters;
+    const auto result
+        = propagator.propagate(start, *endSurface, options).unwrap();
+    const auto& tp = result.endParameters;
 
     // get obtained covariance matrix
     ActsSymMatrixD<5> obtained_cov = (*(tp->covariance()));

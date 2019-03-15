@@ -21,13 +21,13 @@
 using namespace std::string_literals;
 
 namespace {
-  enum class MyError { Failure = 1, SomethingElse = 2 };
+enum class MyError { Failure = 1, SomethingElse = 2 };
 
-  std::error_code
-  make_error_code(MyError e)
-  {
-    return {static_cast<int>(e), std::generic_category()};
-  }
+std::error_code
+make_error_code(MyError e)
+{
+  return {static_cast<int>(e), std::generic_category()};
+}
 }
 
 namespace std {
@@ -174,24 +174,23 @@ namespace Test {
       BOOST_CHECK(!res.ok());
       BOOST_CHECK_EQUAL(res.error(), MyError::SomethingElse);
       BOOST_CHECK(res.error() != MyError::Failure);
-      
-
     }
-
-
   }
 
-
-  struct NoCopy {
-    NoCopy(int i) : num(i) {};
+  struct NoCopy
+  {
+    NoCopy(int i) : num(i){};
     NoCopy(const NoCopy&) = delete;
-    NoCopy& operator=(const NoCopy&) = delete;
+    NoCopy&
+    operator=(const NoCopy&)
+        = delete;
     NoCopy(NoCopy&&) = default;
 
     int num;
   };
 
-  BOOST_AUTO_TEST_CASE(CopyBehavious) {
+  BOOST_AUTO_TEST_CASE(CopyBehavious)
+  {
 
     using Result = Result<NoCopy>;
 
@@ -199,7 +198,6 @@ namespace Test {
     Result res = std::move(n);
     BOOST_CHECK(res.ok());
   }
-
 
   BOOST_AUTO_TEST_SUITE_END()
 }

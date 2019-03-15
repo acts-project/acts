@@ -130,7 +130,8 @@ namespace Test {
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
-    BOOST_CHECK(epropagator.propagate(start, options).unwrap().endParameters != nullptr);
+    BOOST_CHECK(epropagator.propagate(start, options).unwrap().endParameters
+                != nullptr);
   }
 
   // This test case checks that no segmentation fault appears
@@ -189,7 +190,7 @@ namespace Test {
     options.pathLimit   = 25 * units::_cm;
     options.debug       = debugMode;
 
-    const auto& result           = epropagator.propagate(start, options).unwrap();
+    const auto& result = epropagator.propagate(start, options).unwrap();
     auto        collector_result = result.get<PlaneCollector::result_type>();
 
     // step through the surfaces and go step by step
@@ -207,7 +208,9 @@ namespace Test {
       }
       // Extrapolate & check
       const auto& cresult
-          = epropagator.propagate(start, *csurface, optionsEmpty).unwrap().endParameters;
+          = epropagator.propagate(start, *csurface, optionsEmpty)
+                .unwrap()
+                .endParameters;
       BOOST_CHECK(cresult != nullptr);
     }
   }

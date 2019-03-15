@@ -48,10 +48,7 @@ make_error_code(Acts::PropagatorError e)
 {
   return {static_cast<int>(e), Acts::PropagatorErrorCategory()};
 }
-
-
 }
-
 
 namespace std {
 // register with STL
@@ -59,6 +56,4 @@ template <>
 struct is_error_code_enum<Acts::PropagatorError> : std::true_type
 {
 };
-
-
 }

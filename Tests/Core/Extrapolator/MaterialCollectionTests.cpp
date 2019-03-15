@@ -190,9 +190,10 @@ namespace Test {
     if (debugModeBwd) {
       std::cout << ">>> Backward Propagation : start." << std::endl;
     }
-
-    const auto& bwdResult = prop.propagate(
-        *fwdResult.endParameters.get(), startSurface, bwdOptions).unwrap();
+    const auto& bwdResult = prop.propagate(*fwdResult.endParameters.get(),
+                                           startSurface,
+                                           bwdOptions)
+                                .unwrap();
 
     if (debugModeBwd) {
       std::cout << ">>> Backward Propagation : end." << std::endl;
@@ -277,7 +278,8 @@ namespace Test {
 
       // make a forward step
       const auto& fwdStep
-          = prop.propagate(*sParameters, (*fwdSteps.surface), fwdStepOptions).unwrap();
+          = prop.propagate(*sParameters, (*fwdSteps.surface), fwdStepOptions)
+                .unwrap();
       // get the backward output to the screen
       if (debugModeFwdStep) {
         const auto& fwdStepOutput
@@ -366,7 +368,8 @@ namespace Test {
       }
       // make a forward step
       const auto& bwdStep
-          = prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions).unwrap();
+          = prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions)
+                .unwrap();
       // get the backward output to the screen
       if (debugModeBwdStep) {
         const auto& bwdStepOutput

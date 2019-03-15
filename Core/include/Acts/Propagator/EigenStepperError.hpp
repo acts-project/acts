@@ -6,7 +6,7 @@
 
 namespace Acts {
 // This is the custom error code enum
-enum class EigenStepperError { StepSizeStalled = 1,  StepInvalid = 2 };
+enum class EigenStepperError { StepSizeStalled = 1, StepInvalid = 2 };
 
 namespace detail {
   // Define a custom error code category derived from std::error_category
@@ -48,10 +48,7 @@ make_error_code(Acts::EigenStepperError e)
 {
   return {static_cast<int>(e), Acts::EigenStepperErrorCategory()};
 }
-
-
 }
-
 
 namespace std {
 // register with STL
@@ -59,6 +56,4 @@ template <>
 struct is_error_code_enum<Acts::EigenStepperError> : std::true_type
 {
 };
-
-
 }

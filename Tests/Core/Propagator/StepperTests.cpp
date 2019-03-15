@@ -188,7 +188,7 @@ namespace Test {
         prop(es, naviVac);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts).unwrap();
+    const auto& result = prop.propagate(sbtp, propOpts).unwrap();
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -311,7 +311,7 @@ namespace Test {
         prop(es, naviMat);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts).unwrap();
+    const auto& result = prop.propagate(sbtp, propOpts).unwrap();
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -496,7 +496,7 @@ namespace Test {
         prop(es, naviDet);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts).unwrap();
+    const auto& result = prop.propagate(sbtp, propOpts).unwrap();
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -555,7 +555,8 @@ namespace Test {
         propDef(esDef, naviDet);
 
     // Launch and collect results
-    const auto& resultDef = propDef.propagate(sbtp, *(surs[0]), propOptsDef).unwrap();
+    const auto& resultDef
+        = propDef.propagate(sbtp, *(surs[0]), propOptsDef).unwrap();
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
@@ -613,7 +614,8 @@ namespace Test {
 
     // Launch and collect results
     const auto& resultDense
-        = propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense).unwrap();
+        = propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense)
+              .unwrap();
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 
