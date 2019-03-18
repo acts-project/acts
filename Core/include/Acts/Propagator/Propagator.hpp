@@ -551,8 +551,7 @@ public:
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
              typename stepper_t::template return_parameter_type<parameters_t>,
-             action_list_t>,
-         std::error_code>
+             action_list_t>>
   propagate(
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
@@ -647,8 +646,7 @@ public:
   Result<action_list_t_result_t<
              typename stepper_t::template return_parameter_type<parameters_t,
                                                                 surface_t>,
-             action_list_t>,
-         std::error_code>
+             action_list_t>>
   propagate(
       const parameters_t& start,
       const surface_t&    target,
