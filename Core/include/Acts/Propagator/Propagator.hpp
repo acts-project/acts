@@ -521,7 +521,7 @@ private:
     state.options.actionList(state, m_stepper, result);
 
     // return progress flag here, decide on SUCCESS later
-    return result;
+    return std::move(result);
   }
 
 public:
@@ -549,8 +549,8 @@ public:
             template <typename, typename> class propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
   Result<action_list_t_result_t<
-             typename stepper_t::template return_parameter_type<parameters_t>,
-             action_list_t>>
+      typename stepper_t::template return_parameter_type<parameters_t>,
+      action_list_t>>
   propagate(
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
@@ -612,7 +612,7 @@ public:
       }
       return result;
     } else {
-      return result.error(); 
+      return result.error();
     }
   }
 
@@ -643,9 +643,9 @@ public:
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t   = detail::PathLimitReached>
   Result<action_list_t_result_t<
-             typename stepper_t::template return_parameter_type<parameters_t,
-                                                                surface_t>,
-             action_list_t>>
+      typename stepper_t::template return_parameter_type<parameters_t,
+                                                         surface_t>,
+      action_list_t>>
   propagate(
       const parameters_t& start,
       const surface_t&    target,
