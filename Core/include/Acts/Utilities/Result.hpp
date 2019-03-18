@@ -23,13 +23,6 @@ namespace Acts {
 template <typename T, typename E = std::error_code>
 class Result
 {
-  // Helper which checks whether T and E are ambiguous
-  // clang-format off
-  static constexpr bool unambiguous =
-      (!std::is_same_v<T, E> && !std::is_constructible_v<T, E> &&
-       !std::is_constructible_v<T, E>);
-  // clang-format on
-
   /**
    * Private constructor which accepts an external variant.
    * This is used by the factory static methods to set up
@@ -84,7 +77,14 @@ public:
    * @param value The potential value, could be an actual valid value or an
    * error.
    */
-  template <typename T2, typename = std::enable_if_t<unambiguous>>
+  template <
+      typename T2,
+      typename _E = E,
+      typename _T = T,
+      typename    = std::
+          enable_if_t<!std::
+                          is_same_v<_T,
+                                    _E> && !std::is_constructible_v<_T, _E> && !std::is_constructible_v<_T, _E>>>
   Result(T2 value) noexcept : m_var(std::move(value))
   {
   }
@@ -210,4 +210,4 @@ public:
 private:
   std::variant<T, E> m_var;
 };
-}
+}  // namespace Acts
