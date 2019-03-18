@@ -53,9 +53,6 @@ BOOST_TTI_HAS_MEMBER_FUNCTION(step)
 
 namespace Acts {
 
-/// Result status of track parameter propagation
-//};
-
 /// @brief Simple class holding result of propagation call
 ///
 /// @tparam parameters_t Type of final track parameters
@@ -498,6 +495,8 @@ private:
             dstream << res.error();
             return dstream.str();
           });
+          // pass error to caller
+          return res.error();
         }
         // Post-step
         // navigator status call - action list - aborter list - target call
@@ -613,7 +612,7 @@ public:
       }
       return result;
     } else {
-      return PropagatorError::Failure;
+      return result.error(); 
     }
   }
 
@@ -706,7 +705,7 @@ public:
       }
       return result;
     } else {
-      return PropagatorError::Failure;
+      return result.error();
     }
   }
 
