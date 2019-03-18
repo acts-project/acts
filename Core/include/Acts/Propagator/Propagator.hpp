@@ -451,7 +451,7 @@ private:
   ///
   /// @return Propagation PropagatorStatus
   template <typename result_t, typename propagator_state_t>
-  Result<result_t, std::error_code>
+  Result<result_t>
   propagate_impl(propagator_state_t& state) const
   {
     result_t result;
