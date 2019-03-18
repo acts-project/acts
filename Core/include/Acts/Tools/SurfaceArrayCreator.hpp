@@ -86,9 +86,6 @@ public:
     /// of bins to the lowest number of non-equivalent phi surfaces
     /// of all r-bins. If false, this step is skipped.
     bool doPhiBinningOptimization = true;
-
-    /// The building context
-    GeometryContext buildContext = DefaultGeometryContext();
   };
 
   /// Constructor with default config
@@ -122,6 +119,7 @@ public:
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @param [in] gctx The gometry context fro this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsZ is the number of bin in Z for the surfaces
@@ -129,7 +127,8 @@ public:
   ///
   /// @return a unique pointer to a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnCylinder(std::vector<std::shared_ptr<const Surface>> surfaces,
+  surfaceArrayOnCylinder(const GeometryContext&                      gctx,
+                         std::vector<std::shared_ptr<const Surface>> surfaces,
                          size_t                                      binsPhi,
                          size_t                                      binsZ,
                          boost::optional<ProtoLayer> protoLayerOpt
@@ -147,6 +146,7 @@ public:
   /// to be ordered on the cylinder
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
+  /// @param [in] gctx The gometry context fro this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
   /// @param bTypeZ the binning type in z direction (equidistant/aribtrary)
@@ -154,7 +154,8 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnCylinder(std::vector<std::shared_ptr<const Surface>> surfaces,
+  surfaceArrayOnCylinder(const GeometryContext&                      gctx,
+                         std::vector<std::shared_ptr<const Surface>> surfaces,
                          BinningType                 bTypePhi = equidistant,
                          BinningType                 bTypeZ   = equidistant,
                          boost::optional<ProtoLayer> protoLayerOpt
@@ -171,6 +172,7 @@ public:
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
+  /// @param [in] gctx The gometry context fro this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param binsPhi is the number of bins in phi for the surfaces
   /// @param binsR is the number of bin in R for the surfaces
@@ -178,7 +180,8 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnDisc(std::vector<std::shared_ptr<const Surface>> surfaces,
+  surfaceArrayOnDisc(const GeometryContext&                      gctx,
+                     std::vector<std::shared_ptr<const Surface>> surfaces,
                      size_t                                      binsR,
                      size_t                                      binsPhi,
                      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
@@ -195,6 +198,7 @@ public:
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
   /// need to be valid, since no check is performed
   /// @warning This function requires the disc aligned with the z-axis
+  /// @param [in] gctx The gometry context fro this building call
   /// @param protoLayerOpt The proto layer containing the layer size
   /// @param bTypeR the binning type in r direction (equidistant/aribtrary)
   /// @param bTypePhi the binning type in phi direction (equidistant/aribtrary)
@@ -205,7 +209,8 @@ public:
   ///       will be set to lowest number of surfaces of any R-ring.
   ///       This ignores bTypePhi and produces equidistant binning in phi
   std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnDisc(std::vector<std::shared_ptr<const Surface>> surfaces,
+  surfaceArrayOnDisc(const GeometryContext&                      gctx,
+                     std::vector<std::shared_ptr<const Surface>> surfaces,
                      BinningType                                 bTypeR,
                      BinningType                                 bTypePhi,
                      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
@@ -215,6 +220,7 @@ public:
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
   ///
+  /// @param [in] gctx The gometry context fro this building call
   /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// to be ordered on the plane
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -232,7 +238,8 @@ public:
   ///
   /// @return a unique pointer a new SurfaceArray
   std::unique_ptr<SurfaceArray>
-  surfaceArrayOnPlane(std::vector<std::shared_ptr<const Surface>> surfaces,
+  surfaceArrayOnPlane(const GeometryContext&                      gctx,
+                      std::vector<std::shared_ptr<const Surface>> surfaces,
                       size_t                                      bins1,
                       size_t                                      bins2,
                       BinningValue                bValue = BinningValue::binX,
@@ -240,6 +247,12 @@ public:
                       const std::shared_ptr<const Transform3D>& transformOpt
                       = nullptr) const;
 
+  /// Static check funtion for surface equivalent
+  ///
+  /// @param [in] gctx the geometry context for this check
+  /// @param bValue the binning value for the binning
+  /// @param a first surface for checking
+  /// @param b second surface for checking
   static bool
   isSurfaceEquivalent(const GeometryContext& gctx,
                       BinningValue           bValue,
@@ -306,7 +319,8 @@ private:
       const std::function<bool(const Surface*, const Surface*)>& equal) const;
 
   size_t
-  determineBinCount(const std::vector<const Surface*>& surfaces,
+  determineBinCount(const GeometryContext&             gctx,
+                    const std::vector<const Surface*>& surfaces,
                     BinningValue                       bValue) const;
 
   /// SurfaceArrayCreator internal method
@@ -321,6 +335,7 @@ private:
   /// last surface.
   /// @note currently implemented for phi, r and z bining
   /// @todo implement for x,y binning
+  /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
@@ -330,7 +345,8 @@ private:
   /// @note This only creates the @c ProtoAxis, this needs to be turned
   ///       into an actual @c Axis object to be used
   ProtoAxis
-  createVariableAxis(const std::vector<const Surface*>& surfaces,
+  createVariableAxis(const GeometryContext&             gctx,
+                     const std::vector<const Surface*>& surfaces,
                      BinningValue                       bValue,
                      ProtoLayer                         protoLayer,
                      Transform3D&                       transform) const;
@@ -347,6 +363,7 @@ private:
   /// binning direction) to the first/last surface.
   /// @note currently implemented for phi, r and z bining
   /// @todo implement for x,y binning
+  /// @param [in] gctx the geometry context for this call
   /// @param surfaces are the sensitive surfaces to be
   /// @param bValue the BinningValue in which direction should be binned
   /// (currently possible: binPhi, binR, binZ)
@@ -356,7 +373,8 @@ private:
   /// @note This only creates the @c ProtoAxis, this needs to be turned
   ///       into an actual @c Axis object to be used
   ProtoAxis
-  createEquidistantAxis(const std::vector<const Surface*>& surfaces,
+  createEquidistantAxis(const GeometryContext&             gctx,
+                        const std::vector<const Surface*>& surfaces,
                         BinningValue                       bValue,
                         ProtoLayer                         protoLayer,
                         Transform3D&                       transform,
@@ -448,16 +466,18 @@ private:
   /// I.e. to put a finer granularity binning onto your surface
   /// Neighbour bins are then filled to contain pointers as well
   /// This method delegates to SurfaceGridLookup itself.
+  /// @param [in] gctx the geometry context for this call
   /// @param sl The @c SurfaceGridLookup
   /// @param surfaces the surfaces
   void
-  completeBinning(SurfaceArray::ISurfaceGridLookup&  sl,
+  completeBinning(const GeometryContext&             gctx,
+                  SurfaceArray::ISurfaceGridLookup&  sl,
                   const std::vector<const Surface*>& surfaces) const
   {
     ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
                  "empty bins.");
 
-    size_t binCompleted = sl.completeBinning(m_cfg.buildContext, surfaces);
+    size_t binCompleted = sl.completeBinning(gctx, surfaces);
 
     ACTS_VERBOSE("       filled  : " << binCompleted
                                      << " (includes under/overflow)");
@@ -465,11 +485,13 @@ private:
 
   /// Private helper method to transform the  vertices of surface bounds into
   /// global coordinates
+  /// @param [in] gctx the geometry context for this call
   /// @param surface the surface associated with the given vertices
   /// @param locVertices a vector of the vertices in local coordinates
   /// @return a vector of the vertices in global coordinates
   std::vector<Acts::Vector3D>
-  makeGlobalVertices(const Acts::Surface&               surface,
+  makeGlobalVertices(const GeometryContext&             gctx,
+                     const Acts::Surface&               surface,
                      const std::vector<Acts::Vector2D>& locVertices) const;
 };
 

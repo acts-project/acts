@@ -32,7 +32,7 @@ namespace Acts {
 namespace Test {
   // using boost::test_tools::output_test_stream;
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   BOOST_AUTO_TEST_SUITE(Surfaces)
   /// Unit tests for creating DiscSurface object

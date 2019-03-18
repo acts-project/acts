@@ -45,7 +45,7 @@ namespace Test {
     (void)index;
 
     // Create a test context
-    GeometryContext tgContext = DefaultGeometryContext();
+    GeometryContext tgContext = GeometryContext();
 
     // position of volume
     const Vector3D pos(posX, posY, posZ);

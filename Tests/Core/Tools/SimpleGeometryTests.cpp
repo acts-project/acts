@@ -24,6 +24,9 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   /// @brief Unit test for a three layer detector parameters
   /// Testing the Tool chain in the geometry building process
   ///
@@ -116,7 +119,7 @@ namespace Test {
     tgbConfig.trackingVolumeHelper = cylinderVolumeHelper;
 
     TrackingGeometryBuilder tgBuilder(tgbConfig);
-    auto                    tGeometry = tgBuilder.trackingGeometry();
+    auto                    tGeometry = tgBuilder.trackingGeometry(tgContext);
 
     BOOST_CHECK(tGeometry != nullptr);
   }

@@ -8,7 +8,7 @@
 
 #pragma once
 
-/// Set the GeometryContext PLUGIN
+/// Set the Geometry Context PLUGIN
 #ifdef ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #include ACTS_CORE_GEOMETRYCONTEXT_PLUGIN
 #else
@@ -23,8 +23,7 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent geometry changes
 
-using GeometryContext        = std::any;
-using DefaultGeometryContext = GeometryContext;
+using GeometryContext = std::any;
 
 }  // namespace Acts
 

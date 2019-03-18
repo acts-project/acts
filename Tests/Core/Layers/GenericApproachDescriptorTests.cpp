@@ -30,7 +30,7 @@ namespace Test {
   namespace Layers {
 
     // Build a default context for testing
-    GeometryContext tgContext = DefaultGeometryContext();
+    GeometryContext tgContext = GeometryContext();
 
     BOOST_AUTO_TEST_SUITE(Layers)
 

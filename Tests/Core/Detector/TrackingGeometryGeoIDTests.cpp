@@ -20,7 +20,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   ///  create three cylinder surfaces
   ///  the surface radius (will also be the layer radius)

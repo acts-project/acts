@@ -39,8 +39,8 @@ namespace Test {
   using AtlasStepperType = AtlasStepper<BFieldType>;
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly

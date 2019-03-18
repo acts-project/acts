@@ -8,7 +8,7 @@
 
 #pragma once
 
-/// Set the CalibrationContext PLUGIN
+/// Set the Calibration Context PLUGIN
 #ifdef ACTS_CORE_CALIBRATIONCONTEXT_PLUGIN
 #include ACTS_CORE_CALIBRATIONCONTEXT_PLUGIN
 #else
@@ -23,8 +23,7 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent calibration
 
-using CalibrationContext        = std::any;
-using DefaultCalibrationContext = CalibrationContext;
+using CalibrationContext = std::any;
 
 }  // namespace Acts
 

@@ -14,6 +14,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -32,20 +33,33 @@ class ILayerBuilder
 public:
   /// Virtual destructor
   virtual ~ILayerBuilder() = default;
+
   /// LayerBuilder interface method
+  ///
+  /// @param gctx ist the geometry context under
+  /// which the geometry is built
+  ///
   /// @return  the layers at negative side
   virtual const LayerVector
-  negativeLayers() const = 0;
+  negativeLayers(const GeometryContext& gctx) const = 0;
 
   /// LayerBuilder interface method
+  ///
+  /// @param gctx ist the geometry context under
+  /// which the geometry is built
+  ///
   /// @return the layers at the central sector
   virtual const LayerVector
-  centralLayers() const = 0;
+  centralLayers(const GeometryContext& gctx) const = 0;
 
   /// LayerBuilder interface method
+  ///
+  /// @param gctx ist the geometry context under
+  /// which the geometry is built
+  ///
   /// @return  the layers at positive side
   virtual const LayerVector
-  positiveLayers() const = 0;
+  positiveLayers(const GeometryContext& gctx) const = 0;
 
   /// Name identification
   /// @return the string based identification

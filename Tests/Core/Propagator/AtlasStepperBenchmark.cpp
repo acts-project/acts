@@ -31,8 +31,8 @@ main(int argc, char* argv[])
   bool         withCov = true;
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   try {
     po::options_description desc("Allowed options");

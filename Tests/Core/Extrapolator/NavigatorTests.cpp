@@ -37,6 +37,9 @@ using VectorHelpers::perp;
 
 namespace Test {
 
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   /// This is a simple cache struct to mimic the
   /// Propagator cache
   struct PropagatorState
@@ -144,7 +147,7 @@ namespace Test {
     Navigator::state_type navigation;
 
     // The context cache for this propagation
-    GeometryContext geoContext = DefaultGeometryContext();
+    GeometryContext geoContext = GeometryContext();
   };
 
   template <typename stepper_state_t>
@@ -159,7 +162,7 @@ namespace Test {
 
   // the surface cache & the creation of the geometry
 
-  CylindricalTrackingGeometry cGeometry;
+  CylindricalTrackingGeometry cGeometry(tgContext);
   auto                        tGeometry = cGeometry();
 
   // the debug boolean

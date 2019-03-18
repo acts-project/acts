@@ -27,7 +27,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// @brief unit test for construction of constant magnetic field
   ///

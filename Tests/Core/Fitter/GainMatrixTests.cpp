@@ -32,7 +32,7 @@ namespace Test {
   using TrackState      = TrackState<Identifier, BoundParameters>;
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   BOOST_AUTO_TEST_CASE(gain_matrix_updator)
   {

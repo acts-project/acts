@@ -52,9 +52,6 @@ public:
 
     /// the tracking volume helper for detector construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;
-
-    /// The building context
-    GeometryContext buildContext = DefaultGeometryContext();
   };
 
   /// Constructor
@@ -70,9 +67,12 @@ public:
   ~TrackingGeometryBuilder() override = default;
 
   /// TrackingGeometry Interface method
+  ///
+  /// @param gctx geometry context of that building call
+  ///
   /// @return a unique pointer to a TrackingGeometry
   std::unique_ptr<const TrackingGeometry>
-  trackingGeometry() const final;
+  trackingGeometry(const GeometryContext& gctx) const final;
 
   /// Set configuration method
   ///

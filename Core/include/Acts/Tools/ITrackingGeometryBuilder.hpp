@@ -12,6 +12,7 @@
 
 #pragma once
 #include <memory>
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 class TrackingGeometry;
@@ -34,8 +35,11 @@ public:
   virtual ~ITrackingGeometryBuilder() = default;
 
   /// TrackingGeometry Interface methode
+  ///
+  /// @param gctx ist the geometry context for witch the geometry is built
+  ///
   /// @return unique pointer to a newly created TrackingGeometry
   virtual std::unique_ptr<const TrackingGeometry>
-  trackingGeometry() const = 0;
+  trackingGeometry(const GeometryContext& gctx) const = 0;
 };
 }  // namespace

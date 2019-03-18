@@ -40,8 +40,8 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   // Global definitions
   // The path limit abort
@@ -49,7 +49,7 @@ namespace Test {
 
   std::vector<std::unique_ptr<const Surface>> stepState;
 
-  CylindricalTrackingGeometry cGeometry;
+  CylindricalTrackingGeometry cGeometry(tgContext);
   auto                        tGeometry = cGeometry();
 
   // Get the navigator and provide the TrackingGeometry

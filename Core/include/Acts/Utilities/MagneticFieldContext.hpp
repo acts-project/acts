@@ -8,7 +8,7 @@
 
 #pragma once
 
-/// Set the MAgneticFieldContext PLUGIN
+/// Set the Mangetic Field Context PLUGIN
 #ifdef ACTS_CORE_MAGFIELDCONTEXT_PLUGIN
 #include ACTS_CORE_MAGFIELDCONTEXT_PLUGIN
 #else
@@ -23,8 +23,7 @@ namespace Acts {
 /// It is propagated through the code to allow for event/thread
 /// dependent magnetic field changes
 
-using MagneticFieldContext        = std::any;
-using DefaultMagneticFieldContext = MagneticFieldContext;
+using MagneticFieldContext = std::any;
 
 }  // namespace Acts
 

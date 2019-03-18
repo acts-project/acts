@@ -34,7 +34,7 @@ namespace Test {
   {
 
     // Create a test context
-    MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+    MagneticFieldContext mfContext = MagneticFieldContext();
 
     SolenoidBField::Config cfg;
     cfg.length     = 5.8 * Acts::units::_m;

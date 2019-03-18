@@ -32,8 +32,8 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// @brief Unit test for FullBilloirVertexFitter
   ///

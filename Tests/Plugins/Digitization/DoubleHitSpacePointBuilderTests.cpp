@@ -27,7 +27,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   /// Unit test for testing the main functions of DoubleHitSpacePointBuilder
   /// 1) A pair of hits gets added and resolved.

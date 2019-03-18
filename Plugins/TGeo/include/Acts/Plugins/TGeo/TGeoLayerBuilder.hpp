@@ -71,8 +71,6 @@ public:
     bool setVisibility;
     // layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
-    // The building context
-    GeometryContext buildContext = DefaultGeometryContext();
     // configurations
     std::vector<LayerConfig> negativeLayerConfigs;
     std::vector<LayerConfig> centralLayerConfigs;
@@ -90,16 +88,25 @@ public:
   ~TGeoLayerBuilder() override;
 
   /// LayerBuilder interface method - returning the layers at negative side
+  ///
+  /// @param gctx the geometry context for this build call
+  ///
   const LayerVector
-  negativeLayers() const final;
+  negativeLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method - returning the central layers
+  ///
+  /// @param gctx the geometry context for this build call
+  ///
   const LayerVector
-  centralLayers() const final;
+  centralLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method - returning the layers at negative side
+  ///
+  /// @param gctx the geometry context for this build call
+  ///
   const LayerVector
-  positiveLayers() const final;
+  positiveLayers(const GeometryContext& gctx) const final;
 
   /// Name identification
   const std::string&
@@ -140,8 +147,11 @@ private:
   std::vector<std::shared_ptr<const TGeoDetectorElement>> m_elementStore;
 
   /// Private helper function to parse the geometry tree
+  /// @param gcts the geometry context of this call
+  /// @param layerSurfaces are the surfaces that build the layer
   void
-  resolveSensitive(std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
+  resolveSensitive(const GeometryContext&                       gctx,
+                   std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
                    TGeoVolume*                                  tgVolume,
                    TGeoNode*                                    tgNode,
                    const TGeoMatrix&                            tgTransform,
@@ -150,15 +160,16 @@ private:
                    bool               correctBranch = false,
                    const std::string& offset        = "");
 
-  // Private helper method : build layers
-  // @param layers is goint to be filled
-  // @param type is the indication which ones to build -1 | 0 | 1
+  /// Private helper method : build layers
+  /// @param gcts the geometry context of this call
+  /// @param layers is goint to be filled
+  /// @param type is the indication which ones to build -1 | 0 | 1
   void
-  buildLayers(LayerVector& layers, int type = 0);
+  buildLayers(const GeometryContext& gctx, LayerVector& layers, int type = 0);
 
-  // Private helper method : match string with wildcards
-  // @param wc is the one with the potential wildcard
-  // @param test is the test string
+  /// Private helper method : match string with wildcards
+  /// @param wc is the one with the potential wildcard
+  /// @param test is the test string
   bool
   match(const char* first, const char* second) const;
 };

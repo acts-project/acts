@@ -30,7 +30,7 @@ namespace Test {
   {
 
     // Create a test context
-    GeometryContext tgContext = DefaultGeometryContext();
+    GeometryContext tgContext = GeometryContext();
 
     // some position and momentum
     Vector3D pos(1.34, 2.34, 3.45);
@@ -80,9 +80,12 @@ namespace Test {
     mFrame.col(0)           = uAxis;
     mFrame.col(1)           = vAxis;
     mFrame.col(2)           = tAxis;
-    CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_pos.referenceFrame(), 1e-6, 1e-9);
-    CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_neg.referenceFrame(), 1e-6, 1e-9);
-    CHECK_CLOSE_OR_SMALL(mFrame, curvilinear_neut.referenceFrame(), 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(
+        mFrame, curvilinear_pos.referenceFrame(tgContext), 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(
+        mFrame, curvilinear_neg.referenceFrame(tgContext), 1e-6, 1e-9);
+    CHECK_CLOSE_OR_SMALL(
+        mFrame, curvilinear_neut.referenceFrame(tgContext), 1e-6, 1e-9);
 
     /// copy construction test
     CurvilinearParameters        curvilinear_pos_copy(curvilinear_pos);

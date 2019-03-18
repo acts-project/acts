@@ -37,18 +37,16 @@ public:
   /// @brief This struct stores the configuration of the tracking geometry
   struct Config
   {
-    /// The building context
-    GeometryContext buildContext = DefaultGeometryContext();
   };
 
   /// Constructor
   ///
   /// @param logger logging instance
-  TrackingVolumeArrayCreator(const Config&                 cfg,
+  TrackingVolumeArrayCreator(const Config& /*cfg*/,
                              std::unique_ptr<const Logger> logger
                              = getDefaultLogger("LayerArrayCreator",
                                                 Logging::INFO))
-    : m_cfg(cfg), m_logger(std::move(logger))
+    : m_logger(std::move(logger))
   {
   }
 
@@ -57,12 +55,14 @@ public:
 
   /// create a tracking volume array
   ///
-  /// @param tVolumes is the vector of TrackingVolumes to be
-  /// @param bValue is the binning value
+  /// @param [in] gctx the geometry context for this building
+  /// @param [in] tVolumes is the vector of TrackingVolumes to be
+  /// @param [in] bValue is the binning value
   ///
   /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray>
-  trackingVolumeArray(const TrackingVolumeVector& tVolumes,
+  trackingVolumeArray(const GeometryContext&      gctx,
+                      const TrackingVolumeVector& tVolumes,
                       BinningValue                bValue) const override;
 
   /// Set logging instance
@@ -81,9 +81,6 @@ private:
   {
     return *m_logger;
   }
-
-  /// The config class
-  Config m_cfg;
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;

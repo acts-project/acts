@@ -22,7 +22,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   /// we test a two-level hierarchy
   /// every deeper level hierarchy is a a derivate of this

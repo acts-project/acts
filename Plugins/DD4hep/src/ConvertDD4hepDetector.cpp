@@ -19,6 +19,7 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -107,7 +108,7 @@ convertDD4hepDetector(
   tgbConfig.trackingVolumeBuilders = std::move(volumeFactories);
   auto trackingGeometryBuilder
       = std::make_shared<const Acts::TrackingGeometryBuilder>(tgbConfig);
-  return (trackingGeometryBuilder->trackingGeometry());
+  return (trackingGeometryBuilder->trackingGeometry(Acts::GeometryContext()));
 }
 
 std::shared_ptr<const CylinderVolumeBuilder>

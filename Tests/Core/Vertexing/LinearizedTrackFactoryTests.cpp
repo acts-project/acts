@@ -30,8 +30,8 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   // Vertex x/y position distribution
   std::uniform_real_distribution<> vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);

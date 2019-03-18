@@ -38,8 +38,8 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   using cstep = detail::ConstrainedStep;
 

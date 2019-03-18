@@ -197,12 +197,12 @@ public:
   /// is described.
   ///
   /// @param gctx The current geometry context object, e.g. alignment
+  ///             It is ignored for Curvilinear parameters
   ///
   /// @note For a curvilinear track parameterisation this is identical to
   /// the rotation matrix of the intrinsic planar surface.
   RotationMatrix3D
-  referenceFrame(const GeometryContext& gctx
-                 = DefaultGeometryContext()) const final
+  referenceFrame(const GeometryContext& gctx) const final
   {
     return m_upSurface->transform(gctx).linear();
   }

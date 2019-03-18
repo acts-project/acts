@@ -60,7 +60,7 @@ private:
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   BOOST_AUTO_TEST_SUITE(Surfaces)
 

@@ -33,7 +33,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// This is the canonical interface that all field implementations
   /// need to comply with.

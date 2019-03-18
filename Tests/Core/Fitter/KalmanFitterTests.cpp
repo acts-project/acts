@@ -66,9 +66,9 @@ namespace Test {
   bool debugMode = false;
 
   // Create a test context
-  GeometryContext      tgContext  = DefaultGeometryContext();
-  MagneticFieldContext mfContext  = DefaultMagneticFieldContext();
-  CalibrationContext   calContext = DefaultCalibrationContext();
+  GeometryContext      tgContext  = GeometryContext();
+  MagneticFieldContext mfContext  = MagneticFieldContext();
+  CalibrationContext   calContext = CalibrationContext();
 
   /// @brief This struct creates FittableMeasurements on the
   /// detector surfaces, according to the given smearing xxparameters
@@ -211,7 +211,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field)
   {
     // Build detector
-    CubicTrackingGeometry cGeometry;
+    CubicTrackingGeometry cGeometry(tgContext);
     auto                  detector = cGeometry();
 
     // Build navigator for the measurement creatoin

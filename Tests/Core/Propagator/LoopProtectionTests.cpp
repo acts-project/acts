@@ -36,8 +36,8 @@ using namespace detail;
 namespace Test {
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// @brief mockup of stepping state
   struct SteppingState

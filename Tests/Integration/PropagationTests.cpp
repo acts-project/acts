@@ -88,8 +88,9 @@ namespace IntegrationTest {
           return cvb.trackingVolume(inner, nullptr);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
-    Navigator                               navi(detector);
+    std::shared_ptr<const TrackingGeometry> detector
+        = tgb.trackingGeometry(tgContext);
+    Navigator navi(detector);
     return DensePropagatorType(dstepper, std::move(navi));
   }
 

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <functional>
 #include <vector>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
@@ -38,8 +39,14 @@ namespace Test {
   struct CylindricalTrackingGeometry
   {
 
-    /// Default constructor
-    CylindricalTrackingGeometry() = default;
+    std::reference_wrapper<const GeometryContext> geoContext;
+
+    /// Only allowed constructor with reference wrapper
+    CylindricalTrackingGeometry(
+        std::reference_wrapper<const GeometryContext> gctx)
+      : geoContext(gctx)
+    {
+    }
 
     /// The detector store for memory management
     std::vector<std::unique_ptr<const DetectorElementStub>> detectorStore = {};
@@ -142,8 +149,8 @@ namespace Test {
       // create the bounds and the volume
       auto beamPipeBounds
           = std::make_shared<const CylinderVolumeBounds>(0., 25., 1100.);
-      auto beamPipeVolume
-          = beamPipeVolumeBuilder->trackingVolume(nullptr, beamPipeBounds);
+      auto beamPipeVolume = beamPipeVolumeBuilder->trackingVolume(
+          geoContext, nullptr, beamPipeBounds);
 
       //-------------------------------------------------------------------------------------
       // some prep work for the material
@@ -223,9 +230,10 @@ namespace Test {
           detectorStore.push_back(std::move(detElement));
         }
         // create the layer and store it
-        ProtoLayer protoLayer(DefaultGeometryContext(), layerModules);
+        ProtoLayer protoLayer(geoContext, layerModules);
         protoLayer.envR = {0.5, 0.5};
-        auto pLayer     = layerCreator->cylinderLayer(std::move(layerModules),
+        auto pLayer     = layerCreator->cylinderLayer(geoContext,
+                                                  std::move(layerModules),
                                                   pLayerBinning[ilp].first,
                                                   pLayerBinning[ilp].second,
                                                   protoLayer);
@@ -240,8 +248,8 @@ namespace Test {
       }  // loop over layers
 
       // layer array
-      auto pLayerArray
-          = layerArrayCreator->layerArray(pLayers, 25., 300., arbitrary, binR);
+      auto pLayerArray = layerArrayCreator->layerArray(
+          geoContext, pLayers, 25., 300., arbitrary, binR);
       auto pVolumeBounds
           = std::make_shared<const CylinderVolumeBounds>(25., 300., 1100.);
       // create the Tracking volume
@@ -252,9 +260,9 @@ namespace Test {
                                             nullptr,
                                             "Pixel::Barrel");
 
-      // the combined volume
+      // The combined volume
       auto detectorVolume = cylinderVolumeHelper->createContainerTrackingVolume(
-          {beamPipeVolume, pVolume});
+          geoContext, {beamPipeVolume, pVolume});
 
       // create and return the geometry
       return std::make_shared<const TrackingGeometry>(detectorVolume);

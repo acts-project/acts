@@ -40,7 +40,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   using SrfVec = std::vector<std::shared_ptr<const Surface>>;
   struct SurfaceArrayFixture
@@ -207,7 +207,7 @@ namespace Test {
   BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture)
   {
 
-    GeometryContext tgContext = DefaultGeometryContext();
+    GeometryContext tgContext = GeometryContext();
 
     SrfVec                      brl    = makeBarrel(30, 7, 2, 1);
     std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);

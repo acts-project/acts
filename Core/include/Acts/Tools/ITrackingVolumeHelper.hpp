@@ -52,6 +52,7 @@ public:
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
+  /// @param gctx ist the geometry context for witch the volume is built
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
@@ -65,7 +66,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&                 layers,
+  createTrackingVolume(const GeometryContext&             gctx,
+                       const LayerVector&                 layers,
                        std::shared_ptr<const Material>    matprop,
                        VolumeBoundsPtr                    volBounds,
                        std::shared_ptr<const Transform3D> transform = nullptr,
@@ -74,6 +76,7 @@ public:
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
+  /// @param gctx ist the geometry context for witch the volume is built
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
@@ -85,7 +88,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&              layers,
+  createTrackingVolume(const GeometryContext&          gctx,
+                       const LayerVector&              layers,
                        std::shared_ptr<const Material> matprop,
                        double                          loc0Min,
                        double                          loc0Max,
@@ -96,6 +100,7 @@ public:
 
   /// Create a gap volume from dimensions and
   ///
+  /// @param gctx ist the geometry context for witch the volume is built
   /// @param matprop dense material properties for this TrackingVolume
   /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
@@ -105,7 +110,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+  createGapTrackingVolume(const GeometryContext&          gctx,
+                          std::shared_ptr<const Material> matprop,
                           double                          loc0Min,
                           double                          loc0Max,
                           double                          loc1Min,
@@ -117,6 +123,7 @@ public:
 
   /// Create a gap volume from dimensions and
   ///
+  /// @param gctx ist the geometry context for witch the volume is built
   /// @param matprop dense material properties for this TrackingVolume
   /// @param loc0Min, loc0Max, loc1Min, loc1Max local position in space,
   /// @param layerPositions custom layer positions
@@ -126,7 +133,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+  createGapTrackingVolume(const GeometryContext&          gctx,
+                          std::shared_ptr<const Material> matprop,
                           double                          loc0Min,
                           double                          loc0Max,
                           double                          loc1Min,
@@ -138,11 +146,13 @@ public:
 
   /// Create a one level higher TrackingVolue
   ///
+  /// @param gctx ist the geometry context for witch the volume is built
   /// @param volumes the volumes to be contained
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr
-  createContainerTrackingVolume(const TrackingVolumeVector& volumes) const = 0;
+  createContainerTrackingVolume(const GeometryContext&      gctx,
+                                const TrackingVolumeVector& volumes) const = 0;
 };
 
 }  // namespace

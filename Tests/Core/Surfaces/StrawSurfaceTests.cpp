@@ -34,7 +34,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   BOOST_AUTO_TEST_SUITE(StrawSurfaces)
   /// Unit test for creating compliant/non-compliant StrawSurface object

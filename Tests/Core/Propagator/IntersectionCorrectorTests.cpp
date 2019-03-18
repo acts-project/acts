@@ -36,7 +36,7 @@ namespace Test {
   {
 
     // Create a test context
-    GeometryContext tgContext = DefaultGeometryContext();
+    GeometryContext tgContext = GeometryContext();
 
     // construct the surface
     Vector3D pcenter(-4., 4., 0.);

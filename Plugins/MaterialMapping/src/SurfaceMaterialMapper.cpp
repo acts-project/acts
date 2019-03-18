@@ -32,12 +32,14 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
 
 Acts::SurfaceMaterialMapper::State
 Acts::SurfaceMaterialMapper::createState(
-    const TrackingGeometry& tGeometry) const
+    const GeometryContext&      gctx,
+    const MagneticFieldContext& mctx,
+    const TrackingGeometry&     tGeometry) const
 {
   // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
   // The Surface material mapping state
-  State mState;
+  State mState(gctx, mctx);
   resolveMaterialSurfaces(mState, *world);
 
   ACTS_DEBUG(mState.accumulatedMaterial.size()

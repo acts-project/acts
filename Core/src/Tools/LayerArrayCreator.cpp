@@ -28,11 +28,12 @@
 #include "Acts/Utilities/GeometryStatics.hpp"
 
 std::unique_ptr<const Acts::LayerArray>
-Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
-                                    double             min,
-                                    double             max,
-                                    BinningType        bType,
-                                    BinningValue       bValue) const
+Acts::LayerArrayCreator::layerArray(const GeometryContext& gctx,
+                                    const LayerVector&     layersInput,
+                                    double                 min,
+                                    double                 max,
+                                    BinningType            bType,
+                                    BinningValue           bValue) const
 {
   ACTS_VERBOSE("Build LayerArray with " << layersInput.size()
                                         << " layers at input.");
@@ -44,8 +45,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
   LayerVector layers(layersInput);
 
   // sort it accordingly to the binning value
-  GeometryObjectSorterT<std::shared_ptr<const Layer>> layerSorter(
-      m_cfg.buildContext, bValue);
+  GeometryObjectSorterT<std::shared_ptr<const Layer>> layerSorter(gctx, bValue);
   std::sort(layers.begin(), layers.end(), layerSorter);
   // useful typedef
   using LayerOrderPosition = std::pair<std::shared_ptr<const Layer>, Vector3D>;
@@ -61,9 +61,9 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
     // loop over layers and put them in
     for (auto& layIter : layers) {
       ACTS_VERBOSE("equidistant : registering a Layer at binning position : "
-                   << (layIter->binningPosition(m_cfg.buildContext, bValue)));
-      layerOrderVector.push_back(LayerOrderPosition(
-          layIter, layIter->binningPosition(m_cfg.buildContext, bValue)));
+                   << (layIter->binningPosition(gctx, bValue)));
+      layerOrderVector.push_back(
+          LayerOrderPosition(layIter, layIter->binningPosition(gctx, bValue)));
     }
     // create the binUitlity
     binUtility = std::make_unique<const BinUtility>(
@@ -84,7 +84,7 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
     for (auto& layIter : layers) {
       // estimate the offset
       layerThickness = layIter->thickness();
-      layerValue = layIter->binningPositionValue(m_cfg.buildContext, bValue);
+      layerValue     = layIter->binningPositionValue(gctx, bValue);
       // register the new boundaries in the step vector
       boundaries.push_back(layerValue - 0.5 * layerThickness);
       boundaries.push_back(layerValue + 0.5 * layerThickness);
@@ -110,30 +110,27 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
 
       // create the navigation layer surface from the layer
       std::shared_ptr<const Surface> navLayerSurface = createNavigationSurface(
-          *layIter, bValue, -std::abs(layerValue - navigationValue));
-      ACTS_VERBOSE(
-          "arbitrary : creating a  NavigationLayer at "
-          << (navLayerSurface->binningPosition(m_cfg.buildContext, bValue)).x()
-          << ", "
-          << (navLayerSurface->binningPosition(m_cfg.buildContext, bValue)).y()
-          << ", "
-          << (navLayerSurface->binningPosition(m_cfg.buildContext, bValue))
-                 .z());
+          gctx, *layIter, bValue, -std::abs(layerValue - navigationValue));
+      ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
+                   << (navLayerSurface->binningPosition(gctx, bValue)).x()
+                   << ", "
+                   << (navLayerSurface->binningPosition(gctx, bValue)).y()
+                   << ", "
+                   << (navLayerSurface->binningPosition(gctx, bValue)).z());
       navLayer = NavigationLayer::create(std::move(navLayerSurface));
       // push the navigation layer in
       layerOrderVector.push_back(LayerOrderPosition(
-          navLayer, navLayer->binningPosition(m_cfg.buildContext, bValue)));
+          navLayer, navLayer->binningPosition(gctx, bValue)));
 
       // push the original layer in
-      layerOrderVector.push_back(LayerOrderPosition(
-          layIter, layIter->binningPosition(m_cfg.buildContext, bValue)));
-      ACTS_VERBOSE(
-          "arbitrary : registering MaterialLayer at  "
-          << (layIter->binningPosition(m_cfg.buildContext, bValue)).x()
-          << ", "
-          << (layIter->binningPosition(m_cfg.buildContext, bValue)).y()
-          << ", "
-          << (layIter->binningPosition(m_cfg.buildContext, bValue)).z());
+      layerOrderVector.push_back(
+          LayerOrderPosition(layIter, layIter->binningPosition(gctx, bValue)));
+      ACTS_VERBOSE("arbitrary : registering MaterialLayer at  "
+                   << (layIter->binningPosition(gctx, bValue)).x()
+                   << ", "
+                   << (layIter->binningPosition(gctx, bValue)).y()
+                   << ", "
+                   << (layIter->binningPosition(gctx, bValue)).z());
       // remember the last
       lastLayer = layIter;
     }
@@ -144,19 +141,17 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
     if (navigationValue != max) {
       // create the navigation layer surface from the layer
       std::shared_ptr<const Surface> navLayerSurface = createNavigationSurface(
-          *lastLayer, bValue, navigationValue - layerValue);
-      ACTS_VERBOSE(
-          "arbitrary : creating a  NavigationLayer at "
-          << (navLayerSurface->binningPosition(m_cfg.buildContext, bValue)).x()
-          << ", "
-          << (navLayerSurface->binningPosition(m_cfg.buildContext, bValue)).y()
-          << ", "
-          << (navLayerSurface->binningPosition(m_cfg.buildContext, bValue))
-                 .z());
+          gctx, *lastLayer, bValue, navigationValue - layerValue);
+      ACTS_VERBOSE("arbitrary : creating a  NavigationLayer at "
+                   << (navLayerSurface->binningPosition(gctx, bValue)).x()
+                   << ", "
+                   << (navLayerSurface->binningPosition(gctx, bValue)).y()
+                   << ", "
+                   << (navLayerSurface->binningPosition(gctx, bValue)).z());
       navLayer = NavigationLayer::create(std::move(navLayerSurface));
       // push the navigation layer in
       layerOrderVector.push_back(LayerOrderPosition(
-          navLayer, navLayer->binningPosition(m_cfg.buildContext, bValue)));
+          navLayer, navLayer->binningPosition(gctx, bValue)));
     }
     // now close the boundaries
     boundaries.push_back(max);
@@ -179,9 +174,10 @@ Acts::LayerArrayCreator::layerArray(const LayerVector& layersInput,
 }
 
 std::shared_ptr<Acts::Surface>
-Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
-                                                 BinningValue bValue,
-                                                 double       offset) const
+Acts::LayerArrayCreator::createNavigationSurface(const GeometryContext& gctx,
+                                                 const Layer&           layer,
+                                                 BinningValue           bValue,
+                                                 double offset) const
 {
   // surface reference
   const Surface& layerSurface = layer.surfaceRepresentation();
@@ -220,7 +216,7 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
   if (layerSurface.type() != Surface::Cylinder) {
     // create a transform that does the shift
     Transform3D shift = Transform3D(Translation3D(translation));
-    navigationSurface = layerSurface.clone(m_cfg.buildContext, shift);
+    navigationSurface = layerSurface.clone(gctx, shift);
   } else {
     // get the bounds
     const CylinderBounds* cBounds
@@ -229,9 +225,8 @@ Acts::LayerArrayCreator::createNavigationSurface(const Layer& layer,
     double halflengthZ = cBounds->halflengthZ();
     // create the new layer surface
     std::shared_ptr<const Transform3D> navTrasform
-        = (!layerSurface.transform(m_cfg.buildContext).isApprox(s_idTransform))
-        ? std::make_shared<const Transform3D>(
-              layerSurface.transform(m_cfg.buildContext))
+        = (!layerSurface.transform(gctx).isApprox(s_idTransform))
+        ? std::make_shared<const Transform3D>(layerSurface.transform(gctx))
         : nullptr;
     // new navigation layer
     navigationSurface = Surface::makeShared<CylinderSurface>(

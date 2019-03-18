@@ -25,8 +25,8 @@ using units::Nat2SI;
 namespace IntegrationTest {
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly

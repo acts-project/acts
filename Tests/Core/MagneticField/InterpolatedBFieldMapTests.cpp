@@ -30,7 +30,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz)
   {

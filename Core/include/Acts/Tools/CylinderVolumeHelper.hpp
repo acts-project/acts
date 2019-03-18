@@ -61,8 +61,6 @@ public:
     int passiveLayerPhiBins = 1;
     /// bins in r/z for the passive layer
     int passiveLayerRzBins = 100;
-    /// The building context
-    GeometryContext buildContext = DefaultGeometryContext();
   };
 
   /// Constructor
@@ -78,6 +76,7 @@ public:
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
@@ -91,7 +90,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&                 layers,
+  createTrackingVolume(const GeometryContext&             gctx,
+                       const LayerVector&                 layers,
                        std::shared_ptr<const Material>    matprop,
                        VolumeBoundsPtr                    volBounds,
                        std::shared_ptr<const Transform3D> transform = nullptr,
@@ -101,6 +101,7 @@ public:
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   /// @note this TrackingVolume is restricted to Translation only
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
@@ -114,7 +115,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createTrackingVolume(const LayerVector&              layers,
+  createTrackingVolume(const GeometryContext&          gctx,
+                       const LayerVector&              layers,
                        std::shared_ptr<const Material> matprop,
                        double                          rMin,
                        double                          rMax,
@@ -126,6 +128,7 @@ public:
   /// Create a gap volume from dimensions and
   /// @note this TrackingVolume is restricted to Translation only
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param matprop dense material properties for this TrackingVolume
   /// @param rMin minimum radius
   /// @param rMax maximum radius
@@ -137,7 +140,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+  createGapTrackingVolume(const GeometryContext&          gctx,
+                          std::shared_ptr<const Material> matprop,
                           double                          rMin,
                           double                          rMax,
                           double                          zMin,
@@ -149,6 +153,7 @@ public:
 
   /// Create a gap volume from dimensions and
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param matprop dense material properties for this TrackingVolume
   /// @param rMin minimum radius
   /// @param rMax maximum radius
@@ -161,7 +166,8 @@ public:
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
-  createGapTrackingVolume(std::shared_ptr<const Material> matprop,
+  createGapTrackingVolume(const GeometryContext&          gctx,
+                          std::shared_ptr<const Material> matprop,
                           double                          rMin,
                           double                          rMax,
                           double                          zMin,
@@ -174,12 +180,14 @@ public:
   /// Create a container volumes from sub volumes, input volumes are ordered in
   /// R or Z by convention
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param volumes the volumes to be contained
   ///
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
   createContainerTrackingVolume(
+      const GeometryContext&      gctx,
       const TrackingVolumeVector& volumes) const override;
 
   /// Set configuration method
@@ -216,6 +224,7 @@ private:
   /// Private method - it estimates the CylinderBounds and Translation
   /// of layers, these are checked against the layer positions/dimensions.
   ///
+  /// @param gctx [in] the geometry context of this build
   /// @param layers the layers for which the dimensions are checked
   /// @param cylinderVolumeBounds the cylinder volume bounds needed for wrapping
   /// @param transform a transformation of the layers, volume
@@ -226,7 +235,8 @@ private:
   /// @param bValue the binning value in which the binning works
   /// @param bType is the type of binning: equidistant, arbitrary
   bool
-  estimateAndCheckDimension(const LayerVector&           layers,
+  estimateAndCheckDimension(const GeometryContext&       gctx,
+                            const LayerVector&           layers,
                             const CylinderVolumeBounds*& cylinderVolumeBounds,
                             std::shared_ptr<const Transform3D>& transform,
                             double&                             rMinClean,
@@ -239,6 +249,7 @@ private:
   /// Private method - interglue all volumes contained by a TrackingVolume
   /// and set the outside glue volumes in the descriptor
   ///
+  /// @param gctx [in] the geometry context of this build
   /// @param tVolume the tracking volume that is glued together
   /// @param rBinned a boolean indicating if it is binned in r
   /// @param rMin the minimum radius of the volume
@@ -247,7 +258,8 @@ private:
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   bool
-  interGlueTrackingVolume(const MutableTrackingVolumePtr& tVolume,
+  interGlueTrackingVolume(const GeometryContext&          gctx,
+                          const MutableTrackingVolumePtr& tVolume,
                           bool                            rBinned,
                           double                          rMin,
                           double                          rGlueMin,
@@ -257,6 +269,7 @@ private:
 
   /// Private method - glue volume to the other
   ///
+  /// @param gctx [in] the geometry context of this build
   /// @param tvolOne is the first volume in the glue process
   /// @param faceOne is the first boundary face of the glue process
   /// @param tvolTwo is the second volume in the glue process
@@ -267,7 +280,8 @@ private:
   /// @param zMin the minimum z extend of the volume
   /// @param zMax the maximum z extend of the volume
   void
-  glueTrackingVolumes(const MutableTrackingVolumePtr& tvolOne,
+  glueTrackingVolumes(const GeometryContext&          gctx,
+                      const MutableTrackingVolumePtr& tvolOne,
                       BoundarySurfaceFace             faceOne,
                       const MutableTrackingVolumePtr& tvolTwo,
                       BoundarySurfaceFace             faceTwo,

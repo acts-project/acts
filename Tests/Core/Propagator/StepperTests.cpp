@@ -39,8 +39,8 @@ namespace Test {
   using cstep = detail::ConstrainedStep;
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// @brief Aborter for the case that a particle leaves the detector or reaches
   /// a custom made threshold.
@@ -142,7 +142,8 @@ namespace Test {
           return cvb.trackingVolume(inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> vacuum = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> vacuum
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviVac(vacuum);
@@ -263,7 +264,8 @@ namespace Test {
           return cvb.trackingVolume(inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> material = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> material
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviMat(material);
@@ -447,7 +449,8 @@ namespace Test {
           return cvb.trackingVolume(inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> det = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> det
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviDet(det);

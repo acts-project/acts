@@ -255,6 +255,9 @@ public:
   ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
+  ///
+  /// If a context is needed for the vist, the vistitor has to provide this
+  /// e.g. as a private member
   void
   visitSurfaces(const std::function<void(const Acts::Surface*)>& visitor) const;
 
@@ -274,11 +277,13 @@ public:
   ///  - if common face is set the glued volumes are sharing the boundary, down
   /// to the last navigation volume
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbor is the TrackingVolume to be glued
   /// @param bsfNeighbor is the boudnary surface of the neighbor
   void
-  glueTrackingVolume(BoundarySurfaceFace             bsfMine,
+  glueTrackingVolume(const GeometryContext&          gctx,
+                     BoundarySurfaceFace             bsfMine,
                      const MutableTrackingVolumePtr& neighbor,
                      BoundarySurfaceFace             bsfNeighbor);
 
@@ -286,12 +291,13 @@ public:
   ///  - if common face is set the glued volumes are sharing the boundary, down
   /// to the last navigation volume
   ///
-  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param bsfMine is the boundary face indicater where to glue
   /// @param neighbors are the TrackingVolumes to be glued
   /// @param bsfNeighbor are the boudnary surface of the neighbors
   void
-  glueTrackingVolumes(BoundarySurfaceFace                         bsfMine,
+  glueTrackingVolumes(const GeometryContext&                      gctx,
+                      BoundarySurfaceFace                         bsfMine,
                       const std::shared_ptr<TrackingVolumeArray>& neighbors,
                       BoundarySurfaceFace                         bsfNeighbor);
 

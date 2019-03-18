@@ -36,8 +36,8 @@ namespace Test {
   using Jacobian = ActsMatrixD<5, 5>;
 
   // Create a test context
-  GeometryContext      tgContext = DefaultGeometryContext();
-  MagneticFieldContext mfContext = DefaultMagneticFieldContext();
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
   ///
   /// @brief the bound state propagation
   ///
@@ -114,7 +114,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(kalman_extrapolator)
   {
     // Build detector, take the cubic detector
-    CubicTrackingGeometry cGeometry;
+    CubicTrackingGeometry cGeometry(tgContext);
     auto                  detector = cGeometry();
 
     // The Navigator through the detector geometry

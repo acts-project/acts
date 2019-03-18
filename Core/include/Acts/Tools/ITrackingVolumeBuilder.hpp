@@ -14,6 +14,7 @@
 #include <memory>
 #include <tuple>
 #include <vector>
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -46,13 +47,15 @@ public:
 
   /// ITrackingVolumeBuilder interface method
   ///
+  /// @param gctx ist the geometry context for witch the volume is built
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   ///
   /// @return shared pointer to a newly created TrackingVolume
   virtual MutableTrackingVolumePtr
-  trackingVolume(TrackingVolumePtr insideVolume  = nullptr,
-                 VolumeBoundsPtr   outsideBounds = nullptr) const = 0;
+  trackingVolume(const GeometryContext& gctx,
+                 TrackingVolumePtr      insideVolume  = nullptr,
+                 VolumeBoundsPtr        outsideBounds = nullptr) const = 0;
 };
 
 }  // namespace

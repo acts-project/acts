@@ -37,37 +37,39 @@ Acts::TGeoLayerBuilder::setLogger(std::unique_ptr<const Logger> newLogger)
 }
 
 const Acts::LayerVector
-Acts::TGeoLayerBuilder::negativeLayers() const
+Acts::TGeoLayerBuilder::negativeLayers(const GeometryContext& gctx) const
 {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto        mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector nVector;
-  mutableThis->buildLayers(nVector, -1);
+  mutableThis->buildLayers(gctx, nVector, -1);
   return nVector;
 }
 
 const Acts::LayerVector
-Acts::TGeoLayerBuilder::centralLayers() const
+Acts::TGeoLayerBuilder::centralLayers(const GeometryContext& gctx) const
 {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto        mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector cVector;
-  mutableThis->buildLayers(cVector, 0);
+  mutableThis->buildLayers(gctx, cVector, 0);
   return cVector;
 }
 
 const Acts::LayerVector
-Acts::TGeoLayerBuilder::positiveLayers() const
+Acts::TGeoLayerBuilder::positiveLayers(const GeometryContext& gctx) const
 {
   // @todo Remove this hack once the m_elementStore mess is sorted out
   auto        mutableThis = const_cast<TGeoLayerBuilder*>(this);
   LayerVector pVector;
-  mutableThis->buildLayers(pVector, -1);
+  mutableThis->buildLayers(gctx, pVector, -1);
   return pVector;
 }
 
 void
-Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
+Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
+                                    LayerVector&           layers,
+                                    int                    type)
 {
 
   // bail out if you have no gGeoManager
@@ -107,24 +109,29 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
     TGeoVolume* tvolume = gGeoManager->GetTopVolume();
     if (tvolume != nullptr) {
       // recursively step down
-      resolveSensitive(
-          layerSurfaces, tvolume, nullptr, TGeoIdentity(), layerCfg, type);
+      resolveSensitive(gctx,
+                       layerSurfaces,
+                       tvolume,
+                       nullptr,
+                       TGeoIdentity(),
+                       layerCfg,
+                       type);
       // screen output
       ACTS_DEBUG(
           "- number of senstive sensors found : " << layerSurfaces.size());
       // create the layer  - either way
       if (type == 0) {
-        ProtoLayer pl(m_cfg.buildContext, layerSurfaces);
+        ProtoLayer pl(gctx, layerSurfaces);
         pl.envR = {layerCfg.envelope.first, layerCfg.envelope.second};
         pl.envZ = {layerCfg.envelope.second, layerCfg.envelope.second};
         layers.push_back(m_cfg.layerCreator->cylinderLayer(
-            layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
+            gctx, layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
       } else {
-        ProtoLayer pl(m_cfg.buildContext, layerSurfaces);
+        ProtoLayer pl(gctx, layerSurfaces);
         pl.envR = {layerCfg.envelope.first, layerCfg.envelope.second};
         pl.envZ = {layerCfg.envelope.second, layerCfg.envelope.second};
         layers.push_back(m_cfg.layerCreator->discLayer(
-            layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
+            gctx, layerSurfaces, layerCfg.binsLoc0, layerCfg.binsLoc1, pl));
       }
     }
   }
@@ -132,6 +139,7 @@ Acts::TGeoLayerBuilder::buildLayers(LayerVector& layers, int type)
 
 void
 Acts::TGeoLayerBuilder::resolveSensitive(
+    const GeometryContext&                             gctx,
     std::vector<std::shared_ptr<const Acts::Surface>>& layerSurfaces,
     TGeoVolume*                                        tgVolume,
     TGeoNode*                                          tgNode,
@@ -174,7 +182,8 @@ Acts::TGeoLayerBuilder::resolveSensitive(
       // dynamic_cast to a node
       TGeoNode* node = dynamic_cast<TGeoNode*>(obj);
       if (node != nullptr) {
-        resolveSensitive(layerSurfaces,
+        resolveSensitive(gctx,
+                         layerSurfaces,
                          nullptr,
                          node,
                          tgTransform,
@@ -252,7 +261,8 @@ Acts::TGeoLayerBuilder::resolveSensitive(
       // if it's not accepted, get the associated volume
       TGeoVolume* nodeVolume = tgNode->GetVolume();
       // step down one further
-      resolveSensitive(layerSurfaces,
+      resolveSensitive(gctx,
+                       layerSurfaces,
                        nodeVolume,
                        nullptr,
                        nTransform,

@@ -520,9 +520,6 @@ public:
     /// the additional envelope in Z to create zMin, zMax
     double layerEnvelopeZ = 10. * Acts::units::_mm;
 
-    /// The building context
-    GeometryContext buildContext = DefaultGeometryContext();
-
     /// the volume signature
     int volumeSignature = -1;
   };
@@ -541,6 +538,7 @@ public:
 
   /// CylinderVolumeBuilder main call method
   ///
+  /// @param [in] gctx geometry context for which this cylinder volume is built
   /// @param [in] existingVolume is an (optional) volume to be included
   /// @param [in] externalBounds are (optional) external confinement
   ///             constraints
@@ -548,8 +546,9 @@ public:
   ///         optionally provided exisitingVolume consistently for further
   ///         processing
   MutableTrackingVolumePtr
-  trackingVolume(TrackingVolumePtr existingVolume = nullptr,
-                 VolumeBoundsPtr   externalBounds = nullptr) const override;
+  trackingVolume(const GeometryContext& gctx,
+                 TrackingVolumePtr      existingVolume = nullptr,
+                 VolumeBoundsPtr externalBounds = nullptr) const override;
 
   /// Set configuration method
   ///
@@ -587,14 +586,17 @@ private:
 
   /// Analyze the layer config to gather needed dimension
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param [in] lVector is the vector of layers that are parsed
+  ///
   /// @return a VolumeConfig representing this layer
   VolumeConfig
-  analyzeLayers(const LayerVector& lVector) const;
+  analyzeLayers(const GeometryContext& gctx, const LayerVector& lVector) const;
 
   /// Helper method check the layer containment,
   /// both for inside / outside.
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param [in] layerConfig is the VolumeConfig to be tested
   ///        the wrapping flag may be set
   /// @param [in] insideConfig is the inside volume in order to
@@ -604,10 +606,11 @@ private:
   ///
   /// @return boolean that indicates the test result
   bool
-  checkLayerContainment(VolumeConfig&       layerConfig,
-                        const VolumeConfig& insideConfig,
-                        const VolumeConfig& volumeConfig,
-                        int                 sign) const;
+  checkLayerContainment(const GeometryContext& gctx,
+                        VolumeConfig&          layerConfig,
+                        const VolumeConfig&    insideConfig,
+                        const VolumeConfig&    volumeConfig,
+                        int                    sign) const;
 };
 
 /// Return the configuration object

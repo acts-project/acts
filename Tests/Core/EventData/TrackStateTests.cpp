@@ -24,7 +24,7 @@ namespace Acts {
 namespace Test {
 
   // Create a test context
-  GeometryContext tgContext = DefaultGeometryContext();
+  GeometryContext tgContext = GeometryContext();
 
   using Jacobian   = ActsMatrixD<5, 5>;
   using Identifier = unsigned long int;
