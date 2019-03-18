@@ -52,20 +52,20 @@ namespace Test {
 
       Result res = Result::success(42);
       BOOST_CHECK_EQUAL(*res, 42);
-      BOOST_CHECK_EQUAL(res.unwrap(), 42);
+      BOOST_CHECK_EQUAL(res.value(), 42);
       BOOST_CHECK(res.ok());
       res = Result::success('e');
       BOOST_CHECK_EQUAL(*res, 'e');
-      BOOST_CHECK_EQUAL(res.unwrap(), 'e');
+      BOOST_CHECK_EQUAL(res.value(), 'e');
       BOOST_CHECK(res.ok());
       res = Result::failure(42);
       BOOST_CHECK(!res.ok());
       BOOST_CHECK_EQUAL(res.error(), 42);
-      BOOST_CHECK_THROW(res.unwrap(), std::runtime_error);
+      BOOST_CHECK_THROW(res.value(), std::runtime_error);
       res = Result::failure('e');
       BOOST_CHECK(!res.ok());
       BOOST_CHECK_EQUAL(res.error(), 'e');
-      BOOST_CHECK_THROW(res.unwrap(), std::runtime_error);
+      BOOST_CHECK_THROW(res.value(), std::runtime_error);
     }
 
     {
@@ -74,20 +74,20 @@ namespace Test {
       Result res1("hallo");
       BOOST_CHECK(!res1.ok());
       BOOST_CHECK_EQUAL(res1.error(), "hallo");
-      BOOST_CHECK_THROW(res1.unwrap(), std::runtime_error);
+      BOOST_CHECK_THROW(res1.value(), std::runtime_error);
       res1 = Result::failure("hallo");
       BOOST_CHECK(!res1.ok());
       BOOST_CHECK_EQUAL(res1.error(), "hallo");
-      BOOST_CHECK_THROW(res1.unwrap(), std::runtime_error);
+      BOOST_CHECK_THROW(res1.value(), std::runtime_error);
 
       Result res2(4.5);
       BOOST_CHECK(res2.ok());
       BOOST_CHECK(*res2 == 4.5);
-      BOOST_CHECK(res2.unwrap() == 4.5);
+      BOOST_CHECK(res2.value() == 4.5);
       res2 = Result::success(4.5);
       BOOST_CHECK(res2.ok());
       BOOST_CHECK_EQUAL(*res2, 4.5);
-      BOOST_CHECK_EQUAL(res2.unwrap(), 4.5);
+      BOOST_CHECK_EQUAL(res2.value(), 4.5);
     }
   }
 
@@ -107,7 +107,7 @@ namespace Test {
       Result res2(err1);
       BOOST_CHECK(!res2.ok());
       BOOST_CHECK_EQUAL(res2.error(), err1);
-      BOOST_CHECK_THROW(res2.unwrap(), std::runtime_error);
+      BOOST_CHECK_THROW(res2.value(), std::runtime_error);
     }
 
     {
@@ -116,11 +116,11 @@ namespace Test {
       Result res(42);
       BOOST_CHECK(res.ok());
       BOOST_CHECK_EQUAL(*res, 42.);
-      BOOST_CHECK_EQUAL(res.unwrap(), 42);
+      BOOST_CHECK_EQUAL(res.value(), 42);
       res = 46;
       BOOST_CHECK(res.ok());
       BOOST_CHECK_EQUAL(*res, 46.);
-      BOOST_CHECK_EQUAL(res.unwrap(), 46);
+      BOOST_CHECK_EQUAL(res.value(), 46);
 
       Result res2(ec);
       BOOST_CHECK(!res2.ok());
@@ -139,11 +139,11 @@ namespace Test {
       Result res(42);
       BOOST_CHECK(res.ok());
       BOOST_CHECK_EQUAL(*res, 42.);
-      BOOST_CHECK_EQUAL(res.unwrap(), 42);
+      BOOST_CHECK_EQUAL(res.value(), 42);
       res = 46;
       BOOST_CHECK(res.ok());
       BOOST_CHECK_EQUAL(*res, 46.);
-      BOOST_CHECK_EQUAL(res.unwrap(), 46);
+      BOOST_CHECK_EQUAL(res.value(), 46);
 
       Result res2(ec);
       BOOST_CHECK(!res2.ok());
@@ -163,12 +163,12 @@ namespace Test {
 
       BOOST_CHECK(res.ok());
       BOOST_CHECK_EQUAL(*res, "hallo");
-      BOOST_CHECK_EQUAL(res.unwrap(), "hallo");
+      BOOST_CHECK_EQUAL(res.value(), "hallo");
 
       res = "something else";
       BOOST_CHECK(res.ok());
       BOOST_CHECK_EQUAL(*res, "something else");
-      BOOST_CHECK_EQUAL(res.unwrap(), "something else");
+      BOOST_CHECK_EQUAL(res.value(), "something else");
 
       res = MyError::SomethingElse;
       BOOST_CHECK(!res.ok());
@@ -185,11 +185,19 @@ namespace Test {
     operator=(const NoCopy&)
         = delete;
     NoCopy(NoCopy&&) = default;
+    NoCopy&
+    operator=(NoCopy&&)
+        = default;
 
     int num;
   };
 
-  BOOST_AUTO_TEST_CASE(CopyBehavious)
+  Result<NoCopy> make_nocopy(int i, bool v = true) {
+    if (!v) return MyError::Failure;
+    return i;
+  }
+
+  BOOST_AUTO_TEST_CASE(CopyBehaviour)
   {
 
     using Result = Result<NoCopy>;
@@ -197,6 +205,22 @@ namespace Test {
     NoCopy n(5);
     Result res = std::move(n);
     BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL((*res).num, res.value().num);
+
+    res = make_nocopy(3);
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL((*res).num, res.value().num);
+    BOOST_CHECK_EQUAL((*res).num, 3);
+
+    NoCopy n2 = make_nocopy(7).value();
+    BOOST_CHECK_EQUAL(n2.num, 7);
+    BOOST_REQUIRE_THROW(make_nocopy(6, false).value();, std::runtime_error);
+
+    Result n4r = make_nocopy(8);
+    BOOST_CHECK(n4r.ok());;
+    BOOST_CHECK_EQUAL((*n4r).num, 8);
+    NoCopy n4 = std::move(n4r.value());
+    BOOST_CHECK_EQUAL(n4.num, 8);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

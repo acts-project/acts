@@ -150,7 +150,7 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material layers by using the straight line propagator
-  const auto& result   = m_propagator.propagate(start, options).unwrap();
+  const auto& result   = m_propagator.propagate(start, options).value();
   auto        mcResult = result.get<MaterialSurfaceCollector::result_type>();
   auto        mappingSurfaces = mcResult.collected;
 

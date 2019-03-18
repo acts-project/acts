@@ -49,14 +49,17 @@ public:
   /**
    * Move construction is allowed
    */
-  Result(Result<T, E>&& other) = default;
+  Result(Result<T, E>&& other) : m_var(std::move(other.m_var)){};
 
   /**
    * Move assignment is allowed
    */
   Result<T, E>&
   operator=(Result<T, E>&& other)
-      = default;
+  {
+    m_var = std::move(other.m_var);
+    return *this;
+  }
 
   /**
    * @brief Constructor from arbitrary value
@@ -124,19 +127,45 @@ public:
    * @return Reference to the error
    */
   E&
-  error() noexcept
+  error() & noexcept
   {
     return std::get<E>(m_var);
   }
 
   /**
-   * Unwraps the valid value from the result object.
-   * @note This returns by value, but it **moves** the valid value out of the
-   * variant. This modifies (and destroys) the result object.
+   * Returns the error by-value.
+   * @note If `res.ok()` this method will abort (noexcept)
+   * @return The error
+   */
+  E
+  error() && noexcept &&
+  {
+    return std::move(std::get<E>(m_var));
+  }
+
+  /**
+   * Retrieves the valid value from the result object.
+   * @note This is the lvalue version, returns a reference to the value
+   * @return The valid value as a reference
+   */
+  T&
+  value() &
+  {
+    if (m_var.index() != 0) {
+      throw std::runtime_error("Unwrap called on error value");
+    }
+
+    return std::get<T>(m_var);
+  }
+
+  /**
+   * Retrieves the valid value from the result object.
+   * @note This is the rvalue version, returns the value
+   * by-value and moves out of the variant.
    * @return The valid value by value, moved out of the variant.
    */
   T
-  unwrap()
+  value() &&
   {
     if (m_var.index() != 0) {
       throw std::runtime_error("Unwrap called on error value");

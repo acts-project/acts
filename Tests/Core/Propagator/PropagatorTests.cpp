@@ -221,7 +221,7 @@ namespace Test {
     CurvilinearParameters start(nullptr, pos, mom, q);
     // propagate to the cylinder surface
     const auto& result
-        = epropagator.propagate(start, *cSurface, options).unwrap();
+        = epropagator.propagate(start, *cSurface, options).value();
     auto& sor = result.get<so_result>();
 
     BOOST_CHECK_EQUAL(sor.surfaces_passed, 1);
@@ -278,10 +278,10 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a path length of 100 with two steps of 50
     const auto& mid_parameters
-        = epropagator.propagate(start, options_2s).unwrap().endParameters;
+        = epropagator.propagate(start, options_2s).value().endParameters;
     const auto& end_parameters_2s
         = epropagator.propagate(*mid_parameters, options_2s)
-              .unwrap()
+              .value()
               .endParameters;
 
     // setup propagation options - the one step options
@@ -290,7 +290,7 @@ namespace Test {
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a path length of 100 in one step
     const auto& end_parameters_1s
-        = epropagator.propagate(start, options_1s).unwrap().endParameters;
+        = epropagator.propagate(start, options_1s).value().endParameters;
 
     // test that the propagation is additive
     CHECK_CLOSE_REL(
@@ -353,12 +353,12 @@ namespace Test {
     // propagate to a final surface with one stop in between
     const auto& mid_parameters
         = epropagator.propagate(start, *mSurface, options_2s)
-              .unwrap()
+              .value()
               .endParameters;
 
     const auto& end_parameters_2s
         = epropagator.propagate(*mid_parameters, *cSurface, options_2s)
-              .unwrap()
+              .value()
               .endParameters;
 
     // setup propagation options - one step options
@@ -368,7 +368,7 @@ namespace Test {
     // propagate to a final surface in one stop
     const auto& end_parameters_1s
         = epropagator.propagate(start, *cSurface, options_1s)
-              .unwrap()
+              .value()
               .endParameters;
 
     // test that the propagation is additive
