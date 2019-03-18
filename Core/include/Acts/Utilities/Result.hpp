@@ -16,10 +16,11 @@ template <typename T, typename E = std::error_code>
 class Result
 {
   // Helper which checks whether T and E are ambiguous
-  static constexpr bool unambiguous
-      = (!std::
-             is_same_v<T,
-                       E> && !std::is_constructible_v<T, E> && !std::is_constructible_v<T, E>);
+  // clang-format off
+  static constexpr bool unambiguous =
+      (!std::is_same_v<T, E> && !std::is_constructible_v<T, E> &&
+       !std::is_constructible_v<T, E>);
+  // clang-format on
 
   /**
    * Private constructor which accepts an external variant.
@@ -127,7 +128,8 @@ public:
    * @return Reference to the error
    */
   E&
-  error() & noexcept
+      error()
+      & noexcept
   {
     return std::get<E>(m_var);
   }
@@ -138,7 +140,8 @@ public:
    * @return The error
    */
   E
-  error() && noexcept &&
+      error()
+      && noexcept&&
   {
     return std::move(std::get<E>(m_var));
   }

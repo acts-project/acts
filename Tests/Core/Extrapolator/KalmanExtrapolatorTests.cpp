@@ -161,7 +161,7 @@ namespace Test {
     const auto& pJacobian = *(pResult.transportJacobian);
 
     // Run the stepwise propagation
-    const auto& swResult = propagator.propagate(start, swOptions).value();
+    const auto& swResult       = propagator.propagate(start, swOptions).value();
     auto        swJacobianTest = swResult.template get<StepWiseResult>();
 
     // (1) Path length test

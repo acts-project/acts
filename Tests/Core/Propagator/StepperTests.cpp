@@ -614,8 +614,7 @@ namespace Test {
 
     // Launch and collect results
     const auto& resultDense
-        = propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense)
-              .value();
+        = propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense).value();
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 

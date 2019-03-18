@@ -192,8 +192,12 @@ namespace Test {
     int num;
   };
 
-  Result<NoCopy> make_nocopy(int i, bool v = true) {
-    if (!v) return MyError::Failure;
+  Result<NoCopy>
+  make_nocopy(int i, bool v = true)
+  {
+    if (!v) {
+      return MyError::Failure
+    };
     return i;
   }
 
@@ -217,7 +221,7 @@ namespace Test {
     BOOST_REQUIRE_THROW(make_nocopy(6, false).value();, std::runtime_error);
 
     Result n4r = make_nocopy(8);
-    BOOST_CHECK(n4r.ok());;
+    BOOST_CHECK(n4r.ok());
     BOOST_CHECK_EQUAL((*n4r).num, 8);
     NoCopy n4 = std::move(n4r.value());
     BOOST_CHECK_EQUAL(n4.num, 8);
