@@ -196,8 +196,8 @@ namespace Test {
   make_nocopy(int i, bool v = true)
   {
     if (!v) {
-      return MyError::Failure
-    };
+      return MyError::Failure;
+    }
     return i;
   }
 

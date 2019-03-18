@@ -141,7 +141,7 @@ public:
    */
   E
       error()
-      && noexcept&&
+      && noexcept
   {
     return std::move(std::get<E>(m_var));
   }
@@ -155,7 +155,18 @@ public:
   value() &
   {
     if (m_var.index() != 0) {
-      throw std::runtime_error("Unwrap called on error value");
+      if
+        constexpr(std::is_same_v<E, std::error_code>)
+        {
+          std::stringstream ss;
+          const auto&       e = std::get<E>(m_var);
+          ss << "Value called on error value: " << e.category().name() << ": "
+             << e.message() << " [" << e.value() << "]";
+          throw std::runtime_error(ss.str());
+        }
+      else {
+        throw std::runtime_error("Value called on error value");
+      }
     }
 
     return std::get<T>(m_var);
@@ -171,7 +182,18 @@ public:
   value() &&
   {
     if (m_var.index() != 0) {
-      throw std::runtime_error("Unwrap called on error value");
+      if
+        constexpr(std::is_same_v<E, std::error_code>)
+        {
+          std::stringstream ss;
+          const auto&       e = std::get<E>(m_var);
+          ss << "Value called on error value: " << e.category().name() << ": "
+             << e.message() << " [" << e.value() << "]";
+          throw std::runtime_error(ss.str());
+        }
+      else {
+        throw std::runtime_error("Value called on error value");
+      }
     }
 
     return std::move(std::get<T>(m_var));
