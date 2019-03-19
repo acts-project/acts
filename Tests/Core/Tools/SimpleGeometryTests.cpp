@@ -109,12 +109,12 @@ namespace Test {
     // Make the TrackingGeometry Builder
     TrackingGeometryBuilder::Config tgbConfig;
     tgbConfig.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto&) {
-          return beamPipeVolumeBuilder->trackingVolume(inner);
+        [=](const auto& context, const auto& inner, const auto&) {
+          return beamPipeVolumeBuilder->trackingVolume(context, inner);
         });
     tgbConfig.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto&) {
-          return centralVolumeBuilder->trackingVolume(inner);
+        [=](const auto& context, const auto& inner, const auto&) {
+          return centralVolumeBuilder->trackingVolume(context, inner);
         });
     tgbConfig.trackingVolumeHelper = cylinderVolumeHelper;
 

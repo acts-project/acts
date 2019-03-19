@@ -219,8 +219,8 @@ namespace Test {
     cvb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto&) {
-          return cvb.trackingVolume(tgContext, inner, nullptr);
+        [=](const auto& context, const auto& inner, const auto&) {
+          return cvb.trackingVolume(context, inner, nullptr);
         });
     TrackingGeometryBuilder tgb(tgbCfg);
 

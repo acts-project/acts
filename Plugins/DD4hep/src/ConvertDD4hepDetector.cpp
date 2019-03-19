@@ -41,6 +41,8 @@ convertDD4hepDetector(
       = Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
   ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
 
+  Acts::GeometryContext dd4HepContext;
+
   ACTS_INFO("Translating DD4hep geometry into Acts geometry");
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
   // strip detector
@@ -91,13 +93,16 @@ convertDD4hepDetector(
   }
 
   std::vector<std::function<std::shared_ptr<TrackingVolume>(
-      const TrackingVolumePtr&, const VolumeBoundsPtr&)>>
+      const GeometryContext&,
+      const TrackingVolumePtr&,
+      const VolumeBoundsPtr&)>>
       volumeFactories;
 
   for (const auto& vb : volumeBuilders) {
-    volumeFactories.push_back(
-        [vb](const std::shared_ptr<const TrackingVolume>& inner,
-             const VolumeBoundsPtr&) { return vb->trackingVolume(inner); });
+    volumeFactories.push_back([vb](
+        const GeometryContext&                       gctx,
+        const std::shared_ptr<const TrackingVolume>& inner,
+        const VolumeBoundsPtr&) { return vb->trackingVolume(gctx, inner); });
   }
 
   // create cylinder volume helper
@@ -108,7 +113,7 @@ convertDD4hepDetector(
   tgbConfig.trackingVolumeBuilders = std::move(volumeFactories);
   auto trackingGeometryBuilder
       = std::make_shared<const Acts::TrackingGeometryBuilder>(tgbConfig);
-  return (trackingGeometryBuilder->trackingGeometry(Acts::GeometryContext()));
+  return (trackingGeometryBuilder->trackingGeometry(dd4HepContext));
 }
 
 std::shared_ptr<const CylinderVolumeBuilder>

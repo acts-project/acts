@@ -46,6 +46,7 @@ public:
 
     /// the list of tracking volume builders
     std::vector<std::function<std::shared_ptr<TrackingVolume>(
+        const GeometryContext& gctx,
         const TrackingVolumePtr&,
         const VolumeBoundsPtr&)>>
         trackingVolumeBuilders;
