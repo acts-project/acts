@@ -220,7 +220,7 @@ namespace Test {
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
         [=](const auto& inner, const auto&) {
-          return cvb.trackingVolume(inner, nullptr);
+          return cvb.trackingVolume(tgContext, inner, nullptr);
         });
     TrackingGeometryBuilder tgb(tgbCfg);
 
