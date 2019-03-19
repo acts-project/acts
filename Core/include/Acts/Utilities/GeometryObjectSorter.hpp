@@ -11,6 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
+#include <functional>
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Definitions.hpp"
 
 namespace Acts {
@@ -211,8 +214,8 @@ public:
   }
 
 protected:
-  GeometryContext                    m_context;
-  ObjectSorterT<Vector3D>            m_objectSorter;
-  std::shared_ptr<const Transform3D> m_transform;
+  std::reference_wrapper<const GeometryContext> m_context;
+  ObjectSorterT<Vector3D>                       m_objectSorter;
+  std::shared_ptr<const Transform3D>            m_transform;
 };
 }
