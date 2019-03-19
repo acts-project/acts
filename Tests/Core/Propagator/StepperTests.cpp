@@ -505,15 +505,16 @@ namespace Test {
     // Collect boundaries
     std::vector<Surface const*> surs;
     std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
-        boundaries = det->trackingVolume(tgContext, {0.5 * units::_m, 0., 0.})
-                         ->boundarySurfaces();
+        boundaries
+        = det->lowestTrackingVolume(tgContext, {0.5 * units::_m, 0., 0.})
+              ->boundarySurfaces();
     for (auto& b : boundaries) {
       if (b->surfaceRepresentation().center(tgContext).x() == 1. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->trackingVolume(tgContext, {1.5 * units::_m, 0., 0.})
+    boundaries = det->lowestTrackingVolume(tgContext, {1.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
       if (b->surfaceRepresentation().center(tgContext).x() == 2. * units::_m) {
@@ -521,7 +522,7 @@ namespace Test {
         break;
       }
     }
-    boundaries = det->trackingVolume(tgContext, {2.5 * units::_m, 0., 0.})
+    boundaries = det->lowestTrackingVolume(tgContext, {2.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
       if (b->surfaceRepresentation().center(tgContext).x() == 3. * units::_m) {

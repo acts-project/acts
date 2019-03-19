@@ -227,11 +227,13 @@ namespace Test {
     std::unique_ptr<const TrackingGeometry> detector
         = tgb.trackingGeometry(tgContext);
     BOOST_CHECK_EQUAL(
-        detector->trackingVolume(tgContext, Vector3D(1., 0., 0.))->volumeName(),
+        detector->lowestTrackingVolume(tgContext, Vector3D(1., 0., 0.))
+            ->volumeName(),
         volumeConfig.name);
-    BOOST_CHECK_EQUAL(detector->trackingVolume(tgContext, Vector3D(-1., 0., 0.))
-                          ->volumeName(),
-                      volumeConfig2.name);
+    BOOST_CHECK_EQUAL(
+        detector->lowestTrackingVolume(tgContext, Vector3D(-1., 0., 0.))
+            ->volumeName(),
+        volumeConfig2.name);
   }
 }  // namespace Test
 }  // namespace Acts

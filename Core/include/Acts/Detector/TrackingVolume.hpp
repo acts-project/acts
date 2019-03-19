@@ -240,7 +240,7 @@ public:
   ///
   /// @return plain pointer to associated with the position
   const TrackingVolume*
-  trackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
+  lowestTrackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// Return the confined static layer array - if it exists
   /// @return the BinnedArray of static layers if exists

@@ -348,8 +348,9 @@ private:
           // Allocate the layer via the tracking geometry search
           if (surfaceIntersection and state.navigation.worldVolume) {
             auto intersection = surfaceIntersection.position;
-            auto layerVolume  = state.navigation.worldVolume->trackingVolume(
-                state.geoContext, intersection);
+            auto layerVolume
+                = state.navigation.worldVolume->lowestTrackingVolume(
+                    state.geoContext, intersection);
             layer = layerVolume
                 ? layerVolume->associatedLayer(state.geoContext, intersection)
                 : nullptr;

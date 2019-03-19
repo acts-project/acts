@@ -65,7 +65,7 @@ public:
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
-  trackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
+  lowestTrackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// return the lowest tracking Volume
   ///

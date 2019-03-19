@@ -489,7 +489,7 @@ private:
                 << toString(stepper.direction(state.stepping));
         return dstream.str();
       });
-      state.navigation.startVolume = trackingGeometry->trackingVolume(
+      state.navigation.startVolume = trackingGeometry->lowestTrackingVolume(
           state.geoContext, stepper.position(state.stepping));
       state.navigation.startLayer = state.navigation.startVolume
           ? state.navigation.startVolume->associatedLayer(
@@ -1003,7 +1003,7 @@ private:
       /// get the target volume from the intersection
       auto tPosition = targetIntersection.intersection.position;
       state.navigation.targetVolume
-          = trackingGeometry->trackingVolume(state.geoContext, tPosition);
+          = trackingGeometry->lowestTrackingVolume(state.geoContext, tPosition);
       state.navigation.targetLayer = state.navigation.targetVolume
           ? state.navigation.targetVolume->associatedLayer(state.geoContext,
                                                            tPosition)

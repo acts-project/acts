@@ -70,8 +70,8 @@ Acts::TrackingVolume::~TrackingVolume()
 }
 
 const Acts::TrackingVolume*
-Acts::TrackingVolume::trackingVolume(const GeometryContext& /*gctx*/,
-                                     const Vector3D& gp) const
+Acts::TrackingVolume::lowestTrackingVolume(const GeometryContext& /*gctx*/,
+                                           const Vector3D& gp) const
 {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
