@@ -12,7 +12,8 @@ template <typename bfield_t,
           typename propagator_t,
           typename action_list_t,
           typename aborter_list_t>
-Acts::LinearizedTrack
+
+Acts::Result<Acts::LinearizedTrack>
 Acts::LinearizedTrackFactory<bfield_t,
                              propagator_t,
                              action_list_t,
@@ -45,12 +46,8 @@ Acts::LinearizedTrackFactory<bfield_t,
     positionAtPCA       = propRes.endParameters->position();
     parCovarianceAtPCA  = *propRes.endParameters->covariance();
 
-    // *params are already perigeeParameters at linPoint (no propagation to
-    // linPoint needed)
   } else {
-    paramsAtPCA        = params->parameters();
-    positionAtPCA      = params->position();
-    parCovarianceAtPCA = *params->covariance();
+    return result.error();
   }
 
   // phiV and functions

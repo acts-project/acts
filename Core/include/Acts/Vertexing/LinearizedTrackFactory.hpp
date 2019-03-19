@@ -11,9 +11,11 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+
 #include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/MagneticFieldContext.hpp"
-#include "Acts/Vertexing/LinearizedTrack.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Vertexing/VertexEventData/LinearizedTrack.hpp"
 
 namespace Acts {
 
@@ -67,7 +69,8 @@ public:
   /// @param propagator Propagator
   ///
   /// @return Linearized track
-  LinearizedTrack
+
+  Result<LinearizedTrack>
   linearizeTrack(const GeometryContext&      gctx,
                  const MagneticFieldContext& mctx,
                  const BoundParameters*      params,
