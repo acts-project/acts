@@ -66,7 +66,7 @@ Acts::CylinderLayer::surfaceRepresentation()
 void
 Acts::CylinderLayer::buildApproachDescriptor()
 {
-  // reset the pointers
+  // delete and reset as you build a new one
   m_approachDescriptor.reset(nullptr);
 
   // take the boundary surfaces of the representving volume if they exist
