@@ -11,8 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include <list>
+#include <functional>
 #include <memory>
+#include <vector>
 #include "Acts/Tools/ITrackingGeometryBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeHelper.hpp"
@@ -43,8 +44,10 @@ public:
   {
 
     /// the list of tracking volume builders
-    std::list<std::shared_ptr<const ITrackingVolumeBuilder>>
-        trackingVolumeBuilders{};
+    std::vector<std::function<std::shared_ptr<TrackingVolume>(
+        const TrackingVolumePtr&,
+        const VolumeBoundsPtr&)>>
+        trackingVolumeBuilders;
 
     /// the tracking volume helper for detector construction
     std::shared_ptr<const ITrackingVolumeHelper> trackingVolumeHelper = nullptr;

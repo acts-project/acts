@@ -214,7 +214,9 @@ namespace Test {
     cvb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& inner, const auto&) {
+          return cvb.trackingVolume(inner, nullptr);
+        });
     TrackingGeometryBuilder tgb(tgbCfg);
 
     std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();

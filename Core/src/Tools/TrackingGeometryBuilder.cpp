@@ -11,6 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
+
+#include <functional>
+
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
@@ -52,7 +55,7 @@ Acts::TrackingGeometryBuilder::trackingGeometry() const
   for (auto& volumeBuilder : m_cfg.trackingVolumeBuilders) {
     // assign a new highest volume (and potentially wrap around the given
     // highest volume so far)
-    highestVolume = volumeBuilder->trackingVolume(highestVolume);
+    highestVolume = volumeBuilder(highestVolume, nullptr);
   }  // --------------------------------------------------------------------------------
 
   // create the TrackingGeometry

@@ -133,7 +133,9 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(inner, vb);
+        });
     TrackingGeometryBuilder                 tgb(tgbCfg);
     std::shared_ptr<const TrackingGeometry> vacuum = tgb.trackingGeometry();
 
@@ -252,7 +254,9 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(inner, vb);
+        });
     TrackingGeometryBuilder                 tgb(tgbCfg);
     std::shared_ptr<const TrackingGeometry> material = tgb.trackingGeometry();
 
@@ -434,7 +438,9 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(inner, vb);
+        });
     TrackingGeometryBuilder                 tgb(tgbCfg);
     std::shared_ptr<const TrackingGeometry> det = tgb.trackingGeometry();
 

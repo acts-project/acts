@@ -84,7 +84,9 @@ namespace IntegrationTest {
     CuboidVolumeBuilder             cvb(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& inner, const auto&) {
+          return cvb.trackingVolume(inner, nullptr);
+        });
     TrackingGeometryBuilder                 tgb(tgbCfg);
     std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
     Navigator                               navi(detector);
