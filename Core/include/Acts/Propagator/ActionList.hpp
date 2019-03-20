@@ -15,8 +15,8 @@
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
-#include <boost/hana/unpack.hpp>
 #include <boost/hana/type.hpp>
+#include <boost/hana/unpack.hpp>
 
 namespace hana = boost::hana;
 
@@ -41,7 +41,7 @@ public:
   template <template <typename...> class R>
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::result_type_extractor, actors_t...>,
-          hana::template_<R>))::type;
+      hana::template_<R>))::type;
 
   using detail::Extendable<actors_t...>::get;
 

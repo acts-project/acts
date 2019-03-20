@@ -347,14 +347,16 @@ private:
  * This encodes the source_link_t and hides it from the type generator.
  */
 template <typename source_link_t>
-struct fittable_measurement_helper {
+struct fittable_measurement_helper
+{
   template <Acts::ParID_t... pars>
   struct meas_factory
   {
     using type = Measurement<source_link_t, pars...>;
   };
 
-  using type = typename detail::type_generator_t<meas_factory, Acts::NGlobalPars>;
+  using type =
+      typename detail::type_generator_t<meas_factory, Acts::NGlobalPars>;
 };
 
 /**

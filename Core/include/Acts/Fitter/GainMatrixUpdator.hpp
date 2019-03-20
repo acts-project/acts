@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <variant>
 #include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"

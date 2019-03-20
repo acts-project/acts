@@ -74,7 +74,7 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(hana_set_to_tuple_test)
   {
-    constexpr auto a_set   = hana::make_set(hana::type_c<float>,
+    constexpr auto a_set = hana::make_set(hana::type_c<float>,
                                           hana::type_c<int>,
                                           hana::type_c<char>,
                                           hana::type_c<bool>);
@@ -174,11 +174,12 @@ namespace Test {
                   "Didn't find expected results");
 
     // check unpack
-    using found_results_tuple = decltype(
-        hana::unpack(found_results, hana::template_<tuple_helper>))::type::tuple;
+    using found_results_tuple = decltype(hana::unpack(
+        found_results, hana::template_<tuple_helper>))::type::tuple;
     using expected_results_tuple = std::tuple<int, bool>;
-    static_assert(std::is_same<found_results_tuple, expected_results_tuple>::value,
-                  "Unpacked results tuple not correct");
+    static_assert(
+        std::is_same<found_results_tuple, expected_results_tuple>::value,
+        "Unpacked results tuple not correct");
 
     constexpr auto found_actions
         = detail::type_collector_t<detail::action_type_extractor,
@@ -191,11 +192,12 @@ namespace Test {
                   "Didn't find expected actions");
 
     // check unpack
-    using found_actions_tuple = decltype(
-        hana::unpack(found_actions, hana::template_<tuple_helper>))::type::tuple;
+    using found_actions_tuple = decltype(hana::unpack(
+        found_actions, hana::template_<tuple_helper>))::type::tuple;
     using expected_actions_tuple = std::tuple<char, float>;
-    static_assert(std::is_same<found_actions_tuple, expected_actions_tuple>::value,
-                  "Unpacked actions tuple not correct");
+    static_assert(
+        std::is_same<found_actions_tuple, expected_actions_tuple>::value,
+        "Unpacked actions tuple not correct");
   }
 
   BOOST_AUTO_TEST_CASE(has_duplicates_test)

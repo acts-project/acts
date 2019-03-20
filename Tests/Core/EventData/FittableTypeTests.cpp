@@ -118,57 +118,56 @@ namespace Test {
     using type = Measurement<Identifier, pars...>;
   };
 
-  constexpr par_t operator "" _p(unsigned long long i) {return par_t(i);}
+  constexpr par_t operator"" _p(unsigned long long i) { return par_t(i); }
 
   BOOST_AUTO_TEST_CASE(variant_measurement_generation_test)
   {
     {
-      using actual = detail::type_generator_t<meas_factory, 1>;
+      using actual   = detail::type_generator_t<meas_factory, 1>;
       using expected = std::variant<Measurement<Identifier, 0_p>>;
-      static_assert(std::is_same<actual, expected>::value, "Variant is not identical");
+      static_assert(std::is_same<actual, expected>::value,
+                    "Variant is not identical");
     }
     {
-      using actual = detail::type_generator_t<meas_factory, 2>;
-      using expected = std::variant<
-        Measurement<Identifier, 0_p>,
-        Measurement<Identifier, 1_p>,
-        Measurement<Identifier, 0_p, 1_p>
-        >;
-      static_assert(std::is_same<actual, expected>::value, "Variant is not identical");
+      using actual   = detail::type_generator_t<meas_factory, 2>;
+      using expected = std::variant<Measurement<Identifier, 0_p>,
+                                    Measurement<Identifier, 1_p>,
+                                    Measurement<Identifier, 0_p, 1_p>>;
+      static_assert(std::is_same<actual, expected>::value,
+                    "Variant is not identical");
     }
     {
-      using actual = detail::type_generator_t<meas_factory, 3>;
-      using expected = std::variant<
-        Measurement<Identifier, 0_p>,
-        Measurement<Identifier, 1_p>,
-        Measurement<Identifier, 0_p, 1_p>,
-        Measurement<Identifier, 2_p>,
-        Measurement<Identifier, 0_p, 2_p>,
-        Measurement<Identifier, 1_p, 2_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p>
-        >;
-      static_assert(std::is_same<actual, expected>::value, "Variant is not identical");
+      using actual   = detail::type_generator_t<meas_factory, 3>;
+      using expected = std::variant<Measurement<Identifier, 0_p>,
+                                    Measurement<Identifier, 1_p>,
+                                    Measurement<Identifier, 0_p, 1_p>,
+                                    Measurement<Identifier, 2_p>,
+                                    Measurement<Identifier, 0_p, 2_p>,
+                                    Measurement<Identifier, 1_p, 2_p>,
+                                    Measurement<Identifier, 0_p, 1_p, 2_p>>;
+      static_assert(std::is_same<actual, expected>::value,
+                    "Variant is not identical");
     }
     {
       using actual = detail::type_generator_t<meas_factory, 4>;
-      using expected = std::variant<
-        Measurement<Identifier, 0_p>,
-        Measurement<Identifier, 1_p>,
-        Measurement<Identifier, 0_p, 1_p>,
-        Measurement<Identifier, 2_p>,
-        Measurement<Identifier, 0_p, 2_p>,
-        Measurement<Identifier, 1_p, 2_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p>,
-        Measurement<Identifier, 3_p>,
-        Measurement<Identifier, 0_p, 3_p>,
-        Measurement<Identifier, 1_p, 3_p>,
-        Measurement<Identifier, 0_p, 1_p, 3_p>,
-        Measurement<Identifier, 2_p, 3_p>,
-        Measurement<Identifier, 0_p, 2_p, 3_p>,
-        Measurement<Identifier, 1_p, 2_p, 3_p>,
-        Measurement<Identifier, 0_p, 1_p, 2_p, 3_p>
-        >;
-      static_assert(std::is_same<actual, expected>::value, "Variant is not identical");
+      using expected
+          = std::variant<Measurement<Identifier, 0_p>,
+                         Measurement<Identifier, 1_p>,
+                         Measurement<Identifier, 0_p, 1_p>,
+                         Measurement<Identifier, 2_p>,
+                         Measurement<Identifier, 0_p, 2_p>,
+                         Measurement<Identifier, 1_p, 2_p>,
+                         Measurement<Identifier, 0_p, 1_p, 2_p>,
+                         Measurement<Identifier, 3_p>,
+                         Measurement<Identifier, 0_p, 3_p>,
+                         Measurement<Identifier, 1_p, 3_p>,
+                         Measurement<Identifier, 0_p, 1_p, 3_p>,
+                         Measurement<Identifier, 2_p, 3_p>,
+                         Measurement<Identifier, 0_p, 2_p, 3_p>,
+                         Measurement<Identifier, 1_p, 2_p, 3_p>,
+                         Measurement<Identifier, 0_p, 1_p, 2_p, 3_p>>;
+      static_assert(std::is_same<actual, expected>::value,
+                    "Variant is not identical");
     }
     {
       using actual = detail::type_generator_t<meas_factory, 5>;

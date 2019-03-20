@@ -21,21 +21,18 @@ namespace MeasurementHelpers {
   /// @return const pointer to the extracted surface
   template <typename T>
   const Surface*
-  getSurface(
-      const T& fittable_measurement)
+  getSurface(const T& fittable_measurement)
   {
-    return std::visit(
-        [](const auto& meas) { return &meas.referenceSurface(); },
-        fittable_measurement);
+    return std::visit([](const auto& meas) { return &meas.referenceSurface(); },
+                      fittable_measurement);
   }
 
   template <typename T>
   size_t
-  getSize(
-      const T& fittable_measurement)
+  getSize(const T& fittable_measurement)
   {
     return std::visit([](const auto& meas) { return meas.size(); },
-                                fittable_measurement);
+                      fittable_measurement);
   }
 }
 }

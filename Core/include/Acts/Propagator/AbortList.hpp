@@ -14,8 +14,8 @@
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
-#include <boost/hana/unpack.hpp>
 #include <boost/hana/type.hpp>
+#include <boost/hana/unpack.hpp>
 
 namespace hana = boost::hana;
 
@@ -42,8 +42,7 @@ public:
   // This uses the type collector
   using result_type = typename decltype(hana::unpack(
       detail::type_collector_t<detail::action_type_extractor, aborters_t...>,
-          hana::template_<AbortList>))::type;
-  
+      hana::template_<AbortList>))::type;
 
   using detail::Extendable<aborters_t...>::get;
 

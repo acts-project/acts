@@ -96,7 +96,8 @@ namespace detail {
     // the provided `meas_meta` metafunction.
     constexpr auto measurements_h = hana::transform(sublists, [](auto s) {
       return hana::unpack(s, [](auto... i) {
-        return hana::type_c<typename meas_meta<ParID_t(decltype(i)::value)...>::type>;
+        return hana::type_c<
+            typename meas_meta<ParID_t(decltype(i)::value)...>::type>;
       });
     });
     // return tuple of measurements

@@ -25,7 +25,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
-
 #ifndef ACTS_BIT_CODING
 #define ACTS_BIT_CODING 1
 #if (__GNUC__ >= 4)
