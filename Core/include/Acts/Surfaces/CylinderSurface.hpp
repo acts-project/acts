@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 namespace Acts {
@@ -92,11 +91,6 @@ protected:
   /// @param transf is the additional transform applied after copying the
   /// cylinder
   CylinderSurface(const CylinderSurface& other, const Transform3D& transf);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  CylinderSurface(const variant_data& vardata);
 
 public:
   /// Destructor - defaulted
@@ -249,11 +243,6 @@ public:
   /// Return method for properly formatted output string
   std::string
   name() const override;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
   /// Return a PolyhedronRepresentation for this object
   /// @param l0div Number of divisions along l0 (phi)

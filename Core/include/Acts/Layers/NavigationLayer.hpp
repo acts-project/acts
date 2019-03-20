@@ -16,7 +16,6 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -42,11 +41,6 @@ public:
   {
     return LayerPtr(new NavigationLayer(std::move(sRepresentation), thickness));
   }
-
-  /// Factory for shared Layer pointer, that accepts @c variant_data
-  /// @param vardata The data to build from
-  static LayerPtr
-  create(const variant_data& vardata);
 
   /// Destructor
   ~NavigationLayer() override;
@@ -100,11 +94,6 @@ public:
   resolve(bool resolveSensitive,
           bool resolveMaterial,
           bool resolvePassive) const final;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const;
 
 protected:
   /// Private Constructor

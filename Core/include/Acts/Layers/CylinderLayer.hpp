@@ -15,9 +15,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/InstanceFactory.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 namespace Acts {
@@ -64,12 +62,6 @@ public:
                                              laytyp));
   }
 
-  /// Factory for shared Layer pointer, that accepts @c variant_data
-  /// @param vardata The data to build from
-  /// @return The return object is a shared poiter to the layer.
-  static MutableLayerPtr
-  create(const variant_data& vardata);
-
   /// Copy constructor - deleted
   CylinderLayer(const CylinderLayer& cla) = delete;
 
@@ -92,11 +84,6 @@ public:
   // Non-const version
   CylinderSurface&
   surfaceRepresentation() override;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   /// build approach surfaces */

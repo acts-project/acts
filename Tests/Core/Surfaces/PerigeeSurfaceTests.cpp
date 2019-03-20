@@ -23,7 +23,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"  //to get s_noBounds
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
@@ -105,25 +104,6 @@ namespace Test {
     BOOST_CHECK_EQUAL(*assignedPerigeeSurface, *perigeeSurfaceObject);
   }
 
-  /// Unit test for testing PerigeeSurface properties
-  BOOST_AUTO_TEST_CASE(PerigeeSurface_toVariantData)
-  {
-    Vector3D unitXYZ{1., 1., 1.};
-    auto     perigee = Surface::makeShared<PerigeeSurface>(unitXYZ);
-
-    variant_data var_data = perigee->toVariantData();
-    std::cout << var_data << std::endl;
-
-    // const variant_map &var_pl =
-    // boost::get<variant_map>(var_data).get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(
-        boost::get<variant_map>(var_data).get<std::string>("type"),
-        "PerigeeSurface");
-
-    auto perigee2 = Surface::makeShared<PerigeeSurface>(var_data);
-    CHECK_CLOSE_OR_SMALL(
-        perigee->transform(), perigee2->transform(), 1e-6, 1e-9);
-  }
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test

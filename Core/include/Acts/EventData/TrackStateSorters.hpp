@@ -8,11 +8,7 @@
 
 #pragma once
 
-// boost include(s)
-#include <boost/variant.hpp>
-
 namespace Acts {
-/// @brief  Sorter for boost_variant
 struct TrackStatePathLengthSorter
 {
 public:

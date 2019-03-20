@@ -21,7 +21,6 @@
 //
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -67,12 +66,6 @@ public:
   {
     sl << "SurfaceBoundsStub";
     return sl;
-  }
-
-  variant_data
-  toVariantData() const override
-  {
-    return variant_data();
   }
 
 private:

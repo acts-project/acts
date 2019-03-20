@@ -25,7 +25,6 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 using boost::test_tools::output_test_stream;
 namespace utf = boost::unit_test;
@@ -136,28 +135,6 @@ namespace Test {
     BOOST_CHECK_EQUAL(*assignedStrawSurface, *strawSurfaceObject);
   }
 
-  BOOST_AUTO_TEST_CASE(StrawSurface_toVariantData)
-  {
-    double        radius = 2.0, hlZ = 20;
-    Translation3D translation{0., 1., 2.};
-    Transform3D   transform(translation);
-    auto          pTransform = std::make_shared<const Transform3D>(translation);
-    auto straw = Surface::makeShared<StrawSurface>(pTransform, radius, hlZ);
-    variant_data var_straw = straw->toVariantData();
-    std::cout << var_straw << std::endl;
-
-    const variant_map& pl
-        = boost::get<variant_map>(var_straw).get<variant_map>("payload");
-    const variant_map& bounds_pl
-        = pl.get<variant_map>("bounds").get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("radius"), radius);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfZ"), hlZ);
-
-    auto straw2  = Surface::makeShared<StrawSurface>(var_straw);
-    auto lbounds = dynamic_cast<const LineBounds*>(&straw2->bounds());
-    BOOST_CHECK_EQUAL(lbounds->r(), radius);
-    BOOST_CHECK_EQUAL(lbounds->halflengthZ(), hlZ);
-  }
   BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test

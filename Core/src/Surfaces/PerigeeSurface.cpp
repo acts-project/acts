@@ -11,7 +11,6 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 #include <iomanip>
 #include <iostream>
@@ -39,28 +38,6 @@ Acts::PerigeeSurface::PerigeeSurface(const PerigeeSurface& other,
                                      const Transform3D&    shift)
   : GeometryObject(), LineSurface(other, shift)
 {
-}
-
-Acts::PerigeeSurface::PerigeeSurface(const variant_data& vardata)
-  : GeometryObject(), LineSurface(nullptr, nullptr)
-{
-
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(vardata);
-  throw_assert(data.count("type"), "Variant data must have type.");
-  // std::string type = boost::get<std::string>(data["type"]);
-  std::string type = data.get<std::string>("type");
-  throw_assert(type == "PerigeeSurface",
-               "Variant data type must be PerigeeSurface");
-
-  variant_map payload = data.get<variant_map>("payload");
-
-  if (payload.count("transform") != 0u) {
-    // we have a transform
-    auto trf = std::make_shared<const Transform3D>(
-        from_variant<Transform3D>(payload.get<variant_map>("transform")));
-    m_transform = trf;
-  }
 }
 
 Acts::PerigeeSurface&
@@ -109,21 +86,4 @@ Acts::PerigeeSurface::dump(std::ostream& sl) const
      << center().y() << ", " << center().z() << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::PerigeeSurface::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-
-  if (m_transform) {
-    payload["transform"] = to_variant(*m_transform);
-  }
-
-  variant_map data;
-  data["type"]    = "PerigeeSurface"s;
-  data["payload"] = payload;
-  return data;
 }

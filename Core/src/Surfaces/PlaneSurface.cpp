@@ -19,9 +19,6 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/VariantData.hpp"
-
-#include "Acts/Utilities/InstanceFactory.hpp"
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
@@ -70,35 +67,6 @@ Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
                                  std::shared_ptr<const PlanarBounds> pbounds)
   : Surface(std::move(htrans)), m_bounds(std::move(pbounds))
 {
-}
-
-Acts::PlaneSurface::PlaneSurface(const variant_data& vardata)
-{
-  // we need to figure out which way the PS was constructed before
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(vardata);
-  throw_assert(data.count("type"), "Variant data must have type.");
-  // std::string type = boost::get<std::string>(data["type"]);
-  std::string type = data.get<std::string>("type");
-  throw_assert(type == "PlaneSurface",
-               "Variant data type must be PlaneSurface");
-
-  variant_map payload    = data.get<variant_map>("payload");
-  variant_map bounds     = payload.get<variant_map>("bounds");
-  std::string boundsType = bounds.get<std::string>("type");
-
-  InstanceFactory                     factory;
-  std::shared_ptr<const PlanarBounds> pbounds
-      = factory.planarBounds(boundsType, bounds);
-
-  m_bounds = pbounds;
-
-  if (payload.count("transform") != 0u) {
-    // we have a transform
-    auto trf = std::make_shared<const Transform3D>(
-        from_variant<Transform3D>(payload.get<variant_map>("transform")));
-    m_transform = trf;
-  }
 }
 
 Acts::PlaneSurface&
@@ -169,26 +137,4 @@ Acts::PlaneSurface::bounds() const
     return (*m_bounds.get());
   }
   return s_noBounds;
-}
-
-Acts::variant_data
-Acts::PlaneSurface::toVariantData() const
-{
-  using namespace std::string_literals;
-  variant_map payload;
-
-  variant_data bounds = m_bounds->toVariantData();
-  payload["bounds"]   = bounds;
-
-  if (m_transform) {
-    payload["transform"] = to_variant(*m_transform);
-  } else if (m_associatedDetElement != nullptr) {
-    payload["transform"] = to_variant(m_associatedDetElement->transform());
-  }
-
-  variant_map data;
-  data["type"]    = "PlaneSurface"s;
-  data["payload"] = payload;
-
-  return data;
 }

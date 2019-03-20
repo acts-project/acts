@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/TriangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace utf = boost::unit_test;
 
@@ -119,37 +118,6 @@ namespace Test {
                                   assignedVertices.cend(),
                                   originalVertices.cbegin(),
                                   originalVertices.cend());
-  }
-
-  BOOST_AUTO_TEST_CASE(TriangleBounds_toVariantData)
-  {
-    std::array<Vector2D, 3> vertices({{Vector2D(1., 1.),
-                                       Vector2D(4., 1.),
-                                       Vector2D(4., 5.)}});  // 3-4-5 triangle
-    TriangleBounds triangle(vertices);
-    variant_data   var_data = triangle.toVariantData();
-
-    std::cout << var_data << std::endl;
-
-    variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "TriangleBounds");
-    variant_map pl = var_map.get<variant_map>("payload");
-
-    variant_vector var_vertices = pl.get<variant_vector>("vertices");
-    BOOST_CHECK_EQUAL(var_vertices.size(), 3);
-
-    for (size_t i = 0; i < 3; i++) {
-      Vector2D    exp = vertices.at(i);
-      variant_map var = var_vertices.get<variant_map>(i);
-      BOOST_CHECK_EQUAL(var.get<std::string>("type"), "Vector2D");
-      variant_vector coords = var.get<variant_vector>("payload");
-
-      BOOST_CHECK_EQUAL(exp.x(), coords.get<double>(0));
-      BOOST_CHECK_EQUAL(exp.y(), coords.get<double>(1));
-    }
-
-    TriangleBounds triangle2(var_data);
-    BOOST_CHECK_EQUAL(triangle2.vertices().size(), 3);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

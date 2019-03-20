@@ -9,7 +9,6 @@
 #pragma once
 
 #include <boost/range/adaptors.hpp>
-#include <boost/variant.hpp>
 #include <memory>
 #include "Acts/EventData/TrackParameters.hpp"
 

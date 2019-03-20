@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -75,11 +74,6 @@ protected:
   /// @param htrans is the additional transform applied after copying
   StrawSurface(const StrawSurface& other, const Transform3D& htrans);
 
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  StrawSurface(const variant_data& vardata);
-
 public:
   /// Destructor - defaulted
   ~StrawSurface() override = default;
@@ -104,11 +98,6 @@ public:
   /// Return properly formatted class name for screen output */
   std::string
   name() const final;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
   /// Return a PolyhedronRepresentation for this object
   /// @param l0div Number of divisions along l0 (phi)

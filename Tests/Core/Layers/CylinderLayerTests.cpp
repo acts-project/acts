@@ -19,10 +19,10 @@
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 
 #include "LayerStub.hpp"
@@ -98,49 +98,6 @@ namespace Test {
       // auto planeSurface = pCylinderLayer->surfaceRepresentation();
       BOOST_CHECK_EQUAL(pCylinderLayer->surfaceRepresentation().name(),
                         std::string("Acts::CylinderSurface"));
-    }
-
-    BOOST_AUTO_TEST_CASE(CylinderLayer_toVariantData)
-    {
-      Translation3D translation{0., 1., 2.};
-      Transform3D   rot;
-      rot = AngleAxis3D(M_PI / 4, Vector3D::UnitZ());
-
-      auto pTransform = std::make_shared<const Transform3D>(translation * rot);
-      double radius(0.5), halfz(10.);
-      auto   pCylinder = std::make_shared<const CylinderBounds>(radius, halfz);
-      auto   pCylinderLayer = std::dynamic_pointer_cast<CylinderLayer>(
-          CylinderLayer::create(pTransform, pCylinder, nullptr, 0.4));
-
-      variant_data var_data = pCylinderLayer->toVariantData();
-      std::cout << var_data << std::endl;
-
-      variant_map var_map = boost::get<variant_map>(var_data);
-      variant_map pl      = var_map.get<variant_map>("payload");
-      BOOST_CHECK_EQUAL(pl.get<double>("thickness"), 0.4);
-      Transform3D act = from_variant<Transform3D>(pl.at("transform"));
-      CHECK_CLOSE_OR_SMALL(*pTransform, act, 1e-6, 1e-9);
-
-      auto pCylinderLayer2 = std::dynamic_pointer_cast<CylinderLayer>(
-          CylinderLayer::create(var_data));
-
-      BOOST_CHECK_EQUAL(pCylinderLayer->thickness(),
-                        pCylinderLayer2->thickness());
-      CHECK_CLOSE_OR_SMALL(pCylinderLayer->transform(),
-                           pCylinderLayer2->transform(),
-                           1e-6,
-                           1e-9);
-
-      auto cvBoundsExp = dynamic_cast<const CylinderVolumeBounds*>(
-          &(pCylinderLayer->representingVolume()->volumeBounds()));
-      auto cvBoundsAct = dynamic_cast<const CylinderVolumeBounds*>(
-          &(pCylinderLayer2->representingVolume()->volumeBounds()));
-
-      BOOST_CHECK_EQUAL(cvBoundsExp->innerRadius(), cvBoundsAct->innerRadius());
-      BOOST_CHECK_EQUAL(cvBoundsExp->outerRadius(), cvBoundsAct->outerRadius());
-      BOOST_CHECK_EQUAL(cvBoundsExp->halfPhiSector(),
-                        cvBoundsAct->halfPhiSector());
-      BOOST_CHECK_EQUAL(cvBoundsExp->halflengthZ(), cvBoundsAct->halflengthZ());
     }
 
     BOOST_AUTO_TEST_SUITE_END()

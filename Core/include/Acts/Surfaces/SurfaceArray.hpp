@@ -14,8 +14,6 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/IAxis.hpp"
-#include "Acts/Utilities/InstanceFactory.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -518,26 +516,6 @@ public:
   /// @param srf The one and only surface
   SurfaceArray(std::shared_ptr<const Surface> srf);
 
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param data the @c variant_data to build from
-  /// @param g2l Callable that converts from global to local
-  /// @param l2g Callable that converts from local to global
-  /// @param transform Optional additional transform for this SurfaceArray
-  /// @note the transform parameter is ONLY used for the serialization.
-  ///       Apart from that, the SGL handles the transforms.
-  SurfaceArray(const variant_data&                             data_,
-               const std::function<Vector2D(const Vector3D&)>& g2l,
-               const std::function<Vector3D(const Vector2D&)>& l2g,
-               std::shared_ptr<const Transform3D> transform = nullptr);
-
-  // This is here so that overload resolution can figure out
-  // we need std::array<double, 1> as local parameters here.
-  SurfaceArray(const variant_data& data_,
-               std::function<std::array<double, 1>(const Vector3D&)> g2l,
-               std::function<Vector3D(const std::array<double, 1>&)> l2g,
-               std::shared_ptr<const Transform3D> transform = nullptr);
-
   /// @brief Get all surfaces in bin given by position.
   /// @param pos the lookup position
   /// @return reference to @c SurfaceVector contained in bin at that position
@@ -650,9 +628,6 @@ public:
   std::ostream&
   dump(std::ostream& sl) const;
 
-  variant_data
-  toVariantData() const;
-
 private:
   std::unique_ptr<ISurfaceGridLookup> p_gridLookup;
   // this vector makes sure we have shared ownership over the surfaces
@@ -663,9 +638,6 @@ private:
   // this is only used to keep info on transform applied
   // by l2g and g2l
   std::shared_ptr<const Transform3D> m_transform;
-
-  variant_data
-  surfaceGridLookupToVariantData(const ISurfaceGridLookup& sgl) const;
 };
 
 }  // namespace Acts

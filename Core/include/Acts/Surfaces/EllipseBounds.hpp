@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -60,11 +59,6 @@ public:
                 double maxRadius1,
                 double averagePhi = 0.,
                 double halfPhi    = M_PI);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  EllipseBounds(const variant_data& vardata);
 
   ~EllipseBounds() override;
 
@@ -129,11 +123,6 @@ public:
   /// This method returns the halfPhiSector which is covered by the disc
   double
   halfPhiSector() const;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   double          m_rMinX, m_rMinY, m_rMaxX, m_rMaxY, m_avgPhi, m_halfPhi;

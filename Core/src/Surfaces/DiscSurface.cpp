@@ -22,9 +22,7 @@
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/InstanceFactory.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
@@ -79,34 +77,6 @@ Acts::DiscSurface::DiscSurface(const std::shared_ptr<const DiscBounds>& dbounds,
   : GeometryObject(), Surface(detelement), m_bounds(dbounds)
 {
   throw_assert(dbounds, "nullptr as DiscBounds");
-}
-
-Acts::DiscSurface::DiscSurface(const variant_data& vardata) : GeometryObject()
-{
-
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(vardata);
-  throw_assert(data.count("type"), "Variant data must have type.");
-  // std::string type = boost::get<std::string>(data["type"]);
-  std::string type = data.get<std::string>("type");
-  throw_assert(type == "DiscSurface", "Variant data type must be StrawSurface");
-
-  variant_map payload    = data.get<variant_map>("payload");
-  variant_map var_bounds = payload.get<variant_map>("bounds");
-  std::string boundsType = var_bounds.get<std::string>("type");
-
-  InstanceFactory factory;
-
-  std::shared_ptr<const DiscBounds> bounds
-      = factory.discBounds(boundsType, var_bounds);
-  m_bounds = bounds;
-
-  if (payload.count("transform") != 0u) {
-    // we have a transform
-    auto trf = std::make_shared<const Transform3D>(
-        from_variant<Transform3D>(payload.get<variant_map>("transform")));
-    m_transform = trf;
-  }
 }
 
 Acts::DiscSurface&
@@ -215,24 +185,6 @@ Acts::DiscSurface::bounds() const
     return (*(m_bounds.get()));
   }
   return s_noBounds;
-}
-
-Acts::variant_data
-Acts::DiscSurface::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_data bounds = m_bounds->toVariantData();
-  variant_map  payload;
-  payload["bounds"] = bounds;
-  if (m_transform) {
-    payload["transform"] = to_variant(*m_transform);
-  }
-
-  variant_map data;
-  data["type"]    = "DiscSurface"s;
-  data["payload"] = payload;
-  return data;
 }
 
 Acts::PolyhedronRepresentation

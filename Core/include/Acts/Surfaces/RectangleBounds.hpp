@@ -13,7 +13,6 @@
 #pragma once
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -40,11 +39,6 @@ public:
   /// @param halex halflength in X
   /// @param haley halflength in Y
   RectangleBounds(double halex, double haley);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  RectangleBounds(const variant_data& vardata);
 
   ~RectangleBounds() override;
 
@@ -95,11 +89,6 @@ public:
   /// Return method for the half length in Y
   double
   halflengthY() const;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   double m_halfX, m_halfY;

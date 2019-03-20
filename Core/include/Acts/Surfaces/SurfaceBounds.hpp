@@ -15,7 +15,6 @@
 
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -95,11 +94,6 @@ public:
   /// @param sl is the outstream in which the string dump is done
   virtual std::ostream&
   dump(std::ostream& os) const = 0;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  virtual variant_data
-  toVariantData() const = 0;
 };
 
 inline bool

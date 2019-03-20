@@ -12,7 +12,6 @@
 
 #include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -33,27 +32,6 @@ Acts::DiamondBounds::DiamondBounds(double minhalex,
 {
   throw_assert((minhalex <= medhalex), "Hexagon must be a convex polygon");
   throw_assert((maxhalex <= medhalex), "Hexagon must be a convex polygon");
-}
-
-Acts::DiamondBounds::DiamondBounds(const variant_data& vardata)
-  : m_boundingBox(0, 0)
-{
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(vardata);
-  std::string        type = data.get<std::string>("type");
-  throw_assert(type == "DiamondBounds", "Type must be DiamondBounds");
-
-  const variant_map& payload = data.get<variant_map>("payload");
-
-  m_minHalfX = payload.get<double>("minHalfX");
-  m_medHalfX = payload.get<double>("medHalfX");
-  m_maxHalfX = payload.get<double>("maxHalfX");
-  m_minY     = payload.get<double>("minY");
-  m_maxY     = payload.get<double>("maxY");
-
-  m_boundingBox
-      = RectangleBounds(std::max(std::max(m_minHalfX, m_medHalfX), m_maxHalfX),
-                        std::max(m_minY, m_maxY));
 }
 
 Acts::DiamondBounds::~DiamondBounds() = default;
@@ -126,23 +104,4 @@ Acts::DiamondBounds::dump(std::ostream& sl) const
      << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::DiamondBounds::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-  payload["minHalfX"] = m_minHalfX;
-  payload["medHalfX"] = m_medHalfX;
-  payload["maxHalfX"] = m_maxHalfX;
-  payload["minY"]     = m_minY;
-  payload["maxY"]     = m_maxY;
-
-  variant_map data;
-  data["type"]    = "DiamondBounds"s;
-  data["payload"] = payload;
-
-  return data;
 }

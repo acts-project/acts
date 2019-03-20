@@ -22,7 +22,6 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -208,46 +207,6 @@ namespace Test {
     *assignedPlaneSurface = *planeSurfaceObject;
     /// Test equality of assigned to original
     BOOST_CHECK_EQUAL(*assignedPlaneSurface, *planeSurfaceObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(PlaneSurface_Serialization)
-  {
-    // build
-    auto rectBounds = std::make_shared<const RectangleBounds>(5, 10);
-    auto idTrf = std::make_shared<const Transform3D>(Transform3D::Identity());
-    auto rot   = std::make_shared<const Transform3D>(
-        AngleAxis3D(M_PI / 4., Vector3D::UnitZ()));
-    auto         rectSrf = Surface::makeShared<PlaneSurface>(rot, rectBounds);
-    variant_data rectVariant = rectSrf->toVariantData();
-    std::cout << rectVariant << std::endl;
-
-    // rebuild from variant
-    auto rectSrfRec = Surface::makeShared<PlaneSurface>(rectVariant);
-    auto rectBoundsRec
-        = dynamic_cast<const RectangleBounds*>(&rectSrfRec->bounds());
-    CHECK_CLOSE_REL(
-        rectBounds->halflengthX(), rectBoundsRec->halflengthX(), 1e-4);
-    CHECK_CLOSE_REL(
-        rectBounds->halflengthY(), rectBoundsRec->halflengthY(), 1e-4);
-    CHECK_CLOSE_OR_SMALL(*rot, rectSrfRec->transform(), 1e-4, 1e-9);
-
-    std::array<Vector2D, 3> vertices
-        = {{Vector2D(1, 1), Vector2D(1, -1), Vector2D(-1, 1)}};
-    auto triangleBounds = std::make_shared<const TriangleBounds>(vertices);
-    auto triangleSrf = Surface::makeShared<PlaneSurface>(rot, triangleBounds);
-    variant_data triangleVariant = triangleSrf->toVariantData();
-    std::cout << triangleVariant << std::endl;
-
-    // rebuild
-    auto triangleSrfRec = Surface::makeShared<PlaneSurface>(triangleVariant);
-    auto triangleBoundsRec
-        = dynamic_cast<const TriangleBounds*>(&triangleSrfRec->bounds());
-    for (size_t i = 0; i < 3; i++) {
-      CHECK_CLOSE_REL(triangleBounds->vertices().at(i),
-                      triangleBoundsRec->vertices().at(i),
-                      1e-4);
-    }
-    CHECK_CLOSE_OR_SMALL(*rot, triangleSrfRec->transform(), 1e-4, 1e-9);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

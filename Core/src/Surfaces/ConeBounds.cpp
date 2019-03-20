@@ -17,7 +17,6 @@
 #include <iostream>
 #include <limits>
 
-#include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::ConeBounds::ConeBounds(double alpha,
@@ -44,23 +43,6 @@ Acts::ConeBounds::ConeBounds(double alpha,
   , m_avgPhi(detail::radian_sym(avphi))
   , m_halfPhi(std::abs(halfphi))
 {
-}
-
-Acts::ConeBounds::ConeBounds(const variant_data& vardata)
-{
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(vardata);
-  std::string        type = data.get<std::string>("type");
-  throw_assert(type == "ConeBounds", "Type must be ConeBounds");
-
-  const variant_map& payload = data.get<variant_map>("payload");
-
-  m_alpha    = payload.get<double>("alpha");
-  m_tanAlpha = std::tan(m_alpha);
-  m_zMin     = payload.get<double>("zMin");
-  m_zMax     = payload.get<double>("zMax");
-  m_avgPhi   = payload.get<double>("avgPhi");
-  m_halfPhi  = payload.get<double>("halfPhi");
 }
 
 Acts::ConeBounds::~ConeBounds() = default;
@@ -132,19 +114,4 @@ Acts::ConeBounds::dump(std::ostream& sl) const
      << m_avgPhi << ", " << m_halfPhi << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::ConeBounds::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-  payload["alpha"]   = m_alpha;
-  payload["zMin"]    = m_zMin;
-  payload["zMax"]    = m_zMax;
-  payload["avgPhi"]  = m_avgPhi;
-  payload["halfPhi"] = m_halfPhi;
-
-  return variant_map({{"type", "ConeBounds"s}, {"payload", payload}});
 }
