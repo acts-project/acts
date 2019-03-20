@@ -95,7 +95,8 @@ struct NavigationOptions
 /// This navigation actor thus always needs to run first!
 /// It does two things: it figures out the order of volumes, layers and
 /// surfaces. For each propagation step, the operator() runs, which checks if
-/// the current surface (or layer/volume boundary) is reached via isOnSurface.
+/// the current surface (or layer/volume boundary) is reached via
+/// surfaceReached.
 /// The current target surface is the surface pointed to by of the iterators
 /// for the surfaces, layers or volume boundaries.
 /// If a surface is found, the state.navigation.currentSurface
@@ -103,7 +104,7 @@ struct NavigationOptions
 /// actor uses the ordered  iterators  to figure out which surface, layer or
 /// volume boundary is _supposed_ to be hit next. It then sets the maximum
 /// step size to the path length found out by straight line intersection. If
-/// the isOnSurface call fails, it also  re-computes the step size, to make
+/// the surfaceReached call fails, it also  re-computes the step size, to make
 /// sure we end up at the desired surface.
 ///
 class Navigator
@@ -538,9 +539,7 @@ private:
     // Check if we are at a surface
     // If we are on the surface pointed at by the iterator, we can make
     // it the current one to pass it to the other actors
-    if (surface->isOnSurface(stepper.position(state.stepping),
-                             stepper.direction(state.stepping),
-                             true)) {
+    if (stepper.surfaceReached(state.stepping, surface)) {
       debugLog(state, [&] {
         return std::string("Status Surface successfully hit, storing it.");
       });
@@ -1251,10 +1250,8 @@ private:
         return true;
       }
       // the only advance could have been to the target
-      if (state.navigation.targetSurface->isOnSurface(
-              stepper.position(state.stepping),
-              stepper.direction(state.stepping),
-              true)) {
+      if (stepper.surfaceReached(state.stepping,
+                                 state.navigation.targetSurface)) {
         // set the target surface
         state.navigation.currentSurface = state.navigation.targetSurface;
 

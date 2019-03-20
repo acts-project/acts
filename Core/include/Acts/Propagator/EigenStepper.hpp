@@ -11,15 +11,11 @@
 #include <cmath>
 #include <limits>
 #include "Acts/Detector/TrackingVolume.hpp"
-#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
-#include "Acts/Propagator/detail/ConstrainedStep.hpp"
-#include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -76,9 +72,9 @@ public:
   {
 
     /// Constructor from the initial track parameters
-    /// @param[in] par The track parameters at start
-    /// @param[in] ndir The navigation direciton w.r.t momentum
-    /// @param[in] sszice is the maximum step size
+    /// @param [in] par The track parameters at start
+    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ssize is the maximum step size
     ///
     /// @note the covariance matrix is copied when needed
     template <typename T>
@@ -175,12 +171,7 @@ public:
 
   /// Always use the same propagation state type, independently of the initial
   /// track parameter type and of the target surface
-  template <typename T, typename S = int>
   using state_type = State;
-
-  /// Intermediate track parameters are always in curvilinear parametrization
-  template <typename T>
-  using step_parameter_type = CurvilinearParameters;
 
   /// Return parameter types depend on the propagation mode:
   /// - when propagating to a surface we usually return BoundParameters
@@ -190,55 +181,6 @@ public:
 
   /// Constructor requires knowledge of the detector's magnetic field
   EigenStepper(BField bField = BField()) : m_bField(std::move(bField)){};
-
-  /// Convert the propagation state (global) to curvilinear parameters
-  /// This is called by the propagator
-  ///
-  /// @tparam result_t Type of the propagator result to be filled
-  ///
-  /// @param [in,out] state The stepper state
-  /// @param [in,out] result The propagator result object to be filled
-  template <typename result_t>
-  void
-  convert(State& state, result_t& result) const
-  {
-    auto  curvState      = curvilinearState(state);
-    auto& curvParameters = std::get<CurvilinearParameters>(curvState);
-    // Fill the end parameters, @todo error handling
-    result.endParameters = std::make_unique<const CurvilinearParameters>(
-        std::move(curvParameters));
-    // Only fill the transport jacobian when covariance transport was done
-    if (state.covTransport) {
-      auto& tJacobian = std::get<Jacobian>(curvState);
-      result.transportJacobian
-          = std::make_unique<const Jacobian>(std::move(tJacobian));
-    }
-  }
-
-  /// Convert the propagation state to track parameters at a certain surface
-  ///
-  /// @tparam result_t Type of the propagator result to be filled
-  /// @tparam surface_t Type of the surface
-  ///
-  /// @param [in,out] state Propagation state used
-  /// @param [in,out] result Result object from the propagator
-  /// @param [in] surface Destination surface to which the conversion is done
-  template <typename result_t, typename surface_t>
-  void
-  convert(State& state, result_t& result, const surface_t& surface) const
-  {
-    auto  bs              = boundState(state, surface);
-    auto& boundParameters = std::get<BoundParameters>(bs);
-    // Fill the end parameters, @todo error handling
-    result.endParameters
-        = std::make_unique<const BoundParameters>(std::move(boundParameters));
-    // Only fill the transport jacobian when covariance transport was done
-    if (state.covTransport) {
-      auto& tJacobian = std::get<Jacobian>(bs);
-      result.transportJacobian
-          = std::make_unique<const Jacobian>(std::move(tJacobian));
-    }
-  }
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
@@ -279,6 +221,18 @@ public:
   charge(const State& state) const
   {
     return state.q;
+  }
+
+  /// Tests if the state reached a surface
+  ///
+  /// @param [in] state State that is tests
+  /// @param [in] surface Surface that is tested
+  ///
+  /// @return Boolean statement if surface is reached by state
+  bool
+  surfaceReached(const State& state, const Surface* surface) const
+  {
+    return surface->isOnSurface(position(state), direction(state), true);
   }
 
   /// Create and return the bound state at the current position
@@ -493,11 +447,10 @@ public:
   /// @param [in] reinitialize is a flag to steer whether the state should be
   /// reinitialized at the new position
   /// @note no check is done if the position is actually on the surface
-  template <typename surface_t>
   void
-  covarianceTransport(State&           state,
-                      const surface_t& surface,
-                      bool             reinitialize = true) const
+  covarianceTransport(State&         state,
+                      const Surface& surface,
+                      bool           reinitialize = true) const
   {
     using VectorHelpers::phi;
     using VectorHelpers::theta;

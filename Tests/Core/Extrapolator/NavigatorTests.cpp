@@ -103,6 +103,12 @@ namespace Test {
       {
         return VoidIntersectionCorrector();
       }
+
+      bool
+      surfaceReached(const StepperState& state, const Surface* surface) const
+      {
+        return surface->isOnSurface(position(state), direction(state), true);
+      }
     };
 
     /// emulate the options template

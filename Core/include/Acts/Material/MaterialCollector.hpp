@@ -55,12 +55,16 @@ struct MaterialCollector
   /// - it records the surface given the configuration
   ///
   /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_t Type of the stepper of the propagation
   ///
   /// @param state is the mutable propagator state object
+  /// @param stepper The stepper in use
   /// @param result is the result object to be filled
-  template <typename propagator_state_t>
+  template <typename propagator_state_t, typename stepper_t>
   void
-  operator()(propagator_state_t& state, result_type& result) const
+  operator()(propagator_state_t& state,
+             const stepper_t&    stepper,
+             result_type&        result) const
   {
 
     if (state.navigation.currentSurface) {
@@ -81,7 +85,7 @@ struct MaterialCollector
         // get the material propertices and only continue
         const MaterialProperties* mProperties
             = state.navigation.currentSurface->associatedMaterial()->material(
-                state.stepping.position());
+                stepper.position(state.stepping));
         if (mProperties) {
           // pre/post/full update
           double prepofu = 1.;
@@ -123,7 +127,8 @@ struct MaterialCollector
           // the path correction from the surface intersection
           double pCorrection = prepofu
               * state.navigation.currentSurface->pathCorrection(
-                    state.stepping.position(), state.stepping.direction());
+                    stepper.position(state.stepping),
+                    stepper.direction(state.stepping));
           // the full material
           result.materialInX0 += pCorrection * mProperties->thicknessInX0();
           result.materialInL0 += pCorrection * mProperties->thicknessInL0();
@@ -141,8 +146,8 @@ struct MaterialCollector
             // create for recording
             MaterialHit mHit;
             mHit.surface   = state.navigation.currentSurface;
-            mHit.position  = state.stepping.position();
-            mHit.direction = state.stepping.direction();
+            mHit.position  = stepper.position(state.stepping);
+            mHit.direction = stepper.direction(state.stepping);
             // get the material & path length
             mHit.material   = mProperties->material();
             mHit.pathLength = pCorrection * mProperties->thickness();
