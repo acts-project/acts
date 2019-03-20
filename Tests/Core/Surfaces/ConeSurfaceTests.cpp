@@ -20,7 +20,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -219,34 +218,6 @@ namespace Test {
     *assignedConeSurface = *coneSurfaceObject;
     /// Test equality of assigned to original
     BOOST_CHECK_EQUAL(*assignedConeSurface, *coneSurfaceObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(ConeSurface_toVariantData)
-  {
-    double        alpha = M_PI / 2., zMin = 1, zMax = 5, halfPhi = M_PI;
-    Translation3D translation{0., 1., 2.};
-    auto          pTransform = std::make_shared<const Transform3D>(translation);
-    auto          cone       = Surface::makeShared<ConeSurface>(
-        pTransform, alpha, zMin, zMax, halfPhi);
-
-    variant_data var_cone = cone->toVariantData();
-    std::cout << var_cone << std::endl;
-
-    const variant_map& pl
-        = boost::get<variant_map>(var_cone).get<variant_map>("payload");
-    const variant_map& bounds_pl
-        = pl.get<variant_map>("bounds").get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("alpha"), alpha);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("zMin"), zMin);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("zMax"), zMax);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfPhi"), halfPhi);
-
-    auto cone2      = Surface::makeShared<ConeSurface>(var_cone);
-    auto conebounds = dynamic_cast<const ConeBounds*>(&cone2->bounds());
-    BOOST_CHECK_EQUAL(conebounds->alpha(), alpha);
-    BOOST_CHECK_EQUAL(conebounds->halfPhiSector(), halfPhi);
-    BOOST_CHECK_EQUAL(conebounds->minZ(), zMin);
-    BOOST_CHECK_EQUAL(conebounds->maxZ(), zMax);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

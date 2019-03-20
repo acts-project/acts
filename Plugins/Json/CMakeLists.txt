@@ -1,9 +1,9 @@
 file (GLOB_RECURSE src_files "src/*.cpp" "include/*.hpp")
 
-add_library (ActsJsonPlugin SHARED ${src_files})
+add_library (ActsJsonPlugin INTERFACE)
 
-target_include_directories (ActsJsonPlugin PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
-target_link_libraries (ActsJsonPlugin PUBLIC ActsCore)
+target_include_directories (ActsJsonPlugin SYSTEM INTERFACE ${Boost_INCLUDE_DIRS} ${EIGEN_INCLUDE_DIRS})
+target_include_directories (ActsJsonPlugin INTERFACE $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/> $<INSTALL_INTERFACE:include>)
 
 install (TARGETS ActsJsonPlugin
          EXPORT ActsJsonPluginTargets
@@ -11,4 +11,3 @@ install (TARGETS ActsJsonPlugin
 
 install (DIRECTORY include/Acts DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-acts_add_targets_to_cdash_project(PROJECT ActsJsonPlugin TARGETS ActsJsonPlugin)

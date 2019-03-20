@@ -18,7 +18,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -72,11 +71,6 @@ protected:
   /// @param pbounds bounds object to describe the actual surface area
   PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  PlaneSurface(const variant_data& vardata);
 
 public:
   /// Destructor - defaulted
@@ -201,11 +195,6 @@ public:
   /// Return properly formatted class name for screen output
   std::string
   name() const override;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 protected:
   /// the bounds of this surface

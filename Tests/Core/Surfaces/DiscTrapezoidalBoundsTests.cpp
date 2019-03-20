@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/DiscTrapezoidalBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -134,35 +133,6 @@ namespace Test {
     assignedDiscTrapezoidalBoundsObject = discTrapezoidalBoundsObject;
     BOOST_CHECK_EQUAL(assignedDiscTrapezoidalBoundsObject,
                       discTrapezoidalBoundsObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(DiscTrapezoidalBounds_toVariantData)
-  {
-    double rMin = 1, rMax = 5, avgPhi = M_PI / 3., minHalfX = 2, maxHalfX = 4,
-           stereo = M_PI / 8.;
-    DiscTrapezoidalBounds dt(minHalfX, maxHalfX, rMin, rMax, avgPhi, stereo);
-
-    variant_data var_dt = dt.toVariantData();
-    std::cout << var_dt << std::endl;
-
-    variant_map var_dt_map = boost::get<variant_map>(var_dt);
-    BOOST_CHECK_EQUAL(var_dt_map.get<std::string>("type"),
-                      "DiscTrapezoidalBounds");
-    variant_map pl = var_dt_map.get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(pl.get<double>("rMin"), rMin);
-    BOOST_CHECK_EQUAL(pl.get<double>("rMax"), rMax);
-    BOOST_CHECK_EQUAL(pl.get<double>("avgPhi"), avgPhi);
-    BOOST_CHECK_EQUAL(pl.get<double>("minHalfX"), minHalfX);
-    BOOST_CHECK_EQUAL(pl.get<double>("maxHalfX"), maxHalfX);
-    BOOST_CHECK_EQUAL(pl.get<double>("stereo"), stereo);
-
-    DiscTrapezoidalBounds dt2(var_dt);
-
-    BOOST_CHECK_EQUAL(dt.rMin(), dt2.rMin());
-    BOOST_CHECK_EQUAL(dt.rMax(), dt2.rMax());
-    BOOST_CHECK_EQUAL(dt.minHalflengthX(), dt2.minHalflengthX());
-    BOOST_CHECK_EQUAL(dt.maxHalflengthX(), dt2.maxHalflengthX());
-    BOOST_CHECK_EQUAL(dt.stereo(), dt2.stereo());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

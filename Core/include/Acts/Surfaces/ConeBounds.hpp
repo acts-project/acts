@@ -15,7 +15,6 @@
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -69,10 +68,6 @@ public:
              double zmax,
              double halfphi = M_PI,
              double avphi   = 0.);
-
-  /// Constructor which accepts @c variant_data
-  /// @param vardata The data to build from
-  ConeBounds(const variant_data& vardata);
 
   ~ConeBounds() override;
 
@@ -149,11 +144,6 @@ public:
   /// (so that averagePhi +/- halfPhiSector gives the phi bounds of the cone)
   double
   halfPhiSector() const;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   double m_alpha, m_tanAlpha;

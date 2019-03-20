@@ -17,7 +17,6 @@
 #include <iostream>
 
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 using Acts::VectorHelpers::phi;
@@ -49,22 +48,6 @@ Acts::CylinderBounds::CylinderBounds(double radius,
   if (halfPhi == M_PI) {
     m_closed = true;
   }
-}
-
-Acts::CylinderBounds::CylinderBounds(const variant_data& vardata)
-  : m_radius(0), m_avgPhi(0), m_halfPhi(0), m_halfZ(0)
-{
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(vardata);
-  std::string        type = data.get<std::string>("type");
-  throw_assert(type == "CylinderBounds", "Type must be CylinderBounds");
-
-  const variant_map& payload = data.get<variant_map>("payload");
-
-  m_radius  = payload.get<double>("radius");
-  m_avgPhi  = payload.get<double>("avgPhi");
-  m_halfPhi = payload.get<double>("halfPhi");
-  m_halfZ   = payload.get<double>("halfZ");
 }
 
 Acts::CylinderBounds::~CylinderBounds() = default;
@@ -169,20 +152,4 @@ Acts::CylinderBounds::dump(std::ostream& sl) const
   sl << m_halfPhi << ", " << m_halfZ << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::CylinderBounds::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-  payload["radius"]  = m_radius;
-  payload["avgPhi"]  = m_avgPhi;
-  payload["halfPhi"] = m_halfPhi;
-  payload["halfZ"]   = m_halfZ;
-
-  variant_map data({{"type", "CylinderBounds"s}, {"payload", payload}});
-
-  return data;
 }

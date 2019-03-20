@@ -16,7 +16,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(double minhalfx,
@@ -32,24 +31,6 @@ Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(double minhalfx,
   , m_avgPhi(detail::radian_sym(avephi))
   , m_stereo(stereo)
 {
-}
-
-Acts::DiscTrapezoidalBounds::DiscTrapezoidalBounds(const variant_data& vardata)
-{
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(vardata);
-  std::string        type = data.get<std::string>("type");
-  throw_assert(type == "DiscTrapezoidalBounds",
-               "Type must be DiscTrapezoidalBounds");
-
-  const variant_map& payload = data.get<variant_map>("payload");
-
-  m_rMin     = payload.get<double>("rMin");
-  m_rMax     = payload.get<double>("rMax");
-  m_minHalfX = payload.get<double>("minHalfX");
-  m_maxHalfX = payload.get<double>("maxHalfX");
-  m_avgPhi   = payload.get<double>("avgPhi");
-  m_stereo   = payload.get<double>("stereo");
 }
 
 Acts::DiscTrapezoidalBounds::~DiscTrapezoidalBounds() = default;
@@ -133,21 +114,4 @@ Acts::DiscTrapezoidalBounds::dump(std::ostream& sl) const
      << ", " << averagePhi() << ", " << rCenter() << ", " << stereo() << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::DiscTrapezoidalBounds::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-  payload["rMin"]     = m_rMin;
-  payload["rMax"]     = m_rMax;
-  payload["minHalfX"] = m_minHalfX;
-  payload["maxHalfX"] = m_maxHalfX;
-  payload["avgPhi"]   = m_avgPhi;
-  payload["stereo"]   = m_stereo;
-
-  return variant_map(
-      {{"type", "DiscTrapezoidalBounds"s}, {"payload", payload}});
 }

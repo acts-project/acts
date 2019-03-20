@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -54,11 +53,6 @@ protected:
   /// @param shift is the transformed applied after copying
   PerigeeSurface(const PerigeeSurface& other, const Transform3D& shift);
 
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  PerigeeSurface(const variant_data& vardata);
-
 public:
   /// Destructor - defaulted
   ~PerigeeSurface() override = default;
@@ -89,11 +83,6 @@ public:
   /// @param sl is the ostream to be dumped into
   std::ostream&
   dump(std::ostream& sl) const final;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   /// Clone method. Uses the copy constructor a new position can optionally be

@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace utf = boost::unit_test;
 
@@ -119,29 +118,6 @@ namespace Test {
     TrapezoidBounds assignedTrapezoidBoundsObject(10., 20., 14.2);
     assignedTrapezoidBoundsObject = trapezoidBoundsObject;
     BOOST_CHECK_EQUAL(assignedTrapezoidBoundsObject, trapezoidBoundsObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(TrapezoidBounds_toVariantData)
-  {
-    double          minHlX = 10;
-    double          maxHlX = 15;
-    double          hlY    = 5;
-    TrapezoidBounds trap(minHlX, maxHlX, hlY);
-    variant_data    var_data = trap.toVariantData();
-
-    std::cout << var_data << std::endl;
-
-    variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "TrapezoidBounds");
-    variant_map pl = var_map.get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(pl.get<double>("minHalfX"), minHlX);
-    BOOST_CHECK_EQUAL(pl.get<double>("maxHalfX"), maxHlX);
-    BOOST_CHECK_EQUAL(pl.get<double>("halfY"), hlY);
-
-    TrapezoidBounds trap2(var_data);
-    BOOST_CHECK_EQUAL(trap.minHalflengthX(), trap2.minHalflengthX());
-    BOOST_CHECK_EQUAL(trap.maxHalflengthX(), trap2.maxHalflengthX());
-    BOOST_CHECK_EQUAL(trap.halflengthY(), trap2.halflengthY());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

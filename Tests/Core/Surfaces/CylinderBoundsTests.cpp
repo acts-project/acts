@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -133,30 +132,6 @@ namespace Test {
     assignedCylinderBounds = cylinderBoundsObject;
     BOOST_CHECK_EQUAL(assignedCylinderBounds.r(), cylinderBoundsObject.r());
     BOOST_CHECK_EQUAL(assignedCylinderBounds, cylinderBoundsObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData)
-  {
-    double         radius = 10, avgPhi = 0, halfPhi = M_PI, halfZ = 15;
-    CylinderBounds cylBounds(radius, avgPhi, halfPhi, halfZ);
-
-    variant_data var_data = cylBounds.toVariantData();
-    std::cout << var_data << std::endl;
-
-    variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "CylinderBounds");
-    variant_map pl = var_map.get<variant_map>("payload");
-
-    BOOST_CHECK_EQUAL(pl.get<double>("radius"), radius);
-    BOOST_CHECK_EQUAL(pl.get<double>("avgPhi"), avgPhi);
-    BOOST_CHECK_EQUAL(pl.get<double>("halfPhi"), halfPhi);
-    BOOST_CHECK_EQUAL(pl.get<double>("halfZ"), halfZ);
-
-    CylinderBounds cylBounds2(var_data);
-    BOOST_CHECK_EQUAL(cylBounds.r(), cylBounds2.r());
-    BOOST_CHECK_EQUAL(cylBounds.averagePhi(), cylBounds2.averagePhi());
-    BOOST_CHECK_EQUAL(cylBounds.halfPhiSector(), cylBounds2.halfPhiSector());
-    BOOST_CHECK_EQUAL(cylBounds.halflengthZ(), cylBounds2.halflengthZ());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

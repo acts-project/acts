@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
 #include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"

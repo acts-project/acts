@@ -17,7 +17,6 @@
 #include <iostream>
 
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 using Acts::VectorHelpers::phi;
@@ -38,27 +37,6 @@ Acts::EllipseBounds::EllipseBounds(double minRadius0,
   , m_boundingBox(std::max(minRadius0, maxRadius0),
                   std::max(minRadius1, maxRadius1))
 {
-}
-
-Acts::EllipseBounds::EllipseBounds(const variant_data& vardata)
-  : m_boundingBox(0, 0)
-{
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(vardata);
-  std::string        type = data.get<std::string>("type");
-  throw_assert(type == "EllipseBounds", "Type must be EllipseBounds");
-
-  const variant_map& payload = data.get<variant_map>("payload");
-
-  m_rMinX   = payload.get<double>("rMinX");
-  m_rMinY   = payload.get<double>("rMinY");
-  m_rMaxX   = payload.get<double>("rMaxX");
-  m_rMaxY   = payload.get<double>("rMaxY");
-  m_avgPhi  = payload.get<double>("avgPhi");
-  m_halfPhi = payload.get<double>("halfPhi");
-
-  m_boundingBox
-      = RectangleBounds(std::max(m_rMinX, m_rMaxX), std::max(m_rMinY, m_rMaxY));
 }
 
 Acts::EllipseBounds::~EllipseBounds() = default;
@@ -209,24 +187,4 @@ Acts::EllipseBounds::dump(std::ostream& sl) const
      << ", " << averagePhi() << ", " << halfPhiSector() << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::EllipseBounds::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-  payload["rMinX"]   = m_rMinX;
-  payload["rMinY"]   = m_rMinY;
-  payload["rMaxX"]   = m_rMaxX;
-  payload["rMaxY"]   = m_rMaxY;
-  payload["avgPhi"]  = m_avgPhi;
-  payload["halfPhi"] = m_halfPhi;
-
-  variant_map data;
-  data["type"]    = "EllipseBounds"s;
-  data["payload"] = payload;
-
-  return data;
 }

@@ -18,7 +18,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -110,11 +109,6 @@ protected:
   /// @param other The source sourface for the copy
   /// @param transf The additional transform applied to the surface
   DiscSurface(const DiscSurface& other, const Transform3D& transf);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  DiscSurface(const variant_data& vardata);
 
 public:
   /// Destructor - defaulted
@@ -309,11 +303,6 @@ public:
   /// @param l1div Number of divisions along l1 (r)
   virtual PolyhedronRepresentation
   polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 protected:
   std::shared_ptr<const DiscBounds> m_bounds;  ///< bounds (shared)

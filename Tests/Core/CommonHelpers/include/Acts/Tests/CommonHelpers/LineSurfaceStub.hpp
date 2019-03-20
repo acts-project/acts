@@ -9,7 +9,6 @@
 //
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 //
 //
 #include <limits>
@@ -38,11 +37,6 @@ namespace Test {
     LineSurfaceStub(std::shared_ptr<const LineBounds> lbounds,
                     const DetectorElementBase&        detelement)
       : GeometryObject(), LineSurface(lbounds, detelement)
-    { /* nop */
-    }
-
-    LineSurfaceStub(const variant_data& data)
-      : GeometryObject(), LineSurface(data)
     { /* nop */
     }
 

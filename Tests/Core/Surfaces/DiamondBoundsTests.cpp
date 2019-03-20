@@ -20,7 +20,6 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -148,32 +147,6 @@ namespace Test {
     // object, in some sense
     assignedDiamondBoundsObject = diamondBoundsObject;
     BOOST_CHECK_EQUAL(assignedDiamondBoundsObject, diamondBoundsObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(DiamondBounds_toVariantData)
-  {
-    double minHalfX(10.), midHalfX(50.), maxHalfX(30.), halfY1(10.),
-        halfY2(20.);
-    DiamondBounds diam(minHalfX, midHalfX, maxHalfX, halfY1, halfY2);
-    variant_data  var_data = diam.toVariantData();
-
-    std::cout << var_data << std::endl;
-
-    variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "DiamondBounds");
-    variant_map pl = var_map.get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(pl.get<double>("minHalfX"), minHalfX);
-    BOOST_CHECK_EQUAL(pl.get<double>("medHalfX"), midHalfX);
-    BOOST_CHECK_EQUAL(pl.get<double>("maxHalfX"), maxHalfX);
-    BOOST_CHECK_EQUAL(pl.get<double>("minY"), halfY1);
-    BOOST_CHECK_EQUAL(pl.get<double>("maxY"), halfY2);
-
-    DiamondBounds diam2(var_data);
-    BOOST_CHECK_EQUAL(diam.minHalflengthX(), diam2.minHalflengthX());
-    BOOST_CHECK_EQUAL(diam.medHalflengthX(), diam2.medHalflengthX());
-    BOOST_CHECK_EQUAL(diam.maxHalflengthX(), diam2.maxHalflengthX());
-    BOOST_CHECK_EQUAL(diam.halflengthY1(), diam2.halflengthY1());
-    BOOST_CHECK_EQUAL(diam.halflengthY2(), diam2.halflengthY2());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

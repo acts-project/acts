@@ -25,6 +25,7 @@
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"

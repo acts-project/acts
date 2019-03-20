@@ -16,7 +16,6 @@
 #include <iomanip>
 #include <iostream>
 
-#include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 Acts::RadialBounds::RadialBounds(double minrad, double maxrad, double hphisec)
@@ -33,22 +32,6 @@ Acts::RadialBounds::RadialBounds(double minrad,
   , m_avgPhi(detail::radian_sym(avephi))
   , m_halfPhi(std::abs(hphisec))
 {
-}
-
-Acts::RadialBounds::RadialBounds(const variant_data& vardata)
-{
-
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(vardata);
-  std::string        type = data.get<std::string>("type");
-  throw_assert(type == "RadialBounds", "Type must be RadialBounds");
-
-  const variant_map& payload = data.get<variant_map>("payload");
-
-  m_rMin    = payload.get<double>("rMin");
-  m_rMax    = payload.get<double>("rMax");
-  m_avgPhi  = payload.get<double>("avgPhi");
-  m_halfPhi = payload.get<double>("halfPhi");
 }
 
 Acts::RadialBounds::~RadialBounds() = default;
@@ -113,18 +96,4 @@ Acts::RadialBounds::dump(std::ostream& sl) const
      << halfPhiSector() << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::RadialBounds::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-  payload["rMin"]    = m_rMin;
-  payload["rMax"]    = m_rMax;
-  payload["avgPhi"]  = m_avgPhi;
-  payload["halfPhi"] = m_halfPhi;
-
-  return variant_map({{"type", "RadialBounds"s}, {"payload", payload}});
 }

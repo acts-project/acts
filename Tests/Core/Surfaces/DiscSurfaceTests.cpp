@@ -23,7 +23,6 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace utf = boost::unit_test;
 namespace tt  = boost::test_tools;
@@ -215,56 +214,6 @@ namespace Test {
     //
     BOOST_CHECK_NO_THROW(*assignedDisc = *discSurfaceObject);
     BOOST_CHECK_EQUAL(*assignedDisc, *discSurfaceObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(DiscSurface_toVariantData)
-  {
-    double minR = 1, maxR = 4, avgPhi = M_PI / 3, phiSec = M_PI;
-    auto   rbounds
-        = std::make_shared<const RadialBounds>(minR, maxR, avgPhi, phiSec);
-
-    Transform3D rot(AngleAxis3D(M_PI / 4., Vector3D::UnitZ()));
-    auto        trf
-        = std::make_shared<const Transform3D>(Translation3D(0, 0, 2) * rot);
-
-    auto rdisc = Surface::makeShared<DiscSurface>(trf, rbounds);
-
-    variant_data var_rdisc = rdisc->toVariantData();
-    std::cout << var_rdisc << std::endl;
-
-    auto rdisc2 = Surface::makeShared<DiscSurface>(var_rdisc);
-    CHECK_CLOSE_OR_SMALL(rdisc->transform(), rdisc2->transform(), 1e-6, 1e-9);
-    CHECK_CLOSE_OR_SMALL(rdisc2->transform(), *trf, 1e-6, 1e-9);
-
-    const RadialBounds* rbounds_act
-        = dynamic_cast<const RadialBounds*>(&rdisc2->bounds());
-    BOOST_CHECK_EQUAL(rbounds->rMin(), rbounds_act->rMin());
-    BOOST_CHECK_EQUAL(rbounds->rMax(), rbounds_act->rMax());
-    BOOST_CHECK_EQUAL(rbounds->averagePhi(), rbounds_act->averagePhi());
-    BOOST_CHECK_EQUAL(rbounds->halfPhiSector(), rbounds_act->halfPhiSector());
-
-    double rMin = 1, rMax = 5, minHalfX = 2, maxHalfX = 4, stereo = M_PI / 8.;
-    auto   dtbounds = std::make_shared<const DiscTrapezoidalBounds>(
-        minHalfX, maxHalfX, rMin, rMax, avgPhi, stereo);
-
-    auto         dtdisc     = Surface::makeShared<DiscSurface>(trf, dtbounds);
-    variant_data var_dtdisc = dtdisc->toVariantData();
-    std::cout << var_dtdisc;
-
-    auto dtdisc2 = Surface::makeShared<DiscSurface>(var_dtdisc);
-
-    CHECK_CLOSE_OR_SMALL(dtdisc->transform(), dtdisc2->transform(), 1e-6, 1e-9);
-    CHECK_CLOSE_OR_SMALL(dtdisc2->transform(), *trf, 1e-6, 1e-9);
-
-    const DiscTrapezoidalBounds* dtbounds_act
-        = dynamic_cast<const DiscTrapezoidalBounds*>(&dtdisc2->bounds());
-    BOOST_CHECK_EQUAL(dtbounds->rMin(), dtbounds_act->rMin());
-    BOOST_CHECK_EQUAL(dtbounds->rMax(), dtbounds_act->rMax());
-    BOOST_CHECK_EQUAL(dtbounds->minHalflengthX(),
-                      dtbounds_act->minHalflengthX());
-    BOOST_CHECK_EQUAL(dtbounds->maxHalflengthX(),
-                      dtbounds_act->maxHalflengthX());
-    BOOST_CHECK_EQUAL(dtbounds->stereo(), dtbounds_act->stereo());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

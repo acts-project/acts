@@ -21,7 +21,6 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -234,34 +233,6 @@ namespace Test {
     *assignedCylinderSurface = *cylinderSurfaceObject;
     /// Test equality of assigned to original
     BOOST_CHECK_EQUAL(*assignedCylinderSurface, *cylinderSurfaceObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(CylinderSurface_toVariantData)
-  {
-    double        radius(1.0), halfZ(10.);
-    Translation3D translation{0., 1., 2.};
-    auto          pTransform = std::make_shared<const Transform3D>(translation);
-    auto          cylinder
-        = Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
-
-    variant_data var_cyl = cylinder->toVariantData();
-    std::cout << var_cyl << std::endl;
-
-    const variant_map& pl
-        = boost::get<variant_map>(var_cyl).get<variant_map>("payload");
-    const variant_map& bounds_pl
-        = pl.get<variant_map>("bounds").get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("radius"), radius);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("avgPhi"), 0);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfPhi"), M_PI);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfZ"), halfZ);
-
-    auto cylinder2 = Surface::makeShared<CylinderSurface>(var_cyl);
-    auto cylbounds = dynamic_cast<const CylinderBounds*>(&cylinder2->bounds());
-    BOOST_CHECK_EQUAL(cylbounds->r(), radius);
-    BOOST_CHECK_EQUAL(cylbounds->halflengthZ(), halfZ);
-    BOOST_CHECK_EQUAL(cylbounds->halfPhiSector(), M_PI);
-    BOOST_CHECK_EQUAL(cylbounds->averagePhi(), 0);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

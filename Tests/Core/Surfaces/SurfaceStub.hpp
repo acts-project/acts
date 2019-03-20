@@ -10,7 +10,6 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 /// Surface derived class stub
@@ -130,16 +129,6 @@ public:
   constructedOk() const
   {
     return true;
-  }
-
-  /// Conform to base class signature
-  variant_data
-  toVariantData() const override
-  {
-    using namespace std::string_literals;
-    variant_map data;
-    data["type"] = "SurfaceStub"s;
-    return data;
   }
 
 private:
