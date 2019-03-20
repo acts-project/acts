@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <optional>
 #include <system_error>
 #include <type_traits>
 #include <utility>
@@ -55,6 +56,8 @@ public:
 
   /**
    * Move assignment is allowed
+   * @param other The other result instance, rvalue reference
+   * @return The assigned instance
    */
   Result<T, E>&
   operator=(Result<T, E>&& other)
@@ -87,6 +90,30 @@ public:
                                     _E> && !std::is_constructible_v<_T, _E> && !std::is_constructible_v<_T, _E>>>
   Result(T2 value) noexcept : m_var(std::move(value))
   {
+  }
+
+  /**
+   * @brief Assignment operator from arbitrary value
+   * This operator allows construction from any value. The same rules as for
+   * the `Result(T2 value)` constructor apply.
+   * * @tparam T2 Type of the potential assignment
+   * @param value The potential value, could be an actual valid value or an
+   * error.
+   * @return The assigned instance
+   */
+  template <
+      typename T2,
+      typename _E = E,
+      typename _T = T,
+      typename    = std::
+          enable_if_t<!std::
+                          is_same_v<_T,
+                                    _E> && !std::is_constructible_v<_T, _E> && !std::is_constructible_v<_T, _E>>>
+  Result<T, E>&
+  operator=(T2 value) noexcept
+  {
+    m_var = std::move(value);
+    return *this;
   }
 
   /**
@@ -131,7 +158,7 @@ public:
   T& operator*() noexcept { return std::get<T>(m_var); }
 
   /**
-   * Returns a reference to the error stored in the variant.
+   * Returns a reference to the error stored in the result.
    * @note If `res.ok()` this method will abort (noexcept)
    * @return Reference to the error
    */
@@ -210,4 +237,139 @@ public:
 private:
   std::variant<T, E> m_var;
 };
+
+/**
+ * Template specialization for the void case.
+ * This specialization handles the case where there is no actual return value,
+ * but
+ * an error might be returned. Returning the error directly would make handling
+ * different from other functions using the `Result<T, E>` mechanism.
+ * `Result<void, E>` does not have the dereference operator, and value methods.
+ * The static `success` factory does not accept a value.
+ * @note To ease usage, this `Result<void, E>` is default constructible in the
+ * *ok*
+ * state, whereas `Result<T, E>` is not.
+ * @tparam E The type of the error
+ */
+template <typename E>
+class Result<void, E>
+{
+public:
+  /**
+   * Default constructor which initializes the result in the ok state.
+   */
+  Result(){};
+
+  /**
+   * The copy constructor is deleted.
+   */
+  Result(const Result<void, E>& other) = delete;
+
+  /**
+   * The (self) assignment operator is deleted.
+   */
+  Result<void, E>&
+  operator=(const Result<void, E>& other)
+      = delete;
+
+  /**
+   * Move constructor
+   * @param other The other result object, rvalue ref
+   */
+  Result(Result<void, E>&& other) : m_opt(std::move(other.m_opt)){};
+
+  /**
+   * Move assignment operator
+   * @param other The other result object, rvalue ref
+   */
+  Result<void, E>&
+  operator=(Result<void, E>&& other) noexcept
+  {
+    m_opt = std::move(other.m_opt);
+    return *this;
+  }
+
+  /**
+   * Constructor from error. This implicitly requires E2 to be convertible to E.
+   * @tparam E2 The type of the actual error
+   * @param error The instance of the actual error
+   */
+  template <typename E2>
+  Result(E2 error) noexcept : m_opt(std::move(error))
+  {
+  }
+
+  /**
+   * Assignment operator from an error.
+   * @tparam E2 The type of the actual error
+   * @param error The instance of the actual error
+   * @return The assigned instance
+   */
+  template <typename E2>
+  Result<void, E>&
+  operator=(E2 error)
+  {
+    m_opt = std::move(error);
+    return *this;
+  }
+
+  /**
+   * Static factory function to initialize the result in the ok state.
+   * @return Result object, in ok state
+   */
+  static Result<void, E>
+  success()
+  {
+    return Result<void, E>();
+  }
+
+  /**
+   * Static factory function to initialize the result in the error state.
+   * @param error The errorr to initialize with.
+   * @return Result object, in error state.
+   */
+  static Result<void, E>
+  failure(E error)
+  {
+    return Result<void, E>(std::move(error));
+  }
+
+  /**
+   * Checks whether this result is in the ok state, and no error.
+   * @return bool Whether result contains an error or not.
+   */
+  bool
+  ok() const noexcept
+  {
+    return !m_opt;
+  }
+
+  /**
+   * Returns a reference to the error stored in the result.
+   * @note If `res.ok()` this method will abort (noexcept)
+   * @return Reference to the error
+   */
+  E&
+      error()
+      & noexcept
+  {
+    return *m_opt;
+  }
+
+  /**
+   * Returns the error by-value.
+   * @note If `res.ok()` this method will abort (noexcept)
+   * @return Reference to the error
+   */
+  E
+      error()
+      && noexcept
+  {
+    return std::move(*m_opt);
+  }
+
+private:
+  std::optional<E> m_opt;
+};
+
 }  // namespace Acts

@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE Rectangle Bounds Tests
+#define BOOST_TEST_MODULE Result Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 // clang-format on
@@ -42,7 +42,7 @@ namespace Acts {
 
 namespace Test {
 
-  BOOST_AUTO_TEST_SUITE(Surfaces)
+  BOOST_AUTO_TEST_SUITE(Utilities)
 
   BOOST_AUTO_TEST_CASE(TestConstruction)
   {
@@ -216,6 +216,11 @@ namespace Test {
     BOOST_CHECK_EQUAL((*res).num, res.value().num);
     BOOST_CHECK_EQUAL((*res).num, 3);
 
+    res = NoCopy(-4);
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL((*res).num, res.value().num);
+    BOOST_CHECK_EQUAL((*res).num, -4.);
+
     NoCopy n2 = make_nocopy(7).value();
     BOOST_CHECK_EQUAL(n2.num, 7);
     BOOST_REQUIRE_THROW(make_nocopy(6, false).value();, std::runtime_error);
@@ -225,6 +230,42 @@ namespace Test {
     BOOST_CHECK_EQUAL((*n4r).num, 8);
     NoCopy n4 = std::move(n4r.value());
     BOOST_CHECK_EQUAL(n4.num, 8);
+  }
+
+  Result<void>
+  void_res_func(int b)
+  {
+    (void)b;
+    if (b > 5) {
+      return MyError::SomethingElse;
+    }
+    return {};
+  }
+
+  BOOST_AUTO_TEST_CASE(VoidResult)
+  {
+    using Result = Result<void>;
+
+    Result res;
+    BOOST_CHECK(res.ok());
+
+    Result res2 = Result::success();
+    BOOST_CHECK(res2.ok());
+
+    res = MyError::Failure;
+    BOOST_CHECK(!res.ok());
+    BOOST_CHECK_EQUAL(res.error(), MyError::Failure);
+
+    Result res3 = Result::failure(MyError::SomethingElse);
+    BOOST_CHECK(!res3.ok());
+    BOOST_CHECK_EQUAL(res3.error(), MyError::SomethingElse);
+
+    Result res4 = void_res_func(4);
+    BOOST_CHECK(res4.ok());
+
+    Result res5 = void_res_func(42);
+    BOOST_CHECK(!res5.ok());
+    BOOST_CHECK_EQUAL(res5.error(), MyError::SomethingElse);
   }
 
   BOOST_AUTO_TEST_SUITE_END()
