@@ -17,7 +17,7 @@ class Surface;
 namespace MeasurementHelpers {
 
   /// @brief Extract surface from a type erased measurement object
-  /// @tparam M The FittableMeasurement type
+  /// @tparam T The FittableMeasurement type
   /// @return const pointer to the extracted surface
   template <typename T>
   const Surface*
