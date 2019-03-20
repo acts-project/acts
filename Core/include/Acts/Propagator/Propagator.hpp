@@ -582,7 +582,7 @@ public:
 
     static_assert(
         has_member_function_step<const stepper_t,
-                                 double,
+                                 Result<double>,
                                  boost::mpl::vector<StateType&>>::value,
         "Step method of the Stepper is not compatible with the propagator "
         "state");
@@ -597,17 +597,17 @@ public:
     auto result = propagate_impl<ResultType>(state);
 
     if (result.ok()) {
-      m_stepper.convert(state.stepping, *result);
+      auto& propRes = *result;
       /// Convert into return type and fill the result object
       auto  curvState      = m_stepper.curvilinearState(state.stepping, true);
       auto& curvParameters = std::get<CurvilinearParameters>(curvState);
       // Fill the end parameters
-      result.endParameters = std::make_unique<const CurvilinearParameters>(
+      propRes.endParameters = std::make_unique<const CurvilinearParameters>(
           std::move(curvParameters));
       // Only fill the transport jacobian when covariance transport was done
       if (state.stepping.covTransport) {
         auto& tJacobian = std::get<Jacobian>(curvState);
-        result.transportJacobian
+        propRes.transportJacobian
             = std::make_unique<const Jacobian>(std::move(tJacobian));
       }
       return result;
@@ -677,7 +677,7 @@ public:
 
     static_assert(
         has_member_function_step<const stepper_t,
-                                 double,
+                                 Result<double>,
                                  boost::mpl::vector<StateType&>>::value,
         "Step method of the Stepper is not compatible with the propagator "
         "state");
@@ -689,7 +689,7 @@ public:
     // Perform the actual propagation
     auto result = propagate_impl<ResultType>(state);
 
-    if(result.ok()) {
+    if (result.ok()) {
       auto& propRes = *result;
       // Compute the final results and mark the propagation as successful
       auto  bs = m_stepper.boundState(state.stepping, target, true);
