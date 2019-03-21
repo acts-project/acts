@@ -25,13 +25,20 @@ class Surface;
 /// @brief base class for Measurements
 ///
 /// This class describes the measurement of track parameters at a certain
-/// Surface
-/// in the TrackingGeometry.
+/// Surface in the TrackingGeometry.
 ///
 /// @note Identifier must be copy-constructible, move-constructible,
 /// copy-assignable and move-assignable.
 ///
-/// @tparam identifier_t
+/// @tparam source_link_t the templated class that allows to link back to
+/// the source used to create this measurement, this can simply be an identifier
+/// or an extended object that allows to navigate back to the original source.
+/// The source link is necessary when e.g. calibrating the object or in other
+/// circumstances where the pure mathematical view of a measurement is not
+/// sufficient.
+/// The name _link_ indicates that there is a relationship to a unique source
+/// object, i.e. if a measurement appears on several tracks, then there must
+/// be a uniquely identifyable common source for those.
 ///
 /// @test The behavior of this class is tested in the following unit test:
 ///       - \link Acts::Test::BOOST_AUTO_TEST_CASE(measurement_initialization)
@@ -39,17 +46,17 @@ class Surface;
 ///
 /// @tparam Identifier identification object for this measurement
 /// @tparam params     parameter pack containing the measured parameters
-template <typename identifier_t, ParID_t... params>
+template <typename source_link_t, ParID_t... params>
 class Measurement
 {
   // check type conditions
-  static_assert(std::is_copy_constructible<identifier_t>::value,
+  static_assert(std::is_copy_constructible<source_link_t>::value,
                 "'Identifier' must be copy-constructible");
-  static_assert(std::is_move_constructible<identifier_t>::value,
+  static_assert(std::is_move_constructible<source_link_t>::value,
                 "'Identifier' must be move-constructible");
-  static_assert(std::is_copy_assignable<identifier_t>::value,
+  static_assert(std::is_copy_assignable<source_link_t>::value,
                 "'Identifier' must be copy-assignable");
-  static_assert(std::is_move_assignable<identifier_t>::value,
+  static_assert(std::is_move_assignable<source_link_t>::value,
                 "'Identifier' must be move-assignable");
 
 private:
@@ -66,14 +73,12 @@ public:
   /// matrix type for projecting full parameter vector onto local parameters
   using Projection_t = typename ParSet_t::Projection_t;
 
-  using Identifier_t = identifier_t;
-
   /// Delete the default constructor
   Measurement() = delete;
 
   /// @brief standard constructor
   ///
-  /// Interface class for all possible measurements.
+  /// Concrete class for all possible measurements.
   ///
   /// @note Only a reference to the given surface is stored. The user must
   /// ensure that the lifetime of the @c Surface object surpasses the lifetime
@@ -86,13 +91,13 @@ public:
   /// container and this gets relocated).
   ///
   /// @param surface surface at which the measurement took place
-  /// @param id identification object for this measurement
+  /// @param source object for this measurement
   /// @param cov covariance matrix of the measurement.
   /// @param head,values consistent number of parameter values of the
   /// measurement
   template <typename... Tail>
   Measurement(std::shared_ptr<const Surface> surface,
-              const identifier_t&            id,
+              const source_link_t&           source,
               CovMatrix_t                    cov,
               typename std::enable_if<sizeof...(Tail) + 1 == sizeof...(params),
                                       ParValue_t>::type head,
@@ -101,7 +106,7 @@ public:
                     head,
                     values...)
     , m_pSurface(std::move(surface))
-    , m_oIdentifier(id)
+    , m_sourceLink(source)
   {
     assert(m_pSurface);
   }
@@ -111,60 +116,60 @@ public:
 
   /// @brief copy constructor
   ///
-  /// @tparam identifier_t The identifier type
+  /// @tparam source_link_t The identifier type
   /// @tparam params...The local parameter pack
   ///
   /// @param copy is the source for the copy
-  Measurement(const Measurement<identifier_t, params...>& copy)
+  Measurement(const Measurement<source_link_t, params...>& copy)
     : m_oParameters(copy.m_oParameters)
     , m_pSurface(copy.m_pSurface)
-    , m_oIdentifier(copy.m_oIdentifier)
+    , m_sourceLink(copy.m_sourceLink)
   {
   }
 
   /// @brief move constructor
   ///
-  /// @tparam identifier_t The identifier type
+  /// @tparam source_link_t The identifier type
   /// @tparam params...The local parameter pack
   ///
   /// @param other is the source for the move
-  Measurement(Measurement<identifier_t, params...>&& other)
+  Measurement(Measurement<source_link_t, params...>&& other)
     : m_oParameters(std::move(other.m_oParameters))
     , m_pSurface(std::move(other.m_pSurface))
-    , m_oIdentifier(std::move(other.m_oIdentifier))
+    , m_sourceLink(std::move(other.m_sourceLink))
   {
   }
 
   /// @brief copy assignment operator
   ///
-  /// @tparam identifier_t The identifier type
+  /// @tparam source_link_t The identifier type
   /// @tparam params...The local parameter pack
   ///
   /// @param rhs is the source for the assignment
-  Measurement<identifier_t, params...>&
-  operator=(const Measurement<identifier_t, params...>& rhs)
+  Measurement<source_link_t, params...>&
+  operator=(const Measurement<source_link_t, params...>& rhs)
   {
     // check for self-assignment
     if (&rhs != this) {
       m_oParameters = rhs.m_oParameters;
       m_pSurface    = rhs.m_pSurface;
-      m_oIdentifier = rhs.m_oIdentifier;
+      m_sourceLink  = rhs.m_sourceLink;
     }
     return *this;
   }
 
   /// @brief move assignment operator
   ///
-  /// @tparam identifier_t The identifier type
+  /// @tparam source_link_t The identifier type
   /// @tparam params...The local parameter pack
   ///
   /// @param rhs is the source for the move assignment
-  Measurement<identifier_t, params...>&
-  operator=(Measurement<identifier_t, params...>&& rhs)
+  Measurement<source_link_t, params...>&
+  operator=(Measurement<source_link_t, params...>&& rhs)
   {
     m_oParameters = std::move(rhs.m_oParameters);
     m_pSurface    = std::move(rhs.m_pSurface);
-    m_oIdentifier = std::move(rhs.m_oIdentifier);
+    m_sourceLink  = std::move(rhs.m_sourceLink);
     return *this;
   }
 
@@ -234,8 +239,7 @@ public:
   /// @brief access associated surface
   ///
   /// @pre The @c Surface object used to construct this @c Measurement object
-  /// must still be valid
-  ///      at the same memory location.
+  /// must still be valid at the same memory location.
   ///
   /// @return reference to surface at which the measurement took place
   const Acts::Surface&
@@ -244,13 +248,16 @@ public:
     return *m_pSurface;
   }
 
-  /// @brief access to global measurement identifier
+  /// @brief link access to the source of the measurement.
   ///
-  /// @return identifier object
-  identifier_t
-  identifier() const
+  /// The source link can be simply an identifier or a more complicated
+  /// object, see description above.
+  ///
+  /// @return source_link_t object
+  const source_link_t&
+  sourceLink() const
   {
-    return m_oIdentifier;
+    return m_sourceLink;
   }
 
   /// @brief calculate residual with respect to given track parameters
@@ -280,11 +287,11 @@ public:
   /// @return @c true if parameter sets and associated surfaces compare equal,
   /// otherwise @c false
   virtual bool
-  operator==(const Measurement<identifier_t, params...>& rhs) const
+  operator==(const Measurement<source_link_t, params...>& rhs) const
   {
     return ((m_oParameters == rhs.m_oParameters)
             && (*m_pSurface == *rhs.m_pSurface)
-            && (m_oIdentifier == rhs.m_oIdentifier));
+            && (m_sourceLink == rhs.m_sourceLink));
   }
 
   /// @brief inequality operator
@@ -293,7 +300,7 @@ public:
   ///
   /// @sa Measurement::operator==
   bool
-  operator!=(const Measurement<identifier_t, params...>& rhs) const
+  operator!=(const Measurement<source_link_t, params...>& rhs) const
   {
     return !(*this == rhs);
   }
@@ -306,7 +313,7 @@ public:
   }
 
   friend std::ostream&
-  operator<<(std::ostream& out, const Measurement<identifier_t, params...>& m)
+  operator<<(std::ostream& out, const Measurement<source_link_t, params...>& m)
   {
     m.print(out);
     return out;
@@ -336,12 +343,12 @@ private:
   std::shared_ptr<const Surface>
       m_pSurface;  ///< surface at which the measurement took place
 
-  identifier_t m_oIdentifier;  ///< identifier for this measurement
+  source_link_t m_sourceLink;  ///< link to the source for this measurement
 };
 
 /// @brief FittableMeasurement boost_variant type
-template <typename identifier_t>
+template <typename source_link_t>
 using FittableMeasurement =
-    typename detail::fittable_type_generator<identifier_t>::type;
+    typename detail::fittable_type_generator<source_link_t>::type;
 
 }  // namespace Acts

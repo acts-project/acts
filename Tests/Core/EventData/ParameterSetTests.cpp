@@ -8,7 +8,8 @@
 
 // clang-format off
 #define BOOST_TEST_MODULE ParameterSet Tests
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 // clang-format on
 
 #include <cmath>
@@ -378,10 +379,6 @@ namespace Test {
         nullptr, 0, 1.7, -0.15);
     BOOST_CHECK(assigned != other);
     assigned = other;
-    BOOST_CHECK(assigned == other);
-
-    // check for self-assignment
-    assigned = assigned;
     BOOST_CHECK(assigned == other);
 
     // check move assignment

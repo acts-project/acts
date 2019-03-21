@@ -8,7 +8,8 @@
 
 // clang-format off
 #define BOOST_TEST_MODULE Propagator Tests
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 
@@ -83,7 +84,9 @@ namespace IntegrationTest {
     CuboidVolumeBuilder             cvb(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& inner, const auto&) {
+          return cvb.trackingVolume(inner, nullptr);
+        });
     TrackingGeometryBuilder                 tgb(tgbCfg);
     std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
     Navigator                               navi(detector);

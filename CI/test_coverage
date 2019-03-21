@@ -4,6 +4,9 @@ from __future__ import print_function
 import sys
 import os
 import subprocess
+import argparse
+import multiprocessing as mp
+
 
 if not os.path.exists("CMakeCache.txt"):
   print("Not in CMake build dir. Not executing")
@@ -20,7 +23,16 @@ def check_output(*args, **kwargs):
 # call helper function
 def call(cmd):
   print(" ".join(cmd))
-  subprocess.check_call(cmd)
+  try:
+    subprocess.check_call(cmd)
+  except subprocess.CalledProcessError as e:
+    print("Failed, output: ", e.output)
+    raise e
+
+p = argparse.ArgumentParser()
+p.add_argument("--gcov", default=check_output(["which", "gcov"])[1])
+args = p.parse_args()
+
 
 bundled_gcovr = os.path.abspath(os.path.join(os.getcwd(), "../cmake/gcovr"))
 
@@ -66,12 +78,16 @@ excludes = ["-e", "../Tests/", "-e", "../Legacy"]
 # create the html report
 call(gcovr
      + ["-r", source_dir]
+     + ["--gcov-executable", args.gcov]
+     + ["-j", str(mp.cpu_count())]
      + excludes +
      ["--html", "--html-details",
      "-o", os.path.join(coverage_dir, "index.html")])
 
 call(gcovr
      + ["-r", source_dir]
+     + ["-j", str(mp.cpu_count())]
+     + ["--gcov-executable", args.gcov]
      + excludes)
 
 

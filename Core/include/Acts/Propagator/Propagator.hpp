@@ -24,7 +24,13 @@
 namespace Acts {
 
 /// Result status of track parameter propagation
-enum struct Status { SUCCESS, FAILURE, UNSET, IN_PROGRESS, WRONG_DIRECTION };
+enum struct PropagatorStatus {
+  SUCCESS,
+  FAILURE,
+  UNSET,
+  IN_PROGRESS,
+  WRONG_DIRECTION
+};
 
 /// @brief Simple class holding result of propagation call
 ///
@@ -37,7 +43,7 @@ struct Result : private detail::Extendable<result_list...>
   /// Constructor from initial propagation status
   ///
   /// @param s is the current status of the Result object
-  Result(Status s = Status::UNSET)
+  Result(PropagatorStatus s = PropagatorStatus::UNSET)
     : detail::Extendable<result_list...>(), status(s)
   {
   }
@@ -52,7 +58,7 @@ struct Result : private detail::Extendable<result_list...>
   std::unique_ptr<const ActsMatrixD<5, 5>> transportJacobian = nullptr;
 
   /// Propagation status
-  Status status = Status::UNSET;
+  PropagatorStatus status = PropagatorStatus::UNSET;
 
   /// Number of propagation steps that were carried out
   unsigned int steps = 0;
@@ -65,7 +71,10 @@ struct Result : private detail::Extendable<result_list...>
   /// @return @c true if the final parameters are set and propagation status
   ///         is SUCCESS, otherwise @c false
   ///
-  operator bool() const { return (endParameters && status == Status::SUCCESS); }
+  operator bool() const
+  {
+    return (endParameters && status == PropagatorStatus::SUCCESS);
+  }
 };
 
 /// @brief Options for propagate() call
@@ -295,9 +304,9 @@ private:
   /// @param [in,out] result of the propagation
   /// @param [in,out] state the propagator state object
   ///
-  /// @return Propagation Status
+  /// @return Propagation PropagatorStatus
   template <typename result_t, typename propagator_state_t>
-  Status
+  PropagatorStatus
   propagate_impl(result_t& result, propagator_state_t& state) const
   {
 
@@ -355,7 +364,7 @@ private:
     state.options.actionList(state, m_stepper, result);
 
     // return progress flag here, decide on SUCCESS later
-    return Status::IN_PROGRESS;
+    return PropagatorStatus::IN_PROGRESS;
   }
 
 public:
@@ -402,7 +411,7 @@ public:
                   "return track parameter type must be copy-constructible");
 
     // Initialize the propagation result object
-    ResultType result(Status::IN_PROGRESS);
+    ResultType result(PropagatorStatus::IN_PROGRESS);
 
     // Expand the abort list with a path aborter
     path_aborter_t pathAborter;
@@ -422,12 +431,12 @@ public:
     }
 
     // Perform the actual propagation & check its outcome
-    if (propagate_impl(result, state) != Status::IN_PROGRESS) {
-      result.status = Status::FAILURE;
+    if (propagate_impl(result, state) != PropagatorStatus::IN_PROGRESS) {
+      result.status = PropagatorStatus::FAILURE;
     } else {
       /// Convert into return type and fill the result object
       m_stepper.convert(state.stepping, result);
-      result.status = Status::SUCCESS;
+      result.status = PropagatorStatus::SUCCESS;
     }
 
     return result;
@@ -488,7 +497,7 @@ public:
         = action_list_t_result_t<return_parameter_type, action_list_t>;
 
     // Initialize the propagation result object
-    ResultType result(Status::IN_PROGRESS);
+    ResultType result(PropagatorStatus::IN_PROGRESS);
 
     static_assert(std::is_copy_constructible<return_parameter_type>::value,
                   "return track parameter type must be copy-constructible");
@@ -503,12 +512,12 @@ public:
     lProtection(state, m_stepper);
 
     // Perform the actual propagation
-    if (propagate_impl(result, state) != Status::IN_PROGRESS) {
-      result.status = Status::FAILURE;
+    if (propagate_impl(result, state) != PropagatorStatus::IN_PROGRESS) {
+      result.status = PropagatorStatus::FAILURE;
     } else {
       // Compute the final results and mark the propagation as successful
       m_stepper.convert(state.stepping, result, target);
-      result.status = Status::SUCCESS;
+      result.status = PropagatorStatus::SUCCESS;
     }
     return result;
   }

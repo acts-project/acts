@@ -9,7 +9,8 @@
 #include <iostream>
 
 #define BOOST_TEST_MODULE Seeding Tests
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
 #include "Acts/Seeding/BarrelSeedFinder.hpp"
 #include "Acts/Seeding/SpacePoint.hpp"

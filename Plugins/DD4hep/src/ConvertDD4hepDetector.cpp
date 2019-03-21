@@ -88,12 +88,23 @@ convertDD4hepDetector(
   if (beamPipeVolumeBuilder) {
     volumeBuilders.push_back(beamPipeVolumeBuilder);
   }
+
+  std::vector<std::function<std::shared_ptr<TrackingVolume>(
+      const TrackingVolumePtr&, const VolumeBoundsPtr&)>>
+      volumeFactories;
+
+  for (const auto& vb : volumeBuilders) {
+    volumeFactories.push_back(
+        [vb](const std::shared_ptr<const TrackingVolume>& inner,
+             const VolumeBoundsPtr&) { return vb->trackingVolume(inner); });
+  }
+
   // create cylinder volume helper
   auto volumeHelper = cylinderVolumeHelper_dd4hep();
   // hand over the collected volume builders
   Acts::TrackingGeometryBuilder::Config tgbConfig;
   tgbConfig.trackingVolumeHelper   = volumeHelper;
-  tgbConfig.trackingVolumeBuilders = volumeBuilders;
+  tgbConfig.trackingVolumeBuilders = std::move(volumeFactories);
   auto trackingGeometryBuilder
       = std::make_shared<const Acts::TrackingGeometryBuilder>(tgbConfig);
   return (trackingGeometryBuilder->trackingGeometry());

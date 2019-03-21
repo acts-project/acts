@@ -10,7 +10,8 @@
 #define BOOST_TEST_MODULE Magnetic field interface consistency tests
 
 // clang-format off
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/floating_point_comparison.hpp>
 #include "Acts/Utilities/Definitions.hpp"

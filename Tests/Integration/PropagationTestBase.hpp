@@ -8,12 +8,15 @@
 
 // clang-format off
 #define BOOST_TEST_MODULE Propagator Tests
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
 
 #include <cmath>
 
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 /// test consistency of forward-backward propagation

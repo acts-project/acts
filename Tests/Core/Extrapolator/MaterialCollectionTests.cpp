@@ -8,7 +8,8 @@
 
 // clang-format off
 #define BOOST_TEST_MODULE MaterialCollection Tests
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/output_test_stream.hpp>
 // clang-format on
@@ -184,7 +185,7 @@ namespace Test {
       std::cout << ">>> Backward Propagation : start." << std::endl;
     }
     const auto& bwdResult = prop.propagate(
-        *fwdResult.endParameters.template get(), startSurface, bwdOptions);
+        *fwdResult.endParameters.get(), startSurface, bwdOptions);
 
     if (debugModeBwd) {
       std::cout << ">>> Backward Propagation : end." << std::endl;
@@ -348,7 +349,7 @@ namespace Test {
     }
 
     // move forward step by step through the surfaces
-    sParameters = fwdResult.endParameters.template get();
+    sParameters = fwdResult.endParameters.get();
     for (auto& bwdSteps : bwdMaterial.materialInteractions) {
       if (debugModeBwdStep) {
         std::cout << ">>> Backward step : "

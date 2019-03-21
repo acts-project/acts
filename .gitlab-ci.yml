@@ -87,30 +87,6 @@ include_guards:
   script:
     - cmake --build build -- integration_tests
 
-# SLC6, LCG93
-
-build_slc6_lcg93:
-  <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
-
-unit_tests_slc6_lcg93:
-  <<: *template_unit_tests
-  dependencies:
-    - build_slc6_lcg93
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
-
-integration_tests_slc6_lcg93:
-  <<: *template_integration_tests
-  dependencies:
-    - build_slc6_lcg93
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
-
 # SLC6, LCG94
 
 build_slc6_lcg94:
@@ -155,7 +131,8 @@ unit_tests_slc6_lcg94:
   script:
     - cmake --build build -- test
     - cd build
-    - ../CI/test_coverage
+    # we need a clean environment so we can install gcovr (pip), but we need to use gcov from lcg
+    - env -i bash ../CI/coverage_environment.sh "../CI/test_coverage --gcov $(which gcov)"
   coverage: '/^TOTAL.*\s+(\d+\%)$/'
   artifacts:
     paths:
@@ -189,59 +166,27 @@ build_slc6_lcg94_no_legacy:
 
 # SLC, LCG94, LLVM60
 
-build_slc6_lcg94_llvm60:
+build_ubuntu1804_llvm70:
   <<: *template_build
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
   before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_llvm60.sh
-
-unit_tests_slc6_lcg94_llvm60:
-  <<: *template_unit_tests
-  dependencies:
-    - build_slc6_lcg94_llvm60
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_llvm60.sh
-
-integration_tests_slc6_lcg94_llvm60:
-  <<: *template_integration_tests
-  dependencies:
-    - build_slc6_lcg94_llvm60
-  image: gitlab-registry.cern.ch/acts/machines/slc6:latest
-  before_script:
-    - set +e && source CI/setup_lcg94.sh; set -e
-    - source CI/setup_llvm60.sh
-
-# CC7, LCG93
-
-build_cc7_lcg93:
-  <<: *template_build
-  # no DD4Hep and TGeo plugins due to C++17,ROOT,CMake incompatibilities
-  # need to set all variables again since we are overriding the template section
+    - source CI/env_info.sh
   variables:
-    BUILD_TYPE: Release
-    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
+    BUILD_OPTIONS: ${COMMON_BUILD_OPTIONS} -DACTS_BUILD_LEGACY=on -DCMAKE_CXX_FLAGS="-stdlib=libc++"
 
-unit_tests_cc7_lcg93:
+unit_tests_ubuntu1804_llvm70:
   <<: *template_unit_tests
   dependencies:
-    - build_cc7_lcg93
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
+    - build_ubuntu1804_llvm70
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
+  before_script: []
 
-integration_tests_cc7_lcg93:
+integration_tests_ubuntu1804_llvm70:
   <<: *template_integration_tests
   dependencies:
-    - build_cc7_lcg93
-  image: gitlab-registry.cern.ch/acts/machines/cc7:latest
-  before_script:
-    - set +e && source CI/setup_lcg93.sh; set -e
+    - build_ubuntu1804_llvm70
+  image: gitlab-registry.cern.ch/acts/machines/ubuntu1804:latest
+  before_script: []
 
 # CC7, LCG94
 

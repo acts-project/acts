@@ -1,0 +1,44 @@
+#!/bin/bash
+set -e
+
+# Welcome message
+echo "This script will check all staged files for clang-format compliance"
+echo "It will also fix the files inplace and readd them to the staging area"
+echo "ATTENTION: This script does not work well with partially added files"
+
+# Store the CI folder
+CI_FILE_FOLDER="$(dirname "${BASH_SOURCE[0]}")"
+ACTS_ROOT_FOLDER="$(realpath ${CI_FILE_FOLDER}/../)"
+
+# Store the user variables for later
+USER_ID=`id -u`
+GROUP_ID=`id -g`
+
+# Move to the ACTS top level directory
+cd "${ACTS_ROOT_FOLDER}"
+
+# Check for all staged files
+STAGED_FILES=`git diff --cached --name-only`
+STAGING_FILES_TO_CHECK=""
+
+# Make sure to only check C++ source/header files
+for file in ${STAGED_FILES}; do
+    FILE_ENDING_CHECK=`find ${file} \( -iname '*.cpp' -or -iname '*.hpp' -or -iname '*.ipp' \)`
+    if [[ ! -z "${FILE_ENDING_CHECK}" ]]; then
+        STAGING_FILES_TO_CHECK="${file} ${STAGING_FILES_TO_CHECK}"
+    fi
+done
+
+if [[ -z "${STAGING_FILES_TO_CHECK}" ]]; then
+    echo "No files to check"
+    exit
+fi
+
+# Use docker for clang-format checking
+echo "Checking files: ${STAGING_FILES_TO_CHECK}"
+
+docker run --rm -ti \
+           -v ${ACTS_ROOT_FOLDER}:"/working_dir":rw -w "/working_dir" \
+           --user "$USER_ID:$GROUP_ID" \
+           gitlab-registry.cern.ch/acts/machines/check:latest \
+           clang-format -i -style=file ${STAGING_FILES_TO_CHECK}

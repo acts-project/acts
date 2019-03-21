@@ -8,7 +8,8 @@
 
 // clang-format off
 #define BOOST_TEST_MODULE CuboidVolumeBuilderTest
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 // clang-format on
 
 #include <vector>
@@ -213,7 +214,9 @@ namespace Test {
     cvb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& inner, const auto&) {
+          return cvb.trackingVolume(inner, nullptr);
+        });
     TrackingGeometryBuilder tgb(tgbCfg);
 
     std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
