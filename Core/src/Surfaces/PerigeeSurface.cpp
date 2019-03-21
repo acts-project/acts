@@ -41,7 +41,6 @@ Acts::PerigeeSurface::PerigeeSurface(const GeometryContext& gctx,
 {
 }
 
-
 Acts::PerigeeSurface&
 Acts::PerigeeSurface::operator=(const PerigeeSurface& other)
 {

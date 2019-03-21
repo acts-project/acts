@@ -111,7 +111,8 @@ namespace Test {
       bool
       surfaceReached(const StepperState& state, const Surface* surface) const
       {
-        return surface->isOnSurface(position(state), direction(state), true);
+        return surface->isOnSurface(
+            tgContext, position(state), direction(state), true);
       }
     };
 

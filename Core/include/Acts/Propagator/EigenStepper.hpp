@@ -242,7 +242,8 @@ public:
   bool
   surfaceReached(const State& state, const Surface* surface) const
   {
-    return surface->isOnSurface(position(state), direction(state), true);
+    return surface->isOnSurface(
+        state.geoContext, position(state), direction(state), true);
   }
 
   /// Create and return the bound state at the current position
@@ -459,8 +460,7 @@ public:
   /// reinitialized at the new position
   /// @note no check is done if the position is actually on the surface
   void
-  covarianceTransport(const GeometryContext& gctx,
-                      State&         state,
+  covarianceTransport(State&         state,
                       const Surface& surface,
                       bool           reinitialize = true) const
   {

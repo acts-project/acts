@@ -123,6 +123,10 @@ public:
   template <typename parameters_t, typename surface_t = int>
   using return_parameter_type = typename s<parameters_t, surface_t>::type;
 
+  /// Intermediate track parameters are always in curvilinear parametrization
+  template <typename parameters_t>
+  using step_parameter_type = CurvilinearParameters;
+
   /// Constructor
   StraightLineStepper() = default;
 
@@ -175,7 +179,8 @@ public:
   bool
   surfaceReached(const State& state, const Surface* surface) const
   {
-    return surface->isOnSurface(position(state), direction(state), true);
+    return surface->isOnSurface(
+        state.geoContext, position(state), direction(state), true);
   }
 
   /// Create and return the bound state at the current position
@@ -194,7 +199,8 @@ public:
   boundState(State& state, const Surface& surface, bool /*unused*/) const
   {
     // Create the bound parameters
-    BoundParameters parameters(nullptr,
+    BoundParameters parameters(state.geoContext,
+                               nullptr,
                                state.pos,
                                state.p * state.dir,
                                state.q,
@@ -295,34 +301,11 @@ public:
   ///        position
   /// @note no check is done if the position is actually on the surface
   ///
-  /// @return the full transport jacobian
-  static const ActsMatrixD<5, 5>
-  covarianceTransport(const GeometryContext& /*gctx*/,
-                      State& /*unused*/,
+  void
+  covarianceTransport(State& /*unused*/,
                       const Surface& /*surface*/,
-                      bool /*reinitialize = false*/)
+                      bool /*reinitialize = false*/) const
   {
-    return ActsMatrixD<5, 5>::Identity();
-  }
-
-  /// Always use the same propagation state type, independently of the initial
-  /// track parameter type and of the target surface
-  template <typename parameters_t, typename surface_t = int>
-  using state_type = State;
-
-  /// Intermediate track parameters are always in curvilinear parametrization
-  template <typename parameters_t>
-  using step_parameter_type = CurvilinearParameters;
-
-  /// Return parameter types depend on the propagation mode:
-  /// - when propagating to a surface we return BoundParameters
-  /// - otherwise CurvilinearParameters
-  template <typename parameters_t, typename surface_t = int>
-  using return_parameter_type = typename s<parameters_t, surface_t>::type;
-
-  /// Constructor
-  StraightLineStepper() = default;
-
   }
 
   /// Perform a straight line propagation step

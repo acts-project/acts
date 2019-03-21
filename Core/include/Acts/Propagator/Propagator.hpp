@@ -711,7 +711,7 @@ public:
       result.status = PropagatorStatus::FAILURE;
     } else {
       // Compute the final results and mark the propagation as successful
-      auto  bs = m_stepper.boundState(state.geoContext, state.stepping, target, true);
+      auto  bs = m_stepper.boundState(state.stepping, target, true);
       auto& boundParameters = std::get<BoundParameters>(bs);
       // Fill the end parameters
       result.endParameters
