@@ -10,11 +10,11 @@
 
 #include <cmath>
 #include <functional>
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
