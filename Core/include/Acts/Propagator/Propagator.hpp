@@ -147,7 +147,7 @@ struct PropagatorOptions
   /// The mass for the particle for (eventual) material integration
   double mass = 139.57018 * units::_MeV;
 
-  /// Maximum number of steps for one propagate()).value() call
+  /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
   /// Absolute maximum step size

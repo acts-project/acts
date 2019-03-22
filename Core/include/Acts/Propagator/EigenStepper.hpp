@@ -572,7 +572,7 @@ public:
 
     double stepSizeScaling;
 
-    // Select and adjust the; appropriate Runge-Kutta step size as given
+    // Select and adjust the appropriate Runge-Kutta step size as given
     // ATL-SOFT-PUB-2009-001
     while (!tryRungeKuttaStep(state.stepping.stepSize)) {
       stepSizeScaling
