@@ -33,6 +33,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -41,11 +43,15 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
+
   // Global definitions
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
-  CylindricalTrackingGeometry cGeometry;
+  CylindricalTrackingGeometry cGeometry(tgContext);
   auto                        tGeometry = cGeometry();
 
   // create a navigator for this tracking geometry
@@ -117,7 +123,7 @@ namespace Test {
     using AbortListType  = AbortList<>;
 
     using Options = PropagatorOptions<ActionListType, AbortListType>;
-    Options fwdOptions;
+    Options fwdOptions(tgContext, mfContext);
 
     fwdOptions.maxStepSize = 25. * units::_cm;
     fwdOptions.pathLimit   = 25 * units::_cm;
@@ -166,7 +172,7 @@ namespace Test {
     }
 
     // backward material test
-    Options bwdOptions;
+    Options bwdOptions(tgContext, mfContext);
     bwdOptions.maxStepSize = -25 * units::_cm;
     bwdOptions.pathLimit   = -25 * units::_cm;
     bwdOptions.direction   = backward;
@@ -184,6 +190,7 @@ namespace Test {
     if (debugModeBwd) {
       std::cout << ">>> Backward Propagation : start." << std::endl;
     }
+
     const auto& bwdResult = prop.propagate(
         *fwdResult.endParameters.get(), startSurface, bwdOptions);
 
@@ -232,7 +239,7 @@ namespace Test {
 
     // stepping from one surface to the next
     // now go from surface to surface and check
-    Options fwdStepOptions;
+    Options fwdStepOptions(tgContext, mfContext);
     fwdStepOptions.maxStepSize = 25. * units::_cm;
     fwdStepOptions.pathLimit   = 25 * units::_cm;
     fwdStepOptions.debug       = debugModeFwdStep;
@@ -321,7 +328,7 @@ namespace Test {
 
     // stepping from one surface to the next : backwards
     // now go from surface to surface and check
-    Options bwdStepOptions;
+    Options bwdStepOptions(tgContext, mfContext);
 
     bwdStepOptions.maxStepSize = -25 * units::_cm;
     bwdStepOptions.pathLimit   = -25 * units::_cm;

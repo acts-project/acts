@@ -19,6 +19,7 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -39,6 +40,8 @@ convertDD4hepDetector(
   auto DD4hepConverterlogger
       = Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
   ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
+
+  Acts::GeometryContext dd4HepContext;
 
   ACTS_INFO("Translating DD4hep geometry into Acts geometry");
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
@@ -90,13 +93,16 @@ convertDD4hepDetector(
   }
 
   std::vector<std::function<std::shared_ptr<TrackingVolume>(
-      const TrackingVolumePtr&, const VolumeBoundsPtr&)>>
+      const GeometryContext&,
+      const TrackingVolumePtr&,
+      const VolumeBoundsPtr&)>>
       volumeFactories;
 
   for (const auto& vb : volumeBuilders) {
-    volumeFactories.push_back(
-        [vb](const std::shared_ptr<const TrackingVolume>& inner,
-             const VolumeBoundsPtr&) { return vb->trackingVolume(inner); });
+    volumeFactories.push_back([vb](
+        const GeometryContext&                       gctx,
+        const std::shared_ptr<const TrackingVolume>& inner,
+        const VolumeBoundsPtr&) { return vb->trackingVolume(gctx, inner); });
   }
 
   // create cylinder volume helper
@@ -107,7 +113,7 @@ convertDD4hepDetector(
   tgbConfig.trackingVolumeBuilders = std::move(volumeFactories);
   auto trackingGeometryBuilder
       = std::make_shared<const Acts::TrackingGeometryBuilder>(tgbConfig);
-  return (trackingGeometryBuilder->trackingGeometry());
+  return (trackingGeometryBuilder->trackingGeometry(dd4HepContext));
 }
 
 std::shared_ptr<const CylinderVolumeBuilder>
@@ -445,11 +451,14 @@ cylinderVolumeHelper_dd4hep(Logging::Level loggingLevel)
 {
   // create cylindervolumehelper which can be used by all instances
   // hand over LayerArrayCreator
+  Acts::LayerArrayCreator::Config lacConfig;
   auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(
-      Acts::getDefaultLogger("LayArrayCreator", loggingLevel));
+      lacConfig, Acts::getDefaultLogger("LayArrayCreator", loggingLevel));
   // tracking volume array creator
-  auto trackingVolumeArrayCreator
+  Acts::TrackingVolumeArrayCreator::Config tvacConfig;
+  auto                                     trackingVolumeArrayCreator
       = std::make_shared<const Acts::TrackingVolumeArrayCreator>(
+          tvacConfig,
           Acts::getDefaultLogger("TrkVolArrayCreator", loggingLevel));
   // configure the cylinder volume helper
   Acts::CylinderVolumeHelper::Config cvhConfig;

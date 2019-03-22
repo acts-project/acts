@@ -80,7 +80,7 @@ Acts::TrapezoidBounds::boundingBox() const
 }
 
 std::ostream&
-Acts::TrapezoidBounds::dump(std::ostream& sl) const
+Acts::TrapezoidBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

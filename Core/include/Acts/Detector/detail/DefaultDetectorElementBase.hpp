@@ -15,6 +15,7 @@
 #include <memory>
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -37,8 +38,10 @@ public:
   virtual ~DetectorElementBase() = default;
 
   /// Return the transform for the Element proxy mechanism
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   virtual const Transform3D&
-  transform() const = 0;
+  transform(const GeometryContext& gctx) const = 0;
 
   /// Return surface association
   virtual const Surface&

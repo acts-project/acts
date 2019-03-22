@@ -10,6 +10,7 @@
 #include <memory>
 #include "Acts/EventData/SingleTrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -138,6 +139,7 @@ public:
   ///
   /// @tparam ParID_t The parameter type
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param newValue The new updaed value
   ///
   /// For curvilinear parameters the local parameters are forced to be
@@ -147,11 +149,11 @@ public:
                                           local_parameter>::value,
                              int> = 0>
   void
-  set(ParValue_t newValue)
+  set(const GeometryContext& gctx, ParValue_t newValue)
   {
     // set the parameter & update the new global position
     this->getParameterSet().template setParameter<par>(newValue);
-    this->updateGlobalCoordinates(typename par_type<par>::type());
+    this->updateGlobalCoordinates(gctx, typename par_type<par>::type());
     // recreate the surface
     m_upSurface = Surface::makeShared<PlaneSurface>(
         this->position(), this->momentum().normalized());
@@ -164,6 +166,7 @@ public:
   /// enable for parameters that are not local parameters
   /// @tparam ParID_t The parameter type
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param newValue The new updaed value
   ///
   /// For curvilinear parameters the directional change of parameters
@@ -173,10 +176,10 @@ public:
                                               local_parameter>::value,
                              int> = 0>
   void
-  set(ParValue_t newValue)
+  set(const GeometryContext& gctx, ParValue_t newValue)
   {
     this->getParameterSet().template setParameter<par>(newValue);
-    this->updateGlobalCoordinates(typename par_type<par>::type());
+    this->updateGlobalCoordinates(gctx, typename par_type<par>::type());
     // recreate the surface
     m_upSurface = Surface::makeShared<PlaneSurface>(
         this->position(), this->momentum().normalized());
@@ -193,12 +196,15 @@ public:
   /// respect to the global coordinate system, in which the local error
   /// is described.
   ///
-  /// For a curvilinear track parameterisation this is identical to the
-  /// rotation matrix of the intrinsic planar surface.
+  /// @param gctx The current geometry context object, e.g. alignment
+  ///             It is ignored for Curvilinear parameters
+  ///
+  /// @note For a curvilinear track parameterisation this is identical to
+  /// the rotation matrix of the intrinsic planar surface.
   RotationMatrix3D
-  referenceFrame() const final
+  referenceFrame(const GeometryContext& gctx) const final
   {
-    return m_upSurface->transform().linear();
+    return m_upSurface->transform(gctx).linear();
   }
 
 private:

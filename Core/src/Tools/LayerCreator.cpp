@@ -29,9 +29,8 @@ using Acts::VectorHelpers::phi;
 
 Acts::LayerCreator::LayerCreator(const Acts::LayerCreator::Config& lcConfig,
                                  std::unique_ptr<const Logger>     logger)
-  : m_cfg(), m_logger(std::move(logger))
+  : m_cfg(lcConfig), m_logger(std::move(logger))
 {
-  setConfiguration(lcConfig);
 }
 
 void
@@ -50,6 +49,7 @@ Acts::LayerCreator::setLogger(std::unique_ptr<const Logger> newLogger)
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::cylinderLayer(
+    const GeometryContext&                      gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces,
     size_t                                      binsPhi,
     size_t                                      binsZ,
@@ -58,7 +58,8 @@ Acts::LayerCreator::cylinderLayer(
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
 
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
   // remaining layer parameters
   double layerR
@@ -113,9 +114,9 @@ Acts::LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        std::move(surfaces), binsPhi, binsZ, protoLayer, nullptr);
+        gctx, std::move(surfaces), binsPhi, binsZ, protoLayer, nullptr);
 
-    checkBinning(*sArray);
+    checkBinning(gctx, *sArray);
   }
 
   // create the layer and push it back
@@ -139,6 +140,7 @@ Acts::LayerCreator::cylinderLayer(
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::cylinderLayer(
+    const GeometryContext&                      gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces,
     BinningType                                 bTypePhi,
     BinningType                                 bTypeZ,
@@ -147,7 +149,8 @@ Acts::LayerCreator::cylinderLayer(
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
 
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
   // remaining layer parameters
   double layerR
@@ -199,9 +202,9 @@ Acts::LayerCreator::cylinderLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnCylinder(
-        std::move(surfaces), bTypePhi, bTypeZ, protoLayer, nullptr);
+        gctx, std::move(surfaces), bTypePhi, bTypeZ, protoLayer, nullptr);
 
-    checkBinning(*sArray);
+    checkBinning(gctx, *sArray);
   }
 
   // create the layer and push it back
@@ -225,6 +228,7 @@ Acts::LayerCreator::cylinderLayer(
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::discLayer(
+    const GeometryContext&                      gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces,
     size_t                                      binsR,
     size_t                                      binsPhi,
@@ -232,7 +236,8 @@ Acts::LayerCreator::discLayer(
     std::shared_ptr<const Transform3D>          transform,
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
   double layerZ
       = 0.5 * (protoLayer.minZ - protoLayer.envZ.first + protoLayer.maxZ
@@ -272,9 +277,9 @@ Acts::LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        std::move(surfaces), binsR, binsPhi, protoLayer, transform);
+        gctx, std::move(surfaces), binsR, binsPhi, protoLayer, transform);
 
-    checkBinning(*sArray);
+    checkBinning(gctx, *sArray);
   }
 
   // create the share disc bounds
@@ -300,6 +305,7 @@ Acts::LayerCreator::discLayer(
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::discLayer(
+    const GeometryContext&                      gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces,
     BinningType                                 bTypeR,
     BinningType                                 bTypePhi,
@@ -307,7 +313,8 @@ Acts::LayerCreator::discLayer(
     std::shared_ptr<const Transform3D>          transform,
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
   double layerZ
       = 0.5 * (protoLayer.minZ - protoLayer.envZ.first + protoLayer.maxZ
@@ -344,9 +351,9 @@ Acts::LayerCreator::discLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnDisc(
-        std::move(surfaces), bTypeR, bTypePhi, protoLayer, transform);
+        gctx, std::move(surfaces), bTypeR, bTypePhi, protoLayer, transform);
 
-    checkBinning(*sArray);
+    checkBinning(gctx, *sArray);
   }
 
   // create the shared disc bounds
@@ -369,6 +376,7 @@ Acts::LayerCreator::discLayer(
 
 Acts::MutableLayerPtr
 Acts::LayerCreator::planeLayer(
+    const GeometryContext&                      gctx,
     std::vector<std::shared_ptr<const Surface>> surfaces,
     size_t                                      bins1,
     size_t                                      bins2,
@@ -377,7 +385,8 @@ Acts::LayerCreator::planeLayer(
     std::shared_ptr<const Transform3D>          transform,
     std::unique_ptr<ApproachDescriptor>         ad) const
 {
-  ProtoLayer protoLayer = _protoLayer ? *_protoLayer : ProtoLayer(surfaces);
+  ProtoLayer protoLayer
+      = _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
   // remaining layer parameters
   double layerHalf1, layerHalf2, layerThickness;
@@ -440,9 +449,9 @@ Acts::LayerCreator::planeLayer(
   std::unique_ptr<SurfaceArray> sArray;
   if (!surfaces.empty()) {
     sArray = m_cfg.surfaceArrayCreator->surfaceArrayOnPlane(
-        std::move(surfaces), bins1, bins2, bValue, protoLayer, transform);
+        gctx, std::move(surfaces), bins1, bins2, bValue, protoLayer, transform);
 
-    checkBinning(*sArray);
+    checkBinning(gctx, *sArray);
   }
 
   // create the layer and push it back
@@ -478,7 +487,8 @@ Acts::LayerCreator::associateSurfacesToLayer(Layer& layer) const
 }
 
 bool
-Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
+Acts::LayerCreator::checkBinning(const GeometryContext& gctx,
+                                 const SurfaceArray&    sArray) const
 {
 
   // do consistency check: can we access all sensitive surfaces
@@ -536,7 +546,7 @@ Acts::LayerCreator::checkBinning(const SurfaceArray& sArray) const
     ACTS_ERROR(" -- Inaccessible surfaces: ");
     for (const auto& srf : diff) {
       // have to choose BinningValue here
-      Vector3D ctr = srf->binningPosition(binR);
+      Vector3D ctr = srf->binningPosition(gctx, binR);
       ACTS_ERROR(" Surface(x=" << ctr.x() << ", y=" << ctr.y() << ", z="
                                << ctr.z()
                                << ", r="

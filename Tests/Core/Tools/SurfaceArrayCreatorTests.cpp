@@ -23,6 +23,7 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;
@@ -33,6 +34,9 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
 
 #define CHECK_ROTATION_ANGLE(t, a, tolerance)                                  \
   {                                                                            \
@@ -232,7 +236,7 @@ namespace Test {
           std::shared_ptr<Surface> srfA
               = Surface::makeShared<PlaneSurface>(transAptr, bounds);
 
-          Vector3D    nrm    = srfA->normal();
+          Vector3D    nrm    = srfA->normal(tgContext);
           Transform3D transB = trans;
           transB.pretranslate(nrm * 0.1);
           auto transBptr = std::make_shared<const Transform3D>(transB);
@@ -269,7 +273,8 @@ namespace Test {
           = dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
       for (const auto& vtxloc : bounds->vertices()) {
-        Vector3D vtx = srf->transform() * Vector3D(vtxloc.x(), vtxloc.y(), 0);
+        Vector3D vtx
+            = srf->transform(tgContext) * Vector3D(vtxloc.x(), vtxloc.y(), 0);
         os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
       }
 
@@ -293,11 +298,11 @@ namespace Test {
   {
     // fail on empty srf vector
     std::vector<const Surface*> emptyRaw;
-    ProtoLayer                  pl(emptyRaw);
+    ProtoLayer                  pl(tgContext, emptyRaw);
     auto                        tr = Transform3D::Identity();
-    BOOST_CHECK_THROW(
-        createEquidistantAxis(emptyRaw, BinningValue::binPhi, pl, tr),
-        std::logic_error);
+    BOOST_CHECK_THROW(createEquidistantAxis(
+                          tgContext, emptyRaw, BinningValue::binPhi, pl, tr),
+                      std::logic_error);
 
     std::vector<float> bdExp = {
         -3.14159, -2.93215, -2.72271, -2.51327, -2.30383,  -2.0944,   -1.88496,
@@ -316,10 +321,10 @@ namespace Test {
       double angleShift = step / 2.;
       auto   surfaces   = fullPhiTestSurfacesEC(30, angleShift, z);
       std::vector<const Surface*> surfacesRaw = unpack_shared_vector(surfaces);
-      pl                                      = ProtoLayer(surfacesRaw);
-      tr                                      = Transform3D::Identity();
-      auto axis
-          = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+      pl        = ProtoLayer(tgContext, surfacesRaw);
+      tr        = Transform3D::Identity();
+      auto axis = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
 
       BOOST_CHECK_EQUAL(axis.nBins, 30);
       CHECK_CLOSE_REL(axis.max, M_PI, 1e-6);
@@ -331,9 +336,10 @@ namespace Test {
       angleShift  = 0.;
       surfaces    = fullPhiTestSurfacesEC(30, angleShift, z);
       surfacesRaw = unpack_shared_vector(surfaces);
-      pl          = ProtoLayer(surfacesRaw);
+      pl          = ProtoLayer(tgContext, surfacesRaw);
       tr          = Transform3D::Identity();
-      axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+      axis        = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_2.obj");
       BOOST_CHECK_EQUAL(axis.nBins, 30);
@@ -346,9 +352,10 @@ namespace Test {
       angleShift  = step / -4.;
       surfaces    = fullPhiTestSurfacesEC(30, angleShift, z);
       surfacesRaw = unpack_shared_vector(surfaces);
-      pl          = ProtoLayer(surfacesRaw);
+      pl          = ProtoLayer(tgContext, surfacesRaw);
       tr          = Transform3D::Identity();
-      axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+      axis        = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_3.obj");
       BOOST_CHECK_EQUAL(axis.nBins, 30);
@@ -361,10 +368,11 @@ namespace Test {
       angleShift  = step / 4.;
       surfaces    = fullPhiTestSurfacesEC(30, angleShift, z);
       surfacesRaw = unpack_shared_vector(surfaces);
-      pl          = ProtoLayer(surfaces);
+      pl          = ProtoLayer(tgContext, surfaces);
       surfacesRaw = unpack_shared_vector(surfaces);
       tr          = Transform3D::Identity();
-      axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+      axis        = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
       surfacesRaw = unpack_shared_vector(surfaces);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_EC_4.obj");
@@ -381,10 +389,10 @@ namespace Test {
       double angleShift  = step / 2.;
       auto   surfaces    = fullPhiTestSurfacesBRL(30, angleShift, z);
       auto   surfacesRaw = unpack_shared_vector(surfaces);
-      pl                 = ProtoLayer(surfacesRaw);
+      pl                 = ProtoLayer(tgContext, surfacesRaw);
       tr                 = Transform3D::Identity();
-      auto axis
-          = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+      auto axis          = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_1.obj");
       BOOST_CHECK_EQUAL(axis.nBins, 30);
@@ -397,9 +405,10 @@ namespace Test {
       angleShift  = 0.;
       surfaces    = fullPhiTestSurfacesBRL(30, angleShift, z);
       surfacesRaw = unpack_shared_vector(surfaces);
-      pl          = ProtoLayer(surfacesRaw);
+      pl          = ProtoLayer(tgContext, surfacesRaw);
       tr          = Transform3D::Identity();
-      axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+      axis        = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_2.obj");
       BOOST_CHECK_EQUAL(axis.nBins, 30);
@@ -413,9 +422,10 @@ namespace Test {
       angleShift  = step / -4.;
       surfaces    = fullPhiTestSurfacesBRL(30, angleShift, z);
       surfacesRaw = unpack_shared_vector(surfaces);
-      pl          = ProtoLayer(surfacesRaw);
+      pl          = ProtoLayer(tgContext, surfacesRaw);
       tr          = Transform3D::Identity();
-      axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+      axis        = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_3.obj");
       BOOST_CHECK_EQUAL(axis.nBins, 30);
@@ -429,9 +439,10 @@ namespace Test {
       angleShift  = step / 4.;
       surfaces    = fullPhiTestSurfacesBRL(30, angleShift, z);
       surfacesRaw = unpack_shared_vector(surfaces);
-      pl          = ProtoLayer(surfacesRaw);
+      pl          = ProtoLayer(tgContext, surfacesRaw);
       tr          = Transform3D::Identity();
-      axis = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+      axis        = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
       draw_surfaces(surfaces,
                     "SurfaceArrayCreator_createEquidistantAxis_BRL_4.obj");
       BOOST_CHECK_EQUAL(axis.nBins, 30);
@@ -450,10 +461,10 @@ namespace Test {
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_EC_Single.obj");
 
-    pl = ProtoLayer(surfacesRaw);
-    tr = Transform3D::Identity();
-    auto axis
-        = createEquidistantAxis(surfacesRaw, BinningValue::binPhi, pl, tr);
+    pl        = ProtoLayer(tgContext, surfacesRaw);
+    tr        = Transform3D::Identity();
+    auto axis = createEquidistantAxis(
+        tgContext, surfacesRaw, BinningValue::binPhi, pl, tr);
     BOOST_CHECK_EQUAL(axis.nBins, 1);
 
     CHECK_CLOSE_ABS(axis.max, phi(Vector3D(8, 1, 0)), 1e-3);
@@ -468,9 +479,10 @@ namespace Test {
     // single element in z
     auto       surfaces    = straightLineSurfaces(1);
     auto       surfacesRaw = unpack_shared_vector(surfaces);
-    ProtoLayer pl          = ProtoLayer(surfacesRaw);
+    ProtoLayer pl          = ProtoLayer(tgContext, surfacesRaw);
     auto       trf         = Transform3D::Identity();
-    auto axis = createEquidistantAxis(surfacesRaw, BinningValue::binZ, pl, trf);
+    auto       axis        = createEquidistantAxis(
+        tgContext, surfacesRaw, BinningValue::binZ, pl, trf);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_Z_1.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 1);
@@ -483,9 +495,10 @@ namespace Test {
       double z0   = -10 + 1. * i;
       surfaces    = straightLineSurfaces(10, 3, Vector3D(0, 0, z0 + 1.5));
       surfacesRaw = unpack_shared_vector(surfaces);
-      pl          = ProtoLayer(surfacesRaw);
+      pl          = ProtoLayer(tgContext, surfacesRaw);
       trf         = Transform3D::Identity();
-      axis = createEquidistantAxis(surfacesRaw, BinningValue::binZ, pl, trf);
+      axis        = createEquidistantAxis(
+          tgContext, surfacesRaw, BinningValue::binZ, pl, trf);
       draw_surfaces(
           surfaces,
           (boost::format(
@@ -503,9 +516,10 @@ namespace Test {
     tr.rotate(AngleAxis3D(M_PI / 4., Vector3D(0, 0, 1)));
     surfaces    = straightLineSurfaces(10, 3, Vector3D(0, 0, 0 + 1.5), tr);
     surfacesRaw = unpack_shared_vector(surfaces);
-    pl          = ProtoLayer(surfacesRaw);
+    pl          = ProtoLayer(tgContext, surfacesRaw);
     trf         = Transform3D::Identity();
-    axis = createEquidistantAxis(surfacesRaw, BinningValue::binZ, pl, trf);
+    axis        = createEquidistantAxis(
+        tgContext, surfacesRaw, BinningValue::binZ, pl, trf);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_Z_3.obj");
     BOOST_CHECK_EQUAL(axis.nBins, 10);
@@ -523,9 +537,10 @@ namespace Test {
     auto surfacesRaw = unpack_shared_vector(surfaces);
     draw_surfaces(surfaces,
                   "SurfaceArrayCreator_createEquidistantAxis_R_1.obj");
-    auto       trf = Transform3D::Identity();
-    ProtoLayer pl  = ProtoLayer(surfacesRaw);
-    auto axis = createEquidistantAxis(surfacesRaw, BinningValue::binR, pl, trf);
+    auto       trf  = Transform3D::Identity();
+    ProtoLayer pl   = ProtoLayer(tgContext, surfacesRaw);
+    auto       axis = createEquidistantAxis(
+        tgContext, surfacesRaw, BinningValue::binR, pl, trf);
     BOOST_CHECK_EQUAL(axis.nBins, 1);
     CHECK_CLOSE_ABS(axis.max, perp(Vector3D(17, 1, 0)), 1e-3);
     CHECK_CLOSE_ABS(axis.min, 13, 1e-3);
@@ -543,9 +558,10 @@ namespace Test {
                   "SurfaceArrayCreator_createEquidistantAxis_R_2.obj");
 
     surfacesRaw = unpack_shared_vector(surfaces);
-    pl          = ProtoLayer(surfacesRaw);
+    pl          = ProtoLayer(tgContext, surfacesRaw);
     trf         = Transform3D::Identity();
-    axis = createEquidistantAxis(surfacesRaw, BinningValue::binR, pl, trf);
+    axis        = createEquidistantAxis(
+        tgContext, surfacesRaw, BinningValue::binR, pl, trf);
 
     BOOST_CHECK_EQUAL(axis.nBins, 3);
     CHECK_CLOSE_REL(axis.max, perp(Vector3D(20 + 2, 1, 0)), 1e-3);
@@ -571,9 +587,8 @@ namespace Test {
     std::copy(ringC.begin(), ringC.end(), std::back_inserter(surfaces));
     draw_surfaces(surfaces, "SurfaceArrayCreator_dependentBinCounts.obj");
 
-    std::unique_ptr<SurfaceArray> sArray
-        = m_SAC.surfaceArrayOnDisc(surfaces, equidistant, equidistant);
-    std::cout << (*sArray) << std::endl;
+    std::unique_ptr<SurfaceArray> sArray = m_SAC.surfaceArrayOnDisc(
+        tgContext, surfaces, equidistant, equidistant);
     auto axes = sArray->getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 3);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 10);
@@ -607,12 +622,12 @@ namespace Test {
             globalToLocal,
             localToGlobal,
             std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl->fill(brlRaw);
+    sl->fill(tgContext, brlRaw);
     SurfaceArray sa(std::move(sl), brl);
 
     // actually filled SA
     for (const auto& srf : brl) {
-      Vector3D ctr        = srf->binningPosition(binR);
+      Vector3D ctr        = srf->binningPosition(tgContext, binR);
       auto     binContent = sa.at(ctr);
 
       BOOST_CHECK_EQUAL(binContent.size(), 1);
@@ -629,13 +644,15 @@ namespace Test {
     std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
     draw_surfaces(brl, "SurfaceArrayCreator_barrelStagger.obj");
 
-    ProtoLayer pl(brl);
+    ProtoLayer pl(tgContext, brl);
 
     // EQUIDISTANT
     Transform3D tr = Transform3D::Identity();
 
-    auto pAxisPhi = createEquidistantAxis(brlRaw, BinningValue::binPhi, pl, tr);
-    auto pAxisZ   = createEquidistantAxis(brlRaw, BinningValue::binZ, pl, tr);
+    auto pAxisPhi = createEquidistantAxis(
+        tgContext, brlRaw, BinningValue::binPhi, pl, tr);
+    auto pAxisZ
+        = createEquidistantAxis(tgContext, brlRaw, BinningValue::binZ, pl, tr);
 
     double      R   = 10.;
     Transform3D itr = tr.inverse();
@@ -652,18 +669,17 @@ namespace Test {
                                       detail::AxisBoundaryType::Bound>(
         globalToLocal, localToGlobal, pAxisPhi, pAxisZ);
 
-    sl->fill(brlRaw);
+    sl->fill(tgContext, brlRaw);
     SurfaceArray sa(std::move(sl), brl);
     auto         axes = sa.getAxes();
     BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
     BOOST_CHECK_EQUAL(axes.at(1)->getNBins(), 7);
-    std::cout << sa << std::endl;
 
     for (const auto& pr : barrel.second) {
       auto A = pr.first;
       auto B = pr.second;
 
-      Vector3D ctr        = A->binningPosition(binR);
+      Vector3D ctr        = A->binningPosition(tgContext, binR);
       auto     binContent = sa.at(ctr);
       BOOST_CHECK_EQUAL(binContent.size(), 2);
       std::set<const Surface*> act;
@@ -683,8 +699,9 @@ namespace Test {
       tr = Transform3D::Identity();
 
       auto pAxisPhiVar
-          = createVariableAxis(brlRaw, BinningValue::binPhi, pl, tr);
-      auto pAxisZVar = createVariableAxis(brlRaw, BinningValue::binZ, pl, tr);
+          = createVariableAxis(tgContext, brlRaw, BinningValue::binPhi, pl, tr);
+      auto pAxisZVar
+          = createVariableAxis(tgContext, brlRaw, BinningValue::binZ, pl, tr);
 
       itr = tr.inverse();
 
@@ -701,7 +718,7 @@ namespace Test {
                                          detail::AxisBoundaryType::Bound>(
           globalToLocalVar, localToGlobalVar, pAxisPhiVar, pAxisZVar);
 
-      sl2->fill(brlRaw);
+      sl2->fill(tgContext, brlRaw);
       SurfaceArray sa2(std::move(sl2), brl);
       axes = sa2.getAxes();
       BOOST_CHECK_EQUAL(axes.at(0)->getNBins(), 30);
@@ -730,13 +747,11 @@ namespace Test {
         i++;
       }
 
-      std::cout << sa2 << std::endl;
-
       for (const auto& pr : barrel.second) {
         auto A = pr.first;
         auto B = pr.second;
 
-        Vector3D ctr        = A->binningPosition(binR);
+        Vector3D ctr        = A->binningPosition(tgContext, binR);
         auto     binContent = sa2.at(ctr);
         BOOST_CHECK_EQUAL(binContent.size(), 2);
         std::set<const Surface*> act;

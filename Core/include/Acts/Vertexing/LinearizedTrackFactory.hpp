@@ -11,6 +11,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 
 namespace Acts {
@@ -32,13 +34,13 @@ namespace Acts {
 ///
 /// Ref.(1) - CERN-THESIS-2010-027, Giacinto Piacquadio (Freiburg U.)
 ///
-/// @tparam BField Magnetic field type
-/// @tparam Propagator_t Propagator type
+/// @tparam bfield_t Magnetic field type
+/// @tparam propagator_t Propagator type
 /// @tparam action_list_t Propagator action list type
 /// @tparam aborter_list_t Propagator aborter list type
 
-template <typename BField,
-          typename Propagator_t,
+template <typename bfield_t,
+          typename propagator_t,
           typename action_list_t  = ActionList<>,
           typename aborter_list_t = AbortList<>>
 class LinearizedTrackFactory
@@ -46,15 +48,11 @@ class LinearizedTrackFactory
 public:
   struct Config
   {
-    BField bField;
-
-    /// Default propagator options
-    PropagatorOptions<action_list_t, aborter_list_t> propagatorOptions;
-
-    Config(BField bIn) : bField(std::move(bIn)){};
+    bfield_t bField;
+    Config(bfield_t bIn) : bField(std::move(bIn)){};
   };
 
-  /// @brief Constructor with BField
+  /// @brief Constructor with bfield_t
   ///
   /// @param config Configuration object
   LinearizedTrackFactory(const Config& config) : m_cfg(config) {}
@@ -62,15 +60,19 @@ public:
   /// @brief Function that linearizes BoundParameters at
   /// given linearization point
   ///
+  /// @param gctx the Geometry context (i.e. detector conditions)
+  /// @param mctx the magnetic field context (conditions)
   /// @param params Parameters to linearize
   /// @param linPoint Linearization point
   /// @param propagator Propagator
   ///
   /// @return Linearized track
   LinearizedTrack
-  linearizeTrack(const BoundParameters* params,
-                 const Vector3D&        linPoint,
-                 const Propagator_t&    propagator) const;
+  linearizeTrack(const GeometryContext&      gctx,
+                 const MagneticFieldContext& mctx,
+                 const BoundParameters*      params,
+                 const Vector3D&             linPoint,
+                 const propagator_t&         propagator) const;
 
 private:
   // Configuration object

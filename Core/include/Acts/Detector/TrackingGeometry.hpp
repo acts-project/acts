@@ -12,8 +12,9 @@
 
 #pragma once
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
-// STD
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -22,15 +23,12 @@
 namespace Acts {
 
 class TrackingVolume;
-class DetachedTrackingVolume;
+class Layer;
 class Surface;
 class PerigeeSurface;
-class Layer;
 
-using TrackingVolumePtr         = std::shared_ptr<const TrackingVolume>;
-using MutableTrackingVolumePtr  = std::shared_ptr<TrackingVolume>;
-using DetachedTrackingVolumePtr = std::shared_ptr<const DetachedTrackingVolume>;
-using DetachedVolumeVector      = std::vector<DetachedTrackingVolumePtr>;
+using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 ///  @class TrackingGeometry
 ///
@@ -62,27 +60,12 @@ public:
 
   /// return the lowest tracking Volume
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
-  lowestTrackingVolume(const Vector3D& gp) const;
-
-  /// return the vector of lowest detached tracking Volume(->overlaps)
-  ///
-  /// @param gp is the global position of the call
-  ///
-  /// @return plain pointer to the the lowest DetachedTrackingVolume
-  const DetachedVolumeVector*
-  lowestDetachedTrackingVolumes(const Vector3D& gp) const;
-
-  /// return the lowest static volume
-  ///
-  /// @param gp is the global position of the call
-  ///
-  /// @return plain pointer to the the lowest static tracking volume
-  const TrackingVolume*
-  lowestStaticTrackingVolume(const Vector3D& gp) const;
+  lowestTrackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// return the lowest tracking Volume
   ///
@@ -94,11 +77,12 @@ public:
 
   /// Forward the associated Layer information
   ///
+  /// @paramn gctx is the context for this request (e.g. alignment)
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
   const Layer*
-  associatedLayer(const Vector3D& gp) const;
+  associatedLayer(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// Register the beam tube
   ///

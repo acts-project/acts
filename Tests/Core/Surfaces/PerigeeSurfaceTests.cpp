@@ -30,6 +30,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   BOOST_AUTO_TEST_SUITE(PerigeeSurfaces)
   /// Unit test for creating compliant/non-compliant PerigeeSurface object
   BOOST_AUTO_TEST_CASE(PerigeeSurfaceConstruction)
@@ -56,11 +60,11 @@ namespace Test {
     auto copiedPerigeeSurface
         = Surface::makeShared<PerigeeSurface>(*perigeeSurfaceObject);
     BOOST_CHECK_EQUAL(copiedPerigeeSurface->type(), Surface::Perigee);
-    BOOST_CHECK_EQUAL(*copiedPerigeeSurface, *perigeeSurfaceObject);
+    BOOST_CHECK(*copiedPerigeeSurface == *perigeeSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedPerigeeSurface = Surface::makeShared<PerigeeSurface>(
-        *perigeeSurfaceObject, *pTransform);
+        tgContext, *perigeeSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedPerigeeSurface->type(),
                       Surface::Perigee);
   }
@@ -70,8 +74,9 @@ namespace Test {
   {
     /// Test clone method
     Vector3D unitXYZ{1., 1., 1.};
-    auto perigeeSurfaceObject  = Surface::makeShared<PerigeeSurface>(unitXYZ);
-    auto pClonedPerigeeSurface = perigeeSurfaceObject->clone();
+    auto perigeeSurfaceObject = Surface::makeShared<PerigeeSurface>(unitXYZ);
+    auto pClonedPerigeeSurface
+        = perigeeSurfaceObject->clone(tgContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedPerigeeSurface->type(), Surface::Perigee);
     //
     /// Test type (redundant)
@@ -83,7 +88,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    perigeeSurfaceObject->dump(dumpOuput);
+    perigeeSurfaceObject->toStream(tgContext, dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal("Acts::PerigeeSurface:\n\
      Center position  (x, y, z) = (1.0000000, 1.0000000, 1.0000000)"));
   }
@@ -97,11 +102,11 @@ namespace Test {
     auto assignedPerigeeSurface
         = Surface::makeShared<PerigeeSurface>(invalidPosition);
     /// Test equality operator
-    BOOST_CHECK_EQUAL(*perigeeSurfaceObject, *perigeeSurfaceObject2);
+    BOOST_CHECK(*perigeeSurfaceObject == *perigeeSurfaceObject2);
     /// Test assignment
     *assignedPerigeeSurface = *perigeeSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_CHECK_EQUAL(*assignedPerigeeSurface, *perigeeSurfaceObject);
+    BOOST_CHECK(*assignedPerigeeSurface == *perigeeSurfaceObject);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

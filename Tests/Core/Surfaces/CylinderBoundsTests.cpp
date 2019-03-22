@@ -116,7 +116,7 @@ namespace Test {
 
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
-    cylinderBoundsObject.dump(dumpOuput);
+    cylinderBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(
         dumpOuput.is_equal("Acts::CylinderBounds: (radius, averagePhi, "
                            "halfPhiSector, halflengthInZ) = (0.5000000, "

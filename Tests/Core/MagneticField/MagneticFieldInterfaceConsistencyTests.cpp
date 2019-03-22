@@ -16,6 +16,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
@@ -30,6 +31,9 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// This is the canonical interface that all field implementations
   /// need to comply with.
@@ -52,7 +56,7 @@ namespace Test {
     field.getFieldGradient(pos, gradient);
 
     // test interface method with cache
-    Cache_t cache;
+    Cache_t cache(mfContext);
     field.getField(pos, cache);
     field.getFieldGradient(pos, gradient, cache);
   }

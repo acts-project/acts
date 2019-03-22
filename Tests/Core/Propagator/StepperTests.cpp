@@ -26,6 +26,8 @@
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 // TODO: Testing of covariances in Integration test - requires N-layer box
 // detector for implementation of DenseEnvironmentExtension
@@ -36,7 +38,10 @@ namespace Test {
 
   using cstep = detail::ConstrainedStep;
 
-  ///
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
+
   /// @brief Aborter for the case that a particle leaves the detector or reaches
   /// a custom made threshold.
   ///
@@ -133,11 +138,12 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto& vb) {
-          return cvb.trackingVolume(inner, vb);
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> vacuum = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> vacuum
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviVac(vacuum);
@@ -159,7 +165,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -202,7 +208,7 @@ namespace Test {
 
     // Set options for propagator
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-        propOptsDef;
+        propOptsDef(tgContext, mfContext);
     propOptsDef.actionList  = aListDef;
     propOptsDef.abortList   = abortList;
     propOptsDef.maxSteps    = 100;
@@ -254,11 +260,12 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto& vb) {
-          return cvb.trackingVolume(inner, vb);
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> material = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> material
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviMat(material);
@@ -280,7 +287,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -332,7 +339,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOptsDense;
+        propOptsDense(tgContext, mfContext);
     propOptsDense.actionList  = aList;
     propOptsDense.abortList   = abortList;
     propOptsDense.maxSteps    = 100;
@@ -438,11 +445,12 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto& vb) {
-          return cvb.trackingVolume(inner, vb);
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> det = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> det
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviDet(det);
@@ -465,7 +473,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -497,26 +505,27 @@ namespace Test {
     // Collect boundaries
     std::vector<Surface const*> surs;
     std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
-        boundaries = det->lowestTrackingVolume({0.5 * units::_m, 0., 0.})
-                         ->boundarySurfaces();
+        boundaries
+        = det->lowestTrackingVolume(tgContext, {0.5 * units::_m, 0., 0.})
+              ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 1. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 1. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->lowestTrackingVolume({1.5 * units::_m, 0., 0.})
+    boundaries = det->lowestTrackingVolume(tgContext, {1.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 2. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 2. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->lowestTrackingVolume({2.5 * units::_m, 0., 0.})
+    boundaries = det->lowestTrackingVolume(tgContext, {2.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 3. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 3. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
@@ -527,7 +536,7 @@ namespace Test {
     ActionList<StepCollector> aListDef;
 
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-        propOptsDef;
+        propOptsDef(tgContext, mfContext);
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
     propOptsDef.abortList            = abortList;
@@ -583,7 +592,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOptsDense;
+        propOptsDense(tgContext, mfContext);
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
     propOptsDense.abortList          = abortList;

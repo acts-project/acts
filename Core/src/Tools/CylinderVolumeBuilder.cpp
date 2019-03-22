@@ -47,8 +47,9 @@ Acts::CylinderVolumeBuilder::setLogger(std::unique_ptr<const Logger> newLogger)
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeBuilder::trackingVolume(
-    TrackingVolumePtr existingVolume,
-    VolumeBoundsPtr   externalBounds) const
+    const GeometryContext& gctx,
+    TrackingVolumePtr      existingVolume,
+    VolumeBoundsPtr        externalBounds) const
 {
   ACTS_DEBUG("Configured to build volume : " << m_cfg.volumeName);
 
@@ -68,11 +69,11 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   // the layers are built by the layer builder
   if (m_cfg.layerBuilder) {
     // the negative Layers
-    negativeLayers = m_cfg.layerBuilder->negativeLayers();
+    negativeLayers = m_cfg.layerBuilder->negativeLayers(gctx);
     // the central Layers
-    centralLayers = m_cfg.layerBuilder->centralLayers();
+    centralLayers = m_cfg.layerBuilder->centralLayers(gctx);
     // the positive Layer
-    positiveLayers = m_cfg.layerBuilder->positiveLayers();
+    positiveLayers = m_cfg.layerBuilder->positiveLayers(gctx);
   }
   // (0) PREP WORK ------------------------------------------------
   //
@@ -128,9 +129,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
   // Find out with Layer analysis
   // analyze the layers
-  wConfig.nVolumeConfig = analyzeLayers(negativeLayers);
-  wConfig.cVolumeConfig = analyzeLayers(centralLayers);
-  wConfig.pVolumeConfig = analyzeLayers(positiveLayers);
+  wConfig.nVolumeConfig = analyzeLayers(gctx, negativeLayers);
+  wConfig.cVolumeConfig = analyzeLayers(gctx, centralLayers);
+  wConfig.pVolumeConfig = analyzeLayers(gctx, positiveLayers);
 
   std::string layerConfiguration = "|";
   if (wConfig.nVolumeConfig) {
@@ -183,7 +184,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
   auto tvHelper = m_cfg.trackingVolumeHelper;
   // the barrel is always created
   auto barrel = wConfig.cVolumeConfig
-      ? tvHelper->createTrackingVolume(wConfig.cVolumeConfig.layers,
+      ? tvHelper->createTrackingVolume(gctx,
+                                       wConfig.cVolumeConfig.layers,
                                        m_cfg.volumeMaterial,
                                        wConfig.cVolumeConfig.rMin,
                                        wConfig.cVolumeConfig.rMax,
@@ -194,7 +196,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
   // the negative endcap is created if present
   auto nEndcap = wConfig.nVolumeConfig
-      ? tvHelper->createTrackingVolume(wConfig.nVolumeConfig.layers,
+      ? tvHelper->createTrackingVolume(gctx,
+                                       wConfig.nVolumeConfig.layers,
                                        m_cfg.volumeMaterial,
                                        wConfig.nVolumeConfig.rMin,
                                        wConfig.nVolumeConfig.rMax,
@@ -205,7 +208,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
   // the positive endcap is created
   auto pEndcap = wConfig.pVolumeConfig
-      ? tvHelper->createTrackingVolume(wConfig.pVolumeConfig.layers,
+      ? tvHelper->createTrackingVolume(gctx,
+                                       wConfig.pVolumeConfig.layers,
                                        m_cfg.volumeMaterial,
                                        wConfig.pVolumeConfig.rMin,
                                        wConfig.pVolumeConfig.rMax,
@@ -236,7 +240,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     }
     // and low lets create the new volume
     volume = volumesContainer.size() > 1
-        ? tvHelper->createContainerTrackingVolume(volumesContainer)
+        ? tvHelper->createContainerTrackingVolume(gctx, volumesContainer)
         : volume;
   } else if (wConfig.wCondition != Attaching) {
     // the new volume is the only one present
@@ -252,7 +256,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     if (wConfig.fGapVolumeConfig) {
       // create the gap volume
       auto fGap
-          = tvHelper->createGapTrackingVolume(m_cfg.volumeMaterial,
+          = tvHelper->createGapTrackingVolume(gctx,
+                                              m_cfg.volumeMaterial,
                                               wConfig.fGapVolumeConfig.rMin,
                                               wConfig.fGapVolumeConfig.rMax,
                                               wConfig.fGapVolumeConfig.zMin,
@@ -267,7 +272,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     if (wConfig.sGapVolumeConfig) {
       // create the gap volume
       auto sGap
-          = tvHelper->createGapTrackingVolume(m_cfg.volumeMaterial,
+          = tvHelper->createGapTrackingVolume(gctx,
+                                              m_cfg.volumeMaterial,
                                               wConfig.sGapVolumeConfig.rMin,
                                               wConfig.sGapVolumeConfig.rMax,
                                               wConfig.sGapVolumeConfig.zMin,
@@ -281,7 +287,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
     // and low lets create the new existing volume with gaps
     existingVolumeCp = existingContainer.size() > 1
-        ? tvHelper->createContainerTrackingVolume(existingContainer)
+        ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
         : existingVolumeCp;
 
     // for central wrapping or inserting, we need to update once more
@@ -296,7 +302,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     }
     // update
     existingVolumeCp = !existingContainer.empty()
-        ? tvHelper->createContainerTrackingVolume(existingContainer)
+        ? tvHelper->createContainerTrackingVolume(gctx, existingContainer)
         : existingVolumeCp;
 
     std::vector<std::shared_ptr<const TrackingVolume>> totalContainer;
@@ -321,7 +327,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       return nullptr;
     }
     // now create the new container volume
-    volume = tvHelper->createContainerTrackingVolume(totalContainer);
+    volume = tvHelper->createContainerTrackingVolume(gctx, totalContainer);
   }
   // sign the volume and return it
   volume->sign(GeometrySignature(m_cfg.volumeSignature));
@@ -331,7 +337,8 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
 // -----------------------------
 Acts::VolumeConfig
-Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
+Acts::CylinderVolumeBuilder::analyzeLayers(const GeometryContext& gctx,
+                                           const LayerVector&     lVector) const
 {
   // @TODO add envelope tolerance
   //
@@ -346,7 +353,7 @@ Acts::CylinderVolumeBuilder::analyzeLayers(const LayerVector& lVector) const
       // the thickness of the layer needs to be taken into account
       double thickness = layer->thickness();
       // get the center of the layer
-      const Vector3D& center = layer->surfaceRepresentation().center();
+      const Vector3D& center = layer->surfaceRepresentation().center(gctx);
       // check if it is a cylinder layer
       const CylinderLayer* cLayer
           = dynamic_cast<const CylinderLayer*>(layer.get());

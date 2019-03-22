@@ -62,7 +62,7 @@ public:
     return 10.;
   }
   std::ostream&
-  dump(std::ostream& sl) const final
+  toStream(std::ostream& sl) const final
   {
     sl << "SurfaceBoundsStub";
     return sl;

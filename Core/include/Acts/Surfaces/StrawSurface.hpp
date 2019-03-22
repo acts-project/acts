@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -68,11 +69,14 @@ protected:
   /// @param slsf is the source surface for copying
   StrawSurface(const StrawSurface& other);
 
-  /// Copy constructor with shift
+  /// Copy constructor - with shift
   ///
-  /// @param other is the source surface dor copying
-  /// @param htrans is the additional transform applied after copying
-  StrawSurface(const StrawSurface& other, const Transform3D& htrans);
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  StrawSurface(const GeometryContext& gctx,
+               const StrawSurface&    other,
+               const Transform3D&     transf);
 
 public:
   /// Destructor - defaulted
@@ -84,12 +88,12 @@ public:
   StrawSurface&
   operator=(const StrawSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
+  /// Clone method into a concrete type of StrawSurface with shift
   ///
-  /// @param shift additional, optional shift
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param shift applied to the surface
   std::shared_ptr<StrawSurface>
-  clone(const Transform3D* shift = nullptr) const;
+  clone(const GeometryContext& gctx, const Transform3D& shift) const;
 
   /// Return the surface type
   SurfaceType
@@ -100,18 +104,22 @@ public:
   name() const final;
 
   /// Return a PolyhedronRepresentation for this object
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param l0div Number of divisions along l0 (phi)
   /// @param l1div Number of divisions along l1 (z)
   virtual PolyhedronRepresentation
-  polyhedronRepresentation(size_t l0div = 10, size_t l1div = 1) const;
+  polyhedronRepresentation(const GeometryContext& gctx,
+                           size_t                 l0div = 10,
+                           size_t                 l1div = 1) const;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
+  /// Clone method implementation
   ///
-  /// @param shift additional, optional shift
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param shift applied to the surface
   StrawSurface*
-  clone_impl(const Transform3D* shift = nullptr) const override;
+  clone_impl(const GeometryContext& gctx,
+             const Transform3D&     shift) const override;
 };
 
 inline Surface::SurfaceType
@@ -126,4 +134,4 @@ Acts::StrawSurface::name() const
   return "Acts::StrawSurface";
 }
 
-}  // end of namespace Acts
+}  // namespace Acts

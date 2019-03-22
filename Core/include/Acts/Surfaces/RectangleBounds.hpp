@@ -80,7 +80,7 @@ public:
   ///
   /// @param sl is the ostream for the dump
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
   /// Return method for the half length in X
   double

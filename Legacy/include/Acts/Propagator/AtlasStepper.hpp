@@ -9,12 +9,13 @@
 #pragma once
 
 #include <cmath>
-
+#include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -56,13 +57,17 @@ public:
     ///
     /// @tparams Type of TrackParameters
     ///
+    /// @param[in] gctx The geometry contex tof this call
+    /// @param[in] mctx The magnetic field context of this call
     /// @param[in] pars Input parameters
     /// @param[in] ndir The navigation direction w.r.t. parameters
     /// @param[in] ssize the steps size limitation
     template <typename Parameters>
-    State(const Parameters&   pars,
-          NavigationDirection ndir  = forward,
-          double              ssize = std::numeric_limits<double>::max())
+    State(std::reference_wrapper<const GeometryContext>      gctx,
+          std::reference_wrapper<const MagneticFieldContext> mctx,
+          const Parameters&                                  pars,
+          NavigationDirection                                ndir = forward,
+          double ssize = std::numeric_limits<double>::max())
       : state_ready(false)
       , navDir(ndir)
       , useJacobian(false)
@@ -74,6 +79,8 @@ public:
       , field(0., 0., 0.)
       , covariance(nullptr)
       , stepSize(ndir * std::abs(ssize))
+      , fieldCache(mctx)
+      , geoContext(gctx)
     {
       // The rest of this constructor is copy&paste of AtlasStepper::update() -
       // this is a nasty but working solution for the stepper state without
@@ -108,7 +115,7 @@ public:
         covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
         covTransport = true;
         useJacobian  = true;
-        const auto transform = pars.referenceFrame();
+        const auto transform = pars.referenceFrame(geoContext);
 
         pVector[7]  = transform(0, eLOC_0);
         pVector[14] = transform(0, eLOC_1);
@@ -243,16 +250,18 @@ public:
     bool                               covTransport = false;
     double                             jacobian[NGlobalPars * NGlobalPars];
 
-    /// Lazily initialized cache for the magnetic field
-    /// It caches the current magnetic field cell and stays (and interpolates)
-    ///  within as long as this is valid. See step() code for details.
-    typename bfield_t::Cache fieldCache{};
-
     // accummulated path length cache
     double pathAccumulated = 0.;
 
     // adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
+
+    /// It caches the current magnetic field cell and stays (and interpolates)
+    ///  within as long as this is valid. See step() code for details.
+    typename bfield_t::Cache fieldCache;
+
+    /// Cache the geometry context
+    std::reference_wrapper<const GeometryContext> geoContext;
 
     /// Debug output
     /// the string where debug messages are stored (optionally)
@@ -319,7 +328,8 @@ public:
   bool
   surfaceReached(const State& state, const Surface* surface) const
   {
-    return surface->isOnSurface(position(state), direction(state), true);
+    return surface->isOnSurface(
+        state.geoContext, position(state), direction(state), true);
   }
 
   /// Create and return the bound state at the current position
@@ -354,8 +364,12 @@ public:
     }
 
     // Fill the end parameters
-    BoundParameters parameters(
-        std::move(cov), gp, mom, charge(state), surface.getSharedPtr());
+    BoundParameters parameters(state.geoContext,
+                               std::move(cov),
+                               gp,
+                               mom,
+                               charge(state),
+                               surface.getSharedPtr());
 
     return BoundState(
         std::move(parameters), state.jacobian, state.pathAccumulated);
@@ -396,6 +410,7 @@ public:
 
   /// The state update method
   ///
+  /// @param [in,out] state The stepper state for
   /// @param [in] pars The new track parameters at start
   void
   update(State& state, const BoundParameters& pars) const
@@ -434,13 +449,12 @@ public:
       state.covariance   = new ActsSymMatrixD<NGlobalPars>(*pars.covariance());
       state.covTransport = true;
       state.useJacobian  = true;
-      const auto transform = pars.referenceFrame();
-
-      state.pVector[7]  = transform(0, eLOC_0);
-      state.pVector[14] = transform(0, eLOC_1);
-      state.pVector[21] = 0.;
-      state.pVector[28] = 0.;
-      state.pVector[35] = 0.;  // dX /
+      const auto transform = pars.referenceFrame(state.geoContext);
+      state.pVector[7]     = transform(0, eLOC_0);
+      state.pVector[14]    = transform(0, eLOC_1);
+      state.pVector[21]    = 0.;
+      state.pVector[28]    = 0.;
+      state.pVector[35]    = 0.;  // dX /
 
       state.pVector[8]  = transform(1, eLOC_0);
       state.pVector[15] = transform(1, eLOC_1);
@@ -744,7 +758,7 @@ public:
     state.pVector[39] *= p;
     state.pVector[40] *= p;
 
-    const auto fFrame = surface.referenceFrame(gp, mom);
+    const auto fFrame = surface.referenceFrame(state.geoContext, gp, mom);
 
     double Ax[3] = {fFrame(0, 0), fFrame(1, 0), fFrame(2, 0)};
     double Ay[3] = {fFrame(0, 1), fFrame(1, 1), fFrame(2, 1)};
@@ -779,9 +793,9 @@ public:
     if (surface.type() == Surface::Straw
         || surface.type() == Surface::Perigee) {
       // vector from position to center
-      double x = state.pVector[0] - surface.center().x();
-      double y = state.pVector[1] - surface.center().y();
-      double z = state.pVector[2] - surface.center().z();
+      double x = state.pVector[0] - surface.center(state.geoContext).x();
+      double y = state.pVector[1] - surface.center(state.geoContext).y();
+      double z = state.pVector[2] - surface.center(state.geoContext).z();
 
       // this is the projection of the direction onto the local y axis
       double d = state.pVector[3] * Ay[0] + state.pVector[4] * Ay[1]
@@ -897,7 +911,7 @@ public:
     // Jacobian production of transport and to_local
     if (surface.type() == Surface::Disc) {
       // the vector from the disc surface to the p
-      const auto& sfc  = surface.center();
+      const auto& sfc  = surface.center(state.geoContext);
       double      d[3] = {state.pVector[0] - sfc(0),
                      state.pVector[1] - sfc(1),
                      state.pVector[2] - sfc(2)};

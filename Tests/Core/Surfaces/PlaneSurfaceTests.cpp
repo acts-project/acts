@@ -30,6 +30,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   BOOST_AUTO_TEST_SUITE(PlaneSurfaces)
   /// Unit test for creating compliant/non-compliant PlaneSurface object
   BOOST_AUTO_TEST_CASE(PlaneSurfaceConstruction)
@@ -56,11 +60,11 @@ namespace Test {
     auto copiedPlaneSurface
         = Surface::makeShared<PlaneSurface>(*planeSurfaceObject);
     BOOST_CHECK_EQUAL(copiedPlaneSurface->type(), Surface::Plane);
-    BOOST_CHECK_EQUAL(*copiedPlaneSurface, *planeSurfaceObject);
+    BOOST_CHECK(*copiedPlaneSurface == *planeSurfaceObject);
     //
     /// Copied and transformed
-    auto copiedTransformedPlaneSurface
-        = Surface::makeShared<PlaneSurface>(*planeSurfaceObject, *pTransform);
+    auto copiedTransformedPlaneSurface = Surface::makeShared<PlaneSurface>(
+        tgContext, *planeSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedPlaneSurface->type(), Surface::Plane);
 
     /// Construct with nullptr bounds
@@ -82,11 +86,12 @@ namespace Test {
     auto planeSurfaceObject
         = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     //
-    auto pClonedPlaneSurface = planeSurfaceObject->clone();
+    auto pClonedPlaneSurface
+        = planeSurfaceObject->clone(tgContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedPlaneSurface->type(), Surface::Plane);
     // Test clone method with translation
     auto pClonedShiftedPlaneSurface
-        = planeSurfaceObject->clone(pTransform.get());
+        = planeSurfaceObject->clone(tgContext, *pTransform.get());
     // Does it exist at all in a decent state?
     BOOST_CHECK_EQUAL(pClonedShiftedPlaneSurface->type(), Surface::Plane);
     // Is it in the right place?
@@ -96,18 +101,19 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(pTransform2, rBounds);
     // these two surfaces should be equivalent now (prematurely testing equality
     // also)
-    BOOST_CHECK_EQUAL(*pClonedShiftedPlaneSurface, *planeSurfaceObject2);
+    BOOST_CHECK(*pClonedShiftedPlaneSurface == *planeSurfaceObject2);
     // and, trivially, the shifted cloned surface should be different from the
     // original
-    BOOST_CHECK_NE(*pClonedShiftedPlaneSurface, *planeSurfaceObject);
+    BOOST_CHECK(*pClonedShiftedPlaneSurface != *planeSurfaceObject);
     //
     /// Test type (redundant)
     BOOST_CHECK_EQUAL(planeSurfaceObject->type(), Surface::Plane);
     //
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
-    BOOST_CHECK_EQUAL(planeSurfaceObject->binningPosition(BinningValue::binX),
-                      binningPosition);
+    BOOST_CHECK_EQUAL(
+        planeSurfaceObject->binningPosition(tgContext, BinningValue::binX),
+        binningPosition);
     //
     /// Test referenceFrame
     Vector3D         globalPosition{2.0, 2.0, 0.0};
@@ -116,14 +122,14 @@ namespace Test {
     expectedFrame << 1., 0., 0., 0., 1., 0., 0., 0., 1.;
 
     CHECK_CLOSE_OR_SMALL(
-        planeSurfaceObject->referenceFrame(globalPosition, momentum),
+        planeSurfaceObject->referenceFrame(tgContext, globalPosition, momentum),
         expectedFrame,
         1e-6,
         1e-9);
     //
     /// Test normal, given 3D position
     Vector3D normal3D(0., 0., 1.);
-    BOOST_CHECK_EQUAL(planeSurfaceObject->normal(), normal3D);
+    BOOST_CHECK_EQUAL(planeSurfaceObject->normal(tgContext), normal3D);
     //
     /// Test bounds
     BOOST_CHECK_EQUAL(planeSurfaceObject->bounds().type(),
@@ -131,7 +137,8 @@ namespace Test {
 
     /// Test localToGlobal
     Vector2D localPosition{1.5, 1.7};
-    planeSurfaceObject->localToGlobal(localPosition, momentum, globalPosition);
+    planeSurfaceObject->localToGlobal(
+        tgContext, localPosition, momentum, globalPosition);
     //
     // expected position is the translated one
     Vector3D expectedPosition{
@@ -140,21 +147,23 @@ namespace Test {
     CHECK_CLOSE_REL(globalPosition, expectedPosition, 1e-2);
     //
     /// Testing globalToLocal
-    planeSurfaceObject->globalToLocal(globalPosition, momentum, localPosition);
+    planeSurfaceObject->globalToLocal(
+        tgContext, globalPosition, momentum, localPosition);
     Vector2D expectedLocalPosition{1.5, 1.7};
 
     CHECK_CLOSE_REL(localPosition, expectedLocalPosition, 1e-2);
 
     /// Test isOnSurface
     Vector3D offSurface{0, 1, -2.};
-    BOOST_CHECK(
-        planeSurfaceObject->isOnSurface(globalPosition, momentum, true));
-    BOOST_CHECK(!planeSurfaceObject->isOnSurface(offSurface, momentum, true));
+    BOOST_CHECK(planeSurfaceObject->isOnSurface(
+        tgContext, globalPosition, momentum, true));
+    BOOST_CHECK(!planeSurfaceObject->isOnSurface(
+        tgContext, offSurface, momentum, true));
     //
     /// intersectionEstimate
     Vector3D direction{0., 0., 1.};
     auto     intersect = planeSurfaceObject->intersectionEstimate(
-        offSurface, direction, forward, true);
+        tgContext, offSurface, direction, forward, true);
     Intersection expectedIntersect{Vector3D{0, 1, 2}, 4., true, 0};
     BOOST_CHECK(intersect.valid);
     BOOST_CHECK_EQUAL(intersect.position, expectedIntersect.position);
@@ -173,7 +182,7 @@ namespace Test {
     /// Test dump
     // TODO 2017-04-12 msmk: check how to correctly check output
     //    boost::test_tools::output_test_stream dumpOuput;
-    //    planeSurfaceObject.dump(dumpOuput);
+    //    planeSurfaceObject.toStream(dumpOuput);
     //    BOOST_CHECK(dumpOuput.is_equal(
     //      "Acts::PlaneSurface\n"
     //      "    Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n"
@@ -197,7 +206,7 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(pTransform, rBounds);
     //
     /// Test equality operator
-    BOOST_CHECK_EQUAL(*planeSurfaceObject, *planeSurfaceObject2);
+    BOOST_CHECK(*planeSurfaceObject == *planeSurfaceObject2);
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a PlaneSurface object to the existing one");
@@ -206,7 +215,7 @@ namespace Test {
         = Surface::makeShared<PlaneSurface>(nullptr, nullptr);
     *assignedPlaneSurface = *planeSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_CHECK_EQUAL(*assignedPlaneSurface, *planeSurfaceObject);
+    BOOST_CHECK(*assignedPlaneSurface == *planeSurfaceObject);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

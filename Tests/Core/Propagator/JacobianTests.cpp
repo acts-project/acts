@@ -24,6 +24,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -35,6 +37,10 @@ namespace Test {
   using BFieldType       = ConstantBField;
   using EigenStepperType = EigenStepper<BFieldType>;
   using AtlasStepperType = AtlasStepper<BFieldType>;
+
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// Helper method to create a transform for a plane
   /// to mimic detector situations, the plane is roughly
@@ -130,9 +136,9 @@ namespace Test {
   {
     // Jacobian creation for Propagator/Steppers
     // a) ATLAS stepper
-    AtlasStepperType::State astepState(pars);
+    AtlasStepperType::State astepState(tgContext, mfContext, pars);
     // b) Eigen stepper
-    EigenStepperType::State estepState(pars);
+    EigenStepperType::State estepState(tgContext, mfContext, pars);
 
     // create the matrices
     auto asMatrix = convertToMatrix(astepState.pVector);
@@ -177,7 +183,8 @@ namespace Test {
     ActsVectorD<NGlobalPars> pars;
     pars << 182.34, -82., 0.134, 0.85, 1. / (100 * units::_GeV);
 
-    BoundParameters atCylinder(std::move(covPtr), std::move(pars), cSurface);
+    BoundParameters atCylinder(
+        tgContext, std::move(covPtr), std::move(pars), cSurface);
 
     // run the test
     testJacobianToGlobal(atCylinder);
@@ -200,7 +207,8 @@ namespace Test {
     ActsVectorD<NGlobalPars> pars;
     pars << 192.34, 1.823, 0.734, 0.235, 1. / (100 * units::_GeV);
 
-    BoundParameters atDisc(std::move(covPtr), std::move(pars), dSurface);
+    BoundParameters atDisc(
+        tgContext, std::move(covPtr), std::move(pars), dSurface);
 
     // run the test
     testJacobianToGlobal(atDisc);
@@ -224,7 +232,8 @@ namespace Test {
     ActsVectorD<NGlobalPars> pars;
     pars << 12.34, -8722., 2.134, 0.85, 1. / (100 * units::_GeV);
 
-    BoundParameters atPlane(std::move(covPtr), std::move(pars), pSurface);
+    BoundParameters atPlane(
+        tgContext, std::move(covPtr), std::move(pars), pSurface);
 
     // run the test
     testJacobianToGlobal(atPlane);
@@ -245,7 +254,8 @@ namespace Test {
     ActsVectorD<NGlobalPars> pars;
     pars << -3.34, -822., -0.734, 0.85, 1. / (100 * units::_GeV);
 
-    BoundParameters perigee(std::move(covPtr), std::move(pars), pSurface);
+    BoundParameters perigee(
+        tgContext, std::move(covPtr), std::move(pars), pSurface);
 
     // run the test
     testJacobianToGlobal(perigee);
@@ -266,7 +276,8 @@ namespace Test {
     ActsVectorD<NGlobalPars> pars;
     pars << -8.34, 812., 0.734, 0.25, 1. / (100 * units::_GeV);
 
-    BoundParameters atStraw(std::move(covPtr), std::move(pars), sSurface);
+    BoundParameters atStraw(
+        tgContext, std::move(covPtr), std::move(pars), sSurface);
 
     // run the test
     testJacobianToGlobal(atStraw);

@@ -9,7 +9,13 @@
 #pragma once
 
 #include <cmath>
+#include <functional>
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/Propagator/detail/ConstrainedStep.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -50,15 +56,22 @@ public:
   struct State
   {
 
+    /// Delete the default constructor
+    State() = delete;
+
     /// Constructor from the initial track parameters
     ///
     /// @tparam parameters_t the Type of the track parameters
     ///
+    /// @param [in] gctx is the context object for the geometery
+    /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
     /// @param [in] dir is the navigation direction
     /// @param [in] ssize is the (absolute) maximum step size
     template <typename parameters_t>
-    explicit State(const parameters_t& par,
+    explicit State(std::reference_wrapper<const GeometryContext> gctx,
+                   std::reference_wrapper<const MagneticFieldContext> /*mctx*/,
+                   const parameters_t& par,
                    NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
       : pos(par.position())
@@ -67,6 +80,7 @@ public:
       , q(par.charge())
       , navDir(ndir)
       , stepSize(ssize)
+      , geoContext(gctx)
     {
     }
 
@@ -94,6 +108,9 @@ public:
 
     /// adaptive step size of the runge-kutta integration
     cstep stepSize = std::numeric_limits<double>::max();
+
+    // Cache the geometry context of this propagation
+    std::reference_wrapper<const GeometryContext> geoContext;
   };
 
   /// Always use the same propagation state type, independently of the initial
@@ -105,6 +122,10 @@ public:
   /// - otherwise CurvilinearParameters
   template <typename parameters_t, typename surface_t = int>
   using return_parameter_type = typename s<parameters_t, surface_t>::type;
+
+  /// Intermediate track parameters are always in curvilinear parametrization
+  template <typename parameters_t>
+  using step_parameter_type = CurvilinearParameters;
 
   /// Constructor
   StraightLineStepper() = default;
@@ -158,7 +179,8 @@ public:
   bool
   surfaceReached(const State& state, const Surface* surface) const
   {
-    return surface->isOnSurface(position(state), direction(state), true);
+    return surface->isOnSurface(
+        state.geoContext, position(state), direction(state), true);
   }
 
   /// Create and return the bound state at the current position
@@ -177,7 +199,8 @@ public:
   boundState(State& state, const Surface& surface, bool /*unused*/) const
   {
     // Create the bound parameters
-    BoundParameters parameters(nullptr,
+    BoundParameters parameters(state.geoContext,
+                               nullptr,
                                state.pos,
                                state.p * state.dir,
                                state.q,
@@ -277,6 +300,7 @@ public:
   ///        state should be reinitialized at the new
   ///        position
   /// @note no check is done if the position is actually on the surface
+  ///
   void
   covarianceTransport(State& /*unused*/,
                       const Surface& /*surface*/,

@@ -52,7 +52,8 @@ Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
 Acts::Volume::~Volume() = default;
 
 const Acts::Vector3D
-Acts::Volume::binningPosition(Acts::BinningValue bValue) const
+Acts::Volume::binningPosition(const GeometryContext& /*gctx*/,
+                              Acts::BinningValue bValue) const
 {
   // for most of the binning types it is actually the center,
   // just for R-binning types the

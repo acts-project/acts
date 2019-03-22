@@ -17,7 +17,7 @@
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
-
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
 
@@ -28,6 +28,10 @@ namespace Acts {
 
 namespace Test {
   namespace Layers {
+
+    // Build a default context for testing
+    GeometryContext tgContext = GeometryContext();
+
     BOOST_AUTO_TEST_SUITE(Layers)
 
     /// Unit test for creating compliant/non-compliant GenericApproachDescriptor
@@ -68,8 +72,8 @@ namespace Test {
       // registerLayer()
       BOOST_CHECK_NO_THROW(approachDescriptor.registerLayer(aLayer));
       // approachSurface
-      SurfaceIntersection surfIntersection
-          = approachDescriptor.approachSurface(origin, zDir, forward, bcheck);
+      SurfaceIntersection surfIntersection = approachDescriptor.approachSurface(
+          tgContext, origin, zDir, forward, bcheck);
       double expectedIntersection = 20.0;  // property of SurfaceStub
       CHECK_CLOSE_REL(
           surfIntersection.intersection.pathLength, expectedIntersection, 1e-6);

@@ -11,35 +11,40 @@
 ///////////////////////////////////////////////////////////////////
 
 inline const Vector3D
-PlaneSurface::normal(const Vector2D& /*lpos*/) const
+PlaneSurface::normal(const GeometryContext& gctx,
+                     const Vector2D& /*lpos*/) const
 {
   // fast access via tranform matrix (and not rotation())
-  const auto& tMatrix = transform().matrix();
+  const auto& tMatrix = transform(gctx).matrix();
   return Vector3D(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));
 }
 
 inline const Vector3D
-    PlaneSurface::binningPosition(BinningValue /*bValue*/) const
+PlaneSurface::binningPosition(const GeometryContext& gctx,
+                              BinningValue /*bValue*/) const
 {
-  return center();
+  return center(gctx);
 }
 
 inline double
-PlaneSurface::pathCorrection(const Vector3D& pos, const Vector3D& mom) const
+PlaneSurface::pathCorrection(const GeometryContext& gctx,
+                             const Vector3D&        pos,
+                             const Vector3D&        mom) const
 {
   /// we can ignore the global position here
-  return 1. / std::abs(Surface::normal(pos).dot(mom.normalized()));
+  return 1. / std::abs(Surface::normal(gctx, pos).dot(mom.normalized()));
 }
 
 inline Intersection
-PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
-                                   const Vector3D&      gdir,
-                                   NavigationDirection  navDir,
-                                   const BoundaryCheck& bcheck,
-                                   CorrFnc              correct) const
+PlaneSurface::intersectionEstimate(const GeometryContext& gctx,
+                                   const Vector3D&        gpos,
+                                   const Vector3D&        gdir,
+                                   NavigationDirection    navDir,
+                                   const BoundaryCheck&   bcheck,
+                                   CorrFnc                correct) const
 {
   // minimize the call to transform()
-  const auto&    tMatrix = transform().matrix();
+  const auto&    tMatrix = transform(gctx).matrix();
   const Vector3D pnormal = tMatrix.block<3, 1>(0, 2).transpose();
   const Vector3D pcenter = tMatrix.block<3, 1>(0, 3).transpose();
   // return solution and path
@@ -70,7 +75,7 @@ PlaneSurface::intersectionEstimate(const Vector3D&      gpos,
   // evaluate (if necessary in terms of boundaries)
   // @todo: speed up isOnSurface - we know that it is on surface
   //  all we need is to check if it's inside bounds
-  valid = bcheck ? (valid && isOnSurface(solution, gdir, bcheck)) : valid;
+  valid = bcheck ? (valid && isOnSurface(gctx, solution, gdir, bcheck)) : valid;
   // return the result
   return Intersection(solution, path, valid);
 }

@@ -49,7 +49,7 @@ Acts::DD4hepLayerBuilder::setConfiguration(
 }
 
 const Acts::LayerVector
-Acts::DD4hepLayerBuilder::negativeLayers() const
+Acts::DD4hepLayerBuilder::negativeLayers(const GeometryContext& gctx) const
 {
   LayerVector layers;
   if (m_cfg.negativeLayers.empty()) {
@@ -77,7 +77,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
-      ProtoLayer pl(layerSurfaces);
+      ProtoLayer pl(gctx, layerSurfaces);
       if (detExtension->buildEnvelope()) {
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
@@ -241,7 +241,8 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
 
       } else {
         negativeLayer
-            = m_cfg.layerCreator->discLayer(layerSurfaces,
+            = m_cfg.layerCreator->discLayer(gctx,
+                                            layerSurfaces,
                                             m_cfg.bTypeR,
                                             m_cfg.bTypePhi,
                                             pl,
@@ -278,7 +279,7 @@ Acts::DD4hepLayerBuilder::negativeLayers() const
 }
 
 const Acts::LayerVector
-Acts::DD4hepLayerBuilder::centralLayers() const
+Acts::DD4hepLayerBuilder::centralLayers(const GeometryContext& gctx) const
 {
   LayerVector layers;
   if (m_cfg.centralLayers.empty()) {
@@ -306,7 +307,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
-      ProtoLayer pl(layerSurfaces);
+      ProtoLayer pl(gctx, layerSurfaces);
       if (detExtension->buildEnvelope()) {
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
@@ -448,7 +449,8 @@ Acts::DD4hepLayerBuilder::centralLayers() const
 
       } else {
         centralLayer
-            = m_cfg.layerCreator->cylinderLayer(layerSurfaces,
+            = m_cfg.layerCreator->cylinderLayer(gctx,
+                                                layerSurfaces,
                                                 m_cfg.bTypePhi,
                                                 m_cfg.bTypeZ,
                                                 pl,
@@ -486,7 +488,7 @@ Acts::DD4hepLayerBuilder::centralLayers() const
 }
 
 const Acts::LayerVector
-Acts::DD4hepLayerBuilder::positiveLayers() const
+Acts::DD4hepLayerBuilder::positiveLayers(const GeometryContext& gctx) const
 {
   LayerVector layers;
   if (m_cfg.positiveLayers.empty()) {
@@ -514,7 +516,7 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
       TGeoShape* geoShape
           = detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
-      ProtoLayer pl(layerSurfaces);
+      ProtoLayer pl(gctx, layerSurfaces);
       if (detExtension->buildEnvelope()) {
         // set the values of the proto layer in case enevelopes are handed over
         pl.envR = {detExtension->envelopeR(), detExtension->envelopeR()};
@@ -674,7 +676,8 @@ Acts::DD4hepLayerBuilder::positiveLayers() const
 
       } else {
         positiveLayer
-            = m_cfg.layerCreator->discLayer(layerSurfaces,
+            = m_cfg.layerCreator->discLayer(gctx,
+                                            layerSurfaces,
                                             m_cfg.bTypeR,
                                             m_cfg.bTypePhi,
                                             pl,

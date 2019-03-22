@@ -87,7 +87,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    triangleBoundsObject.dump(dumpOuput);
+    triangleBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal(
         "Acts::TriangleBounds:  generating vertices (X, Y)(1.0000000 , 1.0000000) \n\
 (4.0000000 , 1.0000000) \n\

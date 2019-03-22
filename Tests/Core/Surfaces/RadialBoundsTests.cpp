@@ -71,7 +71,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    radialBoundsObject.dump(dumpOuput);
+    radialBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal("Acts::RadialBounds:  (innerRadius, "
                                    "outerRadius, hPhiSector) = (1.0000000, "
                                    "5.0000000, 0.0000000, 0.3926991)"));

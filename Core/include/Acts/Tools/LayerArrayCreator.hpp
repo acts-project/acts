@@ -23,6 +23,7 @@
 #include <algorithm>
 #include "Acts/Tools/ILayerArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -43,10 +44,16 @@ class Layer;
 class LayerArrayCreator : public ILayerArrayCreator
 {
 public:
+  /// @brief This struct stores the configuration of the tracking geometry
+  struct Config
+  {
+  };
+
   /// Constructor
   ///
   /// @param logger logging instance
-  LayerArrayCreator(std::unique_ptr<const Logger> logger
+  LayerArrayCreator(const Config& /*cfg*/,
+                    std::unique_ptr<const Logger> logger
                     = getDefaultLogger("LayerArrayCreator", Logging::INFO))
     : m_logger(std::move(logger))
   {
@@ -57,6 +64,7 @@ public:
 
   /// LayerArrayCreator interface method
   ///
+  /// @param gctx ist the geometry context for witch the array is built
   /// @param layersInput are the layers to be moved into an array
   /// @param min is the minimum value for binning
   /// @param max is the maximum value for binning
@@ -65,11 +73,12 @@ public:
   ///
   /// @return unique pointer to a newly created LayerArray
   std::unique_ptr<const LayerArray>
-  layerArray(const LayerVector& layersInput,
-             double             min,
-             double             max,
-             BinningType        bType  = arbitrary,
-             BinningValue       bValue = binX) const override;
+  layerArray(const GeometryContext& gctx,
+             const LayerVector&     layersInput,
+             double                 min,
+             double                 max,
+             BinningType            bType  = arbitrary,
+             BinningValue           bValue = binX) const override;
 
   /// set logging instance
   void
@@ -87,14 +96,20 @@ private:
   }
 
   /// logging instance
-  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_logger = nullptr;
 
   /// Private helper method for creating a surface for
-  /// the NavigationLayer
+  /// the NavigationLayer, it clones the
+  /// @param layer object and thus needs the
+  /// @param gctx geometry context.
+  ///
+  /// @param bValue is the Binning value for the layer array
+  /// @param offset is the sift for the navigation layer
   std::shared_ptr<Surface>
-  createNavigationSurface(const Layer& layer,
-                          BinningValue bValue,
-                          double       offset) const;
+  createNavigationSurface(const GeometryContext& gctx,
+                          const Layer&           layer,
+                          BinningValue           bValue,
+                          double                 offset) const;
 };
 
 }  // namespace

@@ -21,6 +21,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -31,6 +32,10 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(TestSolenoidBField)
   {
+
+    // Create a test context
+    MagneticFieldContext mfContext = MagneticFieldContext();
+
     SolenoidBField::Config cfg;
     cfg.length     = 5.8 * Acts::units::_m;
     cfg.radius     = (2.56 + 2.46) * 0.5 * 0.5 * Acts::units::_m;
@@ -38,7 +43,7 @@ namespace Test {
     cfg.bMagCenter = 2. * Acts::units::_T;
     SolenoidBField bField(cfg);
 
-    SolenoidBField::Cache cache;
+    SolenoidBField::Cache cache(mfContext);
     CHECK_CLOSE_ABS(bField.getField({0, 0, 0}, cache),
                     Vector3D(0, 0, 2.0 * Acts::units::_T),
                     1e-6 * Acts::units::_T);

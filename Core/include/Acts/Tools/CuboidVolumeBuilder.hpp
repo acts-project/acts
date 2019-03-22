@@ -13,6 +13,7 @@
 #include <vector>
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -92,11 +93,11 @@ public:
   struct Config
   {
     // Center position
-    Vector3D position;
+    Vector3D position = Vector3D(0., 0., 0.);
     // Length in x,y,z
-    Vector3D length;
+    Vector3D length = Vector3D(0., 0., 0.);
     // Configuration of its volumes
-    std::vector<VolumeConfig> volumeCfg;
+    std::vector<VolumeConfig> volumeCfg = {};
   };
 
   /// @brief Default constructor without a configuration
@@ -119,45 +120,56 @@ public:
   /// @brief This function creates a surface with a given configuration. A
   /// detector element is attached if the template parameter is non-void.
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param [in] cfg Configuration of the surface
+  ///
   /// @return Pointer to the created surface
   std::shared_ptr<const PlaneSurface>
-  buildSurface(const SurfaceConfig& cfg) const;
+  buildSurface(const GeometryContext& gctx, const SurfaceConfig& cfg) const;
 
   /// @brief This function creates a layer with a surface encaspulated with a
   /// given configuration. The surface gets a detector element attached if the
   /// template parameter is non-void.
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param [in, out] cfg Configuration of the layer and the surface
+  ///
   /// @return Pointer to the created layer
   std::shared_ptr<const Layer>
-  buildLayer(LayerConfig& cfg) const;
+  buildLayer(const GeometryContext& gctx, LayerConfig& cfg) const;
 
   /// @brief This function creates a TrackingVolume with a configurable number
   /// of layers and surfaces. Each surface gets a detector element attached if
   /// the template parameter is non-void.
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param [in, out] cfg Configuration of the TrackingVolume
+  ///
   /// @return Pointer to the created TrackingVolume
   std::shared_ptr<TrackingVolume>
-  buildVolume(VolumeConfig& cfg) const;
+  buildVolume(const GeometryContext& gctx, VolumeConfig& cfg) const;
 
   /// @brief This function evaluates the minimum and maximum of the binning as
   /// given by the configurations of the surfaces and layers. The ordering
   /// depends on the binning value specified in the configuration of the volume.
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param [in] cfg Container with the given surfaces and layers
+  ///
   /// @return Pair containing the minimum and maximum along the binning
   /// direction
   std::pair<double, double>
-  binningRange(const VolumeConfig& cfg) const;
+  binningRange(const GeometryContext& gctx, const VolumeConfig& cfg) const;
 
   /// @brief This function builds a world TrackingVolume based on a given
   /// configuration
   ///
+  /// @param [in] gctx the geometry context for this building
+  ///
   /// @return Pointer to the created TrackingGeometry
   std::shared_ptr<TrackingVolume>
-  trackingVolume(std::shared_ptr<const TrackingVolume> /*unused*/,
+  trackingVolume(const GeometryContext& gctx,
+                 std::shared_ptr<const TrackingVolume> /*unused*/,
                  std::shared_ptr<const VolumeBounds> /*unused*/) const override;
 
 private:

@@ -15,6 +15,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -63,19 +64,31 @@ public:
   ~PassiveLayerBuilder() override = default;
 
   /// LayerBuilder interface method
+  ///
+  /// @param gctx ist the geometry context under
+  /// which the geometry is built
+  ///
   /// @return  the layers at negative side
   const LayerVector
-  negativeLayers() const override;
+  negativeLayers(const GeometryContext& gctx) const override;
 
   /// LayerBuilder interface method
+  ///
+  /// @param gctx ist the geometry context under
+  /// which the geometry is built
+  ///
   /// @return the layers at the central sector
   const LayerVector
-  centralLayers() const override;
+  centralLayers(const GeometryContext& gctx) const override;
 
   /// LayerBuilder interface method
+  ///
+  /// @param gctx ist the geometry context under
+  /// which the geometry is built
+  ///
   /// @return  the layers at positive side
   const LayerVector
-  positiveLayers() const override;
+  positiveLayers(const GeometryContext& gctx) const override;
 
   /// Name identification
   /// @return the string based identification
@@ -106,6 +119,16 @@ protected:
   Config m_cfg;  //!< configuration
 
 private:
+  /// Helper interface method
+  ///
+  /// @param gctx ist the geometry context under
+  /// which the geometry is built
+  /// @param side is the side of the layer to be built
+  ///
+  /// @return  the layers at positive side
+  const LayerVector
+  endcapLayers(const GeometryContext& gctx, int side) const;
+
   const Logger&
   logger() const
   {
@@ -114,37 +137,12 @@ private:
 
   /// logging instance
   std::unique_ptr<const Logger> m_logger;
-
-  void
-  constructLayers();
-
-  LayerVector m_nLayers;  ///< layers on negative side
-  LayerVector m_cLayers;  ///< layers on central side
-  LayerVector m_pLayers;  ///< layers on positive side
 };
 
 inline PassiveLayerBuilder::Config
 PassiveLayerBuilder::getConfiguration() const
 {
   return m_cfg;
-}
-
-inline const LayerVector
-PassiveLayerBuilder::positiveLayers() const
-{
-  return m_pLayers;
-}
-
-inline const LayerVector
-PassiveLayerBuilder::negativeLayers() const
-{
-  return m_nLayers;
-}
-
-inline const LayerVector
-PassiveLayerBuilder::centralLayers() const
-{
-  return m_cLayers;
 }
 
 }  // namespace

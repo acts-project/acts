@@ -107,7 +107,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    ellipseBoundsObject.dump(dumpOuput);
+    ellipseBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal(
         "Acts::EllipseBounds:  (innerRadiusX, innerRadiusY, outerRadiusX, "
         "outerRadiusY, hPhiSector) = (10.0000000, 15.0000000, 15.0000000, "

@@ -87,8 +87,9 @@ public:
   SpacePointBuilder(DoubleHitSpacePointConfig cfg);
 
   /// @brief Searches possible combinations of two clusters on different
-  /// surfaces
-  /// that may come from the same particles
+  /// surfaces that may come from the same particles
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param clustersFront vector of clusters on a surface
   /// @param clustersBack vector of clusters on another surface
   /// @param clusterPairs storage of the cluster pairs
@@ -96,6 +97,7 @@ public:
   /// clusters[Independent clusters on a single surface]
   void
   makeClusterPairs(
+      const GeometryContext&                         gctx,
       const std::vector<const PlanarModuleCluster*>& clustersFront,
       const std::vector<const PlanarModuleCluster*>& clustersBack,
       std::vector<std::pair<const PlanarModuleCluster*,
@@ -103,11 +105,14 @@ public:
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// on several strip detectors and stores the data
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param clusterPairs pairs of clusters that are space point candidates
   /// @param spacePoints storage of the results
   /// @note If no configuration is set, the default values will be used
   void
   calculateSpacePoints(
+      const GeometryContext& gctx,
       const std::vector<std::pair<const PlanarModuleCluster*,
                                   const PlanarModuleCluster*>>& clusterPairs,
       std::vector<DoubleHitSpacePoint>& spacePoints) const;
@@ -161,7 +166,8 @@ private:
   /// information
   /// @return vector of the global coordinates of the cluster
   Vector3D
-  globalCoords(const PlanarModuleCluster& cluster) const;
+  globalCoords(const GeometryContext&     gctx,
+               const PlanarModuleCluster& cluster) const;
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two clusters
   /// @param pos1 position of the first cluster
@@ -175,7 +181,8 @@ private:
   /// @param cluster object that stores the information about the hit
   /// @return vectors to the top and bottom end of the SDE
   std::pair<Vector3D, Vector3D>
-  endsOfStrip(const PlanarModuleCluster& cluster) const;
+  endsOfStrip(const GeometryContext&     gctx,
+              const PlanarModuleCluster& cluster) const;
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data

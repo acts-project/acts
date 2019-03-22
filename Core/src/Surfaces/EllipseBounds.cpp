@@ -177,7 +177,7 @@ Acts::EllipseBounds::boundingBox() const
 
 // ostream operator overload
 std::ostream&
-Acts::EllipseBounds::dump(std::ostream& sl) const
+Acts::EllipseBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

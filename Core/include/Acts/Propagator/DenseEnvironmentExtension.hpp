@@ -8,9 +8,12 @@
 
 #pragma once
 
+#include <functional>
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -455,6 +458,23 @@ template <typename action_list_t  = ActionList<>,
 struct DenseStepperPropagatorOptions
     : public PropagatorOptions<action_list_t, aborter_list_t>
 {
+
+  /// Copy Constructor
+  DenseStepperPropagatorOptions(
+      const DenseStepperPropagatorOptions<action_list_t, aborter_list_t>& dspo)
+      = default;
+
+  /// Constructor with GeometryContext
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param mctx The current magnetic fielc context object
+  DenseStepperPropagatorOptions(
+      std::reference_wrapper<const GeometryContext>      gctx,
+      std::reference_wrapper<const MagneticFieldContext> mctx)
+    : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx)
+  {
+  }
+
   /// Toggle between mean and mode evaluation of energy loss
   bool meanEnergyLoss = true;
 
@@ -474,7 +494,7 @@ struct DenseStepperPropagatorOptions
   extend(extended_aborter_list_t aborters) const
   {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions;
+        eoptions(this->geoContext, this->magFieldContext);
     // Copy the options over
     eoptions.direction       = this->direction;
     eoptions.absPdgCode      = this->absPdgCode;

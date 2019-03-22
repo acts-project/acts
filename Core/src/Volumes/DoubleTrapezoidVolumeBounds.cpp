@@ -263,7 +263,7 @@ Acts::DoubleTrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
 
 // ostream operator overload
 std::ostream&
-Acts::DoubleTrapezoidVolumeBounds::dump(std::ostream& sl) const
+Acts::DoubleTrapezoidVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
 }

@@ -107,7 +107,7 @@ public:
   ///
   /// @param sl The outoput stream
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
 private:
   /// The five different MaterialProperties

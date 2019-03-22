@@ -12,7 +12,6 @@
 
 #include <functional>
 
-#include "Acts/Detector/DetachedTrackingVolume.hpp"
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Layers/Layer.hpp"
@@ -32,38 +31,14 @@ Acts::TrackingGeometry::TrackingGeometry(
 Acts::TrackingGeometry::~TrackingGeometry() = default;
 
 const Acts::TrackingVolume*
-Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::lowestTrackingVolume(const GeometryContext& gctx,
+                                             const Acts::Vector3D&  gp) const
 {
   const TrackingVolume* searchVolume  = m_world.get();
   const TrackingVolume* currentVolume = nullptr;
   while (currentVolume != searchVolume && (searchVolume != nullptr)) {
     currentVolume = searchVolume;
-    searchVolume  = searchVolume->trackingVolume(gp);
-  }
-  return currentVolume;
-}
-
-const Acts::DetachedVolumeVector*
-Acts::TrackingGeometry::lowestDetachedTrackingVolumes(const Vector3D& gp) const
-{
-  double                tol           = 0.001;
-  const TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
-  if (currentVolume != nullptr) {
-    return currentVolume->detachedTrackingVolumes(gp, tol);
-  }
-  return nullptr;
-}
-
-const Acts::TrackingVolume*
-Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
-{
-  const TrackingVolume* searchVolume  = m_world.get();
-  const TrackingVolume* currentVolume = nullptr;
-  while (currentVolume != searchVolume && (searchVolume != nullptr)) {
-    currentVolume = searchVolume;
-    if ((searchVolume->confinedDetachedVolumes()).empty()) {
-      searchVolume = searchVolume->trackingVolume(gp);
-    }
+    searchVolume  = searchVolume->lowestTrackingVolume(gctx, gp);
   }
   return currentVolume;
 }
@@ -93,10 +68,11 @@ Acts::TrackingGeometry::trackingVolume(const std::string& name) const
 }
 
 const Acts::Layer*
-Acts::TrackingGeometry::associatedLayer(const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::associatedLayer(const GeometryContext& gctx,
+                                        const Acts::Vector3D&  gp) const
 {
-  const TrackingVolume* lowestVol = (lowestTrackingVolume(gp));
-  return lowestVol->associatedLayer(gp);
+  const TrackingVolume* lowestVol = (lowestTrackingVolume(gctx, gp));
+  return lowestVol->associatedLayer(gctx, gp);
 }
 
 void

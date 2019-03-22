@@ -84,19 +84,28 @@ public:
   ~DD4hepLayerBuilder() override;
 
   /// LayerBuilder interface method
+  ///
+  /// @param gctx the geometry context for this build call
+  ///
   /// @return  the layers at negative side
   const LayerVector
-  negativeLayers() const final;
+  negativeLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method
+  ///
+  /// @param gctx the geometry context for this build call
+  ///
   /// @return the layers at the central sector
   const LayerVector
-  centralLayers() const final;
+  centralLayers(const GeometryContext& gctx) const final;
 
   /// LayerBuilder interface method
+  ///
+  /// @param gctx the geometry context for this build call
+  ///
   /// @return  the layers at positive side
   const LayerVector
-  positiveLayers() const final;
+  positiveLayers(const GeometryContext& gctx) const final;
 
   /// Name identification
   /// @return the string based identification of this configuration
@@ -132,6 +141,7 @@ private:
 
   /// Private helper function collecting all sensitive detector elements of a
   /// layer
+  /// @param gctx the geometry context of this call
   /// @param detElement the DD4hep::DetElement of the layer
   /// @param surfaces the vector of surfaces which should be filled with the
   /// sensitive detector elements

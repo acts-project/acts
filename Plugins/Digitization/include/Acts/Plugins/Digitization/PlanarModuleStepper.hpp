@@ -11,6 +11,7 @@
 #include <vector>
 #include "Acts/Plugins/Digitization/DigitizationCell.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -38,25 +39,29 @@ public:
 
   /// Calculate the steps caused by this track - full simulation interface
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param dmodule is the digitization module
   /// @param startPoint is the starting position of the stepping
   /// @param endPoint is the end postion of the stepping
   ///
   /// @return is the vector of digitization steps
   std::vector<DigitizationStep>
-  cellSteps(const DigitizationModule& dmodule,
+  cellSteps(const GeometryContext&    gctx,
+            const DigitizationModule& dmodule,
             const Vector3D&           startPoint,
             const Vector3D&           endPoint) const;
 
   /// Calculate the steps caused by this track - fast simulation interface
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param dmodule is the digitization module
   /// @param moduleIntersection is the 2d intersection at the module surface
   /// @param trackDirection is the track direction at the instersection
   ///
   /// @return is the vector of digitization steps
   std::vector<DigitizationStep>
-  cellSteps(const DigitizationModule& dmodule,
+  cellSteps(const GeometryContext&    gctx,
+            const DigitizationModule& dmodule,
             const Vector2D&           moduleIntersection,
             const Vector3D&           trackDirection) const;
 

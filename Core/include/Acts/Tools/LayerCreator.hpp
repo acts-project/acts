@@ -13,10 +13,11 @@
 #pragma once
 
 #include <boost/optional.hpp>
+#include "Acts/Layers/ApproachDescriptor.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Utilities/ApproachDescriptor.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #ifndef ACTS_LAYERCREATOR_TAKESMALLERBIGGER
@@ -57,8 +58,7 @@ public:
     double cylinderZtolerance{10.};
     /// cylinder module phi tolerance : it counts at same phi, if ...
     double cylinderPhiTolerance{0.1};
-
-    // standard constructor
+    /// standard constructor
     Config() = default;
   };
 
@@ -75,6 +75,7 @@ public:
 
   /// returning a cylindrical layer
   ///
+  /// @param gctx ist the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -90,7 +91,8 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  cylinderLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+  cylinderLayer(const GeometryContext&                      gctx,
+                std::vector<std::shared_ptr<const Surface>> surfaces,
                 size_t                                      binsPhi,
                 size_t                                      binsZ,
                 boost::optional<ProtoLayer>         _protoLayer = boost::none,
@@ -99,6 +101,7 @@ public:
 
   /// returning a cylindrical layer
   ///
+  /// @param gctx ist the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -114,7 +117,8 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  cylinderLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+  cylinderLayer(const GeometryContext&                      gctx,
+                std::vector<std::shared_ptr<const Surface>> surfaces,
                 BinningType                                 bTypePhi,
                 BinningType                                 bTypeZ,
                 boost::optional<ProtoLayer>         _protoLayer = boost::none,
@@ -123,6 +127,7 @@ public:
 
   /// returning a disc layer
   ///
+  /// @param gctx ist the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -138,7 +143,8 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  discLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+  discLayer(const GeometryContext&                      gctx,
+            std::vector<std::shared_ptr<const Surface>> surfaces,
             size_t                                      binsR,
             size_t                                      binsPhi,
             boost::optional<ProtoLayer>         _protoLayer = boost::none,
@@ -147,6 +153,7 @@ public:
 
   /// returning a disc layer
   ///
+  /// @param gctx ist the geometry context with which the geometry is built
   /// @param surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -162,7 +169,8 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  discLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+  discLayer(const GeometryContext&                      gctx,
+            std::vector<std::shared_ptr<const Surface>> surfaces,
             BinningType                                 bTypeR,
             BinningType                                 bTypePhi,
             boost::optional<ProtoLayer>         _protoLayer = boost::none,
@@ -171,6 +179,7 @@ public:
 
   /// returning a plane layer
   ///
+  /// @param gctx ist the geometry context with which the geometry is built
   /// @param [in] surfaces is the vector of pointers to sensitive surfaces
   /// represented by this layer
   /// @pre the pointers to the sensitive surfaces in the surfaces vectors all
@@ -190,7 +199,8 @@ public:
   ///
   /// @return shared pointer to a newly created layer
   MutableLayerPtr
-  planeLayer(std::vector<std::shared_ptr<const Surface>> surfaces,
+  planeLayer(const GeometryContext&                      gctx,
+             std::vector<std::shared_ptr<const Surface>> surfaces,
              size_t                                      bins1,
              size_t                                      bins2,
              BinningValue                        bValue = BinningValue::binX,
@@ -223,7 +233,7 @@ private:
   /// @param surfGrid is the object grid from the surface array
   /// @para surfaces is the vector of sensitive surfaces
   bool
-  checkBinning(const SurfaceArray& sArray) const;
+  checkBinning(const GeometryContext& gctx, const SurfaceArray& sArray) const;
 
   /// configuration object
   Config m_cfg;

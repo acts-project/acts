@@ -29,9 +29,10 @@ Acts::ConeSurface::ConeSurface(const ConeSurface& other)
 {
 }
 
-Acts::ConeSurface::ConeSurface(const ConeSurface& other,
-                               const Transform3D& transf)
-  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
+Acts::ConeSurface::ConeSurface(const GeometryContext& gctx,
+                               const ConeSurface&     other,
+                               const Transform3D&     transf)
+  : GeometryObject(), Surface(gctx, other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -63,16 +64,20 @@ Acts::ConeSurface::ConeSurface(std::shared_ptr<const Transform3D>       htrans,
 }
 
 const Acts::Vector3D
-Acts::ConeSurface::binningPosition(Acts::BinningValue bValue) const
+Acts::ConeSurface::binningPosition(const GeometryContext& gctx,
+                                   Acts::BinningValue     bValue) const
 {
+
+  const Vector3D& sfCenter = center(gctx);
+
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     return Vector3D(
-        center().x() + bounds().r(center().z()), center().y(), center().z());
+        sfCenter.x() + bounds().r(sfCenter.z()), sfCenter.y(), sfCenter.z());
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return center();
+  return sfCenter;
 }
 
 Acts::Surface::SurfaceType
@@ -92,19 +97,20 @@ Acts::ConeSurface::operator=(const ConeSurface& other)
 }
 
 const Acts::Vector3D
-Acts::ConeSurface::rotSymmetryAxis() const
+Acts::ConeSurface::rotSymmetryAxis(const GeometryContext& gctx) const
 {
-  return std::move(transform().matrix().block<3, 1>(0, 2));
+  return std::move(transform(gctx).matrix().block<3, 1>(0, 2));
 }
 
 const Acts::RotationMatrix3D
-Acts::ConeSurface::referenceFrame(const Vector3D& pos,
-                                  const Vector3D& /*gmom*/) const
+Acts::ConeSurface::referenceFrame(const GeometryContext& gctx,
+                                  const Vector3D&        pos,
+                                  const Vector3D& /*unused*/) const
 {
   RotationMatrix3D mFrame;
   // construct the measurement frame
   // measured Y is the local z axis
-  Vector3D measY = rotSymmetryAxis();
+  Vector3D measY = rotSymmetryAxis(gctx);
   // measured z is the position transverse normalized
   Vector3D measDepth = Vector3D(pos.x(), pos.y(), 0.).normalized();
   // measured X is what comoes out of it
@@ -120,8 +126,9 @@ Acts::ConeSurface::referenceFrame(const Vector3D& pos,
 }
 
 void
-Acts::ConeSurface::localToGlobal(const Vector2D& lpos,
-                                 const Vector3D& /*gmom*/,
+Acts::ConeSurface::localToGlobal(const GeometryContext& gctx,
+                                 const Vector2D&        lpos,
+                                 const Vector3D& /*unused*/,
                                  Vector3D& gpos) const
 {
   // create the position in the local 3d frame
@@ -130,16 +137,17 @@ Acts::ConeSurface::localToGlobal(const Vector2D& lpos,
   Vector3D loc3Dframe(r * cos(phi), r * sin(phi), lpos[Acts::eLOC_Z]);
   // transport it to the globalframe
   if (m_transform) {
-    gpos = transform() * loc3Dframe;
+    gpos = transform(gctx) * loc3Dframe;
   }
 }
 
 bool
-Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
-                                 const Vector3D& /*gmom*/,
+Acts::ConeSurface::globalToLocal(const GeometryContext& gctx,
+                                 const Vector3D&        gpos,
+                                 const Vector3D& /*unused*/,
                                  Vector2D& lpos) const
 {
-  Vector3D loc3Dframe = m_transform ? (transform().inverse() * gpos) : gpos;
+  Vector3D loc3Dframe = m_transform ? (transform(gctx).inverse() * gpos) : gpos;
   double   r          = loc3Dframe.z() * bounds().tanAlpha();
   lpos = Vector2D(r * atan2(loc3Dframe.y(), loc3Dframe.x()), loc3Dframe.z());
   // now decide on the quility of the transformation
@@ -149,18 +157,19 @@ Acts::ConeSurface::globalToLocal(const Vector3D& gpos,
 }
 
 double
-Acts::ConeSurface::pathCorrection(const Vector3D& gpos,
-                                  const Vector3D& mom) const
+Acts::ConeSurface::pathCorrection(const GeometryContext& gctx,
+                                  const Vector3D&        gpos,
+                                  const Vector3D&        mom) const
 {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
-  Vector3D posLocal = m_transform ? transform().inverse() * gpos : gpos;
+  Vector3D posLocal = m_transform ? transform(gctx).inverse() * gpos : gpos;
   double   phi      = VectorHelpers::phi(posLocal);
   double   sgn      = posLocal.z() > 0. ? -1. : +1.;
   Vector3D normalC(cos(phi) * bounds().cosAlpha(),
                    sin(phi) * bounds().cosAlpha(),
                    sgn * bounds().sinAlpha());
   if (m_transform) {
-    normalC = transform() * normalC;
+    normalC = transform(gctx) * normalC;
   }
   // back in global frame
   double cAlpha = normalC.dot(mom.normalized());
@@ -174,22 +183,22 @@ Acts::ConeSurface::name() const
 }
 
 std::shared_ptr<Acts::ConeSurface>
-Acts::ConeSurface::clone(const Transform3D* shift) const
+Acts::ConeSurface::clone(const GeometryContext& gctx,
+                         const Transform3D&     shift) const
 {
-  return std::shared_ptr<ConeSurface>(this->clone_impl(shift));
+  return std::shared_ptr<ConeSurface>(this->clone_impl(gctx, shift));
 }
 
 Acts::ConeSurface*
-Acts::ConeSurface::clone_impl(const Transform3D* shift) const
+Acts::ConeSurface::clone_impl(const GeometryContext& gctx,
+                              const Transform3D&     shift) const
 {
-  if (shift != nullptr) {
-    return new ConeSurface(*this, *shift);
-  }
-  return new ConeSurface(*this);
+  return new ConeSurface(gctx, *this, shift);
 }
 
 const Acts::Vector3D
-Acts::ConeSurface::normal(const Acts::Vector2D& lp) const
+Acts::ConeSurface::normal(const GeometryContext& gctx,
+                          const Acts::Vector2D&  lp) const
 {
   // (cos phi cos alpha, sin phi cos alpha, sgn z sin alpha)
   double phi = lp[Acts::eLOC_RPHI] / (bounds().r(lp[Acts::eLOC_Z])),
@@ -197,18 +206,19 @@ Acts::ConeSurface::normal(const Acts::Vector2D& lp) const
   Vector3D localNormal(cos(phi) * bounds().cosAlpha(),
                        sin(phi) * bounds().cosAlpha(),
                        sgn * bounds().sinAlpha());
-  return m_transform ? Vector3D(transform().linear() * localNormal)
+  return m_transform ? Vector3D(transform(gctx).linear() * localNormal)
                      : localNormal;
 }
 
 const Acts::Vector3D
-Acts::ConeSurface::normal(const Acts::Vector3D& gpos) const
+Acts::ConeSurface::normal(const GeometryContext& gctx,
+                          const Acts::Vector3D&  gpos) const
 {
   // get it into the cylinder frame if needed
   // @todo respect opening angle
   Vector3D pos3D = gpos;
   if (m_transform || (m_associatedDetElement != nullptr)) {
-    pos3D     = transform().inverse() * gpos;
+    pos3D     = transform(gctx).inverse() * gpos;
     pos3D.z() = 0;
   }
   return pos3D.normalized();

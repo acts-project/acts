@@ -93,7 +93,7 @@ public:
   ///
   /// @param sl is the outstream in which the string dump is done
   virtual std::ostream&
-  dump(std::ostream& os) const = 0;
+  toStream(std::ostream& os) const = 0;
 };
 
 inline bool
@@ -114,7 +114,7 @@ operator!=(const SurfaceBounds& lhs, const SurfaceBounds& rhs)
 inline std::ostream&
 operator<<(std::ostream& os, const SurfaceBounds& sb)
 {
-  return sb.dump(os);
+  return sb.toStream(os);
 }
 
 }  // namespace Acts

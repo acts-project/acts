@@ -59,6 +59,28 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
   m_valueStore.at(bv_halfZ)         = std::abs(halez);
 }
 
+Acts::CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
+                                                 double thickness)
+  : VolumeBounds(), m_valueStore(4, 0.)
+{
+
+  double cR                         = cBounds.r();
+  m_valueStore.at(bv_innerRadius)   = cR - 0.5 * thickness;
+  m_valueStore.at(bv_outerRadius)   = cR + 0.5 * thickness;
+  m_valueStore.at(bv_halfPhiSector) = cBounds.halfPhiSector();
+  m_valueStore.at(bv_halfZ)         = cBounds.halflengthZ();
+}
+
+Acts::CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
+                                                 double              thickness)
+  : VolumeBounds(), m_valueStore(4, 0.)
+{
+  m_valueStore.at(bv_innerRadius)   = rBounds.rMin();
+  m_valueStore.at(bv_outerRadius)   = rBounds.rMax();
+  m_valueStore.at(bv_halfPhiSector) = rBounds.halfPhiSector();
+  m_valueStore.at(bv_halfZ)         = 0.5 * thickness;
+}
+
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(
     const CylinderVolumeBounds& cylbo)
   : VolumeBounds(), m_valueStore(cylbo.m_valueStore)
@@ -169,7 +191,7 @@ Acts::CylinderVolumeBounds::sectorPlaneBounds() const
 }
 
 std::ostream&
-Acts::CylinderVolumeBounds::dump(std::ostream& sl) const
+Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
 }

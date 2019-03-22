@@ -32,12 +32,14 @@ Acts::SurfaceMaterialMapper::SurfaceMaterialMapper(
 
 Acts::SurfaceMaterialMapper::State
 Acts::SurfaceMaterialMapper::createState(
-    const TrackingGeometry& tGeometry) const
+    const GeometryContext&      gctx,
+    const MagneticFieldContext& mctx,
+    const TrackingGeometry&     tGeometry) const
 {
   // Parse the geometry and find all surfaces with material proxies
   auto world = tGeometry.highestTrackingVolume();
   // The Surface material mapping state
-  State mState;
+  State mState(gctx, mctx);
   resolveMaterialSurfaces(mState, *world);
 
   ACTS_DEBUG(mState.accumulatedMaterial.size()
@@ -143,7 +145,8 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   using ActionList = ActionList<MaterialSurfaceCollector, DebugOutput>;
   using AbortList  = AbortList<detail::EndOfWorldReached>;
 
-  PropagatorOptions<ActionList, AbortList> options;
+  PropagatorOptions<ActionList, AbortList> options(mState.mappingContext,
+                                                   mState.magFieldContext);
   options.debug = m_cfg.mapperDebugOutput;
 
   // Now collect the material layers by using the straight line propagator
@@ -164,11 +167,16 @@ Acts::SurfaceMaterialMapper::mapMaterialTrack(
   std::vector<AssignedMaterialProperties> assignedMaterial;
   assignedMaterial.reserve(mappingSurfaces.size());
   for (auto& mSurface : mappingSurfaces) {
-    Intersection msIntersection = mSurface.surface->intersectionEstimate(
-        mTrack.position(), mTrack.direction(), forward, true);
+    // The material mapping intersection with the surface
+    Intersection msIntersection
+        = mSurface.surface->intersectionEstimate(mState.mappingContext,
+                                                 mTrack.position(),
+                                                 mTrack.direction(),
+                                                 forward,
+                                                 true);
     if (msIntersection) {
       double pathCorrection = mSurface.surface->pathCorrection(
-          msIntersection.position, mTrack.direction());
+          mState.mappingContext, msIntersection.position, mTrack.direction());
       AssignedMaterialProperties amp(
           mSurface.surface->geoID(), msIntersection.position, pathCorrection);
       assignedMaterial.push_back(std::move(amp));

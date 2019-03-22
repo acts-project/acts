@@ -21,6 +21,7 @@ namespace Acts {
 class Surface;
 class CylinderBounds;
 class DiscBounds;
+class RadialBounds;
 class PlanarBounds;
 
 /// @class CylinderVolumeBounds
@@ -104,6 +105,18 @@ public:
                        double haphi,
                        double halez);
 
+  /// Constructor - from cylinder bounds and thickness
+  ///
+  /// @param cbounds the cylinder bounds
+  /// @param thickness
+  CylinderVolumeBounds(const CylinderBounds& cBounds, double thickness);
+
+  /// Constructor - from radial bounds and thickness
+  ///
+  /// @param rbounds the Radial bounds
+  /// @param thickness
+  CylinderVolumeBounds(const RadialBounds& rBounds, double thickness);
+
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy
@@ -174,7 +187,7 @@ public:
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& sl) const override;
+  toStream(std::ostream& sl) const override;
 
 private:
   /// templated dumpT method

@@ -21,6 +21,8 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -32,6 +34,10 @@ namespace Acts {
 using namespace detail;
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   /// @brief mockup of stepping state
   struct SteppingState
@@ -206,7 +212,7 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
 
-    PropagatorOptions<> options;
+    PropagatorOptions<> options(tgContext, mfContext);
     options.maxSteps   = 1e6;
     const auto& result = epropagator.propagate(start, options);
 

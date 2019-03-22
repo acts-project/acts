@@ -18,6 +18,7 @@
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeHelper.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -45,6 +46,7 @@ public:
 
     /// the list of tracking volume builders
     std::vector<std::function<std::shared_ptr<TrackingVolume>(
+        const GeometryContext& gctx,
         const TrackingVolumePtr&,
         const VolumeBoundsPtr&)>>
         trackingVolumeBuilders;
@@ -66,9 +68,12 @@ public:
   ~TrackingGeometryBuilder() override = default;
 
   /// TrackingGeometry Interface method
+  ///
+  /// @param gctx geometry context of that building call
+  ///
   /// @return a unique pointer to a TrackingGeometry
   std::unique_ptr<const TrackingGeometry>
-  trackingGeometry() const final;
+  trackingGeometry(const GeometryContext& gctx) const final;
 
   /// Set configuration method
   ///

@@ -111,7 +111,7 @@ public:
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
 private:
   /// The helper for the bin finding

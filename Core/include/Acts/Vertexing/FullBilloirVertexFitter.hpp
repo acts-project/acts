@@ -26,49 +26,50 @@ namespace Acts {
 /// In:	Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
 /// DOI	10.1016/0168-9002(92)90859-3
 ///
-/// @tparam BField Magnetic field type
-/// @tparam InputTrack Track object type
-/// @tparam Propagator_t Propagator type
+/// @tparam bfield_t Magnetic field type
+/// @tparam input_track_t Track object type
+/// @tparam propagator_t Propagator type
 
-template <typename BField, typename InputTrack, typename Propagator_t>
-class FullBilloirVertexFitter : public IVertexFitter<InputTrack, Propagator_t>
+template <typename bfield_t, typename input_track_t, typename propagator_t>
+class FullBilloirVertexFitter
+    : public IVertexFitter<input_track_t, propagator_t>
 {
 public:
   struct Config
   {
     /// Magnetic field
-    BField bField;
+    bfield_t bField;
 
     /// Maximum number of interations in fitter
     int maxIterations = 5;
 
     // Set up factory for linearizing tracks
-    typename LinearizedTrackFactory<BField, Propagator_t>::Config lt_config;
-    LinearizedTrackFactory<BField, Propagator_t>                  linFactory;
+    typename LinearizedTrackFactory<bfield_t, propagator_t>::Config lt_config;
+    LinearizedTrackFactory<bfield_t, propagator_t>                  linFactory;
 
     /// Constructor with default number of iterations and starting point
-    Config(BField bIn)
+    Config(bfield_t bIn)
       : bField(std::move(bIn)), lt_config(bField), linFactory(lt_config)
     {
     }
   };
 
-  /// @brief Constructor used if InputTrack type == BoundParameters
+  /// @brief Constructor used if input_track_t type == BoundParameters
   ///
   /// @param cfg Configuration object
-  template <typename T = InputTrack,
+  template <typename T = input_track_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
   FullBilloirVertexFitter(const Config& cfg)
     : m_cfg(cfg), extractParameters([&](T params) { return params; })
   {
   }
 
-  /// @brief Constructor for user-defined InputTrack type =! BoundParameters
+  /// @brief Constructor for user-defined input_track_t type =! BoundParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundParameters from InputTrack object
-  FullBilloirVertexFitter(const Config&                              cfg,
-                          std::function<BoundParameters(InputTrack)> func)
+  /// @param func Function extracting BoundParameters from input_track_t object
+  FullBilloirVertexFitter(const Config&                                 cfg,
+                          std::function<BoundParameters(input_track_t)> func)
     : m_cfg(cfg), extractParameters(func)
   {
   }
@@ -84,22 +85,21 @@ public:
   /// starting point
   ///
   /// @return Fitted vertex
-  Vertex<InputTrack>
-  fit(const std::vector<InputTrack>& paramVector,
-      const Propagator_t&            propagator,
-      Vertex<InputTrack>             constraint
-      = Vertex<InputTrack>(Vector3D(0., 0., 0.))) const override;
+  Vertex<input_track_t>
+  fit(const std::vector<input_track_t>&         paramVector,
+      const propagator_t&                       propagator,
+      const VertexFitterOptions<input_track_t>& vFitterOptions) const override;
 
 private:
   /// Configuration object
   Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// InputTrack objects are BoundParameters by default, function to be
-  /// overwritten to return BoundParameters for other InputTrack objects.
+  /// input_track_t objects are BoundParameters by default, function to be
+  /// overwritten to return BoundParameters for other input_track_t objects.
   ///
-  /// @param params InputTrack object to extract track parameters from
-  std::function<BoundParameters(InputTrack)> extractParameters;
+  /// @param params input_track_t object to extract track parameters from
+  std::function<BoundParameters(input_track_t)> extractParameters;
 
   /// @brief Function to correct 2-pi periodicity for phi and theta
   ///

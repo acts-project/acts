@@ -98,7 +98,7 @@ public:
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
   /// This method returns first inner radius
   double

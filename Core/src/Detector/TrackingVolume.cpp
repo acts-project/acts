@@ -13,7 +13,6 @@
 #include <functional>
 #include <utility>
 
-#include "Acts/Detector/DetachedTrackingVolume.hpp"
 #include "Acts/Detector/GlueVolumesDescriptor.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Material/Material.hpp"
@@ -27,9 +26,6 @@ Acts::TrackingVolume::TrackingVolume()
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
   , m_confinedVolumes(nullptr)
-  , m_confinedDetachedVolumes()
-  , m_confinedDenseVolumes()
-  , m_confinedArbitraryLayers()
   , m_name("undefined")
 {
 }
@@ -44,9 +40,6 @@ Acts::TrackingVolume::TrackingVolume(
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
   , m_confinedVolumes(containedVolumeArray)
-  , m_confinedDetachedVolumes()
-  , m_confinedDenseVolumes()
-  , m_confinedArbitraryLayers()
   , m_name(volumeName)
 {
   createBoundarySurfaces();
@@ -59,18 +52,12 @@ Acts::TrackingVolume::TrackingVolume(
     VolumeBoundsPtr                            volbounds,
     std::shared_ptr<const Material>            matprop,
     std::unique_ptr<const LayerArray>          staticLayerArray,
-    const LayerVector&                         arbitraryLayerVector,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
-    const TrackingVolumeVector&                denseVolumeVector,
-    const DetachedVolumeVector&                detachedVolumeVector,
     const std::string&                         volumeName)
   : Volume(std::move(htrans), std::move(volbounds))
   , m_material(std::move(matprop))
   , m_confinedLayers(std::move(staticLayerArray))
   , m_confinedVolumes(std::move(containedVolumeArray))
-  , m_confinedDetachedVolumes(detachedVolumeVector)
-  , m_confinedDenseVolumes(denseVolumeVector)
-  , m_confinedArbitraryLayers(arbitraryLayerVector)
   , m_name(volumeName)
 {
   createBoundarySurfaces();
@@ -82,76 +69,17 @@ Acts::TrackingVolume::~TrackingVolume()
   delete m_glueVolumeDescriptor;
 }
 
-const Acts::Layer*
-Acts::TrackingVolume::associatedLayer(const Vector3D& gp) const
-{
-  // confined static layers - highest hierarchy
-  if (m_confinedLayers) {
-    return (m_confinedLayers->object(gp).get());
-  }
-
-  // confined arbitrary
-  if (!m_confinedArbitraryLayers.empty()) {
-    for (auto& layer : m_confinedArbitraryLayers) {
-      if (layer->isOnLayer(gp)) {
-        return layer.get();
-      }
-    }
-  }
-
-  // return the null pointer
-  return nullptr;
-}
-
 const Acts::TrackingVolume*
-Acts::TrackingVolume::trackingVolume(const Vector3D& gp) const
+Acts::TrackingVolume::lowestTrackingVolume(const GeometryContext& /*gctx*/,
+                                           const Vector3D& gp) const
 {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
     return (m_confinedVolumes->object(gp).get());
   }
 
-  // if no static volumes are there, detached is next hierarchy
-  if (!m_confinedDetachedVolumes.empty()) {
-    for (auto& detachedVolume : m_confinedDetachedVolumes) {
-      if (detachedVolume->trackingVolume()->inside(gp, 0.001)) {
-        {
-          return detachedVolume->trackingVolume();
-        }
-      }
-    }
-  }
-
-  // if no static volumes or detached volumes are there, search for dense
-  // volumes
-  if (!m_confinedDenseVolumes.empty()) {
-    for (auto& denseVolume : m_confinedDenseVolumes) {
-      if (denseVolume->inside(gp, 0.001)) {
-        return denseVolume.get();
-      }
-    }
-  }
-
   // there is no lower sub structure
   return this;
-}
-
-const Acts::DetachedVolumeVector*
-Acts::TrackingVolume::detachedTrackingVolumes(const Vector3D& gp,
-                                              double          tol) const
-{
-  // create a new vector
-  DetachedVolumeVector* currVols = new DetachedVolumeVector;
-  // get the volumes were the position is inside
-  if (!m_confinedDetachedVolumes.empty()) {
-    for (auto& detachedVolume : m_confinedDetachedVolumes) {
-      if (detachedVolume->trackingVolume()->inside(gp, tol)) {
-        currVols->push_back(detachedVolume);
-      }
-    }
-  }
-  // return the volumes that are inside
-  return currVols;
 }
 
 void
@@ -166,24 +94,6 @@ Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
   // confined static volumes
   if (m_confinedVolumes) {
     for (auto& volumesIter : (m_confinedVolumes->arrayObjects())) {
-      auto mutableVolumesIter
-          = std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->sign(geosign, geotype);
-    }
-  }
-
-  // same procedure for the detached volumes
-  if (!m_confinedDetachedVolumes.empty()) {
-    for (auto& volumesIter : m_confinedDetachedVolumes) {
-      auto mutableVolumesIter
-          = std::const_pointer_cast<DetachedTrackingVolume>(volumesIter);
-      mutableVolumesIter->sign(geosign, geotype);
-    }
-  }
-
-  // finally for confined dense volumes
-  if (!m_confinedDenseVolumes.empty()) {
-    for (auto& volumesIter : m_confinedDenseVolumes) {
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
@@ -227,20 +137,24 @@ Acts::TrackingVolume::createBoundarySurfaces()
 
 void
 Acts::TrackingVolume::glueTrackingVolume(
+    const GeometryContext&                 gctx,
     BoundarySurfaceFace                    bsfMine,
     const std::shared_ptr<TrackingVolume>& neighbor,
     BoundarySurfaceFace                    bsfNeighbor)
 {
+
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
-  Vector3D bPosition(binningPosition(binR));
-  Vector3D distance = Vector3D(neighbor->binningPosition(binR) - bPosition);
+  Vector3D bPosition(binningPosition(gctx, binR));
+  Vector3D distance
+      = Vector3D(neighbor->binningPosition(gctx, binR) - bPosition);
   // glue to the face
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(bPosition);
+  Vector3D normal
+      = bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
   BoundaryOrientation bOrientation
       = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
@@ -260,6 +174,7 @@ Acts::TrackingVolume::glueTrackingVolume(
 
 void
 Acts::TrackingVolume::glueTrackingVolumes(
+    const GeometryContext&                      gctx,
     BoundarySurfaceFace                         bsfMine,
     const std::shared_ptr<TrackingVolumeArray>& neighbors,
     BoundarySurfaceFace                         bsfNeighbor)
@@ -269,14 +184,16 @@ Acts::TrackingVolume::glueTrackingVolumes(
   std::shared_ptr<const TrackingVolume> nRefVolume
       = neighbors->arrayObjects().at(0);
   // get the distance
-  Vector3D bPosition(binningPosition(binR));
-  Vector3D distance = Vector3D(nRefVolume->binningPosition(binR) - bPosition);
+  Vector3D bPosition(binningPosition(gctx, binR));
+  Vector3D distance
+      = Vector3D(nRefVolume->binningPosition(gctx, binR) - bPosition);
   // take the normal at the binning positio
   std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
       = boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3D normal = bSurfaceMine->surfaceRepresentation().normal(bPosition);
+  Vector3D normal
+      = bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
   BoundaryOrientation bOrientation
       = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
@@ -442,23 +359,6 @@ Acts::TrackingVolume::closeGeometry(
       mutableVolumesIter->closeGeometry(volumeMap, vol);
     }
   }
-
-  // @todo update that
-  // auto confinedDenseVolumes= tvol.confinedDenseVolumes();
-  // if (!confinedDenseVolumes.empty()) {
-  //   for (auto& volumesIter : confinedDenseVolumes)
-  //     if (volumesIter) closeGeometry(*volumesIter, &tvol, ++cCounter);
-  // }
-  //
-  // // should detached tracking volumes be part of the tracking geometry ? */
-  // auto confinedDetachedVolumes = tvol.confinedDetachedVolumes();
-  // if (!confinedDetachedVolumes.empty()) {
-  //   for (auto& volumesIter : confinedDetachedVolumes)
-  //     if (volumesIter
-  //         && tvol.inside(volumesIter->trackingVolume()->center(), 0.))
-  //       closeGeometry(*(volumesIter->trackingVolume()), &tvol, ++cCounter);
-  // }
-  //
 }
 
 void

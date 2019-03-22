@@ -35,6 +35,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   namespace Layers {
     BOOST_AUTO_TEST_SUITE(Layers)
 
@@ -61,7 +65,8 @@ namespace Test {
       const double        thickness(1.0);
       SurfaceArrayCreator sac;
       size_t              binsX(2), binsY(4);
-      auto pSurfaceArray = sac.surfaceArrayOnPlane(aSurfaces, binsX, binsY);
+      auto                pSurfaceArray
+          = sac.surfaceArrayOnPlane(tgContext, aSurfaces, binsX, binsY);
       auto pPlaneLayerFromSurfaces = PlaneLayer::create(
           pTransform, pRectangle, std::move(pSurfaceArray));
       BOOST_CHECK_EQUAL(pPlaneLayerFromSurfaces->layerType(),

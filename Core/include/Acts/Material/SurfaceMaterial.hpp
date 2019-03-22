@@ -115,13 +115,13 @@ public:
   friend std::ostream&
   operator<<(std::ostream& out, const SurfaceMaterial& sm)
   {
-    sm.dump(out);
+    sm.toStream(out);
     return out;
   }
 
   /// Output Method for std::ostream, to be overloaded by child classes
   virtual std::ostream&
-  dump(std::ostream& sl) const = 0;
+  toStream(std::ostream& sl) const = 0;
 
 protected:
   double m_splitFactor{1.};  //!< the split factor in favour of oppositePre

@@ -229,7 +229,7 @@ Acts::TrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
 }
 
 std::ostream&
-Acts::TrapezoidVolumeBounds::dump(std::ostream& sl) const
+Acts::TrapezoidVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
 }

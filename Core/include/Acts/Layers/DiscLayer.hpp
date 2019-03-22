@@ -16,6 +16,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 

@@ -27,12 +27,17 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 namespace Test {
 
   using Jacobian = ActsMatrixD<5, 5>;
 
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
   ///
   /// @brief the bound state propagation
   ///
@@ -109,7 +114,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(kalman_extrapolator)
   {
     // Build detector, take the cubic detector
-    CubicTrackingGeometry cGeometry;
+    CubicTrackingGeometry cGeometry(tgContext);
     auto                  detector = cGeometry();
 
     // The Navigator through the detector geometry
@@ -144,11 +149,11 @@ namespace Test {
 
     // Create some options
     using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;
-    StepWiseOptions swOptions;
+    StepWiseOptions swOptions(tgContext, mfContext);
 
     using PlainActors  = ActionList<>;
     using PlainOptions = PropagatorOptions<PlainActors, Aborters>;
-    PlainOptions pOptions;
+    PlainOptions pOptions(tgContext, mfContext);
 
     // Run the standard propagation
     const auto& pResult = propagator.propagate(start, pOptions);

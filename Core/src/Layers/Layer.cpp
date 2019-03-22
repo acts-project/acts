@@ -15,7 +15,6 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/ApproachDescriptor.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
 Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
@@ -23,18 +22,12 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
                    std::unique_ptr<ApproachDescriptor> ades,
                    LayerType                           laytyp)
   : m_nextLayers(NextLayers(nullptr, nullptr))
-  , m_nextLayerUtility(nullptr)
   , m_surfaceArray(surfaceArray.release())
   , m_layerThickness(thickness)
   , m_approachDescriptor(nullptr)
-  , m_trackingVolume(nullptr)
-  , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
   , m_ssRepresentingSurface(1)
-  , m_ssSensitiveSurfaces(0)
-  , m_ssApproachSurfaces(0)
-
 {
   if (ades) {
     ades->registerLayer(*this);
@@ -45,11 +38,6 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   if (m_surfaceArray) {
     m_ssSensitiveSurfaces = 1;
   }
-}
-
-Acts::Layer::~Layer()
-{
-  delete m_representingVolume;
 }
 
 const Acts::ApproachDescriptor*

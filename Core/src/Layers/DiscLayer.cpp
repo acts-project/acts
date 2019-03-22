@@ -34,15 +34,16 @@ Acts::DiscLayer::DiscLayer(const std::shared_ptr<const Transform3D>& transform,
   : DiscSurface(transform, dbounds)
   , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
 {
-  // create the representing volume
+  // In case we have Radial bounds
   const RadialBounds* rBounds
-      = dynamic_cast<const RadialBounds*>(dbounds.get());
+      = dynamic_cast<const RadialBounds*>(DiscSurface::m_bounds.get());
   if (rBounds != nullptr) {
-    // @todo make a trapezoidal volume when you have DiscTrapezoidalBounds
-    CylinderVolumeBounds* cvBounds = new CylinderVolumeBounds(
-        rBounds->rMin(), rBounds->rMax(), 0.5 * thickness);
+    // The volume bounds
+    auto rVolumeBounds
+        = std::make_shared<const CylinderVolumeBounds>(*rBounds, thickness);
+    // @todo rotate around x for the avePhi if you have a sector
     m_representingVolume
-        = new AbstractVolume(transform, VolumeBoundsPtr(cvBounds));
+        = std::make_unique<AbstractVolume>(m_transform, rVolumeBounds);
   }
   // associate the layer to the layer surface itself
   DiscSurface::associateLayer(*this);
@@ -88,27 +89,8 @@ Acts::DiscLayer::buildApproachDescriptor()
     // create an ApproachDescriptor with Boundary surfaces
     m_approachDescriptor = std::make_unique<const GenericApproachDescriptor>(
         std::move(aSurfaces));
-  } else {
-    // create the new surfaces - positions first
-    Vector3D aspPosition(center()
-                         + 0.5 * thickness() * Surface::normal(center()));
-    Vector3D asnPosition(center()
-                         - 0.5 * thickness() * Surface::normal(center()));
-    auto asnTransform
-        = std::make_shared<const Transform3D>(Translation3D(asnPosition));
-    auto aspTransform
-        = std::make_shared<const Transform3D>(Translation3D(aspPosition));
-    // create the vector
-    std::vector<std::shared_ptr<const Surface>> aSurfaces;
-    aSurfaces.push_back(
-        Surface::makeShared<DiscSurface>(asnTransform, m_bounds));
-    aSurfaces.push_back(
-        Surface::makeShared<DiscSurface>(aspTransform, m_bounds));
-    // create an ApproachDescriptor with standard surfaces surfaces - these
-    // will be deleted by the approach descriptor
-    m_approachDescriptor = std::make_unique<const GenericApproachDescriptor>(
-        std::move(aSurfaces));
   }
+
   // @todo check if we can give the layer at curface creation
   for (auto& sfPtr : (m_approachDescriptor->containedSurfaces())) {
     if (sfPtr != nullptr) {

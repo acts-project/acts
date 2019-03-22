@@ -16,5 +16,7 @@
 #ifdef ACTS_CORE_IDENTIFIER_PLUGIN
 #include ACTS_CORE_IDENTIFIER_PLUGIN
 #else
-using Identifier = unsigned long long;
+using identifier_type = unsigned long long;
+using identifier_diff = long long;
+using Identifier      = identifier_type;
 #endif

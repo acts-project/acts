@@ -12,6 +12,7 @@
 #pragma once
 #include <memory>
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometryObject.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
 
@@ -84,11 +85,13 @@ public:
   /// The binning position method
   /// - as default the center is given, but may be overloaded
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param bValue is the binning value schema
   ///
   /// @return vector 3D that can be used for the binning
   const Vector3D
-  binningPosition(BinningValue bValue) const override;
+  binningPosition(const GeometryContext& gctx,
+                  BinningValue           bValue) const override;
 
 protected:
   std::shared_ptr<const Transform3D> m_transform;

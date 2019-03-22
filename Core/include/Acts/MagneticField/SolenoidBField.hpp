@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -65,7 +67,10 @@ class SolenoidBField
 public:
   struct Cache
   {
-    // empty, we don't need one
+    /// @brief Constructor with magnetic field context
+    ///
+    /// @param mcfg the magnetic field context
+    Cache(std::reference_wrapper<const MagneticFieldContext> /*mcfg*/) {}
   };
 
   /// Config struct for the SolenoidBfield

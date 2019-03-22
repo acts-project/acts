@@ -16,9 +16,9 @@ namespace Acts {
 ///
 /// @brief Defines a track at vertex object
 ///
-/// @tparam InputTrack Track object type
+/// @tparam input_track_t Track object type
 
-template <typename InputTrack>
+template <typename input_track_t>
 struct TrackAtVertex
 {
   /// Deleted default constructor
@@ -31,7 +31,7 @@ struct TrackAtVertex
   /// @param originalParams Original perigee parameter
   TrackAtVertex(double                 chi2perTrack,
                 const BoundParameters& paramsAtVertex,
-                const InputTrack&      originalTrack)
+                const input_track_t&   originalTrack)
     : m_chi2Track(chi2perTrack)
     , m_fittedParams(paramsAtVertex)
     , m_originalTrack(originalTrack)
@@ -45,7 +45,7 @@ struct TrackAtVertex
   BoundParameters m_fittedParams;
 
   /// Original input track
-  InputTrack m_originalTrack;
+  input_track_t m_originalTrack;
 };
 
 }  // namespace Acts

@@ -26,6 +26,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -35,6 +36,9 @@ namespace Acts {
 using VectorHelpers::perp;
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
 
   /// This is a simple cache struct to mimic the
   /// Propagator cache
@@ -107,7 +111,8 @@ namespace Test {
       bool
       surfaceReached(const StepperState& state, const Surface* surface) const
       {
-        return surface->isOnSurface(position(state), direction(state), true);
+        return surface->isOnSurface(
+            tgContext, position(state), direction(state), true);
       }
     };
 
@@ -141,6 +146,9 @@ namespace Test {
 
     /// Navigation state - internal state of the Navigator
     Navigator::state_type navigation;
+
+    // The context cache for this propagation
+    GeometryContext geoContext = GeometryContext();
   };
 
   template <typename stepper_state_t>
@@ -155,7 +163,7 @@ namespace Test {
 
   // the surface cache & the creation of the geometry
 
-  CylindricalTrackingGeometry cGeometry;
+  CylindricalTrackingGeometry cGeometry(tgContext);
   auto                        tGeometry = cGeometry();
 
   // the debug boolean

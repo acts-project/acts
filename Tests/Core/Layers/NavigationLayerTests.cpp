@@ -29,6 +29,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   namespace Layers {
     BOOST_AUTO_TEST_SUITE(Layers)
 
@@ -61,15 +65,16 @@ namespace Test {
       BinningValue b{BinningValue::binZ};
       Vector3D     origin{0., 0., 0.};
       // binningPosition(), needs a better test
-      BOOST_CHECK_EQUAL(pNavigationLayer->binningPosition(b), origin);
+      BOOST_CHECK_EQUAL(pNavigationLayer->binningPosition(tgContext, b),
+                        origin);
       // surfaceRepresentation() [looks dangerous]
       BOOST_CHECK_EQUAL(rawSurfacePtr,
                         &(pNavigationLayer->surfaceRepresentation()));
       // isOnLayer()
-      BOOST_CHECK(pNavigationLayer->isOnLayer(origin, true));
+      BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin, true));
       // isOnLayer()
       Vector3D crazyPosition{1000., 10000., std::nan("")};
-      BOOST_CHECK(!pNavigationLayer->isOnLayer(crazyPosition, true));
+      BOOST_CHECK(!pNavigationLayer->isOnLayer(tgContext, crazyPosition, true));
       // resolve()
       BOOST_CHECK(!pNavigationLayer->resolve(true, true, true));
     }

@@ -45,6 +45,7 @@ public:
   ///
   /// @tparam track_state_t Type of the track state for the update
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param trackState the measured track state
   ///
   /// @return Bool indicating whether this update was 'successful'
@@ -52,7 +53,7 @@ public:
   ///       which need to be treated differently in calling code.
   template <typename track_state_t>
   bool
-  operator()(track_state_t& trackState) const
+  operator()(const GeometryContext& gctx, track_state_t& trackState) const
   {
     using CovMatrix_t = typename parameters_t::CovMatrix_t;
     using ParVector_t = typename parameters_t::ParVector_t;
@@ -116,6 +117,7 @@ public:
 
     // Create new filtered parameters and covariance
     parameters_t filtered(
+        gctx,
         std::make_unique<const CovMatrix_t>(std::move(filtered_covariance)),
         filtered_parameters,
         predicted.referenceSurface().getSharedPtr());

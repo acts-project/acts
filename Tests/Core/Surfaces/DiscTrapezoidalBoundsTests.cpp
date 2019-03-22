@@ -78,7 +78,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    discTrapezoidalBoundsObject.dump(dumpOuput);
+    discTrapezoidalBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal(
         "Acts::DiscTrapezoidalBounds:  (innerRadius, outerRadius, hMinX, "
         "hMaxX, hlengthY, hPhiSector, averagePhi, rCenter, stereo) = "

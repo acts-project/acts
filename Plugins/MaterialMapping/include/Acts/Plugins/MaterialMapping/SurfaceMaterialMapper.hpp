@@ -20,8 +20,10 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -115,11 +117,26 @@ public:
   /// Nested State struct which is used for the mapping prococess
   struct State
   {
+
+    /// Constructor of the Sate with contexts
+    State(std::reference_wrapper<const GeometryContext>      gctx,
+          std::reference_wrapper<const MagneticFieldContext> mctx)
+      : mappingContext(gctx), magFieldContext(mctx)
+    {
+    }
+
     /// The accumulated material per geometry ID
     std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
+
     /// The created surface material from it
     std::map<GeometryID, std::unique_ptr<const SurfaceMaterial>>
         surfaceMaterial;
+
+    /// Reference to the geometry context for the mapping
+    std::reference_wrapper<const GeometryContext> mappingContext;
+
+    /// Reference to the magnetic field context
+    std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   };
 
   /// Delete the Default constructor
@@ -144,7 +161,9 @@ public:
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
   State
-  createState(const TrackingGeometry& tGeometry) const;
+  createState(const GeometryContext&      gctx,
+              const MagneticFieldContext& mctx,
+              const TrackingGeometry&     tGeometry) const;
 
   /// @brief Method to finalize the maps
   ///

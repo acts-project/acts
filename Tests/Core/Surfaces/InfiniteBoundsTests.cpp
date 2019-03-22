@@ -59,7 +59,7 @@ namespace Test {
 
     /// test for dump
     boost::test_tools::output_test_stream dumpOuput;
-    infiniteBoundsObject.dump(dumpOuput);
+    infiniteBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(
         dumpOuput.is_equal("Acts::InfiniteBounds ... boundless surface\n"));
   }

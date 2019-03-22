@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
@@ -19,9 +20,52 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
+
+/// @brief Options struct how the Fitter is called
+///
+/// It contains the context of the fitter call and the optional
+/// surface where to express the fit result
+///
+/// @note the context objects must be provided
+struct KalmanFitterOptions
+{
+
+  /// Deleted default constructor
+  KalmanFitterOptions() = delete;
+
+  /// PropagatorOptions with context
+  ///
+  /// @param gctx The goemetry context for this fit
+  /// @param mctx The magnetic context for this fit
+  /// @param cctx The calibration context for this fit
+  /// @param rSurface The reference surface for the fit to be expressed at
+  KalmanFitterOptions(std::reference_wrapper<const GeometryContext>      gctx,
+                      std::reference_wrapper<const MagneticFieldContext> mctx,
+                      std::reference_wrapper<const CalibrationContext>   cctx,
+                      const Surface* rSurface = nullptr)
+    : geoContext(gctx)
+    , magFieldContext(mctx)
+    , calibrationContext(cctx)
+    , referenceSurface(rSurface)
+  {
+  }
+
+  /// Context object for the geometry
+  std::reference_wrapper<const GeometryContext> geoContext;
+  /// Context object for the magnetic field
+  std::reference_wrapper<const MagneticFieldContext> magFieldContext;
+  /// context object for the calibration
+  std::reference_wrapper<const CalibrationContext> calibrationContext;
+
+  /// The reference Surface
+  const Surface* referenceSurface = nullptr;
+};
 
 /// @brief Kalman fitter implementation of Acts as a plugin
 /// to the Propgator
@@ -90,18 +134,16 @@ public:
   /// @tparam parameters_t Type of the initial parameters
   /// @tparam surface_t Type of the reference surface
   ///
+  /// @param context The context of this call
   /// @param measurements The fittable measurements
   /// @param sParameters The initial track parameters
-  /// @param rSurface The reference surface
   ///
   /// @return the output as an output track
-  template <typename input_measurements_t,
-            typename parameters_t,
-            typename surface_t>
+  template <typename input_measurements_t, typename parameters_t>
   auto
-  fit(input_measurements_t measurements,
-      const parameters_t&  sParameters,
-      const surface_t*     rSurface = nullptr) const
+  fit(input_measurements_t       measurements,
+      const parameters_t&        sParameters,
+      const KalmanFitterOptions& kfOptions) const
   {
     // Bring the measurements into Acts style
     auto trackStates = m_inputConverter(measurements);
@@ -113,11 +155,13 @@ public:
     using Aborters     = AbortList<>;
 
     // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> kalmanOptions;
+    PropagatorOptions<Actors, Aborters> kalmanOptions(
+        kfOptions.geoContext, kfOptions.magFieldContext);
+
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
     kalmanActor.trackStates   = std::move(trackStates);
-    kalmanActor.targetSurface = rSurface;
+    kalmanActor.targetSurface = kfOptions.referenceSurface;
 
     // Run the fitter
     const auto& result
@@ -296,7 +340,8 @@ private:
         if (layer == nullptr) {
           // Find the intersection to allocate the layer
           auto surfaceIntersection
-              = surface.intersectionEstimate(stepper.position(state.stepping),
+              = surface.intersectionEstimate(state.geoContext,
+                                             stepper.position(state.stepping),
                                              stepper.direction(state.stepping),
                                              state.stepping.navDir,
                                              false);
@@ -304,9 +349,11 @@ private:
           if (surfaceIntersection and state.navigation.worldVolume) {
             auto intersection = surfaceIntersection.position;
             auto layerVolume
-                = state.navigation.worldVolume->trackingVolume(intersection);
-            layer = layerVolume ? layerVolume->associatedLayer(intersection)
-                                : nullptr;
+                = state.navigation.worldVolume->lowestTrackingVolume(
+                    state.geoContext, intersection);
+            layer = layerVolume
+                ? layerVolume->associatedLayer(state.geoContext, intersection)
+                : nullptr;
           }
         }
         // Insert the surface into the measurementsurfaces multimap
@@ -366,13 +413,13 @@ private:
                    typename TrackState::Parameters::CovMatrix_t,
                    double>
             boundState = stepper.boundState(state.stepping, *surface, true);
-
+        // Fill the track state
         trackState.parameter.predicted  = std::get<0>(boundState);
         trackState.parameter.jacobian   = std::get<1>(boundState);
         trackState.parameter.pathLength = std::get<2>(boundState);
 
         // If the update is successful, set covariance and
-        if (m_updator(trackState)) {
+        if (m_updator(state.geoContext, trackState)) {
           // Update the stepping state
           debugLog(state, [&] {
             std::stringstream dstream;
@@ -422,7 +469,8 @@ private:
         return dstream.str();
       });
       // Smooth the track states and obtain the last smoothed track parameters
-      const auto& smoothedPars = m_smoother(result.fittedStates);
+      const auto& smoothedPars
+          = m_smoother(state.geoContext, result.fittedStates);
       // Update the stepping parameters - in order to progress to destination
       if (smoothedPars) {
         // Update the stepping state

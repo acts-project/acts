@@ -60,7 +60,7 @@ Acts::LineBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 
 // ostream operator overload
 std::ostream&
-Acts::LineBounds::dump(std::ostream& sl) const
+Acts::LineBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

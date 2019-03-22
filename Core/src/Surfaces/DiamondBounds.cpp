@@ -93,7 +93,7 @@ Acts::DiamondBounds::boundingBox() const
 
 // ostream operator overload
 std::ostream&
-Acts::DiamondBounds::dump(std::ostream& sl) const
+Acts::DiamondBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);

@@ -14,6 +14,7 @@
 #include <iostream>
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -132,8 +133,10 @@ public:
   identifier() const final;
 
   /// Return local to global transform associated with this identifier
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   const Transform3D&
-  transform() const final;
+  transform(const GeometryContext& gctx) const final;
 
   /// Return surface associated with this identifier, which should come from the
   const Surface&
@@ -175,7 +178,7 @@ TGeoDetectorElement::identifier() const
 }
 
 inline const Transform3D&
-TGeoDetectorElement::transform() const
+TGeoDetectorElement::transform(const GeometryContext& /*gctx*/) const
 {
   return (*m_transform);
 }

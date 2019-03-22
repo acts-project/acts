@@ -98,7 +98,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    trapezoidBoundsObject.dump(dumpOuput);
+    trapezoidBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(
         dumpOuput.is_equal("Acts::TrapezoidBounds:  (minHlengthX, maxHlengthX, "
                            "hlengthY) = (1.0000000, 6.0000000, 2.0000000)"));

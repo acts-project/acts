@@ -12,6 +12,7 @@
 #include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/concept/AnyGrid.hpp"
 
 namespace Acts {
@@ -281,6 +282,12 @@ public:
 
   struct Cache
   {
+
+    /// @brief Constructor with magnetic field context
+    ///
+    /// @param mcfg the magnetic field context
+    Cache(std::reference_wrapper<const MagneticFieldContext> /*mcfg*/) {}
+
     concept::AnyFieldCell<> fieldCell;
     bool                    initialized = false;
   };

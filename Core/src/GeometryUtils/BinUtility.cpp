@@ -20,5 +20,5 @@
 std::ostream&
 Acts::operator<<(std::ostream& sl, const BinUtility& bgen)
 {
-  return bgen.dump(sl);
+  return bgen.toStream(sl);
 }

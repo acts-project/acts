@@ -24,7 +24,7 @@ Acts::SurfaceMaterialProxy::operator*=(double /*scale*/)
 }
 
 std::ostream&
-Acts::SurfaceMaterialProxy::dump(std::ostream& sl) const
+Acts::SurfaceMaterialProxy::toStream(std::ostream& sl) const
 {
   sl << "Acts::SurfaceMaterialProxy : " << std::endl;
   if (m_binUtility.bins(0) * m_binUtility.bins(1) > 1) {

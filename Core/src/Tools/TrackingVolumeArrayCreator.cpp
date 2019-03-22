@@ -20,6 +20,7 @@
 
 std::shared_ptr<const Acts::TrackingVolumeArray>
 Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
+    const GeometryContext&      gctx,
     const TrackingVolumeVector& tVolumes,
     BinningValue                bValue) const
 {
@@ -29,7 +30,7 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   TrackingVolumeVector volumes(tVolumes);
   // sort it accordingly to the binning value
   GeometryObjectSorterT<std::shared_ptr<const TrackingVolume>> volumeSorter(
-      bValue);
+      gctx, bValue);
   std::sort(volumes.begin(), volumes.end(), volumeSorter);
 
   // prepare what we need :
@@ -42,10 +43,10 @@ Acts::TrackingVolumeArrayCreator::trackingVolumeArray(
   // let's loop over the (sorted) volumes
   for (auto& tVolume : volumes) {
     // get the binning position
-    Vector3D binningPosition = tVolume->binningPosition(bValue);
+    Vector3D binningPosition = tVolume->binningPosition(gctx, bValue);
     double   binningBorder   = tVolume->volumeBounds().binningBorder(bValue);
     // get the center value according to the bin
-    double value = tVolume->binningPositionValue(bValue);
+    double value = tVolume->binningPositionValue(gctx, bValue);
     // for the first one take low and high boundary
     if (boundaries.empty()) {
       boundaries.push_back(value - binningBorder);

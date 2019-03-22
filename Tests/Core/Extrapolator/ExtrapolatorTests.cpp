@@ -29,6 +29,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -37,13 +39,17 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
+
   // Global definitions
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
   std::vector<std::unique_ptr<const Surface>> stepState;
 
-  CylindricalTrackingGeometry cGeometry;
+  CylindricalTrackingGeometry cGeometry(tgContext);
   auto                        tGeometry = cGeometry();
 
   // Get the navigator and provide the TrackingGeometry
@@ -120,7 +126,7 @@ namespace Test {
     auto covPtr = std::make_unique<const ActsSymMatrixD<5>>(cov);
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
 
-    PropagatorOptions<> options;
+    PropagatorOptions<> options(tgContext, mfContext);
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
 
@@ -177,7 +183,7 @@ namespace Test {
     // A PlaneSelector for the SurfaceCollector
     using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
-    PropagatorOptions<ActionList<PlaneCollector>> options;
+    PropagatorOptions<ActionList<PlaneCollector>> options(tgContext, mfContext);
 
     options.maxStepSize = 10. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
@@ -187,7 +193,7 @@ namespace Test {
     auto        collector_result = result.get<PlaneCollector::result_type>();
 
     // step through the surfaces and go step by step
-    PropagatorOptions<> optionsEmpty;
+    PropagatorOptions<> optionsEmpty(tgContext, mfContext);
 
     optionsEmpty.maxStepSize = 25. * units::_cm;
     optionsEmpty.debug       = true;
@@ -255,7 +261,8 @@ namespace Test {
 
     using DebugOutput = detail::DebugOutputActor;
 
-    PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
+    PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
+        tgContext, mfContext);
     options.debug       = debugMode;
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 25 * units::_cm;
@@ -323,7 +330,8 @@ namespace Test {
     // Action list and abort list
     using DebugOutput = detail::DebugOutputActor;
 
-    PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options;
+    PropagatorOptions<ActionList<MaterialInteractor, DebugOutput>> options(
+        tgContext, mfContext);
     options.maxStepSize = 25. * units::_cm;
     options.pathLimit   = 1500. * units::_mm;
 

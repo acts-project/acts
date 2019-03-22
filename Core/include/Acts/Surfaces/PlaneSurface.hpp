@@ -17,6 +17,7 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
 
 namespace Acts {
@@ -45,11 +46,14 @@ protected:
   /// @param psf is the source surface for the copy
   PlaneSurface(const PlaneSurface& other);
 
-  /// Copy Constructor with shift
+  /// Copy constructor - with shift
   ///
-  /// @param other The source surface for the copy
-  /// @param transf The transformation that positions the surface in space
-  PlaneSurface(const PlaneSurface& other, const Transform3D& transf);
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  PlaneSurface(const GeometryContext& gctx,
+               const PlaneSurface&    other,
+               const Transform3D&     transf);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -82,19 +86,21 @@ public:
   PlaneSurface&
   operator=(const PlaneSurface& other);
 
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
+  /// Clone method into a concrete type of PlaneSurface with shift
   ///
-  /// @param shift additional, optional shift
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param shift applied to the surface
   std::shared_ptr<PlaneSurface>
-  clone(const Transform3D* shift = nullptr) const;
+  clone(const GeometryContext& gctx, const Transform3D& shift) const;
 
   /// Normal vector return
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param lpos is the local position is ignored
+  ///
   /// return a Vector3D by value
   const Vector3D
-  normal(const Vector2D& lpos) const final;
+  normal(const GeometryContext& gctx, const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -102,11 +108,12 @@ public:
   /// The binning position is the position calcualted
   /// for a certain binning type
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
   const Vector3D
-  binningPosition(BinningValue bValue) const final;
+  binningPosition(const GeometryContext& gctx, BinningValue bValue) const final;
 
   /// Return the surface type
   SurfaceType
@@ -120,19 +127,22 @@ public:
   /// For planar surfaces the momentum is ignroed in the local to global
   /// transformation
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param lpos local 2D posittion in specialized surface frame
   /// @param mom global 3D momentum representation (optionally ignored)
   /// @param gpos global 3D position to be filled (given by reference for method
   /// symmetry)
   void
-  localToGlobal(const Vector2D& lpos,
-                const Vector3D& mom,
-                Vector3D&       gpos) const override;
+  localToGlobal(const GeometryContext& gctx,
+                const Vector2D&        lpos,
+                const Vector3D&        mom,
+                Vector3D&              gpos) const override;
 
   /// Global to local transformation
   /// For planar surfaces the momentum is ignroed in the global to local
   /// transformation
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param mom global 3D momentum representation (optionally ignored)
@@ -142,9 +152,10 @@ public:
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
   bool
-  globalToLocal(const Vector3D& gpos,
-                const Vector3D& mom,
-                Vector2D&       lpos) const override;
+  globalToLocal(const GeometryContext& gctx,
+                const Vector3D&        gpos,
+                const Vector3D&        mom,
+                Vector2D&              lpos) const override;
 
   /// Method that calculates the correction due to incident angle
   ///
@@ -156,10 +167,13 @@ public:
   ///
   /// @return a double representing the scaling factor
   double
-  pathCorrection(const Vector3D& pos, const Vector3D& mom) const final;
+  pathCorrection(const GeometryContext& gctx,
+                 const Vector3D&        pos,
+                 const Vector3D&        mom) const final;
 
-  /// @brief Fast straight line intersection schema
+  /// @brief Straight line intersection schema
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gpos The start position of the intersection attempt
   /// @param gdir The direction of the interesection attempt,
   ///       @note expected to be normalized
@@ -186,11 +200,12 @@ public:
   ///
   /// @return the Intersection object
   Intersection
-  intersectionEstimate(const Vector3D&      gpos,
-                       const Vector3D&      gdir,
-                       NavigationDirection  navDir  = forward,
-                       const BoundaryCheck& bcheck  = false,
-                       CorrFnc              correct = nullptr) const final;
+  intersectionEstimate(const GeometryContext& gctx,
+                       const Vector3D&        gpos,
+                       const Vector3D&        gdir,
+                       NavigationDirection    navDir  = forward,
+                       const BoundaryCheck&   bcheck  = false,
+                       CorrFnc                correct = nullptr) const final;
 
   /// Return properly formatted class name for screen output
   std::string
@@ -201,12 +216,13 @@ protected:
   std::shared_ptr<const PlanarBounds> m_bounds;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
+  /// Clone method implementation
   ///
-  /// @param shift additional, optional shift
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param shift applied to the surface
   PlaneSurface*
-  clone_impl(const Transform3D* shift = nullptr) const override;
+  clone_impl(const GeometryContext& gctx,
+             const Transform3D&     shift) const override;
 };
 
 #include "Acts/Surfaces/detail/PlaneSurface.ipp"
