@@ -258,7 +258,7 @@ public:
   /**
    * Default constructor which initializes the result in the ok state.
    */
-  Result(){};
+  Result() = default;
 
   /**
    * The copy constructor is deleted.

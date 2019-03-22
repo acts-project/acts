@@ -22,14 +22,14 @@ namespace detail {
   {
   public:
     // Return a short descriptive name for the category
-    virtual const char*
-    name() const noexcept override final
+    const char*
+    name() const noexcept final
     {
       return "EigenStepperError";
     }
     // Return what each enum means in text
-    virtual std::string
-    message(int c) const override final
+    std::string
+    message(int c) const final
     {
       switch (static_cast<EigenStepperError>(c)) {
       case EigenStepperError::StepSizeStalled:
