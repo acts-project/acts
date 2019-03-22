@@ -97,3 +97,7 @@ target_include_directories (AnnealingUtilityTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (AnnealingUtilityTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME VertexAnnealingToolUnitTests COMMAND AnnealingUtilityTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST VertexAnnealingToolUnitTests TARGETS AnnealingUtilityTests)
+
+add_executable (FiniteStateMachineTests FiniteStateMachineTests.cpp)
+target_link_libraries (FiniteStateMachineTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME FiniteStateMachineTests COMMAND FiniteStateMachineTests)
