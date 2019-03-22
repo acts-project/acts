@@ -11,7 +11,6 @@
 #include <cmath>
 #include <functional>
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"

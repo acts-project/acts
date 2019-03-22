@@ -18,7 +18,6 @@
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/MagneticFieldContext.hpp"
 
-#include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
@@ -92,7 +91,9 @@ namespace Test {
 
     struct DummyMapper : DummyFieldCell
     {
-      concept::AnyFieldCell<>
+      using FieldCell = DummyFieldCell;
+
+      DummyFieldCell
       getFieldCell(const Vector3D&) const
       {
         return DummyFieldCell();
@@ -114,12 +115,12 @@ namespace Test {
       }
     };
 
-    InterpolatedBFieldMap::Config config;
-    config.scale  = 1.;
-    config.mapper = DummyMapper();
+    DummyMapper                                m;
+    InterpolatedBFieldMap<DummyMapper>::Config config(std::move(m));
+    config.scale = 1.;
 
     // create BField service
-    InterpolatedBFieldMap b(std::move(config));
+    InterpolatedBFieldMap<DummyMapper> b(std::move(config));
 
     testInterfaceConsistency(b);
   }

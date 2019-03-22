@@ -12,7 +12,7 @@
 #include <functional>
 #include <limits>
 #include "Acts/Detector/TrackingVolume.hpp"
-#include "Acts/MagneticField/concept/AnyFieldLookup.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/StepperExtensionList.hpp"
