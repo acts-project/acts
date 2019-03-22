@@ -28,6 +28,9 @@
 #include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+#include "Acts/Propagator/PropagatorError.hpp"
+#include "Acts/Utilities/Result.hpp"
+
 BOOST_TTI_HAS_TYPE(state_type)
 BOOST_TTI_HAS_TEMPLATE(return_parameter_type, class, class)
 BOOST_TTI_HAS_TYPE(State)
@@ -50,30 +53,14 @@ BOOST_TTI_HAS_MEMBER_FUNCTION(step)
 
 namespace Acts {
 
-/// Result status of track parameter propagation
-enum struct PropagatorStatus {
-  SUCCESS,
-  FAILURE,
-  UNSET,
-  IN_PROGRESS,
-  WRONG_DIRECTION
-};
-
 /// @brief Simple class holding result of propagation call
 ///
 /// @tparam parameters_t Type of final track parameters
 /// @tparam result_list  Result pack for additional propagation
 ///                      quantities
 template <typename parameters_t, typename... result_list>
-struct Result : private detail::Extendable<result_list...>
+struct PropagatorResult : private detail::Extendable<result_list...>
 {
-  /// Constructor from initial propagation status
-  ///
-  /// @param s is the current status of the Result object
-  Result(PropagatorStatus s = PropagatorStatus::UNSET)
-    : detail::Extendable<result_list...>(), status(s)
-  {
-  }
 
   /// Accessor to additional propagation quantities
   using detail::Extendable<result_list...>::get;
@@ -84,24 +71,11 @@ struct Result : private detail::Extendable<result_list...>
   /// Full transport jacobian
   std::unique_ptr<const ActsMatrixD<5, 5>> transportJacobian = nullptr;
 
-  /// Propagation status
-  PropagatorStatus status = PropagatorStatus::UNSET;
-
   /// Number of propagation steps that were carried out
   unsigned int steps = 0;
 
   /// Signed distance over which the parameters were propagated
   double pathLength = 0.;
-
-  /// @brief Check the validity of the propagation result
-  ///
-  /// @return @c true if the final parameters are set and propagation status
-  ///         is SUCCESS, otherwise @c false
-  ///
-  operator bool() const
-  {
-    return (endParameters && status == PropagatorStatus::SUCCESS);
-  }
 };
 
 /// @brief Options for propagate() call
@@ -173,7 +147,7 @@ struct PropagatorOptions
   /// The mass for the particle for (eventual) material integration
   double mass = 139.57018 * units::_MeV;
 
-  /// Maximum number of steps for one propagate() call
+  /// Maximum number of steps for one propagate call
   unsigned int maxSteps = 1000;
 
   /// Absolute maximum step size
@@ -443,7 +417,7 @@ private:
     /// @tparam args Parameter pack specifying additional propagation results
     ///
     template <typename... args>
-    using this_result_type = Result<parameters_t, args...>;
+    using this_result_type = PropagatorResult<parameters_t, args...>;
 
     /// @brief Propagation result type derived from a given action list
     using type = typename action_list_t::template result_type<this_result_type>;
@@ -477,9 +451,10 @@ private:
   ///
   /// @return Propagation PropagatorStatus
   template <typename result_t, typename propagator_state_t>
-  PropagatorStatus
-  propagate_impl(result_t& result, propagator_state_t& state) const
+  Result<result_t>
+  propagate_impl(propagator_state_t& state) const
   {
+    result_t result;
 
     // Pre-stepping call to the navigator and action list
     debugLog(state, [&] { return std::string("Entering propagation."); });
@@ -501,17 +476,28 @@ private:
       // Propagation loop : stepping
       for (; result.steps < state.options.maxSteps; ++result.steps) {
         // Perform a propagation step - it takes the propagation state
-        double s = m_stepper.step(state);
-        // Accumulate the path length
-        result.pathLength += s;
-        // Call the actions, can (& will likely) modify the state
-        debugLog(state, [&] {
-          std::stringstream dstream;
-          dstream << "Step with size = ";
-          dstream << s;
-          dstream << " performed.";
-          return dstream.str();
-        });
+        Result<double> res = m_stepper.step(state);
+        if (res.ok()) {
+          // Accumulate the path length
+          double s = *res;
+          result.pathLength += s;
+          debugLog(state, [&] {
+            std::stringstream dstream;
+            dstream << "Step with size = ";
+            dstream << s;
+            dstream << " performed.";
+            return dstream.str();
+          });
+        } else {
+          debugLog(state, [&] {
+            std::stringstream dstream;
+            dstream << "Step failed: ";
+            dstream << res.error();
+            return dstream.str();
+          });
+          // pass error to caller
+          return res.error();
+        }
         // Post-step
         // navigator status call - action list - aborter list - target call
         m_navigator.status(state, m_stepper);
@@ -535,7 +521,7 @@ private:
     state.options.actionList(state, m_stepper, result);
 
     // return progress flag here, decide on SUCCESS later
-    return PropagatorStatus::IN_PROGRESS;
+    return std::move(result);
   }
 
 public:
@@ -562,9 +548,9 @@ public:
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
-  action_list_t_result_t<
+  Result<action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t>,
-      action_list_t>
+      action_list_t>>
   propagate(
       const parameters_t& start,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const
@@ -582,7 +568,6 @@ public:
                   "return track parameter type must be copy-constructible");
 
     // Initialize the propagation result object
-    ResultType result(PropagatorStatus::IN_PROGRESS);
 
     // Expand the abort list with a path aborter
     path_aborter_t pathAborter;
@@ -597,7 +582,7 @@ public:
 
     static_assert(
         has_member_function_step<const stepper_t,
-                                 double,
+                                 Result<double>,
                                  boost::mpl::vector<StateType&>>::value,
         "Step method of the Stepper is not compatible with the propagator "
         "state");
@@ -609,25 +594,26 @@ public:
     }
 
     // Perform the actual propagation & check its outcome
-    if (propagate_impl(result, state) != PropagatorStatus::IN_PROGRESS) {
-      result.status = PropagatorStatus::FAILURE;
-    } else {
+    auto result = propagate_impl<ResultType>(state);
+
+    if (result.ok()) {
+      auto& propRes = *result;
       /// Convert into return type and fill the result object
       auto  curvState      = m_stepper.curvilinearState(state.stepping, true);
       auto& curvParameters = std::get<CurvilinearParameters>(curvState);
       // Fill the end parameters
-      result.endParameters = std::make_unique<const CurvilinearParameters>(
+      propRes.endParameters = std::make_unique<const CurvilinearParameters>(
           std::move(curvParameters));
       // Only fill the transport jacobian when covariance transport was done
       if (state.stepping.covTransport) {
         auto& tJacobian = std::get<Jacobian>(curvState);
-        result.transportJacobian
+        propRes.transportJacobian
             = std::make_unique<const Jacobian>(std::move(tJacobian));
       }
-      result.status = PropagatorStatus::SUCCESS;
+      return result;
+    } else {
+      return result.error();
     }
-
-    return result;
   }
 
   /// @brief Propagate track parameters - User method
@@ -656,10 +642,10 @@ public:
             template <typename, typename> class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
             typename path_aborter_t   = detail::PathLimitReached>
-  action_list_t_result_t<
+  Result<action_list_t_result_t<
       typename stepper_t::template return_parameter_type<parameters_t,
                                                          surface_t>,
-      action_list_t>
+      action_list_t>>
   propagate(
       const parameters_t& start,
       const surface_t&    target,
@@ -684,12 +670,6 @@ public:
     using ResultType
         = action_list_t_result_t<return_parameter_type, action_list_t>;
 
-    // Initialize the propagation result object
-    ResultType result(PropagatorStatus::IN_PROGRESS);
-
-    static_assert(std::is_copy_constructible<return_parameter_type>::value,
-                  "return track parameter type must be copy-constructible");
-
     // Initialize the internal propagator state
     using StateType = State<OptionsType>;
     StateType state(start, eOptions);
@@ -697,7 +677,7 @@ public:
 
     static_assert(
         has_member_function_step<const stepper_t,
-                                 double,
+                                 Result<double>,
                                  boost::mpl::vector<StateType&>>::value,
         "Step method of the Stepper is not compatible with the propagator "
         "state");
@@ -707,25 +687,26 @@ public:
     lProtection(state, m_stepper);
 
     // Perform the actual propagation
-    if (propagate_impl(result, state) != PropagatorStatus::IN_PROGRESS) {
-      result.status = PropagatorStatus::FAILURE;
-    } else {
+    auto result = propagate_impl<ResultType>(state);
+
+    if (result.ok()) {
+      auto& propRes = *result;
       // Compute the final results and mark the propagation as successful
       auto  bs = m_stepper.boundState(state.stepping, target, true);
       auto& boundParameters = std::get<BoundParameters>(bs);
       // Fill the end parameters
-      result.endParameters
+      propRes.endParameters
           = std::make_unique<const BoundParameters>(std::move(boundParameters));
       // Only fill the transport jacobian when covariance transport was done
       if (state.stepping.covTransport) {
         auto& tJacobian = std::get<Jacobian>(bs);
-        result.transportJacobian
+        propRes.transportJacobian
             = std::make_unique<const Jacobian>(std::move(tJacobian));
       }
-
-      result.status = PropagatorStatus::SUCCESS;
+      return result;
+    } else {
+      return result.error();
     }
-    return result;
   }
 
 private:

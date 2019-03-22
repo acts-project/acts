@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 // This is based original stepper code from the ATLAS RungeKuttePropagagor
@@ -983,7 +984,7 @@ public:
   ///
   /// @param state is the provided stepper state (caller keeps thread locality)
   template <typename propagator_state_t>
-  double
+  Result<double>
   step(propagator_state_t& state) const
   {
     // we use h for keeping the nominclature with the original atlas code

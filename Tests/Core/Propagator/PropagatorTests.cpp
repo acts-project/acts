@@ -220,8 +220,9 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
     // propagate to the cylinder surface
-    const auto& result = epropagator.propagate(start, *cSurface, options);
-    auto&       sor    = result.get<so_result>();
+    const auto& result
+        = epropagator.propagate(start, *cSurface, options).value();
+    auto& sor = result.get<so_result>();
 
     BOOST_CHECK_EQUAL(sor.surfaces_passed, 1);
     CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);
@@ -277,9 +278,11 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a path length of 100 with two steps of 50
     const auto& mid_parameters
-        = epropagator.propagate(start, options_2s).endParameters;
+        = epropagator.propagate(start, options_2s).value().endParameters;
     const auto& end_parameters_2s
-        = epropagator.propagate(*mid_parameters, options_2s).endParameters;
+        = epropagator.propagate(*mid_parameters, options_2s)
+              .value()
+              .endParameters;
 
     // setup propagation options - the one step options
     PropagatorOptions<> options_1s(tgContext, mfContext);
@@ -287,7 +290,7 @@ namespace Test {
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a path length of 100 in one step
     const auto& end_parameters_1s
-        = epropagator.propagate(start, options_1s).endParameters;
+        = epropagator.propagate(start, options_1s).value().endParameters;
 
     // test that the propagation is additive
     CHECK_CLOSE_REL(
@@ -349,10 +352,13 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a final surface with one stop in between
     const auto& mid_parameters
-        = epropagator.propagate(start, *mSurface, options_2s).endParameters;
+        = epropagator.propagate(start, *mSurface, options_2s)
+              .value()
+              .endParameters;
 
     const auto& end_parameters_2s
         = epropagator.propagate(*mid_parameters, *cSurface, options_2s)
+              .value()
               .endParameters;
 
     // setup propagation options - one step options
@@ -361,7 +367,9 @@ namespace Test {
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a final surface in one stop
     const auto& end_parameters_1s
-        = epropagator.propagate(start, *cSurface, options_1s).endParameters;
+        = epropagator.propagate(start, *cSurface, options_1s)
+              .value()
+              .endParameters;
 
     // test that the propagation is additive
     CHECK_CLOSE_REL(

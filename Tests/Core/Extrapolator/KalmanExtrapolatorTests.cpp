@@ -156,12 +156,12 @@ namespace Test {
     PlainOptions pOptions(tgContext, mfContext);
 
     // Run the standard propagation
-    const auto& pResult = propagator.propagate(start, pOptions);
+    const auto& pResult = propagator.propagate(start, pOptions).value();
     // Let's get the end parameters and jacobian matrix
     const auto& pJacobian = *(pResult.transportJacobian);
 
     // Run the stepwise propagation
-    const auto& swResult       = propagator.propagate(start, swOptions);
+    const auto& swResult       = propagator.propagate(start, swOptions).value();
     auto        swJacobianTest = swResult.template get<StepWiseResult>();
 
     // (1) Path length test

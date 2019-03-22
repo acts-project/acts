@@ -3,7 +3,7 @@ limits:
   "readability-named-parameter": 0
   "readability-container-size-empty": 0
   "modernize-use-using": 0
-  "readability-braces-around-statements": 0
+  #"readability-braces-around-statements": 0
   "modernize-use-override": 0
   "readability-implicit-bool-cast": 0
   "modernize-use-default-member-init": 0

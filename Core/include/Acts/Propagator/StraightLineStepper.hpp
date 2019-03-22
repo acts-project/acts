@@ -17,6 +17,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {
@@ -319,7 +320,7 @@ public:
   ///
   /// @return the step size taken
   template <typename propagator_state_t>
-  double
+  Result<double>
   step(propagator_state_t& state) const
   {
     // use the adjusted step size

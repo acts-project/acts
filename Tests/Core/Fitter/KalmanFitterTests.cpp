@@ -266,7 +266,7 @@ namespace Test {
     mCreator.detectorResolution = detRes;
 
     // Launch and collect - the measurements
-    auto mResult = mPropagator.propagate(mStart, mOptions);
+    auto mResult = mPropagator.propagate(mStart, mOptions).value();
     if (debugMode) {
       const auto debugString
           = mResult.template get<DebugOutput::result_type>().debugString;

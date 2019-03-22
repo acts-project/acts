@@ -64,7 +64,7 @@ namespace IntegrationTest {
         StartParameters tp = startPars;
         tp.template set<Acts::eLOC_0>(options.geoContext,
                                       tp.template get<Acts::eLOC_0>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
 
@@ -75,7 +75,7 @@ namespace IntegrationTest {
         StartParameters tp = startPars;
         tp.template set<Acts::eLOC_1>(options.geoContext,
                                       tp.template get<Acts::eLOC_1>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         y_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
 
@@ -86,7 +86,7 @@ namespace IntegrationTest {
         StartParameters tp = startPars;
         tp.template set<Acts::ePHI>(options.geoContext,
                                     tp.template get<Acts::ePHI>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         phi_derivatives.push_back((r.endParameters->parameters() - nominal)
                                   / h);
       }
@@ -105,7 +105,7 @@ namespace IntegrationTest {
         }
         tp.template set<Acts::eTHETA>(options.geoContext,
                                       tp.template get<Acts::eTHETA>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         theta_derivatives.push_back((r.endParameters->parameters() - nominal)
                                     / h);
       }
@@ -117,7 +117,7 @@ namespace IntegrationTest {
         StartParameters tp = startPars;
         tp.template set<Acts::eQOP>(options.geoContext,
                                     tp.template get<Acts::eQOP>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         qop_derivatives.push_back((r.endParameters->parameters() - nominal)
                                   / h);
       }

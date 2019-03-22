@@ -20,6 +20,9 @@
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
 
+#include "Acts/Propagator/EigenStepperError.hpp"
+#include "Acts/Utilities/Result.hpp"
+
 namespace Acts {
 
 /// @brief Runge-Kutta-Nystroem stepper based on Eigen implementation
@@ -513,7 +516,7 @@ public:
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
   template <typename propagator_state_t>
-  double
+  Result<double>
   step(propagator_state_t& state) const
   {
     // Runge-Kutta integrator state
@@ -585,8 +588,10 @@ public:
 
       // If step size becomes too small the particle remains at the initial
       // place
-      if (state.stepping.stepSize < state.options.stepSizeCutOff) {
-        return 0.;  // Not moving due to too low momentum needs an aborter
+      if (state.stepping.stepSize * state.stepping.stepSize
+          < state.options.stepSizeCutOff * state.options.stepSizeCutOff) {
+        // Not moving due to too low momentum needs an aborter
+        return EigenStepperError::StepSizeStalled;
       }
     }
 
@@ -598,14 +603,14 @@ public:
       // The step transport matrix in global coordinates
       ActsMatrixD<7, 7> D;
       if (!state.stepping.extension.finalize(state, *this, h, D)) {
-        return 0.;
+        return EigenStepperError::StepInvalid;
       }
 
       // for moment, only update the transport part
       state.stepping.jacTransport = D * state.stepping.jacTransport;
     } else {
       if (!state.stepping.extension.finalize(state, *this, h)) {
-        return 0.;
+        return EigenStepperError::StepInvalid;
       }
     }
 
