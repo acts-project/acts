@@ -121,8 +121,10 @@ Acts::Propagator<S, N>::propagate(
   StateType state(start, eOptions);
 
   static_assert(
-      concept::
-          has_method<const S, Result<double>, concept::Stepper::step_t, StateType&>,
+      concept::has_method<const S,
+                          Result<double>,
+                          concept::Stepper::step_t,
+                          StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -196,8 +198,10 @@ Acts::Propagator<S, N>::propagate(
   state.navigation.targetSurface = &target;
 
   static_assert(
-      concept::
-          has_method<const S, Result<double>, concept::Stepper::step_t, StateType&>,
+      concept::has_method<const S,
+                          Result<double>,
+                          concept::Stepper::step_t,
+                          StateType&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
