@@ -145,7 +145,7 @@ namespace Test {
     Stepper::StepperState stepping;
 
     /// Navigation state - internal state of the Navigator
-    Navigator::state_type navigation;
+    Navigator::State navigation;
 
     // The context cache for this propagation
     GeometryContext geoContext = GeometryContext();

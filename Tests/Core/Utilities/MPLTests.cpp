@@ -8,9 +8,6 @@
 
 // Boost include(s)
 #define BOOST_TEST_MODULE MPL Tests
-#include <boost/mpl/equal.hpp>
-#include <boost/mpl/set.hpp>
-#include <boost/mpl/vector.hpp>
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <type_traits>
@@ -19,12 +16,21 @@
 #include "Acts/Utilities/detail/MPL/are_sorted.hpp"
 #include "Acts/Utilities/detail/MPL/are_within.hpp"
 #include "Acts/Utilities/detail/MPL/at_index.hpp"
-#include "Acts/Utilities/detail/MPL/boost_mpl_helper.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
-namespace bm = bm;
+#include <boost/hana.hpp>
+#include <boost/hana/core/to.hpp>
+#include <boost/hana/equal.hpp>
+#include <boost/hana/ext/std/tuple.hpp>
+#include <boost/hana/integral_constant.hpp>
+#include <boost/hana/set.hpp>
+#include <boost/hana/transform.hpp>
+#include <boost/hana/tuple.hpp>
+#include <boost/hana/type.hpp>
+#include <boost/hana/union.hpp>
 
+namespace hana = boost::hana;
 namespace Acts {
 
 namespace Test {
@@ -44,30 +50,69 @@ namespace Test {
     static_assert(all_of_v<>, "all_of_v<> failed");
   }
 
-  BOOST_AUTO_TEST_CASE(boost_set_merger_test)
+  BOOST_AUTO_TEST_CASE(hana_set_union_test)
   {
-    using first    = typename bm::set<float, int, char, bool>::type;
-    using second   = typename bm::vector<long, int>::type;
-    using found    = typename detail::boost_set_merger_t<first, second>;
-    using expected = typename bm::set<float, int, char, bool, long>::type;
+    // using first    = typename bm::set<float, int, char, bool>::type;
+    constexpr auto first = hana::make_set(hana::type_c<float>,
+                                          hana::type_c<int>,
+                                          hana::type_c<char>,
+                                          hana::type_c<bool>);
+    // using second   = typename bm::vector<long, int>::type;
+    constexpr auto second
+        = hana::make_set(hana::type_c<long>, hana::type_c<int>);
+    constexpr auto found = hana::union_(first, second);
+    // using found    = typename detail::boost_set_merger_t<first, second>;
+    // using expected = typename bm::set<float, int, char, bool, long>::type;
+    constexpr auto expected = hana::make_set(hana::type_c<float>,
+                                             hana::type_c<int>,
+                                             hana::type_c<char>,
+                                             hana::type_c<bool>,
+                                             hana::type_c<long>);
 
-    static_assert(std::is_same<found, expected>::value,
-                  "merging sequence into bm::set failed");
+    static_assert(found == expected, "union of hana::sets failed");
+  }
+
+  BOOST_AUTO_TEST_CASE(hana_set_to_tuple_test)
+  {
+    constexpr auto a_set = hana::make_set(hana::type_c<float>,
+                                          hana::type_c<int>,
+                                          hana::type_c<char>,
+                                          hana::type_c<bool>);
+    constexpr auto h_tuple = hana::make_tuple(hana::type_c<float>,
+                                              hana::type_c<int>,
+                                              hana::type_c<char>,
+                                              hana::type_c<bool>);
+
+    static_assert(hana::to<hana::tuple_tag>(a_set) == h_tuple, "not equal");
+
+    // using std_tuple = decltype(hana::unpack(a_set,
+    // hana::template_<std::tuple>))::type; using expected = std::tuple<float,
+    // int, char>; static_assert(std::is_same<std_tuple, expected>::value,
+    // "using
+    // boost::mpl::set for variadic templates failed");
   }
 
   template <typename... args>
   struct variadic_struct
   {
+    using tuple = std::tuple<args...>;
   };
 
   BOOST_AUTO_TEST_CASE(unpack_boost_set_as_template_test)
   {
-    using boost_set = bm::set<float, int, char>::type;
-    using expected  = variadic_struct<float, int, char>;
-    using found = detail::boost_set_as_tparams_t<variadic_struct, boost_set>;
+    constexpr auto hana_set = hana::make_set(
+        hana::type_c<float>, hana::type_c<int>, hana::type_c<char>);
+    using found = decltype(
+        hana::unpack(hana_set, hana::template_<variadic_struct>))::type;
+
+    using expected = variadic_struct<float, int, char>;
 
     static_assert(std::is_same<found, expected>::value,
                   "using boost::mpl::set for variadic templates failed");
+
+    static_assert(
+        std::is_same<expected::tuple, std::tuple<float, int, char>>::value,
+        "not equal");
   }
 
   namespace {
@@ -92,29 +137,67 @@ namespace Test {
     {
       using action_type = float;
     };
-  }
+  }  // namespace
+
+  template <typename... Args>
+  struct tuple_helper
+  {
+    using tuple = std::tuple<Args...>;
+  };
 
   BOOST_AUTO_TEST_CASE(type_collector_test)
   {
-    typedef detail::type_collector_t<detail::result_type_extractor,
-                                     traits1,
-                                     traits2<true>,
-                                     traits2<false>>
-        found_results;
 
-    typedef detail::type_collector_t<detail::action_type_extractor,
-                                     traits1,
-                                     traits2<true>,
-                                     traits2<false>>
-        found_actions;
+    // test some predicates
+    static_assert(detail::has_result_type_v<traits1>,
+                  "Did not find result type");
+    static_assert(detail::has_result_type_v<traits2<false>>,
+                  "Did not find result type");
+    static_assert(not detail::has_result_type_v<traits2<true>>,
+                  "Did find result type");
 
-    using expected_results = typename bm::set<int, bool>::type;
-    using expected_actions = typename bm::set<char, float>::type;
+    static_assert(detail::has_action_type_v<traits1>,
+                  "Did not find action type");
+    static_assert(detail::has_action_type_v<traits2<false>>,
+                  "Did not find action type");
+    static_assert(detail::has_action_type_v<traits2<true>>,
+                  "Did not find action type");
 
-    static_assert(std::is_same<found_results, expected_results>::value,
-                  "collecting result types failed");
-    static_assert(std::is_same<found_actions, expected_actions>::value,
-                  "collecting action types failed");
+    constexpr auto found_results
+        = detail::type_collector_t<detail::result_type_extractor,
+                                   traits1,
+                                   traits2<true>,
+                                   traits2<false>>;
+    constexpr auto expected_results
+        = hana::make_set(hana::type_c<int>, hana::type_c<bool>);
+    static_assert(found_results == expected_results,
+                  "Didn't find expected results");
+
+    // check unpack
+    using found_results_tuple = decltype(hana::unpack(
+        found_results, hana::template_<tuple_helper>))::type::tuple;
+    using expected_results_tuple = std::tuple<int, bool>;
+    static_assert(
+        std::is_same<found_results_tuple, expected_results_tuple>::value,
+        "Unpacked results tuple not correct");
+
+    constexpr auto found_actions
+        = detail::type_collector_t<detail::action_type_extractor,
+                                   traits1,
+                                   traits2<true>,
+                                   traits2<false>>;
+    constexpr auto expected_actions
+        = hana::make_set(hana::type_c<char>, hana::type_c<float>);
+    static_assert(found_actions == expected_actions,
+                  "Didn't find expected actions");
+
+    // check unpack
+    using found_actions_tuple = decltype(hana::unpack(
+        found_actions, hana::template_<tuple_helper>))::type::tuple;
+    using expected_actions_tuple = std::tuple<char, float>;
+    static_assert(
+        std::is_same<found_actions_tuple, expected_actions_tuple>::value,
+        "Unpacked actions tuple not correct");
   }
 
   BOOST_AUTO_TEST_CASE(has_duplicates_test)

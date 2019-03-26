@@ -49,6 +49,8 @@ public:
   using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
+  using Corrector = VoidIntersectionCorrector;
+
   /// @brief Nested State struct for the local caching
   struct State
   {
@@ -271,8 +273,6 @@ public:
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
   };
-
-  using state_type = State;
 
   template <typename T, typename S = int>
   using return_parameter_type = typename s<T, S>::type;

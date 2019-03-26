@@ -8,12 +8,16 @@
 
 #pragma once
 
-#include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/detail/abort_condition_signature_check.hpp"
 #include "Acts/Propagator/detail/abort_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
-#include "Acts/Utilities/detail/MPL/boost_mpl_helper.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
+#include "Acts/Utilities/detail/MPL/type_collector.hpp"
+
+#include <boost/hana/type.hpp>
+#include <boost/hana/unpack.hpp>
+
+namespace hana = boost::hana;
 
 namespace Acts {
 
@@ -32,14 +36,14 @@ private:
   static_assert(not detail::has_duplicates_v<aborters_t...>,
                 "same aborter type specified several times");
 
-  // clang-format off
-  using actions = detail::type_collector_t<detail::action_type_extractor, aborters_t...>;
-  // clang-format on
-
   using detail::Extendable<aborters_t...>::tuple;
 
 public:
-  using action_list_type = detail::boost_set_as_tparams_t<AbortList, actions>;
+  // This uses the type collector
+  using result_type = typename decltype(hana::unpack(
+      detail::type_collector_t<detail::action_type_extractor, aborters_t...>,
+      hana::template_<AbortList>))::type;
+
   using detail::Extendable<aborters_t...>::get;
 
   /// Default constructor

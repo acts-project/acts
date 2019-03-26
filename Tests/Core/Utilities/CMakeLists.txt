@@ -67,3 +67,7 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST BFieldMapUtilsTest TARGETS BF
 add_executable (ResultTests ResultTests.cpp)
 target_link_libraries (ResultTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME ResultTests COMMAND ResultTests)
+
+add_executable (TypeTraitsTest TypeTraitsTest.cpp)
+target_link_libraries (TypeTraitsTest PRIVATE ActsCore ActsTestsCommonHelpers)
+add_test (NAME TypeTraitsTest COMMAND TypeTraitsTest)

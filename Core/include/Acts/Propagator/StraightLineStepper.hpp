@@ -47,7 +47,9 @@ private:
 public:
   using cstep = detail::ConstrainedStep;
 
+  using Corrector        = VoidIntersectionCorrector;
   using Jacobian         = ActsMatrixD<5, 5>;
+  using Covariance       = ActsMatrixD<5, 5>;
   using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 

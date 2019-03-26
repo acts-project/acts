@@ -11,7 +11,6 @@
 #include <cmath>
 #include <functional>
 #include <limits>
-#include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
@@ -60,7 +59,8 @@ private:
   };
 
 public:
-  using cstep = detail::ConstrainedStep;
+  using cstep     = detail::ConstrainedStep;
+  using Corrector = corrector_t;
 
   /// Jacobian, Covariance and State defintions
   using Jacobian         = ActsMatrixD<5, 5>;
@@ -181,10 +181,6 @@ public:
       Vector3D k1, k2, k3, k4;
     } stepData;
   };
-
-  /// Always use the same propagation state type, independently of the initial
-  /// track parameter type and of the target surface
-  using state_type = State;
 
   /// Return parameter types depend on the propagation mode:
   /// - when propagating to a surface we usually return BoundParameters

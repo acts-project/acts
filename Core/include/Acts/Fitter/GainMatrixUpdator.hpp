@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include <boost/variant.hpp>
 #include <memory>
+#include <variant>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
@@ -77,7 +77,7 @@ public:
 
     // we need to remove type-erasure on the measurement type
     // to access its methods
-    boost::apply_visitor(
+    std::visit(
         [&](const auto& uncalibrated) {
           // type of measurement
           using meas_t = typename std::remove_const<
