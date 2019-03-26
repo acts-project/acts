@@ -9,8 +9,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
-#include "Acts/Vertexing/VertexEventData/TrackAtVertex.hpp"
-#include "Acts/Vertexing/VertexEventData/VertexingError.hpp"
+#include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 
 namespace {
 
@@ -20,16 +20,16 @@ namespace {
 template <typename input_track_t>
 struct BilloirTrack
 {
-  BilloirTrack(const input_track_t& params, Acts::LinearizedTrack* lTrack)
+  BilloirTrack(const input_track_t& params, Acts::LinearizedTrack lTrack)
     : originalTrack(params), linTrack(lTrack)
   {
   }
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  const input_track_t    originalTrack;
-  Acts::LinearizedTrack* linTrack;
-  double                 chi2;
+  const input_track_t   originalTrack;
+  Acts::LinearizedTrack linTrack;
+  double                chi2;
   Acts::ActsMatrixD<5, 3> DiMat;   // position jacobian
   Acts::ActsMatrixD<5, 3> EiMat;   // momentum jacobian
   Acts::ActsSymMatrixD<3> GiMat;   //  = EtWmat * Emat (see below)
@@ -114,9 +114,12 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
 
-      auto result = m_cfg.linFactory.linearizeTrack(vFitterOptions.geoContext,
+      auto result
+          = m_cfg.linFactory.linearizeTrack(vFitterOptions.geoContext,
                                             vFitterOptions.magFieldContext,
-          &trackParams, linPoint, m_cfg.propagator);
+                                            &trackParams,
+                                            linPoint,
+                                            m_cfg.propagator);
       if (result.ok()) {
         const auto linTrack = *result;
         double     d0       = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
@@ -126,10 +129,11 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         double     qOverP   = linTrack.parametersAtPCA[ParID_t::eQOP];
 
         // calculate f(V_0,p_0)  f_d0 = f_z0 = 0
-        double                   fPhi   = trackMomenta[iTrack][0];
-        double                   fTheta = trackMomenta[iTrack][1];
-        double                   fQOvP  = trackMomenta[iTrack][2];
-        BilloirTrack<InputTrack> currentBilloirTrack(trackContainer, linTrack);
+        double                      fPhi   = trackMomenta[iTrack][0];
+        double                      fTheta = trackMomenta[iTrack][1];
+        double                      fQOvP  = trackMomenta[iTrack][2];
+        BilloirTrack<input_track_t> currentBilloirTrack(trackContainer,
+                                                        linTrack);
 
         // calculate deltaQ[i]
         currentBilloirTrack.deltaQ[0] = d0;
@@ -279,7 +283,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       bTrack.chi2
           = ((bTrack.deltaQ - bTrack.DiMat * deltaV - bTrack.EiMat * deltaP)
                  .transpose()
-             * bTrack.linTrack->covarianceAtPCA.inverse()
+             * bTrack.linTrack.covarianceAtPCA.inverse()
              * (bTrack.deltaQ - bTrack.DiMat * deltaV
                 - bTrack.EiMat * deltaP))[0];
       newChi2 += bTrack.chi2;

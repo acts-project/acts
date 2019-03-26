@@ -33,8 +33,9 @@ namespace Acts {
 /// @tparam input_track_t Track object type
 /// @tparam propagator_t Propagator type
 
-template <typename bfield_t, typename input_track_t, typename propagator_t
-= Propagator<EigenStepper<bfield_t>>>
+template <typename bfield_t,
+          typename input_track_t,
+          typename propagator_t = Propagator<EigenStepper<bfield_t>>>
 class FullBilloirVertexFitter
     : public IVertexFitter<input_track_t, propagator_t>
 {
@@ -66,8 +67,8 @@ public:
     /// Constructor with default propagator
     template <
         typename T = propagator_t,
-        std::enable_if_t<std::is_same<T,
-                                      Propagator<EigenStepper<bfield_t>>>::value,
+        std::enable_if_t<std::is_same<T, Propagator<EigenStepper<bfield_t>>>::
+                             value,
                          int> = 0>
     Config(bfield_t bIn)
       : bField(std::move(bIn))
@@ -105,8 +106,7 @@ public:
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to
-  /// @param constraint Constraint of the fit, position of constraint is
-  /// starting point
+  /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Fitted vertex
   Result<Vertex<input_track_t>>

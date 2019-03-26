@@ -20,9 +20,9 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Vertexing/VertexFitterTools/FullBilloirVertexFitter.hpp"
-#include "Acts/Vertexing/VertexFitterTools/IVertexFitter.hpp"
-#include "Acts/Vertexing/VertexEventData/Vertex.hpp"
+#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
+#include "Acts/Vertexing/IVertexFitter.hpp"
+#include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 
@@ -38,10 +38,10 @@ namespace Test {
   template <typename InputTrack_t, typename Propagator_t>
   Vertex<InputTrack_t>
   myFitWrapper(IVertexFitter<InputTrack_t, Propagator_t>* fitter,
-               std::vector<InputTrack_t>& tracks,
-               VertexFitterOptions<BoundParameters> vfOptions)
+               std::vector<InputTrack_t>&        tracks,
+               VertexFitterOptions<InputTrack_t> vfOptions)
   {
-      return fitter->fit(tracks, vfOptions).value();
+    return fitter->fit(tracks, vfOptions).value();
   }
 
   /// @brief Unit test for FullBilloirVertexFitter
@@ -237,9 +237,10 @@ namespace Test {
       if (fittedVertexConstraint.tracks().size() > 0) {
         CHECK_CLOSE_ABS(
             fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
-
+      }
       // Test the IVertexFitter interface
-      Vertex<BoundParameters> testVertex = myFitWrapper(&billoirFitter, tracks, vfOptions);
+      Vertex<BoundParameters> testVertex
+          = myFitWrapper(&billoirFitter, tracks, vfOptions);
       if (testVertex.tracks().size() > 0) {
         CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
       }
@@ -391,7 +392,8 @@ namespace Test {
       }
 
       // Test the IVertexFitter interface
-      Vertex<InputTrack> testVertex = myFitWrapper(&billoirFitter, tracks, vfOptions);
+      Vertex<InputTrack> testVertex
+          = myFitWrapper(&billoirFitter, tracks, vfOptions);
 
       CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
 
