@@ -83,6 +83,7 @@ public:
           using meas_t = typename std::remove_const<
               typename std::remove_reference<decltype(uncalibrated)>::type>::
               type;
+	  	  using CovMatrix_Meas_t = typename meas_t::CovMatrix_t;
           // type of projection
           using projection_t = typename meas_t::Projection_t;
           // type of gain matrix (transposed projection)
@@ -109,20 +110,37 @@ public:
           filtered_covariance
               = (CovMatrix_t::Identity() - K * H) * predicted_covariance;
 
+		  // Create new filtered parameters and covariance
+		  parameters_t filtered(
+			  gctx,
+			  std::make_unique<const CovMatrix_t>(std::move(filtered_covariance)),
+			  filtered_parameters,
+			  predicted.referenceSurface().getSharedPtr());
+
+		  //std::cout<<"predict "<<predicted.parameters()<<"."<<std::endl;
+		  //std::cout<<"filtered "<<filtered.parameters()<<"."<<std::endl;
+		  //std::cout<<"predict residual "<<calibrated.residual(predicted)<<"."<<std::endl;
+		  //std::cout<<"filter residual "<<calibrated.residual(filtered)<<"."<<std::endl;
+		  //std::cout<<"filter residual transpose "<<calibrated.residual(filtered).transpose()<<"."<<std::endl;
+		  //std::cout<<"H "<<H <<"."<<std::endl;
+		  //std::cout<<"K "<<K <<"."<<std::endl;
+		  //std::cout<<"H*K "<<H * K<<"."<<std::endl;
+		  //std::cout<<"Identity "<<CovMatrix_t::Identity()<<"."<<std::endl;
+		  //std::cout<<"Identity2 "<<CovMatrix_Meas_t::Identity()<<"."<<std::endl;
+		  //std::cout<<"cov "<<calibrated.covariance()<<"."<<std::endl;
+
+		  trackState.parameter.chi2 =  
+			(calibrated.residual(filtered).transpose()) 
+			* ((CovMatrix_Meas_t::Identity() - H * K) * calibrated.covariance()).inverse()
+			* calibrated.residual(filtered);
+
           // plug calibrated measurement back into track state
           trackState.measurement.calibrated = std::move(calibrated);
 
+		  trackState.parameter.filtered = std::move(filtered);
+
         },
         *trackState.measurement.uncalibrated);
-
-    // Create new filtered parameters and covariance
-    parameters_t filtered(
-        gctx,
-        std::make_unique<const CovMatrix_t>(std::move(filtered_covariance)),
-        filtered_parameters,
-        predicted.referenceSurface().getSharedPtr());
-
-    trackState.parameter.filtered = std::move(filtered);
 
     // always succeed, no outlier logic yet
     return true;
