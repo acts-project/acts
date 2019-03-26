@@ -144,8 +144,8 @@ public:
     boost::optional<Jacobian> jacobian{boost::none};
     /// The path length along the track - will help sorting
     double pathLength = 0.;
-	///chisqure
-	double  chi2 = 0;
+    /// chisqure
+    double chi2 = 0;
   } parameter;
 
   /// @brief Nested measurement part
@@ -159,7 +159,6 @@ public:
     /// The optional calibrabed measurement
     boost::optional<FittableMeasurement<identifier_t>> calibrated{boost::none};
   } measurement;
-
 
 private:
   /// The surface of this TrackState

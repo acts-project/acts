@@ -83,7 +83,7 @@ public:
           using meas_t = typename std::remove_const<
               typename std::remove_reference<decltype(uncalibrated)>::type>::
               type;
-	  	  using CovMatrix_Meas_t = typename meas_t::CovMatrix_t;
+          using CovMatrix_Meas_t = typename meas_t::CovMatrix_t;
           // type of projection
           using projection_t = typename meas_t::Projection_t;
           // type of gain matrix (transposed projection)
@@ -110,26 +110,28 @@ public:
           filtered_covariance
               = (CovMatrix_t::Identity() - K * H) * predicted_covariance;
 
-		  // Create new filtered parameters and covariance
-		  parameters_t filtered(
-			  gctx,
-			  std::make_unique<const CovMatrix_t>(std::move(filtered_covariance)),
-			  filtered_parameters,
-			  predicted.referenceSurface().getSharedPtr());
+          // Create new filtered parameters and covariance
+          parameters_t filtered(gctx,
+                                std::make_unique<const CovMatrix_t>(
+                                    std::move(filtered_covariance)),
+                                filtered_parameters,
+                                predicted.referenceSurface().getSharedPtr());
 
-		  // calculate the chi2 
-		  // chi2 = r^T * R^-1 * r
-		  // r is the residual of the filtered state
-		  // R is the covariance matrix of the filtered residual
-		  trackState.parameter.chi2 =  
-			(calibrated.residual(filtered).transpose()) 
-			* ((CovMatrix_Meas_t::Identity() - H * K) * calibrated.covariance()).inverse()
-			* calibrated.residual(filtered);
+          // calculate the chi2
+          // chi2 = r^T * R^-1 * r
+          // r is the residual of the filtered state
+          // R is the covariance matrix of the filtered residual
+          trackState.parameter.chi2
+              = (calibrated.residual(filtered).transpose())
+              * ((CovMatrix_Meas_t::Identity() - H * K)
+                 * calibrated.covariance())
+                    .inverse()
+              * calibrated.residual(filtered);
 
           // plug calibrated measurement back into track state
           trackState.measurement.calibrated = std::move(calibrated);
 
-		  trackState.parameter.filtered = std::move(filtered);
+          trackState.parameter.filtered = std::move(filtered);
 
         },
         *trackState.measurement.uncalibrated);

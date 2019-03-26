@@ -509,7 +509,6 @@ private:
         dstream << std::setw(state.options.debugMsgWidth) << logAction()
                 << '\n';
         state.options.debugString += dstream.str();
-		std::cout<<dstream.str();
       }
     }
 
