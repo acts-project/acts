@@ -117,18 +117,10 @@ public:
 			  filtered_parameters,
 			  predicted.referenceSurface().getSharedPtr());
 
-		  //std::cout<<"predict "<<predicted.parameters()<<"."<<std::endl;
-		  //std::cout<<"filtered "<<filtered.parameters()<<"."<<std::endl;
-		  //std::cout<<"predict residual "<<calibrated.residual(predicted)<<"."<<std::endl;
-		  //std::cout<<"filter residual "<<calibrated.residual(filtered)<<"."<<std::endl;
-		  //std::cout<<"filter residual transpose "<<calibrated.residual(filtered).transpose()<<"."<<std::endl;
-		  //std::cout<<"H "<<H <<"."<<std::endl;
-		  //std::cout<<"K "<<K <<"."<<std::endl;
-		  //std::cout<<"H*K "<<H * K<<"."<<std::endl;
-		  //std::cout<<"Identity "<<CovMatrix_t::Identity()<<"."<<std::endl;
-		  //std::cout<<"Identity2 "<<CovMatrix_Meas_t::Identity()<<"."<<std::endl;
-		  //std::cout<<"cov "<<calibrated.covariance()<<"."<<std::endl;
-
+		  // calculate the chi2 
+		  // chi2 = r^T * R^-1 * r
+		  // r is the residual of the filtered state
+		  // R is the covariance matrix of the filtered residual
 		  trackState.parameter.chi2 =  
 			(calibrated.residual(filtered).transpose()) 
 			* ((CovMatrix_Meas_t::Identity() - H * K) * calibrated.covariance()).inverse()

@@ -501,7 +501,6 @@ private:
     debugLog(propagator_state_t&                 state,
              const std::function<std::string()>& logAction) const
     {
-	  state.options.debug = true;
       if (state.options.debug) {
         std::stringstream dstream;
         dstream << "K->" << std::setw(state.options.debugPfxWidth);
