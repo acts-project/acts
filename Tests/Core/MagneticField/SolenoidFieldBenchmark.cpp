@@ -25,16 +25,16 @@ main(int argc, char* argv[])
     n = std::stoi(argv[1]);
   }
 
-  const double L          = 5.8 * Acts::units::_m;
-  const double R          = (2.56 + 2.46) * 0.5 * 0.5 * Acts::units::_m;
+  const long double L          = 5.8 * Acts::units::_m;
+  const long double R          = (2.56 + 2.46) * 0.5 * 0.5 * Acts::units::_m;
   const size_t nCoils     = 1154;
-  const double bMagCenter = 2. * Acts::units::_T;
+  const long double bMagCenter = 2. * Acts::units::_T;
   const size_t nBinsR     = 150;
   const size_t nBinsZ     = 200;
 
   double rMin = -0.1;
   double rMax = R * 2.;
-  double zMin = 2 * (-L / 2.);
+  long double zMin = 2 * (-L / 2.);
   double zMax = 2 * (L / 2.);
 
   size_t printStep = n / 10;
@@ -58,7 +58,7 @@ main(int argc, char* argv[])
   using clock = std::chrono::steady_clock;
   auto start  = clock::now();
 
-  double         z, r, phi;
+  long double         z, r, phi;
   Acts::Vector3D pos;
   Acts::Vector3D B;
   for (size_t i = 0; i < n; i++) {
