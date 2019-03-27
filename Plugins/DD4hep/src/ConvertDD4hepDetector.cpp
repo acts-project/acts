@@ -99,9 +99,9 @@ convertDD4hepDetector(
 
   for (const auto& vb : volumeBuilders) {
     volumeFactories.push_back([vb](
-        const GeometryContext&                       gctx,
+        const GeometryContext&                       vgctx,
         const std::shared_ptr<const TrackingVolume>& inner,
-        const VolumeBoundsPtr&) { return vb->trackingVolume(gctx, inner); });
+        const VolumeBoundsPtr&) { return vb->trackingVolume(vgctx, inner); });
   }
 
   // create cylinder volume helper
