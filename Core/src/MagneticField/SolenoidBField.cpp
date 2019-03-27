@@ -16,7 +16,7 @@ Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(std::move(config))
 {
   m_dz = m_cfg.length / m_cfg.nCoils;
   m_R2 = m_cfg.radius * m_cfg.radius;
-  // we need to scale so we reproduce the expected B field strength
+  // we need to scale in order to reproduce the expected B field strength
   // at the center of the solenoid
   Vector2D field = multiCoilField({0, 0}, 1.);  // scale = 1
   m_scale        = m_cfg.bMagCenter / field.norm();
@@ -67,7 +67,7 @@ Acts::SolenoidBField::getFieldGradient(const Vector3D& position,
 }
 
 Acts::Vector2D
-Acts::SolenoidBField::multiCoilField(const Vector2D& pos, double scale) const
+Acts::SolenoidBField::multiCoilField(const Vector2D& pos,long double scale) const
 {
   // iterate over all coils
   Vector2D resultField(0, 0);
@@ -81,13 +81,13 @@ Acts::SolenoidBField::multiCoilField(const Vector2D& pos, double scale) const
 }
 
 Acts::Vector2D
-Acts::SolenoidBField::singleCoilField(const Vector2D& pos, double scale) const
+Acts::SolenoidBField::singleCoilField(const Vector2D& pos,long double scale) const
 {
   return {B_r(pos, scale), B_z(pos, scale)};
 }
 
-double
-Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
+long double
+Acts::SolenoidBField::B_r(const Vector2D& pos,long double scale) const
 {
 
   //              _
@@ -101,8 +101,8 @@ Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
   //  2         _/  0
   using boost::math::ellint_2;
 
-  double r = std::abs(pos[0]);
-  double z = pos[1];
+ long double r = std::abs(pos[0]);
+ long double z = pos[1];
 
   if (r == 0) {
     return 0.;
@@ -115,19 +115,19 @@ Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
   //  r            4pi     ___ |  |      2| 2          1       |
   //                    | /  3 |_ \2 - 2k /                   _|
   //                    |/ Rr
-  double k_2 = k2(r, z);
-  double k   = std::sqrt(k_2);
-  double constant
+ long double k_2 = k2(r, z);
+ long double k   = std::sqrt(k_2);
+ long double constant
       = scale * k * z / (4 * M_PI * std::sqrt(m_cfg.radius * r * r * r));
 
-  double B = (2. - k_2) / (2. - 2. * k_2) * ellint_2(k_2) - ellint_1(k_2);
+  long double B = (2. - k_2) / (2. - 2. * k_2) * ellint_2(k_2) - ellint_1(k_2);
 
   // pos[0] is still signed!
   return r / pos[0] * constant * B;
 }
 
-double
-Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const
+long double
+Acts::SolenoidBField::B_z(const Vector2D& pos, long double scale) const
 {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
@@ -140,8 +140,8 @@ Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const
   //  2         _/  0
   using boost::math::ellint_2;
 
-  double r = std::abs(pos[0]);
-  double z = pos[1];
+  long double r = std::abs(pos[0]);
+  long double z = pos[1];
 
   //                         _                                       _
   //             mu  I      |  /         2      \                     |
@@ -151,22 +151,22 @@ Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const
   //                   |/Rr |_ \   2r(1 - k )   /                    _|
 
   if (r == 0) {
-    double res = scale / 2. * m_R2 / (std::sqrt(m_R2 + z * z) * (m_R2 + z * z));
+    long double res = scale / 2. * m_R2 / (std::sqrt(m_R2 + z * z) * (m_R2 + z * z));
     return res;
   }
 
-  double k_2      = k2(r, z);
-  double k        = std::sqrt(k_2);
-  double constant = scale * k / (4 * M_PI * std::sqrt(m_cfg.radius * r));
-  double B        = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2))
+  long double k_2      = k2(r, z);
+  long double k        = std::sqrt(k_2);
+ long double constant = scale * k / (4 * M_PI * std::sqrt(m_cfg.radius * r));
+ long double B        = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2))
           * ellint_2(k_2)
       + ellint_1(k_2);
 
   return constant * B;
 }
 
-double
-Acts::SolenoidBField::k2(double r, double z) const
+long double
+Acts::SolenoidBField::k2(long double r, long double z) const
 {
   //  2           4Rr
   // k   =  ---------------
