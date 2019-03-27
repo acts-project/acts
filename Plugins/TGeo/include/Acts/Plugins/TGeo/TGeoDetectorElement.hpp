@@ -36,6 +36,9 @@ class DigitizationModule;
 class TGeoDetectorElement : public IdentifiedDetectorElement
 {
 public:
+  /// Broadcast the context type
+  using ContextType = GeometryContext;
+
   /// Constructor
   /// @param identifier is the detector identifier
   /// @param tGeoDetElement is the TGeoNode which should be represented
