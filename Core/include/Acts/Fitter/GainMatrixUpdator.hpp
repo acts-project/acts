@@ -121,12 +121,12 @@ public:
           // chi2 = r^T * R^-1 * r
           // r is the residual of the filtered state
           // R is the covariance matrix of the filtered residual
-          trackState.parameter.chi2
-              = (calibrated.residual(filtered).transpose())
+          auto residual             = calibrated.residual(filtered);
+          trackState.parameter.chi2 = residual.transpose()
               * ((CovMatrix_Meas_t::Identity() - H * K)
                  * calibrated.covariance())
                     .inverse()
-              * calibrated.residual(filtered);
+              * residual;
 
           // plug calibrated measurement back into track state
           trackState.measurement.calibrated = std::move(calibrated);
