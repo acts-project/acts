@@ -290,8 +290,11 @@ Acts::
   // map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Acts::Vector2D& bfield,
                             const Acts::Vector3D& pos) {
+    double inv_r_sin_theta = 1. / sqrt(pos.x() * pos.x() + pos.y() * pos.y());
+    double cos_phi = pos.x() * inv_r_sin_theta;
+    double sin_phi = pos.y() * inv_r_sin_theta;
     return Acts::Vector3D(
-        bfield.x() * cos(phi(pos)), bfield.x() * sin(phi(pos)), bfield.y());
+        bfield.x() * cos_phi, bfield.x() * sin_phi, bfield.y());
   };
 
   // iterate over all bins, set their value to the solenoid value
