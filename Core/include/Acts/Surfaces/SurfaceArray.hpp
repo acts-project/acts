@@ -341,7 +341,7 @@ public:
           continue;
         }
         typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
-        std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
+        auto neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
         std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
         neighbors.clear();
 

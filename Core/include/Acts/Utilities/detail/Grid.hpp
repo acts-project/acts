@@ -162,7 +162,7 @@ namespace detail {
     ///      dimensions where d is dimensionality of the grid. It must lie
     ///      within the grid range (i.e. not within a under-/overflow bin).
     template <class Point>
-    std::set<size_t>
+    std::vector<size_t>
     closestPointsIndices(const Point& position) const
     {
       return grid_helper::closestPointsIndices(getGlobalBinIndex(position),
@@ -403,7 +403,7 @@ namespace detail {
     ///       Ignoring the truncation of the neighborhood size reaching beyond
     ///       over-/underflow bins, the neighborhood is of size \f$2 \times
     ///       \text{size}+1\f$ along each dimension.
-    std::set<size_t>
+    std::vector<size_t>
     neighborHoodIndices(const index_t& localBins, size_t size = 1u) const
     {
       return grid_helper::neighborHoodIndices(localBins, size, m_axes);
@@ -415,7 +415,7 @@ namespace detail {
     /// @param size how many neighbors (defaul: 1)
     /// @return set of global bin indices pointing to the neighbors
     template <class Point>
-    std::set<size_t>
+    std::vector<size_t>
     neighborHoodIndices(const Point& pos, size_t size = 1u) const
     {
       const size_t  bin       = getGlobalBinIndex(pos);

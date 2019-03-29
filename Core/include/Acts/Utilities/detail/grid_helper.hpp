@@ -189,7 +189,7 @@ namespace detail {
     combineNeighborHoodIndices(
         std::array<size_t, sizeof...(Axes)>&           idx,
         std::array<IndexRange, sizeof...(Axes)>& neighborIndices,
-        std::set<size_t>&          combinations,
+        std::vector<size_t>& combinations,
         const std::tuple<Axes...>& axes)
     {
       // iterate over this axis' neighbors
@@ -362,7 +362,7 @@ namespace detail {
     combineNeighborHoodIndices(
         std::array<size_t, sizeof...(Axes)>&           idx,
         std::array<IndexRange, sizeof...(Axes)>& neighborIndices,
-        std::set<size_t>&          combinations,
+        std::vector<size_t>& combinations,
         const std::tuple<Axes...>& axes)
     {
       // iterate over this axis' neighbors
@@ -373,7 +373,7 @@ namespace detail {
         size_t bin = 0, area = 1;
         grid_helper_impl<sizeof...(Axes) - 1>::getGlobalBin(
             idx, axes, bin, area);
-        combinations.insert(bin);
+        combinations.push_back(bin);
       }
     }
 
@@ -425,19 +425,20 @@ namespace detail {
     /// @tparam Axes parameter pack of axis types defining the grid
     /// @param  [in] bin  global bin index for bin of interest
     /// @param  [in] axes actual axis objects spanning the grid
-    /// @return set of global bin indices for bins whose lower-left corners are
-    ///         the closest points on the grid to every point in the given bin
+    /// @return Sorted collection of global bin indices for bins whose
+    ///         lower-left corners are the closest points on the grid to every
+    ///         point in the given bin
     ///
     /// @note @c bin must be a valid bin index (excluding under-/overflow bins
     ///       along any axis).
     template <class... Axes>
-    static std::set<size_t>
+    static std::vector<size_t>
     closestPointsIndices(size_t bin, const std::tuple<Axes...>& axes)
     {
       std::array<size_t, sizeof...(Axes)> localIndices
           = getLocalBinIndices(bin, axes);
       // get neighboring bins, but only increment.
-      std::set<size_t> comb
+      std::vector<size_t> comb
           = neighborHoodIndices(localIndices, std::make_pair(0, 1), axes);
       return comb;
     }
@@ -698,7 +699,8 @@ namespace detail {
     /// @param  [in] size         size of neighborhood determining how many
     ///                           adjacent bins along each axis are considered
     /// @param  [in] axes         actual axis objects spanning the grid
-    /// @return set of global bin indices for all bins in neighborhood
+    /// @return Sorted collection of global bin indices for all bins in
+    ///         the neighborhood
     ///
     /// @note Over-/underflow bins are included in the neighborhood.
     /// @note The @c size parameter sets the range by how many units each local
@@ -716,7 +718,7 @@ namespace detail {
     ///       indices. The problematic part is the check when going beyond
     ///       under-/overflow bins.
     template <class... Axes>
-    static std::set<size_t>
+    static std::vector<size_t>
     neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
                         std::pair<size_t, size_t>                  sizes,
                         const std::tuple<Axes...>& axes)
@@ -730,15 +732,16 @@ namespace detail {
           localIndices, sizes, axes, neighborIndices);
 
       std::array<size_t, sizeof...(Axes)> idx;
-      std::set<size_t> combinations;
+      std::vector<size_t> combinations;
       grid_helper_impl<MAX>::combineNeighborHoodIndices(
           idx, neighborIndices, combinations, axes);
+      std::sort(combinations.begin(), combinations.end());
 
       return combinations;
     }
 
     template <class... Axes>
-    static std::set<size_t>
+    static std::vector<size_t>
     neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
                         size_t                     size,
                         const std::tuple<Axes...>& axes)
