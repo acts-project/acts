@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9)
 
 # read version number from file
 file(READ version_number _acts_version)
