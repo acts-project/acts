@@ -13,23 +13,46 @@
 
 namespace Acts {
 
+/**
+ * This helper produces output in the OBJ format. Note that colors are not
+ * supported in this implementation.
+ */
 template <typename T = double>
 class ObjHelper : public IVisualization
 {
 public:
-  using value_type  = T;
+  static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
+                "Use either double or float");
+
+  /**
+   * Stored value type, should be double or float
+   */
+  using value_type = T;
+
+  /**
+   * Type of a vertex based on the value type
+   */
   using vertex_type = ActsVector<value_type, 3>;
 
+  /**
+   * Typedef of what a face is.
+   */
   using face_type = std::vector<size_t>;
 
+  /**
+   * @copydoc Acts::IVisualization::vertex()
+   */
   void
-  vertex(const Vector3D& vtx,
+  vertex(const Vector3D&            vtx,
          IVisualization::color_type color = {0, 0, 0}) override
   {
     (void)color;
     m_vertices.push_back(vtx.template cast<value_type>());
   }
 
+  /**
+   * @copydoc Acts::IVisualization::line()
+   */
   void
   line(const Vector3D& /*a*/,
        const Vector3D& /*b*/,
@@ -39,6 +62,9 @@ public:
     throw std::runtime_error("Line not implemented for OBJ");
   }
 
+  /**
+   * @copydoc Acts::IVisualization::face()
+   */
   void
   face(const std::vector<Vector3D>& vtxs,
        IVisualization::color_type /*unsupported*/) override
@@ -52,6 +78,9 @@ public:
     m_faces.push_back(std::move(idxs));
   }
 
+  /**
+   * @copydoc Acts::IVisualization::write()
+   */
   void
   write(std::ostream& os) const override
   {
@@ -68,6 +97,9 @@ public:
     }
   }
 
+  /**
+   * @copydoc Acts::IVisualization::clear()
+   */
   void
   clear() override
   {

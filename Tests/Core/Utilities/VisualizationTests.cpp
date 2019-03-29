@@ -11,8 +11,10 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Utilities/IVisualization.hpp"
-#include "Acts/Utilities/PlyHelper.hpp"
 #include "Acts/Utilities/ObjHelper.hpp"
+#include "Acts/Utilities/PlyHelper.hpp"
+
+#include <iostream>
 
 namespace Acts {
 namespace Test {
@@ -21,16 +23,18 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(construction_test)
   {
-    // this doesn't really test anything, other than conformance to the IVisualization interface
+    // this doesn't really test anything, other than conformance to the
+    // IVisualization interface
     PlyHelper ply;
     ObjHelper obj;
 
     IVisualization* vis;
     vis = &ply;
+    std::cout << *vis << std::endl;
     vis = &obj;
-
-    (void)vis;
+    std::cout << *vis << std::endl;
   }
 
   BOOST_AUTO_TEST_SUITE_END()
-}}
+}
+}

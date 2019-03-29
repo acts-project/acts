@@ -17,11 +17,27 @@ template <typename T = double>
 class PlyHelper : public IVisualization
 {
 public:
-  using value_type  = T;
+  static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
+                "Use either double or float");
+
+  /**
+   * Stored value type, should be double or float
+   */
+  using value_type = T;
+
+  /**
+   * Type of a vertex based on the value type
+   */
   using vertex_type = ActsVector<value_type, 3>;
 
+  /**
+   * Typedef of what a face is.
+   */
   using face_type = std::vector<size_t>;
 
+  /**
+   * @copydoc Acts::IVisualization::vertex()
+   */
   void
   vertex(const Vector3D&            vtx,
          IVisualization::color_type color = {120, 120, 120}) override
@@ -29,6 +45,9 @@ public:
     m_vertices.emplace_back(vtx.template cast<value_type>(), color);
   }
 
+  /**
+   * @copydoc Acts::IVisualization::line()
+   */
   void
   face(const std::vector<Vector3D>& vtxs,
        IVisualization::color_type   color = {120, 120, 120}) override
@@ -42,6 +61,9 @@ public:
     m_faces.push_back(std::move(idxs));
   }
 
+  /**
+   * @copydoc Acts::IVisualization::face()
+   */
   void
   line(const Vector3D&            a,
        const Vector3D&            b,
@@ -54,6 +76,9 @@ public:
     m_edges.emplace_back(std::make_pair(std::make_pair(idx_a, idx_b), color));
   }
 
+  /**
+   * @copydoc Acts::IVisualization::write()
+   */
   void
   write(std::ostream& os) const override
   {
@@ -101,6 +126,9 @@ public:
     }
   }
 
+  /**
+   * @copydoc Acts::IVisualization::clear()
+   */
   void
   clear() override
   {
