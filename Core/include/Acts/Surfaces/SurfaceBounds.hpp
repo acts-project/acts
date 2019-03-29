@@ -47,8 +47,9 @@ public:
     Trapezoid        = 9,
     Triangle         = 10,
     DiscTrapezoidal  = 11,
-    Boundless        = 12,
-    Other            = 12
+    ConvexPolygon    = 12,
+    Boundless        = 13,
+    Other            = 14
   };
 
   virtual ~SurfaceBounds() = default;

@@ -90,3 +90,7 @@ add_test (NAME DiscTrapezoidalBoundsUnitTest COMMAND DiscTrapezoidalBoundsTests)
 add_executable (SurfaceArrayTests SurfaceArrayTests.cpp)
 target_link_libraries (SurfaceArrayTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME SurfaceArrayUnitTest COMMAND SurfaceArrayTests)
+
+add_executable (ConvexPolygonBoundsTest ConvexPolygonBoundsTest.cpp)
+target_link_libraries (ConvexPolygonBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME ConvexPolygonBoundsTest COMMAND ConvexPolygonBoundsTest)
