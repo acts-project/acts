@@ -165,8 +165,7 @@ namespace detail {
     std::vector<size_t>
     closestPointsIndices(const Point& position) const
     {
-      return grid_helper::closestPointsIndices(getGlobalBinIndex(position),
-                                               m_axes);
+      return collectNeigborIndices(rawClosestPointsIndices(position));
     }
 
     /// @brief dimensionality of grid
@@ -355,7 +354,7 @@ namespace detail {
       auto urIndices = grid_helper::getUpperRightBinIndices(llIndices, m_axes);
 
       // get global indices for all surrounding corner points
-      const auto& closestIndices = closestPointsIndices(point);
+      const auto& closestIndices = rawClosestPointsIndices(point);
 
       // get values on grid points
       size_t i = 0;
@@ -406,7 +405,7 @@ namespace detail {
     std::vector<size_t>
     neighborHoodIndices(const index_t& localBins, size_t size = 1u) const
     {
-      return grid_helper::neighborHoodIndices(localBins, size, m_axes);
+      return collectNeighborIndices(rawNeighborHoodIndices(localBins, size));
     }
 
     /// @brief get global bin indices for neighborhood of bin identified by @p
@@ -420,7 +419,7 @@ namespace detail {
     {
       const size_t  bin       = getGlobalBinIndex(pos);
       const index_t localBins = getLocalBinIndices(bin);
-      return grid_helper::neighborHoodIndices(localBins, size, m_axes);
+      return neighborHoodIndices(localBins, size);
     }
 
     /// @brief total number of bins
@@ -451,6 +450,30 @@ namespace detail {
     std::tuple<Axes...> m_axes;
     /// linear value store for each bin
     std::vector<T> m_values;
+
+    std::vector<size_t>
+    collectNeighborIndices(detail::GlobalNeighborHoodIndices<DIM>&& iter) const
+    {
+      std::vector<size_t> result;
+      for (size_t idx: iter) {
+        result.push_back(idx);
+      }
+      return result;
+    }
+
+    template <class Point>
+    detail::GlobalNeighborHoodIndices<DIM>
+    rawClosestPointsIndices(const Point& position) const
+    {
+      return grid_helper::closestPointsIndices(getGlobalBinIndex(position),
+                                               m_axes);
+    }
+
+    detail::GlobalNeighborHoodIndices<DIM>
+    rawNeighborHoodIndices(const index_t& localBins, size_t size = 1u) const
+    {
+      return grid_helper::neighborHoodIndices(localBins, size, m_axes);
+    }
   };
 }  // namespace detail
 

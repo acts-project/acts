@@ -17,6 +17,106 @@ namespace Acts {
 
 namespace detail {
 
+  // This object can be iterated to produce the (ordered) set of global indices
+  // associated with a neighborhood around a certain point on a grid.
+  //
+  // The goal is to emulate the effect of enumerating the global indices into
+  // an std::set (or into an std::vector that gets subsequently sorted), without
+  // paying the price of dynamic memory allocation in hot magnetic field
+  // interpolation code.
+  //
+  template <size_t DIM>
+  class GlobalNeighborHoodIndices
+  {
+  public:
+
+    // You can get the local neighbor indices from
+    // grid_helper_impl<DIM>::neighborHoodIndices and the number of bins in
+    // each direction from grid_helper_impl<DIM>::getNBins.
+    GlobalNeighborHoodIndices(
+        std::array<NeighborHoodIndices, DIM>& neighborIndices,
+        const std::array<size_t, DIM>& nBinsArray)
+      : m_localIndices(neighborIndices)
+    {
+      if (DIM == 1) return;
+      size_t globalStride = 1;
+      for (long i = DIM-2; i >= 0; --i) {
+        globalStride *= (nBinsArray[i+1] + 2);
+        m_globalStrides[i] = globalStride;
+      }
+    }
+
+    class iterator {
+    public:
+      iterator(
+          const GlobalNeighborHoodIndices& parent,
+          std::array<NeighborHoodIndices::iterator, DIM>&& localIndicesIter)
+        : m_localIndicesIter(std::move(localIndicesIter))
+        , m_parent(&parent)
+      {}
+
+      size_t operator*() const {
+        size_t globalIndex = *m_localIndicesIter[DIM-1];
+        if (DIM == 1) return globalIndex;
+        for (size_t i = 0; i < DIM-1; ++i) {
+          globalIndex += m_parent->m_globalStrides[i] * (*m_localIndicesIter[i]);
+        }
+        return globalIndex;
+      }
+
+      iterator& operator++() {
+        const auto& localIndices = m_parent->m_localIndices;
+
+        // Go to the next global index via a lexicographic increment:
+        // - Start by incrementing the last local index
+        // - If it reaches the end, reset it and try the previous one...
+        for (long i = DIM-1; i >= 0; --i) {
+          ++m_localIndicesIter[i];
+          if (m_localIndicesIter[i] != localIndices[i].end()) return *this;
+          m_localIndicesIter[i] = localIndices[i].begin();
+        }
+
+        // If we reached the end of all iterators, we reached the end of
+        // iteration: put iterators in their end state.
+        for (size_t i = 0; i < DIM; ++i) {
+          m_localIndicesIter[i] = localIndices[i].end();
+        }
+        return *this;
+      }
+
+      bool operator==(const iterator& it) {
+        return m_localIndicesIter == it.m_localIndicesIter;
+      }
+
+      bool operator!=(const iterator& it) { return !(*this == it); }
+
+    private:
+      std::array<NeighborHoodIndices::iterator, DIM> m_localIndicesIter;
+      const GlobalNeighborHoodIndices* m_parent;
+    };
+
+    iterator begin() const {
+      std::array<NeighborHoodIndices::iterator, DIM> localIndicesIter;
+      for (size_t i = 0; i < DIM; ++i) {
+        localIndicesIter[i] = m_localIndices[i].begin();
+      }
+      return iterator(*this, std::move(localIndicesIter));
+    }
+
+    iterator end() const {
+      std::array<NeighborHoodIndices::iterator, DIM> localIndicesIter;
+      for (size_t i = 0; i < DIM; ++i) {
+        localIndicesIter[i] = m_localIndices[i].end();
+      }
+      return iterator(*this, std::move(localIndicesIter));
+    }
+
+  private:
+    std::array<NeighborHoodIndices, DIM> m_localIndices;
+    std::array<size_t, DIM-1> m_globalStrides;
+  };
+
+
   /// @cond
   /// @brief helper struct to calculate number of bins inside a grid
   ///
@@ -432,15 +532,13 @@ namespace detail {
     /// @note @c bin must be a valid bin index (excluding under-/overflow bins
     ///       along any axis).
     template <class... Axes>
-    static std::vector<size_t>
+    static GlobalNeighborHoodIndices<sizeof...(Axes)>
     closestPointsIndices(size_t bin, const std::tuple<Axes...>& axes)
     {
       std::array<size_t, sizeof...(Axes)> localIndices
           = getLocalBinIndices(bin, axes);
       // get neighboring bins, but only increment.
-      std::vector<size_t> comb
-          = neighborHoodIndices(localIndices, std::make_pair(0, 1), axes);
-      return comb;
+      return neighborHoodIndices(localIndices, std::make_pair(0, 1), axes);
     }
 
     /// @brief retrieve bin center from set of local bin indices
@@ -718,7 +816,7 @@ namespace detail {
     ///       indices. The problematic part is the check when going beyond
     ///       under-/overflow bins.
     template <class... Axes>
-    static std::vector<size_t>
+    static GlobalNeighborHoodIndices<sizeof...(Axes)>
     neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
                         std::pair<size_t, size_t>                  sizes,
                         const std::tuple<Axes...>& axes)
@@ -731,17 +829,15 @@ namespace detail {
       grid_helper_impl<MAX>::neighborHoodIndices(
           localIndices, sizes, axes, neighborIndices);
 
-      std::array<size_t, sizeof...(Axes)> idx;
-      std::vector<size_t> combinations;
-      grid_helper_impl<MAX>::combineNeighborHoodIndices(
-          idx, neighborIndices, combinations, axes);
-      std::sort(combinations.begin(), combinations.end());
+      // Query the number of bins
+      std::array<size_t, sizeof...(Axes)> nBinsArray = getNBins(axes);
 
-      return combinations;
+      // Produce iterator of global indices
+      return GlobalNeighborHoodIndices(neighborIndices, nBinsArray);
     }
 
     template <class... Axes>
-    static std::vector<size_t>
+    static GlobalNeighborHoodIndices<sizeof...(Axes)>
     neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
                         size_t                     size,
                         const std::tuple<Axes...>& axes)

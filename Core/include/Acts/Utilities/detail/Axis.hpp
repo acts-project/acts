@@ -62,6 +62,8 @@ namespace detail {
 
     class iterator {
     public:
+      iterator() = default;
+
       iterator(size_t begin1, size_t end1, size_t begin2)
         : m_current(begin1), m_end1(end1), m_begin2(begin2) {}
 
@@ -73,8 +75,11 @@ namespace detail {
         return *this;
       }
 
-      bool operator==(const iterator& it) { return m_current == it.m_current; }
-      bool operator!=(const iterator& it) { return !(*this == it); }
+      bool operator==(const iterator& it) const {
+        return m_current == it.m_current;
+      }
+
+      bool operator!=(const iterator& it) const { return !(*this == it); }
 
     private:
       size_t m_current, m_end1, m_begin2;
