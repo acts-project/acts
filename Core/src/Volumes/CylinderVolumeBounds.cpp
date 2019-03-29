@@ -100,14 +100,16 @@ Acts::CylinderVolumeBounds::operator=(const CylinderVolumeBounds& cylbo)
 
 std::vector<std::shared_ptr<const Acts::Surface>>
 Acts::CylinderVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<const Transform3D> transformPtr) const
+    const Transform3D* transformPtr) const
 {
   std::vector<std::shared_ptr<const Surface>> rSurfaces;
   rSurfaces.reserve(6);
 
   // set the transform
-  Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
-                                                    : (*transformPtr.get());
+  Transform3D transform
+      = (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
+  auto trfShared = std::make_shared<Transform3D>(transform);
+
   const Transform3D* tTransform = nullptr;
   Vector3D           cylCenter(transform.translation());
 
@@ -125,13 +127,13 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
       std::shared_ptr<const Transform3D>(tTransform), dBounds));
 
   // outer Cylinder - shares the transform
-  rSurfaces.push_back(Surface::makeShared<CylinderSurface>(
-      transformPtr, outerCylinderBounds()));
+  rSurfaces.push_back(
+      Surface::makeShared<CylinderSurface>(trfShared, outerCylinderBounds()));
 
   // innermost Cylinder
   if (innerRadius() > s_numericalStable) {
-    rSurfaces.push_back(Surface::makeShared<CylinderSurface>(
-        transformPtr, innerCylinderBounds()));
+    rSurfaces.push_back(
+        Surface::makeShared<CylinderSurface>(trfShared, innerCylinderBounds()));
   }
 
   // the cylinder is sectoral

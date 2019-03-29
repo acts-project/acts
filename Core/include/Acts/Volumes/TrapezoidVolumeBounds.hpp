@@ -119,8 +119,7 @@ public:
   ///
   /// @return vector of surfaces from the decopmosition
   std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(
-      std::shared_ptr<const Transform3D> transformPtr) const override;
+  decomposeToSurfaces(const Transform3D* transformPtr) const override;
 
   /// This method returns the minimal halflength in local x
   double
