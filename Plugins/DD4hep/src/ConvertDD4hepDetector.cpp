@@ -34,14 +34,13 @@ convertDD4hepDetector(
     double             layerEnvelopeZ,
     double             defaultLayerThickness,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
-        sortSubDetectors)
+                                 sortSubDetectors,
+    const Acts::GeometryContext& gctx)
 {
   // create local logger for conversion
   auto DD4hepConverterlogger
       = Acts::getDefaultLogger("DD4hepConversion", loggingLevel);
   ACTS_LOCAL_LOGGER(DD4hepConverterlogger);
-
-  Acts::GeometryContext dd4HepContext;
 
   ACTS_INFO("Translating DD4hep geometry into Acts geometry");
   // get the sub detectors of the world detector e.g. beampipe, pixel detector,
@@ -100,9 +99,9 @@ convertDD4hepDetector(
 
   for (const auto& vb : volumeBuilders) {
     volumeFactories.push_back([vb](
-        const GeometryContext&                       gctx,
+        const GeometryContext&                       vgctx,
         const std::shared_ptr<const TrackingVolume>& inner,
-        const VolumeBoundsPtr&) { return vb->trackingVolume(gctx, inner); });
+        const VolumeBoundsPtr&) { return vb->trackingVolume(vgctx, inner); });
   }
 
   // create cylinder volume helper
@@ -113,7 +112,7 @@ convertDD4hepDetector(
   tgbConfig.trackingVolumeBuilders = std::move(volumeFactories);
   auto trackingGeometryBuilder
       = std::make_shared<const Acts::TrackingGeometryBuilder>(tgbConfig);
-  return (trackingGeometryBuilder->trackingGeometry(dd4HepContext));
+  return (trackingGeometryBuilder->trackingGeometry(gctx));
 }
 
 std::shared_ptr<const CylinderVolumeBuilder>
