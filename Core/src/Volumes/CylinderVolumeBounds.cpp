@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/IVisualization.hpp"
 
 const double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
 
@@ -196,4 +197,20 @@ std::ostream&
 Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
+}
+void
+Acts::CylinderVolumeBounds::draw(IVisualization&    helper,
+                                 const Transform3D& transform) const
+{
+  std::vector<std::shared_ptr<const Acts::Surface>> surfaces
+      = decomposeToSurfaces(&transform);
+  for (const auto& srf : surfaces) {
+    auto cyl  = dynamic_cast<const CylinderSurface*>(srf.get());
+    auto disc = dynamic_cast<const DiscSurface*>(srf.get());
+    if (cyl != nullptr) {
+      cyl->polyhedronRepresentation(50).draw(helper);
+    } else {
+      disc->polyhedronRepresentation(50).draw(helper);
+    }
+  }
 }

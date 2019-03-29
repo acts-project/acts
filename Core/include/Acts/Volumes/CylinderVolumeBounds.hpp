@@ -25,6 +25,7 @@ class CylinderBounds;
 class DiscBounds;
 class RadialBounds;
 class PlanarBounds;
+class IVisualization;
 
 /// @class CylinderVolumeBounds
 ///
@@ -189,6 +190,13 @@ public:
   /// Output Method for std::ostream
   std::ostream&
   toStream(std::ostream& sl) const override;
+
+  /// Draw this cylinder to a given helper
+  /// @param helper The helper instance
+  /// @param transform An additional transform, default is identity
+  void
+  draw(IVisualization&    helper,
+       const Transform3D& transform = Transform3D::Identity()) const;
 
 private:
   /// templated dumpT method
