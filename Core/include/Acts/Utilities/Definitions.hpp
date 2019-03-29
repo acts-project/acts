@@ -116,6 +116,14 @@ using Vector3D         = Eigen::Matrix<double, 3, 1>;
 using Vector2D         = Eigen::Matrix<double, 2, 1>;
 using RotationMatrix3D = Eigen::Matrix<double, 3, 3>;
 
+using Rotation3F       = Eigen::Quaternion<float>;
+using Translation3F    = Eigen::Translation<float, 3>;
+using AngleAxis3F      = Eigen::AngleAxisf;
+using Transform3F      = Eigen::Affine3f;
+using Vector3F         = Eigen::Matrix<float, 3, 1>;
+using Vector2F         = Eigen::Matrix<float, 2, 1>;
+using RotationMatrix3F = Eigen::Matrix<float, 3, 3>;
+
 /// axis defintion element for code readability
 /// - please use these for access to the member variables if needed, e.g.
 ///     double z  = position[Acts::eZ];
