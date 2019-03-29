@@ -73,12 +73,6 @@ namespace detail {
         return *this;
       }
 
-      iterator operator++(int) {
-        iterator it = *this;
-        ++(*this);
-        return it;
-      }
-
       bool operator==(const iterator& it) { return m_current == it.m_current; }
       bool operator!=(const iterator& it) { return !(*this == it); }
 
