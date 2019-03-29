@@ -171,12 +171,12 @@ namespace detail {
         const std::array<size_t, sizeof...(Axes)>& localIndices,
         std::pair<size_t, size_t>                  sizes,
         const std::tuple<Axes...>& axes,
-        std::array<std::set<size_t>, sizeof...(Axes)>& neighborIndices)
+        std::array<IndexRange, sizeof...(Axes)>& neighborIndices)
     {
 
       // ask n-th axis
       size_t           locIdx = localIndices.at(N);
-      std::set<size_t> locNeighbors
+      IndexRange locNeighbors
           = std::get<N>(axes).neighborHoodIndices(locIdx, sizes);
       neighborIndices.at(N) = locNeighbors;
 
@@ -188,12 +188,12 @@ namespace detail {
     static void
     combineNeighborHoodIndices(
         std::array<size_t, sizeof...(Axes)>&           idx,
-        std::array<std::set<size_t>, sizeof...(Axes)>& neighborIndices,
+        std::array<IndexRange, sizeof...(Axes)>& neighborIndices,
         std::set<size_t>&          combinations,
         const std::tuple<Axes...>& axes)
     {
       // iterate over this axis' neighbors
-      std::set<size_t>& neighbors = neighborIndices.at(N);
+      IndexRange& neighbors = neighborIndices.at(N);
       for (const auto& i : neighbors) {
         idx.at(N) = i;
         // vary other axes recursively
@@ -347,12 +347,12 @@ namespace detail {
         const std::array<size_t, sizeof...(Axes)>& localIndices,
         std::pair<size_t, size_t>                  sizes,
         const std::tuple<Axes...>& axes,
-        std::array<std::set<size_t>, sizeof...(Axes)>& neighborIndices)
+        std::array<IndexRange, sizeof...(Axes)>& neighborIndices)
     {
 
       // ask 0-th axis
       size_t           locIdx = localIndices.at(0u);
-      std::set<size_t> locNeighbors
+      IndexRange locNeighbors
           = std::get<0u>(axes).neighborHoodIndices(locIdx, sizes);
       neighborIndices.at(0u) = locNeighbors;
     }
@@ -361,12 +361,12 @@ namespace detail {
     static void
     combineNeighborHoodIndices(
         std::array<size_t, sizeof...(Axes)>&           idx,
-        std::array<std::set<size_t>, sizeof...(Axes)>& neighborIndices,
+        std::array<IndexRange, sizeof...(Axes)>& neighborIndices,
         std::set<size_t>&          combinations,
         const std::tuple<Axes...>& axes)
     {
       // iterate over this axis' neighbors
-      std::set<size_t>& neighbors = neighborIndices.at(0u);
+      IndexRange& neighbors = neighborIndices.at(0u);
       for (const auto& i : neighbors) {
         idx.at(0u) = i;
         // at this point, combinations are complete, so fill
@@ -437,7 +437,6 @@ namespace detail {
       std::array<size_t, sizeof...(Axes)> localIndices
           = getLocalBinIndices(bin, axes);
       // get neighboring bins, but only increment.
-      std::array<std::set<size_t>, sizeof...(Axes)> neighborIndices;
       std::set<size_t> comb
           = neighborHoodIndices(localIndices, std::make_pair(0, 1), axes);
       return comb;
@@ -725,7 +724,7 @@ namespace detail {
       constexpr size_t MAX = sizeof...(Axes) - 1;
 
       // length N array which contains local neighbors based on size par
-      std::array<std::set<size_t>, sizeof...(Axes)> neighborIndices;
+      std::array<IndexRange, sizeof...(Axes)> neighborIndices;
       // get local bin indices for neighboring bins
       grid_helper_impl<MAX>::neighborHoodIndices(
           localIndices, sizes, axes, neighborIndices);

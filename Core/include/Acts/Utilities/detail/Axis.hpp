@@ -18,6 +18,39 @@ namespace Acts {
 
 namespace detail {
 
+  // This is a half-open range of indices, including the "begin" element and not
+  // including the "end" element. It can be iterated to get the list of indices.
+  class IndexRange
+  {
+  public:
+    IndexRange() : m_begin(0), m_end(0) {}
+
+    IndexRange(size_t begin, size_t end)
+      : m_begin(begin)
+      , m_end(std::max(begin, end))
+    {}
+
+    class iterator {
+    public:
+      iterator(size_t current) : m_current(current) {}
+
+      size_t operator*() const { return m_current; }
+      iterator& operator++() { ++m_current; return *this; }
+      iterator operator++(int) { iterator it = *this; ++m_current; return it; }
+      bool operator==(const iterator& it) { return m_current == it.m_current; }
+      bool operator!=(const iterator& it) { return !(*this == it); }
+
+    private:
+      size_t m_current;
+    };
+
+    iterator begin() const { return iterator(m_begin); }
+    iterator end() const { return iterator(m_end); }
+
+  private:
+    size_t m_begin, m_end;
+  };
+
   /// Enum which determines how the axis handle its outer boundaries
   /// possible values values
   /// - Open is the default behaviour: out of bounds
@@ -102,8 +135,8 @@ namespace detail {
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
-    /// @return std::set of neighboring bin indices (global)
-    std::set<size_t>
+    /// @return Set of neighboring bin indices (global)
+    IndexRange
     neighborHoodIndices(size_t idx, size_t size = 1) const
     {
       return neighborHoodIndices(idx, std::make_pair(size, size));
@@ -115,25 +148,21 @@ namespace detail {
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
-    /// @return std::set of neighboring bin indices (global)
+    /// @return Set of neighboring bin indices (global)
     /// @note Open varies given bin and allows 0 and NBins+1 (underflow,
     /// overflow)
     ///       as neighbors
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
-    std::set<size_t>
+    IndexRange
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
-      std::set<size_t> result;
       constexpr int    min   = 0;
       const int        max   = getNBins() + 1;
       const int        itmin = std::max(min, int(idx - sizes.first));
       const int        itmax = std::min(max, int(idx + sizes.second));
-      for (int i = itmin; i <= itmax; i++) {
-        result.insert(i);
-      }
-      return result;
+      return IndexRange(itmin, itmax+1);
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -142,27 +171,23 @@ namespace detail {
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
-    /// @return std::set of neighboring bin indices (global)
+    /// @return Set of neighboring bin indices (global)
     /// @note Bound varies given bin and allows 1 and NBins (regular bins)
     ///       as neighbors
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
-    std::set<size_t>
+    IndexRange
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
-      std::set<size_t> result;
       if (idx <= 0 || idx >= (getNBins() + 1)) {
-        return result;
+        return IndexRange();
       }
       constexpr int min   = 1;
       const int     max   = getNBins();
       const int     itmin = std::max(min, int(idx - sizes.first));
       const int     itmax = std::min(max, int(idx + sizes.second));
-      for (int i = itmin; i <= itmax; i++) {
-        result.insert(i);
-      }
-      return result;
+      return IndexRange(itmin, itmax+1);
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -171,25 +196,21 @@ namespace detail {
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
-    /// @return std::set of neighboring bin indices (global)
+    /// @return Set of neighboring bin indices (global)
     /// @note Closed varies given bin and allows bins on the opposite
     ///       side of the axis as neighbors. (excludes underflow / overflow)
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
-    std::set<size_t>
+    IndexRange
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
-      std::set<size_t> result;
       if (idx <= 0 || idx >= (getNBins() + 1)) {
-        return result;
+        return IndexRange();
       }
       const int itmin = idx - sizes.first;
       const int itmax = idx + sizes.second;
-      for (int i = itmin; i <= itmax; i++) {
-        result.insert(wrapBin(i));
-      }
-      return result;
+      return IndexRange(wrapBin(itmin), wrapBin(itmax)+1);
     }
 
     /// @brief Converts bin index into a valid one for this axis.
@@ -418,8 +439,8 @@ namespace detail {
     ///
     /// @param [in] idx requested bin index
     /// @param [in] size how many neighboring bins
-    /// @return std::set of neighboring bin indices (global)
-    std::set<size_t>
+    /// @return Set of neighboring bin indices (global)
+    IndexRange
     neighborHoodIndices(size_t idx, size_t size = 1) const
     {
       return neighborHoodIndices(idx, std::make_pair(size, size));
@@ -431,25 +452,21 @@ namespace detail {
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
-    /// @return std::set of neighboring bin indices (global)
+    /// @return Set of neighboring bin indices (global)
     /// @note Open varies given bin and allows 0 and NBins+1 (underflow,
     /// overflow)
     ///       as neighbors
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
-    std::set<size_t>
+    IndexRange
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
-      std::set<size_t> result;
       constexpr int    min   = 0;
       const int        max   = getNBins() + 1;
       const int        itmin = std::max(min, int(idx - sizes.first));
       const int        itmax = std::min(max, int(idx + sizes.second));
-      for (int i = itmin; i <= itmax; i++) {
-        result.insert(i);
-      }
-      return result;
+      return IndexRange(itmin, itmax+1);
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -458,27 +475,23 @@ namespace detail {
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
-    /// @return std::set of neighboring bin indices (global)
+    /// @return Set of neighboring bin indices (global)
     /// @note Bound varies given bin and allows 1 and NBins (regular bins)
     ///       as neighbors
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
-    std::set<size_t>
+    IndexRange
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
-      std::set<size_t> result;
       if (idx <= 0 || idx >= (getNBins() + 1)) {
-        return result;
+        return IndexRange();
       }
       constexpr int min   = 1;
       const int     max   = getNBins();
       const int     itmin = std::max(min, int(idx - sizes.first));
       const int     itmax = std::min(max, int(idx + sizes.second));
-      for (int i = itmin; i <= itmax; i++) {
-        result.insert(i);
-      }
-      return result;
+      return IndexRange(itmin, itmax+1);
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -487,25 +500,21 @@ namespace detail {
     ///
     /// @param [in] idx requested bin index
     /// @param [in] sizes how many neighboring bins (up/down)
-    /// @return std::set of neighboring bin indices (global)
+    /// @return Set of neighboring bin indices (global)
     /// @note Closed varies given bin and allows bins on the opposite
     ///       side of the axis as neighbors. (excludes underflow / overflow)
     template <AxisBoundaryType T = bdt,
               std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
-    std::set<size_t>
+    IndexRange
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
-      std::set<size_t> result;
       if (idx <= 0 || idx >= (getNBins() + 1)) {
-        return result;
+        return IndexRange();
       }
       const int itmin = idx - sizes.first;
       const int itmax = idx + sizes.second;
-      for (int i = itmin; i <= itmax; i++) {
-        result.insert(wrapBin(i));
-      }
-      return result;
+      return IndexRange(itmin, itmax+1);
     }
 
     /// @brief Converts bin index into a valid one for this axis.
