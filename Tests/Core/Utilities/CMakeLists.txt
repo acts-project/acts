@@ -71,3 +71,7 @@ add_test (NAME ResultTests COMMAND ResultTests)
 add_executable (TypeTraitsTest TypeTraitsTest.cpp)
 target_link_libraries (TypeTraitsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME TypeTraitsTest COMMAND TypeTraitsTest)
+
+add_executable (VisualizationTests VisualizationTests.cpp)
+target_link_libraries (VisualizationTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME VisualizationTests COMMAND VisualizationTests)
