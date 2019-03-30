@@ -165,7 +165,7 @@ namespace detail {
     std::vector<size_t>
     closestPointsIndices(const Point& position) const
     {
-      return collectNeigborIndices(rawClosestPointsIndices(position));
+      return collectNeighborIndices(rawClosestPointsIndices(position));
     }
 
     /// @brief dimensionality of grid
