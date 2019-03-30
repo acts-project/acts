@@ -455,7 +455,7 @@ namespace detail {
     collectNeighborIndices(detail::GlobalNeighborHoodIndices<DIM>&& iter) const
     {
       std::vector<size_t> result;
-      for (size_t idx: iter) {
+      for (size_t idx : iter) {
         result.push_back(idx);
       }
       return result;

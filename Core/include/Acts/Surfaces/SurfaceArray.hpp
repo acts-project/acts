@@ -340,8 +340,8 @@ public:
         if (!isValidBin(i)) {
           continue;
         }
-        typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
-        auto neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
+        typename Grid_t::index_t loc = m_grid.getLocalBinIndices(i);
+        auto neighborIdxs            = m_grid.neighborHoodIndices(loc, 1u);
         std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
         neighbors.clear();
 

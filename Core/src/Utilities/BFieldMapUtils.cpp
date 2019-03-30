@@ -109,14 +109,13 @@ Acts::
 
   // [4] Create the transformation for the bfield
   // map (Br,Bz) -> (Bx,By,Bz)
-  auto transformBField
-      = [](const Acts::Vector2D& field, const Acts::Vector3D& pos) {
-          double inv_r_sin_theta = 1. / sqrt(pos.x()*pos.x() + pos.y()*pos.y());
-          double cos_phi = pos.x() * inv_r_sin_theta;
-          double sin_phi = pos.y() * inv_r_sin_theta;
-          return Acts::Vector3D(
-              field.x() * cos_phi, field.x() * sin_phi, field.y());
-        };
+  auto transformBField = [](const Acts::Vector2D& field,
+                            const Acts::Vector3D& pos) {
+    double inv_r_sin_theta = 1. / sqrt(pos.x() * pos.x() + pos.y() * pos.y());
+    double cos_phi         = pos.x() * inv_r_sin_theta;
+    double sin_phi         = pos.y() * inv_r_sin_theta;
+    return Acts::Vector3D(field.x() * cos_phi, field.x() * sin_phi, field.y());
+  };
 
   // [5] Create the mapper & BField Service
   // create field mapping
@@ -293,9 +292,9 @@ Acts::
   // map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Acts::Vector2D& bfield,
                             const Acts::Vector3D& pos) {
-    double inv_r_sin_theta = 1. / sqrt(pos.x()*pos.x() + pos.y()*pos.y());
-    double cos_phi = pos.x() * inv_r_sin_theta;
-    double sin_phi = pos.y() * inv_r_sin_theta;
+    double inv_r_sin_theta = 1. / sqrt(pos.x() * pos.x() + pos.y() * pos.y());
+    double cos_phi         = pos.x() * inv_r_sin_theta;
+    double sin_phi         = pos.y() * inv_r_sin_theta;
     return Acts::Vector3D(
         bfield.x() * cos_phi, bfield.x() * sin_phi, bfield.y());
   };

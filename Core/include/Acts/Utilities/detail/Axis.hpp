@@ -47,46 +47,60 @@ namespace detail {
     NeighborHoodIndices() : m_begin1(0), m_end1(0), m_begin2(0), m_end2(0) {}
 
     NeighborHoodIndices(size_t begin, size_t end)
-      : m_begin1(begin)
-      , m_end1(end)
-      , m_begin2(end)
-      , m_end2(end)
-    {}
+      : m_begin1(begin), m_end1(end), m_begin2(end), m_end2(end)
+    {
+    }
 
     NeighborHoodIndices(size_t begin1, size_t end1, size_t begin2, size_t end2)
-      : m_begin1(begin1)
-      , m_end1(end1)
-      , m_begin2(begin2)
-      , m_end2(end2)
-    {}
+      : m_begin1(begin1), m_end1(end1), m_begin2(begin2), m_end2(end2)
+    {
+    }
 
-    class iterator {
+    class iterator
+    {
     public:
       iterator() = default;
 
       iterator(size_t begin1, size_t end1, size_t begin2)
-        : m_current(begin1), m_end1(end1), m_begin2(begin2) {}
+        : m_current(begin1), m_end1(end1), m_begin2(begin2)
+      {
+      }
 
       size_t operator*() const { return m_current; }
 
-      iterator& operator++() {
+      iterator& operator++()
+      {
         ++m_current;
         if (m_current == m_end1) m_current = m_begin2;
         return *this;
       }
 
-      bool operator==(const iterator& it) const {
+      bool
+      operator==(const iterator& it) const
+      {
         return m_current == it.m_current;
       }
 
-      bool operator!=(const iterator& it) const { return !(*this == it); }
+      bool
+      operator!=(const iterator& it) const
+      {
+        return !(*this == it);
+      }
 
     private:
       size_t m_current, m_end1, m_begin2;
     };
 
-    iterator begin() const { return iterator(m_begin1, m_end1, m_begin2); }
-    iterator end() const { return iterator(m_end2, m_end2, m_end2); }
+    iterator
+    begin() const
+    {
+      return iterator(m_begin1, m_end1, m_begin2);
+    }
+    iterator
+    end() const
+    {
+      return iterator(m_end2, m_end2, m_end2);
+    }
 
   private:
     size_t m_begin1, m_end1, m_begin2, m_end2;
@@ -186,11 +200,11 @@ namespace detail {
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
-      constexpr int    min   = 0;
-      const int        max   = getNBins() + 1;
-      const int        itmin = std::max(min, int(idx - sizes.first));
-      const int        itmax = std::min(max, int(idx + sizes.second));
-      return NeighborHoodIndices(itmin, itmax+1);
+      constexpr int min   = 0;
+      const int     max   = getNBins() + 1;
+      const int     itmin = std::max(min, int(idx - sizes.first));
+      const int     itmax = std::min(max, int(idx + sizes.second));
+      return NeighborHoodIndices(itmin, itmax + 1);
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -215,7 +229,7 @@ namespace detail {
       const int     max   = getNBins();
       const int     itmin = std::max(min, int(idx - sizes.first));
       const int     itmax = std::min(max, int(idx + sizes.second));
-      return NeighborHoodIndices(itmin, itmax+1);
+      return NeighborHoodIndices(itmin, itmax + 1);
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -240,7 +254,7 @@ namespace detail {
 
       // Handle corner case of returning all bins
       if (sizes.first + sizes.second >= getNBins()) {
-        return NeighborHoodIndices(1, getNBins()+1);
+        return NeighborHoodIndices(1, getNBins() + 1);
       }
 
       // If the entire index range is not covered, we must wrap the range of
@@ -250,14 +264,14 @@ namespace detail {
       // Before wraparound - [        XXXXX]XXX
       // After wraparound  - [ XXXX   XXXX ]
       //
-      const int itmin = idx - sizes.first;
-      const int itmax = idx + sizes.second;
+      const int    itmin   = idx - sizes.first;
+      const int    itmax   = idx + sizes.second;
       const size_t itfirst = wrapBin(itmin);
-      const size_t itlast = wrapBin(itmax);
+      const size_t itlast  = wrapBin(itmax);
       if (itfirst <= itlast) {
-        return NeighborHoodIndices(itfirst, itlast+1);
+        return NeighborHoodIndices(itfirst, itlast + 1);
       } else {
-        return NeighborHoodIndices(1, itlast+1, itfirst, getNBins()+1);
+        return NeighborHoodIndices(1, itlast + 1, itfirst, getNBins() + 1);
       }
     }
 
@@ -510,11 +524,11 @@ namespace detail {
     neighborHoodIndices(size_t idx,
                         std::pair<size_t, size_t> sizes = {1, 1}) const
     {
-      constexpr int    min   = 0;
-      const int        max   = getNBins() + 1;
-      const int        itmin = std::max(min, int(idx - sizes.first));
-      const int        itmax = std::min(max, int(idx + sizes.second));
-      return NeighborHoodIndices(itmin, itmax+1);
+      constexpr int min   = 0;
+      const int     max   = getNBins() + 1;
+      const int     itmin = std::max(min, int(idx - sizes.first));
+      const int     itmax = std::min(max, int(idx + sizes.second));
+      return NeighborHoodIndices(itmin, itmax + 1);
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -539,7 +553,7 @@ namespace detail {
       const int     max   = getNBins();
       const int     itmin = std::max(min, int(idx - sizes.first));
       const int     itmax = std::min(max, int(idx + sizes.second));
-      return NeighborHoodIndices(itmin, itmax+1);
+      return NeighborHoodIndices(itmin, itmax + 1);
     }
 
     /// @brief Get #size bins which neighbor the one given
@@ -564,7 +578,7 @@ namespace detail {
 
       // Handle corner case of returning all bins
       if (sizes.first + sizes.second >= getNBins()) {
-        return NeighborHoodIndices(1, getNBins()+1);
+        return NeighborHoodIndices(1, getNBins() + 1);
       }
 
       // If the entire index range is not covered, we must wrap the range of
@@ -574,14 +588,14 @@ namespace detail {
       // Before wraparound - [        XXXXX]XXX
       // After wraparound  - [ XXXX   XXXX ]
       //
-      const int itmin = idx - sizes.first;
-      const int itmax = idx + sizes.second;
+      const int    itmin   = idx - sizes.first;
+      const int    itmax   = idx + sizes.second;
       const size_t itfirst = wrapBin(itmin);
-      const size_t itlast = wrapBin(itmax);
+      const size_t itlast  = wrapBin(itmax);
       if (itfirst <= itlast) {
-        return NeighborHoodIndices(itfirst, itlast+1);
+        return NeighborHoodIndices(itfirst, itlast + 1);
       } else {
-        return NeighborHoodIndices(1, itlast+1, itfirst, getNBins()+1);
+        return NeighborHoodIndices(1, itlast + 1, itfirst, getNBins() + 1);
       }
     }
 

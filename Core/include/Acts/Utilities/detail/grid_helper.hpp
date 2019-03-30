@@ -29,48 +29,51 @@ namespace detail {
   class GlobalNeighborHoodIndices
   {
   public:
-
     // You can get the local neighbor indices from
     // grid_helper_impl<DIM>::neighborHoodIndices and the number of bins in
     // each direction from grid_helper_impl<DIM>::getNBins.
     GlobalNeighborHoodIndices(
         std::array<NeighborHoodIndices, DIM>& neighborIndices,
-        const std::array<size_t, DIM>& nBinsArray)
+        const std::array<size_t, DIM>&        nBinsArray)
       : m_localIndices(neighborIndices)
     {
       if (DIM == 1) return;
       size_t globalStride = 1;
-      for (long i = DIM-2; i >= 0; --i) {
-        globalStride *= (nBinsArray[i+1] + 2);
+      for (long i = DIM - 2; i >= 0; --i) {
+        globalStride *= (nBinsArray[i + 1] + 2);
         m_globalStrides[i] = globalStride;
       }
     }
 
-    class iterator {
+    class iterator
+    {
     public:
       iterator(
           const GlobalNeighborHoodIndices& parent,
           std::array<NeighborHoodIndices::iterator, DIM>&& localIndicesIter)
-        : m_localIndicesIter(std::move(localIndicesIter))
-        , m_parent(&parent)
-      {}
+        : m_localIndicesIter(std::move(localIndicesIter)), m_parent(&parent)
+      {
+      }
 
-      size_t operator*() const {
-        size_t globalIndex = *m_localIndicesIter[DIM-1];
+      size_t operator*() const
+      {
+        size_t globalIndex = *m_localIndicesIter[DIM - 1];
         if (DIM == 1) return globalIndex;
-        for (size_t i = 0; i < DIM-1; ++i) {
-          globalIndex += m_parent->m_globalStrides[i] * (*m_localIndicesIter[i]);
+        for (size_t i = 0; i < DIM - 1; ++i) {
+          globalIndex
+              += m_parent->m_globalStrides[i] * (*m_localIndicesIter[i]);
         }
         return globalIndex;
       }
 
-      iterator& operator++() {
+      iterator& operator++()
+      {
         const auto& localIndices = m_parent->m_localIndices;
 
         // Go to the next global index via a lexicographic increment:
         // - Start by incrementing the last local index
         // - If it reaches the end, reset it and try the previous one...
-        for (long i = DIM-1; i >= 0; --i) {
+        for (long i = DIM - 1; i >= 0; --i) {
           ++m_localIndicesIter[i];
           if (m_localIndicesIter[i] != localIndices[i].end()) return *this;
           m_localIndicesIter[i] = localIndices[i].begin();
@@ -84,18 +87,26 @@ namespace detail {
         return *this;
       }
 
-      bool operator==(const iterator& it) {
+      bool
+      operator==(const iterator& it)
+      {
         return m_localIndicesIter == it.m_localIndicesIter;
       }
 
-      bool operator!=(const iterator& it) { return !(*this == it); }
+      bool
+      operator!=(const iterator& it)
+      {
+        return !(*this == it);
+      }
 
     private:
       std::array<NeighborHoodIndices::iterator, DIM> m_localIndicesIter;
       const GlobalNeighborHoodIndices* m_parent;
     };
 
-    iterator begin() const {
+    iterator
+    begin() const
+    {
       std::array<NeighborHoodIndices::iterator, DIM> localIndicesIter;
       for (size_t i = 0; i < DIM; ++i) {
         localIndicesIter[i] = m_localIndices[i].begin();
@@ -103,7 +114,9 @@ namespace detail {
       return iterator(*this, std::move(localIndicesIter));
     }
 
-    iterator end() const {
+    iterator
+    end() const
+    {
       std::array<NeighborHoodIndices::iterator, DIM> localIndicesIter;
       for (size_t i = 0; i < DIM; ++i) {
         localIndicesIter[i] = m_localIndices[i].end();
@@ -113,9 +126,8 @@ namespace detail {
 
   private:
     std::array<NeighborHoodIndices, DIM> m_localIndices;
-    std::array<size_t, DIM-1> m_globalStrides;
+    std::array<size_t, DIM - 1>          m_globalStrides;
   };
-
 
   /// @cond
   /// @brief helper struct to calculate number of bins inside a grid
@@ -275,7 +287,7 @@ namespace detail {
     {
 
       // ask n-th axis
-      size_t           locIdx = localIndices.at(N);
+      size_t              locIdx = localIndices.at(N);
       NeighborHoodIndices locNeighbors
           = std::get<N>(axes).neighborHoodIndices(locIdx, sizes);
       neighborIndices.at(N) = locNeighbors;
@@ -287,9 +299,9 @@ namespace detail {
     template <class... Axes>
     static void
     combineNeighborHoodIndices(
-        std::array<size_t, sizeof...(Axes)>&           idx,
+        std::array<size_t, sizeof...(Axes)>&              idx,
         std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices,
-        std::vector<size_t>& combinations,
+        std::vector<size_t>&       combinations,
         const std::tuple<Axes...>& axes)
     {
       // iterate over this axis' neighbors
@@ -460,9 +472,9 @@ namespace detail {
     template <class... Axes>
     static void
     combineNeighborHoodIndices(
-        std::array<size_t, sizeof...(Axes)>&           idx,
+        std::array<size_t, sizeof...(Axes)>&              idx,
         std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices,
-        std::vector<size_t>& combinations,
+        std::vector<size_t>&       combinations,
         const std::tuple<Axes...>& axes)
     {
       // iterate over this axis' neighbors
