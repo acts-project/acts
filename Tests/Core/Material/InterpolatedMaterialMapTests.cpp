@@ -25,6 +25,8 @@ namespace Acts {
 namespace Test {
 
   constexpr unsigned int dim = 2;
+  using grid_t               = detail::
+      Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>;
 
   ActsVectorD<dim>
   trafoGlobalToLocal(const Vector3D& global)
@@ -41,7 +43,7 @@ namespace Test {
     mat << 1, 2, 3, 4, 5;
     std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
 
-    InterpolatedMaterialMap::MaterialCell<dim> materialCell(
+    InterpolatedMaterialMap<grid_t>::MaterialCell materialCell(
         trafoGlobalToLocal, lowerLeft, upperRight, matArray);
 
     // Test InterpolatedMaterialMap::MaterialCell<DIM>::isInside method
@@ -65,23 +67,21 @@ namespace Test {
     detail::EquidistantAxis axisY(0, 3, 3);
 
     // The material mapping grid
-    auto grid = detail::
-        Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>(
-            std::make_tuple(std::move(axisX), std::move(axisY)));
+    auto grid = grid_t(std::make_tuple(std::move(axisX), std::move(axisY)));
     ActsVectorF<5> mat;
     mat << 1, 2, 3, 4, 5;
 
     for (size_t i = 0; i < grid.size(); i++) {
       grid.at(i) = mat;
     }
-    InterpolatedMaterialMap::MaterialMapper<dim> matMap(trafoGlobalToLocal,
-                                                        grid);
+    InterpolatedMaterialMap<grid_t>::MaterialMapper matMap(trafoGlobalToLocal,
+                                                           grid);
 
     // Test Material getter
     CHECK_CLOSE_REL(matMap.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
 
     // Test the MaterialCell getter
-    InterpolatedMaterialMap::MaterialCell<dim> matCell
+    InterpolatedMaterialMap<grid_t>::MaterialCell matCell
         = matMap.getMaterialCell({0.5, 0.5, 0.5});
     CHECK_CLOSE_REL(matCell.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
 
@@ -128,18 +128,16 @@ namespace Test {
     detail::EquidistantAxis axisY(0, 3, 3);
 
     // The material mapping grid
-    auto grid = detail::
-        Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>(
-            std::make_tuple(std::move(axisX), std::move(axisY)));
+    auto grid = grid_t(std::make_tuple(std::move(axisX), std::move(axisY)));
     ActsVectorF<5> mat;
     mat << 1, 2, 3, 4, 5;
 
     for (size_t i = 0; i < grid.size(); i++) {
       grid.at(i) = mat;
     }
-    InterpolatedMaterialMap::MaterialMapper<dim> matMap(trafoGlobalToLocal,
-                                                        grid);
-    InterpolatedMaterialMap ipolMatMap(matMap);
+    InterpolatedMaterialMap<grid_t>::MaterialMapper matMap(trafoGlobalToLocal,
+                                                           grid);
+    InterpolatedMaterialMap<grid_t> ipolMatMap(matMap);
 
     // Test the material getter
     CHECK_CLOSE_REL(
@@ -151,9 +149,9 @@ namespace Test {
     std::array<double, dim>       upperRight{{1., 1.}};
     std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
 
-    InterpolatedMaterialMap::MaterialCell<dim> materialCell(
+    InterpolatedMaterialMap<grid_t>::MaterialCell materialCell(
         trafoGlobalToLocal, lowerLeft, upperRight, matArray);
-    InterpolatedMaterialMap::Cache cache;
+    InterpolatedMaterialMap<grid_t>::Cache cache;
     cache.MaterialCell = materialCell;
     cache.initialized  = true;
     CHECK_CLOSE_REL(ipolMatMap.getMaterial(Vector3D(0.5, 0.5, 0.5), cache),

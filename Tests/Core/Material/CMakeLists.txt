@@ -28,7 +28,7 @@ target_link_libraries (InterpolatedMaterialMapTests PRIVATE ActsCore ActsTestsCo
 
 add_executable (AccumulatedVolumeMaterialTests AccumulatedVolumeMaterialTests.cpp)
 target_include_directories (AccumulatedVolumeMaterialTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries(AccumulatedVolumeMaterialTests PRIVATE ActsCore ActsMaterialMappingPlugin ActsTestsCommonHelpers)
+target_link_libraries(AccumulatedVolumeMaterialTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME AccumulatedVolumeMaterialUnitTest COMMAND AccumulatedVolumeMaterialTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST AccumulatedVolumeMaterialUnitTest TARGETS AccumulatedVolumeMaterialTests)
 

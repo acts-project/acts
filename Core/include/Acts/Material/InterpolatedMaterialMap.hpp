@@ -13,7 +13,6 @@
 #include "Acts/Material/concept/AnyMaterialLookup.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
-#include "Acts/Utilities/concept/AnyGrid.hpp"
 
 namespace Acts {
 
@@ -38,16 +37,18 @@ namespace Acts {
 /// between these values. This might work out since the used material is already
 /// a mean of the materials in a certain bin and can therewith be treated as a
 /// collection of numbers.
+/// @tparam G Type of the grid
+template <typename G>
 class InterpolatedMaterialMap final
 {
 public:
+  using Grid_t                    = G;
+  static constexpr size_t DIM_POS = Grid_t::DIM;
+
   /// @brief Struct representing smallest grid unit in material grid
-  ///
-  /// @tparam DIM_POS Dimensionality of the material map
   ///
   /// This type encapsulate all required information to perform linear
   /// interpolation of material classification values within a 3D volume.
-  template <unsigned int DIM_POS>
   struct MaterialCell
   {
     /// Number of corner points defining the confining hyper-box
@@ -130,18 +131,12 @@ public:
 
   /// @brief Struct for mapping global 3D positions to material values
   ///
-  /// @tparam DIM_POS Dimensionality of position in material map
-  ///
   /// Global 3D positions are transformed into a @c DIM_POS Dimensional vector
   /// which is used to look up the material classification value in the
   /// underlying material map.
-  template <unsigned int DIM_POS>
   struct MaterialMapper
   {
   public:
-    using Grid_t = concept::
-        AnyNDimInterpGrid<ActsVectorF<5>, ActsVectorD<DIM_POS>, DIM_POS>;
-
     /// @brief Default constructor
     ///
     /// @param [in] transformPos Mapping of global 3D coordinates (cartesian)
@@ -174,7 +169,7 @@ public:
     ///
     /// @pre The given @c position must lie within the range of the underlying
     /// map.
-    MaterialCell<DIM_POS>
+    MaterialCell
     getMaterialCell(const Vector3D& position) const
     {
       const auto& gridPosition = m_transformPos(position);
@@ -193,7 +188,7 @@ public:
         neighbors.at(i++) = m_grid.at(index);
       }
 
-      return MaterialCell<DIM_POS>(
+      return MaterialCell(
           m_transformPos, lowerLeft, upperRight, std::move(neighbors));
     }
 

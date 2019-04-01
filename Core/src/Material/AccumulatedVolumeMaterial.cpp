@@ -10,7 +10,7 @@
 // AccumulatedVolumeMaterial.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Plugins/MaterialMapping/AccumulatedVolumeMaterial.hpp"
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 
 void
 Acts::AccumulatedVolumeMaterial::accumulate(const Material& mat)

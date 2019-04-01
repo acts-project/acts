@@ -16,7 +16,7 @@
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-Acts::InterpolatedMaterialMap::MaterialMapper<2>
+auto
 Acts::materialMapperRZ(
     const std::function<size_t(std::array<size_t, 2> binsRZ,
                                std::array<size_t, 2> nBinsRZ)>&
@@ -25,6 +25,7 @@ Acts::materialMapperRZ(
     std::vector<double>   zPos,
     std::vector<Material> material,
     double                lengthUnit)
+    -> InterpolatedMaterialMap<MaterialGrid2D>::MaterialMapper
 {
   // [1] Decompose material
   std::vector<ActsVectorF<5>> materialVector;
@@ -94,11 +95,11 @@ Acts::materialMapperRZ(
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return InterpolatedMaterialMap::MaterialMapper<2>(transformPos,
-                                                    std::move(grid));
+  return InterpolatedMaterialMap<MaterialGrid2D>::MaterialMapper(
+      transformPos, std::move(grid));
 }
 
-Acts::InterpolatedMaterialMap::MaterialMapper<3>
+auto
 Acts::materialMapperXYZ(
     const std::function<size_t(std::array<size_t, 3> binsXYZ,
                                std::array<size_t, 3> nBinsXYZ)>&
@@ -108,6 +109,7 @@ Acts::materialMapperXYZ(
     std::vector<double>   zPos,
     std::vector<Material> material,
     double                lengthUnit)
+    -> InterpolatedMaterialMap<MaterialGrid3D>::MaterialMapper
 {
   // [1] Decompose material
   std::vector<ActsVectorF<5>> materialVector;
@@ -193,6 +195,6 @@ Acts::materialMapperXYZ(
 
   // [5] Create the mapper & BField Service
   // create material mapping
-  return InterpolatedMaterialMap::MaterialMapper<3>(transformPos,
-                                                    std::move(grid));
+  return InterpolatedMaterialMap<MaterialGrid3D>::MaterialMapper(
+      transformPos, std::move(grid));
 }

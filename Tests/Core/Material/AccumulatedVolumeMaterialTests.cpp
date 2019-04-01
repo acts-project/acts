@@ -10,8 +10,8 @@
 #define BOOST_TEST_MODULE AccumulatedVolumeMaterial Tests
 #include <boost/test/included/unit_test.hpp>
 #include <vector>
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Plugins/MaterialMapping/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace Acts {
