@@ -319,24 +319,6 @@ namespace detail {
 
     template <class... Axes>
     static void
-    combineNeighborHoodIndices(
-        std::array<size_t, sizeof...(Axes)>&              idx,
-        std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices,
-        std::vector<size_t>&       combinations,
-        const std::tuple<Axes...>& axes)
-    {
-      // iterate over this axis' neighbors
-      NeighborHoodIndices& neighbors = neighborIndices.at(N);
-      for (const auto& i : neighbors) {
-        idx.at(N) = i;
-        // vary other axes recursively
-        grid_helper_impl<N - 1>::combineNeighborHoodIndices(
-            idx, neighborIndices, combinations, axes);
-      }
-    }
-
-    template <class... Axes>
-    static void
     exteriorBinIndices(std::array<size_t, sizeof...(Axes)>& idx,
                        std::array<bool, sizeof...(Axes)>    isExterior,
                        std::set<size_t>&          combinations,
@@ -488,26 +470,6 @@ namespace detail {
       NeighborHoodIndices locNeighbors
           = std::get<0u>(axes).neighborHoodIndices(locIdx, sizes);
       neighborIndices.at(0u) = locNeighbors;
-    }
-
-    template <class... Axes>
-    static void
-    combineNeighborHoodIndices(
-        std::array<size_t, sizeof...(Axes)>&              idx,
-        std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices,
-        std::vector<size_t>&       combinations,
-        const std::tuple<Axes...>& axes)
-    {
-      // iterate over this axis' neighbors
-      NeighborHoodIndices& neighbors = neighborIndices.at(0u);
-      for (const auto& i : neighbors) {
-        idx.at(0u) = i;
-        // at this point, combinations are complete, so fill
-        size_t bin = 0, area = 1;
-        grid_helper_impl<sizeof...(Axes) - 1>::getGlobalBin(
-            idx, axes, bin, area);
-        combinations.push_back(bin);
-      }
     }
 
     template <class... Axes>
@@ -843,11 +805,6 @@ namespace detail {
     /// @note The concrete bins which are returned depend on the WrappingTypes
     ///       of the contained axes
     ///
-    /// @todo At the moment, this function relies on local-to-global bin index
-    ///       conversions for each neighboring bin. In principle, all
-    ///       information should be available to work directly on global bin
-    ///       indices. The problematic part is the check when going beyond
-    ///       under-/overflow bins.
     template <class... Axes>
     static GlobalNeighborHoodIndices<sizeof...(Axes)>
     neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
