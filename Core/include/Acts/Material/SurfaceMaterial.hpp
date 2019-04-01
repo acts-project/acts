@@ -173,4 +173,4 @@ SurfaceMaterial::materialProperties(const Vector3D&     gp,
   return plainMatProp;
 }
 
-}  // namespace Acts
+}  // namespace

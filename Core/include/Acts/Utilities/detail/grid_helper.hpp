@@ -169,7 +169,7 @@ namespace detail {
     static void
     getBinCenter(std::array<double, sizeof...(Axes)>&       center,
                  const std::array<size_t, sizeof...(Axes)>& localIndices,
-                 const std::tuple<Axes...>&                 axes)
+                 const std::tuple<Axes...>& axes)
     {
       center.at(N) = std::get<N>(axes).getBinCenter(localIndices.at(N));
       grid_helper_impl<N - 1>::getBinCenter(center, localIndices, axes);
@@ -202,9 +202,9 @@ namespace detail {
 
     template <class... Axes>
     static void
-    getLocalBinIndices(size_t&                              bin,
-                       const std::tuple<Axes...>&           axes,
-                       size_t&                              area,
+    getLocalBinIndices(size_t&                    bin,
+                       const std::tuple<Axes...>& axes,
+                       size_t&                    area,
                        std::array<size_t, sizeof...(Axes)>& indices)
     {
       const auto& thisAxis = std::get<N>(axes);
@@ -219,7 +219,7 @@ namespace detail {
     static void
     getLowerLeftBinEdge(std::array<double, sizeof...(Axes)>&       llEdge,
                         const std::array<size_t, sizeof...(Axes)>& localIndices,
-                        const std::tuple<Axes...>&                 axes)
+                        const std::tuple<Axes...>& axes)
     {
       llEdge.at(N) = std::get<N>(axes).getBinLowerBound(localIndices.at(N));
       grid_helper_impl<N - 1>::getLowerLeftBinEdge(llEdge, localIndices, axes);
@@ -228,7 +228,7 @@ namespace detail {
     template <class... Axes>
     static void
     getLowerLeftBinIndices(std::array<size_t, sizeof...(Axes)>& localIndices,
-                           const std::tuple<Axes...>&           axes)
+                           const std::tuple<Axes...>& axes)
     {
       localIndices.at(N) = std::get<N>(axes).wrapBin(localIndices.at(N) - 1);
       grid_helper_impl<N - 1>::getLowerLeftBinIndices(localIndices, axes);
@@ -236,7 +236,7 @@ namespace detail {
 
     template <class... Axes>
     static void
-    getNBins(const std::tuple<Axes...>&           axes,
+    getNBins(const std::tuple<Axes...>& axes,
              std::array<size_t, sizeof...(Axes)>& nBinsArray)
     {
       // by convention getNBins does not include under-/overflow bins
@@ -246,7 +246,7 @@ namespace detail {
 
     template <class... Axes>
     static void
-    getAxes(const std::tuple<Axes...>&                 axes,
+    getAxes(const std::tuple<Axes...>& axes,
             std::array<const IAxis*, sizeof...(Axes)>& axesArr)
     {
       axesArr[N] = static_cast<const IAxis*>(&std::get<N>(axes));
@@ -258,7 +258,7 @@ namespace detail {
     getUpperRightBinEdge(
         std::array<double, sizeof...(Axes)>&       urEdge,
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>&                 axes)
+        const std::tuple<Axes...>& axes)
     {
       urEdge.at(N) = std::get<N>(axes).getBinUpperBound(localIndices.at(N));
       grid_helper_impl<N - 1>::getUpperRightBinEdge(urEdge, localIndices, axes);
@@ -267,7 +267,7 @@ namespace detail {
     template <class... Axes>
     static void
     getUpperRightBinIndices(std::array<size_t, sizeof...(Axes)>& localIndices,
-                            const std::tuple<Axes...>&           axes)
+                            const std::tuple<Axes...>& axes)
     {
       localIndices.at(N) = std::get<N>(axes).wrapBin(localIndices.at(N) + 1);
       grid_helper_impl<N - 1>::getUpperRightBinIndices(localIndices, axes);
@@ -275,7 +275,7 @@ namespace detail {
 
     template <class... Axes>
     static void
-    getMin(const std::tuple<Axes...>&           axes,
+    getMin(const std::tuple<Axes...>& axes,
            std::array<double, sizeof...(Axes)>& minArray)
     {
       minArray[N] = std::get<N>(axes).getMin();
@@ -284,7 +284,7 @@ namespace detail {
 
     template <class... Axes>
     static void
-    getMax(const std::tuple<Axes...>&           axes,
+    getMax(const std::tuple<Axes...>& axes,
            std::array<double, sizeof...(Axes)>& maxArray)
     {
       maxArray[N] = std::get<N>(axes).getMax();
@@ -323,8 +323,8 @@ namespace detail {
     static void
     exteriorBinIndices(std::array<size_t, sizeof...(Axes)>& idx,
                        std::array<bool, sizeof...(Axes)>    isExterior,
-                       std::set<size_t>&                    combinations,
-                       const std::tuple<Axes...>&           axes)
+                       std::set<size_t>&          combinations,
+                       const std::tuple<Axes...>& axes)
     {
       // iterate over this axis' bins, remembering which bins are exterior
       for (size_t i = 0; i < std::get<N>(axes).getNBins() + 2; ++i) {
@@ -345,7 +345,7 @@ namespace detail {
     static void
     getBinCenter(std::array<double, sizeof...(Axes)>&       center,
                  const std::array<size_t, sizeof...(Axes)>& localIndices,
-                 const std::tuple<Axes...>&                 axes)
+                 const std::tuple<Axes...>& axes)
     {
       center.at(0u) = std::get<0u>(axes).getBinCenter(localIndices.at(0u));
     }
@@ -374,7 +374,7 @@ namespace detail {
     static void
     getLocalBinIndices(size_t& bin,
                        const std::tuple<Axes...>& /*axes*/,
-                       size_t&                              area,
+                       size_t& area,
                        std::array<size_t, sizeof...(Axes)>& indices)
     {
       // make sure to account for under-/overflow bins
@@ -386,7 +386,7 @@ namespace detail {
     static void
     getLowerLeftBinEdge(std::array<double, sizeof...(Axes)>&       llEdge,
                         const std::array<size_t, sizeof...(Axes)>& localIndices,
-                        const std::tuple<Axes...>&                 axes)
+                        const std::tuple<Axes...>& axes)
     {
       llEdge.at(0u) = std::get<0u>(axes).getBinLowerBound(localIndices.at(0u));
     }
@@ -394,14 +394,14 @@ namespace detail {
     template <class... Axes>
     static void
     getLowerLeftBinIndices(std::array<size_t, sizeof...(Axes)>& localIndices,
-                           const std::tuple<Axes...>&           axes)
+                           const std::tuple<Axes...>& axes)
     {
       localIndices.at(0u) = std::get<0u>(axes).wrapBin(localIndices.at(0u) - 1);
     }
 
     template <class... Axes>
     static void
-    getNBins(const std::tuple<Axes...>&           axes,
+    getNBins(const std::tuple<Axes...>& axes,
              std::array<size_t, sizeof...(Axes)>& nBinsArray)
     {
       // by convention getNBins does not include under-/overflow bins
@@ -410,7 +410,7 @@ namespace detail {
 
     template <class... Axes>
     static void
-    getAxes(const std::tuple<Axes...>&                 axes,
+    getAxes(const std::tuple<Axes...>& axes,
             std::array<const IAxis*, sizeof...(Axes)>& axesArr)
     {
       axesArr[0u] = static_cast<const IAxis*>(&std::get<0u>(axes));
@@ -421,7 +421,7 @@ namespace detail {
     getUpperRightBinEdge(
         std::array<double, sizeof...(Axes)>&       urEdge,
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>&                 axes)
+        const std::tuple<Axes...>& axes)
     {
       urEdge.at(0u) = std::get<0u>(axes).getBinUpperBound(localIndices.at(0u));
     }
@@ -429,14 +429,14 @@ namespace detail {
     template <class... Axes>
     static void
     getUpperRightBinIndices(std::array<size_t, sizeof...(Axes)>& localIndices,
-                            const std::tuple<Axes...>&           axes)
+                            const std::tuple<Axes...>& axes)
     {
       localIndices.at(0u) = std::get<0u>(axes).wrapBin(localIndices.at(0u) + 1);
     }
 
     template <class... Axes>
     static void
-    getMin(const std::tuple<Axes...>&           axes,
+    getMin(const std::tuple<Axes...>& axes,
            std::array<double, sizeof...(Axes)>& minArray)
     {
       minArray[0u] = std::get<0u>(axes).getMin();
@@ -444,7 +444,7 @@ namespace detail {
 
     template <class... Axes>
     static void
-    getMax(const std::tuple<Axes...>&           axes,
+    getMax(const std::tuple<Axes...>& axes,
            std::array<double, sizeof...(Axes)>& maxArray)
     {
       maxArray[0u] = std::get<0u>(axes).getMax();
@@ -477,8 +477,8 @@ namespace detail {
     static void
     exteriorBinIndices(std::array<size_t, sizeof...(Axes)>& idx,
                        std::array<bool, sizeof...(Axes)>    isExterior,
-                       std::set<size_t>&                    combinations,
-                       const std::tuple<Axes...>&           axes)
+                       std::set<size_t>&          combinations,
+                       const std::tuple<Axes...>& axes)
     {
       // For each exterior bin on this axis, we will do this
       auto recordExteriorBin = [&](size_t i) {
@@ -549,10 +549,10 @@ namespace detail {
     template <class... Axes>
     static std::array<double, sizeof...(Axes)>
     getBinCenter(const std::array<size_t, sizeof...(Axes)>& localIndices,
-                 const std::tuple<Axes...>&                 axes)
+                 const std::tuple<Axes...>& axes)
     {
       std::array<double, sizeof...(Axes)> center;
-      constexpr size_t                    MAX = sizeof...(Axes) - 1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       grid_helper_impl<MAX>::getBinCenter(center, localIndices, axes);
 
       return center;
@@ -622,8 +622,8 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getLocalBinIndices(size_t bin, const std::tuple<Axes...>& axes)
     {
-      constexpr size_t                    MAX  = sizeof...(Axes) - 1;
-      size_t                              area = 1;
+      constexpr size_t MAX  = sizeof...(Axes) - 1;
+      size_t           area = 1;
       std::array<size_t, sizeof...(Axes)> indices;
 
       grid_helper_impl<MAX>::getLocalBinIndices(bin, axes, area, indices);
@@ -643,10 +643,10 @@ namespace detail {
     template <class... Axes>
     static std::array<double, sizeof...(Axes)>
     getLowerLeftBinEdge(const std::array<size_t, sizeof...(Axes)>& localIndices,
-                        const std::tuple<Axes...>&                 axes)
+                        const std::tuple<Axes...>& axes)
     {
       std::array<double, sizeof...(Axes)> llEdge;
-      constexpr size_t                    MAX = sizeof...(Axes) - 1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       grid_helper_impl<MAX>::getLowerLeftBinEdge(llEdge, localIndices, axes);
 
       return llEdge;
@@ -669,7 +669,7 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getLowerLeftBinIndices(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>&                 axes)
+        const std::tuple<Axes...>& axes)
     {
       constexpr size_t MAX       = sizeof...(Axes) - 1;
       auto             llIndices = localIndices;
@@ -723,10 +723,10 @@ namespace detail {
     static std::array<double, sizeof...(Axes)>
     getUpperRightBinEdge(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>&                 axes)
+        const std::tuple<Axes...>& axes)
     {
       std::array<double, sizeof...(Axes)> urEdge;
-      constexpr size_t                    MAX = sizeof...(Axes) - 1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       grid_helper_impl<MAX>::getUpperRightBinEdge(urEdge, localIndices, axes);
 
       return urEdge;
@@ -749,7 +749,7 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getUpperRightBinIndices(
         const std::array<size_t, sizeof...(Axes)>& localIndices,
-        const std::tuple<Axes...>&                 axes)
+        const std::tuple<Axes...>& axes)
     {
       constexpr size_t MAX       = sizeof...(Axes) - 1;
       auto             urIndices = localIndices;
@@ -810,7 +810,7 @@ namespace detail {
     static GlobalNeighborHoodIndices<sizeof...(Axes)>
     neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
                         std::pair<size_t, size_t>                  sizes,
-                        const std::tuple<Axes...>&                 axes)
+                        const std::tuple<Axes...>& axes)
     {
       constexpr size_t MAX = sizeof...(Axes) - 1;
 
@@ -830,8 +830,8 @@ namespace detail {
     template <class... Axes>
     static GlobalNeighborHoodIndices<sizeof...(Axes)>
     neighborHoodIndices(const std::array<size_t, sizeof...(Axes)>& localIndices,
-                        size_t                                     size,
-                        const std::tuple<Axes...>&                 axes)
+                        size_t                     size,
+                        const std::tuple<Axes...>& axes)
     {
       return neighborHoodIndices(
           localIndices, std::make_pair(size, size), axes);
@@ -850,7 +850,7 @@ namespace detail {
 
       std::array<size_t, sizeof...(Axes)> idx;
       std::array<bool, sizeof...(Axes)>   isExterior;
-      std::set<size_t>                    combinations;
+      std::set<size_t> combinations;
       grid_helper_impl<MAX>::exteriorBinIndices(
           idx, isExterior, combinations, axes);
 

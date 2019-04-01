@@ -40,4 +40,4 @@ enum GeometryType {
   NumberOfGeometryTypes = 3
 };
 
-}  // namespace Acts
+}  // namespace

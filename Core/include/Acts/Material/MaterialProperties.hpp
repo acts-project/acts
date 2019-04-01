@@ -262,4 +262,4 @@ operator<<(std::ostream& sl, const MaterialProperties& mprop);
 using MaterialPropertiesVector = std::vector<MaterialProperties>;
 using MaterialPropertiesMatrix = std::vector<MaterialPropertiesVector>;
 
-}  // namespace Acts
+}  // namespace

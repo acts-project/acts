@@ -100,4 +100,4 @@ public:
 private:
   std::vector<ElementFraction> m_elements = {};
 };
-}  // namespace Acts
+}

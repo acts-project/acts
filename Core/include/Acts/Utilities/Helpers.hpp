@@ -128,7 +128,7 @@ namespace VectorHelpers {
 
     return r;
   }
-}  // namespace VectorHelpers
+}
 
 namespace detail {
 
@@ -140,7 +140,7 @@ namespace detail {
     }
     return val;
   }
-}  // namespace detail
+}
 
 inline std::string
 toString(const ActsMatrixXd& matrix,
@@ -233,4 +233,4 @@ unpack_shared_vector(const std::vector<std::shared_ptr<const T>>& items)
   return rawPtrs;
 }
 
-}  // namespace Acts
+}  // end of Acts namespace

@@ -70,17 +70,18 @@ namespace Acts {
 ///    - (4,2,6): 101 = 5
 ///    - (4,5,3): 110 = 6
 ///    - (4,5,6): 111 = 7
-template <typename T,
-          size_t N,
-          class Point1,
-          class Point2 = Point1,
-          class Point3 = Point2,
-          typename     = std::enable_if_t<
-              detail::can_interpolate<Point1, Point2, Point3, T>::value>>
+template <
+    typename T,
+    size_t N,
+    class Point1,
+    class Point2 = Point1,
+    class Point3 = Point2,
+    typename     = std::
+        enable_if_t<detail::can_interpolate<Point1, Point2, Point3, T>::value>>
 inline T
-interpolate(const Point1&           position,
-            const Point2&           lowerCorner,
-            const Point3&           upperCorner,
+interpolate(const Point1& position,
+            const Point2& lowerCorner,
+            const Point3& upperCorner,
             const std::array<T, N>& values)
 {
   return detail::interpolate_impl<T,

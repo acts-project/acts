@@ -43,7 +43,7 @@ namespace detail {
     {
       static constexpr bool value = true;
     };
-  }  // namespace
+  }
 
   template <typename... Args>
   constexpr bool has_duplicates_v = has_duplicates<Args...>::value;

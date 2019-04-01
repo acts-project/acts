@@ -120,9 +120,9 @@ namespace detail {
   struct interpolate_impl
   {
     static T
-    run(const Point1&           pos,
-        const Point2&           lowerLeft,
-        const Point3&           upperRight,
+    run(const Point1& pos,
+        const Point2& lowerLeft,
+        const Point3& upperRight,
         const std::array<T, N>& fields)
     {
       // get distance to lower boundary relative to total bin width
@@ -143,9 +143,9 @@ namespace detail {
   struct interpolate_impl<T, Point1, Point2, Point3, D, 2u>
   {
     static T
-    run(const Point1&            pos,
-        const Point2&            lowerLeft,
-        const Point3&            upperRight,
+    run(const Point1& pos,
+        const Point2& lowerLeft,
+        const Point3& upperRight,
         const std::array<T, 2u>& fields)
     {
       // get distance to lower boundary relative to total bin width

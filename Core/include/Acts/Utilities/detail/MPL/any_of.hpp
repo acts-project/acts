@@ -24,7 +24,7 @@ namespace detail {
     template <bool... others>
     struct any_of<false, others...> : public any_of<others...> {};
     // clang-format on
-  }  // namespace
+  }
 
   template <bool... values>
   constexpr bool any_of_v = any_of<values...>::value;

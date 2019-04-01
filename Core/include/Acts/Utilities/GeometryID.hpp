@@ -178,4 +178,4 @@ operator>=(const GeometryID& one, const GeometryID& two);
 /// Overload of << operator for std::ostream for debug output
 std::ostream&
 operator<<(std::ostream& sl, const GeometryID& tid);
-}  // namespace Acts
+}

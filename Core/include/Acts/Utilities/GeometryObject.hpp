@@ -127,4 +127,4 @@ GeometryObject::binningPositionValue(const GeometryContext& gctx,
     return 0.;
   }
 }
-}  // namespace Acts
+}

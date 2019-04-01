@@ -294,9 +294,9 @@ public:
   float
   value(const Vector3D& position) const
   {
-    using VectorHelpers::eta;
-    using VectorHelpers::perp;
     using VectorHelpers::phi;
+    using VectorHelpers::perp;
+    using VectorHelpers::eta;
     // ordered after occurence
     if (binvalue == binR || binvalue == binH) {
       return (perp(position));
@@ -635,4 +635,4 @@ private:
     return nbelow - 1;
   }
 };
-}  // namespace Acts
+}

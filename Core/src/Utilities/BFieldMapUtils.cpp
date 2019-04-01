@@ -78,7 +78,7 @@ Acts::
   for (size_t i = 1; i <= nBinsR; ++i) {
     for (size_t j = 1; j <= nBinsZ; ++j) {
       std::array<size_t, 2> nIndices = {{rPos.size(), zPos.size()}};
-      Grid_t::index_t       indices  = {{i, j}};
+      Grid_t::index_t indices = {{i, j}};
       if (firstQuadrant) {
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
@@ -213,7 +213,7 @@ Acts::
   for (size_t i = 1; i <= nBinsX; ++i) {
     for (size_t j = 1; j <= nBinsY; ++j) {
       for (size_t k = 1; k <= nBinsZ; ++k) {
-        Grid_t::index_t       indices = {{i, j, k}};
+        Grid_t::index_t indices = {{i, j, k}};
         std::array<size_t, 3> nIndices
             = {{xPos.size(), yPos.size(), zPos.size()}};
         if (firstOctant) {

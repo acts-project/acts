@@ -194,4 +194,4 @@ private:
     }
   }
 };
-}  // namespace Acts
+}
