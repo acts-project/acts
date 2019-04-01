@@ -19,6 +19,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
@@ -47,9 +48,20 @@ namespace Test {
     /// This is a simple cache struct to mimic a Stepper
     struct Stepper
     {
+      // comply with concept
+      using Jacobian   = ActsMatrixD<5, 5>;
+      using Covariance = ActsSymMatrixD<5>;
+      using BoundState = std::tuple<BoundParameters, Jacobian, double>;
+      using CurvilinearState
+          = std::tuple<CurvilinearParameters, Jacobian, double>;
+      using Corrector = VoidIntersectionCorrector;
+
+      template <typename, typename>
+      using return_parameter_type = void;
+
       /// This is a simple cache struct to mimic the
       /// Stepper cache in the propagation
-      struct StepperState
+      struct State
       {
         /// Position
         Vector3D pos = Vector3D(0., 0., 0.);
@@ -75,46 +87,112 @@ namespace Test {
 
       /// Global particle position accessor
       Vector3D
-      position(const StepperState& state) const
+      position(const State& state) const
       {
         return state.pos;
       }
 
       /// Momentum direction accessor
       Vector3D
-      direction(const StepperState& state) const
+      direction(const State& state) const
       {
         return state.dir;
       }
 
       /// Momentum accessor
-      Vector3D
-      momentum(const StepperState& state) const
+      double
+      momentum(const State& state) const
       {
-        return state.p * state.dir;
+        return state.p;
       }
 
       /// Charge access
       double
-      charge(const StepperState& state) const
+      charge(const State& state) const
       {
         return state.q;
       }
 
       /// Return a corrector
-      static VoidIntersectionCorrector
-      corrector(StepperState& /*unused*/)
+      VoidIntersectionCorrector
+      corrector(State& /*unused*/) const
       {
         return VoidIntersectionCorrector();
       }
 
       bool
-      surfaceReached(const StepperState& state, const Surface* surface) const
+      surfaceReached(const State& state, const Surface* surface) const
       {
         return surface->isOnSurface(
             tgContext, position(state), direction(state), true);
       }
+
+      BoundState
+      boundState(State&         state,
+                 const Surface& surface,
+                 bool           reinitialize = true) const
+      {
+        (void)reinitialize;
+        BoundParameters parameters(tgContext,
+                                   nullptr,
+                                   state.pos,
+                                   state.p * state.dir,
+                                   state.q,
+                                   surface.getSharedPtr());
+        BoundState bState{std::move(parameters),
+                          ActsMatrixD<5, 5>::Identity(),
+                          state.pathAccumulated};
+        return bState;
+      }
+
+      CurvilinearState
+      curvilinearState(State& state, bool reinitialize = true) const
+      {
+        (void)reinitialize;
+        CurvilinearParameters parameters(
+            nullptr, state.pos, state.p * state.dir, state.q);
+        // Create the bound state
+        CurvilinearState curvState{std::move(parameters),
+                                   ActsMatrixD<5, 5>::Identity(),
+                                   state.pathAccumulated};
+        return curvState;
+      }
+
+      void
+      update(State& /*state*/, const BoundParameters& /*pars*/) const
+      {
+      }
+
+      void
+      update(State& /*state*/,
+             const Vector3D& /*uposition*/,
+             const Vector3D& /*udirection*/,
+             double /*up*/) const
+      {
+      }
+
+      void
+      covarianceTransport(State& /*state*/, bool /*reinitialize = false*/) const
+      {
+      }
+
+      void
+      covarianceTransport(State& /*unused*/,
+                          const Surface& /*surface*/,
+                          bool /*reinitialize = false*/) const
+      {
+      }
+
+      Vector3D
+      getField(State& /*state*/, const Vector3D& /*pos*/) const
+      {
+        // get the field from the cell
+        return Vector3D(0., 0., 0.);
+      }
     };
+
+    static_assert(StepperConcept<Stepper>,
+                  "Dummy stepper does not fulfill concept");
 
     /// emulate the options template
     struct Options
@@ -142,7 +220,7 @@ namespace Test {
     Options options;
 
     /// The Stepper state - internal statew of the Stepper
-    Stepper::StepperState stepping;
+    Stepper::State stepping;
 
     /// Navigation state - internal state of the Navigator
     Navigator::State navigation;
