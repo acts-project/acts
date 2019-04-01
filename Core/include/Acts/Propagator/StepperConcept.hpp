@@ -70,34 +70,69 @@ namespace concept {
 
     // clang-format off
     template <typename S, typename state = typename S::State>
-    constexpr bool StepperConcept
-      = require<exists<state_t, S>,
-                exists<jacobian_t, S>,
-                exists<covariance_t, S>,
-                exists<bound_state_t, S>,
-                exists<curvilinear_state_t, S>,
-                exists<return_t, S>,
-                has_method<const S, Vector3D, get_field_t, state&, const Vector3D&>,
-                has_method<const S, Vector3D, position_t, const state&>,
-                has_method<const S, Vector3D, direction_t, const state&>,
-                has_method<const S, double, momentum_t, const state&>,
-                has_method<const S, double, charge_t, const state&>,
-                has_method<const S, bool, surface_reached_t, const state&, const Surface*>,
-                has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>,
-                has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>,
-                has_method<const S, void, update_t, state&, const BoundParameters&>,
-                has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double>,
-                has_method<const S, typename S::Corrector, corrector_t, state&>, 
-                has_method<const S, void, covariance_transport_t, state&, bool>,
-                has_method<const S, void, covariance_transport_t, state&, const Surface&, bool>
-               >;
+      struct StepperConcept {
+        constexpr static bool state_exists = exists<state_t, S>;
+        static_assert(state_exists, "State type not found");
+        constexpr static bool jacobian_exists = exists<jacobian_t, S>;
+        static_assert(jacobian_exists, "Jacobian type not found");
+        constexpr static bool covariance_exists = exists<covariance_t, S>;
+        static_assert(covariance_exists, "Covariance type not found");
+        constexpr static bool bound_state_exists = exists<bound_state_t, S>;
+        static_assert(bound_state_exists, "BoundState type not found");
+        constexpr static bool curvilinear_state_exists = exists<curvilinear_state_t, S>;
+        static_assert(curvilinear_state_exists, "CurvilinearState type not found");
+        constexpr static bool return_type_exists = exists<return_t, S>;
+        static_assert(return_type_exists, "return_parameter_type not found");
+        constexpr static bool get_field_exists = has_method<const S, Vector3D, get_field_t, state&, const Vector3D&>;
+        static_assert(get_field_exists, "getField method not found");
+        constexpr static bool position_exists = has_method<const S, Vector3D, position_t, const state&>;
+        static_assert(position_exists, "position method not found");
+        constexpr static bool direction_exists = has_method<const S, Vector3D, direction_t, const state&>;
+        static_assert(direction_exists, "direction method not found");
+        constexpr static bool momentum_exists = has_method<const S, double, momentum_t, const state&>;
+        static_assert(momentum_exists, "momentum method not found");
+        constexpr static bool charge_exists = has_method<const S, double, charge_t, const state&>;
+        static_assert(charge_exists, "charge method not found");
+        constexpr static bool surface_reached_exists = has_method<const S, bool, surface_reached_t, const state&, const Surface*>;
+        static_assert(surface_reached_exists, "surfaceReached method not found");
+        constexpr static bool bound_state_method_exists= has_method<const S, typename S::BoundState, bound_state_method_t, state&, const Surface&, bool>;
+        static_assert(bound_state_method_exists, "boundState method not found");
+        constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
+        static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
+        constexpr static bool update_method_exists = require<has_method<const S, void, update_t, state&, const BoundParameters&>,
+                                                             has_method<const S, void, update_t, state&, const Vector3D&, const Vector3D&, double>>;
+        static_assert(update_method_exists, "update method not found");
+        constexpr static bool corrector_exists = has_method<const S, typename S::Corrector, corrector_t, state&>;
+        static_assert(corrector_exists, "corrector method not found");
+        constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_t, state&, bool>,
+                                                                    has_method<const S, void, covariance_transport_t, state&, const Surface&, bool>>;
+        static_assert(covariance_transport_exists, "covarianceTransport method not found");
+
+        constexpr static bool value = require<state_exists,
+                                              jacobian_exists,
+                                              covariance_exists,
+                                              bound_state_exists,
+                                              curvilinear_state_exists,
+                                              return_type_exists,
+                                              get_field_exists,
+                                              position_exists,
+                                              direction_exists,
+                                              momentum_exists,
+                                              charge_exists,
+                                              surface_reached_exists,
+                                              bound_state_method_exists,
+                                              curvilinear_state_method_exists,
+                                              update_method_exists,
+                                              corrector_exists,
+                                              covariance_transport_exists>;
+      };
     // clang-format on
   }
 }
 
 template <typename stepper, typename state = typename stepper::State>
 constexpr bool StepperConcept
-    = Acts::concept::Stepper::StepperConcept<stepper, state>;
+    = Acts::concept::Stepper::StepperConcept<stepper, state>::value;
 template <typename stepper>
 constexpr bool StepperStateConcept
     = Acts::concept::Stepper::StepperStateConcept<stepper>;
