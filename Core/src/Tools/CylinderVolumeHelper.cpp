@@ -923,12 +923,25 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       ACTS_VERBOSE("             creating a new cylindrical boundary surface "
                    "with bounds = "
                    << cSurface->bounds());
+      ACTS_VERBOSE("             at " << cSurface->center(gctx).transpose());
       boundarySurface
           = std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
               std::move(cSurface),
               gvDescriptorOne.glueVolumes(faceOne),
               gvDescriptorTwo.glueVolumes(faceTwo));
     } else {
+      // Calculate correct position for disc surface
+
+      // we assume it's cylinder bounds
+      auto cylVolBounds = dynamic_cast<const Acts::CylinderVolumeBounds*>(
+          &tvolOne->volumeBounds());
+      double zPos = tvolOne->center().z();
+      double zHL  = cylVolBounds->halflengthZ();
+      transform   = std::make_shared<const Transform3D>(
+          Translation3D(0, 0, zPos + zHL));
+      // this puts the surface on the positive z side of the cyl vol bounds
+      // iteration is from neg to pos, so it should always be in between.
+
       // (2) create the BoundaryDiscSurface, in that case the zMin/zMax provided
       // are both the position of the disk in question
       std::shared_ptr<const Surface> dSurface
@@ -936,6 +949,7 @@ Acts::CylinderVolumeHelper::glueTrackingVolumes(
       ACTS_VERBOSE("             creating a new disc-like boundary surface "
                    "with bounds = "
                    << dSurface->bounds());
+      ACTS_VERBOSE("             at " << dSurface->center(gctx).transpose());
       boundarySurface
           = std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
               std::move(dSurface),
