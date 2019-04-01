@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.9)
 
 # read version number from file
 file(READ version_number _acts_version)
@@ -59,10 +59,7 @@ if(ACTS_BUILD_DOC)
   find_package(Doxygen 1.8.11 REQUIRED)
 endif()
 if(ACTS_BUILD_DD4HEP_PLUGIN)
-  # Work around DD4hep forcing CMAKE_CXX_STANDARD to 14
-  set(_cmake_cxx_standard ${CMAKE_CXX_STANDARD})
   find_package(DD4hep 1.2 REQUIRED COMPONENTS DDCore)
-  set(CMAKE_CXX_STANDARD ${_cmake_cxx_standard})
 endif()
 if(ACTS_BUILD_TGEO_PLUGIN)
   find_package(ROOT 6.10 REQUIRED COMPONENTS Geom)
