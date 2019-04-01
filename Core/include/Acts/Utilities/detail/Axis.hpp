@@ -60,6 +60,9 @@ namespace detail {
     public:
       iterator() = default;
 
+      // Only specify current position. Good enough for end()...
+      iterator(size_t current) : m_current(current) {}
+
       iterator(size_t begin1, size_t end1, size_t begin2)
         : m_current(begin1), m_end1(end1), m_begin2(begin2)
       {
@@ -99,7 +102,7 @@ namespace detail {
     iterator
     end() const
     {
-      return iterator(m_end2, m_end2, m_end2);
+      return iterator(m_end2);
     }
 
     // Number of indices that will be produced if this sequence is iterated

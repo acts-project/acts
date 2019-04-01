@@ -48,6 +48,8 @@ namespace detail {
     class iterator
     {
     public:
+      iterator() = default;
+
       iterator(
           const GlobalNeighborHoodIndices& parent,
           std::array<NeighborHoodIndices::iterator, DIM>&& localIndicesIter)
@@ -79,7 +81,8 @@ namespace detail {
           m_localIndicesIter[i] = localIndices[i].begin();
         }
 
-        // The first index should stay at the end value when it reaches it
+        // The first index should stay at the end value when it reaches it, so
+        // that we know when we've reached the end of iteration.
         ++m_localIndicesIter[0];
         return *this;
       }
@@ -87,7 +90,14 @@ namespace detail {
       bool
       operator==(const iterator& it)
       {
-        return m_localIndicesIter == it.m_localIndicesIter;
+        // We know when we've reached the end, so we don't need an end-iterator.
+        // Sadly, in C++, there has to be one. Therefore, we special-case it
+        // heavily so that it's super-efficient to create and compare to.
+        if (it.m_parent == nullptr) {
+          return m_localIndicesIter[0] == m_parent->m_localIndices[0].end();
+        } else {
+          return m_localIndicesIter == it.m_localIndicesIter;
+        }
       }
 
       bool
@@ -98,7 +108,7 @@ namespace detail {
 
     private:
       std::array<NeighborHoodIndices::iterator, DIM> m_localIndicesIter;
-      const GlobalNeighborHoodIndices* m_parent;
+      const GlobalNeighborHoodIndices* m_parent = nullptr;
     };
 
     iterator
@@ -114,12 +124,7 @@ namespace detail {
     iterator
     end() const
     {
-      std::array<NeighborHoodIndices::iterator, DIM> localIndicesIter;
-      localIndicesIter[0] = m_localIndices[0].end();
-      for (size_t i = 1; i < DIM; ++i) {
-        localIndicesIter[i] = m_localIndices[i].begin();
-      }
-      return iterator(*this, std::move(localIndicesIter));
+      return iterator();
     }
 
     // Number of indices that will be produced if this sequence is iterated
