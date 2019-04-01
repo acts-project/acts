@@ -143,7 +143,6 @@ public:
   /// Virtual Destructor
   virtual ~BoundarySurfaceT() = default;
 
-protected:
   /// Helper metho: attach a Volume to this BoundarySurfaceT
   /// this si done during the geometry construction and only called by
   /// the friend templated volume
@@ -164,6 +163,7 @@ protected:
   attachVolumeArray(std::shared_ptr<const VolumeArray> volumes,
                     BoundaryOrientation                inout);
 
+protected:
   /// the represented surface by this
   std::shared_ptr<const Surface> m_surface;
   /// the inside (w.r.t. normal vector) volume to point to if only one exists

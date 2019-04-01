@@ -568,6 +568,15 @@ public:
   void
   setLogger(std::unique_ptr<const Logger> newLogger);
 
+  /// Analyze the layer config to gather needed dimension
+  ///
+  /// @param [in] gctx the geometry context for this building
+  /// @param [in] lVector is the vector of layers that are parsed
+  ///
+  /// @return a VolumeConfig representing this layer
+  VolumeConfig
+  analyzeLayers(const GeometryContext& gctx, const LayerVector& lVector) const;
+
 private:
   /// Configuration struct
   Config m_cfg;
@@ -583,15 +592,6 @@ private:
 
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;
-
-  /// Analyze the layer config to gather needed dimension
-  ///
-  /// @param [in] gctx the geometry context for this building
-  /// @param [in] lVector is the vector of layers that are parsed
-  ///
-  /// @return a VolumeConfig representing this layer
-  VolumeConfig
-  analyzeLayers(const GeometryContext& gctx, const LayerVector& lVector) const;
 
   /// Helper method check the layer containment,
   /// both for inside / outside.
