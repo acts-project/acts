@@ -49,17 +49,17 @@ public:
     int maxIterations = 5;
 
     /// Set up factory for linearizing tracks
-    typename LinearizedTrackFactory<bfield_t, propagator_t>::Config lt_config;
+    typename LinearizedTrackFactory<bfield_t, propagator_t>::Config ltConfig;
     LinearizedTrackFactory<bfield_t, propagator_t>                  linFactory;
 
     /// Propagator
     propagator_t propagator;
 
     /// Constructor with propagator input
-    Config(bfield_t bIn, const propagator_t& propagatorIn)
-      : bField(std::move(bIn))
-      , lt_config(bField)
-      , linFactory(lt_config)
+    Config(const bfield_t& bIn, const propagator_t& propagatorIn)
+      : bField(bIn)
+      , ltConfig(bIn)
+      , linFactory(ltConfig)
       , propagator(propagatorIn)
     {
     }
@@ -70,12 +70,12 @@ public:
         std::enable_if_t<std::is_same<T, Propagator<EigenStepper<bfield_t>>>::
                              value,
                          int> = 0>
-    Config(bfield_t bIn)
-      : bField(std::move(bIn))
-      , lt_config(bField)
-      , linFactory(lt_config)
+    Config(const bfield_t& bIn)
+      : bField(bIn)
+      , ltConfig(bIn)
+      , linFactory(ltConfig)
       , propagator(
-            Propagator<EigenStepper<bfield_t>>(EigenStepper<bfield_t>(bField)))
+            Propagator<EigenStepper<bfield_t>>(EigenStepper<bfield_t>(bIn)))
     {
     }
   };

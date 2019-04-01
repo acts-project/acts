@@ -50,7 +50,7 @@ public:
   struct Config
   {
     bfield_t bField;
-    Config(bfield_t bIn) : bField(std::move(bIn)){};
+    Config(const bfield_t& bIn) : bField(bIn){};
   };
 
   /// @brief Constructor with bfield_t
