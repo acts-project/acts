@@ -282,10 +282,10 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       // Calculate chi2 per track.
       bTrack.chi2
           = ((bTrack.deltaQ - bTrack.DiMat * deltaV - bTrack.EiMat * deltaP)
-                 .transpose()
-             * bTrack.linTrack.covarianceAtPCA.inverse()
-             * (bTrack.deltaQ - bTrack.DiMat * deltaV
-                - bTrack.EiMat * deltaP))[0];
+                 .transpose())
+                .dot(bTrack.linTrack.covarianceAtPCA.inverse()
+                     * (bTrack.deltaQ - bTrack.DiMat * deltaV
+                        - bTrack.EiMat * deltaP));
       newChi2 += bTrack.chi2;
 
       ++iTrack;
@@ -302,9 +302,9 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
           - (vFitterOptions.vertexConstraint.position()[1] - linPoint[1]);
       deltaTrk[2] = deltaV[2]
           - (vFitterOptions.vertexConstraint.position()[2] - linPoint[2]);
-      newChi2 += (deltaTrk.transpose()
-                  * vFitterOptions.vertexConstraint.covariance().inverse()
-                  * deltaTrk)[0];
+      newChi2 += (deltaTrk.transpose())
+                     .dot(vFitterOptions.vertexConstraint.covariance().inverse()
+                          * deltaTrk);
     }
 
     if (!std::isnormal(newChi2)) {
