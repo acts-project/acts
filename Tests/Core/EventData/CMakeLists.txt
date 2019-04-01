@@ -6,7 +6,7 @@ acts_add_test_to_cdash_project (PROJECT ACore TEST ParameterSetUnitTest TARGETS 
 
 add_executable (FittableTypeTests FittableTypeTests.cpp)
 target_include_directories (FittableTypeTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (FittableTypeTests PRIVATE ActsCore ActsTestsCommonHelpers)
+target_link_libraries (FittableTypeTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME FittableTypeTest COMMAND FittableTypeTests)
 
 add_executable (MeasurementTests MeasurementTests.cpp)

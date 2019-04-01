@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///  Boost include(s)
-#define BOOST_TEST_MODULE GeometryID Tests
-
-#include <boost/test/included/unit_test.hpp>
+#define BOOST_TEST_MODULE AlignmentContext Tests
+#define BOOST_TEST_DYN_LINK
+#include <boost/test/unit_test.hpp>
 
 #include "Acts/Detector/DetectorElementBase.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
@@ -34,7 +34,7 @@ namespace Test {
     std::shared_ptr<const std::array<Transform3D, 2>> alignmentStore = nullptr;
 
     /// Context index
-    unsigned int alignmentIndex;
+    unsigned int alignmentIndex{0};
 
     /// Default contructor
     AlignmentContext() {}
@@ -171,7 +171,7 @@ namespace Test {
     const auto& alignedSurface = alignedElement.surface();
 
     // The alignment centexts
-    AlignmentContext defaultContext;
+    AlignmentContext defaultContext{};
     AlignmentContext negativeContext(alignmentStore, 0);
     AlignmentContext positiveContext(alignmentStore, 1);
 

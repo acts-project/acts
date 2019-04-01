@@ -69,5 +69,5 @@ target_link_libraries (ResultTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boo
 add_test (NAME ResultTests COMMAND ResultTests)
 
 add_executable (TypeTraitsTest TypeTraitsTest.cpp)
-target_link_libraries (TypeTraitsTest PRIVATE ActsCore ActsTestsCommonHelpers)
+target_link_libraries (TypeTraitsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME TypeTraitsTest COMMAND TypeTraitsTest)
