@@ -76,6 +76,14 @@ add_executable (BoundingBoxTest BoundingBoxTest.cpp)
 target_link_libraries (BoundingBoxTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME BoundingBoxTest COMMAND BoundingBoxTest)
 
+add_executable (FrustumTest FrustumTest.cpp)
+target_link_libraries (FrustumTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME FrustumTest COMMAND FrustumTest)
+
+add_executable (RayTest RayTest.cpp)
+target_link_libraries (RayTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME RayTest COMMAND RayTest)
+
 add_executable (VisualizationTests VisualizationTests.cpp)
 target_link_libraries (VisualizationTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME VisualizationTests COMMAND VisualizationTests)
