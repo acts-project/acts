@@ -10,7 +10,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <set>
 #include <vector>
 #include "Acts/Utilities/IAxis.hpp"
 
@@ -44,7 +43,7 @@ namespace detail {
   class NeighborHoodIndices
   {
   public:
-    NeighborHoodIndices() : m_begin1(0), m_end1(0), m_begin2(0), m_end2(0) {}
+    NeighborHoodIndices() = default;
 
     NeighborHoodIndices(size_t begin, size_t end)
       : m_begin1(begin), m_end1(end), m_begin2(end), m_end2(end)
@@ -123,7 +122,7 @@ namespace detail {
     }
 
   private:
-    size_t m_begin1, m_end1, m_begin2, m_end2;
+    size_t m_begin1 = 0, m_end1 = 0, m_begin2 = 0, m_end2 = 0;
   };
 
   /// @brief calculate bin indices from a given binning structure
