@@ -38,4 +38,4 @@ public:
            const SpacePointGrid<SpacePoint>* binnedSP);
 };
 }
-#include "Acts/Seeding/ATLASBottomBinFinder.ipp"
+#include "ATLASBottomBinFinder.ipp"

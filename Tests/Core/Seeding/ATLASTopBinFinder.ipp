@@ -17,12 +17,12 @@ Acts::ATLASTopBinFinder<SpacePoint>::findBins(
 
   std::set<size_t> neighbourBins
       = binnedSP->neighborHoodIndices({phiBin, zBin}, 1);
-  if (zBin == 5) {
+  if (zBin == 6) {
     return neighbourBins;
   }
   // <10 not necessary because grid doesn't return bins that don't exist (only
   // works for 11 zbins)
-  if (zBin > 5) {
+  if (zBin > 6) {
     neighbourBins.erase(binnedSP->getGlobalBinIndex({phiBin, zBin - 1}));
     neighbourBins.erase(binnedSP->getGlobalBinIndex({phiBin - 1, zBin - 1}));
     neighbourBins.erase(binnedSP->getGlobalBinIndex({phiBin + 1, zBin - 1}));

@@ -39,4 +39,4 @@ public:
 };
 }
 
-#include "Acts/Seeding/ATLASTopBinFinder.ipp"
+#include "ATLASTopBinFinder.ipp"

@@ -66,12 +66,12 @@ ATLASCuts<SpacePoint>::seedWeight(
 template <typename SpacePoint>
 bool
 ATLASCuts<SpacePoint>::singleSeedCut(
-    float,
-    const InternalSpacePoint<SpacePoint>*,
-    const InternalSpacePoint<SpacePoint>*,
-    const InternalSpacePoint<SpacePoint>*) const
+    float weight,
+    const InternalSpacePoint<SpacePoint>* b,
+    const InternalSpacePoint<SpacePoint>* m,
+    const InternalSpacePoint<SpacePoint>* t) const
 {
-  return true;
+  return !(b->radius() > 150. && weight < 380.);
 }
 
 template <typename SpacePoint>
