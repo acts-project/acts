@@ -111,10 +111,10 @@ Acts::
   // map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField = [](const Acts::Vector2D& field,
                             const Acts::Vector3D& pos) {
-    double r_sin_theta = sqrt(pos.x() * pos.x() + pos.y() * pos.y());
+    double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
     double cos_phi, sin_phi;
-    if (r_sin_theta > std::numeric_limits<double>::min()) {
-      double inv_r_sin_theta = 1. / r_sin_theta;
+    if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
+      double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
       cos_phi = pos.x() * inv_r_sin_theta;
       sin_phi = pos.y() * inv_r_sin_theta;
     } else {
@@ -299,10 +299,10 @@ Acts::
   // map (Br,Bz) -> (Bx,By,Bz)
   auto transformBField
       = [](const Acts::Vector2D& bfield, const Acts::Vector3D& pos) {
-          double r_sin_theta = sqrt(pos.x() * pos.x() + pos.y() * pos.y());
+          double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
           double cos_phi, sin_phi;
-          if (r_sin_theta > std::numeric_limits<double>::min()) {
-            double inv_r_sin_theta = 1. / r_sin_theta;
+          if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
+            double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
             cos_phi = pos.x() * inv_r_sin_theta;
             sin_phi = pos.y() * inv_r_sin_theta;
           } else {
