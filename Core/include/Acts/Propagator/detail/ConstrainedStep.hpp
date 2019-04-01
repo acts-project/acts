@@ -97,6 +97,18 @@ struct ConstrainedStep {
   /// @param type is the resquested parameter type
   double value(Type type) const { return values[type]; }
 
+  /// Return the maximum step constraint
+  /// @return The max step constraint
+  double max() const {
+    return (*std::max_element(values.begin(), values.end()));
+  }
+
+  /// Return the minimum step constraint
+  /// @return The min step constraint
+  double min() const {
+    return (*std::min_element(values.begin(), values.end()));
+  }
+
   /// Access to currently leading min type
   ///
   Type currentType() const {
