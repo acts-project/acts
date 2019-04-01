@@ -83,6 +83,10 @@ public:
           using meas_t = typename std::remove_const<
               typename std::remove_reference<decltype(uncalibrated)>::type>::
               type;
+          // measurement covariance matrix
+          using meas_cov_t = typename meas_t::CovMatrix_t;
+          // measurement (local) parameter vector
+          using meas_par_t = typename meas_t::ParVector_t;
           // type of projection
           using projection_t = typename meas_t::Projection_t;
           // type of gain matrix (transposed projection)
@@ -109,20 +113,32 @@ public:
           filtered_covariance
               = (CovMatrix_t::Identity() - K * H) * predicted_covariance;
 
+          // Create new filtered parameters and covariance
+          parameters_t filtered(gctx,
+                                std::make_unique<const CovMatrix_t>(
+                                    std::move(filtered_covariance)),
+                                filtered_parameters,
+                                predicted.referenceSurface().getSharedPtr());
+
+          // calculate the chi2
+          // chi2 = r^T * R^-1 * r
+          // r is the residual of the filtered state
+          // R is the covariance matrix of the filtered residual
+          meas_par_t residual = calibrated.residual(filtered);
+          trackState.parameter.chi2
+              = (residual.transpose()
+                 * ((meas_cov_t::Identity() - H * K) * calibrated.covariance())
+                       .inverse()
+                 * residual)
+                    .eval()(0, 0);
+
           // plug calibrated measurement back into track state
           trackState.measurement.calibrated = std::move(calibrated);
 
+          trackState.parameter.filtered = std::move(filtered);
+
         },
         *trackState.measurement.uncalibrated);
-
-    // Create new filtered parameters and covariance
-    parameters_t filtered(
-        gctx,
-        std::make_unique<const CovMatrix_t>(std::move(filtered_covariance)),
-        filtered_parameters,
-        predicted.referenceSurface().getSharedPtr());
-
-    trackState.parameter.filtered = std::move(filtered);
 
     // always succeed, no outlier logic yet
     return true;
