@@ -96,10 +96,29 @@ namespace detail {
     {
       return iterator(m_begin1, m_end1, m_begin2);
     }
+
     iterator
     end() const
     {
       return iterator(m_end2, m_end2, m_end2);
+    }
+
+    // Number of indices that will be produced if this sequence is iterated
+    size_t
+    size() const
+    {
+      return (m_end1 - m_begin1) + (m_end2 - m_begin2);
+    }
+
+    // Collect the sequence of indices into an std::vector
+    std::vector<size_t> collect() const
+    {
+      std::vector<size_t> result;
+      result.reserve(this->size());
+      for (size_t idx: *this) {
+        result.push_back(idx);
+      }
+      return result;
     }
 
   private:

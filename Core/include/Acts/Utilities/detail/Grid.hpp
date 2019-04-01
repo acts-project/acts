@@ -165,7 +165,7 @@ namespace detail {
     std::vector<size_t>
     closestPointsIndices(const Point& position) const
     {
-      return collectNeighborIndices(rawClosestPointsIndices(position));
+      return rawClosestPointsIndices(position).collect();
     }
 
     /// @brief dimensionality of grid
@@ -405,7 +405,7 @@ namespace detail {
     std::vector<size_t>
     neighborHoodIndices(const index_t& localBins, size_t size = 1u) const
     {
-      return collectNeighborIndices(rawNeighborHoodIndices(localBins, size));
+      return rawNeighborHoodIndices(localBins, size).collect();
     }
 
     /// @brief get global bin indices for neighborhood of bin identified by @p
@@ -419,7 +419,7 @@ namespace detail {
     {
       const size_t  bin       = getGlobalBinIndex(pos);
       const index_t localBins = getLocalBinIndices(bin);
-      return neighborHoodIndices(localBins, size);
+      return rawNeighborHoodIndices(localBins, size).collect();
     }
 
     /// @brief total number of bins
@@ -450,16 +450,6 @@ namespace detail {
     std::tuple<Axes...> m_axes;
     /// linear value store for each bin
     std::vector<T> m_values;
-
-    std::vector<size_t>
-    collectNeighborIndices(detail::GlobalNeighborHoodIndices<DIM>&& iter) const
-    {
-      std::vector<size_t> result;
-      for (size_t idx : iter) {
-        result.push_back(idx);
-      }
-      return result;
-    }
 
     template <class Point>
     detail::GlobalNeighborHoodIndices<DIM>

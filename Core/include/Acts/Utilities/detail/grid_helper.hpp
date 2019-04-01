@@ -124,6 +124,28 @@ namespace detail {
       return iterator(*this, std::move(localIndicesIter));
     }
 
+    // Number of indices that will be produced if this sequence is iterated
+    size_t
+    size() const
+    {
+      size_t result = m_localIndices[0].size();
+      for (size_t i = 1; i < DIM; ++i) {
+        result *= m_localIndices[i].size();
+      }
+      return result;
+    }
+
+    // Collect the sequence of indices into an std::vector
+    std::vector<size_t> collect() const
+    {
+      std::vector<size_t> result;
+      result.reserve(this->size());
+      for (size_t idx: *this) {
+        result.push_back(idx);
+      }
+      return result;
+    }
+
   private:
     std::array<NeighborHoodIndices, DIM> m_localIndices;
     std::array<size_t, DIM - 1>          m_globalStrides;
