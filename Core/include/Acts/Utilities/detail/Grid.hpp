@@ -165,7 +165,7 @@ namespace detail {
     std::vector<size_t>
     closestPointsIndices(const Point& position) const
     {
-      return rawClosestPointsIndices(position).collect();
+      return rawClosestPointsIndices(getLocalBinIndices(position)).collect();
     }
 
     /// @brief dimensionality of grid
@@ -205,7 +205,7 @@ namespace detail {
     size_t
     getGlobalBinIndex(const Point& point) const
     {
-      return grid_helper::getGlobalBin(point, m_axes);
+      return grid_helper::getGlobalBin(getLocalBinIndices(point), m_axes);
     }
 
     /// @brief determine global bin index from local bin indices along each axis
@@ -219,6 +219,25 @@ namespace detail {
     getGlobalBinIndex(const index_t& localBins) const
     {
       return grid_helper::getGlobalBin(localBins, m_axes);
+    }
+
+    /// @brief  determine local bin index for each axis from the given point
+    ///
+    /// @tparam Point any type with point semantics supporting component access
+    ///               through @c operator[]
+    ///
+    /// @param  [in] point point to look up in the grid
+    /// @return array with local bin indices along each axis (in same order as
+    ///         given @c axes object)
+    ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is dimensionality of the grid.
+    /// @note This could be a under-/overflow bin along one or more axes.
+    template <class Point>
+    index_t
+    getLocalBinIndices(const Point& point) const
+    {
+      return grid_helper::getLocalBinIndices(point, m_axes);
     }
 
     /// @brief determine local bin index for each axis from global bin index
@@ -347,14 +366,14 @@ namespace detail {
       // get local indices for current bin
       // value of bin is interpreted as being the field value at its lower left
       // corner
-      const auto& llIndices = getLocalBinIndices(getGlobalBinIndex(point));
+      const auto& llIndices = getLocalBinIndices(point);
 
       // get local indices for "upper right" bin (i.e. all local indices
       // incremented by one but avoid overflows)
       auto urIndices = grid_helper::getUpperRightBinIndices(llIndices, m_axes);
 
       // get global indices for all surrounding corner points
-      const auto& closestIndices = rawClosestPointsIndices(point);
+      const auto& closestIndices = rawClosestPointsIndices(llIndices);
 
       // get values on grid points
       size_t i = 0;
@@ -417,8 +436,7 @@ namespace detail {
     std::vector<size_t>
     neighborHoodIndices(const Point& pos, size_t size = 1u) const
     {
-      const size_t  bin       = getGlobalBinIndex(pos);
-      const index_t localBins = getLocalBinIndices(bin);
+      const index_t localBins = getLocalBinIndices(pos);
       return rawNeighborHoodIndices(localBins, size).collect();
     }
 
@@ -451,12 +469,10 @@ namespace detail {
     /// linear value store for each bin
     std::vector<T> m_values;
 
-    template <class Point>
     detail::GlobalNeighborHoodIndices<DIM>
-    rawClosestPointsIndices(const Point& position) const
+    rawClosestPointsIndices(const index_t& localBins) const
     {
-      return grid_helper::closestPointsIndices(getGlobalBinIndex(position),
-                                               m_axes);
+      return grid_helper::closestPointsIndices(localBins, m_axes);
     }
 
     detail::GlobalNeighborHoodIndices<DIM>

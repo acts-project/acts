@@ -170,20 +170,6 @@ namespace detail {
       grid_helper_impl<N - 1>::getBinCenter(center, localIndices, axes);
     }
 
-    template <class Point, class... Axes>
-    static void
-    getGlobalBin(const Point&               point,
-                 const std::tuple<Axes...>& axes,
-                 size_t&                    bin,
-                 size_t&                    area)
-    {
-      const auto& thisAxis = std::get<N>(axes);
-      bin += area * thisAxis.getBin(point[N]);
-      // make sure to account for under-/overflow bins
-      area *= (thisAxis.getNBins() + 2);
-      grid_helper_impl<N - 1>::getGlobalBin(point, axes, bin, area);
-    }
-
     template <class... Axes>
     static void
     getGlobalBin(const std::array<size_t, sizeof...(Axes)>& localBins,
@@ -196,6 +182,17 @@ namespace detail {
       // make sure to account for under-/overflow bins
       area *= (thisAxis.getNBins() + 2);
       grid_helper_impl<N - 1>::getGlobalBin(localBins, axes, bin, area);
+    }
+
+    template <class Point, class... Axes>
+    static void
+    getLocalBinIndices(const Point&               point,
+                       const std::tuple<Axes...>& axes,
+                       std::array<size_t, sizeof...(Axes)>& indices)
+    {
+      const auto& thisAxis = std::get<N>(axes);
+      indices.at(N) = thisAxis.getBin(point[N]);
+      grid_helper_impl<N - 1>::getLocalBinIndices(point, axes, indices);
     }
 
     template <class... Axes>
@@ -348,17 +345,6 @@ namespace detail {
       center.at(0u) = std::get<0u>(axes).getBinCenter(localIndices.at(0u));
     }
 
-    template <class Point, class... Axes>
-    static void
-    getGlobalBin(const Point&               point,
-                 const std::tuple<Axes...>& axes,
-                 size_t&                    bin,
-                 size_t&                    area)
-    {
-      const auto& thisAxis = std::get<0u>(axes);
-      bin += area * thisAxis.getBin(point[0u]);
-    }
-
     template <class... Axes>
     static void
     getGlobalBin(const std::array<size_t, sizeof...(Axes)>& localBins,
@@ -367,6 +353,16 @@ namespace detail {
                  size_t& area)
     {
       bin += area * localBins.at(0u);
+    }
+
+    template <class Point, class... Axes>
+    static void
+    getLocalBinIndices(const Point&               point,
+                       const std::tuple<Axes...>& axes,
+                       std::array<size_t, sizeof...(Axes)>& indices)
+    {
+      const auto& thisAxis = std::get<0u>(axes);
+      indices.at(0u) = thisAxis.getBin(point[0u]);
     }
 
     template <class... Axes>
@@ -528,10 +524,10 @@ namespace detail {
     ///       along any axis).
     template <class... Axes>
     static GlobalNeighborHoodIndices<sizeof...(Axes)>
-    closestPointsIndices(size_t bin, const std::tuple<Axes...>& axes)
+    closestPointsIndices(
+        const std::array<size_t, sizeof...(Axes)>& localIndices,
+        const std::tuple<Axes...>& axes)
     {
-      std::array<size_t, sizeof...(Axes)> localIndices
-          = getLocalBinIndices(bin, axes);
       // get neighboring bins, but only increment.
       return neighborHoodIndices(localIndices, std::make_pair(0, 1), axes);
     }
@@ -557,32 +553,6 @@ namespace detail {
       return center;
     }
 
-    /// @brief determine global bin index in grid defined by a set of axes
-    ///
-    /// @tparam Point any type with point semantics supporting component access
-    ///               through @c operator[]
-    /// @tparam Axes parameter pack of axis types defining the grid
-    ///
-    /// @param  [in] point point to look up in the grid
-    /// @param  [in] axes  actual axis objects spanning the grid
-    /// @return global index for bin containing the given point
-    ///
-    /// @pre The given @c Point type must represent a point in d (or higher)
-    ///      dimensions where d is the number of axis objects in the tuple.
-    /// @note This could be a under-/overflow bin along one or more axes.
-    template <class Point, class... Axes>
-    static size_t
-    getGlobalBin(const Point& point, const std::tuple<Axes...>& axes)
-    {
-      constexpr size_t MAX  = sizeof...(Axes) - 1;
-      size_t           area = 1;
-      size_t           bin  = 0;
-
-      grid_helper_impl<MAX>::getGlobalBin(point, axes, bin, area);
-
-      return bin;
-    }
-
     /// @brief determine global bin index from local indices along each axis
     ///
     /// @tparam Axes parameter pack of axis types defining the grid
@@ -605,6 +575,32 @@ namespace detail {
       grid_helper_impl<MAX>::getGlobalBin(localBins, axes, bin, area);
 
       return bin;
+    }
+
+    /// @brief determine local bin index for each axis from point
+    ///
+    /// @tparam Point any type with point semantics supporting component access
+    ///               through @c operator[]
+    /// @tparam Axes parameter pack of axis types defining the grid
+    ///
+    /// @param  [in] point point to look up in the grid
+    /// @param  [in] axes  actual axis objects spanning the grid
+    /// @return array with local bin indices along each axis (in same order as
+    ///         given @c axes object)
+    ///
+    /// @pre The given @c Point type must represent a point in d (or higher)
+    ///      dimensions where d is the number of axis objects in the tuple.
+    /// @note This could be a under-/overflow bin along one or more axes.
+    template <class Point, class... Axes>
+    static std::array<size_t, sizeof...(Axes)>
+    getLocalBinIndices(const Point& point, const std::tuple<Axes...>& axes)
+    {
+      constexpr size_t MAX  = sizeof...(Axes) - 1;
+      std::array<size_t, sizeof...(Axes)> indices;
+
+      grid_helper_impl<MAX>::getLocalBinIndices(point, axes, indices);
+
+      return indices;
     }
 
     /// @brief determine local bin index for each axis from global bin index
