@@ -139,4 +139,5 @@ operator==(const HomogeneousSurfaceMaterial& hsm) const
 {
   return (m_fullMaterial == hsm.m_fullMaterial);
 }
-}  // namespace Acts
+
+}  // namespace

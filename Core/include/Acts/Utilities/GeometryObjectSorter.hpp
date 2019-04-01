@@ -218,4 +218,4 @@ protected:
   ObjectSorterT<Vector3D>                       m_objectSorter;
   std::shared_ptr<const Transform3D>            m_transform;
 };
-}  // namespace Acts
+}
