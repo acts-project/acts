@@ -1127,7 +1127,7 @@ namespace Test {
     BOOST_CHECK(g1Cl.neighborHoodIndices({{11}}, 1)
                 == bins_t({}));  // overflow, makes no sense
     BOOST_CHECK(g1Cl.neighborHoodIndices({{1}}, 1)
-                == bins_t({10, 1, 2}));  // overflow, makes no sense
+                == bins_t({1, 2, 10}));  // overflow, makes no sense
     BOOST_CHECK(g1Cl.neighborHoodIndices({{5}}, 1)
                 == bins_t({4, 5, 6}));  // overflow, makes no sense
 
@@ -1141,13 +1141,13 @@ namespace Test {
     BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 1)
                 == bins_t({16, 17, 18, 23, 24, 25, 30, 31, 32}));
     BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 1)
-                == bins_t({8, 9, 15, 16, 12, 19, 36, 37, 40}));
+                == bins_t({8, 9, 12, 15, 16, 19, 36, 37, 40}));
     BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 5}}, 1)
-                == bins_t({11, 12, 18, 19, 39, 40, 8, 15, 36}));
+                == bins_t({8, 11, 12, 15, 18, 19, 36, 39, 40}));
     BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 1}}, 1)
-                == bins_t({36, 37, 29, 30, 33, 40, 8, 9, 12}));
+                == bins_t({8, 9, 12, 29, 30, 33, 36, 37, 40}));
     BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 1)
-                == bins_t({39, 40, 32, 33, 11, 12, 29, 36, 8}));
+                == bins_t({8, 11, 12, 29, 32, 33, 36, 39, 40}));
 
     bins_t all({8,  9,  10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24,
                 25, 26, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40});
@@ -1223,7 +1223,7 @@ namespace Test {
 
     // 1D case
     BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.52}})) == bins_t({6, 7}));
-    BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.98}})) == bins_t({10, 1}));
+    BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.98}})) == bins_t({1, 10}));
 
     // 2D case
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.08}}))
@@ -1231,11 +1231,11 @@ namespace Test {
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.68}}))
                 == bins_t({46, 47, 53, 54}));
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.88}}))
-                == bins_t({47, 43, 54, 50}));
+                == bins_t({43, 47, 50, 54}));
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.05, 0.08}}))
                 == bins_t({8, 9, 15, 16}));
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.9, 0.95}}))
-                == bins_t({75, 71, 12, 8}));
+                == bins_t({8, 12, 71, 75}));
 
     // @TODO: 3D checks would also be nice
 
