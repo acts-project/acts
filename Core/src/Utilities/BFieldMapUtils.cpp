@@ -296,20 +296,20 @@ Acts::
 
   // Create the transformation for the bfield
   // map (Br,Bz) -> (Bx,By,Bz)
-  auto transformBField = [](const Acts::Vector2D& bfield,
-                            const Acts::Vector3D& pos) {
-    double r_sin_theta = sqrt(pos.x() * pos.x() + pos.y() * pos.y());
-    double cos_phi, sin_phi;
-    if (r_sin_theta > std::numeric_limits<double>::min()) {
-      cos_phi = pos.x() / r_sin_theta;
-      sin_phi = pos.y() / r_sin_theta;
-    } else {
-      cos_phi = 1.;
-      sin_phi = 0.;
-    }
-    return Acts::Vector3D(
-        bfield.x() * cos_phi, bfield.x() * sin_phi, bfield.y());
-  };
+  auto transformBField
+      = [](const Acts::Vector2D& bfield, const Acts::Vector3D& pos) {
+          double r_sin_theta = sqrt(pos.x() * pos.x() + pos.y() * pos.y());
+          double cos_phi, sin_phi;
+          if (r_sin_theta > std::numeric_limits<double>::min()) {
+            cos_phi = pos.x() / r_sin_theta;
+            sin_phi = pos.y() / r_sin_theta;
+          } else {
+            cos_phi = 1.;
+            sin_phi = 0.;
+          }
+          return Acts::Vector3D(
+              bfield.x() * cos_phi, bfield.x() * sin_phi, bfield.y());
+        };
 
   // iterate over all bins, set their value to the solenoid value
   // at their lower left position

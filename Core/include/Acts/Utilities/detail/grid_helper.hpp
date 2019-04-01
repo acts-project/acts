@@ -134,11 +134,12 @@ namespace detail {
     }
 
     // Collect the sequence of indices into an std::vector
-    std::vector<size_t> collect() const
+    std::vector<size_t>
+    collect() const
     {
       std::vector<size_t> result;
       result.reserve(this->size());
-      for (size_t idx: *this) {
+      for (size_t idx : *this) {
         result.push_back(idx);
       }
       return result;
