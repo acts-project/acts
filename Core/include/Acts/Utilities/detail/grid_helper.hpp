@@ -72,18 +72,15 @@ namespace detail {
 
         // Go to the next global index via a lexicographic increment:
         // - Start by incrementing the last local index
-        // - If it reaches the end, reset it and try the previous one...
-        for (long i = DIM - 1; i >= 0; --i) {
+        // - If it reaches the end, reset it and increment the previous one...
+        for (long i = DIM - 1; i > 0; --i) {
           ++m_localIndicesIter[i];
           if (m_localIndicesIter[i] != localIndices[i].end()) return *this;
           m_localIndicesIter[i] = localIndices[i].begin();
         }
 
-        // If we reached the end of all iterators, we reached the end of
-        // iteration: put iterators in their end state.
-        for (size_t i = 0; i < DIM; ++i) {
-          m_localIndicesIter[i] = localIndices[i].end();
-        }
+        // The first index should stay at the end value when it reaches it
+        ++m_localIndicesIter[0];
         return *this;
       }
 
@@ -118,8 +115,9 @@ namespace detail {
     end() const
     {
       std::array<NeighborHoodIndices::iterator, DIM> localIndicesIter;
-      for (size_t i = 0; i < DIM; ++i) {
-        localIndicesIter[i] = m_localIndices[i].end();
+      localIndicesIter[0] = m_localIndices[0].end();
+      for (size_t i = 1; i < DIM; ++i) {
+        localIndicesIter[i] = m_localIndices[i].begin();
       }
       return iterator(*this, std::move(localIndicesIter));
     }
