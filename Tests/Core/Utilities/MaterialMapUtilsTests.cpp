@@ -519,7 +519,7 @@ namespace Test {
     CHECK_CLOSE_REL(gridX0, trueX0, 1e-1);
     CHECK_CLOSE_REL(gridL0, trueL0, 1e-1);
   }
-  
+
   BOOST_AUTO_TEST_CASE(materialmap_creation)
   {
     // Create grid values
@@ -539,8 +539,8 @@ namespace Test {
             return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
           };
     // Create material mapper in rz
-    auto mapper_rz = materialMapperRZ(
-        localToGlobalBin_rz, rPos, zPos, material_rz);
+    auto mapper_rz
+        = materialMapperRZ(localToGlobalBin_rz, rPos, zPos, material_rz);
     // check number of bins, minima & maxima
     std::vector<size_t> nBins_rz  = {rPos.size(), zPos.size()};
     std::vector<double> minima_rz = {0., 0.};
@@ -585,9 +585,9 @@ namespace Test {
     Vector3D pos0_rz(0., 0., 0.);
     Vector3D pos1_rz(1., 0., 1.);
     Vector3D pos2_rz(0., 2., 2.);
-    auto           value0_rz = mapper_rz.getMaterial(pos0_rz);
-    auto           value1_rz = mapper_rz.getMaterial(pos1_rz);
-    auto           value2_rz = mapper_rz.getMaterial(pos2_rz);
+    auto     value0_rz = mapper_rz.getMaterial(pos0_rz);
+    auto     value1_rz = mapper_rz.getMaterial(pos1_rz);
+    auto     value2_rz = mapper_rz.getMaterial(pos2_rz);
     // Calculate what the value should be at this point
     Material mat0_rz = material_rz.at(
         localToGlobalBin_rz({{0, 0}}, {{rPos.size(), zPos.size()}}));
@@ -595,33 +595,45 @@ namespace Test {
         localToGlobalBin_rz({{1, 1}}, {{rPos.size(), zPos.size()}}));
     Material mat2_rz = material_rz.at(
         localToGlobalBin_rz({{2, 2}}, {{rPos.size(), zPos.size()}}));
-        
+
     // Check the value
     // in rz case material is phi symmetric (check radius)
-    CHECK_CLOSE_ABS(value0_rz.decomposeIntoClassificationNumbers(), mat0_rz.decomposeIntoClassificationNumbers(), 1e-9);
-    CHECK_CLOSE_ABS(value1_rz.decomposeIntoClassificationNumbers(), mat1_rz.decomposeIntoClassificationNumbers(), 1e-9);
-    CHECK_CLOSE_ABS(value2_rz.decomposeIntoClassificationNumbers(), mat2_rz.decomposeIntoClassificationNumbers(), 1e-9);
+    CHECK_CLOSE_ABS(value0_rz.decomposeIntoClassificationNumbers(),
+                    mat0_rz.decomposeIntoClassificationNumbers(),
+                    1e-9);
+    CHECK_CLOSE_ABS(value1_rz.decomposeIntoClassificationNumbers(),
+                    mat1_rz.decomposeIntoClassificationNumbers(),
+                    1e-9);
+    CHECK_CLOSE_ABS(value2_rz.decomposeIntoClassificationNumbers(),
+                    mat2_rz.decomposeIntoClassificationNumbers(),
+                    1e-9);
 
     // Check if filled value is expected value in xyz
     Vector3D pos0_xyz(0., 0., 0.);
     Vector3D pos1_xyz(1., 1., 1.);
     Vector3D pos2_xyz(2., 2., 2.);
-    auto           value0_xyz = mapper_xyz.getMaterial(pos0_xyz);
-    auto           value1_xyz = mapper_xyz.getMaterial(pos1_xyz);
-    auto           value2_xyz = mapper_xyz.getMaterial(pos2_xyz);
+    auto     value0_xyz = mapper_xyz.getMaterial(pos0_xyz);
+    auto     value1_xyz = mapper_xyz.getMaterial(pos1_xyz);
+    auto     value2_xyz = mapper_xyz.getMaterial(pos2_xyz);
     // Calculate what the value should be at this point
-    Material mat0_xyz = material_xyz.at(
-        localToGlobalBin_xyz({{0, 0, 0}}, {{xPos.size(), yPos.size(), zPos.size()}}));
-    Material mat1_xyz = material_xyz.at(
-        localToGlobalBin_xyz({{1, 1, 1}}, {{xPos.size(), yPos.size(), zPos.size()}}));
-    Material mat2_xyz = material_xyz.at(
-        localToGlobalBin_xyz({{2, 2, 2}}, {{xPos.size(), yPos.size(), zPos.size()}}));
-        
+    Material mat0_xyz = material_xyz.at(localToGlobalBin_xyz(
+        {{0, 0, 0}}, {{xPos.size(), yPos.size(), zPos.size()}}));
+    Material mat1_xyz = material_xyz.at(localToGlobalBin_xyz(
+        {{1, 1, 1}}, {{xPos.size(), yPos.size(), zPos.size()}}));
+    Material mat2_xyz = material_xyz.at(localToGlobalBin_xyz(
+        {{2, 2, 2}}, {{xPos.size(), yPos.size(), zPos.size()}}));
+
     // Check the value
     // in xyz case material is phi symmetric (check radius)
-    CHECK_CLOSE_ABS(value0_xyz.decomposeIntoClassificationNumbers(), mat0_xyz.decomposeIntoClassificationNumbers(), 1e-9);
-    CHECK_CLOSE_ABS(value1_xyz.decomposeIntoClassificationNumbers(), mat1_xyz.decomposeIntoClassificationNumbers(), 1e-9);
-    CHECK_CLOSE_ABS(value2_xyz.decomposeIntoClassificationNumbers(), mat2_xyz.decomposeIntoClassificationNumbers(), 1e-9);
+    CHECK_CLOSE_ABS(value0_xyz.decomposeIntoClassificationNumbers(),
+                    mat0_xyz.decomposeIntoClassificationNumbers(),
+                    1e-9);
+    CHECK_CLOSE_ABS(value1_xyz.decomposeIntoClassificationNumbers(),
+                    mat1_xyz.decomposeIntoClassificationNumbers(),
+                    1e-9);
+    CHECK_CLOSE_ABS(value2_xyz.decomposeIntoClassificationNumbers(),
+                    mat2_xyz.decomposeIntoClassificationNumbers(),
+                    1e-9);
   }
 }
 }

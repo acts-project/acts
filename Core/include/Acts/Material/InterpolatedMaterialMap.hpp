@@ -67,9 +67,9 @@ public:
     /// box corners sorted in the canonical order defined in Acts::interpolate
     MaterialCell(
         std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
-        std::array<double, DIM_POS>                          lowerLeft,
-        std::array<double, DIM_POS>                          upperRight,
-        std::array<ActsVectorF<5>, N>                        materialValues)
+        std::array<double, DIM_POS>   lowerLeft,
+        std::array<double, DIM_POS>   upperRight,
+        std::array<ActsVectorF<5>, N> materialValues)
       : m_transformPos(std::move(transformPos))
       , m_lowerLeft(std::move(lowerLeft))
       , m_upperRight(std::move(upperRight))
@@ -184,7 +184,7 @@ public:
       const auto& upperRight   = m_grid.getUpperRightBinEdge(indices);
 
       // Loop through all corner points
-      constexpr size_t                     nCorners = 1 << DIM_POS;
+      constexpr size_t nCorners = 1 << DIM_POS;
       std::array<ActsVectorF<5>, nCorners> neighbors;
       const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
 

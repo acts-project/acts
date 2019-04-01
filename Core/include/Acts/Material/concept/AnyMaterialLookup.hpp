@@ -37,11 +37,11 @@ namespace concept {
 
     namespace mpl = boost::mpl;
 
-    using material_cell_concept = mpl::vector<
-        has_getMaterial<Material(const Vector3D&), const bte::_self>,
-        has_isInside<bool(const Vector3D&), const bte::_self>,
-        bte::copy_constructible<>,
-        bte::relaxed>;
+    using material_cell_concept = mpl::
+        vector<has_getMaterial<Material(const Vector3D&), const bte::_self>,
+               has_isInside<bool(const Vector3D&), const bte::_self>,
+               bte::copy_constructible<>,
+               bte::relaxed>;
   }  // namespace afl_detail
   /// @endcond
 
@@ -61,7 +61,7 @@ namespace concept {
   /// the @c boost::type_erasure::any object. In order to store the value by (@c
   /// const) reference, pass <tt>(const) boost::type_erasure::_self&</tt> as
   /// template parameter.
-  template <typename T = bte::_self>
+  template <typename T  = bte::_self>
   using AnyMaterialCell = bte::any<afl_detail::material_cell_concept, T>;
 
   /// @cond
@@ -109,7 +109,7 @@ namespace concept {
   /// the @c boost::type_erasure::any object. In order to store the value by (@c
   /// const) reference, pass <tt>(const) boost::type_erasure::_self&</tt> as
   /// template parameter.
-  template <typename T = bte::_self>
+  template <typename T    = bte::_self>
   using AnyMaterialLookup = bte::any<afl_detail::material_lookup_concept, T>;
 
 }  // namespace concept
