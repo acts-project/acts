@@ -115,8 +115,8 @@ Acts::
     double cos_phi, sin_phi;
     if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
       double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
-      cos_phi = pos.x() * inv_r_sin_theta;
-      sin_phi = pos.y() * inv_r_sin_theta;
+      cos_phi                = pos.x() * inv_r_sin_theta;
+      sin_phi                = pos.y() * inv_r_sin_theta;
     } else {
       cos_phi = 1.;
       sin_phi = 0.;
@@ -303,8 +303,8 @@ Acts::
           double cos_phi, sin_phi;
           if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
             double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
-            cos_phi = pos.x() * inv_r_sin_theta;
-            sin_phi = pos.y() * inv_r_sin_theta;
+            cos_phi                = pos.x() * inv_r_sin_theta;
+            sin_phi                = pos.y() * inv_r_sin_theta;
           } else {
             cos_phi = 1.;
             sin_phi = 0.;
