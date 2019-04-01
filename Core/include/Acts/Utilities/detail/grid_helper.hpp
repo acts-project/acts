@@ -196,7 +196,7 @@ namespace detail {
                        std::array<size_t, sizeof...(Axes)>& indices)
     {
       const auto& thisAxis = std::get<N>(axes);
-      indices.at(N) = thisAxis.getBin(point[N]);
+      indices.at(N)        = thisAxis.getBin(point[N]);
       grid_helper_impl<N - 1>::getLocalBinIndices(point, axes, indices);
     }
 
@@ -367,7 +367,7 @@ namespace detail {
                        std::array<size_t, sizeof...(Axes)>& indices)
     {
       const auto& thisAxis = std::get<0u>(axes);
-      indices.at(0u) = thisAxis.getBin(point[0u]);
+      indices.at(0u)       = thisAxis.getBin(point[0u]);
     }
 
     template <class... Axes>
@@ -600,7 +600,7 @@ namespace detail {
     static std::array<size_t, sizeof...(Axes)>
     getLocalBinIndices(const Point& point, const std::tuple<Axes...>& axes)
     {
-      constexpr size_t MAX  = sizeof...(Axes) - 1;
+      constexpr size_t MAX = sizeof...(Axes) - 1;
       std::array<size_t, sizeof...(Axes)> indices;
 
       grid_helper_impl<MAX>::getLocalBinIndices(point, axes, indices);
