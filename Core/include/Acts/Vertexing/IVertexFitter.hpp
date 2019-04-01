@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
 namespace Acts {
@@ -60,14 +61,11 @@ public:
   virtual ~IVertexFitter() = default;
 
   /// @param paramVector Vector of track objects to fit vertex to
-  /// @param propagator Propagator
-  /// @param constraint Constraint of the fit, position of constraint is
-  /// starting point
+  /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Fitted vertex
-  virtual Vertex<input_track_t>
+  virtual Result<Vertex<input_track_t>>
   fit(const std::vector<input_track_t>&         paramVector,
-      const propagator_t&                       propagator,
       const VertexFitterOptions<input_track_t>& vFitterOptions) const = 0;
 };
 

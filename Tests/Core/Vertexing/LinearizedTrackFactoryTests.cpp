@@ -137,8 +137,13 @@ namespace Test {
     ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
 
     for (const BoundParameters& parameters : tracks) {
-      LinearizedTrack linTrack = linFactory.linearizeTrack(
-          tgContext, mfContext, &parameters, Vector3D(0., 0., 0.), propagator);
+      LinearizedTrack linTrack = linFactory
+                                     .linearizeTrack(tgContext,
+                                                     mfContext,
+                                                     &parameters,
+                                                     Vector3D(0., 0., 0.),
+                                                     propagator)
+                                     .value();
 
       BOOST_CHECK_NE(linTrack.parametersAtPCA, vec5Zero);
       BOOST_CHECK_NE(linTrack.covarianceAtPCA, mat5Zero);
@@ -171,8 +176,13 @@ namespace Test {
     Vector3D          vec3Zero = Vector3D::Zero();
     ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
 
-    LinearizedTrack linTrack = linFactory.linearizeTrack(
-        tgContext, mfContext, nullptr, Vector3D(1., 2., 3.), propagator);
+    LinearizedTrack linTrack = linFactory
+                                   .linearizeTrack(tgContext,
+                                                   mfContext,
+                                                   nullptr,
+                                                   Vector3D(1., 2., 3.),
+                                                   propagator)
+                                   .value();
 
     BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vec5Zero);
     BOOST_CHECK_EQUAL(linTrack.covarianceAtPCA, mat5Zero);

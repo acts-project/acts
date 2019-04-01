@@ -10,6 +10,7 @@
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Vertexing/TrackAtVertex.hpp"
+#include "Acts/Vertexing/VertexingError.hpp"
 
 namespace {
 
@@ -19,16 +20,16 @@ namespace {
 template <typename input_track_t>
 struct BilloirTrack
 {
-  BilloirTrack(const input_track_t& params, Acts::LinearizedTrack* lTrack)
-    : originalTrack(params), linTrack(lTrack)
+  BilloirTrack(const input_track_t& params, Acts::LinearizedTrack lTrack)
+    : originalTrack(params), linTrack(std::move(lTrack))
   {
   }
 
   BilloirTrack(const BilloirTrack& arg) = default;
 
-  const input_track_t    originalTrack;
-  Acts::LinearizedTrack* linTrack;
-  double                 chi2;
+  const input_track_t   originalTrack;
+  Acts::LinearizedTrack linTrack;
+  double                chi2;
   Acts::ActsMatrixD<5, 3> DiMat;   // position jacobian
   Acts::ActsMatrixD<5, 3> EiMat;   // momentum jacobian
   Acts::ActsSymMatrixD<3> GiMat;   //  = EtWmat * Emat (see below)
@@ -61,10 +62,9 @@ struct BilloirVertex
 }  // end anonymous namespace
 
 template <typename bfield_t, typename input_track_t, typename propagator_t>
-Acts::Vertex<input_track_t>
+Acts::Result<Acts::Vertex<input_track_t>>
 Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
     const std::vector<input_track_t>&         paramVector,
-    const propagator_t&                       propagator,
     const VertexFitterOptions<input_track_t>& vFitterOptions) const
 {
   double       chi2    = std::numeric_limits<double>::max();
@@ -113,74 +113,80 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         double qop   = trackParams.parameters()[ParID_t::eQOP];
         trackMomenta.push_back(Vector3D(phi, theta, qop));
       }
-      LinearizedTrack linTrack
+
+      auto result
           = m_cfg.linFactory.linearizeTrack(vFitterOptions.geoContext,
                                             vFitterOptions.magFieldContext,
                                             &trackParams,
                                             linPoint,
-                                            propagator);
-      double d0     = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
-      double z0     = linTrack.parametersAtPCA[ParID_t::eLOC_Z0];
-      double phi    = linTrack.parametersAtPCA[ParID_t::ePHI];
-      double theta  = linTrack.parametersAtPCA[ParID_t::eTHETA];
-      double qOverP = linTrack.parametersAtPCA[ParID_t::eQOP];
+                                            m_cfg.propagator);
+      if (result.ok()) {
+        const auto linTrack = *result;
+        double     d0       = linTrack.parametersAtPCA[ParID_t::eLOC_D0];
+        double     z0       = linTrack.parametersAtPCA[ParID_t::eLOC_Z0];
+        double     phi      = linTrack.parametersAtPCA[ParID_t::ePHI];
+        double     theta    = linTrack.parametersAtPCA[ParID_t::eTHETA];
+        double     qOverP   = linTrack.parametersAtPCA[ParID_t::eQOP];
 
-      // calculate f(V_0,p_0)  f_d0 = f_z0 = 0
-      double                      fPhi   = trackMomenta[iTrack][0];
-      double                      fTheta = trackMomenta[iTrack][1];
-      double                      fQOvP  = trackMomenta[iTrack][2];
-      BilloirTrack<input_track_t> currentBilloirTrack(trackContainer,
-                                                      &linTrack);
+        // calculate f(V_0,p_0)  f_d0 = f_z0 = 0
+        double                      fPhi   = trackMomenta[iTrack][0];
+        double                      fTheta = trackMomenta[iTrack][1];
+        double                      fQOvP  = trackMomenta[iTrack][2];
+        BilloirTrack<input_track_t> currentBilloirTrack(trackContainer,
+                                                        linTrack);
 
-      // calculate deltaQ[i]
-      currentBilloirTrack.deltaQ[0] = d0;
-      currentBilloirTrack.deltaQ[1] = z0;
-      currentBilloirTrack.deltaQ[2] = phi - fPhi;
-      currentBilloirTrack.deltaQ[3] = theta - fTheta;
-      currentBilloirTrack.deltaQ[4] = qOverP - fQOvP;
+        // calculate deltaQ[i]
+        currentBilloirTrack.deltaQ[0] = d0;
+        currentBilloirTrack.deltaQ[1] = z0;
+        currentBilloirTrack.deltaQ[2] = phi - fPhi;
+        currentBilloirTrack.deltaQ[3] = theta - fTheta;
+        currentBilloirTrack.deltaQ[4] = qOverP - fQOvP;
 
-      // position jacobian (D matrix)
-      ActsMatrixD<5, 3> Dmat;
-      Dmat = linTrack.positionJacobian;
+        // position jacobian (D matrix)
+        ActsMatrixD<5, 3> Dmat;
+        Dmat = linTrack.positionJacobian;
 
-      // momentum jacobian (E matrix)
-      ActsMatrixD<5, 3> Emat;
-      Emat = linTrack.momentumJacobian;
-      // cache some matrix multiplications
-      ActsMatrixD<3, 5> DtWmat;
-      ActsMatrixD<3, 5> EtWmat;
-      ActsSymMatrixD<5> Wi = linTrack.covarianceAtPCA.inverse();
-      DtWmat               = Dmat.transpose() * Wi;
-      EtWmat               = Emat.transpose() * Wi;
+        // momentum jacobian (E matrix)
+        ActsMatrixD<5, 3> Emat;
+        Emat = linTrack.momentumJacobian;
+        // cache some matrix multiplications
+        ActsMatrixD<3, 5> DtWmat;
+        ActsMatrixD<3, 5> EtWmat;
+        ActsSymMatrixD<5> Wi = linTrack.covarianceAtPCA.inverse();
+        DtWmat               = Dmat.transpose() * Wi;
+        EtWmat               = Emat.transpose() * Wi;
 
-      // compute billoir tracks
-      currentBilloirTrack.DiMat = Dmat;
-      currentBilloirTrack.EiMat = Emat;
-      currentBilloirTrack.GiMat = EtWmat * Emat;
-      currentBilloirTrack.BiMat = DtWmat * Emat;  // DiMat^T * Wi * EiMat
-      currentBilloirTrack.UiVec
-          = EtWmat * currentBilloirTrack.deltaQ;  // EiMat^T * Wi * dqi
-      currentBilloirTrack.CiInv
-          = (EtWmat * Emat).inverse();  // (EiMat^T * Wi * EiMat)^-1
+        // compute billoir tracks
+        currentBilloirTrack.DiMat = Dmat;
+        currentBilloirTrack.EiMat = Emat;
+        currentBilloirTrack.GiMat = EtWmat * Emat;
+        currentBilloirTrack.BiMat = DtWmat * Emat;  // DiMat^T * Wi * EiMat
+        currentBilloirTrack.UiVec
+            = EtWmat * currentBilloirTrack.deltaQ;  // EiMat^T * Wi * dqi
+        currentBilloirTrack.CiInv
+            = (EtWmat * Emat).inverse();  // (EiMat^T * Wi * EiMat)^-1
 
-      // sum up over all tracks
-      billoirVertex.Tvec
-          += DtWmat * currentBilloirTrack.deltaQ;  // sum{DiMat^T * Wi * dqi}
-      billoirVertex.Amat += DtWmat * Dmat;         // sum{DiMat^T * Wi * DiMat}
+        // sum up over all tracks
+        billoirVertex.Tvec
+            += DtWmat * currentBilloirTrack.deltaQ;  // sum{DiMat^T * Wi * dqi}
+        billoirVertex.Amat += DtWmat * Dmat;  // sum{DiMat^T * Wi * DiMat}
 
-      // remember those results for all tracks
-      currentBilloirTrack.BCiMat = currentBilloirTrack.BiMat
-          * currentBilloirTrack.CiInv;  // BCi = BiMat * Ci^-1
+        // remember those results for all tracks
+        currentBilloirTrack.BCiMat = currentBilloirTrack.BiMat
+            * currentBilloirTrack.CiInv;  // BCi = BiMat * Ci^-1
 
-      // and some summed results
-      billoirVertex.BCUvec += currentBilloirTrack.BCiMat
-          * currentBilloirTrack.UiVec;  // sum{BiMat * Ci^-1 * UiVec}
-      billoirVertex.BCBmat += currentBilloirTrack.BCiMat
-          * currentBilloirTrack.BiMat
-                .transpose();  // sum{BiMat * Ci^-1 * BiMat^T}
+        // and some summed results
+        billoirVertex.BCUvec += currentBilloirTrack.BCiMat
+            * currentBilloirTrack.UiVec;  // sum{BiMat * Ci^-1 * UiVec}
+        billoirVertex.BCBmat += currentBilloirTrack.BCiMat
+            * currentBilloirTrack.BiMat
+                  .transpose();  // sum{BiMat * Ci^-1 * BiMat^T}
 
-      billoirTracks.push_back(currentBilloirTrack);
-      ++iTrack;
+        billoirTracks.push_back(currentBilloirTrack);
+        ++iTrack;
+      } else {
+        return result.error();
+      }
 
     }  // end loop tracks
 
@@ -276,10 +282,10 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
       // Calculate chi2 per track.
       bTrack.chi2
           = ((bTrack.deltaQ - bTrack.DiMat * deltaV - bTrack.EiMat * deltaP)
-                 .transpose()
-             * bTrack.linTrack->covarianceAtPCA.inverse()
-             * (bTrack.deltaQ - bTrack.DiMat * deltaV
-                - bTrack.EiMat * deltaP))[0];
+                 .transpose())
+                .dot(bTrack.linTrack.covarianceAtPCA.inverse()
+                     * (bTrack.deltaQ - bTrack.DiMat * deltaV
+                        - bTrack.EiMat * deltaP));
       newChi2 += bTrack.chi2;
 
       ++iTrack;
@@ -296,9 +302,13 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
           - (vFitterOptions.vertexConstraint.position()[1] - linPoint[1]);
       deltaTrk[2] = deltaV[2]
           - (vFitterOptions.vertexConstraint.position()[2] - linPoint[2]);
-      newChi2 += (deltaTrk.transpose()
-                  * vFitterOptions.vertexConstraint.covariance().inverse()
-                  * deltaTrk)[0];
+      newChi2 += (deltaTrk.transpose())
+                     .dot(vFitterOptions.vertexConstraint.covariance().inverse()
+                          * deltaTrk);
+    }
+
+    if (!std::isnormal(newChi2)) {
+      return VertexingError::NumericFailure;
     }
 
     // assign new linearization point (= new vertex position in global frame)

@@ -35,6 +35,15 @@ namespace Test {
   GeometryContext      tgContext = GeometryContext();
   MagneticFieldContext mfContext = MagneticFieldContext();
 
+  template <typename InputTrack_t, typename Propagator_t>
+  Vertex<InputTrack_t>
+  myFitWrapper(IVertexFitter<InputTrack_t, Propagator_t>* fitter,
+               std::vector<InputTrack_t>&        tracks,
+               VertexFitterOptions<InputTrack_t> vfOptions)
+  {
+    return fitter->fit(tracks, vfOptions).value();
+  }
+
   /// @brief Unit test for FullBilloirVertexFitter
   ///
   BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test)
@@ -53,7 +62,7 @@ namespace Test {
     FullBilloirVertexFitter<ConstantBField,
                             BoundParameters,
                             Propagator<EigenStepper<ConstantBField>>>::Config
-        vertexFitterCfg(bField);
+        vertexFitterCfg(bField, propagator);
     FullBilloirVertexFitter<ConstantBField,
                             BoundParameters,
                             Propagator<EigenStepper<ConstantBField>>>
@@ -75,14 +84,16 @@ namespace Test {
         tgContext, mfContext, myConstraint);
 
     Vertex<BoundParameters> fittedVertex
-        = billoirFitter.fit(emptyVector, propagator, vfOptions);
+        = billoirFitter.fit(emptyVector, vfOptions).value();
+
     Vector3D origin(0., 0., 0.);
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
 
     ActsSymMatrixD<3> zeroMat = ActsSymMatrixD<3>::Zero();
     BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
 
-    fittedVertex = billoirFitter.fit(emptyVector, propagator, vfOptions);
+    fittedVertex = billoirFitter.fit(emptyVector, vfOptions).value();
+
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
     BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
   }
@@ -147,7 +158,7 @@ namespace Test {
       FullBilloirVertexFitter<ConstantBField,
                               BoundParameters,
                               Propagator<EigenStepper<ConstantBField>>>::Config
-          vertexFitterCfg(bField);
+          vertexFitterCfg(bField, propagator);
       FullBilloirVertexFitter<ConstantBField,
                               BoundParameters,
                               Propagator<EigenStepper<ConstantBField>>>
@@ -215,17 +226,23 @@ namespace Test {
 
       // Do the actual fit with 4 tracks without constraint
       Vertex<BoundParameters> fittedVertex
-          = billoirFitter.fit(tracks, propagator, vfOptions);
+          = billoirFitter.fit(tracks, vfOptions).value();
       if (fittedVertex.tracks().size() > 0) {
         CHECK_CLOSE_ABS(
             fittedVertex.position(), vertexPosition, 1 * units::_mm);
       }
       // Do the fit with a constraint
       Vertex<BoundParameters> fittedVertexConstraint
-          = billoirFitter.fit(tracks, propagator, vfOptionsConstr);
+          = billoirFitter.fit(tracks, vfOptionsConstr).value();
       if (fittedVertexConstraint.tracks().size() > 0) {
         CHECK_CLOSE_ABS(
             fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+      }
+      // Test the IVertexFitter interface
+      Vertex<BoundParameters> testVertex
+          = myFitWrapper(&billoirFitter, tracks, vfOptions);
+      if (testVertex.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
       }
 
       if (debugMode) {
@@ -293,7 +310,7 @@ namespace Test {
       FullBilloirVertexFitter<ConstantBField,
                               InputTrack,
                               Propagator<EigenStepper<ConstantBField>>>::Config
-          vertexFitterCfg(bField);
+          vertexFitterCfg(bField, propagator);
       FullBilloirVertexFitter<ConstantBField,
                               InputTrack,
                               Propagator<EigenStepper<ConstantBField>>>
@@ -361,18 +378,24 @@ namespace Test {
 
       // Do the actual fit with 4 tracks without constraint
       Vertex<InputTrack> fittedVertex
-          = billoirFitter.fit(tracks, propagator, vfOptions);
+          = billoirFitter.fit(tracks, vfOptions).value();
       if (fittedVertex.tracks().size() > 0) {
         CHECK_CLOSE_ABS(
             fittedVertex.position(), vertexPosition, 1 * units::_mm);
       }
       // Do the fit with a constraint
       Vertex<InputTrack> fittedVertexConstraint
-          = billoirFitter.fit(tracks, propagator, vfOptionsConstr);
+          = billoirFitter.fit(tracks, vfOptionsConstr).value();
       if (fittedVertexConstraint.tracks().size() > 0) {
         CHECK_CLOSE_ABS(
             fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
       }
+
+      // Test the IVertexFitter interface
+      Vertex<InputTrack> testVertex
+          = myFitWrapper(&billoirFitter, tracks, vfOptions);
+
+      CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
 
       if (debugMode) {
         std::cout << "Fitting nTracks: " << nTracks << std::endl;
