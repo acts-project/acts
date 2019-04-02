@@ -36,8 +36,8 @@ namespace detail {
   //
   // The goal is to emulate the effect of enumerating a range of neighbor
   // indices on an axis (which may go out of bounds and wrap around since we
-  // have AxisBoundaryType::Closed), inserting them into an std::set, and
-  // returning said std::set, without paying the price of complex set algorithms
+  // have AxisBoundaryType::Closed), inserting them into an std::vector, and
+  // discarding duplicates, without paying the price of duplicate removal
   // and dynamic memory allocation in hot magnetic field interpolation code.
   //
   class NeighborHoodIndices
@@ -274,9 +274,12 @@ namespace detail {
         return NeighborHoodIndices();
       }
 
-      // Handle corner case of returning all bins
-      if (sizes.first + sizes.second >= getNBins()) {
-        return NeighborHoodIndices(1, getNBins() + 1);
+      // Handle corner case where user requests more neighbours than the number
+      // of bins on the axis. We do not want to double-count bins in that case.
+      sizes.first %= getNBins();
+      sizes.second %= getNBins();
+      if (sizes.first + sizes.second + 1 > getNBins()) {
+        sizes.second -= (sizes.first + sizes.second + 1) - getNBins();
       }
 
       // If the entire index range is not covered, we must wrap the range of
@@ -293,7 +296,7 @@ namespace detail {
       if (itfirst <= itlast) {
         return NeighborHoodIndices(itfirst, itlast + 1);
       } else {
-        return NeighborHoodIndices(1, itlast + 1, itfirst, getNBins() + 1);
+        return NeighborHoodIndices(itfirst, getNBins() + 1, 1, itlast + 1);
       }
     }
 
@@ -598,9 +601,12 @@ namespace detail {
         return NeighborHoodIndices();
       }
 
-      // Handle corner case of returning all bins
-      if (sizes.first + sizes.second >= getNBins()) {
-        return NeighborHoodIndices(1, getNBins() + 1);
+      // Handle corner case where user requests more neighbours than the number
+      // of bins on the axis. We do not want to double-count bins in that case.
+      sizes.first %= getNBins();
+      sizes.second %= getNBins();
+      if (sizes.first + sizes.second + 1 > getNBins()) {
+        sizes.second -= (sizes.first + sizes.second + 1) - getNBins();
       }
 
       // If the entire index range is not covered, we must wrap the range of
@@ -617,7 +623,7 @@ namespace detail {
       if (itfirst <= itlast) {
         return NeighborHoodIndices(itfirst, itlast + 1);
       } else {
-        return NeighborHoodIndices(1, itlast + 1, itfirst, getNBins() + 1);
+        return NeighborHoodIndices(itfirst, getNBins() + 1, 1, itlast + 1);
       }
     }
 
