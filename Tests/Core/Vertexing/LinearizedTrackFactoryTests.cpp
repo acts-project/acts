@@ -67,8 +67,8 @@ namespace Test {
     unsigned int nTracks = 100;
 
     // Set up RNG
-    std::random_device rd;
-    std::mt19937       gen(rd());
+    int          mySeed = 31415;
+    std::mt19937 gen(mySeed);
 
     // Set up constant B-Field
     ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
