@@ -1109,7 +1109,7 @@ namespace Test {
     BOOST_CHECK(g1Cl.neighborHoodIndices({{11}}, 1).collect()
                 == bins_t({}));  // overflow, makes no sense
     BOOST_CHECK(g1Cl.neighborHoodIndices({{1}}, 1).collect()
-                == bins_t({1, 2, 10}));  // overflow, makes no sense
+                == bins_t({10, 1, 2}));  // overflow, makes no sense
     BOOST_CHECK(g1Cl.neighborHoodIndices({{5}}, 1).collect()
                 == bins_t({4, 5, 6}));  // overflow, makes no sense
 
@@ -1123,21 +1123,29 @@ namespace Test {
     BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 1).collect()
                 == bins_t({16, 17, 18, 23, 24, 25, 30, 31, 32}));
     BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 1).collect()
-                == bins_t({8, 9, 12, 15, 16, 19, 36, 37, 40}));
+                == bins_t({40, 36, 37, 12, 8, 9, 19, 15, 16}));
     BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 5}}, 1).collect()
-                == bins_t({8, 11, 12, 15, 18, 19, 36, 39, 40}));
+                == bins_t({39, 40, 36, 11, 12, 8, 18, 19, 15}));
     BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 1}}, 1).collect()
-                == bins_t({8, 9, 12, 29, 30, 33, 36, 37, 40}));
+                == bins_t({33, 29, 30, 40, 36, 37, 12, 8, 9}));
     BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 1).collect()
-                == bins_t({8, 11, 12, 29, 32, 33, 36, 39, 40}));
+                == bins_t({32, 33, 29, 39, 40, 36, 11, 12, 8}));
 
-    bins_t all({8,  9,  10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24,
-                25, 26, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40});
-    BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 2).collect() == all);
-    BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 2).collect() == all);
-    BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 5}}, 2).collect() == all);
-    BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 1}}, 2).collect() == all);
-    BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 2).collect() == all);
+    BOOST_CHECK(g2Cl.neighborHoodIndices({{3, 3}}, 2).collect()
+                == bins_t({8, 9, 10, 11, 12, 15, 16, 17, 18, 19, 22, 23, 24, 25,
+                           26, 29, 30, 31, 32, 33, 36, 37, 38, 39, 40}));
+    BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 1}}, 2).collect()
+                == bins_t({32, 33, 29, 30, 31, 39, 40, 36, 37, 38, 11, 12, 8, 9,
+                           10, 18, 19, 15, 16, 17, 25, 26, 22, 23, 24}));
+    BOOST_CHECK(g2Cl.neighborHoodIndices({{1, 5}}, 2).collect()
+                == bins_t({31, 32, 33, 29, 30, 38, 39, 40, 36, 37, 10, 11, 12,
+                           8, 9, 17, 18, 19, 15, 16, 24, 25, 26, 22, 23}));
+    BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 1}}, 2).collect()
+                == bins_t({25, 26, 22, 23, 24, 32, 33, 29, 30, 31, 39, 40, 36,
+                           37, 38, 11, 12, 8, 9, 10, 18, 19, 15, 16, 17}));
+    BOOST_CHECK(g2Cl.neighborHoodIndices({{5, 5}}, 2).collect()
+                == bins_t({24, 25, 26, 22, 23, 31, 32, 33, 29, 30, 38, 39, 40,
+                           36, 37, 10, 11, 12, 8, 9, 17, 18, 19, 15, 16}));
 
     // @TODO 3D test would be nice, but should essentially not be a problem if
     // 2D works.
@@ -1209,7 +1217,7 @@ namespace Test {
     BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.52}})).collect()
                 == bins_t({6, 7}));
     BOOST_CHECK(g1Cl.closestPointsIndices(Point({{0.98}})).collect()
-                == bins_t({1, 10}));
+                == bins_t({10, 1}));
 
     // 2D case
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.08}})).collect()
@@ -1217,11 +1225,11 @@ namespace Test {
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.68}})).collect()
                 == bins_t({46, 47, 53, 54}));
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.52, 0.88}})).collect()
-                == bins_t({43, 47, 50, 54}));
+                == bins_t({47, 43, 54, 50}));
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.05, 0.08}})).collect()
                 == bins_t({8, 9, 15, 16}));
     BOOST_CHECK(g2Cl.closestPointsIndices(Point({{0.9, 0.95}})).collect()
-                == bins_t({8, 12, 71, 75}));
+                == bins_t({75, 71, 12, 8}));
 
     // @TODO: 3D checks would also be nice
 
