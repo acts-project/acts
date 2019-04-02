@@ -60,11 +60,14 @@ namespace detail {
     public:
       iterator() = default;
 
-      // Only specify current position. Good enough for end()...
-      iterator(size_t current) : m_current(current) {}
+      // Specialized constructor for end() iterator
+      iterator(size_t current) : m_current(current), m_wrapped(true) {}
 
       iterator(size_t begin1, size_t end1, size_t begin2)
-        : m_current(begin1), m_end1(end1), m_begin2(begin2)
+        : m_current(begin1)
+        , m_end1(end1)
+        , m_begin2(begin2)
+        , m_wrapped(begin1 == begin2)
       {
       }
 
@@ -73,14 +76,17 @@ namespace detail {
       iterator& operator++()
       {
         ++m_current;
-        if (m_current == m_end1) m_current = m_begin2;
+        if (m_current == m_end1) {
+          m_current = m_begin2;
+          m_wrapped = true;
+        }
         return *this;
       }
 
       bool
       operator==(const iterator& it) const
       {
-        return m_current == it.m_current;
+        return (m_current == it.m_current) && (m_wrapped == it.m_wrapped);
       }
 
       bool
@@ -91,6 +97,7 @@ namespace detail {
 
     private:
       size_t m_current, m_end1, m_begin2;
+      bool m_wrapped;
     };
 
     iterator
