@@ -79,8 +79,8 @@ namespace IntegrationTest {
         if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
           // under or overflow bin
         } else {
-          point_t  lowerLeft = grid.getLowerLeftBinEdge(index);
-          Vector2D B         = grid.at(index);
+          point_t  lowerLeft = grid.lowerLeftBinEdge(index);
+          Vector2D B         = grid.atLocalBins(index);
           ostr << i << ";" << j << ";" << lowerLeft[0] << ";" << lowerLeft[1];
           ostr << ";" << B[0] << ";" << B[1] << std::endl;
         }

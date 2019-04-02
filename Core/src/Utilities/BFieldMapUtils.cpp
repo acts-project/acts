@@ -86,14 +86,14 @@ Acts::
         size_t          n = std::abs(int(j) - int(zPos.size()));
         Grid_t::index_t indicesFirstQuadrant = {{i - 1, n}};
 
-        grid.at(indices)
+        grid.atLocalBins(indices)
             = bField.at(localToGlobalBin(indicesFirstQuadrant, nIndices))
             * BFieldUnit;
       } else {
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
-        grid.at(indices)
+        grid.atLocalBins(indices)
             = bField.at(localToGlobalBin({{i - 1, j - 1}}, nIndices))
             * BFieldUnit;
       }
@@ -225,7 +225,7 @@ Acts::
           size_t          l = std::abs(int(k) - (int(zPos.size())));
           Grid_t::index_t indicesFirstOctant = {{m, n, l}};
 
-          grid.at(indices)
+          grid.atLocalBins(indices)
               = bField.at(localToGlobalBin(indicesFirstOctant, nIndices))
               * BFieldUnit;
 
@@ -233,7 +233,7 @@ Acts::
           // std::vectors begin with 0 and we do not want the user needing to
           // take underflow or overflow bins in account this is why we need to
           // subtract by one
-          grid.at(indices)
+          grid.atLocalBins(indices)
               = bField.at(localToGlobalBin({{i - 1, j - 1, k - 1}}, nIndices))
               * BFieldUnit;
         }
@@ -320,13 +320,13 @@ Acts::
       Grid_t::index_t index({i, j});
       if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
         // under or overflow bin, set zero
-        grid.at(index) = Grid_t::value_type(0, 0);
+        grid.atLocalBins(index) = Grid_t::value_type(0, 0);
       } else {
         // regular bin, get lower left boundary
-        Grid_t::point_t lowerLeft = grid.getLowerLeftBinEdge(index);
+        Grid_t::point_t lowerLeft = grid.lowerLeftBinEdge(index);
         // do lookup
         Vector2D B     = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
-        grid.at(index) = B;
+        grid.atLocalBins(index) = B;
       }
     }
   }
