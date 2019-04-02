@@ -390,10 +390,9 @@ namespace Test {
     BOOST_CHECK_EQUAL(g.globalBinFromLocalBins({{3, 4, 2}}), 78u);
     BOOST_CHECK_EQUAL(g.globalBinFromLocalBins({{3, 4, 3}}), 79u);
 
-    BOOST_CHECK(
-        g.localBinsFromGlobalBin(
-            g.globalBinFromPosition(Point({{1.2, 0.7, 1.4}})))
-        == indices({{2, 1, 2}}));
+    BOOST_CHECK(g.localBinsFromGlobalBin(
+                    g.globalBinFromPosition(Point({{1.2, 0.7, 1.4}})))
+                == indices({{2, 1, 2}}));
 
     // inside checks
     BOOST_CHECK(not g.isInside(Point({{-2., -1, -2}})));
@@ -721,10 +720,9 @@ namespace Test {
     BOOST_CHECK_EQUAL(g.globalBinFromLocalBins({{1, 3, 4}}), 39u);
     BOOST_CHECK_EQUAL(g.globalBinFromLocalBins({{2, 3, 4}}), 59u);
 
-    BOOST_CHECK(
-        g.localBinsFromGlobalBin(
-            g.globalBinFromPosition(Point({{1.8, 0.7, 3.2}})))
-        == indices({{2, 2, 3}}));
+    BOOST_CHECK(g.localBinsFromGlobalBin(
+                    g.globalBinFromPosition(Point({{1.8, 0.7, 3.2}})))
+                == indices({{2, 2, 3}}));
 
     // inside checks
     BOOST_CHECK(not g.isInside(Point({{-2., -1, -2}})));

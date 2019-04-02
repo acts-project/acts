@@ -325,7 +325,7 @@ Acts::
         // regular bin, get lower left boundary
         Grid_t::point_t lowerLeft = grid.lowerLeftBinEdge(index);
         // do lookup
-        Vector2D B     = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
+        Vector2D B = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
         grid.atLocalBins(index) = B;
       }
     }
