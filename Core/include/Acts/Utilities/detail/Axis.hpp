@@ -97,7 +97,7 @@ namespace detail {
 
     private:
       size_t m_current, m_end1, m_begin2;
-      bool m_wrapped;
+      bool   m_wrapped;
     };
 
     iterator
