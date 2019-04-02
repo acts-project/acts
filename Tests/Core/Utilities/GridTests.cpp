@@ -1033,7 +1033,6 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(neighborhood)
   {
     using bins_t  = std::vector<size_t>;
-    using point_t = std::array<double, 1>;
     using EAxis   = EquidistantAxis;
     using Grid1_t = Grid<double, EAxis>;
     using Grid2_t = Grid<double, EAxis, EAxis>;
