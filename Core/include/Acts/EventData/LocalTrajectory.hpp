@@ -86,6 +86,7 @@ namespace detail_lt {
     uint16_t nparams = 0;
     uint16_t imeas   = kInvalid;
     uint16_t nmeas   = 0;
+    uint16_t iparent = kInvalid;
   };
 }  // namespace detail_lt
 
@@ -144,8 +145,12 @@ public:
   LocalTrajectory() = default;
 
   /// Add a point without measurement and return its index.
+  ///
+  /// @param trackParameters  at the local point
+  /// @param parent           parent point or SIZE_MAX if there is no parent
   size_t
-  addPoint(const TrackParametersBase& trackParameters);
+  addPoint(const TrackParametersBase& trackParameters,
+           size_t                     parent = SIZE_MAX);
   /// Access a point on the trajectory by index.
   LocalTrajectoryPoint
   getPoint(size_t index) const
@@ -229,7 +234,8 @@ LocalTrajectoryPoint::measurementCovariance() const
 }
 
 inline size_t
-LocalTrajectory::addPoint(const TrackParametersBase& trackParameters)
+LocalTrajectory::addPoint(const TrackParametersBase& trackParameters,
+                          size_t                     parent)
 {
   using Par        = TrackParametersBase::ParVector_t;
   using FullCov    = detail_lt::Types<8>::FullCovariance;
@@ -250,6 +256,8 @@ LocalTrajectory::addPoint(const TrackParametersBase& trackParameters)
   detail_lt::PointData p;
   p.iparams = iparams;
   p.nparams = nparams;
+  if (parent != SIZE_MAX) { p.iparent = static_cast<uint16_t>(parent); }
+
   m_points.push_back(std::move(p));
 
   return m_points.size() - 1;
