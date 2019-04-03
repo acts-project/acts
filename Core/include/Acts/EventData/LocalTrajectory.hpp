@@ -48,26 +48,35 @@ namespace detail_lt {
     }
   };
   /// Type construction helper for coefficients and associated covariances.
-  ///
-  /// All types have an upper size bound but the
   template <Eigen::Index MaxSize, Eigen::Index SizeIncrement = 8>
   struct Types
   {
     static constexpr int Flags = Eigen::ColMajor | Eigen::AutoAlign;
     using Scalar               = double;
+
+    // storage of multiple items in flat arrays (with overallocation up to max)
     using StorageCoefficients
         = GrowableColumns<Eigen::Array<Scalar, MaxSize, Eigen::Dynamic, Flags>,
                           SizeIncrement>;
     using StorageCovariance = GrowableColumns<
         Eigen::Array<Scalar, MaxSize * MaxSize, Eigen::Dynamic, Flags>,
         SizeIncrement>;
+
+    // full single items
     using FullCoefficients = Eigen::Matrix<Scalar, MaxSize, 1, Flags>;
     using FullCovariance   = Eigen::Matrix<Scalar, MaxSize, MaxSize, Flags>;
+    using FullCoefficientsConstMap = Eigen::Map<const FullCoefficients>;
+    using FullCovarianceConstMap   = Eigen::Map<const FullCovariance>;
+
+    // sub-vector, sub-matrix single items
     using Coefficients
         = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags, MaxSize, 1>;
     using Covariance = Eigen::
         Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags, MaxSize, MaxSize>;
-    using CovarianceStride = Eigen::Stride<MaxSize, 1>;
+    using CoefficientsConstMap = Eigen::Map<const Coefficients>;
+    // TODO can we determine the pointer alignment at compile time?
+    using CovarianceConstMap = Eigen::
+        Map<const Covariance, Eigen::Unaligned, Eigen::Stride<MaxSize, 1>>;
   };
   struct PointData
   {
@@ -86,28 +95,41 @@ class LocalTrajectoryPoint
 {
 public:
   // underlying storage types w/ overallocation
-  using FullParameters        = detail_lt::Types<8>::FullCoefficients;
-  using FullCovariance        = detail_lt::Types<8>::FullCovariance;
-  using Parameters            = detail_lt::Types<8>::Coefficients;
-  using Covariance            = detail_lt::Types<8>::Covariance;
-  using CovarianceStride      = detail_lt::Types<8>::CovarianceStride;
-  using Measurement           = detail_lt::Types<2>::Coefficients;
-  using MeasurementCovariance = detail_lt::Types<2>::Covariance;
+  using FullParameters  = detail_lt::Types<8>::FullCoefficientsConstMap;
+  using FullCovariance  = detail_lt::Types<8>::FullCovarianceConstMap;
+  using FullMeasurement = detail_lt::Types<2>::FullCoefficientsConstMap;
+  using FullMeasurementCovariance = detail_lt::Types<2>::FullCovarianceConstMap;
+  using Parameters                = detail_lt::Types<8>::CoefficientsConstMap;
+  using Covariance                = detail_lt::Types<8>::CovarianceConstMap;
+  using Measurement               = detail_lt::Types<2>::CoefficientsConstMap;
+  using MeasurementCovariance     = detail_lt::Types<2>::CovarianceConstMap;
 
   LocalTrajectoryPoint(const LocalTrajectory& trajectory, size_t index);
 
-  Eigen::Map<const FullParameters>
+  FullParameters
   fullParameters() const;
-  Eigen::Map<const FullCovariance>
+  FullCovariance
   fullCovariance() const;
-  Eigen::Map<const Parameters>
+  FullMeasurement
+  fullMeasurement() const;
+  FullMeasurementCovariance
+  fullMeasurementCovariance() const;
+
+  Parameters
   parameters() const;
-  Eigen::Map<const Covariance, Eigen::Unaligned, CovarianceStride>
+  Covariance
   covariance() const;
+  Measurement
+  measurement() const;
+  MeasurementCovariance
+  measurementCovariance() const;
 
   /// Check if the point has an associated measurement.
   bool
-  hasMeasurement() const;
+  hasMeasurement() const
+  {
+    return m_point.imeas != decltype(m_point)::kInvalid;
+  }
 
 private:
   const LocalTrajectory& m_traj;
@@ -150,29 +172,41 @@ inline LocalTrajectoryPoint::LocalTrajectoryPoint(
 {
 }
 
-inline Eigen::Map<const LocalTrajectoryPoint::FullParameters>
+inline LocalTrajectoryPoint::FullParameters
 LocalTrajectoryPoint::fullParameters() const
 {
-  return Eigen::Map<const LocalTrajectoryPoint::FullParameters>(
+  return LocalTrajectoryPoint::FullParameters(
       m_traj.m_params.data.col(m_point.iparams).data());
 }
 
-inline Eigen::Map<const LocalTrajectoryPoint::FullCovariance>
+inline LocalTrajectoryPoint::FullCovariance
 LocalTrajectoryPoint::fullCovariance() const
 {
-  return Eigen::Map<const LocalTrajectoryPoint::FullCovariance>(
+  return LocalTrajectoryPoint::FullCovariance(
       m_traj.m_cov.data.col(m_point.iparams).data());
 }
 
-inline Eigen::Map<const LocalTrajectoryPoint::Parameters>
+inline LocalTrajectoryPoint::FullMeasurement
+LocalTrajectoryPoint::fullMeasurement() const
+{
+  return LocalTrajectoryPoint::FullMeasurement(
+      m_traj.m_meas.data.col(m_point.imeas).data());
+}
+
+inline LocalTrajectoryPoint::FullMeasurementCovariance
+LocalTrajectoryPoint::fullMeasurementCovariance() const
+{
+  return LocalTrajectoryPoint::FullMeasurementCovariance(
+      m_traj.m_measCov.data.col(m_point.imeas).data());
+}
+
+inline LocalTrajectoryPoint::Parameters
 LocalTrajectoryPoint::parameters() const
 {
   return {m_traj.m_params.data.col(m_point.iparams).data(), m_point.nparams};
 }
 
-inline Eigen::Map<const LocalTrajectoryPoint::Covariance,
-                  Eigen::Unaligned,
-                  LocalTrajectoryPoint::CovarianceStride>
+inline LocalTrajectoryPoint::Covariance
 LocalTrajectoryPoint::covariance() const
 {
   return {m_traj.m_cov.data.col(m_point.iparams).data(),
@@ -180,10 +214,18 @@ LocalTrajectoryPoint::covariance() const
           m_point.nparams};
 }
 
-inline bool
-LocalTrajectoryPoint::hasMeasurement() const
+inline LocalTrajectoryPoint::Measurement
+LocalTrajectoryPoint::measurement() const
 {
-  return m_point.imeas != decltype(m_point)::kInvalid;
+  return {m_traj.m_meas.data.col(m_point.imeas).data(), m_point.nmeas};
+}
+
+inline LocalTrajectoryPoint::MeasurementCovariance
+LocalTrajectoryPoint::measurementCovariance() const
+{
+  return {m_traj.m_measCov.data.col(m_point.imeas).data(),
+          m_point.nmeas,
+          m_point.nmeas};
 }
 
 inline size_t
