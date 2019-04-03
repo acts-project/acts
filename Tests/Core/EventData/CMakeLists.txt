@@ -38,7 +38,7 @@ target_include_directories (MeasurementHelpersTests PRIVATE ${Boost_INCLUDE_DIRS
 target_link_libraries (MeasurementHelpersTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME MeasurementHelpersTests COMMAND MeasurementHelpersTests)
 
-add_executable (LocalTrajectoryTests LocalTrajectoryTests.cpp)
-target_include_directories (LocalTrajectoryTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (LocalTrajectoryTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-add_test (NAME LocalTrajectoryUnitTests COMMAND LocalTrajectoryTests)
+add_executable (MultiTrajectoryTests MultiTrajectoryTests.cpp)
+target_include_directories (MultiTrajectoryTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (MultiTrajectoryTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME LocalTrajectoryUnitTests COMMAND MultiTrajectoryTests)

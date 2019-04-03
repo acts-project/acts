@@ -14,7 +14,7 @@
 
 #include <iostream>
 
-#include "Acts/EventData/LocalTrajectory.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 
 using std::cout;
@@ -38,17 +38,17 @@ namespace Test {
             -1};
   }
 
-  BOOST_AUTO_TEST_CASE(local_trajectory_build)
+  BOOST_AUTO_TEST_CASE(multitrajectory_build)
   {
-    LocalTrajectory lt;
+    MultiTrajectory t;
 
     // construct trajectory w/ multiple components
-    auto i0 = lt.addPoint(make_params());
+    auto i0 = t.addPoint(make_params());
     // trajectory bifurcates here into multiple hypotheses
-    auto i1a = lt.addPoint(make_params(), i0);
-    auto i1b = lt.addPoint(make_params(), i0);
-    auto i2a = lt.addPoint(make_params(), i1a);
-    auto i2b = lt.addPoint(make_params(), i1b);
+    auto i1a = t.addPoint(make_params(), i0);
+    auto i1b = t.addPoint(make_params(), i0);
+    auto i2a = t.addPoint(make_params(), i1a);
+    auto i2b = t.addPoint(make_params(), i1b);
 
     // print each trajectory component
     auto print = [](auto p) {
@@ -56,17 +56,17 @@ namespace Test {
       cout << "     params " << p.parameters().transpose() << endl;
     };
     cout << "trajectory starting at " << i2a << endl;
-    lt.visitBackwards(i2a, print);
+    t.visitBackwards(i2a, print);
     cout << "trajectory starting at " << i2b << endl;
-    lt.visitBackwards(i2b, print);
+    t.visitBackwards(i2b, print);
 
     // modify elements of the trajectory
-    lt.applyBackwards(i2b, [](auto p) { p.fullParameters().setRandom(); });
+    t.applyBackwards(i2b, [](auto p) { p.fullParameters().setRandom(); });
     cout << "modified trajectory starting at " << i2b << endl;
-    lt.visitBackwards(i2b, print);
+    t.visitBackwards(i2b, print);
 
     // print full/effective parameters/covariance for an example point
-    const auto& p = lt.getPoint(i1b);
+    const auto& p = t.getPoint(i1b);
     cout << "data for point " << p.index() << endl;
     cout << p.fullParameters().transpose() << endl;
     cout << p.fullCovariance() << endl;

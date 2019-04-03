@@ -18,7 +18,7 @@
 
 namespace Acts {
 
-class LocalTrajectory;
+class MultiTrajectory;
 
 namespace detail_lt {
   /// wrapper for a dynamic Eigen type that adds support for automatic growth
@@ -144,35 +144,35 @@ namespace detail_lt {
 
   private:
     // Private since it can only be created by the trajectory.
-    TrackStateProxy(ConstIf<LocalTrajectory, ReadOnly>& trajectory,
+    TrackStateProxy(ConstIf<MultiTrajectory, ReadOnly>& trajectory,
                     size_t                              index)
       : m_traj(trajectory), m_index(index)
     {
     }
 
-    ConstIf<LocalTrajectory, ReadOnly>& m_traj;
+    ConstIf<MultiTrajectory, ReadOnly>& m_traj;
     size_t                              m_index;
 
-    friend class Acts::LocalTrajectory;
+    friend class Acts::MultiTrajectory;
   };
 }  // namespace detail_lt
 
-/// Store local states, covariances, measurements along a trajectory.
+/// Store a trajectory of track states with multiple components.
 ///
-/// The trajectory supports both simple, sequential trajectories as well
+/// This container supports both simple, sequential trajectories as well
 /// as combinatorial or multi-component trajectories. Each point can store
 /// a parent point such that the trajectory forms a directed, acyclic graph
 /// of sub-trajectories. From a set of endpoints, all possible sub-components
 /// can be easily identified. Some functionality is provided to simplify
-/// iterating over sub-components.
-class LocalTrajectory
+/// iterating over specific sub-components.
+class MultiTrajectory
 {
 public:
   using ConstTrackStateProxy = detail_lt::TrackStateProxy<true>;
   using TrackStateProxy      = detail_lt::TrackStateProxy<false>;
 
   /// Create an empty trajectory.
-  LocalTrajectory() = default;
+  MultiTrajectory() = default;
 
   /// Add a point without measurement and return its index.
   ///
@@ -307,7 +307,7 @@ namespace detail_lt {
 }  // namespace detail_lt
 
 inline size_t
-LocalTrajectory::addPoint(const TrackParametersBase& trackParameters,
+MultiTrajectory::addPoint(const TrackParametersBase& trackParameters,
                           size_t                     previous)
 {
   using Par        = TrackParametersBase::ParVector_t;
@@ -338,7 +338,7 @@ LocalTrajectory::addPoint(const TrackParametersBase& trackParameters,
 
 template <typename F>
 void
-LocalTrajectory::visitBackwards(size_t endpoint, F&& callable) const
+MultiTrajectory::visitBackwards(size_t endpoint, F&& callable) const
 {
   while (true) {
     callable(getPoint(endpoint));
@@ -352,7 +352,7 @@ LocalTrajectory::visitBackwards(size_t endpoint, F&& callable) const
 
 template <typename F>
 void
-LocalTrajectory::applyBackwards(size_t endpoint, F&& callable)
+MultiTrajectory::applyBackwards(size_t endpoint, F&& callable)
 {
   while (true) {
     callable(getPoint(endpoint));
