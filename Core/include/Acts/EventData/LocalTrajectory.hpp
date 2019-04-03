@@ -105,7 +105,16 @@ public:
   using Measurement               = detail_lt::Types<2>::CoefficientsConstMap;
   using MeasurementCovariance     = detail_lt::Types<2>::CovarianceConstMap;
 
-  LocalTrajectoryPoint(const LocalTrajectory& trajectory, size_t index);
+  LocalTrajectoryPoint(const LocalTrajectory& trajectory, size_t index)
+    : m_traj(trajectory), m_index(index)
+  {
+  }
+
+  size_t
+  index() const
+  {
+    return m_index;
+  }
 
   FullParameters
   fullParameters() const;
@@ -127,14 +136,11 @@ public:
 
   /// Check if the point has an associated measurement.
   bool
-  hasMeasurement() const
-  {
-    return m_point.imeas != decltype(m_point)::kInvalid;
-  }
+  hasMeasurement() const;
 
 private:
   const LocalTrajectory& m_traj;
-  detail_lt::PointData   m_point;
+  size_t                 m_index;
 };
 
 /// @brief Store local states, covariances, measurements along a trajectory
@@ -170,67 +176,73 @@ private:
 
 // implementations
 
-inline LocalTrajectoryPoint::LocalTrajectoryPoint(
-    const LocalTrajectory& trajectory,
-    size_t                 index)
-  : m_traj(trajectory), m_point(trajectory.m_points.at(index))
-{
-}
-
 inline LocalTrajectoryPoint::FullParameters
 LocalTrajectoryPoint::fullParameters() const
 {
+  const auto& point = m_traj.m_points[m_index];
   return LocalTrajectoryPoint::FullParameters(
-      m_traj.m_params.data.col(m_point.iparams).data());
+      m_traj.m_params.data.col(point.iparams).data());
 }
 
 inline LocalTrajectoryPoint::FullCovariance
 LocalTrajectoryPoint::fullCovariance() const
 {
+  const auto& point = m_traj.m_points[m_index];
   return LocalTrajectoryPoint::FullCovariance(
-      m_traj.m_cov.data.col(m_point.iparams).data());
+      m_traj.m_cov.data.col(point.iparams).data());
 }
 
 inline LocalTrajectoryPoint::FullMeasurement
 LocalTrajectoryPoint::fullMeasurement() const
 {
+  const auto& point = m_traj.m_points[m_index];
   return LocalTrajectoryPoint::FullMeasurement(
-      m_traj.m_meas.data.col(m_point.imeas).data());
+      m_traj.m_meas.data.col(point.imeas).data());
 }
 
 inline LocalTrajectoryPoint::FullMeasurementCovariance
 LocalTrajectoryPoint::fullMeasurementCovariance() const
 {
+  const auto& point = m_traj.m_points[m_index];
   return LocalTrajectoryPoint::FullMeasurementCovariance(
-      m_traj.m_measCov.data.col(m_point.imeas).data());
+      m_traj.m_measCov.data.col(point.imeas).data());
 }
 
 inline LocalTrajectoryPoint::Parameters
 LocalTrajectoryPoint::parameters() const
 {
-  return {m_traj.m_params.data.col(m_point.iparams).data(), m_point.nparams};
+  const auto& point = m_traj.m_points[m_index];
+  return {m_traj.m_params.data.col(point.iparams).data(), point.nparams};
 }
 
 inline LocalTrajectoryPoint::Covariance
 LocalTrajectoryPoint::covariance() const
 {
-  return {m_traj.m_cov.data.col(m_point.iparams).data(),
-          m_point.nparams,
-          m_point.nparams};
+  const auto& point = m_traj.m_points[m_index];
+  return {m_traj.m_cov.data.col(point.iparams).data(),
+          point.nparams,
+          point.nparams};
 }
 
 inline LocalTrajectoryPoint::Measurement
 LocalTrajectoryPoint::measurement() const
 {
-  return {m_traj.m_meas.data.col(m_point.imeas).data(), m_point.nmeas};
+  const auto& point = m_traj.m_points[m_index];
+  return {m_traj.m_meas.data.col(point.imeas).data(), point.nmeas};
 }
 
 inline LocalTrajectoryPoint::MeasurementCovariance
 LocalTrajectoryPoint::measurementCovariance() const
 {
-  return {m_traj.m_measCov.data.col(m_point.imeas).data(),
-          m_point.nmeas,
-          m_point.nmeas};
+  const auto& point = m_traj.m_points[m_index];
+  return {
+      m_traj.m_measCov.data.col(point.imeas).data(), point.nmeas, point.nmeas};
+}
+
+inline bool
+LocalTrajectoryPoint::hasMeasurement() const
+{
+  return m_traj.m_points[m_index].imeas != detail_lt::PointData::kInvalid;
 }
 
 inline size_t
