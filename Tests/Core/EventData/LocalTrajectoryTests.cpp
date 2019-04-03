@@ -42,19 +42,31 @@ namespace Test {
   {
     LocalTrajectory lt;
 
+    // construct trajectory w/ multiple components
     auto i0 = lt.addPoint(make_params());
-    auto i1 = lt.addPoint(make_params());
-    auto p0 = lt.getPoint(i0);
-    auto p1 = lt.getPoint(i1);
+    // trajectory bifurcates here into multiple hypotheses
+    auto i1a = lt.addPoint(make_params(), i0);
+    auto i1b = lt.addPoint(make_params(), i0);
+    auto i2a = lt.addPoint(make_params(), i1a);
+    auto i2b = lt.addPoint(make_params(), i1b);
 
-    for (const auto& p : {p0, p1}) {
-      cout << "point" << endl;
-      cout << p.parameters().transpose() << endl;
-      cout << p.covariance() << endl;
-      cout << p.fullParameters().transpose() << endl;
-      cout << p.fullCovariance() << endl;
-      cout << "has measurement " << p1.hasMeasurement() << endl;
-    }
+    // print each trajectory component
+    auto print = [](const LocalTrajectoryPoint& p) {
+      cout << "  point " << p.index() << endl;
+    };
+    cout << "trajectory starting at " << i2a << endl;
+    lt.traverseBackward(i2a, print);
+    cout << "trajectory starting at " << i2b << endl;
+    lt.traverseBackward(i2b, print);
+
+    // print full/effective parameters/covariance for an example point
+    const auto& p = lt.getPoint(i1b);
+    cout << "data for point " << p.index() << endl;
+    cout << p.fullParameters().transpose() << endl;
+    cout << p.fullCovariance() << endl;
+    cout << p.parameters().transpose() << endl;
+    cout << p.covariance() << endl;
+    cout << "has measurement " << p.hasMeasurement() << endl;
   }
 
 }  // namespace Test

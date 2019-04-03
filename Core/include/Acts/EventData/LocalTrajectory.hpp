@@ -92,10 +92,10 @@ namespace detail_lt {
 
 class LocalTrajectory;
 
+/// Proxy object to access a single point on the trajectory.
 class LocalTrajectoryPoint
 {
 public:
-  // underlying storage types w/ overallocation
   using FullParameters  = detail_lt::Types<8>::FullCoefficientsConstMap;
   using FullCovariance  = detail_lt::Types<8>::FullCovarianceConstMap;
   using FullMeasurement = detail_lt::Types<2>::FullCoefficientsConstMap;
@@ -104,11 +104,6 @@ public:
   using Covariance                = detail_lt::Types<8>::CovarianceConstMap;
   using Measurement               = detail_lt::Types<2>::CoefficientsConstMap;
   using MeasurementCovariance     = detail_lt::Types<2>::CovarianceConstMap;
-
-  LocalTrajectoryPoint(const LocalTrajectory& trajectory, size_t index)
-    : m_traj(trajectory), m_index(index)
-  {
-  }
 
   size_t
   index() const
@@ -139,11 +134,26 @@ public:
   hasMeasurement() const;
 
 private:
+  // Private since it can only be created by the trajectory.
+  LocalTrajectoryPoint(const LocalTrajectory& trajectory, size_t index)
+    : m_traj(trajectory), m_index(index)
+  {
+  }
+
   const LocalTrajectory& m_traj;
   size_t                 m_index;
+
+  friend class LocalTrajectory;
 };
 
-/// @brief Store local states, covariances, measurements along a trajectory
+/// Store local states, covariances, measurements along a trajectory.
+///
+/// The trajectory supports both simple, sequential trajectories as well
+/// as combinatorial or multi-component trajectories. Each point can store
+/// a parent point such that the trajectory forms a directed, acyclic graph
+/// of sub-trajectories. From a set of endpoints, all possible sub-components
+/// can be easily identified. Some functionality is provided to simplify
+/// iterating over sub-components.
 class LocalTrajectory
 {
 public:
@@ -163,6 +173,14 @@ public:
   {
     return {*this, index};
   }
+
+  /// Visit all previous trajectory points starting from a given endpoint
+  ///
+  /// @param endPoint  index of the last track point in the trajectory
+  /// @param visit     Functor to be called w/ each track point
+  template <typename Visitor>
+  void
+  traverseBackward(size_t endpoint, Visitor visit) const;
 
 private:
   std::vector<detail_lt::PointData>        m_points;
@@ -273,6 +291,23 @@ LocalTrajectory::addPoint(const TrackParametersBase& trackParameters,
   m_points.push_back(std::move(p));
 
   return m_points.size() - 1;
+}
+
+template <typename Visitor>
+void
+LocalTrajectory::traverseBackward(size_t endpoint, Visitor visit) const
+{
+  if (m_points.size() <= endpoint) {
+    // TODO to fail or not to fail here?
+    return;
+  }
+  // TODO check input valididty
+  while (true) {
+    visit(LocalTrajectoryPoint(*this, endpoint));
+    // this point has no parent and ends the trajectory
+    if (m_points[endpoint].iparent == detail_lt::PointData::kInvalid) { break; }
+    endpoint = m_points[endpoint].iparent;
+  }
 }
 
 }  // namespace Acts
