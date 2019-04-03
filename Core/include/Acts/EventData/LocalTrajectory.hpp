@@ -82,11 +82,11 @@ namespace detail_lt {
   {
     static constexpr uint16_t kInvalid = UINT16_MAX;
 
-    uint16_t iparams = kInvalid;
-    uint16_t nparams = 0;
-    uint16_t imeas   = kInvalid;
-    uint16_t nmeas   = 0;
-    uint16_t iparent = kInvalid;
+    uint16_t iprevious = kInvalid;
+    uint16_t iparams   = kInvalid;
+    uint16_t imeas     = kInvalid;
+    uint8_t  nparams   = 0;
+    uint8_t  nmeas     = 0;
   };
 }  // namespace detail_lt
 
@@ -163,10 +163,10 @@ public:
   /// Add a point without measurement and return its index.
   ///
   /// @param trackParameters  at the local point
-  /// @param parent           parent point or SIZE_MAX if there is no parent
+  /// @param previous         point index or SIZE_MAX if its the first
   size_t
   addPoint(const TrackParametersBase& trackParameters,
-           size_t                     parent = SIZE_MAX);
+           size_t                     previous = SIZE_MAX);
   /// Access a point on the trajectory by index.
   LocalTrajectoryPoint
   getPoint(size_t index) const
@@ -265,7 +265,7 @@ LocalTrajectoryPoint::hasMeasurement() const
 
 inline size_t
 LocalTrajectory::addPoint(const TrackParametersBase& trackParameters,
-                          size_t                     parent)
+                          size_t                     previous)
 {
   using Par        = TrackParametersBase::ParVector_t;
   using FullCov    = detail_lt::Types<8>::FullCovariance;
@@ -284,9 +284,9 @@ LocalTrajectory::addPoint(const TrackParametersBase& trackParameters,
   }
 
   detail_lt::PointData p;
+  if (previous != SIZE_MAX) { p.iprevious = static_cast<uint16_t>(previous); }
   p.iparams = iparams;
   p.nparams = nparams;
-  if (parent != SIZE_MAX) { p.iparent = static_cast<uint16_t>(parent); }
 
   m_points.push_back(std::move(p));
 
@@ -305,8 +305,10 @@ LocalTrajectory::traverseBackward(size_t endpoint, Visitor visit) const
   while (true) {
     visit(LocalTrajectoryPoint(*this, endpoint));
     // this point has no parent and ends the trajectory
-    if (m_points[endpoint].iparent == detail_lt::PointData::kInvalid) { break; }
-    endpoint = m_points[endpoint].iparent;
+    if (m_points[endpoint].iprevious == detail_lt::PointData::kInvalid) {
+      break;
+    }
+    endpoint = m_points[endpoint].iprevious;
   }
 }
 
