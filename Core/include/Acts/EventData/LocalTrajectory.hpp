@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cstdint>
+#include <type_traits>
 #include <vector>
 
 #include <Eigen/Core>
@@ -47,8 +48,13 @@ namespace detail_lt {
       return data.col(index);
     }
   };
+  /// Either type T or const T depending on the boolean.
+  template <typename T, bool select>
+  using ConstIf = std::conditional_t<select, const T, T>;
   /// Type construction helper for coefficients and associated covariances.
-  template <Eigen::Index MaxSize, Eigen::Index SizeIncrement = 8>
+  template <Eigen::Index MaxSize,
+            bool         ReadOnlyMaps  = true,
+            Eigen::Index SizeIncrement = 8>
   struct Types
   {
     static constexpr int Flags = Eigen::ColMajor | Eigen::AutoAlign;
@@ -65,18 +71,20 @@ namespace detail_lt {
     // full single items
     using FullCoefficients = Eigen::Matrix<Scalar, MaxSize, 1, Flags>;
     using FullCovariance   = Eigen::Matrix<Scalar, MaxSize, MaxSize, Flags>;
-    using FullCoefficientsConstMap = Eigen::Map<const FullCoefficients>;
-    using FullCovarianceConstMap   = Eigen::Map<const FullCovariance>;
+    using FullCoefficientsMap
+        = Eigen::Map<ConstIf<FullCoefficients, ReadOnlyMaps>>;
+    using FullCovarianceMap = Eigen::Map<ConstIf<FullCovariance, ReadOnlyMaps>>;
 
     // sub-vector, sub-matrix single items
     using Coefficients
         = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags, MaxSize, 1>;
     using Covariance = Eigen::
         Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags, MaxSize, MaxSize>;
-    using CoefficientsConstMap = Eigen::Map<const Coefficients>;
+    using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
     // TODO can we determine the pointer alignment at compile time?
-    using CovarianceConstMap = Eigen::
-        Map<const Covariance, Eigen::Unaligned, Eigen::Stride<MaxSize, 1>>;
+    using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>,
+                                     Eigen::Unaligned,
+                                     Eigen::Stride<MaxSize, 1>>;
   };
   struct PointData
   {
@@ -96,14 +104,14 @@ class LocalTrajectory;
 class LocalTrajectoryPoint
 {
 public:
-  using FullParameters  = detail_lt::Types<8>::FullCoefficientsConstMap;
-  using FullCovariance  = detail_lt::Types<8>::FullCovarianceConstMap;
-  using FullMeasurement = detail_lt::Types<2>::FullCoefficientsConstMap;
-  using FullMeasurementCovariance = detail_lt::Types<2>::FullCovarianceConstMap;
-  using Parameters                = detail_lt::Types<8>::CoefficientsConstMap;
-  using Covariance                = detail_lt::Types<8>::CovarianceConstMap;
-  using Measurement               = detail_lt::Types<2>::CoefficientsConstMap;
-  using MeasurementCovariance     = detail_lt::Types<2>::CovarianceConstMap;
+  using FullParameters            = detail_lt::Types<8>::FullCoefficientsMap;
+  using FullCovariance            = detail_lt::Types<8>::FullCovarianceMap;
+  using FullMeasurement           = detail_lt::Types<2>::FullCoefficientsMap;
+  using FullMeasurementCovariance = detail_lt::Types<2>::FullCovarianceMap;
+  using Parameters                = detail_lt::Types<8>::CoefficientsMap;
+  using Covariance                = detail_lt::Types<8>::CovarianceMap;
+  using Measurement               = detail_lt::Types<2>::CoefficientsMap;
+  using MeasurementCovariance     = detail_lt::Types<2>::CovarianceMap;
 
   size_t
   index() const
