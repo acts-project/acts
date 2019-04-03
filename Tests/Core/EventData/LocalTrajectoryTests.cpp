@@ -51,13 +51,19 @@ namespace Test {
     auto i2b = lt.addPoint(make_params(), i1b);
 
     // print each trajectory component
-    auto print = [](const LocalTrajectoryPoint& p) {
+    auto print = [](auto p) {
       cout << "  point " << p.index() << endl;
+      cout << "     params " << p.parameters().transpose() << endl;
     };
     cout << "trajectory starting at " << i2a << endl;
-    lt.traverseBackward(i2a, print);
+    lt.visitBackwards(i2a, print);
     cout << "trajectory starting at " << i2b << endl;
-    lt.traverseBackward(i2b, print);
+    lt.visitBackwards(i2b, print);
+
+    // modify elements of the trajectory
+    lt.applyBackwards(i2b, [](auto p) { p.fullParameters().setRandom(); });
+    cout << "modified trajectory starting at " << i2b << endl;
+    lt.visitBackwards(i2b, print);
 
     // print full/effective parameters/covariance for an example point
     const auto& p = lt.getPoint(i1b);

@@ -17,6 +17,9 @@
 #include "Acts/EventData/TrackParametersBase.hpp"
 
 namespace Acts {
+
+class LocalTrajectory;
+
 namespace detail_lt {
   /// wrapper for a dynamic Eigen type that adds support for automatic growth
   ///
@@ -96,63 +99,63 @@ namespace detail_lt {
     uint8_t  nparams   = 0;
     uint8_t  nmeas     = 0;
   };
+  /// Proxy object to access a single point on the trajectory.
+  template <bool ReadOnly>
+  class LocalTrajectoryPoint
+  {
+  public:
+    using FullParameters  = typename Types<8, ReadOnly>::FullCoefficientsMap;
+    using FullCovariance  = typename Types<8, ReadOnly>::FullCovarianceMap;
+    using FullMeasurement = typename Types<2, ReadOnly>::FullCoefficientsMap;
+    using FullMeasurementCovariance =
+        typename Types<2, ReadOnly>::FullCovarianceMap;
+    using Parameters            = typename Types<8, ReadOnly>::CoefficientsMap;
+    using Covariance            = typename Types<8, ReadOnly>::CovarianceMap;
+    using Measurement           = typename Types<2, ReadOnly>::CoefficientsMap;
+    using MeasurementCovariance = typename Types<2, ReadOnly>::CovarianceMap;
+
+    size_t
+    index() const
+    {
+      return m_index;
+    }
+
+    FullParameters
+    fullParameters() const;
+    FullCovariance
+    fullCovariance() const;
+    FullMeasurement
+    fullMeasurement() const;
+    FullMeasurementCovariance
+    fullMeasurementCovariance() const;
+
+    Parameters
+    parameters() const;
+    Covariance
+    covariance() const;
+    Measurement
+    measurement() const;
+    MeasurementCovariance
+    measurementCovariance() const;
+
+    /// Check if the point has an associated measurement.
+    bool
+    hasMeasurement() const;
+
+  private:
+    // Private since it can only be created by the trajectory.
+    LocalTrajectoryPoint(ConstIf<LocalTrajectory, ReadOnly>& trajectory,
+                         size_t                              index)
+      : m_traj(trajectory), m_index(index)
+    {
+    }
+
+    ConstIf<LocalTrajectory, ReadOnly>& m_traj;
+    size_t                              m_index;
+
+    friend class Acts::LocalTrajectory;
+  };
 }  // namespace detail_lt
-
-class LocalTrajectory;
-
-/// Proxy object to access a single point on the trajectory.
-class LocalTrajectoryPoint
-{
-public:
-  using FullParameters            = detail_lt::Types<8>::FullCoefficientsMap;
-  using FullCovariance            = detail_lt::Types<8>::FullCovarianceMap;
-  using FullMeasurement           = detail_lt::Types<2>::FullCoefficientsMap;
-  using FullMeasurementCovariance = detail_lt::Types<2>::FullCovarianceMap;
-  using Parameters                = detail_lt::Types<8>::CoefficientsMap;
-  using Covariance                = detail_lt::Types<8>::CovarianceMap;
-  using Measurement               = detail_lt::Types<2>::CoefficientsMap;
-  using MeasurementCovariance     = detail_lt::Types<2>::CovarianceMap;
-
-  size_t
-  index() const
-  {
-    return m_index;
-  }
-
-  FullParameters
-  fullParameters() const;
-  FullCovariance
-  fullCovariance() const;
-  FullMeasurement
-  fullMeasurement() const;
-  FullMeasurementCovariance
-  fullMeasurementCovariance() const;
-
-  Parameters
-  parameters() const;
-  Covariance
-  covariance() const;
-  Measurement
-  measurement() const;
-  MeasurementCovariance
-  measurementCovariance() const;
-
-  /// Check if the point has an associated measurement.
-  bool
-  hasMeasurement() const;
-
-private:
-  // Private since it can only be created by the trajectory.
-  LocalTrajectoryPoint(const LocalTrajectory& trajectory, size_t index)
-    : m_traj(trajectory), m_index(index)
-  {
-  }
-
-  const LocalTrajectory& m_traj;
-  size_t                 m_index;
-
-  friend class LocalTrajectory;
-};
 
 /// Store local states, covariances, measurements along a trajectory.
 ///
@@ -165,6 +168,9 @@ private:
 class LocalTrajectory
 {
 public:
+  using ConstLocalPoint = detail_lt::LocalTrajectoryPoint<true>;
+  using LocalPoint      = detail_lt::LocalTrajectoryPoint<false>;
+
   /// Create an empty trajectory.
   LocalTrajectory() = default;
 
@@ -175,20 +181,36 @@ public:
   size_t
   addPoint(const TrackParametersBase& trackParameters,
            size_t                     previous = SIZE_MAX);
-  /// Access a point on the trajectory by index.
-  LocalTrajectoryPoint
+  /// Access a read-only point on the trajectory by index.
+  ConstLocalPoint
   getPoint(size_t index) const
   {
     return {*this, index};
   }
+  /// Access a writable point on the trajectory by index.
+  LocalPoint
+  getPoint(size_t index)
+  {
+    return {*this, index};
+  }
 
-  /// Visit all previous trajectory points starting from a given endpoint
+  /// Visit all previous points starting at a given endpoint.
   ///
-  /// @param endPoint  index of the last track point in the trajectory
-  /// @param visit     Functor to be called w/ each track point
-  template <typename Visitor>
+  /// @param endPoint  index of the last track point
+  /// @param callable  non-modifying functor to be called with each point
+  template <typename F>
   void
-  traverseBackward(size_t endpoint, Visitor visit) const;
+  visitBackwards(size_t endpoint, F&& callable) const;
+  /// Apply a function to all previous points starting at a given endpoint.
+  ///
+  /// @param endPoint  index of the last track point
+  /// @param callable  modifying functor to be called with each point
+  ///
+  /// @warning If the trajectory contains multiple components with common
+  ///          points, this can have an impact on the other components.
+  template <typename F>
+  void
+  applyBackwards(size_t endpoint, F&& callable);
 
 private:
   std::vector<detail_lt::PointData>        m_points;
@@ -197,79 +219,92 @@ private:
   detail_lt::Types<2>::StorageCoefficients m_meas;
   detail_lt::Types<2>::StorageCovariance   m_measCov;
 
-  friend class LocalTrajectoryPoint;
+  friend class detail_lt::LocalTrajectoryPoint<true>;
+  friend class detail_lt::LocalTrajectoryPoint<false>;
 };
 
 // implementations
 
-inline LocalTrajectoryPoint::FullParameters
-LocalTrajectoryPoint::fullParameters() const
-{
-  const auto& point = m_traj.m_points[m_index];
-  return LocalTrajectoryPoint::FullParameters(
-      m_traj.m_params.data.col(point.iparams).data());
-}
+namespace detail_lt {
+  template <bool ReadOnly>
+  inline typename LocalTrajectoryPoint<ReadOnly>::FullParameters
+  LocalTrajectoryPoint<ReadOnly>::fullParameters() const
+  {
+    const auto& point = m_traj.m_points[m_index];
+    return LocalTrajectoryPoint<ReadOnly>::FullParameters(
+        m_traj.m_params.data.col(point.iparams).data());
+  }
 
-inline LocalTrajectoryPoint::FullCovariance
-LocalTrajectoryPoint::fullCovariance() const
-{
-  const auto& point = m_traj.m_points[m_index];
-  return LocalTrajectoryPoint::FullCovariance(
-      m_traj.m_cov.data.col(point.iparams).data());
-}
+  template <bool ReadOnly>
+  inline typename LocalTrajectoryPoint<ReadOnly>::FullCovariance
+  LocalTrajectoryPoint<ReadOnly>::fullCovariance() const
+  {
+    const auto& point = m_traj.m_points[m_index];
+    return LocalTrajectoryPoint<ReadOnly>::FullCovariance(
+        m_traj.m_cov.data.col(point.iparams).data());
+  }
 
-inline LocalTrajectoryPoint::FullMeasurement
-LocalTrajectoryPoint::fullMeasurement() const
-{
-  const auto& point = m_traj.m_points[m_index];
-  return LocalTrajectoryPoint::FullMeasurement(
-      m_traj.m_meas.data.col(point.imeas).data());
-}
+  template <bool ReadOnly>
+  inline typename LocalTrajectoryPoint<ReadOnly>::FullMeasurement
+  LocalTrajectoryPoint<ReadOnly>::fullMeasurement() const
+  {
+    const auto& point = m_traj.m_points[m_index];
+    return LocalTrajectoryPoint<ReadOnly>::FullMeasurement(
+        m_traj.m_meas.data.col(point.imeas).data());
+  }
 
-inline LocalTrajectoryPoint::FullMeasurementCovariance
-LocalTrajectoryPoint::fullMeasurementCovariance() const
-{
-  const auto& point = m_traj.m_points[m_index];
-  return LocalTrajectoryPoint::FullMeasurementCovariance(
-      m_traj.m_measCov.data.col(point.imeas).data());
-}
+  template <bool ReadOnly>
+  inline typename LocalTrajectoryPoint<ReadOnly>::FullMeasurementCovariance
+  LocalTrajectoryPoint<ReadOnly>::fullMeasurementCovariance() const
+  {
+    const auto& point = m_traj.m_points[m_index];
+    return LocalTrajectoryPoint<ReadOnly>::FullMeasurementCovariance(
+        m_traj.m_measCov.data.col(point.imeas).data());
+  }
 
-inline LocalTrajectoryPoint::Parameters
-LocalTrajectoryPoint::parameters() const
-{
-  const auto& point = m_traj.m_points[m_index];
-  return {m_traj.m_params.data.col(point.iparams).data(), point.nparams};
-}
+  template <bool ReadOnly>
+  inline typename LocalTrajectoryPoint<ReadOnly>::Parameters
+  LocalTrajectoryPoint<ReadOnly>::parameters() const
+  {
+    const auto& point = m_traj.m_points[m_index];
+    return {m_traj.m_params.data.col(point.iparams).data(), point.nparams};
+  }
 
-inline LocalTrajectoryPoint::Covariance
-LocalTrajectoryPoint::covariance() const
-{
-  const auto& point = m_traj.m_points[m_index];
-  return {m_traj.m_cov.data.col(point.iparams).data(),
-          point.nparams,
-          point.nparams};
-}
+  template <bool ReadOnly>
+  inline typename LocalTrajectoryPoint<ReadOnly>::Covariance
+  LocalTrajectoryPoint<ReadOnly>::covariance() const
+  {
+    const auto& point = m_traj.m_points[m_index];
+    return {m_traj.m_cov.data.col(point.iparams).data(),
+            point.nparams,
+            point.nparams};
+  }
 
-inline LocalTrajectoryPoint::Measurement
-LocalTrajectoryPoint::measurement() const
-{
-  const auto& point = m_traj.m_points[m_index];
-  return {m_traj.m_meas.data.col(point.imeas).data(), point.nmeas};
-}
+  template <bool ReadOnly>
+  inline typename LocalTrajectoryPoint<ReadOnly>::Measurement
+  LocalTrajectoryPoint<ReadOnly>::measurement() const
+  {
+    const auto& point = m_traj.m_points[m_index];
+    return {m_traj.m_meas.data.col(point.imeas).data(), point.nmeas};
+  }
 
-inline LocalTrajectoryPoint::MeasurementCovariance
-LocalTrajectoryPoint::measurementCovariance() const
-{
-  const auto& point = m_traj.m_points[m_index];
-  return {
-      m_traj.m_measCov.data.col(point.imeas).data(), point.nmeas, point.nmeas};
-}
+  template <bool ReadOnly>
+  inline typename LocalTrajectoryPoint<ReadOnly>::MeasurementCovariance
+  LocalTrajectoryPoint<ReadOnly>::measurementCovariance() const
+  {
+    const auto& point = m_traj.m_points[m_index];
+    return {m_traj.m_measCov.data.col(point.imeas).data(),
+            point.nmeas,
+            point.nmeas};
+  }
 
-inline bool
-LocalTrajectoryPoint::hasMeasurement() const
-{
-  return m_traj.m_points[m_index].imeas != detail_lt::PointData::kInvalid;
-}
+  template <bool ReadOnly>
+  inline bool
+  LocalTrajectoryPoint<ReadOnly>::hasMeasurement() const
+  {
+    return m_traj.m_points[m_index].imeas != detail_lt::PointData::kInvalid;
+  }
+}  // namespace detail_lt
 
 inline size_t
 LocalTrajectory::addPoint(const TrackParametersBase& trackParameters,
@@ -301,17 +336,26 @@ LocalTrajectory::addPoint(const TrackParametersBase& trackParameters,
   return m_points.size() - 1;
 }
 
-template <typename Visitor>
+template <typename F>
 void
-LocalTrajectory::traverseBackward(size_t endpoint, Visitor visit) const
+LocalTrajectory::visitBackwards(size_t endpoint, F&& callable) const
 {
-  if (m_points.size() <= endpoint) {
-    // TODO to fail or not to fail here?
-    return;
-  }
-  // TODO check input valididty
   while (true) {
-    visit(LocalTrajectoryPoint(*this, endpoint));
+    callable(getPoint(endpoint));
+    // this point has no parent and ends the trajectory
+    if (m_points[endpoint].iprevious == detail_lt::PointData::kInvalid) {
+      break;
+    }
+    endpoint = m_points[endpoint].iprevious;
+  }
+}
+
+template <typename F>
+void
+LocalTrajectory::applyBackwards(size_t endpoint, F&& callable)
+{
+  while (true) {
+    callable(getPoint(endpoint));
     // this point has no parent and ends the trajectory
     if (m_points[endpoint].iprevious == detail_lt::PointData::kInvalid) {
       break;
