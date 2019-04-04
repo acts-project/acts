@@ -18,7 +18,9 @@
 
 namespace Acts {
 
+// forward declarations
 class MultiTrajectory;
+class Surface;
 
 namespace detail_lt {
   /// Either type T or const T depending on the boolean.
@@ -80,10 +82,11 @@ namespace detail_lt {
   {
     static constexpr uint16_t kInvalid = UINT16_MAX;
 
-    uint16_t iprevious = kInvalid;
-    uint16_t iparams   = kInvalid;
-    uint16_t imeas     = kInvalid;
-    uint16_t nmeas     = 0;
+    const Surface& surface;
+    uint16_t       iprevious = kInvalid;
+    uint16_t       iparams   = kInvalid;
+    uint16_t       imeas     = kInvalid;
+    uint16_t       nmeas     = 0;
   };
   /// Proxy object to access a single point on the trajectory.
   ///
@@ -104,6 +107,13 @@ namespace detail_lt {
     index() const
     {
       return m_istate;
+    }
+
+    /// Reference surface.
+    const Surface&
+    referenceSurface() const
+    {
+      return m_data.surface;
     }
 
     /// Track parameters vector.
@@ -281,7 +291,7 @@ MultiTrajectory::addPoint(const TrackParametersBase& trackParameters,
     CovMap(m_cov.col(iparams).data()).topLeftCorner<nparams, nparams>() = *cov;
   }
 
-  detail_lt::IndexData p;
+  detail_lt::IndexData p = {trackParameters.referenceSurface()};
   if (iprevious != SIZE_MAX) { p.iprevious = static_cast<uint16_t>(iprevious); }
   p.iparams = iparams;
   m_index.push_back(std::move(p));
