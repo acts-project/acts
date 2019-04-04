@@ -39,11 +39,11 @@ namespace Test {
     // Build a material cell
     std::array<double, dim> lowerLeft{{0., 0.}};
     std::array<double, dim> upperRight{{1., 1.}};
-    ActsVectorF<5> mat;
+    ActsVectorF<5>          mat;
     mat << 1, 2, 3, 4, 5;
     std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
 
-    InterpolatedMaterialMap<grid_t>::MaterialCell materialCell(
+    MaterialMapper<grid_t>::MaterialCell materialCell(
         trafoGlobalToLocal, lowerLeft, upperRight, matArray);
 
     // Test InterpolatedMaterialMap::MaterialCell<DIM>::isInside method
@@ -74,14 +74,13 @@ namespace Test {
     for (size_t i = 0; i < grid.size(); i++) {
       grid.at(i) = mat;
     }
-    InterpolatedMaterialMap<grid_t>::MaterialMapper matMap(trafoGlobalToLocal,
-                                                           grid);
+    MaterialMapper<grid_t> matMap(trafoGlobalToLocal, grid);
 
     // Test Material getter
     CHECK_CLOSE_REL(matMap.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
 
     // Test the MaterialCell getter
-    InterpolatedMaterialMap<grid_t>::MaterialCell matCell
+    MaterialMapper<grid_t>::MaterialCell matCell
         = matMap.getMaterialCell({0.5, 0.5, 0.5});
     CHECK_CLOSE_REL(matCell.getMaterial({0.5, 0.5, 0.5}), Material(mat), 1e-4);
 
@@ -135,9 +134,8 @@ namespace Test {
     for (size_t i = 0; i < grid.size(); i++) {
       grid.at(i) = mat;
     }
-    InterpolatedMaterialMap<grid_t>::MaterialMapper matMap(trafoGlobalToLocal,
-                                                           grid);
-    InterpolatedMaterialMap<grid_t> ipolMatMap(matMap);
+    MaterialMapper<grid_t>  matMap(trafoGlobalToLocal, grid);
+    InterpolatedMaterialMap ipolMatMap(matMap);
 
     // Test the material getter
     CHECK_CLOSE_REL(
@@ -149,11 +147,11 @@ namespace Test {
     std::array<double, dim>       upperRight{{1., 1.}};
     std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
 
-    InterpolatedMaterialMap<grid_t>::MaterialCell materialCell(
+    MaterialMapper<grid_t>::MaterialCell materialCell(
         trafoGlobalToLocal, lowerLeft, upperRight, matArray);
-    InterpolatedMaterialMap<grid_t>::Cache cache;
-    cache.MaterialCell = materialCell;
-    cache.initialized  = true;
+    InterpolatedMaterialMap<MaterialMapper<grid_t>>::Cache cache;
+    cache.matCell     = materialCell;
+    cache.initialized = true;
     CHECK_CLOSE_REL(ipolMatMap.getMaterial(Vector3D(0.5, 0.5, 0.5), cache),
                     Material(mat),
                     1e-4);

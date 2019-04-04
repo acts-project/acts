@@ -10,36 +10,18 @@
 
 #include <functional>
 #include "Acts/Material/Material.hpp"
-#include "Acts/Material/concept/AnyMaterialLookup.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
 
 namespace Acts {
 
-/// @ingroup Material
-/// @brief Interpolate material classification values from material values on a
-/// given grid
+/// @brief Struct for mapping global 3D positions to material values
 ///
-/// This class implements a material service which is initialized by a
-/// material map defined by:
-/// - a list of material values on a regular grid in some n-Dimensional space,
-/// - a transformation of global 3D coordinates onto this n-Dimensional
-/// space.
-/// - a transformation of local n-Dimensional material coordinates into
-/// global (cartesian) 3D coordinates
-///
-/// The material value for a given global position is then determined by:
-/// - mapping the position onto the grid,
-/// - looking up the material classification values on the closest grid points,
-/// - doing a linear interpolation of these values.
-/// @warning Each classification number of the material is interpolated
-/// independently and thus does not consider any correlations that exists
-/// between these values. This might work out since the used material is already
-/// a mean of the materials in a certain bin and can therewith be treated as a
-/// collection of numbers.
-/// @tparam G Type of the grid
+/// Global 3D positions are transformed into a @c DIM_POS Dimensional vector
+/// which is used to look up the material classification value in the
+/// underlying material map.
 template <typename G>
-class InterpolatedMaterialMap final
+struct MaterialMapper
 {
 public:
   using Grid_t                    = G;
@@ -68,9 +50,9 @@ public:
     /// box corners sorted in the canonical order defined in Acts::interpolate
     MaterialCell(
         std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
-        std::array<double, DIM_POS>   lowerLeft,
-        std::array<double, DIM_POS>   upperRight,
-        std::array<ActsVectorF<5>, N> materialValues)
+        std::array<double, DIM_POS>                          lowerLeft,
+        std::array<double, DIM_POS>                          upperRight,
+        std::array<ActsVectorF<5>, N>                        materialValues)
       : m_transformPos(std::move(transformPos))
       , m_lowerLeft(std::move(lowerLeft))
       , m_upperRight(std::move(upperRight))
@@ -129,131 +111,149 @@ public:
     std::array<ActsVectorF<5>, N> m_materialValues;
   };
 
-  /// @brief Struct for mapping global 3D positions to material values
+  /// @brief Default constructor
   ///
-  /// Global 3D positions are transformed into a @c DIM_POS Dimensional vector
-  /// which is used to look up the material classification value in the
-  /// underlying material map.
-  struct MaterialMapper
+  /// @param [in] transformPos Mapping of global 3D coordinates (cartesian)
+  /// onto grid space
+  /// @param [in] grid Grid storing material classification values
+  MaterialMapper(
+      std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
+      Grid_t                                               grid)
+    : m_transformPos(std::move(transformPos)), m_grid(std::move(grid))
   {
-  public:
-    /// @brief Default constructor
-    ///
-    /// @param [in] transformPos Mapping of global 3D coordinates (cartesian)
-    /// onto grid space
-    /// @param [in] grid Grid storing material classification values
-    MaterialMapper(
-        std::function<ActsVectorD<DIM_POS>(const Vector3D&)> transformPos,
-        Grid_t                                               grid)
-      : m_transformPos(std::move(transformPos)), m_grid(std::move(grid))
-    {
+  }
+
+  /// @brief Retrieve material at given position
+  ///
+  /// @param [in] position Global 3D position
+  /// @return Material at the given position
+  ///
+  /// @pre The given @c position must lie within the range of the underlying
+  /// map.
+  Material
+  getMaterial(const Vector3D& position) const
+  {
+    return Material(m_grid.interpolate(m_transformPos(position)));
+  }
+
+  /// @brief Retrieve material cell for given position
+  ///
+  /// @param [in] position Global 3D position
+  /// @return material cell containing the given global position
+  ///
+  /// @pre The given @c position must lie within the range of the underlying
+  /// map.
+  MaterialCell
+  getMaterialCell(const Vector3D& position) const
+  {
+    const auto& gridPosition = m_transformPos(position);
+    size_t      bin          = m_grid.getGlobalBinIndex(gridPosition);
+    const auto& indices      = m_grid.getLocalBinIndices(bin);
+    const auto& lowerLeft    = m_grid.getLowerLeftBinEdge(indices);
+    const auto& upperRight   = m_grid.getUpperRightBinEdge(indices);
+
+    // Loop through all corner points
+    constexpr size_t                     nCorners = 1 << DIM_POS;
+    std::array<ActsVectorF<5>, nCorners> neighbors;
+    const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
+
+    size_t i = 0;
+    for (size_t index : cornerIndices) {
+      neighbors.at(i++) = m_grid.at(index);
     }
 
-    /// @brief Retrieve material at given position
-    ///
-    /// @param [in] position Global 3D position
-    /// @return Material at the given position
-    ///
-    /// @pre The given @c position must lie within the range of the underlying
-    /// map.
-    Material
-    getMaterial(const Vector3D& position) const
-    {
-      return Material(m_grid.interpolate(m_transformPos(position)));
-    }
+    return MaterialCell(
+        m_transformPos, lowerLeft, upperRight, std::move(neighbors));
+  }
 
-    /// @brief Retrieve material cell for given position
-    ///
-    /// @param [in] position Global 3D position
-    /// @return material cell containing the given global position
-    ///
-    /// @pre The given @c position must lie within the range of the underlying
-    /// map.
-    MaterialCell
-    getMaterialCell(const Vector3D& position) const
-    {
-      const auto& gridPosition = m_transformPos(position);
-      size_t      bin          = m_grid.getGlobalBinIndex(gridPosition);
-      const auto& indices      = m_grid.getLocalBinIndices(bin);
-      const auto& lowerLeft    = m_grid.getLowerLeftBinEdge(indices);
-      const auto& upperRight   = m_grid.getUpperRightBinEdge(indices);
+  /// @brief Get the number of bins for all axes of the map
+  ///
+  /// @return Vector returning number of bins for all map axes
+  std::vector<size_t>
+  getNBins() const
+  {
+    auto nBinsArray = m_grid.getNBins();
+    return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
+  }
 
-      // Loop through all corner points
-      constexpr size_t nCorners = 1 << DIM_POS;
-      std::array<ActsVectorF<5>, nCorners> neighbors;
-      const auto& cornerIndices = m_grid.closestPointsIndices(gridPosition);
+  /// @brief Get the minimum value of all axes of the map
+  ///
+  /// @return Vector returning the minima of all map axes
+  std::vector<double>
+  getMin() const
+  {
+    auto minArray = m_grid.getMin();
+    return std::vector<double>(minArray.begin(), minArray.end());
+  }
 
-      size_t i = 0;
-      for (size_t index : cornerIndices) {
-        neighbors.at(i++) = m_grid.at(index);
-      }
+  /// @brief Get the maximum value of all axes of the map
+  ///
+  /// @return Vector returning the maxima of all map axes
+  std::vector<double>
+  getMax() const
+  {
+    auto maxArray = m_grid.getMax();
+    return std::vector<double>(maxArray.begin(), maxArray.end());
+  }
 
-      return MaterialCell(
-          m_transformPos, lowerLeft, upperRight, std::move(neighbors));
-    }
+  /// @brief Check whether given 3D position is inside look-up domain
+  ///
+  /// @param [in] position Global 3D position
+  /// @return @c true if position is inside the defined look-up grid,
+  ///         otherwise @c false
+  bool
+  isInside(const Vector3D& position) const
+  {
+    return m_grid.isInside(m_transformPos(position));
+  }
 
-    /// @brief Get the number of bins for all axes of the map
-    ///
-    /// @return Vector returning number of bins for all map axes
-    std::vector<size_t>
-    getNBins() const
-    {
-      auto nBinsArray = m_grid.getNBins();
-      return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
-    }
+  /// @brief Get a const reference on the underlying grid structure
+  ///
+  /// @return Grid reference
+  const Grid_t&
+  getGrid() const
+  {
+    return m_grid;
+  }
 
-    /// @brief Get the minimum value of all axes of the map
-    ///
-    /// @return Vector returning the minima of all map axes
-    std::vector<double>
-    getMin() const
-    {
-      auto minArray = m_grid.getMin();
-      return std::vector<double>(minArray.begin(), minArray.end());
-    }
+private:
+  /// Geometric transformation applied to global 3D positions
+  std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
+  /// Grid storing material values
+  Grid_t m_grid;
+};
 
-    /// @brief Get the maximum value of all axes of the map
-    ///
-    /// @return Vector returning the maxima of all map axes
-    std::vector<double>
-    getMax() const
-    {
-      auto maxArray = m_grid.getMax();
-      return std::vector<double>(maxArray.begin(), maxArray.end());
-    }
-
-    /// @brief Check whether given 3D position is inside look-up domain
-    ///
-    /// @param [in] position Global 3D position
-    /// @return @c true if position is inside the defined look-up grid,
-    ///         otherwise @c false
-    bool
-    isInside(const Vector3D& position) const
-    {
-      return m_grid.isInside(m_transformPos(position));
-    }
-
-    /// @brief Get a const reference on the underlying grid structure
-    ///
-    /// @return Grid reference
-    const Grid_t&
-    getGrid() const
-    {
-      return m_grid;
-    }
-
-  private:
-    /// Geometric transformation applied to global 3D positions
-    std::function<ActsVectorD<DIM_POS>(const Vector3D&)> m_transformPos;
-    /// Grid storing material values
-    Grid_t m_grid;
-  };
-
+/// @ingroup Material
+/// @brief Interpolate material classification values from material values on a
+/// given grid
+///
+/// This class implements a material service which is initialized by a
+/// material map defined by:
+/// - a list of material values on a regular grid in some n-Dimensional space,
+/// - a transformation of global 3D coordinates onto this n-Dimensional
+/// space.
+/// - a transformation of local n-Dimensional material coordinates into
+/// global (cartesian) 3D coordinates
+///
+/// The material value for a given global position is then determined by:
+/// - mapping the position onto the grid,
+/// - looking up the material classification values on the closest grid points,
+/// - doing a linear interpolation of these values.
+/// @warning Each classification number of the material is interpolated
+/// independently and thus does not consider any correlations that exists
+/// between these values. This might work out since the used material is already
+/// a mean of the materials in a certain bin and can therewith be treated as a
+/// collection of numbers.
+/// @tparam G Type of the grid
+template <typename Mapper_t>
+class InterpolatedMaterialMap final
+{
+public:
   /// @brief Temporary storage of a certain cell to improve material access
   struct Cache
   {
     /// Stored material cell
-    concept::AnyMaterialCell<> MaterialCell;
+    std::optional<typename Mapper_t::MaterialCell> matCell;
     /// Boolean statement if the cell is initialized
     bool initialized = false;
   };
@@ -261,10 +261,7 @@ public:
   /// @brief Create interpolated map
   ///
   /// @param [in] mapper Material map
-  InterpolatedMaterialMap(concept::AnyMaterialLookup<> mapper)
-    : m_mapper(std::move(mapper))
-  {
-  }
+  InterpolatedMaterialMap(Mapper_t& mapper) : m_mapper(std::move(mapper)) {}
 
   /// @brief Retrieve material
   ///
@@ -287,11 +284,11 @@ public:
   Material
   getMaterial(const Vector3D& position, Cache& cache) const
   {
-    if (!cache.initialized || !cache.MaterialCell.isInside(position)) {
-      cache.MaterialCell = getMaterialCell(position);
-      cache.initialized  = true;
+    if (!cache.initialized || !(*cache.matCell).isInside(position)) {
+      cache.matCell     = getMaterialCell(position);
+      cache.initialized = true;
     }
-    return cache.MaterialCell.getMaterial(position);
+    return (*cache.matCell).getMaterial(position);
   }
 
   /// @brief Retrieve material value & its "gradient"
@@ -330,7 +327,7 @@ public:
   /// @brief Convenience method to access underlying material mapper
   ///
   /// @return The material mapper
-  concept::AnyMaterialLookup<>
+  Mapper_t
   getMapper() const
   {
     return m_mapper;
@@ -354,7 +351,7 @@ private:
   ///
   /// @pre The given @c position must lie within the range of the underlying
   /// map.
-  concept::AnyMaterialCell<>
+  typename Mapper_t::MaterialCell
   getMaterialCell(const Vector3D& position) const
   {
     return m_mapper.getMaterialCell(position);
@@ -365,7 +362,6 @@ private:
   /// This object performs the mapping of the global 3D coordinates onto the
   /// material grid and the interpolation of the material component values on
   /// close-by grid points.
-  concept::AnyMaterialLookup<> m_mapper;
+  Mapper_t m_mapper;
 };
-
 }  // namespace Acts

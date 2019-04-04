@@ -174,7 +174,7 @@ public:
 
   /// @brief Access to all classification numbers of the material
   ActsVectorF<5>
-  decomposeIntoClassificationNumbers()
+  classificationNumbers()
   {
     ActsVectorF<5> numbers;
     numbers << X0(), L0(), A(), Z(), rho();
@@ -225,4 +225,4 @@ Material::operator!=(const Material& mat) const
 {
   return !operator==(mat);
 }
-}
+}  // namespace Acts

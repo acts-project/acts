@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 // clang-format off
-#define BOOST_TEST_MODULE bfield utils test
+#define BOOST_TEST_MODULE material utils test
 #include <boost/test/included/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
 // clang-format on
@@ -44,23 +44,16 @@ using namespace detail;
 
 namespace Test {
 
-  /// @brief This function assigns all material points to the fith bin.
-  ///
-  /// @return 5
-  Grid2D::index_t
-  mapToZero2D(const Vector3D& /*unused*/, const Grid2D& /*unused*/)
-  {
-    return {{0, 0}};
-  }
-
-  /// @brief This function assigns all material points to the fith bin.
-  ///
-  /// @return 25
-  Grid3D::index_t
-  mapToZero3D(const Vector3D& /*unused*/, const Grid3D& /*unused*/)
-  {
-    return {{0, 0, 0}};
-  }
+  using RecordedMaterial
+      = std::vector<std::pair<Acts::Material, Acts::Vector3D>>;
+  using EAxis = Acts::detail::EquidistantAxis;
+  using Grid2D
+      = Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
+  using Grid3D = Acts::detail::
+      Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis, EAxis>;
+  using MaterialGrid2D = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis>;
+  using MaterialGrid3D
+      = Acts::detail::Grid<Acts::ActsVectorF<5>, EAxis, EAxis, EAxis>;
 
   /// @brief This function assigns material to the 2D bin number that represents
   /// the local index of the first axis to the material point.
@@ -118,6 +111,12 @@ namespace Test {
     return {{index, 0, 0}};
   }
 
+  /// @brief Rough searcher for closest point
+  ///
+  /// @param [in] matPos Position of the material
+  /// @param [in] grid Grid that is used for the look-up
+  ///
+  /// @return Local grid point with the closest distance to @p matPos
   Grid3D::index_t
   mapMaterial3D(const Vector3D& matPos, const Grid3D& grid)
   {
@@ -147,6 +146,7 @@ namespace Test {
     return {{indexX, indexY, indexZ}};
   }
 
+  /// @brief Collector of material and position along propagation
   struct MaterialCollector
   {
     struct this_result
@@ -176,221 +176,67 @@ namespace Test {
   /// @brief Various test cases of the VolumeMaterialMapper functions
   BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_tests)
   {
+
     // Define some axes and grid points
-    std::vector<double> axis1 = {0., 1.};
-    std::vector<double> axis2 = {3., 4., 2.};
-    std::vector<double> axis3 = {5., 6., 7.};
+    std::array<double, 3> axis1 = {0., 1., 2.};
+    std::array<double, 3> axis2 = {2., 4., 3.};
+    std::array<double, 3> axis3 = {5., 6., 3.};
 
-    //
-    // Test block for createState
-    //
-    // Test that a 2D grid could be created
-    Grid2D grid2d = createGrid(axis1, axis2);
-    BOOST_CHECK_EQUAL(grid2d.getAxes().size(), 2);
-    // Test the number of bins
-    Grid2D::index_t nBins2d = grid2d.getNBins();
-    BOOST_CHECK_EQUAL(nBins2d[0], axis1.size());
-    BOOST_CHECK_EQUAL(nBins2d[1], axis2.size());
-    // Test the limits
-    Grid2D::point_t min2d = grid2d.getMin();
-    CHECK_CLOSE_ABS(min2d[0], axis1[0], 1e-4);
-    CHECK_CLOSE_REL(min2d[1], axis2[2], 1e-4);
-    Grid2D::point_t max2d = grid2d.getMax();
-    CHECK_CLOSE_REL(max2d[0], axis1[1] + 1, 1e-4);
-    CHECK_CLOSE_REL(max2d[1], axis2[1] + 1, 1e-4);
-
-    // And again for 3 axes
-    Grid3D grid3d = createGrid(axis1, axis2, axis3);
-    BOOST_CHECK_EQUAL(grid3d.getAxes().size(), 3);
-    // Test the number of bins
-    Grid3D::index_t nBins3d = grid3d.getNBins();
-    BOOST_CHECK_EQUAL(nBins3d[0], axis1.size());
-    BOOST_CHECK_EQUAL(nBins3d[1], axis2.size());
-    BOOST_CHECK_EQUAL(nBins3d[2], axis3.size());
-    // Test the limits
-    Grid3D::point_t min3d = grid3d.getMin();
-    CHECK_CLOSE_ABS(min3d[0], axis1[0], 1e-4);
-    CHECK_CLOSE_REL(min3d[1], axis2[2], 1e-4);
-    CHECK_CLOSE_REL(min3d[2], axis3[0], 1e-4);
-    Grid3D::point_t max3d = grid3d.getMax();
-    CHECK_CLOSE_REL(max3d[0], axis1[1] + 1, 1e-4);
-    CHECK_CLOSE_REL(max3d[1], axis2[1] + 1, 1e-4);
-    CHECK_CLOSE_REL(max3d[2], axis3[2] + 1, 1e-4);
-
-    //
-    // Test block for mapMaterialPoints in 2D
-    //
-    Material mat1(1., 2., 3., 4., 5.);
+    // Make some materials
     std::vector<std::pair<Material, Vector3D>> matRecord;
-    matRecord.push_back(std::make_pair(mat1, Vector3D(0., 0., 0.)));
+    Material                                   mat1(1., 2., 3., 4., 5.);
+    Material                                   mat2(6., 7., 8., 9., 10.);
 
-    // Check if material can be assigned by the function
-    MaterialGrid2D mgrid2d = mapMaterialPoints(grid2d, matRecord, mapToZero2D);
-    BOOST_CHECK_EQUAL(mgrid2d.getNBins()[0], nBins2d[0]);
-    BOOST_CHECK_EQUAL(mgrid2d.getNBins()[1], nBins2d[1]);
-    CHECK_CLOSE_ABS(mgrid2d.getMin()[0], min2d[0], 1e-4);
-    CHECK_CLOSE_REL(mgrid2d.getMin()[1], min2d[1], 1e-4);
-    CHECK_CLOSE_REL(mgrid2d.getMax()[0], max2d[0], 1e-4);
-    CHECK_CLOSE_REL(mgrid2d.getMax()[1], max2d[1], 1e-4);
-
-    CHECK_CLOSE_REL(grid2d.at((size_t)0).average(), mat1, 1e-4);
-    CHECK_CLOSE_REL(
-        mgrid2d.at((size_t)0), mat1.decomposeIntoClassificationNumbers(), 1e-4);
-
-    // Check that it was only assigned to a single bin
-    for (size_t i = 1; i < grid2d.size(); i++) {
-      BOOST_CHECK_EQUAL(
-          grid2d.at(i).average().decomposeIntoClassificationNumbers(),
-          Material().decomposeIntoClassificationNumbers());
-      BOOST_CHECK_EQUAL(mgrid2d.at(i),
-                        Material().decomposeIntoClassificationNumbers());
-    }
-
-    // Check if the assignment to a custom bin is possible
-    Material mat2(6., 7., 8., 9., 10.);
-    matRecord.clear();
-    matRecord.push_back(std::make_pair(mat2, Vector3D(0.4, 0., 0.)));
-    matRecord.push_back(std::make_pair(mat2, Vector3D(0.6, 0., 0.)));
-    mgrid2d = mapMaterialPoints(grid2d, matRecord, mapToBin2D);
-
-    // Check that the first element now has both materials
-    CHECK_CLOSE_REL(grid2d.at((size_t)0).average().X0(),
-                    0.5 * (mat1.X0() + mat2.X0()),
-                    1e-4);
-    CHECK_CLOSE_REL(grid2d.at((size_t)0).average().L0(),
-                    0.5 * (mat1.L0() + mat2.L0()),
-                    1e-4);
-    CHECK_CLOSE_REL(
-        grid2d.at((size_t)0).average().A(), 0.5 * (mat1.A() + mat2.A()), 1e-4);
-    CHECK_CLOSE_REL(
-        grid2d.at((size_t)0).average().Z(), 0.5 * (mat1.Z() + mat2.Z()), 1e-4);
-    CHECK_CLOSE_REL(grid2d.at((size_t)0).average().rho(),
-                    0.5 * (mat1.rho() + mat2.rho()),
-                    1e-4);
-    CHECK_CLOSE_REL(
-        grid2d.at((size_t)0).average().decomposeIntoClassificationNumbers(),
-        mgrid2d.at((size_t)0),
-        1e-4);
-    // Check that the second element has a single material
-    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().X0(), mat2.X0(), 1e-4);
-    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().L0(), mat2.L0(), 1e-4);
-    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().A(), mat2.A(), 1e-4);
-    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().Z(), mat2.Z(), 1e-4);
-    CHECK_CLOSE_REL(grid2d.at((size_t)5).average().rho(), mat2.rho(), 1e-4);
-
-    // Check that nothing was assigned to the other elements
-    for (size_t i = 1; i < grid2d.size(); i++) {
-      if (i == 5) {
-        continue;
-      }
-      BOOST_CHECK_EQUAL(
-          grid2d.at(i).average().decomposeIntoClassificationNumbers(),
-          Material().decomposeIntoClassificationNumbers());
-    }
+    Material       vacuum;
+    ActsVectorF<5> matMix;
+    matMix << 3.5, 4.5, 5.5, 6.5, 7.5;
 
     //
-    // Test block for mapMaterialPoints in 3D
-    //
-    matRecord.clear();
-    matRecord.push_back(std::make_pair(mat1, Vector3D(0., 0., 0.)));
-
-    // Check if material can be assigned by the function
-    MaterialGrid3D mgrid3d = mapMaterialPoints(grid3d, matRecord, mapToZero3D);
-    BOOST_CHECK_EQUAL(mgrid3d.getNBins()[0], nBins3d[0]);
-    BOOST_CHECK_EQUAL(mgrid3d.getNBins()[1], nBins3d[1]);
-    CHECK_CLOSE_ABS(mgrid3d.getMin()[0], min3d[0], 1e-4);
-    CHECK_CLOSE_REL(mgrid3d.getMin()[1], min3d[1], 1e-4);
-    CHECK_CLOSE_REL(mgrid3d.getMax()[0], max3d[0], 1e-4);
-    CHECK_CLOSE_REL(mgrid3d.getMax()[1], max3d[1], 1e-4);
-
-    CHECK_CLOSE_REL(grid3d.at((size_t)0).average(), mat1, 1e-4);
-    CHECK_CLOSE_REL(
-        mgrid3d.at((size_t)0), mat1.decomposeIntoClassificationNumbers(), 1e-4);
-
-    // Check that it was only assigned to a single bin
-    for (size_t i = 1; i < grid3d.size(); i++) {
-      BOOST_CHECK_EQUAL(
-          grid3d.at(i).average().decomposeIntoClassificationNumbers(),
-          Material().decomposeIntoClassificationNumbers());
-      BOOST_CHECK_EQUAL(mgrid3d.at(i),
-                        Material().decomposeIntoClassificationNumbers());
-    }
-
-    // Check if the assignment to a custom bin is possible
-    matRecord.clear();
-    matRecord.push_back(std::make_pair(mat2, Vector3D(0.4, 0., 0.)));
-    matRecord.push_back(std::make_pair(mat2, Vector3D(0.6, 0., 0.)));
-    mgrid3d = mapMaterialPoints(grid3d, matRecord, mapToBin3D);
-
-    // Check that the first element now has both materials
-    CHECK_CLOSE_REL(grid3d.at((size_t)0).average().X0(),
-                    0.5 * (mat1.X0() + mat2.X0()),
-                    1e-4);
-    CHECK_CLOSE_REL(grid3d.at((size_t)0).average().L0(),
-                    0.5 * (mat1.L0() + mat2.L0()),
-                    1e-4);
-    CHECK_CLOSE_REL(
-        grid3d.at((size_t)0).average().A(), 0.5 * (mat1.A() + mat2.A()), 1e-4);
-    CHECK_CLOSE_REL(
-        grid3d.at((size_t)0).average().Z(), 0.5 * (mat1.Z() + mat2.Z()), 1e-4);
-    CHECK_CLOSE_REL(grid3d.at((size_t)0).average().rho(),
-                    0.5 * (mat1.rho() + mat2.rho()),
-                    1e-4);
-    CHECK_CLOSE_REL(
-        grid3d.at((size_t)0).average().decomposeIntoClassificationNumbers(),
-        mgrid3d.at((size_t)0),
-        1e-4);
-    // Check that the second element has a single material
-    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().X0(), mat2.X0(), 1e-4);
-    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().L0(), mat2.L0(), 1e-4);
-    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().A(), mat2.A(), 1e-4);
-    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().Z(), mat2.Z(), 1e-4);
-    CHECK_CLOSE_REL(grid3d.at((size_t)25).average().rho(), mat2.rho(), 1e-4);
-
-    // Check that nothing was assigned to the other elements
-    for (size_t i = 1; i < grid3d.size(); i++) {
-      if (i == 25) {
-        continue;
-      }
-      BOOST_CHECK_EQUAL(
-          grid3d.at(i).average().decomposeIntoClassificationNumbers(),
-          Material().decomposeIntoClassificationNumbers());
-    }
-
-    //
-    // Test the full production chain in 2D
+    // Test the production chain in 2D
     //
     matRecord.clear();
     matRecord.push_back(std::make_pair(mat1, Vector3D(0., 0., 0.)));
     matRecord.push_back(std::make_pair(mat2, Vector3D(0.4, 0., 0.)));
     matRecord.push_back(std::make_pair(mat2, Vector3D(0.6, 0., 0.)));
-    auto           tmpGrid2D = createGrid(axis1, axis2);
-    MaterialGrid2D mgrid2dStepChain
-        = mapMaterialPoints(tmpGrid2D, matRecord, mapToBin2D);
-    MaterialGrid2D mgrid2dFullChain
+
+    MaterialGrid2D mgrid2d
         = createMaterialGrid(axis1, axis2, matRecord, mapToBin2D);
 
     // Test sizes
-    BOOST_CHECK_EQUAL(mgrid2dFullChain.size(), mgrid2dStepChain.size());
-    for (size_t index = 0; index < mgrid2dFullChain.size(); index++) {
-      // Both should contain the same data
-      BOOST_CHECK_EQUAL(mgrid2dFullChain.at(index), mgrid2dStepChain.at(index));
+    BOOST_CHECK_EQUAL(mgrid2d.size(), (axis1[2] + 2) * (axis2[2] + 2));
+    for (size_t index = 0; index < mgrid2d.size(); index++) {
+      // Check the contained data
+      if (index == 0) {
+        BOOST_CHECK_EQUAL(mgrid2d.at(index), matMix);
+        continue;
+      }
+      if (index == 5) {
+        BOOST_CHECK_EQUAL(mgrid2d.at(index), mat2.classificationNumbers());
+        continue;
+      }
+      BOOST_CHECK_EQUAL(mgrid2d.at(index), vacuum.classificationNumbers());
     }
 
     //
-    // Test the full production chain in 3D
+    // Test the production chain in 3D
     //
-    auto           tmpGrid3D = createGrid(axis1, axis2, axis3);
-    MaterialGrid3D mgrid3dStepChain
-        = mapMaterialPoints(tmpGrid3D, matRecord, mapToBin3D);
-    MaterialGrid3D mgrid3dFullChain
+    MaterialGrid3D mgrid3d
         = createMaterialGrid(axis1, axis2, axis3, matRecord, mapToBin3D);
 
     // Test sizes
-    BOOST_CHECK_EQUAL(mgrid3dFullChain.size(), mgrid3dStepChain.size());
-    for (size_t index = 0; index < mgrid3dFullChain.size(); index++) {
-      // Both should contain the same data
-      BOOST_CHECK_EQUAL(mgrid3dFullChain.at(index), mgrid3dStepChain.at(index));
+    BOOST_CHECK_EQUAL(mgrid3d.size(),
+                      (axis1[2] + 2) * (axis2[2] + 2) * (axis3[2] + 2));
+    for (size_t index = 0; index < mgrid3d.size(); index++) {
+      // Check the contained data
+      if (index == 0) {
+        BOOST_CHECK_EQUAL(mgrid3d.at(index), matMix);
+        continue;
+      }
+      if (index == 25) {
+        BOOST_CHECK_EQUAL(mgrid3d.at(index), mat2.classificationNumbers());
+        continue;
+      }
+      BOOST_CHECK_EQUAL(mgrid3d.at(index), vacuum.classificationNumbers());
     }
   }
 
@@ -433,8 +279,6 @@ namespace Test {
     // Build a detector
     CuboidVolumeBuilder             cvb(cfg);
     TrackingGeometryBuilder::Config tgbCfg;
-    //~ tgbCfg.trackingVolumeBuilders.push_back(
-    //~ std::make_shared<const CuboidVolumeBuilder>(cvb));
     tgbCfg.trackingVolumeBuilders.push_back(
         [=](const auto& context, const auto& inner, const auto&) {
           return cvb.trackingVolume(context, inner, nullptr);
@@ -443,18 +287,9 @@ namespace Test {
     std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(gc);
 
     // Set up the grid axes
-    unsigned int        nGridPoints = 9;
-    std::vector<double> xAxis(nGridPoints + 1,
-                              3. * units::_m / (double)nGridPoints);
-    std::vector<double> yAxis(nGridPoints + 1,
-                              1. * units::_m / (double)nGridPoints);
-    std::vector<double> zAxis(nGridPoints + 1,
-                              1. * units::_m / (double)nGridPoints);
-    for (unsigned int i = 0; i <= nGridPoints; i++) {
-      xAxis[i] *= i;
-      yAxis[i] *= i;
-      zAxis[i] *= i;
-    }
+    std::array<double, 3> xAxis{0. * units::_m, 3. * units::_m, 7};
+    std::array<double, 3> yAxis{-0.5 * units::_m, 0.5 * units::_m, 7};
+    std::array<double, 3> zAxis{-0.5 * units::_m, 0.5 * units::_m, 7};
 
     // Set up a random engine for sampling material
     std::random_device               rd;
@@ -478,8 +313,8 @@ namespace Test {
         = createMaterialGrid(xAxis, yAxis, zAxis, matRecord, mapMaterial3D);
 
     // Construct a simple propagation through the detector
-    StraightLineStepper sls;
-    Navigator           nav(std::move(detector));
+    StraightLineStepper                        sls;
+    Navigator                                  nav(std::move(detector));
     Propagator<StraightLineStepper, Navigator> prop(sls, nav);
 
     // Set some start parameters
@@ -555,8 +390,7 @@ namespace Test {
     auto localToGlobalBin_xyz
         = [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
             return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2))
-                    + binsXYZ.at(1) * nBinsXYZ.at(2)
-                    + binsXYZ.at(2));
+                    + binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
           };
 
     // Create material mapper in xyz
@@ -591,14 +425,14 @@ namespace Test {
 
     // Check the value
     // in rz case material is phi symmetric (check radius)
-    CHECK_CLOSE_ABS(value0_rz.decomposeIntoClassificationNumbers(),
-                    mat0_rz.decomposeIntoClassificationNumbers(),
+    CHECK_CLOSE_ABS(value0_rz.classificationNumbers(),
+                    mat0_rz.classificationNumbers(),
                     1e-9);
-    CHECK_CLOSE_ABS(value1_rz.decomposeIntoClassificationNumbers(),
-                    mat1_rz.decomposeIntoClassificationNumbers(),
+    CHECK_CLOSE_ABS(value1_rz.classificationNumbers(),
+                    mat1_rz.classificationNumbers(),
                     1e-9);
-    CHECK_CLOSE_ABS(value2_rz.decomposeIntoClassificationNumbers(),
-                    mat2_rz.decomposeIntoClassificationNumbers(),
+    CHECK_CLOSE_ABS(value2_rz.classificationNumbers(),
+                    mat2_rz.classificationNumbers(),
                     1e-9);
 
     // Check if filled value is expected value in xyz
@@ -618,15 +452,15 @@ namespace Test {
 
     // Check the value
     // in xyz case material is phi symmetric (check radius)
-    CHECK_CLOSE_ABS(value0_xyz.decomposeIntoClassificationNumbers(),
-                    mat0_xyz.decomposeIntoClassificationNumbers(),
+    CHECK_CLOSE_ABS(value0_xyz.classificationNumbers(),
+                    mat0_xyz.classificationNumbers(),
                     1e-9);
-    CHECK_CLOSE_ABS(value1_xyz.decomposeIntoClassificationNumbers(),
-                    mat1_xyz.decomposeIntoClassificationNumbers(),
+    CHECK_CLOSE_ABS(value1_xyz.classificationNumbers(),
+                    mat1_xyz.classificationNumbers(),
                     1e-9);
-    CHECK_CLOSE_ABS(value2_xyz.decomposeIntoClassificationNumbers(),
-                    mat2_xyz.decomposeIntoClassificationNumbers(),
+    CHECK_CLOSE_ABS(value2_xyz.classificationNumbers(),
+                    mat2_xyz.classificationNumbers(),
                     1e-9);
   }
-}
-}
+}  // namespace Test
+}  // namespace Acts

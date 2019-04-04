@@ -75,9 +75,8 @@ namespace Test {
     Material moveAssignedSilicon = std::move(assignedSilicon);
     BOOST_CHECK_EQUAL(silicon, moveAssignedSilicon);
 
-    ActsVectorF<5> decomposedSilicon
-        = silicon.decomposeIntoClassificationNumbers();
+    ActsVectorF<5> decomposedSilicon = silicon.classificationNumbers();
     CHECK_CLOSE_REL(decomposedSilicon, siliconValues, 1e-4);
   }
-}
-}
+}  // namespace Test
+}  // namespace Acts
