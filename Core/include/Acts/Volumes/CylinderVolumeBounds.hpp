@@ -12,6 +12,8 @@
 
 #pragma once
 #include <cmath>
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Volumes/VolumeBounds.hpp"
@@ -146,8 +148,7 @@ public:
   /// situated
   /// @note this surface is a factory method, the volume handles the memory
   std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(
-      std::shared_ptr<const Transform3D> transformPtr) const override;
+  decomposeToSurfaces(const Transform3D* transformPtr) const override;
 
   /// Binning offset - overloaded for some R-binning types
   ///

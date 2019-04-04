@@ -25,6 +25,7 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+  BOOST_AUTO_TEST_SUITE(Volumes)
 
   /// Unit test for testing the decomposeToSurfaces() function
   BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
@@ -68,7 +69,7 @@ namespace Test {
         = std::const_pointer_cast<const Transform3D>(mutableTransformPtr);
     // get the boundary surfaces
     std::vector<std::shared_ptr<const Acts::Surface>> boundarySurfaces
-        = cylBounds.decomposeToSurfaces(transformPtr);
+        = cylBounds.decomposeToSurfaces(transformPtr.get());
     // Test
 
     // check if difference is halfZ - sign and direction independent
@@ -112,6 +113,8 @@ namespace Test {
     CHECK_CLOSE_REL(boundarySurfaces.at(3)->center(tgContext), pos, 1e-12);
     CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(tgContext), pos, 1e-12);
   }
+
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
 
