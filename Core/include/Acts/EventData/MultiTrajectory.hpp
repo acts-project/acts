@@ -55,7 +55,7 @@ namespace detail_lt {
     }
   };
   /// Type construction helper for coefficients and associated covariances.
-  template <size_t MaxSize, bool ReadOnlyMaps = true>
+  template <size_t Size, bool ReadOnlyMaps = true>
   struct Types
   {
     enum {
@@ -63,30 +63,17 @@ namespace detail_lt {
       SizeIncrement = 8,
     };
     using Scalar = double;
-
-    // full single items
-    using Coefficients    = Eigen::Matrix<Scalar, MaxSize, 1, Flags>;
-    using Covariance      = Eigen::Matrix<Scalar, MaxSize, MaxSize, Flags>;
+    // single items
+    using Coefficients    = Eigen::Matrix<Scalar, Size, 1, Flags>;
+    using Covariance      = Eigen::Matrix<Scalar, Size, Size, Flags>;
     using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
     using CovarianceMap   = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
-
-    // sub-vector, sub-matrix of single items
-    using SubCoefficients
-        = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags, MaxSize, 1>;
-    using SubCovariance = Eigen::
-        Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags, MaxSize, MaxSize>;
-    using SubCoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
-    // TODO can we determine the pointer alignment at compile time?
-    using SubCovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>,
-                                        Eigen::Unaligned,
-                                        Eigen::Stride<MaxSize, 1>>;
-
-    // storage of multiple items in flat arrays (with overallocation up to max)
+    // storage of multiple items in flat arrays
     using StorageCoefficients
-        = GrowableColumns<Eigen::Array<Scalar, MaxSize, Eigen::Dynamic, Flags>,
+        = GrowableColumns<Eigen::Array<Scalar, Size, Eigen::Dynamic, Flags>,
                           SizeIncrement>;
     using StorageCovariance = GrowableColumns<
-        Eigen::Array<Scalar, MaxSize * MaxSize, Eigen::Dynamic, Flags>,
+        Eigen::Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
         SizeIncrement>;
   };
   struct IndexData
