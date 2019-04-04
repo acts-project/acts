@@ -27,35 +27,35 @@ namespace detail_lt {
   /// wrapper for a dynamic Eigen type that adds support for automatic growth
   ///
   /// \warning Assumes the underlying storage has a fixed number of rows
-  template <typename Storage, Eigen::Index kSizeIncrement>
+  template <typename Storage, size_t kSizeIncrement>
   struct GrowableColumns
   {
     Storage data;
 
     /// Access a column after ensuring the underlying storage is large enough.
     auto
-    ensureCol(Eigen::Index index)
+    ensureCol(size_t index)
     {
-      while (data.cols() <= index) {
+      while (static_cast<size_t>(data.cols()) <= index) {
         data.conservativeResize(Eigen::NoChange, data.cols() + kSizeIncrement);
       }
       return data.col(index);
     }
     /// Writable access to a column w/o checking its existence first.
     auto
-    col(Eigen::Index index)
+    col(size_t index)
     {
       return data.col(index);
     }
     /// Read-only access to a column w/o checking its existence first.
     auto
-    col(Eigen::Index index) const
+    col(size_t index) const
     {
       return data.col(index);
     }
   };
   /// Type construction helper for coefficients and associated covariances.
-  template <Eigen::Index MaxSize, bool ReadOnlyMaps = true>
+  template <size_t MaxSize, bool ReadOnlyMaps = true>
   struct Types
   {
     enum {
@@ -103,7 +103,7 @@ namespace detail_lt {
   /// @tparam ReadOnly  true for read-only access to underlying storage
   /// @tparam N         Number of track parameters
   /// @tparam M         Maximum number of measurements
-  template <Eigen::Index N, Eigen::Index M, bool ReadOnly = true>
+  template <size_t N, size_t M, bool ReadOnly = true>
   class TrackStateProxy
   {
   public:
@@ -242,32 +242,32 @@ private:
 // implementations
 
 namespace detail_lt {
-  template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
+  template <size_t N, size_t M, bool ReadOnly>
   inline TrackStateProxy<N, M, ReadOnly>::TrackStateProxy(
       ConstIf<MultiTrajectory, ReadOnly>& trajectory,
       size_t                              istate)
     : m_traj(trajectory), m_istate(istate), m_data(trajectory.m_index[istate])
   {
   }
-  template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
+  template <size_t N, size_t M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::Parameters
   TrackStateProxy<N, M, ReadOnly>::parameters() const
   {
     return Parameters(m_traj.m_params.data.col(m_data.iparams).data());
   }
-  template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
+  template <size_t N, size_t M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::Covariance
   TrackStateProxy<N, M, ReadOnly>::covariance() const
   {
     return Covariance(m_traj.m_cov.data.col(m_data.iparams).data());
   }
-  template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
+  template <size_t N, size_t M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::Measurement
   TrackStateProxy<N, M, ReadOnly>::measurement() const
   {
     return Measurement(m_traj.m_meas.data.col(m_data.imeas).data());
   }
-  template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
+  template <size_t N, size_t M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::MeasurementCovariance
   TrackStateProxy<N, M, ReadOnly>::measurementCovariance() const
   {
