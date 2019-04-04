@@ -61,15 +61,13 @@ namespace Test {
     t.visitBackwards(i2b, print);
 
     // modify elements of the trajectory
-    t.applyBackwards(i2b, [](auto p) { p.fullParameters().setRandom(); });
+    t.applyBackwards(i2b, [](auto p) { p.parameters().setRandom(); });
     cout << "modified trajectory starting at " << i2b << endl;
     t.visitBackwards(i2b, print);
 
     // print full/effective parameters/covariance for an example point
     const auto& p = t.getPoint(i1b);
     cout << "data for point " << p.index() << endl;
-    cout << p.fullParameters().transpose() << endl;
-    cout << p.fullCovariance() << endl;
     cout << p.parameters().transpose() << endl;
     cout << p.covariance() << endl;
     cout << "has measurement " << p.hasMeasurement() << endl;
