@@ -139,9 +139,8 @@ namespace Test {
                                    state.p * state.dir,
                                    state.q,
                                    surface.getSharedPtr());
-        BoundState bState{std::move(parameters),
-                          ActsMatrixD<5, 5>::Identity(),
-                          state.pathAccumulated};
+        BoundState bState{
+            std::move(parameters), Jacobian::Identity(), state.pathAccumulated};
         return bState;
       }
 
@@ -152,9 +151,8 @@ namespace Test {
         CurvilinearParameters parameters(
             nullptr, state.pos, state.p * state.dir, state.q);
         // Create the bound state
-        CurvilinearState curvState{std::move(parameters),
-                                   ActsMatrixD<5, 5>::Identity(),
-                                   state.pathAccumulated};
+        CurvilinearState curvState{
+            std::move(parameters), Jacobian::Identity(), state.pathAccumulated};
         return curvState;
       }
 
