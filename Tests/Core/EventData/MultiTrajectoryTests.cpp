@@ -70,7 +70,7 @@ namespace Test {
     cout << "data for point " << p.index() << endl;
     cout << p.parameters().transpose() << endl;
     cout << p.covariance() << endl;
-    cout << "has measurement " << p.hasMeasurement() << endl;
+    cout << "has uncalibrated " << p.hasUncalibrated() << endl;
   }
 
 }  // namespace Test

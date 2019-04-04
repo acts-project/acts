@@ -84,10 +84,11 @@ namespace detail_lt {
     static constexpr uint16_t kInvalid = UINT16_MAX;
 
     const Surface& surface;
-    uint16_t       iprevious = kInvalid;
-    uint16_t       iparams   = kInvalid;
-    uint16_t       imeas     = kInvalid;
-    uint16_t       nmeas     = 0;
+    uint16_t       iprevious     = kInvalid;
+    uint16_t       iparams       = kInvalid;
+    uint16_t       iuncalibrated = kInvalid;
+    uint16_t       icalibrated   = kInvalid;
+    uint16_t       measdim       = 0;
   };
   /// Proxy object to access a single point on the trajectory.
   ///
@@ -123,30 +124,63 @@ namespace detail_lt {
     /// Track parameters covariance matrix.
     Covariance
     covariance() const;
+    bool
+    hasUncalibrated() const
+    {
+      return m_data.iuncalibrated != IndexData::kInvalid;
+    }
+
+    /// Full measurement vector. Might contain additional zeroed dimensions.
+    Measurement
+    uncalibrated() const;
+
+    /// Full measurement covariance matrix.
+    MeasurementCovariance
+    uncalibratedCovariance() const;
+
+    /// Dynamic measurement vector with only the valid dimensions.
+    auto
+    effectiveUncalibrated() const
+    {
+      return uncalibrated().head(m_data.measdim);
+    }
+
+    /// Dynamic measurement covariance matrix with only the valid dimensions.
+    auto
+    effectiveUncalibratedCovariance() const
+    {
+      return uncalibratedCovariance().topLeftCorner(m_data.measdim,
+                                                    m_data.measdim);
+    }
 
     /// Check if the point has an associated measurement.
     bool
-    hasMeasurement() const
+    hasCalibrated() const
     {
-      return m_data.imeas != IndexData::kInvalid;
+      return m_data.icalibrated != IndexData::kInvalid;
     }
+
     /// Full measurement vector. Might contain additional zeroed dimensions.
     Measurement
-    measurement() const;
+    calibrated() const;
+
     /// Full measurement covariance matrix.
     MeasurementCovariance
-    measurementCovariance() const;
+    calibratedCovariance() const;
+
     /// Dynamic measurement vector with only the valid dimensions.
     auto
-    effectiveMeasurement() const
+    effectiveCalibrated() const
     {
-      return measurement().head(m_data.nmeas);
+      return calibrated().head(m_data.measdim);
     }
+
     /// Dynamic measurement covariance matrix with only the valid dimensions.
     auto
-    effectiveMeasurementCovariance() const
+    effectiveCalibratedCovariance() const
     {
-      return measurementCovariance().topLeftCorner(m_data.nmeas, m_data.nmeas);
+      return calibratedCovariance().topLeftCorner(m_data.measdim,
+                                                  m_data.measdim);
     }
 
   private:
@@ -264,18 +298,34 @@ namespace detail_lt {
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::measurement() const -> Measurement
+  TrackStateProxy<N, M, ReadOnly>::uncalibrated() const -> Measurement
   {
-    return Measurement(m_traj.m_meas.data.col(m_data.imeas).data());
+    return Measurement(m_traj.m_meas.data.col(m_data.iuncalibrated).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::measurementCovariance() const
+  TrackStateProxy<N, M, ReadOnly>::uncalibratedCovariance() const
       -> MeasurementCovariance
   {
     return MeasurementCovariance(
-        m_traj.m_measCov.data.col(m_data.imeas).data());
+        m_traj.m_measCov.data.col(m_data.iuncalibrated).data());
+  }
+
+  template <size_t N, size_t M, bool ReadOnly>
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::calibrated() const -> Measurement
+  {
+    return Measurement(m_traj.m_meas.data.col(m_data.icalibrated).data());
+  }
+
+  template <size_t N, size_t M, bool ReadOnly>
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::calibratedCovariance() const
+      -> MeasurementCovariance
+  {
+    return MeasurementCovariance(
+        m_traj.m_measCov.data.col(m_data.icalibrated).data());
   }
 }  // namespace detail_lt
 
