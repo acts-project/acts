@@ -89,7 +89,7 @@ namespace detail_lt {
         Eigen::Array<Scalar, MaxSize * MaxSize, Eigen::Dynamic, Flags>,
         SizeIncrement>;
   };
-  struct PointData
+  struct IndexData
   {
     static constexpr uint16_t kInvalid = UINT16_MAX;
 
@@ -115,11 +115,11 @@ namespace detail_lt {
     using FullMeasurementCovariance =
         typename Types<M, ReadOnly>::CovarianceMap;
 
-    /// Point index within the trajectory.
+    /// Index within the trajectory.
     size_t
     index() const
     {
-      return m_index;
+      return m_istate;
     }
 
     Parameters
@@ -131,7 +131,7 @@ namespace detail_lt {
     bool
     hasMeasurement() const
     {
-      return m_point.imeas != PointData::kInvalid;
+      return m_data.imeas != IndexData::kInvalid;
     }
     /// Effect measurement vector containing only the valid dimensions.
     Measurement
@@ -147,11 +147,11 @@ namespace detail_lt {
   private:
     // Private since it can only be created by the trajectory.
     TrackStateProxy(ConstIf<MultiTrajectory, ReadOnly>& trajectory,
-                    size_t                              index);
+                    size_t                              istate);
 
     ConstIf<MultiTrajectory, ReadOnly>& m_traj;
-    PointData                           m_point;
-    size_t                              m_index;
+    size_t                              m_istate;
+    IndexData                           m_data;
 
     friend class Acts::MultiTrajectory;
   };
@@ -183,43 +183,44 @@ public:
   /// Add a point without measurement and return its index.
   ///
   /// @param trackParameters  at the local point
-  /// @param previous         point index or SIZE_MAX if its the first
+  /// @param iprevious        index of the previous state, SIZE_MAX if first
   size_t
   addPoint(const TrackParametersBase& trackParameters,
-           size_t                     previous = SIZE_MAX);
+           size_t                     iprevious = SIZE_MAX);
   /// Access a read-only point on the trajectory by index.
   ConstTrackStateProxy
-  getPoint(size_t index) const
+  getPoint(size_t istate) const
   {
-    return {*this, index};
+    return {*this, istate};
   }
   /// Access a writable point on the trajectory by index.
   TrackStateProxy
-  getPoint(size_t index)
+  getPoint(size_t istate)
   {
-    return {*this, index};
+    return {*this, istate};
   }
 
-  /// Visit all previous points starting at a given endpoint.
+  /// Visit all previous states starting at a given endpoint.
   ///
-  /// @param endPoint  index of the last track point
-  /// @param callable  non-modifying functor to be called with each point
+  /// @param iendpoint  index of the last state
+  /// @param callable   non-modifying functor to be called with each point
   template <typename F>
   void
-  visitBackwards(size_t endpoint, F&& callable) const;
-  /// Apply a function to all previous points starting at a given endpoint.
+  visitBackwards(size_t iendpoint, F&& callable) const;
+  /// Apply a function to all previous states starting at a given endpoint.
   ///
-  /// @param endPoint  index of the last track point
-  /// @param callable  modifying functor to be called with each point
+  /// @param iendpoint  index of the last state
+  /// @param callable   modifying functor to be called with each point
   ///
   /// @warning If the trajectory contains multiple components with common
   ///          points, this can have an impact on the other components.
   template <typename F>
   void
-  applyBackwards(size_t endpoint, F&& callable);
+  applyBackwards(size_t iendpoint, F&& callable);
 
 private:
-  std::vector<detail_lt::PointData>                         m_points;
+  /// index to map track states to the corresponding
+  std::vector<detail_lt::IndexData>                         m_index;
   detail_lt::Types<ParametersSize>::StorageCoefficients     m_params;
   detail_lt::Types<ParametersSize>::StorageCovariance       m_cov;
   detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
@@ -237,62 +238,60 @@ namespace detail_lt {
   template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
   inline TrackStateProxy<N, M, ReadOnly>::TrackStateProxy(
       ConstIf<MultiTrajectory, ReadOnly>& trajectory,
-      size_t                              index)
-    : m_traj(trajectory), m_point(trajectory.m_points[index]), m_index(index)
+      size_t                              istate)
+    : m_traj(trajectory), m_istate(istate), m_data(trajectory.m_index[istate])
   {
   }
-
   template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::Parameters
   TrackStateProxy<N, M, ReadOnly>::parameters() const
   {
-    return Parameters(m_traj.m_params.data.col(m_point.iparams).data());
+    return Parameters(m_traj.m_params.data.col(m_data.iparams).data());
   }
   template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::Covariance
   TrackStateProxy<N, M, ReadOnly>::covariance() const
   {
-    return Covariance(m_traj.m_cov.data.col(m_point.iparams).data());
+    return Covariance(m_traj.m_cov.data.col(m_data.iparams).data());
   }
   template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::Measurement
   TrackStateProxy<N, M, ReadOnly>::measurement() const
   {
-    return {m_traj.m_meas.data.col(m_point.imeas).data(), m_point.nmeas};
+    return {m_traj.m_meas.data.col(m_data.imeas).data(), m_data.nmeas};
   }
   template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::MeasurementCovariance
   TrackStateProxy<N, M, ReadOnly>::measurementCovariance() const
   {
-    return {m_traj.m_measCov.data.col(m_point.imeas).data(),
-            m_point.nmeas,
-            m_point.nmeas};
+    return {m_traj.m_measCov.data.col(m_data.imeas).data(),
+            m_data.nmeas,
+            m_data.nmeas};
   }
   template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::FullMeasurement
   TrackStateProxy<N, M, ReadOnly>::fullMeasurement() const
   {
-    return TrackStateProxy<N, M, ReadOnly>::FullMeasurement(
-        m_traj.m_meas.data.col(m_point.imeas).data());
+    return FullMeasurement(m_traj.m_meas.data.col(m_data.imeas).data());
   }
   template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::FullMeasurementCovariance
   TrackStateProxy<N, M, ReadOnly>::fullMeasurementCovariance() const
   {
-    return TrackStateProxy<N, M, ReadOnly>::FullMeasurementCovariance(
-        m_traj.m_measCov.data.col(m_point.imeas).data());
+    return FullMeasurementCovariance(
+        m_traj.m_measCov.data.col(m_data.imeas).data());
   }
 }  // namespace detail_lt
 
 inline size_t
 MultiTrajectory::addPoint(const TrackParametersBase& trackParameters,
-                          size_t                     previous)
+                          size_t                     iprevious)
 {
   using Par    = TrackParametersBase::ParVector_t;
   using CovMap = detail_lt::Types<ParametersSize, false>::CovarianceMap;
 
   constexpr auto nparams = Par::RowsAtCompileTime;
-  auto           iparams = m_points.size();
+  auto           iparams = m_index.size();
 
   m_params.ensureCol(iparams).setZero();
   m_params.col(iparams).head<nparams>() = trackParameters.parameters();
@@ -302,39 +301,39 @@ MultiTrajectory::addPoint(const TrackParametersBase& trackParameters,
     CovMap(m_cov.col(iparams).data()).topLeftCorner<nparams, nparams>() = *cov;
   }
 
-  detail_lt::PointData p;
-  if (previous != SIZE_MAX) { p.iprevious = static_cast<uint16_t>(previous); }
+  detail_lt::IndexData p;
+  if (iprevious != SIZE_MAX) { p.iprevious = static_cast<uint16_t>(iprevious); }
   p.iparams = iparams;
-  m_points.push_back(std::move(p));
+  m_index.push_back(std::move(p));
 
-  return m_points.size() - 1;
+  return m_index.size() - 1;
 }
 
 template <typename F>
 void
-MultiTrajectory::visitBackwards(size_t endpoint, F&& callable) const
+MultiTrajectory::visitBackwards(size_t iendpoint, F&& callable) const
 {
   while (true) {
-    callable(getPoint(endpoint));
+    callable(getPoint(iendpoint));
     // this point has no parent and ends the trajectory
-    if (m_points[endpoint].iprevious == detail_lt::PointData::kInvalid) {
+    if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
       break;
     }
-    endpoint = m_points[endpoint].iprevious;
+    iendpoint = m_index[iendpoint].iprevious;
   }
 }
 
 template <typename F>
 void
-MultiTrajectory::applyBackwards(size_t endpoint, F&& callable)
+MultiTrajectory::applyBackwards(size_t iendpoint, F&& callable)
 {
   while (true) {
-    callable(getPoint(endpoint));
+    callable(getPoint(iendpoint));
     // this point has no parent and ends the trajectory
-    if (m_points[endpoint].iprevious == detail_lt::PointData::kInvalid) {
+    if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
       break;
     }
-    endpoint = m_points[endpoint].iprevious;
+    iendpoint = m_index[iendpoint].iprevious;
   }
 }
 
