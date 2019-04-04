@@ -124,6 +124,14 @@ namespace detail_lt {
 
     /// Track parameters vector.
     Parameters
+    parameters() const;
+
+    /// Track parameters covariance matrix.
+    Covariance
+    covariance() const;
+
+    /// Track parameters vector.
+    Parameters
     predicted() const;
 
     /// Track parameters covariance matrix.
@@ -320,6 +328,37 @@ namespace detail_lt {
       size_t istate)
     : m_traj(trajectory), m_istate(istate), m_data(trajectory.m_index[istate])
   {
+  }
+
+  template <size_t N, size_t M, bool ReadOnly>
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::parameters() const -> Parameters
+  {
+    IndexData::IndexType idx;
+    if (hasSmoothed()) {
+      idx = m_data.ismoothed;
+    } else if (hasFiltered()) {
+      idx = m_data.ifiltered;
+    } else {
+      idx = m_data.ipredicted;
+    }
+
+    return Parameters(m_traj.m_params.data.col(idx).data());
+  }
+
+  template <size_t N, size_t M, bool ReadOnly>
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::covariance() const -> Covariance
+  {
+    IndexData::IndexType idx;
+    if (hasSmoothed()) {
+      idx = m_data.ismoothed;
+    } else if (hasFiltered()) {
+      idx = m_data.ifiltered;
+    } else {
+      idx = m_data.ipredicted;
+    }
+    return Covariance(m_traj.m_cov.data.col(idx).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
