@@ -81,16 +81,18 @@ namespace detail_lt {
   };
   struct IndexData
   {
-    static constexpr uint16_t kInvalid = UINT16_MAX;
+    using IndexType = uint16_t;
+
+    static constexpr IndexType kInvalid = UINT16_MAX;
 
     const Surface& surface;
-    uint16_t       iprevious     = kInvalid;
-    uint16_t       ipredicted    = kInvalid;
-    uint16_t       ifiltered     = kInvalid;
-    uint16_t       ismoothed     = kInvalid;
-    uint16_t       iuncalibrated = kInvalid;
-    uint16_t       icalibrated   = kInvalid;
-    uint16_t       measdim       = 0;
+    IndexType      iprevious     = kInvalid;
+    IndexType      ipredicted    = kInvalid;
+    IndexType      ifiltered     = kInvalid;
+    IndexType      ismoothed     = kInvalid;
+    IndexType      iuncalibrated = kInvalid;
+    IndexType      icalibrated   = kInvalid;
+    IndexType      measdim       = 0;
   };
   /// Proxy object to access a single point on the trajectory.
   ///
