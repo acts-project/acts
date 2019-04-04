@@ -130,6 +130,12 @@ namespace detail_lt {
     Covariance
     predictedCovariance() const;
 
+    bool
+    hasPredicted() const
+    {
+      return m_data.ipredicted != IndexData::kInvalid;
+    }
+
     /// Track parameters vector.
     Parameters
     filtered() const;
@@ -138,6 +144,12 @@ namespace detail_lt {
     Covariance
     filteredCovariance() const;
 
+    bool
+    hasFiltered() const
+    {
+      return m_data.ifiltered != IndexData::kInvalid;
+    }
+
     /// Track parameters vector.
     Parameters
     smoothed() const;
@@ -145,6 +157,12 @@ namespace detail_lt {
     /// Track parameters covariance matrix.
     Covariance
     smoothedCovariance() const;
+
+    bool
+    hasSmoothed() const
+    {
+      return m_data.ismoothed != IndexData::kInvalid;
+    }
 
     bool
     hasUncalibrated() const
