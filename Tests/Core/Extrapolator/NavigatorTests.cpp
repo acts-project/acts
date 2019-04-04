@@ -132,6 +132,7 @@ namespace Test {
                  const Surface& surface,
                  bool           reinitialize = true) const
       {
+        // suppress unused warning
         (void)reinitialize;
         BoundParameters parameters(tgContext,
                                    nullptr,
