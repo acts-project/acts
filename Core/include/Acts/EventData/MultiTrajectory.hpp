@@ -247,27 +247,32 @@ namespace detail_lt {
     : m_traj(trajectory), m_istate(istate), m_data(trajectory.m_index[istate])
   {
   }
+
   template <size_t N, size_t M, bool ReadOnly>
-  inline typename TrackStateProxy<N, M, ReadOnly>::Parameters
-  TrackStateProxy<N, M, ReadOnly>::parameters() const
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::parameters() const -> Parameters
   {
     return Parameters(m_traj.m_params.data.col(m_data.iparams).data());
   }
+
   template <size_t N, size_t M, bool ReadOnly>
-  inline typename TrackStateProxy<N, M, ReadOnly>::Covariance
-  TrackStateProxy<N, M, ReadOnly>::covariance() const
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::covariance() const -> Covariance
   {
     return Covariance(m_traj.m_cov.data.col(m_data.iparams).data());
   }
+
   template <size_t N, size_t M, bool ReadOnly>
-  inline typename TrackStateProxy<N, M, ReadOnly>::Measurement
-  TrackStateProxy<N, M, ReadOnly>::measurement() const
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::measurement() const -> Measurement
   {
     return Measurement(m_traj.m_meas.data.col(m_data.imeas).data());
   }
+
   template <size_t N, size_t M, bool ReadOnly>
-  inline typename TrackStateProxy<N, M, ReadOnly>::MeasurementCovariance
+  inline auto
   TrackStateProxy<N, M, ReadOnly>::measurementCovariance() const
+      -> MeasurementCovariance
   {
     return MeasurementCovariance(
         m_traj.m_measCov.data.col(m_data.imeas).data());
