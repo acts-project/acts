@@ -107,13 +107,10 @@ namespace detail_lt {
   class TrackStateProxy
   {
   public:
-    using Parameters  = typename Types<N, ReadOnly>::CoefficientsMap;
-    using Covariance  = typename Types<N, ReadOnly>::CovarianceMap;
-    using Measurement = typename Types<M, ReadOnly>::SubCoefficientsMap;
-    using MeasurementCovariance = typename Types<M, ReadOnly>::SubCovarianceMap;
-    using FullMeasurement       = typename Types<M, ReadOnly>::CoefficientsMap;
-    using FullMeasurementCovariance =
-        typename Types<M, ReadOnly>::CovarianceMap;
+    using Parameters            = typename Types<N, ReadOnly>::CoefficientsMap;
+    using Covariance            = typename Types<N, ReadOnly>::CovarianceMap;
+    using Measurement           = typename Types<M, ReadOnly>::CoefficientsMap;
+    using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
 
     /// Index within the trajectory.
     size_t
@@ -122,8 +119,10 @@ namespace detail_lt {
       return m_istate;
     }
 
+    /// Track parameters vector.
     Parameters
     parameters() const;
+    /// Track parameters covariance matrix.
     Covariance
     covariance() const;
 
@@ -133,16 +132,24 @@ namespace detail_lt {
     {
       return m_data.imeas != IndexData::kInvalid;
     }
-    /// Effect measurement vector containing only the valid dimensions.
+    /// Full measurement vector. Might contain additional zeroed dimensions.
     Measurement
     measurement() const;
+    /// Full measurement covariance matrix.
     MeasurementCovariance
     measurementCovariance() const;
-    /// Full measurement vector with zeros for invalid dimensions.
-    FullMeasurement
-    fullMeasurement() const;
-    FullMeasurementCovariance
-    fullMeasurementCovariance() const;
+    /// Dynamic measurement vector with only the valid dimensions.
+    auto
+    effectiveMeasurement() const
+    {
+      return measurement().head(m_data.nmeas);
+    }
+    /// Dynamic measurement covariance matrix with only the valid dimensions.
+    auto
+    effectiveMeasurementCovariance() const
+    {
+      return measurementCovariance().topLeftCorner(m_data.nmeas, m_data.nmeas);
+    }
 
   private:
     // Private since it can only be created by the trajectory.
@@ -258,27 +265,13 @@ namespace detail_lt {
   inline typename TrackStateProxy<N, M, ReadOnly>::Measurement
   TrackStateProxy<N, M, ReadOnly>::measurement() const
   {
-    return {m_traj.m_meas.data.col(m_data.imeas).data(), m_data.nmeas};
+    return Measurement(m_traj.m_meas.data.col(m_data.imeas).data());
   }
   template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
   inline typename TrackStateProxy<N, M, ReadOnly>::MeasurementCovariance
   TrackStateProxy<N, M, ReadOnly>::measurementCovariance() const
   {
-    return {m_traj.m_measCov.data.col(m_data.imeas).data(),
-            m_data.nmeas,
-            m_data.nmeas};
-  }
-  template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
-  inline typename TrackStateProxy<N, M, ReadOnly>::FullMeasurement
-  TrackStateProxy<N, M, ReadOnly>::fullMeasurement() const
-  {
-    return FullMeasurement(m_traj.m_meas.data.col(m_data.imeas).data());
-  }
-  template <Eigen::Index N, Eigen::Index M, bool ReadOnly>
-  inline typename TrackStateProxy<N, M, ReadOnly>::FullMeasurementCovariance
-  TrackStateProxy<N, M, ReadOnly>::fullMeasurementCovariance() const
-  {
-    return FullMeasurementCovariance(
+    return MeasurementCovariance(
         m_traj.m_measCov.data.col(m_data.imeas).data());
   }
 }  // namespace detail_lt
