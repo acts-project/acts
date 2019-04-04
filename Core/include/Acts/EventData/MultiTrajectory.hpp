@@ -85,7 +85,9 @@ namespace detail_lt {
 
     const Surface& surface;
     uint16_t       iprevious     = kInvalid;
-    uint16_t       iparams       = kInvalid;
+    uint16_t       ipredicted    = kInvalid;
+    uint16_t       ifiltered     = kInvalid;
+    uint16_t       ismoothed     = kInvalid;
     uint16_t       iuncalibrated = kInvalid;
     uint16_t       icalibrated   = kInvalid;
     uint16_t       measdim       = 0;
@@ -120,10 +122,28 @@ namespace detail_lt {
 
     /// Track parameters vector.
     Parameters
-    parameters() const;
+    predicted() const;
+
     /// Track parameters covariance matrix.
     Covariance
-    covariance() const;
+    predictedCovariance() const;
+
+    /// Track parameters vector.
+    Parameters
+    filtered() const;
+
+    /// Track parameters covariance matrix.
+    Covariance
+    filteredCovariance() const;
+
+    /// Track parameters vector.
+    Parameters
+    smoothed() const;
+
+    /// Track parameters covariance matrix.
+    Covariance
+    smoothedCovariance() const;
+
     bool
     hasUncalibrated() const
     {
@@ -284,16 +304,44 @@ namespace detail_lt {
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::parameters() const -> Parameters
+  TrackStateProxy<N, M, ReadOnly>::predicted() const -> Parameters
   {
-    return Parameters(m_traj.m_params.data.col(m_data.iparams).data());
+    return Parameters(m_traj.m_params.data.col(m_data.ipredicted).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::covariance() const -> Covariance
+  TrackStateProxy<N, M, ReadOnly>::predictedCovariance() const -> Covariance
   {
-    return Covariance(m_traj.m_cov.data.col(m_data.iparams).data());
+    return Covariance(m_traj.m_cov.data.col(m_data.ipredicted).data());
+  }
+
+  template <size_t N, size_t M, bool ReadOnly>
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::filtered() const -> Parameters
+  {
+    return Parameters(m_traj.m_params.data.col(m_data.ifiltered).data());
+  }
+
+  template <size_t N, size_t M, bool ReadOnly>
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::filteredCovariance() const -> Covariance
+  {
+    return Covariance(m_traj.m_cov.data.col(m_data.ifiltered).data());
+  }
+
+  template <size_t N, size_t M, bool ReadOnly>
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::smoothed() const -> Parameters
+  {
+    return Parameters(m_traj.m_params.data.col(m_data.ismoothed).data());
+  }
+
+  template <size_t N, size_t M, bool ReadOnly>
+  inline auto
+  TrackStateProxy<N, M, ReadOnly>::smoothedCovariance() const -> Covariance
+  {
+    return Covariance(m_traj.m_cov.data.col(m_data.ismoothed).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
@@ -327,6 +375,7 @@ namespace detail_lt {
     return MeasurementCovariance(
         m_traj.m_measCov.data.col(m_data.icalibrated).data());
   }
+
 }  // namespace detail_lt
 
 inline size_t
@@ -336,22 +385,23 @@ MultiTrajectory::addPoint(const TrackParametersBase& trackParameters,
   using Par    = TrackParametersBase::ParVector_t;
   using CovMap = detail_lt::Types<ParametersSize, false>::CovarianceMap;
 
-  constexpr auto nparams = Par::RowsAtCompileTime;
-  auto           iparams = m_index.size();
+  constexpr auto nparams    = Par::RowsAtCompileTime;
+  auto           ipredicted = m_index.size();
 
-  m_params.ensureCol(iparams).setZero();
-  m_params.col(iparams).head<nparams>() = trackParameters.parameters();
-  m_cov.ensureCol(iparams).setZero();
+  m_params.ensureCol(ipredicted).setZero();
+  m_params.col(ipredicted).head<nparams>() = trackParameters.parameters();
+  m_cov.ensureCol(ipredicted).setZero();
   const auto* cov = trackParameters.covariance();
   if (cov != nullptr) {
-    CovMap(m_cov.col(iparams).data()).topLeftCorner<nparams, nparams>() = *cov;
+    CovMap(m_cov.col(ipredicted).data()).topLeftCorner<nparams, nparams>()
+        = *cov;
   }
 
   detail_lt::IndexData p = {trackParameters.referenceSurface()};
   if (iprevious != SIZE_MAX) {
     p.iprevious = static_cast<uint16_t>(iprevious);
   }
-  p.iparams = iparams;
+  p.ipredicted = ipredicted;
   m_index.push_back(std::move(p));
 
   return m_index.size() - 1;

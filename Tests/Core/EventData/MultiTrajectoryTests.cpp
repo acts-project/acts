@@ -53,7 +53,7 @@ namespace Test {
     // print each trajectory component
     auto print = [](auto p) {
       cout << "  point " << p.index() << endl;
-      cout << "     params " << p.parameters().transpose() << endl;
+      cout << "     params " << p.predicted().transpose() << endl;
     };
     cout << "trajectory starting at " << i2a << endl;
     t.visitBackwards(i2a, print);
@@ -61,15 +61,15 @@ namespace Test {
     t.visitBackwards(i2b, print);
 
     // modify elements of the trajectory
-    t.applyBackwards(i2b, [](auto p) { p.parameters().setRandom(); });
+    t.applyBackwards(i2b, [](auto p) { p.predicted().setRandom(); });
     cout << "modified trajectory starting at " << i2b << endl;
     t.visitBackwards(i2b, print);
 
     // print full/effective parameters/covariance for an example point
     const auto& p = t.getPoint(i1b);
     cout << "data for point " << p.index() << endl;
-    cout << p.parameters().transpose() << endl;
-    cout << p.covariance() << endl;
+    cout << p.predicted().transpose() << endl;
+    cout << p.predictedCovariance() << endl;
     cout << "has uncalibrated " << p.hasUncalibrated() << endl;
   }
 
