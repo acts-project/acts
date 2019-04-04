@@ -39,7 +39,7 @@ namespace Test {
     // Build a material cell
     std::array<double, dim> lowerLeft{{0., 0.}};
     std::array<double, dim> upperRight{{1., 1.}};
-    ActsVectorF<5>          mat;
+    ActsVectorF<5> mat;
     mat << 1, 2, 3, 4, 5;
     std::array<ActsVectorF<5>, 4> matArray = {mat, mat, mat, mat};
 
