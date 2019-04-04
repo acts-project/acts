@@ -74,9 +74,10 @@ namespace detail_lt {
     using StorageCoefficients
         = GrowableColumns<Eigen::Array<Scalar, Size, Eigen::Dynamic, Flags>,
                           SizeIncrement>;
-    using StorageCovariance = GrowableColumns<
-        Eigen::Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
-        SizeIncrement>;
+    using StorageCovariance
+        = GrowableColumns<Eigen::
+                              Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
+                          SizeIncrement>;
   };
   struct IndexData
   {
@@ -151,11 +152,11 @@ namespace detail_lt {
   private:
     // Private since it can only be created by the trajectory.
     TrackStateProxy(ConstIf<MultiTrajectory, ReadOnly>& trajectory,
-                    size_t                              istate);
+                    size_t istate);
 
     ConstIf<MultiTrajectory, ReadOnly>& m_traj;
-    size_t                              m_istate;
-    IndexData                           m_data;
+    size_t    m_istate;
+    IndexData m_data;
 
     friend class Acts::MultiTrajectory;
   };
@@ -242,7 +243,7 @@ namespace detail_lt {
   template <size_t N, size_t M, bool ReadOnly>
   inline TrackStateProxy<N, M, ReadOnly>::TrackStateProxy(
       ConstIf<MultiTrajectory, ReadOnly>& trajectory,
-      size_t                              istate)
+      size_t istate)
     : m_traj(trajectory), m_istate(istate), m_data(trajectory.m_index[istate])
   {
   }
@@ -292,7 +293,9 @@ MultiTrajectory::addPoint(const TrackParametersBase& trackParameters,
   }
 
   detail_lt::IndexData p = {trackParameters.referenceSurface()};
-  if (iprevious != SIZE_MAX) { p.iprevious = static_cast<uint16_t>(iprevious); }
+  if (iprevious != SIZE_MAX) {
+    p.iprevious = static_cast<uint16_t>(iprevious);
+  }
   p.iparams = iparams;
   m_index.push_back(std::move(p));
 
