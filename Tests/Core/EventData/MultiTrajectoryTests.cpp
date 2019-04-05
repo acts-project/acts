@@ -16,6 +16,7 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackState.hpp"
 
 using std::cout;
 using std::endl;
@@ -23,6 +24,7 @@ using std::endl;
 namespace Acts {
 namespace Test {
 
+  using SourceLink = unsigned long long;
   using Parameters = TrackParametersBase::ParVector_t;
   using Covariance = TrackParametersBase::CovMatrix_t;
 
@@ -38,17 +40,23 @@ namespace Test {
             -1};
   }
 
+  TrackState<SourceLink, CurvilinearParameters>
+  make_trackstate()
+  {
+    return {make_params()};
+  }
+
   BOOST_AUTO_TEST_CASE(multitrajectory_build)
   {
     MultiTrajectory t;
 
     // construct trajectory w/ multiple components
-    auto i0 = t.addPoint(make_params());
+    auto i0 = t.addTrackState(make_trackstate());
     // trajectory bifurcates here into multiple hypotheses
-    auto i1a = t.addPoint(make_params(), i0);
-    auto i1b = t.addPoint(make_params(), i0);
-    auto i2a = t.addPoint(make_params(), i1a);
-    auto i2b = t.addPoint(make_params(), i1b);
+    auto i1a = t.addTrackState(make_trackstate(), i0);
+    auto i1b = t.addTrackState(make_trackstate(), i0);
+    auto i2a = t.addTrackState(make_trackstate(), i1a);
+    auto i2b = t.addTrackState(make_trackstate(), i1b);
 
     // print each trajectory component
     auto print = [](auto p) {

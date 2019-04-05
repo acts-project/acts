@@ -15,6 +15,7 @@
 #include <Eigen/Core>
 
 #include "Acts/EventData/TrackParametersBase.hpp"
+#include "Acts/EventData/TrackState.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -297,9 +298,11 @@ public:
   ///
   /// @param trackParameters  at the local point
   /// @param iprevious        index of the previous state, SIZE_MAX if first
+  template <typename source_link_t, typename parameters_t>
   size_t
-  addPoint(const TrackParametersBase& trackParameters,
-           size_t                     iprevious = SIZE_MAX);
+  addTrackState(const TrackState<source_link_t, parameters_t>& ts,
+                size_t iprevious = SIZE_MAX);
+
   /// Access a read-only point on the trajectory by index.
   ConstTrackStateProxy
   getPoint(size_t istate) const
@@ -464,32 +467,67 @@ namespace detail_lt {
 
 }  // namespace detail_lt
 
+template <typename source_link_t, typename parameters_t>
 inline size_t
-MultiTrajectory::addPoint(const TrackParametersBase& trackParameters,
-                          size_t                     iprevious)
+MultiTrajectory::addTrackState(
+    const TrackState<source_link_t, parameters_t>& ts,
+    size_t iprevious)
 {
-  using Par    = TrackParametersBase::ParVector_t;
   using CovMap = detail_lt::Types<ParametersSize, false>::CovarianceMap;
 
-  constexpr auto nparams    = Par::RowsAtCompileTime;
-  auto           ipredicted = m_index.size();
-
-  m_params.ensureCol(ipredicted).setZero();
-  m_params.col(ipredicted).head<nparams>() = trackParameters.parameters();
-  m_cov.ensureCol(ipredicted).setZero();
-  const auto* cov = trackParameters.covariance();
-  if (cov != nullptr) {
-    CovMap(m_cov.col(ipredicted).data()).topLeftCorner<nparams, nparams>()
-        = *cov;
-  }
-
-  detail_lt::IndexData p = {trackParameters.referenceSurface()};
+  detail_lt::IndexData p = {ts.referenceSurface()};
   if (iprevious != SIZE_MAX) {
     p.iprevious = static_cast<uint16_t>(iprevious);
   }
-  p.ipredicted = ipredicted;
-  m_index.push_back(std::move(p));
 
+  if (ts.parameter.predicted) {
+    const auto& predicted         = *ts.parameter.predicted;
+    m_params.addCol()             = predicted.parameters();
+    CovMap(m_cov.addCol().data()) = *predicted.covariance();
+    p.ipredicted                  = m_params.size() - 1;
+  }
+
+  if (ts.parameter.filtered) {
+    const auto& filtered          = *ts.parameter.filtered;
+    m_params.addCol()             = filtered.parameters();
+    CovMap(m_cov.addCol().data()) = *filtered.covariance();
+    p.ifiltered                   = m_params.size() - 1;
+  }
+
+  if (ts.parameter.smoothed) {
+    const auto& smoothed          = *ts.parameter.smoothed;
+    m_params.addCol()             = smoothed.parameters();
+    CovMap(m_cov.addCol().data()) = *smoothed.covariance();
+    p.ismoothed                   = m_params.size() - 1;
+  }
+
+  // handle measurements
+  if (ts.measurement.uncalibrated) {
+    auto meas    = m_meas.addCol();
+    auto measCov = m_measCov.addCol();
+    std::visit(
+        [&meas, &measCov](const auto& m) {
+          meas.template head<m.size()>() = m.parameters();
+          measCov.template topLeftCorner<m.size(), m.size()>() = m.covariance();
+        },
+        *ts.measurement.uncalibrated);
+
+    p.iuncalibrated = meas.size() - 1;
+  }
+
+  if (ts.measurement.calibrated) {
+    auto meas    = m_meas.addCol();
+    auto measCov = m_measCov.addCol();
+    std::visit(
+        [&meas, &measCov](const auto& m) {
+          meas.template head<m.size()>() = m.parameters();
+          measCov.template topLeftCorner<m.size(), m.size()>() = m.covariance();
+        },
+        *ts.measurement.calibrated);
+    p.icalibrated = meas.size() - 1;
+  }
+
+  m_index.push_back(std::move(p));
   return m_index.size() - 1;
 }
 
