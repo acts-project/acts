@@ -32,30 +32,55 @@ namespace detail_lt {
   template <typename Storage, size_t kSizeIncrement>
   struct GrowableColumns
   {
-    Storage data;
 
-    /// Access a column after ensuring the underlying storage is large enough.
+    /// Make sure storage for @p n additional columns is allocated. Will update
+    /// the size of the container accordingly. The indices added by this call
+    /// can safely be written to.
+    /// @param n Number of columns to add, defaults to 1.
+    /// @return View into the last allocated column
     auto
-    ensureCol(size_t index)
+    addCol(size_t n = 1)
     {
-      while (static_cast<size_t>(data.cols()) <= index) {
+      size_t index = m_size + (n - 1);
+      while (capacity() <= index) {
         data.conservativeResize(Eigen::NoChange, data.cols() + kSizeIncrement);
       }
+      m_size = index + 1;
       return data.col(index);
     }
+
     /// Writable access to a column w/o checking its existence first.
     auto
     col(size_t index)
     {
       return data.col(index);
     }
+
     /// Read-only access to a column w/o checking its existence first.
     auto
     col(size_t index) const
     {
       return data.col(index);
     }
+
+    /// Return the current allocated storage capacity
+    size_t
+    capacity() const
+    {
+      return static_cast<size_t>(data.cols());
+    }
+
+    size_t
+    size() const
+    {
+      return m_size;
+    }
+
+  private:
+    Storage data;
+    size_t  m_size{0};
   };
+
   /// Type construction helper for coefficients and associated covariances.
   template <size_t Size, bool ReadOnlyMaps = true>
   struct Types
@@ -280,6 +305,7 @@ public:
   {
     return {*this, istate};
   }
+
   /// Access a writable point on the trajectory by index.
   TrackStateProxy
   getPoint(size_t istate)
@@ -365,49 +391,49 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<N, M, ReadOnly>::predicted() const -> Parameters
   {
-    return Parameters(m_traj.m_params.data.col(m_data.ipredicted).data());
+    return Parameters(m_traj.m_params.col(m_data.ipredicted).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<N, M, ReadOnly>::predictedCovariance() const -> Covariance
   {
-    return Covariance(m_traj.m_cov.data.col(m_data.ipredicted).data());
+    return Covariance(m_traj.m_cov.col(m_data.ipredicted).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<N, M, ReadOnly>::filtered() const -> Parameters
   {
-    return Parameters(m_traj.m_params.data.col(m_data.ifiltered).data());
+    return Parameters(m_traj.m_params.col(m_data.ifiltered).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<N, M, ReadOnly>::filteredCovariance() const -> Covariance
   {
-    return Covariance(m_traj.m_cov.data.col(m_data.ifiltered).data());
+    return Covariance(m_traj.m_cov.col(m_data.ifiltered).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<N, M, ReadOnly>::smoothed() const -> Parameters
   {
-    return Parameters(m_traj.m_params.data.col(m_data.ismoothed).data());
+    return Parameters(m_traj.m_params.col(m_data.ismoothed).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<N, M, ReadOnly>::smoothedCovariance() const -> Covariance
   {
-    return Covariance(m_traj.m_cov.data.col(m_data.ismoothed).data());
+    return Covariance(m_traj.m_cov.col(m_data.ismoothed).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<N, M, ReadOnly>::uncalibrated() const -> Measurement
   {
-    return Measurement(m_traj.m_meas.data.col(m_data.iuncalibrated).data());
+    return Measurement(m_traj.m_meas.col(m_data.iuncalibrated).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
@@ -416,14 +442,14 @@ namespace detail_lt {
       -> MeasurementCovariance
   {
     return MeasurementCovariance(
-        m_traj.m_measCov.data.col(m_data.iuncalibrated).data());
+        m_traj.m_measCov.col(m_data.iuncalibrated).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<N, M, ReadOnly>::calibrated() const -> Measurement
   {
-    return Measurement(m_traj.m_meas.data.col(m_data.icalibrated).data());
+    return Measurement(m_traj.m_meas.col(m_data.icalibrated).data());
   }
 
   template <size_t N, size_t M, bool ReadOnly>
@@ -432,7 +458,7 @@ namespace detail_lt {
       -> MeasurementCovariance
   {
     return MeasurementCovariance(
-        m_traj.m_measCov.data.col(m_data.icalibrated).data());
+        m_traj.m_measCov.col(m_data.icalibrated).data());
   }
 
 }  // namespace detail_lt
