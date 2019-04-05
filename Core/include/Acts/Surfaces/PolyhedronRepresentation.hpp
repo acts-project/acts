@@ -50,5 +50,18 @@ struct PolyhedronRepresentation
   ///       to allow for multiple output objects in one obj file.
   std::string
   objString(size_t vtxOffset = 0) const;
+
+  template <typename helper_t>
+  void
+  draw(helper_t& helper) const
+  {
+    for (const auto& face : faces) {
+      std::vector<Vector3D> face_vtx;
+      for (size_t i : face) {
+        face_vtx.push_back(vertices[i]);
+      }
+      helper.face(face_vtx);
+    }
+  }
 };
 }
