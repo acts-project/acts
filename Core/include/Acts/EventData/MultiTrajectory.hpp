@@ -15,6 +15,7 @@
 #include <Eigen/Core>
 
 #include "Acts/EventData/TrackParametersBase.hpp"
+#include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
 
@@ -281,7 +282,7 @@ class MultiTrajectory
 {
 public:
   enum {
-    ParametersSize     = 6,
+    ParametersSize     = NGlobalPars,
     MeasurementSizeMax = 2,
   };
   using ConstTrackStateProxy
