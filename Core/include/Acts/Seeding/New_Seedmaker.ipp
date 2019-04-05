@@ -17,8 +17,8 @@ namespace Acts {
 
 template <typename SpacePoint>
 New_Seedmaker<SpacePoint>::New_Seedmaker(
-    const Acts::SeedmakerConfig<SpacePoint>& config)
-  : m_config(config)
+    const Acts::SeedmakerConfig<SpacePoint> config)
+  : m_config(std::move(config))
 {
 
   // calculation of scattering using the highland formula

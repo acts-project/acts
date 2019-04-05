@@ -42,8 +42,16 @@ class New_Seedmaker
 public:
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the Seedmaker
-  New_Seedmaker(const Acts::SeedmakerConfig<SpacePoint>& config);
+  New_Seedmaker(const Acts::SeedmakerConfig<SpacePoint> config);
   ~New_Seedmaker() = default;
+  /**    @name Disallow default instantiation, copy, assignment */
+  //@{
+  New_Seedmaker()                                 = delete;
+  New_Seedmaker(const New_Seedmaker<SpacePoint>&) = delete;
+  New_Seedmaker<SpacePoint>&
+  operator=(const New_Seedmaker<SpacePoint>&)
+      = delete;
+  //@}
 
   /// converter function from internal seeds to external seeds. avoids
   /// templating all functions.
@@ -79,20 +87,11 @@ public:
       std::shared_ptr<Acts::SeedmakerState<SpacePoint>> state) const;
 
 private:
-  /**    @name Disallow default instantiation, copy, assignment */
-  //@{
-  New_Seedmaker()                                 = delete;
-  New_Seedmaker(const New_Seedmaker<SpacePoint>&) = delete;
-  New_Seedmaker<SpacePoint>&
-  operator=(const New_Seedmaker<SpacePoint>&)
-      = delete;
-  //@}
-
   void
   transformCoordinates(std::vector<const InternalSpacePoint<SpacePoint>*>& vec,
                        const InternalSpacePoint<SpacePoint>*               spM,
                        bool                    bottom,
-                       std::vector<LinCircle>& linCircle) const;
+                       std::vector<LinCircle>& linCircleVec) const;
 
   Acts::SeedmakerConfig<SpacePoint> m_config;
 };

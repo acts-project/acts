@@ -58,14 +58,14 @@ struct SeedmakerConfig
   // Geometry Settings
   // Detector ROI
   // limiting location of collision region in z
-  float collisionRegionMin;
-  float collisionRegionMax;
-  float phiMin = -M_PI;
-  float phiMax = M_PI;
+  float collisionRegionMin = -150;
+  float collisionRegionMax = +150;
+  float phiMin             = -M_PI;
+  float phiMax             = M_PI;
   // limiting location of measurements
-  float zMin;
-  float zMax;
-  float rMax;
+  float zMin = -2800;
+  float zMax = 2800;
+  float rMax = 600;
   // WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
   // which will make seeding very slow!
   float rMin = 33;
@@ -95,10 +95,10 @@ struct SeedmakerConfig
   float sigmaError = 5;
 
   // derived values, set on Seedmaker construction
-  float highland;
-  float maxScatteringAngle2;
-  float pTPerHelixRadius;
-  float minHelixDiameter2;
-  float pT2perRadius;
+  float highland            = 0;
+  float maxScatteringAngle2 = 0;
+  float pTPerHelixRadius    = 0;
+  float minHelixDiameter2   = 0;
+  float pT2perRadius        = 0;
 };
 }  // namespace Acts
