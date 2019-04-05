@@ -15,7 +15,7 @@ namespace Acts {
 
 /**
  * Partially abstract base class which provides an interface to visualization
- * helper classes. It provides a number of methods that alle the helpers need to
+ * helper classes. It provides a number of methods that all the helpers need to
  * conform to. It also provides a `color_type` typedef, but not all of the
  * helpers actually support that.
  */
@@ -79,9 +79,7 @@ public:
    */
 
   /**
-   * Draw a vertex at a given location and a color.
-   * @param vtx The vertex position
-   * @param color The color
+   * @copydoc Acts::IVisualization::vertex(const Vector3D&, color_type)
    */
   void
   vertex(const Vector3F& vtx, color_type color = {120, 120, 120})
@@ -91,11 +89,7 @@ public:
   }
 
   /**
-   * Draw a face that connects a list of vertices.
-   * @note Depending on the helper implementation, out of plane vertices might
-   * be handled differently.
-   * @param vtxs The vertices that make up the face
-   * @param color The color of the face
+   * @copydoc Acts::IVisualization::face(std::vector<Vector3F>&, color_type)
    */
   void
   face(const std::vector<Vector3F>& vtxs, color_type color = {120, 120, 120})
@@ -109,10 +103,8 @@ public:
   }
 
   /**
-   * Draw a line from a vertex to another
-   * @param a The start vertex
-   * @param b The end vertex
-   * @param color The color of the line
+   * @copydoc Acts::IVisualization::line(const Vector3F&, const Vector3F&,
+   * color_type)
    */
   void
   line(const Vector3F& a, const Vector3F& b, color_type color = {120, 120, 120})

@@ -46,18 +46,20 @@ public:
   vertex(const Vector3D&            vtx,
          IVisualization::color_type color = {0, 0, 0}) override
   {
-    (void)color;
+    (void)color;  // suppress unused warning
     m_vertices.push_back(vtx.template cast<value_type>());
   }
 
   /**
    * @copydoc Acts::IVisualization::line()
+   * @note This function ist not implemented for the OBJ format.
    */
   void
   line(const Vector3D& /*a*/,
        const Vector3D& /*b*/,
-       IVisualization::color_type /*color*/) override
+       IVisualization::color_type color = {0, 0, 0}) override
   {
+    (void)color;  // suppress unused warning
     // not implemented
     throw std::runtime_error("Line not implemented for OBJ");
   }
@@ -67,8 +69,9 @@ public:
    */
   void
   face(const std::vector<Vector3D>& vtxs,
-       IVisualization::color_type /*unsupported*/) override
+       IVisualization::color_type   color = {0, 0, 0}) override
   {
+    (void)color;  // suppress unused warning
     face_type idxs;
     idxs.reserve(vtxs.size());
     for (const auto& vtx : vtxs) {
