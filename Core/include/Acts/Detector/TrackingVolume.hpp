@@ -21,6 +21,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
 #include "Acts/Volumes/BoundarySurfaceT.hpp"
 #include "Acts/Volumes/Volume.hpp"
@@ -30,6 +31,7 @@ namespace Acts {
 class GlueVolumesDescriptor;
 class VolumeBounds;
 class Material;
+class SurfaceMaterial;
 
 using TrackingVolumeBoundaryPtr
     = std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
@@ -46,6 +48,10 @@ using LayerVector          = std::vector<LayerPtr>;
 
 // full intersection with Layer
 using LayerIntersection = FullIntersection<Layer, Surface>;
+
+// SurfaceMaterial assignment map
+using SurfaceMaterialMap
+    = std::map<GeometryID, std::shared_ptr<const SurfaceMaterial>>;
 
 // full intersection with surface
 using BoundaryIntersection
@@ -411,15 +417,18 @@ private:
   void
   synchronizeLayers(double envelope = 1.) const;
 
-  /// close the Geometry, i.e. set the TDD_ID
+  /// close the Geometry, i.e. set the GeometryID and assign material
   ///
+  /// @param surfaceMaterialMap is a map that contains the surface
+  ///        the surface material
   /// @param volumeMap is a map to find the a volume
   ///        by a given name
   /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
   ///
   void
-  closeGeometry(std::map<std::string, const TrackingVolume*>& volumeMap,
+  closeGeometry(const SurfaceMaterialMap& surfaceMaterialMap,
+                std::map<std::string, const TrackingVolume*>& volumeMap,
                 size_t& vol);
 
   /// interlink the layers in this TrackingVolume

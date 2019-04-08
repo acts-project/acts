@@ -21,6 +21,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/GeometryObject.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -29,6 +30,7 @@
 namespace Acts {
 
 class Surface;
+class SurfaceMaterial;
 class BinUtility;
 class Volume;
 class VolumeBounds;
@@ -37,6 +39,10 @@ class ApproachDescriptor;
 
 // Simple surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
+
+// SurfaceMaterial assignment
+using SurfaceMaterialMap
+    = std::map<GeometryID, std::shared_ptr<const SurfaceMaterial>>;
 
 // master typedef
 class Layer;
@@ -370,12 +376,17 @@ protected:
 
 private:
   /// Private helper method to close the geometry
+  /// - it will assign material to the surfaces if needed
   /// - it will set the layer geometry ID for a unique identification
   /// - it will also register the internal sub strucutre
+  ///
+  /// @param surfaceMaterialMap is a map that contains the surface
+  ///        the surface material
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
   void
-  closeGeometry(const GeometryID& layerID);
+  closeGeometry(const SurfaceMaterialMap& surfaceMaterialMap,
+                const GeometryID&         layerID);
 };
 
 /// Layers are constructedd with shared_ptr factories, hence the layer array is

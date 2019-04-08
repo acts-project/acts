@@ -277,7 +277,7 @@ public:
   /// @param material Material description this given and stored as a shared
   /// pointer
   void
-  setAssociatedMaterial(std::shared_ptr<const SurfaceMaterial> material);
+  assignSurfaceMaterial(std::shared_ptr<const SurfaceMaterial> material);
 
   /// The templated Parameters onSurface method
   /// In order to avoid unneccessary geometrical operations, it checks on the

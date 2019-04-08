@@ -47,7 +47,7 @@ Acts::CuboidVolumeBuilder::buildSurface(
     surface = Surface::makeShared<PlaneSurface>(
         std::make_shared<const Transform3D>(trafo), cfg.rBounds);
   }
-  surface->setAssociatedMaterial(cfg.surMat);
+  surface->assignSurfaceMaterial(cfg.surMat);
   return surface;
 }
 

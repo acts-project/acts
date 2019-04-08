@@ -13,6 +13,7 @@
 #pragma once
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
 
 #include <functional>
@@ -26,9 +27,12 @@ class TrackingVolume;
 class Layer;
 class Surface;
 class PerigeeSurface;
+class SurfaceMaterial;
 
 using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
+using SurfaceMaterialMap
+    = std::map<GeometryID, std::shared_ptr<const SurfaceMaterial>>;
 
 ///  @class TrackingGeometry
 ///
@@ -48,7 +52,9 @@ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
-  TrackingGeometry(const MutableTrackingVolumePtr& highestVolume);
+  TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
+                   const SurfaceMaterialMap&       surfaceMaterialMap
+                   = SurfaceMaterialMap());
 
   /// Destructor
   ~TrackingGeometry();

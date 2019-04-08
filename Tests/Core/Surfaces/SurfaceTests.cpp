@@ -144,7 +144,7 @@ namespace Test {
     MaterialProperties newProperties{0.5, 0.5, 0.5, 20., 10., 5.};
     auto               pNewMaterial
         = std::make_shared<const HomogeneousSurfaceMaterial>(newProperties);
-    surface.setAssociatedMaterial(pNewMaterial);
+    surface.assignSurfaceMaterial(pNewMaterial);
     BOOST_CHECK_EQUAL(surface.associatedMaterial(),
                       pNewMaterial.get());  // passes ??
     //

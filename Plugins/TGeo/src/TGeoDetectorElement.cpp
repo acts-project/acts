@@ -377,7 +377,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   }
   // set the asscoiated material (non const method)
   if (surface) {
-    surface->setAssociatedMaterial(std::move(material));
+    surface->assignSurfaceMaterial(std::move(material));
   }
   // set the const member surface
   m_surface = surface;
@@ -722,7 +722,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
   }
   // set the asscoiated material (non const method)
   if (surface) {
-    surface->setAssociatedMaterial(std::move(material));
+    surface->assignSurfaceMaterial(std::move(material));
   }
   // set the const member surface
   m_surface = surface;

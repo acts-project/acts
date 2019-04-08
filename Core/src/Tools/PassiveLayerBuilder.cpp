@@ -96,7 +96,7 @@ Acts::PassiveLayerBuilder::endcapLayers(const Acts::GeometryContext& /*gctx*/,
         // create homogeneous material
         material = m_cfg.posnegLayerMaterial.at(ipnl);
         // sign it to the surface
-        eLayer->surfaceRepresentation().setAssociatedMaterial(material);
+        eLayer->surfaceRepresentation().assignSurfaceMaterial(material);
       }
       // push it into the layer vector
       eLayers.push_back(eLayer);
@@ -137,7 +137,7 @@ Acts::PassiveLayerBuilder::centralLayers(
         // create homogeneous material
         material = m_cfg.centralLayerMaterial.at(icl);
         // sign it to the surface
-        cLayer->surfaceRepresentation().setAssociatedMaterial(material);
+        cLayer->surfaceRepresentation().assignSurfaceMaterial(material);
       }
       // push it into the layer vector
       cLayers.push_back(cLayer);
