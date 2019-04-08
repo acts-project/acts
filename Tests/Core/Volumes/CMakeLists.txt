@@ -3,3 +3,13 @@ target_include_directories (CylinderVolumeBoundsTests PRIVATE ${Boost_INCLUDE_DI
 target_link_libraries (CylinderVolumeBoundsTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test(NAME CylinderVolumeBoundsUnitTest COMMAND CylinderVolumeBoundsTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST CylinderVolumeBoundsUnitTest TARGETS CylinderVolumeBoundsTests)
+
+add_executable (GenericCuboidVolumeBoundsTest GenericCuboidVolumeBoundsTest.cpp)
+target_include_directories (GenericCuboidVolumeBoundsTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (GenericCuboidVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME GenericCuboidVolumeBoundsTest COMMAND GenericCuboidVolumeBoundsTest)
+
+add_executable (CutoutCylinderVolumeBoundsTest CutoutCylinderVolumeBoundsTest.cpp)
+target_include_directories (CutoutCylinderVolumeBoundsTest PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (CutoutCylinderVolumeBoundsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test(NAME CutoutCylinderVolumeBoundsTest COMMAND CutoutCylinderVolumeBoundsTest)
