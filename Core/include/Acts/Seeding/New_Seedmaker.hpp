@@ -49,7 +49,8 @@ public:
   New_Seedmaker()                                 = delete;
   New_Seedmaker(const New_Seedmaker<SpacePoint>&) = delete;
   New_Seedmaker<SpacePoint>&
-  operator=(const New_Seedmaker<SpacePoint>&)     = delete;
+  operator=(const New_Seedmaker<SpacePoint>&)
+      = delete;
   //@}
 
   /// Create a new space point grid, fill all space points from input parameter
@@ -79,9 +80,8 @@ public:
   /// @param state the state object in which all found seeds are stored.
   /// state object can be shared between all parallel calls
   void
-  createSeedsForRegion(
-      SeedingStateIterator<SpacePoint>                  it,
-      Acts::SeedmakerState<SpacePoint>& state) const;
+  createSeedsForRegion(SeedingStateIterator<SpacePoint>  it,
+                       Acts::SeedmakerState<SpacePoint>& state) const;
 
 private:
   void

@@ -133,7 +133,7 @@ New_Seedmaker<SpacePoint>::initState(
 template <typename SpacePoint>
 void
 New_Seedmaker<SpacePoint>::createSeedsForRegion(
-    SeedingStateIterator<SpacePoint>                  it,
+    SeedingStateIterator<SpacePoint>  it,
     Acts::SeedmakerState<SpacePoint>& state) const
 {
   for (size_t spIndex = 0; spIndex < it.currentBin->size(); spIndex++) {
