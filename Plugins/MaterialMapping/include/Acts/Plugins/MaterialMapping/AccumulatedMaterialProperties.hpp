@@ -82,10 +82,9 @@ public:
   void
   accumulate(const MaterialProperties& amp, double pathCorrection = 1.);
 
-  /// Average the information accumulated during one event
-  /// using the event weights
+  /// Average the information accumulated for one trackå
   void
-  eventAverage();
+  trackAverage();
 
   /// Average the information accumulated during the entire
   /// mapping process
@@ -136,7 +135,7 @@ AccumulatedMaterialProperties::accumulate(const MaterialProperties& amp,
 }
 
 inline void
-AccumulatedMaterialProperties::eventAverage()
+AccumulatedMaterialProperties::trackAverage()
 {
   // Always count a hit if a path length is registered
   if (m_eventPath > 0.) {

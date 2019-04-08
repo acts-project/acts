@@ -86,7 +86,9 @@ public:
   ///
   /// @param lp local position for the bin assignment
   /// @param mp material properties to be assigned
-  void
+  ///
+  /// @return the bin triple to which the material was assigned
+  std::array<size_t, 3>
   accumulate(const Vector2D&           lp,
              const MaterialProperties& mp,
              double                    pathCorrection = 1.);
@@ -95,25 +97,19 @@ public:
   ///
   /// @param gp local position for the bin assignment
   /// @param mp material properties to be assigned
-  void
+  ///
+  /// @return the bin triple to which the material was assigned
+  std::array<size_t, 3>
   accumulate(const Vector3D&           gp,
              const MaterialProperties& mp,
              double                    pathCorrection = 1.);
 
-  /// Assign a material properites object
+  /// Average the information accumulated from one mapped track
   ///
-  /// @param gp local position for the bin assignment
-  /// @param mps Vector of recorded material properties to be assigned
-  /// @param pathCorrection The geometric path correction due to incident
+  /// @param trackBins The bins that were touched by this event
+  /// If none is given, the average runs over all bins in the surface map
   void
-  accumulate(const Vector3D& gp,
-             const std::vector<std::pair<MaterialProperties, Vector3D>>& mps,
-             double pathCorrection = 1.);
-
-  /// Average the information accumulated during one event
-  /// using the event weights
-  void
-  eventAverage();
+  trackAverage(const std::vector<std::array<size_t, 3>>& trackBins = {});
 
   /// Total average creates SurfaceMaterial
   std::unique_ptr<const SurfaceMaterial>
