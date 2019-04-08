@@ -49,28 +49,20 @@ public:
   New_Seedmaker()                                 = delete;
   New_Seedmaker(const New_Seedmaker<SpacePoint>&) = delete;
   New_Seedmaker<SpacePoint>&
-  operator=(const New_Seedmaker<SpacePoint>&)
-      = delete;
+  operator=(const New_Seedmaker<SpacePoint>&)     = delete;
   //@}
-
-  /// converter function from internal seeds to external seeds. avoids
-  /// templating all functions.
-  /// @param intSeed the internal seed to be converted taken from a state
-  /// @param inputSP the vector that has been used to call initState to generate
-  /// intSeed
-  /// @return the Seed return type with constructor Seed(SpacePoint, SpacePoint,
-  /// Spacepoint, float z)
-  template <typename Seed>
-  std::unique_ptr<Seed>
-  nextSeed(Acts::SeedmakerState<SpacePoint>* state);
 
   /// Create a new space point grid, fill all space points from input parameter
   /// into the grid and save grid in the state.
-  /// @param spVec the unordered vector containing all input space points
-  /// @param state the state of the object in which the space point grid will
-  /// be stored
+  /// @param spBegin begin iterator to retrieve all input space points
+  /// @param spEnd end iterator where to stop adding space points
+  /// @param covTool covariance tool which is applied to each space point
+  /// @param bottomBinFinder IBinFinder tool to store in the returned state
+  /// @param topBinFinder IBinFinder tool to store in the returned state
+  /// @return the state object containing all space points and container for
+  /// found seeds
   template <typename SpacePointIterator>
-  std::shared_ptr<Acts::SeedmakerState<SpacePoint>>
+  Acts::SeedmakerState<SpacePoint>
   initState(SpacePointIterator spBegin,
             SpacePointIterator spEnd,
             std::function<Acts::Vector2D(const SpacePoint* const,
@@ -81,10 +73,15 @@ public:
             std::shared_ptr<Acts::IBinFinder<SpacePoint>> topBinFinder) const;
 
   /// Create all seeds from the grid bin referenced by "it"
+  /// This method can be called in parallel.
+  /// @param it caches and updates the current space point and its
+  /// neighbors. Iterator must be separate object for each parallel call.
+  /// @param state the state object in which all found seeds are stored.
+  /// state object can be shared between all parallel calls
   void
   createSeedsForRegion(
       SeedingStateIterator<SpacePoint>                  it,
-      std::shared_ptr<Acts::SeedmakerState<SpacePoint>> state) const;
+      Acts::SeedmakerState<SpacePoint>& state) const;
 
 private:
   void

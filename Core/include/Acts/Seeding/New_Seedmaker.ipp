@@ -39,7 +39,7 @@ New_Seedmaker<SpacePoint>::New_Seedmaker(
 
 template <typename SpacePoint>
 template <typename SpacePointIterator>
-std::shared_ptr<Acts::SeedmakerState<SpacePoint>>
+Acts::SeedmakerState<SpacePoint>
 New_Seedmaker<SpacePoint>::initState(
     SpacePointIterator spBegin,
     SpacePointIterator spEnd,
@@ -53,7 +53,7 @@ New_Seedmaker<SpacePoint>::initState(
           typename std::iterator_traits<SpacePointIterator>::value_type,
           const SpacePoint*>::value,
       "Iterator does not contain type this class was templated with");
-  auto state = std::make_shared<Acts::SeedmakerState<SpacePoint>>();
+  auto state = Acts::SeedmakerState<SpacePoint>();
   // setup spacepoint grid config
   SpacePointGridConfig gridConf;
   gridConf.bFieldInZ   = m_config.bFieldInZ;
@@ -120,21 +120,21 @@ New_Seedmaker<SpacePoint>::initState(
       bin.push_back(std::move(isp));
     }
   }
-  state->binnedSP        = std::move(grid);
-  state->bottomBinFinder = bottomBinFinder;
-  state->topBinFinder    = topBinFinder;
-  std::array<size_t, 2> numBins = state->binnedSP->getNBins();
+  state.binnedSP        = std::move(grid);
+  state.bottomBinFinder = bottomBinFinder;
+  state.topBinFinder    = topBinFinder;
+  std::array<size_t, 2> numBins = state.binnedSP->getNBins();
   for (size_t i = 0; i < numBins[0] * numBins[1]; i++) {
-    state->outputVec.push_back({});
+    state.outputVec.push_back({});
   }
-  return state;
+  return std::move(state);
 }
 
 template <typename SpacePoint>
 void
 New_Seedmaker<SpacePoint>::createSeedsForRegion(
     SeedingStateIterator<SpacePoint>                  it,
-    std::shared_ptr<Acts::SeedmakerState<SpacePoint>> state) const
+    Acts::SeedmakerState<SpacePoint>& state) const
 {
   for (size_t spIndex = 0; spIndex < it.currentBin->size(); spIndex++) {
     const InternalSpacePoint<SpacePoint>* spM
@@ -353,7 +353,7 @@ New_Seedmaker<SpacePoint>::createSeedsForRegion(
       }
     }
     m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM,
-                                              state->outputVec[it.outputIndex]);
+                                              state.outputVec[it.outputIndex]);
   }
 }
 

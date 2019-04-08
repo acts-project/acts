@@ -106,24 +106,24 @@ main()
     return {sp->covr, sp->covz};
   };
 
-  std::shared_ptr<Acts::SeedmakerState<SpacePoint>> state = a.initState(
+  Acts::SeedmakerState<SpacePoint> state = a.initState(
       spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder);
   auto start = std::chrono::system_clock::now();
-  for (Acts::SeedingStateIterator<SpacePoint> it = state->begin();
-       !(it == state->end());
+  for (Acts::SeedingStateIterator<SpacePoint> it = state.begin();
+       !(it == state.end());
        ++it) {
     a.createSeedsForRegion(it, state);
   }
   auto                          end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
   std::cout << "time to create seeds: " << elapsed_seconds.count() << std::endl;
-  std::cout << "Number of regions: " << state->outputVec.size() << std::endl;
+  std::cout << "Number of regions: " << state.outputVec.size() << std::endl;
   int numSeeds = 0;
-  for (auto& outVec : state->outputVec) {
+  for (auto& outVec : state.outputVec) {
     numSeeds += outVec.size();
   }
   std::cout << "Number of seeds generated: " << numSeeds << std::endl;
-  for (auto& regionVec : state->outputVec) {
+  for (auto& regionVec : state.outputVec) {
     for (size_t i = 0; i < regionVec.size(); i++) {
       const Acts::Seed<SpacePoint>* seed = regionVec[i].get();
       const SpacePoint*             sp   = seed->sp()[0];
