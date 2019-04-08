@@ -32,12 +32,12 @@ public:
   /// - both faces are given in counter clock wise order
   GenericCuboidVolumeBounds(const std::array<Acts::Vector3D, 8>& vertices);
 
-  virtual ~GenericCuboidVolumeBounds() = default;
+  ~GenericCuboidVolumeBounds() = default override;
 
   ///  clone() method to make deep copy in Volume copy constructor and for
   /// assigment operator  of the Surface class.
-  virtual VolumeBounds*
-  clone() const;
+  VolumeBounds*
+  clone() const override;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -45,8 +45,8 @@ public:
   /// @param tol is the tolerance applied for the inside check
   ///
   /// @return boolean indicating if the position is inside
-  virtual bool
-  inside(const Vector3D& gpos, double tol = 0.) const;
+  bool
+  inside(const Vector3D& gpos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into Surfaces
   /// the Volume can turn them into BoundarySurfaces
@@ -56,13 +56,13 @@ public:
   /// @note this is factory method
   ///
   /// @return a vector of surfaces bounding this volume
-  virtual std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(const Transform3D* transform) const;
+  std::vector<std::shared_ptr<const Surface>>
+  decomposeToSurfaces(const Transform3D* transform) const override;
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream to be written into
-  virtual std::ostream&
-  toStream(std::ostream& sl) const;
+  std::ostream&
+  toStream(std::ostream& sl) const override;
 
   void
   draw(IVisualization&    helper,

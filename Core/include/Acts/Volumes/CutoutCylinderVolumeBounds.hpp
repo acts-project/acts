@@ -31,7 +31,7 @@ public:
   {
   }
 
-  virtual ~CutoutCylinderVolumeBounds() = default;
+  ~CutoutCylinderVolumeBounds() = default override;
 
   VolumeBounds*
   clone() const override;
