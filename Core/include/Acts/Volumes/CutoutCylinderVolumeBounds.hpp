@@ -18,10 +18,30 @@ namespace Acts {
 
 class IVisualization;
 
+/**
+ * Class which implements a cutout cylinder. This shape is bascially a cylinder,
+ * with another, smaller cylinder subtracted from the center.
+ * --------------------- rmax
+ * |                   |
+ * |    |---------|    | rmed
+ * |    |         |    |
+ * ------         ------ rmin
+ *       -- dz2 --
+ * -------- dz1 -------
+ *
+ */
 class CutoutCylinderVolumeBounds : public VolumeBounds
 {
 
 public:
+  /**
+   * Constructor from defining parameters
+   * @param rmin Minimum radius at the "choke points"
+   * @param rmed The medium radius (outer radius of the cutout)
+   * @param rmax The outer radius of the overall shape
+   * @param dz1 The longer halflength of the shape
+   * @param dz2 The shorter halflength of the shape
+   */
   CutoutCylinderVolumeBounds(double rmin,
                              double rmed,
                              double rmax,
@@ -31,47 +51,99 @@ public:
   {
   }
 
+  /**
+   * Virtual default constructor
+   */
   ~CutoutCylinderVolumeBounds() = default override;
 
+  /**
+   * Clone method.
+   * @return Pointer to a copy of the shape
+   */
   VolumeBounds*
   clone() const override;
 
+  /**
+   * Inside method to test whether a point is inside the shape
+   * @param gpos The point to test
+   * @param tol The tolerance to test with
+   * @return Whether the point is inside or not.
+   */
   bool
   inside(const Vector3D& gpos, double tol = 0) const override;
 
+  /**
+   * Method to decompose the Bounds into Surfaces
+   *
+   * @param transform is the transform to position the surfaces in 3D space
+   * @note this is a factory method
+   *
+   * @return vector of surfaces from the decopmosition
+   */
   std::vector<std::shared_ptr<const Surface>>
   decomposeToSurfaces(const Transform3D* transform) const override;
+
+  /**
+   * Write information about this instance to an outstream
+   * @param sl The outstream
+   * @return The outstream
+   */
   std::ostream&
   toStream(std::ostream& sl) const override;
 
+  /**
+   * Draw this shape using a visualization helper
+   * @param helper The visualizatin helper
+   * @param transform Optional transformation matrix
+   */
   void
   draw(IVisualization&    helper,
        const Transform3D& transform = Transform3D::Identity()) const;
 
+  /**
+   * Return the minimum radius
+   * @return The minimum radius
+   */
   double
   rMin() const
   {
     return m_rmin;
   }
 
+  /**
+   * Return the medium radius
+   * @return The medium radius
+   */
   double
   rMed() const
   {
     return m_rmed;
   }
 
+  /**
+   * Return the maximum radius
+   * @return The maximum radius
+   */
   double
   rMax() const
   {
     return m_rmax;
   }
 
+  /**
+   * Return the longer halflength in z.
+   * @return The halflength
+   */
   double
   dZ1() const
   {
     return m_dz1;
   }
 
+  /**
+   * Return the shorter halflength in z.
+   * @return The halflength
+   */
   double
   dZ2() const
   {

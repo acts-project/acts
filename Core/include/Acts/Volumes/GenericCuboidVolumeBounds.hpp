@@ -64,6 +64,11 @@ public:
   std::ostream&
   toStream(std::ostream& sl) const override;
 
+  /**
+   * Draw this shape using a visualization helper
+   * @param helper The visualizatin helper
+   * @param transform Optional transformation matrix
+   */
   void
   draw(IVisualization&    helper,
        const Transform3D& transform = Transform3D::Identity()) const;
