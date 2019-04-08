@@ -855,6 +855,13 @@ private:
     if (state.navigation.navBoundaries.empty()) {
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
+      debugLog(state, [&] {
+        std::stringstream ss;
+        ss << "Try to find boundaries, we are at: "
+           << stepper.position(state.stepping).transpose()
+           << ", dir: " << stepper.direction(state.stepping).transpose();
+        return ss.str();
+      });
       // Evaluate the boundary surfaces
       state.navigation.navBoundaries
           = state.navigation.currentVolume->compatibleBoundaries(
@@ -897,10 +904,21 @@ private:
           or distance * distance
               < s_onSurfaceTolerance * s_onSurfaceTolerance) {
         debugLog(state, [&] {
-          return std::string("Boundary intersection not valid, skipping it.");
+          std::stringstream ss;
+          ss << "Boundary intersection with:\n";
+          boundaryIntersect.object->toStream(state.geoContext, ss);
+          ss << "\n";
+          ss << "Boundary intersection not valid, skipping it.\n";
+          ss << "valid: " << bool(boundaryIntersect) << "\n";
+          ss << "pathLength: " << distance << "\n";
+          if (distance < 0 && std::abs(distance) < 0.01) {
+            ss << "Very likely overstepped over boundary surface! \n";
+          }
+          return ss.str();
         });
         // Increase the iterator to the next one
         ++state.navigation.navBoundaryIter;
+
       } else {
         debugLog(state,
                  [&] { return std::string("Boundary intersection valid."); });
