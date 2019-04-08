@@ -32,7 +32,7 @@ public:
   /// - both faces are given in counter clock wise order
   GenericCuboidVolumeBounds(const std::array<Acts::Vector3D, 8>& vertices);
 
-  ~GenericCuboidVolumeBounds() = default override;
+  ~GenericCuboidVolumeBounds() override = default;
 
   ///  clone() method to make deep copy in Volume copy constructor and for
   /// assigment operator  of the Surface class.

@@ -54,7 +54,7 @@ public:
   /**
    * Virtual default constructor
    */
-  ~CutoutCylinderVolumeBounds() = default override;
+  ~CutoutCylinderVolumeBounds() override = default;
 
   /**
    * Clone method.
