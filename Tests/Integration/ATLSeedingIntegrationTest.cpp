@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <algorithm>
-#include "Acts/Seeding/ATL_Seedmaker.hpp"
+#include "Acts/Seeding/AtlasSeedfinder.hpp"
 
-#define BOOST_TEST_MODULE SeedmakerIntegrationTest
+#define BOOST_TEST_MODULE SeedfinderIntegrationTest
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
@@ -43,7 +43,7 @@ std::vector<Acts::Legacy::Seed<SpacePoint>>
 runSeeding(std::vector<SpacePoint*> spVec)
 {
 
-  Acts::Legacy::ATL_Seedmaker<SpacePoint> seedMaker;
+  Acts::Legacy::AtlasSeedfinder<SpacePoint> seedMaker;
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
   const Acts::Legacy::Seed<SpacePoint>*       seed     = seedMaker.next();
