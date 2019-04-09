@@ -148,10 +148,10 @@ public:
   getMaterialCell(const Vector3D& position) const
   {
     const auto& gridPosition = m_transformPos(position);
-    size_t      bin          = m_grid.getGlobalBinIndex(gridPosition);
-    const auto& indices      = m_grid.getLocalBinIndices(bin);
-    const auto& lowerLeft    = m_grid.getLowerLeftBinEdge(indices);
-    const auto& upperRight   = m_grid.getUpperRightBinEdge(indices);
+    size_t      bin          = m_grid.globalBinFromPosition(gridPosition);
+    const auto& indices      = m_grid.localBinsFromPosition(bin);
+    const auto& lowerLeft    = m_grid.lowerLeftBinEdge(indices);
+    const auto& upperRight   = m_grid.upperRightBinEdge(indices);
 
     // Loop through all corner points
     constexpr size_t nCorners = 1 << DIM_POS;
@@ -173,7 +173,7 @@ public:
   std::vector<size_t>
   getNBins() const
   {
-    auto nBinsArray = m_grid.getNBins();
+    auto nBinsArray = m_grid.numLocalBins();
     return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
   }
 
@@ -183,7 +183,7 @@ public:
   std::vector<double>
   getMin() const
   {
-    auto minArray = m_grid.getMin();
+    auto minArray = m_grid.minPosition();
     return std::vector<double>(minArray.begin(), minArray.end());
   }
 
@@ -193,7 +193,7 @@ public:
   std::vector<double>
   getMax() const
   {
-    auto maxArray = m_grid.getMax();
+    auto maxArray = m_grid.maxPosition();
     return std::vector<double>(maxArray.begin(), maxArray.end());
   }
 

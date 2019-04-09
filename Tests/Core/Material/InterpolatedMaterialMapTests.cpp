@@ -111,9 +111,9 @@ namespace Test {
     // Test the grid getter
     auto matMapGrid = matMap.getGrid();
     for (unsigned int i = 0; i < dim; i++) {
-      BOOST_CHECK_EQUAL(grid.getNBins()[i], matMapGrid.getNBins()[i]);
-      BOOST_CHECK_EQUAL(grid.getMin()[i], matMapGrid.getMin()[i]);
-      BOOST_CHECK_EQUAL(grid.getMax()[i], matMapGrid.getMax()[i]);
+      BOOST_CHECK_EQUAL(grid.numLocalBins()[i], matMapGrid.numLocalBins()[i]);
+      BOOST_CHECK_EQUAL(grid.minPosition()[i], matMapGrid.minPosition()[i]);
+      BOOST_CHECK_EQUAL(grid.maxPosition()[i], matMapGrid.maxPosition()[i]);
     }
     for (size_t i = 0; i < grid.size(); i++) {
       CHECK_CLOSE_REL(grid.at(i), matMapGrid.at(i), 1e-4);

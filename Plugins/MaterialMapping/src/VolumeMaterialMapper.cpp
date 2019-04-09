@@ -133,14 +133,14 @@ mapMaterialPoints(
   for (const auto& rm : mPoints) {
     // Search for fitting grid point and accumulate
     Grid2D::index_t index = matchToGridPoint(rm.second, grid);
-    grid.at(index).accumulate(rm.first);
+    grid.atLocalBins(index).accumulate(rm.first);
   }
 
   // Build material grid
   // Re-build the axes
-  Grid2D::point_t min   = grid.getMin();
-  Grid2D::point_t max   = grid.getMax();
-  Grid2D::index_t nBins = grid.getNBins();
+  Grid2D::point_t min   = grid.minPosition();
+  Grid2D::point_t max   = grid.maxPosition();
+  Grid2D::index_t nBins = grid.numLocalBins();
 
   EAxis axis1(min[0], max[0], nBins[0]);
   EAxis axis2(min[1], max[1], nBins[1]);
@@ -174,14 +174,14 @@ mapMaterialPoints(
   for (const auto& rm : mPoints) {
     // Search for fitting grid point and accumulate
     Grid3D::index_t index = matchToGridPoint(rm.second, grid);
-    grid.at(index).accumulate(rm.first);
+    grid.atLocalBins(index).accumulate(rm.first);
   }
 
   // Build material grid
   // Re-build the axes
-  Grid3D::point_t min   = grid.getMin();
-  Grid3D::point_t max   = grid.getMax();
-  Grid3D::index_t nBins = grid.getNBins();
+  Grid3D::point_t min   = grid.minPosition();
+  Grid3D::point_t max   = grid.maxPosition();
+  Grid3D::index_t nBins = grid.numLocalBins();
 
   EAxis axis1(min[0], max[0], nBins[0]);
   EAxis axis2(min[1], max[1], nBins[1]);
