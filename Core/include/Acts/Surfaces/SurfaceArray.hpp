@@ -231,7 +231,7 @@ public:
     SurfaceVector&
     lookup(const Vector3D& pos) override
     {
-      return m_grid.at(m_globalToLocal(pos));
+      return m_grid.atPosition(m_globalToLocal(pos));
     }
 
     /// @brief Performs lookup at @c pos and returns bin content as const
@@ -241,7 +241,7 @@ public:
     const SurfaceVector&
     lookup(const Vector3D& pos) const override
     {
-      return m_grid.at(m_globalToLocal(pos));
+      return m_grid.atPosition(m_globalToLocal(pos));
     }
 
     /// @brief Performs lookup at global bin and returns bin content as
@@ -272,7 +272,7 @@ public:
     neighbors(const Vector3D& pos) const override
     {
       auto loc = m_globalToLocal(pos);
-      return m_neighborMap.at(m_grid.getGlobalBinIndex(loc));
+      return m_neighborMap.at(m_grid.globalBinFromPosition(loc));
     }
 
     /// @brief Returns the total size of the grid (including under/overflow
@@ -299,7 +299,7 @@ public:
     std::vector<const IAxis*>
     getAxes() const override
     {
-      auto arr = m_grid.getAxes();
+      auto arr = m_grid.axes();
       return std::vector<const IAxis*>(arr.begin(), arr.end());
     }
 
@@ -319,8 +319,8 @@ public:
     bool
     isValidBin(size_t bin) const override
     {
-      std::array<size_t, DIM> indices = m_grid.getLocalBinIndices(bin);
-      std::array<size_t, DIM> nBins   = m_grid.getNBins();
+      std::array<size_t, DIM> indices = m_grid.localBinsFromGlobalBin(bin);
+      std::array<size_t, DIM> nBins   = m_grid.numLocalBins();
       for (size_t i = 0; i < indices.size(); ++i) {
         size_t idx = indices.at(i);
         if (idx <= 0 || idx >= nBins.at(i) + 1) {
@@ -340,8 +340,8 @@ public:
         if (!isValidBin(i)) {
           continue;
         }
-        typename Grid_t::index_t loc  = m_grid.getLocalBinIndices(i);
-        std::set<size_t> neighborIdxs = m_grid.neighborHoodIndices(loc, 1u);
+        typename Grid_t::index_t loc = m_grid.localBinsFromGlobalBin(i);
+        auto neighborIdxs            = m_grid.neighborHoodIndices(loc, 1u);
         std::vector<const Surface*>& neighbors = m_neighborMap.at(i);
         neighbors.clear();
 
@@ -369,7 +369,7 @@ public:
     getBinCenterImpl(size_t bin) const
     {
       return m_localToGlobal(ActsVectorD<DIM>(
-          m_grid.getBinCenter(m_grid.getLocalBinIndices(bin)).data()));
+          m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin)).data()));
     }
 
     /// Internal method, see above.
@@ -378,7 +378,7 @@ public:
     Vector3D
     getBinCenterImpl(size_t bin) const
     {
-      point_t pos = m_grid.getBinCenter(m_grid.getLocalBinIndices(bin));
+      point_t pos = m_grid.binCenter(m_grid.localBinsFromGlobalBin(bin));
       return m_localToGlobal(pos);
     }
 

@@ -86,14 +86,14 @@ Acts::
         size_t          n = std::abs(int(j) - int(zPos.size()));
         Grid_t::index_t indicesFirstQuadrant = {{i - 1, n}};
 
-        grid.at(indices)
+        grid.atLocalBins(indices)
             = bField.at(localToGlobalBin(indicesFirstQuadrant, nIndices))
             * BFieldUnit;
       } else {
         // std::vectors begin with 0 and we do not want the user needing to
         // take underflow or overflow bins in account this is why we need to
         // subtract by one
-        grid.at(indices)
+        grid.atLocalBins(indices)
             = bField.at(localToGlobalBin({{i - 1, j - 1}}, nIndices))
             * BFieldUnit;
       }
@@ -109,11 +109,20 @@ Acts::
 
   // [4] Create the transformation for the bfield
   // map (Br,Bz) -> (Bx,By,Bz)
-  auto transformBField
-      = [](const Acts::Vector2D& field, const Acts::Vector3D& pos) {
-          return Acts::Vector3D(
-              field.x() * cos(phi(pos)), field.x() * sin(phi(pos)), field.y());
-        };
+  auto transformBField = [](const Acts::Vector2D& field,
+                            const Acts::Vector3D& pos) {
+    double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
+    double cos_phi, sin_phi;
+    if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
+      double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
+      cos_phi                = pos.x() * inv_r_sin_theta;
+      sin_phi                = pos.y() * inv_r_sin_theta;
+    } else {
+      cos_phi = 1.;
+      sin_phi = 0.;
+    }
+    return Acts::Vector3D(field.x() * cos_phi, field.x() * sin_phi, field.y());
+  };
 
   // [5] Create the mapper & BField Service
   // create field mapping
@@ -216,7 +225,7 @@ Acts::
           size_t          l = std::abs(int(k) - (int(zPos.size())));
           Grid_t::index_t indicesFirstOctant = {{m, n, l}};
 
-          grid.at(indices)
+          grid.atLocalBins(indices)
               = bField.at(localToGlobalBin(indicesFirstOctant, nIndices))
               * BFieldUnit;
 
@@ -224,7 +233,7 @@ Acts::
           // std::vectors begin with 0 and we do not want the user needing to
           // take underflow or overflow bins in account this is why we need to
           // subtract by one
-          grid.at(indices)
+          grid.atLocalBins(indices)
               = bField.at(localToGlobalBin({{i - 1, j - 1, k - 1}}, nIndices))
               * BFieldUnit;
         }
@@ -288,11 +297,21 @@ Acts::
 
   // Create the transformation for the bfield
   // map (Br,Bz) -> (Bx,By,Bz)
-  auto transformBField = [](const Acts::Vector2D& bfield,
-                            const Acts::Vector3D& pos) {
-    return Acts::Vector3D(
-        bfield.x() * cos(phi(pos)), bfield.x() * sin(phi(pos)), bfield.y());
-  };
+  auto transformBField
+      = [](const Acts::Vector2D& bfield, const Acts::Vector3D& pos) {
+          double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
+          double cos_phi, sin_phi;
+          if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
+            double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
+            cos_phi                = pos.x() * inv_r_sin_theta;
+            sin_phi                = pos.y() * inv_r_sin_theta;
+          } else {
+            cos_phi = 1.;
+            sin_phi = 0.;
+          }
+          return Acts::Vector3D(
+              bfield.x() * cos_phi, bfield.x() * sin_phi, bfield.y());
+        };
 
   // iterate over all bins, set their value to the solenoid value
   // at their lower left position
@@ -301,13 +320,13 @@ Acts::
       Grid_t::index_t index({i, j});
       if (i == 0 || j == 0 || i == nBinsR + 1 || j == nBinsZ + 1) {
         // under or overflow bin, set zero
-        grid.at(index) = Grid_t::value_type(0, 0);
+        grid.atLocalBins(index) = Grid_t::value_type(0, 0);
       } else {
         // regular bin, get lower left boundary
-        Grid_t::point_t lowerLeft = grid.getLowerLeftBinEdge(index);
+        Grid_t::point_t lowerLeft = grid.lowerLeftBinEdge(index);
         // do lookup
-        Vector2D B     = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
-        grid.at(index) = B;
+        Vector2D B = field.getField(Vector2D(lowerLeft[0], lowerLeft[1]));
+        grid.atLocalBins(index) = B;
       }
     }
   }
