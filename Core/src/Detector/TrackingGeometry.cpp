@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,13 +19,14 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 Acts::TrackingGeometry::TrackingGeometry(
-    const MutableTrackingVolumePtr& highestVolume)
+    const MutableTrackingVolumePtr& highestVolume,
+    const SurfaceMaterialMap&       surfaceMaterialMap)
   : m_world(highestVolume)
   , m_beam(Surface::makeShared<PerigeeSurface>(s_origin))
 {
   // close up the geometry
   size_t volumeID = 0;
-  highestVolume->closeGeometry(m_trackingVolumes, volumeID);
+  highestVolume->closeGeometry(surfaceMaterialMap, m_trackingVolumes, volumeID);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry() = default;

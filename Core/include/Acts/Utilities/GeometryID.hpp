@@ -104,6 +104,15 @@ public:
     return (m_value == tddID.value());
   }
 
+  /// Non-equality operator
+  ///
+  /// @param tddID is the geometry ID that will be compared on equality
+  bool
+  operator!=(const GeometryID& tddID) const
+  {
+    return !operator==(tddID);
+  }
+
   /// Add some stuff
   ///
   /// @param type_id which identifier do you wanna add

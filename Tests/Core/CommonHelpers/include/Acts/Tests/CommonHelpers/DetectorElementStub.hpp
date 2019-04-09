@@ -60,7 +60,7 @@ namespace Test {
       , m_elementThickness(thickness)
     {
       auto mutableSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-      mutableSurface->setAssociatedMaterial(material);
+      mutableSurface->assignSurfaceMaterial(material);
       m_elementSurface = mutableSurface;
     }
 
@@ -82,7 +82,7 @@ namespace Test {
     {
       auto mutableSurface
           = Surface::makeShared<LineSurfaceStub>(lBounds, *this);
-      mutableSurface->setAssociatedMaterial(material);
+      mutableSurface->assignSurfaceMaterial(material);
       m_elementSurface = mutableSurface;
     }
 

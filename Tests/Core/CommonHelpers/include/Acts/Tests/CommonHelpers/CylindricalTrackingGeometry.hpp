@@ -241,7 +241,7 @@ namespace Test {
             = pLayer->approachDescriptor()->containedSurfaces();
         auto mutableOuterSurface
             = const_cast<Acts::Surface*>(approachSurfaces.at(1));
-        mutableOuterSurface->setAssociatedMaterial(layerMaterialPtr);
+        mutableOuterSurface->assignSurfaceMaterial(layerMaterialPtr);
         /// now push back the layer
         pLayers.push_back(pLayer);
 
