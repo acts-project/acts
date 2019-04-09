@@ -92,7 +92,7 @@ namespace Test {
 
     CHECK_CLOSE_REL(thicknessNZL, 2 * hThickness, 10e-6);
 
-    // Check that the readout / counter surfaces are reveresed
+    // Check that the readout / counter surfaces are reversed
     CHECK_CLOSE_OR_SMALL(centerReadoutPZL, centerCounterNZL, 10e-6, 10e-9);
     CHECK_CLOSE_OR_SMALL(centerReadoutNZL, centerCounterPZL, 10e-6, 10e-9);
 
