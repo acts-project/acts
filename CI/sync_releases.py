@@ -25,9 +25,11 @@ try:
 except:
     Halo = None
 
+
 class JIRAException(Exception):
     def __init__(self, messages, *args, **kwargs):
         self.messages = messages
+
 
 class JIRA:
     def __init__(self, cookies, url):
@@ -35,10 +37,15 @@ class JIRA:
         self.url = url
 
     def jql(self, q):
-        return requests.get(self.url + "/rest/api/2/search?jql={}&maxResults=500".format(q), cookies=self.cookies)
+        return requests.get(
+            self.url + "/rest/api/2/search?jql={}&maxResults=500".format(q),
+            cookies=self.cookies,
+        )
 
     def get_version_issues(self, version):
-        res = self.jql("project= ACTS AND fixVersion = {} AND status = Closed".format(version)).json()
+        res = self.jql(
+            "project= ACTS AND fixVersion = {} AND status = Closed".format(version)
+        ).json()
         try:
             assert res["maxResults"] > res["total"]
             assert res["startAt"] == 0
@@ -54,25 +61,29 @@ def spinner(text, *args, **kwargs):
         with Halo(text, *args, **kwargs):
             yield
     else:
-        sys.stdout.write(text+"\n")
+        sys.stdout.write(text + "\n")
         yield
+
 
 if sys.stdout.isatty() and tqdm is not None:
     Progress = tqdm
     prog_iter = tqdm
     prog_write = tqdm.write
 else:
-    class Progress():
+
+    class Progress:
         def __init__(self, total, desc, *args, **kwargs):
             self.total = total
             self.current = 0
-            sys.stdout.write(desc+"\n")
+            sys.stdout.write(desc + "\n")
+
         def update(self, n=1, *args, **kwargs):
             self.current += n
             perc = self.current / self.total * 100
             inc = math.ceil(self.total / 10)
             if self.current % inc == 0:
-                sys.stdout.write("%.2f"%perc + "%\n")
+                sys.stdout.write("%.2f" % perc + "%\n")
+
         def close(self):
             pass
 
@@ -87,12 +98,13 @@ else:
         sys.stdout.write(*args, **kwargs)
         sys.stdout.write("\n")
 
+
 def mtmap(tp, func, values, desc=None):
     prog = Progress(total=len(values), leave=False, desc=desc)
     futures = []
     for v in values:
         futures.append(tp.submit(func, v))
-    
+
     for _ in as_completed(futures):
         prog.update()
     prog.close()
@@ -114,36 +126,42 @@ def make_release_notes(version, issues, mrs):
 
         issues_by_type[issue_type].append((key, url, summary))
 
-
     markdown = ""
     markdown += "# Release v{}\n\n".format(version)
 
-    markdown += "\n"*2 + "Merge requests for this release:\n\n"
+    markdown += "\n" * 2 + "Merge requests for this release:\n\n"
     for mr in mrs:
         markdown += " - [!%d - %s](%s)" % (mr.iid, mr.title, mr.web_url) + "\n"
-    markdown += "\n"*2
+    markdown += "\n" * 2
 
     for issue_type, issues in issues_by_type.items():
 
         markdown += "## {}\n".format(issue_type)
 
         for key, url, summary in sorted(issues, key=lambda i: i[0]):
-            markdown += " - [[{key}] {summary}]({url})\n".format(key=key, url=url, summary=summary)
+            markdown += " - [[{key}] {summary}]({url})\n".format(
+                key=key, url=url, summary=summary
+            )
 
-        markdown += "\n"*2
+        markdown += "\n" * 2
 
     return markdown
+
 
 def parse_version(tag):
     return re.match(r"v(\d\.\d\d\.\d\d)", tag.name).group(1)
 
+
 def main():
     p = argparse.ArgumentParser()
 
-    p.add_argument("--access-token",
-                   help="Gitlab access token to update the releases",
-                   default=os.getenv("ATSJENKINS_ACCESS_TOKEN", None))
+    p.add_argument(
+        "--access-token",
+        help="Gitlab access token to update the releases",
+        default=os.getenv("ATSJENKINS_ACCESS_TOKEN", None),
+    )
     p.add_argument("--dry-run", "-s", action="store_true")
+    p.add_argument("--json")
 
     args = p.parse_args()
 
@@ -161,7 +179,9 @@ def main():
         tags = project.tags.list(all=True)
 
     with spinner(text="Loading merge requests"):
-        mrlist = project.mergerequests.list(state="merged", target_branch="master", all=True)
+        mrlist = project.mergerequests.list(
+            state="merged", target_branch="master", all=True
+        )
 
     with ThreadPoolExecutor(max_workers=15) as tp:
         mrs = mrlist
@@ -185,11 +205,12 @@ def main():
                 return tag, jira.get_version_issues(version)
             except JIRAException:
                 return tag, []
-        version_issues = dict(mtmap(tp, load_issues, tags, desc="Loading issues from JIRA"))
 
+        version_issues = dict(
+            mtmap(tp, load_issues, tags, desc="Loading issues from JIRA")
+        )
 
     tag_mrs = {}
-
 
     tag_mrs[tags[0]] = []
     for mr in mrs:
@@ -204,6 +225,7 @@ def main():
 
     print("Found", len(tags), "tags")
 
+    json_dict = {}
 
     for tag in prog_iter(tags, desc="Updating tag release notes"):
         name = tag.name
@@ -214,14 +236,33 @@ def main():
         relnotes = make_release_notes(version, version_issues[tag], tag_mrs[tag])
 
         if not has_release:
-            prog_write("Creating release for tag %s"%name)
+            prog_write("Creating release for tag %s" % name)
         else:
-            prog_write("Updating release notes for tag %s"%name)
+            prog_write("Updating release notes for tag %s" % name)
+
+        prep_issues = []
+        for issue in version_issues[tag]:
+            issue_type = issue["fields"]["issuetype"]["name"]
+            summary = issue["fields"]["summary"]
+            key = issue["key"]
+            prep_issues.append({"type": issue_type, "summary": summary, "key": key})
+
+        json_dict[name] = {
+            "version": version,
+            "relnotes": relnotes,
+            "jira_issues": prep_issues,
+            "mrs": [mr.iid for mr in tag_mrs[tag]],
+        }
 
         if not args.dry_run:
             tag.set_release_description(relnotes)
 
             prog_write("Release notes for %s set" % name)
+
+    if args.json:
+        print("Writing to", args.json)
+        with open(args.json, "w+") as f:
+            json.dump(json_dict, f, indent=2)
 
     print("Release note synchronization complete")
 
