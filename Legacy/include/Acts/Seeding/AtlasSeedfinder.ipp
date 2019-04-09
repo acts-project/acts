@@ -154,8 +154,8 @@ template <typename SpacePoint>
 template <class RandIter>
 void
 Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int      iteration,
-                                                  RandIter spBegin,
-                                                  RandIter spEnd)
+                                                    RandIter spBegin,
+                                                    RandIter spEnd)
 {
   iteration <= 0 ? m_iteration = 0 : m_iteration = iteration;
   erase();

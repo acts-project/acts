@@ -46,14 +46,15 @@ public:
   ~Seedfinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
-  Seedfinder()                                 = delete;
+  Seedfinder()                                         = delete;
   Seedfinder(const Seedfinder<external_spacepoint_t>&) = delete;
   Seedfinder<external_spacepoint_t>&
   operator=(const Seedfinder<external_spacepoint_t>&)
       = delete;
   //@}
 
-  /// @brief Create a new space point grid, fill all space points from input parameter
+  /// @brief Create a new space point grid, fill all space points from input
+  /// parameter
   /// into the grid and save grid in the state.
   /// @param spBegin begin iterator to retrieve all input space points
   /// @param spEnd end iterator where to stop adding space points
@@ -64,14 +65,16 @@ public:
   /// found seeds
   template <typename spacepoint_iterator_t>
   Acts::SeedfinderState<external_spacepoint_t>
-  initState(spacepoint_iterator_t spBegin,
-            spacepoint_iterator_t spEnd,
-            std::function<Acts::Vector2D(const external_spacepoint_t&,
-                                         float,
-                                         float,
-                                         float)>          covTool,
-            std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> bottomBinFinder,
-            std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> topBinFinder) const;
+  initState(
+      spacepoint_iterator_t spBegin,
+      spacepoint_iterator_t spEnd,
+      std::function<Acts::Vector2D(const external_spacepoint_t&,
+                                   float,
+                                   float,
+                                   float)>                     covTool,
+      std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> bottomBinFinder,
+      std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> topBinFinder)
+      const;
 
   /// Create all seeds from the grid bin referenced by "it"
   /// This method can be called in parallel.
@@ -80,15 +83,17 @@ public:
   /// @param state the state object in which all found seeds are stored.
   /// state object can be shared between all parallel calls
   void
-  createSeedsForRegion(SeedfinderStateIterator<external_spacepoint_t>  it,
-                       Acts::SeedfinderState<external_spacepoint_t>& state) const;
+  createSeedsForRegion(
+      SeedfinderStateIterator<external_spacepoint_t> it,
+      Acts::SeedfinderState<external_spacepoint_t>&  state) const;
 
 private:
   void
-  transformCoordinates(std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-                       const InternalSpacePoint<external_spacepoint_t>&               spM,
-                       bool                    bottom,
-                       std::vector<LinCircle>& linCircleVec) const;
+  transformCoordinates(
+      std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
+      const InternalSpacePoint<external_spacepoint_t>&               spM,
+      bool                                                           bottom,
+      std::vector<LinCircle>& linCircleVec) const;
 
   Acts::SeedfinderConfig<external_spacepoint_t> m_config;
 };

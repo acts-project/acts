@@ -93,10 +93,11 @@ protected:
 
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-    const SpacePoint&       sp,
-    const Acts::Vector3D&   globalPos,
-    const Acts::Vector2D&   offsetXY,
-    const Acts::Vector2D&   cov): m_sp(sp)
+    const SpacePoint&     sp,
+    const Acts::Vector3D& globalPos,
+    const Acts::Vector2D& offsetXY,
+    const Acts::Vector2D& cov)
+  : m_sp(sp)
 {
   m_x    = globalPos.x() - offsetXY.x();
   m_y    = globalPos.y() - offsetXY.y();
@@ -112,7 +113,8 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
 
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-    const InternalSpacePoint<SpacePoint>& sp): m_sp(sp.sp())
+    const InternalSpacePoint<SpacePoint>& sp)
+  : m_sp(sp.sp())
 {
   m_x    = sp.m_x;
   m_y    = sp.m_y;

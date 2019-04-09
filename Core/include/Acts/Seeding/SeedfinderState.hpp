@@ -53,8 +53,8 @@ public:
   }
 
   SeedfinderStateIterator(const SpacePointGrid<SpacePoint>* spgrid,
-                       IBinFinder<SpacePoint>*           botBinFinder,
-                       IBinFinder<SpacePoint>*           tBinFinder)
+                          IBinFinder<SpacePoint>*           botBinFinder,
+                          IBinFinder<SpacePoint>*           tBinFinder)
     : currentBin(&(spgrid->at({1, 1})))
   {
     grid             = spgrid;
@@ -69,10 +69,10 @@ public:
   }
 
   SeedfinderStateIterator(const SpacePointGrid<SpacePoint>* spgrid,
-                       IBinFinder<SpacePoint>*           botBinFinder,
-                       IBinFinder<SpacePoint>*           tBinFinder,
-                       size_t                            phiInd,
-                       size_t                            zInd)
+                          IBinFinder<SpacePoint>*           botBinFinder,
+                          IBinFinder<SpacePoint>*           tBinFinder,
+                          size_t                            phiInd,
+                          size_t                            zInd)
     : currentBin(&(spgrid->at({phiInd, zInd})))
   {
     bottomBinFinder  = botBinFinder;
@@ -126,10 +126,10 @@ struct SeedfinderState
   {
     auto phiZbins = binnedSP->getNBins();
     return SeedfinderStateIterator<SpacePoint>(binnedSP.get(),
-                                            bottomBinFinder.get(),
-                                            topBinFinder.get(),
-                                            phiZbins[0],
-                                            phiZbins[1] + 1);
+                                               bottomBinFinder.get(),
+                                               topBinFinder.get(),
+                                               phiZbins[0],
+                                               phiZbins[1] + 1);
   }
 };
 }

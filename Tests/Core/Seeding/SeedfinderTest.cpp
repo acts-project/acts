@@ -9,8 +9,8 @@
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/Seedfinder.hpp"
 
 #include "ATLASCuts.hpp"
 #include "SpacePoint.hpp"
@@ -101,8 +101,7 @@ main()
   Acts::Seedfinder<SpacePoint> a(config);
 
   // covariance tool, sets covariances per spacepoint as required
-  auto ct
-      = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2D {
+  auto ct = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2D {
     return {sp.covr, sp.covz};
   };
 

@@ -43,8 +43,10 @@ Acts::SeedfinderState<external_spacepoint_t>
 Seedfinder<external_spacepoint_t>::initState(
     spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd,
-    std::function<Acts::Vector2D(const external_spacepoint_t&, float, float, float)>
-                                                  covTool,
+    std::function<Acts::Vector2D(const external_spacepoint_t&,
+                                 float,
+                                 float,
+                                 float)>                     covTool,
     std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> bottomBinFinder,
     std::shared_ptr<Acts::IBinFinder<external_spacepoint_t>> topBinFinder) const
 {
@@ -79,14 +81,18 @@ Seedfinder<external_spacepoint_t>::initState(
   // (worst case minR: configured minR + 1mm)
   size_t numRBins = (m_config.rMax + m_config.beamPos.norm());
   std::
-      vector<std::vector<std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>>
+      vector<std::
+                 vector<std::
+                            unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>>
           rBins(numRBins);
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
-    if(*it==nullptr){ continue;}
+    if (*it == nullptr) {
+      continue;
+    }
     const external_spacepoint_t& sp  = **it;
-    float             spX = sp.x();
-    float             spY = sp.y();
-    float             spZ = sp.z();
+    float                        spX = sp.x();
+    float                        spY = sp.y();
+    float                        spZ = sp.z();
 
     if (spZ > zMax || spZ < zMin) {
       continue;
@@ -100,8 +106,9 @@ Seedfinder<external_spacepoint_t>::initState(
     Acts::Vector2D cov
         = covTool(sp, m_config.zAlign, m_config.rAlign, m_config.sigmaError);
     Acts::Vector3D spPosition(spX, spY, spZ);
-    auto           isp = std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
-        sp, spPosition, m_config.beamPos, cov);
+    auto           isp
+        = std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
+            sp, spPosition, m_config.beamPos, cov);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     size_t rIndex = isp->radius();
@@ -116,7 +123,10 @@ Seedfinder<external_spacepoint_t>::initState(
   for (auto& rbin : rBins) {
     for (auto& isp : rbin) {
       Acts::Vector2D spLocation(isp->phi(), isp->z());
-      std::vector<std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>& bin
+      std::
+          vector<std::
+                     unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>&
+              bin
           = grid->at(spLocation);
       bin.push_back(std::move(isp));
     }
@@ -134,8 +144,8 @@ Seedfinder<external_spacepoint_t>::initState(
 template <typename external_spacepoint_t>
 void
 Seedfinder<external_spacepoint_t>::createSeedsForRegion(
-    SeedfinderStateIterator<external_spacepoint_t>  it,
-    Acts::SeedfinderState<external_spacepoint_t>& state) const
+    SeedfinderStateIterator<external_spacepoint_t> it,
+    Acts::SeedfinderState<external_spacepoint_t>&  state) const
 {
   for (size_t spIndex = 0; spIndex < it.currentBin->size(); spIndex++) {
     const InternalSpacePoint<external_spacepoint_t>* spM
@@ -148,7 +158,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
 
     std::set<size_t>& bottomBinIndices = it.bottomBinIndices;
     std::set<size_t>& topBinIndices    = it.topBinIndices;
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
+    std::vector<const InternalSpacePoint<external_spacepoint_t>*>
+        compatBottomSP;
 
     // bottom space point
     for (auto bottomBinIndex : bottomBinIndices) {
@@ -223,14 +234,17 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
 
     // create vectors here to avoid reallocation in each loop
     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
-    std::vector<float>                                 curvatures;
-    std::vector<float>                                 impactParameters;
+    std::vector<float>                                            curvatures;
+    std::vector<float> impactParameters;
 
-    std::vector<std::pair<float,
-                          std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-           seedsPerSpM;
-    size_t numBotSP = compatBottomSP.size();
-    size_t numTopSP = compatTopSP.size();
+    std::
+        vector<std::
+                   pair<float,
+                        std::
+                            unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+            seedsPerSpM;
+    size_t  numBotSP = compatBottomSP.size();
+    size_t  numTopSP = compatTopSP.size();
 
     for (size_t b = 0; b < numBotSP; b++) {
 
@@ -338,9 +352,12 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
         }
       }
       if (!topSpVec.empty()) {
-        std::vector<std::pair<float,
-                              std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-            sameTrackSeeds;
+        std::
+            vector<std::
+                       pair<float,
+                            std::
+                                unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+                sameTrackSeeds;
         sameTrackSeeds = std::move(
             m_config.seedFilter->filterSeeds_2SpFixed(*compatBottomSP[b],
                                                       *spM,
@@ -363,8 +380,8 @@ void
 Seedfinder<external_spacepoint_t>::transformCoordinates(
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>&               spM,
-    bool                                                bottom,
-    std::vector<LinCircle>&                             linCircleVec) const
+    bool                                                           bottom,
+    std::vector<LinCircle>& linCircleVec) const
 {
   float xM      = spM.x();
   float yM      = spM.y();
