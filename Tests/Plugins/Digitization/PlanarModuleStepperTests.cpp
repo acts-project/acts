@@ -40,7 +40,7 @@ namespace Test {
   double tanAlpha   = tan(lAngle);
   double sguardX    = 2 * hThickness * abs(tanAlpha);
 
-  // Module bunds
+  // Module bounds
   auto moduleBounds = std::make_shared<const RectangleBounds>(halfX, halfY);
   auto cSegmentation
       = std::make_shared<const CartesianSegmentation>(moduleBounds,
