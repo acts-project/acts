@@ -87,6 +87,9 @@ namespace Test {
       index)
   {
 
+    // avoid warning with void
+    (void)index;
+
     // Entry and exit point
     Vector3D entry(entryX, entryY, -hThickness);
     Vector3D exit(exitX, exitY, hThickness);
