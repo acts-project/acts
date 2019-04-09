@@ -8,7 +8,6 @@
 
 #pragma once
 #include <vector>
-#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/InterpolatedMaterialMap.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -117,63 +116,4 @@ materialMapperXYZ(const std::function<size_t(std::array<size_t, 3> binsXYZ,
                   std::vector<double>   zPos,
                   std::vector<Material> material,
                   double                lengthUnit = units::_mm);
-
-/// @brief This function creates a discrete material map
-///
-/// @param [in] gridAxis1 Axis data
-/// @param [in] gridAxis2 Axis data
-/// @note The data of the axes is given in the std::array as {minimum value,
-/// maximum value, number of bins}
-/// @param [in] mPoints The set of material at the space points
-/// @param [in] matchToGridPoint Function that assigns the space point
-/// of @p mPoints to the grid points by its local index
-///
-/// @return The map
-detail::Grid<ActsVectorF<5>, detail::EquidistantAxis, detail::EquidistantAxis>
-createMaterialGrid(
-    std::array<double, 3>                             gridAxis1,
-    std::array<double, 3>                             gridAxis2,
-    const std::vector<std::pair<Material, Vector3D>>& mPoints,
-    const std::function<detail::Grid<ActsVectorF<5>,
-                                     detail::EquidistantAxis,
-                                     detail::EquidistantAxis>::
-                            index_t(
-                                const Vector3D&,
-                                const detail::Grid<AccumulatedVolumeMaterial,
-                                                   detail::EquidistantAxis,
-                                                   detail::EquidistantAxis>&)>&
-        matchToGridPoint);
-
-/// @brief This function creates a discrete material map
-///
-/// @param [in] gridAxis1 Axis data
-/// @param [in] gridAxis2 Axis data
-/// @param [in] gridAxis3 Axis data
-/// @note The data of the axes is given in the std::array as {minimum value,
-/// maximum value, number of bins}
-/// @param [in] mPoints The set of material at the space points
-/// @param [in] matchToGridPoint Function that assigns the space point
-/// of @p mPoints to the grid points by its local index
-///
-/// @return The map
-detail::Grid<ActsVectorF<5>,
-             detail::EquidistantAxis,
-             detail::EquidistantAxis,
-             detail::EquidistantAxis>
-createMaterialGrid(
-    std::array<double, 3>                             gridAxis1,
-    std::array<double, 3>                             gridAxis2,
-    std::array<double, 3>                             gridAxis3,
-    const std::vector<std::pair<Material, Vector3D>>& mPoints,
-    const std::function<detail::Grid<ActsVectorF<5>,
-                                     detail::EquidistantAxis,
-                                     detail::EquidistantAxis,
-                                     detail::EquidistantAxis>::
-                            index_t(
-                                const Vector3D&,
-                                const detail::Grid<AccumulatedVolumeMaterial,
-                                                   detail::EquidistantAxis,
-                                                   detail::EquidistantAxis,
-                                                   detail::EquidistantAxis>&)>&
-        matchToGridPoint);
 }  // namespace Acts
