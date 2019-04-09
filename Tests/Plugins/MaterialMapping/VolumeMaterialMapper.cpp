@@ -184,8 +184,8 @@ namespace Test {
 
     // Make some materials
     std::vector<std::pair<Material, Vector3D>> matRecord;
-    Material                                   mat1(1., 2., 3., 4., 5.);
-    Material                                   mat2(6., 7., 8., 9., 10.);
+    Material mat1(1., 2., 3., 4., 5.);
+    Material mat2(6., 7., 8., 9., 10.);
 
     Material       vacuum;
     ActsVectorF<5> matMix;
@@ -313,8 +313,8 @@ namespace Test {
         = createMaterialGrid(xAxis, yAxis, zAxis, matRecord, mapMaterial3D);
 
     // Construct a simple propagation through the detector
-    StraightLineStepper                        sls;
-    Navigator                                  nav(std::move(detector));
+    StraightLineStepper sls;
+    Navigator           nav(std::move(detector));
     Propagator<StraightLineStepper, Navigator> prop(sls, nav);
 
     // Set some start parameters

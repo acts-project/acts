@@ -198,8 +198,8 @@ mapMaterialPoints(
 
 MaterialGrid2D
 Acts::createMaterialGrid(
-    std::array<double, 3>   gridAxis1,
-    std::array<double, 3>   gridAxis2,
+    std::array<double, 3> gridAxis1,
+    std::array<double, 3> gridAxis2,
     const RecordedMaterial& mPoints,
     const std::function<Grid2D::index_t(const Vector3D&, const Grid2D&)>&
         matchToGridPoint)
@@ -210,9 +210,9 @@ Acts::createMaterialGrid(
 
 MaterialGrid3D
 Acts::createMaterialGrid(
-    std::array<double, 3>   gridAxis1,
-    std::array<double, 3>   gridAxis2,
-    std::array<double, 3>   gridAxis3,
+    std::array<double, 3> gridAxis1,
+    std::array<double, 3> gridAxis2,
+    std::array<double, 3> gridAxis3,
     const RecordedMaterial& mPoints,
     const std::function<Grid3D::index_t(const Vector3D&, const Grid3D&)>&
         matchToGridPoint)

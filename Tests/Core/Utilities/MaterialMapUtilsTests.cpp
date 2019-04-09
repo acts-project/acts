@@ -80,7 +80,8 @@ namespace Test {
     auto localToGlobalBin_xyz
         = [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
             return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2))
-                    + binsXYZ.at(1) * nBinsXYZ.at(2) + binsXYZ.at(2));
+                    + binsXYZ.at(1) * nBinsXYZ.at(2)
+                    + binsXYZ.at(2));
           };
 
     // Create material mapper in xyz
