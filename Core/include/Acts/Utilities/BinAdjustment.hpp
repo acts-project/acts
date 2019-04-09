@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// BinAdjustment.h, Acts project
+// BinAdjustment.hpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -89,11 +89,11 @@ adjustBinUtility(const BinUtility& bu, const CylinderBounds& cBounds)
   for (auto& bd : bData) {
     // The binning value
     BinningValue bval = bd.binvalue;
-    // Throw exceptions is stuff doesn't make sense:
+    // Throw exceptions if stuff doesn't make sense:
     // - not the right binning value
     // - not equidistant
     if (bd.type == arbitrary) {
-      throw std::invalid_argument("Arbirary binning can not be adjusted.");
+      throw std::invalid_argument("Arbitrary binning can not be adjusted.");
     } else if (bval != binRPhi and bval != binPhi and bval != binZ) {
       throw std::invalid_argument("Cylinder binning must be: rphi, phi, z");
     }

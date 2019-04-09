@@ -419,8 +419,8 @@ private:
 
   /// close the Geometry, i.e. set the GeometryID and assign material
   ///
-  /// @param surfaceMaterialMap is a map that contains the surface
-  ///        the surface material
+  /// @param surfaceMaterialMap is a map that contains 
+  ///        the surface material mapped iwth the GeometryID
   /// @param volumeMap is a map to find the a volume
   ///        by a given name
   /// @param vol is the geometry id of the volume

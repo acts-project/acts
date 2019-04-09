@@ -63,7 +63,7 @@ Acts::Layer::closeGeometry(const SurfaceMaterialMap& surfaceMaterialMap,
     // Try to find the surface in the map
     auto sMaterial = surfaceMaterialMap.find(geoID);
     if (sMaterial != surfaceMaterialMap.end()) {
-      sf->assignSurfaceMaterial(std::move(sMaterial->second));
+      sf->assignSurfaceMaterial(sMaterial->second);
     }
   };
 

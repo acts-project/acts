@@ -82,7 +82,7 @@ public:
   void
   accumulate(const MaterialProperties& amp, double pathCorrection = 1.);
 
-  /// Average the information accumulated for one trackå
+  /// Average the information accumulated for one track
   void
   trackAverage();
 
