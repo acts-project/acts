@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Volumes/GenericCuboidVolumeBounds.hpp"
+
 #include "Acts/Surfaces/ConvexPolygonBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -133,9 +134,6 @@ Acts::GenericCuboidVolumeBounds::decomposeToSurfaces(
         normal, Vector3D::UnitZ()));
 
     vol2srf = vol2srf * Translation3D(-ctrd);
-    // if(transform != nullptr) {
-    // vol2srf =  vol2srf * (*transform).inverse();
-    //}
 
     // now calculate position of vertices in surface local frame
     Vector3D a_l, b_l, c_l, d_l;

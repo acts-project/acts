@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Volumes/CutoutCylinderVolumeBounds.hpp"
+
 #include <memory>
 #include <vector>
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -70,12 +71,10 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
 
   // outer cylinder envelope
   auto outer = Surface::makeShared<CylinderSurface>(trf, m_rmax, m_dz1);
-  // surfaces.push_back(outer);
   surfaces.at(tubeOuterCover) = outer;
 
   // inner (small) cylinder envelope
   auto ctr_inner = Surface::makeShared<CylinderSurface>(trf, m_rmed, m_dz2);
-  // surfaces.push_back(ctr_inner);
   surfaces.at(tubeInnerCover) = ctr_inner;
 
   // z position of the pos and neg choke points
@@ -87,14 +86,12 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
         *trf * Translation3D(Vector3D(0, 0, zChoke)));
     auto posInner
         = Surface::makeShared<CylinderSurface>(posChokeTrf, m_rmin, hlChoke);
-    // surfaces.push_back(posInner);
     surfaces.at(index7) = posInner;
 
     auto negChokeTrf = std::make_shared<const Transform3D>(
         *trf * Translation3D(Vector3D(0, 0, -zChoke)));
     auto negInner
         = Surface::makeShared<CylinderSurface>(negChokeTrf, m_rmin, hlChoke);
-    // surfaces.push_back(negInner);
     surfaces.at(index6) = negInner;
   }
 
@@ -103,7 +100,6 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
       *trf * Translation3D(Vector3D(0, 0, m_dz1)));
   auto posOutDisc
       = Surface::makeShared<DiscSurface>(posOutDiscTrf, m_rmin, m_rmax);
-  // surfaces.push_back(posOutDisc);
   surfaces.at(positiveFaceXY) = posOutDisc;
 
   auto negOutDiscTrf = std::make_shared<const Transform3D>(
@@ -111,7 +107,6 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
       * AngleAxis3D(M_PI, Vector3D::UnitX()));
   auto negOutDisc
       = Surface::makeShared<DiscSurface>(negOutDiscTrf, m_rmin, m_rmax);
-  // surfaces.push_back(negOutDisc);
   surfaces.at(negativeFaceXY) = negOutDisc;
 
   // inner disks
@@ -119,7 +114,6 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
       *trf * Translation3D(Vector3D(0, 0, m_dz2)));
   auto posInDisc
       = Surface::makeShared<DiscSurface>(posInDiscTrf, m_rmin, m_rmed);
-  // surfaces.push_back(posInDisc);
   surfaces.at(index5) = posInDisc;
 
   auto negInDiscTrf = std::make_shared<const Transform3D>(
@@ -127,7 +121,6 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
       * AngleAxis3D(M_PI, Vector3D::UnitX()));
   auto negInDisc
       = Surface::makeShared<DiscSurface>(negInDiscTrf, m_rmin, m_rmed);
-  // surfaces.push_back(negInDisc);
   surfaces.at(index4) = negInDisc;
 
   return surfaces;
