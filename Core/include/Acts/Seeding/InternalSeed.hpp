@@ -23,9 +23,9 @@ class InternalSeed
   /////////////////////////////////////////////////////////////////////////////////
 
 public:
-  InternalSeed(const InternalSpacePoint<SpacePoint>* s0,
-               const InternalSpacePoint<SpacePoint>* s1,
-               const InternalSpacePoint<SpacePoint>* s2,
+  InternalSeed(const InternalSpacePoint<SpacePoint>& s0,
+               const InternalSpacePoint<SpacePoint>& s1,
+               const InternalSpacePoint<SpacePoint>& s2,
                float                                 z);
   InternalSeed&
   operator=(const InternalSeed& seed);
@@ -56,11 +56,11 @@ InternalSeed<SpacePoint>::operator=(const InternalSeed<SpacePoint>& seed)
 
 template <typename SpacePoint>
 inline InternalSeed<SpacePoint>::InternalSeed(
-    const InternalSpacePoint<SpacePoint>* s0,
-    const InternalSpacePoint<SpacePoint>* s1,
-    const InternalSpacePoint<SpacePoint>* s2,
+    const InternalSpacePoint<SpacePoint>& s0,
+    const InternalSpacePoint<SpacePoint>& s1,
+    const InternalSpacePoint<SpacePoint>& s2,
     float                                 z)
-  : sp({s0, s1, s2})
+  : sp({&s0, &s1, &s2})
 {
   m_z = z;
 }

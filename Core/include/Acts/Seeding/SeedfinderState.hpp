@@ -21,10 +21,10 @@
 namespace Acts {
 
 template <typename SpacePoint>
-class SeedingStateIterator
+class SeedfinderStateIterator
 {
 public:
-  SeedingStateIterator& operator++()
+  SeedfinderStateIterator& operator++()
   {
     if (zIndex < phiZbins[1]) {
       zIndex++;
@@ -47,12 +47,12 @@ public:
   }
 
   bool
-  operator==(const SeedingStateIterator& otherState)
+  operator==(const SeedfinderStateIterator& otherState)
   {
     return (zIndex == otherState.zIndex && phiIndex == otherState.phiIndex);
   }
 
-  SeedingStateIterator(const SpacePointGrid<SpacePoint>* spgrid,
+  SeedfinderStateIterator(const SpacePointGrid<SpacePoint>* spgrid,
                        IBinFinder<SpacePoint>*           botBinFinder,
                        IBinFinder<SpacePoint>*           tBinFinder)
     : currentBin(&(spgrid->at({1, 1})))
@@ -68,7 +68,7 @@ public:
     topBinIndices    = topBinFinder->findBins(phiIndex, zIndex, grid);
   }
 
-  SeedingStateIterator(const SpacePointGrid<SpacePoint>* spgrid,
+  SeedfinderStateIterator(const SpacePointGrid<SpacePoint>* spgrid,
                        IBinFinder<SpacePoint>*           botBinFinder,
                        IBinFinder<SpacePoint>*           tBinFinder,
                        size_t                            phiInd,
@@ -101,7 +101,7 @@ public:
 };
 
 template <typename SpacePoint>
-struct SeedmakerState
+struct SeedfinderState
 {
   // grid with ownership of all InternalSpacePoint
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> binnedSP;
@@ -114,18 +114,18 @@ struct SeedmakerState
   // container with seeds created so far
   std::vector<std::vector<std::unique_ptr<Seed<SpacePoint>>>> outputVec;
 
-  SeedingStateIterator<SpacePoint>
+  SeedfinderStateIterator<SpacePoint>
   begin()
   {
-    return SeedingStateIterator<SpacePoint>(
+    return SeedfinderStateIterator<SpacePoint>(
         binnedSP.get(), bottomBinFinder.get(), topBinFinder.get());
   }
 
-  SeedingStateIterator<SpacePoint>
+  SeedfinderStateIterator<SpacePoint>
   end()
   {
     auto phiZbins = binnedSP->getNBins();
-    return SeedingStateIterator<SpacePoint>(binnedSP.get(),
+    return SeedfinderStateIterator<SpacePoint>(binnedSP.get(),
                                             bottomBinFinder.get(),
                                             topBinFinder.get(),
                                             phiZbins[0],

@@ -20,9 +20,9 @@ public:
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
   float
-  seedWeight(const InternalSpacePoint<SpacePoint>* bottom,
-             const InternalSpacePoint<SpacePoint>* middle,
-             const InternalSpacePoint<SpacePoint>* top) const;
+  seedWeight(const InternalSpacePoint<SpacePoint>& bottom,
+             const InternalSpacePoint<SpacePoint>& middle,
+             const InternalSpacePoint<SpacePoint>& top) const;
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
@@ -31,9 +31,9 @@ public:
   /// discarded
   bool
   singleSeedCut(float                                 weight,
-                const InternalSpacePoint<SpacePoint>* bottom,
-                const InternalSpacePoint<SpacePoint>* middle,
-                const InternalSpacePoint<SpacePoint>* top) const;
+                const InternalSpacePoint<SpacePoint>& bottom,
+                const InternalSpacePoint<SpacePoint>&,
+                const InternalSpacePoint<SpacePoint>&) const;
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space
@@ -49,15 +49,15 @@ public:
 template <typename SpacePoint>
 float
 ATLASCuts<SpacePoint>::seedWeight(
-    const InternalSpacePoint<SpacePoint>* bottom,
-    const InternalSpacePoint<SpacePoint>*,
-    const InternalSpacePoint<SpacePoint>* top) const
+    const InternalSpacePoint<SpacePoint>& bottom,
+    const InternalSpacePoint<SpacePoint>&,
+    const InternalSpacePoint<SpacePoint>& top) const
 {
   float weight = 0;
-  if (bottom->radius() > 150) {
+  if (bottom.radius() > 150) {
     weight = 400;
   }
-  if (top->radius() < 150) {
+  if (top.radius() < 150) {
     weight = 200;
   }
   return weight;
@@ -67,11 +67,11 @@ template <typename SpacePoint>
 bool
 ATLASCuts<SpacePoint>::singleSeedCut(
     float                                 weight,
-    const InternalSpacePoint<SpacePoint>* b,
-    const InternalSpacePoint<SpacePoint>*,
-    const InternalSpacePoint<SpacePoint>*) const
+    const InternalSpacePoint<SpacePoint>& b,
+    const InternalSpacePoint<SpacePoint>&,
+    const InternalSpacePoint<SpacePoint>&) const
 {
-  return !(b->radius() > 150. && weight < 380.);
+  return !(b.radius() > 150. && weight < 380.);
 }
 
 template <typename SpacePoint>

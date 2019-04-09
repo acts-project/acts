@@ -24,8 +24,8 @@ SeedFilter<SpacePoint>::SeedFilter(
 template <typename SpacePoint>
 std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
 SeedFilter<SpacePoint>::filterSeeds_2SpFixed(
-    const InternalSpacePoint<SpacePoint>*               bottomSP,
-    const InternalSpacePoint<SpacePoint>*               middleSP,
+    const InternalSpacePoint<SpacePoint>&               bottomSP,
+    const InternalSpacePoint<SpacePoint>&               middleSP,
     std::vector<const InternalSpacePoint<SpacePoint>*>& topSpVec,
     std::vector<float>&                                 invHelixDiameterVec,
     std::vector<float>&                                 impactParametersVec,
@@ -89,17 +89,17 @@ SeedFilter<SpacePoint>::filterSeeds_2SpFixed(
     }
     if (m_experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
-      weight += m_experimentCuts->seedWeight(bottomSP, middleSP, topSpVec[i]);
+      weight += m_experimentCuts->seedWeight(bottomSP, middleSP, *topSpVec[i]);
       // discard seeds according to detector specific cuts (e.g.: weight)
       if (!m_experimentCuts->singleSeedCut(
-              weight, bottomSP, middleSP, topSpVec[i])) {
+              weight, bottomSP, middleSP, *topSpVec[i])) {
         continue;
       }
     }
     selectedSeeds.push_back(
         std::make_pair(weight,
                        std::make_unique<const InternalSeed<SpacePoint>>(
-                           bottomSP, middleSP, topSpVec[i], zOrigin)));
+                           bottomSP, middleSP, *topSpVec[i], zOrigin)));
   }
   return selectedSeeds;
 }

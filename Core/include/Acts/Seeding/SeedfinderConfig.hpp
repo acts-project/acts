@@ -16,7 +16,7 @@ template <typename T>
 class SeedFilter;
 
 template <typename SpacePoint>
-struct SeedmakerConfig
+struct SeedfinderConfig
 {
 
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
@@ -94,7 +94,7 @@ struct SeedmakerConfig
   // find seeds within 5sigma error ellipse
   float sigmaError = 5;
 
-  // derived values, set on Seedmaker construction
+  // derived values, set on Seedfinder construction
   float highland            = 0;
   float maxScatteringAngle2 = 0;
   float pTPerHelixRadius    = 0;

@@ -25,7 +25,7 @@ class InternalSpacePoint
 
 public:
   InternalSpacePoint() = delete;
-  InternalSpacePoint(const SpacePoint*     sp,
+  InternalSpacePoint(const SpacePoint&     sp,
                      const Acts::Vector3D& globalPos,
                      const Acts::Vector2D& offsetXY,
                      const Acts::Vector2D& cov);
@@ -71,7 +71,7 @@ public:
   {
     return m_covz;
   }
-  const SpacePoint*
+  const SpacePoint&
   sp() const
   {
     return m_sp;
@@ -84,7 +84,7 @@ protected:
   float             m_r;     // radius       in beam system coordinates
   float             m_covr;  //
   float             m_covz;  //
-  const SpacePoint* m_sp;    // external space point
+  const SpacePoint& m_sp;    // external space point
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -93,12 +93,11 @@ protected:
 
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-    const SpacePoint* const sp,
+    const SpacePoint&       sp,
     const Acts::Vector3D&   globalPos,
     const Acts::Vector2D&   offsetXY,
-    const Acts::Vector2D&   cov)
+    const Acts::Vector2D&   cov): m_sp(sp)
 {
-  m_sp   = sp;
   m_x    = globalPos.x() - offsetXY.x();
   m_y    = globalPos.y() - offsetXY.y();
   m_z    = globalPos.z();
@@ -113,9 +112,8 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
 
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-    const InternalSpacePoint<SpacePoint>& sp)
+    const InternalSpacePoint<SpacePoint>& sp): m_sp(sp.sp())
 {
-  m_sp   = sp.sp();
   m_x    = sp.m_x;
   m_y    = sp.m_y;
   m_z    = sp.m_z;

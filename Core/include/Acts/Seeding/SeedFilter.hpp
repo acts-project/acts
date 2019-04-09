@@ -62,8 +62,8 @@ public:
   virtual std::
       vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
       filterSeeds_2SpFixed(
-          const InternalSpacePoint<SpacePoint>*               bottomSP,
-          const InternalSpacePoint<SpacePoint>*               middleSP,
+          const InternalSpacePoint<SpacePoint>&               bottomSP,
+          const InternalSpacePoint<SpacePoint>&               middleSP,
           std::vector<const InternalSpacePoint<SpacePoint>*>& topSpVec,
           std::vector<float>& invHelixDiameterVec,
           std::vector<float>& impactParametersVec,

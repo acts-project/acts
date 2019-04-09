@@ -28,9 +28,9 @@ public:
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
   virtual float
-  seedWeight(const InternalSpacePoint<SpacePoint>* bottom,
-             const InternalSpacePoint<SpacePoint>* middle,
-             const InternalSpacePoint<SpacePoint>* top) const = 0;
+  seedWeight(const InternalSpacePoint<SpacePoint>& bottom,
+             const InternalSpacePoint<SpacePoint>& middle,
+             const InternalSpacePoint<SpacePoint>& top) const = 0;
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
@@ -39,9 +39,9 @@ public:
   /// discarded
   virtual bool
   singleSeedCut(float                                 weight,
-                const InternalSpacePoint<SpacePoint>* bottom,
-                const InternalSpacePoint<SpacePoint>* middle,
-                const InternalSpacePoint<SpacePoint>* top) const = 0;
+                const InternalSpacePoint<SpacePoint>& bottom,
+                const InternalSpacePoint<SpacePoint>& middle,
+                const InternalSpacePoint<SpacePoint>& top) const = 0;
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space

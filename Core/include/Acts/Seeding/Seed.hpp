@@ -20,9 +20,9 @@ class Seed
   /////////////////////////////////////////////////////////////////////////////////
 
 public:
-  Seed(const SpacePoint* b,
-       const SpacePoint* m,
-       const SpacePoint* u,
+  Seed(const SpacePoint& b,
+       const SpacePoint& m,
+       const SpacePoint& u,
        float             vertex);
   Seed(const Seed&) = default;
   Seed&
@@ -49,15 +49,15 @@ private:
 ///////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-Seed<SpacePoint>::Seed(const SpacePoint* b,
-                       const SpacePoint* m,
-                       const SpacePoint* u,
+Seed<SpacePoint>::Seed(const SpacePoint& b,
+                       const SpacePoint& m,
+                       const SpacePoint& u,
                        float             vertex)
 {
   m_zvertex = vertex;
-  m_spacepoints.push_back(b);
-  m_spacepoints.push_back(m);
-  m_spacepoints.push_back(u);
+  m_spacepoints.push_back(&b);
+  m_spacepoints.push_back(&m);
+  m_spacepoints.push_back(&u);
 }
 
 }  // end of Acts namespace

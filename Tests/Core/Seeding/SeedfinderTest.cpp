@@ -9,7 +9,7 @@
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
-#include "Acts/Seeding/New_Seedmaker.hpp"
+#include "Acts/Seeding/Seedfinder.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 
 #include "ATLASCuts.hpp"
@@ -70,7 +70,7 @@ main()
   std::vector<const SpacePoint*> spVec = readFile("sp.txt");
   std::cout << "size of read SP: " << spVec.size() << std::endl;
 
-  Acts::SeedmakerConfig<SpacePoint> config;
+  Acts::SeedfinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax               = 160.;
   config.deltaRMin          = 5.;
@@ -98,18 +98,18 @@ main()
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::New_Seedmaker<SpacePoint> a(config);
+  Acts::Seedfinder<SpacePoint> a(config);
 
   // covariance tool, sets covariances per spacepoint as required
-  std::function<Acts::Vector2D(const SpacePoint*, float, float, float)> ct
-      = [=](const SpacePoint* sp, float, float, float) -> Acts::Vector2D {
-    return {sp->covr, sp->covz};
+  auto ct
+      = [=](const SpacePoint& sp, float, float, float) -> Acts::Vector2D {
+    return {sp.covr, sp.covz};
   };
 
-  Acts::SeedmakerState<SpacePoint> state = a.initState(
+  Acts::SeedfinderState<SpacePoint> state = a.initState(
       spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder);
   auto start = std::chrono::system_clock::now();
-  for (Acts::SeedingStateIterator<SpacePoint> it = state.begin();
+  for (Acts::SeedfinderStateIterator<SpacePoint> it = state.begin();
        !(it == state.end());
        ++it) {
     a.createSeedsForRegion(it, state);
