@@ -52,8 +52,8 @@ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
-  /// @param surfaceMaterialMap is a map that holds optionally the 
-  ///        the surface material to be assigned by GeometryID        
+  /// @param surfaceMaterialMap is a map that holds optionally the
+  ///        the surface material to be assigned by GeometryID
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
                    const SurfaceMaterialMap&       surfaceMaterialMap
                    = SurfaceMaterialMap());
