@@ -33,7 +33,7 @@ namespace Test {
   double hThickness = 75 * units::_um;
   double lAngle     = 0.1;
 
-  // Module bunds
+  // Module bounds
   auto moduleBounds = std::make_shared<const RectangleBounds>(5 * units::_mm,
                                                               10 * units::_mm);
   CartesianSegmentation cSegmentation(moduleBounds, nbinsx, nbinsy);
