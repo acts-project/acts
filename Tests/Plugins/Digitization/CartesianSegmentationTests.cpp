@@ -96,7 +96,7 @@ namespace Test {
     CHECK_CLOSE_OR_SMALL(centerReadoutPZL, centerCounterNZL, 10e-6, 10e-9);
     CHECK_CLOSE_OR_SMALL(centerReadoutNZL, centerCounterPZL, 10e-6, 10e-9);
 
-    // The surface vectors: positive readout, zero lorentz angle
+    // The surface vectors: positive readout, lorentz angle
     // -> PL
     SurfacePtrVector boundariesPL;
     SurfacePtrVector segSurfacesXPL;
