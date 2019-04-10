@@ -57,7 +57,11 @@ def main():
     p.add_argument("--dry-run", "-s", action="store_true")
     p.add_argument("--verbose", "-v", action="store_true")
 
-    label_groups = ["New Feature", "Bug", "Improvement"]
+    label_groups = os.getenv(
+        "RELEASE_NOTES_LABEL_GROUPS", "New Feature;Bug;Improvement"
+    ).split(";")
+
+    print("Label groups:", ", ".join(label_groups))
 
     args = p.parse_args()
 
