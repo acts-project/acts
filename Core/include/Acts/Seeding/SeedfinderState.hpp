@@ -75,13 +75,13 @@ public:
                           size_t                            zInd)
     : currentBin(&(spgrid->atLocalBins({phiInd, zInd})))
   {
-    bottomBinFinder  = botBinFinder;
-    topBinFinder     = tBinFinder;
-    grid             = spgrid;
-    phiIndex         = phiInd;
-    zIndex           = zInd;
-    phiZbins         = grid->numLocalBins();
-    outputIndex      = (phiInd - 1) * phiZbins[1] + zInd - 1;
+    bottomBinFinder = botBinFinder;
+    topBinFinder    = tBinFinder;
+    grid            = spgrid;
+    phiIndex        = phiInd;
+    zIndex          = zInd;
+    phiZbins        = grid->numLocalBins();
+    outputIndex     = (phiInd - 1) * phiZbins[1] + zInd - 1;
     if (phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]) {
       bottomBinIndices = bottomBinFinder->findBins(phiIndex, zIndex, grid);
       topBinIndices    = topBinFinder->findBins(phiIndex, zIndex, grid);
