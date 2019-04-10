@@ -96,7 +96,7 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext&          gctx,
     ++attempts;
     // try it out by intersecting, but do not force the direction
     Acts::Intersection bIntersection = bSurface->intersectionEstimate(
-        gctx, intersection3D, trackDirection, forward, true);
+        gctx, intersection3D, trackDirection, anyDirection, true);
     if (bIntersection.valid) {
       // now record
       boundaryIntersections.push_back(bIntersection);
@@ -108,25 +108,18 @@ Acts::PlanarModuleStepper::cellSteps(const GeometryContext&          gctx,
                    << bIntersection.position.z());
     }
     // fast break in case of readout/counter surface hit
+    // the first two attempts are the module faces, if they are hit,
+    // the stepper has run ok.
     if (attempts == 2 && boundaryIntersections.size() == attempts) {
-      break;
-    } else if (attempts > 2 && boundaryIntersections.size() == 3) {
       break;
     }
   }
-  // post-process if we have more than 2 intersections
+  // Post-process if we have more than 2 intersections
   // only first or last can be wrong after resorting
   if (boundaryIntersections.size() > 2) {
     ACTS_VERBOSE("More than 2 Boundary Surfaces intersected, this is an edge "
                  "case, resolving ... ");
     std::sort(boundaryIntersections.begin(), boundaryIntersections.end());
-    if (boundaryIntersections[0].pathLength
-            * boundaryIntersections[1].pathLength
-        < 0.) {
-      boundaryIntersections.pop_back();
-    } else {
-      boundaryIntersections.erase(boundaryIntersections.begin());
-    }
   }
   // if for some reason the intersection does not work
   if (boundaryIntersections.empty()) {
