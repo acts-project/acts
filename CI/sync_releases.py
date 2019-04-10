@@ -86,17 +86,18 @@ def main():
             print(f"No milestone found for tag f{tag.name} => skipping")
         milestone = ms_map[version]
         print(tag.name, milestone.title)
-        # issues = list(milestone.issues())
+
+        mrs = []
         with spinner(text=f"Loading merge requests associated with %{milestone.iid}"):
-            mrs = list(milestone.merge_requests())
+            for mr in milestone.merge_requests():
+                if mr.state == "merged":
+                    mrs.append(mr)
 
         # need to get issues from merged MRs
         with spinner(text=f"Collecting issues from {len(mrs)} merged MRs"):
             issue_ids = []
             issues = []
             for mr in mrs:
-                if mr.state != "merged":
-                    continue
                 for issue in mr.closes_issues():
                     if issue.id not in issue_ids:
                         issue_ids.append(issue.id)
