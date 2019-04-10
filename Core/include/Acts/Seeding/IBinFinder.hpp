@@ -29,10 +29,11 @@ public:
   /// points
   /// @param zBin the z bin index of the bin containing the middle space points
   /// @param binnedSP the grid containing all bins
-  /// @return a set containing the global bin indices for all bins potentially
+  /// @return a vector containing the global bin indices for all bins
+  /// potentially
   /// containing bottom resp. top space points that can be combined with the
   /// middle space points from the provided bin
-  virtual std::set<size_t>
+  virtual std::vector<size_t>
   findBins(size_t                            phiBin,
            size_t                            zBin,
            const SpacePointGrid<SpacePoint>* binnedSP)

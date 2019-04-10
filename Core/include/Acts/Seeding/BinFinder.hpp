@@ -10,7 +10,7 @@
 
 #include "Acts/Seeding/IBinFinder.hpp"
 
-#include <set>
+#include <vector>
 
 namespace Acts {
 
@@ -31,7 +31,7 @@ public:
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  std::set<size_t>
+  std::vector<size_t>
   findBins(size_t                            phiBin,
            size_t                            zBin,
            const SpacePointGrid<SpacePoint>* binnedSP) override;

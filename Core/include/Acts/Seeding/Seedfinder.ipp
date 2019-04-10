@@ -127,14 +127,14 @@ Seedfinder<external_spacepoint_t>::initState(
           vector<std::
                      unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>&
               bin
-          = grid->at(spLocation);
+          = grid->atPosition(spLocation);
       bin.push_back(std::move(isp));
     }
   }
   state.binnedSP        = std::move(grid);
   state.bottomBinFinder = bottomBinFinder;
   state.topBinFinder    = topBinFinder;
-  std::array<size_t, 2> numBins = state.binnedSP->getNBins();
+  std::array<size_t, 2> numBins = state.binnedSP->numLocalBins();
   for (size_t i = 0; i < numBins[0] * numBins[1]; i++) {
     state.outputVec.push_back({});
   }
@@ -156,8 +156,8 @@ Seedfinder<external_spacepoint_t>::createSeedsForRegion(
     float covrM = spM->covr();
     float covzM = spM->covz();
 
-    std::set<size_t>& bottomBinIndices = it.bottomBinIndices;
-    std::set<size_t>& topBinIndices    = it.topBinIndices;
+    std::vector<size_t>& bottomBinIndices = it.bottomBinIndices;
+    std::vector<size_t>& topBinIndices    = it.topBinIndices;
     std::vector<const InternalSpacePoint<external_spacepoint_t>*>
         compatBottomSP;
 
