@@ -21,6 +21,7 @@
 #include <utility>
 #include <vector>
 #include "Acts/Material/MaterialComposition.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
@@ -73,6 +74,16 @@ public:
   {
     float zOaTr = (iA > 0. ? iZ / iA * iRho : 0.);
     m_store[5]  = zOaTr;
+  }
+
+  Material(ActsVectorF<5> iMatData, MaterialComposition imc = {})
+    : Material(iMatData[0],
+               iMatData[1],
+               iMatData[2],
+               iMatData[3],
+               iMatData[4],
+               std::move(imc))
+  {
   }
 
   /// @brief Copy Constructor
@@ -146,6 +157,7 @@ public:
   {
     return m_store[matZ];
   }
+
   /// @brief Access to rho
   float
   rho() const
@@ -158,6 +170,15 @@ public:
   zOverAtimesRho() const
   {
     return m_store[matZ_AR];
+  }
+
+  /// @brief Access to all classification numbers of the material
+  ActsVectorF<5>
+  classificationNumbers()
+  {
+    ActsVectorF<5> numbers;
+    numbers << X0(), L0(), A(), Z(), rho();
+    return numbers;
   }
 
   /// spit out as a string
@@ -204,4 +225,4 @@ Material::operator!=(const Material& mat) const
 {
   return !operator==(mat);
 }
-}
+}  // namespace Acts

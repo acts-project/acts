@@ -1,0 +1,157 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2019 Acts project team
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+// clang-format off
+#define BOOST_TEST_MODULE material utils test
+#include <boost/test/included/unit_test.hpp>
+#include <boost/test/data/test_case.hpp>
+// clang-format on
+
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/MaterialMapUtils.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include <limits>
+#include <random>
+#include <vector>
+#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
+#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/MaterialMapUtils.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Tools/CuboidVolumeBuilder.hpp"
+#include "Acts/Tools/TrackingGeometryBuilder.hpp"
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
+
+namespace bdata = boost::unit_test::data;
+
+using Acts::VectorHelpers::perp;
+
+namespace Acts {
+namespace Test {
+
+  BOOST_AUTO_TEST_CASE(materialmap_creation)
+  {
+    // Create grid values
+    std::vector<double> rPos = {0., 1., 2.};
+    std::vector<double> xPos = {0., 1., 2.};
+    std::vector<double> yPos = {0., 1., 2.};
+    std::vector<double> zPos = {0., 1., 2.};
+
+    // Create material association in rz
+    std::vector<Material> material_rz;
+    for (int i = 0; i < 9; i++) {
+      material_rz.push_back(Material(i, i, i, i, i));
+    }
+
+    auto localToGlobalBin_rz
+        = [](std::array<size_t, 2> binsRZ, std::array<size_t, 2> nBinsRZ) {
+            return (binsRZ.at(1) * nBinsRZ.at(0) + binsRZ.at(0));
+          };
+    // Create material mapper in rz
+    auto mapper_rz
+        = materialMapperRZ(localToGlobalBin_rz, rPos, zPos, material_rz);
+    // check number of bins, minima & maxima
+    std::vector<size_t> nBins_rz  = {rPos.size(), zPos.size()};
+    std::vector<double> minima_rz = {0., 0.};
+    std::vector<double> maxima_rz = {3., 3.};
+    BOOST_CHECK(mapper_rz.getNBins() == nBins_rz);
+    // Check minimum (should be first value because bin values are always
+    // assigned to the left boundary)
+    BOOST_CHECK(mapper_rz.getMin() == minima_rz);
+    // Check maximum (should be last value + 1 step because bin values are
+    // always assigned to the left boundary)
+    BOOST_CHECK(mapper_rz.getMax() == maxima_rz);
+
+    // Create map in xyz
+    std::vector<Material> material_xyz;
+    for (int i = 0; i < 27; i++) {
+      material_xyz.push_back(Material(i, i, i, i, i));
+    }
+
+    auto localToGlobalBin_xyz
+        = [](std::array<size_t, 3> binsXYZ, std::array<size_t, 3> nBinsXYZ) {
+            return (binsXYZ.at(0) * (nBinsXYZ.at(1) * nBinsXYZ.at(2))
+                    + binsXYZ.at(1) * nBinsXYZ.at(2)
+                    + binsXYZ.at(2));
+          };
+
+    // Create material mapper in xyz
+    auto mapper_xyz = materialMapperXYZ(
+        localToGlobalBin_xyz, xPos, yPos, zPos, material_xyz);
+    // Check number of bins, minima & maxima
+    std::vector<size_t> nBins_xyz  = {xPos.size(), yPos.size(), zPos.size()};
+    std::vector<double> minima_xyz = {0., 0., 0.};
+    std::vector<double> maxima_xyz = {3., 3., 3.};
+    BOOST_CHECK(mapper_xyz.getNBins() == nBins_xyz);
+    // Check minimum (should be first value because bin values are always
+    // assigned to the left boundary)
+    BOOST_CHECK(mapper_xyz.getMin() == minima_xyz);
+    // Check maximum (should be last value + 1 step because bin values are
+    // always assigned to the left boundary)
+    BOOST_CHECK(mapper_xyz.getMax() == maxima_xyz);
+
+    // Check if filled value is expected value in rz
+    Vector3D pos0_rz(0., 0., 0.);
+    Vector3D pos1_rz(1., 0., 1.);
+    Vector3D pos2_rz(0., 2., 2.);
+    auto     value0_rz = mapper_rz.getMaterial(pos0_rz);
+    auto     value1_rz = mapper_rz.getMaterial(pos1_rz);
+    auto     value2_rz = mapper_rz.getMaterial(pos2_rz);
+    // Calculate what the value should be at this point
+    Material mat0_rz = material_rz.at(
+        localToGlobalBin_rz({{0, 0}}, {{rPos.size(), zPos.size()}}));
+    Material mat1_rz = material_rz.at(
+        localToGlobalBin_rz({{1, 1}}, {{rPos.size(), zPos.size()}}));
+    Material mat2_rz = material_rz.at(
+        localToGlobalBin_rz({{2, 2}}, {{rPos.size(), zPos.size()}}));
+
+    // Check the value
+    // in rz case material is phi symmetric (check radius)
+    CHECK_CLOSE_ABS(value0_rz.classificationNumbers(),
+                    mat0_rz.classificationNumbers(),
+                    1e-9);
+    CHECK_CLOSE_ABS(value1_rz.classificationNumbers(),
+                    mat1_rz.classificationNumbers(),
+                    1e-9);
+    CHECK_CLOSE_ABS(value2_rz.classificationNumbers(),
+                    mat2_rz.classificationNumbers(),
+                    1e-9);
+
+    // Check if filled value is expected value in xyz
+    Vector3D pos0_xyz(0., 0., 0.);
+    Vector3D pos1_xyz(1., 1., 1.);
+    Vector3D pos2_xyz(2., 2., 2.);
+    auto     value0_xyz = mapper_xyz.getMaterial(pos0_xyz);
+    auto     value1_xyz = mapper_xyz.getMaterial(pos1_xyz);
+    auto     value2_xyz = mapper_xyz.getMaterial(pos2_xyz);
+    // Calculate what the value should be at this point
+    Material mat0_xyz = material_xyz.at(localToGlobalBin_xyz(
+        {{0, 0, 0}}, {{xPos.size(), yPos.size(), zPos.size()}}));
+    Material mat1_xyz = material_xyz.at(localToGlobalBin_xyz(
+        {{1, 1, 1}}, {{xPos.size(), yPos.size(), zPos.size()}}));
+    Material mat2_xyz = material_xyz.at(localToGlobalBin_xyz(
+        {{2, 2, 2}}, {{xPos.size(), yPos.size(), zPos.size()}}));
+
+    // Check the value
+    // in xyz case material is phi symmetric (check radius)
+    CHECK_CLOSE_ABS(value0_xyz.classificationNumbers(),
+                    mat0_xyz.classificationNumbers(),
+                    1e-9);
+    CHECK_CLOSE_ABS(value1_xyz.classificationNumbers(),
+                    mat1_xyz.classificationNumbers(),
+                    1e-9);
+    CHECK_CLOSE_ABS(value2_xyz.classificationNumbers(),
+                    mat2_xyz.classificationNumbers(),
+                    1e-9);
+  }
+}  // namespace Test
+}  // namespace Acts
