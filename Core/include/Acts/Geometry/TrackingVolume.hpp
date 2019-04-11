@@ -283,10 +283,10 @@ class TrackingVolume : public Volume {
 
   /// Return the confined volumes of this container array - if it exists
   std::shared_ptr<const TrackingVolumeArray> confinedVolumes() const;
-  
+
   /// Return the confined dense volumes
   const MutableTrackingVolumeVector
-	denseVolumes() const;
+  denseVolumes() const;
 
   /// @brief Visit all sensitive surfaces
   ///
@@ -556,7 +556,7 @@ inline const LayerArray* TrackingVolume::confinedLayers() const {
 inline const MutableTrackingVolumeVector
 TrackingVolume::denseVolumes() const
 {
-	return m_confinedDenseVolumes;
+  return m_confinedDenseVolumes;
 }
 
 inline std::shared_ptr<const TrackingVolumeArray>

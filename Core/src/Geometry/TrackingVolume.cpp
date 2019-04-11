@@ -98,7 +98,6 @@ const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
     for (auto& denseVolume : m_confinedDenseVolumes)
       if (denseVolume->inside(gp, 0.001)) return denseVolume.get();
 
-
   // there is no lower sub structure
   return this;
 }
@@ -463,7 +462,7 @@ void Acts::TrackingVolume::closeGeometry(
       mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
     }
   }
-  
+
   if (!m_confinedDenseVolumes.empty()) {
     for (auto& volumesIter : m_confinedDenseVolumes) {
       auto mutableVolumesIter

@@ -269,9 +269,9 @@ namespace Test {
     CuboidVolumeBuilder cvb;
 
     // Create a test context
-    GeometryContext tgContext = GeometryContext();
+    GeometryContext      tgContext = GeometryContext();
     MagneticFieldContext mfContext = MagneticFieldContext();
-    
+
     // Build a volume that confines another volume
     CuboidVolumeBuilder::VolumeConfig vCfg;
     vCfg.position = {1. * units::_m, 0., 0.};
@@ -303,21 +303,26 @@ namespace Test {
           return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(tgContext);
+    std::shared_ptr<const TrackingGeometry> detector
+        = tgb.trackingGeometry(tgContext);
 
     // Test that the right volume is selected
     BOOST_TEST(
-        detector->lowestTrackingVolume(tgContext, {1. * units::_m, 0., 0.})->volumeName()
+        detector->lowestTrackingVolume(tgContext, {1. * units::_m, 0., 0.})
+            ->volumeName()
         == vCfg.name);
     BOOST_TEST(
-        detector->lowestTrackingVolume(tgContext, {1.1 * units::_m, 0., 0.})->volumeName()
+        detector->lowestTrackingVolume(tgContext, {1.1 * units::_m, 0., 0.})
+            ->volumeName()
         == cvCfg1.name);
     BOOST_TEST(
-        detector->lowestTrackingVolume(tgContext, {0.9 * units::_m, 0., 0.})->volumeName()
+        detector->lowestTrackingVolume(tgContext, {0.9 * units::_m, 0., 0.})
+            ->volumeName()
         == cvCfg2.name);
 
     // Set propagator and navigator
-    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext, mfContext);
+    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext,
+                                                                mfContext);
     propOpts.maxStepSize = 10. * units::_mm;
     StraightLineStepper sls;
     Navigator           navi(detector);
@@ -367,9 +372,9 @@ namespace Test {
     CuboidVolumeBuilder cvb;
 
     // Create a test context
-    GeometryContext tgContext = GeometryContext();
+    GeometryContext      tgContext = GeometryContext();
     MagneticFieldContext mfContext = MagneticFieldContext();
-      
+
     // Build a volume that confines another volume
     CuboidVolumeBuilder::VolumeConfig vCfg1;
     vCfg1.position = {1. * units::_m, 0., 0.};
@@ -422,10 +427,12 @@ namespace Test {
           return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(tgContext);
+    std::shared_ptr<const TrackingGeometry> detector
+        = tgb.trackingGeometry(tgContext);
 
     // Set propagator and navigator
-    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext, mfContext);
+    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext,
+                                                                mfContext);
     propOpts.maxStepSize = 10. * units::_mm;
     StraightLineStepper sls;
     Navigator           navi(detector);

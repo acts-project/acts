@@ -694,7 +694,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
           return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(tgContext);
+    std::shared_ptr<const TrackingGeometry> detector
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviVac(detector);
@@ -732,7 +733,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
         prop(es, naviVac);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts).value();
+    const auto& result = prop.propagate(sbtp, propOpts).value();
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 

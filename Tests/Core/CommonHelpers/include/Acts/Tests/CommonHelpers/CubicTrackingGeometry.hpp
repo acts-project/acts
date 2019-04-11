@@ -55,7 +55,6 @@ struct CubicTrackingGeometry {
     surfaceMaterial = std::shared_ptr<const ISurfaceMaterial>(
         new HomogeneousSurfaceMaterial(matProp));
   }
-<<<<<<< HEAD
 
   /// Call operator to build the standard cubic tracking geometry
   std::shared_ptr<const TrackingGeometry> operator()() {

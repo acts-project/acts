@@ -238,7 +238,8 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   }
 
   // now call the main method
-  return createGapTrackingVolume(gctx,mtvVector,
+  return createGapTrackingVolume(gctx,
+                                 mtvVector,
                                  volumeMaterial,
                                  rMin,
                                  rMax,
