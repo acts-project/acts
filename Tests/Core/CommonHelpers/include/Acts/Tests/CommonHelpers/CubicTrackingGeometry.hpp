@@ -55,6 +55,7 @@ struct CubicTrackingGeometry {
     surfaceMaterial = std::shared_ptr<const ISurfaceMaterial>(
         new HomogeneousSurfaceMaterial(matProp));
   }
+<<<<<<< HEAD
 
   /// Call operator to build the standard cubic tracking geometry
   std::shared_ptr<const TrackingGeometry> operator()() {
@@ -121,7 +122,7 @@ struct CubicTrackingGeometry {
 
     auto trackVolume1 = TrackingVolume::create(
         std::make_shared<const Transform3D>(trafoVol1), boundsVol, nullptr,
-        std::move(layArr1), nullptr, "Volume 1");
+        std::move(layArr1), nullptr, {}, "Volume 1");
     trackVolume1->sign(GeometrySignature::Global);
 
     // Build volume for surfaces with positive x-values
@@ -137,17 +138,17 @@ struct CubicTrackingGeometry {
 
     auto trackVolume2 = TrackingVolume::create(
         std::make_shared<const Transform3D>(trafoVol2), boundsVol, nullptr,
-        std::move(layArr2), nullptr, "Volume 2");
+        std::move(layArr2), nullptr, {}, "Volume 2");
 
     trackVolume2->sign(GeometrySignature::Global);
 
     // Glue volumes
     trackVolume2->glueTrackingVolume(
-        geoContext, BoundarySurfaceFace::negativeFaceYZ, trackVolume1,
+        geoContext, BoundarySurfaceFace::negativeFaceYZ, trackVolume1.get(),
         BoundarySurfaceFace::positiveFaceYZ);
 
     trackVolume1->glueTrackingVolume(
-        geoContext, BoundarySurfaceFace::positiveFaceYZ, trackVolume2,
+        geoContext, BoundarySurfaceFace::positiveFaceYZ, trackVolume2.get(),
         BoundarySurfaceFace::negativeFaceYZ);
 
     // Build world volume

@@ -268,6 +268,10 @@ namespace Test {
     // Production factory
     CuboidVolumeBuilder cvb;
 
+    // Create a test context
+    GeometryContext tgContext = GeometryContext();
+    MagneticFieldContext mfContext = MagneticFieldContext();
+    
     // Build a volume that confines another volume
     CuboidVolumeBuilder::VolumeConfig vCfg;
     vCfg.position = {1. * units::_m, 0., 0.};
@@ -295,23 +299,25 @@ namespace Test {
     cvb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
+        });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(tgContext);
 
     // Test that the right volume is selected
     BOOST_TEST(
-        detector->lowestTrackingVolume({1. * units::_m, 0., 0.})->volumeName()
+        detector->lowestTrackingVolume(tgContext, {1. * units::_m, 0., 0.})->volumeName()
         == vCfg.name);
     BOOST_TEST(
-        detector->lowestTrackingVolume({1.1 * units::_m, 0., 0.})->volumeName()
+        detector->lowestTrackingVolume(tgContext, {1.1 * units::_m, 0., 0.})->volumeName()
         == cvCfg1.name);
     BOOST_TEST(
-        detector->lowestTrackingVolume({0.9 * units::_m, 0., 0.})->volumeName()
+        detector->lowestTrackingVolume(tgContext, {0.9 * units::_m, 0., 0.})->volumeName()
         == cvCfg2.name);
 
     // Set propagator and navigator
-    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts;
+    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext, mfContext);
     propOpts.maxStepSize = 10. * units::_mm;
     StraightLineStepper sls;
     Navigator           navi(detector);
@@ -327,7 +333,7 @@ namespace Test {
         nullptr, startParams, startMom, 1.);
 
     // Launch and collect results
-    const auto& result = prop.propagate(sbtp, propOpts);
+    const auto& result = prop.propagate(sbtp, propOpts).value();
     const StepVolumeCollector::this_result& stepResult
         = result.get<typename StepVolumeCollector::result_type>();
 
@@ -360,6 +366,10 @@ namespace Test {
     // Production factory
     CuboidVolumeBuilder cvb;
 
+    // Create a test context
+    GeometryContext tgContext = GeometryContext();
+    MagneticFieldContext mfContext = MagneticFieldContext();
+      
     // Build a volume that confines another volume
     CuboidVolumeBuilder::VolumeConfig vCfg1;
     vCfg1.position = {1. * units::_m, 0., 0.};
@@ -408,12 +418,14 @@ namespace Test {
     cvb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
+        });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(tgContext);
 
     // Set propagator and navigator
-    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts;
+    PropagatorOptions<ActionList<StepVolumeCollector>> propOpts(tgContext, mfContext);
     propOpts.maxStepSize = 10. * units::_mm;
     StraightLineStepper sls;
     Navigator           navi(detector);
@@ -429,7 +441,7 @@ namespace Test {
         nullptr, startParams, startMom, 1.);
 
     // Launch and collect results
-    const auto& result = prop.propagate(sbtp, propOpts);
+    const auto& result = prop.propagate(sbtp, propOpts).value();
     const StepVolumeCollector::this_result& stepResult
         = result.get<typename StepVolumeCollector::result_type>();
 

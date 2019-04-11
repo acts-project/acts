@@ -146,7 +146,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 	// Build confined volumes
 	if(cfg.trackingVolumes.empty())
 		for(VolumeConfig vc : cfg.volumeCfg)
-			cfg.trackingVolumes.push_back(buildVolume(vc));
+			cfg.trackingVolumes.push_back(buildVolume(gctx, vc));
 	
 	
 	std::shared_ptr<TrackingVolume> trackVolume;
@@ -158,28 +158,23 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 								   bounds,
 								   cfg.material,
 								   nullptr,
-								   {},
+								   nullptr,
 								   cfg.trackingVolumes,
-								   {},
 								   cfg.name);
 	}
 	else
 	{
-		  // Build layer array
-	  std::pair<double, double> minMax = binningRange(cfg);
-	  LayerArrayCreator layArrCreator(
-		  getDefaultLogger("LayerArrayCreator", Logging::INFO));
-	  std::unique_ptr<const LayerArray>  layArr( 
-		  layArrCreator.layerArray(layVec,
-								   minMax.first,
-								   minMax.second,
-								   BinningType::arbitrary,
-								   BinningValue::binX));
 	
   // Build TrackingVolume
-  auto trackVolume = TrackingVolume::create(
-      std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
-      std::move(layArr), nullptr, cfg.trackingVolumes, cfg.name);
+  trackVolume
+      = TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
+                               bounds,
+                               cfg.volumeMaterial,
+                               std::move(layArr),
+                               nullptr,
+                               cfg.trackingVolumes,
+                               cfg.name);
+   }
   trackVolume->sign(GeometrySignature::Global);
 
   return trackVolume;

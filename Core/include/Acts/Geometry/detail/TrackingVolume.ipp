@@ -102,10 +102,9 @@ std::vector<BoundaryIntersection> TrackingVolume::compatibleBoundaries(
     }
     nonExcludedBoundaries.push_back(bSurface);
   }
-  
-  const std::vector<std::shared_ptr<const TrackingVolume>> denseVolumes
-      = confinedDenseVolumes();
-  for (const auto& dv : denseVolumes) {
+
+  const std::vector<std::shared_ptr<TrackingVolume>> confinedDenseVolumes = denseVolumes();
+  for (const auto& dv : confinedDenseVolumes) {
     auto& bSurfacesConfined = dv->boundarySurfaces();
     for (auto& bsIter : bSurfacesConfined) {
       // get the boundary surface pointer

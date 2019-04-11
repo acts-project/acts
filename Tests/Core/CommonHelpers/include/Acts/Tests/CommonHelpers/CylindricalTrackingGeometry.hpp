@@ -231,7 +231,7 @@ struct CylindricalTrackingGeometry {
     // create the Tracking volume
     auto pVolume = TrackingVolume::create(nullptr, pVolumeBounds, nullptr,
                                           std::move(pLayerArray), nullptr,
-                                          "Pixel::Barrel");
+                                          {}, "Pixel::Barrel");
 
     // The combined volume
     auto detectorVolume = cylinderVolumeHelper->createContainerTrackingVolume(

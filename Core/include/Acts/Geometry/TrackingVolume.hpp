@@ -283,6 +283,10 @@ class TrackingVolume : public Volume {
 
   /// Return the confined volumes of this container array - if it exists
   std::shared_ptr<const TrackingVolumeArray> confinedVolumes() const;
+  
+  /// Return the confined dense volumes
+  const MutableTrackingVolumeVector
+	denseVolumes() const;
 
   /// @brief Visit all sensitive surfaces
   ///
@@ -504,7 +508,7 @@ private:
   std::shared_ptr<const TrackingVolumeArray> m_confinedVolumes = nullptr;
 
   /// confined dense
-  TrackingVolumeVector m_confinedDenseVolumes;
+  MutableTrackingVolumeVector m_confinedDenseVolumes;
 
   /// Volumes to glue Volumes from the outside
   GlueVolumesDescriptor* m_glueVolumeDescriptor{nullptr};
@@ -547,6 +551,12 @@ inline void TrackingVolume::assignVolumeMaterial(
 
 inline const LayerArray* TrackingVolume::confinedLayers() const {
   return m_confinedLayers.get();
+}
+
+inline const MutableTrackingVolumeVector
+TrackingVolume::denseVolumes() const
+{
+	return m_confinedDenseVolumes;
 }
 
 inline std::shared_ptr<const TrackingVolumeArray>

@@ -30,6 +30,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Surfaces/RectangleBounds.hpp"
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -689,9 +690,11 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        std::make_shared<const CuboidVolumeBuilder>(cvb));
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
+        });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviVac(detector);
@@ -709,7 +712,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext, mfContext);
     propOpts.abortList.get<EndOfWorld>().maxX = 3. * units::_m;
 
     // Build stepper and propagator
@@ -729,7 +732,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
         prop(es, naviVac);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts);
+    const auto&                       result = prop.propagate(sbtp, propOpts).value();
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 

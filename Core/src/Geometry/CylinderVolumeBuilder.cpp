@@ -134,13 +134,9 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
   // Find out with Layer analysis
   // analyze the layers
-  wConfig.nVolumeConfig = analyzeLayers(gctx, negativeLayers);
-  wConfig.cVolumeConfig = analyzeLayers(gctx, centralLayers);
-  wConfig.pVolumeConfig = analyzeLayers(gctx, positiveLayers);
-
-  wConfig.nVolumeConfig = analyzeContent(negativeLayers, {});  // TODO
-  wConfig.cVolumeConfig = analyzeContent(centralLayers, centralVolumes);
-  wConfig.pVolumeConfig = analyzeContent(positiveLayers, {});  // TODO
+  wConfig.nVolumeConfig = analyzeContent(gctx, negativeLayers, {});  // TODO
+  wConfig.cVolumeConfig = analyzeContent(gctx, centralLayers, centralVolumes);
+  wConfig.pVolumeConfig = analyzeContent(gctx, positiveLayers, {});  // TODO
 
   std::string layerConfiguration = "|";
   if (wConfig.nVolumeConfig) {
