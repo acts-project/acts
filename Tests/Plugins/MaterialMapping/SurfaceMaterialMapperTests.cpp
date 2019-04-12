@@ -22,6 +22,8 @@
 #include "Acts/Tools/PassiveLayerBuilder.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -46,11 +48,13 @@ trackingGeometry()
   auto layerCreator            = std::make_shared<const LayerCreator>(
       lcConfig, getDefaultLogger("LayerCreator", layerLLevel));
   // configure the layer array creator
-  auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(
+  LayerArrayCreator::Config lacConfig;
+  auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(lacConfig,
       getDefaultLogger("LayerArrayCreator", layerLLevel));
 
   // tracking volume array creator
-  auto tVolumeArrayCreator = std::make_shared<const TrackingVolumeArrayCreator>(
+  TrackingVolumeArrayCreator::Config tvacConfig;
+  auto tVolumeArrayCreator = std::make_shared<const TrackingVolumeArrayCreator>(tvacConfig,
       getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
   // configure the cylinder volume helper
   CylinderVolumeHelper::Config cvhConfig;
@@ -83,8 +87,9 @@ trackingGeometry()
   auto centralVolumeBounds
       = std::make_shared<const CylinderVolumeBounds>(0., 40., 110.);
 
+  GeometryContext gCtx;
   auto centralVolume
-      = centralVolumeBuilder->trackingVolume(nullptr, centralVolumeBounds);
+      = centralVolumeBuilder->trackingVolume(gCtx, nullptr, centralVolumeBounds);
 
   return std::make_shared<const TrackingGeometry>(centralVolume);
 }
@@ -107,42 +112,15 @@ namespace Test {
     SurfaceMaterialMapper::Config smmConfig;
     SurfaceMaterialMapper         smMapper(smmConfig, std::move(propagator));
 
+    /// Create some contexts
+    GeometryContext gCtx;
+    MagneticFieldContext mfCtx;
+    
     /// Now create the mapper state
-    auto mState = smMapper.createState(*tGeometry);
+    auto mState = smMapper.createState(gCtx, mfCtx, *tGeometry);
 
     /// Test if this is not null
     BOOST_CHECK_EQUAL(mState.accumulatedMaterial.size(), 3);
-
-    // material properties
-    MaterialProperties a(1., 1., 1., 1., 1., 1.);
-    // and vacuum
-    MaterialProperties v(1.);
-
-    // we shoot under an angle of
-    double cotan_theta_03_13_24 = 1.25 / 3.;
-    // path scaled material
-    MaterialProperties a_theta_03_13_24(a);
-    a *= 1. / sin(atan2(3, 1.25));
-    RecordedMaterialProperties m03{a, Vector3D(1., 0., cotan_theta_03_13_24)};
-    RecordedMaterialProperties m13{a,
-                                   Vector3D(2., 0., 2 * cotan_theta_03_13_24)};
-    RecordedMaterialProperties m24{a,
-                                   Vector3D(2., 0., 2 * cotan_theta_03_13_24)};
-    std::vector<RecordedMaterialProperties> rmps = {m03, m13, m24};
-
-    RecordedMaterialTrack rmt031324(
-        Vector3D(0., 0., 0.), m03.second.normalized(), rmps);
-
-    smMapper.mapMaterialTrack(mState, rmt031324);
-
-    RecordedMaterialProperties m02{a, Vector3D(1., 0., -cotan_theta_03_13_24)};
-    RecordedMaterialProperties m21{a,
-                                   Vector3D(2., 0., -2 * cotan_theta_03_13_24)};
-
-    RecordedMaterialTrack rmt02xx21(
-        Vector3D(0., 0., 0.), m02.second.normalized(), rmps);
-
-    smMapper.mapMaterialTrack(mState, rmt02xx21);
   }
 
 }  // namespace Test

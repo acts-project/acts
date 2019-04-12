@@ -34,8 +34,6 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
-namespace bdata = boost::unit_test::data;
-
 using Acts::VectorHelpers::perp;
 
 namespace Acts {
@@ -69,12 +67,12 @@ namespace Test {
     double dist  = std::numeric_limits<double>::max();
     size_t index = 0;
     // Loop through all elements in the first axis
-    for (size_t i = 0; i < grid.getNBins()[0]; i++) {
+    for (size_t i = 0; i < grid.numLocalBins()[0]; i++) {
       // Search the closest distance - elements are ordered
-      if (std::abs(grid.getUpperRightBinEdge({{i, 0}})[0] - matPos.x())
+      if (std::abs(grid.upperRightBinEdge({{i, 0}})[0] - matPos.x())
           < dist) {
         // Store distance and index
-        dist  = std::abs(grid.getUpperRightBinEdge({{i, 0}})[0] - matPos.x());
+        dist  = std::abs(grid.upperRightBinEdge({{i, 0}})[0] - matPos.x());
         index = i;
       } else {  // Break if distance becomes larger
         break;
@@ -97,12 +95,12 @@ namespace Test {
     double dist  = std::numeric_limits<double>::max();
     size_t index = 0;
     // Loop through all elements in the first axis
-    for (size_t i = 0; i < grid.getNBins()[0]; i++) {
+    for (size_t i = 0; i < grid.numLocalBins()[0]; i++) {
       // Search the closest distance - elements are ordered
-      if (std::abs(grid.getUpperRightBinEdge({{i, 0, 0}})[0] - matPos.x())
+      if (std::abs(grid.upperRightBinEdge({{i, 0, 0}})[0] - matPos.x())
           < dist) {
         // Store distance and index
-        dist = std::abs(grid.getUpperRightBinEdge({{i, 0, 0}})[0] - matPos.x());
+        dist = std::abs(grid.upperRightBinEdge({{i, 0, 0}})[0] - matPos.x());
         index = i;
       } else {  // Break if distance becomes larger
         break;
@@ -123,13 +121,13 @@ namespace Test {
     double dist   = std::numeric_limits<double>::max();
     size_t indexX = 0, indexY = 0, indexZ = 0;
     // Loop through all elements
-    for (size_t i = 0; i < grid.getNBins()[0]; i++) {
-      for (size_t j = 0; j < grid.getNBins()[1]; j++) {
-        for (size_t k = 0; k < grid.getNBins()[2]; k++) {
+    for (size_t i = 0; i < grid.numLocalBins()[0]; i++) {
+      for (size_t j = 0; j < grid.numLocalBins()[1]; j++) {
+        for (size_t k = 0; k < grid.numLocalBins()[2]; k++) {
           // Search the closest distance - elements are ordered
-          double dX = grid.getUpperRightBinEdge({{i, j, k}})[0] - matPos.x();
-          double dY = grid.getUpperRightBinEdge({{i, j, k}})[1] - matPos.y();
-          double dZ = grid.getUpperRightBinEdge({{i, j, k}})[2] - matPos.z();
+          double dX = grid.upperRightBinEdge({{i, j, k}})[0] - matPos.x();
+          double dY = grid.upperRightBinEdge({{i, j, k}})[1] - matPos.y();
+          double dZ = grid.upperRightBinEdge({{i, j, k}})[2] - matPos.z();
 
           if (std::sqrt(dX * dX + dY * dY + dZ * dZ) < dist) {
             // Store distance and index
@@ -338,7 +336,7 @@ namespace Test {
     std::vector<Material> matGrid;
     double                gridX0 = 0., gridL0 = 0., trueX0 = 0., trueL0 = 0.;
     for (unsigned int i = 0; i < stepResult.position.size(); i++) {
-      matGrid.push_back(grid.at(stepResult.position[i]));
+      matGrid.push_back(grid.atPosition(stepResult.position[i]));
       gridX0 += matGrid[i].X0();
       gridL0 += matGrid[i].L0();
       trueX0 += stepResult.matTrue[i].X0();
