@@ -21,9 +21,9 @@
 #include "Acts/Tools/LayerCreator.hpp"
 #include "Acts/Tools/PassiveLayerBuilder.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 #include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 namespace Acts {
 
@@ -49,13 +49,13 @@ trackingGeometry()
       lcConfig, getDefaultLogger("LayerCreator", layerLLevel));
   // configure the layer array creator
   LayerArrayCreator::Config lacConfig;
-  auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(lacConfig,
-      getDefaultLogger("LayerArrayCreator", layerLLevel));
+  auto layerArrayCreator = std::make_shared<const LayerArrayCreator>(
+      lacConfig, getDefaultLogger("LayerArrayCreator", layerLLevel));
 
   // tracking volume array creator
   TrackingVolumeArrayCreator::Config tvacConfig;
-  auto tVolumeArrayCreator = std::make_shared<const TrackingVolumeArrayCreator>(tvacConfig,
-      getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
+  auto tVolumeArrayCreator = std::make_shared<const TrackingVolumeArrayCreator>(
+      tvacConfig, getDefaultLogger("TrackingVolumeArrayCreator", volumeLLevel));
   // configure the cylinder volume helper
   CylinderVolumeHelper::Config cvhConfig;
   cvhConfig.layerArrayCreator          = layerArrayCreator;
@@ -88,8 +88,8 @@ trackingGeometry()
       = std::make_shared<const CylinderVolumeBounds>(0., 40., 110.);
 
   GeometryContext gCtx;
-  auto centralVolume
-      = centralVolumeBuilder->trackingVolume(gCtx, nullptr, centralVolumeBounds);
+  auto            centralVolume = centralVolumeBuilder->trackingVolume(
+      gCtx, nullptr, centralVolumeBounds);
 
   return std::make_shared<const TrackingGeometry>(centralVolume);
 }
@@ -113,9 +113,9 @@ namespace Test {
     SurfaceMaterialMapper         smMapper(smmConfig, std::move(propagator));
 
     /// Create some contexts
-    GeometryContext gCtx;
+    GeometryContext      gCtx;
     MagneticFieldContext mfCtx;
-    
+
     /// Now create the mapper state
     auto mState = smMapper.createState(gCtx, mfCtx, *tGeometry);
 

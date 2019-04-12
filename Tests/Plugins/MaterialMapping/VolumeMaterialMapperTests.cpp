@@ -69,8 +69,7 @@ namespace Test {
     // Loop through all elements in the first axis
     for (size_t i = 0; i < grid.numLocalBins()[0]; i++) {
       // Search the closest distance - elements are ordered
-      if (std::abs(grid.upperRightBinEdge({{i, 0}})[0] - matPos.x())
-          < dist) {
+      if (std::abs(grid.upperRightBinEdge({{i, 0}})[0] - matPos.x()) < dist) {
         // Store distance and index
         dist  = std::abs(grid.upperRightBinEdge({{i, 0}})[0] - matPos.x());
         index = i;
@@ -100,7 +99,7 @@ namespace Test {
       if (std::abs(grid.upperRightBinEdge({{i, 0, 0}})[0] - matPos.x())
           < dist) {
         // Store distance and index
-        dist = std::abs(grid.upperRightBinEdge({{i, 0, 0}})[0] - matPos.x());
+        dist  = std::abs(grid.upperRightBinEdge({{i, 0, 0}})[0] - matPos.x());
         index = i;
       } else {  // Break if distance becomes larger
         break;
