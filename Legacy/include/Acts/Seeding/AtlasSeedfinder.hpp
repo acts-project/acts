@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// ATL_Seedmaker.hpp Acts project
+// AtlasSeedfinder.hpp Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -18,13 +18,13 @@
 #include <utility>
 #include <vector>
 
-#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/LegacyInternalSeed.hpp"
 #include "Acts/Seeding/SPForSeed.hpp"
 
 namespace Acts {
-namespace Seeding {
+namespace Legacy {
   template <typename SpacePoint>
-  class ATL_Seedmaker
+  class AtlasSeedfinder
   {
     struct Config
     {
@@ -51,8 +51,8 @@ namespace Seeding {
     // Standard tool methods
     ///////////////////////////////////////////////////////////////////
 
-    ATL_Seedmaker();
-    virtual ~ATL_Seedmaker();
+    AtlasSeedfinder();
+    virtual ~AtlasSeedfinder();
 
     ///////////////////////////////////////////////////////////////////
     // Methods to initialize tool for new event or region
@@ -85,9 +85,9 @@ namespace Seeding {
   protected:
     /**    @name Disallow default instantiation, copy, assignment */
     //@{
-    ATL_Seedmaker(const ATL_Seedmaker<SpacePoint>&) = delete;
-    ATL_Seedmaker<SpacePoint>&
-    operator=(const ATL_Seedmaker<SpacePoint>&)
+    AtlasSeedfinder(const AtlasSeedfinder<SpacePoint>&) = delete;
+    AtlasSeedfinder<SpacePoint>&
+    operator=(const AtlasSeedfinder<SpacePoint>&)
         = delete;
     //@}
     ///////////////////////////////////////////////////////////////////
@@ -255,7 +255,7 @@ namespace Seeding {
 
   template <typename SpacePoint>
   inline const Seed<SpacePoint>*
-  ATL_Seedmaker<SpacePoint>::next()
+  AtlasSeedfinder<SpacePoint>::next()
   {
     do {
       if (i_seed == i_seede) {
@@ -271,7 +271,7 @@ namespace Seeding {
 
   template <typename SpacePoint>
   inline bool
-  ATL_Seedmaker<SpacePoint>::isZCompatible(float& Zv)
+  AtlasSeedfinder<SpacePoint>::isZCompatible(float& Zv)
   {
     if (Zv < m_zminU || Zv > m_zmaxU) {
       return false;
@@ -286,7 +286,7 @@ namespace Seeding {
 
   template <typename SpacePoint>
   inline SPForSeed<SpacePoint>*
-  ATL_Seedmaker<SpacePoint>::newSpacePoint(SpacePoint* const& sp)
+  AtlasSeedfinder<SpacePoint>::newSpacePoint(SpacePoint* const& sp)
   {
     SPForSeed<SpacePoint>* sps;
 
@@ -323,13 +323,12 @@ namespace Seeding {
   public:
     template <typename SpacePoint>
     bool
-    operator()(
-        const std::pair<float, Acts::Seeding::SPForSeed<SpacePoint>*>& i1,
-        const std::pair<float, Acts::Seeding::SPForSeed<SpacePoint>*>& i2)
+    operator()(const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i1,
+               const std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>& i2)
     {
       return i1.first < i2.first;
     }
   };
-}  // end of Seeding namespace
+}  // end of Legacy namespace
 }  // end of Acts namespace
-#include "Acts/Seeding/ATL_Seedmaker.ipp"
+#include "Acts/Seeding/AtlasSeedfinder.ipp"

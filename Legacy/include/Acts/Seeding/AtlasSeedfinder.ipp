@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// ATL_Seedmaker.ipp Acts project
+// AtlasSeedfinder.ipp Acts project
 ///////////////////////////////////////////////////////////////////
 
 #include <algorithm>
@@ -17,7 +17,7 @@
 ///////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder()
 {
 
   m_checketa = false;
@@ -94,7 +94,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::ATL_Seedmaker()
 // Destructor
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::~ATL_Seedmaker()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::~AtlasSeedfinder()
 {
   if (r_index) {
     delete[] r_index;
@@ -153,9 +153,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::~ATL_Seedmaker()
 template <typename SpacePoint>
 template <class RandIter>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
-                                                   RandIter spBegin,
-                                                   RandIter spEnd)
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int      iteration,
+                                                    RandIter spBegin,
+                                                    RandIter spEnd)
 {
   iteration <= 0 ? m_iteration = 0 : m_iteration = iteration;
   erase();
@@ -199,7 +199,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
   RandIter sp = spBegin;
   for (; sp != spEnd; ++sp) {
 
-    Acts::Seeding::SPForSeed<SpacePoint>* sps = newSpacePoint((*sp));
+    Acts::Legacy::SPForSeed<SpacePoint>* sps = newSpacePoint((*sp));
     if (!sps) {
       continue;
     }
@@ -227,7 +227,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newEvent(int      iteration,
 
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::find3Sp()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::find3Sp()
 {
   m_zminU = m_zmin;
   m_zmaxU = m_zmax;
@@ -251,7 +251,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::find3Sp()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::findNext()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::findNext()
 {
   if (m_endlist) {
     return;
@@ -271,7 +271,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::findNext()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork()
 {
   m_ptmin = fabs(m_ptmin);
 
@@ -305,7 +305,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   // Build radius sorted containers
   //
   r_size   = int((r_rmax + .1) / r_rstep);
-  r_Sorted = new std::list<Acts::Seeding::SPForSeed<SpacePoint>*>[r_size];
+  r_Sorted = new std::list<Acts::Legacy::SPForSeed<SpacePoint>*>[r_size];
   r_index  = new int[r_size];
   r_map    = new int[r_size];
   for (int i = 0; i != r_size; ++i) {
@@ -426,7 +426,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
   }
 
   if (!m_SP) {
-    m_SP = new Acts::Seeding::SPForSeed<SpacePoint>*[m_maxsizeSP];
+    m_SP = new Acts::Legacy::SPForSeed<SpacePoint>*[m_maxsizeSP];
   }
   if (m_R == nullptr) {
     m_R = new float[m_maxsizeSP];
@@ -447,11 +447,11 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
     m_Zo = new float[m_maxsizeSP];
   }
   if (!m_OneSeeds) {
-    m_OneSeeds = new Acts::Seeding::InternalSeed<SpacePoint>[m_maxOneSize];
+    m_OneSeeds = new Acts::Legacy::InternalSeed<SpacePoint>[m_maxOneSize];
   }
 
   if (!m_seedOutput) {
-    m_seedOutput = new Acts::Seeding::Seed<SpacePoint>();
+    m_seedOutput = new Acts::Legacy::Seed<SpacePoint>();
   }
 
   i_seed  = l_seeds.begin();
@@ -463,7 +463,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildFrameWork()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildBeamFrameWork()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildBeamFrameWork()
 {
 
   double bx = m_config.beamPosX;
@@ -480,7 +480,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::buildBeamFrameWork()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::convertToBeamFrameWork(
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::convertToBeamFrameWork(
     SpacePoint* const& sp,
     float*             r)
 {
@@ -495,10 +495,10 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::convertToBeamFrameWork(
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists()
 {
   const float pi2 = 2. * M_PI;
-  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator r, re;
+  typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r, re;
 
   int  ir0 = 0;
   bool ibl = false;
@@ -589,7 +589,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillLists()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::erase()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::erase()
 {
   for (int i = 0; i != m_nrfz; ++i) {
     int n      = rfz_index[i];
@@ -608,7 +608,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::erase()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp()
 {
   // if less than 3 sp in total
   if (m_nsaz < 3) {
@@ -619,7 +619,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp()
   // indices for the z-regions array in weird order.
   // ensures creating seeds first for barrel, then left EC, then right EC
   const int ZI[11] = {5, 6, 7, 8, 9, 10, 4, 3, 2, 1, 0};
-  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator rt[9],
+  typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator rt[9],
       rte[9], rb[9], rbe[9];
   int nseed = 0;
 
@@ -678,18 +678,17 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp()
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
-    typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rb,
-    typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rbe,
-    typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rt,
-    typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator* rte,
-    int                                                                  NB,
-    int                                                                  NT,
-    int&                                                                 nseed)
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
+    typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rb,
+    typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rbe,
+    typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rt,
+    typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rte,
+    int                                                                 NB,
+    int                                                                 NT,
+    int&                                                                nseed)
 {
-  typename std::list<Acts::Seeding::SPForSeed<SpacePoint>*>::iterator r0
-      = rb[0],
-      r;
+  typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r0 = rb[0],
+                                                                     r;
   if (!m_endlist) {
     r0        = m_rMin;
     m_endlist = true;
@@ -822,7 +821,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
 
     for (int i = 0; i != Nt; ++i) {
 
-      Acts::Seeding::SPForSeed<SpacePoint>* sp = m_SP[i];
+      Acts::Legacy::SPForSeed<SpacePoint>* sp = m_SP[i];
 
       float dx = sp->x() - X;
       float dy = sp->y() - Y;
@@ -931,12 +930,12 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::production3Sp(
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(
-    Acts::Seeding::SPForSeed<SpacePoint>*& p1,
-    Acts::Seeding::SPForSeed<SpacePoint>*& p2,
-    Acts::Seeding::SPForSeed<SpacePoint>*& p3,
-    float                                  z,
-    float                                  q)
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
+    Acts::Legacy::SPForSeed<SpacePoint>*& p1,
+    Acts::Legacy::SPForSeed<SpacePoint>*& p2,
+    Acts::Legacy::SPForSeed<SpacePoint>*& p3,
+    float                                 z,
+    float                                 q)
 {
   // if the number of seeds already in m_OneSeeds does not exceed m_maxOneSize
   // then insert the current SP into m_mapOneSeeds and m_OneSeeds.
@@ -954,7 +953,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(
   // Then remove all entries after the newly inserted entry equal to the new
   // seed.
   else {
-    typename std::multimap<float, Acts::Seeding::InternalSeed<SpacePoint>*>::
+    typename std::multimap<float, Acts::Legacy::InternalSeed<SpacePoint>*>::
         reverse_iterator l
         = m_mapOneSeeds.rbegin();
 
@@ -962,11 +961,11 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(
       return;
     }
 
-    Acts::Seeding::InternalSeed<SpacePoint>* s = (*l).second;
+    Acts::Legacy::InternalSeed<SpacePoint>* s = (*l).second;
     s->set(p1, p2, p3, z);
 
     typename std::multimap<float,
-                           Acts::Seeding::InternalSeed<SpacePoint>*>::iterator i
+                           Acts::Legacy::InternalSeed<SpacePoint>*>::iterator i
         = m_mapOneSeeds.insert(std::make_pair(q, s));
 
     for (++i; i != m_mapOneSeeds.end(); ++i) {
@@ -983,10 +982,10 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeed(
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
-    Acts::Seeding::SPForSeed<SpacePoint>*& SPb,
-    Acts::Seeding::SPForSeed<SpacePoint>*& SP0,
-    float                                  Zob)
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeedWithCurvaturesComparison(
+    Acts::Legacy::SPForSeed<SpacePoint>*& SPb,
+    Acts::Legacy::SPForSeed<SpacePoint>*& SP0,
+    float                                 Zob)
 {
   // allowed (1/helixradius)-delta between 2 seeds
   const float dC = .00003;
@@ -995,10 +994,9 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
   float ub   = SPb->quality();
   float u0   = SP0->quality();
 
-  std::sort(m_CmSp.begin(), m_CmSp.end(), Acts::Seeding::comCurvature());
-  typename std::
-      vector<std::pair<float, Acts::Seeding::SPForSeed<SpacePoint>*>>::iterator
-          j,
+  std::sort(m_CmSp.begin(), m_CmSp.end(), Acts::Legacy::comCurvature());
+  typename std::vector<std::pair<float, Acts::Legacy::SPForSeed<SpacePoint>*>>::
+      iterator j,
       jn, i = m_CmSp.begin(), ie = m_CmSp.end();
   jn = i;
 
@@ -1095,12 +1093,12 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::newOneSeedWithCurvaturesComparison(
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 void
-Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillSeeds()
+Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillSeeds()
 {
   m_fillOneSeeds = 0;
 
   typename std::multimap<float,
-                         Acts::Seeding::InternalSeed<SpacePoint>*>::iterator lf
+                         Acts::Legacy::InternalSeed<SpacePoint>*>::iterator lf
       = m_mapOneSeeds.begin(),
       l = m_mapOneSeeds.begin(), le = m_mapOneSeeds.end();
 
@@ -1108,7 +1106,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillSeeds()
     return;
   }
 
-  Acts::Seeding::InternalSeed<SpacePoint>* s;
+  Acts::Legacy::InternalSeed<SpacePoint>* s;
 
   for (; l != le; ++l) {
 
@@ -1125,7 +1123,7 @@ Acts::Seeding::ATL_Seedmaker<SpacePoint>::fillSeeds()
       s  = (*i_seede++);
       *s = *(*l).second;
     } else {
-      s = new Acts::Seeding::InternalSeed<SpacePoint>(*(*l).second);
+      s = new Acts::Legacy::InternalSeed<SpacePoint>(*(*l).second);
       l_seeds.push_back(s);
       i_seede = l_seeds.end();
     }

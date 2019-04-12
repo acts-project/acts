@@ -14,7 +14,7 @@
 #include <list>
 
 namespace Acts {
-namespace Seeding {
+namespace Legacy {
 
   template <typename SpacePoint>
   class Seed
@@ -131,5 +131,5 @@ namespace Seeding {
   Seed<SpacePoint>::~Seed()
   {
   }
-}  // end of Seeding namespace
+}  // end of Legacy namespace
 }  // end of Acts namespace

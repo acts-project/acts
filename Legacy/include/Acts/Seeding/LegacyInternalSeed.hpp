@@ -11,11 +11,11 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Seeding/LegacySeed.hpp"
 #include "Acts/Seeding/SPForSeed.hpp"
-#include "Acts/Seeding/Seed.hpp"
 
 namespace Acts {
-namespace Seeding {
+namespace Legacy {
   template <typename SpacePoint>
   class InternalSeed
   {
@@ -71,7 +71,7 @@ namespace Seeding {
     setQuality(float);
 
     bool
-    set3(Acts::Seeding::Seed<SpacePoint>&);
+    set3(Acts::Legacy::Seed<SpacePoint>&);
 
   protected:
     SPForSeed<SpacePoint>* m_s0;
@@ -163,7 +163,7 @@ namespace Seeding {
 
   template <typename SpacePoint>
   inline bool
-  InternalSeed<SpacePoint>::set3(Acts::Seeding::Seed<SpacePoint>& s)
+  InternalSeed<SpacePoint>::set3(Acts::Legacy::Seed<SpacePoint>& s)
   {
 
     bool pixb = !m_s0->spacepoint->clusterList().second;
@@ -211,5 +211,5 @@ namespace Seeding {
     return false;
   }
 
-}  // end of Seeding namespace
+}  // end of Legacy namespace
 }  // end of Acts namespace
