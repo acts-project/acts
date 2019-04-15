@@ -51,7 +51,7 @@ public:
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
@@ -73,7 +73,7 @@ public:
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
@@ -97,7 +97,7 @@ public:
 
   /// Create a gap volume from dimensions and
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
   /// this TrackingVolume is restricted to Translation only
@@ -120,7 +120,7 @@ public:
 
   /// Create a gap volume from dimensions and
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param loc0Min, loc0Max, loc1Min, loc1Max local position in space,
   /// @param layerPositions custom layer positions
@@ -143,7 +143,7 @@ public:
 
   /// Create a one level higher TrackingVolue
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param volumes the volumes to be contained
   ///
   /// @return shared pointer to a new TrackingVolume

@@ -77,7 +77,7 @@ public:
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
@@ -85,7 +85,7 @@ public:
   /// @param volumeBounds: confinement of this TrackingVolume
   /// @param transform (optional) placement of this TrackingVolume
   /// @param volumeName  volume name to be given
-  /// @param btype (optional) BinningType - arbitrary(default) or equidistant
+  /// @param bType (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr
@@ -99,15 +99,17 @@ public:
 
   /// Create a TrackingVolume* from a set of layers and (optional) parameters
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param layers vector of static layers confined by the TrackingVolume
   /// if no bounds or HepTransform is given, they define the size
   /// together with the volume enevlope parameters
   /// @param volumeMaterial material properties for this TrackingVolume
-  /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
-  /// this TrackingVolume is restricted to Translation only
+  /// @param rMin minimum radius
+  /// @param rMax maximum radius
+  /// @param zMin minimum z
+  /// @param zMax maximum z
   /// @param volumeName  volume name to be given
-  /// @param btype (optional) BinningType - arbitrary(default) or equidistant
+  /// @param bType (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   MutableTrackingVolumePtr

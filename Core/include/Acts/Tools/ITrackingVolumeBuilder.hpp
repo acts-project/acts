@@ -47,7 +47,7 @@ public:
 
   /// ITrackingVolumeBuilder interface method
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param insideVolume is an (optional) volume to be wrapped
   /// @param outsideBounds is an (optional) outside confinement
   ///
