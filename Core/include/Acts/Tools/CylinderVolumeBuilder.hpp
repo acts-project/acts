@@ -13,7 +13,6 @@
 #pragma once
 #include <limits>
 #include <string>
-#include "Acts/Material/Material.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeHelper.hpp"
@@ -35,6 +34,7 @@ namespace Acts {
 
 class TrackingVolume;
 class VolumeBounds;
+class IVolumeMaterial;
 
 /// @enum WrappingCondition
 enum WrappingCondition {
@@ -509,7 +509,7 @@ public:
     /// The dimensions of the manually created world
     std::vector<double> volumeDimension = {};
     /// the world material
-    std::shared_ptr<const Material> volumeMaterial = nullptr;
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
     /// build the volume to the beam line
     bool buildToRadiusZero = false;
     /// needed to build layers within the volume

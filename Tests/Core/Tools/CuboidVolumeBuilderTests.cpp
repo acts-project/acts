@@ -18,6 +18,7 @@
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -63,7 +64,7 @@ namespace Test {
       // Material of the surfaces
       MaterialProperties matProp(
           352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-      cfg.surMat = std::shared_ptr<const SurfaceMaterial>(
+      cfg.surMat = std::shared_ptr<const ISurfaceMaterial>(
           new HomogeneousSurfaceMaterial(matProp));
 
       // Thickness of the detector element
@@ -87,7 +88,7 @@ namespace Test {
           = cvb.buildSurface(tgContext, cfg);
       BOOST_CHECK_NE(pSur, nullptr);
       CHECK_CLOSE_ABS(pSur->center(tgContext), cfg.position, 1e-9);
-      BOOST_CHECK_NE(pSur->associatedMaterial(), nullptr);
+      BOOST_CHECK_NE(pSur->surfaceMaterial(), nullptr);
       BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
     }
 
@@ -122,8 +123,9 @@ namespace Test {
     volumeConfig.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
     volumeConfig.layerCfg = layerConfig;
     volumeConfig.name     = "Test volume";
-    volumeConfig.material = std::make_shared<const Material>(
-        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    volumeConfig.volumeMaterial
+        = std::make_shared<const HomogeneousVolumeMaterial>(
+            Material(352.8, 407., 9.012, 4., 1.848e-3));
 
     // Test the building
     std::shared_ptr<TrackingVolume> trVol
@@ -133,7 +135,7 @@ namespace Test {
                       volumeConfig.layers.size() * 2
                           + 1);  // #layers = navigation + material layers
     BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
-    BOOST_CHECK_NE(trVol->material(), nullptr);
+    BOOST_CHECK_NE(trVol->volumeMaterial(), nullptr);
 
     // Test the building
     volumeConfig.layers.clear();
@@ -191,7 +193,7 @@ namespace Test {
       // Material of the surfaces
       MaterialProperties matProp(
           352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-      cfg.surMat = std::shared_ptr<const SurfaceMaterial>(
+      cfg.surMat = std::shared_ptr<const ISurfaceMaterial>(
           new HomogeneousSurfaceMaterial(matProp));
 
       // Thickness of the detector element

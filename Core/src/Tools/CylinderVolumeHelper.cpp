@@ -54,13 +54,13 @@ Acts::CylinderVolumeHelper::setLogger(std::unique_ptr<const Logger> newLogger)
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
-    const GeometryContext&              gctx,
-    const LayerVector&                  layers,
-    std::shared_ptr<const Material>     matprop,
-    std::shared_ptr<const VolumeBounds> volBounds,
-    std::shared_ptr<const Transform3D>  transform,
-    const std::string&                  volumeName,
-    BinningType                         bType) const
+    const GeometryContext&                 gctx,
+    const LayerVector&                     layers,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    std::shared_ptr<const VolumeBounds>    volumeBounds,
+    std::shared_ptr<const Transform3D>     transform,
+    const std::string&                     volumeName,
+    BinningType                            bType) const
 {
   // the final one to build / sensitive Volume / Bounds
   MutableTrackingVolumePtr tVolume = nullptr;
@@ -68,14 +68,15 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   std::unique_ptr<const LayerArray> layerArray = nullptr;
 
   // cases are:
-  // (1) volBounds && transform   : use both information
-  // (2) volBounds && !transform  : centered around 0, but with given bounds
-  // (3) !volBounds && transform  : estimate size from layers, use transform
-  // (4) !volBounds && !transform : estimate size & translation from layers
+  // (1) volumeBounds && transform   : use both information
+  // (2) volumeBounds && !transform  : centered around 0, but with given bounds
+  // (3) !volumeBounds && transform  : estimate size from layers, use transform
+  // (4) !volumeBounds && !transform : estimate size & translation from layers
   const CylinderVolumeBounds* cylinderBounds = nullptr;
   // this is the implementation of CylinderVolumeHelper
-  if (volBounds) {
-    cylinderBounds = dynamic_cast<const CylinderVolumeBounds*>(volBounds.get());
+  if (volumeBounds) {
+    cylinderBounds
+        = dynamic_cast<const CylinderVolumeBounds*>(volumeBounds.get());
     if (cylinderBounds == nullptr) {
       ACTS_WARNING(
           "[!] Problem: given bounds are not cylindrical - return nullptr");
@@ -106,7 +107,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
       ACTS_WARNING("[!] Problem with given dimensions - return nullptr and "
                    "delete provided objects");
       // delete if newly created bounds
-      if (volBounds == nullptr) {
+      if (volumeBounds == nullptr) {
         delete cylinderBounds;
       }
       return tVolume;
@@ -135,14 +136,14 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
   }  // layers are created and done
   // make sure the ownership of the bounds is correct
-  std::shared_ptr<const VolumeBounds> volBoundsFinal
-      = volBounds.get() != nullptr
-      ? volBounds
+  std::shared_ptr<const VolumeBounds> volumeBoundsFinal
+      = volumeBounds.get() != nullptr
+      ? volumeBounds
       : std::shared_ptr<const VolumeBounds>(cylinderBounds);
   // finally create the TrackingVolume
   tVolume = TrackingVolume::create(transform,
-                                   volBoundsFinal,
-                                   matprop,
+                                   volumeBoundsFinal,
+                                   volumeMaterial,
                                    std::move(layerArray),
                                    nullptr,
                                    volumeName);
@@ -156,15 +157,15 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
-    const GeometryContext&          gctx,
-    const LayerVector&              layers,
-    std::shared_ptr<const Material> matprop,
-    double                          rMin,
-    double                          rMax,
-    double                          zMin,
-    double                          zMax,
-    const std::string&              volumeName,
-    BinningType                     bType) const
+    const GeometryContext&                 gctx,
+    const LayerVector&                     layers,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    double                                 rMin,
+    double                                 rMax,
+    double                                 zMin,
+    double                                 zMax,
+    const std::string&                     volumeName,
+    BinningType                            bType) const
 {
   // that's what is needed
   CylinderVolumeBounds* cBounds = nullptr;
@@ -205,7 +206,7 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
   // call to the creation method with Bounds & Translation3D
   return createTrackingVolume(gctx,
                               layers,
-                              matprop,
+                              volumeMaterial,
                               VolumeBoundsPtr(cBounds),
                               transform,
                               volumeName,
@@ -214,15 +215,15 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    const GeometryContext&          gctx,
-    std::shared_ptr<const Material> matprop,
-    double                          rMin,
-    double                          rMax,
-    double                          zMin,
-    double                          zMax,
-    unsigned int                    materialLayers,
-    bool                            cylinder,
-    const std::string&              volumeName) const
+    const GeometryContext&                 gctx,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    double                                 rMin,
+    double                                 rMax,
+    double                                 zMin,
+    double                                 zMax,
+    unsigned int                           materialLayers,
+    bool                                   cylinder,
+    const std::string&                     volumeName) const
 {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
@@ -248,7 +249,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
 
   // now call the main method
   return createGapTrackingVolume(gctx,
-                                 matprop,
+                                 volumeMaterial,
                                  rMin,
                                  rMax,
                                  zMin,
@@ -261,16 +262,16 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
-    const GeometryContext&          gctx,
-    std::shared_ptr<const Material> matprop,
-    double                          rMin,
-    double                          rMax,
-    double                          zMin,
-    double                          zMax,
-    const std::vector<double>&      layerPositions,
-    bool                            cylinder,
-    const std::string&              volumeName,
-    BinningType                     bType) const
+    const GeometryContext&                 gctx,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    double                                 rMin,
+    double                                 rMax,
+    double                                 zMin,
+    double                                 zMax,
+    const std::vector<double>&             layerPositions,
+    bool                                   cylinder,
+    const std::string&                     volumeName,
+    BinningType                            bType) const
 {
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
@@ -314,7 +315,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   }
   // now call the createTrackingVolume() method
   return createTrackingVolume(
-      gctx, layers, matprop, rMin, rMax, zMin, zMax, volumeName, bType);
+      gctx, layers, volumeMaterial, rMin, rMax, zMin, zMax, volumeName, bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>

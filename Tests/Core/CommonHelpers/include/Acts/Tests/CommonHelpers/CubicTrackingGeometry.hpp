@@ -52,7 +52,7 @@ namespace Test {
       // Material of the surfaces
       MaterialProperties matProp(
           352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-      surfaceMaterial = std::shared_ptr<const SurfaceMaterial>(
+      surfaceMaterial = std::shared_ptr<const ISurfaceMaterial>(
           new HomogeneousSurfaceMaterial(matProp));
     }
 
@@ -209,8 +209,8 @@ namespace Test {
     }
 
     RotationMatrix3D rotation = RotationMatrix3D::Identity();
-    std::shared_ptr<const RectangleBounds> rBounds         = nullptr;
-    std::shared_ptr<const SurfaceMaterial> surfaceMaterial = nullptr;
+    std::shared_ptr<const RectangleBounds>  rBounds         = nullptr;
+    std::shared_ptr<const ISurfaceMaterial> surfaceMaterial = nullptr;
 
     std::vector<std::unique_ptr<const DetectorElementStub>> detectorStore = {};
 

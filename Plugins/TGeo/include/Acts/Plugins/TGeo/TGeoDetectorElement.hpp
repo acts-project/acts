@@ -19,7 +19,7 @@
 
 namespace Acts {
 
-class SurfaceMaterial;
+class ISurfaceMaterial;
 class SurfaceBounds;
 class DigitizationModule;
 
@@ -77,7 +77,7 @@ public:
       const std::string&                              axes     = "XYZ",
       double                                          scalor   = 1.,
       bool                                            isDisc   = false,
-      std::shared_ptr<const Acts::SurfaceMaterial>    material = nullptr,
+      std::shared_ptr<const Acts::ISurfaceMaterial>   material = nullptr,
       std::shared_ptr<const Acts::DigitizationModule> digitizationModule
       = nullptr);
 
@@ -124,7 +124,7 @@ public:
       const std::string&                              axes     = "XYZ",
       double                                          scalor   = 1.,
       bool                                            isDisc   = false,
-      std::shared_ptr<const Acts::SurfaceMaterial>    material = nullptr,
+      std::shared_ptr<const Acts::ISurfaceMaterial>   material = nullptr,
       std::shared_ptr<const Acts::DigitizationModule> digitizationModule
       = nullptr);
 

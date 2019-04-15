@@ -10,6 +10,7 @@
 #include <list>
 #include <stdexcept>
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
@@ -278,11 +279,12 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
     // get the possible material of the surounding volume
     dd4hep::Material ddmaterial = subDetector.volume().material();
     auto             volumeMaterial
-        = std::make_shared<const Material>(ddmaterial.radLength(),
-                                           ddmaterial.intLength(),
-                                           ddmaterial.A(),
-                                           ddmaterial.Z(),
-                                           ddmaterial.density());
+        = std::make_shared<const Acts::HomogeneousVolumeMaterial>(
+            Acts::Material(ddmaterial.radLength(),
+                           ddmaterial.intLength(),
+                           ddmaterial.A(),
+                           ddmaterial.Z(),
+                           ddmaterial.density()));
 
     // the configuration object of the volume builder
     Acts::CylinderVolumeBuilder::Config cvbConfig;
@@ -412,11 +414,12 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
     /// @todo volume material currently not used
     dd4hep::Material ddmaterial = subDetector.volume().material();
     auto             volumeMaterial
-        = std::make_shared<const Material>(ddmaterial.radLength(),
-                                           ddmaterial.intLength(),
-                                           ddmaterial.A(),
-                                           ddmaterial.Z(),
-                                           ddmaterial.density());
+        = std::make_shared<const Acts::HomogeneousVolumeMaterial>(
+            Acts::Material(ddmaterial.radLength(),
+                           ddmaterial.intLength(),
+                           ddmaterial.A(),
+                           ddmaterial.Z(),
+                           ddmaterial.density()));
     cvbConfig.layerEnvelopeR = std::make_pair(layerEnvelopeR, layerEnvelopeR);
     cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
     cvbConfig.trackingVolumeHelper = volumeHelper;

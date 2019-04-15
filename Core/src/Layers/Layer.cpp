@@ -13,7 +13,7 @@
 // Geometry module
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
@@ -53,28 +53,20 @@ Acts::Layer::approachDescriptor()
 }
 
 void
-Acts::Layer::closeGeometry(const SurfaceMaterialMap& surfaceMaterialMap,
+Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
                            const GeometryID&         layerID)
 {
-
-  // This functor checks and assigns the material for a given
-  auto assignSurfaceMaterial
-      = [&surfaceMaterialMap](Surface* sf, GeometryID geoID) -> void {
-    // Try to find the surface in the map
-    auto sMaterial = surfaceMaterialMap.find(geoID);
-    if (sMaterial != surfaceMaterialMap.end()) {
-      sf->assignSurfaceMaterial(sMaterial->second);
-    }
-  };
 
   // set the volumeID of this
   assignGeoID(layerID);
   // assign to the representing surface
   Surface* rSurface = const_cast<Surface*>(&surfaceRepresentation());
-  assignSurfaceMaterial(rSurface, layerID);
+  if (materialDecorator != nullptr) {
+    materialDecorator->decorate(*rSurface);
+  }
 
   // also find out how the sub structure is defined
-  if (surfaceRepresentation().associatedMaterial() != nullptr) {
+  if (surfaceRepresentation().surfaceMaterial() != nullptr) {
     m_ssRepresentingSurface = 2;
   }
 
@@ -89,9 +81,11 @@ Acts::Layer::closeGeometry(const SurfaceMaterialMap& surfaceMaterialMap,
       asurfaceID.add(++iasurface, GeometryID::approach_mask);
       auto mutableASurface = const_cast<Surface*>(aSurface);
       mutableASurface->assignGeoID(asurfaceID);
-      assignSurfaceMaterial(mutableASurface, asurfaceID);
+      if (materialDecorator != nullptr) {
+        materialDecorator->decorate(*rSurface);
+      }
       // if any of the approach surfaces has material
-      if (aSurface->associatedMaterial() != nullptr) {
+      if (aSurface->surfaceMaterial() != nullptr) {
         m_ssApproachSurfaces = 2;
       }
     }
@@ -107,9 +101,11 @@ Acts::Layer::closeGeometry(const SurfaceMaterialMap& surfaceMaterialMap,
       ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
-      assignSurfaceMaterial(mutableSSurface, ssurfaceID);
+      if (materialDecorator != nullptr) {
+        materialDecorator->decorate(*rSurface);
+      }
       // if any of the sensitive surfaces has material
-      if (sSurface->associatedMaterial() != nullptr) {
+      if (sSurface->surfaceMaterial() != nullptr) {
         m_ssSensitiveSurfaces = 2;
       }
     }

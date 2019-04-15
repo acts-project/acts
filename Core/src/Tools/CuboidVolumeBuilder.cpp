@@ -162,7 +162,7 @@ Acts::CuboidVolumeBuilder::buildVolume(
   auto trackVolume
       = TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
                                bounds,
-                               cfg.material,
+                               cfg.volumeMaterial,
                                std::move(layArr),
                                nullptr,
                                cfg.name);

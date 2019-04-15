@@ -24,7 +24,7 @@ namespace Acts {
 
 class PlanarBounds;
 class DiscBounds;
-class SurfaceMaterial;
+class ISurfaceMaterial;
 class LineBounds;
 
 namespace Test {
@@ -50,10 +50,10 @@ namespace Test {
     /// @param pBounds is the planar bounds for the planar detector element
     /// @param thickness is the module thickness
     /// @param material is the (optional) Surface material associated to it
-    DetectorElementStub(std::shared_ptr<const Transform3D>     transform,
-                        std::shared_ptr<const PlanarBounds>    pBounds,
-                        double                                 thickness,
-                        std::shared_ptr<const SurfaceMaterial> material
+    DetectorElementStub(std::shared_ptr<const Transform3D>      transform,
+                        std::shared_ptr<const PlanarBounds>     pBounds,
+                        double                                  thickness,
+                        std::shared_ptr<const ISurfaceMaterial> material
                         = nullptr)
       : DetectorElementBase()
       , m_elementTransform(std::move(transform))
@@ -71,10 +71,10 @@ namespace Test {
     /// @param dBounds is the line bounds for the line like detector element
     /// @param thickness is the module thickness
     /// @param material is the (optional) Surface material associated to it
-    DetectorElementStub(std::shared_ptr<const Transform3D>     transform,
-                        std::shared_ptr<const LineBounds>      lBounds,
-                        double                                 thickness,
-                        std::shared_ptr<const SurfaceMaterial> material
+    DetectorElementStub(std::shared_ptr<const Transform3D>      transform,
+                        std::shared_ptr<const LineBounds>       lBounds,
+                        double                                  thickness,
+                        std::shared_ptr<const ISurfaceMaterial> material
                         = nullptr)
       : DetectorElementBase()
       , m_elementTransform(std::move(transform))

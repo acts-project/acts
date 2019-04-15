@@ -13,7 +13,7 @@
 #pragma once
 
 #include <vector>
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "DD4hep/CartesianGridXY.h"
@@ -218,7 +218,7 @@ public:
   double
   envelopeZ() const final;
   /// @copydoc IActsExtension::material()
-  std::shared_ptr<const Acts::SurfaceMaterial>
+  std::shared_ptr<const Acts::ISurfaceMaterial>
   material() const final;
   /// @copydoc IActsExtension::digitizationModule
   std::shared_ptr<const DigitizationModule>
@@ -228,7 +228,7 @@ private:
   /// The configuration object
   Config m_cfg;
   // The Acts SurfaceMaterial
-  std::shared_ptr<const Acts::SurfaceMaterial> m_material;
+  std::shared_ptr<const Acts::ISurfaceMaterial> m_material;
   /// The "geometric" digitization module can be optionally added to the
   /// layer,
   /// this then allows only one digitzation description shared amonst the
@@ -309,7 +309,7 @@ ActsExtension::envelopeZ() const
   return (m_cfg.envelopeR);
 }
 
-inline std::shared_ptr<const Acts::SurfaceMaterial>
+inline std::shared_ptr<const Acts::ISurfaceMaterial>
 Acts::ActsExtension::material() const
 {
   return m_material;

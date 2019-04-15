@@ -17,7 +17,7 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility&        binUtility,
     MaterialPropertiesVector fullProperties,
     double                   splitFactor)
-  : SurfaceMaterial(splitFactor), m_binUtility(binUtility)
+  : ISurfaceMaterial(splitFactor), m_binUtility(binUtility)
 {
   // fill the material with deep copy
   m_fullMaterial.push_back(std::move(fullProperties));
@@ -27,7 +27,7 @@ Acts::BinnedSurfaceMaterial::BinnedSurfaceMaterial(
     const BinUtility&        binUtility,
     MaterialPropertiesMatrix fullProperties,
     double                   splitFactor)
-  : Acts::SurfaceMaterial(splitFactor)
+  : ISurfaceMaterial(splitFactor)
   , m_binUtility(binUtility)
   , m_fullMaterial(std::move(fullProperties))
 {

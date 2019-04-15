@@ -17,6 +17,7 @@
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Layers/ApproachDescriptor.hpp"
+#include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -30,7 +31,7 @@
 namespace Acts {
 
 class Surface;
-class SurfaceMaterial;
+class ISurfaceMaterial;
 class BinUtility;
 class Volume;
 class VolumeBounds;
@@ -39,10 +40,6 @@ class ApproachDescriptor;
 
 // Simple surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
-
-// SurfaceMaterial assignment
-using SurfaceMaterialMap
-    = std::map<GeometryID, std::shared_ptr<const SurfaceMaterial>>;
 
 // master typedef
 class Layer;
@@ -380,12 +377,12 @@ private:
   /// - it will set the layer geometry ID for a unique identification
   /// - it will also register the internal sub strucutre
   ///
-  /// @param surfaceMaterialMap is a map that contains the surface
-  ///        the surface material
+  /// @param materialDecorator is a decorator that assigns
+  ///        optionally the surface material to where they belong
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
   void
-  closeGeometry(const SurfaceMaterialMap& surfaceMaterialMap,
+  closeGeometry(const IMaterialDecorator* materialDecorator,
                 const GeometryID&         layerID);
 };
 

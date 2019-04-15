@@ -1,13 +1,13 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// SurfaceMaterial.h, Acts project
+// ISurfaceMaterial.hpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -19,32 +19,31 @@
 
 namespace Acts {
 
-/// @class SurfaceMaterial
+/// @class ISurfaceMaterial
+///
+/// Virtual base class of surface based material description
 ///
 /// MaterialProperties that are associated to a surface,
 /// extended by certain special representations (binned, homogenous)
 ///
-/// The SurfaceMaterial class inherits from GeometryID,
-/// in order to allow storing the material in a file and assigning it uniquely.
-///
-class SurfaceMaterial
+class ISurfaceMaterial
 {
 public:
   /// Constructor
-  SurfaceMaterial() = default;
+  ISurfaceMaterial() = default;
 
   /// Constructor
   ///
   /// @param splitFactor is the splitting ratio between pre/post update
-  SurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
+  ISurfaceMaterial(double splitFactor) : m_splitFactor(splitFactor) {}
 
   /// Destructor
-  virtual ~SurfaceMaterial() = default;
+  virtual ~ISurfaceMaterial() = default;
 
   /// Scale operator
   ///
   /// @param scale is the scale factor applied
-  virtual SurfaceMaterial&
+  virtual ISurfaceMaterial&
   operator*=(double scale)
       = 0;
 
@@ -109,11 +108,11 @@ public:
   /// @brief output stream operator
   ///
   /// Prints information about this object to the output stream using the
-  /// virtual SurfaceMaterial::dump method
+  /// virtual ISurfaceMaterial::dump method
   ///
   /// @return modified output stream object
   friend std::ostream&
-  operator<<(std::ostream& out, const SurfaceMaterial& sm)
+  operator<<(std::ostream& out, const ISurfaceMaterial& sm)
   {
     sm.toStream(out);
     return out;
@@ -128,8 +127,8 @@ protected:
 };
 
 inline double
-SurfaceMaterial::factor(NavigationDirection pDir,
-                        MaterialUpdateStage mStage) const
+ISurfaceMaterial::factor(NavigationDirection pDir,
+                         MaterialUpdateStage mStage) const
 {
   if (mStage == Acts::fullUpdate) {
     return 1.;
@@ -138,9 +137,9 @@ SurfaceMaterial::factor(NavigationDirection pDir,
 }
 
 inline MaterialProperties
-SurfaceMaterial::materialProperties(const Vector2D&     lp,
-                                    NavigationDirection pDir,
-                                    MaterialUpdateStage mStage) const
+ISurfaceMaterial::materialProperties(const Vector2D&     lp,
+                                     NavigationDirection pDir,
+                                     MaterialUpdateStage mStage) const
 {
   // The plain material properties associated to this bin
   MaterialProperties plainMatProp = materialProperties(lp);
@@ -156,9 +155,9 @@ SurfaceMaterial::materialProperties(const Vector2D&     lp,
 }
 
 inline MaterialProperties
-SurfaceMaterial::materialProperties(const Vector3D&     gp,
-                                    NavigationDirection pDir,
-                                    MaterialUpdateStage mStage) const
+ISurfaceMaterial::materialProperties(const Vector3D&     gp,
+                                     NavigationDirection pDir,
+                                     MaterialUpdateStage mStage) const
 {
   // The plain material properties associated to this bin
   MaterialProperties plainMatProp = materialProperties(gp);

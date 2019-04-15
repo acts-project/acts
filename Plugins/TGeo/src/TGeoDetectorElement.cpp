@@ -10,7 +10,7 @@
 #include <iostream>
 #include <utility>
 
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
@@ -32,7 +32,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     const std::string&                              axes,
     double                                          scalor,
     bool                                            isDisc,
-    std::shared_ptr<const Acts::SurfaceMaterial>    material,
+    std::shared_ptr<const Acts::ISurfaceMaterial>   material,
     std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
   : Acts::IdentifiedDetectorElement()
   , m_detElement(tGeoDetElement)
@@ -390,7 +390,7 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
     const std::string&                              axes,
     double                                          scalor,
     bool                                            isDisc,
-    std::shared_ptr<const Acts::SurfaceMaterial>    material,
+    std::shared_ptr<const Acts::ISurfaceMaterial>   material,
     std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
   : Acts::IdentifiedDetectorElement()
   , m_detElement(tGeoDetElement)

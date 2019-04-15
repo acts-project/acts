@@ -16,7 +16,7 @@
 Acts::HomogeneousSurfaceMaterial::HomogeneousSurfaceMaterial(
     const MaterialProperties& full,
     double                    splitFactor)
-  : SurfaceMaterial(splitFactor), m_fullMaterial(full)
+  : ISurfaceMaterial(splitFactor), m_fullMaterial(full)
 {
 }
 

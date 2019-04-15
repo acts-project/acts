@@ -22,7 +22,7 @@
 
 Acts::TrackingVolume::TrackingVolume()
   : Volume()
-  , m_material(std::make_shared<const Material>())
+  , m_volumeMaterial(nullptr)
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
   , m_confinedVolumes(nullptr)
@@ -36,7 +36,7 @@ Acts::TrackingVolume::TrackingVolume(
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
     const std::string&                                volumeName)
   : Volume(std::move(htrans), std::move(volbounds))
-  , m_material(std::make_shared<const Material>())
+  , m_volumeMaterial(nullptr)
   , m_boundarySurfaces()
   , m_confinedLayers(nullptr)
   , m_confinedVolumes(containedVolumeArray)
@@ -49,13 +49,13 @@ Acts::TrackingVolume::TrackingVolume(
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
     std::shared_ptr<const Transform3D>         htrans,
-    VolumeBoundsPtr                            volbounds,
-    std::shared_ptr<const Material>            matprop,
+    VolumeBoundsPtr                            volumeBounds,
+    std::shared_ptr<const IVolumeMaterial>     volumeMaterial,
     std::unique_ptr<const LayerArray>          staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
     const std::string&                         volumeName)
-  : Volume(std::move(htrans), std::move(volbounds))
-  , m_material(std::move(matprop))
+  : Volume(std::move(htrans), std::move(volumeBounds))
+  , m_volumeMaterial(std::move(volumeMaterial))
   , m_confinedLayers(std::move(staticLayerArray))
   , m_confinedVolumes(std::move(containedVolumeArray))
   , m_name(volumeName)
@@ -308,7 +308,7 @@ Acts::TrackingVolume::interlinkLayers()
 
 void
 Acts::TrackingVolume::closeGeometry(
-    const SurfaceMaterialMap& surfaceMaterialMap,
+    const IMaterialDecorator* materialDecorator,
     std::map<std::string, const TrackingVolume*>& volumeMap,
     size_t& vol)
 {
@@ -322,15 +322,10 @@ Acts::TrackingVolume::closeGeometry(
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeoID(volumeID);
 
-  // This functor checks and assigns the material for a given
-  auto assignSurfaceMaterial
-      = [&surfaceMaterialMap](Surface& sf, GeometryID geoID) -> void {
-    // Try to find the surface in the map
-    auto sMaterial = surfaceMaterialMap.find(geoID);
-    if (sMaterial != surfaceMaterialMap.end()) {
-      sf.assignSurfaceMaterial(sMaterial->second);
-    }
-  };
+  // assign the material if you have a decorator
+  if (materialDecorator != nullptr) {
+    materialDecorator->decorate(*thisVolume);
+  }
 
   // loop over the boundary surfaces
   geo_id_value iboundary = 0;
@@ -344,7 +339,10 @@ Acts::TrackingVolume::closeGeometry(
     // now assign to the boundary surface
     auto& mutableBSurface = *(const_cast<Surface*>(&bSurface));
     mutableBSurface.assignGeoID(boundaryID);
-    assignSurfaceMaterial(mutableBSurface, boundaryID);
+    // assign the material if you have a decorator
+    if (materialDecorator != nullptr) {
+      materialDecorator->decorate(mutableBSurface);
+    }
   }
 
   // A) this is NOT a container volume, volumeID is already incremented
@@ -359,7 +357,7 @@ Acts::TrackingVolume::closeGeometry(
         layerID.add(++ilayer, GeometryID::layer_mask);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
-        mutableLayerPtr->closeGeometry(surfaceMaterialMap, layerID);
+        mutableLayerPtr->closeGeometry(materialDecorator, layerID);
       }
     }
   } else {
@@ -368,7 +366,7 @@ Acts::TrackingVolume::closeGeometry(
     for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
       auto mutableVolumesIter
           = std::const_pointer_cast<TrackingVolume>(volumesIter);
-      mutableVolumesIter->closeGeometry(surfaceMaterialMap, volumeMap, vol);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
     }
   }
 }

@@ -158,8 +158,8 @@ namespace Test {
       MaterialProperties lProperties(
           95.7, 465.2, 28.03, 14., 2.32e-3, 1.5 * units::_mm);
 
-      std::shared_ptr<const SurfaceMaterial> layerMaterialPtr
-          = std::shared_ptr<const SurfaceMaterial>(
+      std::shared_ptr<const ISurfaceMaterial> layerMaterialPtr
+          = std::shared_ptr<const ISurfaceMaterial>(
               new Acts::HomogeneousSurfaceMaterial(lProperties));
 
       // Module material - X0, L0, A, Z, Rho
@@ -183,8 +183,8 @@ namespace Test {
         MaterialProperties moduleMaterialProperties(pcMaterial,
                                                     pModuleThickness[ilp]);
         // Create a new surface material
-        std::shared_ptr<const SurfaceMaterial> moduleMaterialPtr
-            = std::shared_ptr<const SurfaceMaterial>(
+        std::shared_ptr<const ISurfaceMaterial> moduleMaterialPtr
+            = std::shared_ptr<const ISurfaceMaterial>(
                 new Acts::HomogeneousSurfaceMaterial(moduleMaterialProperties));
 
         // The rectangle bounds for all modules

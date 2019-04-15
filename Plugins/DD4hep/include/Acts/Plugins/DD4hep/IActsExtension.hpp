@@ -70,7 +70,7 @@ class DigitizationModule;
 ///
 /// @note see Acts::ActsExtension for implementation.
 
-class SurfaceMaterial;
+class ISurfaceMaterial;
 
 /// @enum LayerMaterialPos The LayerMaterialPos enumeration is foreseen to
 /// mark
@@ -136,7 +136,7 @@ public:
   virtual double
   envelopeZ() const = 0;
   /// @return The SurfaceMaterial
-  virtual std::shared_ptr<const Acts::SurfaceMaterial>
+  virtual std::shared_ptr<const Acts::ISurfaceMaterial>
   material() const = 0;
   /// @return the shared pointer to the digitization module
   virtual std::shared_ptr<const DigitizationModule>

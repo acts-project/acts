@@ -13,7 +13,7 @@
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/SurfaceMaterialMapper.hpp"
 #include "Acts/Tools/CylinderVolumeBuilder.hpp"
 #include "Acts/Tools/CylinderVolumeHelper.hpp"
@@ -33,7 +33,7 @@ trackingGeometry()
 {
 
   BinUtility zbinned(8, -40, 40, open, binZ);
-  auto       matProxy = std::make_shared<const SurfaceMaterialProxy>(zbinned);
+  auto       matProxy = std::make_shared<const ProtoSurfaceMaterial>(zbinned);
 
   Logging::Level surfaceLLevel = Logging::INFO;
   Logging::Level layerLLevel   = Logging::INFO;

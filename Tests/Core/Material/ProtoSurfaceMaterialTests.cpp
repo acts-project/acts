@@ -7,28 +7,28 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///  Boost include(s)
-#define BOOST_TEST_MODULE SurfaceMaterialProxy Tests
+#define BOOST_TEST_MODULE ProtoSurfaceMaterial Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <climits>
-#include "Acts/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 
 namespace Acts {
 
 namespace Test {
 
   /// Test the constructors
-  BOOST_AUTO_TEST_CASE(SurfaceMaterialProxy_construction_test)
+  BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test)
   {
     BinUtility smpBU(10, -10., 10., open, binX);
     smpBU += BinUtility(10, -10., 10., open, binY);
 
     // Constructor from arguments
-    SurfaceMaterialProxy smp(smpBU);
+    ProtoSurfaceMaterial smp(smpBU);
     // Copy constructor
-    SurfaceMaterialProxy smpCopy(smp);
+    ProtoSurfaceMaterial smpCopy(smp);
     // Copy move constructor
-    SurfaceMaterialProxy smpCopyMoved(std::move(smpCopy));
+    ProtoSurfaceMaterial smpCopyMoved(std::move(smpCopy));
   }
 
 }  // namespace Test

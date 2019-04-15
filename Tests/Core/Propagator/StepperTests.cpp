@@ -17,6 +17,7 @@
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -247,9 +248,9 @@ namespace Test {
   {
     CuboidVolumeBuilder               cvb;
     CuboidVolumeBuilder::VolumeConfig vConf;
-    vConf.position = {0.5 * units::_m, 0., 0.};
-    vConf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
-    vConf.material = std::make_shared<const Material>(
+    vConf.position       = {0.5 * units::_m, 0., 0.};
+    vConf.length         = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
         Material(352.8, 394.133, 9.012, 4., 1.848e-3));
     CuboidVolumeBuilder::Config conf;
     conf.volumeCfg.push_back(vConf);
@@ -427,9 +428,9 @@ namespace Test {
     vConfVac1.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
     vConfVac1.name     = "First vacuum volume";
     CuboidVolumeBuilder::VolumeConfig vConfMat;
-    vConfMat.position = {1.5 * units::_m, 0., 0.};
-    vConfMat.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
-    vConfMat.material = std::make_shared<const Material>(
+    vConfMat.position       = {1.5 * units::_m, 0., 0.};
+    vConfMat.length         = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConfMat.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
         Material(352.8, 394.133, 9.012, 4., 1.848e-3));
     vConfMat.name = "Material volume";
     CuboidVolumeBuilder::VolumeConfig vConfVac2;

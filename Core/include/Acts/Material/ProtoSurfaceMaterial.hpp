@@ -7,69 +7,69 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// SurfaceMaterialProxy.hpp, Acts project MaterialPlugins
+// ProtoSurfaceMaterial.hpp, Acts project MaterialPlugins
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
 namespace Acts {
 
-/// @class SurfaceMaterialProxy
+/// @class ProtoSurfaceMaterial
 ///
 /// @brief proxy to SurfaceMaterial hand over BinUtility
 ///
-/// The SurfaceMaterialProxy class acts as a proxy to the SurfaceMaterial
+/// The ProtoSurfaceMaterial class acts as a proxy to the SurfaceMaterial
 /// to mark the layers and surfaces on which the material should be mapped on
 /// at construction time of the geometry and to hand over the granularity of
 /// of the material map with the bin Utility.
 
-class SurfaceMaterialProxy : public SurfaceMaterial
+class ProtoSurfaceMaterial : public ISurfaceMaterial
 {
 public:
   /// Constructor without BinUtility - homogenous material
-  SurfaceMaterialProxy() = default;
+  ProtoSurfaceMaterial() = default;
 
   /// Constructor with BinUtility - multidimensional material
   ///
   /// @param binUtility a BinUtility determining the granularity
   ///        and binning of the material on the surface/layer
-  SurfaceMaterialProxy(const BinUtility& binUtility);
+  ProtoSurfaceMaterial(const BinUtility& binUtility);
 
   /// Copy constuctor
   ///
   /// @param smproxy The source proxy
-  SurfaceMaterialProxy(const SurfaceMaterialProxy& smproxy) = default;
+  ProtoSurfaceMaterial(const ProtoSurfaceMaterial& smproxy) = default;
 
   /// Copy move constuctor
   ///
   /// @param smproxy The source proxy
-  SurfaceMaterialProxy(SurfaceMaterialProxy&& smproxy) = default;
+  ProtoSurfaceMaterial(ProtoSurfaceMaterial&& smproxy) = default;
 
   /// Destructor
   ///
   /// @param smproxy The source proxy
-  ~SurfaceMaterialProxy() override = default;
+  ~ProtoSurfaceMaterial() override = default;
 
   /// Assignment operator
   ///
   /// @param smproxy The source proxy
-  SurfaceMaterialProxy&
-  operator=(const SurfaceMaterialProxy& smproxy)
+  ProtoSurfaceMaterial&
+  operator=(const ProtoSurfaceMaterial& smproxy)
       = default;
 
   /// Assigment move operator
   ///
   /// @param smproxy The source proxy
-  SurfaceMaterialProxy&
-  operator=(SurfaceMaterialProxy&& smproxy)
+  ProtoSurfaceMaterial&
+  operator=(ProtoSurfaceMaterial&& smproxy)
       = default;
 
   /// Scale operator
   ///
   /// @param
-  SurfaceMaterialProxy&
+  ProtoSurfaceMaterial&
   operator*=(double scale) final;
 
   /// Return the BinUtility
@@ -119,26 +119,26 @@ private:
 }
 
 inline const Acts::MaterialProperties&
-Acts::SurfaceMaterialProxy::materialProperties(const Vector2D& /*lp*/) const
+Acts::ProtoSurfaceMaterial::materialProperties(const Vector2D& /*lp*/) const
 {
   return (m_materialProperties);
 }
 
 inline const Acts::MaterialProperties&
-Acts::SurfaceMaterialProxy::materialProperties(const Vector3D& /*gp*/) const
+Acts::ProtoSurfaceMaterial::materialProperties(const Vector3D& /*gp*/) const
 {
   return (m_materialProperties);
 }
 
 inline const Acts::MaterialProperties&
-    Acts::SurfaceMaterialProxy::materialProperties(size_t /*ib0*/,
+    Acts::ProtoSurfaceMaterial::materialProperties(size_t /*ib0*/,
                                                    size_t /*ib1*/) const
 {
   return (m_materialProperties);
 }
 
 inline const Acts::BinUtility&
-Acts::SurfaceMaterialProxy::binUtility() const
+Acts::ProtoSurfaceMaterial::binUtility() const
 {
   return m_binUtility;
 }

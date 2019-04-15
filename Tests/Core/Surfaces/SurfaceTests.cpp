@@ -107,7 +107,7 @@ namespace Test {
     BOOST_CHECK_EQUAL(surface.associatedLayer(), pLayer.get());
     // associated Material is not set to the surface
     // it is set to the detector element surface though
-    BOOST_CHECK_NE(surface.associatedMaterial(), pMaterial.get());
+    BOOST_CHECK_NE(surface.surfaceMaterial(), pMaterial.get());
     // center()
     CHECK_CLOSE_OR_SMALL(reference, surface.center(tgContext), 1e-6, 1e-9);
     // insideBounds
@@ -140,12 +140,12 @@ namespace Test {
     Vector3D zero{0., 0., 0.};
     BOOST_CHECK_EQUAL(zero, normal);
     // pathCorrection is pure virtual
-    // associatedMaterial()
+    // surfaceMaterial()
     MaterialProperties newProperties{0.5, 0.5, 0.5, 20., 10., 5.};
     auto               pNewMaterial
         = std::make_shared<const HomogeneousSurfaceMaterial>(newProperties);
     surface.assignSurfaceMaterial(pNewMaterial);
-    BOOST_CHECK_EQUAL(surface.associatedMaterial(),
+    BOOST_CHECK_EQUAL(surface.surfaceMaterial(),
                       pNewMaterial.get());  // passes ??
     //
     CHECK_CLOSE_OR_SMALL(surface.transform(tgContext), *pTransform, 1e-6, 1e-9);

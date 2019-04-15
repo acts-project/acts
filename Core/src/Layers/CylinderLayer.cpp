@@ -12,7 +12,7 @@
 
 #include "Acts/Layers/CylinderLayer.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"

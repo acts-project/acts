@@ -87,7 +87,7 @@ Acts::AccumulatedSurfaceMaterial::trackAverage(
 }
 
 /// Total average creates SurfaceMaterial
-std::unique_ptr<const Acts::SurfaceMaterial>
+std::unique_ptr<const Acts::ISurfaceMaterial>
 Acts::AccumulatedSurfaceMaterial::totalAverage()
 {
   if (m_binUtility.bins() == 1) {
