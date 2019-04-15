@@ -507,8 +507,10 @@ MultiTrajectory::addTrackState(
     auto measCov = m_measCov.addCol();
     std::visit(
         [&meas, &measCov](const auto& m) {
-          meas.template head<m.size()>() = m.parameters();
-          measCov.template topLeftCorner<m.size(), m.size()>() = m.covariance();
+          using meas_t                         = std::decay_t<decltype(m)>;
+          meas.template head<meas_t::size()>() = m.parameters();
+          measCov.template topLeftCorner<meas_t::size(), meas_t::size()>()
+              = m.covariance();
         },
         *ts.measurement.uncalibrated);
 
@@ -520,8 +522,10 @@ MultiTrajectory::addTrackState(
     auto measCov = m_measCov.addCol();
     std::visit(
         [&meas, &measCov](const auto& m) {
-          meas.template head<m.size()>() = m.parameters();
-          measCov.template topLeftCorner<m.size(), m.size()>() = m.covariance();
+          using meas_t                         = std::decay_t<decltype(m)>;
+          meas.template head<meas_t::size()>() = m.parameters();
+          measCov.template topLeftCorner<meas_t::size(), meas_t::size()>()
+              = m.covariance();
         },
         *ts.measurement.calibrated);
     p.icalibrated = meas.size() - 1;
