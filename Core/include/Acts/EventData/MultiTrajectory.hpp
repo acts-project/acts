@@ -21,6 +21,7 @@
 namespace Acts {
 
 // forward declarations
+template <typename source_link_t>
 class MultiTrajectory;
 class Surface;
 
@@ -123,10 +124,11 @@ namespace detail_lt {
   };
   /// Proxy object to access a single point on the trajectory.
   ///
-  /// @tparam ReadOnly  true for read-only access to underlying storage
+  /// @tparam source_link_t Type to link back to an original measurement
   /// @tparam N         Number of track parameters
   /// @tparam M         Maximum number of measurements
-  template <size_t N, size_t M, bool ReadOnly = true>
+  /// @tparam ReadOnly  true for read-only access to underlying storage
+  template <typename source_link_t, size_t N, size_t M, bool ReadOnly = true>
   class TrackStateProxy
   {
   public:
@@ -260,14 +262,15 @@ namespace detail_lt {
 
   private:
     // Private since it can only be created by the trajectory.
-    TrackStateProxy(ConstIf<MultiTrajectory, ReadOnly>& trajectory,
-                    size_t istate);
+    TrackStateProxy(
+        ConstIf<MultiTrajectory<source_link_t>, ReadOnly>& trajectory,
+        size_t istate);
 
-    ConstIf<MultiTrajectory, ReadOnly>& m_traj;
+    ConstIf<MultiTrajectory<source_link_t>, ReadOnly>& m_traj;
     size_t    m_istate;
     IndexData m_data;
 
-    friend class Acts::MultiTrajectory;
+    friend class Acts::MultiTrajectory<source_link_t>;
   };
 }  // namespace detail_lt
 
@@ -279,6 +282,8 @@ namespace detail_lt {
 /// of sub-trajectories. From a set of endpoints, all possible sub-components
 /// can be easily identified. Some functionality is provided to simplify
 /// iterating over specific sub-components.
+/// @tparam source_link_t Type to link back to an original measurement
+template <typename source_link_t>
 class MultiTrajectory
 {
 public:
@@ -286,10 +291,10 @@ public:
     ParametersSize     = NGlobalPars,
     MeasurementSizeMax = 2,
   };
-  using ConstTrackStateProxy
-      = detail_lt::TrackStateProxy<ParametersSize, MeasurementSizeMax, true>;
-  using TrackStateProxy
-      = detail_lt::TrackStateProxy<ParametersSize, MeasurementSizeMax, false>;
+  using ConstTrackStateProxy = detail_lt::
+      TrackStateProxy<source_link_t, ParametersSize, MeasurementSizeMax, true>;
+  using TrackStateProxy = detail_lt::
+      TrackStateProxy<source_link_t, ParametersSize, MeasurementSizeMax, false>;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
@@ -298,7 +303,7 @@ public:
   ///
   /// @param trackParameters  at the local point
   /// @param iprevious        index of the previous state, SIZE_MAX if first
-  template <typename source_link_t, typename parameters_t>
+  template <typename parameters_t>
   size_t
   addTrackState(const TrackState<source_link_t, parameters_t>& ts,
                 size_t iprevious = SIZE_MAX);
@@ -337,32 +342,32 @@ public:
 
 private:
   /// index to map track states to the corresponding
-  std::vector<detail_lt::IndexData>                         m_index;
-  detail_lt::Types<ParametersSize>::StorageCoefficients     m_params;
-  detail_lt::Types<ParametersSize>::StorageCovariance       m_cov;
-  detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
-  detail_lt::Types<MeasurementSizeMax>::StorageCovariance   m_measCov;
+  std::vector<detail_lt::IndexData>                                  m_index;
+  typename detail_lt::Types<ParametersSize>::StorageCoefficients     m_params;
+  typename detail_lt::Types<ParametersSize>::StorageCovariance       m_cov;
+  typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
+  typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance   m_measCov;
 
   friend class detail_lt::
-      TrackStateProxy<ParametersSize, MeasurementSizeMax, true>;
+      TrackStateProxy<source_link_t, ParametersSize, MeasurementSizeMax, true>;
   friend class detail_lt::
-      TrackStateProxy<ParametersSize, MeasurementSizeMax, false>;
+      TrackStateProxy<source_link_t, ParametersSize, MeasurementSizeMax, false>;
 };
 
 // implementations
 
 namespace detail_lt {
-  template <size_t N, size_t M, bool ReadOnly>
-  inline TrackStateProxy<N, M, ReadOnly>::TrackStateProxy(
-      ConstIf<MultiTrajectory, ReadOnly>& trajectory,
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
+  inline TrackStateProxy<SL, N, M, ReadOnly>::TrackStateProxy(
+      ConstIf<MultiTrajectory<SL>, ReadOnly>& trajectory,
       size_t istate)
     : m_traj(trajectory), m_istate(istate), m_data(trajectory.m_index[istate])
   {
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::parameters() const -> Parameters
+  TrackStateProxy<SL, N, M, ReadOnly>::parameters() const -> Parameters
   {
     IndexData::IndexType idx;
     if (hasSmoothed()) {
@@ -376,9 +381,9 @@ namespace detail_lt {
     return Parameters(m_traj.m_params.data.col(idx).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::covariance() const -> Covariance
+  TrackStateProxy<SL, N, M, ReadOnly>::covariance() const -> Covariance
   {
     IndexData::IndexType idx;
     if (hasSmoothed()) {
@@ -391,74 +396,74 @@ namespace detail_lt {
     return Covariance(m_traj.m_cov.data.col(idx).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::predicted() const -> Parameters
+  TrackStateProxy<SL, N, M, ReadOnly>::predicted() const -> Parameters
   {
     return Parameters(m_traj.m_params.col(m_data.ipredicted).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::predictedCovariance() const -> Covariance
+  TrackStateProxy<SL, N, M, ReadOnly>::predictedCovariance() const -> Covariance
   {
     return Covariance(m_traj.m_cov.col(m_data.ipredicted).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::filtered() const -> Parameters
+  TrackStateProxy<SL, N, M, ReadOnly>::filtered() const -> Parameters
   {
     return Parameters(m_traj.m_params.col(m_data.ifiltered).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::filteredCovariance() const -> Covariance
+  TrackStateProxy<SL, N, M, ReadOnly>::filteredCovariance() const -> Covariance
   {
     return Covariance(m_traj.m_cov.col(m_data.ifiltered).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::smoothed() const -> Parameters
+  TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const -> Parameters
   {
     return Parameters(m_traj.m_params.col(m_data.ismoothed).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::smoothedCovariance() const -> Covariance
+  TrackStateProxy<SL, N, M, ReadOnly>::smoothedCovariance() const -> Covariance
   {
     return Covariance(m_traj.m_cov.col(m_data.ismoothed).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::uncalibrated() const -> Measurement
+  TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const -> Measurement
   {
     return Measurement(m_traj.m_meas.col(m_data.iuncalibrated).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::uncalibratedCovariance() const
+  TrackStateProxy<SL, N, M, ReadOnly>::uncalibratedCovariance() const
       -> MeasurementCovariance
   {
     return MeasurementCovariance(
         m_traj.m_measCov.col(m_data.iuncalibrated).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::calibrated() const -> Measurement
+  TrackStateProxy<SL, N, M, ReadOnly>::calibrated() const -> Measurement
   {
     return Measurement(m_traj.m_meas.col(m_data.icalibrated).data());
   }
 
-  template <size_t N, size_t M, bool ReadOnly>
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<N, M, ReadOnly>::calibratedCovariance() const
+  TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
       -> MeasurementCovariance
   {
     return MeasurementCovariance(
@@ -467,13 +472,14 @@ namespace detail_lt {
 
 }  // namespace detail_lt
 
-template <typename source_link_t, typename parameters_t>
+template <typename SL>
+template <typename parameters_t>
 inline size_t
-MultiTrajectory::addTrackState(
-    const TrackState<source_link_t, parameters_t>& ts,
-    size_t iprevious)
+MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
+                                   size_t iprevious)
 {
-  using CovMap = detail_lt::Types<ParametersSize, false>::CovarianceMap;
+  using CovMap =
+      typename detail_lt::Types<ParametersSize, false>::CovarianceMap;
 
   detail_lt::IndexData p = {ts.referenceSurface()};
   if (iprevious != SIZE_MAX) {
@@ -535,9 +541,10 @@ MultiTrajectory::addTrackState(
   return m_index.size() - 1;
 }
 
+template <typename SL>
 template <typename F>
 void
-MultiTrajectory::visitBackwards(size_t iendpoint, F&& callable) const
+MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const
 {
   while (true) {
     callable(getPoint(iendpoint));
@@ -549,9 +556,10 @@ MultiTrajectory::visitBackwards(size_t iendpoint, F&& callable) const
   }
 }
 
+template <typename SL>
 template <typename F>
 void
-MultiTrajectory::applyBackwards(size_t iendpoint, F&& callable)
+MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable)
 {
   while (true) {
     callable(getPoint(iendpoint));

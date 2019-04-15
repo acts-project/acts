@@ -48,7 +48,7 @@ namespace Test {
 
   BOOST_AUTO_TEST_CASE(multitrajectory_build)
   {
-    MultiTrajectory t;
+    MultiTrajectory<SourceLink> t;
 
     // construct trajectory w/ multiple components
     auto i0 = t.addTrackState(make_trackstate());
