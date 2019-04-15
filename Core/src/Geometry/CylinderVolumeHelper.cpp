@@ -299,8 +299,16 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
     }
   }
   // now call the createTrackingVolume() method
-  return createTrackingVolume(
-      gctx, layers, mtvVector, volumeMaterial, rMin, rMax, zMin, zMax, volumeName, bType);
+  return createTrackingVolume(gctx,
+                              layers,
+                              mtvVector,
+                              volumeMaterial,
+                              rMin,
+                              rMax,
+                              zMin,
+                              zMax,
+                              volumeName,
+                              bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>

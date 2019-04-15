@@ -658,14 +658,16 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     CuboidVolumeBuilder::VolumeConfig muConf1;
     muConf1.position = {2.3 * units::_m, 0., 0.};
     muConf1.length   = {20. * units::_cm, 20. * units::_cm, 20. * units::_cm};
-    muConf1.volumeMaterial = std::shared_ptr<const IVolumeMaterial>(
-        new HomogeneousVolumeMaterial(Material(352.8, 407., 9.012, 4., 1.848e-3)));
+    muConf1.volumeMaterial
+        = std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
+            Material(352.8, 407., 9.012, 4., 1.848e-3)));
     muConf1.name = "MDT1";
     CuboidVolumeBuilder::VolumeConfig muConf2;
     muConf2.position = {2.7 * units::_m, 0., 0.};
     muConf2.length   = {20. * units::_cm, 20. * units::_cm, 20. * units::_cm};
-    muConf2.volumeMaterial = std::shared_ptr<const IVolumeMaterial>(
-        new HomogeneousVolumeMaterial(Material(352.8, 407., 9.012, 4., 1.848e-3)));
+    muConf2.volumeMaterial
+        = std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
+            Material(352.8, 407., 9.012, 4., 1.848e-3)));
     muConf2.name = "MDT2";
 
     CuboidVolumeBuilder::VolumeConfig vConf1;
@@ -676,8 +678,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     CuboidVolumeBuilder::VolumeConfig vConf2;
     vConf2.position = {1.5 * units::_m, 0., 0.};
     vConf2.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
-    vConf2.volumeMaterial = std::shared_ptr<const IVolumeMaterial>(
-        new HomogeneousVolumeMaterial(Material(352.8, 407., 9.012, 4., 1.848e-3)));
+    vConf2.volumeMaterial
+        = std::shared_ptr<const IVolumeMaterial>(new HomogeneousVolumeMaterial(
+            Material(352.8, 407., 9.012, 4., 1.848e-3)));
     vConf2.name = "Calorimeter";
     CuboidVolumeBuilder::VolumeConfig vConf3;
     vConf3.position  = {2.5 * units::_m, 0., 0.};
