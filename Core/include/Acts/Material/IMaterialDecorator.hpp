@@ -19,9 +19,11 @@ class TrackingVolume;
 
 /// @class IMaterialDecorator
 ///
-/// Virtual base class of surface based material description
-//
-/// Material associated with a Volume (homogenous, binned, interpolated)
+/// Virtual base class for decorators that allow to load
+/// material onto a TrackingGeometry. The geometry allows material
+/// to be assigned either to surfaces or to volumes, hence there are
+/// two decorate interface methots.
+///
 class IMaterialDecorator
 {
 public:
@@ -29,10 +31,14 @@ public:
   virtual ~IMaterialDecorator() = default;
 
   /// Decorate a surface
+  ///
+  /// @param surface the non-cost surface that is decorated
   virtual void
   decorate(Surface& surface) const = 0;
 
   /// Decorate a TrackingVolume
+  ///
+  /// @param volume the non-cost volume that is decorated
   virtual void
   decorate(TrackingVolume& volume) const = 0;
 };

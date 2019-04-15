@@ -108,7 +108,7 @@ public:
   /// @brief output stream operator
   ///
   /// Prints information about this object to the output stream using the
-  /// virtual ISurfaceMaterial::dump method
+  /// virtual ISurfaceMaterial::toStream method
   ///
   /// @return modified output stream object
   friend std::ostream&
