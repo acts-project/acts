@@ -38,7 +38,7 @@ public:
   /// @param position is the request position for the material call
   /// @todo interface to change including 'cell'
   const Material&
-  material(const Vector3D& /*position*/) const final override
+  material(const Vector3D& /*position*/) const final
   {
     return m_material;
   }
