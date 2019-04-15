@@ -497,6 +497,9 @@ private:
   /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
 
+  /// Remember the mother volume
+  const TrackingVolume* m_motherVolume{nullptr};
+
   // the boundary surfaces
   std::vector<TrackingVolumeBoundaryPtr> m_boundarySurfaces;
 

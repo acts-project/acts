@@ -31,6 +31,7 @@
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 
 using namespace Acts::UnitLiterals;
 
@@ -282,8 +283,8 @@ namespace Test {
     cvCfg1.position = {1.1 * units::_m, 0., 0.};
     cvCfg1.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
     cvCfg1.name     = "Confined volume1";
-    cvCfg1.material = std::make_shared<const Material>(
-        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    cvCfg1.volumeMaterial = std::shared_ptr<const IVolumeMaterial>(
+        new HomogeneousVolumeMaterial(Material(352.8, 407., 9.012, 4., 1.848e-3)));
     CuboidVolumeBuilder::VolumeConfig cvCfg2;
     cvCfg2.position = {0.9 * units::_m, 0., 0.};
     cvCfg2.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
@@ -350,16 +351,16 @@ namespace Test {
       if (stepResult.position[i].x() >= 0.85 * units::_m
           && stepResult.position[i].x() < 0.95 * units::_m) {
         BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg2.name);
-        BOOST_TEST(stepResult.volume[i]->material() == nullptr);
+        BOOST_TEST(stepResult.volume[i]->volumeMaterial() == nullptr);
       } else {
         if (stepResult.position[i].x() >= 1.05 * units::_m
             && stepResult.position[i].x() < 1.15 * units::_m) {
           BOOST_TEST(stepResult.volume[i]->volumeName() == cvCfg1.name);
-          BOOST_TEST(stepResult.volume[i]->material() != nullptr);
+          BOOST_TEST(stepResult.volume[i]->volumeMaterial() != nullptr);
         } else {
           if (stepResult.position[i].x() < 2. * units::_m) {
             BOOST_TEST(stepResult.volume[i]->volumeName() == vCfg.name);
-            BOOST_TEST(stepResult.volume[i]->material() == nullptr);
+            BOOST_TEST(stepResult.volume[i]->volumeMaterial() == nullptr);
           }
         }
       }
@@ -386,8 +387,8 @@ namespace Test {
     cvCfg1.position = {0.1 * units::_m, 0.4 * units::_m, 0.4 * units::_m};
     cvCfg1.length   = {10. * units::_cm, 10. * units::_cm, 10. * units::_cm};
     cvCfg1.name     = "Confined volume1";
-    cvCfg1.material = std::make_shared<const Material>(
-        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    cvCfg1.volumeMaterial = std::shared_ptr<const IVolumeMaterial>(
+        new HomogeneousVolumeMaterial(Material(352.8, 407., 9.012, 4., 1.848e-3)));
     // Volume that is missed but far away such that it may be hit
     CuboidVolumeBuilder::VolumeConfig cvCfg2;
     cvCfg2.position = {1.9 * units::_m, -0.4 * units::_m, -0.4 * units::_m};

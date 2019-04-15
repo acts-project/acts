@@ -31,6 +31,9 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 
 namespace tt = boost::test_tools;
 using namespace Acts::UnitLiterals;
@@ -633,7 +636,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     sConf1.rotation.col(2) = zPos;
     sConf1.rBounds         = std::make_shared<const RectangleBounds>(
         RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
-    sConf1.surMat = std::shared_ptr<const SurfaceMaterial>(
+    sConf1.surMat = std::shared_ptr<const ISurfaceMaterial>(
         new HomogeneousSurfaceMaterial(matProp));
     sConf1.thickness = 1. * units::_mm;
     CuboidVolumeBuilder::LayerConfig lConf1;
@@ -646,7 +649,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     sConf2.rotation.col(2) = zPos;
     sConf2.rBounds         = std::make_shared<const RectangleBounds>(
         RectangleBounds(0.5 * units::_m, 0.5 * units::_m));
-    sConf2.surMat = std::shared_ptr<const SurfaceMaterial>(
+    sConf2.surMat = std::shared_ptr<const ISurfaceMaterial>(
         new HomogeneousSurfaceMaterial(matProp));
     sConf2.thickness = 1. * units::_mm;
     CuboidVolumeBuilder::LayerConfig lConf2;
@@ -655,14 +658,14 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     CuboidVolumeBuilder::VolumeConfig muConf1;
     muConf1.position = {2.3 * units::_m, 0., 0.};
     muConf1.length   = {20. * units::_cm, 20. * units::_cm, 20. * units::_cm};
-    muConf1.material = std::make_shared<const Material>(
-        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    muConf1.volumeMaterial = std::shared_ptr<const IVolumeMaterial>(
+        new HomogeneousVolumeMaterial(Material(352.8, 407., 9.012, 4., 1.848e-3)));
     muConf1.name = "MDT1";
     CuboidVolumeBuilder::VolumeConfig muConf2;
     muConf2.position = {2.7 * units::_m, 0., 0.};
     muConf2.length   = {20. * units::_cm, 20. * units::_cm, 20. * units::_cm};
-    muConf2.material = std::make_shared<const Material>(
-        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    muConf2.volumeMaterial = std::shared_ptr<const IVolumeMaterial>(
+        new HomogeneousVolumeMaterial(Material(352.8, 407., 9.012, 4., 1.848e-3)));
     muConf2.name = "MDT2";
 
     CuboidVolumeBuilder::VolumeConfig vConf1;
@@ -673,8 +676,8 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
     CuboidVolumeBuilder::VolumeConfig vConf2;
     vConf2.position = {1.5 * units::_m, 0., 0.};
     vConf2.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
-    vConf2.material = std::make_shared<const Material>(
-        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    vConf2.volumeMaterial = std::shared_ptr<const IVolumeMaterial>(
+        new HomogeneousVolumeMaterial(Material(352.8, 407., 9.012, 4., 1.848e-3)));
     vConf2.name = "Calorimeter";
     CuboidVolumeBuilder::VolumeConfig vConf3;
     vConf3.position  = {2.5 * units::_m, 0., 0.};

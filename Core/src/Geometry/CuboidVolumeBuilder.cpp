@@ -156,7 +156,7 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
 	  trackVolume
 		  = TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
 								   bounds,
-								   cfg.material,
+								   cfg.volumeMaterial,
 								   nullptr,
 								   nullptr,
 								   cfg.trackingVolumes,
