@@ -438,7 +438,7 @@ private:
   operator=(const TrackingVolume&)
       = delete;
 
-  /// The volume baded material the TrackingVolume consists of
+  /// The volume based material the TrackingVolume consists of
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
 
   /// Remember the mother volume
