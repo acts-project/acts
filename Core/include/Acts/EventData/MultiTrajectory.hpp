@@ -310,14 +310,14 @@ public:
 
   /// Access a read-only point on the trajectory by index.
   ConstTrackStateProxy
-  getPoint(size_t istate) const
+  getTrackState(size_t istate) const
   {
     return {*this, istate};
   }
 
   /// Access a writable point on the trajectory by index.
   TrackStateProxy
-  getPoint(size_t istate)
+  getTrackState(size_t istate)
   {
     return {*this, istate};
   }
@@ -547,7 +547,7 @@ void
 MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const
 {
   while (true) {
-    callable(getPoint(iendpoint));
+    callable(getTrackState(iendpoint));
     // this point has no parent and ends the trajectory
     if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
       break;
@@ -562,7 +562,7 @@ void
 MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable)
 {
   while (true) {
-    callable(getPoint(iendpoint));
+    callable(getTrackState(iendpoint));
     // this point has no parent and ends the trajectory
     if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
       break;

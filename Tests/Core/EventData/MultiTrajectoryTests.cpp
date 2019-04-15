@@ -74,7 +74,7 @@ namespace Test {
     t.visitBackwards(i2b, print);
 
     // print full/effective parameters/covariance for an example point
-    const auto& p = t.getPoint(i1b);
+    const auto& p = t.getTrackState(i1b);
     cout << "data for point " << p.index() << endl;
     cout << p.predicted().transpose() << endl;
     cout << p.predictedCovariance() << endl;
