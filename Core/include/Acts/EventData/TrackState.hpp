@@ -23,15 +23,15 @@ class Surface;
 /// @brief Templated class to hold the track information
 /// on a surface along the trajectory
 ///
-/// @tparam identifier_t Type of the identifier
+/// @tparam source_link_t Type of the source link
 /// @tparam parameters_t Type of the parameters on the surface
 ///
 /// @note the Surface is only stored as a pointer, i.e. it is
 /// assumed the surface lives longer than the TrackState
-template <typename identifier_t, typename parameters_t>
+template <typename source_link_t, typename parameters_t>
 class TrackState {
  public:
-  using Identifier = identifier_t;
+  using SourceLink = source_link_t;
   using Parameters = parameters_t;
   using Jacobian = typename Parameters::CovMatrix_t;
 
@@ -134,10 +134,10 @@ class TrackState {
   /// (in case the latter is different)
   struct {
     /// The optional (uncalibrated) measurement
-    boost::optional<FittableMeasurement<identifier_t>> uncalibrated{
+    boost::optional<FittableMeasurement<source_link_t>> uncalibrated{
         boost::none};
     /// The optional calibrabed measurement
-    boost::optional<FittableMeasurement<identifier_t>> calibrated{boost::none};
+    boost::optional<FittableMeasurement<source_link_t>> calibrated{boost::none};
   } measurement;
 
  private:
