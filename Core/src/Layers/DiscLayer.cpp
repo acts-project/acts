@@ -13,7 +13,6 @@
 #include "Acts/Layers/DiscLayer.hpp"
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
 #include "Acts/Layers/Layer.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Utilities/BinUtility.hpp"

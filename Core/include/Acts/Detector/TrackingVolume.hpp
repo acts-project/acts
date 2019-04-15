@@ -16,6 +16,7 @@
 #include <string>
 #include "Acts/Detector/detail/BoundaryIntersectionSorter.hpp"
 #include "Acts/Layers/Layer.hpp"
+#include "Acts/Material/IVolumeMaterial.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
@@ -30,15 +31,13 @@ namespace Acts {
 
 class GlueVolumesDescriptor;
 class VolumeBounds;
-class Material;
-class SurfaceMaterial;
-
-using TrackingVolumeBoundaryPtr
-    = std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
 
 // master typedefs
 using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
+
+using TrackingVolumeBoundaryPtr
+    = std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>;
 
 // possible contained
 using TrackingVolumeArray  = BinnedArray<TrackingVolumePtr>;
@@ -48,10 +47,6 @@ using LayerVector          = std::vector<LayerPtr>;
 
 // full intersection with Layer
 using LayerIntersection = FullIntersection<Layer, Surface>;
-
-// SurfaceMaterial assignment map
-using SurfaceMaterialMap
-    = std::map<GeometryID, std::shared_ptr<const SurfaceMaterial>>;
 
 // full intersection with surface
 using BoundaryIntersection
@@ -122,7 +117,7 @@ public:
   static MutableTrackingVolumePtr
   create(std::shared_ptr<const Transform3D>         htrans,
          VolumeBoundsPtr                            volumeBounds,
-         std::shared_ptr<const Material>            matprop,
+         std::shared_ptr<const IVolumeMaterial>     volumeMaterial,
          std::unique_ptr<const LayerArray>          containedLayers  = nullptr,
          std::shared_ptr<const TrackingVolumeArray> containedVolumes = nullptr,
          const std::string&                         volumeName = "undefined")
@@ -130,7 +125,7 @@ public:
     return MutableTrackingVolumePtr(
         new TrackingVolume(std::move(htrans),
                            std::move(volumeBounds),
-                           std::move(matprop),
+                           std::move(volumeMaterial),
                            std::move(containedLayers),
                            std::move(containedVolumes),
                            volumeName));
@@ -276,8 +271,8 @@ public:
   boundarySurfaces() const;
 
   /// Return the material of the volume
-  std::shared_ptr<const Material>
-  material() const;
+  std::shared_ptr<const IVolumeMaterial>
+  volumeMaterial() const;
 
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
@@ -392,15 +387,15 @@ protected:
   /// Constructor for a full equipped Tracking Volume
   ///
   /// @param htrans is the global 3D transform to position the volume in space
-  /// @param volbounds is the description of the volume boundaries
-  /// @param matprop is are materials of the tracking volume
+  /// @param volumeBounds is the description of the volume boundaries
+  /// @param volumeMaterial is are materials of the tracking volume
   /// @param staticLayerArray is the confined layer array (optional)
   /// @param containedVolumeArray is the confined volume array
   /// @param volumeName is a string identifier
-  TrackingVolume(std::shared_ptr<const Transform3D> htrans,
-                 VolumeBoundsPtr                    volbounds,
-                 std::shared_ptr<const Material>    matprop,
-                 std::unique_ptr<const LayerArray>  staticLayerArray = nullptr,
+  TrackingVolume(std::shared_ptr<const Transform3D>     htrans,
+                 VolumeBoundsPtr                        volumeBounds,
+                 std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+                 std::unique_ptr<const LayerArray> staticLayerArray = nullptr,
                  std::shared_ptr<const TrackingVolumeArray> containedVolumeArray
                  = nullptr,
                  const std::string& volumeName = "undefined");
@@ -419,15 +414,15 @@ private:
 
   /// close the Geometry, i.e. set the GeometryID and assign material
   ///
-  /// @param surfaceMaterialMap is a map that contains
-  ///        the surface material mapped iwth the GeometryID
+  /// @param materialDecorator is a dedicated decorator for the
+  ///        material to be assigned (surface, volume based)
   /// @param volumeMap is a map to find the a volume
   ///        by a given name
   /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
   ///
   void
-  closeGeometry(const SurfaceMaterialMap& surfaceMaterialMap,
+  closeGeometry(const IMaterialDecorator* materialDecorator,
                 std::map<std::string, const TrackingVolume*>& volumeMap,
                 size_t& vol);
 
@@ -443,8 +438,8 @@ private:
   operator=(const TrackingVolume&)
       = delete;
 
-  /// The Material the TrackingVolume consists of
-  std::shared_ptr<const Material> m_material;
+  /// The volume based material the TrackingVolume consists of
+  std::shared_ptr<const IVolumeMaterial> m_volumeMaterial{nullptr};
 
   /// Remember the mother volume
   const TrackingVolume* m_motherVolume{nullptr};
@@ -481,10 +476,10 @@ TrackingVolume::volumeName() const
   return m_name;
 }
 
-inline std::shared_ptr<const Material>
-TrackingVolume::material() const
+inline std::shared_ptr<const IVolumeMaterial>
+TrackingVolume::volumeMaterial() const
 {
-  return m_material;
+  return m_volumeMaterial;
 }
 
 inline const LayerArray*

@@ -40,7 +40,7 @@ public:
     std::vector<double> centralLayerRadii;        ///< central layer specs
     std::vector<double> centralLayerHalflengthZ;  ///< central layer specs
     std::vector<double> centralLayerThickness;    ///< central layer specs
-    std::vector<std::shared_ptr<const SurfaceMaterial>>
+    std::vector<std::shared_ptr<const ISurfaceMaterial>>
         centralLayerMaterial;  ///< central layer specs
 
     // the layers at p/e side
@@ -48,7 +48,7 @@ public:
     std::vector<double> posnegLayerRmin;       ///< p/n layer specs
     std::vector<double> posnegLayerRmax;       ///< p/n layer specs
     std::vector<double> posnegLayerThickness;  ///< p/n layer specs
-    std::vector<std::shared_ptr<const SurfaceMaterial>>
+    std::vector<std::shared_ptr<const ISurfaceMaterial>>
         posnegLayerMaterial;  ///< p/n  layer specs
   };
 

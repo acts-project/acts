@@ -12,7 +12,7 @@
 #include "Acts/Layers/GenericApproachDescriptor.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Layers/ProtoLayer.hpp"
-#include "Acts/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepDetectorElement.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
 #include "Acts/Plugins/TGeo/TGeoPrimitivesHelpers.hpp"
@@ -130,8 +130,8 @@ Acts::DD4hepLayerBuilder::negativeLayers(const GeometryContext& gctx) const
       }
 
       // if the layer should carry material it will be marked by assigning a
-      // SurfaceMaterialProxy
-      std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
+      // ProtoSurfaceMaterial
+      std::shared_ptr<const ProtoSurfaceMaterial> materialProxy(nullptr);
       // the approachdescriptor telling where the material sits on the layer
       // (inner, middle, outer) Surface
       std::unique_ptr<Acts::ApproachDescriptor> approachDescriptor = nullptr;
@@ -149,7 +149,7 @@ Acts::DD4hepLayerBuilder::negativeLayers(const GeometryContext& gctx) const
             bins2, pl.minR, pl.maxR, Acts::open, Acts::binR, transform);
         // and create material proxy to mark layer for material mapping
         materialProxy
-            = std::make_shared<const SurfaceMaterialProxy>(materialBinUtil);
+            = std::make_shared<const ProtoSurfaceMaterial>(materialBinUtil);
         // access the material position
         layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
@@ -352,8 +352,8 @@ Acts::DD4hepLayerBuilder::centralLayers(const GeometryContext& gctx) const
       double halfZ = (pl.minZ - pl.maxZ) * 0.5;
 
       // if the layer should carry material it will be marked by assigning a
-      // SurfaceMaterialProxy
-      std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
+      // ProtoSurfaceMaterial
+      std::shared_ptr<const ProtoSurfaceMaterial> materialProxy(nullptr);
       // the approachdescriptor telling where the material sits on the layer
       // (inner, middle, outer) Surface
       std::unique_ptr<Acts::ApproachDescriptor> approachDescriptor = nullptr;
@@ -387,7 +387,7 @@ Acts::DD4hepLayerBuilder::centralLayers(const GeometryContext& gctx) const
             bins2, -halfZ, halfZ, Acts::open, Acts::binZ, transform);
         // and create material proxy to mark layer for material mapping
         materialProxy
-            = std::make_shared<const SurfaceMaterialProxy>(materialBinUtil);
+            = std::make_shared<const ProtoSurfaceMaterial>(materialBinUtil);
         // access the material position
         layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
@@ -569,8 +569,8 @@ Acts::DD4hepLayerBuilder::positiveLayers(const GeometryContext& gctx) const
       }
 
       // if the layer should carry material it will be marked by assigning a
-      // SurfaceMaterialProxy
-      std::shared_ptr<const SurfaceMaterialProxy> materialProxy(nullptr);
+      // ProtoSurfaceMaterial
+      std::shared_ptr<const ProtoSurfaceMaterial> materialProxy(nullptr);
       // the approachdescriptor telling where the material sits on the layer
       // (inner, middle, outer) Surface
       std::unique_ptr<Acts::ApproachDescriptor> approachDescriptor = nullptr;
@@ -588,7 +588,7 @@ Acts::DD4hepLayerBuilder::positiveLayers(const GeometryContext& gctx) const
             bins2, pl.minR, pl.maxR, Acts::open, Acts::binR, transform);
         // and create material proxy to mark layer for material mapping
         materialProxy
-            = std::make_shared<const SurfaceMaterialProxy>(materialBinUtil);
+            = std::make_shared<const ProtoSurfaceMaterial>(materialBinUtil);
         // access the material position
         layerPos = detExtension->layerMaterialPosition();
         ACTS_VERBOSE(
@@ -739,7 +739,7 @@ Acts::DD4hepLayerBuilder::createSensitiveSurface(
     const std::string&        axes) const
 {
   // access the possible material
-  std::shared_ptr<const Acts::SurfaceMaterial> material = nullptr;
+  std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr;
   // access the possible extension of the DetElement
   Acts::IActsExtension* detExtension = nullptr;
   try {

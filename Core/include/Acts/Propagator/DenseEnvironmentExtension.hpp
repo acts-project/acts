@@ -73,7 +73,7 @@ struct DenseEnvironmentExtension
 
     // Check existence of a volume with material
     if (!state.navigation.currentVolume
-        || !state.navigation.currentVolume->material()) {
+        || !state.navigation.currentVolume->volumeMaterial()) {
       return 0;
     }
     return 2;
@@ -104,8 +104,10 @@ struct DenseEnvironmentExtension
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
-      massSI   = units::Nat2SI<units::MASS>(state.options.mass);
-      material = state.navigation.currentVolume->material().get();
+      auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
+      Vector3D position   = stepper.position(state.stepping);
+      massSI              = units::Nat2SI<units::MASS>(state.options.mass);
+      material            = &(volumeMaterial->material(position));
       initialMomentum
           = units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
       currentMomentum = initialMomentum;

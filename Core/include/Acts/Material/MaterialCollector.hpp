@@ -9,9 +9,9 @@
 #pragma once
 
 #include <sstream>
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 namespace Acts {
@@ -81,10 +81,10 @@ struct MaterialCollector
         return dstream.str();
       });
 
-      if (state.navigation.currentSurface->associatedMaterial()) {
+      if (state.navigation.currentSurface->surfaceMaterial()) {
         // get the material propertices and only continue
         const MaterialProperties* mProperties
-            = state.navigation.currentSurface->associatedMaterial()->material(
+            = state.navigation.currentSurface->surfaceMaterial()->material(
                 stepper.position(state.stepping));
         if (mProperties) {
           // pre/post/full update
@@ -95,7 +95,7 @@ struct MaterialCollector
               return std::string("Update on start surface: post-update mode.");
             });
             prepofu
-                = state.navigation.currentSurface->associatedMaterial()->factor(
+                = state.navigation.currentSurface->surfaceMaterial()->factor(
                     state.stepping.navDir, postUpdate);
           } else if (state.navigation.targetSurface
                      == state.navigation.currentSurface) {
@@ -103,7 +103,7 @@ struct MaterialCollector
               return std::string("Update on target surface: pre-update mode");
             });
             prepofu
-                = state.navigation.currentSurface->associatedMaterial()->factor(
+                = state.navigation.currentSurface->surfaceMaterial()->factor(
                     state.stepping.navDir, preUpdate);
           } else {
             debugLog(state, [&] {

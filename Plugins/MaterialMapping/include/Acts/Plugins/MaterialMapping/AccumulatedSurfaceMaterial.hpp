@@ -12,8 +12,8 @@
 
 #pragma once
 
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedMaterialProperties.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
@@ -112,7 +112,7 @@ public:
   trackAverage(const std::vector<std::array<size_t, 3>>& trackBins = {});
 
   /// Total average creates SurfaceMaterial
-  std::unique_ptr<const SurfaceMaterial>
+  std::unique_ptr<const ISurfaceMaterial>
   totalAverage();
 
   /// Access to the accumulated material

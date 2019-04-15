@@ -90,7 +90,7 @@ Acts::PassiveLayerBuilder::endcapLayers(const Acts::GeometryContext& /*gctx*/,
                               m_cfg.posnegLayerThickness.at(ipnl));
 
       // assign the material to the layer surface
-      std::shared_ptr<const SurfaceMaterial> material = nullptr;
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr;
       // create the material from jobOptions
       if (!m_cfg.posnegLayerMaterial.empty()) {
         // create homogeneous material
@@ -131,7 +131,7 @@ Acts::PassiveLayerBuilder::centralLayers(
       MutableLayerPtr cLayer = CylinderLayer::create(
           nullptr, cBounds, nullptr, m_cfg.centralLayerThickness.at(icl));
       // assign the material to the layer surface
-      std::shared_ptr<const SurfaceMaterial> material = nullptr;
+      std::shared_ptr<const ISurfaceMaterial> material = nullptr;
       // create the material from jobOptions
       if (!m_cfg.centralLayerMaterial.empty()) {
         // create homogeneous material

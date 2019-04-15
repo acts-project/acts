@@ -19,9 +19,9 @@ namespace Acts {
 
 class TrackingVolume;
 class VolumeBounds;
-class Material;
 class RectangleBounds;
-class SurfaceMaterial;
+class ISurfaceMaterial;
+class IVolumeMaterial;
 class DetectorElementBase;
 class PlaneSurface;
 
@@ -44,7 +44,7 @@ public:
     // Bounds
     std::shared_ptr<const RectangleBounds> rBounds = nullptr;
     // Attached material
-    std::shared_ptr<const SurfaceMaterial> surMat = nullptr;
+    std::shared_ptr<const ISurfaceMaterial> surMat = nullptr;
     // Thickness
     double thickness = 0.;
     // Constructor function for optional detector elements
@@ -86,7 +86,7 @@ public:
     // Name of the volume
     std::string name = "Volume";
     // Material
-    std::shared_ptr<const Material> material = nullptr;
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
   };
 
   /// @brief This struct stores the configuration of the tracking geometry

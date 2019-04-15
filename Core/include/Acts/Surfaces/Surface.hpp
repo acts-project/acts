@@ -29,7 +29,7 @@ namespace Acts {
 
 class DetectorElementBase;
 class SurfaceBounds;
-class SurfaceMaterial;
+class ISurfaceMaterial;
 class Layer;
 class TrackingVolume;
 
@@ -257,11 +257,6 @@ public:
   const Layer*
   associatedLayer() const;
 
-  /// Return method for the associated Material to this surface
-  /// @return SurfaceMaterial as plain pointer, can be nullptr
-  const SurfaceMaterial*
-  associatedMaterial() const;
-
   /// Set Associated Layer
   /// Many surfaces can be associated to a Layer, but it might not be known yet
   /// during construction of the layer, this can be set afterwards
@@ -270,6 +265,11 @@ public:
   void
   associateLayer(const Layer& lay);
 
+  /// Return method for the associated Material to this surface
+  /// @return SurfaceMaterial as plain pointer, can be nullptr
+  const ISurfaceMaterial*
+  surfaceMaterial() const;
+
   /// Set Associated SurfaceMaterial
   /// The material is usually derived in a complicated way and loaded from
   /// a framework given source. As various srufaces may share the same
@@ -277,7 +277,7 @@ public:
   /// @param material Material description this given and stored as a shared
   /// pointer
   void
-  assignSurfaceMaterial(std::shared_ptr<const SurfaceMaterial> material);
+  assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
 
   /// The templated Parameters onSurface method
   /// In order to avoid unneccessary geometrical operations, it checks on the
@@ -563,7 +563,7 @@ protected:
   const TrackingVolume* m_associatedTrackingVolume{nullptr};
 
   /// Possibility to attach a material descrption
-  std::shared_ptr<const SurfaceMaterial> m_associatedMaterial;
+  std::shared_ptr<const ISurfaceMaterial> m_surfaceMaterial;
 };
 
 #include "Acts/Surfaces/detail/Surface.ipp"

@@ -42,7 +42,7 @@ public:
 
   /// LayerArrayCreator interface method
   ///
-  /// @param gctx ist the geometry context for witch the volume is built
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param layers are the layers to be moved into an array
   /// @param min is the minimul value for binning
   /// @param max is the maximum value for binning

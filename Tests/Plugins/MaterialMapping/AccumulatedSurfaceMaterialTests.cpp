@@ -11,7 +11,7 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <climits>
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedSurfaceMaterial.hpp"
 
 namespace Acts {

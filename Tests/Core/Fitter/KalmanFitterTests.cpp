@@ -177,7 +177,7 @@ namespace Test {
     {
       // Check if there is a surface with material and a covariance is existing
       if (state.navigation.currentSurface
-          && state.navigation.currentSurface->associatedMaterial()
+          && state.navigation.currentSurface->surfaceMaterial()
           && state.stepping.cov != ActsSymMatrixD<5>::Zero()) {
         // Sample angles
         std::normal_distribution<double> scatterAngle(

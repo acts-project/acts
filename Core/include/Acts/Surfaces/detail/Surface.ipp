@@ -152,16 +152,16 @@ Surface::associatedLayer() const
   return (m_associatedLayer);
 }
 
-inline const SurfaceMaterial*
-Surface::associatedMaterial() const
+inline const ISurfaceMaterial*
+Surface::surfaceMaterial() const
 {
-  return m_associatedMaterial.get();
+  return m_surfaceMaterial.get();
 }
 
 inline void
-Surface::assignSurfaceMaterial(std::shared_ptr<const SurfaceMaterial> material)
+Surface::assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material)
 {
-  m_associatedMaterial = std::move(material);
+  m_surfaceMaterial = std::move(material);
 }
 
 inline void

@@ -78,7 +78,7 @@ Layer::resolve(bool resolveSensitive,
   }
   if (resolveMaterial
       && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
-          || (surfaceRepresentation().associatedMaterial() != nullptr))) {
+          || (surfaceRepresentation().surfaceMaterial() != nullptr))) {
     return true;
   }
   return false;
@@ -156,7 +156,7 @@ Layer::compatibleSurfaces(const GeometryContext& gctx,
       return true;
     }
     // next option: it's a material surface and you want to have it
-    if (options.resolveMaterial && sf.associatedMaterial()) {
+    if (options.resolveMaterial && sf.surfaceMaterial()) {
       return true;
     }
     // last option: resovle all
@@ -264,7 +264,7 @@ Layer::surfaceOnApproach(const GeometryContext& gctx,
   bool resolvePS = options.resolveSensitive || options.resolvePassive;
   bool resolveMS = options.resolveMaterial
       && (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1
-          || surfaceRepresentation().associatedMaterial());
+          || surfaceRepresentation().surfaceMaterial());
 
   // now of course this only counts when you have an approach descriptor
   if (m_approachDescriptor && (resolvePS || resolveMS)) {

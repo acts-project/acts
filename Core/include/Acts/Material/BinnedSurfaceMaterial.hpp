@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -24,7 +24,7 @@ namespace Acts {
 /// MaterialProperties. This is not memory optimised as every bin
 /// holds one material property object.
 
-class BinnedSurfaceMaterial : public SurfaceMaterial
+class BinnedSurfaceMaterial : public ISurfaceMaterial
 {
 public:
   /// Default Constructor - deleted

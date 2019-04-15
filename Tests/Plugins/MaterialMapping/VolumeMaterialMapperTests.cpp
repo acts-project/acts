@@ -24,6 +24,7 @@
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Material/Material.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/VolumeMaterialMapper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -160,12 +161,15 @@ namespace Test {
                result_type&        result) const
     {
       if (state.navigation.currentVolume != nullptr) {
+
+        auto position = stepper.position(state.stepping);
         result.matTrue.push_back(
-            (state.navigation.currentVolume->material() != nullptr)
-                ? *state.navigation.currentVolume->material()
+            (state.navigation.currentVolume->volumeMaterial() != nullptr)
+                ? state.navigation.currentVolume->volumeMaterial()->material(
+                      position)
                 : Material());
 
-        result.position.push_back(stepper.position(state.stepping));
+        result.position.push_back(position);
       }
     }
   };
@@ -246,24 +250,24 @@ namespace Test {
     vCfg1.position = Vector3D(0.5 * units::_m, 0., 0.);
     vCfg1.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
     vCfg1.name     = "Vacuum volume";
-    vCfg1.material
-        = std::make_shared<const Material>(352.8, 407., 9.012, 4., 1.848e-3);
+    vCfg1.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
+        Material(352.8, 407., 9.012, 4., 1.848e-3));
 
     // Build a material volume
     CuboidVolumeBuilder::VolumeConfig vCfg2;
     vCfg2.position = Vector3D(1.5 * units::_m, 0., 0.);
     vCfg2.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
     vCfg2.name     = "First material volume";
-    vCfg2.material
-        = std::make_shared<const Material>(95.7, 465.2, 28.03, 14., 2.32e-3);
+    vCfg2.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
+        Material(95.7, 465.2, 28.03, 14., 2.32e-3));
 
     // Build another material volume with different material
     CuboidVolumeBuilder::VolumeConfig vCfg3;
     vCfg3.position = Vector3D(2.5 * units::_m, 0., 0.);
     vCfg3.length   = Vector3D(1. * units::_m, 1. * units::_m, 1. * units::_m);
     vCfg3.name     = "Second material volume";
-    vCfg3.material
-        = std::make_shared<const Material>(352.8, 407., 9.012, 4., 1.848e-3);
+    vCfg3.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
+        Material(352.8, 407., 9.012, 4., 1.848e-3));
 
     // Configure world
     CuboidVolumeBuilder::Config cfg;
@@ -298,9 +302,10 @@ namespace Test {
     RecordedMaterial matRecord;
     for (unsigned int i = 0; i < 1e4; i++) {
       Vector3D pos(disX(gen), disYZ(gen), disYZ(gen));
-      Material tv
-          = (detector->lowestTrackingVolume(gc, pos)->material() != nullptr)
-          ? *(detector->lowestTrackingVolume(gc, pos)->material())
+      Material tv = (detector->lowestTrackingVolume(gc, pos)->volumeMaterial()
+                     != nullptr)
+          ? (detector->lowestTrackingVolume(gc, pos)->volumeMaterial())
+                ->material(pos)
           : Material();
       matRecord.push_back(std::make_pair(tv, pos));
     }

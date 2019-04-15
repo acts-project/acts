@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// TrackingGeometry.h, Acts project
+// TrackingGeometry.hpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
@@ -27,12 +27,10 @@ class TrackingVolume;
 class Layer;
 class Surface;
 class PerigeeSurface;
-class SurfaceMaterial;
+class IMaterialDecorator;
 
 using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
-using SurfaceMaterialMap
-    = std::map<GeometryID, std::shared_ptr<const SurfaceMaterial>>;
 
 ///  @class TrackingGeometry
 ///
@@ -42,7 +40,6 @@ using SurfaceMaterialMap
 ///  (respectively, if existing, a global search of an associated Layer or the
 ///  next associated Layer), such as a continous navigation by BoundarySurfaces
 ///  between the confined TrackingVolumes.
-
 class TrackingGeometry
 {
   /// Give the GeometryBuilder friend rights
@@ -52,11 +49,10 @@ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
-  /// @param surfaceMaterialMap is a map that holds optionally the
-  ///        the surface material to be assigned by GeometryID
+  /// @param materialDecorator is a dediated decorator that can assign
+  ///        surface or volume based material to the TrackingVolume
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
-                   const SurfaceMaterialMap&       surfaceMaterialMap
-                   = SurfaceMaterialMap());
+                   const IMaterialDecorator*       materialDecorator = nullptr);
 
   /// Destructor
   ~TrackingGeometry();

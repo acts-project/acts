@@ -14,7 +14,7 @@
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
-#include "Acts/Material/SurfaceMaterialProxy.hpp"
+#include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -107,7 +107,7 @@ Acts::SurfaceMaterialMapper::checkAndInsert(State&         mState,
                                             const Surface& surface) const
 {
 
-  auto surfaceMaterial = surface.associatedMaterial();
+  auto surfaceMaterial = surface.surfaceMaterial();
   // check if the surface has a proxy
   if (surfaceMaterial != nullptr) {
 
@@ -118,7 +118,7 @@ Acts::SurfaceMaterialMapper::checkAndInsert(State&         mState,
 
     // We need a dynamic_cast to either a surface material proxy or
     // proper surface material
-    auto psm = dynamic_cast<const SurfaceMaterialProxy*>(surfaceMaterial);
+    auto psm = dynamic_cast<const ProtoSurfaceMaterial*>(surfaceMaterial);
 
     // Get the bin utility: try proxy material first
     const BinUtility* bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;

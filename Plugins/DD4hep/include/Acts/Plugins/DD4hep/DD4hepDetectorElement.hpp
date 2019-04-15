@@ -78,7 +78,7 @@ public:
       const std::string&                        axes               = "XYZ",
       double                                    scalor             = 1.,
       bool                                      isDisc             = false,
-      std::shared_ptr<const SurfaceMaterial>    material           = nullptr,
+      std::shared_ptr<const ISurfaceMaterial>   material           = nullptr,
       std::shared_ptr<const DigitizationModule> digitizationModule = nullptr);
 
   /// Desctructor

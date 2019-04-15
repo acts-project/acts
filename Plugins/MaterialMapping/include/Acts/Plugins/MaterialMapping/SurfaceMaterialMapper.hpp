@@ -15,7 +15,7 @@
 #include "Acts/Extrapolator/MaterialInteractor.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Extrapolator/SurfaceCollector.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
@@ -35,7 +35,7 @@ struct MaterialSurface
   bool
   operator()(const Surface& sf) const
   {
-    return (sf.associatedMaterial() != nullptr);
+    return (sf.surfaceMaterial() != nullptr);
   }
 };
 
@@ -97,7 +97,7 @@ public:
     std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
 
     /// The created surface material from it
-    std::map<GeometryID, std::unique_ptr<const SurfaceMaterial>>
+    std::map<GeometryID, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
 
     /// Reference to the geometry context for the mapping
