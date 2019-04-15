@@ -59,9 +59,14 @@ Acts::TrackingGeometryBuilder::trackingGeometry(
     highestVolume = volumeBuilder(gctx, highestVolume, nullptr);
   }  // --------------------------------------------------------------------------------
 
-  // create the TrackingGeometry
+  // create the TrackingGeometry & decorate it with the material
   if (highestVolume) {
-    trackingGeometry.reset(new TrackingGeometry(highestVolume));
+    // first check if we have material to get
+    const IMaterialDecorator* materialDecorator
+        = m_cfg.materialDecorator ? m_cfg.materialDecorator.get() : nullptr;
+    // build and set the TrackingGeometry
+    trackingGeometry.reset(
+        new TrackingGeometry(highestVolume, materialDecorator));
   }
   // return the geometry to the service
   return (trackingGeometry);
