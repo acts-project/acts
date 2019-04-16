@@ -11,11 +11,10 @@
 #include <boost/hana/set.hpp>
 #include <boost/hana/type.hpp>
 
-namespace hana = boost::hana;
-
 namespace Acts {
 
 namespace detail {
+  namespace hana = boost::hana;
 
 /**
  * Struct which extracts the result type from an actor.
