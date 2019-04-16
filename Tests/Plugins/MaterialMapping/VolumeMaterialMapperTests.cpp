@@ -294,7 +294,7 @@ namespace Test {
 
     // Set up a random engine for sampling material
     std::random_device               rd;
-    std::mt19937                     gen(rd());
+    std::mt19937                     gen(42);
     std::uniform_real_distribution<> disX(0., 3. * units::_m);
     std::uniform_real_distribution<> disYZ(-0.5 * units::_m, 0.5 * units::_m);
 
