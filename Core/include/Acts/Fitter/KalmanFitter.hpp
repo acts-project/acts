@@ -13,6 +13,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/TrackState.hpp"
 #include "Acts/EventData/TrackStateSorters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -100,7 +101,7 @@ struct KalmanFitterOptions {
 /// The void components are provided mainly for unit testing.
 template <typename propagator_t, typename updator_t = VoidKalmanUpdator,
           typename smoother_t = VoidKalmanSmoother,
-          typename calibrator_t = VoidKalmanComponents,
+          typename calibrator_t = VoidMeasurementCalibrator,
           typename input_converter_t = VoidKalmanComponents,
           typename output_converter_t = VoidKalmanComponents>
 class KalmanFitter {
@@ -127,18 +128,31 @@ class KalmanFitter {
   /// @tparam surface_t Type of the reference surface
   ///
   /// @param context The context of this call
-  /// @param measurements The fittable measurements
+  /// @param sourcelinks The fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
+  /// @note The input measurements are given in the form of @c SourceLinks. It's
+  /// @c calibrator_t's job to turn them into calibrated measurements used in
+  /// the fit.
   ///
   /// @return the output as an output track
-  template <typename input_measurements_t, typename parameters_t>
-  auto fit(input_measurements_t measurements, const parameters_t& sParameters,
+  template <typename source_link_t, typename start_parameters_t,
+            typename parameters_t = BoundParameters>
+  auto fit(const std::vector<source_link_t>& sourcelinks,
+           const start_parameters_t& sParameters,
            const KalmanFitterOptions& kfOptions) const {
-    // Bring the measurements into Acts style
-    auto trackStates = m_inputConverter(measurements);
+    static_assert(SourceLinkConcept<source_link_t>,
+                  "Source link does not fulfill SourceLinkConcept");
+
+    // To be able to find measurements later, we put the into a map
+    // We need to copy input SourceLinks anyways, so the map can own them.
+    std::map<const Surface*, source_link_t> inputMeasurements;
+    for (const auto& sl : sourcelinks) {
+      const Surface* srf = &sl.referenceSurface();
+      inputMeasurements[srf] = sl;  // copy!
+    }
 
     // Create the ActionList and AbortList
-    using KalmanActor = Actor<decltype(trackStates)>;
+    using KalmanActor = Actor<source_link_t, parameters_t>;
     using KalmanResult = typename KalmanActor::result_type;
     using Actors = ActionList<KalmanActor>;
     using Aborters = AbortList<>;
@@ -149,7 +163,7 @@ class KalmanFitter {
 
     // Catch the actor and set the measurements
     auto& kalmanActor = kalmanOptions.actionList.template get<KalmanActor>();
-    kalmanActor.trackStates = std::move(trackStates);
+    kalmanActor.inputMeasurements = std::move(inputMeasurements);
     kalmanActor.targetSurface = kfOptions.referenceSurface;
 
     // Run the fitter
@@ -175,20 +189,18 @@ class KalmanFitter {
 
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
-  /// @tparam track_states_t is any iterable std::container of
-  /// boost::variant TrackState objects.
-  ///
-  /// @tparam updator_t The Kalman updator used for this fitter
+  /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
   ///
   /// @tparam calibrator_t The Measurement calibrator for Fittable
   /// measurements to be calibrated
   ///
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
-  template <typename track_states_t>
+  template <typename source_link_t, typename parameters_t>
   class Actor {
    public:
-    using TrackState = typename track_states_t::value_type;
+    // using TrackState = typename track_states_t::value_type;
+    using TrackStateType = TrackState<source_link_t, parameters_t>;
 
     /// Explicit constructor with updator and calibrator
     Actor(updator_t pUpdator = updator_t(), smoother_t pSmoother = smoother_t(),
@@ -201,8 +213,7 @@ class KalmanFitter {
     /// It mainly acts as an internal state which is
     /// created for every propagation/extrapolation step
     struct this_result {
-      // Move the result into the fitted states
-      track_states_t fittedStates = {};
+      std::vector<TrackStateType> fittedStates = {};
 
       // The optional Parameters at the provided surface
       boost::optional<BoundParameters> fittedParameters;
@@ -212,12 +223,10 @@ class KalmanFitter {
 
       // Indicator if you smoothed
       bool smoothed = false;
+      bool initialized = false;
 
       // Measurement surfaces without hits
       std::vector<const Surface*> missedActiveSurfaces = {};
-
-      // The index map for accessing the track state in order
-      std::map<const Surface*, size_t> accessIndices = {};
     };
 
     /// Broadcast the result_type
@@ -226,8 +235,8 @@ class KalmanFitter {
     /// The target surface
     const Surface* targetSurface = nullptr;
 
-    /// The Track states with which the Actor is initialized
-    track_states_t trackStates = {};
+    /// Allows retrieving measurements for a surface
+    std::map<const Surface*, source_link_t> inputMeasurements;
 
     /// @brief Kalman actor operation
     ///
@@ -242,10 +251,11 @@ class KalmanFitter {
                     result_type& result) const {
       // Initialization:
       // - Only when track states are not set
-      if (result.fittedStates.empty()) {
+      if (!result.initialized) {
         // -> Move the TrackState vector
         // -> Feed the KalmanSequencer with the measurements to be fitted
         initialize(state, stepper, result);
+        result.initialized = true;
       }
 
       // Update:
@@ -263,7 +273,7 @@ class KalmanFitter {
 
       // Finalization:
       // - When all track states have been handled
-      if (result.processedStates == trackStates.size() and
+      if (result.processedStates == inputMeasurements.size() and
           not result.smoothed) {
         // -> Sort the track states (as now the path length is set)
         // -> Call the smoothing
@@ -294,63 +304,8 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
-    void initialize(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result) const {
-      // Screen output message
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Initializing KalmanFitter with ";
-        dstream << trackStates.size();
-        dstream << " measurements to fit.";
-        return dstream.str();
-      });
-      // Create the multimap
-      MeasurementSurfaces measurementSurfaces;
-      // Move the track states
-      result.fittedStates = std::move(trackStates);
-      // Memorize the index to access the state
-      size_t stateIndex = 0;
-      for (auto& tState : result.fittedStates) {
-        // Get the Surface
-        const Surface& surface = tState.referenceSurface();
-        // Get the associated Layer to this Surface
-        auto layer = surface.associatedLayer();
-        if (layer == nullptr) {
-          // Find the intersection to allocate the layer
-          auto surfaceIntersection = surface.intersectionEstimate(
-              state.geoContext, stepper.position(state.stepping),
-              stepper.direction(state.stepping), state.stepping.navDir, false);
-          // Allocate the layer via the tracking geometry search
-          if (surfaceIntersection and state.navigation.worldVolume) {
-            auto intersection = surfaceIntersection.position;
-            auto layerVolume =
-                state.navigation.worldVolume->lowestTrackingVolume(
-                    state.geoContext, intersection);
-            layer = layerVolume ? layerVolume->associatedLayer(state.geoContext,
-                                                               intersection)
-                                : nullptr;
-          }
-        }
-        // Insert the surface into the measurementsurfaces multimap
-        if (layer) {
-          measurementSurfaces.insert(
-              std::pair<const Layer*, const Surface*>(layer, &surface));
-          // Insert the fitted state into the fittedStates map
-          result.accessIndices[&surface] = stateIndex;
-        }
-        ++stateIndex;
-      }
-      // Screen output message
-      debugLog(state, [&] {
-        std::stringstream dstream;
-        dstream << "Set ";
-        dstream << measurementSurfaces.size();
-        dstream << " measurements surfaces to the navigation.";
-        return dstream.str();
-      });
-      // Feed the KalmanSequencer with the measurement surfaces
-      state.navigation.externalSurfaces = std::move(measurementSurfaces);
-    }
+    void initialize(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    result_type& /*result*/) const {}
 
     /// @brief Kalman actor operation : update
     ///
@@ -365,8 +320,8 @@ class KalmanFitter {
     void filter(const Surface* surface, propagator_state_t& state,
                 const stepper_t& stepper, result_type& result) const {
       // Try to find the surface in the measurement surfaces
-      auto cindexItr = result.accessIndices.find(surface);
-      if (cindexItr != result.accessIndices.end()) {
+      auto sourcelink_it = inputMeasurements.find(surface);
+      if (sourcelink_it != inputMeasurements.end()) {
         // Screen output message
         debugLog(state, [&] {
           std::stringstream dstream;
@@ -376,12 +331,13 @@ class KalmanFitter {
           return dstream.str();
         });
 
-        // Get the current TrackState
-        TrackState& trackState = result.fittedStates[cindexItr->second];
+        // create track state on the vector from sourcelink
+        result.fittedStates.emplace_back(sourcelink_it->second);
+        TrackStateType& trackState = result.fittedStates.back();
 
         // Transport & bind the state to the current surface
         std::tuple<BoundParameters,
-                   typename TrackState::Parameters::CovMatrix_t, double>
+                   typename TrackStateType::Parameters::CovMatrix_t, double>
             boundState = stepper.boundState(state.stepping, *surface, true);
         // Fill the track state
         trackState.parameter.predicted = std::get<0>(boundState);
@@ -403,7 +359,7 @@ class KalmanFitter {
         }
         // We count the processed state
         ++result.processedStates;
-      } else if (surface->associatedDetectorElement()) {
+      } else if (surface->associatedDetectorElement() != nullptr) {
         // Count the missed surface
         result.missedActiveSurfaces.push_back(surface);
       }

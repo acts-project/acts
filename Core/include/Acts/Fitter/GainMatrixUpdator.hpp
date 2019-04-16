@@ -25,7 +25,8 @@ namespace Acts {
 ///
 /// This is implemented as a boost vistor pattern for use of the
 /// boost variant container
-template <typename parameters_t, typename calibrator_t = VoidKalmanComponents>
+template <typename parameters_t,
+          typename calibrator_t = VoidMeasurementCalibrator>
 class GainMatrixUpdator {
   using jacobian_t = typename parameters_t::CovMatrix_t;
 
@@ -70,14 +71,18 @@ class GainMatrixUpdator {
     ParVector_t filtered_parameters;
     CovMatrix_t filtered_covariance;
 
+    // need to calibrate the uncalibrated measurement
+    // this will turn them into a measurement we can understand
+    trackState.measurement.calibrated =
+        m_mCalibrator(*trackState.measurement.uncalibrated, predicted);
+
     // we need to remove type-erasure on the measurement type
     // to access its methods
     std::visit(
-        [&](const auto& uncalibrated) {
+        [&](const auto& calibrated) {
           // type of measurement
-          using meas_t =
-              typename std::remove_const<typename std::remove_reference<
-                  decltype(uncalibrated)>::type>::type;
+          using meas_t = typename std::remove_const<
+              typename std::remove_reference<decltype(calibrated)>::type>::type;
           // measurement covariance matrix
           using meas_cov_t = typename meas_t::CovMatrix_t;
           // measurement (local) parameter vector
@@ -87,9 +92,6 @@ class GainMatrixUpdator {
           // type of gain matrix (transposed projection)
           using gain_matrix_t = ActsMatrixD<projection_t::ColsAtCompileTime,
                                             projection_t::RowsAtCompileTime>;
-
-          // Calibrate the measurement
-          meas_t calibrated = m_mCalibrator(uncalibrated, predicted);
 
           // Take the projector (measurement mapping function)
           const projection_t& H = calibrated.projector();
@@ -127,12 +129,9 @@ class GainMatrixUpdator {
                residual)
                   .eval()(0, 0);
 
-          // plug calibrated measurement back into track state
-          trackState.measurement.calibrated = std::move(calibrated);
-
           trackState.parameter.filtered = std::move(filtered);
         },
-        *trackState.measurement.uncalibrated);
+        *trackState.measurement.calibrated);
 
     // always succeed, no outlier logic yet
     return true;

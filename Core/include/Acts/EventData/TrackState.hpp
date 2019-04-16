@@ -41,10 +41,8 @@ class TrackState {
 
   /// Constructor from (uncalibrated) measurement
   ///
-  /// @tparam measurement_t Type of the measurement
   /// @param m The measurement object
-  TrackState(FittableMeasurement<SourceLink> m) {
-    m_surface = MeasurementHelpers::getSurface(m);
+  TrackState(SourceLink m) : m_surface(&m.referenceSurface()) {
     measurement.uncalibrated = std::move(m);
   }
 
@@ -100,14 +98,11 @@ class TrackState {
   const Surface& referenceSurface() const { return (*m_surface); }
 
   /// @brief number of Measured parameters, forwarded
-  /// @note This only returns a value if either of the measurements
-  ///       are set. If not, this returns boost::none
+  /// @note This only returns a value if there is a calibrated measurement
+  ///       set. If not, this returns boost::none
   ///
   /// @return number of measured parameters, or boost::none
   boost::optional<size_t> size() {
-    if (this->measurement.uncalibrated) {
-      return MeasurementHelpers::getSize(*this->measurement.uncalibrated);
-    }
     if (this->measurement.calibrated) {
       return MeasurementHelpers::getSize(*this->measurement.calibrated);
     }
@@ -138,10 +133,9 @@ class TrackState {
   /// (in case the latter is different)
   struct {
     /// The optional (uncalibrated) measurement
-    boost::optional<FittableMeasurement<source_link_t>> uncalibrated{
-        boost::none};
+    boost::optional<SourceLink> uncalibrated{boost::none};
     /// The optional calibrabed measurement
-    boost::optional<FittableMeasurement<source_link_t>> calibrated{boost::none};
+    boost::optional<FittableMeasurement<SourceLink>> calibrated{boost::none};
   } measurement;
 
  private:
