@@ -14,7 +14,7 @@
 namespace Acts {
 
 namespace detail {
-  namespace hana = boost::hana;
+namespace hana = boost::hana;
 
 /**
  * Struct which extracts the result type from an actor.

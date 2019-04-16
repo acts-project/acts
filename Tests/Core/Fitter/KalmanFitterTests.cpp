@@ -19,6 +19,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -46,11 +47,11 @@ namespace Acts {
 namespace Test {
 
 // A few initialisations and definitionas
-using Identifier = GeometryID;
+using SourceLink = MinimalSourceLink;
 using Jacobian = BoundParameters::CovMatrix_t;
 using Covariance = BoundSymMatrix;
 
-using TrackState = TrackState<Identifier, BoundParameters>;
+using TrackState = TrackState<SourceLink, BoundParameters>;
 using Resolution = std::pair<ParID_t, double>;
 using ElementResolution = std::vector<Resolution>;
 using VolumeResolution = std::map<geo_id_value, ElementResolution>;
@@ -116,12 +117,12 @@ struct MeasurementCreator {
             double dp = sp * gauss(generator);
             if (lResolution->second[0].first == eLOC_0) {
               // push back & move a LOC_0 measurement
-              Measurement<Identifier, eLOC_0> m0(surface->getSharedPtr(), geoID,
+              Measurement<SourceLink, eLOC_0> m0(surface->getSharedPtr(), {},
                                                  cov1D, lPos[eLOC_0] + dp);
               result.push_back(TrackState(std::move(m0)));
             } else {
               // push back & move a LOC_1 measurement
-              Measurement<Identifier, eLOC_1> m1(surface->getSharedPtr(), geoID,
+              Measurement<SourceLink, eLOC_1> m1(surface->getSharedPtr(), {},
                                                  cov1D, lPos[eLOC_1] + dp);
               result.push_back(TrackState(std::move(m1)));
             }
@@ -133,8 +134,8 @@ struct MeasurementCreator {
             double dx = sx * gauss(generator);
             double dy = sy * gauss(generator);
             // push back & move a LOC_0, LOC_1 measurement
-            Measurement<Identifier, eLOC_0, eLOC_1> m01(
-                surface->getSharedPtr(), geoID, cov2D, lPos[eLOC_0] + dx,
+            Measurement<SourceLink, eLOC_0, eLOC_1> m01(
+                surface->getSharedPtr(), {}, cov2D, lPos[eLOC_0] + dx,
                 lPos[eLOC_1] + dy);
             result.push_back(TrackState(std::move(m01)));
           }
