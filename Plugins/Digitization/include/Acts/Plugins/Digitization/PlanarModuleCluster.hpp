@@ -16,6 +16,7 @@ using Identifier = unsigned long long;
 #endif
 
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Plugins/Digitization/DigitizationCell.hpp"
 #include "Acts/Plugins/Digitization/DigitizationModule.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -24,7 +25,7 @@ using Identifier = unsigned long long;
 namespace Acts {
 
 template <ParID_t... params>
-using Measurement_t = Measurement<Identifier, params...>;
+using Measurement_t = Measurement<MinimalSourceLink, params...>;
 
 class PlanarModuleCluster
     : public Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1> {
@@ -38,12 +39,13 @@ class PlanarModuleCluster
   /// @param [in] loc1 is the local position in the second coordinate
   /// @param [in] dCells is the vector of digitization cells
   PlanarModuleCluster(std::shared_ptr<const Surface> mSurface,
-                      const Identifier& cIdentifier, ActsSymMatrixD<2> cov,
+                      const Identifier& /*cIdentifier*/, ActsSymMatrixD<2> cov,
                       double loc0, double loc1,
                       std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
       : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(
-            std::move(mSurface), cIdentifier, std::move(cov), loc0, loc1),
+            std::move(mSurface), {},  // original measurement
+            std::move(cov), loc0, loc1),
         m_digitizationCells(std::move(dCells)),
         m_digitizationModule(dModule) {}
 

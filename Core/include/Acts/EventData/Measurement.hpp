@@ -12,6 +12,7 @@
 #include <type_traits>
 #include <utility>
 #include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/fittable_type_generator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -49,14 +50,8 @@ class Surface;
 template <typename source_link_t, ParID_t... params>
 class Measurement {
   // check type conditions
-  static_assert(std::is_copy_constructible<source_link_t>::value,
-                "'Identifier' must be copy-constructible");
-  static_assert(std::is_move_constructible<source_link_t>::value,
-                "'Identifier' must be move-constructible");
-  static_assert(std::is_copy_assignable<source_link_t>::value,
-                "'Identifier' must be copy-assignable");
-  static_assert(std::is_move_assignable<source_link_t>::value,
-                "'Identifier' must be move-assignable");
+  static_assert(SourceLinkConcept<source_link_t>,
+                "Source link does not fulfill SourceLinkConcept");
 
  private:
   // private typedefs

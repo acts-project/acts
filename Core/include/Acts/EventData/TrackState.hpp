@@ -12,6 +12,7 @@
 #include <boost/optional.hpp>
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SourceLinkConcept.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 namespace Acts {
@@ -30,6 +31,9 @@ class Surface;
 /// assumed the surface lives longer than the TrackState
 template <typename source_link_t, typename parameters_t>
 class TrackState {
+  static_assert(SourceLinkConcept<source_link_t>,
+                "Source link does not fulfill SourceLinkConcept");
+
  public:
   using SourceLink = source_link_t;
   using Parameters = parameters_t;

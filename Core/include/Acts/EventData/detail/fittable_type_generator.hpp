@@ -21,9 +21,6 @@
 #include <boost/hana/tuple.hpp>
 
 namespace Acts {
-// forward declaration
-template <typename identifier_t, ParID_t... params>
-class Measurement;
 
 /// @cond detail
 namespace detail {
