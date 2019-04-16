@@ -25,6 +25,7 @@
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
 
@@ -126,13 +127,14 @@ class KalmanFitter {
   /// Fit implementation of the foward filter, calls the
   /// the forward filter and backward smoother
   ///
-  /// @tparam input_measurements_t Type of the fittable measurements
-  /// @tparam parameters_t Type of the initial parameters
-  /// @tparam surface_t Type of the reference surface
+  /// @tparam source_link_t Source link type identifying uncalibrated input
+  /// measurements.
+  /// @tparam start_parameters_t Type of the initial parameters
+  /// @tparam parameters_t Type of parameters used for local parameters
   ///
-  /// @param context The context of this call
   /// @param sourcelinks The fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
+  /// @param kfOptions KalmanOptions steering the fit
   /// @note The input measurements are given in the form of @c SourceLinks. It's
   /// @c calibrator_t's job to turn them into calibrated measurements used in
   /// the fit.
@@ -201,9 +203,7 @@ class KalmanFitter {
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
   /// @tparam source_link_t is an type fulfilling the @c SourceLinkConcept
-  ///
-  /// @tparam calibrator_t The Measurement calibrator for Fittable
-  /// measurements to be calibrated
+  /// @tparam parameters_t The type of parameters used for "local" paremeters.
   ///
   /// The KalmanActor does not rely on the measurements to be
   /// sorted along the track.
@@ -224,6 +224,7 @@ class KalmanFitter {
     /// It mainly acts as an internal state which is
     /// created for every propagation/extrapolation step
     struct this_result {
+      // Fitted states that the actor has handled.
       std::vector<TrackStateType> fittedStates = {};
 
       // The optional Parameters at the provided surface
@@ -232,8 +233,10 @@ class KalmanFitter {
       // Counter for handled states
       size_t processedStates = 0;
 
-      // Indicator if you smoothed
+      // Indicator if smoothing has been done.
       bool smoothed = false;
+
+      // Indicator if initialization has been performed.
       bool initialized = false;
 
       // Measurement surfaces without hits
