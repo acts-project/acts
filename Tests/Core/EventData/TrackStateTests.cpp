@@ -59,6 +59,14 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
   // The 1D track state from the measurement
   BoundTrackState mts1D(SourceLink{&m1D});
 
+  auto calibrate = [](auto& trackstate) {
+    // double ref: optional, MinimalSourceLink
+    trackstate.measurement.calibrated = **trackstate.measurement.uncalibrated;
+  };
+
+  // "calibrate" the measurement
+  calibrate(mts1D);
+
   BOOST_CHECK_EQUAL(*mts1D.size(), 1);
 
   // Test the copy construtor
@@ -78,6 +86,7 @@ BOOST_AUTO_TEST_CASE(track_state_initialization) {
 
   // The 2D track state from the measurement
   BoundTrackState mts2D(SourceLink{&m2D});
+  calibrate(mts2D);
 
   BOOST_CHECK_EQUAL(*mts2D.size(), 2);
 
