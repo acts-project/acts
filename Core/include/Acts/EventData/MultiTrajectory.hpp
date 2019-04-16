@@ -132,6 +132,7 @@ namespace detail_lt {
   class TrackStateProxy
   {
   public:
+    using SourceLink            = source_link_t;
     using Parameters            = typename Types<N, ReadOnly>::CoefficientsMap;
     using Covariance            = typename Types<N, ReadOnly>::CovarianceMap;
     using Measurement           = typename Types<M, ReadOnly>::CoefficientsMap;
