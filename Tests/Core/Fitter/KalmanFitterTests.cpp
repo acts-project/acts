@@ -316,7 +316,8 @@ BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field) {
   using Smoother = GainMatrixSmoother<BoundParameters>;
   using KalmanFitter = KalmanFitter<RecoPropagator, Updator, Smoother>;
 
-  KalmanFitter kFitter(rPropagator);
+  KalmanFitter kFitter(rPropagator,
+                       getDefaultLogger("KalmanFilter", Logging::VERBOSE));
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, rSurface);
 
