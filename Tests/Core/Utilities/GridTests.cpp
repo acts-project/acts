@@ -1039,8 +1039,8 @@ namespace Test {
     EAxis   a(0.0, 1.0, 10u);
     EAxis   b(0.0, 1.0, 10u);
     EAxis   c(0.0, 1.0, 10u);
-    Grid1_t g1(std::make_tuple(std::move(a)));
-    Grid2_t g2(std::make_tuple(std::move(a), std::move(b)));
+    Grid1_t g1(std::make_tuple(a));
+    Grid2_t g2(std::make_tuple(a, b));
     Grid3_t g3(std::make_tuple(std::move(a), std::move(b), std::move(c)));
 
     // clang-format off
@@ -1180,8 +1180,8 @@ namespace Test {
     EAxis   a(0.0, 1.0, 10u);
     EAxis   b(0.0, 1.0, 5u);
     EAxis   c(0.0, 1.0, 3u);
-    Grid1_t g1(std::make_tuple(std::move(a)));
-    Grid2_t g2(std::make_tuple(std::move(a), std::move(b)));
+    Grid1_t g1(std::make_tuple(a));
+    Grid2_t g2(std::make_tuple(a, b));
     Grid3_t g3(std::make_tuple(std::move(a), std::move(b), std::move(c)));
 
     // clang-format off
@@ -1210,7 +1210,7 @@ namespace Test {
     EAxisClosed   aCl(0.0, 1.0, 10u);
     EAxisClosed   bCl(0.0, 1.0, 5u);
     EAxisClosed   cCl(0.0, 1.0, 3u);
-    Grid1Cl_t g1Cl(std::make_tuple(std::move(aCl)));
+    Grid1Cl_t g1Cl(std::make_tuple(aCl));
     Grid2Cl_t g2Cl(std::make_tuple(std::move(aCl), std::move(bCl)));
 
     // 1D case
@@ -1241,7 +1241,7 @@ namespace Test {
     EAxisOpen  aOp(0.0, 1.0, 10u);
     EAxisOpen  bOp(0.0, 1.0, 5u);
     EAxisOpen  cOp(0.0, 1.0, 3u);
-    Grid1Op_t g1Op(std::make_tuple(std::move(aOp)));
+    Grid1Op_t g1Op(std::make_tuple(aOp));
     Grid2Op_t g2Op(std::make_tuple(std::move(aOp), std::move(bOp)));
 
     // 1D case
