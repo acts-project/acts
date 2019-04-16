@@ -208,28 +208,9 @@ namespace detail_lt {
       return m_data.iuncalibrated != IndexData::kInvalid;
     }
 
-    /// Full measurement vector. Might contain additional zeroed dimensions.
-    Measurement
+    /// Uncalibrated measurement in the form of a source link
+    const SourceLink&
     uncalibrated() const;
-
-    /// Full measurement covariance matrix.
-    MeasurementCovariance
-    uncalibratedCovariance() const;
-
-    /// Dynamic measurement vector with only the valid dimensions.
-    auto
-    effectiveUncalibrated() const
-    {
-      return uncalibrated().head(m_data.measdim);
-    }
-
-    /// Dynamic measurement covariance matrix with only the valid dimensions.
-    auto
-    effectiveUncalibratedCovariance() const
-    {
-      return uncalibratedCovariance().topLeftCorner(m_data.measdim,
-                                                    m_data.measdim);
-    }
 
     /// Check if the point has an associated measurement.
     bool
@@ -263,15 +244,14 @@ namespace detail_lt {
 
   private:
     // Private since it can only be created by the trajectory.
-    TrackStateProxy(
-        ConstIf<MultiTrajectory<source_link_t>, ReadOnly>& trajectory,
-        size_t istate);
+    TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
+                    size_t istate);
 
-    ConstIf<MultiTrajectory<source_link_t>, ReadOnly>& m_traj;
+    ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& m_traj;
     size_t    m_istate;
     IndexData m_data;
 
-    friend class Acts::MultiTrajectory<source_link_t>;
+    friend class Acts::MultiTrajectory<SourceLink>;
   };
 }  // namespace detail_lt
 
@@ -292,10 +272,11 @@ public:
     ParametersSize     = NGlobalPars,
     MeasurementSizeMax = 2,
   };
+  using SourceLink           = source_link_t;
   using ConstTrackStateProxy = detail_lt::
-      TrackStateProxy<source_link_t, ParametersSize, MeasurementSizeMax, true>;
+      TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, true>;
   using TrackStateProxy = detail_lt::
-      TrackStateProxy<source_link_t, ParametersSize, MeasurementSizeMax, false>;
+      TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, false>;
 
   /// Create an empty trajectory.
   MultiTrajectory() = default;
@@ -306,7 +287,7 @@ public:
   /// @param iprevious        index of the previous state, SIZE_MAX if first
   template <typename parameters_t>
   size_t
-  addTrackState(const TrackState<source_link_t, parameters_t>& ts,
+  addTrackState(const TrackState<SourceLink, parameters_t>& ts,
                 size_t iprevious = SIZE_MAX);
 
   /// Access a read-only point on the trajectory by index.
@@ -348,11 +329,12 @@ private:
   typename detail_lt::Types<ParametersSize>::StorageCovariance       m_cov;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance   m_measCov;
+  std::vector<SourceLink> m_sourceLinks;
 
   friend class detail_lt::
-      TrackStateProxy<source_link_t, ParametersSize, MeasurementSizeMax, true>;
+      TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, true>;
   friend class detail_lt::
-      TrackStateProxy<source_link_t, ParametersSize, MeasurementSizeMax, false>;
+      TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, false>;
 };
 
 // implementations
@@ -441,18 +423,9 @@ namespace detail_lt {
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
-  TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const -> Measurement
+  TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const -> const SourceLink&
   {
-    return Measurement(m_traj.m_meas.col(m_data.iuncalibrated).data());
-  }
-
-  template <typename SL, size_t N, size_t M, bool ReadOnly>
-  inline auto
-  TrackStateProxy<SL, N, M, ReadOnly>::uncalibratedCovariance() const
-      -> MeasurementCovariance
-  {
-    return MeasurementCovariance(
-        m_traj.m_measCov.col(m_data.iuncalibrated).data());
+    return m_traj.m_sourceLinks[m_data.iuncalibrated];
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
@@ -510,18 +483,8 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
 
   // handle measurements
   if (ts.measurement.uncalibrated) {
-    auto meas    = m_meas.addCol();
-    auto measCov = m_measCov.addCol();
-    std::visit(
-        [&meas, &measCov](const auto& m) {
-          using meas_t                         = std::decay_t<decltype(m)>;
-          meas.template head<meas_t::size()>() = m.parameters();
-          measCov.template topLeftCorner<meas_t::size(), meas_t::size()>()
-              = m.covariance();
-        },
-        *ts.measurement.uncalibrated);
-
-    p.iuncalibrated = meas.size() - 1;
+    m_sourceLinks.push_back(*ts.measurement.uncalibrated);
+    p.iuncalibrated = m_sourceLinks.size() - 1;
   }
 
   if (ts.measurement.calibrated) {
