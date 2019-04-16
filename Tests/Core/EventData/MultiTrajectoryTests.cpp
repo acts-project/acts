@@ -17,6 +17,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 
 using std::cout;
 using std::endl;
@@ -24,7 +25,7 @@ using std::endl;
 namespace Acts {
 namespace Test {
 
-  using SourceLink = unsigned long long;
+  using SourceLink = MinimalSourceLink;
   using Parameters = TrackParametersBase::ParVector_t;
   using Covariance = TrackParametersBase::CovMatrix_t;
 
