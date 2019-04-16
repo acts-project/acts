@@ -148,6 +148,7 @@ class KalmanFitter {
 
     // To be able to find measurements later, we put the into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
+    ACTS_VERBOSE("Preparing " << sourcelinks.size() << " input measurements");
     std::map<const Surface*, source_link_t> inputMeasurements;
     for (const auto& sl : sourcelinks) {
       const Surface* srf = &sl.referenceSurface();
@@ -361,6 +362,7 @@ class KalmanFitter {
         ++result.processedStates;
       } else if (surface->associatedDetectorElement() != nullptr) {
         // Count the missed surface
+        ACTS_VERBOSE("Detected hole on " << surface->geoID().toString());
         result.missedActiveSurfaces.push_back(surface);
       }
     }
