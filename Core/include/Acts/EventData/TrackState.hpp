@@ -39,7 +39,7 @@ class TrackState {
   ///
   /// @tparam measurement_t Type of the measurement
   /// @param m The measurement object
-  TrackState(FittableMeasurement<identifier_t> m) {
+  TrackState(FittableMeasurement<SourceLink> m) {
     m_surface = MeasurementHelpers::getSurface(m);
     measurement.uncalibrated = std::move(m);
   }
