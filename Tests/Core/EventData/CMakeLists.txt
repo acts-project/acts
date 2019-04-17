@@ -40,5 +40,5 @@ add_test (NAME MeasurementHelpersTests COMMAND MeasurementHelpersTests)
 
 add_executable (MultiTrajectoryTests MultiTrajectoryTests.cpp)
 target_include_directories (MultiTrajectoryTests PRIVATE ${Boost_INCLUDE_DIRS})
-target_link_libraries (MultiTrajectoryTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries (MultiTrajectoryTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME LocalTrajectoryUnitTests COMMAND MultiTrajectoryTests)
