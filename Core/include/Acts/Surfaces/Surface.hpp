@@ -270,12 +270,13 @@ public:
   const ISurfaceMaterial*
   surfaceMaterial() const;
 
-  /// Set Associated SurfaceMaterial
-  /// The material is usually derived in a complicated way and loaded from
-  /// a framework given source. As various srufaces may share the same
+  /// Assign the surface material description
   ///
-  /// @param material Material description this given and stored as a shared
-  /// pointer
+  /// The material is usually derived in a complicated way and loaded from
+  /// a framework given source. As various surfaces may share the same source
+  /// this is provided by a shared pointer
+  ///
+  /// @param material Material description associated to this surface
   void
   assignSurfaceMaterial(std::shared_ptr<const ISurfaceMaterial> material);
 

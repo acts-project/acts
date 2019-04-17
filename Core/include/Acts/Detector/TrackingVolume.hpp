@@ -274,6 +274,16 @@ public:
   std::shared_ptr<const IVolumeMaterial>
   volumeMaterial() const;
 
+  /// Set the volume material description
+  ///
+  /// The material is usually derived in a complicated way and loaded from
+  /// a framework given source. As various volumes could potentially share the
+  /// the same material description, it is provided as a shared object
+  ///
+  /// @param material Material description of this volume
+  void
+  assignVolumeMaterial(std::shared_ptr<const IVolumeMaterial> material);
+
   /// Glue another tracking volume to this one
   ///  - if common face is set the glued volumes are sharing the boundary, down
   /// to the last navigation volume
@@ -480,6 +490,13 @@ inline std::shared_ptr<const IVolumeMaterial>
 TrackingVolume::volumeMaterial() const
 {
   return m_volumeMaterial;
+}
+
+inline void
+TrackingVolume::assignVolumeMaterial(
+    std::shared_ptr<const IVolumeMaterial> material)
+{
+  m_volumeMaterial = std::move(material);
 }
 
 inline const LayerArray*
