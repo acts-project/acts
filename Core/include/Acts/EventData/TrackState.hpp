@@ -144,6 +144,8 @@ public:
     boost::optional<Jacobian> jacobian{boost::none};
     /// The path length along the track - will help sorting
     double pathLength = 0.;
+    /// chisquare
+    double chi2 = 0;
   } parameter;
 
   /// @brief Nested measurement part

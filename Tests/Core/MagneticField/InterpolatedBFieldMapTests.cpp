@@ -17,6 +17,7 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -27,6 +28,9 @@ using Acts::VectorHelpers::perp;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   BOOST_AUTO_TEST_CASE(InterpolatedBFieldMap_rz)
   {
@@ -56,59 +60,58 @@ namespace Test {
     detail::EquidistantAxis r(0.0, 4.0, 4u);
     detail::EquidistantAxis z(-5, 5, 5u);
 
-    typedef detail::
-        Grid<Vector3D, detail::EquidistantAxis, detail::EquidistantAxis>
-            Grid_t;
+    using Grid_t = detail::
+        Grid<Vector3D, detail::EquidistantAxis, detail::EquidistantAxis>;
+    using Mapper_t = InterpolatedBFieldMapper<Grid_t>;
+    using BField_t = InterpolatedBFieldMap<Mapper_t>;
 
     Grid_t g(std::make_tuple(std::move(r), std::move(z)));
 
     // set grid values
-    for (size_t i = 1; i <= g.getNBins().at(0) + 1; ++i) {
-      for (size_t j = 1; j <= g.getNBins().at(1) + 1; ++j) {
+    for (size_t i = 1; i <= g.numLocalBins().at(0) + 1; ++i) {
+      for (size_t j = 1; j <= g.numLocalBins().at(1) + 1; ++j) {
         Grid_t::index_t indices  = {{i, j}};
-        const auto&     llCorner = g.getLowerLeftBinEdge(indices);
-        g.at(indices)            = BField::value(llCorner);
+        const auto&     llCorner = g.lowerLeftBinEdge(indices);
+        g.atLocalBins(indices)   = BField::value(llCorner);
       }
     }
 
     // create field mapping
-    InterpolatedBFieldMap::FieldMapper<3, 2> mapper(
-        transformPos, transformBField, std::move(g));
-    InterpolatedBFieldMap::Config config;
-    config.scale  = 1.;
-    config.mapper = std::move(mapper);
+    Mapper_t         mapper(transformPos, transformBField, std::move(g));
+    BField_t::Config config(std::move(mapper));
+    config.scale = 1.;
 
     // create BField service
-    InterpolatedBFieldMap b(std::move(config));
+    BField_t b(std::move(config));
 
     Vector3D pos;
     pos << -3, 2.5, 1.7;
     // test the cache interface
-    InterpolatedBFieldMap::Cache bCache;
+    BField_t::Cache bCache(mfContext);
     CHECK_CLOSE_REL(
         b.getField(pos, bCache), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     CHECK_CLOSE_REL(
         b.getField(pos, bCache), BField::value({{perp(pos), pos.z()}}), 1e-6);
-    auto c = bCache.fieldCell;
+    auto& c = *bCache.fieldCell;
     BOOST_CHECK(c.isInside(pos));
     CHECK_CLOSE_REL(
         c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     pos << 0, 1.5, -2.5;
-    InterpolatedBFieldMap::Cache bCache2;
+    BField_t::Cache bCache2(mfContext);
     CHECK_CLOSE_REL(
         b.getField(pos, bCache2), BField::value({{perp(pos), pos.z()}}), 1e-6);
-    c = bCache2.fieldCell;
+    c = *bCache2.fieldCell;
     BOOST_CHECK(c.isInside(pos));
     CHECK_CLOSE_REL(
         c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);
 
     pos << 2, 3, -4;
-    InterpolatedBFieldMap::Cache bCache3;
+    BField_t::Cache bCache3(mfContext);
     CHECK_CLOSE_REL(
         b.getField(pos, bCache3), BField::value({{perp(pos), pos.z()}}), 1e-6);
-    c = bCache3.fieldCell;
+    c = *bCache3.fieldCell;
     BOOST_CHECK(c.isInside(pos));
     CHECK_CLOSE_REL(
         c.getField(pos), BField::value({{perp(pos), pos.z()}}), 1e-6);

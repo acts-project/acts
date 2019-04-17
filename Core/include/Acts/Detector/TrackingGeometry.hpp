@@ -7,13 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// TrackingGeometry.h, Acts project
+// TrackingGeometry.hpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/GeometrySignature.hpp"
-// STD
+
 #include <functional>
 #include <map>
 #include <memory>
@@ -22,15 +24,13 @@
 namespace Acts {
 
 class TrackingVolume;
-class DetachedTrackingVolume;
+class Layer;
 class Surface;
 class PerigeeSurface;
-class Layer;
+class IMaterialDecorator;
 
-using TrackingVolumePtr         = std::shared_ptr<const TrackingVolume>;
-using MutableTrackingVolumePtr  = std::shared_ptr<TrackingVolume>;
-using DetachedTrackingVolumePtr = std::shared_ptr<const DetachedTrackingVolume>;
-using DetachedVolumeVector      = std::vector<DetachedTrackingVolumePtr>;
+using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 ///  @class TrackingGeometry
 ///
@@ -40,7 +40,6 @@ using DetachedVolumeVector      = std::vector<DetachedTrackingVolumePtr>;
 ///  (respectively, if existing, a global search of an associated Layer or the
 ///  next associated Layer), such as a continous navigation by BoundarySurfaces
 ///  between the confined TrackingVolumes.
-
 class TrackingGeometry
 {
   /// Give the GeometryBuilder friend rights
@@ -50,7 +49,10 @@ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
-  TrackingGeometry(const MutableTrackingVolumePtr& highestVolume);
+  /// @param materialDecorator is a dediated decorator that can assign
+  ///        surface or volume based material to the TrackingVolume
+  TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
+                   const IMaterialDecorator*       materialDecorator = nullptr);
 
   /// Destructor
   ~TrackingGeometry();
@@ -62,27 +64,12 @@ public:
 
   /// return the lowest tracking Volume
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the lowest TrackingVolume
   const TrackingVolume*
-  lowestTrackingVolume(const Vector3D& gp) const;
-
-  /// return the vector of lowest detached tracking Volume(->overlaps)
-  ///
-  /// @param gp is the global position of the call
-  ///
-  /// @return plain pointer to the the lowest DetachedTrackingVolume
-  const DetachedVolumeVector*
-  lowestDetachedTrackingVolumes(const Vector3D& gp) const;
-
-  /// return the lowest static volume
-  ///
-  /// @param gp is the global position of the call
-  ///
-  /// @return plain pointer to the the lowest static tracking volume
-  const TrackingVolume*
-  lowestStaticTrackingVolume(const Vector3D& gp) const;
+  lowestTrackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// return the lowest tracking Volume
   ///
@@ -94,11 +81,12 @@ public:
 
   /// Forward the associated Layer information
   ///
+  /// @paramn gctx is the context for this request (e.g. alignment)
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
   const Layer*
-  associatedLayer(const Vector3D& gp) const;
+  associatedLayer(const GeometryContext& gctx, const Vector3D& gp) const;
 
   /// Register the beam tube
   ///

@@ -18,7 +18,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -48,11 +47,6 @@ public:
   ///
   /// @param vertices is the vector of vertices
   TriangleBounds(const std::array<Vector2D, 3>& vertices);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  TriangleBounds(const variant_data& vardata);
 
   ~TriangleBounds() override;
 
@@ -93,12 +87,7 @@ public:
   ///
   /// @param sl is the ostream to be dumped into
   std::ostream&
-  dump(std::ostream& sl) const final;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
+  toStream(std::ostream& sl) const final;
 
 private:
   std::array<Vector2D, 3> m_vertices;

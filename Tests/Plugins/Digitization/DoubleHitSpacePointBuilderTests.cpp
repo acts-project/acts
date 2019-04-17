@@ -26,6 +26,9 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   /// Unit test for testing the main functions of DoubleHitSpacePointBuilder
   /// 1) A pair of hits gets added and resolved.
   /// 2) A pair of hits gets added and rejected.
@@ -126,7 +129,7 @@ namespace Test {
 
     // Combine two PlanarModuleClusters
     SpacePointBuilder<DoubleHitSpacePoint> dhsp(dhsp_cfg);
-    dhsp.makeClusterPairs({pmc}, {pmc2}, clusterPairs);
+    dhsp.makeClusterPairs(tgContext, {pmc}, {pmc2}, clusterPairs);
 
     BOOST_CHECK_EQUAL(clusterPairs.size(), 1);
     BOOST_CHECK_EQUAL(*(clusterPairs[0].first), *pmc);
@@ -134,7 +137,7 @@ namespace Test {
 
     std::cout << "Calculate space point" << std::endl;
 
-    dhsp.calculateSpacePoints(clusterPairs, resultSP);
+    dhsp.calculateSpacePoints(tgContext, clusterPairs, resultSP);
 
     BOOST_CHECK_EQUAL(resultSP.size(), 1);
 
@@ -159,7 +162,7 @@ namespace Test {
     std::cout << "Try to store hits" << std::endl;
 
     // Combine points
-    dhsp.makeClusterPairs({pmc}, {pmc3}, clusterPairs);
+    dhsp.makeClusterPairs(tgContext, {pmc}, {pmc3}, clusterPairs);
 
     // Test for rejecting unconnected hits
     BOOST_CHECK_EQUAL(resultSP.size(), 1);

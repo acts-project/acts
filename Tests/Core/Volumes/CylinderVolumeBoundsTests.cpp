@@ -16,6 +16,7 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -24,6 +25,7 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+  BOOST_AUTO_TEST_SUITE(Volumes)
 
   /// Unit test for testing the decomposeToSurfaces() function
   BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
@@ -42,6 +44,10 @@ namespace Test {
                        index)
   {
     (void)index;
+
+    // Create a test context
+    GeometryContext tgContext = GeometryContext();
+
     // position of volume
     const Vector3D pos(posX, posY, posZ);
     // rotation around x axis
@@ -63,22 +69,24 @@ namespace Test {
         = std::const_pointer_cast<const Transform3D>(mutableTransformPtr);
     // get the boundary surfaces
     std::vector<std::shared_ptr<const Acts::Surface>> boundarySurfaces
-        = cylBounds.decomposeToSurfaces(transformPtr);
+        = cylBounds.decomposeToSurfaces(transformPtr.get());
     // Test
 
     // check if difference is halfZ - sign and direction independent
-    CHECK_CLOSE_REL((pos - boundarySurfaces.at(0)->center()).norm(),
+    CHECK_CLOSE_REL((pos - boundarySurfaces.at(0)->center(tgContext)).norm(),
                     cylBounds.halflengthZ(),
                     1e-12);
-    CHECK_CLOSE_REL((pos - boundarySurfaces.at(1)->center()).norm(),
+    CHECK_CLOSE_REL((pos - boundarySurfaces.at(1)->center(tgContext)).norm(),
                     cylBounds.halflengthZ(),
                     1e-12);
     // transform to local
     double posDiscPosZ
-        = (transformPtr->inverse() * boundarySurfaces.at(1)->center()).z();
+        = (transformPtr->inverse() * boundarySurfaces.at(1)->center(tgContext))
+              .z();
     double centerPosZ = (transformPtr->inverse() * pos).z();
     double negDiscPosZ
-        = (transformPtr->inverse() * boundarySurfaces.at(0)->center()).z();
+        = (transformPtr->inverse() * boundarySurfaces.at(0)->center(tgContext))
+              .z();
     // check if center of disc boundaries lies in the middle in z
     BOOST_CHECK_LT(centerPosZ, posDiscPosZ);
     BOOST_CHECK_GT(centerPosZ, negDiscPosZ);
@@ -89,20 +97,24 @@ namespace Test {
     // orientation of disc surfaces
     // positive disc durface should point in positive direction in the frame of
     // the volume
-    CHECK_CLOSE_REL(transformPtr->rotation().col(2).dot(
-                        boundarySurfaces.at(1)->normal(Acts::Vector2D(0., 0.))),
-                    1.,
-                    1e-12);
+    CHECK_CLOSE_REL(
+        transformPtr->rotation().col(2).dot(
+            boundarySurfaces.at(1)->normal(tgContext, Acts::Vector2D(0., 0.))),
+        1.,
+        1e-12);
     // negative disc durface should point in negative direction in the frame of
     // the volume
-    CHECK_CLOSE_REL(transformPtr->rotation().col(2).dot(
-                        boundarySurfaces.at(0)->normal(Acts::Vector2D(0., 0.))),
-                    -1.,
-                    1e-12);
+    CHECK_CLOSE_REL(
+        transformPtr->rotation().col(2).dot(
+            boundarySurfaces.at(0)->normal(tgContext, Acts::Vector2D(0., 0.))),
+        -1.,
+        1e-12);
     // test in r
-    CHECK_CLOSE_REL(boundarySurfaces.at(3)->center(), pos, 1e-12);
-    CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(), pos, 1e-12);
+    CHECK_CLOSE_REL(boundarySurfaces.at(3)->center(tgContext), pos, 1e-12);
+    CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(tgContext), pos, 1e-12);
   }
+
+  BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
 

@@ -38,6 +38,9 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Utilities/CalibrationContext.hpp"
 
 namespace Acts {
 namespace Test {
@@ -61,6 +64,11 @@ namespace Test {
   ActsSymMatrixD<2> cov2D;
 
   bool debugMode = false;
+
+  // Create a test context
+  GeometryContext      tgContext  = GeometryContext();
+  MagneticFieldContext mfContext  = MagneticFieldContext();
+  CalibrationContext   calContext = CalibrationContext();
 
   /// @brief This struct creates FittableMeasurements on the
   /// detector surfaces, according to the given smearing xxparameters
@@ -102,7 +110,8 @@ namespace Test {
           if (lResolution != vResolution->second.end()) {
             // Apply global to local
             Acts::Vector2D lPos;
-            surface->globalToLocal(stepper.position(state.stepping),
+            surface->globalToLocal(state.geoContext,
+                                   stepper.position(state.stepping),
                                    stepper.direction(state.stepping),
                                    lPos);
             if (lResolution->second.size() == 1) {
@@ -168,7 +177,7 @@ namespace Test {
     {
       // Check if there is a surface with material and a covariance is existing
       if (state.navigation.currentSurface
-          && state.navigation.currentSurface->associatedMaterial()
+          && state.navigation.currentSurface->surfaceMaterial()
           && state.stepping.cov != ActsSymMatrixD<5>::Zero()) {
         // Sample angles
         std::normal_distribution<double> scatterAngle(
@@ -202,7 +211,7 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(kalman_fitter_zero_field)
   {
     // Build detector
-    CubicTrackingGeometry cGeometry;
+    CubicTrackingGeometry cGeometry(tgContext);
     auto                  detector = cGeometry();
 
     // Build navigator for the measurement creatoin
@@ -250,13 +259,14 @@ namespace Test {
     detRes[3] = stripVolumeRes;
 
     // Set options for propagator
-    PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions;
+    PropagatorOptions<MeasurementActions, MeasurementAborters> mOptions(
+        tgContext, mfContext);
     mOptions.debug              = debugMode;
     auto& mCreator              = mOptions.actionList.get<MeasurementCreator>();
     mCreator.detectorResolution = detRes;
 
     // Launch and collect - the measurements
-    auto mResult = mPropagator.propagate(mStart, mOptions);
+    auto mResult = mPropagator.propagate(mStart, mOptions).value();
     if (debugMode) {
       const auto debugString
           = mResult.template get<DebugOutput::result_type>().debugString;
@@ -306,12 +316,14 @@ namespace Test {
 
     KalmanFitter kFitter(rPropagator);
 
+    KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, rSurface);
+
     // Fit the track
-    auto fittedTrack      = kFitter.fit(measurements, rStart, rSurface);
+    auto fittedTrack      = kFitter.fit(measurements, rStart, kfOptions);
     auto fittedParameters = fittedTrack.fittedParameters.get();
 
     // Make sure it is deterministic
-    auto fittedAgainTrack      = kFitter.fit(measurements, rStart, rSurface);
+    auto fittedAgainTrack      = kFitter.fit(measurements, rStart, kfOptions);
     auto fittedAgainParameters = fittedAgainTrack.fittedParameters.get();
 
     CHECK_CLOSE_REL(fittedParameters.parameters(),
@@ -328,7 +340,7 @@ namespace Test {
 
     // Make sure it works for shuffled measurements as well
     auto fittedShuffledTrack
-        = kFitter.fit(shuffledMeasurements, rStart, rSurface);
+        = kFitter.fit(shuffledMeasurements, rStart, kfOptions);
     auto fittedShuffledParameters = fittedShuffledTrack.fittedParameters.get();
 
     CHECK_CLOSE_REL(fittedParameters.parameters(),
@@ -344,7 +356,7 @@ namespace Test {
 
     // Make sure it works for shuffled measurements as well
     auto fittedWithHoleTrack
-        = kFitter.fit(measurementsWithHole, rStart, rSurface);
+        = kFitter.fit(measurementsWithHole, rStart, kfOptions);
     auto fittedWithHoleParameters = fittedWithHoleTrack.fittedParameters.get();
 
     // Count one hole

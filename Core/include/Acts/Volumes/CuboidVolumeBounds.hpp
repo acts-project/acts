@@ -91,8 +91,7 @@ public:
   ///
   /// @param transformPtr is the transfrom of the volume
   std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(
-      std::shared_ptr<const Transform3D> transformPtr) const override;
+  decomposeToSurfaces(const Transform3D* transformPtr) const override;
 
   /// This method returns the halflength in local x
   double
@@ -110,7 +109,7 @@ public:
   ///
   /// @param sl is ostream operator to be dumped into
   std::ostream&
-  dump(std::ostream& sl) const override;
+  toStream(std::ostream& sl) const override;
 
 private:
   /// Templated dumpT method

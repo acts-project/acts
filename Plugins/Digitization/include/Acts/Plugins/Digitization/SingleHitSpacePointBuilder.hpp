@@ -10,6 +10,7 @@
 
 #include "Acts/Plugins/Digitization/CartesianSegmentation.hpp"
 #include "Acts/Plugins/Digitization/SpacePointBuilder.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -62,16 +63,20 @@ public:
 
   /// @brief Calculates the space points out of a given collection of clusters
   /// and stores the results
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param cluster vector of clusters
   /// @param spacePointStorage storage of the results
   void
   calculateSpacePoints(
+      const GeometryContext&                         gctx,
       const std::vector<const PlanarModuleCluster*>& clusters,
       std::vector<SingleHitSpacePoint>&              spacePointStorage) const;
 
 protected:
   /// @brief Getter method for the local coordinates of a cluster
   /// on its corresponding surface
+  ///
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the local coordinates of the cluster on the surface
@@ -79,11 +84,14 @@ protected:
   localCoords(const PlanarModuleCluster& cluster) const;
 
   /// @brief Getter method for the global coordinates of a cluster
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param cluster object related to the cluster that holds the necessary
   /// information
   /// @return vector of the global coordinates of the cluster
   Vector3D
-  globalCoords(const PlanarModuleCluster& cluster) const;
+  globalCoords(const GeometryContext&     gctx,
+               const PlanarModuleCluster& cluster) const;
 };
 
 }  // namespace Acts

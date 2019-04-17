@@ -18,7 +18,6 @@
 #include <utility>
 
 #include "Acts/Surfaces/InfiniteBounds.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 Acts::StrawSurface::StrawSurface(std::shared_ptr<const Transform3D> htrans,
                                  double                             radius,
@@ -45,38 +44,11 @@ Acts::StrawSurface::StrawSurface(const Acts::StrawSurface& other)
 {
 }
 
-Acts::StrawSurface::StrawSurface(const StrawSurface& other,
-                                 const Transform3D&  htrans)
-  : LineSurface(other, htrans)
+Acts::StrawSurface::StrawSurface(const GeometryContext& gctx,
+                                 const StrawSurface&    other,
+                                 const Transform3D&     transf)
+  : GeometryObject(), LineSurface(gctx, other, transf)
 {
-}
-
-Acts::StrawSurface::StrawSurface(const variant_data& vardata)
-  : GeometryObject(), LineSurface(nullptr, nullptr)
-{
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(vardata);
-  throw_assert(data.count("type"), "Variant data must have type.");
-  // std::string type = boost::get<std::string>(data["type"]);
-  std::string type = data.get<std::string>("type");
-  throw_assert(type == "StrawSurface",
-               "Variant data type must be StrawSurface");
-
-  variant_map payload    = data.get<variant_map>("payload");
-  variant_map bounds     = payload.get<variant_map>("bounds");
-  std::string boundsType = bounds.get<std::string>("type");
-
-  throw_assert(boundsType == "LineBounds",
-               "Can only construct StrawSurface from LineBounds");
-
-  m_bounds = std::make_shared<const LineBounds>(bounds);
-
-  if (payload.count("transform") != 0u) {
-    // we have a transform
-    auto trf = std::make_shared<const Transform3D>(
-        from_variant<Transform3D>(payload.get<variant_map>("transform")));
-    m_transform = trf;
-  }
 }
 
 Acts::StrawSurface&
@@ -90,40 +62,22 @@ Acts::StrawSurface::operator=(const StrawSurface& other)
 }
 
 std::shared_ptr<Acts::StrawSurface>
-Acts::StrawSurface::clone(const Transform3D* shift) const
+Acts::StrawSurface::clone(const GeometryContext& gctx,
+                          const Transform3D&     shift) const
 {
-  return std::shared_ptr<StrawSurface>(this->clone_impl(shift));
+  return std::shared_ptr<StrawSurface>(this->clone_impl(gctx, shift));
 }
 
 Acts::StrawSurface*
-Acts::StrawSurface::clone_impl(const Transform3D* shift) const
+Acts::StrawSurface::clone_impl(const GeometryContext& gctx,
+                               const Transform3D&     shift) const
 {
-  if (shift != nullptr) {
-    return new StrawSurface(*this, *shift);
-  }
-  return new StrawSurface(*this);
-}
-
-Acts::variant_data
-Acts::StrawSurface::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map  payload;
-  variant_data bounds = m_bounds->toVariantData();
-  payload["bounds"]   = bounds;
-  if (m_transform) {
-    payload["transform"] = to_variant(*m_transform);
-  }
-
-  variant_map data;
-  data["type"]    = "StrawSurface"s;
-  data["payload"] = payload;
-  return data;
+  return new StrawSurface(gctx, *this, shift);
 }
 
 Acts::PolyhedronRepresentation
-Acts::StrawSurface::polyhedronRepresentation(size_t l0div,
+Acts::StrawSurface::polyhedronRepresentation(const GeometryContext& gctx,
+                                             size_t                 l0div,
                                              size_t /*l1div*/) const
 {
   std::vector<Vector3D>            vertices;
@@ -140,10 +94,12 @@ Acts::StrawSurface::polyhedronRepresentation(size_t l0div,
   Vector3D left(r, 0, -hlZ);
   Vector3D right(r, 0, hlZ);
 
+  const Transform3D& sfTransform = transform(gctx);
+
   for (size_t i = 0; i < l0div; i++) {
     Transform3D rot(AngleAxis3D(i * phistep, Vector3D::UnitZ()));
-    vertices.push_back(transform() * rot * left);
-    vertices.push_back(transform() * rot * right);
+    vertices.push_back(sfTransform * rot * left);
+    vertices.push_back(sfTransform * rot * right);
   }
 
   for (size_t v = 0; v < vertices.size() - 2; v = v + 2) {

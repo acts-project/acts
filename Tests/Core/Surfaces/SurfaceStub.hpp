@@ -10,7 +10,7 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 /// Surface derived class stub
@@ -21,8 +21,10 @@ public:
     : GeometryObject(), Surface(htrans)
   {
   }
-  SurfaceStub(const SurfaceStub& sf, const Transform3D& transf)
-    : GeometryObject(), Surface(sf, transf)
+  SurfaceStub(const GeometryContext& gctx,
+              const SurfaceStub&     sf,
+              const Transform3D&     transf)
+    : GeometryObject(), Surface(gctx, sf, transf)
   {
   }
   SurfaceStub(const DetectorElementBase& detelement)
@@ -34,7 +36,8 @@ public:
 
   /// Implicit constructor
   Surface*
-  clone(const Transform3D* /*shift = nullptr*/) const
+  clone(const GeometryContext& /*gctx*/,
+        const Transform3D& /*shift = nullptr*/) const
   {
     return nullptr;
   }
@@ -48,19 +51,19 @@ public:
 
   /// Return method for the normal vector of the surface
   const Vector3D
-  normal(const Vector2D& /*lpos*/) const final
+  normal(const GeometryContext& gctx, const Vector2D& /*lpos*/) const final
   {
-    return normal();
+    return normal(gctx);
   }
 
   const Vector3D
-  normal(const Vector3D&) const final
+  normal(const GeometryContext& gctx, const Vector3D&) const final
   {
-    return normal();
+    return normal(gctx);
   }
 
   const Vector3D
-  normal() const final
+  normal(const GeometryContext& /*gctx*/) const final
   {
     return Vector3D{0., 0., 0.};
   }
@@ -74,7 +77,8 @@ public:
 
   /// Local to global transformation
   void
-  localToGlobal(const Vector2D& /*lpos*/,
+  localToGlobal(const GeometryContext& /*gctx*/,
+                const Vector2D& /*lpos*/,
                 const Vector3D& /*gmom*/,
                 Vector3D& /*gpos*/) const final
   {
@@ -83,7 +87,8 @@ public:
 
   /// Global to local transformation
   bool
-  globalToLocal(const Vector3D& /*gpos*/,
+  globalToLocal(const GeometryContext& /*cxt*/,
+                const Vector3D& /*gpos*/,
                 const Vector3D& /*gmom*/,
                 Vector2D& lpos) const final
   {
@@ -93,14 +98,17 @@ public:
 
   /// Calculation of the path correction for incident
   double
-  pathCorrection(const Vector3D& /*gpos*/, const Vector3D& /*gmom*/) const final
+  pathCorrection(const GeometryContext& /*cxt*/,
+                 const Vector3D& /*gpos*/,
+                 const Vector3D& /*gmom*/) const final
   {
     return 0.0;
   }
 
   /// Straight line intersection schema from parameters
   Intersection
-  intersectionEstimate(const Vector3D& /*gpos*/,
+  intersectionEstimate(const GeometryContext& /*cxt*/,
+                       const Vector3D& /*gpos*/,
                        const Vector3D& /*gdir*/,
                        NavigationDirection /*navDir*/,
                        const BoundaryCheck& /*bcheck*/,
@@ -112,7 +120,9 @@ public:
   }
 
   /// Inherited from GeometryObject base
-  const Vector3D binningPosition(BinningValue /*bValue*/) const final
+  const Vector3D
+  binningPosition(const GeometryContext& /*txt*/,
+                  BinningValue /*bValue*/) const final
   {
     const Vector3D v{0.0, 0.0, 0.0};
     return v;
@@ -132,22 +142,13 @@ public:
     return true;
   }
 
-  /// Conform to base class signature
-  variant_data
-  toVariantData() const override
-  {
-    using namespace std::string_literals;
-    variant_map data;
-    data["type"] = "SurfaceStub"s;
-    return data;
-  }
-
 private:
   /// the bounds of this surface
   std::shared_ptr<const PlanarBounds> m_bounds;
 
   SurfaceStub*
-  clone_impl(const Transform3D* /* shift */) const override
+  clone_impl(const GeometryContext& /*gctx*/,
+             const Transform3D& /* shift */) const override
   {
     return nullptr;
   }

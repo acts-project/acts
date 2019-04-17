@@ -1,51 +1,18 @@
 #!/usr/bin/env python3
 
-import cern_sso
 import os
-from urllib.parse import quote as quote_plus
-import requests
 import json
 import re
 import argparse
 import gitlab
-from concurrent.futures import ThreadPoolExecutor, as_completed
-import dateutil.parser
 import contextlib
 import sys
 import math
 
-
-# these are optional, but nice
-try:
-    from tqdm import tqdm
-except:
-    tqdm = None
 try:
     from halo import Halo
 except:
     Halo = None
-
-class JIRAException(Exception):
-    def __init__(self, messages, *args, **kwargs):
-        self.messages = messages
-
-class JIRA:
-    def __init__(self, cookies, url):
-        self.cookies = cookies
-        self.url = url
-
-    def jql(self, q):
-        return requests.get(self.url + "/rest/api/2/search?jql={}&maxResults=500".format(q), cookies=self.cookies)
-
-    def get_version_issues(self, version):
-        res = self.jql("project= ACTS AND fixVersion = {} AND status = Closed".format(version)).json()
-        try:
-            assert res["maxResults"] > res["total"]
-            assert res["startAt"] == 0
-
-            return res["issues"]
-        except:
-            raise JIRAException(res["errorMessages"])
 
 
 @contextlib.contextmanager
@@ -54,102 +21,49 @@ def spinner(text, *args, **kwargs):
         with Halo(text, *args, **kwargs):
             yield
     else:
-        sys.stdout.write(text+"\n")
+        sys.stdout.write(text + "\n")
         yield
 
-if sys.stdout.isatty() and tqdm is not None:
-    Progress = tqdm
-    prog_iter = tqdm
-    prog_write = tqdm.write
-else:
-    class Progress():
-        def __init__(self, total, desc, *args, **kwargs):
-            self.total = total
-            self.current = 0
-            sys.stdout.write(desc+"\n")
-        def update(self, n=1, *args, **kwargs):
-            self.current += n
-            perc = self.current / self.total * 100
-            inc = math.ceil(self.total / 10)
-            if self.current % inc == 0:
-                sys.stdout.write("%.2f"%perc + "%\n")
-        def close(self):
-            pass
-
-    def prog_iter(values, *args, **kwargs):
-        p = Progress(len(values), *args, **kwargs)
-        for value in values:
-            yield value
-            p.update()
-        p.close()
-
-    def prog_write(*args, **kwargs):
-        sys.stdout.write(*args, **kwargs)
-        sys.stdout.write("\n")
-
-def mtmap(tp, func, values, desc=None):
-    prog = Progress(total=len(values), leave=False, desc=desc)
-    futures = []
-    for v in values:
-        futures.append(tp.submit(func, v))
-    
-    for _ in as_completed(futures):
-        prog.update()
-    prog.close()
-    return [f.result() for f in futures]
-
-
-def make_release_notes(version, issues, mrs):
-
-    issues_by_type = {}
-
-    for issue in issues:
-        issue_type = issue["fields"]["issuetype"]["name"]
-        summary = issue["fields"]["summary"]
-        key = issue["key"]
-        url = "https://its.cern.ch/jira/browse/{}".format(key)
-
-        if not issue_type in issues_by_type:
-            issues_by_type[issue_type] = []
-
-        issues_by_type[issue_type].append((key, url, summary))
-
-
-    markdown = ""
-    markdown += "# Release v{}\n\n".format(version)
-
-    markdown += "\n"*2 + "Merge requests for this release:\n\n"
-    for mr in mrs:
-        markdown += " - [!%d - %s](%s)" % (mr.iid, mr.title, mr.web_url) + "\n"
-    markdown += "\n"*2
-
-    for issue_type, issues in issues_by_type.items():
-
-        markdown += "## {}\n".format(issue_type)
-
-        for key, url, summary in sorted(issues, key=lambda i: i[0]):
-            markdown += " - [[{key}] {summary}]({url})\n".format(key=key, url=url, summary=summary)
-
-        markdown += "\n"*2
-
-    return markdown
 
 def parse_version(tag):
     return re.match(r"v(\d\.\d\d\.\d\d)", tag.name).group(1)
 
+
+def group_items(labels, items):
+    groups = {l: [] for l in labels}
+    groups["Uncategorized"] = []
+
+    for item in items:
+        assigned = False
+        for label in item.labels:
+            if label in labels:
+                groups[label].append(item)
+                assigned = True
+                break
+        # is we get here, we didn't group this
+        if not assigned:
+            groups["Uncategorized"].append(item)
+    return groups
+
+
 def main():
     p = argparse.ArgumentParser()
 
-    p.add_argument("--access-token",
-                   help="Gitlab access token to update the releases",
-                   default=os.getenv("ATSJENKINS_ACCESS_TOKEN", None))
+    p.add_argument(
+        "--access-token",
+        help="Gitlab access token to update the releases",
+        default=os.getenv("ATSJENKINS_ACCESS_TOKEN", None),
+    )
     p.add_argument("--dry-run", "-s", action="store_true")
+    p.add_argument("--verbose", "-v", action="store_true")
+
+    label_groups = os.getenv(
+        "RELEASE_NOTES_LABEL_GROUPS", "New Feature;Bug;Improvement"
+    ).split(";")
+
+    print("Label groups:", ", ".join(label_groups))
 
     args = p.parse_args()
-
-    jira_url = "https://its.cern.ch/jira"
-    cookies = cern_sso.krb_sign_on(jira_url)
-    jira = JIRA(cookies=cookies, url=jira_url)
 
     gl = gitlab.Gitlab("https://gitlab.cern.ch", private_token=args.access_token)
     if not args.dry_run:
@@ -160,70 +74,79 @@ def main():
     with spinner(text="Loading tags"):
         tags = project.tags.list(all=True)
 
-    with spinner(text="Loading merge requests"):
-        mrlist = project.mergerequests.list(state="merged", target_branch="master", all=True)
+    with spinner(text="Loading milestones"):
+        milestones = project.milestones.list(all=True)
+        ms_map = {}
+        for ms in milestones:
+            ms_map[ms.title] = ms
 
-    with ThreadPoolExecutor(max_workers=15) as tp:
-        mrs = mrlist
-
-        for tag in tags:
-            date = dateutil.parser.parse(tag.commit["created_at"])
-            tag.created_at = date
-        tags = list(sorted(tags, key=lambda t: t.created_at))
-
-        def augment_with_commit(mr):
-            commit = project.commits.get(mr.sha)
-            date = dateutil.parser.parse(commit.created_at)
-            mr.commit_date = date
-            return mr
-
-        mrs = mtmap(tp, augment_with_commit, mrs, desc="Loading MR commit info")
-
-        def load_issues(tag):
-            version = parse_version(tag)
-            try:
-                return tag, jira.get_version_issues(version)
-            except JIRAException:
-                return tag, []
-        version_issues = dict(mtmap(tp, load_issues, tags, desc="Loading issues from JIRA"))
-
-
-    tag_mrs = {}
-
-
-    tag_mrs[tags[0]] = []
-    for mr in mrs:
-        if tags[0].created_at > mr.commit_date:
-            tag_mrs[tags[0]].append(mr)
-
-    for tag, tagn in zip(tags, tags[1:]):
-        tag_mrs[tagn] = []
-        for mr in mrs:
-            if tag.created_at < mr.commit_date < tagn.created_at:
-                tag_mrs[tagn].append(mr)
-
-    print("Found", len(tags), "tags")
-
-
-    for tag in prog_iter(tags, desc="Updating tag release notes"):
-        name = tag.name
+    for tag in tags:
         version = parse_version(tag)
-        has_release = tag.release is not None
+        if not version in ms_map:
+            print(f"No milestone found for tag f{tag.name} => skipping")
+        milestone = ms_map[version]
+        print(tag.name, milestone.title)
 
-        prog_write(name)
-        relnotes = make_release_notes(version, version_issues[tag], tag_mrs[tag])
+        mrs = []
+        with spinner(text=f"Loading merge requests associated with %{milestone.iid}"):
+            for mr in milestone.merge_requests():
+                if mr.state == "merged":
+                    mrs.append(mr)
 
-        if not has_release:
-            prog_write("Creating release for tag %s"%name)
-        else:
-            prog_write("Updating release notes for tag %s"%name)
+        # need to get issues from merged MRs
+        with spinner(text=f"Collecting issues from {len(mrs)} merged MRs"):
+            issue_ids = []
+            issues = []
+            for mr in mrs:
+                for issue in mr.closes_issues():
+                    if issue.id not in issue_ids:
+                        issue_ids.append(issue.id)
+                        issues.append(issue)
 
+        issues_grouped = group_items(label_groups, issues)
+        mrs_grouped = group_items(label_groups, mrs)
+
+        if args.verbose:
+            print("Issues:", ", ".join([str(i.iid) for i in issues]))
+
+            for g, issues in issues_grouped.items():
+                print(g, ", ".join([str(i.iid) for i in issues]))
+
+            print("MRs:", ", ".join([str(mr.iid) for mr in mrs]))
+            for g, mrs in mrs_grouped.items():
+                print(g, ", ".join([str(mr.iid) for mr in mrs]))
+
+        with spinner(text="Assembling release notes"):
+            # make the Markdown
+            md = ""
+            # md = f"# Release {tag.name}\n"
+            md += f"Milestone: [%{milestone.title}]({milestone.web_url})\n"
+
+            if len(mrs) > 0:
+                md += f"### {len(mrs)} Merge Requests in this release:\n"
+                for g in label_groups + ["Uncategorized"]:
+                    if len(mrs_grouped[g]) == 0:
+                        continue
+                    md += f"#### {g}\n"
+                    for mr in mrs_grouped[g]:
+                        md += f"- [!{mr.iid} - {mr.title}]({mr.web_url})\n"
+                md += "\n"
+
+            if len(issues) > 0:
+                md += f"### {len(issues)} issues addressed in this release:\n"
+                for g in label_groups + ["Uncategorized"]:
+                    if len(issues_grouped[g]) == 0:
+                        continue
+                    md += f"#### {g}\n"
+                    for issue in issues_grouped[g]:
+                        md += f"- [#{issue.iid} - {issue.title}]({issue.web_url})\n"
+
+        # print(md)
         if not args.dry_run:
-            tag.set_release_description(relnotes)
-
-            prog_write("Release notes for %s set" % name)
-
-    print("Release note synchronization complete")
+            with spinner(text=f"Saving release notes on {tag.name}"):
+                tag.set_release_description(md)
+        if args.verbose:
+            print("---")
 
 
 if "__main__" == __name__:

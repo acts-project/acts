@@ -19,18 +19,16 @@
 #include "Acts/Surfaces/InfiniteBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/VariantData.hpp"
-
-#include "Acts/Utilities/InstanceFactory.hpp"
 
 Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
   : GeometryObject(), Surface(other), m_bounds(other.m_bounds)
 {
 }
 
-Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other,
-                                 const Transform3D&  transf)
-  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
+Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
+                                 const PlaneSurface&    other,
+                                 const Transform3D&     transf)
+  : GeometryObject(), Surface(gctx, other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -72,35 +70,6 @@ Acts::PlaneSurface::PlaneSurface(std::shared_ptr<const Transform3D>  htrans,
 {
 }
 
-Acts::PlaneSurface::PlaneSurface(const variant_data& vardata)
-{
-  // we need to figure out which way the PS was constructed before
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(vardata);
-  throw_assert(data.count("type"), "Variant data must have type.");
-  // std::string type = boost::get<std::string>(data["type"]);
-  std::string type = data.get<std::string>("type");
-  throw_assert(type == "PlaneSurface",
-               "Variant data type must be PlaneSurface");
-
-  variant_map payload    = data.get<variant_map>("payload");
-  variant_map bounds     = payload.get<variant_map>("bounds");
-  std::string boundsType = bounds.get<std::string>("type");
-
-  InstanceFactory                     factory;
-  std::shared_ptr<const PlanarBounds> pbounds
-      = factory.planarBounds(boundsType, bounds);
-
-  m_bounds = pbounds;
-
-  if (payload.count("transform") != 0u) {
-    // we have a transform
-    auto trf = std::make_shared<const Transform3D>(
-        from_variant<Transform3D>(payload.get<variant_map>("transform")));
-    m_transform = trf;
-  }
-}
-
 Acts::PlaneSurface&
 Acts::PlaneSurface::operator=(const PlaneSurface& other)
 {
@@ -118,22 +87,24 @@ Acts::PlaneSurface::type() const
 }
 
 void
-Acts::PlaneSurface::localToGlobal(const Vector2D& lpos,
+Acts::PlaneSurface::localToGlobal(const GeometryContext& gctx,
+                                  const Vector2D&        lpos,
                                   const Vector3D& /*gmom*/,
                                   Vector3D& gpos) const
 {
   Vector3D loc3Dframe(lpos[Acts::eLOC_X], lpos[Acts::eLOC_Y], 0.);
   /// the chance that there is no transform is almost 0, let's apply it
-  gpos = transform() * loc3Dframe;
+  gpos = transform(gctx) * loc3Dframe;
 }
 
 bool
-Acts::PlaneSurface::globalToLocal(const Vector3D& gpos,
+Acts::PlaneSurface::globalToLocal(const GeometryContext& gctx,
+                                  const Vector3D&        gpos,
                                   const Vector3D& /*gmom*/,
                                   Acts::Vector2D& lpos) const
 {
   /// the chance that there is no transform is almost 0, let's apply it
-  Vector3D loc3Dframe = (transform().inverse()) * gpos;
+  Vector3D loc3Dframe = (transform(gctx).inverse()) * gpos;
   lpos                = Vector2D(loc3Dframe.x(), loc3Dframe.y());
   return ((loc3Dframe.z() * loc3Dframe.z()
            > s_onSurfaceTolerance * s_onSurfaceTolerance)
@@ -148,18 +119,17 @@ Acts::PlaneSurface::name() const
 }
 
 std::shared_ptr<Acts::PlaneSurface>
-Acts::PlaneSurface::clone(const Transform3D* shift) const
+Acts::PlaneSurface::clone(const GeometryContext& gctx,
+                          const Transform3D&     shift) const
 {
-  return std::shared_ptr<PlaneSurface>(this->clone_impl(shift));
+  return std::shared_ptr<PlaneSurface>(this->clone_impl(gctx, shift));
 }
 
 Acts::PlaneSurface*
-Acts::PlaneSurface::clone_impl(const Transform3D* shift) const
+Acts::PlaneSurface::clone_impl(const GeometryContext& gctx,
+                               const Transform3D&     shift) const
 {
-  if (shift != nullptr) {
-    return new PlaneSurface(*this, *shift);
-  }
-  return new PlaneSurface(*this);
+  return new PlaneSurface(gctx, *this, shift);
 }
 
 const Acts::SurfaceBounds&
@@ -169,26 +139,4 @@ Acts::PlaneSurface::bounds() const
     return (*m_bounds.get());
   }
   return s_noBounds;
-}
-
-Acts::variant_data
-Acts::PlaneSurface::toVariantData() const
-{
-  using namespace std::string_literals;
-  variant_map payload;
-
-  variant_data bounds = m_bounds->toVariantData();
-  payload["bounds"]   = bounds;
-
-  if (m_transform) {
-    payload["transform"] = to_variant(*m_transform);
-  } else if (m_associatedDetElement != nullptr) {
-    payload["transform"] = to_variant(m_associatedDetElement->transform());
-  }
-
-  variant_map data;
-  data["type"]    = "PlaneSurface"s;
-  data["payload"] = payload;
-
-  return data;
 }

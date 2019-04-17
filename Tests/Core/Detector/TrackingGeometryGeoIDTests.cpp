@@ -19,36 +19,40 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   ///  create three cylinder surfaces
   ///  the surface radius (will also be the layer radius)
-  double iv_surfaceHalfLengthZ = 50 * Acts::units::_mm;
-  double iv_surfaceRadius      = 25. * Acts::units::_mm;
-  double iv_surfaceRstagger    = 5. * Acts::units::_mm;
-  double iv_surfaceZoverlap    = 10. * Acts::units::_mm;
-  double iv_layerEnvelope      = 0.5 * Acts::units::_mm;
-  double iv_volumeEnvelope     = 10. * Acts::units::_mm;
-  double iv_volumeRadius       = iv_surfaceRadius + 0.5 * iv_surfaceRstagger
-      + iv_layerEnvelope + iv_volumeEnvelope;
+  double iVsurfaceHalfLengthZ = 50 * Acts::units::_mm;
+  double iVsurfaceRadius      = 25. * Acts::units::_mm;
+  double iVsurfaceRstagger    = 5. * Acts::units::_mm;
+  double iVsurfaceZoverlap    = 10. * Acts::units::_mm;
+  double iVlayerEnvelope      = 0.5 * Acts::units::_mm;
+  double iVvolumeEnvelope     = 10. * Acts::units::_mm;
+  double iVvolumeRadius       = iVsurfaceRadius + 0.5 * iVsurfaceRstagger
+      + iVlayerEnvelope + iVvolumeEnvelope;
 
   ///  the surface radius (will also be the layer radius)
-  double ov_surfaceHalfLengthZ = 50. * Acts::units::_mm;
-  double ov_surfaceRadius      = 100. * Acts::units::_mm;
-  double ov_surfaceRstagger    = 5. * Acts::units::_mm;
-  double ov_surfaceZoverlap    = 10. * Acts::units::_mm;
-  double ov_layerEnvelope      = 0.5 * Acts::units::_mm;
-  double ov_volumeEnvelope     = 10. * Acts::units::_mm;
-  double ov_volumeRadius       = ov_surfaceRadius + 0.5 * ov_surfaceRstagger
-      + ov_layerEnvelope + ov_volumeEnvelope;
+  double oVsurfaceHalfLengthZ = 50. * Acts::units::_mm;
+  double oVsurfaceRadius      = 100. * Acts::units::_mm;
+  double oVsurfaceRstagger    = 5. * Acts::units::_mm;
+  double oVsurfaceZoverlap    = 10. * Acts::units::_mm;
+  double oVlayerEnvelope      = 0.5 * Acts::units::_mm;
+  double oVvolumeEnvelope     = 10. * Acts::units::_mm;
+  double oVvolumeRadius       = oVsurfaceRadius + 0.5 * oVsurfaceRstagger
+      + oVlayerEnvelope + oVvolumeEnvelope;
 
   ///  inner volume
-  auto iVolume = constructCylinderVolume(iv_surfaceHalfLengthZ,
-                                         iv_surfaceRadius,
-                                         iv_surfaceRstagger,
-                                         iv_surfaceZoverlap,
-                                         iv_layerEnvelope,
-                                         iv_volumeEnvelope,
+  auto iVolume = constructCylinderVolume(tgContext,
+                                         iVsurfaceHalfLengthZ,
+                                         iVsurfaceRadius,
+                                         iVsurfaceRstagger,
+                                         iVsurfaceZoverlap,
+                                         iVlayerEnvelope,
+                                         iVvolumeEnvelope,
                                          0.,
-                                         iv_volumeRadius,
+                                         iVvolumeRadius,
                                          "InnerVolume");
 
   BOOST_AUTO_TEST_CASE(GeometryID_innervolume_test)
@@ -72,14 +76,15 @@ namespace Test {
   }
 
   ///  outer volume
-  auto oVolume = constructCylinderVolume(ov_surfaceHalfLengthZ,
-                                         ov_surfaceRadius,
-                                         ov_surfaceRstagger,
-                                         ov_surfaceZoverlap,
-                                         ov_layerEnvelope,
-                                         ov_volumeEnvelope,
-                                         iv_volumeRadius,
-                                         ov_volumeRadius,
+  auto oVolume = constructCylinderVolume(tgContext,
+                                         oVsurfaceHalfLengthZ,
+                                         oVsurfaceRadius,
+                                         oVsurfaceRstagger,
+                                         oVsurfaceZoverlap,
+                                         oVlayerEnvelope,
+                                         oVvolumeEnvelope,
+                                         iVvolumeRadius,
+                                         oVvolumeRadius,
                                          "OuterVolume");
 
   BOOST_AUTO_TEST_CASE(GeometryID_outervolume_test)
@@ -102,13 +107,14 @@ namespace Test {
     }
   }
   //
-  double ov_volumeHalfZ
-      = (4 * ov_surfaceHalfLengthZ - ov_surfaceZoverlap) + ov_volumeEnvelope;
+  double oVvolumeHalfZ
+      = (4 * oVsurfaceHalfLengthZ - oVsurfaceZoverlap) + oVvolumeEnvelope;
   // now create the container volume
-  auto hVolume = constructContainerVolume(iVolume,
+  auto hVolume = constructContainerVolume(tgContext,
+                                          iVolume,
                                           oVolume,
-                                          ov_volumeRadius,
-                                          ov_volumeHalfZ,
+                                          oVvolumeRadius,
+                                          oVvolumeHalfZ,
                                           "Container");
 
   ///  pre-check on GeometryID

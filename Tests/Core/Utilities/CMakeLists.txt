@@ -63,3 +63,20 @@ add_executable (BFieldMapUtilsTests BFieldMapUtilsTests.cpp)
 target_link_libraries (BFieldMapUtilsTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME BFieldMapUtilsTest COMMAND BFieldMapUtilsTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST BFieldMapUtilsTest TARGETS BFieldMapUtilsTests)
+
+add_executable (ResultTests ResultTests.cpp)
+target_link_libraries (ResultTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME ResultTests COMMAND ResultTests)
+
+add_executable (TypeTraitsTest TypeTraitsTest.cpp)
+target_link_libraries (TypeTraitsTest PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME TypeTraitsTest COMMAND TypeTraitsTest)
+
+add_executable (VisualizationTests VisualizationTests.cpp)
+target_link_libraries (VisualizationTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME VisualizationTests COMMAND VisualizationTests)
+
+add_executable (MaterialMapUtilsTests MaterialMapUtilsTests.cpp)
+target_link_libraries (MaterialMapUtilsTests PRIVATE ActsCore ActsTestsCommonHelpers)
+add_test (NAME MaterialMapUtilsTest COMMAND MaterialMapUtilsTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialMapUtilsTest TARGETS MaterialMapUtilsTests)

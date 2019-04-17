@@ -12,6 +12,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -61,8 +62,9 @@ namespace IntegrationTest {
       x_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
         StartParameters tp = startPars;
-        tp.template set<Acts::eLOC_0>(tp.template get<Acts::eLOC_0>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        tp.template set<Acts::eLOC_0>(options.geoContext,
+                                      tp.template get<Acts::eLOC_0>() + h);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         x_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
 
@@ -71,8 +73,9 @@ namespace IntegrationTest {
       y_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
         StartParameters tp = startPars;
-        tp.template set<Acts::eLOC_1>(tp.template get<Acts::eLOC_1>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        tp.template set<Acts::eLOC_1>(options.geoContext,
+                                      tp.template get<Acts::eLOC_1>() + h);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         y_derivatives.push_back((r.endParameters->parameters() - nominal) / h);
       }
 
@@ -81,8 +84,9 @@ namespace IntegrationTest {
       phi_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
         StartParameters tp = startPars;
-        tp.template set<Acts::ePHI>(tp.template get<Acts::ePHI>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        tp.template set<Acts::ePHI>(options.geoContext,
+                                    tp.template get<Acts::ePHI>() + h);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         phi_derivatives.push_back((r.endParameters->parameters() - nominal)
                                   / h);
       }
@@ -99,8 +103,9 @@ namespace IntegrationTest {
         if (current_theta + h < 0) {
           h = -current_theta;
         }
-        tp.template set<Acts::eTHETA>(tp.template get<Acts::eTHETA>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        tp.template set<Acts::eTHETA>(options.geoContext,
+                                      tp.template get<Acts::eTHETA>() + h);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         theta_derivatives.push_back((r.endParameters->parameters() - nominal)
                                     / h);
       }
@@ -110,8 +115,9 @@ namespace IntegrationTest {
       qop_derivatives.reserve(h_steps.size());
       for (double h : h_steps) {
         StartParameters tp = startPars;
-        tp.template set<Acts::eQOP>(tp.template get<Acts::eQOP>() + h);
-        const auto& r = m_propagator.propagate(tp, dest, var_options);
+        tp.template set<Acts::eQOP>(options.geoContext,
+                                    tp.template get<Acts::eQOP>() + h);
+        const auto& r = m_propagator.propagate(tp, dest, var_options).value();
         qop_derivatives.push_back((r.endParameters->parameters() - nominal)
                                   / h);
       }

@@ -14,11 +14,12 @@
 #include <iostream>
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
 
-class SurfaceMaterial;
+class ISurfaceMaterial;
 class SurfaceBounds;
 class DigitizationModule;
 
@@ -35,6 +36,9 @@ class DigitizationModule;
 class TGeoDetectorElement : public IdentifiedDetectorElement
 {
 public:
+  /// Broadcast the context type
+  using ContextType = GeometryContext;
+
   /// Constructor
   /// @param identifier is the detector identifier
   /// @param tGeoDetElement is the TGeoNode which should be represented
@@ -73,7 +77,7 @@ public:
       const std::string&                              axes     = "XYZ",
       double                                          scalor   = 1.,
       bool                                            isDisc   = false,
-      std::shared_ptr<const Acts::SurfaceMaterial>    material = nullptr,
+      std::shared_ptr<const Acts::ISurfaceMaterial>   material = nullptr,
       std::shared_ptr<const Acts::DigitizationModule> digitizationModule
       = nullptr);
 
@@ -120,7 +124,7 @@ public:
       const std::string&                              axes     = "XYZ",
       double                                          scalor   = 1.,
       bool                                            isDisc   = false,
-      std::shared_ptr<const Acts::SurfaceMaterial>    material = nullptr,
+      std::shared_ptr<const Acts::ISurfaceMaterial>   material = nullptr,
       std::shared_ptr<const Acts::DigitizationModule> digitizationModule
       = nullptr);
 
@@ -132,8 +136,10 @@ public:
   identifier() const final;
 
   /// Return local to global transform associated with this identifier
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   const Transform3D&
-  transform() const final;
+  transform(const GeometryContext& gctx) const final;
 
   /// Return surface associated with this identifier, which should come from the
   const Surface&
@@ -175,7 +181,7 @@ TGeoDetectorElement::identifier() const
 }
 
 inline const Transform3D&
-TGeoDetectorElement::transform() const
+TGeoDetectorElement::transform(const GeometryContext& /*gctx*/) const
 {
   return (*m_transform);
 }

@@ -4,6 +4,18 @@ target_link_libraries (ClusterizationTests PRIVATE ActsCore ActsDigitizationPlug
 add_test (NAME ClusterizationUnitTest COMMAND ClusterizationTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST ClusterizationUnitTest TARGETS ClusterizationTests)
 
+add_executable (CartesianSegmentationTests CartesianSegmentationTests.cpp)
+target_include_directories (CartesianSegmentationTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (CartesianSegmentationTests PRIVATE ActsCore ActsDigitizationPlugin ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME CartesianSegmentationUnitTest COMMAND CartesianSegmentationTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST CartesianSegmentationUnitTest TARGETS CartesianSegmentationTests)
+
+add_executable (PlanarModuleStepperTests PlanarModuleStepperTests.cpp)
+target_include_directories (PlanarModuleStepperTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (PlanarModuleStepperTests PRIVATE ActsCore ActsDigitizationPlugin ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME PlanarModuleStepperUnitTest COMMAND PlanarModuleStepperTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST PlanarModuleStepperUnitTest TARGETS PlanarModuleStepperTests)
+
 add_executable (SingleHitSpacePointBuilderTests SingleHitSpacePointBuilderTests.cpp)
 target_link_libraries (SingleHitSpacePointBuilderTests PRIVATE ActsCore ActsDigitizationPlugin ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME SingleHitSpacePointBuilderUnitTest COMMAND SingleHitSpacePointBuilderTests)

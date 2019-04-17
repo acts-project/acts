@@ -21,7 +21,6 @@ namespace Test {
   geo_id_value layer_mask     = GeometryID::layer_mask;
   geo_id_value approach_mask  = GeometryID::approach_mask;
   geo_id_value sensitive_mask = GeometryID::sensitive_mask;
-  geo_id_value channel_mask   = GeometryID::channel_mask;
 
   /// test of the geometry ID creation and consistency of the ranges
   BOOST_AUTO_TEST_CASE(GeometryID_test)
@@ -41,17 +40,13 @@ namespace Test {
     geo_id_value sensitive_range
         = ACTS_BIT_SHIFT(approach_mask) - ACTS_BIT_SHIFT(sensitive_mask);
 
-    geo_id_value channel_range = ACTS_BIT_SHIFT(sensitive_mask)
-        - ACTS_BIT_SHIFT(GeometryID::channel_mask);
-
     /// prepare all the masks and shifts
     std::vector<std::pair<geo_id_value, geo_id_value>> masks_range
         = {{volume_mask, volume_range},
            {boundary_mask, boundary_range},
            {layer_mask, layer_range},
            {approach_mask, approach_range},
-           {sensitive_mask, sensitive_range},
-           {channel_mask, channel_range}};
+           {sensitive_mask, sensitive_range}};
 
     for (auto msr : masks_range) {
 
@@ -81,7 +76,6 @@ namespace Test {
     GeometryID layerID(3, GeometryID::layer_mask);
     GeometryID approachID(4, GeometryID::approach_mask);
     GeometryID sensitiveID(5, GeometryID::sensitive_mask);
-    GeometryID channelID(6, GeometryID::channel_mask);
 
     // now check the validity before adding
     BOOST_CHECK_EQUAL(1lu, volumeID.value(GeometryID::volume_mask));
@@ -89,7 +83,6 @@ namespace Test {
     BOOST_CHECK_EQUAL(3lu, layerID.value(GeometryID::layer_mask));
     BOOST_CHECK_EQUAL(4lu, approachID.value(GeometryID::approach_mask));
     BOOST_CHECK_EQUAL(5lu, sensitiveID.value(GeometryID::sensitive_mask));
-    BOOST_CHECK_EQUAL(6lu, channelID.value(GeometryID::channel_mask));
 
     // now create a compound ones
     GeometryID compoundID_dconst;
@@ -111,14 +104,12 @@ namespace Test {
       cid += layerID;
       cid += approachID;
       cid += sensitiveID;
-      cid += channelID;
       // now check the cid
       BOOST_CHECK_EQUAL(1lu, cid.value(GeometryID::volume_mask));
       BOOST_CHECK_EQUAL(2lu, cid.value(GeometryID::boundary_mask));
       BOOST_CHECK_EQUAL(3lu, cid.value(GeometryID::layer_mask));
       BOOST_CHECK_EQUAL(4lu, cid.value(GeometryID::approach_mask));
       BOOST_CHECK_EQUAL(5lu, cid.value(GeometryID::sensitive_mask));
-      BOOST_CHECK_EQUAL(6lu, cid.value(GeometryID::channel_mask));
     }
   }
 

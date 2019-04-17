@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 Acts project team
+// Copyright (C) 2016-2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,7 +12,6 @@
 
 #include <functional>
 
-#include "Acts/Detector/DetachedTrackingVolume.hpp"
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Layers/Layer.hpp"
@@ -20,50 +19,27 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 Acts::TrackingGeometry::TrackingGeometry(
-    const MutableTrackingVolumePtr& highestVolume)
+    const MutableTrackingVolumePtr& highestVolume,
+    const IMaterialDecorator*       materialDecorator)
   : m_world(highestVolume)
   , m_beam(Surface::makeShared<PerigeeSurface>(s_origin))
 {
-  // close up the geometry
+  // Close the geometry: assign geometryID and successively the material
   size_t volumeID = 0;
-  highestVolume->closeGeometry(m_trackingVolumes, volumeID);
+  highestVolume->closeGeometry(materialDecorator, m_trackingVolumes, volumeID);
 }
 
 Acts::TrackingGeometry::~TrackingGeometry() = default;
 
 const Acts::TrackingVolume*
-Acts::TrackingGeometry::lowestTrackingVolume(const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::lowestTrackingVolume(const GeometryContext& gctx,
+                                             const Acts::Vector3D&  gp) const
 {
   const TrackingVolume* searchVolume  = m_world.get();
   const TrackingVolume* currentVolume = nullptr;
   while (currentVolume != searchVolume && (searchVolume != nullptr)) {
     currentVolume = searchVolume;
-    searchVolume  = searchVolume->trackingVolume(gp);
-  }
-  return currentVolume;
-}
-
-const Acts::DetachedVolumeVector*
-Acts::TrackingGeometry::lowestDetachedTrackingVolumes(const Vector3D& gp) const
-{
-  double                tol           = 0.001;
-  const TrackingVolume* currentVolume = lowestStaticTrackingVolume(gp);
-  if (currentVolume != nullptr) {
-    return currentVolume->detachedTrackingVolumes(gp, tol);
-  }
-  return nullptr;
-}
-
-const Acts::TrackingVolume*
-Acts::TrackingGeometry::lowestStaticTrackingVolume(const Vector3D& gp) const
-{
-  const TrackingVolume* searchVolume  = m_world.get();
-  const TrackingVolume* currentVolume = nullptr;
-  while (currentVolume != searchVolume && (searchVolume != nullptr)) {
-    currentVolume = searchVolume;
-    if ((searchVolume->confinedDetachedVolumes()).empty()) {
-      searchVolume = searchVolume->trackingVolume(gp);
-    }
+    searchVolume  = searchVolume->lowestTrackingVolume(gctx, gp);
   }
   return currentVolume;
 }
@@ -93,10 +69,11 @@ Acts::TrackingGeometry::trackingVolume(const std::string& name) const
 }
 
 const Acts::Layer*
-Acts::TrackingGeometry::associatedLayer(const Acts::Vector3D& gp) const
+Acts::TrackingGeometry::associatedLayer(const GeometryContext& gctx,
+                                        const Acts::Vector3D&  gp) const
 {
-  const TrackingVolume* lowestVol = (lowestTrackingVolume(gp));
-  return lowestVol->associatedLayer(gp);
+  const TrackingVolume* lowestVol = (lowestTrackingVolume(gctx, gp));
+  return lowestVol->associatedLayer(gctx, gp);
 }
 
 void

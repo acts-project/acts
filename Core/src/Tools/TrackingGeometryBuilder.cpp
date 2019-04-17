@@ -45,7 +45,8 @@ Acts::TrackingGeometryBuilder::setLogger(
 }
 
 std::unique_ptr<const Acts::TrackingGeometry>
-Acts::TrackingGeometryBuilder::trackingGeometry() const
+Acts::TrackingGeometryBuilder::trackingGeometry(
+    const GeometryContext& gctx) const
 {
   // the return geometry with the highest volume
   std::unique_ptr<const TrackingGeometry> trackingGeometry;
@@ -55,12 +56,17 @@ Acts::TrackingGeometryBuilder::trackingGeometry() const
   for (auto& volumeBuilder : m_cfg.trackingVolumeBuilders) {
     // assign a new highest volume (and potentially wrap around the given
     // highest volume so far)
-    highestVolume = volumeBuilder(highestVolume, nullptr);
+    highestVolume = volumeBuilder(gctx, highestVolume, nullptr);
   }  // --------------------------------------------------------------------------------
 
-  // create the TrackingGeometry
+  // create the TrackingGeometry & decorate it with the material
   if (highestVolume) {
-    trackingGeometry.reset(new TrackingGeometry(highestVolume));
+    // first check if we have material to get
+    const IMaterialDecorator* materialDecorator
+        = m_cfg.materialDecorator ? m_cfg.materialDecorator.get() : nullptr;
+    // build and set the TrackingGeometry
+    trackingGeometry.reset(
+        new TrackingGeometry(highestVolume, materialDecorator));
   }
   // return the geometry to the service
   return (trackingGeometry);

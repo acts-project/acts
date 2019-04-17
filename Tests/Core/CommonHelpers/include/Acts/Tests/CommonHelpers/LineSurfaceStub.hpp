@@ -9,7 +9,6 @@
 //
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 //
 //
 #include <limits>
@@ -41,24 +40,21 @@ namespace Test {
     { /* nop */
     }
 
-    LineSurfaceStub(const variant_data& data)
-      : GeometryObject(), LineSurface(data)
-    { /* nop */
-    }
-
     //
     LineSurfaceStub(const LineSurfaceStub& ls)
       : GeometryObject(), LineSurface(ls)
     { /* nop */
     }
     //
-    LineSurfaceStub(const LineSurfaceStub& ls, const Transform3D& t)
-      : GeometryObject(), LineSurface(ls, t)
+    LineSurfaceStub(const GeometryContext& gctx,
+                    const LineSurfaceStub& ls,
+                    const Transform3D&     t)
+      : GeometryObject(), LineSurface(gctx, ls, t)
     { /* nop */
     }
     /// pure virtual functions of baseclass implemented here
     std::shared_ptr<LineSurfaceStub>
-    clone(const Transform3D* /*shift = nullptr*/) const
+    clone(const GeometryContext& /*gctx*/, const Transform3D& /*unused*/) const
     {
       return nullptr;
     }
@@ -81,7 +77,8 @@ namespace Test {
 
   private:
     Surface*
-    clone_impl(const Transform3D* /*shift*/) const
+    clone_impl(const GeometryContext& /*gctx*/,
+               const Transform3D& /*unused*/) const
     {
       return nullptr;
     }

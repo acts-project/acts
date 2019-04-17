@@ -4,6 +4,11 @@ target_link_libraries (ParameterSetTests PRIVATE ActsCore ActsTestsCommonHelpers
 add_test (NAME ParameterSetUnitTest COMMAND ParameterSetTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST ParameterSetUnitTest TARGETS ParameterSetTests)
 
+add_executable (FittableTypeTests FittableTypeTests.cpp)
+target_include_directories (FittableTypeTests PRIVATE ${Boost_INCLUDE_DIRS})
+target_link_libraries (FittableTypeTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME FittableTypeTest COMMAND FittableTypeTests)
+
 add_executable (MeasurementTests MeasurementTests.cpp)
 target_include_directories (MeasurementTests PRIVATE ${Boost_INCLUDE_DIRS})
 target_link_libraries (MeasurementTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

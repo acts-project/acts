@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/EllipseBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -108,7 +107,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    ellipseBoundsObject.dump(dumpOuput);
+    ellipseBoundsObject.toStream(dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal(
         "Acts::EllipseBounds:  (innerRadiusX, innerRadiusY, outerRadiusX, "
         "outerRadiusY, hPhiSector) = (10.0000000, 15.0000000, 15.0000000, "
@@ -137,35 +136,6 @@ namespace Test {
     // object, in some sense
     assignedEllipseBoundsObject = ellipseBoundsObject;
     BOOST_CHECK_EQUAL(assignedEllipseBoundsObject, ellipseBoundsObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(EllipseBounds_toVariantData)
-  {
-    double minRad1(10.), minRad2(15.), maxRad1(15.), maxRad2(20.),
-        averagePhi(0.), phiSector(M_PI / 2.);
-    EllipseBounds ell(
-        minRad1, minRad2, maxRad1, maxRad2, averagePhi, phiSector);
-    variant_data var_data = ell.toVariantData();
-
-    std::cout << var_data << std::endl;
-
-    variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "EllipseBounds");
-    variant_map pl = var_map.get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(pl.get<double>("rMinX"), minRad1);
-    BOOST_CHECK_EQUAL(pl.get<double>("rMinY"), minRad2);
-    BOOST_CHECK_EQUAL(pl.get<double>("rMaxX"), maxRad1);
-    BOOST_CHECK_EQUAL(pl.get<double>("rMaxY"), maxRad2);
-    BOOST_CHECK_EQUAL(pl.get<double>("avgPhi"), averagePhi);
-    BOOST_CHECK_EQUAL(pl.get<double>("halfPhi"), phiSector);
-
-    EllipseBounds ell2(var_data);
-    BOOST_CHECK_EQUAL(ell.rMinX(), ell2.rMinX());
-    BOOST_CHECK_EQUAL(ell.rMinY(), ell2.rMinY());
-    BOOST_CHECK_EQUAL(ell.rMaxX(), ell2.rMaxX());
-    BOOST_CHECK_EQUAL(ell.rMaxY(), ell2.rMaxY());
-    BOOST_CHECK_EQUAL(ell.averagePhi(), ell2.averagePhi());
-    BOOST_CHECK_EQUAL(ell.halfPhiSector(), ell2.halfPhiSector());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

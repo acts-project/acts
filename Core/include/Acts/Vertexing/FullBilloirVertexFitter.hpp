@@ -13,6 +13,9 @@
 #include "Acts/Vertexing/LinearizedTrackFactory.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+
 namespace Acts {
 
 /// @class FullBilloirVertexFitter
@@ -22,53 +25,77 @@ namespace Acts {
 /// This class implements the Billoir vertex fitter:
 ///
 /// Fast vertex fitting with a local parametrization of tracks
-/// Author(s)	Billoir, P ; Qian, S
-/// In:	Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
-/// DOI	10.1016/0168-9002(92)90859-3
+/// Author(s) Billoir, P ; Qian, S
+/// In: Nucl. Instrum. Methods Phys. Res., A 311 (1992) 139-150
+/// DOI 10.1016/0168-9002(92)90859-3
 ///
-/// @tparam BField Magnetic field type
-/// @tparam InputTrack Track object type
-/// @tparam Propagator_t Propagator type
+/// @tparam bfield_t Magnetic field type
+/// @tparam input_track_t Track object type
+/// @tparam propagator_t Propagator type
 
-template <typename BField, typename InputTrack, typename Propagator_t>
-class FullBilloirVertexFitter : public IVertexFitter<InputTrack, Propagator_t>
+template <typename bfield_t,
+          typename input_track_t,
+          typename propagator_t = Propagator<EigenStepper<bfield_t>>>
+class FullBilloirVertexFitter
+    : public IVertexFitter<input_track_t, propagator_t>
 {
 public:
   struct Config
   {
     /// Magnetic field
-    BField bField;
+    bfield_t bField;
 
     /// Maximum number of interations in fitter
     int maxIterations = 5;
 
-    // Set up factory for linearizing tracks
-    typename LinearizedTrackFactory<BField, Propagator_t>::Config lt_config;
-    LinearizedTrackFactory<BField, Propagator_t>                  linFactory;
+    /// Set up factory for linearizing tracks
+    typename LinearizedTrackFactory<bfield_t, propagator_t>::Config ltConfig;
+    LinearizedTrackFactory<bfield_t, propagator_t>                  linFactory;
 
-    /// Constructor with default number of iterations and starting point
-    Config(BField bIn)
-      : bField(std::move(bIn)), lt_config(bField), linFactory(lt_config)
+    /// Propagator
+    propagator_t propagator;
+
+    /// Constructor with propagator input
+    Config(const bfield_t& bIn, const propagator_t& propagatorIn)
+      : bField(bIn)
+      , ltConfig(bIn)
+      , linFactory(ltConfig)
+      , propagator(propagatorIn)
+    {
+    }
+
+    /// Constructor with default propagator
+    template <
+        typename T = propagator_t,
+        std::enable_if_t<std::is_same<T, Propagator<EigenStepper<bfield_t>>>::
+                             value,
+                         int> = 0>
+    Config(const bfield_t& bIn)
+      : bField(bIn)
+      , ltConfig(bIn)
+      , linFactory(ltConfig)
+      , propagator(
+            Propagator<EigenStepper<bfield_t>>(EigenStepper<bfield_t>(bIn)))
     {
     }
   };
 
-  /// @brief Constructor used if InputTrack type == BoundParameters
+  /// @brief Constructor used if input_track_t type == BoundParameters
   ///
   /// @param cfg Configuration object
-  template <typename T = InputTrack,
+  template <typename T = input_track_t,
             std::enable_if_t<std::is_same<T, BoundParameters>::value, int> = 0>
   FullBilloirVertexFitter(const Config& cfg)
     : m_cfg(cfg), extractParameters([&](T params) { return params; })
   {
   }
 
-  /// @brief Constructor for user-defined InputTrack type =! BoundParameters
+  /// @brief Constructor for user-defined input_track_t type =! BoundParameters
   ///
   /// @param cfg Configuration object
-  /// @param func Function extracting BoundParameters from InputTrack object
-  FullBilloirVertexFitter(const Config&                              cfg,
-                          std::function<BoundParameters(InputTrack)> func)
+  /// @param func Function extracting BoundParameters from input_track_t object
+  FullBilloirVertexFitter(const Config&                                 cfg,
+                          std::function<BoundParameters(input_track_t)> func)
     : m_cfg(cfg), extractParameters(func)
   {
   }
@@ -79,27 +106,23 @@ public:
   /// @brief Fit method, fitting vertex for provided tracks with constraint
   ///
   /// @param paramVector Vector of track objects to fit vertex to
-  /// @param propagator Propagator
-  /// @param constraint Constraint of the fit, position of constraint is
-  /// starting point
+  /// @param vFitterOptions Vertex fitter options
   ///
   /// @return Fitted vertex
-  Vertex<InputTrack>
-  fit(const std::vector<InputTrack>& paramVector,
-      const Propagator_t&            propagator,
-      Vertex<InputTrack>             constraint
-      = Vertex<InputTrack>(Vector3D(0., 0., 0.))) const override;
+  Result<Vertex<input_track_t>>
+  fit(const std::vector<input_track_t>&         paramVector,
+      const VertexFitterOptions<input_track_t>& vFitterOptions) const override;
 
 private:
   /// Configuration object
   Config m_cfg;
 
   /// @brief Function to extract track parameters,
-  /// InputTrack objects are BoundParameters by default, function to be
-  /// overwritten to return BoundParameters for other InputTrack objects.
+  /// input_track_t objects are BoundParameters by default, function to be
+  /// overwritten to return BoundParameters for other input_track_t objects.
   ///
-  /// @param params InputTrack object to extract track parameters from
-  std::function<BoundParameters(InputTrack)> extractParameters;
+  /// @param params input_track_t object to extract track parameters from
+  std::function<BoundParameters(input_track_t)> extractParameters;
 
   /// @brief Function to correct 2-pi periodicity for phi and theta
   ///

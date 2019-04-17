@@ -16,5 +16,5 @@
 std::ostream&
 Acts::operator<<(std::ostream& sl, const Acts::VolumeBounds& vb)
 {
-  return vb.dump(sl);
+  return vb.toStream(sl);
 }

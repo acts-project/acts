@@ -33,6 +33,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -41,11 +43,15 @@ namespace Acts {
 
 namespace Test {
 
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
+
   // Global definitions
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
-  CylindricalTrackingGeometry cGeometry;
+  CylindricalTrackingGeometry cGeometry(tgContext);
   auto                        tGeometry = cGeometry();
 
   // create a navigator for this tracking geometry
@@ -117,7 +123,7 @@ namespace Test {
     using AbortListType  = AbortList<>;
 
     using Options = PropagatorOptions<ActionListType, AbortListType>;
-    Options fwdOptions;
+    Options fwdOptions(tgContext, mfContext);
 
     fwdOptions.maxStepSize = 25. * units::_cm;
     fwdOptions.pathLimit   = 25 * units::_cm;
@@ -134,7 +140,7 @@ namespace Test {
       std::cout << ">>> Forward Propagation : start." << std::endl;
     }
     // forward material test
-    const auto& fwdResult = prop.propagate(start, fwdOptions);
+    const auto& fwdResult = prop.propagate(start, fwdOptions).value();
     auto&       fwdMaterial
         = fwdResult.template get<MaterialInteractor::result_type>();
 
@@ -166,7 +172,7 @@ namespace Test {
     }
 
     // backward material test
-    Options bwdOptions;
+    Options bwdOptions(tgContext, mfContext);
     bwdOptions.maxStepSize = -25 * units::_cm;
     bwdOptions.pathLimit   = -25 * units::_cm;
     bwdOptions.direction   = backward;
@@ -184,8 +190,10 @@ namespace Test {
     if (debugModeBwd) {
       std::cout << ">>> Backward Propagation : start." << std::endl;
     }
-    const auto& bwdResult = prop.propagate(
-        *fwdResult.endParameters.get(), startSurface, bwdOptions);
+    const auto& bwdResult = prop.propagate(*fwdResult.endParameters.get(),
+                                           startSurface,
+                                           bwdOptions)
+                                .value();
 
     if (debugModeBwd) {
       std::cout << ">>> Backward Propagation : end." << std::endl;
@@ -232,7 +240,7 @@ namespace Test {
 
     // stepping from one surface to the next
     // now go from surface to surface and check
-    Options fwdStepOptions;
+    Options fwdStepOptions(tgContext, mfContext);
     fwdStepOptions.maxStepSize = 25. * units::_cm;
     fwdStepOptions.pathLimit   = 25 * units::_cm;
     fwdStepOptions.debug       = debugModeFwdStep;
@@ -270,7 +278,8 @@ namespace Test {
 
       // make a forward step
       const auto& fwdStep
-          = prop.propagate(*sParameters, (*fwdSteps.surface), fwdStepOptions);
+          = prop.propagate(*sParameters, (*fwdSteps.surface), fwdStepOptions)
+                .value();
       // get the backward output to the screen
       if (debugModeFwdStep) {
         const auto& fwdStepOutput
@@ -299,7 +308,7 @@ namespace Test {
     }
 
     const auto& fwdStepFinal
-        = prop.propagate(*sParameters, dSurface, fwdStepOptions);
+        = prop.propagate(*sParameters, dSurface, fwdStepOptions).value();
 
     auto& fwdStepMaterial
         = fwdStepFinal.template get<typename MaterialInteractor::result_type>();
@@ -321,7 +330,7 @@ namespace Test {
 
     // stepping from one surface to the next : backwards
     // now go from surface to surface and check
-    Options bwdStepOptions;
+    Options bwdStepOptions(tgContext, mfContext);
 
     bwdStepOptions.maxStepSize = -25 * units::_cm;
     bwdStepOptions.pathLimit   = -25 * units::_cm;
@@ -359,7 +368,8 @@ namespace Test {
       }
       // make a forward step
       const auto& bwdStep
-          = prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions);
+          = prop.propagate(*sParameters, (*bwdSteps.surface), bwdStepOptions)
+                .value();
       // get the backward output to the screen
       if (debugModeBwdStep) {
         const auto& bwdStepOutput
@@ -388,7 +398,7 @@ namespace Test {
     }
 
     const auto& bwdStepFinal
-        = prop.propagate(*sParameters, dbSurface, bwdStepOptions);
+        = prop.propagate(*sParameters, dbSurface, bwdStepOptions).value();
 
     auto& bwdStepMaterial
         = bwdStepFinal.template get<typename MaterialInteractor::result_type>();

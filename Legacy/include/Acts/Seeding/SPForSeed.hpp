@@ -29,7 +29,7 @@
 //    else               {m_covr = 8.*f22; m_covz = .1;}
 
 namespace Acts {
-namespace Seeding {
+namespace Legacy {
 
   template <typename SpacePoint>
   class SPForSeed
@@ -311,5 +311,5 @@ namespace Seeding {
     }
   }
 
-}  // end of Seeding namespace
+}  // end of Legacy namespace
 }  // end of Acts namespace

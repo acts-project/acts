@@ -20,15 +20,5 @@ set (CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} ${ACTS_CX
 set (CMAKE_EXE_LINKER_FLAGS_DEBUG "${CMAKE_EXE_LINKER_FLAGS_DEBUG} ${ACTS_EXE_LINKER_FLAGS_DEBUG}")
 set (CMAKE_SHARED_LINKER_FLAGS_DEBUG "${CMAKE_SHARED_LINKER_FLAGS_DEBUG} ${ACTS_SHARED_LINKER_FLAGS_DEBUG}")
 
-set(CMAKE_CXX_STANDARD 17 CACHE STRING "C++ standard version to use for the build")
-if(${CMAKE_CXX_STANDARD} LESS 17)
-  message(FATAL_ERROR "Acts cannot be build with a standard version\
-  below C++17, C++${CMAKE_CXX_STANDARD} was requested")
-endif()
-message(STATUS "Building with standard version: C++${CMAKE_CXX_STANDARD}")
-
-set(CMAKE_CXX_STANDARD_REQUIRED TRUE CACHE BOOL "Enforce C++ standard version.")
-set(CMAKE_CXX_EXTENSIONS FALSE CACHE BOOL "Allow/Disallow compiler extensions")
-
 # silence warning about missing RPATH on Mac OSX
 set (CMAKE_MACOSX_RPATH 1)

@@ -65,11 +65,11 @@ Acts::CuboidVolumeBounds::operator=(const CuboidVolumeBounds& bobo)
 
 std::vector<std::shared_ptr<const Acts::Surface>>
 Acts::CuboidVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<const Transform3D> transformPtr) const
+    const Transform3D* transformPtr) const
 {
   // the transform - apply when given
-  Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
-                                                    : (*transformPtr.get());
+  Transform3D transform
+      = (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
   const Transform3D* tTransform = nullptr;
 
   std::vector<std::shared_ptr<const Acts::Surface>> rSurfaces;
@@ -146,7 +146,7 @@ Acts::CuboidVolumeBounds::faceZXRectangleBounds() const
 
 // ostream operator overload
 std::ostream&
-Acts::CuboidVolumeBounds::dump(std::ostream& sl) const
+Acts::CuboidVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT(sl);
 }

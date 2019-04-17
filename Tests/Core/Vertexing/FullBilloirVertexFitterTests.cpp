@@ -31,21 +31,19 @@ namespace bdata = boost::unit_test::data;
 namespace Acts {
 namespace Test {
 
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
+
   template <typename InputTrack_t, typename Propagator_t>
   Vertex<InputTrack_t>
   myFitWrapper(IVertexFitter<InputTrack_t, Propagator_t>* fitter,
-               std::vector<InputTrack_t>& tracks,
-               const Propagator_t&        propagator,
-               Vertex<InputTrack_t>*      constraint = nullptr)
+               std::vector<InputTrack_t>&        tracks,
+               VertexFitterOptions<InputTrack_t> vfOptions)
   {
-    if (constraint != nullptr) {
-      return fitter->fit(tracks, propagator, *constraint);
-    } else {
-      return fitter->fit(tracks, propagator);
-    }
+    return fitter->fit(tracks, vfOptions).value();
   }
 
-  ///
   /// @brief Unit test for FullBilloirVertexFitter
   ///
   BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test)
@@ -64,7 +62,7 @@ namespace Test {
     FullBilloirVertexFitter<ConstantBField,
                             BoundParameters,
                             Propagator<EigenStepper<ConstantBField>>>::Config
-        vertexFitterCfg(bField);
+        vertexFitterCfg(bField, propagator);
     FullBilloirVertexFitter<ConstantBField,
                             BoundParameters,
                             Propagator<EigenStepper<ConstantBField>>>
@@ -82,15 +80,20 @@ namespace Test {
 
     std::vector<BoundParameters> emptyVector;
 
+    VertexFitterOptions<BoundParameters> vfOptions(
+        tgContext, mfContext, myConstraint);
+
     Vertex<BoundParameters> fittedVertex
-        = billoirFitter.fit(emptyVector, propagator, myConstraint);
+        = billoirFitter.fit(emptyVector, vfOptions).value();
+
     Vector3D origin(0., 0., 0.);
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
 
     ActsSymMatrixD<3> zeroMat = ActsSymMatrixD<3>::Zero();
     BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
 
-    fittedVertex = billoirFitter.fit(emptyVector, propagator);
+    fittedVertex = billoirFitter.fit(emptyVector, vfOptions).value();
+
     BOOST_CHECK_EQUAL(fittedVertex.position(), origin);
     BOOST_CHECK_EQUAL(fittedVertex.covariance(), zeroMat);
   }
@@ -131,8 +134,8 @@ namespace Test {
     bool debugMode = false;
 
     // Set up RNG
-    std::random_device rd;
-    std::mt19937       gen(rd());
+    int          mySeed = 31415;
+    std::mt19937 gen(mySeed);
 
     // Set up constant B-Field
     ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
@@ -155,7 +158,7 @@ namespace Test {
       FullBilloirVertexFitter<ConstantBField,
                               BoundParameters,
                               Propagator<EigenStepper<ConstantBField>>>::Config
-          vertexFitterCfg(bField);
+          vertexFitterCfg(bField, propagator);
       FullBilloirVertexFitter<ConstantBField,
                               BoundParameters,
                               Propagator<EigenStepper<ConstantBField>>>
@@ -170,6 +173,11 @@ namespace Test {
       myCovMat(2, 2) = 30.;
       myConstraint.setCovariance(std::move(myCovMat));
       myConstraint.setPosition(Vector3D(0, 0, 0));
+
+      VertexFitterOptions<BoundParameters> vfOptions(tgContext, mfContext);
+
+      VertexFitterOptions<BoundParameters> vfOptionsConstr(
+          tgContext, mfContext, myConstraint);
 
       // Create position of vertex and perigee surface
       double x = vXYDist(gen);
@@ -212,26 +220,27 @@ namespace Test {
         (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
             0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0.,
             0., 0., 0., 0., resQp * resQp;
-        tracks.push_back(
-            BoundParameters(std::move(covMat), paramVec, perigeeSurface));
+        tracks.push_back(BoundParameters(
+            tgContext, std::move(covMat), paramVec, perigeeSurface));
       }
 
       // Do the actual fit with 4 tracks without constraint
       Vertex<BoundParameters> fittedVertex
-          = billoirFitter.fit(tracks, propagator);
-
-      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
-
+          = billoirFitter.fit(tracks, vfOptions).value();
+      if (fittedVertex.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(
+            fittedVertex.position(), vertexPosition, 1 * units::_mm);
+      }
       // Do the fit with a constraint
       Vertex<BoundParameters> fittedVertexConstraint
-          = billoirFitter.fit(tracks, propagator, myConstraint);
-
-      CHECK_CLOSE_ABS(
-          fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
-
+          = billoirFitter.fit(tracks, vfOptionsConstr).value();
+      if (fittedVertexConstraint.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(
+            fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+      }
       // Test the IVertexFitter interface
       Vertex<BoundParameters> testVertex
-          = myFitWrapper(&billoirFitter, tracks, propagator);
+          = myFitWrapper(&billoirFitter, tracks, vfOptions);
       if (testVertex.tracks().size() > 0) {
         CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
       }
@@ -274,8 +283,8 @@ namespace Test {
     bool debugMode = false;
 
     // Set up RNG
-    std::random_device rd;
-    std::mt19937       gen(rd());
+    int          mySeed = 31415;
+    std::mt19937 gen(mySeed);
 
     // Set up constant B-Field
     ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
@@ -301,7 +310,7 @@ namespace Test {
       FullBilloirVertexFitter<ConstantBField,
                               InputTrack,
                               Propagator<EigenStepper<ConstantBField>>>::Config
-          vertexFitterCfg(bField);
+          vertexFitterCfg(bField, propagator);
       FullBilloirVertexFitter<ConstantBField,
                               InputTrack,
                               Propagator<EigenStepper<ConstantBField>>>
@@ -316,6 +325,11 @@ namespace Test {
       myCovMat(2, 2) = 30.;
       myConstraint.setCovariance(std::move(myCovMat));
       myConstraint.setPosition(Vector3D(0, 0, 0));
+
+      VertexFitterOptions<InputTrack> vfOptions(tgContext, mfContext);
+
+      VertexFitterOptions<InputTrack> vfOptionsConstr(
+          tgContext, mfContext, myConstraint);
 
       // Create position of vertex and perigee surface
       double x = vXYDist(gen);
@@ -358,25 +372,28 @@ namespace Test {
         (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0.,
             0., 0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0.,
             0., 0., 0., 0., resQp * resQp;
-        tracks.push_back(InputTrack(
-            BoundParameters(std::move(covMat), paramVec, perigeeSurface)));
+        tracks.push_back(InputTrack(BoundParameters(
+            tgContext, std::move(covMat), paramVec, perigeeSurface)));
       }
 
       // Do the actual fit with 4 tracks without constraint
-      Vertex<InputTrack> fittedVertex = billoirFitter.fit(tracks, propagator);
-
-      CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1 * units::_mm);
-
+      Vertex<InputTrack> fittedVertex
+          = billoirFitter.fit(tracks, vfOptions).value();
+      if (fittedVertex.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(
+            fittedVertex.position(), vertexPosition, 1 * units::_mm);
+      }
       // Do the fit with a constraint
       Vertex<InputTrack> fittedVertexConstraint
-          = billoirFitter.fit(tracks, propagator, myConstraint);
-
-      CHECK_CLOSE_ABS(
-          fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+          = billoirFitter.fit(tracks, vfOptionsConstr).value();
+      if (fittedVertexConstraint.tracks().size() > 0) {
+        CHECK_CLOSE_ABS(
+            fittedVertexConstraint.position(), vertexPosition, 1 * units::_mm);
+      }
 
       // Test the IVertexFitter interface
       Vertex<InputTrack> testVertex
-          = myFitWrapper(&billoirFitter, tracks, propagator);
+          = myFitWrapper(&billoirFitter, tracks, vfOptions);
 
       CHECK_CLOSE_ABS(testVertex.position(), vertexPosition, 1 * units::_mm);
 

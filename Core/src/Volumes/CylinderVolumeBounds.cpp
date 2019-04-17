@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/IVisualization.hpp"
 
 const double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
 
@@ -59,6 +60,28 @@ Acts::CylinderVolumeBounds::CylinderVolumeBounds(double rinner,
   m_valueStore.at(bv_halfZ)         = std::abs(halez);
 }
 
+Acts::CylinderVolumeBounds::CylinderVolumeBounds(const CylinderBounds& cBounds,
+                                                 double thickness)
+  : VolumeBounds(), m_valueStore(4, 0.)
+{
+
+  double cR                         = cBounds.r();
+  m_valueStore.at(bv_innerRadius)   = cR - 0.5 * thickness;
+  m_valueStore.at(bv_outerRadius)   = cR + 0.5 * thickness;
+  m_valueStore.at(bv_halfPhiSector) = cBounds.halfPhiSector();
+  m_valueStore.at(bv_halfZ)         = cBounds.halflengthZ();
+}
+
+Acts::CylinderVolumeBounds::CylinderVolumeBounds(const RadialBounds& rBounds,
+                                                 double              thickness)
+  : VolumeBounds(), m_valueStore(4, 0.)
+{
+  m_valueStore.at(bv_innerRadius)   = rBounds.rMin();
+  m_valueStore.at(bv_outerRadius)   = rBounds.rMax();
+  m_valueStore.at(bv_halfPhiSector) = rBounds.halfPhiSector();
+  m_valueStore.at(bv_halfZ)         = 0.5 * thickness;
+}
+
 Acts::CylinderVolumeBounds::CylinderVolumeBounds(
     const CylinderVolumeBounds& cylbo)
   : VolumeBounds(), m_valueStore(cylbo.m_valueStore)
@@ -78,14 +101,16 @@ Acts::CylinderVolumeBounds::operator=(const CylinderVolumeBounds& cylbo)
 
 std::vector<std::shared_ptr<const Acts::Surface>>
 Acts::CylinderVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<const Transform3D> transformPtr) const
+    const Transform3D* transformPtr) const
 {
   std::vector<std::shared_ptr<const Surface>> rSurfaces;
   rSurfaces.reserve(6);
 
   // set the transform
-  Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
-                                                    : (*transformPtr.get());
+  Transform3D transform
+      = (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
+  auto trfShared = std::make_shared<Transform3D>(transform);
+
   const Transform3D* tTransform = nullptr;
   Vector3D           cylCenter(transform.translation());
 
@@ -103,13 +128,13 @@ Acts::CylinderVolumeBounds::decomposeToSurfaces(
       std::shared_ptr<const Transform3D>(tTransform), dBounds));
 
   // outer Cylinder - shares the transform
-  rSurfaces.push_back(Surface::makeShared<CylinderSurface>(
-      transformPtr, outerCylinderBounds()));
+  rSurfaces.push_back(
+      Surface::makeShared<CylinderSurface>(trfShared, outerCylinderBounds()));
 
   // innermost Cylinder
   if (innerRadius() > s_numericalStable) {
-    rSurfaces.push_back(Surface::makeShared<CylinderSurface>(
-        transformPtr, innerCylinderBounds()));
+    rSurfaces.push_back(
+        Surface::makeShared<CylinderSurface>(trfShared, innerCylinderBounds()));
   }
 
   // the cylinder is sectoral
@@ -169,7 +194,23 @@ Acts::CylinderVolumeBounds::sectorPlaneBounds() const
 }
 
 std::ostream&
-Acts::CylinderVolumeBounds::dump(std::ostream& sl) const
+Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
+}
+void
+Acts::CylinderVolumeBounds::draw(IVisualization&    helper,
+                                 const Transform3D& transform) const
+{
+  std::vector<std::shared_ptr<const Acts::Surface>> surfaces
+      = decomposeToSurfaces(&transform);
+  for (const auto& srf : surfaces) {
+    auto cyl  = dynamic_cast<const CylinderSurface*>(srf.get());
+    auto disc = dynamic_cast<const DiscSurface*>(srf.get());
+    if (cyl != nullptr) {
+      cyl->polyhedronRepresentation(50).draw(helper);
+    } else {
+      disc->polyhedronRepresentation(50).draw(helper);
+    }
+  }
 }

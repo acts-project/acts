@@ -16,7 +16,7 @@
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -60,11 +60,6 @@ public:
                                          laytyp));
   }
 
-  /// Factory for shared Layer pointer, that accepts @c variant_data
-  /// @param vardata The data to build from
-  static MutableLayerPtr
-  create(const variant_data& vardata);
-
   /// Default Constructor
   DiscLayer() = delete;
 
@@ -87,11 +82,6 @@ public:
   // Non-const version
   DiscSurface&
   surfaceRepresentation() override;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   /// build approach surfaces

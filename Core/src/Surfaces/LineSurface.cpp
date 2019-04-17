@@ -18,7 +18,6 @@
 #include <utility>
 
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 Acts::LineSurface::LineSurface(std::shared_ptr<const Transform3D> htrans,
                                double                             radius,
@@ -47,9 +46,10 @@ Acts::LineSurface::LineSurface(const LineSurface& other)
 {
 }
 
-Acts::LineSurface::LineSurface(const LineSurface& other,
-                               const Transform3D& transf)
-  : GeometryObject(), Surface(other, transf), m_bounds(other.m_bounds)
+Acts::LineSurface::LineSurface(const GeometryContext& gctx,
+                               const LineSurface&     other,
+                               const Transform3D&     transf)
+  : GeometryObject(), Surface(gctx, other, transf), m_bounds(other.m_bounds)
 {
 }
 
@@ -61,50 +61,4 @@ Acts::LineSurface::operator=(const LineSurface& other)
     m_bounds         = other.m_bounds;
   }
   return *this;
-}
-
-Acts::LineSurface::LineSurface(const variant_data& vardata) : GeometryObject()
-{
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  variant_map data = boost::get<variant_map>(vardata);
-  throw_assert(data.count("type"), "Variant data must have type.");
-  // std::string type = boost::get<std::string>(data["type"]);
-  std::string type = data.get<std::string>("type");
-  throw_assert(type == "LineSurface", "Variant data type must be LineSurface");
-
-  variant_map payload    = data.get<variant_map>("payload");
-  variant_map bounds     = payload.get<variant_map>("bounds");
-  std::string boundsType = bounds.get<std::string>("type");
-
-  throw_assert(boundsType == "LineBounds",
-               "Can only construct LineSurface from LineBounds");
-
-  m_bounds = std::make_shared<const LineBounds>(bounds);
-
-  if (payload.count("transform") != 0u) {
-    // we have a transform
-    auto trf = std::make_shared<const Transform3D>(
-        from_variant<Transform3D>(payload.get<variant_map>("transform")));
-    m_transform = trf;
-  }
-}
-
-Acts::variant_data
-Acts::LineSurface::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-
-  variant_data bounds = m_bounds->toVariantData();
-  payload["bounds"]   = bounds;
-
-  if (m_transform) {
-    payload["transform"] = to_variant(*m_transform);
-  }
-
-  variant_map data;
-  data["type"]    = "LineSurface"s;
-  data["payload"] = payload;
-  return data;
 }

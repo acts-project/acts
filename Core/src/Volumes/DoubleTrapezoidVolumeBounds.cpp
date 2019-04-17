@@ -65,13 +65,13 @@ operator=(const Acts::DoubleTrapezoidVolumeBounds& trabo)
 
 std::vector<std::shared_ptr<const Acts::Surface>>
 Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
-    std::shared_ptr<const Transform3D> transformPtr) const
+    const Transform3D* transformPtr) const
 {
   std::vector<std::shared_ptr<const Surface>> rSurfaces;
 
   // the transform
-  Transform3D transform = (transformPtr == nullptr) ? Transform3D::Identity()
-                                                    : (*transformPtr.get());
+  Transform3D transform
+      = (transformPtr == nullptr) ? Transform3D::Identity() : (*transformPtr);
 
   // face surfaces xy
   RotationMatrix3D diamondRotation(transform.rotation());
@@ -109,7 +109,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D         faceAlpha1Position(
       A + alpha1Rotation.col(0) * faceAlpha1Bounds->halflengthX());
   tTransform
-      = new Transform3D(alpha1Rotation * Translation3D(faceAlpha1Position));
+      = new Transform3D(Translation3D(faceAlpha1Position) * alpha1Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceAlpha1Bounds)));
@@ -125,7 +125,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D         faceBeta1Position(
       B + beta1Rotation.col(0) * faceBeta1Bounds->halflengthX());
   tTransform
-      = new Transform3D(beta1Rotation * Translation3D(faceBeta1Position));
+      = new Transform3D(Translation3D(faceBeta1Position) * beta1Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceBeta1Bounds)));
@@ -143,7 +143,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D         faceAlpha2Position(
       AA + alpha2Rotation.col(0) * faceAlpha2Bounds->halflengthX());
   tTransform
-      = new Transform3D(alpha2Rotation * Translation3D(faceAlpha2Position));
+      = new Transform3D(Translation3D(faceAlpha2Position) * alpha2Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceAlpha2Bounds)));
@@ -159,7 +159,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
   Vector3D         faceBeta2Position(
       BB + beta2Rotation.col(0) * faceBeta2Bounds->halflengthX());
   tTransform
-      = new Transform3D(beta2Rotation * Translation3D(faceBeta2Position));
+      = new Transform3D(Translation3D(faceBeta2Position) * beta2Rotation);
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform),
       std::shared_ptr<const PlanarBounds>(faceBeta2Bounds)));
@@ -175,7 +175,7 @@ Acts::DoubleTrapezoidVolumeBounds::decomposeToSurfaces(
       std::shared_ptr<const PlanarBounds>(faceZXRectangleBoundsBottom())));
   //   (8) - at positive local y
   tTransform = new Transform3D(
-      transform * Translation3D(Vector3D(0., halflengthY2(), 0.))
+      transform * Translation3D(Vector3D(0., 2 * halflengthY2(), 0.))
       * AngleAxis3D(-0.5 * M_PI, Vector3D(0., 1., 0.))
       * AngleAxis3D(-0.5 * M_PI, Vector3D(1., 0., 0.)));
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
@@ -192,8 +192,8 @@ Acts::DoubleTrapezoidVolumeBounds::faceXYDiamondBounds() const
   return new DiamondBounds(m_valueStore.at(bv_minHalfX),
                            m_valueStore.at(bv_medHalfX),
                            m_valueStore.at(bv_maxHalfX),
-                           m_valueStore.at(bv_halfY1),
-                           m_valueStore.at(bv_halfY2));
+                           2 * m_valueStore.at(bv_halfY1),
+                           2 * m_valueStore.at(bv_halfY2));
 }
 
 Acts::RectangleBounds*
@@ -263,7 +263,7 @@ Acts::DoubleTrapezoidVolumeBounds::inside(const Vector3D& pos, double tol) const
 
 // ostream operator overload
 std::ostream&
-Acts::DoubleTrapezoidVolumeBounds::dump(std::ostream& sl) const
+Acts::DoubleTrapezoidVolumeBounds::toStream(std::ostream& sl) const
 {
   return dumpT<std::ostream>(sl);
 }

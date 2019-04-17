@@ -15,6 +15,7 @@
 #include <vector>
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -50,12 +51,14 @@ public:
   /// TrackingVolumeArrayCreator interface method - creates array depending on
   /// the binning type
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param vols are the TrackingVolumes ordered in a tracker
   /// @param bVal is the binning value for the volume binning
   ///
   /// @return sahred pointer to a new TrackingVolumeArray
   virtual std::shared_ptr<const TrackingVolumeArray>
-  trackingVolumeArray(const TrackingVolumeVector& vols,
+  trackingVolumeArray(const GeometryContext&      gctx,
+                      const TrackingVolumeVector& vols,
                       BinningValue                bVal) const = 0;
 };
 }  // namespace

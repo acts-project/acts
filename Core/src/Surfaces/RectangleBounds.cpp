@@ -12,31 +12,21 @@
 
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 
 Acts::RectangleBounds::RectangleBounds(double halex, double haley)
-  : m_halfX(std::abs(halex)), m_halfY(std::abs(haley))
+  : m_min(-halex, -haley), m_max(halex, haley)
 {
 }
 
-Acts::RectangleBounds::RectangleBounds(const variant_data& vardata)
+Acts::RectangleBounds::RectangleBounds(const Vector2D& vmin,
+                                       const Vector2D& vmax)
+  : m_min(vmin), m_max(vmax)
 {
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(vardata);
-  std::string        type = data.get<std::string>("type");
-  throw_assert(type == "RectangleBounds", "Type must be RectangleBounds");
-
-  const variant_map& payload = data.get<variant_map>("payload");
-
-  m_halfX = payload.get<double>("halflengthX");
-  m_halfY = payload.get<double>("halflengthY");
 }
-
-Acts::RectangleBounds::~RectangleBounds() = default;
 
 Acts::RectangleBounds*
 Acts::RectangleBounds::clone() const
@@ -48,8 +38,7 @@ std::vector<TDD_real_t>
 Acts::RectangleBounds::valueStore() const
 {
   std::vector<TDD_real_t> values(RectangleBounds::bv_length);
-  values[RectangleBounds::bv_halfX] = halflengthX();
-  values[RectangleBounds::bv_halfY] = halflengthY();
+  values = {m_min.x(), m_min.y(), m_max.x(), m_max.y()};
   return values;
 }
 
@@ -57,27 +46,22 @@ bool
 Acts::RectangleBounds::inside(const Acts::Vector2D&      lpos,
                               const Acts::BoundaryCheck& bcheck) const
 {
-  return bcheck.isInside(lpos,
-                         Vector2D(-halflengthX(), -halflengthY()),
-                         Vector2D(halflengthX(), halflengthY()));
+  return bcheck.isInside(lpos, m_min, m_max);
 }
 
 double
 Acts::RectangleBounds::distanceToBoundary(const Acts::Vector2D& lpos) const
 {
-  return BoundaryCheck(true).distance(lpos,
-                                      Vector2D(-halflengthX(), -halflengthY()),
-                                      Vector2D(halflengthX(), halflengthY()));
+  return BoundaryCheck(true).distance(lpos, m_min, m_max);
 }
 
 std::vector<Acts::Vector2D>
 Acts::RectangleBounds::vertices() const
 {
   // counter-clockwise starting from bottom-right corner
-  return {{halflengthX(), -halflengthY()},
-          {halflengthX(), halflengthY()},
-          {-halflengthX(), halflengthY()},
-          {-halflengthX(), -halflengthY()}};
+  return {
+      {m_max.x(), m_min.y()}, m_max, {m_min.x(), m_max.y()}, m_min,
+  };
 }
 
 const Acts::RectangleBounds&
@@ -88,26 +72,14 @@ Acts::RectangleBounds::boundingBox() const
 
 // ostream operator overload
 std::ostream&
-Acts::RectangleBounds::dump(std::ostream& sl) const
+Acts::RectangleBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
-  sl << "Acts::RectangleBounds:  (halflengthX, halflengthY) = "
+  sl << "Acts::RectangleBounds:  (hlX, hlY) = "
      << "(" << halflengthX() << ", " << halflengthY() << ")";
+  sl << "\n(lower left, upper right):\n";
+  sl << m_min.transpose() << "\n" << m_max.transpose();
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::RectangleBounds::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-  payload["halflengthX"] = m_halfX;
-  payload["halflengthY"] = m_halfY;
-
-  variant_map data({{"type", "RectangleBounds"s}, {"payload", payload}});
-
-  return data;
 }

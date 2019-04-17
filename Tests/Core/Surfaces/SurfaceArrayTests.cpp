@@ -23,8 +23,8 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <fstream>
@@ -38,6 +38,9 @@ namespace tt    = boost::test_tools;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
 
   using SrfVec = std::vector<std::shared_ptr<const Surface>>;
   struct SurfaceArrayFixture
@@ -180,7 +183,8 @@ namespace Test {
             = dynamic_cast<const PlanarBounds*>(&srf->bounds());
 
         for (const auto& vtxloc : bounds->vertices()) {
-          Vector3D vtx = srf->transform() * Vector3D(vtxloc.x(), vtxloc.y(), 0);
+          Vector3D vtx
+              = srf->transform(tgContext) * Vector3D(vtxloc.x(), vtxloc.y(), 0);
           os << "v " << vtx.x() << " " << vtx.y() << " " << vtx.z() << "\n";
         }
 
@@ -202,6 +206,9 @@ namespace Test {
 
   BOOST_FIXTURE_TEST_CASE(SurfaceArray_create, SurfaceArrayFixture)
   {
+
+    GeometryContext tgContext = GeometryContext();
+
     SrfVec                      brl    = makeBarrel(30, 7, 2, 1);
     std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
     draw_surfaces(brl, "SurfaceArray_create_BRL_1.obj");
@@ -229,14 +236,14 @@ namespace Test {
             transform,
             itransform,
             std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl->fill(brlRaw);
+    sl->fill(tgContext, brlRaw);
     SurfaceArray sa(std::move(sl), brl);
 
     // let's see if we can access all surfaces
-    sa.dump(std::cout);
+    sa.toStream(tgContext, std::cout);
 
     for (const auto& srf : brl) {
-      Vector3D                    ctr        = srf->binningPosition(binR);
+      Vector3D                    ctr = srf->binningPosition(tgContext, binR);
       std::vector<const Surface*> binContent = sa.at(ctr);
 
       BOOST_CHECK_EQUAL(binContent.size(), 1);
@@ -254,11 +261,11 @@ namespace Test {
             itransform,
             std::make_tuple(std::move(phiAxis), std::move(zAxis)));
     // do NOT fill, only completebinning
-    sl2->completeBinning(brlRaw);
+    sl2->completeBinning(tgContext, brlRaw);
     SurfaceArray sa2(std::move(sl2), brl);
-    sa.dump(std::cout);
+    sa.toStream(tgContext, std::cout);
     for (const auto& srf : brl) {
-      Vector3D                    ctr        = srf->binningPosition(binR);
+      Vector3D                    ctr = srf->binningPosition(tgContext, binR);
       std::vector<const Surface*> binContent = sa2.at(ctr);
 
       BOOST_CHECK_EQUAL(binContent.size(), 1);
@@ -281,139 +288,6 @@ namespace Test {
     BOOST_CHECK_EQUAL(binContent.at(0), srf.get());
     BOOST_CHECK_EQUAL(sa.surfaces().size(), 1);
     BOOST_CHECK_EQUAL(sa.surfaces().at(0), srf.get());
-  }
-
-  BOOST_FIXTURE_TEST_CASE(SurfaceArray_toVariantData, SurfaceArrayFixture)
-  {
-    SrfVec                      brl    = makeBarrel(30, 7, 2, 1);
-    std::vector<const Surface*> brlRaw = unpack_shared_vector(brl);
-
-    detail::Axis<detail::AxisType::Equidistant,
-                 detail::AxisBoundaryType::Closed>
-                        phiAxis(-M_PI, M_PI, 30u);
-    std::vector<double> zAxis_bin_edges_exp = {-14, -10, 3, 5, 8, 14};
-    detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
-        zAxis(zAxis_bin_edges_exp);
-
-    double angleShift = 2 * M_PI / 30. / 2.;
-    auto transform    = [angleShift](const Vector3D& pos) {
-      return Vector2D(phi(pos) + angleShift, pos.z());
-    };
-    double R        = 10;
-    auto itransform = [angleShift, R](const Vector2D& loc) {
-      return Vector3D(R * std::cos(loc[0] - angleShift),
-                      R * std::sin(loc[0] - angleShift),
-                      loc[1]);
-    };
-    auto sl
-        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(phiAxis),
-                                                           decltype(zAxis)>>(
-            transform,
-            itransform,
-            std::make_tuple(std::move(phiAxis), std::move(zAxis)));
-    sl->fill(brlRaw);
-    SurfaceArray sa(std::move(sl), brl);
-    sa.dump(std::cout);
-
-    variant_data data = sa.toVariantData();
-    // std::cout << data << std::endl;
-
-    const variant_map& var_map = boost::get<variant_map>(data);
-    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "SurfaceArray");
-    const variant_map& sa_var_pl = var_map.get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(sa_var_pl.count("surfacegridlookup"), 1);
-    const variant_map& sgl_var_pl
-        = sa_var_pl.get<variant_map>("surfacegridlookup")
-              .get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(sgl_var_pl.get<int>("dimensions"), 2);
-    const variant_vector& axes = sgl_var_pl.get<variant_vector>("axes");
-    BOOST_CHECK_EQUAL(axes.size(), 2);
-
-    const variant_map& phiAxis_pl
-        = axes.get<variant_map>(0).get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(phiAxis_pl.get<std::string>("axisboundarytype"),
-                      "closed");
-    BOOST_CHECK_EQUAL(phiAxis_pl.get<std::string>("axistype"), "equidistant");
-    BOOST_CHECK_EQUAL(phiAxis_pl.get<double>("min"), -M_PI);
-    BOOST_CHECK_EQUAL(phiAxis_pl.get<double>("max"), M_PI);
-    BOOST_CHECK_EQUAL(phiAxis_pl.get<int>("nbins"), 30);
-
-    const variant_map& zAxis_pl
-        = axes.get<variant_map>(1).get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(zAxis_pl.get<std::string>("axisboundarytype"), "bound");
-    BOOST_CHECK_EQUAL(zAxis_pl.get<std::string>("axistype"), "variable");
-    const variant_vector& zAxis_bin_edges
-        = zAxis_pl.get<variant_vector>("bin_edges");
-    BOOST_CHECK_EQUAL(zAxis_bin_edges.size(), 6);
-    for (size_t i = 0; i < zAxis_bin_edges.size(); i++) {
-      BOOST_CHECK_EQUAL(zAxis_bin_edges.get<double>(i),
-                        zAxis_bin_edges_exp.at(i));
-    }
-
-    SurfaceArray sa2(data, transform, itransform);
-    sa2.dump(std::cout);
-
-    std::ostringstream dumpExp_os;
-    sa.dump(dumpExp_os);
-    std::string                           dumpExp = dumpExp_os.str();
-    boost::test_tools::output_test_stream dumpAct;
-    sa2.dump(dumpAct);
-    BOOST_CHECK(dumpAct.is_equal(dumpExp));
-  }
-
-  BOOST_FIXTURE_TEST_CASE(SurfaceArray_toVariantData_1D, SurfaceArrayFixture)
-  {
-    detail::Axis<detail::AxisType::Equidistant, detail::AxisBoundaryType::Bound>
-         zAxis(0, 30, 10);
-    auto transform = [](const Vector3D& pos) {
-      return std::array<double, 1>({{pos.z()}});
-    };
-    auto itransform = [](const std::array<double, 1>& loc) {
-      return Vector3D(0, 0, loc[0]);
-    };
-    auto sl
-        = std::make_unique<SurfaceArray::SurfaceGridLookup<decltype(zAxis)>>(
-            transform, itransform, std::make_tuple(zAxis));
-
-    // same thing in 1D
-    SrfVec                      line    = straightLineSurfaces();
-    std::vector<const Surface*> lineRaw = unpack_shared_vector(line);
-    sl->fill(lineRaw);
-    SurfaceArray sa(std::move(sl), line);
-
-    sa.dump(std::cout);
-
-    variant_data data = sa.toVariantData();
-    // std::cout << data << std::endl;
-
-    const variant_map& var_map = boost::get<variant_map>(data);
-    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "SurfaceArray");
-    const variant_map& sa_var_pl = var_map.get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(sa_var_pl.count("surfacegridlookup"), 1);
-    const variant_map& sgl_var_pl
-        = sa_var_pl.get<variant_map>("surfacegridlookup")
-              .get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(sgl_var_pl.get<int>("dimensions"), 1);
-    const variant_vector& axes = sgl_var_pl.get<variant_vector>("axes");
-    BOOST_CHECK_EQUAL(axes.size(), 1);
-
-    const variant_map& zAxis_pl
-        = axes.get<variant_map>(0).get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(zAxis_pl.get<std::string>("axisboundarytype"), "bound");
-    BOOST_CHECK_EQUAL(zAxis_pl.get<std::string>("axistype"), "equidistant");
-    BOOST_CHECK_EQUAL(zAxis_pl.get<double>("min"), 0);
-    BOOST_CHECK_EQUAL(zAxis_pl.get<double>("max"), 30);
-    BOOST_CHECK_EQUAL(zAxis_pl.get<int>("nbins"), 10);
-
-    SurfaceArray sa2(data, transform, itransform);
-    sa2.dump(std::cout);
-
-    std::ostringstream dumpExp_os;
-    sa.dump(dumpExp_os);
-    std::string                           dumpExp = dumpExp_os.str();
-    boost::test_tools::output_test_stream dumpAct;
-    sa2.dump(dumpAct);
-    BOOST_CHECK(dumpAct.is_equal(dumpExp));
   }
 
   BOOST_AUTO_TEST_SUITE_END()

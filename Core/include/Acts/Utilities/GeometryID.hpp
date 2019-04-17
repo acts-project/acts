@@ -33,12 +33,11 @@ class GeometryID
 
 public:
   // clang-format off
-  constexpr static geo_id_value volume_mask    = 0xff00000000000000; // 256 volumes
-  constexpr static geo_id_value boundary_mask  = 0x00f0000000000000; // 15 boundaries
-  constexpr static geo_id_value layer_mask     = 0x000fff0000000000; // 4095 layers
-  constexpr static geo_id_value approach_mask  = 0x000000f000000000; // 15 approach surfaces
-  constexpr static geo_id_value sensitive_mask = 0x0000000ffff00000; // 65535 sensitive surfaces
-  constexpr static geo_id_value channel_mask   = 0x00000000000fffff; // 1048575 channels
+  constexpr static geo_id_value volume_mask    = 0xff00000000000000; // 255 volumes
+  constexpr static geo_id_value boundary_mask  = 0x00ff000000000000; // 255 boundaries
+  constexpr static geo_id_value layer_mask     = 0x0000fff000000000; // 4095 layers
+  constexpr static geo_id_value approach_mask  = 0x0000000ff0000000; // 255 approach surfaces
+  constexpr static geo_id_value sensitive_mask = 0x000000000fffffff; // (2^28)-1 sensitive surfaces
   // clang-format on
 
   /// default constructor
@@ -103,6 +102,15 @@ public:
   operator==(const GeometryID& tddID) const
   {
     return (m_value == tddID.value());
+  }
+
+  /// Non-equality operator
+  ///
+  /// @param tddID is the geometry ID that will be compared on equality
+  bool
+  operator!=(const GeometryID& tddID) const
+  {
+    return !operator==(tddID);
   }
 
   /// Add some stuff

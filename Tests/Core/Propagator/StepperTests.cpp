@@ -17,6 +17,7 @@
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -26,6 +27,8 @@
 #include "Acts/Tools/CuboidVolumeBuilder.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 // TODO: Testing of covariances in Integration test - requires N-layer box
 // detector for implementation of DenseEnvironmentExtension
@@ -36,7 +39,10 @@ namespace Test {
 
   using cstep = detail::ConstrainedStep;
 
-  ///
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
+
   /// @brief Aborter for the case that a particle leaves the detector or reaches
   /// a custom made threshold.
   ///
@@ -133,11 +139,12 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto& vb) {
-          return cvb.trackingVolume(inner, vb);
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> vacuum = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> vacuum
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviVac(vacuum);
@@ -159,7 +166,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -182,7 +189,7 @@ namespace Test {
         prop(es, naviVac);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts);
+    const auto& result = prop.propagate(sbtp, propOpts).value();
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -202,7 +209,7 @@ namespace Test {
 
     // Set options for propagator
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-        propOptsDef;
+        propOptsDef(tgContext, mfContext);
     propOptsDef.actionList  = aListDef;
     propOptsDef.abortList   = abortList;
     propOptsDef.maxSteps    = 100;
@@ -219,7 +226,7 @@ namespace Test {
         propDef(esDef, naviVac);
 
     // Launch and collect results
-    const auto& resultDef = propDef.propagate(sbtp, propOptsDef);
+    const auto& resultDef = propDef.propagate(sbtp, propOptsDef).value();
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
@@ -241,9 +248,9 @@ namespace Test {
   {
     CuboidVolumeBuilder               cvb;
     CuboidVolumeBuilder::VolumeConfig vConf;
-    vConf.position = {0.5 * units::_m, 0., 0.};
-    vConf.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
-    vConf.material = std::make_shared<const Material>(
+    vConf.position       = {0.5 * units::_m, 0., 0.};
+    vConf.length         = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
         Material(352.8, 394.133, 9.012, 4., 1.848e-3));
     CuboidVolumeBuilder::Config conf;
     conf.volumeCfg.push_back(vConf);
@@ -254,11 +261,12 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto& vb) {
-          return cvb.trackingVolume(inner, vb);
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> material = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> material
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviMat(material);
@@ -280,7 +288,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -304,7 +312,7 @@ namespace Test {
         prop(es, naviMat);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts);
+    const auto& result = prop.propagate(sbtp, propOpts).value();
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -332,7 +340,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOptsDense;
+        propOptsDense(tgContext, mfContext);
     propOptsDense.actionList  = aList;
     propOptsDense.abortList   = abortList;
     propOptsDense.maxSteps    = 100;
@@ -351,7 +359,7 @@ namespace Test {
         propDense(esDense, naviMat);
 
     // Launch and collect results
-    const auto& resultDense = propDense.propagate(sbtp, propOptsDense);
+    const auto& resultDense = propDense.propagate(sbtp, propOptsDense).value();
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 
@@ -387,7 +395,7 @@ namespace Test {
                Navigator>
         propB(esB, naviMat);
 
-    const auto& resultB = propB.propagate(sbtp, propOptsDense);
+    const auto& resultB = propB.propagate(sbtp, propOptsDense).value();
     const StepCollector::this_result& stepResultB
         = resultB.get<typename StepCollector::result_type>();
 
@@ -420,9 +428,9 @@ namespace Test {
     vConfVac1.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
     vConfVac1.name     = "First vacuum volume";
     CuboidVolumeBuilder::VolumeConfig vConfMat;
-    vConfMat.position = {1.5 * units::_m, 0., 0.};
-    vConfMat.length   = {1. * units::_m, 1. * units::_m, 1. * units::_m};
-    vConfMat.material = std::make_shared<const Material>(
+    vConfMat.position       = {1.5 * units::_m, 0., 0.};
+    vConfMat.length         = {1. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConfMat.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
         Material(352.8, 394.133, 9.012, 4., 1.848e-3));
     vConfMat.name = "Material volume";
     CuboidVolumeBuilder::VolumeConfig vConfVac2;
@@ -438,11 +446,12 @@ namespace Test {
     cvb.setConfig(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto& vb) {
-          return cvb.trackingVolume(inner, vb);
+        [=](const auto& context, const auto& inner, const auto& vb) {
+          return cvb.trackingVolume(context, inner, vb);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> det = tgb.trackingGeometry();
+    std::shared_ptr<const TrackingGeometry> det
+        = tgb.trackingGeometry(tgContext);
 
     // Build navigator
     Navigator naviDet(det);
@@ -465,7 +474,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOpts;
+        propOpts(tgContext, mfContext);
     propOpts.actionList  = aList;
     propOpts.abortList   = abortList;
     propOpts.maxSteps    = 100;
@@ -488,7 +497,7 @@ namespace Test {
         prop(es, naviDet);
 
     // Launch and collect results
-    const auto&                       result = prop.propagate(sbtp, propOpts);
+    const auto& result = prop.propagate(sbtp, propOpts).value();
     const StepCollector::this_result& stepResult
         = result.get<typename StepCollector::result_type>();
 
@@ -497,26 +506,27 @@ namespace Test {
     // Collect boundaries
     std::vector<Surface const*> surs;
     std::vector<std::shared_ptr<const BoundarySurfaceT<TrackingVolume>>>
-        boundaries = det->lowestTrackingVolume({0.5 * units::_m, 0., 0.})
-                         ->boundarySurfaces();
+        boundaries
+        = det->lowestTrackingVolume(tgContext, {0.5 * units::_m, 0., 0.})
+              ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 1. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 1. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->lowestTrackingVolume({1.5 * units::_m, 0., 0.})
+    boundaries = det->lowestTrackingVolume(tgContext, {1.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 2. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 2. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
     }
-    boundaries = det->lowestTrackingVolume({2.5 * units::_m, 0., 0.})
+    boundaries = det->lowestTrackingVolume(tgContext, {2.5 * units::_m, 0., 0.})
                      ->boundarySurfaces();
     for (auto& b : boundaries) {
-      if (b->surfaceRepresentation().center().x() == 3. * units::_m) {
+      if (b->surfaceRepresentation().center(tgContext).x() == 3. * units::_m) {
         surs.push_back(&(b->surfaceRepresentation()));
         break;
       }
@@ -527,7 +537,7 @@ namespace Test {
     ActionList<StepCollector> aListDef;
 
     PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-        propOptsDef;
+        propOptsDef(tgContext, mfContext);
     abortList.get<EndOfWorld>().maxX = 1. * units::_m;
     propOptsDef.actionList           = aListDef;
     propOptsDef.abortList            = abortList;
@@ -546,7 +556,8 @@ namespace Test {
         propDef(esDef, naviDet);
 
     // Launch and collect results
-    const auto& resultDef = propDef.propagate(sbtp, *(surs[0]), propOptsDef);
+    const auto& resultDef
+        = propDef.propagate(sbtp, *(surs[0]), propOptsDef).value();
     const StepCollector::this_result& stepResultDef
         = resultDef.get<typename StepCollector::result_type>();
 
@@ -583,7 +594,7 @@ namespace Test {
     // Set options for propagator
     DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                   AbortList<EndOfWorld>>
-        propOptsDense;
+        propOptsDense(tgContext, mfContext);
     abortList.get<EndOfWorld>().maxX = 2. * units::_m;
     propOptsDense.actionList         = aList;
     propOptsDense.abortList          = abortList;
@@ -604,7 +615,7 @@ namespace Test {
 
     // Launch and collect results
     const auto& resultDense
-        = propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense);
+        = propDense.propagate(sbtpPiecewise, *(surs[1]), propOptsDense).value();
     const StepCollector::this_result& stepResultDense
         = resultDense.get<typename StepCollector::result_type>();
 

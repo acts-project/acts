@@ -16,11 +16,11 @@
 
 #include <algorithm>
 #include <limits>
+#include <iostream>
 
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace utf    = boost::unit_test;
 const double inf = std::numeric_limits<double>::infinity();
@@ -87,6 +87,10 @@ namespace Test {
     RectangleBounds rect(halfX, halfY);
     BOOST_CHECK_EQUAL(rect.halflengthX(), 10.);
     BOOST_CHECK_EQUAL(rect.halflengthY(), 5.);
+
+    CHECK_CLOSE_ABS(rect.min(), Vector2D(-halfX, -halfY), 1e-6);
+    CHECK_CLOSE_ABS(rect.max(), Vector2D(halfX, halfY), 1e-6);
+
     const std::vector<Vector2D> coords
         = {{10., -5.}, {10., 5.}, {-10., 5.}, {-10., -5.}};
     // equality, ensure ordering is ok
@@ -130,23 +134,6 @@ namespace Test {
                                   clonedVertices.cbegin(),
                                   clonedVertices.cend());
     delete rectB;
-  }
-
-  BOOST_AUTO_TEST_CASE(RectangleBounds_toVariantData)
-  {
-    RectangleBounds rect(10, 15);
-    variant_data    var_data = rect.toVariantData();
-
-    std::cout << var_data << std::endl;
-    variant_map var_map = boost::get<variant_map>(var_data);
-    BOOST_CHECK_EQUAL(var_map.get<std::string>("type"), "RectangleBounds");
-    variant_map pl = var_map.get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(pl.get<double>("halflengthX"), 10.);
-    BOOST_CHECK_EQUAL(pl.get<double>("halflengthY"), 15.);
-
-    RectangleBounds rect2(var_data);
-    BOOST_CHECK_EQUAL(rect.halflengthX(), rect2.halflengthX());
-    BOOST_CHECK_EQUAL(rect.halflengthY(), rect2.halflengthY());
   }
 
   BOOST_AUTO_TEST_SUITE_END()

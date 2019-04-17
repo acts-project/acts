@@ -69,7 +69,7 @@ public:
   ///
   /// @return a vector of surfaces bounding this volume
   virtual std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(std::shared_ptr<const Transform3D> transform) const = 0;
+  decomposeToSurfaces(const Transform3D* transform) const = 0;
 
   /// Binning offset - overloaded for some R-binning types
   ///
@@ -91,7 +91,7 @@ public:
   ///
   /// @param sl is the output stream to be dumped into
   virtual std::ostream&
-  dump(std::ostream& sl) const = 0;
+  toStream(std::ostream& sl) const = 0;
 };
 
 /// Binning offset - overloaded for some R-binning types

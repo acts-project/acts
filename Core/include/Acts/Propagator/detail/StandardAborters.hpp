@@ -197,6 +197,7 @@ namespace detail {
       // Calculate the distance to the surface
       const double tolerance    = state.options.targetTolerance;
       const auto   intersection = targetSurface.intersectionEstimate(
+          state.geoContext,
           stepper.position(state.stepping),
           stepper.direction(state.stepping),
           anyDirection);

@@ -17,7 +17,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -49,11 +48,6 @@ public:
   /// @param maxhalex maximal half length X, definition at maximum halflength Y
   /// @param haley half length Y - defined at x=0
   TrapezoidBounds(double minhalex, double maxhalex, double haley);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  TrapezoidBounds(const variant_data& vardata);
 
   ~TrapezoidBounds() override;
 
@@ -132,7 +126,7 @@ public:
   ///
   /// @param sl is the ostream to be dumped into
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
   ///  This method returns the minimal halflength in X
   /// (first coordinate of local surface frame)
@@ -148,11 +142,6 @@ public:
   /// (second coordinate of local surface frame)
   double
   halflengthY() const;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   double          m_minHalfX;

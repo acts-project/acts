@@ -12,16 +12,18 @@
 
 #pragma once
 
+#include "Acts/Extrapolator/MaterialInteractor.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Extrapolator/SurfaceCollector.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedSurfaceMaterial.hpp"
-#include "Acts/Plugins/MaterialMapping/RecordedMaterialTrack.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -33,7 +35,7 @@ struct MaterialSurface
   bool
   operator()(const Surface& sf) const
   {
-    return (sf.associatedMaterial() != nullptr);
+    return (sf.surfaceMaterial() != nullptr);
   }
 };
 
@@ -46,7 +48,7 @@ struct MaterialSurface
 /// The process runs as such:
 ///
 ///  1) TrackingGeometry is parsed and for each Surface with
-///     SurfaceMaterialProxy a local store is initialized
+///     ProtoSurfaceMaterial a local store is initialized
 ///     the identification is done hereby through the Surface::GeometryID
 ///
 ///  2) A Cache is generated that is used to keep the filling thread local,
@@ -67,38 +69,6 @@ class SurfaceMaterialMapper
 public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
-  /// @struct Assigned material
-  ///
-  /// The assgined material properties class is a helper struct.
-  /// It holds:
-  /// - all recorded material properties of one RecordedMaterialTrack that are
-  ///   uniquely assiged to one surface object
-  /// - the assgined position (i.e. the projected position onto the surface)
-  /// - the path correction factor respecting the incident angle into the
-  /// surface
-  ///
-  struct AssignedMaterialProperties
-  {
-    /// GeometryID of object were recorded material properties is assigned
-    GeometryID geoID{0};
-    /// Projected position of the assigned material
-    Vector3D assignedPosition{0., 0., 0.};
-    /// The material information that is assigned (can be multiple steps)
-    std::vector<RecordedMaterialProperties> assignedProperties;
-    /// The incident angle correction due to particle incident
-    double pathCorrection{0.};
-
-    /// @brief Constructor for AssignedMaterialProperties
-    ///
-    /// @param gid The GeometryID of the surface
-    /// @param pos The position of the assignment/intersection
-    /// @param pc The pathCorrection to be applied (inverse)
-    AssignedMaterialProperties(GeometryID gid, Vector3D pos, double pc)
-      : geoID(gid), assignedPosition(std::move(pos)), pathCorrection(pc)
-    {
-    }
-  };
-
   /// @struct Config
   ///
   /// Nested Configuration struct for the material mapper
@@ -115,11 +85,26 @@ public:
   /// Nested State struct which is used for the mapping prococess
   struct State
   {
+
+    /// Constructor of the Sate with contexts
+    State(std::reference_wrapper<const GeometryContext>      gctx,
+          std::reference_wrapper<const MagneticFieldContext> mctx)
+      : geoContext(gctx), magFieldContext(mctx)
+    {
+    }
+
     /// The accumulated material per geometry ID
     std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
+
     /// The created surface material from it
-    std::map<GeometryID, std::unique_ptr<const SurfaceMaterial>>
+    std::map<GeometryID, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
+
+    /// Reference to the geometry context for the mapping
+    std::reference_wrapper<const GeometryContext> geoContext;
+
+    /// Reference to the magnetic field context
+    std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   };
 
   /// Delete the Default constructor
@@ -144,7 +129,9 @@ public:
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
   State
-  createState(const TrackingGeometry& tGeometry) const;
+  createState(const GeometryContext&      gctx,
+              const MagneticFieldContext& mctx,
+              const TrackingGeometry&     tGeometry) const;
 
   /// @brief Method to finalize the maps
   ///
@@ -167,7 +154,7 @@ public:
   mapMaterialTrack(State& mState, const RecordedMaterialTrack& mTrack) const;
 
 private:
-  /// @brief finds all surfaces with SurfaceMaterialProxy of a volume
+  /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume
   ///
   /// @param mState The state to be filled
   /// @param tVolume is current TrackingVolume

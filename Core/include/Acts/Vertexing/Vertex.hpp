@@ -17,9 +17,9 @@ namespace Acts {
 ///
 /// @brief Class for storing vertex objects
 ///
-/// @tparam InputTrack Track object type
+/// @tparam input_track_t Track object type
 ///
-template <typename InputTrack>
+template <typename input_track_t>
 class Vertex
 {
 
@@ -37,9 +37,9 @@ public:
   /// @param position Vertex position
   /// @param covariance Position covariance matrix
   /// @param tracks Vector of tracks associated with the vertex
-  Vertex(const Vector3D&                         position,
-         const ActsSymMatrixD<3>&                covariance,
-         std::vector<TrackAtVertex<InputTrack>>& tracks);
+  Vertex(const Vector3D&                            position,
+         const ActsSymMatrixD<3>&                   covariance,
+         std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @return Returns 3-position
   const Vector3D&
@@ -49,7 +49,7 @@ public:
   covariance() const;
 
   /// @return Returns vector of tracks associated with the vertex
-  const std::vector<TrackAtVertex<InputTrack>>&
+  const std::vector<TrackAtVertex<input_track_t>>&
   tracks() const;
 
   /// @return Returns pair of (chi2, numberDoF)
@@ -66,7 +66,7 @@ public:
 
   /// @param tracks Vector of tracks at vertex
   void
-  setTracksAtVertex(const std::vector<TrackAtVertex<InputTrack>>& tracks);
+  setTracksAtVertex(const std::vector<TrackAtVertex<input_track_t>>& tracks);
 
   /// @param chiSquared Chi2 of fit
   /// @param numberDoF Number of degrees of freedom
@@ -76,7 +76,7 @@ public:
 private:
   Vector3D          m_position   = Vector3D(0., 0., 0.);
   ActsSymMatrixD<3> m_covariance = ActsSymMatrixD<3>::Zero();
-  std::vector<TrackAtVertex<InputTrack>> m_tracksAtVertex;
+  std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
   double m_chiSquared = std::numeric_limits<double>::max();  // chi2 of the fit
   double m_numberDoF  = 0;  // number of degrees of freedom
 };

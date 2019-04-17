@@ -8,18 +8,21 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
-template <typename BField,
-          typename Propagator_t,
+template <typename bfield_t,
+          typename propagator_t,
           typename action_list_t,
           typename aborter_list_t>
-Acts::LinearizedTrack
-Acts::LinearizedTrackFactory<BField,
-                             Propagator_t,
+
+Acts::Result<Acts::LinearizedTrack>
+Acts::LinearizedTrackFactory<bfield_t,
+                             propagator_t,
                              action_list_t,
                              aborter_list_t>::
-    linearizeTrack(const BoundParameters* params,
-                   const Vector3D&        linPoint,
-                   const Propagator_t&    propagator) const
+    linearizeTrack(const GeometryContext&      gctx,
+                   const MagneticFieldContext& mctx,
+                   const BoundParameters*      params,
+                   const Vector3D&             linPoint,
+                   const propagator_t&         propagator) const
 {
   if (params == nullptr) {
     return LinearizedTrack();
@@ -33,20 +36,18 @@ Acts::LinearizedTrackFactory<BField,
   Vector3D          positionAtPCA;
   ActsSymMatrixD<5> parCovarianceAtPCA;
 
-  // Do the propagation to linPoint
-  const auto& result
-      = propagator.propagate(*params, *perigeeSurface, m_cfg.propagatorOptions);
-  if (result.status == PropagatorStatus::SUCCESS) {
-    paramsAtPCA        = result.endParameters->parameters();
-    positionAtPCA      = result.endParameters->position();
-    parCovarianceAtPCA = *result.endParameters->covariance();
+  PropagatorOptions<action_list_t, aborter_list_t> pOptions(gctx, mctx);
 
-    // *params are already perigeeParameters at linPoint (no propagation to
-    // linPoint needed)
+  // Do the propagation to linPoint
+  auto result = propagator.propagate(*params, *perigeeSurface, pOptions);
+  if (result.ok()) {
+    const auto& propRes = *result;
+    paramsAtPCA         = propRes.endParameters->parameters();
+    positionAtPCA       = propRes.endParameters->position();
+    parCovarianceAtPCA  = *propRes.endParameters->covariance();
+
   } else {
-    paramsAtPCA        = params->parameters();
-    positionAtPCA      = params->position();
-    parCovarianceAtPCA = *params->covariance();
+    return result.error();
   }
 
   // phiV and functions

@@ -8,9 +8,12 @@
 
 #pragma once
 
+#include <functional>
 #include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
@@ -70,7 +73,7 @@ struct DenseEnvironmentExtension
 
     // Check existence of a volume with material
     if (!state.navigation.currentVolume
-        || !state.navigation.currentVolume->material()) {
+        || !state.navigation.currentVolume->volumeMaterial()) {
       return 0;
     }
     return 2;
@@ -101,8 +104,10 @@ struct DenseEnvironmentExtension
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
-      massSI   = units::Nat2SI<units::MASS>(state.options.mass);
-      material = state.navigation.currentVolume->material().get();
+      auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
+      Vector3D position   = stepper.position(state.stepping);
+      massSI              = units::Nat2SI<units::MASS>(state.options.mass);
+      material            = &(volumeMaterial->material(position));
       initialMomentum
           = units::Nat2SI<units::MOMENTUM>(stepper.momentum(state.stepping));
       currentMomentum = initialMomentum;
@@ -455,6 +460,23 @@ template <typename action_list_t  = ActionList<>,
 struct DenseStepperPropagatorOptions
     : public PropagatorOptions<action_list_t, aborter_list_t>
 {
+
+  /// Copy Constructor
+  DenseStepperPropagatorOptions(
+      const DenseStepperPropagatorOptions<action_list_t, aborter_list_t>& dspo)
+      = default;
+
+  /// Constructor with GeometryContext
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param mctx The current magnetic fielc context object
+  DenseStepperPropagatorOptions(
+      std::reference_wrapper<const GeometryContext>      gctx,
+      std::reference_wrapper<const MagneticFieldContext> mctx)
+    : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx)
+  {
+  }
+
   /// Toggle between mean and mode evaluation of energy loss
   bool meanEnergyLoss = true;
 
@@ -474,7 +496,7 @@ struct DenseStepperPropagatorOptions
   extend(extended_aborter_list_t aborters) const
   {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions;
+        eoptions(this->geoContext, this->magFieldContext);
     // Copy the options over
     eoptions.direction       = this->direction;
     eoptions.absPdgCode      = this->absPdgCode;

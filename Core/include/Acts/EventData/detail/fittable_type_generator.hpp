@@ -8,10 +8,17 @@
 
 #pragma once
 
-// boost include(s)
-#include <boost/mpl/vector.hpp>
-#include <boost/variant.hpp>
+#include <variant>
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+
+#include <type_traits>
+
+#include <boost/hana/append.hpp>
+#include <boost/hana/integral_constant.hpp>
+#include <boost/hana/range.hpp>
+#include <boost/hana/remove_at.hpp>
+#include <boost/hana/transform.hpp>
+#include <boost/hana/tuple.hpp>
 
 namespace Acts {
 // forward declaration
@@ -20,143 +27,95 @@ class Measurement;
 
 /// @cond detail
 namespace detail {
-  ///
-  /// @brief generate boost::variant type for all possible Measurement's
-  ///
-  template <typename identifier_t>
-  struct fittable_type_generator;
 
-  /// @cond
-  template <typename identifier_t>
-  struct fittable_type_generator
+  namespace hana = boost::hana;
+
+  /**
+   * @brief Constexpr function which produces a tuple that contains all unique
+   * ordered sublists of the range from 0 to W.
+   * This will generate:
+   * | W  | output                                             |
+   * |:---|:---------------------------------------------------|
+   * | 1  | [(0)]                                              |
+   * | 2  | [(0), (1), (0, 1)]                                 |
+   * | 3  | [(0), (1), (0, 1), (2), (0, 2), (1, 2), (0, 1, 2)] |
+   *
+   * In python, this algorithm would be roughly equivalent to
+   * ```python
+   * comb = [()]
+   * for i in range(0, 6):
+   *     comb = comb + [c + (i,) for c in comb]
+   * comb = comb[1:]
+   * ```
+   * or using `foldl = lambda func, acc, xs: functools.reduce(func, xs, acc)`:
+   * ```python
+   * def unique_ordered_subset(n):
+   *   comb = [()]
+   *   comb = foldl(lambda c, i: c+[c_i+(i,) for c_i in c], comb, range(0, n))
+   *   return comb[1:]
+   * ```
+   *
+   * @tparam W End of the range (exclusive)
+   */
+  template <size_t W>
+  constexpr auto
+  unique_ordered_sublists()
   {
-    template <typename... T>
-    struct container
-    {
-    };
+    using namespace hana::literals;
+    // generate an empty tuple to start off
+    constexpr auto combinations = hana::make_tuple(hana::make_tuple());
+    // generate range over which to fold
+    constexpr auto w_range
+        = hana::to_tuple(hana::make_range(0_c, hana::size_c<W>));
+    // main fold expression. This successively adds variations to `state` and
+    // then
+    // returns the result.
+    constexpr auto comb2
+        = hana::fold_left(w_range, combinations, [](auto state, auto i) {
+            auto mapped = hana::transform(
+                state, [i](auto c_i) { return hana::append(c_i, i); });
+            return hana::concat(state, mapped);
+          });
+    // we need to pop off the initial empty tuple, which isn't really valid
+    return hana::remove_at(comb2, 0_c);
+  }
 
-    template <typename T, typename U>
-    struct add_prepended;
+  /**
+   * Generates a tuple of types using `unique_ordered_sublists` from above.
+   * @tparam meas_meta Metafunction which will create a type given a parameter
+   *                   list
+   * @tparam W The size of the parameter pack to generate the sublists over.
+   */
+  template <template <ParID_t...> class meas_meta, size_t W>
+  constexpr auto
+  type_generator()
+  {
+    // generate sublists
+    constexpr auto sublists = unique_ordered_sublists<W>();
+    // map each sublist (tuple of paramater indices) into a measurement using
+    // the provided `meas_meta` metafunction.
+    constexpr auto measurements_h = hana::transform(sublists, [](auto s) {
+      return hana::unpack(s, [](auto... i) {
+        return hana::type_c<
+            typename meas_meta<ParID_t(decltype(i)::value)...>::type>;
+      });
+    });
+    // return tuple of measurements
+    return measurements_h;
+  }
 
-    template <ParID_t first, typename... others>
-    struct add_prepended<Measurement<identifier_t, first>, container<others...>>
-    {
-      using type
-          = container<typename add_prepended<Measurement<identifier_t, first>,
-                                             others>::type...,
-                      others...>;
-    };
+  /**
+   * Type alias which unpacks the hana tuple generated in `type_generator`
+   * into an `std::variant`.
+   * @tparam meas_meta Factory meta function for measurements.
+   * @tparam W max number of parameters.
+   */
+  template <template <ParID_t...> class meas_meta, size_t W>
+  using type_generator_t =
+      typename decltype(hana::unpack(type_generator<meas_meta, W>(),
+                                     hana::template_<std::variant>))::type;
 
-    template <ParID_t first, ParID_t... others>
-    struct add_prepended<Measurement<identifier_t, first>,
-                         Measurement<identifier_t, others...>>
-    {
-      using type = Measurement<identifier_t, first, others...>;
-    };
-
-    template <ParID_t... first>
-    struct add_prepended<Measurement<identifier_t, first...>, boost::mpl::na>
-    {
-      using type = Measurement<identifier_t, first...>;
-    };
-
-    template <typename T, typename C>
-    struct add_to_container;
-
-    template <typename T, typename... others>
-    struct add_to_container<T, container<others...>>
-    {
-      using type = container<T, others...>;
-    };
-
-    template <typename T>
-    struct generator_impl;
-
-    template <ParID_t first, ParID_t... others>
-    struct generator_impl<container<Measurement<identifier_t, first>,
-                                    Measurement<identifier_t, others...>>>
-    {
-      using type = container<Measurement<identifier_t, first>,
-                             Measurement<identifier_t, others...>,
-                             Measurement<identifier_t, first, others...>>;
-    };
-
-    template <ParID_t first, typename next, typename... others>
-    struct generator_impl<container<Measurement<identifier_t, first>,
-                                    next,
-                                    others...>>
-    {
-      using others_combined =
-          typename generator_impl<container<next, others...>>::type;
-      using prepended = typename add_prepended<Measurement<identifier_t, first>,
-                                               others_combined>::type;
-      using type = typename add_to_container<Measurement<identifier_t, first>,
-                                             prepended>::type;
-    };
-
-    template <ParID_t v, typename C>
-    struct add_to_value_container;
-
-    template <ParID_t v, ParID_t... others>
-    struct add_to_value_container<v, std::integer_sequence<ParID_t, others...>>
-    {
-      using type = std::integer_sequence<ParID_t, others..., v>;
-    };
-
-    template <typename T, unsigned int N>
-    struct tparam_generator
-    {
-      using type =
-          typename add_to_value_container<static_cast<ParID_t>(N),
-                                          typename tparam_generator<T, N - 1>::
-                                              type>::type;
-    };
-
-    template <typename T>
-    struct tparam_generator<T, 0>
-    {
-      using type = std::integer_sequence<T, static_cast<T>(0)>;
-    };
-
-    template <typename T>
-    struct converter;
-
-    template <ParID_t... values>
-    struct converter<std::integer_sequence<ParID_t, values...>>
-    {
-      using type = container<Measurement<identifier_t, values>...>;
-    };
-
-    template <typename... types>
-    struct to_boost_vector;
-
-    template <typename first, typename... rest>
-    struct to_boost_vector<first, rest...>
-    {
-      using type = typename boost::mpl::
-          push_front<typename to_boost_vector<rest...>::type, first>::type;
-    };
-
-    template <typename last>
-    struct to_boost_vector<last>
-    {
-      using type = boost::mpl::vector<last>;
-    };
-
-    template <typename... MeasTypes>
-    struct converter<container<MeasTypes...>>
-    {
-      using type = typename boost::make_variant_over<
-          typename to_boost_vector<MeasTypes...>::type>::type;
-    };
-
-    using par_list =
-        typename tparam_generator<ParID_t, Acts::NGlobalPars - 1>::type;
-    using meas_list    = typename converter<par_list>::type;
-    using permutations = typename generator_impl<meas_list>::type;
-    using type         = typename converter<permutations>::type;
-  };
   /// @endcond
-}  // namespace details
+}  // namespace detail
 /// @endcond
 }  // namespace Acts

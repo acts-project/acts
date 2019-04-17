@@ -11,11 +11,12 @@
 ///////////////////////////////////////////////////////////////////
 
 inline Intersection
-ConeSurface::intersectionEstimate(const Vector3D&      gpos,
-                                  const Vector3D&      gmom,
-                                  NavigationDirection  navDir,
-                                  const BoundaryCheck& bcheck,
-                                  CorrFnc              correct) const
+ConeSurface::intersectionEstimate(const GeometryContext& gctx,
+                                  const Vector3D&        gpos,
+                                  const Vector3D&        gmom,
+                                  NavigationDirection    navDir,
+                                  const BoundaryCheck&   bcheck,
+                                  CorrFnc                correct) const
 {
 
   // check if you need
@@ -38,7 +39,7 @@ ConeSurface::intersectionEstimate(const Vector3D&      gpos,
   do {
 
     if (needsTransform) {
-      Transform3D invTrans = transform().inverse();
+      Transform3D invTrans = transform(gctx).inverse();
       point1               = invTrans * gpos;
       direction            = invTrans.linear() * direction;
     }
@@ -115,10 +116,10 @@ ConeSurface::intersectionEstimate(const Vector3D&      gpos,
 
   // transform back if needed
   if (m_transform) {
-    solution = transform() * solution;
+    solution = transform(gctx) * solution;
   }
   // check validity
-  valid = bcheck ? (valid && isOnSurface(solution, gmom, bcheck)) : valid;
+  valid = bcheck ? (valid && isOnSurface(gctx, solution, gmom, bcheck)) : valid;
   // set the result navigation direction
   return Intersection(solution, path, valid);
 }

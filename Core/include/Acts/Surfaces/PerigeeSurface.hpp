@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/LineSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/GeometryStatics.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -48,27 +47,25 @@ protected:
   /// @param other is the source surface to be copied
   PerigeeSurface(const PerigeeSurface& other);
 
-  /// Copy constructor with shift
+  /// Copy constructor - with shift
   ///
-  /// @param other is the source surface to be copied
-  /// @param shift is the transformed applied after copying
-  PerigeeSurface(const PerigeeSurface& other, const Transform3D& shift);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  PerigeeSurface(const variant_data& vardata);
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param other is the source cone surface
+  /// @param transf is the additional transfrom applied after copying
+  PerigeeSurface(const GeometryContext& gctx,
+                 const PerigeeSurface&  other,
+                 const Transform3D&     transf);
 
 public:
   /// Destructor - defaulted
   ~PerigeeSurface() override = default;
 
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
+  /// Clone method into a concrete type of PerigeeSurface with shift
   ///
-  /// @param shift additional, optional shift
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param shift applied to the surface
   std::shared_ptr<PerigeeSurface>
-  clone(const Transform3D* shift = nullptr) const;
+  clone(const GeometryContext& gctx, const Transform3D& shift) const;
 
   /// Assignment operator
   ///
@@ -86,22 +83,21 @@ public:
 
   /// Output Method for std::ostream
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param sl is the ostream to be dumped into
+  ///
+  /// @return ostreamn obect which was streamed into
   std::ostream&
-  dump(std::ostream& sl) const final;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
+  toStream(const GeometryContext& gctx, std::ostream& sl) const final;
 
 private:
-  /// Clone method. Uses the copy constructor a new position can optionally be
-  /// given a shift.
+  /// Clone method implementation
   ///
-  /// @param shift additional, optional shift
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param shift applied to the surface
   PerigeeSurface*
-  clone_impl(const Transform3D* shift = nullptr) const override;
+  clone_impl(const GeometryContext& gctx,
+             const Transform3D&     shift) const override;
 };
 
-}  // namespace
+}  // namespace Acts

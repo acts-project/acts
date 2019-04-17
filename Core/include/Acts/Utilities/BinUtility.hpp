@@ -405,7 +405,7 @@ public:
   ///
   /// @param sl is the ostream to be dumped into
   std::ostream&
-  dump(std::ostream& sl) const
+  toStream(std::ostream& sl) const
   {
     sl << "BinUtility for " << m_binningData.size()
        << "- dimensional array:" << std::endl;

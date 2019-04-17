@@ -13,11 +13,11 @@
 #pragma once
 #include <limits>
 #include <string>
-#include "Acts/Material/Material.hpp"
 #include "Acts/Tools/ILayerBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeBuilder.hpp"
 #include "Acts/Tools/ITrackingVolumeHelper.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"
 
@@ -34,6 +34,7 @@ namespace Acts {
 
 class TrackingVolume;
 class VolumeBounds;
+class IVolumeMaterial;
 
 /// @enum WrappingCondition
 enum WrappingCondition {
@@ -508,7 +509,7 @@ public:
     /// The dimensions of the manually created world
     std::vector<double> volumeDimension = {};
     /// the world material
-    std::shared_ptr<const Material> volumeMaterial = nullptr;
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial = nullptr;
     /// build the volume to the beam line
     bool buildToRadiusZero = false;
     /// needed to build layers within the volume
@@ -518,6 +519,7 @@ public:
         = {1. * Acts::units::_mm, 1. * Acts::units::_mm};
     /// the additional envelope in Z to create zMin, zMax
     double layerEnvelopeZ = 10. * Acts::units::_mm;
+
     /// the volume signature
     int volumeSignature = -1;
   };
@@ -536,6 +538,7 @@ public:
 
   /// CylinderVolumeBuilder main call method
   ///
+  /// @param [in] gctx geometry context for which this cylinder volume is built
   /// @param [in] existingVolume is an (optional) volume to be included
   /// @param [in] externalBounds are (optional) external confinement
   ///             constraints
@@ -543,8 +546,9 @@ public:
   ///         optionally provided exisitingVolume consistently for further
   ///         processing
   MutableTrackingVolumePtr
-  trackingVolume(TrackingVolumePtr existingVolume = nullptr,
-                 VolumeBoundsPtr   externalBounds = nullptr) const override;
+  trackingVolume(const GeometryContext& gctx,
+                 TrackingVolumePtr      existingVolume = nullptr,
+                 VolumeBoundsPtr externalBounds = nullptr) const override;
 
   /// Set configuration method
   ///
@@ -564,6 +568,15 @@ public:
   void
   setLogger(std::unique_ptr<const Logger> newLogger);
 
+  /// Analyze the layer config to gather needed dimension
+  ///
+  /// @param [in] gctx the geometry context for this building
+  /// @param [in] lVector is the vector of layers that are parsed
+  ///
+  /// @return a VolumeConfig representing this layer
+  VolumeConfig
+  analyzeLayers(const GeometryContext& gctx, const LayerVector& lVector) const;
+
 private:
   /// Configuration struct
   Config m_cfg;
@@ -580,16 +593,10 @@ private:
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;
 
-  /// Analyze the layer config to gather needed dimension
-  ///
-  /// @param [in] lVector is the vector of layers that are parsed
-  /// @return a VolumeConfig representing this layer
-  VolumeConfig
-  analyzeLayers(const LayerVector& lVector) const;
-
   /// Helper method check the layer containment,
   /// both for inside / outside.
   ///
+  /// @param [in] gctx the geometry context for this building
   /// @param [in] layerConfig is the VolumeConfig to be tested
   ///        the wrapping flag may be set
   /// @param [in] insideConfig is the inside volume in order to
@@ -599,10 +606,11 @@ private:
   ///
   /// @return boolean that indicates the test result
   bool
-  checkLayerContainment(VolumeConfig&       layerConfig,
-                        const VolumeConfig& insideConfig,
-                        const VolumeConfig& volumeConfig,
-                        int                 sign) const;
+  checkLayerContainment(const GeometryContext& gctx,
+                        VolumeConfig&          layerConfig,
+                        const VolumeConfig&    insideConfig,
+                        const VolumeConfig&    volumeConfig,
+                        int                    sign) const;
 };
 
 /// Return the configuration object

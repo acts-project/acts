@@ -8,14 +8,22 @@
 
 #pragma once
 
-// boost include(s)
-#include <boost/variant.hpp>
-
 namespace Acts {
-/// @brief  Sorter for boost_variant
+/**
+ * Struct that sorts trackstates using their path lengths.
+ * This can be used as a sorter in STL functions.
+ */
 struct TrackStatePathLengthSorter
 {
 public:
+  /**
+   * The sorting operator
+   * @tparam identifier_t Identifier of the track state
+   * @tparam parameters_t The concrete parameters type
+   * @param lhs First track state
+   * @param rhs Second trackstate
+   * @return bool
+   */
   template <typename identifier_t, typename parameters_t>
   bool
   operator()(const TrackState<identifier_t, parameters_t>& lhs,

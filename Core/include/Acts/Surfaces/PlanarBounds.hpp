@@ -14,8 +14,6 @@
 #include <vector>
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
-
 namespace Acts {
 
 /// forward declare rectangle bounds as boundary box
@@ -37,11 +35,6 @@ public:
   // Bounding box parameters
   virtual const RectangleBounds&
   boundingBox() const = 0;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override = 0;
 };
 
 }  // namespace

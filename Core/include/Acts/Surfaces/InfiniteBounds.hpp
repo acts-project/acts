@@ -13,7 +13,6 @@
 #pragma once
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -68,16 +67,11 @@ public:
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& os) const final
+  toStream(std::ostream& os) const final
   {
     os << "Acts::InfiniteBounds ... boundless surface" << std::endl;
     return os;
   }
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 };
 
 static const InfiniteBounds s_noBounds{};

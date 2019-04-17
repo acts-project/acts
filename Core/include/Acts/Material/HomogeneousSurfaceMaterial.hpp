@@ -7,23 +7,22 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// HomogeneousSurfaceMaterial.h, Acts project
+// HomogeneousSurfaceMaterial.hpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include <vector>
+
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
 
 /// @class HomogeneousSurfaceMaterial
 ///
-/// It extends the SurfaceMaterial base class and describes a simple homogeneous
-/// material descriptions
-
-class HomogeneousSurfaceMaterial : public SurfaceMaterial
+/// It extends the ISurfaceMaterial virutal base class to describe
+/// a simple homogeneous material on a surface
+class HomogeneousSurfaceMaterial : public ISurfaceMaterial
 {
 public:
   /// Default Constructor - defaulted
@@ -98,16 +97,16 @@ public:
   materialProperties(size_t ib0, size_t ib1) const final;
 
   /// The inherited methods - for materialProperties access
-  using SurfaceMaterial::materialProperties;
+  using ISurfaceMaterial::materialProperties;
 
   /// The interited methods - for scale access
-  using SurfaceMaterial::factor;
+  using ISurfaceMaterial::factor;
 
   /// Output Method for std::ostream
   ///
   /// @param sl The outoput stream
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
 private:
   /// The five different MaterialProperties

@@ -18,6 +18,7 @@
 #include "Acts/Detector/TrackingVolume.hpp"
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -36,6 +37,9 @@ namespace Test {
 
     // Construct builder
     CuboidVolumeBuilder cvb;
+
+    // Create a test context
+    GeometryContext tgContext = GeometryContext();
 
     // Create configurations for surfaces
     std::vector<CuboidVolumeBuilder::SurfaceConfig> surfaceConfig;
@@ -60,7 +64,7 @@ namespace Test {
       // Material of the surfaces
       MaterialProperties matProp(
           352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-      cfg.surMat = std::shared_ptr<const SurfaceMaterial>(
+      cfg.surMat = std::shared_ptr<const ISurfaceMaterial>(
           new HomogeneousSurfaceMaterial(matProp));
 
       // Thickness of the detector element
@@ -80,10 +84,11 @@ namespace Test {
 
     // Test that 4 surfaces can be built
     for (const auto& cfg : surfaceConfig) {
-      std::shared_ptr<const PlaneSurface> pSur = cvb.buildSurface(cfg);
+      std::shared_ptr<const PlaneSurface> pSur
+          = cvb.buildSurface(tgContext, cfg);
       BOOST_CHECK_NE(pSur, nullptr);
-      CHECK_CLOSE_ABS(pSur->center(), cfg.position, 1e-9);
-      BOOST_CHECK_NE(pSur->associatedMaterial(), nullptr);
+      CHECK_CLOSE_ABS(pSur->center(tgContext), cfg.position, 1e-9);
+      BOOST_CHECK_NE(pSur->surfaceMaterial(), nullptr);
       BOOST_CHECK_NE(pSur->associatedDetectorElement(), nullptr);
     }
 
@@ -101,7 +106,7 @@ namespace Test {
 
     // Test that 4 layers with surfaces can be built
     for (auto& cfg : layerConfig) {
-      LayerPtr layer = cvb.buildLayer(cfg);
+      LayerPtr layer = cvb.buildLayer(tgContext, cfg);
       BOOST_CHECK_NE(layer, nullptr);
       BOOST_CHECK_NE(cfg.surface, nullptr);
       BOOST_CHECK_EQUAL(layer->surfaceArray()->surfaces().size(), 1);
@@ -118,21 +123,23 @@ namespace Test {
     volumeConfig.length   = {5. * units::_m, 1. * units::_m, 1. * units::_m};
     volumeConfig.layerCfg = layerConfig;
     volumeConfig.name     = "Test volume";
-    volumeConfig.material = std::make_shared<const Material>(
-        Material(352.8, 407., 9.012, 4., 1.848e-3));
+    volumeConfig.volumeMaterial
+        = std::make_shared<const HomogeneousVolumeMaterial>(
+            Material(352.8, 407., 9.012, 4., 1.848e-3));
 
     // Test the building
-    std::shared_ptr<TrackingVolume> trVol = cvb.buildVolume(volumeConfig);
+    std::shared_ptr<TrackingVolume> trVol
+        = cvb.buildVolume(tgContext, volumeConfig);
     BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
     BOOST_CHECK_EQUAL(trVol->confinedLayers()->arrayObjects().size(),
                       volumeConfig.layers.size() * 2
                           + 1);  // #layers = navigation + material layers
     BOOST_CHECK_EQUAL(trVol->volumeName(), volumeConfig.name);
-    BOOST_CHECK_NE(trVol->material(), nullptr);
+    BOOST_CHECK_NE(trVol->volumeMaterial(), nullptr);
 
     // Test the building
     volumeConfig.layers.clear();
-    trVol = cvb.buildVolume(volumeConfig);
+    trVol = cvb.buildVolume(tgContext, volumeConfig);
     BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
     BOOST_CHECK_EQUAL(trVol->confinedLayers()->arrayObjects().size(),
                       volumeConfig.layers.size() * 2
@@ -144,7 +151,7 @@ namespace Test {
       lay.surface = nullptr;
       lay.active  = true;
     }
-    trVol = cvb.buildVolume(volumeConfig);
+    trVol = cvb.buildVolume(tgContext, volumeConfig);
     BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
     for (auto& lay : volumeConfig.layers) {
       BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
@@ -154,7 +161,7 @@ namespace Test {
     for (auto& lay : volumeConfig.layerCfg) {
       lay.active = true;
     }
-    trVol = cvb.buildVolume(volumeConfig);
+    trVol = cvb.buildVolume(tgContext, volumeConfig);
     BOOST_CHECK_EQUAL(volumeConfig.layers.size(), 4);
     for (auto& lay : volumeConfig.layers) {
       BOOST_CHECK_EQUAL(lay->layerType(), LayerType::active);
@@ -186,7 +193,7 @@ namespace Test {
       // Material of the surfaces
       MaterialProperties matProp(
           352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-      cfg.surMat = std::shared_ptr<const SurfaceMaterial>(
+      cfg.surMat = std::shared_ptr<const ISurfaceMaterial>(
           new HomogeneousSurfaceMaterial(matProp));
 
       // Thickness of the detector element
@@ -214,17 +221,20 @@ namespace Test {
     cvb.setConfig(config);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto&) {
-          return cvb.trackingVolume(inner, nullptr);
+        [=](const auto& context, const auto& inner, const auto&) {
+          return cvb.trackingVolume(context, inner, nullptr);
         });
     TrackingGeometryBuilder tgb(tgbCfg);
 
-    std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
+    std::unique_ptr<const TrackingGeometry> detector
+        = tgb.trackingGeometry(tgContext);
     BOOST_CHECK_EQUAL(
-        detector->lowestTrackingVolume({1., 0., 0.})->volumeName(),
+        detector->lowestTrackingVolume(tgContext, Vector3D(1., 0., 0.))
+            ->volumeName(),
         volumeConfig.name);
     BOOST_CHECK_EQUAL(
-        detector->lowestTrackingVolume({-1., 0., 0.})->volumeName(),
+        detector->lowestTrackingVolume(tgContext, Vector3D(-1., 0., 0.))
+            ->volumeName(),
         volumeConfig2.name);
   }
 }  // namespace Test

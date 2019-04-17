@@ -48,6 +48,7 @@ class DigitizationModule
 public:
   /// Constructor from a Segmentation descriptor
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param moduleSegmentation is the segmentation descriptions
   /// @param halfThickness is the half thickness of the module
   /// @param readoutDirection is the readout drift direction
@@ -65,6 +66,7 @@ public:
   /// Return the internal test segmentation surfaces to test between entry
   /// and exit given by their cell id's - the boundaries are not given
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param entryCids are the entry digitisation cell ids
   /// @param exitCids are the exit digitisation cell ids
   ///
@@ -111,7 +113,10 @@ public:
   stepSurfaces(const Vector3D& start, const Vector3D& end) const;
 
   /// Fill the associated digitsation cell from this start and end position,
-  // correct for lorentz effect if needed
+  /// correct for lorentz effect if needed
+  ///
+  /// @param start is the start position of the step
+  /// @param end is the end position of the step
   const DigitizationStep
   digitizationStep(const Vector3D& start, const Vector3D& end) const;
 

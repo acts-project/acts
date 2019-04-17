@@ -27,8 +27,8 @@ class Surface;
 /// This class describes the measurement of track parameters at a certain
 /// Surface in the TrackingGeometry.
 ///
-/// @note Identifier must be copy-constructible, move-constructible,
-/// copy-assignable and move-assignable.
+/// The measurement is in local parameters and will not provide localToGlobal
+/// information. It is thus free from any Context.
 ///
 /// @tparam source_link_t the templated class that allows to link back to
 /// the source used to create this measurement, this can simply be an identifier
@@ -331,10 +331,6 @@ protected:
     out << parameters() << std::endl;
     out << "covariance matrix:" << std::endl;
     out << covariance() << std::endl;
-    out << "at " << (referenceSurface().isFree() ? "free" : "non-free")
-        << " surface:" << std::endl;
-    out << referenceSurface();
-
     return out;
   }
 
@@ -346,9 +342,28 @@ private:
   source_link_t m_sourceLink;  ///< link to the source for this measurement
 };
 
-/// @brief FittableMeasurement boost_variant type
+/**
+ * Required factory metafunction which produces measurements.
+ * This encodes the source_link_t and hides it from the type generator.
+ */
+template <typename source_link_t>
+struct fittable_measurement_helper
+{
+  template <Acts::ParID_t... pars>
+  struct meas_factory
+  {
+    using type = Measurement<source_link_t, pars...>;
+  };
+
+  using type =
+      typename detail::type_generator_t<meas_factory, Acts::NGlobalPars>;
+};
+
+/**
+ * @brief FittableMeasurement variant type
+ */
 template <typename source_link_t>
 using FittableMeasurement =
-    typename detail::fittable_type_generator<source_link_t>::type;
+    typename fittable_measurement_helper<source_link_t>::type;
 
 }  // namespace Acts

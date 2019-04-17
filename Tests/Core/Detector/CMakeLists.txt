@@ -1,3 +1,8 @@
+add_executable (AlignmentContextTests AlingmentContextTests.cpp)
+target_link_libraries (AlignmentContextTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME AlignmentContextUnitTest COMMAND AlignmentContextTests)
+acts_add_test_to_cdash_project (PROJECT ACore TEST AlignmentContextUnitTest TARGETS AlignmentContextTests)
+
 add_executable (TrackingGeometryGeoIDTests TrackingGeometryGeoIDTests.cpp)
 target_link_libraries (TrackingGeometryGeoIDTests PRIVATE ActsCore ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_test (NAME TrackingGeometryGeoIDUnitTest COMMAND TrackingGeometryGeoIDTests)

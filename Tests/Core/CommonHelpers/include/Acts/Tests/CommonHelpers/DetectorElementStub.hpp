@@ -24,7 +24,7 @@ namespace Acts {
 
 class PlanarBounds;
 class DiscBounds;
-class SurfaceMaterial;
+class ISurfaceMaterial;
 class LineBounds;
 
 namespace Test {
@@ -50,17 +50,17 @@ namespace Test {
     /// @param pBounds is the planar bounds for the planar detector element
     /// @param thickness is the module thickness
     /// @param material is the (optional) Surface material associated to it
-    DetectorElementStub(std::shared_ptr<const Transform3D>     transform,
-                        std::shared_ptr<const PlanarBounds>    pBounds,
-                        double                                 thickness,
-                        std::shared_ptr<const SurfaceMaterial> material
+    DetectorElementStub(std::shared_ptr<const Transform3D>      transform,
+                        std::shared_ptr<const PlanarBounds>     pBounds,
+                        double                                  thickness,
+                        std::shared_ptr<const ISurfaceMaterial> material
                         = nullptr)
       : DetectorElementBase()
       , m_elementTransform(std::move(transform))
       , m_elementThickness(thickness)
     {
       auto mutableSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-      mutableSurface->setAssociatedMaterial(material);
+      mutableSurface->assignSurfaceMaterial(material);
       m_elementSurface = mutableSurface;
     }
 
@@ -71,10 +71,10 @@ namespace Test {
     /// @param dBounds is the line bounds for the line like detector element
     /// @param thickness is the module thickness
     /// @param material is the (optional) Surface material associated to it
-    DetectorElementStub(std::shared_ptr<const Transform3D>     transform,
-                        std::shared_ptr<const LineBounds>      lBounds,
-                        double                                 thickness,
-                        std::shared_ptr<const SurfaceMaterial> material
+    DetectorElementStub(std::shared_ptr<const Transform3D>      transform,
+                        std::shared_ptr<const LineBounds>       lBounds,
+                        double                                  thickness,
+                        std::shared_ptr<const ISurfaceMaterial> material
                         = nullptr)
       : DetectorElementBase()
       , m_elementTransform(std::move(transform))
@@ -82,7 +82,7 @@ namespace Test {
     {
       auto mutableSurface
           = Surface::makeShared<LineSurfaceStub>(lBounds, *this);
-      mutableSurface->setAssociatedMaterial(material);
+      mutableSurface->assignSurfaceMaterial(material);
       m_elementSurface = mutableSurface;
     }
 
@@ -91,9 +91,11 @@ namespace Test {
 
     /// Return local to global transform associated with this identifier
     ///
+    /// @param gctx The current geometry context object, e.g. alignment
+    ///
     /// @note this is called from the surface().transform() in the PROXY mode
     const Transform3D&
-    transform() const override;
+    transform(const GeometryContext& gctx) const override;
 
     /// Return surface associated with this detector element
     const Surface&
@@ -113,7 +115,7 @@ namespace Test {
   };
 
   inline const Transform3D&
-  DetectorElementStub::transform() const
+  DetectorElementStub::transform(const GeometryContext& /*gctx*/) const
   {
     return *m_elementTransform;
   }

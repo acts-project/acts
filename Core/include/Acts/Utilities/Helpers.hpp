@@ -22,9 +22,8 @@
 #include "strings.h"
 
 // Acts include(s)
-#include "Definitions.hpp"
-
-#include <boost/tti/has_member_function.hpp>
+#include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 
 #ifndef ACTS_BIT_CODING
 #define ACTS_BIT_CODING 1
@@ -57,17 +56,14 @@ namespace Acts {
  */
 
 namespace VectorHelpers {
-
   namespace detail {
-    // helper to figure out if a type has a member called phi
-    BOOST_TTI_HAS_MEMBER_FUNCTION(phi)
-    template <typename T>
-    using has_phi_method
-        = has_member_function_phi<T,
-                                  double,
-                                  boost::mpl::vector<>,
-                                  boost::function_types::const_qualified>;
-  }
+    template <class T>
+    using phi_method_t = decltype(std::declval<const T>().phi());
+
+    template <class T>
+    using has_phi_method = concept::is_detected<phi_method_t, T>;
+
+  }  // namespace detail
 
   // default call on Eigen types, calculate radius
   template <typename Derived>

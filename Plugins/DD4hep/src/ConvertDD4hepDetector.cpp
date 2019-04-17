@@ -10,6 +10,7 @@
 #include <list>
 #include <stdexcept>
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
@@ -19,6 +20,7 @@
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Tools/TrackingGeometryBuilder.hpp"
 #include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {
@@ -33,7 +35,8 @@ convertDD4hepDetector(
     double             layerEnvelopeZ,
     double             defaultLayerThickness,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
-        sortSubDetectors)
+                                 sortSubDetectors,
+    const Acts::GeometryContext& gctx)
 {
   // create local logger for conversion
   auto DD4hepConverterlogger
@@ -90,13 +93,16 @@ convertDD4hepDetector(
   }
 
   std::vector<std::function<std::shared_ptr<TrackingVolume>(
-      const TrackingVolumePtr&, const VolumeBoundsPtr&)>>
+      const GeometryContext&,
+      const TrackingVolumePtr&,
+      const VolumeBoundsPtr&)>>
       volumeFactories;
 
   for (const auto& vb : volumeBuilders) {
-    volumeFactories.push_back(
-        [vb](const std::shared_ptr<const TrackingVolume>& inner,
-             const VolumeBoundsPtr&) { return vb->trackingVolume(inner); });
+    volumeFactories.push_back([vb](
+        const GeometryContext&                       vgctx,
+        const std::shared_ptr<const TrackingVolume>& inner,
+        const VolumeBoundsPtr&) { return vb->trackingVolume(vgctx, inner); });
   }
 
   // create cylinder volume helper
@@ -107,7 +113,7 @@ convertDD4hepDetector(
   tgbConfig.trackingVolumeBuilders = std::move(volumeFactories);
   auto trackingGeometryBuilder
       = std::make_shared<const Acts::TrackingGeometryBuilder>(tgbConfig);
-  return (trackingGeometryBuilder->trackingGeometry());
+  return (trackingGeometryBuilder->trackingGeometry(gctx));
 }
 
 std::shared_ptr<const CylinderVolumeBuilder>
@@ -273,11 +279,12 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
     // get the possible material of the surounding volume
     dd4hep::Material ddmaterial = subDetector.volume().material();
     auto             volumeMaterial
-        = std::make_shared<const Material>(ddmaterial.radLength(),
-                                           ddmaterial.intLength(),
-                                           ddmaterial.A(),
-                                           ddmaterial.Z(),
-                                           ddmaterial.density());
+        = std::make_shared<const Acts::HomogeneousVolumeMaterial>(
+            Acts::Material(ddmaterial.radLength(),
+                           ddmaterial.intLength(),
+                           ddmaterial.A(),
+                           ddmaterial.Z(),
+                           ddmaterial.density()));
 
     // the configuration object of the volume builder
     Acts::CylinderVolumeBuilder::Config cvbConfig;
@@ -407,11 +414,12 @@ volumeBuilder_dd4hep(dd4hep::DetElement subDetector,
     /// @todo volume material currently not used
     dd4hep::Material ddmaterial = subDetector.volume().material();
     auto             volumeMaterial
-        = std::make_shared<const Material>(ddmaterial.radLength(),
-                                           ddmaterial.intLength(),
-                                           ddmaterial.A(),
-                                           ddmaterial.Z(),
-                                           ddmaterial.density());
+        = std::make_shared<const Acts::HomogeneousVolumeMaterial>(
+            Acts::Material(ddmaterial.radLength(),
+                           ddmaterial.intLength(),
+                           ddmaterial.A(),
+                           ddmaterial.Z(),
+                           ddmaterial.density()));
     cvbConfig.layerEnvelopeR = std::make_pair(layerEnvelopeR, layerEnvelopeR);
     cvbConfig.layerEnvelopeZ = layerEnvelopeZ;
     cvbConfig.trackingVolumeHelper = volumeHelper;
@@ -445,11 +453,14 @@ cylinderVolumeHelper_dd4hep(Logging::Level loggingLevel)
 {
   // create cylindervolumehelper which can be used by all instances
   // hand over LayerArrayCreator
+  Acts::LayerArrayCreator::Config lacConfig;
   auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(
-      Acts::getDefaultLogger("LayArrayCreator", loggingLevel));
+      lacConfig, Acts::getDefaultLogger("LayArrayCreator", loggingLevel));
   // tracking volume array creator
-  auto trackingVolumeArrayCreator
+  Acts::TrackingVolumeArrayCreator::Config tvacConfig;
+  auto                                     trackingVolumeArrayCreator
       = std::make_shared<const Acts::TrackingVolumeArrayCreator>(
+          tvacConfig,
           Acts::getDefaultLogger("TrkVolArrayCreator", loggingLevel));
   // configure the cylinder volume helper
   Acts::CylinderVolumeHelper::Config cvhConfig;

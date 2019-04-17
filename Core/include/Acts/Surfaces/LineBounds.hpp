@@ -13,7 +13,6 @@
 #pragma once
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -34,11 +33,6 @@ public:
   /// @param radius is the radius of the cylinder, default = 0.
   /// @param halez is the half length in z, defualt = 0.
   LineBounds(double radius = 0., double halez = 0.);
-
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  LineBounds(const variant_data& vardata);
 
   ~LineBounds() override;
 
@@ -82,12 +76,7 @@ public:
   ///
   /// @param sl is the ostream to be dumped into
   std::ostream&
-  dump(std::ostream& sl) const final;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
+  toStream(std::ostream& sl) const final;
 
 private:
   double m_radius, m_halfZ;

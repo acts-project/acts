@@ -19,7 +19,6 @@
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 
 #include "LayerStub.hpp"
@@ -30,6 +29,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext tgContext = GeometryContext();
+
   namespace Layers {
     BOOST_AUTO_TEST_SUITE(Layers)
 
@@ -62,46 +65,18 @@ namespace Test {
       BinningValue b{BinningValue::binZ};
       Vector3D     origin{0., 0., 0.};
       // binningPosition(), needs a better test
-      BOOST_CHECK_EQUAL(pNavigationLayer->binningPosition(b), origin);
+      BOOST_CHECK_EQUAL(pNavigationLayer->binningPosition(tgContext, b),
+                        origin);
       // surfaceRepresentation() [looks dangerous]
       BOOST_CHECK_EQUAL(rawSurfacePtr,
                         &(pNavigationLayer->surfaceRepresentation()));
       // isOnLayer()
-      BOOST_CHECK(pNavigationLayer->isOnLayer(origin, true));
+      BOOST_CHECK(pNavigationLayer->isOnLayer(tgContext, origin, true));
       // isOnLayer()
       Vector3D crazyPosition{1000., 10000., std::nan("")};
-      BOOST_CHECK(!pNavigationLayer->isOnLayer(crazyPosition, true));
+      BOOST_CHECK(!pNavigationLayer->isOnLayer(tgContext, crazyPosition, true));
       // resolve()
       BOOST_CHECK(!pNavigationLayer->resolve(true, true, true));
-    }
-
-    BOOST_AUTO_TEST_CASE(NavigationLayer_toVariantData)
-    {
-      const double thickness = 0.1;
-      double       w = 5, h = 10;
-      auto         rbounds = std::make_shared<const RectangleBounds>(w, h);
-      auto trf = std::make_shared<const Transform3D>(Translation3D(0, 0, 5));
-      std::shared_ptr<const Surface> pSurface
-          = Surface::makeShared<PlaneSurface>(trf, rbounds);
-      auto pNavigationLayer = std::dynamic_pointer_cast<const NavigationLayer>(
-          NavigationLayer::create(std::move(pSurface), thickness));
-
-      variant_data var_data = pNavigationLayer->toVariantData();
-      std::cout << var_data << std::endl;
-
-      auto pNavigationLayer2 = std::dynamic_pointer_cast<const NavigationLayer>(
-          NavigationLayer::create(var_data));
-      std::cout << pNavigationLayer2->toVariantData() << std::endl;
-
-      auto rbounds2 = dynamic_cast<const RectangleBounds*>(
-          &pNavigationLayer2->surfaceRepresentation().bounds());
-      CHECK_CLOSE_OR_SMALL(
-          *trf,
-          pNavigationLayer2->surfaceRepresentation().transform(),
-          1e-6,
-          1e-9);
-      BOOST_CHECK_EQUAL(rbounds2->halflengthX(), w);
-      BOOST_CHECK_EQUAL(rbounds2->halflengthY(), h);
     }
 
     BOOST_AUTO_TEST_SUITE_END()

@@ -29,6 +29,10 @@ namespace bdata = boost::unit_test::data;
 namespace Acts {
 namespace Test {
 
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
+
   // Vertex x/y position distribution
   std::uniform_real_distribution<> vXYDist(-0.1 * units::_mm, 0.1 * units::_mm);
   // Vertex z position distribution
@@ -63,8 +67,8 @@ namespace Test {
     unsigned int nTracks = 100;
 
     // Set up RNG
-    std::random_device rd;
-    std::mt19937       gen(rd());
+    int          mySeed = 31415;
+    std::mt19937 gen(mySeed);
 
     // Set up constant B-Field
     ConstantBField bField(Vector3D(0., 0., 1.) * units::_T);
@@ -116,8 +120,8 @@ namespace Test {
       (*covMat) << resD0 * resD0, 0., 0., 0., 0., 0., resZ0 * resZ0, 0., 0., 0.,
           0., 0., resPh * resPh, 0., 0., 0., 0., 0., resTh * resTh, 0., 0., 0.,
           0., 0., resQp * resQp;
-      tracks.push_back(
-          BoundParameters(std::move(covMat), paramVec, perigeeSurface));
+      tracks.push_back(BoundParameters(
+          tgContext, std::move(covMat), paramVec, perigeeSurface));
     }
 
     LinearizedTrackFactory<ConstantBField,
@@ -133,8 +137,13 @@ namespace Test {
     ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
 
     for (const BoundParameters& parameters : tracks) {
-      LinearizedTrack linTrack = linFactory.linearizeTrack(
-          &parameters, Vector3D(0., 0., 0.), propagator);
+      LinearizedTrack linTrack = linFactory
+                                     .linearizeTrack(tgContext,
+                                                     mfContext,
+                                                     &parameters,
+                                                     Vector3D(0., 0., 0.),
+                                                     propagator)
+                                     .value();
 
       BOOST_CHECK_NE(linTrack.parametersAtPCA, vec5Zero);
       BOOST_CHECK_NE(linTrack.covarianceAtPCA, mat5Zero);
@@ -167,8 +176,13 @@ namespace Test {
     Vector3D          vec3Zero = Vector3D::Zero();
     ActsMatrixD<5, 3> mat53Zero = ActsMatrixD<5, 3>::Zero();
 
-    LinearizedTrack linTrack
-        = linFactory.linearizeTrack(nullptr, Vector3D(1., 2., 3.), propagator);
+    LinearizedTrack linTrack = linFactory
+                                   .linearizeTrack(tgContext,
+                                                   mfContext,
+                                                   nullptr,
+                                                   Vector3D(1., 2., 3.),
+                                                   propagator)
+                                   .value();
 
     BOOST_CHECK_EQUAL(linTrack.parametersAtPCA, vec5Zero);
     BOOST_CHECK_EQUAL(linTrack.covarianceAtPCA, mat5Zero);

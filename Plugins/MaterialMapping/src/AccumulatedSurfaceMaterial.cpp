@@ -35,68 +35,59 @@ Acts::AccumulatedSurfaceMaterial::AccumulatedSurfaceMaterial(
 }
 
 // Assign a material properites object
-void
+std::array<size_t, 3>
 Acts::AccumulatedSurfaceMaterial::accumulate(const Vector2D&           lp,
                                              const MaterialProperties& mp,
                                              double pathCorrection)
 {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
-  } else {
-    size_t bin0 = m_binUtility.bin(lp, 0);
-    size_t bin1 = m_binUtility.bin(lp, 1);
-    m_accumulatedMaterial[bin1][bin0].accumulate(mp, pathCorrection);
+    return {0, 0, 0};
   }
+  size_t bin0 = m_binUtility.bin(lp, 0);
+  size_t bin1 = m_binUtility.bin(lp, 1);
+  m_accumulatedMaterial[bin1][bin0].accumulate(mp, pathCorrection);
+  return {bin0, bin1, 0};
 }
 
 // Assign a material properites object
-void
+std::array<size_t, 3>
 Acts::AccumulatedSurfaceMaterial::accumulate(const Vector3D&           gp,
                                              const MaterialProperties& mp,
                                              double pathCorrection)
 {
   if (m_binUtility.dimensions() == 0) {
     m_accumulatedMaterial[0][0].accumulate(mp, pathCorrection);
-  } else {
-    std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
-    m_accumulatedMaterial[bTriple[1]][bTriple[0]].accumulate(mp,
-                                                             pathCorrection);
+    return {0, 0, 0};
   }
-}
-
-// Assign a vector of material properites object
-void
-Acts::AccumulatedSurfaceMaterial::accumulate(
-    const Vector3D& gp,
-    const std::vector<std::pair<MaterialProperties, Vector3D>>& mps,
-    double pathCorrection)
-{
-  if (m_binUtility.dimensions() == 0) {
-    for (auto mp : mps) {
-      m_accumulatedMaterial[0][0].accumulate(mp.first, pathCorrection);
-    }
-  } else {
-    std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
-    for (auto mp : mps) {
-      m_accumulatedMaterial[bTriple[1]][bTriple[0]].accumulate(mp.first,
-                                                               pathCorrection);
-    }
-  }
+  std::array<size_t, 3> bTriple = m_binUtility.binTriple(gp);
+  m_accumulatedMaterial[bTriple[1]][bTriple[0]].accumulate(mp, pathCorrection);
+  return bTriple;
 }
 
 // Average the information accumulated during one event
 void
-Acts::AccumulatedSurfaceMaterial::eventAverage()
+Acts::AccumulatedSurfaceMaterial::trackAverage(
+    const std::vector<std::array<size_t, 3>>& trackBins)
 {
-  for (auto& matVec : m_accumulatedMaterial) {
-    for (auto& mat : matVec) {
-      mat.eventAverage();
+
+  // The touched bins are known, so you can access them directly
+  if (not trackBins.empty()) {
+    for (auto bin : trackBins) {
+      m_accumulatedMaterial[bin[1]][bin[0]].trackAverage();
+    }
+  } else {
+    // Run over all bins
+    for (auto& matVec : m_accumulatedMaterial) {
+      for (auto& mat : matVec) {
+        mat.trackAverage();
+      }
     }
   }
 }
 
 /// Total average creates SurfaceMaterial
-std::unique_ptr<const Acts::SurfaceMaterial>
+std::unique_ptr<const Acts::ISurfaceMaterial>
 Acts::AccumulatedSurfaceMaterial::totalAverage()
 {
   if (m_binUtility.bins() == 1) {

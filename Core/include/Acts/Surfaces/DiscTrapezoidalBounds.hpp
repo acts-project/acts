@@ -16,7 +16,6 @@
 #include "Acts/Surfaces/DiscBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -60,11 +59,6 @@ public:
                         double avephi = M_PI_2,
                         double stereo = 0.);
 
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  DiscTrapezoidalBounds(const variant_data& vardata);
-
   ~DiscTrapezoidalBounds() override;
 
   DiscTrapezoidalBounds*
@@ -92,7 +86,7 @@ public:
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
   /// This method returns inner radius
   double
@@ -129,11 +123,6 @@ public:
   /// This method returns the halflength in Y (this is Rmax -Rmin)
   double
   halflengthY() const;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   double m_rMin, m_rMax, m_minHalfX, m_maxHalfX, m_avgPhi;

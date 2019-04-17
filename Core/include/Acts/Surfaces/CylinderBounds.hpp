@@ -15,7 +15,6 @@
 
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
 namespace Acts {
@@ -76,11 +75,6 @@ public:
                  double halfPhi,
                  double halfZ);
 
-  /// Constructor which accepts @c variant_data
-  ///
-  /// @param vardata the @c variant_data to build from
-  CylinderBounds(const variant_data& vardata);
-
   ~CylinderBounds() override;
 
   CylinderBounds*
@@ -120,7 +114,7 @@ public:
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
   /// This method returns the radius
   double
@@ -137,11 +131,6 @@ public:
   /// This method returns the halflengthZ
   double
   halflengthZ() const;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
 
 private:
   /// the bound radius, average, half phi and half Z

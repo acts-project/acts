@@ -21,7 +21,6 @@
 //
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace Acts {
 
@@ -63,16 +62,10 @@ public:
     return 10.;
   }
   std::ostream&
-  dump(std::ostream& sl) const final
+  toStream(std::ostream& sl) const final
   {
     sl << "SurfaceBoundsStub";
     return sl;
-  }
-
-  variant_data
-  toVariantData() const override
-  {
-    return variant_data();
   }
 
 private:

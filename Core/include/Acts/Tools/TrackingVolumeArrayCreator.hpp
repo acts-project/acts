@@ -15,6 +15,7 @@
 #include "Acts/Tools/ITrackingVolumeArrayCreator.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
@@ -33,10 +34,16 @@ using TrackingVolumeOrderPosition = std::pair<TrackingVolumePtr, Vector3D>;
 class TrackingVolumeArrayCreator : public ITrackingVolumeArrayCreator
 {
 public:
+  /// @brief This struct stores the configuration of the tracking geometry
+  struct Config
+  {
+  };
+
   /// Constructor
   ///
   /// @param logger logging instance
-  TrackingVolumeArrayCreator(std::unique_ptr<const Logger> logger
+  TrackingVolumeArrayCreator(const Config& /*cfg*/,
+                             std::unique_ptr<const Logger> logger
                              = getDefaultLogger("LayerArrayCreator",
                                                 Logging::INFO))
     : m_logger(std::move(logger))
@@ -48,12 +55,14 @@ public:
 
   /// create a tracking volume array
   ///
-  /// @param tVolumes is the vector of TrackingVolumes to be
-  /// @param bValue is the binning value
+  /// @param [in] gctx the geometry context for this building
+  /// @param [in] tVolumes is the vector of TrackingVolumes to be
+  /// @param [in] bValue is the binning value
   ///
   /// @return new created volume array
   std::shared_ptr<const TrackingVolumeArray>
-  trackingVolumeArray(const TrackingVolumeVector& tVolumes,
+  trackingVolumeArray(const GeometryContext&      gctx,
+                      const TrackingVolumeVector& tVolumes,
                       BinningValue                bValue) const override;
 
   /// Set logging instance

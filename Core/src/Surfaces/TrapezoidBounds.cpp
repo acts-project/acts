@@ -15,7 +15,6 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include "Acts/Utilities/VariantData.hpp"
 
 Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
                                        double maxhalex,
@@ -25,23 +24,6 @@ Acts::TrapezoidBounds::TrapezoidBounds(double minhalex,
   , m_halfY(std::abs(haley))
   , m_boundingBox(std::max(minhalex, maxhalex), haley)
 {
-}
-
-Acts::TrapezoidBounds::TrapezoidBounds(const variant_data& vardata)
-  : m_boundingBox(0, 0)
-{
-  throw_assert(vardata.which() == 4, "Variant data must be map");
-  const variant_map& data = boost::get<variant_map>(vardata);
-  std::string        type = data.get<std::string>("type");
-  throw_assert(type == "TrapezoidBounds", "Type must be TrapezoidBounds");
-
-  const variant_map& payload = data.get<variant_map>("payload");
-
-  m_minHalfX = payload.get<double>("minHalfX");
-  m_maxHalfX = payload.get<double>("maxHalfX");
-  m_halfY    = payload.get<double>("halfY");
-
-  m_boundingBox = RectangleBounds(m_maxHalfX, m_halfY);
 }
 
 Acts::TrapezoidBounds::~TrapezoidBounds() = default;
@@ -98,7 +80,7 @@ Acts::TrapezoidBounds::boundingBox() const
 }
 
 std::ostream&
-Acts::TrapezoidBounds::dump(std::ostream& sl) const
+Acts::TrapezoidBounds::toStream(std::ostream& sl) const
 {
   sl << std::setiosflags(std::ios::fixed);
   sl << std::setprecision(7);
@@ -107,21 +89,4 @@ Acts::TrapezoidBounds::dump(std::ostream& sl) const
      << halflengthY() << ")";
   sl << std::setprecision(-1);
   return sl;
-}
-
-Acts::variant_data
-Acts::TrapezoidBounds::toVariantData() const
-{
-  using namespace std::string_literals;
-
-  variant_map payload;
-  payload["minHalfX"] = m_minHalfX;
-  payload["maxHalfX"] = m_maxHalfX;
-  payload["halfY"]    = m_halfY;
-
-  variant_map data;
-  data["type"]    = "TrapezoidBounds"s;
-  data["payload"] = payload;
-
-  return data;
 }

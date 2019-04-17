@@ -11,8 +11,8 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
@@ -24,7 +24,7 @@ namespace Acts {
 /// MaterialProperties. This is not memory optimised as every bin
 /// holds one material property object.
 
-class BinnedSurfaceMaterial : public SurfaceMaterial
+class BinnedSurfaceMaterial : public ISurfaceMaterial
 {
 public:
   /// Default Constructor - deleted
@@ -111,7 +111,7 @@ public:
 
   /// Output Method for std::ostream, to be overloaded by child classes
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
 private:
   /// The helper for the bin finding

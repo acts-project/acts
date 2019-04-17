@@ -1,6 +1,8 @@
 #ifndef ActsVersion_h
 #define ActsVersion_h
 
+#include <string_view>
+
 //  Caution: this is the only Acts header that is guaranteed
 //  to change with every Acts release. Including this header
 //  will cause a recompile every time a new Acts version is
@@ -12,6 +14,7 @@ constexpr unsigned int VersionMinor = @PROJECT_VERSION_MINOR@u;
 constexpr unsigned int VersionPatch = @PROJECT_VERSION_PATCH@u;
 constexpr unsigned int Version
     = 10000u * VersionMajor + 100u * VersionMinor + VersionPatch;
+constexpr std::string_view CommitHash = "@_git_hash_short@";
 }  // namespace Acts
 
 // for backward compatibility

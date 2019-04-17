@@ -21,7 +21,6 @@
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantData.hpp"
 
 namespace tt = boost::test_tools;
 using boost::test_tools::output_test_stream;
@@ -30,6 +29,10 @@ namespace utf = boost::unit_test;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext testContext = GeometryContext();
+
   BOOST_AUTO_TEST_SUITE(CylinderSurfaces)
   /// Unit test for creating compliant/non-compliant CylinderSurface object
   BOOST_AUTO_TEST_CASE(CylinderSurfaceConstruction)
@@ -70,12 +73,12 @@ namespace Test {
     auto copiedCylinderSurface
         = Surface::makeShared<CylinderSurface>(*cylinderSurfaceObject);
     BOOST_CHECK_EQUAL(copiedCylinderSurface->type(), Surface::Cylinder);
-    BOOST_CHECK_EQUAL(*copiedCylinderSurface, *cylinderSurfaceObject);
+    BOOST_CHECK(*copiedCylinderSurface == *cylinderSurfaceObject);
     //
     /// Copied and transformed
     auto copiedTransformedCylinderSurface
-        = Surface::makeShared<CylinderSurface>(*cylinderSurfaceObject,
-                                               *pTransform);
+        = Surface::makeShared<CylinderSurface>(
+            testContext, *cylinderSurfaceObject, *pTransform);
     BOOST_CHECK_EQUAL(copiedTransformedCylinderSurface->type(),
                       Surface::Cylinder);
 
@@ -96,7 +99,8 @@ namespace Test {
     auto cylinderSurfaceObject
         = Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
     //
-    auto pClonedCylinderSurface = cylinderSurfaceObject->clone();
+    auto pClonedCylinderSurface
+        = cylinderSurfaceObject->clone(testContext, Transform3D::Identity());
     BOOST_CHECK_EQUAL(pClonedCylinderSurface->type(), Surface::Cylinder);
     //
     /// Test type (redundant)
@@ -104,10 +108,10 @@ namespace Test {
     //
     /// Test binningPosition
     Vector3D binningPosition{0., 1., 2.};
-    CHECK_CLOSE_ABS(
-        cylinderSurfaceObject->binningPosition(BinningValue::binPhi),
-        binningPosition,
-        1e-9);
+    CHECK_CLOSE_ABS(cylinderSurfaceObject->binningPosition(
+                        testContext, BinningValue::binPhi),
+                    binningPosition,
+                    1e-9);
     //
     /// Test referenceFrame
     double           rootHalf = std::sqrt(0.5);
@@ -119,44 +123,49 @@ namespace Test {
     expectedFrame << rootHalf, 0., rootHalf, rootHalf, 0., -rootHalf, 0., 1.,
         0.;
     // check without shift
-    CHECK_CLOSE_OR_SMALL(
-        cylinderSurfaceObject->referenceFrame(globalPosition, momentum),
-        expectedFrame,
-        1e-6,
-        1e-9);
+    CHECK_CLOSE_OR_SMALL(cylinderSurfaceObject->referenceFrame(
+                             testContext, globalPosition, momentum),
+                         expectedFrame,
+                         1e-6,
+                         1e-9);
     // check with shift and different momentum
-    CHECK_CLOSE_OR_SMALL(
-        cylinderSurfaceObject->referenceFrame(globalPositionZ, momentum2),
-        expectedFrame,
-        1e-6,
-        1e-9);
+    CHECK_CLOSE_OR_SMALL(cylinderSurfaceObject->referenceFrame(
+                             testContext, globalPositionZ, momentum2),
+                         expectedFrame,
+                         1e-6,
+                         1e-9);
     //
     /// Test normal, given 3D position
     Vector3D origin{0., 0., 0.};
     Vector3D normal3D = {0., -1., 0.};
-    CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(origin), normal3D, 1e-9);
+    CHECK_CLOSE_ABS(
+        cylinderSurfaceObject->normal(testContext, origin), normal3D, 1e-9);
 
     Vector3D pos45deg    = {rootHalf, 1 + rootHalf, 0.};
     Vector3D pos45degZ   = {rootHalf, 1 + rootHalf, 4.};
     Vector3D normal45deg = {rootHalf, rootHalf, 0.};
     // test the normal vector
-    CHECK_CLOSE_ABS(
-        cylinderSurfaceObject->normal(pos45deg), normal45deg, 1e-6 * rootHalf);
+    CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45deg),
+                    normal45deg,
+                    1e-6 * rootHalf);
     // thest that the normal vector is independent of z coordinate
-    CHECK_CLOSE_ABS(
-        cylinderSurfaceObject->normal(pos45degZ), normal45deg, 1e-6 * rootHalf);
+    CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, pos45degZ),
+                    normal45deg,
+                    1e-6 * rootHalf);
     //
     /// Test normal given 2D rphi position
     Vector2D positionPiBy2(1.0, 0.);
     Vector3D normalAtPiBy2{std::cos(1.), std::sin(1.), 0.};
-    CHECK_CLOSE_ABS(
-        cylinderSurfaceObject->normal(positionPiBy2), normalAtPiBy2, 1e-9);
+    CHECK_CLOSE_ABS(cylinderSurfaceObject->normal(testContext, positionPiBy2),
+                    normalAtPiBy2,
+                    1e-9);
 
     //
     /// Test rotational symmetry axis
     Vector3D symmetryAxis{0., 0., 1.};
-    CHECK_CLOSE_ABS(
-        cylinderSurfaceObject->rotSymmetryAxis(), symmetryAxis, 1e-9);
+    CHECK_CLOSE_ABS(cylinderSurfaceObject->rotSymmetryAxis(testContext),
+                    symmetryAxis,
+                    1e-9);
     //
     /// Test bounds
     BOOST_CHECK_EQUAL(cylinderSurfaceObject->bounds().type(),
@@ -165,27 +174,27 @@ namespace Test {
     /// Test localToGlobal
     Vector2D localPosition{0., 0.};
     cylinderSurfaceObject->localToGlobal(
-        localPosition, momentum, globalPosition);
+        testContext, localPosition, momentum, globalPosition);
     Vector3D expectedPosition{1, 1, 2};
     BOOST_CHECK_EQUAL(globalPosition, expectedPosition);
     //
     /// Testing globalToLocal
     cylinderSurfaceObject->globalToLocal(
-        globalPosition, momentum, localPosition);
+        testContext, globalPosition, momentum, localPosition);
     Vector2D expectedLocalPosition{0., 0.};
     BOOST_CHECK_EQUAL(localPosition, expectedLocalPosition);
     //
     /// Test isOnSurface
     Vector3D offSurface{100, 1, 2};
-    BOOST_CHECK(
-        cylinderSurfaceObject->isOnSurface(globalPosition, momentum, true));
-    BOOST_CHECK(
-        !cylinderSurfaceObject->isOnSurface(offSurface, momentum, true));
+    BOOST_CHECK(cylinderSurfaceObject->isOnSurface(
+        testContext, globalPosition, momentum, true));
+    BOOST_CHECK(!cylinderSurfaceObject->isOnSurface(
+        testContext, offSurface, momentum, true));
     //
     /// intersectionEstimate
     Vector3D direction{-1., 0, 0};
-    auto     intersect
-        = cylinderSurfaceObject->intersectionEstimate(offSurface, direction);
+    auto     intersect = cylinderSurfaceObject->intersectionEstimate(
+        testContext, offSurface, direction);
     Intersection expectedIntersect{Vector3D{1, 1, 2}, 99., true, 0};
     BOOST_CHECK(intersect.valid);
     CHECK_CLOSE_ABS(intersect.position, expectedIntersect.position, 1e-9);
@@ -193,7 +202,8 @@ namespace Test {
     CHECK_CLOSE_ABS(intersect.distance, expectedIntersect.distance, 1e-9);
     //
     /// Test pathCorrection
-    CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(offSurface, momentum),
+    CHECK_CLOSE_REL(cylinderSurfaceObject->pathCorrection(
+                        testContext, offSurface, momentum),
                     std::sqrt(3.),
                     0.01);
     //
@@ -203,7 +213,7 @@ namespace Test {
     //
     /// Test dump
     boost::test_tools::output_test_stream dumpOuput;
-    cylinderSurfaceObject->dump(dumpOuput);
+    cylinderSurfaceObject->toStream(testContext, dumpOuput);
     BOOST_CHECK(dumpOuput.is_equal("Acts::CylinderSurface\n\
      Center position  (x, y, z) = (0.0000, 1.0000, 2.0000)\n\
      Rotation:             colX = (1.000000, 0.000000, 0.000000)\n\
@@ -224,7 +234,7 @@ namespace Test {
         = Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
     //
     /// Test equality operator
-    BOOST_CHECK_EQUAL(*cylinderSurfaceObject, *cylinderSurfaceObject2);
+    BOOST_CHECK(*cylinderSurfaceObject == *cylinderSurfaceObject2);
     //
     BOOST_TEST_CHECKPOINT(
         "Create and then assign a CylinderSurface object to the existing one");
@@ -233,35 +243,7 @@ namespace Test {
         = Surface::makeShared<CylinderSurface>(nullptr, 6.6, 5.4);
     *assignedCylinderSurface = *cylinderSurfaceObject;
     /// Test equality of assigned to original
-    BOOST_CHECK_EQUAL(*assignedCylinderSurface, *cylinderSurfaceObject);
-  }
-
-  BOOST_AUTO_TEST_CASE(CylinderSurface_toVariantData)
-  {
-    double        radius(1.0), halfZ(10.);
-    Translation3D translation{0., 1., 2.};
-    auto          pTransform = std::make_shared<const Transform3D>(translation);
-    auto          cylinder
-        = Surface::makeShared<CylinderSurface>(pTransform, radius, halfZ);
-
-    variant_data var_cyl = cylinder->toVariantData();
-    std::cout << var_cyl << std::endl;
-
-    const variant_map& pl
-        = boost::get<variant_map>(var_cyl).get<variant_map>("payload");
-    const variant_map& bounds_pl
-        = pl.get<variant_map>("bounds").get<variant_map>("payload");
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("radius"), radius);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("avgPhi"), 0);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfPhi"), M_PI);
-    BOOST_CHECK_EQUAL(bounds_pl.get<double>("halfZ"), halfZ);
-
-    auto cylinder2 = Surface::makeShared<CylinderSurface>(var_cyl);
-    auto cylbounds = dynamic_cast<const CylinderBounds*>(&cylinder2->bounds());
-    BOOST_CHECK_EQUAL(cylbounds->r(), radius);
-    BOOST_CHECK_EQUAL(cylbounds->halflengthZ(), halfZ);
-    BOOST_CHECK_EQUAL(cylbounds->halfPhiSector(), M_PI);
-    BOOST_CHECK_EQUAL(cylbounds->averagePhi(), 0);
+    BOOST_CHECK(*assignedCylinderSurface == *cylinderSurfaceObject);
   }
 
   BOOST_AUTO_TEST_SUITE_END()

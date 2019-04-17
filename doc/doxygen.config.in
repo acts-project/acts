@@ -771,15 +771,13 @@ WARN_LOGFILE           = doxygen.log
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = @PROJECT_SOURCE_DIR@/Core/include \
-                         @PROJECT_SOURCE_DIR@/Plugins/DD4hepPlugins/include \
-                         @PROJECT_SOURCE_DIR@/Plugins/TGeo/include \
-                         @PROJECT_SOURCE_DIR@/Plugins/MaterialPlugins/include \
-						 @PROJECT_SOURCE_DIR@/Tests \
-						 @PROJECT_SOURCE_DIR@/Examples \
+INPUT                  = @PROJECT_SOURCE_DIR@/Core \
+                         @PROJECT_SOURCE_DIR@/Legacy \
+                         @PROJECT_SOURCE_DIR@/Plugins \
+                         @PROJECT_SOURCE_DIR@/Tests \
+                         @PROJECT_SOURCE_DIR@/doc/Modules.hpp \
                          @PROJECT_SOURCE_DIR@/README.md \
-                         @PROJECT_SOURCE_DIR@/CONTRIBUTING.md \
-                         @PROJECT_SOURCE_DIR@/doc/Modules.hpp 
+                         @PROJECT_SOURCE_DIR@/CONTRIBUTING.md
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -804,9 +802,10 @@ INPUT_ENCODING         = UTF-8
 # *.m, *.markdown, *.md, *.mm, *.dox, *.py, *.pyw, *.f90, *.f, *.for, *.tcl,
 # *.vhd, *.vhdl, *.ucf, *.qsf, *.as and *.js.
 
-FILE_PATTERNS          = *.hpp \
-                         *.cpp \
-                         *.ipp
+FILE_PATTERNS          = *.cpp \
+                         *.hpp \
+                         *.ipp \
+                         *.md
 
 # The RECURSIVE tag can be used to specify whether or not subdirectories should
 # be searched for input files as well.
@@ -931,7 +930,7 @@ FILTER_SOURCE_PATTERNS =
 # (index.html). This can be useful if you have a project on for instance GitHub
 # and want to reuse the introduction page also for the doxygen output.
 
-USE_MDFILE_AS_MAINPAGE =
+USE_MDFILE_AS_MAINPAGE = @PROJECT_SOURCE_DIR@/README.md
 
 #---------------------------------------------------------------------------
 # Configuration options related to source browsing
@@ -2038,7 +2037,7 @@ INCLUDE_PATH           =
 # used.
 # This tag requires that the tag ENABLE_PREPROCESSING is set to YES.
 
-INCLUDE_FILE_PATTERNS  = 
+INCLUDE_FILE_PATTERNS  =
 
 # The PREDEFINED tag can be used to specify one or more macro names that are
 # defined before the preprocessor is started (similar to the -D option of e.g.

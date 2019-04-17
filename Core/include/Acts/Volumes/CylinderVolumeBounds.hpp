@@ -12,6 +12,8 @@
 
 #pragma once
 #include <cmath>
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Volumes/VolumeBounds.hpp"
@@ -21,7 +23,9 @@ namespace Acts {
 class Surface;
 class CylinderBounds;
 class DiscBounds;
+class RadialBounds;
 class PlanarBounds;
+class IVisualization;
 
 /// @class CylinderVolumeBounds
 ///
@@ -104,6 +108,18 @@ public:
                        double haphi,
                        double halez);
 
+  /// Constructor - from cylinder bounds and thickness
+  ///
+  /// @param cbounds the cylinder bounds
+  /// @param thickness
+  CylinderVolumeBounds(const CylinderBounds& cBounds, double thickness);
+
+  /// Constructor - from radial bounds and thickness
+  ///
+  /// @param rbounds the Radial bounds
+  /// @param thickness
+  CylinderVolumeBounds(const RadialBounds& rBounds, double thickness);
+
   /// Copy Constructor
   ///
   /// @param cylbo is the source cylinder volume bounds for the copy
@@ -133,8 +149,7 @@ public:
   /// situated
   /// @note this surface is a factory method, the volume handles the memory
   std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(
-      std::shared_ptr<const Transform3D> transformPtr) const override;
+  decomposeToSurfaces(const Transform3D* transformPtr) const override;
 
   /// Binning offset - overloaded for some R-binning types
   ///
@@ -174,7 +189,14 @@ public:
 
   /// Output Method for std::ostream
   std::ostream&
-  dump(std::ostream& sl) const override;
+  toStream(std::ostream& sl) const override;
+
+  /// Draw this cylinder to a given helper
+  /// @param helper The helper instance
+  /// @param transform An additional transform, default is identity
+  void
+  draw(IVisualization&    helper,
+       const Transform3D& transform = Transform3D::Identity()) const;
 
 private:
   /// templated dumpT method

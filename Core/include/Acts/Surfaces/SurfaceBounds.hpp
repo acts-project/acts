@@ -15,7 +15,6 @@
 
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -48,8 +47,9 @@ public:
     Trapezoid        = 9,
     Triangle         = 10,
     DiscTrapezoidal  = 11,
-    Boundless        = 12,
-    Other            = 12
+    ConvexPolygon    = 12,
+    Boundless        = 13,
+    Other            = 14
   };
 
   virtual ~SurfaceBounds() = default;
@@ -94,12 +94,7 @@ public:
   ///
   /// @param sl is the outstream in which the string dump is done
   virtual std::ostream&
-  dump(std::ostream& os) const = 0;
-
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  virtual variant_data
-  toVariantData() const = 0;
+  toStream(std::ostream& os) const = 0;
 };
 
 inline bool
@@ -120,7 +115,7 @@ operator!=(const SurfaceBounds& lhs, const SurfaceBounds& rhs)
 inline std::ostream&
 operator<<(std::ostream& os, const SurfaceBounds& sb)
 {
-  return sb.dump(os);
+  return sb.toStream(os);
 }
 
 }  // namespace Acts

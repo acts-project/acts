@@ -20,6 +20,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -73,9 +74,9 @@ namespace IntegrationTest {
   setupDensePropagator()
   {
     CuboidVolumeBuilder::VolumeConfig vConf;
-    vConf.position = {1.5 * units::_m, 0., 0.};
-    vConf.length   = {3. * units::_m, 1. * units::_m, 1. * units::_m};
-    vConf.material = std::make_shared<const Material>(
+    vConf.position       = {1.5 * units::_m, 0., 0.};
+    vConf.length         = {3. * units::_m, 1. * units::_m, 1. * units::_m};
+    vConf.volumeMaterial = std::make_shared<const HomogeneousVolumeMaterial>(
         Material(352.8, 407., 9.012, 4., 1.848e-3));
     CuboidVolumeBuilder::Config conf;
     conf.volumeCfg.push_back(vConf);
@@ -84,12 +85,13 @@ namespace IntegrationTest {
     CuboidVolumeBuilder             cvb(conf);
     TrackingGeometryBuilder::Config tgbCfg;
     tgbCfg.trackingVolumeBuilders.push_back(
-        [=](const auto& inner, const auto&) {
-          return cvb.trackingVolume(inner, nullptr);
+        [=](const auto& context, const auto& inner, const auto&) {
+          return cvb.trackingVolume(context, inner, nullptr);
         });
     TrackingGeometryBuilder                 tgb(tgbCfg);
-    std::shared_ptr<const TrackingGeometry> detector = tgb.trackingGeometry();
-    Navigator                               navi(detector);
+    std::shared_ptr<const TrackingGeometry> detector
+        = tgb.trackingGeometry(tgContext);
+    Navigator navi(detector);
     return DensePropagatorType(dstepper, std::move(navi));
   }
 

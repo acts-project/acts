@@ -13,7 +13,6 @@
 #pragma once
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/VariantDataFwd.hpp"
 
 namespace Acts {
 
@@ -41,12 +40,13 @@ public:
   /// @param haley halflength in Y
   RectangleBounds(double halex, double haley);
 
-  /// Constructor which accepts @c variant_data
+  /// Constructor with explicit min and max vertex
   ///
-  /// @param vardata the @c variant_data to build from
-  RectangleBounds(const variant_data& vardata);
+  /// @param vmin Minimum vertex
+  /// @param vmax Maximum vertex
+  RectangleBounds(const Vector2D& vmin, const Vector2D& vmax);
 
-  ~RectangleBounds() override;
+  ~RectangleBounds() override = default;
 
   RectangleBounds*
   clone() const final;
@@ -86,7 +86,7 @@ public:
   ///
   /// @param sl is the ostream for the dump
   std::ostream&
-  dump(std::ostream& sl) const final;
+  toStream(std::ostream& sl) const final;
 
   /// Return method for the half length in X
   double
@@ -96,25 +96,31 @@ public:
   double
   halflengthY() const;
 
-  /// Produce a @c variant_data representation of this object
-  /// @return The representation
-  variant_data
-  toVariantData() const override;
+  /// Get the min vertex defining the bounds
+  /// @return The min vertex
+  const Vector2D&
+  min() const;
+
+  /// Get the max vertex defining the bounds
+  /// @return The max vertex
+  const Vector2D&
+  max() const;
 
 private:
-  double m_halfX, m_halfY;
+  Vector2D m_min;
+  Vector2D m_max;
 };
 
 inline double
 RectangleBounds::halflengthX() const
 {
-  return m_halfX;
+  return std::abs(m_max.x() - m_min.x()) * 0.5;
 }
 
 inline double
 RectangleBounds::halflengthY() const
 {
-  return m_halfY;
+  return std::abs(m_max.y() - m_min.y()) * 0.5;
 }
 
 inline SurfaceBounds::BoundsType
@@ -123,4 +129,16 @@ RectangleBounds::type() const
   return SurfaceBounds::Rectangle;
 }
 
-}  // namespace
+inline const Vector2D&
+RectangleBounds::min() const
+{
+  return m_min;
+}
+
+inline const Vector2D&
+RectangleBounds::max() const
+{
+  return m_max;
+}
+
+}  // namespace Acts

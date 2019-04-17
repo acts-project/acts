@@ -13,9 +13,8 @@
 // Geometry module
 #include "Acts/Layers/Layer.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/ApproachDescriptor.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
 Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
@@ -23,18 +22,12 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
                    std::unique_ptr<ApproachDescriptor> ades,
                    LayerType                           laytyp)
   : m_nextLayers(NextLayers(nullptr, nullptr))
-  , m_nextLayerUtility(nullptr)
   , m_surfaceArray(surfaceArray.release())
   , m_layerThickness(thickness)
   , m_approachDescriptor(nullptr)
-  , m_trackingVolume(nullptr)
-  , m_enclosingDetachedTrackingVolume(nullptr)
   , m_representingVolume(nullptr)
   , m_layerType(laytyp)
   , m_ssRepresentingSurface(1)
-  , m_ssSensitiveSurfaces(0)
-  , m_ssApproachSurfaces(0)
-
 {
   if (ades) {
     ades->registerLayer(*this);
@@ -45,11 +38,6 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   if (m_surfaceArray) {
     m_ssSensitiveSurfaces = 1;
   }
-}
-
-Acts::Layer::~Layer()
-{
-  delete m_representingVolume;
 }
 
 const Acts::ApproachDescriptor*
@@ -65,13 +53,20 @@ Acts::Layer::approachDescriptor()
 }
 
 void
-Acts::Layer::closeGeometry(const GeometryID& layerID)
+Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
+                           const GeometryID&         layerID)
 {
+
   // set the volumeID of this
   assignGeoID(layerID);
+  // assign to the representing surface
+  Surface* rSurface = const_cast<Surface*>(&surfaceRepresentation());
+  if (materialDecorator != nullptr) {
+    materialDecorator->decorate(*rSurface);
+  }
 
   // also find out how the sub structure is defined
-  if (surfaceRepresentation().associatedMaterial() != nullptr) {
+  if (surfaceRepresentation().surfaceMaterial() != nullptr) {
     m_ssRepresentingSurface = 2;
   }
 
@@ -86,8 +81,11 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
       asurfaceID.add(++iasurface, GeometryID::approach_mask);
       auto mutableASurface = const_cast<Surface*>(aSurface);
       mutableASurface->assignGeoID(asurfaceID);
+      if (materialDecorator != nullptr) {
+        materialDecorator->decorate(*rSurface);
+      }
       // if any of the approach surfaces has material
-      if (aSurface->associatedMaterial() != nullptr) {
+      if (aSurface->surfaceMaterial() != nullptr) {
         m_ssApproachSurfaces = 2;
       }
     }
@@ -103,8 +101,11 @@ Acts::Layer::closeGeometry(const GeometryID& layerID)
       ssurfaceID.add(++issurface, GeometryID::sensitive_mask);
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeoID(ssurfaceID);
+      if (materialDecorator != nullptr) {
+        materialDecorator->decorate(*rSurface);
+      }
       // if any of the sensitive surfaces has material
-      if (sSurface->associatedMaterial() != nullptr) {
+      if (sSurface->surfaceMaterial() != nullptr) {
         m_ssSensitiveSurfaces = 2;
       }
     }

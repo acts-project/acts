@@ -11,6 +11,7 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -49,22 +50,28 @@ public:
   /// Loops over a provided vector of surface and calculates the various
   /// min/max values in one go. Also takes into account the thickness
   /// of an associated DetectorElement, if it exists.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(const std::vector<const Surface*>& surfaces);
+  ProtoLayer(const GeometryContext&             gctx,
+             const std::vector<const Surface*>& surfaces);
 
   /// Constructor
   ///
   /// Loops over a provided vector of surface and calculates the various
   /// min/max values in one go. Also takes into account the thickness
   /// of an associated DetectorElement, if it exists.
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The vector of surfaces to consider
-  ProtoLayer(const std::vector<std::shared_ptr<const Surface>>& surfaces);
+  ProtoLayer(const GeometryContext&                             gctx,
+             const std::vector<std::shared_ptr<const Surface>>& surfaces);
 
   // normal empty constructor
   ProtoLayer() = default;
 
   std::ostream&
-  dump(std::ostream& sl) const;
+  toStream(std::ostream& sl) const;
 
   /// Calculates the closest radial distance of a line
   ///
@@ -77,8 +84,11 @@ public:
 
 private:
   /// Helper method which performs the actual min/max calculation
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param surfaces The surfaces to build this protolayer out of
   void
-  measure(const std::vector<const Surface*>& surfaces);
+  measure(const GeometryContext&             gctx,
+          const std::vector<const Surface*>& surfaces);
 };
 }  // namespace Acts

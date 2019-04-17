@@ -25,6 +25,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;
@@ -34,6 +36,10 @@ using Acts::VectorHelpers::perp;
 namespace Acts {
 
 namespace Test {
+
+  // Create a test context
+  GeometryContext      tgContext = GeometryContext();
+  MagneticFieldContext mfContext = MagneticFieldContext();
 
   using cstep = detail::ConstrainedStep;
 
@@ -99,7 +105,8 @@ namespace Test {
         // calculate the distance to the surface
         const double distance
             = surface
-                  ->intersectionEstimate(stepper.position(state.stepping),
+                  ->intersectionEstimate(state.geoContext,
+                                         stepper.position(state.stepping),
                                          stepper.direction(state.stepping),
                                          forward,
                                          true)
@@ -124,66 +131,17 @@ namespace Test {
     }
   };
 
-  /// An observer that scatters at a given pathlength
-  /// with a fixed sigma(phi) and sigma(theta)
-  struct PathScatterer
-  {
-
-    // the surface to be intersected
-    double path_limit = std::numeric_limits<double>::max();
-    // scattering deltas
-    double sigma_phi   = 0.05;
-    double sigma_theta = 0.05;
-    // the tolerance for intersection
-    double tolerance = 1.e-5;
-
-    /// Simple result struct to be returned
-    struct this_result
-    {
-      bool scattered = false;
-    };
-
-    using result_type = this_result;
-
-    PathScatterer() = default;
-
-    template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& state,
-               const stepper_t& /*unused*/,
-               result_type& result) const
-    {
-      if (!result.scattered
-          && std::abs(state.stepping.pathAccumulated - path_limit)
-              < tolerance) {
-        // now here we should apply the scattering
-        result.scattered = true;
-        // do the update and reinitialize the jacobians
-        state.stepping.covarianceTransport(true);
-        state.stepping.cov(ePHI, ePHI) += sigma_phi * sigma_phi;
-        state.stepping.cov(eTHETA, eTHETA) += sigma_theta * sigma_theta;
-      }
-    }
-
-    template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& /*unused*/,
-               const stepper_t& /*unused*/) const
-    {
-    }
-  };
-
   // Global definitions
   // The path limit abort
   using path_limit = detail::PathLimitReached;
 
-  using BField_type         = ConstantBField;
-  using EigenStepper_type   = EigenStepper<BField_type>;
-  using EigenPropagatorType = Propagator<EigenStepper_type>;
+  using BFieldType          = ConstantBField;
+  using EigenStepperType    = EigenStepper<BFieldType>;
+  using EigenPropagatorType = Propagator<EigenStepperType>;
 
   const double        Bz = 2. * units::_T;
-  BField_type         bField(0, 0, Bz);
-  EigenStepper_type   estepper(bField);
+  BFieldType          bField(0, 0, Bz);
+  EigenStepperType    estepper(bField);
   EigenPropagatorType epropagator(std::move(estepper));
 
   auto mSurface
@@ -197,17 +155,16 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(PropagatorOptions_)
   {
 
-    using null_options_type = PropagatorOptions<>;
-    null_options_type null_options;
+    using null_optionsType = PropagatorOptions<>;
+    null_optionsType null_options(tgContext, mfContext);
     // todo write null options test
 
-    using ActionList_type      = ActionList<PerpendicularMeasure>;
-    using AbortConditions_type = AbortList<>;
+    using ActionListType      = ActionList<PerpendicularMeasure>;
+    using AbortConditionsType = AbortList<>;
 
-    using options_type
-        = PropagatorOptions<ActionList_type, AbortConditions_type>;
+    using optionsType = PropagatorOptions<ActionListType, AbortConditionsType>;
 
-    options_type options;
+    optionsType options(tgContext, mfContext);
   }
 
   BOOST_DATA_TEST_CASE(
@@ -235,12 +192,13 @@ namespace Test {
     double dcharge = -1 + 2 * charge;
     (void)index;
 
-    using CylinderObserver     = SurfaceObserver<CylinderSurface>;
-    using ActionList_type      = ActionList<CylinderObserver>;
-    using AbortConditions_type = AbortList<>;
+    using CylinderObserver    = SurfaceObserver<CylinderSurface>;
+    using ActionListType      = ActionList<CylinderObserver>;
+    using AbortConditionsType = AbortList<>;
 
     // setup propagation options
-    PropagatorOptions<ActionList_type, AbortConditions_type> options;
+    PropagatorOptions<ActionListType, AbortConditionsType> options(tgContext,
+                                                                   mfContext);
 
     options.pathLimit   = 20 * units::_m;
     options.maxStepSize = 1 * units::_cm;
@@ -262,8 +220,9 @@ namespace Test {
     Vector3D              mom(px, py, pz);
     CurvilinearParameters start(nullptr, pos, mom, q);
     // propagate to the cylinder surface
-    const auto& result = epropagator.propagate(start, *cSurface, options);
-    auto&       sor    = result.get<so_result>();
+    const auto& result
+        = epropagator.propagate(start, *cSurface, options).value();
+    auto& sor = result.get<so_result>();
 
     BOOST_CHECK_EQUAL(sor.surfaces_passed, 1);
     CHECK_CLOSE_ABS(sor.surface_passed_r, 10., 1e-5);
@@ -295,7 +254,7 @@ namespace Test {
     (void)index;
 
     // setup propagation options - the tow step options
-    PropagatorOptions<> options_2s;
+    PropagatorOptions<> options_2s(tgContext, mfContext);
     options_2s.pathLimit   = 50 * units::_cm;
     options_2s.maxStepSize = 1 * units::_cm;
 
@@ -319,17 +278,19 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a path length of 100 with two steps of 50
     const auto& mid_parameters
-        = epropagator.propagate(start, options_2s).endParameters;
+        = epropagator.propagate(start, options_2s).value().endParameters;
     const auto& end_parameters_2s
-        = epropagator.propagate(*mid_parameters, options_2s).endParameters;
+        = epropagator.propagate(*mid_parameters, options_2s)
+              .value()
+              .endParameters;
 
     // setup propagation options - the one step options
-    PropagatorOptions<> options_1s;
+    PropagatorOptions<> options_1s(tgContext, mfContext);
     options_1s.pathLimit   = 100 * units::_cm;
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a path length of 100 in one step
     const auto& end_parameters_1s
-        = epropagator.propagate(start, options_1s).endParameters;
+        = epropagator.propagate(start, options_1s).value().endParameters;
 
     // test that the propagation is additive
     CHECK_CLOSE_REL(
@@ -367,7 +328,7 @@ namespace Test {
     (void)index;
 
     // setup propagation options - 2 setp options
-    PropagatorOptions<> options_2s;
+    PropagatorOptions<> options_2s(tgContext, mfContext);
     options_2s.pathLimit   = 10 * units::_m;
     options_2s.maxStepSize = 1 * units::_cm;
 
@@ -391,19 +352,24 @@ namespace Test {
     CurvilinearParameters start(std::move(covPtr), pos, mom, q);
     // propagate to a final surface with one stop in between
     const auto& mid_parameters
-        = epropagator.propagate(start, *mSurface, options_2s).endParameters;
+        = epropagator.propagate(start, *mSurface, options_2s)
+              .value()
+              .endParameters;
 
     const auto& end_parameters_2s
         = epropagator.propagate(*mid_parameters, *cSurface, options_2s)
+              .value()
               .endParameters;
 
     // setup propagation options - one step options
-    PropagatorOptions<> options_1s;
+    PropagatorOptions<> options_1s(tgContext, mfContext);
     options_1s.pathLimit   = 10 * units::_m;
     options_1s.maxStepSize = 1 * units::_cm;
     // propagate to a final surface in one stop
     const auto& end_parameters_1s
-        = epropagator.propagate(start, *cSurface, options_1s).endParameters;
+        = epropagator.propagate(start, *cSurface, options_1s)
+              .value()
+              .endParameters;
 
     // test that the propagation is additive
     CHECK_CLOSE_REL(

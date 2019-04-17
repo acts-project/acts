@@ -9,14 +9,12 @@
 #pragma once
 
 #include <boost/range/adaptors.hpp>
-#include <boost/variant.hpp>
 #include <memory>
 #include "Acts/EventData/TrackParameters.hpp"
 
 namespace Acts {
 
 /// @brief Kalman smoother implementation based on Gain matrix formalism
-///
 ///
 /// @tparam parameters_t Type of the track parameters
 /// @tparam jacobian_t Type of the Jacobian
@@ -27,11 +25,12 @@ class GainMatrixSmoother
   using jacobian_t = typename parameters_t::CovMatrix_t;
 
 public:
-  /// @todo write documentation
+  /// @brief Gain Matrix smoother implementation
+  ///
 
   template <typename track_states_t>
   boost::optional<parameters_t>
-  operator()(track_states_t& filteredStates) const
+  operator()(const GeometryContext& gctx, track_states_t& filteredStates) const
   {
     using namespace boost::adaptors;
 
@@ -86,7 +85,8 @@ public:
 
       // Create smoothed track parameters
       ts.parameter.smoothed
-          = parameters_t(std::make_unique<CovMatrix_t>(std::move(smoothedCov)),
+          = parameters_t(gctx,
+                         std::make_unique<CovMatrix_t>(std::move(smoothedCov)),
                          smoothedPars,
                          ts.referenceSurface().getSharedPtr());
 

@@ -15,6 +15,7 @@
 #include <vector>
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 
@@ -41,6 +42,7 @@ public:
 
   /// LayerArrayCreator interface method
   ///
+  /// @param gctx is the geometry context for witch the volume is built
   /// @param layers are the layers to be moved into an array
   /// @param min is the minimul value for binning
   /// @param max is the maximum value for binning
@@ -49,10 +51,11 @@ public:
   ///
   /// @return unqiue pointer to a new LayerArray
   virtual std::unique_ptr<const LayerArray>
-  layerArray(const LayerVector& layers,
-             double             min,
-             double             max,
-             BinningType        btype  = arbitrary,
-             BinningValue       bvalue = binX) const = 0;
+  layerArray(const GeometryContext& gctx,
+             const LayerVector&     layers,
+             double                 min,
+             double                 max,
+             BinningType            btype  = arbitrary,
+             BinningValue           bvalue = binX) const = 0;
 };
 }  // namespace

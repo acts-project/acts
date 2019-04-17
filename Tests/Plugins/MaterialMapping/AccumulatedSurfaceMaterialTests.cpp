@@ -11,7 +11,7 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 #include <climits>
-#include "Acts/Material/SurfaceMaterial.hpp"
+#include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedSurfaceMaterial.hpp"
 
 namespace Acts {
@@ -59,10 +59,10 @@ namespace Test {
     // assign 2 one steps
     material0D.accumulate(Vector2D{0., 0.}, one);
     material0D.accumulate(Vector2D{0., 0.}, one);
-    material0D.eventAverage();
+    material0D.trackAverage();
     // assign 1 double step
     material0D.accumulate(Vector3D(0., 0., 0.), two);
-    material0D.eventAverage();
+    material0D.trackAverage();
     // get the single matrix
     auto accMat0D     = material0D.accumulatedMaterial();
     auto accMatProp0D = accMat0D[0][0];
@@ -92,19 +92,19 @@ namespace Test {
     material2D.accumulate(Vector2D{0.5, -0.5}, two);
     material2D.accumulate(Vector2D{-0.5, 0.5}, three);
     material2D.accumulate(Vector2D{0.5, 0.5}, four);
-    material2D.eventAverage();
+    material2D.trackAverage();
     // event 1
     material2D.accumulate(Vector2D{0.5, -0.5}, two);
     material2D.accumulate(Vector2D{-0.5, 0.5}, three);
     material2D.accumulate(Vector2D{0.5, 0.5}, four);
-    material2D.eventAverage();
+    material2D.trackAverage();
     // event 2
     material2D.accumulate(Vector2D{-0.5, 0.5}, three);
     material2D.accumulate(Vector2D{0.5, 0.5}, four);
-    material2D.eventAverage();
+    material2D.trackAverage();
     // event 2
     material2D.accumulate(Vector2D{0.5, 0.5}, four);
-    material2D.eventAverage();
+    material2D.trackAverage();
     // get the single matrix
     auto accMat2D = material2D.accumulatedMaterial();
     // the accumulated properties

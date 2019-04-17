@@ -93,7 +93,8 @@ convertDD4hepDetector(
     double             defaultLayerThickness = 10e-10 * units::_mm,
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors
-    = sortDetElementsByID);
+    = sortDetElementsByID,
+    const GeometryContext& gctx = GeometryContext());
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
 ///

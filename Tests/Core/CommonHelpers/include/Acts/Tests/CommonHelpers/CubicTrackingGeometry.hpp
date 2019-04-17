@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <functional>
 #include <vector>
 #include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/Detector/TrackingVolume.hpp"
@@ -20,6 +21,7 @@
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Volumes/CuboidVolumeBounds.hpp"
 
 namespace Acts {
@@ -29,7 +31,10 @@ namespace Test {
   {
 
     /// Default constructor for the Cubit tracking geometry
-    CubicTrackingGeometry()
+    ///
+    /// @param gctx the geometry context for this geometry at building time
+    CubicTrackingGeometry(std::reference_wrapper<const GeometryContext> gctx)
+      : geoContext(gctx)
     {
       // Construct the rotation
       double   rotationAngle = M_PI * 0.5;
@@ -47,7 +52,7 @@ namespace Test {
       // Material of the surfaces
       MaterialProperties matProp(
           352.8, 407., 9.012, 4., 1.848e-3, 0.5 * units::_mm);
-      surfaceMaterial = std::shared_ptr<const SurfaceMaterial>(
+      surfaceMaterial = std::shared_ptr<const ISurfaceMaterial>(
           new HomogeneousSurfaceMaterial(matProp));
     }
 
@@ -108,13 +113,16 @@ namespace Test {
       auto boundsVol = std::make_shared<const CuboidVolumeBounds>(
           1.5 * units::_m, 0.5 * units::_m, 0.5 * units::_m);
 
-      LayerArrayCreator layArrCreator(
-          getDefaultLogger("LayerArrayCreator", Logging::INFO));
+      LayerArrayCreator::Config lacConfig;
+      LayerArrayCreator         layArrCreator(
+          lacConfig, getDefaultLogger("LayerArrayCreator", Logging::INFO));
+
       LayerVector layVec;
       layVec.push_back(layers[0]);
       layVec.push_back(layers[1]);
       std::unique_ptr<const LayerArray> layArr1(
-          layArrCreator.layerArray(layVec,
+          layArrCreator.layerArray(geoContext,
+                                   layVec,
                                    -2. * units::_m - 1. * units::_mm,
                                    -1. * units::_m + 1. * units::_mm,
                                    BinningType::arbitrary,
@@ -125,9 +133,7 @@ namespace Test {
           boundsVol,
           nullptr,
           std::move(layArr1),
-          layVec,
-          {},
-          {},
+          nullptr,
           "Volume 1");
       trackVolume1->sign(GeometrySignature::Global);
 
@@ -138,7 +144,8 @@ namespace Test {
       layVec.clear();
       for (i = 2; i < 6; i++) layVec.push_back(layers[i]);
       std::unique_ptr<const LayerArray> layArr2(
-          layArrCreator.layerArray(layVec,
+          layArrCreator.layerArray(geoContext,
+                                   layVec,
                                    1. * units::_m - 2. * units::_mm,
                                    2. * units::_m + 2. * units::_mm,
                                    BinningType::arbitrary,
@@ -149,18 +156,19 @@ namespace Test {
           boundsVol,
           nullptr,
           std::move(layArr2),
-          layVec,
-          {},
-          {},
+          nullptr,
           "Volume 2");
+
       trackVolume2->sign(GeometrySignature::Global);
 
       // Glue volumes
-      trackVolume2->glueTrackingVolume(BoundarySurfaceFace::negativeFaceYZ,
+      trackVolume2->glueTrackingVolume(geoContext,
+                                       BoundarySurfaceFace::negativeFaceYZ,
                                        trackVolume1,
                                        BoundarySurfaceFace::positiveFaceYZ);
 
-      trackVolume1->glueTrackingVolume(BoundarySurfaceFace::positiveFaceYZ,
+      trackVolume1->glueTrackingVolume(geoContext,
+                                       BoundarySurfaceFace::positiveFaceYZ,
                                        trackVolume2,
                                        BoundarySurfaceFace::negativeFaceYZ);
 
@@ -201,10 +209,12 @@ namespace Test {
     }
 
     RotationMatrix3D rotation = RotationMatrix3D::Identity();
-    std::shared_ptr<const RectangleBounds> rBounds         = nullptr;
-    std::shared_ptr<const SurfaceMaterial> surfaceMaterial = nullptr;
+    std::shared_ptr<const RectangleBounds>  rBounds         = nullptr;
+    std::shared_ptr<const ISurfaceMaterial> surfaceMaterial = nullptr;
 
     std::vector<std::unique_ptr<const DetectorElementStub>> detectorStore = {};
+
+    std::reference_wrapper<const GeometryContext> geoContext;
   };
 }  // namespace Test
 }  // namespace Acts

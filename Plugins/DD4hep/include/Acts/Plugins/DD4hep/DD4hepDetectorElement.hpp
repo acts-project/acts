@@ -41,6 +41,9 @@ class DigitizationModule;
 class DD4hepDetectorElement : public TGeoDetectorElement
 {
 public:
+  /// Broadcast the context type
+  using ContextType = GeometryContext;
+
   /// Constructor
   /// @param detElement The DD4hep DetElement which should be linked to a
   /// surface
@@ -75,8 +78,9 @@ public:
       const std::string&                        axes               = "XYZ",
       double                                    scalor             = 1.,
       bool                                      isDisc             = false,
-      std::shared_ptr<const SurfaceMaterial>    material           = nullptr,
+      std::shared_ptr<const ISurfaceMaterial>   material           = nullptr,
       std::shared_ptr<const DigitizationModule> digitizationModule = nullptr);
+
   /// Desctructor
   ~DD4hepDetectorElement() override = default;
 

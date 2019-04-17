@@ -14,6 +14,7 @@
 // Acts includes
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
+#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
@@ -155,12 +156,16 @@ public:
   /// respect to the global coordinate system, in which the local error
   /// is described.
   ///
+  ///
+  /// @param[in] gctx is the Context object that is forwarded to the surface
+  ///            for local to global coordinate transformation
+  ///
   /// For planar surface, this is identical to the rotation matrix of the
   /// surface frame, for measurements with respect to a line this has to be
   /// constructed by the point of clostest approach to the line, for
   /// cylindrical surfaces this is (by convention) the tangential plane.
   virtual RotationMatrix3D
-  referenceFrame() const = 0;
+  referenceFrame(const GeometryContext& gctx) const = 0;
 
   /// @brief output stream operator
   ///
