@@ -268,6 +268,23 @@ namespace Test {
     BOOST_CHECK_EQUAL(res5.error(), MyError::SomethingElse);
   }
 
+  BOOST_AUTO_TEST_CASE(BoolResult)
+  {
+    using Result = Result<bool>;
+
+    Result res = Result::success(false);
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL(*res, false);
+
+    res = Result::success(true);
+    BOOST_CHECK(res.ok());
+    BOOST_CHECK_EQUAL(*res, true);
+
+    res = Result::failure(MyError::Failure);
+    BOOST_CHECK(!res.ok());
+    BOOST_CHECK_EQUAL(res.error(), MyError::Failure);
+  }
+
   BOOST_AUTO_TEST_SUITE_END()
 }
 }

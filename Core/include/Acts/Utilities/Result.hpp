@@ -87,7 +87,7 @@ public:
       typename    = std::
           enable_if_t<!std::
                           is_same_v<_T,
-                                    _E> && !std::is_constructible_v<_T, _E> && !std::is_constructible_v<_T, _E>>>
+                                    _E> && !std::is_constructible_v<_T, _E> && !std::is_constructible_v<_E, _T>>>
   Result(T2 value) noexcept : m_var(std::move(value))
   {
   }
@@ -108,7 +108,7 @@ public:
       typename    = std::
           enable_if_t<!std::
                           is_same_v<_T,
-                                    _E> && !std::is_constructible_v<_T, _E> && !std::is_constructible_v<_T, _E>>>
+                                    _E> && !std::is_constructible_v<_T, _E> && !std::is_constructible_v<_E, _T>>>
   Result<T, E>&
   operator=(T2 value) noexcept
   {
