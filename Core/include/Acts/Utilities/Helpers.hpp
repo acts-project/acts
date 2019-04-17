@@ -13,6 +13,7 @@
 #pragma once
 
 // libc/STL include(s)
+#include <bitset>
 #include <cmath>
 #include <cstdlib>
 #include <iomanip>
@@ -422,6 +423,56 @@ decltype(Callable<N>::invoke(std::declval<Args>()...)) template_switch(
   std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
             << ") is not valid (v > NMAX)" << std::endl;
   std::abort();
+}
+
+/// Convert a bitset to a matrix of integers, with each element set to the bit
+/// value.
+/// @note How the bits are assigned to matrix elements depends on the storage
+/// type of the matrix being converted (row-major or col-major)
+/// @tparam MatrixType Matrix type that is produced
+/// @param bs The bitset to convert
+/// @return A matrix with the integer values of the bits from @p bs
+template <typename MatrixType>
+MatrixType
+bitsetToMatrix(const std::bitset<MatrixType::RowsAtCompileTime
+                                 * MatrixType::ColsAtCompileTime> bs)
+{
+  constexpr int rows = MatrixType::RowsAtCompileTime;
+  constexpr int cols = MatrixType::ColsAtCompileTime;
+
+  static_assert(rows != -1 && cols != -1,
+                "bitsetToMatrix does not support dynamic matrices");
+
+  MatrixType m;
+  auto*      p = m.data();
+  for (size_t i = 0; i < rows * cols; i++) {
+    p[i] = bs[rows * cols - 1 - i];
+  }
+  return m;
+}
+
+/// Convert an integer matrix to a bitset.
+/// @note How the bits are ordered depends on the storage type of the matrix
+/// being converted (row-major or col-major)
+/// @tparam Derived Eigen base concrete type
+/// @param m Matrix that is converted
+/// @return The converted bitset.
+template <typename Derived>
+auto
+matrixToBitset(const Eigen::PlainObjectBase<Derived>& m)
+{
+  using MatrixType      = Eigen::PlainObjectBase<Derived>;
+  constexpr size_t rows = MatrixType::RowsAtCompileTime;
+  constexpr size_t cols = MatrixType::ColsAtCompileTime;
+
+  std::bitset<rows * cols> res;
+
+  auto* p = m.data();
+  for (size_t i = 0; i < rows * cols; i++) {
+    res[rows * cols - 1 - i] = p[i];
+  }
+
+  return res;
 }
 
 }  // namespace Acts
