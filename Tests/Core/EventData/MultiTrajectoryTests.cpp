@@ -12,8 +12,6 @@
 #include <boost/test/unit_test.hpp>
 // clang-format on
 
-#include <iostream>
-
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
@@ -21,6 +19,8 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+
+#include <iostream>
 
 using std::cout;
 using std::endl;
@@ -148,29 +148,33 @@ namespace Test {
     // "calibrate"
     ts.measurement.calibrated = **ts.measurement.uncalibrated;
 
+    // make jacobian
+    CovMat_t jac;
+    jac << 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 89, 90, 91, 92, 93,
+        94, 95, 96, 97, 98, 99, 100, 101;
+
+    ts.parameter.jacobian = jac;
+
     // now put it into the collection
     t.addTrackState(ts);
 
     // now investigate the proxy
     auto tsProxy = t.getTrackState(0);
 
-    // std::cout << predPar.transpose() << std::endl;
-    // std::cout << pred.parameters().transpose() << std::endl;
-    // std::cout << (*ts.parameter.predicted).parameters().transpose()
-    //<< std::endl;
-    // std::cout << tsProxy.predicted().transpose() << std::endl;
-
     CHECK_CLOSE_ABS(pred.parameters(), tsProxy.predicted(), 1e-9);
-    CHECK_CLOSE_ABS(pred.covariance(), tsProxy.predictedCovariance(), 1e-9);
+    CHECK_CLOSE_ABS(*pred.covariance(), tsProxy.predictedCovariance(), 1e-9);
 
     CHECK_CLOSE_ABS(filt.parameters(), tsProxy.filtered(), 1e-9);
-    CHECK_CLOSE_ABS(filt.covariance(), tsProxy.filteredCovariance(), 1e-9);
+    CHECK_CLOSE_ABS(*filt.covariance(), tsProxy.filteredCovariance(), 1e-9);
 
     CHECK_CLOSE_ABS(smot.parameters(), tsProxy.smoothed(), 1e-9);
-    CHECK_CLOSE_ABS(smot.covariance(), tsProxy.smoothedCovariance(), 1e-9);
+    CHECK_CLOSE_ABS(*smot.covariance(), tsProxy.smoothedCovariance(), 1e-9);
 
-    std::cout << tsProxy.smoothedCovariance() << std::endl;
+    BOOST_CHECK_EQUAL(&ts.referenceSurface(), &tsProxy.referenceSurface());
+
+    CHECK_CLOSE_ABS(jac, tsProxy.jacobian(), 1e-9);
   }
 
 }  // namespace Test
+
 }  // namespace Acts
