@@ -9,8 +9,8 @@
 #pragma once
 
 #include <cmath>
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 
 #ifdef ACTS_COORDINATE_TRANSFORM_PLUGIN

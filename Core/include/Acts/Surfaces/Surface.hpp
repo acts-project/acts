@@ -12,15 +12,15 @@
 
 #pragma once
 
-#include "Acts/Detector/DetectorElementBase.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryObject.hpp"
+#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/GeometryObject.hpp"
-#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 
 #include <memory>

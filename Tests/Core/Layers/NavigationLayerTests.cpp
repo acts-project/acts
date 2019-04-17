@@ -14,12 +14,12 @@
 #include <boost/test/output_test_stream.hpp>
 // clang-format on
 
-#include "Acts/Layers/NavigationLayer.hpp"
+#include "Acts/Geometry/NavigationLayer.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Volumes/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 
 #include "LayerStub.hpp"
 

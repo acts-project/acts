@@ -10,11 +10,11 @@
 // STL include(s)
 #include <ostream>
 
-#include "Acts/Utilities/Definitions.hpp"
 // Acts includes
 #include "Acts/EventData/ChargePolicy.hpp"
 #include "Acts/EventData/ParameterSet.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
 

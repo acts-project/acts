@@ -20,10 +20,10 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 
 using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::perp;

@@ -8,8 +8,8 @@
 
 #pragma once
 #include "Acts/EventData/SingleTrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 

@@ -14,7 +14,7 @@
 // clang-format on
 
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"

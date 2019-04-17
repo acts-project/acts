@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
-#include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
+#include "Acts/Propagator/detail/InteractionFormulas.hpp"
 
 const Acts::detail::IonisationLoss
     Acts::DenseEnvironmentExtension::ionisationLoss;

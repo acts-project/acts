@@ -14,10 +14,10 @@
 #include <boost/test/output_test_stream.hpp>
 // clang-format on
 
-#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "../Surfaces/SurfaceStub.hpp"
 #include "LayerStub.hpp"
 

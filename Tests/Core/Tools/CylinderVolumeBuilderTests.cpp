@@ -11,7 +11,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <boost/test/data/test_case.hpp>
-#include "Acts/Tools/CylinderVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace bdata = boost::unit_test::data;

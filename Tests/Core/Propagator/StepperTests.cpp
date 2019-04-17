@@ -14,8 +14,8 @@
 
 #include <fstream>
 
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
@@ -24,11 +24,11 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/CuboidVolumeBuilder.hpp"
-#include "Acts/Tools/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 // TODO: Testing of covariances in Integration test - requires N-layer box
 // detector for implementation of DenseEnvironmentExtension

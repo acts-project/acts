@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryID.hpp"
 
 namespace Acts {
 

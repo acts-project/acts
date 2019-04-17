@@ -15,7 +15,7 @@
 
 #include <cmath>
 
-#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace Acts {

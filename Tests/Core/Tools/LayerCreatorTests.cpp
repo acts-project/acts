@@ -17,19 +17,19 @@
 #include <fstream>
 #include <random>
 
-#include "Acts/Layers/CylinderLayer.hpp"
-#include "Acts/Layers/DiscLayer.hpp"
-#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Geometry/CylinderLayer.hpp"
+#include "Acts/Geometry/DiscLayer.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

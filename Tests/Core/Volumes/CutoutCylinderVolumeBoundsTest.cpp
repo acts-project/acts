@@ -14,11 +14,11 @@
 #include <iostream>
 #include <memory>
 
+#include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/PlyHelper.hpp"
-#include "Acts/Volumes/CutoutCylinderVolumeBounds.hpp"
 
 namespace Acts {
 namespace Test {

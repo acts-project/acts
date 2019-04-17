@@ -11,10 +11,10 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
-#include "Acts/Tools/ILayerBuilder.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/ILayerBuilder.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 class TGeoMatrix;

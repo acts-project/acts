@@ -21,8 +21,8 @@
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 

@@ -14,12 +14,12 @@
 
 #include <cmath>
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryStatics.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/GeometryStatics.hpp"
 #include "Acts/Utilities/detail/RealQuadraticEquation.hpp"
 
 namespace Acts {

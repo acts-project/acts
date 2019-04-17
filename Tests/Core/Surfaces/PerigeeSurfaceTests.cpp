@@ -16,7 +16,7 @@
 
 #include <limits>
 
-#include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/InfiniteBounds.hpp"  //to get s_noBounds
 #include "Acts/Surfaces/PerigeeSurface.hpp"

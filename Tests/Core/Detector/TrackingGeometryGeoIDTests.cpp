@@ -11,7 +11,7 @@
 
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "TrackingVolumeCreation.hpp"
 

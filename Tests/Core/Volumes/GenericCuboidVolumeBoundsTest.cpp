@@ -15,13 +15,13 @@
 #include <iostream>
 #include <memory>
 
+#include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/PlyHelper.hpp"
-#include "Acts/Volumes/GenericCuboidVolumeBounds.hpp"
 
 namespace Acts {
 namespace Test {

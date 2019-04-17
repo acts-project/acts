@@ -10,14 +10,14 @@
 
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Tools/CylinderVolumeBuilder.hpp"
-#include "Acts/Tools/CylinderVolumeHelper.hpp"
-#include "Acts/Tools/LayerArrayCreator.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
-#include "Acts/Tools/PassiveLayerBuilder.hpp"
-#include "Acts/Tools/TrackingGeometryBuilder.hpp"
-#include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
+#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/LayerArrayCreator.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/PassiveLayerBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace Acts {

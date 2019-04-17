@@ -24,8 +24,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

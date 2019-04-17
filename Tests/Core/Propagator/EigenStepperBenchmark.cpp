@@ -9,12 +9,12 @@
 #include <boost/program_options.hpp>
 #include <iostream>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 namespace po = boost::program_options;

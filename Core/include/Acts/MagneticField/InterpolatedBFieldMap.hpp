@@ -11,9 +11,9 @@
 #include <functional>
 #include <optional>
 #include <vector>
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Interpolation.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 

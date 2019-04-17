@@ -12,18 +12,18 @@
 
 #pragma once
 
-#include "Acts/Extrapolator/MaterialInteractor.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
-#include "Acts/Extrapolator/SurfaceCollector.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/AccumulatedSurfaceMaterial.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
+#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/GeometryID.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 
