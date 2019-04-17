@@ -1,5 +1,5 @@
 // This file is part of the Acts project.
-
+//
 // Copyright (C) 2019 Acts project team
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
