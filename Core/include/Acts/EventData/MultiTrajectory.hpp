@@ -118,6 +118,7 @@ namespace detail_lt {
     IndexType      ipredicted    = kInvalid;
     IndexType      ifiltered     = kInvalid;
     IndexType      ismoothed     = kInvalid;
+    IndexType      ijacobian     = kInvalid;
     IndexType      iuncalibrated = kInvalid;
     IndexType      icalibrated   = kInvalid;
     IndexType      measdim       = 0;
@@ -201,6 +202,10 @@ namespace detail_lt {
     {
       return m_data.ismoothed != IndexData::kInvalid;
     }
+
+    /// Returns the jacobian associated to this track state
+    Covariance
+    jacobian() const;
 
     bool
     hasUncalibrated() const
@@ -423,6 +428,13 @@ namespace detail_lt {
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
+  TrackStateProxy<SL, N, M, ReadOnly>::jacobian() const -> Covariance
+  {
+    return Covariance(m_traj.m_cov.col(m_data.ijacobian).data());
+  }
+
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
+  inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const -> const SourceLink&
   {
     return m_traj.m_sourceLinks[m_data.iuncalibrated];
@@ -480,6 +492,10 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
     CovMap(m_cov.addCol().data()) = *smoothed.covariance();
     p.ismoothed                   = m_params.size() - 1;
   }
+
+  // store jacobian
+  CovMap(m_cov.addCol().data()) = *ts.parameter.jacobian;
+  p.ijacobian                   = m_cov.size() - 1;
 
   // handle measurements
   if (ts.measurement.uncalibrated) {
