@@ -16,9 +16,9 @@
 #include <random>
 #include <vector>
 
-#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -27,8 +27,8 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 namespace Acts {
 namespace Test {

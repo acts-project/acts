@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
+#include "Acts/Geometry/ILayerBuilder.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tools/ILayerBuilder.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Logger.hpp"

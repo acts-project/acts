@@ -15,15 +15,15 @@
 // clang-format on
 
 #include "Acts/EventData/SingleTrackParameters.hpp"
-#include "Acts/Layers/CylinderLayer.hpp"
-#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/CylinderLayer.hpp"
+#include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Volumes/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 
 #include "LayerStub.hpp"
 

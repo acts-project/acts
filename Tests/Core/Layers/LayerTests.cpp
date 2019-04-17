@@ -20,13 +20,13 @@
 
 //#include <limits>
 #include "Acts/EventData/SingleTrackParameters.hpp"
-#include "Acts/Layers/GenericApproachDescriptor.hpp"
-#include "Acts/Layers/Layer.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/Layer.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

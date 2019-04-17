@@ -10,7 +10,7 @@
 #define BOOST_TEST_MODULE GeometryID Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-#include "Acts/Utilities/GeometryID.hpp"
+#include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 namespace Acts {

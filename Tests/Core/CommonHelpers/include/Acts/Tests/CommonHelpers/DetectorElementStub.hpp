@@ -13,7 +13,7 @@
 #pragma once
 #include "Acts/Utilities/Definitions.hpp"
 // Geometry module
-#include "Acts/Detector/DetectorElementBase.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 

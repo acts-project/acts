@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 

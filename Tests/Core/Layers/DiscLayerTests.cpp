@@ -15,16 +15,16 @@
 // clang-format on
 
 #include "Acts/EventData/SingleTrackParameters.hpp"
-#include "Acts/Layers/DiscLayer.hpp"
-#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/DiscLayer.hpp"
+#include "Acts/Geometry/GenericApproachDescriptor.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Volumes/CuboidVolumeBounds.hpp"
-#include "Acts/Volumes/CylinderVolumeBounds.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 
 #include "LayerStub.hpp"
 

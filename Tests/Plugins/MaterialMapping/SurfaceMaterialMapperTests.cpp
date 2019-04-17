@@ -10,20 +10,20 @@
 #define BOOST_TEST_MODULE SurfaceMaterialMapper Tests
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerArrayCreator.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/PassiveLayerBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Plugins/MaterialMapping/SurfaceMaterialMapper.hpp"
-#include "Acts/Tools/CylinderVolumeBuilder.hpp"
-#include "Acts/Tools/CylinderVolumeHelper.hpp"
-#include "Acts/Tools/LayerArrayCreator.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
-#include "Acts/Tools/PassiveLayerBuilder.hpp"
-#include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
-#include "Acts/Volumes/CylinderVolumeBounds.hpp"
 
 namespace Acts {
 

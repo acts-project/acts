@@ -10,8 +10,8 @@
 #include <type_traits>
 #include "Acts/EventData/TrackParametersBase.hpp"
 #include "Acts/EventData/detail/coordinate_transformations.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 

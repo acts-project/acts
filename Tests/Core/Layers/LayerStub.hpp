@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 #include "../Surfaces/SurfaceStub.hpp"
-#include "Acts/Layers/Layer.hpp"
+#include "Acts/Geometry/Layer.hpp"
 
 namespace Acts {
 /// Layer derived class stub

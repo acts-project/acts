@@ -19,14 +19,14 @@
 // leave blank line
 
 //#include <limits>
-#include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 //#include "Acts/Utilities/Definitions.hpp"
 #include "Acts/EventData/SingleTrackParameters.hpp"
-#include "Acts/Layers/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
+#include "Acts/Geometry/GenericApproachDescriptor.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Volumes/CuboidVolumeBounds.hpp"
 #include "LayerStub.hpp"
 
 using boost::test_tools::output_test_stream;

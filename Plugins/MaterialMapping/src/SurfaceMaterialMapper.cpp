@@ -12,10 +12,10 @@
 
 #include "Acts/Plugins/MaterialMapping/SurfaceMaterialMapper.hpp"
 #include "Acts/EventData/NeutralParameters.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 #include "Acts/Propagator/ActionList.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/DebugOutputActor.hpp"

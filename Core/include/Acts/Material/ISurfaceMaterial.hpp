@@ -13,9 +13,9 @@
 #pragma once
 #include <memory>
 #include <vector>
+#include "Acts/Geometry/GeometryID.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryID.hpp"
 
 namespace Acts {
 

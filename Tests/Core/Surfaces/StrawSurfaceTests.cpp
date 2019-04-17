@@ -19,7 +19,7 @@
 // leave blank line
 
 #include <limits>
-#include "Acts/Layers/PlaneLayer.hpp"
+#include "Acts/Geometry/PlaneLayer.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"

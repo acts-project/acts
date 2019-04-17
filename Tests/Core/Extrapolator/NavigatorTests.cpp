@@ -17,7 +17,7 @@
 #include <memory>
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
 #include "Acts/Propagator/detail/ConstrainedStep.hpp"
@@ -27,7 +27,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Intersection.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

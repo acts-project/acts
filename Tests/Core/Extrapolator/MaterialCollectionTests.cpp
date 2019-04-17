@@ -17,9 +17,9 @@
 #include <memory>
 
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Extrapolator/MaterialInteractor.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
-#include "Acts/Extrapolator/SurfaceCollector.hpp"
+#include "Acts/Propagator/MaterialInteractor.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Propagator/ActionList.hpp"
@@ -33,8 +33,8 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

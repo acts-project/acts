@@ -12,7 +12,7 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "TrackingVolumeCreation.hpp"

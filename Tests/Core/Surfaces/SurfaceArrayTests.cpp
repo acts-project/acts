@@ -14,16 +14,16 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/tools/output_test_stream.hpp>
 
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 

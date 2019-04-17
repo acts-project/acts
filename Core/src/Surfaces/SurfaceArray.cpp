@@ -8,8 +8,8 @@
 
 #include <utility>
 
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 

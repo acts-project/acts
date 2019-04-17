@@ -16,7 +16,7 @@
 #include <boost/test/floating_point_comparison.hpp>
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/MagneticField/SharedBField.hpp"

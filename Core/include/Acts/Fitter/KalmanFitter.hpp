@@ -15,6 +15,8 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStateSorters.hpp"
 #include "Acts/Fitter/detail/VoidKalmanComponents.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -22,8 +24,6 @@
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 

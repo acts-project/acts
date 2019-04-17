@@ -21,7 +21,7 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BFieldMapUtils.hpp"
+#include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Units.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"

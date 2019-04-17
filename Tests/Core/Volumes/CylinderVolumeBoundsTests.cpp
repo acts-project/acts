@@ -17,7 +17,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Volumes/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt    = boost::test_tools;

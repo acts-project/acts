@@ -11,12 +11,12 @@
 #define BOOST_TEST_DYN_LINK
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Detector/DetectorElementBase.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 
 #include <array>
