@@ -89,7 +89,7 @@ namespace VectorHelpers {
   template <typename T,
             std::enable_if_t<detail::has_phi_method<T>::value, int> = 0>
   double
-  phi(const T& v)
+  phi(const T& v) noexcept
   {
     return v.phi();
   }
@@ -102,7 +102,7 @@ namespace VectorHelpers {
   /// @return The transverse radius value.
   template <typename Derived>
   double
-  perp(const Eigen::MatrixBase<Derived>& v)
+  perp(const Eigen::MatrixBase<Derived>& v) noexcept
   {
     if (v.rows() < 2) {
       return 0.;
@@ -118,7 +118,7 @@ namespace VectorHelpers {
   /// @return The theta value
   template <typename Derived>
   double
-  theta(const Eigen::MatrixBase<Derived>& v)
+  theta(const Eigen::MatrixBase<Derived>& v) noexcept
   {
     if (v.rows() < 3) {
       return 0.;
@@ -134,7 +134,7 @@ namespace VectorHelpers {
   /// @return The pseudorapidity value
   template <typename Derived>
   double
-  eta(const Eigen::MatrixBase<Derived>& v)
+  eta(const Eigen::MatrixBase<Derived>& v) noexcept
   {
     return std::atanh(v[2] / v.norm());
   }
