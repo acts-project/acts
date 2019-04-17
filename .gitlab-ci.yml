@@ -294,7 +294,5 @@ sync_releases:
     - pip3 install -r CI/requirements.txt
   script:
     - CI/sync_releases.py
-  after_script:
-    - kdestroy
   only:
     - tags
