@@ -14,6 +14,7 @@
 
 // libc/STL include(s)
 #include <cmath>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <memory>
@@ -73,11 +74,25 @@ namespace VectorHelpers {
   /// @return The value of the angle in the transverse plane.
   template <typename Derived>
   double
-  phi(const Eigen::MatrixBase<Derived>& v)
+  phi(const Eigen::MatrixBase<Derived>& v) noexcept
   {
-    if (v.rows() < 2) {
-      return 0.;
+    constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
+    if
+      constexpr(rows != -1)
+      {
+        // static size, do compile time check
+        static_assert(rows >= 2,
+                      "Phi function not valid for vectors not at least 2D");
+      }
+    else {
+      // dynamic size
+      if (v.rows() < 2) {
+        std::cerr << "Phi function not valid for vectors not at least 2D"
+                  << std::endl;
+        std::abort();
+      }
     }
+
     return std::atan2(v[1], v[0]);
   }
 
@@ -104,8 +119,21 @@ namespace VectorHelpers {
   double
   perp(const Eigen::MatrixBase<Derived>& v) noexcept
   {
-    if (v.rows() < 2) {
-      return 0.;
+    constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
+    if
+      constexpr(rows != -1)
+      {
+        // static size, do compile time check
+        static_assert(rows >= 2,
+                      "Perp function not valid for vectors not at least 2D");
+      }
+    else {
+      // dynamic size
+      if (v.rows() < 2) {
+        std::cerr << "Perp function not valid for vectors not at least 2D"
+                  << std::endl;
+        std::abort();
+      }
     }
     return std::sqrt(v[0] * v[0] + v[1] * v[1]);
   }
@@ -120,9 +148,23 @@ namespace VectorHelpers {
   double
   theta(const Eigen::MatrixBase<Derived>& v) noexcept
   {
-    if (v.rows() < 3) {
-      return 0.;
+    constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
+    if
+      constexpr(rows != -1)
+      {
+        // static size, do compile time check
+        static_assert(rows >= 3,
+                      "Theta function not valid for non-3D vectors.");
+      }
+    else {
+      // dynamic size
+      if (v.rows() < 3) {
+        std::cerr << "Theta function not valid for non-3D vectors."
+                  << std::endl;
+        std::abort();
+      }
     }
+
     return std::atan2(std::sqrt(v[0] * v[0] + v[1] * v[1]), v[2]);
   }
 
@@ -136,6 +178,21 @@ namespace VectorHelpers {
   double
   eta(const Eigen::MatrixBase<Derived>& v) noexcept
   {
+    constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
+    if
+      constexpr(rows != -1)
+      {
+        // static size, do compile time check
+        static_assert(rows >= 3, "Eta function not valid for non-3D vectors.");
+      }
+    else {
+      // dynamic size
+      if (v.rows() < 3) {
+        std::cerr << "Eta function not valid for non-3D vectors." << std::endl;
+        std::abort();
+      }
+    }
+
     return std::atanh(v[2] / v.norm());
   }
 
