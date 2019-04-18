@@ -583,6 +583,9 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
 
           m_projectors.push_back(matrixToBitset(fullProjector));
 
+          // we also need to set the measurement dimension
+          p.measdim = meas_t::size();
+
           m_sourceLinks.push_back(m.sourceLink());
         },
         *ts.measurement.calibrated);
