@@ -50,6 +50,11 @@ struct MinimalSourceLink {
   }
 };
 
+inline std::ostream& operator<<(std::ostream& os, const MinimalSourceLink& sl) {
+  os << "SourceLink(" << sl.meas << ")";
+  return os;
+}
+
 static_assert(SourceLinkConcept<MinimalSourceLink>,
               "MinimalSourceLink does not fulfill SourceLinkConcept");
 }  // namespace Acts
