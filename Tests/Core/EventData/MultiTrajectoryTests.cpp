@@ -52,40 +52,48 @@ namespace Test {
     return {make_params()};
   }
 
-  // BOOST_AUTO_TEST_CASE(multitrajectory_build)
-  //{
-  // MultiTrajectory<SourceLink> t;
+  BOOST_AUTO_TEST_CASE(multitrajectory_build)
+  {
+    MultiTrajectory<SourceLink> t;
 
-  //// construct trajectory w/ multiple components
-  // auto i0 = t.addTrackState(make_trackstate());
-  //// trajectory bifurcates here into multiple hypotheses
-  // auto i1a = t.addTrackState(make_trackstate(), i0);
-  // auto i1b = t.addTrackState(make_trackstate(), i0);
-  // auto i2a = t.addTrackState(make_trackstate(), i1a);
-  // auto i2b = t.addTrackState(make_trackstate(), i1b);
+    // construct trajectory w/ multiple components
+    auto i0 = t.addTrackState(make_trackstate());
+    // trajectory bifurcates here into multiple hypotheses
+    auto i1a = t.addTrackState(make_trackstate(), i0);
+    auto i1b = t.addTrackState(make_trackstate(), i0);
+    auto i2a = t.addTrackState(make_trackstate(), i1a);
+    auto i2b = t.addTrackState(make_trackstate(), i1b);
 
-  //// print each trajectory component
-  // auto print = [](auto p) {
-  // cout << "  point " << p.index() << endl;
-  // cout << "     params " << p.predicted().transpose() << endl;
-  //};
-  // cout << "trajectory starting at " << i2a << endl;
-  // t.visitBackwards(i2a, print);
-  // cout << "trajectory starting at " << i2b << endl;
-  // t.visitBackwards(i2b, print);
+    // print each trajectory component
+    std::vector<size_t> act;
+    auto collect = [&](auto p) {
+      act.push_back(p.index());
+      // assert absence of things
+      BOOST_CHECK(!p.hasUncalibrated());
+      BOOST_CHECK(!p.hasCalibrated());
+      BOOST_CHECK(!p.hasFiltered());
+      BOOST_CHECK(!p.hasSmoothed());
+      BOOST_CHECK(!p.hasJacobian());
+      BOOST_CHECK(!p.hasProjector());
 
-  //// modify elements of the trajectory
-  // t.applyBackwards(i2b, [](auto p) { p.predicted().setRandom(); });
-  // cout << "modified trajectory starting at " << i2b << endl;
-  // t.visitBackwards(i2b, print);
+    };
 
-  //// print full/effective parameters/covariance for an example point
-  // const auto& p = t.getTrackState(i1b);
-  // cout << "data for point " << p.index() << endl;
-  // cout << p.predicted().transpose() << endl;
-  // cout << p.predictedCovariance() << endl;
-  // cout << "has uncalibrated " << p.hasUncalibrated() << endl;
-  //}
+    std::vector<size_t> exp = {i2a, i1a, i0};
+    t.visitBackwards(i2a, collect);
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        act.begin(), act.end(), exp.begin(), exp.end());
+
+    act.clear();
+    exp = {i2b, i1b, i0};
+    t.visitBackwards(i2b, collect);
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        act.begin(), act.end(), exp.begin(), exp.end());
+
+    act.clear();
+    t.applyBackwards(i2b, collect);
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        act.begin(), act.end(), exp.begin(), exp.end());
+  }
 
   BOOST_AUTO_TEST_CASE(storage_consistency)
   {
