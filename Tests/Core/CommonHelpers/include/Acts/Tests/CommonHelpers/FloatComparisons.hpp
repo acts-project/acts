@@ -116,23 +116,43 @@ namespace Test {
     // Container comparison is then implemented on top of scalar comparison
 
     // Matrix comparison backend (called by Eigen-related compare() overloads)
-    template <typename Scalar, int rows, int cols, int rows2, int cols2>
+    template <typename Derived1, typename Derived2>
     predicate_result
-    matrixCompare(const ActsMatrix<Scalar, rows, cols>&   val,
-                  const ActsMatrix<Scalar, rows2, cols2>& ref,
-                  ScalarComparison&& compareImpl)
+    matrixCompare(const Eigen::DenseBase<Derived1>& val,
+                  const Eigen::DenseBase<Derived2>& ref,
+                  ScalarComparison&&                compareImpl)
     {
-      static_assert(rows != Eigen::Dynamic,
-                    "Dynamic-size matrices are currently unsupported.");
-      static_assert(rows == rows2,
-                    "Input matrices do not have the same number of rows");
-      static_assert(cols != Eigen::Dynamic,
-                    "Dynamic-size matrices are currently unsupported.");
-      static_assert(cols == cols2,
-                    "Input matrices do not have the same number of columns");
+      constexpr int rows1 = Eigen::DenseBase<Derived1>::RowsAtCompileTime;
+      constexpr int rows2 = Eigen::DenseBase<Derived2>::RowsAtCompileTime;
+      constexpr int cols1 = Eigen::DenseBase<Derived1>::ColsAtCompileTime;
+      constexpr int cols2 = Eigen::DenseBase<Derived2>::ColsAtCompileTime;
 
-      for (int col = 0; col < cols; ++col) {
-        for (int row = 0; row < rows; ++row) {
+      if
+        constexpr(rows1 != Eigen::Dynamic && rows2 != Eigen::Dynamic
+                  && cols1 != Eigen::Dynamic
+                  && cols2 != Eigen::Dynamic)
+        {
+          // All dimensions on both are static. Static assert compatibility.
+          static_assert(rows1 == rows2,
+                        "Input matrices do not have the same number of rows");
+          static_assert(
+              cols1 == cols2,
+              "Input matrices do not have the same number of columns");
+        }
+      else {
+        // some are dynamic, do runtime check
+        if (val.rows() != ref.rows() || val.cols() != ref.cols()) {
+          predicate_result res{false};
+          res.message() << "Mismatch in matrix dimensions:\n"
+                        << val << "\n"
+                        << ref;
+          return res;
+        }
+      }
+
+      // for looping, always use runtime values
+      for (int col = 0; col < val.cols(); ++col) {
+        for (int row = 0; row < val.rows(); ++row) {
           predicate_result res = compareImpl(val(row, col), ref(row, col));
           if (!res) {
             res.message() << " The failure occured during a matrix comparison,"
