@@ -18,6 +18,7 @@
 #include "Acts/EventData/TrackParametersBase.hpp"
 #include "Acts/EventData/TrackState.hpp"
 #include "Acts/Utilities/ParameterDefinitions.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
 
@@ -307,6 +308,15 @@ namespace detail_lt {
 
     friend class Acts::MultiTrajectory<SourceLink>;
   };
+
+  // implement track state visitor concept
+  template <typename T, typename TS>
+  using call_operator_t = decltype(std::declval<T>()(std::declval<TS&>()));
+
+  template <typename T, typename TS>
+  constexpr bool VisitorConcept
+      = concept::require<concept::exists<call_operator_t, T, TS>>;
+
 }  // namespace detail_lt
 
 /// Store a trajectory of track states with multiple components.
@@ -627,6 +637,9 @@ template <typename F>
 void
 MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const
 {
+  static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
+                "Callable needs to satisfy VisitorConcept");
+
   while (true) {
     callable(getTrackState(iendpoint));
     // this point has no parent and ends the trajectory
@@ -642,6 +655,8 @@ template <typename F>
 void
 MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable)
 {
+  static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
+                "Callable needs to satisfy VisitorConcept");
   while (true) {
     callable(getTrackState(iendpoint));
     // this point has no parent and ends the trajectory
