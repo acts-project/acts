@@ -168,7 +168,12 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
   using CovMap =
       typename detail_lt::Types<ParametersSize, false>::CovarianceMap;
 
-  detail_lt::IndexData p = {ts.referenceSurface()};
+  detail_lt::IndexData p;
+
+  // make shared ownership held by this multi trajectory
+  m_referenceSurfaces.push_back(ts.referenceSurface().getSharedPtr());
+  p.irefsurface = m_referenceSurfaces.size() - 1;
+
   if (iprevious != SIZE_MAX) {
     p.iprevious = static_cast<uint16_t>(iprevious);
   }

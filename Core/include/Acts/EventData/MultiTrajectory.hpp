@@ -121,13 +121,13 @@ namespace detail_lt {
 
     static constexpr IndexType kInvalid = UINT16_MAX;
 
-    const Surface& surface;
-    IndexType      iprevious  = kInvalid;
-    IndexType      ipredicted = kInvalid;
-    IndexType      ifiltered  = kInvalid;
-    IndexType      ismoothed  = kInvalid;
-    IndexType      ijacobian  = kInvalid;
-    IndexType      iprojector = kInvalid;
+    IndexType irefsurface = kInvalid;
+    IndexType iprevious   = kInvalid;
+    IndexType ipredicted  = kInvalid;
+    IndexType ifiltered   = kInvalid;
+    IndexType ismoothed   = kInvalid;
+    IndexType ijacobian   = kInvalid;
+    IndexType iprojector  = kInvalid;
 
     IndexType iuncalibrated         = kInvalid;
     IndexType icalibrated           = kInvalid;
@@ -178,7 +178,8 @@ namespace detail_lt {
     const Surface&
     referenceSurface() const
     {
-      return m_data.surface;
+      assert(m_data.irefsurface != IndexData::kInvalid);
+      return *m_traj.m_referenceSurfaces[m_data.irefsurface];
     }
 
     /// Track parameters vector. This tries to be somewhat smart and return the
@@ -453,6 +454,11 @@ private:
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance   m_measCov;
   std::vector<SourceLink>      m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
+  // owning vector of shared pointers to surfaces
+  // @TODO: This might be problematic when appending a large number of surfaces
+  // / trackstates, because vector has to reallocated and thus copy. This might
+  // be handled in a smart way by moving but not sure.
+  std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
   friend class detail_lt::
       TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, true>;
