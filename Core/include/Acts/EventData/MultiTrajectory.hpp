@@ -383,6 +383,13 @@ namespace detail_lt {
       return m_data.measdim;
     }
 
+    /// Setter for a full measurement object
+    /// @note This assumes this TrackState stores it's own calibrated
+    /// measurement. **If storage is shared with another TrackState, both will
+    /// be overwritten!**. Also assumes none of the calibrated components is
+    /// *invalid* (i.e. unset) for this TrackState..
+    /// @tparam params The parameter tags of the measurement
+    /// @param meas The measurement object to set
     template <bool RO  = ReadOnly,
               typename = std::enable_if_t<!RO>,
               ParID_t... params>
@@ -394,6 +401,7 @@ namespace detail_lt {
 
       m_data.measdim = measdim;
 
+      assert(hasCalibrated());
       calibrated().setZero();
       calibrated().template head<measdim>() = meas.parameters();
 
@@ -401,6 +409,7 @@ namespace detail_lt {
       calibratedCovariance().template topLeftCorner<measdim, measdim>()
           = meas.covariance();
 
+      assert(m_data.iprojector != IndexData::kInvalid);
       typename TrackStateProxy::Projector fullProjector;
       fullProjector.setZero();
       fullProjector.template topLeftCorner<measdim,
@@ -409,6 +418,7 @@ namespace detail_lt {
           = meas.projector();
       m_traj.m_projectors[m_data.iprojector] = matrixToBitset(fullProjector);
 
+      assert(m_data.icalibratedsourcelink != IndexData::kInvalid);
       calibratedSourceLink() = meas.sourceLink();
     }
 
