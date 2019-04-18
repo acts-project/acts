@@ -440,6 +440,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::predicted() const -> Parameters
   {
+    assert(m_data.ipredicted != IndexData::kInvalid);
     return Parameters(m_traj.m_params.col(m_data.ipredicted).data());
   }
 
@@ -447,6 +448,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::predictedCovariance() const -> Covariance
   {
+    assert(m_data.ipredicted != IndexData::kInvalid);
     return Covariance(m_traj.m_cov.col(m_data.ipredicted).data());
   }
 
@@ -454,6 +456,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::filtered() const -> Parameters
   {
+    assert(m_data.ifiltered != IndexData::kInvalid);
     return Parameters(m_traj.m_params.col(m_data.ifiltered).data());
   }
 
@@ -461,6 +464,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::filteredCovariance() const -> Covariance
   {
+    assert(m_data.ifiltered != IndexData::kInvalid);
     return Covariance(m_traj.m_cov.col(m_data.ifiltered).data());
   }
 
@@ -468,6 +472,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const -> Parameters
   {
+    assert(m_data.ismoothed != IndexData::kInvalid);
     return Parameters(m_traj.m_params.col(m_data.ismoothed).data());
   }
 
@@ -475,6 +480,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::smoothedCovariance() const -> Covariance
   {
+    assert(m_data.ismoothed != IndexData::kInvalid);
     return Covariance(m_traj.m_cov.col(m_data.ismoothed).data());
   }
 
@@ -482,6 +488,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::jacobian() const -> Covariance
   {
+    assert(m_data.ijacobian != IndexData::kInvalid);
     return Covariance(m_traj.m_cov.col(m_data.ijacobian).data());
   }
 
@@ -489,6 +496,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::projector() const -> Projector
   {
+    assert(m_data.iprojector != IndexData::kInvalid);
     return bitsetToMatrix<Projector>(m_traj.m_projectors[m_data.iprojector]);
   }
 
@@ -496,6 +504,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const -> const SourceLink&
   {
+    assert(m_data.iuncalibrated != IndexData::kInvalid);
     return m_traj.m_sourceLinks[m_data.iuncalibrated];
   }
 
@@ -503,6 +512,7 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::calibrated() const -> Measurement
   {
+    assert(m_data.icalibrated != IndexData::kInvalid);
     return Measurement(m_traj.m_meas.col(m_data.icalibrated).data());
   }
 
@@ -520,6 +530,7 @@ namespace detail_lt {
   TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
       -> MeasurementCovariance
   {
+    assert(m_data.icalibrated != IndexData::kInvalid);
     return MeasurementCovariance(
         m_traj.m_measCov.col(m_data.icalibrated).data());
   }
