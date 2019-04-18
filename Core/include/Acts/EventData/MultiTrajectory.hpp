@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <bitset>
 #include <cstdint>
 #include <type_traits>
 #include <vector>
@@ -112,6 +113,7 @@ namespace detail_lt {
                               Array<Scalar, Size * Size, Eigen::Dynamic, Flags>,
                           SizeIncrement>;
   };
+
   struct IndexData
   {
     using IndexType = uint16_t;
@@ -119,15 +121,18 @@ namespace detail_lt {
     static constexpr IndexType kInvalid = UINT16_MAX;
 
     const Surface& surface;
-    IndexType      iprevious     = kInvalid;
-    IndexType      ipredicted    = kInvalid;
-    IndexType      ifiltered     = kInvalid;
-    IndexType      ismoothed     = kInvalid;
-    IndexType      ijacobian     = kInvalid;
-    IndexType      iuncalibrated = kInvalid;
-    IndexType      icalibrated   = kInvalid;
-    IndexType      measdim       = 0;
+    IndexType      iprevious  = kInvalid;
+    IndexType      ipredicted = kInvalid;
+    IndexType      ifiltered  = kInvalid;
+    IndexType      ismoothed  = kInvalid;
+    IndexType      ijacobian  = kInvalid;
+    IndexType      iprojector = kInvalid;
+
+    IndexType iuncalibrated = kInvalid;
+    IndexType icalibrated   = kInvalid;
+    IndexType measdim       = 0;
   };
+
   /// Proxy object to access a single point on the trajectory.
   ///
   /// @tparam source_link_t Type to link back to an original measurement
@@ -143,6 +148,20 @@ namespace detail_lt {
     using Covariance            = typename Types<N, ReadOnly>::CovarianceMap;
     using Measurement           = typename Types<M, ReadOnly>::CoefficientsMap;
     using MeasurementCovariance = typename Types<M, ReadOnly>::CovarianceMap;
+
+    // as opposed to the types above, this is an actual Matrix (rather than a
+    // map)
+    // @TODO: Does not copy flags, because this fails: can't have col major row
+    // vector, but that's required for 1xN projection matrices below.
+    constexpr static auto ProjectorFlags = Eigen::RowMajor | Eigen::AutoAlign;
+    using Projector
+        = Eigen::Matrix<typename Covariance::Scalar, M, N, ProjectorFlags>;
+    using EffectiveProjector = Eigen::Matrix<typename Projector::Scalar,
+                                             Eigen::Dynamic,
+                                             Eigen::Dynamic,
+                                             ProjectorFlags,
+                                             M,
+                                             N>;
 
     /// Index within the trajectory.
     size_t
@@ -211,6 +230,27 @@ namespace detail_lt {
     /// Returns the jacobian associated to this track state
     Covariance
     jacobian() const;
+
+    bool
+    hasJacobian() const
+    {
+      return m_data.ijacobian != IndexData::kInvalid;
+    }
+
+    Projector
+    projector() const;
+
+    bool
+    hasProjector() const
+    {
+      return m_data.iprojector != IndexData::kInvalid;
+    }
+
+    EffectiveProjector
+    effectiveProjector() const
+    {
+      return projector().topLeftCorner(m_data.measdim, M);
+    }
 
     bool
     hasUncalibrated() const
@@ -288,6 +328,8 @@ public:
   using TrackStateProxy = detail_lt::
       TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, false>;
 
+  using ProjectorBitset = std::bitset<ParametersSize * MeasurementSizeMax>;
+
   /// Create an empty trajectory.
   MultiTrajectory() = default;
 
@@ -339,7 +381,8 @@ private:
   typename detail_lt::Types<ParametersSize>::StorageCovariance       m_cov;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCoefficients m_meas;
   typename detail_lt::Types<MeasurementSizeMax>::StorageCovariance   m_measCov;
-  std::vector<SourceLink> m_sourceLinks;
+  std::vector<SourceLink>      m_sourceLinks;
+  std::vector<ProjectorBitset> m_projectors;
 
   friend class detail_lt::
       TrackStateProxy<SourceLink, ParametersSize, MeasurementSizeMax, true>;
@@ -440,6 +483,13 @@ namespace detail_lt {
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
+  TrackStateProxy<SL, N, M, ReadOnly>::projector() const -> Projector
+  {
+    return bitsetToMatrix<Projector>(m_traj.m_projectors[m_data.iprojector]);
+  }
+
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
+  inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const -> const SourceLink&
   {
     return m_traj.m_sourceLinks[m_data.iuncalibrated];
@@ -499,8 +549,10 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
   }
 
   // store jacobian
-  CovMap(m_cov.addCol().data()) = *ts.parameter.jacobian;
-  p.ijacobian                   = m_cov.size() - 1;
+  if (ts.parameter.jacobian) {
+    CovMap(m_cov.addCol().data()) = *ts.parameter.jacobian;
+    p.ijacobian                   = m_cov.size() - 1;
+  }
 
   // handle measurements
   if (ts.measurement.uncalibrated) {
@@ -512,14 +564,30 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
     auto meas    = m_meas.addCol();
     auto measCov = m_measCov.addCol();
     std::visit(
-        [&meas, &measCov](const auto& m) {
+        [&meas, &measCov, &p, this](const auto& m) {
           using meas_t                         = std::decay_t<decltype(m)>;
           meas.template head<meas_t::size()>() = m.parameters();
-          measCov.template topLeftCorner<meas_t::size(), meas_t::size()>()
+          CovMap(measCov.data())
+              .template topLeftCorner<meas_t::size(), meas_t::size()>()
               = m.covariance();
+
+          // We can only store the projection if we have a calibrated
+          // measurement. Place (possibly asymmetric) projector into
+          // full size projector, padded with zeroes.
+          // Convert to bitset before setting.
+          typename TrackStateProxy::Projector fullProjector;
+          fullProjector.setZero();
+          fullProjector
+              .template topLeftCorner<meas_t::size(), MeasurementSizeMax>()
+              = m.projector();
+
+          m_projectors.push_back(matrixToBitset(fullProjector));
+
+          m_sourceLinks.push_back(m.sourceLink());
         },
         *ts.measurement.calibrated);
-    p.icalibrated = meas.size() - 1;
+    p.icalibrated = m_meas.size() - 1;
+    p.iprojector  = m_projectors.size() - 1;
   }
 
   m_index.push_back(std::move(p));

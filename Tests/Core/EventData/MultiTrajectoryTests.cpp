@@ -90,17 +90,22 @@ namespace Test {
   BOOST_AUTO_TEST_CASE(storage_consistency)
   {
     auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
-                                                   Vector3D{1., 0., 0.});
+                                                   Vector3D{0., 0., 1.});
     MultiTrajectory<SourceLink> t;
     using TrackState = TrackState<SourceLink, BoundParameters>;
 
     ActsMatrixD<3, 3> mCov;
     mCov << 1, 2, 3, 4, 5, 6, 7, 8, 9;
-    FittableMeasurement<SourceLink> fm
-        = Measurement<SourceLink, eLOC_0, eLOC_1, ePHI>{
-            plane, {}, mCov, 2, 3, 4};
 
-    TrackState ts{SourceLink{&fm}};
+    ActsVectorD<3> mPar;
+    mPar << 2, 3, 4;
+    Measurement<SourceLink, eLOC_0, eLOC_1, eQOP> meas{
+        plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
+
+    FittableMeasurement<SourceLink> fm = meas;
+
+    SourceLink sl{&fm};
+    TrackState ts{sl};
 
     // add parameters
     using ParVec_t = BoundParameters::ParVector_t;
@@ -108,7 +113,7 @@ namespace Test {
 
     // predicted
     ParVec_t predPar;
-    predPar << 1, 2, 3, 4, 5;
+    predPar << 1, 2, M_PI / 4., M_PI / 2., 5;
 
     CovMat_t predCov;
     predCov << 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
@@ -121,7 +126,7 @@ namespace Test {
 
     // filtered
     ParVec_t filtPar;
-    filtPar << 6, 7, 8, 9, 10;
+    filtPar << 6, 7, M_PI / 4., M_PI / 2., 10;
 
     CovMat_t filtCov;
     filtCov << 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41,
@@ -134,7 +139,7 @@ namespace Test {
 
     // smoothed
     ParVec_t smotPar;
-    smotPar << 11, 12, 13, 14, 15;
+    smotPar << 11, 12, M_PI / 4., M_PI / 2., 15;
 
     CovMat_t smotCov;
     smotCov << 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66,
@@ -145,8 +150,14 @@ namespace Test {
 
     ts.parameter.smoothed = smot;
 
-    // "calibrate"
-    ts.measurement.calibrated = **ts.measurement.uncalibrated;
+    // "calibrate", keep original source link (stack address)
+    ts.measurement.calibrated
+        = decltype(meas){meas.referenceSurface().getSharedPtr(),
+                         sl,
+                         meas.covariance(),
+                         meas.parameters()[0],
+                         meas.parameters()[1],
+                         meas.parameters()[2]};
 
     // make jacobian
     CovMat_t jac;
@@ -161,18 +172,55 @@ namespace Test {
     // now investigate the proxy
     auto tsProxy = t.getTrackState(0);
 
-    CHECK_CLOSE_ABS(pred.parameters(), tsProxy.predicted(), 1e-9);
-    CHECK_CLOSE_ABS(*pred.covariance(), tsProxy.predictedCovariance(), 1e-9);
+    // parameters
+    BOOST_CHECK(tsProxy.hasPredicted());
+    BOOST_CHECK_EQUAL(predPar, tsProxy.predicted());
+    BOOST_CHECK_EQUAL(predCov, tsProxy.predictedCovariance());
 
-    CHECK_CLOSE_ABS(filt.parameters(), tsProxy.filtered(), 1e-9);
-    CHECK_CLOSE_ABS(*filt.covariance(), tsProxy.filteredCovariance(), 1e-9);
+    BOOST_CHECK(tsProxy.hasFiltered());
+    BOOST_CHECK_EQUAL(filtPar, tsProxy.filtered());
+    BOOST_CHECK_EQUAL(filtCov, tsProxy.filteredCovariance());
 
-    CHECK_CLOSE_ABS(smot.parameters(), tsProxy.smoothed(), 1e-9);
-    CHECK_CLOSE_ABS(*smot.covariance(), tsProxy.smoothedCovariance(), 1e-9);
+    BOOST_CHECK(tsProxy.hasSmoothed());
+    BOOST_CHECK_EQUAL(smotPar, tsProxy.smoothed());
+    BOOST_CHECK_EQUAL(smotCov, tsProxy.smoothedCovariance());
 
-    BOOST_CHECK_EQUAL(&ts.referenceSurface(), &tsProxy.referenceSurface());
+    BOOST_CHECK_EQUAL(&tsProxy.referenceSurface(), &ts.referenceSurface());
 
-    CHECK_CLOSE_ABS(jac, tsProxy.jacobian(), 1e-9);
+    BOOST_CHECK(tsProxy.hasJacobian());
+    BOOST_CHECK_EQUAL(tsProxy.jacobian(), jac);
+
+    BOOST_CHECK(tsProxy.hasProjector());
+    // projector with dynamic rows
+    // should be exactly equal
+    BOOST_CHECK_EQUAL(tsProxy.effectiveProjector(), meas.projector());
+
+    CovMat_t proj;
+    proj << 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+        0, 0;
+
+    // full projector, should be exactly equal
+    BOOST_CHECK_EQUAL(tsProxy.projector(), proj);
+
+    // measurement properties
+    BOOST_CHECK(tsProxy.hasCalibrated());
+    BOOST_CHECK_EQUAL(meas.parameters(), tsProxy.effectiveCalibrated());
+    ParVec_t mParFull;
+    mParFull.setZero();
+    mParFull.head(3) = mPar;
+    BOOST_CHECK_EQUAL(mParFull, tsProxy.calibrated());
+
+    BOOST_CHECK_EQUAL(meas.covariance(),
+                      tsProxy.effectiveCalibratedCovariance());
+
+    CovMat_t mCovFull;
+    mCovFull.setZero();
+    mCovFull.topLeftCorner(3, 3) = mCov;
+    BOOST_CHECK_EQUAL(mCovFull, tsProxy.calibratedCovariance());
+
+    // uncalibrated **is** a SourceLink
+    BOOST_CHECK(tsProxy.hasUncalibrated());
+    BOOST_CHECK_EQUAL(sl, tsProxy.uncalibrated());
   }
 
 }  // namespace Test
