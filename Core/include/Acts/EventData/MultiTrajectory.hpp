@@ -49,6 +49,11 @@ namespace detail_lt {
         data.conservativeResize(Eigen::NoChange, data.cols() + kSizeIncrement);
       }
       m_size = index + 1;
+
+      // @TODO: do this or not? If we assume this happens only when something is
+      // written, the expectation is that everything is zero
+      data.col(index).setZero();
+
       return data.col(index);
     }
 
