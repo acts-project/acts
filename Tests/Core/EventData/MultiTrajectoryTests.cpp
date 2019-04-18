@@ -18,6 +18,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Utilities/TypeTraits.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <iostream>
@@ -47,59 +48,21 @@ namespace Test {
   }
 
   TrackState<SourceLink, CurvilinearParameters>
-  make_trackstate()
+  make_rand_trackstate()
   {
     return {make_params()};
   }
 
-  BOOST_AUTO_TEST_CASE(multitrajectory_build)
-  {
-    MultiTrajectory<SourceLink> t;
+  using ParVec_t = BoundParameters::ParVector_t;
+  using CovMat_t = BoundParameters::CovMatrix_t;
 
-    // construct trajectory w/ multiple components
-    auto i0 = t.addTrackState(make_trackstate());
-    // trajectory bifurcates here into multiple hypotheses
-    auto i1a = t.addTrackState(make_trackstate(), i0);
-    auto i1b = t.addTrackState(make_trackstate(), i0);
-    auto i2a = t.addTrackState(make_trackstate(), i1a);
-    auto i2b = t.addTrackState(make_trackstate(), i1b);
-
-    // print each trajectory component
-    std::vector<size_t> act;
-    auto collect = [&](auto p) {
-      act.push_back(p.index());
-      // assert absence of things
-      BOOST_CHECK(!p.hasUncalibrated());
-      BOOST_CHECK(!p.hasCalibrated());
-      BOOST_CHECK(!p.hasFiltered());
-      BOOST_CHECK(!p.hasSmoothed());
-      BOOST_CHECK(!p.hasJacobian());
-      BOOST_CHECK(!p.hasProjector());
-
-    };
-
-    std::vector<size_t> exp = {i2a, i1a, i0};
-    t.visitBackwards(i2a, collect);
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        act.begin(), act.end(), exp.begin(), exp.end());
-
-    act.clear();
-    exp = {i2b, i1b, i0};
-    t.visitBackwards(i2b, collect);
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        act.begin(), act.end(), exp.begin(), exp.end());
-
-    act.clear();
-    t.applyBackwards(i2b, collect);
-    BOOST_CHECK_EQUAL_COLLECTIONS(
-        act.begin(), act.end(), exp.begin(), exp.end());
-  }
-
-  BOOST_AUTO_TEST_CASE(storage_consistency)
+  // std::pair<TrackState<SourceLink, BoundParameters>,
+  // std::unique_ptr<FittableMeasurement<SourceLink>>>
+  auto
+  make_trackstate()
   {
     auto plane = Surface::makeShared<PlaneSurface>(Vector3D{0., 0., 0.},
                                                    Vector3D{0., 0., 1.});
-    MultiTrajectory<SourceLink> t;
     using TrackState = TrackState<SourceLink, BoundParameters>;
 
     ActsMatrixD<3, 3> mCov;
@@ -110,14 +73,12 @@ namespace Test {
     Measurement<SourceLink, eLOC_0, eLOC_1, eQOP> meas{
         plane, {}, mCov, mPar[0], mPar[1], mPar[2]};
 
-    FittableMeasurement<SourceLink> fm = meas;
+    auto fm = std::make_unique<FittableMeasurement<SourceLink>>(meas);
 
-    SourceLink sl{&fm};
+    SourceLink sl{fm.get()};
     TrackState ts{sl};
 
     // add parameters
-    using ParVec_t = BoundParameters::ParVector_t;
-    using CovMat_t = BoundParameters::CovMatrix_t;
 
     // predicted
     ParVec_t predPar;
@@ -174,6 +135,181 @@ namespace Test {
 
     ts.parameter.jacobian = jac;
 
+    return std::make_tuple(ts, std::move(fm), meas);
+  }
+
+  BOOST_AUTO_TEST_CASE(multitrajectory_build)
+  {
+    MultiTrajectory<SourceLink> t;
+
+    // construct trajectory w/ multiple components
+    auto i0 = t.addTrackState(make_rand_trackstate());
+    // trajectory bifurcates here into multiple hypotheses
+    auto i1a = t.addTrackState(make_rand_trackstate(), i0);
+    auto i1b = t.addTrackState(make_rand_trackstate(), i0);
+    auto i2a = t.addTrackState(make_rand_trackstate(), i1a);
+    auto i2b = t.addTrackState(make_rand_trackstate(), i1b);
+
+    // print each trajectory component
+    std::vector<size_t> act;
+    auto collect = [&](auto p) {
+      act.push_back(p.index());
+      // assert absence of things
+      BOOST_CHECK(!p.hasUncalibrated());
+      BOOST_CHECK(!p.hasCalibrated());
+      BOOST_CHECK(!p.hasFiltered());
+      BOOST_CHECK(!p.hasSmoothed());
+      BOOST_CHECK(!p.hasJacobian());
+      BOOST_CHECK(!p.hasProjector());
+
+    };
+
+    std::vector<size_t> exp = {i2a, i1a, i0};
+    t.visitBackwards(i2a, collect);
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        act.begin(), act.end(), exp.begin(), exp.end());
+
+    act.clear();
+    exp = {i2b, i1b, i0};
+    t.visitBackwards(i2b, collect);
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        act.begin(), act.end(), exp.begin(), exp.end());
+
+    act.clear();
+    t.applyBackwards(i2b, collect);
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        act.begin(), act.end(), exp.begin(), exp.end());
+  }
+
+  BOOST_AUTO_TEST_CASE(trackstate_proxy_cross_talk)
+  {
+
+    // assert expected "cross-talk" between trackstate proxies
+    auto[ots, fm, meas] = make_trackstate();
+
+    MultiTrajectory<SourceLink> t;
+
+    t.addTrackState(ots);
+
+    const auto& ct  = t;
+    auto        cts = ct.getTrackState(0);
+    auto        ts  = t.getTrackState(0);
+
+    ParVec_t v;
+    CovMat_t cov;
+
+    v.setRandom();
+    ts.predicted() = v;
+    BOOST_CHECK_EQUAL(cts.predicted(), v);
+    cov.setRandom();
+    ts.predictedCovariance() = cov;
+    BOOST_CHECK_EQUAL(cts.predictedCovariance(), cov);
+
+    v.setRandom();
+    ts.filtered() = v;
+    BOOST_CHECK_EQUAL(cts.filtered(), v);
+    cov.setRandom();
+    ts.filteredCovariance() = cov;
+    BOOST_CHECK_EQUAL(cts.filteredCovariance(), cov);
+
+    v.setRandom();
+    ts.smoothed() = v;
+    BOOST_CHECK_EQUAL(cts.smoothed(), v);
+    cov.setRandom();
+    ts.smoothedCovariance() = cov;
+    BOOST_CHECK_EQUAL(cts.smoothedCovariance(), cov);
+
+    // make copy of fm
+    auto       fm2 = std::make_unique<FittableMeasurement<SourceLink>>(*fm);
+    SourceLink sl2{fm2.get()};
+    ts.uncalibrated() = sl2;
+    BOOST_CHECK_EQUAL(cts.uncalibrated(), sl2);
+    BOOST_CHECK_NE(cts.uncalibrated(), SourceLink{fm.get()});
+
+    CovMat_t newMeasCov;
+    newMeasCov.setRandom();
+    ts.calibratedCovariance() = newMeasCov;
+    BOOST_CHECK_EQUAL(cts.calibratedCovariance(), newMeasCov);
+
+    ParVec_t newMeasPar;
+    newMeasPar.setRandom();
+    ts.calibrated() = newMeasPar;
+    BOOST_CHECK_EQUAL(cts.calibrated(), newMeasPar);
+
+    size_t measdim = ts.effectiveCalibrated().rows();
+
+    ActsMatrixXd eff{measdim, measdim};
+    eff.setRandom();
+    ts.effectiveCalibratedCovariance() = eff;
+    BOOST_CHECK_EQUAL(cts.effectiveCalibratedCovariance(), eff);
+    newMeasCov.topLeftCorner(eff.rows(), eff.rows()) = eff;
+    BOOST_CHECK_EQUAL(cts.calibratedCovariance(), newMeasCov);
+
+    CovMat_t jac;
+    jac.setRandom();
+    ts.jacobian() = jac;
+    BOOST_CHECK_EQUAL(cts.jacobian(), jac);
+  }
+
+  BOOST_AUTO_TEST_CASE(trackstate_reassignment)
+  {
+
+    auto[ots, fm, meas] = make_trackstate();
+    using meas_t = decltype(meas);
+
+    constexpr size_t maxmeasdim
+        = MultiTrajectory<SourceLink>::MeasurementSizeMax;
+
+    MultiTrajectory<SourceLink> t;
+    t.addTrackState(ots);
+
+    auto ts = t.getTrackState(0);
+
+    // assert measdim and contents of original measurement (just to be safe)
+    BOOST_CHECK_EQUAL(ts.calibratedSize(), meas.size());
+    BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), meas.parameters());
+    BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(), meas.covariance());
+    BOOST_CHECK_EQUAL(ts.effectiveProjector(), meas.projector());
+
+    // create new measurement
+    ActsSymMatrixD<2> mCov;
+    mCov.setRandom();
+    ActsVectorD<2> mPar;
+    mPar.setRandom();
+    Measurement<SourceLink, eLOC_0, eLOC_1> m2{
+        meas.referenceSurface().getSharedPtr(), {}, mCov, mPar[0], mPar[1]};
+
+    ts.setCalibrated(m2);
+
+    BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
+    BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), mPar);
+    BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(), mCov);
+    BOOST_CHECK_EQUAL(ts.effectiveProjector(), m2.projector());
+
+    // check if overallocated part is zeroed correctly
+    ActsVectorD<maxmeasdim> mParFull;
+    mParFull.setZero();
+    mParFull.head(2) = mPar;
+    BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
+
+    ActsSymMatrixD<maxmeasdim> mCovFull;
+    mCovFull.setZero();
+    mCovFull.topLeftCorner(2, 2) = mCov;
+    BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
+
+    ActsSymMatrixD<maxmeasdim> projFull;
+    projFull.setZero();
+    projFull.topLeftCorner(m2.size(), maxmeasdim) = m2.projector();
+    BOOST_CHECK_EQUAL(ts.projector(), projFull);
+  }
+
+  BOOST_AUTO_TEST_CASE(storage_consistency)
+  {
+
+    MultiTrajectory<SourceLink> t;
+
+    auto[ts, fm, om] = make_trackstate();
+
     // now put it into the collection
     t.addTrackState(ts);
 
@@ -182,56 +318,66 @@ namespace Test {
 
     // parameters
     BOOST_CHECK(tsProxy.hasPredicted());
-    BOOST_CHECK_EQUAL(predPar, tsProxy.predicted());
-    BOOST_CHECK_EQUAL(predCov, tsProxy.predictedCovariance());
+    BOOST_CHECK_EQUAL(ts.parameter.predicted->parameters(),
+                      tsProxy.predicted());
+    BOOST_CHECK_EQUAL(*ts.parameter.predicted->covariance(),
+                      tsProxy.predictedCovariance());
 
     BOOST_CHECK(tsProxy.hasFiltered());
-    BOOST_CHECK_EQUAL(filtPar, tsProxy.filtered());
-    BOOST_CHECK_EQUAL(filtCov, tsProxy.filteredCovariance());
+    BOOST_CHECK_EQUAL(ts.parameter.filtered->parameters(), tsProxy.filtered());
+    BOOST_CHECK_EQUAL(*ts.parameter.filtered->covariance(),
+                      tsProxy.filteredCovariance());
 
     BOOST_CHECK(tsProxy.hasSmoothed());
-    BOOST_CHECK_EQUAL(smotPar, tsProxy.smoothed());
-    BOOST_CHECK_EQUAL(smotCov, tsProxy.smoothedCovariance());
+    BOOST_CHECK_EQUAL(ts.parameter.smoothed->parameters(), tsProxy.smoothed());
+    BOOST_CHECK_EQUAL(*ts.parameter.smoothed->covariance(),
+                      tsProxy.smoothedCovariance());
 
     BOOST_CHECK_EQUAL(&tsProxy.referenceSurface(), &ts.referenceSurface());
 
     BOOST_CHECK(tsProxy.hasJacobian());
-    BOOST_CHECK_EQUAL(tsProxy.jacobian(), jac);
+    BOOST_CHECK_EQUAL(tsProxy.jacobian(), *ts.parameter.jacobian);
 
     BOOST_CHECK(tsProxy.hasProjector());
-    // projector with dynamic rows
-    // should be exactly equal
-    BOOST_CHECK_EQUAL(tsProxy.effectiveProjector(), meas.projector());
+    std::visit(
+        [&](const auto& meas) {
+          BOOST_CHECK_EQUAL(tsProxy.effectiveProjector(), meas.projector());
+          // measurement properties
+          BOOST_CHECK(tsProxy.hasCalibrated());
+          BOOST_CHECK_EQUAL(meas.parameters(), tsProxy.effectiveCalibrated());
+          ParVec_t mParFull;
+          mParFull.setZero();
+          mParFull.head(meas.size()) = meas.parameters();
+          BOOST_CHECK_EQUAL(mParFull, tsProxy.calibrated());
 
-    CovMat_t proj;
-    proj << 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0,
-        0, 0;
+          BOOST_CHECK_EQUAL(meas.covariance(),
+                            tsProxy.effectiveCalibratedCovariance());
+          CovMat_t mCovFull;
+          mCovFull.setZero();
+          mCovFull.topLeftCorner(meas.size(), meas.size()) = meas.covariance();
+          BOOST_CHECK_EQUAL(mCovFull, tsProxy.calibratedCovariance());
 
-    // full projector, should be exactly equal
-    BOOST_CHECK_EQUAL(tsProxy.projector(), proj);
+          // calibrated links to original measurement
+          BOOST_CHECK_EQUAL(meas.sourceLink(), tsProxy.calibratedSourceLink());
 
-    // measurement properties
-    BOOST_CHECK(tsProxy.hasCalibrated());
-    BOOST_CHECK_EQUAL(meas.parameters(), tsProxy.effectiveCalibrated());
-    ParVec_t mParFull;
-    mParFull.setZero();
-    mParFull.head(3) = mPar;
-    BOOST_CHECK_EQUAL(mParFull, tsProxy.calibrated());
+          // uncalibrated **is** a SourceLink
+          BOOST_CHECK(tsProxy.hasUncalibrated());
+          BOOST_CHECK_EQUAL(meas.sourceLink(), tsProxy.uncalibrated());
 
-    BOOST_CHECK_EQUAL(meas.covariance(),
-                      tsProxy.effectiveCalibratedCovariance());
+          // full projector, should be exactly equal
+          CovMat_t fullProj;
+          fullProj.setZero();
+          fullProj.topLeftCorner(
+              meas.size(), MultiTrajectory<SourceLink>::MeasurementSizeMax)
+              = meas.projector();
+          BOOST_CHECK_EQUAL(tsProxy.projector(), fullProj);
 
-    CovMat_t mCovFull;
-    mCovFull.setZero();
-    mCovFull.topLeftCorner(3, 3) = mCov;
-    BOOST_CHECK_EQUAL(mCovFull, tsProxy.calibratedCovariance());
+          // projector with dynamic rows
+          // should be exactly equal
+          BOOST_CHECK_EQUAL(tsProxy.effectiveProjector(), meas.projector());
 
-    // calibrated links to original measurement
-    BOOST_CHECK_EQUAL(sl, tsProxy.calibratedSourceLink());
-
-    // uncalibrated **is** a SourceLink
-    BOOST_CHECK(tsProxy.hasUncalibrated());
-    BOOST_CHECK_EQUAL(sl, tsProxy.uncalibrated());
+        },
+        *ts.measurement.calibrated);
   }
 
 }  // namespace Test
