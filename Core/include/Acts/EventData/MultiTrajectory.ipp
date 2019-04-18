@@ -168,7 +168,12 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
   using CovMap =
       typename detail_lt::Types<ParametersSize, false>::CovarianceMap;
 
-  detail_lt::IndexData p;
+  // use a TrackStateProxy to do the assignments
+  m_index.emplace_back();
+  detail_lt::IndexData& p     = m_index.back();
+  size_t                index = m_index.size() - 1;
+
+  TrackStateProxy nts = getTrackState(index);
 
   // make shared ownership held by this multi trajectory
   m_referenceSurfaces.push_back(ts.referenceSurface().getSharedPtr());
@@ -212,41 +217,11 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
   }
 
   if (ts.measurement.calibrated) {
-    auto meas    = m_meas.addCol();
-    auto measCov = m_measCov.addCol();
-    std::visit(
-        [&meas, &measCov, &p, this](const auto& m) {
-          using meas_t                         = std::decay_t<decltype(m)>;
-          meas.template head<meas_t::size()>() = m.parameters();
-          CovMap(measCov.data())
-              .template topLeftCorner<meas_t::size(), meas_t::size()>()
-              = m.covariance();
-
-          // We can only store the projection if we have a calibrated
-          // measurement. Place (possibly asymmetric) projector into
-          // full size projector, padded with zeroes.
-          // Convert to bitset before setting.
-          typename TrackStateProxy::Projector fullProjector;
-          fullProjector.setZero();
-          fullProjector
-              .template topLeftCorner<meas_t::size(), MeasurementSizeMax>()
-              = m.projector();
-
-          m_projectors.push_back(matrixToBitset(fullProjector));
-
-          // we also need to set the measurement dimension
-          p.measdim = meas_t::size();
-
-          m_sourceLinks.push_back(m.sourceLink());
-          p.icalibratedsourcelink = m_sourceLinks.size() - 1;
-        },
-        *ts.measurement.calibrated);
-    p.icalibrated = m_meas.size() - 1;
-    p.iprojector  = m_projectors.size() - 1;
+    std::visit([&](const auto& m) { nts.resetCalibrated(m); },
+               *ts.measurement.calibrated);
   }
 
-  m_index.push_back(std::move(p));
-  return m_index.size() - 1;
+  return index;
 }
 
 template <typename SL>

@@ -436,6 +436,36 @@ namespace detail_lt {
       calibratedSourceLink() = meas.sourceLink();
     }
 
+    /// Setter for a full measurement object.
+    /// @note This allocates new storage for the calibrated measurement. If this
+    /// TrackState previously already had unique storage for these components,
+    /// they will **not be removed**, but may become unaccessible.
+    /// @tparam params The parameter tags of the measurement
+    /// @param meas The measurement object to set
+    template <bool RO  = ReadOnly,
+              typename = std::enable_if_t<!RO>,
+              ParID_t... params>
+    void
+    resetCalibrated(const Acts::Measurement<SourceLink, params...>& meas)
+    {
+      IndexData& dataref = data();
+      // force reallocate, whether currently invalid or shared index
+      m_traj.m_meas.addCol();
+      m_traj.m_measCov.addCol();
+      // shared index between meas par
+      // and cov
+      dataref.icalibrated = m_traj.m_meas.size() - 1;
+
+      m_traj.m_sourceLinks.emplace_back();
+      dataref.icalibratedsourcelink = m_traj.m_sourceLinks.size() - 1;
+
+      m_traj.m_projectors.emplace_back();
+      dataref.iprojector = m_traj.m_projectors.size() - 1;
+
+      // now actually assign to the allocated entries
+      setCalibrated(meas);
+    }
+
   private:
     // Private since it can only be created by the trajectory.
     TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
