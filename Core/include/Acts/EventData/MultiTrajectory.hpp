@@ -128,9 +128,10 @@ namespace detail_lt {
     IndexType      ijacobian  = kInvalid;
     IndexType      iprojector = kInvalid;
 
-    IndexType iuncalibrated = kInvalid;
-    IndexType icalibrated   = kInvalid;
-    IndexType measdim       = 0;
+    IndexType iuncalibrated         = kInvalid;
+    IndexType icalibrated           = kInvalid;
+    IndexType icalibratedsourcelink = kInvalid;
+    IndexType measdim               = 0;
   };
 
   /// Proxy object to access a single point on the trajectory.
@@ -268,6 +269,9 @@ namespace detail_lt {
     {
       return m_data.icalibrated != IndexData::kInvalid;
     }
+
+    const SourceLink&
+    calibratedSourceLink() const;
 
     /// Full measurement vector. Might contain additional zeroed dimensions.
     Measurement
@@ -504,6 +508,15 @@ namespace detail_lt {
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
+  TrackStateProxy<SL, N, M, ReadOnly>::calibratedSourceLink() const
+      -> const SourceLink&
+  {
+    assert(m_data.icalibratedsourcelink != IndexData::kInvalid);
+    return m_traj.m_sourceLinks[m_data.icalibratedsourcelink];
+  }
+
+  template <typename SL, size_t N, size_t M, bool ReadOnly>
+  inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
       -> MeasurementCovariance
   {
@@ -587,6 +600,7 @@ MultiTrajectory<SL>::addTrackState(const TrackState<SL, parameters_t>& ts,
           p.measdim = meas_t::size();
 
           m_sourceLinks.push_back(m.sourceLink());
+          p.icalibratedsourcelink = m_sourceLinks.size() - 1;
         },
         *ts.measurement.calibrated);
     p.icalibrated = m_meas.size() - 1;

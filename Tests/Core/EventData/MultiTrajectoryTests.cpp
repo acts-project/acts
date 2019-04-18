@@ -218,6 +218,9 @@ namespace Test {
     mCovFull.topLeftCorner(3, 3) = mCov;
     BOOST_CHECK_EQUAL(mCovFull, tsProxy.calibratedCovariance());
 
+    // calibrated links to original measurement
+    BOOST_CHECK_EQUAL(sl, tsProxy.calibratedSourceLink());
+
     // uncalibrated **is** a SourceLink
     BOOST_CHECK(tsProxy.hasUncalibrated());
     BOOST_CHECK_EQUAL(sl, tsProxy.uncalibrated());
