@@ -373,6 +373,16 @@ namespace detail_lt {
                                                   m_data.measdim);
     }
 
+    /// Return the (dynamic) number of dimensions stored for this measurement.
+    /// @note The underlying storage is overallocated to MeasurementSizeMax
+    /// regardless of this value
+    /// @return The number of dimensions
+    size_t
+    calibratedSize() const
+    {
+      return m_data.measdim;
+    }
+
   private:
     // Private since it can only be created by the trajectory.
     TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
