@@ -166,6 +166,7 @@ namespace detail_lt {
                                              N>;
 
     /// Index within the trajectory.
+    /// @return the index
     size_t
     index() const
     {
@@ -173,87 +174,127 @@ namespace detail_lt {
     }
 
     /// Reference surface.
+    /// @return the reference surface
     const Surface&
     referenceSurface() const
     {
       return m_data.surface;
     }
 
-    /// Track parameters vector.
+    /// Track parameters vector. This tries to be somewhat smart and return the
+    /// first parameters that are set in this order: predicted -> filtered ->
+    /// smoothed
+    /// @return one of predicted, filtered or smoothed parameters
     Parameters
     parameters() const;
 
-    /// Track parameters covariance matrix.
+    /// Track parameters covariance matrix. This tries to be somewhat smart and
+    /// return the
+    /// first parameters that are set in this order: predicted -> filtered ->
+    /// smoothed
+    /// @return one of predicted, filtered or smoothed covariances
     Covariance
     covariance() const;
 
-    /// Track parameters vector.
+    /// Predicted track parameters vector
+    /// @return The predicted parameters
     Parameters
     predicted() const;
 
-    /// Track parameters covariance matrix.
+    /// Predicted track parameters covariance matrix.
+    /// @return The predicted track parameter covariance
     Covariance
     predictedCovariance() const;
 
+    /// Check whether the predicted parameters+covariance is set
+    /// @return Whether it is set or not
     bool
     hasPredicted() const
     {
       return m_data.ipredicted != IndexData::kInvalid;
     }
 
-    /// Track parameters vector.
+    /// Filtered track parameters vector
+    /// @return The filtered parameters
     Parameters
     filtered() const;
 
-    /// Track parameters covariance matrix.
+    /// Filtered track parameters covariance matrix
+    /// @return The filtered parameters covariance
     Covariance
     filteredCovariance() const;
 
+    /// Return whether filtered parameters+covariance is set
+    /// @return Whether it is set
     bool
     hasFiltered() const
     {
       return m_data.ifiltered != IndexData::kInvalid;
     }
 
-    /// Track parameters vector.
+    /// Smoothed track parameters vector
+    /// @return the parameter vector
     Parameters
     smoothed() const;
 
-    /// Track parameters covariance matrix.
+    /// Smoothed track parameters covariance matrix
+    /// @return the parameter covariance matrix
     Covariance
     smoothedCovariance() const;
 
+    /// Return whether smoothed parameters+covariance is set
+    /// @return Whether it is set
     bool
     hasSmoothed() const
     {
       return m_data.ismoothed != IndexData::kInvalid;
     }
 
-    /// Returns the jacobian associated to this track state
+    /// Returns the jacobian from the previous trackstate to this one
+    /// @return The jacobian matrix
     Covariance
     jacobian() const;
 
+    /// Returns whether a jacobian is set for this trackstate
+    /// @return Whether it is set
     bool
     hasJacobian() const
     {
       return m_data.ijacobian != IndexData::kInvalid;
     }
 
+    /// Returns the projector (measurement mapping function) for this track
+    /// state. It is derived from the uncalibrated measurement
+    /// @note This function returns the overallocated projector. This means it
+    /// is of dimension MxM, where M is the maximum number of measurement
+    /// dimensions. The NxM submatrix, where N is the actual dimension of the
+    /// measurement, is located in the top left corner, everything else is zero.
+    /// @return The overallocated projector
     Projector
     projector() const;
 
+    /// Returns whether a projector is set
+    /// @return Whether it is set
     bool
     hasProjector() const
     {
       return m_data.iprojector != IndexData::kInvalid;
     }
 
+    /// Returns the projector (measurement mapping function) for this track
+    /// state. It is derived from the uncalibrated measurement
+    /// @note This function returns the effective projector. This means it
+    /// is of dimension NxM, where N is the actual dimension of the
+    /// measurement.
+    /// @return The effective projector
     EffectiveProjector
     effectiveProjector() const
     {
       return projector().topLeftCorner(m_data.measdim, M);
     }
 
+    /// Return whether an uncalibrated measurement (source link) is set
+    /// @return Whether it is set
     bool
     hasUncalibrated() const
     {
@@ -261,28 +302,38 @@ namespace detail_lt {
     }
 
     /// Uncalibrated measurement in the form of a source link
+    /// @return The uncalibrated measurement source link
     const SourceLink&
     uncalibrated() const;
 
-    /// Check if the point has an associated measurement.
+    /// Check if the point has an associated calibrated measurement.
+    /// @return Whether it is set
     bool
     hasCalibrated() const
     {
       return m_data.icalibrated != IndexData::kInvalid;
     }
 
+    /// The source link of the calibrated measurement
+    /// @note This does not necessarily have to be the uncalibrated source link.
+    /// @return The source link
     const SourceLink&
     calibratedSourceLink() const;
 
-    /// Full measurement vector. Might contain additional zeroed dimensions.
+    /// Full calibrated measurement vector. Might contain additional zeroed
+    /// dimensions.
+    /// @return The measurement vector
     Measurement
     calibrated() const;
 
-    /// Full measurement covariance matrix.
+    /// Full calibrated measurement covariance matrix. The effective covariance
+    /// is located in the top left corner, everything else is zeroed.
+    /// @return The measurement covariance matrix
     MeasurementCovariance
     calibratedCovariance() const;
 
     /// Dynamic measurement vector with only the valid dimensions.
+    /// @return The effective calibrated measurement vector
     auto
     effectiveCalibrated() const
     {
@@ -290,6 +341,7 @@ namespace detail_lt {
     }
 
     /// Dynamic measurement covariance matrix with only the valid dimensions.
+    /// @return The effective calibrated covariance matrix
     auto
     effectiveCalibratedCovariance() const
     {
@@ -349,8 +401,11 @@ public:
 
   /// Add a point without measurement and return its index.
   ///
+  /// @tparam parameters_t The parameter type used for the trackstate
   /// @param trackParameters  at the local point
   /// @param iprevious        index of the previous state, SIZE_MAX if first
+  /// @note The parameter type from @p parameters_t is not currently stored in
+  /// MultiTrajectory.
   template <typename parameters_t>
   size_t
   addTrackState(const TrackState<SourceLink, parameters_t>& ts,
@@ -377,6 +432,7 @@ public:
   template <typename F>
   void
   visitBackwards(size_t iendpoint, F&& callable) const;
+
   /// Apply a function to all previous states starting at a given endpoint.
   ///
   /// @param iendpoint  index of the last state
