@@ -320,7 +320,7 @@ class MultiTrajectory
 public:
   enum {
     ParametersSize     = NGlobalPars,
-    MeasurementSizeMax = 2,
+    MeasurementSizeMax = NGlobalPars,
   };
   using SourceLink           = source_link_t;
   using ConstTrackStateProxy = detail_lt::
