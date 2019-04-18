@@ -173,13 +173,26 @@ namespace detail_lt {
       return m_istate;
     }
 
+    template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+    IndexData&
+    data()
+    {
+      return m_traj.m_index[m_istate];
+    }
+
+    const IndexData&
+    data() const
+    {
+      return m_traj.m_index[m_istate];
+    }
+
     /// Reference surface.
     /// @return the reference surface
     const Surface&
     referenceSurface() const
     {
-      assert(m_data.irefsurface != IndexData::kInvalid);
-      return *m_traj.m_referenceSurfaces[m_data.irefsurface];
+      assert(data().irefsurface != IndexData::kInvalid);
+      return *m_traj.m_referenceSurfaces[data().irefsurface];
     }
 
     /// Track parameters vector. This tries to be somewhat smart and return the
@@ -212,7 +225,7 @@ namespace detail_lt {
     bool
     hasPredicted() const
     {
-      return m_data.ipredicted != IndexData::kInvalid;
+      return data().ipredicted != IndexData::kInvalid;
     }
 
     /// Filtered track parameters vector
@@ -230,7 +243,7 @@ namespace detail_lt {
     bool
     hasFiltered() const
     {
-      return m_data.ifiltered != IndexData::kInvalid;
+      return data().ifiltered != IndexData::kInvalid;
     }
 
     /// Smoothed track parameters vector
@@ -248,7 +261,7 @@ namespace detail_lt {
     bool
     hasSmoothed() const
     {
-      return m_data.ismoothed != IndexData::kInvalid;
+      return data().ismoothed != IndexData::kInvalid;
     }
 
     /// Returns the jacobian from the previous trackstate to this one
@@ -261,7 +274,7 @@ namespace detail_lt {
     bool
     hasJacobian() const
     {
-      return m_data.ijacobian != IndexData::kInvalid;
+      return data().ijacobian != IndexData::kInvalid;
     }
 
     /// Returns the projector (measurement mapping function) for this track
@@ -279,7 +292,7 @@ namespace detail_lt {
     bool
     hasProjector() const
     {
-      return m_data.iprojector != IndexData::kInvalid;
+      return data().iprojector != IndexData::kInvalid;
     }
 
     /// Returns the projector (measurement mapping function) for this track
@@ -291,7 +304,7 @@ namespace detail_lt {
     EffectiveProjector
     effectiveProjector() const
     {
-      return projector().topLeftCorner(m_data.measdim, M);
+      return projector().topLeftCorner(data().measdim, M);
     }
 
     /// Return whether an uncalibrated measurement (source link) is set
@@ -299,7 +312,7 @@ namespace detail_lt {
     bool
     hasUncalibrated() const
     {
-      return m_data.iuncalibrated != IndexData::kInvalid;
+      return data().iuncalibrated != IndexData::kInvalid;
     }
 
     /// Uncalibrated measurement in the form of a source link. Const version
@@ -314,8 +327,8 @@ namespace detail_lt {
     SourceLink&
     uncalibrated()
     {
-      assert(m_data.iuncalibrated != IndexData::kInvalid);
-      return m_traj.m_sourceLinks[m_data.iuncalibrated];
+      assert(data().iuncalibrated != IndexData::kInvalid);
+      return m_traj.m_sourceLinks[data().iuncalibrated];
     }
 
     /// Check if the point has an associated calibrated measurement.
@@ -323,7 +336,7 @@ namespace detail_lt {
     bool
     hasCalibrated() const
     {
-      return m_data.icalibrated != IndexData::kInvalid;
+      return data().icalibrated != IndexData::kInvalid;
     }
 
     /// The source link of the calibrated measurement. Const version
@@ -340,8 +353,8 @@ namespace detail_lt {
     SourceLink&
     calibratedSourceLink()
     {
-      assert(m_data.icalibratedsourcelink != IndexData::kInvalid);
-      return m_traj.m_sourceLinks[m_data.icalibratedsourcelink];
+      assert(data().icalibratedsourcelink != IndexData::kInvalid);
+      return m_traj.m_sourceLinks[data().icalibratedsourcelink];
     }
 
     /// Full calibrated measurement vector. Might contain additional zeroed
@@ -361,7 +374,7 @@ namespace detail_lt {
     auto
     effectiveCalibrated() const
     {
-      return calibrated().head(m_data.measdim);
+      return calibrated().head(data().measdim);
     }
 
     /// Dynamic measurement covariance matrix with only the valid dimensions.
@@ -369,8 +382,8 @@ namespace detail_lt {
     auto
     effectiveCalibratedCovariance() const
     {
-      return calibratedCovariance().topLeftCorner(m_data.measdim,
-                                                  m_data.measdim);
+      return calibratedCovariance().topLeftCorner(data().measdim,
+                                                  data().measdim);
     }
 
     /// Return the (dynamic) number of dimensions stored for this measurement.
@@ -380,7 +393,7 @@ namespace detail_lt {
     size_t
     calibratedSize() const
     {
-      return m_data.measdim;
+      return data().measdim;
     }
 
     /// Setter for a full measurement object
@@ -396,10 +409,11 @@ namespace detail_lt {
     void
     setCalibrated(const Acts::Measurement<SourceLink, params...>& meas)
     {
+      IndexData&       dataref = data();
       constexpr size_t measdim
           = Acts::Measurement<SourceLink, params...>::size();
 
-      m_data.measdim = measdim;
+      dataref.measdim = measdim;
 
       assert(hasCalibrated());
       calibrated().setZero();
@@ -409,16 +423,16 @@ namespace detail_lt {
       calibratedCovariance().template topLeftCorner<measdim, measdim>()
           = meas.covariance();
 
-      assert(m_data.iprojector != IndexData::kInvalid);
+      assert(dataref.iprojector != IndexData::kInvalid);
       typename TrackStateProxy::Projector fullProjector;
       fullProjector.setZero();
       fullProjector.template topLeftCorner<measdim,
                                            MultiTrajectory<SourceLink>::
                                                MeasurementSizeMax>()
           = meas.projector();
-      m_traj.m_projectors[m_data.iprojector] = matrixToBitset(fullProjector);
+      m_traj.m_projectors[dataref.iprojector] = matrixToBitset(fullProjector);
 
-      assert(m_data.icalibratedsourcelink != IndexData::kInvalid);
+      assert(dataref.icalibratedsourcelink != IndexData::kInvalid);
       calibratedSourceLink() = meas.sourceLink();
     }
 
@@ -428,8 +442,7 @@ namespace detail_lt {
                     size_t istate);
 
     ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& m_traj;
-    size_t    m_istate;
-    IndexData m_data;
+    size_t m_istate;
 
     friend class Acts::MultiTrajectory<SourceLink>;
   };

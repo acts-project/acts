@@ -23,7 +23,7 @@ namespace detail_lt {
   inline TrackStateProxy<SL, N, M, ReadOnly>::TrackStateProxy(
       ConstIf<MultiTrajectory<SL>, ReadOnly>& trajectory,
       size_t istate)
-    : m_traj(trajectory), m_istate(istate), m_data(trajectory.m_index[istate])
+    : m_traj(trajectory), m_istate(istate)
   {
   }
 
@@ -33,11 +33,11 @@ namespace detail_lt {
   {
     IndexData::IndexType idx;
     if (hasSmoothed()) {
-      idx = m_data.ismoothed;
+      idx = data().ismoothed;
     } else if (hasFiltered()) {
-      idx = m_data.ifiltered;
+      idx = data().ifiltered;
     } else {
-      idx = m_data.ipredicted;
+      idx = data().ipredicted;
     }
 
     return Parameters(m_traj.m_params.data.col(idx).data());
@@ -49,11 +49,11 @@ namespace detail_lt {
   {
     IndexData::IndexType idx;
     if (hasSmoothed()) {
-      idx = m_data.ismoothed;
+      idx = data().ismoothed;
     } else if (hasFiltered()) {
-      idx = m_data.ifiltered;
+      idx = data().ifiltered;
     } else {
-      idx = m_data.ipredicted;
+      idx = data().ipredicted;
     }
     return Covariance(m_traj.m_cov.data.col(idx).data());
   }
@@ -62,80 +62,80 @@ namespace detail_lt {
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::predicted() const -> Parameters
   {
-    assert(m_data.ipredicted != IndexData::kInvalid);
-    return Parameters(m_traj.m_params.col(m_data.ipredicted).data());
+    assert(data().ipredicted != IndexData::kInvalid);
+    return Parameters(m_traj.m_params.col(data().ipredicted).data());
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::predictedCovariance() const -> Covariance
   {
-    assert(m_data.ipredicted != IndexData::kInvalid);
-    return Covariance(m_traj.m_cov.col(m_data.ipredicted).data());
+    assert(data().ipredicted != IndexData::kInvalid);
+    return Covariance(m_traj.m_cov.col(data().ipredicted).data());
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::filtered() const -> Parameters
   {
-    assert(m_data.ifiltered != IndexData::kInvalid);
-    return Parameters(m_traj.m_params.col(m_data.ifiltered).data());
+    assert(data().ifiltered != IndexData::kInvalid);
+    return Parameters(m_traj.m_params.col(data().ifiltered).data());
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::filteredCovariance() const -> Covariance
   {
-    assert(m_data.ifiltered != IndexData::kInvalid);
-    return Covariance(m_traj.m_cov.col(m_data.ifiltered).data());
+    assert(data().ifiltered != IndexData::kInvalid);
+    return Covariance(m_traj.m_cov.col(data().ifiltered).data());
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::smoothed() const -> Parameters
   {
-    assert(m_data.ismoothed != IndexData::kInvalid);
-    return Parameters(m_traj.m_params.col(m_data.ismoothed).data());
+    assert(data().ismoothed != IndexData::kInvalid);
+    return Parameters(m_traj.m_params.col(data().ismoothed).data());
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::smoothedCovariance() const -> Covariance
   {
-    assert(m_data.ismoothed != IndexData::kInvalid);
-    return Covariance(m_traj.m_cov.col(m_data.ismoothed).data());
+    assert(data().ismoothed != IndexData::kInvalid);
+    return Covariance(m_traj.m_cov.col(data().ismoothed).data());
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::jacobian() const -> Covariance
   {
-    assert(m_data.ijacobian != IndexData::kInvalid);
-    return Covariance(m_traj.m_cov.col(m_data.ijacobian).data());
+    assert(data().ijacobian != IndexData::kInvalid);
+    return Covariance(m_traj.m_cov.col(data().ijacobian).data());
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::projector() const -> Projector
   {
-    assert(m_data.iprojector != IndexData::kInvalid);
-    return bitsetToMatrix<Projector>(m_traj.m_projectors[m_data.iprojector]);
+    assert(data().iprojector != IndexData::kInvalid);
+    return bitsetToMatrix<Projector>(m_traj.m_projectors[data().iprojector]);
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::uncalibrated() const -> const SourceLink&
   {
-    assert(m_data.iuncalibrated != IndexData::kInvalid);
-    return m_traj.m_sourceLinks[m_data.iuncalibrated];
+    assert(data().iuncalibrated != IndexData::kInvalid);
+    return m_traj.m_sourceLinks[data().iuncalibrated];
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
   inline auto
   TrackStateProxy<SL, N, M, ReadOnly>::calibrated() const -> Measurement
   {
-    assert(m_data.icalibrated != IndexData::kInvalid);
-    return Measurement(m_traj.m_meas.col(m_data.icalibrated).data());
+    assert(data().icalibrated != IndexData::kInvalid);
+    return Measurement(m_traj.m_meas.col(data().icalibrated).data());
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
@@ -143,8 +143,8 @@ namespace detail_lt {
   TrackStateProxy<SL, N, M, ReadOnly>::calibratedSourceLink() const
       -> const SourceLink&
   {
-    assert(m_data.icalibratedsourcelink != IndexData::kInvalid);
-    return m_traj.m_sourceLinks[m_data.icalibratedsourcelink];
+    assert(data().icalibratedsourcelink != IndexData::kInvalid);
+    return m_traj.m_sourceLinks[data().icalibratedsourcelink];
   }
 
   template <typename SL, size_t N, size_t M, bool ReadOnly>
@@ -152,9 +152,9 @@ namespace detail_lt {
   TrackStateProxy<SL, N, M, ReadOnly>::calibratedCovariance() const
       -> MeasurementCovariance
   {
-    assert(m_data.icalibrated != IndexData::kInvalid);
+    assert(data().icalibrated != IndexData::kInvalid);
     return MeasurementCovariance(
-        m_traj.m_measCov.col(m_data.icalibrated).data());
+        m_traj.m_measCov.col(data().icalibrated).data());
   }
 
 }  // namespace detail_lt
