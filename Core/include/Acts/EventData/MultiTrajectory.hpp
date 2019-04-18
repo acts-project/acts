@@ -383,6 +383,35 @@ namespace detail_lt {
       return m_data.measdim;
     }
 
+    template <bool RO  = ReadOnly,
+              typename = std::enable_if_t<!RO>,
+              ParID_t... params>
+    void
+    setCalibrated(const Acts::Measurement<SourceLink, params...>& meas)
+    {
+      constexpr size_t measdim
+          = Acts::Measurement<SourceLink, params...>::size();
+
+      m_data.measdim = measdim;
+
+      calibrated().setZero();
+      calibrated().template head<measdim>() = meas.parameters();
+
+      calibratedCovariance().setZero();
+      calibratedCovariance().template topLeftCorner<measdim, measdim>()
+          = meas.covariance();
+
+      typename TrackStateProxy::Projector fullProjector;
+      fullProjector.setZero();
+      fullProjector.template topLeftCorner<measdim,
+                                           MultiTrajectory<SourceLink>::
+                                               MeasurementSizeMax>()
+          = meas.projector();
+      m_traj.m_projectors[m_data.iprojector] = matrixToBitset(fullProjector);
+
+      calibratedSourceLink() = meas.sourceLink();
+    }
+
   private:
     // Private since it can only be created by the trajectory.
     TrackStateProxy(ConstIf<MultiTrajectory<SourceLink>, ReadOnly>& trajectory,
