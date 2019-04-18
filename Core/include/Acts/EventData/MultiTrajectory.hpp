@@ -302,10 +302,21 @@ namespace detail_lt {
       return m_data.iuncalibrated != IndexData::kInvalid;
     }
 
-    /// Uncalibrated measurement in the form of a source link
+    /// Uncalibrated measurement in the form of a source link. Const version
     /// @return The uncalibrated measurement source link
     const SourceLink&
     uncalibrated() const;
+
+    /// Uncalibrated measurement in the form of a source link. Mutable version
+    /// @note This overload is only available if @c ReadOnly is false
+    /// @return The uncalibrated measurement source link
+    template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+    SourceLink&
+    uncalibrated()
+    {
+      assert(m_data.iuncalibrated != IndexData::kInvalid);
+      return m_traj.m_sourceLinks[m_data.iuncalibrated];
+    }
 
     /// Check if the point has an associated calibrated measurement.
     /// @return Whether it is set
@@ -315,11 +326,23 @@ namespace detail_lt {
       return m_data.icalibrated != IndexData::kInvalid;
     }
 
-    /// The source link of the calibrated measurement
+    /// The source link of the calibrated measurement. Const version
     /// @note This does not necessarily have to be the uncalibrated source link.
     /// @return The source link
     const SourceLink&
     calibratedSourceLink() const;
+
+    /// The source link of the calibrated measurement. Mutable version
+    /// @note This does not necessarily have to be the uncalibrated source link.
+    /// @note This overload is only available if @c ReadOnly is false
+    /// @return The source link
+    template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+    SourceLink&
+    calibratedSourceLink()
+    {
+      assert(m_data.icalibratedsourcelink != IndexData::kInvalid);
+      return m_traj.m_sourceLinks[m_data.icalibratedsourcelink];
+    }
 
     /// Full calibrated measurement vector. Might contain additional zeroed
     /// dimensions.
