@@ -12,9 +12,9 @@
 
 #pragma once
 
+#include "Acts/Material/AccumulatedMaterialProperties.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Plugins/MaterialMapping/AccumulatedMaterialProperties.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 

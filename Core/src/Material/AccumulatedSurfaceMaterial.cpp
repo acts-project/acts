@@ -10,7 +10,7 @@
 // AccumulatedSurfaceMaterial.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Plugins/MaterialMapping/AccumulatedSurfaceMaterial.hpp"
+#include "Acts/Material/AccumulatedSurfaceMaterial.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 

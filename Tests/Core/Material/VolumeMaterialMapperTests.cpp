@@ -25,7 +25,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
-#include "Acts/Plugins/MaterialMapping/VolumeMaterialMapper.hpp"
+#include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"

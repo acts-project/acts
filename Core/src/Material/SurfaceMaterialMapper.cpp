@@ -10,7 +10,7 @@
 // SurfaceMaterialMapper.cpp, Acts project
 ///////////////////////////////////////////////////////////////////
 
-#include "Acts/Plugins/MaterialMapping/SurfaceMaterialMapper.hpp"
+#include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/EventData/NeutralParameters.hpp"
 #include "Acts/Material/BinnedSurfaceMaterial.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
