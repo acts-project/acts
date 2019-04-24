@@ -11,6 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+
+#include <iostream>
+
 namespace Acts {
 
 ///  @enum BoundarySurfaceFace

@@ -24,11 +24,11 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/detail/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
-#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
+#include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace Acts {
 namespace Test {
