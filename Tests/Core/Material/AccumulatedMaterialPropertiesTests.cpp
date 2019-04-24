@@ -15,7 +15,7 @@
 #include <climits>
 
 #include "Acts/Material/MaterialProperties.hpp"
-#include "Acts/Plugins/MaterialMapping/AccumulatedMaterialProperties.hpp"
+#include "Acts/Material/AccumulatedMaterialProperties.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace Acts {

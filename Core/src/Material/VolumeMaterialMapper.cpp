@@ -6,11 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/MaterialMapping/VolumeMaterialMapper.hpp"
+#include "Acts/Material/VolumeMaterialMapper.hpp"
 #include <iostream>
 #include <limits>
+#include "Acts/Material/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Material/MaterialMapUtils.hpp"
-#include "Acts/Plugins/MaterialMapping/AccumulatedVolumeMaterial.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"

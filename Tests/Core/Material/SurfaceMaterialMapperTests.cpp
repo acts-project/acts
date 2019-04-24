@@ -23,7 +23,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
-#include "Acts/Plugins/MaterialMapping/SurfaceMaterialMapper.hpp"
+#include "Acts/Material/SurfaceMaterialMapper.hpp"
 
 namespace Acts {
 
