@@ -38,10 +38,34 @@ class Vertex {
   Vertex(const Vector3D& position, const ActsSymMatrixD<3>& covariance,
          std::vector<TrackAtVertex<input_track_t>>& tracks);
 
+  /// @brief Vertex constructor
+  ///
+  /// @param position Full vertex position
+  /// @param covariance 4x4 covariance matrix
+  /// @param tracks Vector of tracks associated with the vertex
+  Vertex(const Vector4D&                            position,
+         const ActsSymMatrixD<4>&                   covariance,
+         std::vector<TrackAtVertex<input_track_t>>& tracks);
+
   /// @return Returns 3-position
-  const Vector3D& position() const;
+  Vector3D
+  position() const;
+
+  /// @return Returns time
+  ParValue_t
+  time() const;
+
+  /// @return Returns 4-position
+  const Vector4D&
+  fullPosition() const;
+
   /// @return Returns position covariance
-  const ActsSymMatrixD<3>& covariance() const;
+  ActsSymMatrixD<3>
+  covariance() const;
+
+  /// @return Returns 4x4 covariance
+  const ActsSymMatrixD<4>&
+  fullCovariance() const;
 
   /// @return Returns vector of tracks associated with the vertex
   const std::vector<TrackAtVertex<input_track_t>>& tracks() const;
@@ -49,11 +73,29 @@ class Vertex {
   /// @return Returns pair of (chi2, numberDoF)
   std::pair<double, double> fitQuality() const;
 
+  /// @brief Set position and time
+  ///
   /// @param position Vertex position
-  void setPosition(const Vector3D& position);
+  /// @param time The time
+  void
+  setPosition(const Vector3D& position, ParValue_t time = 0);
 
+  /// @brief Sets time
+  ///
+  /// @param time The time
+  void
+  setTime(ParValue_t time);
+
+  /// @brief Sets 3x3 covariance
+  ///
   /// @param covariance Position covariance matrix
   void setCovariance(const ActsSymMatrixD<3>& covariance);
+
+  /// @brief Sets 4x4 covariance
+  ///
+  /// @param covariance The 4x4 covariance matrix
+  void
+  setCovariance(const ActsSymMatrixD<4>& covariance);
 
   /// @param tracks Vector of tracks at vertex
   void setTracksAtVertex(
@@ -63,9 +105,9 @@ class Vertex {
   /// @param numberDoF Number of degrees of freedom
   void setFitQuality(double chiSquared, double numberDoF);
 
- private:
-  Vector3D m_position = Vector3D(0., 0., 0.);
-  ActsSymMatrixD<3> m_covariance = ActsSymMatrixD<3>::Zero();
+private:
+  Vector4D          m_position   = Vector4D::Zero();
+  ActsSymMatrixD<4> m_covariance = ActsSymMatrixD<4>::Zero();
   std::vector<TrackAtVertex<input_track_t>> m_tracksAtVertex;
   double m_chiSquared = std::numeric_limits<double>::max();  // chi2 of the fit
   double m_numberDoF = 0;  // number of degrees of freedom

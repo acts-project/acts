@@ -108,12 +108,14 @@ using ActsRowVectorX = Eigen::Matrix<T, 1, Eigen::Dynamic>;
 using ActsRowVectorXd = ActsRowVectorX<double>;
 using ActsRowVectorXf = ActsRowVectorX<float>;
 
-using Rotation3D = Eigen::Quaternion<double>;
-using Translation3D = Eigen::Translation<double, 3>;
-using AngleAxis3D = Eigen::AngleAxisd;
-using Transform3D = Eigen::Affine3d;
-using Vector3D = Eigen::Matrix<double, 3, 1>;
-using Vector2D = Eigen::Matrix<double, 2, 1>;
+
+using Rotation3D       = Eigen::Quaternion<double>;
+using Translation3D    = Eigen::Translation<double, 3>;
+using AngleAxis3D      = Eigen::AngleAxisd;
+using Transform3D      = Eigen::Affine3d;
+using Vector4D         = Eigen::Matrix<double, 4, 1>;
+using Vector3D         = Eigen::Matrix<double, 3, 1>;
+using Vector2D         = Eigen::Matrix<double, 2, 1>;
 using RotationMatrix3D = Eigen::Matrix<double, 3, 3>;
 
 using Rotation3F = Eigen::Quaternion<float>;
@@ -134,6 +136,7 @@ enum AxisDefs : int {
   eX = 0,
   eY = 1,
   eZ = 2,
+  eT = 3,
   // momentum access
   ePX = 0,
   ePY = 1,
