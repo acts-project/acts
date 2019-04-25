@@ -94,8 +94,10 @@ def main():
         action="store_true",
         help="Fail if year in license statement is not valid.",
     )
+    p.add_argument("--exclude", "-e", action="append", default=EXCLUDE)
 
     args = p.parse_args()
+    print(args.exclude)
 
     if os.path.isdir(args.input):
         srcs = (
@@ -190,7 +192,7 @@ def main():
     step = int(nsrcs / 20)
     for i, src in enumerate(srcs):
 
-        if any([fnmatch(src, e) for e in EXCLUDE]):
+        if any([fnmatch(src, e) for e in args.exclude]):
             continue
 
         if nsrcs > 1 and i % step == 0:
