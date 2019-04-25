@@ -80,3 +80,7 @@ add_executable (MaterialMapUtilsTests MaterialMapUtilsTests.cpp)
 target_link_libraries (MaterialMapUtilsTests PRIVATE ActsCore ActsTestsCommonHelpers)
 add_test (NAME MaterialMapUtilsTest COMMAND MaterialMapUtilsTests)
 acts_add_test_to_cdash_project (PROJECT ACore TEST MaterialMapUtilsTest TARGETS MaterialMapUtilsTests)
+
+add_executable (HelpersTests HelpersTests.cpp)
+target_link_libraries (HelpersTests PRIVATE ActsCore ActsTestsCommonHelpers ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+add_test (NAME HelpersTests COMMAND HelpersTests)
