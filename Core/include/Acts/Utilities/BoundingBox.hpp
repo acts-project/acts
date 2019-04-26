@@ -16,8 +16,10 @@
 #include <tuple>
 #include <vector>
 #include "Acts/Utilities/Definitions.hpp"
+#include "Acts/Utilities/Frustum.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/IVisualization.hpp"
+#include "Acts/Utilities/Ray.hpp"
 
 namespace Acts {
 
@@ -165,6 +167,29 @@ class AxisAlignedBoundingBox {
    * @return Whether the point is inside or not.
    */
   bool intersect(const vertex_type& point) const;
+
+  /**
+   * @brief Implements the slab method for Ray/AABB intersections.
+   *
+   * See https://tavianator.com/fast-branchless-raybounding-box-intersections/,
+   * https://tavianator.com/fast-branchless-raybounding-box-intersections-part-2-nans/,
+   * https://medium.com/@bromanz/another-view-on-the-classic-ray-aabb-intersection-algorithm-for-bvh-traversal-41125138b525
+   *
+   * @note This implementation may treat parallel rays on any of the slabs
+   *       as **outside** due to how @c NaNs are handled by Eigen.
+   *       See http://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
+   * @param ray The ray to intersect with
+   * @return Whether the ray intersects this AABB
+   */
+  bool intersect(const Ray<value_type, DIM>& ray) const;
+
+  /**
+   * Check if a frustum intersects with this bounding box
+   * @param fr The frustum
+   * @return Whether the frustum intersects this AABB
+   */
+  template <size_t sides>
+  bool intersect(const Frustum<value_type, DIM, sides>& fr) const;
 
   /**
    * Set the skip node (bounding box)

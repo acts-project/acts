@@ -115,6 +115,78 @@ bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
 }
 
 template <typename entity_t, typename value_t, size_t DIM>
+bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
+    const Ray<value_type, DIM>& ray) const {
+  const vertex_type& origin = ray.origin();
+  const vertex_array_type& idir = ray.idir();
+  // this is NaN origin is on box boundary and ray is parallel to
+  // that boundary, since 0*inf = NaN.
+  vertex_array_type t0s = (m_vmin - origin).array() * idir;
+  vertex_array_type t1s = (m_vmax - origin).array() * idir;
+
+  // this is non-compliant with IEEE-754-2008, NaN gets propagated through
+  // http://eigen.tuxfamily.org/bz/show_bug.cgi?id=564
+  // this means that rays parallel to boundaries might not be considered
+  // to intersect.
+  vertex_array_type tsmaller = t0s.min(t1s);
+  vertex_array_type tbigger = t0s.max(t1s);
+
+  value_type tmin = tsmaller.maxCoeff();
+  value_type tmax = tbigger.minCoeff();
+
+  // std::cout << "--- " << ray << " -> " << this << std::endl;
+  // std::cout << "t0s:\n" << t0s << "\nt1s\n" << t1s << "\n\n";
+  // std::cout << "tsmaller:\n" << tsmaller << "\ntbigger\n" << tbigger <<
+  // "\n\n";
+  // std::cout << "tmin:" << tmin << "\ntmax:" << tmax << std::endl;
+
+  return tmin < tmax && tmax > 0.0;  // ((tmin > 0.0 && tmax > 0.0) || (tmin <
+                                     // 0.0 && tmax > 0.0));
+}
+
+template <typename entity_t, typename value_t, size_t DIM>
+template <size_t sides>
+bool Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::intersect(
+    const Frustum<value_type, DIM, sides>& fr) const {
+  // std::cout << __FUNCTION__ << std::endl;
+  // std::cout << "sides: " << sides << std::endl;
+
+  const auto& normals = fr.normals();
+  const vertex_array_type vmin = m_vmin - fr.origin();
+  const vertex_array_type vmax = m_vmax - fr.origin();
+
+  // std::cout << "vmin: " << vmin.transpose() << "\nvmax: " <<
+  // vmax.transpose()
+  //<< std::endl;
+
+  vertex_type p_vtx;
+  // for loop, we could eliminate this, probably,
+  // but sides+1 is known at compile time, so the compiler
+  // will most likely unroll the loop
+  for (size_t i = 0; i < sides + 1; i++) {
+    const vertex_type& normal = normals[i];
+
+    // for (size_t j=0;j<DIM;j++) {
+    // p_vtx[j] = normal[j] < 0 ? vmin[j] : vmax[j];
+    // std::cout << p_vtx[j] << std::endl;
+    //}
+
+    p_vtx = (normal.array() < 0).template cast<value_type>() * vmin +
+            (normal.array() >= 0).template cast<value_type>() * vmax;
+    // std::cout << p_vtx.transpose() << std::endl;
+
+    if (p_vtx.dot(normal) < 0) {
+      // p vertex is outside on this plane, box must be outside
+      return false;
+    }
+  }
+
+  // If we get here, no p-vertex was outside, so box intersects or is
+  // contained. We don't care, so report 'intsersect'
+  return true;
+}
+
+template <typename entity_t, typename value_t, size_t DIM>
 void Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::setSkip(
     self_t* skip) {
   // set next on this
