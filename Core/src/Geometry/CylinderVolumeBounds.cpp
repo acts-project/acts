@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/IVisualization.hpp"
 
 const double Acts::CylinderVolumeBounds::s_numericalStable = 10e-2;
@@ -174,6 +175,34 @@ Acts::CylinderVolumeBounds::sectorPlaneBounds() const {
 std::ostream& Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const {
   return dumpT<std::ostream>(sl);
 }
+
+Acts::Volume::BoundingBox Acts::CylinderVolumeBounds::boundingBox(
+    const Transform3D* trf, const Vector3D& envelope,
+    const Volume* entity) const {
+  double xmax, xmin, ymax, ymin;
+  xmax = outerRadius();
+
+  if (halfPhiSector() > M_PI / 2.) {
+    // more than half
+    ymax = outerRadius();
+    ymin = -outerRadius();
+    xmin = outerRadius() * std::cos(halfPhiSector());
+  } else {
+    // less than half
+    ymax = outerRadius() * std::sin(halfPhiSector());
+    ymin = -ymax;
+    // in this case, xmin is given by the inner radius
+    xmin = innerRadius() * std::cos(halfPhiSector());
+  }
+
+  Vector3D vmin(xmin, ymin, -halflengthZ());
+  Vector3D vmax(xmax, ymax, halflengthZ());
+
+  // this is probably not perfect, but at least conservative
+  Volume::BoundingBox box{entity, vmin - envelope, vmax + envelope};
+  return trf == nullptr ? box : box.transformed(*trf);
+}
+
 void Acts::CylinderVolumeBounds::draw(IVisualization& helper,
                                       const Transform3D& transform) const {
   std::vector<std::shared_ptr<const Acts::Surface>> surfaces =

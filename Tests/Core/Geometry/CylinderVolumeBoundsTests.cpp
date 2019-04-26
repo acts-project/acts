@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -96,6 +97,52 @@ BOOST_DATA_TEST_CASE(CylinderVolumeBounds_decomposeToSurfaces,
   // test in r
   CHECK_CLOSE_REL(boundarySurfaces.at(3)->center(tgContext), pos, 1e-12);
   CHECK_CLOSE_REL(boundarySurfaces.at(2)->center(tgContext), pos, 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(bounding_box_creation) {
+  float tol = 1e-4;
+
+  CylinderVolumeBounds cvb(5, 10);
+  auto bb = cvb.boundingBox();
+
+  Transform3D rot;
+  rot = AngleAxis3D(M_PI / 2., Vector3D::UnitX());
+
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  BOOST_CHECK_EQUAL(bb.max(), Vector3D(5, 5, 10));
+  BOOST_CHECK_EQUAL(bb.min(), Vector3D(-5, -5, -10));
+
+  bb = cvb.boundingBox(&rot);
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  CHECK_CLOSE_ABS(bb.max(), Vector3D(5, 10, 5), tol);
+  CHECK_CLOSE_ABS(bb.min(), Vector3D(-5, -10, -5), tol);
+
+  cvb = CylinderVolumeBounds(5, 8, 12);
+  bb = cvb.boundingBox();
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  BOOST_CHECK_EQUAL(bb.max(), Vector3D(8, 8, 12));
+  BOOST_CHECK_EQUAL(bb.min(), Vector3D(-8, -8, -12));
+
+  double angle = M_PI / 8.;
+  cvb = CylinderVolumeBounds(5, 8, angle, 13);
+  bb = cvb.boundingBox();
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  CHECK_CLOSE_ABS(bb.max(), Vector3D(8, 8 * std::sin(angle), 13), tol);
+  CHECK_CLOSE_ABS(
+      bb.min(), Vector3D(5 * std::cos(angle), -8 * std::sin(angle), -13), tol);
+
+  rot = AngleAxis3D(M_PI / 2., Vector3D::UnitZ());
+  bb = cvb.boundingBox(&rot);
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  CHECK_CLOSE_ABS(bb.max(), Vector3D(8 * std::sin(angle), 8, 13), tol);
+  CHECK_CLOSE_ABS(
+      bb.min(), Vector3D(-8 * std::sin(angle), 5 * std::cos(angle), -13), tol);
+
+  rot = AngleAxis3D(M_PI / 2., Vector3D(-2, 4, 5).normalized());
+  bb = cvb.boundingBox(&rot);
+  BOOST_CHECK_EQUAL(bb.entity(), nullptr);
+  CHECK_CLOSE_ABS(bb.max(), Vector3D(8.40007, 15.2828, 3.88911), tol);
+  CHECK_CLOSE_ABS(bb.min(), Vector3D(-7.27834, -8.12028, -14.2182), tol);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

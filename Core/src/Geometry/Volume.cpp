@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2019 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,6 +14,8 @@
 #include <iostream>
 #include <utility>
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
+#include "Acts/Utilities/Definitions.hpp"
 
 Acts::Volume::Volume()
     : GeometryObject(),
@@ -84,4 +86,11 @@ bool Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
 std::ostream& Acts::operator<<(std::ostream& sl, const Acts::Volume& vol) {
   sl << "Voluem with " << vol.volumeBounds() << std::endl;
   return sl;
+}
+
+Acts::Volume::BoundingBox Acts::Volume::boundingBox(
+    const Vector3D& envelope) const {
+  BoundingBox box = m_volumeBounds->boundingBox(m_transform.get(), envelope);
+  box.setEntity(this);
+  return box;
 }

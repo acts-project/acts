@@ -11,6 +11,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
+
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -18,6 +19,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 
 Acts::TrapezoidVolumeBounds::TrapezoidVolumeBounds()
     : VolumeBounds(), m_valueStore(bv_length, 0.) {}
@@ -93,6 +95,7 @@ Acts::TrapezoidVolumeBounds::decomposeToSurfaces(
                                Translation3D(Vector3D(0., 0., halflengthZ())));
   rSurfaces.push_back(Surface::makeShared<PlaneSurface>(
       std::shared_ptr<const Transform3D>(tTransform), xytBounds));
+
   // face surfaces yz
   // transmute cyclical
   //   (3) - at point A, attached to alpha opening angle
@@ -212,4 +215,38 @@ bool Acts::TrapezoidVolumeBounds::inside(const Vector3D& pos,
 
 std::ostream& Acts::TrapezoidVolumeBounds::toStream(std::ostream& sl) const {
   return dumpT<std::ostream>(sl);
+}
+
+Acts::Volume::BoundingBox Acts::TrapezoidVolumeBounds::boundingBox(
+    const Acts::Transform3D* trf, const Vector3D& envelope,
+    const Volume* entity) const {
+  double minx = minHalflengthX();
+  double maxx = maxHalflengthX();
+  double haley = halflengthY();
+  double halez = halflengthZ();
+
+  std::array<Vector3D, 8> vertices = {{{-minx, -haley, -halez},
+                                       {+minx, -haley, -halez},
+                                       {-maxx, +haley, -halez},
+                                       {+maxx, +haley, -halez},
+                                       {-minx, -haley, +halez},
+                                       {+minx, -haley, +halez},
+                                       {-maxx, +haley, +halez},
+                                       {+maxx, +haley, +halez}}};
+
+  Transform3D transform = Transform3D::Identity();
+  if (trf != nullptr) {
+    transform = *trf;
+  }
+
+  Vector3D vmin = transform * vertices[0];
+  Vector3D vmax = transform * vertices[0];
+
+  for (size_t i = 1; i < 8; i++) {
+    const Vector3D vtx = transform * vertices[i];
+    vmin = vmin.cwiseMin(vtx);
+    vmax = vmax.cwiseMax(vtx);
+  }
+
+  return {entity, vmin - envelope, vmax + envelope};
 }

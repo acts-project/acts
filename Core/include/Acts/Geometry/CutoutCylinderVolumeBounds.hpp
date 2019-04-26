@@ -12,6 +12,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PolyhedronRepresentation.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -73,6 +74,10 @@ class CutoutCylinderVolumeBounds : public VolumeBounds {
    */
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transform) const override;
+
+  Volume::BoundingBox boundingBox(
+      const Transform3D* trf = nullptr, const Vector3D& envelope = {0, 0, 0},
+      const Volume* entity = nullptr) const override;
 
   /**
    * Write information about this instance to an outstream

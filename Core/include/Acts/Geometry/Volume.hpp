@@ -14,6 +14,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryObject.hpp"
 #include "Acts/Geometry/GeometryStatics.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -31,6 +32,7 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 
 class Volume : public virtual GeometryObject {
  public:
+  using BoundingBox = AABB3D<Volume>;
   ///  Default constructor
   Volume();
 
@@ -66,6 +68,8 @@ class Volume : public virtual GeometryObject {
 
   /// returns the volumeBounds()
   const VolumeBounds& volumeBounds() const;
+
+  BoundingBox boundingBox(const Vector3D& envelope = {0, 0, 0}) const;
 
   /// Inside() method for checks
   ///

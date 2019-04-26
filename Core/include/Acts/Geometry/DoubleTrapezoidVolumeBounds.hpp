@@ -11,7 +11,9 @@
 ///////////////////////////////////////////////////////////////////
 
 #pragma once
+#include "Acts/Geometry/Volume.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 
 namespace Acts {
@@ -114,6 +116,10 @@ class DoubleTrapezoidVolumeBounds : public VolumeBounds {
   /// @return a vector of surfaces to be used as boundary surfaces
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transformPtr) const override;
+
+  Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
+                                  const Vector3D& envelope = {0, 0, 0},
+                                  const Volume* entity = nullptr) const final;
 
   /// This method returns the X halflength at minimal Y
   double minHalflengthX() const;

@@ -120,6 +120,22 @@ Acts::CutoutCylinderVolumeBounds::decomposeToSurfaces(
 
   return surfaces;
 }
+
+Acts::Volume::BoundingBox Acts::CutoutCylinderVolumeBounds::boundingBox(
+    const Acts::Transform3D* trf, const Acts::Vector3D& envelope,
+    const Acts::Volume* entity) const {
+  Vector3D vmin, vmax;
+
+  // no phi sector is possible, so this is just the outer size of
+
+  vmax = {m_rmax, m_rmax, m_dz1};
+  vmin = {-m_rmax, -m_rmax, -m_dz1};
+
+  Acts::Volume::BoundingBox box(entity, vmin - envelope, vmax + envelope);
+  // transform at the very end, if required
+  return trf == nullptr ? box : box.transformed(*trf);
+}
+
 std::ostream& Acts::CutoutCylinderVolumeBounds::toStream(
     std::ostream& sl) const {
   sl << "Acts::CutoutCylinderVolumeBounds(\n";
