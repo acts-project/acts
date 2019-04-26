@@ -8,75 +8,57 @@
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(const Vector3D& position)
-  : m_position(position)
-{
-}
+    : m_position(position) {}
 
 template <typename input_track_t>
 Acts::Vertex<input_track_t>::Vertex(
-    const Vector3D&                            position,
-    const ActsSymMatrixD<3>&                   covariance,
+    const Vector3D& position, const ActsSymMatrixD<3>& covariance,
     std::vector<TrackAtVertex<input_track_t>>& tracks)
-  : m_position(position)
-  , m_covariance(covariance)
-  , m_tracksAtVertex(std::move(tracks))
-{
-}
+    : m_position(position),
+      m_covariance(covariance),
+      m_tracksAtVertex(std::move(tracks)) {}
 
 template <typename input_track_t>
-const Acts::Vector3D&
-Acts::Vertex<input_track_t>::position() const
-{
+const Acts::Vector3D& Acts::Vertex<input_track_t>::position() const {
   return m_position;
 }
 
 template <typename input_track_t>
-const Acts::ActsSymMatrixD<3>&
-Acts::Vertex<input_track_t>::covariance() const
-{
+const Acts::ActsSymMatrixD<3>& Acts::Vertex<input_track_t>::covariance() const {
   return m_covariance;
 }
 
 template <typename input_track_t>
 const std::vector<Acts::TrackAtVertex<input_track_t>>&
-Acts::Vertex<input_track_t>::tracks() const
-{
+Acts::Vertex<input_track_t>::tracks() const {
   return m_tracksAtVertex;
 }
 
 template <typename input_track_t>
-std::pair<double, double>
-Acts::Vertex<input_track_t>::fitQuality() const
-{
+std::pair<double, double> Acts::Vertex<input_track_t>::fitQuality() const {
   return std::pair<double, double>(m_chiSquared, m_numberDoF);
 }
 
 template <typename input_track_t>
-void
-Acts::Vertex<input_track_t>::setPosition(const Vector3D& position)
-{
+void Acts::Vertex<input_track_t>::setPosition(const Vector3D& position) {
   m_position = position;
 }
 
 template <typename input_track_t>
-void
-Acts::Vertex<input_track_t>::setCovariance(const ActsSymMatrixD<3>& covariance)
-{
+void Acts::Vertex<input_track_t>::setCovariance(
+    const ActsSymMatrixD<3>& covariance) {
   m_covariance = covariance;
 }
 
 template <typename input_track_t>
-void
-Acts::Vertex<input_track_t>::setTracksAtVertex(
-    const std::vector<TrackAtVertex<input_track_t>>& tracks)
-{
+void Acts::Vertex<input_track_t>::setTracksAtVertex(
+    const std::vector<TrackAtVertex<input_track_t>>& tracks) {
   m_tracksAtVertex = std::move(tracks);
 }
 
 template <typename input_track_t>
-void
-Acts::Vertex<input_track_t>::setFitQuality(double chiSquared, double numberDoF)
-{
+void Acts::Vertex<input_track_t>::setFitQuality(double chiSquared,
+                                                double numberDoF) {
   m_chiSquared = chiSquared;
-  m_numberDoF  = numberDoF;
+  m_numberDoF = numberDoF;
 }

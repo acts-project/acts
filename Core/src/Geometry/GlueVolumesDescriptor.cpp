@@ -18,32 +18,28 @@
 Acts::GlueVolumesDescriptor::GlueVolumesDescriptor(
     const std::map<BoundarySurfaceFace,
                    std::shared_ptr<const TrackingVolumeArray>>& gvs)
-  : m_glueVolumes(gvs)
-{
+    : m_glueVolumes(gvs) {
   // fill the available faces
   for (auto& gvIter : m_glueVolumes) {
     m_glueFaces.push_back(gvIter.first);
   }
 }
 
-void
-Acts::GlueVolumesDescriptor::registerGlueVolumes(
-    Acts::BoundarySurfaceFace                  bsf,
-    std::shared_ptr<const TrackingVolumeArray> gvs)
-{
+void Acts::GlueVolumesDescriptor::registerGlueVolumes(
+    Acts::BoundarySurfaceFace bsf,
+    std::shared_ptr<const TrackingVolumeArray> gvs) {
   // register the face
   auto searchIter = m_glueVolumes.find(bsf);
   if (searchIter == m_glueVolumes.end()) {
     m_glueFaces.push_back(bsf);
   }
   // simple assignment overwrites already existing entries
-  m_glueVolumes[bsf]
-      = std::move(gvs);  //!< @todo change to addGlueVolumes principle
+  m_glueVolumes[bsf] =
+      std::move(gvs);  //!< @todo change to addGlueVolumes principle
 }
 
 std::shared_ptr<const Acts::TrackingVolumeArray>
-Acts::GlueVolumesDescriptor::glueVolumes(Acts::BoundarySurfaceFace bsf) const
-{
+Acts::GlueVolumesDescriptor::glueVolumes(Acts::BoundarySurfaceFace bsf) const {
   // searching for the glue volumes according
   auto searchIter = m_glueVolumes.find(bsf);
   if (searchIter != m_glueVolumes.end()) {
@@ -52,9 +48,7 @@ Acts::GlueVolumesDescriptor::glueVolumes(Acts::BoundarySurfaceFace bsf) const
   return nullptr;
 }
 
-std::string
-Acts::GlueVolumesDescriptor::screenOutput() const
-{
+std::string Acts::GlueVolumesDescriptor::screenOutput() const {
   std::stringstream sl;
   sl << "Acts::GlueVolumesDescriptor: " << std::endl;
   const std::vector<Acts::BoundarySurfaceFace>& glueFaceVector = glueFaces();
@@ -62,8 +56,8 @@ Acts::GlueVolumesDescriptor::screenOutput() const
      << " Volume faces." << std::endl;
   // loop over the faces
   for (auto& gFace : glueFaceVector) {
-    const std::vector<TrackingVolumePtr>& glueVolumesVector
-        = glueVolumes(gFace)->arrayObjects();
+    const std::vector<TrackingVolumePtr>& glueVolumesVector =
+        glueVolumes(gFace)->arrayObjects();
     // loop over the TrackingVolumes
     sl << "        -----> Processing Face: " << int(gFace) << " - has ";
     sl << glueVolumesVector.size()
@@ -76,9 +70,8 @@ Acts::GlueVolumesDescriptor::screenOutput() const
   return sl.str();
 }
 
-std::ostream&
-Acts::operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd)
-{
+std::ostream& Acts::operator<<(std::ostream& sl,
+                               const GlueVolumesDescriptor& gvd) {
   sl << gvd.screenOutput();
   return sl;
 }

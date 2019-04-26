@@ -29,9 +29,8 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 /// the interface for inherited Volume classes
 /// regarding the geometrical information.
 
-class Volume : public virtual GeometryObject
-{
-public:
+class Volume : public virtual GeometryObject {
+ public:
   ///  Default constructor
   Volume();
 
@@ -40,7 +39,7 @@ public:
   /// @param htrans is the transform to position the volume in 3D space
   /// @param volbounds is the volume boundary definitions
   Volume(const std::shared_ptr<const Transform3D>& htrans,
-         VolumeBoundsPtr                           volbounds);
+         VolumeBoundsPtr volbounds);
 
   /// Copy Constructor - with optional shift
   ///
@@ -54,24 +53,19 @@ public:
   /// Assignment operator
   ///
   /// @param vol is the source volume to be copied
-  Volume&
-  operator=(const Volume& vol);
+  Volume& operator=(const Volume& vol);
 
   /// Pseudo-constructor
-  virtual Volume*
-  clone() const;
+  virtual Volume* clone() const;
 
   //// Return methods for geometry transform
-  const Transform3D&
-  transform() const;
+  const Transform3D& transform() const;
 
   /// returns the center of the volume
-  const Vector3D&
-  center() const;
+  const Vector3D& center() const;
 
   /// returns the volumeBounds()
-  const VolumeBounds&
-  volumeBounds() const;
+  const VolumeBounds& volumeBounds() const;
 
   /// Inside() method for checks
   ///
@@ -79,8 +73,7 @@ public:
   /// @param tol is the tolerance parameter
   ///
   /// @return boolean indicator if the position is inside
-  bool
-  inside(const Vector3D& gpos, double tol = 0.) const;
+  bool inside(const Vector3D& gpos, double tol = 0.) const;
 
   /// The binning position method
   /// - as default the center is given, but may be overloaded
@@ -89,39 +82,31 @@ public:
   /// @param bValue is the binning value schema
   ///
   /// @return vector 3D that can be used for the binning
-  const Vector3D
-  binningPosition(const GeometryContext& gctx,
-                  BinningValue           bValue) const override;
+  const Vector3D binningPosition(const GeometryContext& gctx,
+                                 BinningValue bValue) const override;
 
-protected:
+ protected:
   std::shared_ptr<const Transform3D> m_transform;
-  Vector3D                           m_center;
-  VolumeBoundsPtr                    m_volumeBounds;
+  Vector3D m_center;
+  VolumeBoundsPtr m_volumeBounds;
 };
 
-inline const Transform3D&
-Volume::transform() const
-{
+inline const Transform3D& Volume::transform() const {
   if (m_transform) {
     return (*(m_transform.get()));
   }
   return Acts::s_idTransform;
 }
 
-inline const Vector3D&
-Volume::center() const
-{
+inline const Vector3D& Volume::center() const {
   return m_center;
 }
 
-inline const VolumeBounds&
-Volume::volumeBounds() const
-{
+inline const VolumeBounds& Volume::volumeBounds() const {
   return (*(m_volumeBounds.get()));
 }
 
 /**Overload of << operator for std::ostream for debug output*/
-std::ostream&
-operator<<(std::ostream& sl, const Volume& vol);
+std::ostream& operator<<(std::ostream& sl, const Volume& vol);
 
 }  // namespace Acts

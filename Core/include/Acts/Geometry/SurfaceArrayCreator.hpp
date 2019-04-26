@@ -25,13 +25,11 @@
 namespace Acts {
 
 namespace Test {
-  struct SurfaceArrayCreatorFixture;
+struct SurfaceArrayCreatorFixture;
 }
 
-using SurfaceMatcher = std::function<bool(const GeometryContext& gctx,
-                                          BinningValue,
-                                          const Surface*,
-                                          const Surface*)>;
+using SurfaceMatcher = std::function<bool(
+    const GeometryContext& gctx, BinningValue, const Surface*, const Surface*)>;
 
 using SurfaceVector = std::vector<const Surface*>;
 using SurfaceMatrix = std::vector<SurfaceVector>;
@@ -44,40 +42,35 @@ using V3Matrix = std::vector<V3Vector>;
 /// It is designed create sub surface arrays to be ordered on Surfaces
 ///
 /// @todo write more documentation on how this is done
-class SurfaceArrayCreator
-{
-public:
+class SurfaceArrayCreator {
+ public:
   friend Acts::Test::SurfaceArrayCreatorFixture;
   friend Acts::SurfaceArray;
 
-  struct ProtoAxis
-  {
-    BinningType         bType;
-    BinningValue        bValue;
-    size_t              nBins;
-    double              min;
-    double              max;
+  struct ProtoAxis {
+    BinningType bType;
+    BinningValue bValue;
+    size_t nBins;
+    double min;
+    double max;
     std::vector<double> binEdges;
 
-    size_t
-    getBin(double x) const
-    {
+    size_t getBin(double x) const {
       if (binEdges.empty()) {
         // equidistant
         double w = (max - min) / nBins;
         return std::floor((x - min) / w);
       } else {
         // variable
-        const auto it
-            = std::upper_bound(std::begin(binEdges), std::end(binEdges), x);
+        const auto it =
+            std::upper_bound(std::begin(binEdges), std::end(binEdges), x);
         return std::distance(std::begin(binEdges), it) - 1;
       }
     }
   };
 
   // Configuration struct
-  struct Config
-  {
+  struct Config {
     /// Type-erased function which determines whether two surfaces are supposed
     /// to be considered equivalent in terms of the binning
     SurfaceMatcher surfaceMatcher = SurfaceArrayCreator::isSurfaceEquivalent;
@@ -91,21 +84,17 @@ public:
   /// Constructor with default config
   ///
   /// @param logger logging instance
-  SurfaceArrayCreator(std::unique_ptr<const Logger> logger
-                      = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
-    : m_cfg(Config()), m_logger(std::move(logger))
-  {
-  }
+  SurfaceArrayCreator(std::unique_ptr<const Logger> logger = getDefaultLogger(
+                          "SurfaceArrayCreator", Logging::INFO))
+      : m_cfg(Config()), m_logger(std::move(logger)) {}
   /// Constructor with explicit config
   ///
   /// @param cfg Explicit config struct
   /// @param logger logging instance
-  SurfaceArrayCreator(const Config&                 cfg,
-                      std::unique_ptr<const Logger> logger
-                      = getDefaultLogger("SurfaceArrayCreator", Logging::INFO))
-    : m_cfg(cfg), m_logger(std::move(logger))
-  {
-  }
+  SurfaceArrayCreator(const Config& cfg,
+                      std::unique_ptr<const Logger> logger = getDefaultLogger(
+                          "SurfaceArrayCreator", Logging::INFO))
+      : m_cfg(cfg), m_logger(std::move(logger)) {}
 
   /// Destructor
   virtual ~SurfaceArrayCreator() = default;
@@ -126,15 +115,11 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer to a new SurfaceArray
-  std::unique_ptr<SurfaceArray>
-  surfaceArrayOnCylinder(const GeometryContext&                      gctx,
-                         std::vector<std::shared_ptr<const Surface>> surfaces,
-                         size_t                                      binsPhi,
-                         size_t                                      binsZ,
-                         boost::optional<ProtoLayer> protoLayerOpt
-                         = boost::none,
-                         const std::shared_ptr<const Transform3D>& transformOpt
-                         = nullptr) const;
+  std::unique_ptr<SurfaceArray> surfaceArrayOnCylinder(
+      const GeometryContext& gctx,
+      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsPhi,
+      size_t binsZ, boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -153,15 +138,12 @@ public:
   /// @param transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnCylinder(const GeometryContext&                      gctx,
-                         std::vector<std::shared_ptr<const Surface>> surfaces,
-                         BinningType                 bTypePhi = equidistant,
-                         BinningType                 bTypeZ   = equidistant,
-                         boost::optional<ProtoLayer> protoLayerOpt
-                         = boost::none,
-                         const std::shared_ptr<const Transform3D>& transformOpt
-                         = nullptr) const;
+  std::unique_ptr<Acts::SurfaceArray> surfaceArrayOnCylinder(
+      const GeometryContext& gctx,
+      std::vector<std::shared_ptr<const Surface>> surfaces,
+      BinningType bTypePhi = equidistant, BinningType bTypeZ = equidistant,
+      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a disc, binned in r, phi when extremas and
@@ -179,14 +161,11 @@ public:
   /// @param transformOpt is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray>
-  surfaceArrayOnDisc(const GeometryContext&                      gctx,
-                     std::vector<std::shared_ptr<const Surface>> surfaces,
-                     size_t                                      binsR,
-                     size_t                                      binsPhi,
-                     boost::optional<ProtoLayer> protoLayerOpt = boost::none,
-                     const std::shared_ptr<const Transform3D>& transformOpt
-                     = nullptr) const;
+  std::unique_ptr<SurfaceArray> surfaceArrayOnDisc(
+      const GeometryContext& gctx,
+      std::vector<std::shared_ptr<const Surface>> surfaces, size_t binsR,
+      size_t binsPhi, boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   ///
@@ -208,14 +187,12 @@ public:
   /// @note If there is more than on R-Ring, number of phi bins
   ///       will be set to lowest number of surfaces of any R-ring.
   ///       This ignores bTypePhi and produces equidistant binning in phi
-  std::unique_ptr<Acts::SurfaceArray>
-  surfaceArrayOnDisc(const GeometryContext&                      gctx,
-                     std::vector<std::shared_ptr<const Surface>> surfaces,
-                     BinningType                                 bTypeR,
-                     BinningType                                 bTypePhi,
-                     boost::optional<ProtoLayer> protoLayerOpt = boost::none,
-                     const std::shared_ptr<const Transform3D>& transformOpt
-                     = nullptr) const;
+  std::unique_ptr<Acts::SurfaceArray> surfaceArrayOnDisc(
+      const GeometryContext& gctx,
+      std::vector<std::shared_ptr<const Surface>> surfaces, BinningType bTypeR,
+      BinningType bTypePhi,
+      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// SurfaceArrayCreator interface method
   /// - create an array on a plane
@@ -237,15 +214,12 @@ public:
   /// @param [in] transformOpt is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
-  std::unique_ptr<SurfaceArray>
-  surfaceArrayOnPlane(const GeometryContext&                      gctx,
-                      std::vector<std::shared_ptr<const Surface>> surfaces,
-                      size_t                                      bins1,
-                      size_t                                      bins2,
-                      BinningValue                bValue = BinningValue::binX,
-                      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
-                      const std::shared_ptr<const Transform3D>& transformOpt
-                      = nullptr) const;
+  std::unique_ptr<SurfaceArray> surfaceArrayOnPlane(
+      const GeometryContext& gctx,
+      std::vector<std::shared_ptr<const Surface>> surfaces, size_t bins1,
+      size_t bins2, BinningValue bValue = BinningValue::binX,
+      boost::optional<ProtoLayer> protoLayerOpt = boost::none,
+      const std::shared_ptr<const Transform3D>& transformOpt = nullptr) const;
 
   /// Static check funtion for surface equivalent
   ///
@@ -253,12 +227,9 @@ public:
   /// @param bValue the binning value for the binning
   /// @param a first surface for checking
   /// @param b second surface for checking
-  static bool
-  isSurfaceEquivalent(const GeometryContext& gctx,
-                      BinningValue           bValue,
-                      const Surface*         a,
-                      const Surface*         b)
-  {
+  static bool isSurfaceEquivalent(const GeometryContext& gctx,
+                                  BinningValue bValue, const Surface* a,
+                                  const Surface* b) {
     using Acts::VectorHelpers::perp;
 
     if (bValue == Acts::binPhi) {
@@ -280,15 +251,14 @@ public:
     }
 
     if (bValue == Acts::binZ) {
-      return (std::abs(a->binningPosition(gctx, binR).z()
-                       - b->binningPosition(gctx, binR).z())
-              < Acts::units::_um);
+      return (std::abs(a->binningPosition(gctx, binR).z() -
+                       b->binningPosition(gctx, binR).z()) < Acts::units::_um);
     }
 
     if (bValue == Acts::binR) {
-      return (std::abs(perp(a->binningPosition(gctx, binR))
-                       - perp(b->binningPosition(gctx, binR)))
-              < Acts::units::_um);
+      return (std::abs(perp(a->binningPosition(gctx, binR)) -
+                       perp(b->binningPosition(gctx, binR))) <
+              Acts::units::_um);
     }
 
     return false;
@@ -296,32 +266,24 @@ public:
 
   /// Set logging instance
   /// @param logger is the logging instance to be set
-  void
-  setLogger(std::unique_ptr<const Logger> logger)
-  {
+  void setLogger(std::unique_ptr<const Logger> logger) {
     m_logger = std::move(logger);
   }
 
-private:
+ private:
   /// configuration object
   Config m_cfg;
 
   /// Private access to logger
-  const Logger&
-  logger() const
-  {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
-  std::vector<const Surface*>
-  findKeySurfaces(
+  std::vector<const Surface*> findKeySurfaces(
       const std::vector<const Surface*>& surfaces,
       const std::function<bool(const Surface*, const Surface*)>& equal) const;
 
-  size_t
-  determineBinCount(const GeometryContext&             gctx,
-                    const std::vector<const Surface*>& surfaces,
-                    BinningValue                       bValue) const;
+  size_t determineBinCount(const GeometryContext& gctx,
+                           const std::vector<const Surface*>& surfaces,
+                           BinningValue bValue) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates a variable @c ProtoAxis from a vector of (unsorted) surfaces with
@@ -344,12 +306,10 @@ private:
   /// @return Instance of @c ProtoAxis containing determined properties
   /// @note This only creates the @c ProtoAxis, this needs to be turned
   ///       into an actual @c Axis object to be used
-  ProtoAxis
-  createVariableAxis(const GeometryContext&             gctx,
-                     const std::vector<const Surface*>& surfaces,
-                     BinningValue                       bValue,
-                     ProtoLayer                         protoLayer,
-                     Transform3D&                       transform) const;
+  ProtoAxis createVariableAxis(const GeometryContext& gctx,
+                               const std::vector<const Surface*>& surfaces,
+                               BinningValue bValue, ProtoLayer protoLayer,
+                               Transform3D& transform) const;
 
   /// SurfaceArrayCreator internal method
   /// Creates a equidistant @c ProtoAxis when the extremas and the bin number
@@ -372,13 +332,11 @@ private:
   /// @return Instance of @c ProtoAxis containing determined properties
   /// @note This only creates the @c ProtoAxis, this needs to be turned
   ///       into an actual @c Axis object to be used
-  ProtoAxis
-  createEquidistantAxis(const GeometryContext&             gctx,
-                        const std::vector<const Surface*>& surfaces,
-                        BinningValue                       bValue,
-                        ProtoLayer                         protoLayer,
-                        Transform3D&                       transform,
-                        size_t                             nBins = 0) const;
+  ProtoAxis createEquidistantAxis(const GeometryContext& gctx,
+                                  const std::vector<const Surface*>& surfaces,
+                                  BinningValue bValue, ProtoLayer protoLayer,
+                                  Transform3D& transform,
+                                  size_t nBins = 0) const;
 
   /// SurfaceArrayCreator internal method
   /// @brief Creates a SurfaceGridLookup instance within an any
@@ -392,17 +350,11 @@ private:
   /// @param localToGlobal transform callable
   /// @param pAxisA ProtoAxis object for axis A
   /// @param pAxisB ProtoAxis object for axis B
-  template <detail::AxisBoundaryType bdtA,
-            detail::AxisBoundaryType bdtB,
-            typename F1,
-            typename F2>
+  template <detail::AxisBoundaryType bdtA, detail::AxisBoundaryType bdtB,
+            typename F1, typename F2>
   static std::unique_ptr<SurfaceArray::ISurfaceGridLookup>
-  makeSurfaceGridLookup2D(F1        globalToLocal,
-                          F2        localToGlobal,
-                          ProtoAxis pAxisA,
-                          ProtoAxis pAxisB)
-  {
-
+  makeSurfaceGridLookup2D(F1 globalToLocal, F2 localToGlobal, ProtoAxis pAxisA,
+                          ProtoAxis pAxisB) {
     using ISGL = SurfaceArray::ISurfaceGridLookup;
     std::unique_ptr<ISGL> ptr;
 
@@ -469,13 +421,12 @@ private:
   /// @param [in] gctx the geometry context for this call
   /// @param sl The @c SurfaceGridLookup
   /// @param surfaces the surfaces
-  void
-  completeBinning(const GeometryContext&             gctx,
-                  SurfaceArray::ISurfaceGridLookup&  sl,
-                  const std::vector<const Surface*>& surfaces) const
-  {
-    ACTS_VERBOSE("Complete binning by filling closest neighbour surfaces into "
-                 "empty bins.");
+  void completeBinning(const GeometryContext& gctx,
+                       SurfaceArray::ISurfaceGridLookup& sl,
+                       const std::vector<const Surface*>& surfaces) const {
+    ACTS_VERBOSE(
+        "Complete binning by filling closest neighbour surfaces into "
+        "empty bins.");
 
     size_t binCompleted = sl.completeBinning(gctx, surfaces);
 
@@ -489,10 +440,9 @@ private:
   /// @param surface the surface associated with the given vertices
   /// @param locVertices a vector of the vertices in local coordinates
   /// @return a vector of the vertices in global coordinates
-  std::vector<Acts::Vector3D>
-  makeGlobalVertices(const GeometryContext&             gctx,
-                     const Acts::Surface&               surface,
-                     const std::vector<Acts::Vector2D>& locVertices) const;
+  std::vector<Acts::Vector3D> makeGlobalVertices(
+      const GeometryContext& gctx, const Acts::Surface& surface,
+      const std::vector<Acts::Vector2D>& locVertices) const;
 };
 
 }  // namespace Acts

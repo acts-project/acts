@@ -39,17 +39,15 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 ///
 /// The Volume, retrieving a set of Surfaces from the VolumeBounds, can turn the
 /// Surfaces into BoundarySurfaces.
-class VolumeBounds
-{
-public:
+class VolumeBounds {
+ public:
   /// Default Constructor*/
   VolumeBounds() = default;
   /// Destructor
   virtual ~VolumeBounds() = default;
   ///  clone() method to make deep copy in Volume copy constructor and for
   /// assigment operator  of the Surface class.
-  virtual VolumeBounds*
-  clone() const = 0;
+  virtual VolumeBounds* clone() const = 0;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -57,8 +55,7 @@ public:
   /// @param tol is the tolerance applied for the inside check
   ///
   /// @return boolean indicating if the position is inside
-  virtual bool
-  inside(const Vector3D& gpos, double tol = 0.) const = 0;
+  virtual bool inside(const Vector3D& gpos, double tol = 0.) const = 0;
 
   /// Method to decompose the Bounds into Surfaces
   /// the Volume can turn them into BoundarySurfaces
@@ -68,45 +65,40 @@ public:
   /// @note this is factory method
   ///
   /// @return a vector of surfaces bounding this volume
-  virtual std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(const Transform3D* transform) const = 0;
+  virtual std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
+      const Transform3D* transform) const = 0;
 
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the binning schema used
   ///
   /// @return vector 3D to be used for the binning
-  virtual Vector3D
-  binningOffset(BinningValue bValue) const;
+  virtual Vector3D binningOffset(BinningValue bValue) const;
 
   /// Binning borders in double
   ///
   /// @param bValue is the binning schema used
   ///
   /// @return float offset to be used for the binning
-  virtual double
-  binningBorder(BinningValue bValue) const;
+  virtual double binningBorder(BinningValue bValue) const;
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream to be dumped into
-  virtual std::ostream&
-  toStream(std::ostream& sl) const = 0;
+  virtual std::ostream& toStream(std::ostream& sl) const = 0;
 };
 
 /// Binning offset - overloaded for some R-binning types
-inline Vector3D VolumeBounds::binningOffset(BinningValue /*bValue*/) const
-{  // standard offset is 0.,0.,0.
+inline Vector3D VolumeBounds::binningOffset(
+    BinningValue /*bValue*/) const {  // standard offset is 0.,0.,0.
   return Vector3D(0., 0., 0.);
 }
 
-inline double VolumeBounds::binningBorder(BinningValue /*bValue*/) const
-{
+inline double VolumeBounds::binningBorder(BinningValue /*bValue*/) const {
   return 0.;
 }
 
 /// Overload of << operator for std::ostream for debug output
-std::ostream&
-operator<<(std::ostream& sl, const VolumeBounds& vb);
+std::ostream& operator<<(std::ostream& sl, const VolumeBounds& vb);
 
-}  // namespace
+}  // namespace Acts

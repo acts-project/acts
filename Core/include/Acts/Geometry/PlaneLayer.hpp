@@ -25,9 +25,8 @@ class ApproachDescriptor;
 /// Class to describe a planar detector layer for tracking,
 /// it inhertis from both, Layer base class and PlaneSurface class
 ///
-class PlaneLayer : virtual public PlaneSurface, public Layer
-{
-public:
+class PlaneLayer : virtual public PlaneSurface, public Layer {
+ public:
   /// Factory for a shared plane layer
   ///
   /// @param transform which places the layer in the global frame
@@ -38,20 +37,15 @@ public:
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
-  static MutableLayerPtr
-  create(std::shared_ptr<const Transform3D>  transform,
-         std::shared_ptr<const PlanarBounds> pbounds,
-         std::unique_ptr<SurfaceArray>       surfaceArray = nullptr,
-         double                              thickness    = 0.,
-         std::unique_ptr<ApproachDescriptor> ad           = nullptr,
-         LayerType                           laytyp       = Acts::active)
-  {
-    return MutableLayerPtr(new PlaneLayer(std::move(transform),
-                                          pbounds,
-                                          std::move(surfaceArray),
-                                          thickness,
-                                          std::move(ad),
-                                          laytyp));
+  static MutableLayerPtr create(
+      std::shared_ptr<const Transform3D> transform,
+      std::shared_ptr<const PlanarBounds> pbounds,
+      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      LayerType laytyp = Acts::active) {
+    return MutableLayerPtr(new PlaneLayer(std::move(transform), pbounds,
+                                          std::move(surfaceArray), thickness,
+                                          std::move(ad), laytyp));
   }
 
   /// Default Constructor - deleted
@@ -61,28 +55,23 @@ public:
   PlaneLayer(const PlaneLayer& pla) = delete;
 
   /// Assignment operator for PlaneLayers - deleted
-  PlaneLayer&
-  operator=(const PlaneLayer&)
-      = delete;
+  PlaneLayer& operator=(const PlaneLayer&) = delete;
 
   /// Destructor
   ~PlaneLayer() override = default;
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return returns a reference to a PlaneSurface
-  const PlaneSurface&
-  surfaceRepresentation() const override;
+  const PlaneSurface& surfaceRepresentation() const override;
 
   // Non-const version
-  PlaneSurface&
-  surfaceRepresentation() override;
+  PlaneSurface& surfaceRepresentation() override;
 
-private:
+ private:
   /// private helper method to build approach surfaces
-  void
-  buildApproachDescriptor();
+  void buildApproachDescriptor();
 
-protected:
+ protected:
   /// Private constructor for a PlaneLayer is called by create(args*)
   ///
   /// @param transform which places the layer in the global frame
@@ -93,12 +82,12 @@ protected:
   /// @param laytyp is the layer type
   ///
   /// @return shared pointer to a PlaneLayer
-  PlaneLayer(std::shared_ptr<const Transform3D>   transform,
+  PlaneLayer(std::shared_ptr<const Transform3D> transform,
              std::shared_ptr<const PlanarBounds>& pbounds,
-             std::unique_ptr<SurfaceArray>        surfaceArray = nullptr,
-             double                               thickness    = 0.,
-             std::unique_ptr<ApproachDescriptor>  ades         = nullptr,
-             LayerType                            laytyp       = Acts::active);
+             std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+             double thickness = 0.,
+             std::unique_ptr<ApproachDescriptor> ades = nullptr,
+             LayerType laytyp = Acts::active);
 
   /// Private constructor for a PlaneLayer, is called by create(arge*
   ///
@@ -107,4 +96,4 @@ protected:
   PlaneLayer(const PlaneLayer& pla, const Transform3D& shift);
 };
 
-}  // namespace
+}  // namespace Acts

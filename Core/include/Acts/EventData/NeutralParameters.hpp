@@ -14,7 +14,7 @@
 
 namespace Acts {
 using NeutralParameters = SingleTrackParameters<NeutralPolicy>;
-using NeutralCurvilinearParameters
-    = SingleCurvilinearTrackParameters<NeutralPolicy>;
+using NeutralCurvilinearParameters =
+    SingleCurvilinearTrackParameters<NeutralPolicy>;
 using NeutralBoundParameters = SingleBoundTrackParameters<NeutralPolicy>;
 }  // namespace Acts

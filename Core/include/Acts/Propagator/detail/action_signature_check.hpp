@@ -39,70 +39,46 @@ namespace Acts {
 /// clang-format off
 namespace detail {
 
-  namespace {
+namespace {
 
-    template <typename T,
-              typename propagator_state_t,
-              typename stepper_t,
-              typename result_t,
-              typename
-              = decltype(std::declval<T>().
-                         operator()(std::declval<propagator_state_t&>(),
-                                    std::declval<stepper_t&>(),
-                                    std::declval<result_t&>()))>
-    std::true_type
-    test_action_with_result(int);
+template <typename T, typename propagator_state_t, typename stepper_t,
+          typename result_t,
+          typename = decltype(std::declval<T>().operator()(
+              std::declval<propagator_state_t&>(), std::declval<stepper_t&>(),
+              std::declval<result_t&>()))>
+std::true_type test_action_with_result(int);
 
-    template <typename, typename, typename, typename>
-    std::false_type
-    test_action_with_result(...);
+template <typename, typename, typename, typename>
+std::false_type test_action_with_result(...);
 
-    template <typename T,
-              typename propagator_state_t,
-              typename stepper_t,
-              typename
-              = decltype(std::declval<T>().
-                         operator()(std::declval<propagator_state_t&>(),
-                                    std::declval<stepper_t&>()))>
-    std::true_type
-    test_action_without_result(int);
+template <typename T, typename propagator_state_t, typename stepper_t,
+          typename = decltype(std::declval<T>().operator()(
+              std::declval<propagator_state_t&>(), std::declval<stepper_t&>()))>
+std::true_type test_action_without_result(int);
 
-    template <typename>
-    std::false_type
-    test_action_without_result(...);
+template <typename>
+std::false_type test_action_without_result(...);
 
-    template <typename T,
-              typename propagator_state_t,
-              typename stepper_t,
-              bool has_result = false>
-    struct action_signature_check_impl
-        : decltype(
-              test_action_without_result<T, propagator_state_t, stepper_t>(0))
-    {
-    };
+template <typename T, typename propagator_state_t, typename stepper_t,
+          bool has_result = false>
+struct action_signature_check_impl
+    : decltype(
+          test_action_without_result<T, propagator_state_t, stepper_t>(0)) {};
 
-    template <typename T, typename propagator_state_t, typename stepper_t>
-    struct action_signature_check_impl<T, propagator_state_t, stepper_t, true>
-        : decltype(test_action_with_result<T,
-                                           propagator_state_t,
-                                           stepper_t,
-                                           detail::result_type_t<T>>(0))
-    {
-    };
+template <typename T, typename propagator_state_t, typename stepper_t>
+struct action_signature_check_impl<T, propagator_state_t, stepper_t, true>
+    : decltype(test_action_with_result<T, propagator_state_t, stepper_t,
+                                       detail::result_type_t<T>>(0)) {};
 
-    template <typename T, typename propagator_state_t, typename stepper_t>
-    struct action_signature_check
-        : action_signature_check_impl<T,
-                                      propagator_state_t,
-                                      stepper_t,
-                                      detail::has_result_type_v<T>>
-    {
-    };
-  }  // end of anonymous namespace
+template <typename T, typename propagator_state_t, typename stepper_t>
+struct action_signature_check
+    : action_signature_check_impl<T, propagator_state_t, stepper_t,
+                                  detail::has_result_type_v<T>> {};
+}  // end of anonymous namespace
 
-  template <typename T, typename propagator_state_t, typename stepper_t>
-  constexpr bool action_signature_check_v
-      = action_signature_check<T, propagator_state_t, stepper_t>::value;
+template <typename T, typename propagator_state_t, typename stepper_t>
+constexpr bool action_signature_check_v =
+    action_signature_check<T, propagator_state_t, stepper_t>::value;
 }  // namespace detail
 
 }  // namespace Acts

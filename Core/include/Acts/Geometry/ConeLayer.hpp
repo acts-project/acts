@@ -26,9 +26,8 @@ class ApproachDescriptor;
 /// Class to describe a conical detector layer for tracking, it inhertis from
 /// both, Layer base class and ConeSurface class
 ///
-class ConeLayer : virtual public ConeSurface, public Layer
-{
-public:
+class ConeLayer : virtual public ConeSurface, public Layer {
+ public:
   /// Factory for shared layer
   ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
@@ -41,20 +40,15 @@ public:
   /// @todo chage od and ad to unique_ptr
   ///
   /// @return is a shared pointer to a layer
-  static MutableLayerPtr
-  create(std::shared_ptr<const Transform3D>  transform,
-         std::shared_ptr<const ConeBounds>   cbounds,
-         std::unique_ptr<SurfaceArray>       surfaceArray,
-         double                              thickness = 0.,
-         std::unique_ptr<ApproachDescriptor> ad        = nullptr,
-         LayerType                           laytyp    = Acts::active)
-  {
-    return MutableLayerPtr(new ConeLayer(std::move(transform),
-                                         std::move(cbounds),
-                                         std::move(surfaceArray),
-                                         thickness,
-                                         std::move(ad),
-                                         laytyp));
+  static MutableLayerPtr create(
+      std::shared_ptr<const Transform3D> transform,
+      std::shared_ptr<const ConeBounds> cbounds,
+      std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
+      std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      LayerType laytyp = Acts::active) {
+    return MutableLayerPtr(new ConeLayer(
+        std::move(transform), std::move(cbounds), std::move(surfaceArray),
+        thickness, std::move(ad), laytyp));
   }
 
   /// Default Constructor - delete
@@ -64,22 +58,18 @@ public:
   ConeLayer(const ConeLayer& cla) = delete;
 
   /// Assignment operator for ConeLayers - delete
-  ConeLayer&
-  operator=(const ConeLayer&)
-      = delete;
+  ConeLayer& operator=(const ConeLayer&) = delete;
 
   /// Destructor
   ~ConeLayer() override = default;
 
   /// Transforms the layer into a Surface representation for extrapolation
-  const ConeSurface&
-  surfaceRepresentation() const override;
+  const ConeSurface& surfaceRepresentation() const override;
 
   // Non-const version
-  ConeSurface&
-  surfaceRepresentation() override;
+  ConeSurface& surfaceRepresentation() override;
 
-protected:
+ protected:
   /// Private constructor with arguments
   ///
   /// @param transform is the 3D transform that poisitions the layer in 3D frame
@@ -90,12 +80,11 @@ protected:
   /// @param laytyp is the layer type
   ///
   /// @todo chage od and ad to unique_ptr
-  ConeLayer(std::shared_ptr<const Transform3D>  transform,
-            std::shared_ptr<const ConeBounds>   cbounds,
-            std::unique_ptr<SurfaceArray>       surfaceArray,
-            double                              thickness = 0.,
-            std::unique_ptr<ApproachDescriptor> ade       = nullptr,
-            LayerType                           laytyp    = Acts::active);
+  ConeLayer(std::shared_ptr<const Transform3D> transform,
+            std::shared_ptr<const ConeBounds> cbounds,
+            std::unique_ptr<SurfaceArray> surfaceArray, double thickness = 0.,
+            std::unique_ptr<ApproachDescriptor> ade = nullptr,
+            LayerType laytyp = Acts::active);
 
   /// Private copy constructor with shift, called by create(args*)
   ///
@@ -104,4 +93,4 @@ protected:
   ConeLayer(const ConeLayer& cla, const Transform3D& shift);
 };
 
-}  // namespace
+}  // namespace Acts

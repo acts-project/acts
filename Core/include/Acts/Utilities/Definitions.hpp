@@ -48,7 +48,7 @@ enum NavigationDirection : int { backward = -1, anyDirection = 0, forward = 1 };
 /// - fullUpdate : update when passing a surface
 /// - postUpdate : update when leaving a surface
 enum MaterialUpdateStage : int {
-  preUpdate  = -1,
+  preUpdate = -1,
   fullUpdate = 0,
   postUpdate = 1
 };
@@ -108,20 +108,20 @@ using ActsRowVectorX = Eigen::Matrix<T, 1, Eigen::Dynamic>;
 using ActsRowVectorXd = ActsRowVectorX<double>;
 using ActsRowVectorXf = ActsRowVectorX<float>;
 
-using Rotation3D       = Eigen::Quaternion<double>;
-using Translation3D    = Eigen::Translation<double, 3>;
-using AngleAxis3D      = Eigen::AngleAxisd;
-using Transform3D      = Eigen::Affine3d;
-using Vector3D         = Eigen::Matrix<double, 3, 1>;
-using Vector2D         = Eigen::Matrix<double, 2, 1>;
+using Rotation3D = Eigen::Quaternion<double>;
+using Translation3D = Eigen::Translation<double, 3>;
+using AngleAxis3D = Eigen::AngleAxisd;
+using Transform3D = Eigen::Affine3d;
+using Vector3D = Eigen::Matrix<double, 3, 1>;
+using Vector2D = Eigen::Matrix<double, 2, 1>;
 using RotationMatrix3D = Eigen::Matrix<double, 3, 3>;
 
-using Rotation3F       = Eigen::Quaternion<float>;
-using Translation3F    = Eigen::Translation<float, 3>;
-using AngleAxis3F      = Eigen::AngleAxisf;
-using Transform3F      = Eigen::Affine3f;
-using Vector3F         = Eigen::Matrix<float, 3, 1>;
-using Vector2F         = Eigen::Matrix<float, 2, 1>;
+using Rotation3F = Eigen::Quaternion<float>;
+using Translation3F = Eigen::Translation<float, 3>;
+using AngleAxis3F = Eigen::AngleAxisf;
+using Transform3F = Eigen::Affine3f;
+using Vector3F = Eigen::Matrix<float, 3, 1>;
+using Vector2F = Eigen::Matrix<float, 2, 1>;
 using RotationMatrix3F = Eigen::Matrix<float, 3, 3>;
 
 /// axis defintion element for code readability

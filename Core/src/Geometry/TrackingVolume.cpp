@@ -21,58 +21,49 @@
 #include "Acts/Utilities/BinUtility.hpp"
 
 Acts::TrackingVolume::TrackingVolume()
-  : Volume()
-  , m_volumeMaterial(nullptr)
-  , m_boundarySurfaces()
-  , m_confinedLayers(nullptr)
-  , m_confinedVolumes(nullptr)
-  , m_name("undefined")
-{
-}
+    : Volume(),
+      m_volumeMaterial(nullptr),
+      m_boundarySurfaces(),
+      m_confinedLayers(nullptr),
+      m_confinedVolumes(nullptr),
+      m_name("undefined") {}
 
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D>                htrans,
-    VolumeBoundsPtr                                   volbounds,
+    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volbounds,
     const std::shared_ptr<const TrackingVolumeArray>& containedVolumeArray,
-    const std::string&                                volumeName)
-  : Volume(std::move(htrans), std::move(volbounds))
-  , m_volumeMaterial(nullptr)
-  , m_boundarySurfaces()
-  , m_confinedLayers(nullptr)
-  , m_confinedVolumes(containedVolumeArray)
-  , m_name(volumeName)
-{
+    const std::string& volumeName)
+    : Volume(std::move(htrans), std::move(volbounds)),
+      m_volumeMaterial(nullptr),
+      m_boundarySurfaces(),
+      m_confinedLayers(nullptr),
+      m_confinedVolumes(containedVolumeArray),
+      m_name(volumeName) {
   createBoundarySurfaces();
   interlinkLayers();
 }
 
 // constructor for arguments
 Acts::TrackingVolume::TrackingVolume(
-    std::shared_ptr<const Transform3D>         htrans,
-    VolumeBoundsPtr                            volumeBounds,
-    std::shared_ptr<const IVolumeMaterial>     volumeMaterial,
-    std::unique_ptr<const LayerArray>          staticLayerArray,
+    std::shared_ptr<const Transform3D> htrans, VolumeBoundsPtr volumeBounds,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    std::unique_ptr<const LayerArray> staticLayerArray,
     std::shared_ptr<const TrackingVolumeArray> containedVolumeArray,
-    const std::string&                         volumeName)
-  : Volume(std::move(htrans), std::move(volumeBounds))
-  , m_volumeMaterial(std::move(volumeMaterial))
-  , m_confinedLayers(std::move(staticLayerArray))
-  , m_confinedVolumes(std::move(containedVolumeArray))
-  , m_name(volumeName)
-{
+    const std::string& volumeName)
+    : Volume(std::move(htrans), std::move(volumeBounds)),
+      m_volumeMaterial(std::move(volumeMaterial)),
+      m_confinedLayers(std::move(staticLayerArray)),
+      m_confinedVolumes(std::move(containedVolumeArray)),
+      m_name(volumeName) {
   createBoundarySurfaces();
   interlinkLayers();
 }
 
-Acts::TrackingVolume::~TrackingVolume()
-{
+Acts::TrackingVolume::~TrackingVolume() {
   delete m_glueVolumeDescriptor;
 }
 
-const Acts::TrackingVolume*
-Acts::TrackingVolume::lowestTrackingVolume(const GeometryContext& /*gctx*/,
-                                           const Vector3D& gp) const
-{
+const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
+    const GeometryContext& /*gctx*/, const Vector3D& gp) const {
   // confined static volumes - highest hierarchy
   if (m_confinedVolumes) {
     return (m_confinedVolumes->object(gp).get());
@@ -82,9 +73,8 @@ Acts::TrackingVolume::lowestTrackingVolume(const GeometryContext& /*gctx*/,
   return this;
 }
 
-void
-Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
-{
+void Acts::TrackingVolume::sign(GeometrySignature geosign,
+                                GeometryType geotype) {
   // never overwrite what is already signed, that's a crime
   if (m_geometrySignature == Unsigned) {
     m_geometrySignature = geosign;
@@ -94,117 +84,105 @@ Acts::TrackingVolume::sign(GeometrySignature geosign, GeometryType geotype)
   // confined static volumes
   if (m_confinedVolumes) {
     for (auto& volumesIter : (m_confinedVolumes->arrayObjects())) {
-      auto mutableVolumesIter
-          = std::const_pointer_cast<TrackingVolume>(volumesIter);
+      auto mutableVolumesIter =
+          std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->sign(geosign, geotype);
     }
   }
 }
 
-const std::
-    vector<std::shared_ptr<const Acts::BoundarySurfaceT<Acts::TrackingVolume>>>&
-    Acts::TrackingVolume::boundarySurfaces() const
-{
+const std::vector<
+    std::shared_ptr<const Acts::BoundarySurfaceT<Acts::TrackingVolume>>>&
+Acts::TrackingVolume::boundarySurfaces() const {
   return (m_boundarySurfaces);
 }
 
-void
-Acts::TrackingVolume::createBoundarySurfaces()
-{
+void Acts::TrackingVolume::createBoundarySurfaces() {
   // transform Surfaces To BoundarySurfaces
-  std::vector<std::shared_ptr<const Surface>> surfaces
-      = Volume::volumeBounds().decomposeToSurfaces(m_transform.get());
+  std::vector<std::shared_ptr<const Surface>> surfaces =
+      Volume::volumeBounds().decomposeToSurfaces(m_transform.get());
 
   // counter to flip the inner/outer position for Cylinders
-  int    sfCounter = 0;
-  size_t sfNumber  = surfaces.size();
+  int sfCounter = 0;
+  size_t sfNumber = surfaces.size();
 
   for (auto& sf : surfaces) {
     // flip inner/outer for cylinders
-    TrackingVolume* inner
-        = (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
-        ? nullptr
-        : this;
+    TrackingVolume* inner =
+        (sf->type() == Surface::Cylinder && sfCounter == 3 && sfNumber > 3)
+            ? nullptr
+            : this;
     TrackingVolume* outer = (inner) != nullptr ? nullptr : this;
     // create the boundary surface
     m_boundarySurfaces.push_back(
-        std::make_shared<const BoundarySurfaceT<TrackingVolume>>(
-            std::move(sf), inner, outer));
+        std::make_shared<const BoundarySurfaceT<TrackingVolume>>(std::move(sf),
+                                                                 inner, outer));
     // increase the counter
     ++sfCounter;
   }
 }
 
-void
-Acts::TrackingVolume::glueTrackingVolume(
-    const GeometryContext&                 gctx,
-    BoundarySurfaceFace                    bsfMine,
+void Acts::TrackingVolume::glueTrackingVolume(
+    const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
     const std::shared_ptr<TrackingVolume>& neighbor,
-    BoundarySurfaceFace                    bsfNeighbor)
-{
-
+    BoundarySurfaceFace bsfNeighbor) {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
   Vector3D bPosition(binningPosition(gctx, binR));
-  Vector3D distance
-      = Vector3D(neighbor->binningPosition(gctx, binR) - bPosition);
+  Vector3D distance =
+      Vector3D(neighbor->binningPosition(gctx, binR) - bPosition);
   // glue to the face
-  std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
-      = boundarySurfaces().at(bsfMine);
+  std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
+      boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3D normal
-      = bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
+  Vector3D normal =
+      bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  BoundaryOrientation bOrientation
-      = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
+  BoundaryOrientation bOrientation =
+      (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
   // the easy case :
   // - no glue volume descriptors on either side
-  if ((m_glueVolumeDescriptor == nullptr)
-      || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
+  if ((m_glueVolumeDescriptor == nullptr) ||
+      !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
-    auto mutableBSurfaceMine
-        = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
-            bSurfaceMine);
+    auto mutableBSurfaceMine =
+        std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(bSurfaceMine);
     mutableBSurfaceMine->attachVolume(neighbor, bOrientation);
     // now set it to the neighbor volume - the optised way
     (neighbor->m_boundarySurfaces).at(bsfNeighbor) = bSurfaceMine;
   }
 }
 
-void
-Acts::TrackingVolume::glueTrackingVolumes(
-    const GeometryContext&                      gctx,
-    BoundarySurfaceFace                         bsfMine,
+void Acts::TrackingVolume::glueTrackingVolumes(
+    const GeometryContext& gctx, BoundarySurfaceFace bsfMine,
     const std::shared_ptr<TrackingVolumeArray>& neighbors,
-    BoundarySurfaceFace                         bsfNeighbor)
-{
+    BoundarySurfaceFace bsfNeighbor) {
   // find the connection of the two tracking volumes : binR returns the center
   // except for cylindrical volumes
-  std::shared_ptr<const TrackingVolume> nRefVolume
-      = neighbors->arrayObjects().at(0);
+  std::shared_ptr<const TrackingVolume> nRefVolume =
+      neighbors->arrayObjects().at(0);
   // get the distance
   Vector3D bPosition(binningPosition(gctx, binR));
-  Vector3D distance
-      = Vector3D(nRefVolume->binningPosition(gctx, binR) - bPosition);
+  Vector3D distance =
+      Vector3D(nRefVolume->binningPosition(gctx, binR) - bPosition);
   // take the normal at the binning positio
-  std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine
-      = boundarySurfaces().at(bsfMine);
+  std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bSurfaceMine =
+      boundarySurfaces().at(bsfMine);
   // @todo - complex glueing could be possible with actual intersection for the
   // normal vector
-  Vector3D normal
-      = bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
+  Vector3D normal =
+      bSurfaceMine->surfaceRepresentation().normal(gctx, bPosition);
   // estimate the orientation
-  BoundaryOrientation bOrientation
-      = (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
+  BoundaryOrientation bOrientation =
+      (normal.dot(distance) > 0.) ? outsideVolume : insideVolume;
   // the easy case :
   // - no glue volume descriptors on either side
-  if ((m_glueVolumeDescriptor == nullptr)
-      || !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
+  if ((m_glueVolumeDescriptor == nullptr) ||
+      !m_glueVolumeDescriptor->glueVolumes(bsfMine)) {
     // the boundary orientation
-    auto mutableBSurfaceMine
-        = std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(
-            bSurfaceMine);
+    auto mutableBSurfaceMine =
+        std::const_pointer_cast<BoundarySurfaceT<TrackingVolume>>(bSurfaceMine);
     mutableBSurfaceMine->attachVolumeArray(neighbors, bOrientation);
     // now set it to the neighbor volumes - the optised way
     for (auto& nVolume : neighbors->arrayObjects()) {
@@ -214,33 +192,26 @@ Acts::TrackingVolume::glueTrackingVolumes(
   }
 }
 
-void
-Acts::TrackingVolume::updateBoundarySurface(
-    BoundarySurfaceFace                                     bsf,
-    std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs)
-{
+void Acts::TrackingVolume::updateBoundarySurface(
+    BoundarySurfaceFace bsf,
+    std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> bs) {
   m_boundarySurfaces.at(bsf) = std::move(bs);
 }
 
-void
-Acts::TrackingVolume::registerGlueVolumeDescriptor(GlueVolumesDescriptor* gvd)
-{
+void Acts::TrackingVolume::registerGlueVolumeDescriptor(
+    GlueVolumesDescriptor* gvd) {
   delete m_glueVolumeDescriptor;
   m_glueVolumeDescriptor = gvd;
 }
 
-Acts::GlueVolumesDescriptor&
-Acts::TrackingVolume::glueVolumesDescriptor()
-{
+Acts::GlueVolumesDescriptor& Acts::TrackingVolume::glueVolumesDescriptor() {
   if (m_glueVolumeDescriptor == nullptr) {
     m_glueVolumeDescriptor = new GlueVolumesDescriptor;
   }
   return (*m_glueVolumeDescriptor);
 }
 
-void
-Acts::TrackingVolume::synchronizeLayers(double envelope) const
-{
+void Acts::TrackingVolume::synchronizeLayers(double envelope) const {
   // case a : Layers exist
   // msgstream << MSG::VERBOSE << "  -> synchronizing Layer dimensions of
   // TrackingVolume '" << volumeName() << "'." << endreq;
@@ -274,9 +245,7 @@ Acts::TrackingVolume::synchronizeLayers(double envelope) const
   }
 }
 
-void
-Acts::TrackingVolume::interlinkLayers()
-{
+void Acts::TrackingVolume::interlinkLayers() {
   if (m_confinedLayers) {
     auto& layers = m_confinedLayers->arrayObjects();
 
@@ -301,17 +270,14 @@ Acts::TrackingVolume::interlinkLayers()
       // set the other next volume
       Layer& mutableLayer = *(std::const_pointer_cast<Layer>(*layerIter));
       mutableLayer.m_nextLayers.second = lastLayer;
-      lastLayer                        = &mutableLayer;
+      lastLayer = &mutableLayer;
     }
   }
 }
 
-void
-Acts::TrackingVolume::closeGeometry(
+void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
-    std::map<std::string, const TrackingVolume*>& volumeMap,
-    size_t& vol)
-{
+    std::map<std::string, const TrackingVolume*>& volumeMap, size_t& vol) {
   // insert the volume into the map
   volumeMap[volumeName()] = this;
 
@@ -364,17 +330,15 @@ Acts::TrackingVolume::closeGeometry(
     // B) this is a container volume, go through sub volume
     // do the loop
     for (auto& volumesIter : m_confinedVolumes->arrayObjects()) {
-      auto mutableVolumesIter
-          = std::const_pointer_cast<TrackingVolume>(volumesIter);
+      auto mutableVolumesIter =
+          std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
     }
   }
 }
 
-void
-Acts::TrackingVolume::visitSurfaces(
-    const std::function<void(const Acts::Surface*)>& visitor) const
-{
+void Acts::TrackingVolume::visitSurfaces(
+    const std::function<void(const Acts::Surface*)>& visitor) const {
   if (!m_confinedVolumes) {
     // no sub volumes => loop over the confined layers
     if (m_confinedLayers) {

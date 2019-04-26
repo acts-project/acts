@@ -21,9 +21,8 @@ namespace Acts {
 ///
 /// This helper struct allows to create a material composition
 /// as terms of element fraction objects
-class MaterialComposition
-{
-public:
+class MaterialComposition {
+ public:
   /// Default constructor
   MaterialComposition() = default;
 
@@ -36,8 +35,7 @@ public:
   /// to one within tolerance
   ///
   /// @param efracs are the element fractions
-  MaterialComposition(const std::vector<ElementFraction>& efracs)
-  {
+  MaterialComposition(const std::vector<ElementFraction>& efracs) {
     m_elements = efracs;
     std::sort(m_elements.begin(), m_elements.end());
   }
@@ -55,49 +53,31 @@ public:
   /// Assignment operator
   ///
   /// @param mc is the source object
-  MaterialComposition&
-  operator=(const MaterialComposition& mc)
-      = default;
+  MaterialComposition& operator=(const MaterialComposition& mc) = default;
 
   /// Assignment move operator
   ///
   /// @param mc is the source object
-  MaterialComposition&
-  operator=(MaterialComposition&& mc)
-      = default;
+  MaterialComposition& operator=(MaterialComposition&& mc) = default;
 
   /// Access to the elements themselves
-  const std::vector<ElementFraction>&
-  elements() const
-  {
-    return m_elements;
-  }
+  const std::vector<ElementFraction>& elements() const { return m_elements; }
 
   /// Boolean operator to indicate if this is empty
   operator bool() const { return !empty(); }
 
   /// How many elements you have
-  size_t
-  size() const
-  {
-    return m_elements.size();
-  }
+  size_t size() const { return m_elements.size(); }
 
   /// Check if empty
-  bool
-  empty() const
-  {
-    return m_elements.empty();
-  }
+  bool empty() const { return m_elements.empty(); }
 
   /// Euality operator
-  bool
-  operator==(const MaterialComposition& mc) const
-  {
+  bool operator==(const MaterialComposition& mc) const {
     return (mc.m_elements == m_elements);
   }
 
-private:
+ private:
   std::vector<ElementFraction> m_elements = {};
 };
-}
+}  // namespace Acts

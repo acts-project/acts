@@ -16,41 +16,32 @@
 
 Acts::DigitizationModule::DigitizationModule(
     std::shared_ptr<const Segmentation> moduleSegmentation,
-    double                              halfThickness,
-    int                                 readoutDirection,
-    double                              lorentzAngle,
-    double                              energyThreshold,
-    bool                                analogue)
-  :
+    double halfThickness, int readoutDirection, double lorentzAngle,
+    double energyThreshold, bool analogue)
+    :
 
-  m_halfThickness(halfThickness)
-  , m_readoutDirection(readoutDirection)
-  , m_lorentzAngle(lorentzAngle)
-  , m_tanLorentzAngle(tan(lorentzAngle))
-  , m_energyThreshold(energyThreshold)
-  , m_analogue(analogue)
-  , m_segmentation(std::move(moduleSegmentation))
-  , m_boundarySurfaces()
-  , m_segmentationSurfacesX()
-  , m_segmentationSurfacesY()
-{
-  m_segmentation->createSegmentationSurfaces(m_boundarySurfaces,
-                                             m_segmentationSurfacesX,
-                                             m_segmentationSurfacesY,
-                                             halfThickness,
-                                             readoutDirection,
-                                             lorentzAngle);
+      m_halfThickness(halfThickness),
+      m_readoutDirection(readoutDirection),
+      m_lorentzAngle(lorentzAngle),
+      m_tanLorentzAngle(tan(lorentzAngle)),
+      m_energyThreshold(energyThreshold),
+      m_analogue(analogue),
+      m_segmentation(std::move(moduleSegmentation)),
+      m_boundarySurfaces(),
+      m_segmentationSurfacesX(),
+      m_segmentationSurfacesY() {
+  m_segmentation->createSegmentationSurfaces(
+      m_boundarySurfaces, m_segmentationSurfacesX, m_segmentationSurfacesY,
+      halfThickness, readoutDirection, lorentzAngle);
 }
 
-const Acts::SurfacePtrVector
-Acts::DigitizationModule::segmentationSurfaces(
+const Acts::SurfacePtrVector Acts::DigitizationModule::segmentationSurfaces(
     const Acts::DigitizationCell& entryCids,
-    const Acts::DigitizationCell& exitCids) const
-{
+    const Acts::DigitizationCell& exitCids) const {
   SurfacePtrVector sSurfaces;
 
   auto startbinX = entryCids.channel0;
-  auto endbinX   = exitCids.channel0;
+  auto endbinX = exitCids.channel0;
   // swap if needed
   if (startbinX > endbinX) {
     std::swap(startbinX, endbinX);
@@ -62,7 +53,7 @@ Acts::DigitizationModule::segmentationSurfaces(
 
   // start bin, end bin
   auto startbinY = entryCids.channel1;
-  auto endbinY   = exitCids.channel1;
+  auto endbinY = exitCids.channel1;
   // swap if needed
   if (startbinY > endbinY) {
     std::swap(startbinY, endbinY);
@@ -76,15 +67,13 @@ Acts::DigitizationModule::segmentationSurfaces(
   return sSurfaces;
 }
 
-const Acts::SurfacePtrVector
-Acts::DigitizationModule::stepSurfaces(const Vector3D& start,
-                                       const Vector3D& end) const
-{
+const Acts::SurfacePtrVector Acts::DigitizationModule::stepSurfaces(
+    const Vector3D& start, const Vector3D& end) const {
   // prepare the return vector
   SurfacePtrVector stepSurfaces;
 
   const DigitizationCell startCell = m_segmentation->cell(start);
-  const DigitizationCell endCell   = m_segmentation->cell(end);
+  const DigitizationCell endCell = m_segmentation->cell(end);
 
   // go along x - first with the naive binning (i.e. w.o lorentz angle)
   size_t sCellX = startCell.channel0;

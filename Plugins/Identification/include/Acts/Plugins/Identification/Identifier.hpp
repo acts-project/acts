@@ -18,5 +18,5 @@
 #else
 using identifier_type = unsigned long long;
 using identifier_diff = long long;
-using Identifier      = identifier_type;
+using Identifier = identifier_type;
 #endif

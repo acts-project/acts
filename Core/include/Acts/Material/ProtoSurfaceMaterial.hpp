@@ -25,9 +25,8 @@ namespace Acts {
 /// at construction time of the geometry and to hand over the granularity of
 /// of the material map with the bin Utility.
 
-class ProtoSurfaceMaterial : public ISurfaceMaterial
-{
-public:
+class ProtoSurfaceMaterial : public ISurfaceMaterial {
+ public:
   /// Constructor without BinUtility - homogenous material
   ProtoSurfaceMaterial() = default;
 
@@ -55,26 +54,21 @@ public:
   /// Assignment operator
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterial&
-  operator=(const ProtoSurfaceMaterial& smproxy)
-      = default;
+  ProtoSurfaceMaterial& operator=(const ProtoSurfaceMaterial& smproxy) =
+      default;
 
   /// Assigment move operator
   ///
   /// @param smproxy The source proxy
-  ProtoSurfaceMaterial&
-  operator=(ProtoSurfaceMaterial&& smproxy)
-      = default;
+  ProtoSurfaceMaterial& operator=(ProtoSurfaceMaterial&& smproxy) = default;
 
   /// Scale operator
   ///
   /// @param
-  ProtoSurfaceMaterial&
-  operator*=(double scale) final;
+  ProtoSurfaceMaterial& operator*=(double scale) final;
 
   /// Return the BinUtility
-  const BinUtility&
-  binUtility() const;
+  const BinUtility& binUtility() const;
 
   /// Return method for full material description of the Surface - from local
   /// coordinates
@@ -82,8 +76,7 @@ public:
   /// @param lp is local positioning vector
   ///
   /// @return will return dummy material
-  const MaterialProperties&
-  materialProperties(const Vector2D& lp) const final;
+  const MaterialProperties& materialProperties(const Vector2D& lp) const final;
 
   /// Return method for full material description of the Surface - from the
   /// global coordinates
@@ -91,8 +84,7 @@ public:
   /// @param gp is the global positioning vector
   ///
   /// @return will return dummy material
-  const MaterialProperties&
-  materialProperties(const Vector3D& gp) const final;
+  const MaterialProperties& materialProperties(const Vector3D& gp) const final;
 
   /// Direct access via bins to the MaterialProperties
   ///
@@ -100,14 +92,13 @@ public:
   /// @param ib1 indicates the seconf bin
   ///
   /// @return will return dummy material
-  const MaterialProperties&
-  materialProperties(size_t ib0, size_t ib1) const final;
+  const MaterialProperties& materialProperties(size_t ib0,
+                                               size_t ib1) const final;
 
   /// Output Method for std::ostream, to be overloaded by child classes
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
-private:
+ private:
   /// two dimensional BinUtility determining
   /// the granularity and binning of the
   /// material on the surface/layer
@@ -116,29 +107,24 @@ private:
   /// Dummy material properties
   MaterialProperties m_materialProperties;
 };
-}
+}  // namespace Acts
 
 inline const Acts::MaterialProperties&
-Acts::ProtoSurfaceMaterial::materialProperties(const Vector2D& /*lp*/) const
-{
+Acts::ProtoSurfaceMaterial::materialProperties(const Vector2D& /*lp*/) const {
   return (m_materialProperties);
 }
 
 inline const Acts::MaterialProperties&
-Acts::ProtoSurfaceMaterial::materialProperties(const Vector3D& /*gp*/) const
-{
+Acts::ProtoSurfaceMaterial::materialProperties(const Vector3D& /*gp*/) const {
   return (m_materialProperties);
 }
 
 inline const Acts::MaterialProperties&
-    Acts::ProtoSurfaceMaterial::materialProperties(size_t /*ib0*/,
-                                                   size_t /*ib1*/) const
-{
+Acts::ProtoSurfaceMaterial::materialProperties(size_t /*ib0*/,
+                                               size_t /*ib1*/) const {
   return (m_materialProperties);
 }
 
-inline const Acts::BinUtility&
-Acts::ProtoSurfaceMaterial::binUtility() const
-{
+inline const Acts::BinUtility& Acts::ProtoSurfaceMaterial::binUtility() const {
   return m_binUtility;
 }

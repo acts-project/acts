@@ -28,15 +28,14 @@ namespace Acts {
 ///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
 
-class TrapezoidBounds : public PlanarBounds
-{
-public:
+class TrapezoidBounds : public PlanarBounds {
+ public:
   /// @enum BoundValues - for readability
   enum BoundValues {
     bv_minHalfX = 0,
     bv_maxHalfX = 1,
-    bv_halfY    = 2,
-    bv_length   = 3
+    bv_halfY = 2,
+    bv_length = 3
   };
 
   /// Trapezoid bounds default constructor is forbidden
@@ -51,14 +50,11 @@ public:
 
   ~TrapezoidBounds() override;
 
-  TrapezoidBounds*
-  clone() const final;
+  TrapezoidBounds* clone() const final;
 
-  BoundsType
-  type() const final;
+  BoundsType type() const final;
 
-  std::vector<TDD_real_t>
-  valueStore() const final;
+  std::vector<TDD_real_t> valueStore() const final;
 
   /// The orientation of the Trapezoid is according to the figure above,
   /// in words: the shorter of the two parallel sides of the trapezoid
@@ -104,68 +100,54 @@ public:
   /// @param lpos Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   /// @return is a signed distance parameter
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /// Return the vertices - or, the points of the extremas
-  std::vector<Vector2D>
-  vertices() const final;
+  std::vector<Vector2D> vertices() const final;
 
   // Bounding box representation
-  const RectangleBounds&
-  boundingBox() const final;
+  const RectangleBounds& boundingBox() const final;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
   ///  This method returns the minimal halflength in X
   /// (first coordinate of local surface frame)
-  double
-  minHalflengthX() const;
+  double minHalflengthX() const;
 
   /// This method returns the maximal halflength in X
   /// (first coordinate of local surface frame)
-  double
-  maxHalflengthX() const;
+  double maxHalflengthX() const;
 
   /// This method returns the halflength in Y
   /// (second coordinate of local surface frame)
-  double
-  halflengthY() const;
+  double halflengthY() const;
 
-private:
-  double          m_minHalfX;
-  double          m_maxHalfX;
-  double          m_halfY;
+ private:
+  double m_minHalfX;
+  double m_maxHalfX;
+  double m_halfY;
   RectangleBounds m_boundingBox;
 };
 
-inline double
-TrapezoidBounds::minHalflengthX() const
-{
+inline double TrapezoidBounds::minHalflengthX() const {
   return m_minHalfX;
 }
 
-inline double
-TrapezoidBounds::maxHalflengthX() const
-{
+inline double TrapezoidBounds::maxHalflengthX() const {
   return m_maxHalfX;
 }
 
-inline double
-TrapezoidBounds::halflengthY() const
-{
+inline double TrapezoidBounds::halflengthY() const {
   return m_halfY;
 }
 
-}  // namespace
+}  // namespace Acts

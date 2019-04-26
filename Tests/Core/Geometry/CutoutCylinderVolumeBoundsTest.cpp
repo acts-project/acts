@@ -23,94 +23,91 @@
 namespace Acts {
 namespace Test {
 
-  BOOST_AUTO_TEST_SUITE(Volumes)
+BOOST_AUTO_TEST_SUITE(Volumes)
 
-  BOOST_AUTO_TEST_CASE(construction_test)
-  {
-    CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
-    ccvb.toStream(std::cout);
-  }
-
-  BOOST_AUTO_TEST_CASE(decomposeToSurfaces_test)
-  {
-    CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
-    PlyHelper<double>          ply;
-    ccvb.draw(ply);
-
-    std::ofstream os("ccvb.ply");
-    os << ply;
-  }
-
-  BOOST_AUTO_TEST_CASE(inside_test)
-  {
-    CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
-
-    BOOST_CHECK(!ccvb.inside({0, 0, 0}));
-    BOOST_CHECK(!ccvb.inside({0, 3, 0}));
-    BOOST_CHECK(!ccvb.inside({3, 0, 0}));
-    BOOST_CHECK(!ccvb.inside({0, 7, 0}));
-    BOOST_CHECK(!ccvb.inside({7, 0, 0}));
-    BOOST_CHECK(ccvb.inside({0, 13, 0}));
-    BOOST_CHECK(ccvb.inside({13, 0, 0}));
-    BOOST_CHECK(!ccvb.inside({0, 17, 0}));
-    BOOST_CHECK(!ccvb.inside({17, 0, 0}));
-
-    // outside in z
-    BOOST_CHECK(!ccvb.inside({0, 0, 35}));
-    BOOST_CHECK(!ccvb.inside({0, 0, -35}));
-    BOOST_CHECK(!ccvb.inside({0, 3, 35}));
-    BOOST_CHECK(!ccvb.inside({0, 3, -35}));
-    BOOST_CHECK(!ccvb.inside({3, 0, 35}));
-    BOOST_CHECK(!ccvb.inside({3, 0, -35}));
-    BOOST_CHECK(!ccvb.inside({0, 10, 35}));
-    BOOST_CHECK(!ccvb.inside({0, 10, -35}));
-    BOOST_CHECK(!ccvb.inside({10, 0, 35}));
-    BOOST_CHECK(!ccvb.inside({10, 0, -35}));
-    BOOST_CHECK(!ccvb.inside({0, 20, 35}));
-    BOOST_CHECK(!ccvb.inside({0, 20, -35}));
-    BOOST_CHECK(!ccvb.inside({20, 0, 35}));
-    BOOST_CHECK(!ccvb.inside({20, 0, -35}));
-
-    // in the choke point in z
-    BOOST_CHECK(!ccvb.inside({0, 0, 27}));
-    BOOST_CHECK(!ccvb.inside({0, 0, -27}));
-    BOOST_CHECK(!ccvb.inside({0, 3, 27}));
-    BOOST_CHECK(!ccvb.inside({0, 3, -27}));
-    BOOST_CHECK(!ccvb.inside({3, 0, 27}));
-    BOOST_CHECK(!ccvb.inside({3, 0, -27}));
-    BOOST_CHECK(ccvb.inside({0, 7, 27}));
-    BOOST_CHECK(ccvb.inside({0, 7, -27}));
-    BOOST_CHECK(ccvb.inside({7, 0, 27}));
-    BOOST_CHECK(ccvb.inside({7, 0, -27}));
-    BOOST_CHECK(ccvb.inside({0, 13, 27}));
-    BOOST_CHECK(ccvb.inside({0, 13, -27}));
-    BOOST_CHECK(ccvb.inside({13, 0, 27}));
-    BOOST_CHECK(ccvb.inside({13, 0, -27}));
-    BOOST_CHECK(!ccvb.inside({0, 17, 27}));
-    BOOST_CHECK(!ccvb.inside({0, 17, -27}));
-    BOOST_CHECK(!ccvb.inside({17, 0, 27}));
-    BOOST_CHECK(!ccvb.inside({17, 0, -27}));
-
-    // right inside the choke point in z
-    BOOST_CHECK(!ccvb.inside({0, 0, 23}));
-    BOOST_CHECK(!ccvb.inside({0, 0, -23}));
-    BOOST_CHECK(!ccvb.inside({0, 3, 23}));
-    BOOST_CHECK(!ccvb.inside({0, 3, -23}));
-    BOOST_CHECK(!ccvb.inside({3, 0, 23}));
-    BOOST_CHECK(!ccvb.inside({3, 0, -23}));
-    BOOST_CHECK(!ccvb.inside({0, 7, 23}));
-    BOOST_CHECK(!ccvb.inside({0, 7, -23}));
-    BOOST_CHECK(!ccvb.inside({7, 0, 23}));
-    BOOST_CHECK(!ccvb.inside({7, 0, -23}));
-    BOOST_CHECK(ccvb.inside({0, 13, 23}));
-    BOOST_CHECK(ccvb.inside({0, 13, -23}));
-    BOOST_CHECK(ccvb.inside({13, 0, 23}));
-    BOOST_CHECK(ccvb.inside({13, 0, -23}));
-    BOOST_CHECK(!ccvb.inside({0, 17, 23}));
-    BOOST_CHECK(!ccvb.inside({0, 17, -23}));
-    BOOST_CHECK(!ccvb.inside({17, 0, 23}));
-    BOOST_CHECK(!ccvb.inside({17, 0, -23}));
-  }
-  BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_CASE(construction_test) {
+  CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
+  ccvb.toStream(std::cout);
 }
+
+BOOST_AUTO_TEST_CASE(decomposeToSurfaces_test) {
+  CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
+  PlyHelper<double> ply;
+  ccvb.draw(ply);
+
+  std::ofstream os("ccvb.ply");
+  os << ply;
 }
+
+BOOST_AUTO_TEST_CASE(inside_test) {
+  CutoutCylinderVolumeBounds ccvb(5, 10, 15, 30, 25);
+
+  BOOST_CHECK(!ccvb.inside({0, 0, 0}));
+  BOOST_CHECK(!ccvb.inside({0, 3, 0}));
+  BOOST_CHECK(!ccvb.inside({3, 0, 0}));
+  BOOST_CHECK(!ccvb.inside({0, 7, 0}));
+  BOOST_CHECK(!ccvb.inside({7, 0, 0}));
+  BOOST_CHECK(ccvb.inside({0, 13, 0}));
+  BOOST_CHECK(ccvb.inside({13, 0, 0}));
+  BOOST_CHECK(!ccvb.inside({0, 17, 0}));
+  BOOST_CHECK(!ccvb.inside({17, 0, 0}));
+
+  // outside in z
+  BOOST_CHECK(!ccvb.inside({0, 0, 35}));
+  BOOST_CHECK(!ccvb.inside({0, 0, -35}));
+  BOOST_CHECK(!ccvb.inside({0, 3, 35}));
+  BOOST_CHECK(!ccvb.inside({0, 3, -35}));
+  BOOST_CHECK(!ccvb.inside({3, 0, 35}));
+  BOOST_CHECK(!ccvb.inside({3, 0, -35}));
+  BOOST_CHECK(!ccvb.inside({0, 10, 35}));
+  BOOST_CHECK(!ccvb.inside({0, 10, -35}));
+  BOOST_CHECK(!ccvb.inside({10, 0, 35}));
+  BOOST_CHECK(!ccvb.inside({10, 0, -35}));
+  BOOST_CHECK(!ccvb.inside({0, 20, 35}));
+  BOOST_CHECK(!ccvb.inside({0, 20, -35}));
+  BOOST_CHECK(!ccvb.inside({20, 0, 35}));
+  BOOST_CHECK(!ccvb.inside({20, 0, -35}));
+
+  // in the choke point in z
+  BOOST_CHECK(!ccvb.inside({0, 0, 27}));
+  BOOST_CHECK(!ccvb.inside({0, 0, -27}));
+  BOOST_CHECK(!ccvb.inside({0, 3, 27}));
+  BOOST_CHECK(!ccvb.inside({0, 3, -27}));
+  BOOST_CHECK(!ccvb.inside({3, 0, 27}));
+  BOOST_CHECK(!ccvb.inside({3, 0, -27}));
+  BOOST_CHECK(ccvb.inside({0, 7, 27}));
+  BOOST_CHECK(ccvb.inside({0, 7, -27}));
+  BOOST_CHECK(ccvb.inside({7, 0, 27}));
+  BOOST_CHECK(ccvb.inside({7, 0, -27}));
+  BOOST_CHECK(ccvb.inside({0, 13, 27}));
+  BOOST_CHECK(ccvb.inside({0, 13, -27}));
+  BOOST_CHECK(ccvb.inside({13, 0, 27}));
+  BOOST_CHECK(ccvb.inside({13, 0, -27}));
+  BOOST_CHECK(!ccvb.inside({0, 17, 27}));
+  BOOST_CHECK(!ccvb.inside({0, 17, -27}));
+  BOOST_CHECK(!ccvb.inside({17, 0, 27}));
+  BOOST_CHECK(!ccvb.inside({17, 0, -27}));
+
+  // right inside the choke point in z
+  BOOST_CHECK(!ccvb.inside({0, 0, 23}));
+  BOOST_CHECK(!ccvb.inside({0, 0, -23}));
+  BOOST_CHECK(!ccvb.inside({0, 3, 23}));
+  BOOST_CHECK(!ccvb.inside({0, 3, -23}));
+  BOOST_CHECK(!ccvb.inside({3, 0, 23}));
+  BOOST_CHECK(!ccvb.inside({3, 0, -23}));
+  BOOST_CHECK(!ccvb.inside({0, 7, 23}));
+  BOOST_CHECK(!ccvb.inside({0, 7, -23}));
+  BOOST_CHECK(!ccvb.inside({7, 0, 23}));
+  BOOST_CHECK(!ccvb.inside({7, 0, -23}));
+  BOOST_CHECK(ccvb.inside({0, 13, 23}));
+  BOOST_CHECK(ccvb.inside({0, 13, -23}));
+  BOOST_CHECK(ccvb.inside({13, 0, 23}));
+  BOOST_CHECK(ccvb.inside({13, 0, -23}));
+  BOOST_CHECK(!ccvb.inside({0, 17, 23}));
+  BOOST_CHECK(!ccvb.inside({0, 17, -23}));
+  BOOST_CHECK(!ccvb.inside({17, 0, 23}));
+  BOOST_CHECK(!ccvb.inside({17, 0, -23}));
+}
+BOOST_AUTO_TEST_SUITE_END()
+}  // namespace Test
+}  // namespace Acts

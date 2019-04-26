@@ -30,11 +30,8 @@ namespace Acts {
 class TrackingGeometry;
 
 /// @brief selector for finding
-struct MaterialSurface
-{
-  bool
-  operator()(const Surface& sf) const
-  {
+struct MaterialSurface {
+  bool operator()(const Surface& sf) const {
     return (sf.surfaceMaterial() != nullptr);
   }
 };
@@ -64,16 +61,14 @@ struct MaterialSurface
 ///
 ///  4) Each 'hit' bin per event is counted and averaged at the end of the run
 ///
-class SurfaceMaterialMapper
-{
-public:
+class SurfaceMaterialMapper {
+ public:
   using StraightLinePropagator = Propagator<StraightLineStepper, Navigator>;
 
   /// @struct Config
   ///
   /// Nested Configuration struct for the material mapper
-  struct Config
-  {
+  struct Config {
     /// Mapping range
     std::array<double, 2> etaRange = {{-6., 6.}};
     /// Mapping output to debug stream
@@ -83,15 +78,11 @@ public:
   /// @struct State
   ///
   /// Nested State struct which is used for the mapping prococess
-  struct State
-  {
-
+  struct State {
     /// Constructor of the Sate with contexts
-    State(std::reference_wrapper<const GeometryContext>      gctx,
+    State(std::reference_wrapper<const GeometryContext> gctx,
           std::reference_wrapper<const MagneticFieldContext> mctx)
-      : geoContext(gctx), magFieldContext(mctx)
-    {
-    }
+        : geoContext(gctx), magFieldContext(mctx) {}
 
     /// The accumulated material per geometry ID
     std::map<GeometryID, AccumulatedSurfaceMaterial> accumulatedMaterial;
@@ -115,11 +106,10 @@ public:
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
   /// @param log The logger
-  SurfaceMaterialMapper(const Config&                 cfg,
-                        StraightLinePropagator        propagator,
-                        std::unique_ptr<const Logger> slogger
-                        = getDefaultLogger("SurfaceMaterialMapper",
-                                           Logging::INFO));
+  SurfaceMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
+                        std::unique_ptr<const Logger> slogger =
+                            getDefaultLogger("SurfaceMaterialMapper",
+                                             Logging::INFO));
 
   /// @brief helper method that creates the cache for the mapping
   ///
@@ -128,10 +118,9 @@ public:
   /// This method takes a TrackingGeometry,
   /// finds all surfaces with material proxis
   /// and returns you a Cache object tO be used
-  State
-  createState(const GeometryContext&      gctx,
-              const MagneticFieldContext& mctx,
-              const TrackingGeometry&     tGeometry) const;
+  State createState(const GeometryContext& gctx,
+                    const MagneticFieldContext& mctx,
+                    const TrackingGeometry& tGeometry) const;
 
   /// @brief Method to finalize the maps
   ///
@@ -140,8 +129,7 @@ public:
   /// class type
   ///
   /// @param mState
-  void
-  finalizeMaps(State& mState) const;
+  void finalizeMaps(State& mState) const;
 
   /// Process/map a single track
   ///
@@ -150,30 +138,25 @@ public:
   ///
   /// @note the RecordedMaterialProperties of the track are assumed
   /// to be ordered from the starting position along the starting direction
-  void
-  mapMaterialTrack(State& mState, const RecordedMaterialTrack& mTrack) const;
+  void mapMaterialTrack(State& mState,
+                        const RecordedMaterialTrack& mTrack) const;
 
-private:
+ private:
   /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume
   ///
   /// @param mState The state to be filled
   /// @param tVolume is current TrackingVolume
-  void
-  resolveMaterialSurfaces(State& mState, const TrackingVolume& tVolume) const;
+  void resolveMaterialSurfaces(State& mState,
+                               const TrackingVolume& tVolume) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
-  void
-  checkAndInsert(State& /*mState*/, const Surface& surface) const;
+  void checkAndInsert(State& /*mState*/, const Surface& surface) const;
 
   /// Standard logger method
-  const Logger&
-  logger() const
-  {
-    return *m_logger;
-  }
+  const Logger& logger() const { return *m_logger; }
 
   /// The configuration object
   Config m_cfg;
@@ -184,4 +167,4 @@ private:
   /// The logging instance
   std::unique_ptr<const Logger> m_logger;
 };
-}
+}  // namespace Acts

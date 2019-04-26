@@ -26,9 +26,9 @@ namespace Acts {
 template <ParID_t... params>
 using Measurement_t = Measurement<Identifier, params...>;
 
-class PlanarModuleCluster : public Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>
-{
-public:
+class PlanarModuleCluster
+    : public Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1> {
+ public:
   /// Constructor from DigitizationCells
   ///
   /// @param [in] mSurface is the module surface
@@ -38,48 +38,37 @@ public:
   /// @param [in] loc1 is the local position in the second coordinate
   /// @param [in] dCells is the vector of digitization cells
   PlanarModuleCluster(std::shared_ptr<const Surface> mSurface,
-                      const Identifier&              cIdentifier,
-                      ActsSymMatrixD<2>              cov,
-                      double                         loc0,
-                      double                         loc1,
-                      std::vector<DigitizationCell>  dCells,
-                      const DigitizationModule*      dModule = nullptr)
-    : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(std::move(mSurface),
-                                                    cIdentifier,
-                                                    std::move(cov),
-                                                    loc0,
-                                                    loc1)
-    , m_digitizationCells(std::move(dCells))
-    , m_digitizationModule(dModule)
-  {
-  }
+                      const Identifier& cIdentifier, ActsSymMatrixD<2> cov,
+                      double loc0, double loc1,
+                      std::vector<DigitizationCell> dCells,
+                      const DigitizationModule* dModule = nullptr)
+      : Measurement_t<ParDef::eLOC_0, ParDef::eLOC_1>(
+            std::move(mSurface), cIdentifier, std::move(cov), loc0, loc1),
+        m_digitizationCells(std::move(dCells)),
+        m_digitizationModule(dModule) {}
 
   /// access to the digitization cells
   ///
   /// @return the vector to the digitization cells
-  const std::vector<DigitizationCell>&
-  digitizationCells() const;
+  const std::vector<DigitizationCell>& digitizationCells() const;
 
   /// access to the digitization module
   ///
   /// @return the pointer to the digitization module
-  const DigitizationModule*
-  digitizationModule() const;
+  const DigitizationModule* digitizationModule() const;
 
-private:
+ private:
   std::vector<DigitizationCell> m_digitizationCells;  /// the digitization cells
   const DigitizationModule* m_digitizationModule;  /// the digitization module
 };
 
 inline const std::vector<DigitizationCell>&
-PlanarModuleCluster::digitizationCells() const
-{
+PlanarModuleCluster::digitizationCells() const {
   return m_digitizationCells;
 }
 
-inline const DigitizationModule*
-PlanarModuleCluster::digitizationModule() const
-{
+inline const DigitizationModule* PlanarModuleCluster::digitizationModule()
+    const {
   return m_digitizationModule;
 }
-}
+}  // namespace Acts

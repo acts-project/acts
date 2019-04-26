@@ -14,9 +14,8 @@
 namespace Acts {
 
 template <typename T = double>
-class PlyHelper : public IVisualization
-{
-public:
+class PlyHelper : public IVisualization {
+ public:
   static_assert(std::is_same_v<T, double> || std::is_same_v<T, float>,
                 "Use either double or float");
 
@@ -38,20 +37,16 @@ public:
   /**
    * @copydoc Acts::IVisualization::vertex()
    */
-  void
-  vertex(const Vector3D&            vtx,
-         IVisualization::color_type color = {120, 120, 120}) override
-  {
+  void vertex(const Vector3D& vtx,
+              IVisualization::color_type color = {120, 120, 120}) override {
     m_vertices.emplace_back(vtx.template cast<value_type>(), color);
   }
 
   /**
    * @copydoc Acts::IVisualization::line()
    */
-  void
-  face(const std::vector<Vector3D>& vtxs,
-       IVisualization::color_type   color = {120, 120, 120}) override
-  {
+  void face(const std::vector<Vector3D>& vtxs,
+            IVisualization::color_type color = {120, 120, 120}) override {
     face_type idxs;
     idxs.reserve(vtxs.size());
     for (const auto& vtx : vtxs) {
@@ -64,11 +59,8 @@ public:
   /**
    * @copydoc Acts::IVisualization::face()
    */
-  void
-  line(const Vector3D&            a,
-       const Vector3D&            b,
-       IVisualization::color_type color = {120, 120, 120}) override
-  {
+  void line(const Vector3D& a, const Vector3D& b,
+            IVisualization::color_type color = {120, 120, 120}) override {
     vertex(a, color);
     size_t idx_a = m_vertices.size() - 1;
     vertex(b, color);
@@ -79,9 +71,7 @@ public:
   /**
    * @copydoc Acts::IVisualization::write()
    */
-  void
-  write(std::ostream& os) const override
-  {
+  void write(std::ostream& os) const override {
     os << "ply\n";
     os << "format ascii 1.0\n";
     os << "element vertex " << m_vertices.size() << "\n";
@@ -129,18 +119,16 @@ public:
   /**
    * @copydoc Acts::IVisualization::clear()
    */
-  void
-  clear() override
-  {
+  void clear() override {
     m_vertices.clear();
     m_faces.clear();
     m_edges.clear();
   }
 
-private:
+ private:
   std::vector<std::pair<vertex_type, IVisualization::color_type>> m_vertices;
   std::vector<face_type> m_faces;
   std::vector<std::pair<std::pair<size_t, size_t>, IVisualization::color_type>>
       m_edges;
 };
-}
+}  // namespace Acts

@@ -29,7 +29,7 @@ class Surface;
 class PerigeeSurface;
 class IMaterialDecorator;
 
-using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 ///  @class TrackingGeometry
@@ -40,27 +40,25 @@ using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 ///  (respectively, if existing, a global search of an associated Layer or the
 ///  next associated Layer), such as a continous navigation by BoundarySurfaces
 ///  between the confined TrackingVolumes.
-class TrackingGeometry
-{
+class TrackingGeometry {
   /// Give the GeometryBuilder friend rights
   friend class TrackingGeometryBuilder;
 
-public:
+ public:
   /// Constructor
   ///
   /// @param highestVolume is the world volume
   /// @param materialDecorator is a dediated decorator that can assign
   ///        surface or volume based material to the TrackingVolume
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
-                   const IMaterialDecorator*       materialDecorator = nullptr);
+                   const IMaterialDecorator* materialDecorator = nullptr);
 
   /// Destructor
   ~TrackingGeometry();
 
   /// Access to the world volume
   /// @return plain pointer to the world volume
-  const TrackingVolume*
-  highestTrackingVolume() const;
+  const TrackingVolume* highestTrackingVolume() const;
 
   /// return the lowest tracking Volume
   ///
@@ -68,16 +66,15 @@ public:
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to the lowest TrackingVolume
-  const TrackingVolume*
-  lowestTrackingVolume(const GeometryContext& gctx, const Vector3D& gp) const;
+  const TrackingVolume* lowestTrackingVolume(const GeometryContext& gctx,
+                                             const Vector3D& gp) const;
 
   /// return the lowest tracking Volume
   ///
   /// @param name is the name for the volume search
   ///
   /// @return plain pointer to the lowest TrackingVolume
-  const TrackingVolume*
-  trackingVolume(const std::string& name) const;
+  const TrackingVolume* trackingVolume(const std::string& name) const;
 
   /// Forward the associated Layer information
   ///
@@ -85,14 +82,13 @@ public:
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
-  const Layer*
-  associatedLayer(const GeometryContext& gctx, const Vector3D& gp) const;
+  const Layer* associatedLayer(const GeometryContext& gctx,
+                               const Vector3D& gp) const;
 
   /// Register the beam tube
   ///
   /// @param beam is the beam line surface
-  void
-  registerBeamTube(std::shared_ptr<const PerigeeSurface> beam);
+  void registerBeamTube(std::shared_ptr<const PerigeeSurface> beam);
 
   /// @brief surface representing the beam pipe
   ///
@@ -100,30 +96,28 @@ public:
   ///
   /// @return raw pointer to surface representing the beam pipe
   ///         (could be a null pointer)
-  const Surface*
-  getBeamline() const;
+  const Surface* getBeamline() const;
 
   /// @brief Visit all sensitive surfaces
   ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
-  void
-  visitSurfaces(const std::function<void(const Acts::Surface*)>& visitor) const;
+  void visitSurfaces(
+      const std::function<void(const Acts::Surface*)>& visitor) const;
 
-private:
+ private:
   /// Geometry Builder busineess: the geometry builder has to sign
   ///
   /// @param geosit is the volume signature
   /// @param geotype is the volume navigation type
-  void
-  sign(GeometrySignature geosit, GeometryType geotype = Static);
+  void sign(GeometrySignature geosit, GeometryType geotype = Static);
 
   /// The known world - and the beamline
-  TrackingVolumePtr                     m_world;
+  TrackingVolumePtr m_world;
   std::shared_ptr<const PerigeeSurface> m_beam;
 
   /// The Volumes in a map for string based search
   std::map<std::string, const TrackingVolume*> m_trackingVolumes;
 };
 
-}  // namespace
+}  // namespace Acts

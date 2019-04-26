@@ -13,19 +13,14 @@
 #include "Acts/Material/ProtoSurfaceMaterial.hpp"
 
 Acts::ProtoSurfaceMaterial::ProtoSurfaceMaterial(const BinUtility& binUtility)
-  : ISurfaceMaterial(), m_binUtility(binUtility)
-{
-}
+    : ISurfaceMaterial(), m_binUtility(binUtility) {}
 
-Acts::ProtoSurfaceMaterial&
-Acts::ProtoSurfaceMaterial::operator*=(double /*scale*/)
-{
+Acts::ProtoSurfaceMaterial& Acts::ProtoSurfaceMaterial::operator*=(
+    double /*scale*/) {
   return (*this);
 }
 
-std::ostream&
-Acts::ProtoSurfaceMaterial::toStream(std::ostream& sl) const
-{
+std::ostream& Acts::ProtoSurfaceMaterial::toStream(std::ostream& sl) const {
   sl << "Acts::ProtoSurfaceMaterial : " << std::endl;
   if (m_binUtility.bins(0) * m_binUtility.bins(1) > 1) {
     sl << "   - Number of Material bins [0,1] : " << m_binUtility.bins(0)

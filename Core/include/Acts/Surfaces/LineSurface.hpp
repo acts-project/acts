@@ -31,21 +31,19 @@ class LineBounds;
 ///  @note It leaves the type() method virtual, so it can not be instantiated
 ///
 /// @image html LineSurface.png
-class LineSurface : public Surface
-{
+class LineSurface : public Surface {
   friend Surface;
 
   LineSurface() = delete;
 
-protected:
+ protected:
   /// Constructor from Transform3D and bounds
   ///
   /// @param htrans The transform that positions the surface in the global frame
   /// @param radius The straw radius
   /// @param halez The half length in z
-  LineSurface(std::shared_ptr<const Transform3D> htrans,
-              double                             radius,
-              double                             halez);
+  LineSurface(std::shared_ptr<const Transform3D> htrans, double radius,
+              double halez);
 
   /// Constructor from Transform3D and a shared bounds object
   ///
@@ -53,14 +51,14 @@ protected:
   /// @param lbounds The bounds describing the straw dimensions, can be
   /// optionally nullptr
   LineSurface(std::shared_ptr<const Transform3D> htrans,
-              std::shared_ptr<const LineBounds>  lbounds = nullptr);
+              std::shared_ptr<const LineBounds> lbounds = nullptr);
 
   /// Constructor from DetectorElementBase : Element proxy
   ///
   /// @param lbounds The bounds describing the straw dimensions
   /// @param detelement for which this surface is (at least) one representation
   LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
-              const DetectorElementBase&               detelement);
+              const DetectorElementBase& detelement);
 
   /// Copy constructor
   ///
@@ -72,19 +70,17 @@ protected:
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
   /// @param transf is the additional transfrom applied after copying
-  LineSurface(const GeometryContext& gctx,
-              const LineSurface&     other,
-              const Transform3D&     transf);
+  LineSurface(const GeometryContext& gctx, const LineSurface& other,
+              const Transform3D& transf);
 
-public:
+ public:
   /// Destructor - defaulted
   ~LineSurface() override = default;
 
   /// Assignment operator
   ///
   /// @param slsf is the source surface dor copying
-  LineSurface&
-  operator=(const LineSurface& other);
+  LineSurface& operator=(const LineSurface& other);
 
   /// Normal vector return
   ///
@@ -92,8 +88,8 @@ public:
   /// @param lpos is the local position is ignored
   ///
   /// @return a Vector3D by value
-  const Vector3D
-  normal(const GeometryContext& gctx, const Vector2D& lpos) const final;
+  const Vector3D normal(const GeometryContext& gctx,
+                        const Vector2D& lpos) const final;
 
   /// Normal vector return without argument
   using Surface::normal;
@@ -105,8 +101,8 @@ public:
   /// @param bValue is the binning type to be used
   ///
   /// @return position that can beused for this binning
-  const Vector3D
-  binningPosition(const GeometryContext& gctx, BinningValue bValue) const final;
+  const Vector3D binningPosition(const GeometryContext& gctx,
+                                 BinningValue bValue) const final;
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
@@ -119,10 +115,9 @@ public:
   /// @param mom is the momentum used for the measurement frame construction
   ///
   /// @return is a rotation matrix that indicates the measurement frame
-  const RotationMatrix3D
-  referenceFrame(const GeometryContext& gctx,
-                 const Vector3D&        gpos,
-                 const Vector3D&        mom) const final;
+  const RotationMatrix3D referenceFrame(const GeometryContext& gctx,
+                                        const Vector3D& gpos,
+                                        const Vector3D& mom) const final;
 
   /// Initialize the jacobian from local to global
   /// the surface knows best, hence the calculation is done here.
@@ -135,12 +130,10 @@ public:
   /// @param dir is the direction at of the parameters
   ///
   /// @param pars is the paranmeters vector
-  void
-  initJacobianToGlobal(const GeometryContext& gctx,
-                       ActsMatrixD<7, 5>& jacobian,
-                       const Vector3D&       gpos,
-                       const Vector3D&       dir,
-                       const ActsVectorD<5>& pars) const final;
+  void initJacobianToGlobal(const GeometryContext& gctx,
+                            ActsMatrixD<7, 5>& jacobian, const Vector3D& gpos,
+                            const Vector3D& dir,
+                            const ActsVectorD<5>& pars) const final;
 
   /// Calculate the form factors for the derivatives
   /// the calculation is identical for all surfaces where the
@@ -153,12 +146,9 @@ public:
   /// @param jac is the transport jacobian
   ///
   /// @return a five-dim vector
-  const ActsRowVectorD<5>
-  derivativeFactors(const GeometryContext&  gctx,
-                    const Vector3D&         pos,
-                    const Vector3D&         dir,
-                    const RotationMatrix3D& rft,
-                    const ActsMatrixD<7, 5>& jac) const final;
+  const ActsRowVectorD<5> derivativeFactors(
+      const GeometryContext& gctx, const Vector3D& pos, const Vector3D& dir,
+      const RotationMatrix3D& rft, const ActsMatrixD<7, 5>& jac) const final;
 
   /// Local to global transformation
   /// for line surfaces the momentum is used in order to interpret the drift
@@ -169,11 +159,8 @@ public:
   /// @param mom is the global momentum (used to sign the closest approach)
   ///
   /// @param gpos is the global position shich is filled
-  void
-  localToGlobal(const GeometryContext& gctx,
-                const Vector2D&        lpos,
-                const Vector3D&        mom,
-                Vector3D&              gpos) const final;
+  void localToGlobal(const GeometryContext& gctx, const Vector2D& lpos,
+                     const Vector3D& mom, Vector3D& gpos) const final;
 
   /// Specified for LineSurface: global to local method without dynamic
   /// memory allocation
@@ -212,11 +199,8 @@ public:
   ///
   /// @return boolean indication if operation was successful (fail means global
   /// position was not on surface)
-  bool
-  globalToLocal(const GeometryContext& gctx,
-                const Vector3D&        gpos,
-                const Vector3D&        mom,
-                Vector2D&              lpos) const final;
+  bool globalToLocal(const GeometryContext& gctx, const Vector3D& gpos,
+                     const Vector3D& mom, Vector2D& lpos) const final;
 
   /// @brief Straight line intersection schema
   ///
@@ -256,47 +240,38 @@ public:
   ///  e_a)(\vec e_a \cdot \vec e_b)}{1-(\vec e_a \cdot \vec e_b)^2} @f$ <br>
   ///
   /// @return is the intersection object
-  Intersection
-  intersectionEstimate(const GeometryContext& gctx,
-                       const Vector3D&        gpos,
-                       const Vector3D&        gdir,
-                       NavigationDirection    navDir  = forward,
-                       const BoundaryCheck&   bcheck  = false,
-                       CorrFnc                correct = nullptr) const final;
+  Intersection intersectionEstimate(const GeometryContext& gctx,
+                                    const Vector3D& gpos, const Vector3D& gdir,
+                                    NavigationDirection navDir = forward,
+                                    const BoundaryCheck& bcheck = false,
+                                    CorrFnc correct = nullptr) const final;
 
   /// the pathCorrection for derived classes with thickness
   /// is by definition 1 for LineSurfaces
   ///
   /// @note input parameters are ignored
   /// @note there's no material associated to the line surface
-  double
-  pathCorrection(const GeometryContext& gctx,
-                 const Vector3D&        pos,
-                 const Vector3D&        mom) const override;
+  double pathCorrection(const GeometryContext& gctx, const Vector3D& pos,
+                        const Vector3D& mom) const override;
 
   /// This method returns the bounds of the Surface by reference */
-  const SurfaceBounds&
-  bounds() const final;
+  const SurfaceBounds& bounds() const final;
 
   /// Return properly formatted class name for screen output */
-  std::string
-  name() const override;
+  std::string name() const override;
 
-protected:
+ protected:
   std::shared_ptr<const LineBounds> m_bounds;  ///< bounds (shared)
 
-private:
+ private:
   /// helper function to apply the globalToLocal with out transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos is the global position
   /// @param mom is the momentum
   /// @param lpos is the local position to be filled
-  bool
-  globalToLocalPlain(const GeometryContext& gctx,
-                     const Vector3D&        pos,
-                     const Vector3D&        mom,
-                     Vector2D&              lpos) const;
+  bool globalToLocalPlain(const GeometryContext& gctx, const Vector3D& pos,
+                          const Vector3D& mom, Vector2D& lpos) const;
 };
 
 #include "Acts/Surfaces/detail/LineSurface.ipp"

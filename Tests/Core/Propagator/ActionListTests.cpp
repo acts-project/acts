@@ -31,180 +31,153 @@
 #include "Acts/Utilities/detail/Extendable.hpp"
 
 namespace bdata = boost::unit_test::data;
-namespace tt    = boost::test_tools;
+namespace tt = boost::test_tools;
 
 namespace Acts {
 
 namespace Test {
 
-  // the constrained step class
-  using cstep = detail::ConstrainedStep;
+// the constrained step class
+using cstep = detail::ConstrainedStep;
 
-  /// This is a simple cache struct to mimic the
-  /// Propagator cache
-  struct PropagatorState
-  {
+/// This is a simple cache struct to mimic the
+/// Propagator cache
+struct PropagatorState {
+  // This is a simple cache struct to mimic the
+  // Stepper cache in the propagation
+  struct StepperState {
+    // accummulated path length cache
+    double pathAccumulated = 0.;
 
-    // This is a simple cache struct to mimic the
-    // Stepper cache in the propagation
-    struct StepperState
-    {
-      // accummulated path length cache
-      double pathAccumulated = 0.;
-
-      // adaptive sep size of the runge-kutta integration
-      cstep stepSize = std::numeric_limits<double>::max();
-    };
-
-    /// emulate the options template
-    struct Options
-    {
-      /// Debug output
-      /// the string where debug messages are stored (optionally)
-      bool        debug       = false;
-      std::string debugString = "";
-      /// buffer & formatting for consistent output
-      size_t debugPfxWidth = 30;
-      size_t debugMsgWidth = 50;
-    };
-
-    /// Navigation cache: the start surface
-    const Surface* startSurface = nullptr;
-
-    /// Navigation cache: the current surface
-    const Surface* currentSurface = nullptr;
-
-    /// Navigation cache: the target surface
-    const Surface* targetSurface = nullptr;
-    bool           targetReached = false;
-
-    /// Give some options
-    Options options;
-
-    /// The Stepper cache
-    StepperState stepping;
+    // adaptive sep size of the runge-kutta integration
+    cstep stepSize = std::numeric_limits<double>::max();
   };
 
-  /// This is a simple struct to mimic the stepper
-  struct Stepper
-  {
+  /// emulate the options template
+  struct Options {
+    /// Debug output
+    /// the string where debug messages are stored (optionally)
+    bool debug = false;
+    std::string debugString = "";
+    /// buffer & formatting for consistent output
+    size_t debugPfxWidth = 30;
+    size_t debugMsgWidth = 50;
   };
 
-  /// A distance observer struct as an actor
-  struct DistanceObserver
-  {
-    double path_to_go = 100. * units::_mm;
+  /// Navigation cache: the start surface
+  const Surface* startSurface = nullptr;
 
-    struct this_result
-    {
-      double distance = std::numeric_limits<double>::max();
-    };
+  /// Navigation cache: the current surface
+  const Surface* currentSurface = nullptr;
 
-    using result_type = this_result;
+  /// Navigation cache: the target surface
+  const Surface* targetSurface = nullptr;
+  bool targetReached = false;
 
-    DistanceObserver(double ptg = 0.) : path_to_go(ptg) {}
+  /// Give some options
+  Options options;
 
-    template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& state,
-               const stepper_t& /*unused*/,
-               result_type& result) const
-    {
-      result.distance = path_to_go - state.stepping.pathAccumulated;
-    }
+  /// The Stepper cache
+  StepperState stepping;
+};
 
-    template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& /*unused*/,
-               const stepper_t& /*unused*/) const
-    {
-    }
+/// This is a simple struct to mimic the stepper
+struct Stepper {};
+
+/// A distance observer struct as an actor
+struct DistanceObserver {
+  double path_to_go = 100. * units::_mm;
+
+  struct this_result {
+    double distance = std::numeric_limits<double>::max();
   };
 
-  /// A call counter struct as an actor
-  struct CallCounter
-  {
+  using result_type = this_result;
 
-    struct this_result
-    {
-      size_t calls = 0;
-    };
+  DistanceObserver(double ptg = 0.) : path_to_go(ptg) {}
 
-    using result_type = this_result;
-
-    CallCounter() = default;
-
-    template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& /*unused*/,
-               const stepper_t& /*unused*/,
-               result_type& r) const
-    {
-      ++r.calls;
-    }
-
-    template <typename propagator_state_t, typename stepper_t>
-    void
-    operator()(propagator_state_t& /*unused*/,
-               const stepper_t& /*unused*/) const
-    {
-    }
-  };
-
-  // This tests the implementation of the ActionList
-  // and the standard aborters
-  BOOST_AUTO_TEST_CASE(ActionListTest_Distance)
-  {
-    // construct the (prop/step) cache and result
-    PropagatorState state;
-    Stepper         stepper;
-
-    // Type of track parameters produced at the end of the propagation
-    using distance_result = typename DistanceObserver::result_type;
-    detail::Extendable<distance_result> result;
-
-    ActionList<DistanceObserver> action_list;
-    action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
-
-    // observe and check
-    action_list(state, stepper, result);
-    BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
-                      100. * units::_mm);
-
-    // now move the cache and check again
-    state.stepping.pathAccumulated = 50. * units::_mm;
-    action_list(state, stepper, result);
-    BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t& state, const stepper_t& /*unused*/,
+                  result_type& result) const {
+    result.distance = path_to_go - state.stepping.pathAccumulated;
   }
 
-  // This tests the implementation of the ActionList
-  // and the standard aborters
-  BOOST_AUTO_TEST_CASE(ActionListTest_TwoActions)
-  {
-    // construct the (prop/step) cache and result
-    PropagatorState state;
-    Stepper         stepper;
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t& /*unused*/,
+                  const stepper_t& /*unused*/) const {}
+};
 
-    // Type of track parameters produced at the end of the propagation
-    using distance_result = typename DistanceObserver::result_type;
-    using caller_result   = typename CallCounter::result_type;
-    ActionList<DistanceObserver, CallCounter> action_list;
-    action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
+/// A call counter struct as an actor
+struct CallCounter {
+  struct this_result {
+    size_t calls = 0;
+  };
 
-    detail::Extendable<distance_result, caller_result> result;
+  using result_type = this_result;
 
-    //// observe and check
-    action_list(state, stepper, result);
-    BOOST_CHECK_EQUAL(result.get<distance_result>().distance,
-                      100. * units::_mm);
-    BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
+  CallCounter() = default;
 
-    // now move the cache and check again
-    state.stepping.pathAccumulated = 50. * units::_mm;
-    action_list(state, stepper, result);
-    BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
-    BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
+                  result_type& r) const {
+    ++r.calls;
   }
+
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t& /*unused*/,
+                  const stepper_t& /*unused*/) const {}
+};
+
+// This tests the implementation of the ActionList
+// and the standard aborters
+BOOST_AUTO_TEST_CASE(ActionListTest_Distance) {
+  // construct the (prop/step) cache and result
+  PropagatorState state;
+  Stepper stepper;
+
+  // Type of track parameters produced at the end of the propagation
+  using distance_result = typename DistanceObserver::result_type;
+  detail::Extendable<distance_result> result;
+
+  ActionList<DistanceObserver> action_list;
+  action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
+
+  // observe and check
+  action_list(state, stepper, result);
+  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 100. * units::_mm);
+
+  // now move the cache and check again
+  state.stepping.pathAccumulated = 50. * units::_mm;
+  action_list(state, stepper, result);
+  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
+}
+
+// This tests the implementation of the ActionList
+// and the standard aborters
+BOOST_AUTO_TEST_CASE(ActionListTest_TwoActions) {
+  // construct the (prop/step) cache and result
+  PropagatorState state;
+  Stepper stepper;
+
+  // Type of track parameters produced at the end of the propagation
+  using distance_result = typename DistanceObserver::result_type;
+  using caller_result = typename CallCounter::result_type;
+  ActionList<DistanceObserver, CallCounter> action_list;
+  action_list.get<DistanceObserver>().path_to_go = 100. * units::_mm;
+
+  detail::Extendable<distance_result, caller_result> result;
+
+  //// observe and check
+  action_list(state, stepper, result);
+  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 100. * units::_mm);
+  BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 1);
+
+  // now move the cache and check again
+  state.stepping.pathAccumulated = 50. * units::_mm;
+  action_list(state, stepper, result);
+  BOOST_CHECK_EQUAL(result.get<distance_result>().distance, 50. * units::_mm);
+  BOOST_CHECK_EQUAL(result.get<caller_result>().calls, 2);
+}
 
 }  // namespace Test
 }  // namespace Acts

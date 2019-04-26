@@ -17,18 +17,15 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 
-Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
-                   double                              thickness,
-                   std::unique_ptr<ApproachDescriptor> ades,
-                   LayerType                           laytyp)
-  : m_nextLayers(NextLayers(nullptr, nullptr))
-  , m_surfaceArray(surfaceArray.release())
-  , m_layerThickness(thickness)
-  , m_approachDescriptor(nullptr)
-  , m_representingVolume(nullptr)
-  , m_layerType(laytyp)
-  , m_ssRepresentingSurface(1)
-{
+Acts::Layer::Layer(std::unique_ptr<SurfaceArray> surfaceArray, double thickness,
+                   std::unique_ptr<ApproachDescriptor> ades, LayerType laytyp)
+    : m_nextLayers(NextLayers(nullptr, nullptr)),
+      m_surfaceArray(surfaceArray.release()),
+      m_layerThickness(thickness),
+      m_approachDescriptor(nullptr),
+      m_representingVolume(nullptr),
+      m_layerType(laytyp),
+      m_ssRepresentingSurface(1) {
   if (ades) {
     ades->registerLayer(*this);
     m_approachDescriptor = std::move(ades);
@@ -40,23 +37,16 @@ Acts::Layer::Layer(std::unique_ptr<SurfaceArray>       surfaceArray,
   }
 }
 
-const Acts::ApproachDescriptor*
-Acts::Layer::approachDescriptor() const
-{
+const Acts::ApproachDescriptor* Acts::Layer::approachDescriptor() const {
   return m_approachDescriptor.get();
 }
 
-Acts::ApproachDescriptor*
-Acts::Layer::approachDescriptor()
-{
+Acts::ApproachDescriptor* Acts::Layer::approachDescriptor() {
   return const_cast<ApproachDescriptor*>(m_approachDescriptor.get());
 }
 
-void
-Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
-                           const GeometryID&         layerID)
-{
-
+void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
+                                const GeometryID& layerID) {
   // set the volumeID of this
   assignGeoID(layerID);
   // assign to the representing surface

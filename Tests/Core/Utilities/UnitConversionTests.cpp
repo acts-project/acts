@@ -17,12 +17,11 @@
 
 using namespace Acts::units;
 namespace utf = boost::unit_test;
-namespace tt  = boost::test_tools;
+namespace tt = boost::test_tools;
 
 BOOST_AUTO_TEST_SUITE(unit_conversion)
 
-BOOST_AUTO_TEST_CASE(length_conversions)
-{
+BOOST_AUTO_TEST_CASE(length_conversions) {
   CHECK_CLOSE_REL(_m, 1e-3 * _km, 1e-15);
   CHECK_CLOSE_REL(_m, 1e3 * _mm, 1e-15);
   CHECK_CLOSE_REL(_m, 1e6 * _um, 1e-15);
@@ -31,21 +30,18 @@ BOOST_AUTO_TEST_CASE(length_conversions)
   CHECK_CLOSE_REL(_m, 1e15 * _fm, 1e-15);
 }
 
-BOOST_AUTO_TEST_CASE(mass_conversions)
-{
+BOOST_AUTO_TEST_CASE(mass_conversions) {
   CHECK_CLOSE_REL(_kg, 1e3 * _g, 1e-15);
   CHECK_CLOSE_REL(_kg, 1e6 * _mg, 1e-15);
   CHECK_CLOSE_REL(1.660539040e-27 * _kg, _u, 1e-15);
 }
 
-BOOST_AUTO_TEST_CASE(time_conversions)
-{
+BOOST_AUTO_TEST_CASE(time_conversions) {
   CHECK_CLOSE_REL(_s, 1e3 * _ms, 1e-15);
   CHECK_CLOSE_REL(3600 * _s, _h, 1e-15);
 }
 
-BOOST_AUTO_TEST_CASE(energy_conversions)
-{
+BOOST_AUTO_TEST_CASE(energy_conversions) {
   CHECK_CLOSE_REL(_MeV, 1e-3 * _GeV, 1e-15);
   CHECK_CLOSE_REL(_MeV, 1e-6 * _TeV, 1e-15);
   CHECK_CLOSE_REL(_MeV, 1e3 * _keV, 1e-15);

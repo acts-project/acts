@@ -17,14 +17,13 @@ namespace Acts {
 
  */
 
-class Geant4DetElement
-{
-public:
+class Geant4DetElement {
+ public:
   /** Constructor */
   Geant4DetElement();
   /** Desctructor */
   virtual ~Geant4DetElement();
 
-private:
+ private:
 };
-}
+}  // namespace Acts

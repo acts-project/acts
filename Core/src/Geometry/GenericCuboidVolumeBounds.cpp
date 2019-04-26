@@ -22,8 +22,7 @@
 
 Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
     const std::array<Acts::Vector3D, 8>& vertices)
-  : m_vertices(vertices)
-{
+    : m_vertices(vertices) {
   // calculate approximate center of gravity first, so we can make sure
   // the normals point inwards
   Vector3D cog(0, 0, 0);
@@ -36,27 +35,27 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
 
   size_t idx = 0;
 
-  auto handle_face
-      = [&](const auto& a, const auto& b, const auto& c, const auto& d) {
-          // we assume a b c d to be counter clockwise
-          const Vector3D ab = b - a, ac = c - a;
-          Vector3D       normal = ab.cross(ac).normalized();
+  auto handle_face = [&](const auto& a, const auto& b, const auto& c,
+                         const auto& d) {
+    // we assume a b c d to be counter clockwise
+    const Vector3D ab = b - a, ac = c - a;
+    Vector3D normal = ab.cross(ac).normalized();
 
-          if ((cog - a).dot(normal) < 0) {
-            // normal points outwards, flip normal
-            normal *= -1.;
-          }
+    if ((cog - a).dot(normal) < 0) {
+      // normal points outwards, flip normal
+      normal *= -1.;
+    }
 
-          // get rid of -0 values if present
-          normal += Vector3D::Zero();
+    // get rid of -0 values if present
+    normal += Vector3D::Zero();
 
-          // check if d is on the surface
-          throw_assert((std::abs((a - d).dot(normal)) < 1e-6),
-                       "Four points do not lie on the same plane!");
+    // check if d is on the surface
+    throw_assert((std::abs((a - d).dot(normal)) < 1e-6),
+                 "Four points do not lie on the same plane!");
 
-          m_normals[idx] = normal;
-          idx++;
-        };
+    m_normals[idx] = normal;
+    idx++;
+  };
 
   // handle faces
   handle_face(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
@@ -67,16 +66,12 @@ Acts::GenericCuboidVolumeBounds::GenericCuboidVolumeBounds(
   handle_face(m_vertices[1], m_vertices[0], m_vertices[4], m_vertices[5]);
 }
 
-Acts::VolumeBounds*
-Acts::GenericCuboidVolumeBounds::clone() const
-{
+Acts::VolumeBounds* Acts::GenericCuboidVolumeBounds::clone() const {
   return new GenericCuboidVolumeBounds(*this);
 }
 
-bool
-Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
-                                        double                tol) const
-{
+bool Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
+                                             double tol) const {
   constexpr std::array<size_t, 6> vtxs = {0, 4, 0, 1, 2, 1};
   // needs to be on same side, get ref
   bool ref = std::signbit((gpos - m_vertices[vtxs[0]]).dot(m_normals[0]));
@@ -96,8 +91,7 @@ Acts::GenericCuboidVolumeBounds::inside(const Acts::Vector3D& gpos,
 
 std::vector<std::shared_ptr<const Acts::Surface>>
 Acts::GenericCuboidVolumeBounds::decomposeToSurfaces(
-    const Acts::Transform3D* transform) const
-{
+    const Acts::Transform3D* transform) const {
   std::vector<std::shared_ptr<const Acts::Surface>> surfaces;
 
   // approximate cog of the volume
@@ -109,13 +103,13 @@ Acts::GenericCuboidVolumeBounds::decomposeToSurfaces(
 
   cog *= 0.125;  // 1/8.
 
-  auto make_surface = [&](
-      const auto& a, const auto& b, const auto& c, const auto& d) {
+  auto make_surface = [&](const auto& a, const auto& b, const auto& c,
+                          const auto& d) {
     // calculate centroid of these points
     Vector3D ctrd = (a + b + c + d) / 4.;
     // create normal
     const Vector3D ab = b - a, ac = c - a;
-    Vector3D       normal = ab.cross(ac).normalized();
+    Vector3D normal = ab.cross(ac).normalized();
 
     if ((cog - d).dot(normal) > 0) {
       // normal points inwards, flip normal
@@ -169,9 +163,8 @@ Acts::GenericCuboidVolumeBounds::decomposeToSurfaces(
   return surfaces;
 }
 
-std::ostream&
-Acts::GenericCuboidVolumeBounds::toStream(std::ostream& sl) const
-{
+std::ostream& Acts::GenericCuboidVolumeBounds::toStream(
+    std::ostream& sl) const {
   sl << "Acts::GenericCuboidVolumeBounds: vertices (x, y, z) =\n";
   for (size_t i = 0; i < 8; i++) {
     if (i > 0) {
@@ -181,15 +174,13 @@ Acts::GenericCuboidVolumeBounds::toStream(std::ostream& sl) const
   }
   return sl;
 }
-void
-Acts::GenericCuboidVolumeBounds::draw(IVisualization&    helper,
-                                      const Transform3D& transform) const
-{
-  auto draw_face
-      = [&](const auto& a, const auto& b, const auto& c, const auto& d) {
-          helper.face(std::vector<Vector3D>(
-              {transform * a, transform * b, transform * c, transform * d}));
-        };
+void Acts::GenericCuboidVolumeBounds::draw(IVisualization& helper,
+                                           const Transform3D& transform) const {
+  auto draw_face = [&](const auto& a, const auto& b, const auto& c,
+                       const auto& d) {
+    helper.face(std::vector<Vector3D>(
+        {transform * a, transform * b, transform * c, transform * d}));
+  };
 
   draw_face(m_vertices[0], m_vertices[1], m_vertices[2], m_vertices[3]);
   draw_face(m_vertices[4], m_vertices[5], m_vertices[6], m_vertices[7]);

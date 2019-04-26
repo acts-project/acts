@@ -29,9 +29,8 @@ class ApproachDescriptor;
 /// it inhertis from both, Layer base class
 /// and DiscSurface class
 
-class DiscLayer : virtual public DiscSurface, public Layer
-{
-public:
+class DiscLayer : virtual public DiscSurface, public Layer {
+ public:
   ///  Factory constructor with DiscSurface components
   ///
   /// @param transform is the transform to place the layer in the 3D frame
@@ -44,20 +43,15 @@ public:
   /// @todo move ApproachDescriptor to unqique_ptr
   ///
   /// @return a sharted pointer to the new layer
-  static MutableLayerPtr
-  create(const std::shared_ptr<const Transform3D>& transform,
-         const std::shared_ptr<const DiscBounds>&  dbounds,
-         std::unique_ptr<SurfaceArray>             surfaceArray = nullptr,
-         double                                    thickness    = 0.,
-         std::unique_ptr<ApproachDescriptor>       ad           = nullptr,
-         LayerType                                 laytyp       = Acts::passive)
-  {
-    return MutableLayerPtr(new DiscLayer(transform,
-                                         dbounds,
-                                         std::move(surfaceArray),
-                                         thickness,
-                                         std::move(ad),
-                                         laytyp));
+  static MutableLayerPtr create(
+      const std::shared_ptr<const Transform3D>& transform,
+      const std::shared_ptr<const DiscBounds>& dbounds,
+      std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+      double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
+      LayerType laytyp = Acts::passive) {
+    return MutableLayerPtr(new DiscLayer(transform, dbounds,
+                                         std::move(surfaceArray), thickness,
+                                         std::move(ad), laytyp));
   }
 
   /// Default Constructor
@@ -67,28 +61,23 @@ public:
   DiscLayer(const DiscLayer& cla) = delete;
 
   /// Assignment operator for DiscLayers - deleted
-  DiscLayer&
-  operator=(const DiscLayer&)
-      = delete;
+  DiscLayer& operator=(const DiscLayer&) = delete;
 
   /// Destructor
   ~DiscLayer() override = default;
 
   /// Transforms the layer into a Surface representation for extrapolation
   /// @return This method returns a surface reference
-  const DiscSurface&
-  surfaceRepresentation() const override;
+  const DiscSurface& surfaceRepresentation() const override;
 
   // Non-const version
-  DiscSurface&
-  surfaceRepresentation() override;
+  DiscSurface& surfaceRepresentation() override;
 
-private:
+ private:
   /// build approach surfaces
-  void
-  buildApproachDescriptor();
+  void buildApproachDescriptor();
 
-protected:
+ protected:
   // Constructor with DiscSurface components and pointer to SurfaceArray
   ///
   /// @param transform is the transform to place the layer in the 3D frame
@@ -98,14 +87,14 @@ protected:
   /// @param ad is the approach descriptor that provides the approach surface
   /// @param laytyp is the layer taype
   DiscLayer(const std::shared_ptr<const Transform3D>& transform,
-            const std::shared_ptr<const DiscBounds>&  dbounds,
-            std::unique_ptr<SurfaceArray>             surfaceArray = nullptr,
-            double                                    thickness    = 0.,
-            std::unique_ptr<ApproachDescriptor>       ades         = nullptr,
-            LayerType                                 laytyp = Acts::active);
+            const std::shared_ptr<const DiscBounds>& dbounds,
+            std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
+            double thickness = 0.,
+            std::unique_ptr<ApproachDescriptor> ades = nullptr,
+            LayerType laytyp = Acts::active);
 
   /// Copy constructor with shift
   DiscLayer(const DiscLayer& cla, const Transform3D& tr);
 };
 
-}  // namespace
+}  // namespace Acts

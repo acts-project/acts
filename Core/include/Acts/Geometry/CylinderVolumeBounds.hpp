@@ -69,16 +69,15 @@ class IVisualization;
 ///
 ///  @image html CylinderVolumeBounds_decomp.gif
 
-class CylinderVolumeBounds : public VolumeBounds
-{
-public:
+class CylinderVolumeBounds : public VolumeBounds {
+ public:
   /// @enum BoundValues for readability
   enum BoundValues {
-    bv_innerRadius   = 0,
-    bv_outerRadius   = 1,
+    bv_innerRadius = 0,
+    bv_outerRadius = 1,
     bv_halfPhiSector = 2,
-    bv_halfZ         = 3,
-    bv_length        = 4
+    bv_halfZ = 3,
+    bv_length = 4
   };
 
   /// Default Constructor
@@ -103,9 +102,7 @@ public:
   /// @param router is the outer radius of the cylinder
   /// @param haphi is the half opening angle
   /// @param halez is the half length in z
-  CylinderVolumeBounds(double rinner,
-                       double router,
-                       double haphi,
+  CylinderVolumeBounds(double rinner, double router, double haphi,
                        double halez);
 
   /// Constructor - from cylinder bounds and thickness
@@ -129,100 +126,82 @@ public:
   ~CylinderVolumeBounds() override;
 
   /// Assignment operator
-  CylinderVolumeBounds&
-  operator=(const CylinderVolumeBounds& cylbo);
+  CylinderVolumeBounds& operator=(const CylinderVolumeBounds& cylbo);
 
   /// Virtual constructor
-  CylinderVolumeBounds*
-  clone() const override;
+  CylinderVolumeBounds* clone() const override;
 
   /// This method checks if position in the 3D volume
   /// frame is inside the cylinder
   ///
   /// @param pos is a global position to be checked
   /// @param tol is the tolerance for the check
-  bool
-  inside(const Vector3D& pos, double tol = 0.) const override;
+  bool inside(const Vector3D& pos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into boundarySurfaces
   /// @param transformPtr is the transform where the boundary surfaces are
   /// situated
   /// @note this surface is a factory method, the volume handles the memory
-  std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(const Transform3D* transformPtr) const override;
+  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
+      const Transform3D* transformPtr) const override;
 
   /// Binning offset - overloaded for some R-binning types
   ///
   /// @param bValue is the type used for the binning
-  Vector3D
-  binningOffset(BinningValue bValue) const override;
+  Vector3D binningOffset(BinningValue bValue) const override;
 
   /// Binning borders in double
   ///
   /// @param bValue is the type used for the binning
-  double
-  binningBorder(BinningValue bValue) const override;
+  double binningBorder(BinningValue bValue) const override;
 
   /// This method returns the inner radius
-  double
-  innerRadius() const;
+  double innerRadius() const;
 
   /// This method returns the outer radius
-  double
-  outerRadius() const;
+  double outerRadius() const;
 
   /// This method returns the medium radius
-  double
-  mediumRadius() const;
+  double mediumRadius() const;
 
   /// This method returns the delta radius
-  double
-  deltaRadius() const;
+  double deltaRadius() const;
 
   /// This method returns the halfPhiSector angle
-  double
-  halfPhiSector() const;
+  double halfPhiSector() const;
 
   /// This method returns the halflengthZ
-  double
-  halflengthZ() const;
+  double halflengthZ() const;
 
   /// Output Method for std::ostream
-  std::ostream&
-  toStream(std::ostream& sl) const override;
+  std::ostream& toStream(std::ostream& sl) const override;
 
   /// Draw this cylinder to a given helper
   /// @param helper The helper instance
   /// @param transform An additional transform, default is identity
-  void
-  draw(IVisualization&    helper,
-       const Transform3D& transform = Transform3D::Identity()) const;
+  void draw(IVisualization& helper,
+            const Transform3D& transform = Transform3D::Identity()) const;
 
-private:
+ private:
   /// templated dumpT method
   template <class T>
-  T&
-  dumpT(T& tstream) const;
+  T& dumpT(T& tstream) const;
 
   /// This method returns the associated CylinderBounds
   /// of the inner CylinderSurfaces.
-  std::shared_ptr<const CylinderBounds>
-  innerCylinderBounds() const;
+  std::shared_ptr<const CylinderBounds> innerCylinderBounds() const;
 
   /// This method returns the associated CylinderBounds
   /// of the inner CylinderSurfaces.
-  std::shared_ptr<const CylinderBounds>
-  outerCylinderBounds() const;
+  std::shared_ptr<const CylinderBounds> outerCylinderBounds() const;
 
   /// This method returns the associated RadialBounds
   /// for the bottom/top DiscSurface
-  std::shared_ptr<const DiscBounds>
-  discBounds() const;
+  std::shared_ptr<const DiscBounds> discBounds() const;
 
   /// This method returns the associated PlaneBounds
   /// limiting a sectoral CylinderVolume
-  std::shared_ptr<const PlanarBounds>
-  sectorPlaneBounds() const;
+  std::shared_ptr<const PlanarBounds> sectorPlaneBounds() const;
 
   /// The internal version of the bounds can be float/double
   std::vector<TDD_real_t> m_valueStore;
@@ -232,39 +211,34 @@ private:
   static const double s_numericalStable;
 };
 
-inline CylinderVolumeBounds*
-CylinderVolumeBounds::clone() const
-{
+inline CylinderVolumeBounds* CylinderVolumeBounds::clone() const {
   return new CylinderVolumeBounds(*this);
 }
 
-inline bool
-CylinderVolumeBounds::inside(const Vector3D& pos, double tol) const
-{
+inline bool CylinderVolumeBounds::inside(const Vector3D& pos,
+                                         double tol) const {
   using VectorHelpers::perp;
   using VectorHelpers::phi;
-  double ros       = perp(pos);
-  bool   insidePhi = cos(phi(pos)) >= cos(m_valueStore[bv_halfPhiSector]) - tol;
-  bool   insideR   = insidePhi ? ((ros >= m_valueStore[bv_innerRadius] - tol)
-                              && (ros <= m_valueStore[bv_outerRadius] + tol))
+  double ros = perp(pos);
+  bool insidePhi = cos(phi(pos)) >= cos(m_valueStore[bv_halfPhiSector]) - tol;
+  bool insideR = insidePhi ? ((ros >= m_valueStore[bv_innerRadius] - tol) &&
+                              (ros <= m_valueStore[bv_outerRadius] + tol))
                            : false;
-  bool insideZ
-      = insideR ? (std::abs(pos.z()) <= m_valueStore[bv_halfZ] + tol) : false;
+  bool insideZ =
+      insideR ? (std::abs(pos.z()) <= m_valueStore[bv_halfZ] + tol) : false;
   return (insideZ && insideR && insidePhi);
 }
 
-inline Vector3D
-CylinderVolumeBounds::binningOffset(BinningValue bValue) const
-{  // the medium radius is taken for r-type binning
+inline Vector3D CylinderVolumeBounds::binningOffset(BinningValue bValue)
+    const {  // the medium radius is taken for r-type binning
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     return Vector3D(mediumRadius(), 0., 0.);
   }
   return VolumeBounds::binningOffset(bValue);
 }
 
-inline double
-CylinderVolumeBounds::binningBorder(BinningValue bValue) const
-{  // the medium radius is taken for r-type binning
+inline double CylinderVolumeBounds::binningBorder(BinningValue bValue)
+    const {  // the medium radius is taken for r-type binning
   if (bValue == Acts::binR) {
     return 0.5 * deltaRadius();
   }
@@ -274,47 +248,33 @@ CylinderVolumeBounds::binningBorder(BinningValue bValue) const
   return VolumeBounds::binningBorder(bValue);
 }
 
-inline double
-CylinderVolumeBounds::innerRadius() const
-{
+inline double CylinderVolumeBounds::innerRadius() const {
   return m_valueStore.at(bv_innerRadius);
 }
 
-inline double
-CylinderVolumeBounds::outerRadius() const
-{
+inline double CylinderVolumeBounds::outerRadius() const {
   return m_valueStore.at(bv_outerRadius);
 }
 
-inline double
-CylinderVolumeBounds::mediumRadius() const
-{
-  return 0.5
-      * (m_valueStore.at(bv_innerRadius) + m_valueStore.at(bv_outerRadius));
+inline double CylinderVolumeBounds::mediumRadius() const {
+  return 0.5 *
+         (m_valueStore.at(bv_innerRadius) + m_valueStore.at(bv_outerRadius));
 }
 
-inline double
-CylinderVolumeBounds::deltaRadius() const
-{
+inline double CylinderVolumeBounds::deltaRadius() const {
   return (m_valueStore.at(bv_outerRadius) - m_valueStore.at(bv_innerRadius));
 }
 
-inline double
-CylinderVolumeBounds::halfPhiSector() const
-{
+inline double CylinderVolumeBounds::halfPhiSector() const {
   return m_valueStore.at(bv_halfPhiSector);
 }
 
-inline double
-CylinderVolumeBounds::halflengthZ() const
-{
+inline double CylinderVolumeBounds::halflengthZ() const {
   return m_valueStore.at(bv_halfZ);
 }
 
 template <class T>
-T&
-CylinderVolumeBounds::dumpT(T& tstream) const
-{
+T& CylinderVolumeBounds::dumpT(T& tstream) const {
   tstream << std::setiosflags(std::ios::fixed);
   tstream << std::setprecision(5);
   tstream << "Acts::CylinderVolumeBounds: (rMin, rMax, halfPhi, halfZ) = ";
@@ -324,4 +284,4 @@ CylinderVolumeBounds::dumpT(T& tstream) const
           << m_valueStore.at(bv_halfZ);
   return tstream;
 }
-}
+}  // namespace Acts

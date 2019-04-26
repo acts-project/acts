@@ -19,10 +19,8 @@ namespace Acts {
 
 class IVisualization;
 
-class GenericCuboidVolumeBounds : public VolumeBounds
-{
-
-public:
+class GenericCuboidVolumeBounds : public VolumeBounds {
+ public:
   GenericCuboidVolumeBounds() = delete;
 
   /// Constructor from a set of vertices
@@ -36,8 +34,7 @@ public:
 
   ///  clone() method to make deep copy in Volume copy constructor and for
   /// assigment operator  of the Surface class.
-  VolumeBounds*
-  clone() const override;
+  VolumeBounds* clone() const override;
 
   /// Checking if position given in volume frame is inside
   ///
@@ -45,8 +42,7 @@ public:
   /// @param tol is the tolerance applied for the inside check
   ///
   /// @return boolean indicating if the position is inside
-  bool
-  inside(const Vector3D& gpos, double tol = 0.) const override;
+  bool inside(const Vector3D& gpos, double tol = 0.) const override;
 
   /// Method to decompose the Bounds into Surfaces
   /// the Volume can turn them into BoundarySurfaces
@@ -56,24 +52,22 @@ public:
   /// @note this is factory method
   ///
   /// @return a vector of surfaces bounding this volume
-  std::vector<std::shared_ptr<const Surface>>
-  decomposeToSurfaces(const Transform3D* transform) const override;
+  std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
+      const Transform3D* transform) const override;
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the output stream to be written into
-  std::ostream&
-  toStream(std::ostream& sl) const override;
+  std::ostream& toStream(std::ostream& sl) const override;
 
   /**
    * Draw this shape using a visualization helper
    * @param helper The visualizatin helper
    * @param transform Optional transformation matrix
    */
-  void
-  draw(IVisualization&    helper,
-       const Transform3D& transform = Transform3D::Identity()) const;
+  void draw(IVisualization& helper,
+            const Transform3D& transform = Transform3D::Identity()) const;
 
-private:
+ private:
   std::array<Vector3D, 8> m_vertices;
   std::array<Vector3D, 6> m_normals;
 };

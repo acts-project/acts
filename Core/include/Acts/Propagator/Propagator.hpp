@@ -36,9 +36,7 @@ namespace Acts {
 /// @tparam result_list  Result pack for additional propagation
 ///                      quantities
 template <typename parameters_t, typename... result_list>
-struct PropagatorResult : private detail::Extendable<result_list...>
-{
-
+struct PropagatorResult : private detail::Extendable<result_list...> {
   /// Accessor to additional propagation quantities
   using detail::Extendable<result_list...>::get;
 
@@ -63,24 +61,20 @@ struct PropagatorResult : private detail::Extendable<result_list...>
 /// @tparam aborter_list_t List of abort conditions tested after each
 ///    propagation step using the current propagation and stepper state
 ///
-template <typename action_list_t  = ActionList<>,
+template <typename action_list_t = ActionList<>,
           typename aborter_list_t = AbortList<>>
-struct PropagatorOptions
-{
-
+struct PropagatorOptions {
   /// Delete default contructor
   PropagatorOptions() = delete;
 
   /// PropagatorOptions copy constructor
-  PropagatorOptions(const PropagatorOptions<action_list_t, aborter_list_t>& po)
-      = default;
+  PropagatorOptions(
+      const PropagatorOptions<action_list_t, aborter_list_t>& po) = default;
 
   /// PropagatorOptions with context
-  PropagatorOptions(std::reference_wrapper<const GeometryContext>      gctx,
+  PropagatorOptions(std::reference_wrapper<const GeometryContext> gctx,
                     std::reference_wrapper<const MagneticFieldContext> mctx)
-    : geoContext(gctx), magFieldContext(mctx)
-  {
-  }
+      : geoContext(gctx), magFieldContext(mctx) {}
 
   /// @brief Expand the Options with extended aborters
   ///
@@ -88,29 +82,28 @@ struct PropagatorOptions
   ///
   /// @param aborters The new aborter list to be used (internally)
   template <typename extended_aborter_list_t>
-  PropagatorOptions<action_list_t, extended_aborter_list_t>
-  extend(extended_aborter_list_t aborters) const
-  {
+  PropagatorOptions<action_list_t, extended_aborter_list_t> extend(
+      extended_aborter_list_t aborters) const {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
         geoContext, magFieldContext);
     // Copy the options over
-    eoptions.direction       = direction;
-    eoptions.absPdgCode      = absPdgCode;
-    eoptions.mass            = mass;
-    eoptions.maxSteps        = maxSteps;
-    eoptions.maxStepSize     = maxStepSize;
+    eoptions.direction = direction;
+    eoptions.absPdgCode = absPdgCode;
+    eoptions.mass = mass;
+    eoptions.maxSteps = maxSteps;
+    eoptions.maxStepSize = maxStepSize;
     eoptions.targetTolerance = targetTolerance;
-    eoptions.pathLimit       = pathLimit;
-    eoptions.loopProtection  = loopProtection;
-    eoptions.loopFraction    = loopFraction;
+    eoptions.pathLimit = pathLimit;
+    eoptions.loopProtection = loopProtection;
+    eoptions.loopFraction = loopFraction;
     // Output option
-    eoptions.debug         = debug;
-    eoptions.debugString   = debugString;
+    eoptions.debug = debug;
+    eoptions.debugString = debugString;
     eoptions.debugPfxWidth = debugPfxWidth;
     eoptions.debugMsgWidth = debugMsgWidth;
     // Action / abort list
     eoptions.actionList = std::move(actionList);
-    eoptions.abortList  = std::move(aborters);
+    eoptions.abortList = std::move(aborters);
     // And return the options
     return eoptions;
   }
@@ -137,17 +130,17 @@ struct PropagatorOptions
   double targetTolerance = s_onSurfaceTolerance;
 
   /// Loop protection step, it adapts the pathLimit
-  bool   loopProtection = true;
-  double loopFraction   = 0.5;  ///< Allowed loop fraction, 1 is a full loop
+  bool loopProtection = true;
+  double loopFraction = 0.5;  ///< Allowed loop fraction, 1 is a full loop
 
   /// Debug output steering:
   //  -> @todo: move to a debug struct
   // - the string where debug messages are stored (optionally)
   // - it also has some formatting options
-  bool        debug         = false;  ///< switch debug on
-  std::string debugString   = "";     ///< the string to collect msgs
-  size_t      debugPfxWidth = 30;     ///< the prefix width
-  size_t      debugMsgWidth = 50;     ///< the mesage width
+  bool debug = false;            ///< switch debug on
+  std::string debugString = "";  ///< the string to collect msgs
+  size_t debugPfxWidth = 30;     ///< the prefix width
+  size_t debugMsgWidth = 50;     ///< the mesage width
 
   // Configurations for Stepper
   /// Tolerance for the error of the integration
@@ -195,10 +188,9 @@ struct PropagatorOptions
 ///   surface type) -> type of internal state object
 ///
 template <typename stepper_t, typename navigator_t = detail::VoidNavigator>
-class Propagator final
-{
-  using Jacobian         = ActsMatrixD<5, 5>;
-  using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
+class Propagator final {
+  using Jacobian = ActsMatrixD<5, 5>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
   static_assert(StepperStateConcept<typename stepper_t::State>,
@@ -206,7 +198,7 @@ class Propagator final
   static_assert(StepperConcept<stepper_t>,
                 "Stepper does not fulfill stepper concept.");
 
-public:
+ public:
   /// Type of the stepper in use for public scope
   using Stepper = stepper_t;
 
@@ -221,9 +213,7 @@ public:
   /// @param stepper The stepper implementation is moved to a private member
   /// @param navigator The navigator implementation, moved to a private member
   explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
-    : m_stepper(std::move(stepper)), m_navigator(std::move(navigator))
-  {
-  }
+      : m_stepper(std::move(stepper)), m_navigator(std::move(navigator)) {}
 
   /// @brief private Propagator state for navigation and debugging
   ///
@@ -233,9 +223,7 @@ public:
   /// This struct holds the common state information for propagating
   /// which is independent of the actual stepper implementation.
   template <typename propagator_options_t>
-  struct State
-  {
-
+  struct State {
     /// Create the propagator state from the options
     ///
     /// @tparam parameters_t the type of the start parameters
@@ -245,14 +233,10 @@ public:
     /// @param topts The options handed over by the propagate call
     template <typename parameters_t>
     State(const parameters_t& start, const propagator_options_t& topts)
-      : options(topts)
-      , stepping(topts.geoContext,
-                 topts.magFieldContext,
-                 start,
-                 topts.direction,
-                 topts.maxStepSize)
-      , geoContext(topts.geoContext)
-    {
+        : options(topts),
+          stepping(topts.geoContext, topts.magFieldContext, start,
+                   topts.direction, topts.maxStepSize),
+          geoContext(topts.geoContext) {
       // Setting the start surface
       navigation.startSurface = &start.referenceSurface();
     }
@@ -270,7 +254,7 @@ public:
     std::reference_wrapper<const GeometryContext> geoContext;
   };
 
-private:
+ private:
   /// @brief Helper struct determining the result's type
   ///
   /// @tparam parameters_t Type of final track parameters
@@ -281,8 +265,7 @@ private:
   /// ActionList.
   ///
   template <typename parameters_t, typename action_list_t>
-  struct result_type_helper
-  {
+  struct result_type_helper {
     /// @brief Propagation result type for an arbitrary list of additional
     ///        propagation results
     ///
@@ -323,10 +306,9 @@ private:
   ///
   /// @return Propagation PropagatorStatus
   template <typename result_t, typename propagator_state_t>
-  Result<result_t>
-  propagate_impl(propagator_state_t& state) const;
+  Result<result_t> propagate_impl(propagator_state_t& state) const;
 
-public:
+ public:
   /// @brief Propagate track parameters
   ///
   /// This function performs the propagation of the track parameters using the
@@ -345,8 +327,7 @@ public:
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
   ///
-  template <typename parameters_t,
-            typename action_list_t,
+  template <typename parameters_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t,
             typename path_aborter_t = detail::PathLimitReached>
@@ -376,23 +357,20 @@ public:
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
-  template <typename parameters_t,
-            typename surface_t,
-            typename action_list_t,
+  template <typename parameters_t, typename surface_t, typename action_list_t,
             typename aborter_list_t,
             template <typename, typename> class propagator_options_t,
             typename target_aborter_t = detail::SurfaceReached,
-            typename path_aborter_t   = detail::PathLimitReached>
-  Result<action_list_t_result_t<
-      typename stepper_t::template return_parameter_type<parameters_t,
-                                                         surface_t>,
-      action_list_t>>
+            typename path_aborter_t = detail::PathLimitReached>
+  Result<
+      action_list_t_result_t<typename stepper_t::template return_parameter_type<
+                                 parameters_t, surface_t>,
+                             action_list_t>>
   propagate(
-      const parameters_t& start,
-      const surface_t&    target,
+      const parameters_t& start, const surface_t& target,
       const propagator_options_t<action_list_t, aborter_list_t>& options) const;
 
-private:
+ private:
   /// Implementation of propagation algorithm
   stepper_t m_stepper;
 
@@ -410,9 +388,8 @@ private:
   /// @param state the propagator state for the debug flag, prefix/length
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
-  void
-  debugLog(propagator_state_t&                 state,
-           const std::function<std::string()>& logAction) const;
+  void debugLog(propagator_state_t& state,
+                const std::function<std::string()>& logAction) const;
 };
 
 }  // namespace Acts

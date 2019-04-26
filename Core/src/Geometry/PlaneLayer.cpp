@@ -19,15 +19,14 @@
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D>   transform,
+Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D> transform,
                              std::shared_ptr<const PlanarBounds>& pbounds,
-                             std::unique_ptr<SurfaceArray>        surfaceArray,
-                             double                               thickness,
-                             std::unique_ptr<ApproachDescriptor>  ades,
-                             LayerType                            laytyp)
-  : PlaneSurface(std::move(transform), pbounds)
-  , Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp)
-{
+                             std::unique_ptr<SurfaceArray> surfaceArray,
+                             double thickness,
+                             std::unique_ptr<ApproachDescriptor> ades,
+                             LayerType laytyp)
+    : PlaneSurface(std::move(transform), pbounds),
+      Layer(std::move(surfaceArray), thickness, std::move(ades), laytyp) {
   // @todo create representing volume
   // register the layer to the surface
   Acts::PlaneSurface::associateLayer(*this);
@@ -41,21 +40,15 @@ Acts::PlaneLayer::PlaneLayer(std::shared_ptr<const Transform3D>   transform,
   }
 }
 
-const Acts::PlaneSurface&
-Acts::PlaneLayer::surfaceRepresentation() const
-{
+const Acts::PlaneSurface& Acts::PlaneLayer::surfaceRepresentation() const {
   return (*this);
 }
 
-Acts::PlaneSurface&
-Acts::PlaneLayer::surfaceRepresentation()
-{
+Acts::PlaneSurface& Acts::PlaneLayer::surfaceRepresentation() {
   return (*this);
 }
 
-void
-Acts::PlaneLayer::buildApproachDescriptor()
-{
+void Acts::PlaneLayer::buildApproachDescriptor() {
   // delete it
   m_approachDescriptor.reset(nullptr);
   // delete the surfaces
@@ -64,16 +57,16 @@ Acts::PlaneLayer::buildApproachDescriptor()
 
   //@todo fix with representing volume
   const Transform3D& lTransform = PlaneSurface::transform(GeometryContext());
-  RotationMatrix3D   lRotation  = lTransform.rotation();
-  const Vector3D&    lCenter    = PlaneSurface::center(GeometryContext());
-  const Vector3D&    lVector    = Surface::normal(GeometryContext(), lCenter);
+  RotationMatrix3D lRotation = lTransform.rotation();
+  const Vector3D& lCenter = PlaneSurface::center(GeometryContext());
+  const Vector3D& lVector = Surface::normal(GeometryContext(), lCenter);
   // create new surfaces
   const Transform3D* apnTransform = new Transform3D(
-      Translation3D(lCenter - 0.5 * Layer::m_layerThickness * lVector)
-      * lRotation);
+      Translation3D(lCenter - 0.5 * Layer::m_layerThickness * lVector) *
+      lRotation);
   const Transform3D* appTransform = new Transform3D(
-      Translation3D(lCenter + 0.5 * Layer::m_layerThickness * lVector)
-      * lRotation);
+      Translation3D(lCenter + 0.5 * Layer::m_layerThickness * lVector) *
+      lRotation);
   // create the new surfaces
   aSurfaces.push_back(Surface::makeShared<Acts::PlaneSurface>(
       std::shared_ptr<const Transform3D>(apnTransform),
@@ -87,6 +80,6 @@ Acts::PlaneLayer::buildApproachDescriptor()
     mutableSf->associateLayer(*this);
   }
   // @todo check if we can provide the layer at surface creation
-  m_approachDescriptor
-      = std::make_unique<const GenericApproachDescriptor>(std::move(aSurfaces));
+  m_approachDescriptor =
+      std::make_unique<const GenericApproachDescriptor>(std::move(aSurfaces));
 }

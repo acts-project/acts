@@ -17,9 +17,8 @@ namespace Acts {
 /// finder. It only contains one function that takes the indices of the bin
 /// that contains all middle space points for the three space point seeds.
 template <typename SpacePoint>
-class IBinFinder
-{
-public:
+class IBinFinder {
+ public:
   /// destructor
   virtual ~IBinFinder() = default;
 
@@ -33,10 +32,8 @@ public:
   /// potentially
   /// containing bottom resp. top space points that can be combined with the
   /// middle space points from the provided bin
-  virtual std::vector<size_t>
-  findBins(size_t                            phiBin,
-           size_t                            zBin,
-           const SpacePointGrid<SpacePoint>* binnedSP)
-      = 0;
+  virtual std::vector<size_t> findBins(
+      size_t phiBin, size_t zBin,
+      const SpacePointGrid<SpacePoint>* binnedSP) = 0;
 };
-}
+}  // namespace Acts

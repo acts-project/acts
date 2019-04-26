@@ -36,45 +36,38 @@ namespace Acts {
 /// with s being the arc length of the track, q the charge of the particle,
 /// p its momentum and B the magnetic field
 ///
-template <typename BField,
-          typename corrector_t     = VoidIntersectionCorrector,
+template <typename BField, typename corrector_t = VoidIntersectionCorrector,
           typename extensionlist_t = StepperExtensionList<DefaultExtension>,
-          typename auctioneer_t    = detail::VoidAuctioneer>
-class EigenStepper
-{
-
-private:
+          typename auctioneer_t = detail::VoidAuctioneer>
+class EigenStepper {
+ private:
   // This struct is a meta-function which normally maps to BoundParameters...
   template <typename T, typename S>
-  struct s
-  {
+  struct s {
     using type = BoundParameters;
   };
 
   // ...unless type S is int, in which case it maps to Curvilinear parameters
   template <typename T>
-  struct s<T, int>
-  {
+  struct s<T, int> {
     using type = CurvilinearParameters;
   };
 
-public:
-  using cstep     = detail::ConstrainedStep;
+ public:
+  using cstep = detail::ConstrainedStep;
   using Corrector = corrector_t;
 
   /// Jacobian, Covariance and State defintions
-  using Jacobian         = ActsMatrixD<5, 5>;
-  using Covariance       = ActsSymMatrixD<5>;
-  using BoundState       = std::tuple<BoundParameters, Jacobian, double>;
+  using Jacobian = ActsMatrixD<5, 5>;
+  using Covariance = ActsSymMatrixD<5>;
+  using BoundState = std::tuple<BoundParameters, Jacobian, double>;
   using CurvilinearState = std::tuple<CurvilinearParameters, Jacobian, double>;
 
   /// @brief State for track parameter propagation
   ///
   /// It contains the stepping information and is provided thread local
   /// by the propagator
-  struct State
-  {
-
+  struct State {
     /// Constructor from the initial track parameters
     ///
     /// @param [in] gctx is the context object for the geometry
@@ -85,20 +78,18 @@ public:
     ///
     /// @note the covariance matrix is copied when needed
     template <typename parameters_t>
-    explicit State(std::reference_wrapper<const GeometryContext>      gctx,
+    explicit State(std::reference_wrapper<const GeometryContext> gctx,
                    std::reference_wrapper<const MagneticFieldContext> mctx,
-                   const parameters_t&                                par,
-                   NavigationDirection ndir = forward,
+                   const parameters_t& par, NavigationDirection ndir = forward,
                    double ssize = std::numeric_limits<double>::max())
-      : pos(par.position())
-      , dir(par.momentum().normalized())
-      , p(par.momentum().norm())
-      , q(par.charge())
-      , navDir(ndir)
-      , stepSize(ndir * std::abs(ssize))
-      , fieldCache(mctx)
-      , geoContext(gctx)
-    {
+        : pos(par.position()),
+          dir(par.momentum().normalized()),
+          p(par.momentum().norm()),
+          q(par.charge()),
+          navDir(ndir),
+          stepSize(ndir * std::abs(ssize)),
+          fieldCache(mctx),
+          geoContext(gctx) {
       // remember the start parameters
       startPos = pos;
       startDir = dir;
@@ -108,9 +99,9 @@ public:
         const auto& surface = par.referenceSurface();
         // set the covariance transport flag to true and copy
         covTransport = true;
-        cov          = ActsSymMatrixD<5>(*par.covariance());
-        surface.initJacobianToGlobal(
-            gctx, jacToGlobal, pos, dir, par.parameters());
+        cov = ActsSymMatrixD<5>(*par.covariance());
+        surface.initJacobianToGlobal(gctx, jacToGlobal, pos, dir,
+                                     par.parameters());
       }
     }
 
@@ -149,8 +140,8 @@ public:
 
     /// Covariance matrix (and indicator)
     //// associated with the initial error on track parameters
-    bool       covTransport = false;
-    Covariance cov          = Covariance::Zero();
+    bool covTransport = false;
+    Covariance cov = Covariance::Zero();
 
     /// accummulated path length state
     double pathAccumulated = 0.;
@@ -173,8 +164,7 @@ public:
     auctioneer_t auctioneer;
 
     /// @brief Storage of magnetic field and the sub steps during a RKN4 step
-    struct
-    {
+    struct {
       /// Magnetic field evaulations
       Vector3D B_first, B_middle, B_last;
       /// k_i of the RKN4 algorithm
@@ -197,40 +187,22 @@ public:
   /// @param [in,out] state is the propagation state associated with the track
   ///                 the magnetic field cell is used (and potentially updated)
   /// @param [in] pos is the field position
-  Vector3D
-  getField(State& state, const Vector3D& pos) const
-  {
+  Vector3D getField(State& state, const Vector3D& pos) const {
     // get the field from the cell
     return m_bField.getField(pos, state.fieldCache);
   }
 
   /// Global particle position accessor
-  Vector3D
-  position(const State& state) const
-  {
-    return state.pos;
-  }
+  Vector3D position(const State& state) const { return state.pos; }
 
   /// Momentum direction accessor
-  Vector3D
-  direction(const State& state) const
-  {
-    return state.dir;
-  }
+  Vector3D direction(const State& state) const { return state.dir; }
 
   /// Actual momentum accessor
-  double
-  momentum(const State& state) const
-  {
-    return state.p;
-  }
+  double momentum(const State& state) const { return state.p; }
 
   /// Charge access
-  double
-  charge(const State& state) const
-  {
-    return state.q;
-  }
+  double charge(const State& state) const { return state.q; }
 
   /// Tests if the state reached a surface
   ///
@@ -238,11 +210,9 @@ public:
   /// @param [in] surface Surface that is tested
   ///
   /// @return Boolean statement if surface is reached by state
-  bool
-  surfaceReached(const State& state, const Surface* surface) const
-  {
-    return surface->isOnSurface(
-        state.geoContext, position(state), direction(state), true);
+  bool surfaceReached(const State& state, const Surface* surface) const {
+    return surface->isOnSurface(state.geoContext, position(state),
+                                direction(state), true);
   }
 
   /// Create and return the bound state at the current position
@@ -261,10 +231,8 @@ public:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  BoundState
-  boundState(State&         state,
-             const Surface& surface,
-             bool           reinitialize = true) const;
+  BoundState boundState(State& state, const Surface& surface,
+                        bool reinitialize = true) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -279,15 +247,14 @@ public:
   ///   - the curvilinear parameters at given position
   ///   - the stepweise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  CurvilinearState
-  curvilinearState(State& state, bool reinitialize = true) const;
+  CurvilinearState curvilinearState(State& state,
+                                    bool reinitialize = true) const;
 
   /// Method to update a stepper state to the some parameters
   ///
   /// @param [in,out] state State object that will be updated
   /// @param [in] pars Parameters that will be written into @p state
-  void
-  update(State& state, const BoundParameters& pars) const;
+  void update(State& state, const BoundParameters& pars) const;
 
   /// Method to update momentum, direction and p
   ///
@@ -295,16 +262,11 @@ public:
   /// @param [in] uposition the updated position
   /// @param [in] udirection the updated direction
   /// @param [in] up the updated momentum value
-  void
-  update(State&          state,
-         const Vector3D& uposition,
-         const Vector3D& udirection,
-         double          up) const;
+  void update(State& state, const Vector3D& uposition,
+              const Vector3D& udirection, double up) const;
 
   /// Return a corrector
-  corrector_t
-  corrector(State& state) const
-  {
+  corrector_t corrector(State& state) const {
     return corrector_t(state.startPos, state.startDir, state.pathAccumulated);
   }
 
@@ -317,8 +279,7 @@ public:
   /// reinitialized at the new position
   ///
   /// @return the full transport jacobian
-  void
-  covarianceTransport(State& state, bool reinitialize = false) const;
+  void covarianceTransport(State& state, bool reinitialize = false) const;
 
   /// Method for on-demand transport of the covariance
   /// to a new curvilinear frame at current position,
@@ -331,10 +292,8 @@ public:
   /// @param [in] reinitialize is a flag to steer whether the state should be
   /// reinitialized at the new position
   /// @note no check is done if the position is actually on the surface
-  void
-  covarianceTransport(State&         state,
-                      const Surface& surface,
-                      bool           reinitialize = true) const;
+  void covarianceTransport(State& state, const Surface& surface,
+                           bool reinitialize = true) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
@@ -347,10 +306,9 @@ public:
   ///                      and since we're using an adaptive algorithm, it can
   ///                      be modified by the stepper class during propagation.
   template <typename propagator_state_t>
-  Result<double>
-  step(propagator_state_t& state) const;
+  Result<double> step(propagator_state_t& state) const;
 
-private:
+ private:
   /// Magnetic field inside of the detector
   BField m_bField;
 };

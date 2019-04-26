@@ -26,9 +26,8 @@ namespace Acts {
 /// It also provides the binningPosition method for
 /// Geometry geometrical object to be binned in BinnedArrays
 ///
-class GeometryObject
-{
-public:
+class GeometryObject {
+ public:
   /// default constructor
   GeometryObject() : m_geoID(0) {}
 
@@ -45,9 +44,7 @@ public:
   /// assignment operator
   ///
   /// @param geoID the source geoID
-  GeometryObject&
-  operator=(const GeometryObject& geoID)
-  {
+  GeometryObject& operator=(const GeometryObject& geoID) {
     if (&geoID != this) {
       m_geoID = geoID.m_geoID;
     }
@@ -56,8 +53,7 @@ public:
 
   /// Return the value
   /// @return the geometry id by reference
-  const GeometryID&
-  geoID() const;
+  const GeometryID& geoID() const;
 
   /// Force a binning position method
   ///
@@ -65,8 +61,8 @@ public:
   /// @param bValue is the value in which you want to bin
   ///
   /// @return vector 3D used for the binning schema
-  virtual const Vector3D
-  binningPosition(const GeometryContext& gctx, BinningValue bValue) const = 0;
+  virtual const Vector3D binningPosition(const GeometryContext& gctx,
+                                         BinningValue bValue) const = 0;
 
   /// Implement the binningValue
   ///
@@ -74,57 +70,50 @@ public:
   /// @param bValue is the dobule in which you want to bin
   ///
   /// @return float to be used for the binning schema
-  double
-  binningPositionValue(const GeometryContext& gctx, BinningValue bValue) const;
+  double binningPositionValue(const GeometryContext& gctx,
+                              BinningValue bValue) const;
 
   /// Set the value
   ///
   /// @param geoID the geometry identifier to be assigned
-  void
-  assignGeoID(const GeometryID& geoID);
+  void assignGeoID(const GeometryID& geoID);
 
-protected:
+ protected:
   GeometryID m_geoID;
 };
 
-inline const GeometryID&
-GeometryObject::geoID() const
-{
+inline const GeometryID& GeometryObject::geoID() const {
   return m_geoID;
 }
 
-inline void
-GeometryObject::assignGeoID(const GeometryID& geoID)
-{
+inline void GeometryObject::assignGeoID(const GeometryID& geoID) {
   m_geoID = geoID;
 }
 
-inline double
-GeometryObject::binningPositionValue(const GeometryContext& gctx,
-                                     BinningValue           bValue) const
-{
+inline double GeometryObject::binningPositionValue(const GeometryContext& gctx,
+                                                   BinningValue bValue) const {
   using VectorHelpers::perp;
   // now switch
   switch (bValue) {
-  // case x
-  case Acts::binX: {
-    return binningPosition(gctx, bValue).x();
-  } break;
-  // case y
-  case Acts::binY: {
-    return binningPosition(gctx, bValue).y();
-  } break;
-  // case z
-  case Acts::binZ: {
-    return binningPosition(gctx, bValue).z();
-  } break;
-  // case
-  case Acts::binR: {
-    return perp(binningPosition(gctx, bValue));
-  } break;
-  // do nothing for the default
-  default:
-    return 0.;
+    // case x
+    case Acts::binX: {
+      return binningPosition(gctx, bValue).x();
+    } break;
+    // case y
+    case Acts::binY: {
+      return binningPosition(gctx, bValue).y();
+    } break;
+    // case z
+    case Acts::binZ: {
+      return binningPosition(gctx, bValue).z();
+    } break;
+    // case
+    case Acts::binR: {
+      return perp(binningPosition(gctx, bValue));
+    } break;
+    // do nothing for the default
+    default:
+      return 0.;
   }
 }
-}
+}  // namespace Acts

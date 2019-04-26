@@ -31,9 +31,7 @@ using Cstep = detail::ConstrainedStep;
 /// @tparam propagator_state_t Type of the object for navigation state
 /// @tparam object_t Type of the object for navigation to check against
 template <typename object_t>
-struct NavigationOptions
-{
-
+struct NavigationOptions {
   /// The navigation direction
   NavigationDirection navDir = forward;
 
@@ -65,23 +63,18 @@ struct NavigationOptions
   /// @param sobject Start object to check against
   /// @param eobject End object to check against
   /// @param maxStepLength Maximal step length to check against
-  NavigationOptions(NavigationDirection ndir,
-                    BoundaryCheck       bcheck,
-                    bool                resolves = true,
-                    bool                resolvem = true,
-                    bool                resolvep = false,
-                    const object_t*     sobject  = nullptr,
-                    const object_t*     eobject  = nullptr)
-    : navDir(ndir)
-    , boundaryCheck(std::move(bcheck))
-    , resolveSensitive(resolves)
-    , resolveMaterial(resolvem)
-    , resolvePassive(resolvep)
-    , startObject(sobject)
-    , endObject(eobject)
-    , pathLimit(ndir * std::numeric_limits<double>::max())
-  {
-  }
+  NavigationOptions(NavigationDirection ndir, BoundaryCheck bcheck,
+                    bool resolves = true, bool resolvem = true,
+                    bool resolvep = false, const object_t* sobject = nullptr,
+                    const object_t* eobject = nullptr)
+      : navDir(ndir),
+        boundaryCheck(std::move(bcheck)),
+        resolveSensitive(resolves),
+        resolveMaterial(resolvem),
+        resolvePassive(resolvep),
+        startObject(sobject),
+        endObject(eobject),
+        pathLimit(ndir * std::numeric_limits<double>::max()) {}
 };
 
 /// Navigator class
@@ -107,29 +100,27 @@ struct NavigationOptions
 /// the surfaceReached call fails, it also  re-computes the step size, to make
 /// sure we end up at the desired surface.
 ///
-class Navigator
-{
-
-public:
-  using Surfaces    = std::vector<const Surface*>;
+class Navigator {
+ public:
+  using Surfaces = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
-  using NavigationSurfaces    = std::vector<SurfaceIntersection>;
+  using NavigationSurfaces = std::vector<SurfaceIntersection>;
   using NavigationSurfaceIter = NavigationSurfaces::iterator;
 
-  using NavigationLayers    = std::vector<LayerIntersection>;
+  using NavigationLayers = std::vector<LayerIntersection>;
   using NavigationLayerIter = NavigationLayers::iterator;
 
-  using NavigationBoundaries   = std::vector<BoundaryIntersection>;
+  using NavigationBoundaries = std::vector<BoundaryIntersection>;
   using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
   using ExternalSurfaces = std::multimap<const Layer*, const Surface*>;
 
   /// The navigation stage
   enum struct Stage : int {
-    undefined      = 0,
-    surfaceTarget  = 1,
-    layerTarget    = 2,
+    undefined = 0,
+    surfaceTarget = 1,
+    layerTarget = 2,
     boundaryTarget = 3
   };
 
@@ -137,9 +128,7 @@ public:
   ///
   /// @param tGeometry The tracking geometry for the navigator
   Navigator(std::shared_ptr<const TrackingGeometry> tGeometry = nullptr)
-    : trackingGeometry(std::move(tGeometry))
-  {
-  }
+      : trackingGeometry(std::move(tGeometry)) {}
 
   /// Tracking Geometry for this Navigator
   std::shared_ptr<const TrackingGeometry> trackingGeometry;
@@ -160,8 +149,7 @@ public:
   /// It acts as an internal state which is
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
-  struct State
-  {
+  struct State {
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
@@ -233,9 +221,7 @@ public:
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void
-  status(propagator_state_t& state, const stepper_t& stepper) const
-  {
+  void status(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
       return;
@@ -259,9 +245,7 @@ public:
 
     // (b) Status call within propagation loop
     // Try finding status of surfaces
-    if (status(state,
-               stepper,
-               state.navigation.navSurfaces,
+    if (status(state, stepper, state.navigation.navSurfaces,
                state.navigation.navSurfaceIter)) {
       debugLog(state,
                [&] { return std::string("Status: in surface handling."); });
@@ -269,17 +253,15 @@ public:
         debugLog(state, [&] {
           return std::string("On surface: switch forward or release.");
         });
-        if (++state.navigation.navSurfaceIter
-            == state.navigation.navSurfaces.end()) {
+        if (++state.navigation.navSurfaceIter ==
+            state.navigation.navSurfaces.end()) {
           ++state.navigation.navLayerIter;
         }
       }
       // Set the navigation stage to surface target
       state.navigation.navigationStage = Stage::surfaceTarget;
       // Try finding status of layer
-    } else if (status(state,
-                      stepper,
-                      state.navigation.navLayers,
+    } else if (status(state, stepper, state.navigation.navLayers,
                       state.navigation.navLayerIter)) {
       debugLog(state,
                [&] { return std::string("Status: in layer handling."); });
@@ -299,9 +281,7 @@ public:
         state.navigation.navigationStage = Stage::layerTarget;
       }
       // Try finding status of boundaries
-    } else if (status(state,
-                      stepper,
-                      state.navigation.navBoundaries,
+    } else if (status(state, stepper, state.navigation.navBoundaries,
                       state.navigation.navBoundaryIter)) {
       debugLog(state,
                [&] { return std::string("Stauts: in boundary handling."); });
@@ -320,11 +300,9 @@ public:
         // Update volume information
         // get the attached volume information
         auto boundary = state.navigation.navBoundaryIter->object;
-        state.navigation.currentVolume
-            = boundary->attachedVolume(state.geoContext,
-                                       stepper.position(state.stepping),
-                                       stepper.direction(state.stepping),
-                                       state.stepping.navDir);
+        state.navigation.currentVolume = boundary->attachedVolume(
+            state.geoContext, stepper.position(state.stepping),
+            stepper.direction(state.stepping), state.stepping.navDir);
         // No volume anymore : end of known world
         if (!state.navigation.currentVolume) {
           debugLog(state, [&] {
@@ -339,15 +317,15 @@ public:
           debugLog(state, [&] { return std::string("Volume updated."); });
           // Forget the bounday information
           state.navigation.navBoundaries.clear();
-          state.navigation.navBoundaryIter
-              = state.navigation.navBoundaries.end();
+          state.navigation.navBoundaryIter =
+              state.navigation.navBoundaries.end();
         }
       } else {
         // Set the navigation stage back to boundary target
         state.navigation.navigationStage = Stage::boundaryTarget;
       }
-    } else if (state.navigation.currentVolume
-               == state.navigation.targetVolume) {
+    } else if (state.navigation.currentVolume ==
+               state.navigation.targetVolume) {
       debugLog(state, [&] {
         return std::string("No further navigation action, proceed to target.");
       });
@@ -375,9 +353,7 @@ public:
   /// @param [in,out] state is the mutable propagator state object
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
-  void
-  target(propagator_state_t& state, const stepper_t& stepper) const
-  {
+  void target(propagator_state_t& state, const stepper_t& stepper) const {
     // Check if the navigator is inactive
     if (inactive(state, stepper)) {
       return;
@@ -396,12 +372,12 @@ public:
     }
 
     // Try targeting the surfaces - then layers - then boundaries
-    if (state.navigation.navigationStage <= Stage::surfaceTarget
-        and targetSurfaces(state, stepper, navCorr)) {
+    if (state.navigation.navigationStage <= Stage::surfaceTarget and
+        targetSurfaces(state, stepper, navCorr)) {
       debugLog(state,
                [&] { return std::string("Target set to next surface."); });
-    } else if (state.navigation.navigationStage <= Stage::layerTarget
-               and targetLayers(state, stepper, navCorr)) {
+    } else if (state.navigation.navigationStage <= Stage::layerTarget and
+               targetLayers(state, stepper, navCorr)) {
       debugLog(state, [&] { return std::string("Target set to next layer."); });
     } else if (targetBoundaries(state, stepper, navCorr)) {
       debugLog(state,
@@ -422,7 +398,7 @@ public:
     return;
   }
 
-private:
+ private:
   /// --------------------------------------------------------------------
   /// Initialize call - start of propagation
   ///
@@ -434,9 +410,7 @@ private:
   ///
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  void
-  initialize(propagator_state_t& state, const stepper_t& stepper) const
-  {
+  void initialize(propagator_state_t& state, const stepper_t& stepper) const {
     // Call the navigation helper prior to actual navigation
     debugLog(state, [&] { return std::string("Initialization."); });
 
@@ -461,16 +435,16 @@ private:
     // Fast Navigation initialization for start condition:
     // - short-cut through object association, saves navigation in the
     // - geometry and volume tree search for the lowest volume
-    if (state.navigation.startSurface
-        && state.navigation.startSurface->associatedLayer()) {
+    if (state.navigation.startSurface &&
+        state.navigation.startSurface->associatedLayer()) {
       debugLog(state, [&] {
         return std::string("Fast start initialization through association.");
       });
       // assign the current layer and volume by association
-      state.navigation.startLayer
-          = state.navigation.startSurface->associatedLayer();
-      state.navigation.startVolume
-          = state.navigation.startLayer->trackingVolume();
+      state.navigation.startLayer =
+          state.navigation.startSurface->associatedLayer();
+      state.navigation.startVolume =
+          state.navigation.startLayer->trackingVolume();
       // Set the start volume as current volume
       state.navigation.currentVolume = state.navigation.startVolume;
     } else {
@@ -488,10 +462,11 @@ private:
       });
       state.navigation.startVolume = trackingGeometry->lowestTrackingVolume(
           state.geoContext, stepper.position(state.stepping));
-      state.navigation.startLayer = state.navigation.startVolume
-          ? state.navigation.startVolume->associatedLayer(
-                state.geoContext, stepper.position(state.stepping))
-          : nullptr;
+      state.navigation.startLayer =
+          state.navigation.startVolume
+              ? state.navigation.startVolume->associatedLayer(
+                    state.geoContext, stepper.position(state.stepping))
+              : nullptr;
       // Set the start volume as current volume
       state.navigation.currentVolume = state.navigation.startVolume;
       if (state.navigation.startVolume) {
@@ -518,16 +493,11 @@ private:
   /// @param [in] navIter test surface fore the status test
   ///
   /// @return boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename stepper_t,
-            typename navigation_surfaces_t,
-            typename navigation_iter_t>
-  bool
-  status(propagator_state_t&      state,
-         const stepper_t&         stepper,
-         navigation_surfaces_t&   navSurfaces,
-         const navigation_iter_t& navIter) const
-  {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigation_surfaces_t, typename navigation_iter_t>
+  bool status(propagator_state_t& state, const stepper_t& stepper,
+              navigation_surfaces_t& navSurfaces,
+              const navigation_iter_t& navIter) const {
     // No surfaces, status check will be done on layer
     if (navSurfaces.empty() or navIter == navSurfaces.end()) {
       return false;
@@ -570,30 +540,25 @@ private:
   /// @param [in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename stepper_t,
+  template <typename propagator_state_t, typename stepper_t,
             typename corrector_t>
-  bool
-  targetSurfaces(propagator_state_t& state,
-                 const stepper_t&    stepper,
-                 const corrector_t&  navCorr) const
-  {
-
+  bool targetSurfaces(propagator_state_t& state, const stepper_t& stepper,
+                      const corrector_t& navCorr) const {
     if (state.navigation.navigationBreak) {
       return false;
     }
 
     // Make sure resolve Surfaces is called on the start layer
-    if (state.navigation.startLayer
-        and not state.navigation.startLayerResolved) {
+    if (state.navigation.startLayer and
+        not state.navigation.startLayerResolved) {
       debugLog(state,
                [&] { return std::string("Start layer to be resolved."); });
       // We provide the layer to the resolve surface method in this case
       state.navigation.startLayerResolved = true;
-      bool startResolved                  = resolveSurfaces(
-          state, stepper, navCorr, state.navigation.startLayer);
-      if (not startResolved
-          and state.navigation.startLayer == state.navigation.targetLayer) {
+      bool startResolved =
+          resolveSurfaces(state, stepper, navCorr, state.navigation.startLayer);
+      if (not startResolved and
+          state.navigation.startLayer == state.navigation.targetLayer) {
         debugLog(state, [&] {
           return std::string("Start is target layer, nothing left to do.");
         });
@@ -606,9 +571,8 @@ private:
 
     // The call that we are on a layer and have not yet resolved the surfaces
     // No surfaces, do not return to stepper
-    if (state.navigation.navSurfaces.empty()
-        or state.navigation.navSurfaceIter
-            == state.navigation.navSurfaces.end()) {
+    if (state.navigation.navSurfaces.empty() or
+        state.navigation.navSurfaceIter == state.navigation.navSurfaces.end()) {
       debugLog(state, [&] {
         return std::string("No surfaces present, target at layer first.");
       });
@@ -621,8 +585,8 @@ private:
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
 
     // Loop over the navigation surfaces
-    while (state.navigation.navSurfaceIter
-           != state.navigation.navSurfaces.end()) {
+    while (state.navigation.navSurfaceIter !=
+           state.navigation.navSurfaces.end()) {
       // Screen output how much is left to try
       debugLog(state, [&] {
         std::stringstream dstream;
@@ -643,11 +607,8 @@ private:
       });
       // Now intersect (should exclude punch-through)
       auto surfaceIntersect = surface->surfaceIntersectionEstimate(
-          state.geoContext,
-          stepper.position(state.stepping),
-          stepper.direction(state.stepping),
-          navOpts,
-          navCorr);
+          state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), navOpts, navCorr);
       double surfaceDistance = surfaceIntersect.intersection.pathLength;
       if (!surfaceIntersect) {
         debugLog(state, [&] {
@@ -701,15 +662,10 @@ private:
   /// @param [in] corrector_t navCorr is the navigation path corrector
   ///
   /// @return boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename stepper_t,
+  template <typename propagator_state_t, typename stepper_t,
             typename corrector_t>
-  bool
-  targetLayers(propagator_state_t& state,
-               const stepper_t&    stepper,
-               const corrector_t&  navCorr) const
-  {
-
+  bool targetLayers(propagator_state_t& state, const stepper_t& stepper,
+                    const corrector_t& navCorr) const {
     if (state.navigation.navigationBreak) {
       return false;
     }
@@ -745,11 +701,8 @@ private:
       // Otherwise try to step towards it
       NavigationOptions<Surface> navOpts(state.stepping.navDir, true);
       auto layerIntersect = layerSurface->surfaceIntersectionEstimate(
-          state.geoContext,
-          stepper.position(state.stepping),
-          stepper.direction(state.stepping),
-          navOpts,
-          navCorr);
+          state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), navOpts, navCorr);
       // check if the intersect is invalid
       if (!layerIntersect) {
         debugLog(state, [&] {
@@ -758,8 +711,8 @@ private:
         ++state.navigation.navLayerIter;
       } else {
         // update the navigation step size, release the former first
-        updateStep(
-            state, navCorr, layerIntersect.intersection.pathLength, true);
+        updateStep(state, navCorr, layerIntersect.intersection.pathLength,
+                   true);
         return true;
       }
     }
@@ -780,8 +733,8 @@ private:
       return dstream.str();
     });
     // Set the navigation break if necessary
-    state.navigation.navigationBreak
-        = (state.navigation.currentVolume == state.navigation.targetVolume);
+    state.navigation.navigationBreak =
+        (state.navigation.currentVolume == state.navigation.targetVolume);
     return false;
   }
 
@@ -813,30 +766,28 @@ private:
   /// @param [in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename stepper_t,
+  template <typename propagator_state_t, typename stepper_t,
             typename corrector_t>
-  bool
-  targetBoundaries(propagator_state_t& state,
-                   const stepper_t&    stepper,
-                   const corrector_t&  navCorr) const
-  {
+  bool targetBoundaries(propagator_state_t& state, const stepper_t& stepper,
+                        const corrector_t& navCorr) const {
     if (state.navigation.navigationBreak) {
       return false;
     }
 
     if (!state.navigation.currentVolume) {
       debugLog(state, [&] {
-        return std::string("No sufficient information to resolve boundary, "
-                           "stopping navigation.");
+        return std::string(
+            "No sufficient information to resolve boundary, "
+            "stopping navigation.");
       });
       state.stepping.stepSize.release(Cstep::actor);
       return false;
-    } else if (state.navigation.currentVolume
-               == state.navigation.targetVolume) {
+    } else if (state.navigation.currentVolume ==
+               state.navigation.targetVolume) {
       debugLog(state, [&] {
-        return std::string("In target volume: no need to resolve boundary, "
-                           "stopping navigation.");
+        return std::string(
+            "In target volume: no need to resolve boundary, "
+            "stopping navigation.");
         state.navigation.navigationBreak = true;
         state.stepping.stepSize.release(Cstep::actor);
       });
@@ -863,13 +814,10 @@ private:
         return ss.str();
       });
       // Evaluate the boundary surfaces
-      state.navigation.navBoundaries
-          = state.navigation.currentVolume->compatibleBoundaries(
-              state.geoContext,
-              stepper.position(state.stepping),
-              stepper.direction(state.stepping),
-              navOpts,
-              navCorr,
+      state.navigation.navBoundaries =
+          state.navigation.currentVolume->compatibleBoundaries(
+              state.geoContext, stepper.position(state.stepping),
+              stepper.direction(state.stepping), navOpts, navCorr,
               BoundaryIntersectionSorter());
       // The number of boundary candidates
       debugLog(state, [&] {
@@ -886,23 +834,19 @@ private:
     }
 
     // Loop over the boundary surface
-    while (state.navigation.navBoundaryIter
-           != state.navigation.navBoundaries.end()) {
+    while (state.navigation.navBoundaryIter !=
+           state.navigation.navBoundaries.end()) {
       // That is the current boundary surface
       auto boundarySurface = state.navigation.navBoundaryIter->representation;
       // Step towards the boundary surface
       auto boundaryIntersect = boundarySurface->surfaceIntersectionEstimate(
-          state.geoContext,
-          stepper.position(state.stepping),
-          stepper.direction(state.stepping),
-          navOpts,
-          navCorr);
+          state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), navOpts, navCorr);
       // Distance
       auto distance = boundaryIntersect.intersection.pathLength;
       // Check the boundary is properly intersected: we are in target mode
-      if (!boundaryIntersect
-          or distance * distance
-              < s_onSurfaceTolerance * s_onSurfaceTolerance) {
+      if (!boundaryIntersect or
+          distance * distance < s_onSurfaceTolerance * s_onSurfaceTolerance) {
         debugLog(state, [&] {
           std::stringstream ss;
           ss << "Boundary intersection with:\n";
@@ -953,14 +897,10 @@ private:
   /// @param [in] navCorr is the navigation path corrector
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename stepper_t,
+  template <typename propagator_state_t, typename stepper_t,
             typename corrector_t>
-  void
-  initializeTarget(propagator_state_t& state,
-                   const stepper_t&    stepper,
-                   const corrector_t&  navCorr) const
-  {
+  void initializeTarget(propagator_state_t& state, const stepper_t& stepper,
+                        const corrector_t& navCorr) const {
     if (state.navigation.targetVolume && state.stepping.pathAccumulated == 0.) {
       debugLog(state, [&] {
         return std::string("Re-initialzing cancelled as it is the first step.");
@@ -968,9 +908,9 @@ private:
       return;
     }
     // Fast Navigation initialization for target:
-    if (state.navigation.targetSurface
-        && state.navigation.targetSurface->associatedLayer()
-        && !state.navigation.targetVolume) {
+    if (state.navigation.targetSurface &&
+        state.navigation.targetSurface->associatedLayer() &&
+        !state.navigation.targetVolume) {
       debugLog(state, [&] {
         return std::string("Fast target initialization through association.");
       });
@@ -981,10 +921,10 @@ private:
         return dstream.str();
       });
       // assign the target volume and the target surface
-      state.navigation.targetLayer
-          = state.navigation.targetSurface->associatedLayer();
-      state.navigation.targetVolume
-          = state.navigation.targetLayer->trackingVolume();
+      state.navigation.targetLayer =
+          state.navigation.targetSurface->associatedLayer();
+      state.navigation.targetVolume =
+          state.navigation.targetLayer->trackingVolume();
     } else if (state.navigation.targetSurface) {
       // screen output that you do a re-initialization
       if (state.navigation.targetVolume) {
@@ -994,19 +934,14 @@ private:
       }
       // Slow navigation initialization for target:
       // target volume and layer search through global search
-      NavigationOptions<Surface> navOpts(state.stepping.navDir,
-                                         false,
-                                         resolveSensitive,
-                                         resolveMaterial,
+      NavigationOptions<Surface> navOpts(state.stepping.navDir, false,
+                                         resolveSensitive, resolveMaterial,
                                          resolvePassive);
       // take the target intersection
-      auto targetIntersection
-          = state.navigation.targetSurface->surfaceIntersectionEstimate(
-              state.geoContext,
-              stepper.position(state.stepping),
-              stepper.direction(state.stepping),
-              navOpts,
-              navCorr);
+      auto targetIntersection =
+          state.navigation.targetSurface->surfaceIntersectionEstimate(
+              state.geoContext, stepper.position(state.stepping),
+              stepper.direction(state.stepping), navOpts, navCorr);
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Target estimate position (";
@@ -1017,12 +952,13 @@ private:
       });
       /// get the target volume from the intersection
       auto tPosition = targetIntersection.intersection.position;
-      state.navigation.targetVolume
-          = trackingGeometry->lowestTrackingVolume(state.geoContext, tPosition);
-      state.navigation.targetLayer = state.navigation.targetVolume
-          ? state.navigation.targetVolume->associatedLayer(state.geoContext,
-                                                           tPosition)
-          : nullptr;
+      state.navigation.targetVolume =
+          trackingGeometry->lowestTrackingVolume(state.geoContext, tPosition);
+      state.navigation.targetLayer =
+          state.navigation.targetVolume
+              ? state.navigation.targetVolume->associatedLayer(state.geoContext,
+                                                               tPosition)
+              : nullptr;
       if (state.navigation.targetVolume) {
         debugLog(state, [&] {
           std::stringstream dstream;
@@ -1046,38 +982,27 @@ private:
   /// @param [in] cLayer is the already assigned current layer, e.g. start layer
   ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename stepper_t,
+  template <typename propagator_state_t, typename stepper_t,
             typename corrector_t>
-  bool
-  resolveSurfaces(propagator_state_t& state,
-                  const stepper_t&    stepper,
-                  const corrector_t&  navCorr,
-                  const Layer*        cLayer = nullptr) const
-  {
+  bool resolveSurfaces(propagator_state_t& state, const stepper_t& stepper,
+                       const corrector_t& navCorr,
+                       const Layer* cLayer = nullptr) const {
     // get the layer and layer surface
     auto layerSurface = cLayer ? state.navigation.startSurface
                                : state.navigation.navLayerIter->representation;
     auto navLayer = cLayer ? cLayer : state.navigation.navLayerIter->object;
     // are we on the start layer
-    bool onStart      = (navLayer == state.navigation.startLayer);
+    bool onStart = (navLayer == state.navigation.startLayer);
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
-    NavigationOptions<Surface> navOpts(state.stepping.navDir,
-                                       true,
-                                       resolveSensitive,
-                                       resolveMaterial,
-                                       resolvePassive,
-                                       startSurface,
-                                       state.navigation.targetSurface);
+    NavigationOptions<Surface> navOpts(
+        state.stepping.navDir, true, resolveSensitive, resolveMaterial,
+        resolvePassive, startSurface, state.navigation.targetSurface);
     // Check the limit
     navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
     // get the surfaces
-    state.navigation.navSurfaces
-        = navLayer->compatibleSurfaces(state.geoContext,
-                                       stepper.position(state.stepping),
-                                       stepper.direction(state.stepping),
-                                       navOpts,
-                                       navCorr);
+    state.navigation.navSurfaces = navLayer->compatibleSurfaces(
+        state.geoContext, stepper.position(state.stepping),
+        stepper.direction(state.stepping), navOpts, navCorr);
     // the number of layer candidates
     if (!state.navigation.navSurfaces.empty()) {
       debugLog(state, [&] {
@@ -1093,8 +1018,7 @@ private:
       state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
       // Update the navigation step size before you return to the stepper
       // This is a new navigation stream, release the former step size first
-      updateStep(state,
-                 navCorr,
+      updateStep(state, navCorr,
                  state.navigation.navSurfaceIter->intersection.pathLength,
                  true);
       return true;
@@ -1122,42 +1046,31 @@ private:
   /// @param [in] navCorr is the navigation path corrector
   ///
   /// @return boolean return triggers exit to stepper
-  template <typename propagator_state_t,
-            typename stepper_t,
+  template <typename propagator_state_t, typename stepper_t,
             typename corrector_t>
-  bool
-  resolveLayers(propagator_state_t& state,
-                const stepper_t&    stepper,
-                const corrector_t&  navCorr) const
-  {
+  bool resolveLayers(propagator_state_t& state, const stepper_t& stepper,
+                     const corrector_t& navCorr) const {
     debugLog(state,
              [&] { return std::string("Searching for compatible layers."); });
 
     // Check if we are in the start volume
-    auto startLayer
-        = (state.navigation.currentVolume == state.navigation.startVolume)
-        ? state.navigation.startLayer
-        : nullptr;
+    auto startLayer =
+        (state.navigation.currentVolume == state.navigation.startVolume)
+            ? state.navigation.startLayer
+            : nullptr;
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
-    NavigationOptions<Layer> navOpts(state.stepping.navDir,
-                                     true,
-                                     resolveSensitive,
-                                     resolveMaterial,
-                                     resolvePassive,
-                                     startLayer,
-                                     nullptr);
+    NavigationOptions<Layer> navOpts(state.stepping.navDir, true,
+                                     resolveSensitive, resolveMaterial,
+                                     resolvePassive, startLayer, nullptr);
     // Set also the target surface
     navOpts.targetSurface = state.navigation.targetSurface;
-    navOpts.pathLimit     = state.stepping.stepSize.value(Cstep::aborter);
+    navOpts.pathLimit = state.stepping.stepSize.value(Cstep::aborter);
     // Request the compatible layers
-    state.navigation.navLayers
-        = state.navigation.currentVolume->compatibleLayers(
-            state.geoContext,
-            stepper.position(state.stepping),
-            stepper.direction(state.stepping),
-            navOpts,
-            navCorr);
+    state.navigation.navLayers =
+        state.navigation.currentVolume->compatibleLayers(
+            state.geoContext, stepper.position(state.stepping),
+            stepper.direction(state.stepping), navOpts, navCorr);
 
     // Layer candidates have been found
     if (!state.navigation.navLayers.empty()) {
@@ -1174,13 +1087,12 @@ private:
       // Set the iterator to the first
       state.navigation.navLayerIter = state.navigation.navLayers.begin();
       // Setting the step size towards first
-      if (state.navigation.startLayer
-          && state.navigation.navLayerIter->object
-              != state.navigation.startLayer) {
+      if (state.navigation.startLayer &&
+          state.navigation.navLayerIter->object !=
+              state.navigation.startLayer) {
         debugLog(state, [&] { return std::string("Target at layer."); });
         // update the navigation step size before you return
-        updateStep(state,
-                   navCorr,
+        updateStep(state, navCorr,
                    state.navigation.navLayerIter->intersection.pathLength,
                    true);
         // Trigger the return to the propagator
@@ -1210,23 +1122,20 @@ private:
   /// @param[in] step the step size
   /// @param[in] release flag steers if the step is released first
   template <typename propagator_state_t, typename corrector_t>
-  void
-  updateStep(propagator_state_t& state,
-             const corrector_t&  navCorr,
-             double              navigationStep,
-             bool                release = false) const
-  {  //  update the step
+  void updateStep(propagator_state_t& state, const corrector_t& navCorr,
+                  double navigationStep,
+                  bool release = false) const {  //  update the step
     state.stepping.stepSize.update(navigationStep, Cstep::actor, release);
     debugLog(state, [&] {
       std::stringstream dstream;
-      std::string       releaseFlag = release ? "released and " : "";
+      std::string releaseFlag = release ? "released and " : "";
       dstream << "Navigation stepSize " << releaseFlag << "updated to ";
       dstream << state.stepping.stepSize.toString();
       return dstream.str();
     });
     /// If we have an initial step and are configured to modify it
-    if (state.stepping.pathAccumulated == 0.
-        and navCorr(state.stepping.stepSize)) {
+    if (state.stepping.pathAccumulated == 0. and
+        navCorr(state.stepping.stepSize)) {
       debugLog(state, [&] {
         std::stringstream dstream;
         dstream << "Initial navigation step modified to ";
@@ -1250,9 +1159,7 @@ private:
   ///
   /// boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t>
-  bool
-  inactive(propagator_state_t& state, const stepper_t& stepper) const
-  {
+  bool inactive(propagator_state_t& state, const stepper_t& stepper) const {
     // Void behavior in case no tracking geometry is present
     if (!trackingGeometry) {
       return true;
@@ -1304,17 +1211,15 @@ private:
   ///      prefix and length
   /// @param logAction is a callable function that returns a stremable object
   template <typename propagator_state_t>
-  void
-  debugLog(propagator_state_t&                 state,
-           const std::function<std::string()>& logAction) const
-  {
+  void debugLog(propagator_state_t& state,
+                const std::function<std::string()>& logAction) const {
     if (state.options.debug) {
       std::string vName = "No Volume";
       if (state.navigation.currentVolume) {
         vName = state.navigation.currentVolume->volumeName();
       }
       std::vector<std::string> lines;
-      std::string              input = logAction();
+      std::string input = logAction();
       boost::split(lines, input, boost::is_any_of("\n"));
       for (const auto& line : lines) {
         std::stringstream dstream;

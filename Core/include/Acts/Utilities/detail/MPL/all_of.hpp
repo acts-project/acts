@@ -13,8 +13,8 @@ namespace Acts {
 
 namespace detail {
 
-  namespace {
-    // clang-format off
+namespace {
+// clang-format off
     template <bool... values>
     struct all_of : std::true_type {};
 
@@ -23,11 +23,11 @@ namespace detail {
 
     template <bool... others>
     struct all_of<true, others...> : public all_of<others...> {};
-    // clang-format on
-  }  // end of anonymous namespace
+// clang-format on
+}  // end of anonymous namespace
 
-  template <bool... values>
-  constexpr bool all_of_v = all_of<values...>::value;
+template <bool... values>
+constexpr bool all_of_v = all_of<values...>::value;
 }  // namespace detail
 
 }  // namespace Acts

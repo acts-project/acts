@@ -21,23 +21,23 @@ namespace Acts {
 /// @todo will be in the future be replace by GeometryID mechanism
 ///
 enum GeometrySignature {
-  Global             = 0,
-  ID                 = 1,
-  BeamPipe           = 2,
-  Calo               = 3,
-  MS                 = 4,
-  Cavern             = 5,
+  Global = 0,
+  ID = 1,
+  BeamPipe = 2,
+  Calo = 3,
+  MS = 4,
+  Cavern = 5,
   NumberOfSignatures = 6,
-  Unsigned           = 99
+  Unsigned = 99
 };
 
 enum GeometryType {
-  Static                = 0,
-  Dense                 = 1,
-  DenseWithLayers       = 1,
-  Detached              = 2,
-  Master                = 3,
+  Static = 0,
+  Dense = 1,
+  DenseWithLayers = 1,
+  Detached = 2,
+  Master = 3,
   NumberOfGeometryTypes = 3
 };
 
-}  // namespace
+}  // namespace Acts

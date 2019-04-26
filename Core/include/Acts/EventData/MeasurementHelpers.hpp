@@ -16,23 +16,19 @@ class Surface;
 
 namespace MeasurementHelpers {
 
-  /// @brief Extract surface from a type erased measurement object
-  /// @tparam T The FittableMeasurement type
-  /// @return const pointer to the extracted surface
-  template <typename T>
-  const Surface*
-  getSurface(const T& fittable_measurement)
-  {
-    return std::visit([](const auto& meas) { return &meas.referenceSurface(); },
-                      fittable_measurement);
-  }
+/// @brief Extract surface from a type erased measurement object
+/// @tparam T The FittableMeasurement type
+/// @return const pointer to the extracted surface
+template <typename T>
+const Surface* getSurface(const T& fittable_measurement) {
+  return std::visit([](const auto& meas) { return &meas.referenceSurface(); },
+                    fittable_measurement);
+}
 
-  template <typename T>
-  size_t
-  getSize(const T& fittable_measurement)
-  {
-    return std::visit([](const auto& meas) { return meas.size(); },
-                      fittable_measurement);
-  }
+template <typename T>
+size_t getSize(const T& fittable_measurement) {
+  return std::visit([](const auto& meas) { return meas.size(); },
+                    fittable_measurement);
 }
-}
+}  // namespace MeasurementHelpers
+}  // namespace Acts

@@ -20,7 +20,7 @@
 namespace Acts {
 
 class TrackingVolume;
-using TrackingVolumePtr   = std::shared_ptr<const TrackingVolume>;
+using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
 
 ///  @class GlueVolumesDescriptor
@@ -30,9 +30,8 @@ using TrackingVolumeArray = BinnedArray<TrackingVolumePtr>;
 /// Detector
 /// by another one.
 ///
-class GlueVolumesDescriptor
-{
-public:
+class GlueVolumesDescriptor {
+ public:
   /// Constructor
   GlueVolumesDescriptor() = default;
   /// Constructor - with arguments
@@ -48,9 +47,8 @@ public:
   ///
   /// @param bsf is the boundary surface face where the volume array is attached
   /// @param gvs is the array of volumes to be attached
-  void
-  registerGlueVolumes(Acts::BoundarySurfaceFace                  bsf,
-                      std::shared_ptr<const TrackingVolumeArray> gvs);
+  void registerGlueVolumes(Acts::BoundarySurfaceFace bsf,
+                           std::shared_ptr<const TrackingVolumeArray> gvs);
 
   /// Retrieve the glue volumes
   ///
@@ -58,30 +56,26 @@ public:
   /// array
   ///
   /// @return the shared pointer to the TrackingVolume array
-  std::shared_ptr<const TrackingVolumeArray>
-  glueVolumes(BoundarySurfaceFace bsf) const;
+  std::shared_ptr<const TrackingVolumeArray> glueVolumes(
+      BoundarySurfaceFace bsf) const;
 
   /// Retrieve the available Glue Faces
   /// @return the list of faces for which glue information is there
-  const std::vector<BoundarySurfaceFace>&
-  glueFaces() const;
+  const std::vector<BoundarySurfaceFace>& glueFaces() const;
 
   /// Dump it to the screen
-  std::string
-  screenOutput() const;
+  std::string screenOutput() const;
 
-private:
+ private:
   std::map<BoundarySurfaceFace, std::shared_ptr<const TrackingVolumeArray>>
-                                   m_glueVolumes;
+      m_glueVolumes;
   std::vector<BoundarySurfaceFace> m_glueFaces;
 };
 
 inline const std::vector<BoundarySurfaceFace>&
-GlueVolumesDescriptor::glueFaces() const
-{
+GlueVolumesDescriptor::glueFaces() const {
   return m_glueFaces;
 }
 
-std::ostream&
-operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd);
-}
+std::ostream& operator<<(std::ostream& sl, const GlueVolumesDescriptor& gvd);
+}  // namespace Acts

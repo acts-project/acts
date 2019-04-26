@@ -14,8 +14,7 @@ namespace Acts {
 ///
 /// @brief type for parameters with unrestricted value range
 ///
-struct unbound_parameter
-{
+struct unbound_parameter {
   static constexpr bool may_modify_value{
       false};  ///< parameter values need no adjustment
 
@@ -28,16 +27,12 @@ struct unbound_parameter
   /// @return identical input parameter value
   ///
   template <typename T>
-  static T
-  getValue(const T& input)
-  {
+  static T getValue(const T& input) {
     return input;
   }
 
   template <typename T>
-  static T
-  getDifference(const T& first, const T& second)
-  {
+  static T getDifference(const T& first, const T& second) {
     return first - second;
   }
 };
@@ -45,9 +40,7 @@ struct unbound_parameter
 ///
 /// @brief type for local parameters bound to a surface
 ///
-struct local_parameter : public unbound_parameter
-{
-};
+struct local_parameter : public unbound_parameter {};
 
 ///
 /// @brief type for parameter with restricted value range
@@ -62,8 +55,7 @@ struct local_parameter : public unbound_parameter
 /// the value range
 ///
 template <typename T, T (*MIN)(), T (*MAX)()>
-struct bound_parameter
-{
+struct bound_parameter {
   static constexpr bool may_modify_value{
       true};                      ///< parameter values may need adjustment
   static constexpr T min{MIN()};  ///< lower bound of range
@@ -80,16 +72,12 @@ struct bound_parameter
   ///         @c bound_parameter<U,MIN,MAX>::max.
   ///
   template <typename U>
-  static U
-  getValue(const U& input)
-  {
+  static U getValue(const U& input) {
     return (input > max) ? max : ((input < min) ? min : input);
   }
 
   template <typename U>
-  static U
-  getDifference(const U& first, const U& second)
-  {
+  static U getDifference(const U& first, const U& second) {
     return getValue(first) - getValue(second);
   }
 };
@@ -106,8 +94,7 @@ struct bound_parameter
 /// the value range
 ///
 template <typename T, T (*MIN)(), T (*MAX)()>
-struct cyclic_parameter
-{
+struct cyclic_parameter {
   static constexpr bool may_modify_value{
       true};                      ///< parameter values may need adjustment
   static constexpr T min{MIN()};  ///< lower bound of range
@@ -125,9 +112,7 @@ struct cyclic_parameter
   ///         parameter type.
   ///
   template <typename U>
-  static U
-  getValue(const U& input)
-  {
+  static U getValue(const U& input) {
     if (min <= input && input < max) {
       return input;
     } else {
@@ -136,11 +121,9 @@ struct cyclic_parameter
   }
 
   template <typename U>
-  static U
-  getDifference(const U& first, const U& second)
-  {
+  static U getDifference(const U& first, const U& second) {
     static constexpr U half_period = (max - min) / 2;
-    U                  tmp         = getValue(first) - getValue(second);
+    U tmp = getValue(first) - getValue(second);
     return (tmp < -half_period
                 ? tmp + 2 * half_period
                 : (tmp > half_period ? tmp - 2 * half_period : tmp));

@@ -22,7 +22,7 @@ namespace Acts {
 class TrackingVolume;
 
 /// A std::shared_ptr to a tracking volume
-using TrackingVolumePtr        = std::shared_ptr<const TrackingVolume>;
+using TrackingVolumePtr = std::shared_ptr<const TrackingVolume>;
 using MutableTrackingVolumePtr = std::shared_ptr<TrackingVolume>;
 
 /// A BinnedArray of a std::shared_tr to a TrackingVolume
@@ -42,9 +42,8 @@ using TrackingVolumeVector = std::vector<TrackingVolumePtr>;
 ///
 /// Arrays for glueing and confinement are often the same,
 /// therefore the newly created TrackingVolumeArray is done by a shared_ptr
-class ITrackingVolumeArrayCreator
-{
-public:
+class ITrackingVolumeArrayCreator {
+ public:
   /// Virtual destructor
   virtual ~ITrackingVolumeArrayCreator() = default;
 
@@ -56,9 +55,8 @@ public:
   /// @param bVal is the binning value for the volume binning
   ///
   /// @return sahred pointer to a new TrackingVolumeArray
-  virtual std::shared_ptr<const TrackingVolumeArray>
-  trackingVolumeArray(const GeometryContext&      gctx,
-                      const TrackingVolumeVector& vols,
-                      BinningValue                bVal) const = 0;
+  virtual std::shared_ptr<const TrackingVolumeArray> trackingVolumeArray(
+      const GeometryContext& gctx, const TrackingVolumeVector& vols,
+      BinningValue bVal) const = 0;
 };
-}  // namespace
+}  // namespace Acts

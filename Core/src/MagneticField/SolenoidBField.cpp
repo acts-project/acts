@@ -12,19 +12,16 @@
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 
-Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(std::move(config))
-{
+Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(std::move(config)) {
   m_dz = m_cfg.length / m_cfg.nCoils;
   m_R2 = m_cfg.radius * m_cfg.radius;
   // we need to scale so we reproduce the expected B field strength
   // at the center of the solenoid
   Vector2D field = multiCoilField({0, 0}, 1.);  // scale = 1
-  m_scale        = m_cfg.bMagCenter / field.norm();
+  m_scale = m_cfg.bMagCenter / field.norm();
 }
 
-Acts::Vector3D
-Acts::SolenoidBField::getField(const Vector3D& position) const
-{
+Acts::Vector3D Acts::SolenoidBField::getField(const Vector3D& position) const {
   using VectorHelpers::perp;
   Vector2D rzPos(perp(position), position.z());
   Vector2D rzField = multiCoilField(rzPos, m_scale);
@@ -39,57 +36,45 @@ Acts::SolenoidBField::getField(const Vector3D& position) const
   return xyzField;
 }
 
-Acts::Vector3D
-Acts::SolenoidBField::getField(const Vector3D& position, Cache& /*cache*/) const
-{
+Acts::Vector3D Acts::SolenoidBField::getField(const Vector3D& position,
+                                              Cache& /*cache*/) const {
   return getField(position);
 }
 
-Acts::Vector2D
-Acts::SolenoidBField::getField(const Vector2D& position) const
-{
+Acts::Vector2D Acts::SolenoidBField::getField(const Vector2D& position) const {
   return multiCoilField(position, m_scale);
 }
 
-Acts::Vector3D
-Acts::SolenoidBField::getFieldGradient(const Vector3D& position,
-                                       ActsMatrixD<3, 3>& /*derivative*/) const
-{
+Acts::Vector3D Acts::SolenoidBField::getFieldGradient(
+    const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/) const {
   return getField(position);
 }
 
-Acts::Vector3D
-Acts::SolenoidBField::getFieldGradient(const Vector3D& position,
-                                       ActsMatrixD<3, 3>& /*derivative*/,
-                                       Cache& /*cache*/) const
-{
+Acts::Vector3D Acts::SolenoidBField::getFieldGradient(
+    const Vector3D& position, ActsMatrixD<3, 3>& /*derivative*/,
+    Cache& /*cache*/) const {
   return getField(position);
 }
 
-Acts::Vector2D
-Acts::SolenoidBField::multiCoilField(const Vector2D& pos, double scale) const
-{
+Acts::Vector2D Acts::SolenoidBField::multiCoilField(const Vector2D& pos,
+                                                    double scale) const {
   // iterate over all coils
   Vector2D resultField(0, 0);
   for (size_t coil = 0; coil < m_cfg.nCoils; coil++) {
-    Vector2D shiftedPos
-        = Vector2D(pos[0], pos[1] + m_cfg.length * 0.5 - m_dz * (coil + 0.5));
+    Vector2D shiftedPos =
+        Vector2D(pos[0], pos[1] + m_cfg.length * 0.5 - m_dz * (coil + 0.5));
     resultField += singleCoilField(shiftedPos, scale);
   }
 
   return resultField;
 }
 
-Acts::Vector2D
-Acts::SolenoidBField::singleCoilField(const Vector2D& pos, double scale) const
-{
+Acts::Vector2D Acts::SolenoidBField::singleCoilField(const Vector2D& pos,
+                                                     double scale) const {
   return {B_r(pos, scale), B_z(pos, scale)};
 }
 
-double
-Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
-{
-
+double Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -116,9 +101,9 @@ Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
   //                    | /  3 |_ \2 - 2k /                   _|
   //                    |/ Rr
   double k_2 = k2(r, z);
-  double k   = std::sqrt(k_2);
-  double constant
-      = scale * k * z / (4 * M_PI * std::sqrt(m_cfg.radius * r * r * r));
+  double k = std::sqrt(k_2);
+  double constant =
+      scale * k * z / (4 * M_PI * std::sqrt(m_cfg.radius * r * r * r));
 
   double B = (2. - k_2) / (2. - 2. * k_2) * ellint_2(k_2) - ellint_1(k_2);
 
@@ -126,9 +111,7 @@ Acts::SolenoidBField::B_r(const Vector2D& pos, double scale) const
   return r / pos[0] * constant * B;
 }
 
-double
-Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const
-{
+double Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const {
   //              _
   //     2       /  pi / 2          2    2          - 1 / 2
   // E (k )  =   |         ( 1  -  k  sin {theta} )         dtheta
@@ -155,23 +138,21 @@ Acts::SolenoidBField::B_z(const Vector2D& pos, double scale) const
     return res;
   }
 
-  double k_2      = k2(r, z);
-  double k        = std::sqrt(k_2);
+  double k_2 = k2(r, z);
+  double k = std::sqrt(k_2);
   double constant = scale * k / (4 * M_PI * std::sqrt(m_cfg.radius * r));
-  double B        = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2))
-          * ellint_2(k_2)
-      + ellint_1(k_2);
+  double B = ((m_cfg.radius + r) * k_2 - 2. * r) / (2. * r * (1. - k_2)) *
+                 ellint_2(k_2) +
+             ellint_1(k_2);
 
   return constant * B;
 }
 
-double
-Acts::SolenoidBField::k2(double r, double z) const
-{
+double Acts::SolenoidBField::k2(double r, double z) const {
   //  2           4Rr
   // k   =  ---------------
   //               2      2
   //        (R + r)   +  z
-  return 4 * m_cfg.radius * r
-      / ((m_cfg.radius + r) * (m_cfg.radius + r) + z * z);
+  return 4 * m_cfg.radius * r /
+         ((m_cfg.radius + r) * (m_cfg.radius + r) + z * z);
 }

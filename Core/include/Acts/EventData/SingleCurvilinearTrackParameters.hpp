@@ -24,9 +24,8 @@ namespace Acts {
 /// is constructed with the help of the global z axis.
 template <typename ChargePolicy>
 class SingleCurvilinearTrackParameters
-    : public SingleTrackParameters<ChargePolicy>
-{
-public:
+    : public SingleTrackParameters<ChargePolicy> {
+ public:
   /// type of covariance matrix
   using CovPtr_t = typename SingleTrackParameters<ChargePolicy>::CovPtr_t;
 
@@ -40,20 +39,15 @@ public:
   /// @param[in] dCharge The charge of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, ChargedPolicy>::value, int> = 0>
-  SingleCurvilinearTrackParameters(CovPtr_t              cov,
-                                   const ActsVectorD<3>& position,
+  SingleCurvilinearTrackParameters(CovPtr_t cov, const ActsVectorD<3>& position,
                                    const ActsVectorD<3>& momentum,
-                                   double                dCharge)
-    : SingleTrackParameters<ChargePolicy>(
-          std::move(cov),
-          detail::coordinate_transformation::global2curvilinear(position,
-                                                                momentum,
-                                                                dCharge),
-          position,
-          momentum)
-    , m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum))
-  {
-  }
+                                   double dCharge)
+      : SingleTrackParameters<ChargePolicy>(
+            std::move(cov),
+            detail::coordinate_transformation::global2curvilinear(
+                position, momentum, dCharge),
+            position, momentum),
+        m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum)) {}
 
   /// @brief constructor for curvilienear representation
   /// This is the constructor from global parameters, enabled only
@@ -64,73 +58,61 @@ public:
   /// @param[in] momentum The global momentum of this track parameterisation
   template <typename T = ChargePolicy,
             std::enable_if_t<std::is_same<T, NeutralPolicy>::value, int> = 0>
-  SingleCurvilinearTrackParameters(CovPtr_t              cov,
-                                   const ActsVectorD<3>& position,
+  SingleCurvilinearTrackParameters(CovPtr_t cov, const ActsVectorD<3>& position,
                                    const ActsVectorD<3>& momentum)
-    : SingleTrackParameters<ChargePolicy>(
-          std::move(cov),
-          detail::coordinate_transformation::global2curvilinear(position,
-                                                                momentum,
-                                                                0),
-          position,
-          momentum)
-    , m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum))
-  {
-  }
+      : SingleTrackParameters<ChargePolicy>(
+            std::move(cov),
+            detail::coordinate_transformation::global2curvilinear(position,
+                                                                  momentum, 0),
+            position, momentum),
+        m_upSurface(Surface::makeShared<PlaneSurface>(position, momentum)) {}
 
   /// @brief copy constructor - charged/neutral
   /// @param[in] copy The source parameters
   SingleCurvilinearTrackParameters(
       const SingleCurvilinearTrackParameters<ChargePolicy>& copy)
-    : SingleTrackParameters<ChargePolicy>(copy)
-    , m_upSurface(copy.m_upSurface)  // copy shared ptr
-  {
-  }
+      : SingleTrackParameters<ChargePolicy>(copy),
+        m_upSurface(copy.m_upSurface)  // copy shared ptr
+  {}
 
   /// @brief move constructor - charged/neutral
   /// @param[in] other The source parameters
   SingleCurvilinearTrackParameters(
       SingleCurvilinearTrackParameters<ChargePolicy>&& other)
-    : SingleTrackParameters<ChargePolicy>(std::move(other))
-    , m_upSurface(std::move(other.m_upSurface))
-  {
-  }
+      : SingleTrackParameters<ChargePolicy>(std::move(other)),
+        m_upSurface(std::move(other.m_upSurface)) {}
 
   /// @brief desctructor
   ~SingleCurvilinearTrackParameters() override = default;
 
   /// @brief copy assignment operator - charged/netural
   /// virtual constructor for type creation without casting
-  SingleCurvilinearTrackParameters<ChargePolicy>&
-  operator=(const SingleCurvilinearTrackParameters<ChargePolicy>& rhs)
-  {
+  SingleCurvilinearTrackParameters<ChargePolicy>& operator=(
+      const SingleCurvilinearTrackParameters<ChargePolicy>& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(rhs);
-      m_upSurface = Surface::makeShared<PlaneSurface>(this->position(),
-                                                      this->momentum());
+      m_upSurface =
+          Surface::makeShared<PlaneSurface>(this->position(), this->momentum());
     }
     return *this;
   }
 
   /// @brief move assignment operator - charged/netural
   /// virtual constructor for type creation without casting
-  SingleCurvilinearTrackParameters<ChargePolicy>&
-  operator=(SingleCurvilinearTrackParameters<ChargePolicy>&& rhs)
-  {
+  SingleCurvilinearTrackParameters<ChargePolicy>& operator=(
+      SingleCurvilinearTrackParameters<ChargePolicy>&& rhs) {
     // check for self-assignment
     if (this != &rhs) {
       SingleTrackParameters<ChargePolicy>::operator=(std::move(rhs));
-      m_upSurface                                  = std::move(rhs.m_upSurface);
+      m_upSurface = std::move(rhs.m_upSurface);
     }
     return *this;
   }
 
   /// @brief clone - charged/netural
   /// virtual constructor for type creation without casting
-  SingleTrackParameters<ChargePolicy>*
-  clone() const override
-  {
+  SingleTrackParameters<ChargePolicy>* clone() const override {
     return new SingleCurvilinearTrackParameters<ChargePolicy>(*this);
   }
 
@@ -148,9 +130,7 @@ public:
             std::enable_if_t<std::is_same<typename par_type<par>::type,
                                           local_parameter>::value,
                              int> = 0>
-  void
-  set(const GeometryContext& gctx, ParValue_t newValue)
-  {
+  void set(const GeometryContext& gctx, ParValue_t newValue) {
     // set the parameter & update the new global position
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(gctx, typename par_type<par>::type());
@@ -175,9 +155,7 @@ public:
             std::enable_if_t<not std::is_same<typename par_type<par>::type,
                                               local_parameter>::value,
                              int> = 0>
-  void
-  set(const GeometryContext& gctx, ParValue_t newValue)
-  {
+  void set(const GeometryContext& gctx, ParValue_t newValue) {
     this->getParameterSet().template setParameter<par>(newValue);
     this->updateGlobalCoordinates(gctx, typename par_type<par>::type());
     // recreate the surface
@@ -186,11 +164,7 @@ public:
   }
 
   /// @brief access to the reference surface
-  const Surface&
-  referenceSurface() const final
-  {
-    return *m_upSurface;
-  }
+  const Surface& referenceSurface() const final { return *m_upSurface; }
 
   /// @brief access to the measurement frame, i.e. the rotation matrix with
   /// respect to the global coordinate system, in which the local error
@@ -201,13 +175,11 @@ public:
   ///
   /// @note For a curvilinear track parameterisation this is identical to
   /// the rotation matrix of the intrinsic planar surface.
-  RotationMatrix3D
-  referenceFrame(const GeometryContext& gctx) const final
-  {
+  RotationMatrix3D referenceFrame(const GeometryContext& gctx) const final {
     return m_upSurface->transform(gctx).linear();
   }
 
-private:
+ private:
   std::shared_ptr<PlaneSurface> m_upSurface;
 };
 }  // namespace Acts

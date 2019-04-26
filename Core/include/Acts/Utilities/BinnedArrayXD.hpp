@@ -30,22 +30,20 @@ namespace Acts {
 ///
 /// the type of Binning is given defined through the BinUtility
 template <class T>
-class BinnedArrayXD : public BinnedArray<T>
-{
+class BinnedArrayXD : public BinnedArray<T> {
   /// typedef the object and position for readability
   using TAP = std::pair<T, Vector3D>;
 
-public:
+ public:
   /// Constructor for single object
   ///
   /// @tparam object is the single object
   BinnedArrayXD(T object)
-    : BinnedArray<T>()
-    , m_objectGrid(1,
-                   std::vector<std::vector<T>>(1, std::vector<T>(1, nullptr)))
-    , m_arrayObjects({object})
-    , m_binUtility(nullptr)
-  {
+      : BinnedArray<T>(),
+        m_objectGrid(
+            1, std::vector<std::vector<T>>(1, std::vector<T>(1, nullptr))),
+        m_arrayObjects({object}),
+        m_binUtility(nullptr) {
     /// fill the single object into the object grid
     m_objectGrid[0][0][0] = object;
   }
@@ -55,16 +53,14 @@ public:
   ///
   /// @param tapvector is a vector of object and binning position
   /// @param bu is the unique bin utility for this binned array
-  BinnedArrayXD(const std::vector<TAP>&           tapvector,
+  BinnedArrayXD(const std::vector<TAP>& tapvector,
                 std::unique_ptr<const BinUtility> bu)
-    : BinnedArray<T>()
-    , m_objectGrid(
-          bu->bins(2),
-          std::vector<std::vector<T>>(bu->bins(1),
-                                      std::vector<T>(bu->bins(0), nullptr)))
-    , m_arrayObjects()
-    , m_binUtility(std::move(bu))
-  {
+      : BinnedArray<T>(),
+        m_objectGrid(bu->bins(2),
+                     std::vector<std::vector<T>>(
+                         bu->bins(1), std::vector<T>(bu->bins(0), nullptr))),
+        m_arrayObjects(),
+        m_binUtility(std::move(bu)) {
     /// reserve the right amount of data
     m_arrayObjects.reserve(tapvector.size());
     /// loop over the object & position for ordering
@@ -77,8 +73,8 @@ public:
         /// fill the data
         m_objectGrid[bins[2]][bins[1]][bins[0]] = tap.first;
         /// fill the unique m_arrayObjects
-        if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(), tap.first)
-            == m_arrayObjects.end()) {
+        if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(),
+                      tap.first) == m_arrayObjects.end()) {
           m_arrayObjects.push_back(tap.first);
         }
       }
@@ -90,15 +86,14 @@ public:
   /// @param grid is the prepared object grid
   /// @param bu is the unique bin utility for this binned array
   BinnedArrayXD(const std::vector<std::vector<std::vector<T>>>& grid,
-                std::unique_ptr<const BinUtility>               bu)
-    : BinnedArray<T>()
-    , m_objectGrid(grid)
-    , m_arrayObjects()
-    , m_binUtility(std::move(bu))
-  {
+                std::unique_ptr<const BinUtility> bu)
+      : BinnedArray<T>(),
+        m_objectGrid(grid),
+        m_arrayObjects(),
+        m_binUtility(std::move(bu)) {
     // get the total dimension
-    size_t objects
-        = m_binUtility->bins(0) * m_binUtility->bins(1) * m_binUtility->bins(2);
+    size_t objects =
+        m_binUtility->bins(0) * m_binUtility->bins(1) * m_binUtility->bins(2);
     /// reserve the right amount of data
     m_arrayObjects.reserve(objects);
     /// loop over the object & position for ordering
@@ -107,8 +102,8 @@ public:
         for (auto& o0 : o1) {
           if (o0) {
             /// fill the unique m_arrayObjects
-            if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(), o0)
-                == m_arrayObjects.end()) {
+            if (std::find(m_arrayObjects.begin(), m_arrayObjects.end(), o0) ==
+                m_arrayObjects.end()) {
               m_arrayObjects.push_back(o0);
             }
           }
@@ -123,9 +118,7 @@ public:
 
   /// Assignment operator
   /// - not allowed, use the same array
-  BinnedArrayXD&
-  operator=(const BinnedArrayXD<T>& barr)
-      = delete;
+  BinnedArrayXD& operator=(const BinnedArrayXD<T>& barr) = delete;
 
   /// Destructor
   ~BinnedArrayXD() override = default;
@@ -137,23 +130,19 @@ public:
   /// @param bins is the bin triple filled during this access
   ///
   /// @return is the object in that bin
-  T
-  object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final
-  {
+  T object(const Vector2D& lposition, std::array<size_t, 3>& bins) const final {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
-      bins[2]     = bdim > 2 ? m_binUtility->bin(lposition, 2) : 0;
-      bins[1]     = bdim > 1 ? m_binUtility->bin(lposition, 1) : 0;
-      bins[0]     = m_binUtility->bin(lposition, 0);
+      bins[2] = bdim > 2 ? m_binUtility->bin(lposition, 2) : 0;
+      bins[1] = bdim > 1 ? m_binUtility->bin(lposition, 1) : 0;
+      bins[0] = m_binUtility->bin(lposition, 0);
       return m_objectGrid[bins[2]][bins[1]][bins[0]];
     }
     return m_objectGrid[0][0][0];
   }
 
   // satisfy overload / override
-  T
-  object(const Vector2D& lposition) const override
-  {
+  T object(const Vector2D& lposition) const override {
     std::array<size_t, 3> bins;
     return object(lposition, bins);
   }
@@ -164,41 +153,31 @@ public:
   /// @param bins is the bins triple filled during access
   ///
   /// @return is the object in that bin
-  T
-  object(const Vector3D& position, std::array<size_t, 3>& bins) const final
-  {
+  T object(const Vector3D& position, std::array<size_t, 3>& bins) const final {
     if (m_binUtility) {
       size_t bdim = m_binUtility->dimensions();
-      bins[2]     = bdim > 2 ? m_binUtility->bin(position, 2) : 0;
-      bins[1]     = bdim > 1 ? m_binUtility->bin(position, 1) : 0;
-      bins[0]     = m_binUtility->bin(position, 0);
+      bins[2] = bdim > 2 ? m_binUtility->bin(position, 2) : 0;
+      bins[1] = bdim > 1 ? m_binUtility->bin(position, 1) : 0;
+      bins[0] = m_binUtility->bin(position, 0);
       return m_objectGrid[bins[2]][bins[1]][bins[0]];
     }
     return m_objectGrid[0][0][0];
   }
 
   // satisfy overload / override
-  T
-  object(const Vector3D& position) const override
-  {
+  T object(const Vector3D& position) const override {
     std::array<size_t, 3> bins;
     return object(position, bins);
   }
 
   /// Return all unqiue object
   /// @return vector of unique array objects
-  const std::vector<T>&
-  arrayObjects() const final
-  {
-    return m_arrayObjects;
-  }
+  const std::vector<T>& arrayObjects() const final { return m_arrayObjects; }
 
   /// Return the object grid
   /// multiple entries are allowed and wanted
   /// @return internal object grid
-  const std::vector<std::vector<std::vector<T>>>&
-  objectGrid() const final
-  {
+  const std::vector<std::vector<std::vector<T>>>& objectGrid() const final {
     return m_objectGrid;
   }
 
@@ -208,9 +187,8 @@ public:
   /// @param binTriple is the binning
   ///
   /// @return a vector of unique objects
-  std::vector<T>
-  objectCluster(const std::array<size_t, 3>& binTriple) const override
-  {
+  std::vector<T> objectCluster(
+      const std::array<size_t, 3>& binTriple) const override {
     // prepare the return vector
     std::vector<T> rvector;
     // reference bin object to be excluded
@@ -220,16 +198,16 @@ public:
     // avoiding code duplication
     std::vector<size_t> zerorange = {0};
     // 2D bin
-    std::vector<size_t> bin2values = (bdim > 2)
-        ? m_binUtility->binningData()[2].neighbourRange(binTriple[2])
-        : zerorange;
+    std::vector<size_t> bin2values =
+        (bdim > 2) ? m_binUtility->binningData()[2].neighbourRange(binTriple[2])
+                   : zerorange;
     // 1D bin
-    std::vector<size_t> bin1values = (bdim > 1)
-        ? m_binUtility->binningData()[1].neighbourRange(binTriple[1])
-        : zerorange;
+    std::vector<size_t> bin1values =
+        (bdim > 1) ? m_binUtility->binningData()[1].neighbourRange(binTriple[1])
+                   : zerorange;
     // 0D bin
-    std::vector<size_t> bin0values
-        = m_binUtility->binningData()[0].neighbourRange(binTriple[0]);
+    std::vector<size_t> bin0values =
+        m_binUtility->binningData()[0].neighbourRange(binTriple[0]);
 
     // do the loop
     for (auto b2 : bin2values) {
@@ -237,9 +215,9 @@ public:
         for (auto b0 : bin0values) {
           // get the object
           T object = m_objectGrid[b2][b1][b0];
-          if (object && object != bObject
-              && std::find(rvector.begin(), rvector.end(), object)
-                  == rvector.end()) {
+          if (object && object != bObject &&
+              std::find(rvector.begin(), rvector.end(), object) ==
+                  rvector.end()) {
             rvector.push_back(object);
           }
         }
@@ -251,13 +229,9 @@ public:
 
   /// Return the BinUtility
   /// @return plain pointer to the bin utility of this array
-  const BinUtility*
-  binUtility() const final
-  {
-    return (m_binUtility.get());
-  }
+  const BinUtility* binUtility() const final { return (m_binUtility.get()); }
 
-private:
+ private:
   /// the data store - a 3D array at default
   std::vector<std::vector<std::vector<T>>> m_objectGrid;
   /// Vector of unique Array objects

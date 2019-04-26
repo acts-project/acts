@@ -28,8 +28,7 @@
 std::shared_ptr<const Acts::PlaneSurface>
 Acts::CuboidVolumeBuilder::buildSurface(
     const GeometryContext& /*gctx*/,
-    const CuboidVolumeBuilder::SurfaceConfig& cfg) const
-{
+    const CuboidVolumeBuilder::SurfaceConfig& cfg) const {
   std::shared_ptr<PlaneSurface> surface;
 
   // Build transformation
@@ -41,8 +40,7 @@ Acts::CuboidVolumeBuilder::buildSurface(
     surface = Surface::makeShared<PlaneSurface>(
         cfg.rBounds,
         *(cfg.detElementConstructor(std::make_shared<const Transform3D>(trafo),
-                                    cfg.rBounds,
-                                    cfg.thickness)));
+                                    cfg.rBounds, cfg.thickness)));
   } else {
     surface = Surface::makeShared<PlaneSurface>(
         std::make_shared<const Transform3D>(trafo), cfg.rBounds);
@@ -51,11 +49,9 @@ Acts::CuboidVolumeBuilder::buildSurface(
   return surface;
 }
 
-std::shared_ptr<const Acts::Layer>
-Acts::CuboidVolumeBuilder::buildLayer(
-    const GeometryContext&                  gctx,
-    Acts::CuboidVolumeBuilder::LayerConfig& cfg) const
-{
+std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
+    const GeometryContext& gctx,
+    Acts::CuboidVolumeBuilder::LayerConfig& cfg) const {
   // Build the surface
   if (cfg.surface == nullptr) {
     cfg.surface = buildSurface(gctx, cfg.surfaceCfg);
@@ -68,20 +64,14 @@ Acts::CuboidVolumeBuilder::buildLayer(
   lCfg.surfaceArrayCreator = std::make_shared<const SurfaceArrayCreator>();
   LayerCreator layerCreator(lCfg);
 
-  return layerCreator.planeLayer(gctx,
-                                 {cfg.surface},
-                                 cfg.binsY,
-                                 cfg.binsZ,
-                                 BinningValue::binX,
-                                 boost::none,
+  return layerCreator.planeLayer(gctx, {cfg.surface}, cfg.binsY, cfg.binsZ,
+                                 BinningValue::binX, boost::none,
                                  std::make_shared<const Transform3D>(trafo));
 }
 
-std::pair<double, double>
-Acts::CuboidVolumeBuilder::binningRange(
+std::pair<double, double> Acts::CuboidVolumeBuilder::binningRange(
     const GeometryContext& /*gctx*/,
-    const Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const
-{
+    const Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
   // Construct return value
   std::pair<double, double> minMax = std::make_pair(
       std::numeric_limits<double>::max(), -std::numeric_limits<double>::max());
@@ -97,11 +87,9 @@ Acts::CuboidVolumeBuilder::binningRange(
   return minMax;
 }
 
-std::shared_ptr<Acts::TrackingVolume>
-Acts::CuboidVolumeBuilder::buildVolume(
-    const GeometryContext&                   gctx,
-    Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const
-{
+std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
+    const GeometryContext& gctx,
+    Acts::CuboidVolumeBuilder::VolumeConfig& cfg) const {
   // Build transformation
   Transform3D trafo(Transform3D::Identity());
   trafo.translation() = cfg.position;
@@ -148,35 +136,24 @@ Acts::CuboidVolumeBuilder::buildVolume(
   // Build layer array
   std::pair<double, double> minMax = binningRange(gctx, cfg);
   LayerArrayCreator::Config lacCnf;
-  LayerArrayCreator         layArrCreator(
+  LayerArrayCreator layArrCreator(
       lacCnf, getDefaultLogger("LayerArrayCreator", Logging::INFO));
   std::unique_ptr<const LayerArray> layArr(
-      layArrCreator.layerArray(gctx,
-                               layVec,
-                               minMax.first,
-                               minMax.second,
-                               BinningType::arbitrary,
-                               BinningValue::binX));
+      layArrCreator.layerArray(gctx, layVec, minMax.first, minMax.second,
+                               BinningType::arbitrary, BinningValue::binX));
 
   // Build TrackingVolume
-  auto trackVolume
-      = TrackingVolume::create(std::make_shared<const Transform3D>(trafo),
-                               bounds,
-                               cfg.volumeMaterial,
-                               std::move(layArr),
-                               nullptr,
-                               cfg.name);
+  auto trackVolume = TrackingVolume::create(
+      std::make_shared<const Transform3D>(trafo), bounds, cfg.volumeMaterial,
+      std::move(layArr), nullptr, cfg.name);
   trackVolume->sign(GeometrySignature::Global);
 
   return trackVolume;
 }
 
-Acts::MutableTrackingVolumePtr
-Acts::CuboidVolumeBuilder::trackingVolume(
-    const GeometryContext& gctx,
-    Acts::TrackingVolumePtr /*unused*/,
-    Acts::VolumeBoundsPtr /*unused*/) const
-{
+Acts::MutableTrackingVolumePtr Acts::CuboidVolumeBuilder::trackingVolume(
+    const GeometryContext& gctx, Acts::TrackingVolumePtr /*unused*/,
+    Acts::VolumeBoundsPtr /*unused*/) const {
   // Build volumes
   std::vector<std::shared_ptr<TrackingVolume>> volumes;
   volumes.reserve(m_cfg.volumeCfg.size());
@@ -186,12 +163,10 @@ Acts::CuboidVolumeBuilder::trackingVolume(
 
   // Glue volumes
   for (unsigned int i = 0; i < volumes.size() - 1; i++) {
-    volumes[i + 1]->glueTrackingVolume(gctx,
-                                       BoundarySurfaceFace::negativeFaceYZ,
-                                       volumes[i],
-                                       BoundarySurfaceFace::positiveFaceYZ);
-    volumes[i]->glueTrackingVolume(gctx,
-                                   BoundarySurfaceFace::positiveFaceYZ,
+    volumes[i + 1]->glueTrackingVolume(
+        gctx, BoundarySurfaceFace::negativeFaceYZ, volumes[i],
+        BoundarySurfaceFace::positiveFaceYZ);
+    volumes[i]->glueTrackingVolume(gctx, BoundarySurfaceFace::positiveFaceYZ,
                                    volumes[i + 1],
                                    BoundarySurfaceFace::negativeFaceYZ);
   }
@@ -213,16 +188,16 @@ Acts::CuboidVolumeBuilder::trackingVolume(
 
   // Set bin boundaries along binning
   std::vector<float> binBoundaries;
-  binBoundaries.push_back(volumes[0]->center().x()
-                          - m_cfg.volumeCfg[0].length.x() * 0.5);
+  binBoundaries.push_back(volumes[0]->center().x() -
+                          m_cfg.volumeCfg[0].length.x() * 0.5);
   for (size_t i = 0; i < volumes.size(); i++) {
-    binBoundaries.push_back(volumes[i]->center().x()
-                            + m_cfg.volumeCfg[i].length.x() * 0.5);
+    binBoundaries.push_back(volumes[i]->center().x() +
+                            m_cfg.volumeCfg[i].length.x() * 0.5);
   }
 
   // Build binning
   BinningData binData(BinningOption::open, BinningValue::binX, binBoundaries);
-  auto        bu = std::make_unique<const BinUtility>(binData);
+  auto bu = std::make_unique<const BinUtility>(binData);
 
   // Build TrackingVolume array
   std::shared_ptr<const TrackingVolumeArray> trVolArr(

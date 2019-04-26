@@ -20,18 +20,16 @@
 namespace po = boost::program_options;
 using namespace Acts;
 
-int
-main(int argc, char* argv[])
-{
-  unsigned int toys    = 1;
-  double       pT      = 1;
-  double       Bz      = 1;
-  double       maxPath = 1;
-  unsigned int lvl     = Acts::Logging::INFO;
-  bool         withCov = true;
+int main(int argc, char* argv[]) {
+  unsigned int toys = 1;
+  double pT = 1;
+  double Bz = 1;
+  double maxPath = 1;
+  unsigned int lvl = Acts::Logging::INFO;
+  bool withCov = true;
 
   // Create a test context
-  GeometryContext      tgContext = GeometryContext();
+  GeometryContext tgContext = GeometryContext();
   MagneticFieldContext mfContext = MagneticFieldContext();
 
   try {
@@ -64,22 +62,21 @@ main(int argc, char* argv[])
 
   // print information about profiling setup
   ACTS_INFO("propagating " << toys << " tracks with pT = " << pT << "GeV in a "
-                           << Bz
-                           << "T B-field");
+                           << Bz << "T B-field");
 
-  using BField_type     = ConstantBField;
-  using Stepper_type    = EigenStepper<BField_type>;
+  using BField_type = ConstantBField;
+  using Stepper_type = EigenStepper<BField_type>;
   using Propagator_type = Propagator<Stepper_type>;
 
-  BField_type     bField(0, 0, Bz * units::_T);
-  Stepper_type    atlas_stepper(std::move(bField));
+  BField_type bField(0, 0, Bz * units::_T);
+  Stepper_type atlas_stepper(std::move(bField));
   Propagator_type propagator(std::move(atlas_stepper));
 
   PropagatorOptions<> options(tgContext, mfContext);
   options.pathLimit = maxPath * units::_m;
 
-  Vector3D          pos(0, 0, 0);
-  Vector3D          mom(pT * units::_GeV, 0, 0);
+  Vector3D pos(0, 0, 0);
+  Vector3D mom(pT * units::_GeV, 0, 0);
   ActsSymMatrixD<5> cov;
   cov << 10 * units::_mm, 0, 0, 0, 0, 0, 10 * units::_mm, 0, 0, 0, 0, 0, 1, 0,
       0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1. / (10 * units::_GeV);
@@ -94,12 +91,9 @@ main(int argc, char* argv[])
   for (unsigned int i = 0; i < toys; ++i) {
     auto r = propagator.propagate(pars, options).value();
     ACTS_DEBUG("reached position (" << r.endParameters->position().x() << ", "
-                                    << r.endParameters->position().y()
-                                    << ", "
+                                    << r.endParameters->position().y() << ", "
                                     << r.endParameters->position().z()
-                                    << ") in "
-                                    << r.steps
-                                    << " steps");
+                                    << ") in " << r.steps << " steps");
     totalPathLength += r.pathLength;
   }
 

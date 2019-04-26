@@ -21,9 +21,8 @@ namespace Acts {
 /// Bounds for a LineSurface.
 ///
 
-class LineBounds : public SurfaceBounds
-{
-public:
+class LineBounds : public SurfaceBounds {
+ public:
   /// @enum BoundValues for readablility
   /// nested enumeration object
   enum BoundValues { bv_radius = 0, bv_halfZ = 1, bv_length = 2 };
@@ -36,14 +35,11 @@ public:
 
   ~LineBounds() override;
 
-  LineBounds*
-  clone() const final;
+  LineBounds* clone() const final;
 
-  BoundsType
-  type() const final;
+  BoundsType type() const final;
 
-  std::vector<TDD_real_t>
-  valueStore() const final;
+  std::vector<TDD_real_t> valueStore() const final;
 
   /// Inside check for the bounds object driven by the boundary check directive
   /// Each Bounds has a method inside, which checks if a LocalPosition is inside
@@ -53,45 +49,36 @@ public:
   /// @param bcheck boundary check directive
   ///
   /// @return boolean indicator for the success of this operation
-  bool
-  inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2D& lpos, const BoundaryCheck& bcheck) const final;
 
   /// Minimal distance to boundary ( > 0 if outside and <=0 if inside)
   ///
   /// @param lpos is the local position to check for the distance
   ///
   /// @return is a signed distance parameter
-  double
-  distanceToBoundary(const Vector2D& lpos) const final;
+  double distanceToBoundary(const Vector2D& lpos) const final;
 
   /// This method returns the radius
-  virtual double
-  r() const;
+  virtual double r() const;
 
   /// This method returns the halflengthZ
-  double
-  halflengthZ() const;
+  double halflengthZ() const;
 
   /// Output Method for std::ostream
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream&
-  toStream(std::ostream& sl) const final;
+  std::ostream& toStream(std::ostream& sl) const final;
 
-private:
+ private:
   double m_radius, m_halfZ;
 };
 
-inline double
-LineBounds::r() const
-{
+inline double LineBounds::r() const {
   return m_radius;
 }
 
-inline double
-LineBounds::halflengthZ() const
-{
+inline double LineBounds::halflengthZ() const {
   return m_halfZ;
 }
 
-}  // namespace
+}  // namespace Acts

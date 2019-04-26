@@ -17,19 +17,18 @@ namespace Acts {
 
 namespace Test {
 
-  /// Test the constructors
-  BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test)
-  {
-    BinUtility smpBU(10, -10., 10., open, binX);
-    smpBU += BinUtility(10, -10., 10., open, binY);
+/// Test the constructors
+BOOST_AUTO_TEST_CASE(ProtoSurfaceMaterial_construction_test) {
+  BinUtility smpBU(10, -10., 10., open, binX);
+  smpBU += BinUtility(10, -10., 10., open, binY);
 
-    // Constructor from arguments
-    ProtoSurfaceMaterial smp(smpBU);
-    // Copy constructor
-    ProtoSurfaceMaterial smpCopy(smp);
-    // Copy move constructor
-    ProtoSurfaceMaterial smpCopyMoved(std::move(smpCopy));
-  }
+  // Constructor from arguments
+  ProtoSurfaceMaterial smp(smpBU);
+  // Copy constructor
+  ProtoSurfaceMaterial smpCopy(smp);
+  // Copy move constructor
+  ProtoSurfaceMaterial smpCopyMoved(std::move(smpCopy));
+}
 
 }  // namespace Test
 }  // namespace Acts
