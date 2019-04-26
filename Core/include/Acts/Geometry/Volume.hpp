@@ -72,8 +72,13 @@ class Volume : public virtual GeometryObject {
   /// returns the volumeBounds()
   const VolumeBounds& volumeBounds() const;
 
+  /// Construct bounding box for this shape
+  /// @param envelope Optional envelope to add / subtract from min/max
+  /// @return Constructed bounding box pointing to this volume
   BoundingBox boundingBox(const Vector3D& envelope = {0, 0, 0}) const;
 
+  /// Construct oriented bounding box for this shape
+  /// @return Constructed oriented bounding box pointing to this volume
   const BoundingBox& orientedBoundingBox() const;
 
   /// Inside() method for checks

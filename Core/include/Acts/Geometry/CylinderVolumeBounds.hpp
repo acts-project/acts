@@ -147,6 +147,11 @@ class CylinderVolumeBounds : public VolumeBounds {
   std::vector<std::shared_ptr<const Surface>> decomposeToSurfaces(
       const Transform3D* transformPtr) const override;
 
+  /// Construct bounding box for this shape
+  /// @param trf Optional transform
+  /// @param envelope Optional envelope to add / subtract from min/max
+  /// @param entity Entity to associate this bounding box with
+  /// @return Constructed bounding box
   Volume::BoundingBox boundingBox(const Transform3D* trf = nullptr,
                                   const Vector3D& envelope = {0, 0, 0},
                                   const Volume* entity = nullptr) const final;
