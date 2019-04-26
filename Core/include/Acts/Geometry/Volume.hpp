@@ -33,6 +33,7 @@ using VolumeBoundsPtr = std::shared_ptr<const VolumeBounds>;
 class Volume : public virtual GeometryObject {
  public:
   using BoundingBox = AABB3D<Volume>;
+
   ///  Default constructor
   Volume();
 
@@ -63,6 +64,8 @@ class Volume : public virtual GeometryObject {
   //// Return methods for geometry transform
   const Transform3D& transform() const;
 
+  const Transform3D& itransform() const;
+
   /// returns the center of the volume
   const Vector3D& center() const;
 
@@ -70,6 +73,8 @@ class Volume : public virtual GeometryObject {
   const VolumeBounds& volumeBounds() const;
 
   BoundingBox boundingBox(const Vector3D& envelope = {0, 0, 0}) const;
+
+  const BoundingBox& orientedBoundingBox() const;
 
   /// Inside() method for checks
   ///
@@ -91,8 +96,10 @@ class Volume : public virtual GeometryObject {
 
  protected:
   std::shared_ptr<const Transform3D> m_transform;
+  Transform3D m_itransform;
   Vector3D m_center;
   VolumeBoundsPtr m_volumeBounds;
+  BoundingBox m_orientedBoundingBox;
 };
 
 inline const Transform3D& Volume::transform() const {
@@ -100,6 +107,10 @@ inline const Transform3D& Volume::transform() const {
     return (*(m_transform.get()));
   }
   return Acts::s_idTransform;
+}
+
+inline const Transform3D& Volume::itransform() const {
+  return m_itransform;
 }
 
 inline const Vector3D& Volume::center() const {

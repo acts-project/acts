@@ -21,14 +21,19 @@ Acts::Volume::Volume()
     : GeometryObject(),
       m_transform(nullptr),
       m_center(s_origin),
-      m_volumeBounds(nullptr) {}
+      m_volumeBounds(nullptr),
+      m_orientedBoundingBox(BoundingBox(this, {0, 0, 0}, {0, 0, 0})) {}
 
 Acts::Volume::Volume(const std::shared_ptr<const Transform3D>& htrans,
                      std::shared_ptr<const VolumeBounds> volbounds)
     : GeometryObject(),
       m_transform(htrans),
+      m_itransform(m_transform ? m_transform->inverse()
+                               : Transform3D::Identity()),
       m_center(s_origin),
-      m_volumeBounds(std::move(volbounds)) {
+      m_volumeBounds(std::move(volbounds)),
+      m_orientedBoundingBox(
+          m_volumeBounds->boundingBox(nullptr, {0.05, 0.05, 0.05}, this)) {
   if (htrans) {
     m_center = htrans->translation();
   }
@@ -37,11 +42,17 @@ Acts::Volume::Volume(const std::shared_ptr<const Transform3D>& htrans,
 Acts::Volume::Volume(const Volume& vol, const Transform3D* shift)
     : GeometryObject(),
       m_transform(vol.m_transform),
+      m_itransform(m_transform ? m_transform->inverse()
+                               : Transform3D::Identity()),
       m_center(s_origin),
-      m_volumeBounds(vol.m_volumeBounds) {
-  // applyt he shift if it exists
+      m_volumeBounds(vol.m_volumeBounds),
+      m_orientedBoundingBox(
+          m_volumeBounds->boundingBox(nullptr, {0.05, 0.05, 0.05}, this)) {
+  // apply the shift if it exists
   if (shift != nullptr) {
     m_transform = std::make_shared<const Transform3D>(transform() * (*shift));
+    // reset inverse
+    m_itransform = m_transform->inverse();
   }
   // now set the center
   m_center = transform().translation();
@@ -84,7 +95,7 @@ bool Acts::Volume::inside(const Acts::Vector3D& gpos, double tol) const {
 }
 
 std::ostream& Acts::operator<<(std::ostream& sl, const Acts::Volume& vol) {
-  sl << "Voluem with " << vol.volumeBounds() << std::endl;
+  sl << "Volume with " << vol.volumeBounds() << std::endl;
   return sl;
 }
 
@@ -93,4 +104,8 @@ Acts::Volume::BoundingBox Acts::Volume::boundingBox(
   BoundingBox box = m_volumeBounds->boundingBox(m_transform.get(), envelope);
   box.setEntity(this);
   return box;
+}
+
+const Acts::Volume::BoundingBox& Acts::Volume::orientedBoundingBox() const {
+  return m_orientedBoundingBox;
 }
