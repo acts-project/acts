@@ -328,7 +328,7 @@ Acts::FullBilloirVertexFitter<bfield_t, input_track_t, propagator_t>::fit(
         // new refitted trackparameters
         TrackParametersBase::ParVector_t paramVec;
         paramVec << 0., 0., trackMomenta[iTrack](0), trackMomenta[iTrack](1),
-            trackMomenta[iTrack](2), 0.;
+            trackMomenta[iTrack](2);
 
         BoundParameters refittedParams(vFitterOptions.geoContext,
                                        std::move(covDeltaPmat[iTrack]),
