@@ -10,9 +10,9 @@
 
 #include <array>
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 
 namespace Acts {
 

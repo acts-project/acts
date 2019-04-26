@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Tools/CylinderVolumeBuilder.hpp"
-#include "Acts/Tools/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/CylinderVolumeBuilder.hpp"
+#include "Acts/Geometry/CylinderVolumeHelper.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Units.hpp"

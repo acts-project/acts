@@ -77,7 +77,6 @@ by adding `-D<OPTION>=<VALUE>` to the `cmake` command.
 | ACTS_BUILD_DD4HEP_PLUGIN         | OFF     | build DD4HEP plugin for DD4hep geometry                 |
 | ACTS_BUILD_TGEO_PLUGIN           | OFF     | build TGeo plugin for ROOT geometry                     |
 | ACTS_BUILD_JSON_PLUGIN           | OFF     | build Json plugin for Json geometry input/output        |
-| ACTS_BUILD_MATERIAL_PLUGIN       | OFF     | build Material plugin                                   |
 | ACTS_BUILD_IDENTIFICATION_PLUGIN | OFF     | build Identification plugin                             |
 | CMAKE_INSTALL_PREFIX             |         | target installation directory                           |
 | CMAKE_PREFIX_PATH                |         | search path for external packages                       |
@@ -118,7 +117,6 @@ source CI/setup_lcg94.sh # example, you can use any of the provided scripts.
 mkdir build && cd build
 cmake -DCMAKE_INSTALL_PREFIX=<path you want> \
       -DACTS_BUILD_DD4HEP_PLUGIN=ON \
-      -DACTS_BUILD_MATERIAL_PLUGIN=ON \
       -DACTS_BUILD_TGEO_PLUGIN=ON ..
 cmake --build . -- install
 ```

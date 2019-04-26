@@ -14,7 +14,7 @@
 // clang-format on
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/BFieldMapUtils.hpp"
+#include "Acts/MagneticField/BFieldMapUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 

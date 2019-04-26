@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "Acts/Detector/DetectorElementBase.hpp"
+#include "Acts/Geometry/DetectorElementBase.hpp"
 #include "Acts/Plugins/Identification/Identifier.hpp"
 
 namespace Acts {

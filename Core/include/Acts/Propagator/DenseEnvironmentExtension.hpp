@@ -9,11 +9,11 @@
 #pragma once
 
 #include <functional>
-#include "Acts/Extrapolator/detail/InteractionFormulas.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/Propagator.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
+#include "Acts/Propagator/detail/InteractionFormulas.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
 
 namespace Acts {
 

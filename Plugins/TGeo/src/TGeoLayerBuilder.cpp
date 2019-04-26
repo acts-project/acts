@@ -8,7 +8,7 @@
 
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include <stdio.h>
-#include "Acts/Layers/ProtoLayer.hpp"
+#include "Acts/Geometry/ProtoLayer.hpp"
 #include "Acts/Plugins/TGeo/TGeoDetectorElement.hpp"
 #include "TGeoManager.h"
 #include "TGeoMatrix.h"

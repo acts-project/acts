@@ -13,21 +13,21 @@
 // clang-format on
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Utilities/MaterialMapUtils.hpp"
+#include "Acts/Material/MaterialMapUtils.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include <limits>
 #include <random>
 #include <vector>
-#include "Acts/Detector/TrackingGeometry.hpp"
-#include "Acts/Detector/TrackingVolume.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/EventData/SingleCurvilinearTrackParameters.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Material/Material.hpp"
-#include "Acts/Utilities/MaterialMapUtils.hpp"
+#include "Acts/Material/MaterialMapUtils.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/CuboidVolumeBuilder.hpp"
-#include "Acts/Tools/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 

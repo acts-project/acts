@@ -17,12 +17,12 @@
 #include <random>
 #include <vector>
 
-#include "Acts/Detector/TrackingGeometry.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackState.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
-#include "Acts/Extrapolator/SurfaceCollector.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/SurfaceCollector.hpp"
 #include "Acts/Fitter/GainMatrixSmoother.hpp"
 #include "Acts/Fitter/GainMatrixUpdator.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
@@ -37,9 +37,9 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/GeometryID.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/Geometry/GeometryID.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
 
 namespace Acts {

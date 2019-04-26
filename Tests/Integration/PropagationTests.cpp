@@ -18,7 +18,7 @@
 
 #include "Acts/ActsVersion.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
-#include "Acts/Extrapolator/Navigator.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
@@ -30,8 +30,8 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Tools/CuboidVolumeBuilder.hpp"
-#include "Acts/Tools/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/CuboidVolumeBuilder.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/Definitions.hpp"
 #include "Acts/Utilities/Units.hpp"
 

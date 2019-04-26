@@ -9,18 +9,18 @@
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include <list>
 #include <stdexcept>
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/LayerArrayCreator.hpp"
+#include "Acts/Geometry/LayerCreator.hpp"
+#include "Acts/Geometry/PassiveLayerBuilder.hpp"
+#include "Acts/Geometry/SurfaceArrayCreator.hpp"
+#include "Acts/Geometry/TrackingGeometryBuilder.hpp"
+#include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
 #include "Acts/Material/HomogeneousVolumeMaterial.hpp"
 #include "Acts/Material/MaterialProperties.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/IActsExtension.hpp"
-#include "Acts/Tools/LayerArrayCreator.hpp"
-#include "Acts/Tools/LayerCreator.hpp"
-#include "Acts/Tools/PassiveLayerBuilder.hpp"
-#include "Acts/Tools/SurfaceArrayCreator.hpp"
-#include "Acts/Tools/TrackingGeometryBuilder.hpp"
-#include "Acts/Tools/TrackingVolumeArrayCreator.hpp"
-#include "Acts/Utilities/GeometryContext.hpp"
 #include "TGeoManager.h"
 
 namespace Acts {

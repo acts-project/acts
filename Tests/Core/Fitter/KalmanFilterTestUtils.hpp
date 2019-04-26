@@ -13,7 +13,6 @@
 #include <memory>
 #include <random>
 #include <vector>
-#include "Acts/Detector/TrackingGeometry.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Extrapolation/ExtrapolationCell.hpp"
 #include "Acts/Extrapolation/ExtrapolationEngine.hpp"
@@ -24,6 +23,7 @@
 #include "Acts/Extrapolation/StaticNavigationEngine.hpp"
 #include "Acts/Fitter/KalmanFitter.hpp"
 #include "Acts/Fitter/KalmanUpdator.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Definitions.hpp"

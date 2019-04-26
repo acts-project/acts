@@ -15,7 +15,7 @@
 #include <boost/test/data/test_case.hpp>
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/Utilities/Definitions.hpp"
-#include "Acts/Utilities/MagneticFieldContext.hpp"
+#include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Utilities/Units.hpp"
 // clang-format on
 
